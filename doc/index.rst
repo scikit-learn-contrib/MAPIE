@@ -1,13 +1,7 @@
-.. project-template documentation master file, created by
-   sphinx-quickstart on Mon Jan 18 14:44:12 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to sklearn-predictioninterval's documentation!
+Welcome to Predinterv's documentation!
 ============================================
 
-This project is a reference implementation to anyone who wishes to develop
-scikit-learn compatible classes.
+This module allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
 
 .. toctree::
    :maxdepth: 2
@@ -34,19 +28,19 @@ scikit-learn compatible classes.
 `Getting started <quick_start.html>`_
 -------------------------------------
 
-Information regarding this template and how to modify it for your own project.
+How to install the module and estimate your first prediction intervals.
 
 `User Guide <user_guide.html>`_
 -------------------------------
 
-An example of narrative documentation.
+A tutorial that presents the different methods for estimating prediction intervals.
 
 `API Documentation <api.html>`_
 -------------------------------
 
-An example of API documentation.
+The API documentation.
 
 `Examples <auto_examples/index.html>`_
 --------------------------------------
 
-A set of examples. It complements the `User Guide <user_guide.html>`_.
+A set of examples.

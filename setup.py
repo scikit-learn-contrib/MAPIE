@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""A template for scikit-learn compatible packages."""
+"""A scikit-learn-compatible module for estimating prediction intervals."""
 
 import codecs
 import os
@@ -7,21 +7,21 @@ import os
 from setuptools import find_packages, setup
 
 # get __version__ from _version.py
-ver_file = os.path.join('sklpredinterv', '_version.py')
+ver_file = os.path.join('predinterv', '_version.py')
 with open(ver_file) as f:
     exec(f.read())
 
 DISTNAME = 'sklearn-predictioninterval'
-DESCRIPTION = 'A template for scikit-learn compatible packages.'
+DESCRIPTION = 'A scikit-learn-compatible module for estimating prediction intervals.'
 with codecs.open('README.rst', encoding='utf-8-sig') as f:
     LONG_DESCRIPTION = f.read()
-MAINTAINER = 'V. Birodkars, G. Lemaitre'
-MAINTAINER_EMAIL = 'vighneshbirodkar@nyu.edu, g.lemaitre58@gmail.com'
-URL = 'https://github.com/scikit-learn-contrib/project-template'
+MAINTAINER = 'V. Taquet, G. Martinon'
+MAINTAINER_EMAIL = 'vtaquet@quantmetry.com, gmartinon@quantmetry.com'
+URL = 'https://github.com/vtaquet/predinterv'
 LICENSE = 'new BSD'
-DOWNLOAD_URL = 'https://github.com/scikit-learn-contrib/project-template'
+DOWNLOAD_URL = 'https://github.com/vtaquet/predinterv'
 VERSION = __version__
-INSTALL_REQUIRES = ['numpy', 'scipy', 'scikit-learn']
+INSTALL_REQUIRES = ['numpy', 'pandas', 'scipy', 'scikit-learn']
 CLASSIFIERS = ['Intended Audience :: Science/Research',
                'Intended Audience :: Developers',
                'License :: OSI Approved',
@@ -32,10 +32,10 @@ CLASSIFIERS = ['Intended Audience :: Science/Research',
                'Operating System :: POSIX',
                'Operating System :: Unix',
                'Operating System :: MacOS',
-               'Programming Language :: Python :: 2.7',
                'Programming Language :: Python :: 3.5',
                'Programming Language :: Python :: 3.6',
-               'Programming Language :: Python :: 3.7']
+               'Programming Language :: Python :: 3.7',
+               'Programming Language :: Python :: 3.8']
 EXTRAS_REQUIRE = {
     'tests': [
         'pytest',
