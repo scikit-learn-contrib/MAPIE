@@ -1,4 +1,4 @@
-name: predinterv
+name: mapie
 channels:
     - defaults
     - conda-forge

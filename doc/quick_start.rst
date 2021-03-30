@@ -1,11 +1,10 @@
 #####################################
-Quick Start with the project-template
+Quick Start with MAPIE
 #####################################
 
-This package serves as a skeleton package aiding at developing compatible
-scikit-learn contribution.
+This package allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
 
-Creating your own scikit-learn contribution package
+Estimate your prediction intervals
 ===================================================
 
 1. Download and install the module

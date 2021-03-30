@@ -1,3 +1,11 @@
-numpy
-scipy
-scikit-learn
+flake8=3.8.4
+numpy=1.19.5
+numpydoc
+pandas=1.2.1
+pytest=6.2.2
+python=3.8.6
+scipy=1.6.1
+scikit-learn=0.24.1
+sphinx=3.5.2
+sphinx-gallery
+sphinx-rtd-theme

@@ -1,13 +1,13 @@
-####################
-project-template API
-####################
+##############
+MAPIE API
+##############
 
-This is an example on how to document the API of your own project.
 
-.. currentmodule:: predinterv
+
+.. currentmodule:: mapie
 
 PredictionInterval
-=========
+==================
 
 .. autosummary::
    :toctree: generated/

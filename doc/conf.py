@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# predinterv documentation build configuration file, created by
+# MAPIE documentation build configuration file, created by
 # sphinx-quickstart on Mon Jan 18 14:44:12 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -37,9 +37,12 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
+    "sphinx.ext.mathjax",
     'numpydoc',
-    'sphinx_gallery.gen_gallery',
+    'sphinx_gallery.gen_gallery'
 ]
+mathjax_path="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+
 
 # this is needed for some reason...
 # see https://github.com/numpy/numpydoc/issues/69
@@ -74,7 +77,7 @@ plot_gallery = True
 master_doc = 'index'
 
 # General information about the project.
-project = u'sklearn-predictioninterval'
+project = u'MAPIE'
 copyright = u'2021, Quantmetry'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -82,7 +85,7 @@ copyright = u'2021, Quantmetry'
 # built documents.
 #
 # The short X.Y version.
-from predinterv import __version__
+from mapie import __version__
 version = __version__
 # The full version, including alpha/beta/rc tags.
 release = __version__
@@ -120,7 +123,7 @@ exclude_patterns = ['_build', '_templates']
 pygments_style = 'sphinx'
 
 # Custom style
-html_style = 'css/predinterv.css'
+html_style = 'css/project-template.css'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
@@ -211,7 +214,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'predintervdoc'
+htmlhelp_basename = 'mapiedoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -231,7 +234,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'predinterv.tex', u'predinterv Documentation',
+  ('index', 'mapie.tex', u'MAPIE Documentation',
    u'Vianney Taquet', 'manual'),
 ]
 
@@ -261,7 +264,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'predinterv', u'predinterv Documentation',
+    ('index', 'mapie', u'MAPIE Documentation',
      [u'Vianney Taquet'], 1)
 ]
 
@@ -275,8 +278,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'predinterv', u'predinterv Documentation',
-   u'Vighnesh Birodkar', 'predinterv', 'One line description of project.',
+  ('index', 'mapie', u'MAPIE Documentation',
+   u'Vianney Taquet', 'MAPIE', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -306,12 +309,12 @@ intersphinx_mapping = {
 
 # sphinx-gallery configuration
 sphinx_gallery_conf = {
-    'doc_module': 'predinterv',
+    'doc_module': 'mapie',
     'backreferences_dir': os.path.join('generated'),
     'reference_url': {
-        'predinterv': None}
+        'mapie': None}
 }
 
 def setup(app):
     # a copy button to copy snippet of code from the documentation
-    app.add_javascript('js/copybutton.js')
+    app.add_js_file('js/copybutton.js')

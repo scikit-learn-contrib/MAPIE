@@ -61,10 +61,8 @@ class PredictionInterval(BaseEstimator, RegressorMixin):
         Whether to shuffle the data before splitting into batches.
     return_pred: str, optional
         Return the predictions from either
-            - the single estimator trained on the full training
-            dataset ("single")
-            - the median of the prediction intervals computed from
-            the leave-one-out or out-of-folds models ("ensemble")
+            - the single estimator trained on the full training dataset ("single")
+            - the median of the prediction intervals computed from the leave-one-out or out-of-folds models ("ensemble")
         Valid for the jackknife_plus, jackknife_minmax, cv_plus, or cv_minmax methods.
         By  default, returns "single"
     random_state : int, optional
@@ -131,7 +129,7 @@ class PredictionInterval(BaseEstimator, RegressorMixin):
         if self.method not in valid_methods:
             raise ValueError("Invalid method.")
         check_not_none(self.estimator)
-        check_estimator(self.estimator)
+        # check_estimator(self.estimator)
 
     def _select_cv(self) -> Union[KFold, LeaveOneOut]:
         """

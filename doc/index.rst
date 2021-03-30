@@ -1,5 +1,5 @@
-Welcome to Predinterv's documentation!
-============================================
+Welcome to MAPIE's documentation!
+======================================
 
 This module allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
 
@@ -21,7 +21,7 @@ This module allows you to easily estimate prediction intervals using your favour
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Tutorial - Examples
+   :caption: Examples
 
    auto_examples/index
 

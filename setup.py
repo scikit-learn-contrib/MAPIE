@@ -7,19 +7,19 @@ import os
 from setuptools import find_packages, setup
 
 # get __version__ from _version.py
-ver_file = os.path.join('predinterv', '_version.py')
+ver_file = os.path.join('mapie', '_version.py')
 with open(ver_file) as f:
     exec(f.read())
 
-DISTNAME = 'sklearn-predictioninterval'
+DISTNAME = 'MAPIE'
 DESCRIPTION = 'A scikit-learn-compatible module for estimating prediction intervals.'
 with codecs.open('README.rst', encoding='utf-8-sig') as f:
     LONG_DESCRIPTION = f.read()
 MAINTAINER = 'V. Taquet, G. Martinon'
 MAINTAINER_EMAIL = 'vtaquet@quantmetry.com, gmartinon@quantmetry.com'
-URL = 'https://github.com/vtaquet/predinterv'
+URL = 'https://github.com/simai-ml/MAPIE'
 LICENSE = 'new BSD'
-DOWNLOAD_URL = 'https://github.com/vtaquet/predinterv'
+DOWNLOAD_URL = 'https://github.com/simai-ml/MAPIE'
 VERSION = __version__
 INSTALL_REQUIRES = ['numpy', 'pandas', 'scipy', 'scikit-learn']
 CLASSIFIERS = ['Intended Audience :: Science/Research',
