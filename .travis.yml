@@ -16,16 +16,7 @@ install:
   - conda env create -f environment.yml
   - source activate mapie
 
-stages:
-  - lint
-  # - mypy
-  - test
-
-jobs:
-  include:
-    - stage: lint
-      script: flake8 . --exclude doc,setup.py --max-line-length=120
-    # - stage: mypy
-    #   script: mypy . --strict --config-file mypy.ini
-    - stage: test
-      script: pytest -s mapie/tests
+script:
+  - flake8 . --exclude doc,setup.py --max-line-length=120
+  # - mypy . --strict --config-file mypy.ini
+  - pytest -s mapie/tests
