@@ -1,5 +1,5 @@
+os: linux
 dist: trusty
-
 language: python
 
 before_install:
@@ -21,11 +21,11 @@ stages:
   # - mypy
   - test
 
-stage: lint
-  script: flake8 . --exclude doc,setup.py --max-line-length=120
-
-# stage: mypy
-#   script: mypy . --strict --config-file mypy.ini
-
-stage: test
-  script: pytest -s mapie/tests
+jobs:
+  include:
+    - stage: lint
+      script: flake8 . --exclude doc,setup.py --max-line-length=120
+    # - stage: mypy
+    #   script: mypy . --strict --config-file mypy.ini
+    - stage: test
+      script: pytest -s mapie/tests
