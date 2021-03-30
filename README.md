@@ -3,6 +3,7 @@
 This module allows you to easily estimate prediction intervals 
 using your favourite sklearn-compatible regressor.
 
+
 # Install Conda
 * `curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh`
 * `source Miniconda3-latest-MacOSX-x86_64.sh`
