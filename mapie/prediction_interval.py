@@ -1,17 +1,13 @@
 from __future__ import annotations
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 import numpy as np
-import pandas as pd
+from numpy.typing import ArrayLike
 from sklearn.utils import check_X_y, check_array
-from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import KFold, LeaveOneOut
-
-# If you can install numpy=1.20+, simply import numpy.typing.ArrayLike
-ArrayLike = Union[pd.DataFrame, pd.Series, np.ndarray, List[List[float]]]
 
 
 def check_not_none(estimator: Optional[RegressorMixin]) -> None:
@@ -32,11 +28,10 @@ def check_not_none(estimator: Optional[RegressorMixin]) -> None:
         raise ValueError("Invalid none estimator.")
 
 
-class PredictionInterval(BaseEstimator, RegressorMixin):
+class PredictionInterval(BaseEstimator, RegressorMixin):  # type: ignore
     """
     Estimator implementing the jackknife+ method and its variations
-    for estimating prediction intervals from leave-one-out 
-    (or out-of-fold) models.
+    for estimating prediction intervals from leave-one-out models.
 
     Parameters
     ----------
@@ -61,8 +56,10 @@ class PredictionInterval(BaseEstimator, RegressorMixin):
         Whether to shuffle the data before splitting into batches.
     return_pred: str, optional
         Return the predictions from either
-            - the single estimator trained on the full training dataset ("single")
-            - the median of the prediction intervals computed from the leave-one-out or out-of-folds models ("ensemble")
+            - the single estimator trained on the full training
+            dataset ("single")
+            - the median of the prediction intervals computed from
+            the leave-one-out or out-of-folds models ("ensemble")
         Valid for the jackknife_plus, jackknife_minmax, cv_plus, or cv_minmax methods.
         By  default, returns "single"
     random_state : int, optional
@@ -95,8 +92,7 @@ class PredictionInterval(BaseEstimator, RegressorMixin):
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7, 9, 11, 13, 15])
     >>> pireg = PredictionInterval(LinearRegression())
-    >>> pireg.fit(X_toy, y_toy)
-    >>> print(pireg.predict(X_toy))
+    >>> print(pireg.fit(X_toy, y_toy).predict(X_toy))
     """
 
     def __init__(
@@ -129,7 +125,6 @@ class PredictionInterval(BaseEstimator, RegressorMixin):
         if self.method not in valid_methods:
             raise ValueError("Invalid method.")
         check_not_none(self.estimator)
-        # check_estimator(self.estimator)
 
     def _select_cv(self) -> Union[KFold, LeaveOneOut]:
         """
@@ -152,6 +147,8 @@ class PredictionInterval(BaseEstimator, RegressorMixin):
             )
         elif self.method.startswith("jackknife"):
             cv = LeaveOneOut()
+        else:
+            raise ValueError("Invalid method.")
         return cv
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> PredictionInterval:
@@ -200,12 +197,12 @@ class PredictionInterval(BaseEstimator, RegressorMixin):
                     )
                     index_cv = np.concatenate((index_cv, val_fold))
                 e = clone(self.estimator)
-                e.fit(X[train_fold], y[train_fold])
+                e.fit(X[train_fold], y[train_fold])  # type: ignore
                 self.estimators_.append(e)
                 self.y_train_pred_split_ = np.concatenate(
                     (
                         self.y_train_pred_split_,
-                        e.predict(X[val_fold])
+                        e.predict(X[val_fold])  # type: ignore
                     )
                 )
             if self.method.startswith("cv"):
@@ -262,6 +259,8 @@ class PredictionInterval(BaseEstimator, RegressorMixin):
                 upper_bounds = np.max(
                     y_test_pred_split, axis=1, keepdims=True
                 ) + self.residuals_split_
+            else:
+                raise ValueError("Invalid method.")
             y_test_pred_low = np.quantile(
                 lower_bounds, self.alpha, axis=1, interpolation="lower"
             )

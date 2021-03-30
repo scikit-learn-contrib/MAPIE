@@ -3,15 +3,17 @@ channels:
     - defaults
     - conda-forge
 dependencies:
-    - flake8=3.8.4
-    - numpy=1.19.5
-    - numpydoc
-    - pandas=1.2.1
-    - pytest=6.2.2
-    - python=3.8.6
-    - scipy=1.6.1
-    - scikit-learn=0.24.1
-    - sphinx=3.5.2
-    - sphinx-gallery
+    - flake8=3.9.0
+    - mypy=0.800
+    - numpy=1.20.2
+    - numpydoc=1.1.0
+    - pip=21.0.1
     - pip:
         - sphinx-rtd-theme
+    - pytest=6.2.2
+    - pytest-cov=2.11.1
+    - python=3.9.2
+    - scikit-learn=0.24.1
+    - sphinx=3.5.3
+    - sphinx-gallery=0.8.2
+    
