@@ -4,7 +4,6 @@ This module allows you to easily estimate prediction intervals
 using your favourite sklearn-compatible regressor.
 
 
-
 # Install Conda
 * `curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh`
 * `source Miniconda3-latest-MacOSX-x86_64.sh`
@@ -12,7 +11,7 @@ using your favourite sklearn-compatible regressor.
 * `rm Miniconda3-latest-MacOSX-x86_64.sh`
 
 # Create virtual environment
-* `conda env create -f environment.yaml`
+* `conda env create -f environment.yml`
 * `conda activate mapie`
 * `python -m ipykernel install --user --name=mapie`
 
