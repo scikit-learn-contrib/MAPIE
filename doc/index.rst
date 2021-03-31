@@ -1,5 +1,5 @@
-Welcome to MAPIE's documentation!
-======================================
+MAPIE: Model Agnostic Prediction Interval Estimator
+===================================================
 
 This module allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
 
@@ -15,6 +15,7 @@ This module allows you to easily estimate prediction intervals using your favour
    :hidden:
    :caption: Documentation
 
+   method_description
    user_guide
    api
 
