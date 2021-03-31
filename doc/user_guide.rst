@@ -23,7 +23,7 @@ Throughout this tutorial, we will answer the following questions:
 
 - How do the prediction intervals vary between regressor models?
 
-We will start by fitting asimple polynomial function to the considered one-dimensional
+We will start by fitting a simple polynomial function to the considered one-dimensional
 :math:`x \times sin(x)`. We will then compare the estimated prediction intervals using 
 a polynomial function, a boosting model, and a simple neural network. 
 

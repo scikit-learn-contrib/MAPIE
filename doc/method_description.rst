@@ -30,7 +30,8 @@ feature vector :math:`X_{n+1}` such that
 .. math:: 
     P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \} \geq 1 - \alpha
 
-- **"Naive" method**
+1. "Naive" method
+=================
 
 The so-called naive method computes the residuals of the training data to estimate the 
 typical error obtained on a new test data point. 
@@ -52,8 +53,9 @@ As a result, the probability that a new point lies in the interval given by the
 naive method would be lower than the target level :math:`(1-\alpha)`.
 
 
-- **Jackknife**
-  
+2. Jackknife method
+===================
+
 The *standard* Jackknife method is based on the construction of a set of 
 *leave-one-out* (l-o-o) models. 
 Estimating the prediction intervals is carried out in three main steps:
@@ -86,7 +88,8 @@ sample size is closed to the number of features
 (as seen in the "Reproducing the simulations from Foygel-Barber et al. (2020)" example). 
 
 
-- **Jackknife+**
+3. Jackknife+ method
+====================
 
 Unlike the standard Jackknife method which estimates a prediction interval centered 
 around the prediction of the model trained on the entire dataset, the so-called Jackknife+ 
@@ -105,7 +108,8 @@ they require to run as many simulations as the number of training points, and is
 for a typical data science usecase. 
 
 
-- **CV+**
+4. CV+ method
+=============
 
 In order to reduce the computational time, one can adopt a cross-validation approach
 instead of a leave-one-out approach, called the CV+ method.
