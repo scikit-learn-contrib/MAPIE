@@ -11,7 +11,8 @@ recently introduced by Foygel-Barber et al. (2020).
 They allow the user to estimate robust prediction intervals with any kind of
 Machine-Learning model for regression purposes. 
 We give here a brief theoretical description of the methods included in the module.
-The figure below, adapted from Fig. 1 of Foygel-Barber (2020) illustrates the the methods by emphasing their main differences.
+The figure below, adapted from Fig. 1 of Foygel-Barber (2020), illustrates the 
+methods and emphasizes their main differences.
 
 .. image:: images/jackknife_cut.png
    :width: 800
@@ -45,22 +46,27 @@ or
 
 with :math:`\hat{q}_{n, \alpha}^+` is the :math:`(1-\alpha)` quantile of the distribution.
 
-Since this method estimates the residuals only on the training set, it tends to be optimistic and
-under-estimates the width of prediction intervals because of a potential overfit. 
+Since this method estimates the residuals only on the training set, it tends to be too 
+optimistic and under-estimates the width of prediction intervals because of a potential overfit. 
 As a result, the probability that a new point lies in the interval given by the 
 naive method would be lower than the target level :math:`(1-\alpha)`.
 
 
 - **Jackknife**
   
-The *standard* Jackknife method is based on the construction of a set of *leave-one-out* (l-o-o) models. 
+The *standard* Jackknife method is based on the construction of a set of 
+*leave-one-out* (l-o-o) models. 
 Estimating the prediction intervals is carried out in three main steps:
 
-    - For each instance *i = 1, ..., n* of the training set, we fit the regression function
-    :math:`\hat{\mu}_{-i}` on the entire training set with the :math:`i^{th}` point removed, resulting in *n* l-o-o models.
-    - The corresponding l-o-o residual is computed for each :math:`i^{th}` point :math:`|Y_i - \hat{\mu}_{-i}(X_i)|`.
-    - We fit the regression function :math:`\hat{\mu}` on the entire training set and we compute
-    the prediction interval using the computed l-o-o residuals. 
+- For each instance *i = 1, ..., n* of the training set, we fit the regression function
+  :math:`\hat{\mu}_{-i}` on the entire training set with the :math:`i^{th}` point removed,
+  resulting in *n* l-o-o models.
+
+- The corresponding l-o-o residual is computed for each :math:`i^{th}` point
+  :math:`|Y_i - \hat{\mu}_{-i}(X_i)|`.
+
+- We fit the regression function :math:`\hat{\mu}` on the entire training set and we compute
+  the prediction interval using the computed l-o-o residuals. 
   
 .. math:: \hat{\mu}(X_{n+1}) \pm ((1-\alpha) \textrm{ quantile of } |Y_1-\hat{\mu}_{-1}(X_1)|, ..., |Y_n-\hat{\mu}_{-n}(X_n)|)
 
@@ -76,20 +82,23 @@ is the *l-o-o* residual.
 
 This method avoids the overfitting problem but can loose its predictive 
 cover when :math:`\hat{\mu}` becomes unstable, for example when the 
-sample size is closed to the number of features (as seen in the example). 
+sample size is closed to the number of features
+(as seen in the "Reproducing the simulations from Foygel-Barber et al. (2020)" example). 
 
 
 - **Jackknife+**
 
-Unlike the standard Jackknife method which estimates an prediction interval centered 
+Unlike the standard Jackknife method which estimates a prediction interval centered 
 around the prediction of the model trained on the entire dataset, the so-called Jackknife+ 
 method uses each l-o-o prediction on the new test point to take the variability of the 
 regression function into account.
+The resulting confidence interval can therefore be summarized as follows
 
 .. math:: \hat{C}_{n, \alpha}^{\rm jackknife+}(X_{n+1}) = [ \hat{q}_{n, \alpha}^-\{\hat{\mu}_{-i}(X_{n+1}) - R_I^{\rm LOO} \}, \hat{q}_{n, \alpha}^+\{\hat{\mu}_{-i}(X_{n+1}) + R_I^{\rm LOO} \}] 
 
 As described in Barber et al. (2020), this method garantees a higher stability 
-with a coverage level of :math:`1-2\alpha` for a target coverage level of :math:`1-\alpha`.
+with a coverage level of :math:`1-2\alpha` for a target coverage level of :math:`1-\alpha`,
+without any *a priori* assumption on the distribution of the data :math:`(X, Y)`.
 
 However, the Jackknife and Jackknife+ methods are computationally heavy since 
 they require to run as many simulations as the number of training points, and is prohibitive 
@@ -98,15 +107,28 @@ for a typical data science usecase.
 
 - **CV+**
 
-In order to reduce the computational time, one can adopt a cross-validation approach instead of the leave-one-out approach associated with the jackknife strategy, called the CV+ method.
+In order to reduce the computational time, one can adopt a cross-validation approach
+instead of a leave-one-out approach, called the CV+ method.
 
-By analogy with the jackknife+ method, estimating the prediction intervals with CV+ is performed in four main steps:
+By analogy with the jackknife+ method, estimating the prediction intervals with CV+
+is performed in four main steps:
 
 - We split the training set into *K* disjoint subsets :math:`S_1, S_2, ..., S_k` of equal size. 
-- *K* regression functions :math:`\hat{\mu}_{-Sk}` are fitted on the training set with the corresponding :math:`k^{th}` fold removed.
-- The corresponding *out-of-fold* residual is computed for each :math:`i^{th}` point :math:`|Y_i - \hat{\mu}_{-Sk(i)}(X_i)|` where *k(i)* is the fold containing *i*.
-- Similar to the jackknife+, the regression functions :math:`\hat{\mu}_{-Sk(i)}(X_i)` are used to estimate the prediction intervals. 
+  
+- *K* regression functions :math:`\hat{\mu}_{-Sk}` are fitted on the training set with the 
+  corresponding :math:`k^{th}` fold removed.
 
-As noted by Barber et al. (2020), the Jackknife+ can be viewed as a special case of the CV+ in which :math:`K = n`. 
-In practice, this method results in slightly wider prediction intervals and is therefore more conservative, but gives 
-a reasonable compromise for large datasets where the Jacknife+ method is unfeasible.
+- The corresponding *out-of-fold* residual is computed for each :math:`i^{th}` point 
+  :math:`|Y_i - \hat{\mu}_{-Sk(i)}(X_i)|` where *k(i)* is the fold containing *i*.
+
+- Similar to the jackknife+, the regression functions :math:`\hat{\mu}_{-Sk(i)}(X_i)` 
+  are used to estimate the prediction intervals. 
+
+As for Jackknife+, this method garantees a coverage level higher than :math:`1-2\alpha` 
+for a target coverage level of :math:`1-\alpha`, without any *a priori* assumption on 
+the distribution of the data.
+As noted by Barber et al. (2020), the Jackknife+ can be viewed as a special case of the CV+ 
+in which :math:`K = n`. 
+In practice, this method results in slightly wider prediction intervals and is therefore 
+more conservative, but gives a reasonable compromise for large datasets where the Jacknife+ 
+method is unfeasible.

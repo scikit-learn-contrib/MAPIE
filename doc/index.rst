@@ -1,7 +1,9 @@
 MAPIE: Model Agnostic Prediction Interval Estimator
 ===================================================
 
-This module allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
+Welcome to MAPIE's documentation !
+
+MAPIE allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
 
 .. toctree::
    :maxdepth: 2
@@ -31,10 +33,15 @@ This module allows you to easily estimate prediction intervals using your favour
 
 How to install the module and estimate your first prediction intervals.
 
-`User Guide <user_guide.html>`_
--------------------------------
+`Theoretical description <method_description.html>`_
+----------------------------------------------------
 
-A tutorial that presents the different methods for estimating prediction intervals.
+A brief introduction to the methods used in MAPIE to estimate prediction intervals.
+
+`Tutorial <user_guide.html>`_
+-----------------------------
+
+A tutorial that presents some key features of MAPIE.
 
 `API Documentation <api.html>`_
 -------------------------------

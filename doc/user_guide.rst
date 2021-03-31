@@ -6,41 +6,35 @@
 Tutorial
 ========
 
-In this tutorial, we will consider a simple, one-dimensional, function
-to compare the prediction intervals estimated by MAPIE:
+In this tutorial, we compare the prediction intervals estimated by MAPIE on a 
+simple, one-dimensional, function
 
 .. math::
 
 
    f(x) = x \times sin(x)
 
-We will start by answering the two following questions by fitting a
-simple polynomial function to the considered one-dimensional
-:math:`x \times sin(x)`: 
+Throughout this tutorial, we will answer the following questions:
 
 - How well do the MAPIE methods capture the aleatoric uncertainty existing in the data?
-  Here, the one-dimensional function is generated with a constant, homoscedastic, noise and with
-  input data obtained through an uniform distribution.
 
-- How do the prediction intervals estimated by the jackknife+ methods
-  evolve for new *out-of-distribution* data? Here, the one-dimensional function is
-  generated without noise but with input data obtained through a normal distribution.
+- How do the prediction intervals estimated by the resampling methods
+  evolve for new *out-of-distribution* data? 
 
-Then, we will compare the prediction intervals estimated for several models: 
+- How do the prediction intervals vary between regressor models?
 
-- a polynomial function 
-
-- a boosting model 
-
-- a simple neural network
+We will start by fitting asimple polynomial function to the considered one-dimensional
+:math:`x \times sin(x)`. We will then compare the estimated prediction intervals using 
+a polynomial function, a boosting model, and a simple neural network. 
 
 
 1. Estimating the aleatoric uncertainty of homoscedastic noisy data
 ===================================================================
 
-Let’s start by generating our noisy one-dimensional function with a 
-uniform distribution of the input data. Here, the noise is
-considered as *homoscedastic*, since it remains constant over :math:`x`.
+Let’s start by generating noisy one-dimensional data obtained through 
+uniform distribution. 
+Here, the noise is considered as *homoscedastic*, since it remains constant 
+over :math:`x`.
 
 .. code:: python
 
@@ -50,16 +44,23 @@ considered as *homoscedastic*, since it remains constant over :math:`x`.
 
 .. code:: python
 
-    def gauss_function(x, a, mu, sig):
-        """One-dimensional gaussian function."""
-        return a*np.exp(-(x-mu)**2/(2*sig**2))
-
-.. code:: python
-
-    def generate_onedimensional_data(funct, distrib='normal', noise=True, n_samples=100, 
-                                     mu=0, sig=1, sigfactor=1, 
-                                     min_x=-5, max_x=5, step=0.1, sig_noise=1):
-        """Generate one-dimensional data from an input function and some information on the noise."""
+    def generate_onedimensional_data(
+        funct,
+        distrib='normal',
+        noise=True,
+        n_samples=100,
+        mu=0,
+        sig=1,
+        sigfactor=1,
+        min_x=-5,
+        max_x=5,
+        step=0.1,
+        sig_noise=1
+    ):
+        """
+        Generate one-dimensional data with homo- or hetero-scedastic noise
+        from an input function and some information on the noise.
+        """
         np.random.seed(59)
         if distrib == 'normal':
             X_train = npr.normal(mu,sig,n_samples)
@@ -104,9 +105,9 @@ Let's visualize our noisy function.
 .. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_9_1.png
 
 
-As mentioned previously, we will fit our training data with a simple
-polynomial function. Here, we choose a degree equal to 10 so the
-:math:`x \times sin(x)` is perfectly fitted.
+As mentioned previously, we fit our training data with a simple
+polynomial function. Here, we choose a degree equal to 10 so the function 
+is able to perfectly fit :math:`x \times sin(x)`.
 
 .. code:: python
 
@@ -114,9 +115,9 @@ polynomial function. Here, we choose a degree equal to 10 so the
     polyn_model = Pipeline([('poly', PolynomialFeatures(degree=degree_polyn)),
                             ('linear', LinearRegression(fit_intercept=False))])
 
-We estimate the prediction intervals for all the methods simply with
-``fit`` and ``predict``. The prediction interval lower and upper bounds
-are then saved in a DataFrame. Note that we set an alpha value of 0.05
+We then estimate the prediction intervals for all the methods very easily with a
+``fit`` and ``predict`` process. The prediction interval lower and upper bounds
+are then saved in a DataFrame. Here, we set an alpha value of 0.05
 in order to obtain a 95% confidence for our prediction intervals.
 
 .. code:: python
@@ -130,14 +131,23 @@ in order to obtain a 95% confidence for our prediction intervals.
         preds_df[method] = pd.DataFrame(np.stack([y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]], axis=1), columns=['pred', 'lower', 'upper'])
     preds_df = pd.concat(preds_df, axis=1)
 
-Let’s now compare the predicted intervals with the true confidence
-intervals for the Jackknife+ and CV+ methods.
+Let’s now compare the confidence intervals with the predicted intervals with obtained 
+by the Jackknife+ and CV+ methods.
 
 .. code:: python
 
-    def plot_1d_data(X_train, y_train, X_test, y_test, y_sigma,
-                     y_pred, y_pred_low, y_pred_up, 
-                     ax=None, title=None):
+    def plot_1d_data(
+        X_train,
+        y_train, 
+        X_test,
+        y_test,
+        y_sigma,
+        y_pred, 
+        y_pred_low, 
+        y_pred_up,
+        ax=None,
+        title=None
+    ):
         ax.set_xlabel('x') ; ax.set_ylabel('y')
         ax.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3)
         ax.scatter(X_train, y_train, color='red', alpha=0.3, label='Training data')
@@ -174,7 +184,7 @@ intervals for the Jackknife+ and CV+ methods.
 At first glance, the two methods give identical results and the
 prediction intervals are very close to the true confidence intervals.
 Let’s confirm this by comparing the prediction interval widths over
-:math:`x` between the methods.
+:math:`x` between all methods.
 
 .. code:: python
 
@@ -190,19 +200,17 @@ Let’s confirm this by comparing the prediction interval widths over
 .. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_18_1.png
 
 
-As expected, the prediction intervals estimated by the “naive” method
+As expected, the prediction intervals estimated by the Naive method
 are slightly too narrow. The Jackknife, Jackknife+, CV, and CV+ give
 similar widths that are very close to the true width. On the other hand,
 the widths estimated by Jackknife-minmax and CV-minmax are slightly too
-wide. Note that the widths given by the naive, Jackknife, and CV methods
+wide. Note that the widths given by the Naive, Jackknife, and CV methods
 are constant since the prediction intervals are estimated upon the
 residuals of the training data only.
 
 Let’s now compare the *effective* coverage, namely the fraction of test
 points whose true values lie within the prediction intervals, given by
-the different method. All the methods except the Naive one give
-effective coverage close to 0.95.
-
+the different methods. 
 
 .. raw:: html
 
@@ -268,15 +276,20 @@ effective coverage close to 0.95.
     </table>
     </div>
 
+All methods except the Naive one give effective coverage close to 0.95,
+confirming the theoretical garantees.
+    
 
 
 2. Estimating the epistemic uncertainty of out-of-distribution data
 ===================================================================
 
-Let’s now consider a one-dimensional without noise, but with training
-data obtained from a normal distribution. The goal is to explore how the
-prediction interval evolves for new test data that lie outside the
-distribution of the training data.
+Let’s now consider one-dimensional data without noise, but normally distributed.
+The goal is to explore how the prediction intervals evolve for new data 
+that lie outside the distribution of the training data in order to see how the methods
+can capture the *epistemic* uncertainty.
+
+Lets' start by generating and showing the data. 
 
 .. code:: python
 
@@ -314,12 +327,14 @@ methods.
 
 .. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_28_0.png
 
+At first glance, our polynomial function does not give accurate
+predictions with respect to the true function when :math:`|x > 6|`. 
+The prediction intervals estimated with the Jackknife+ do not seem to 
+increase significantly, unlike the CV+ method whose prediction intervals
+capture a high uncertainty when :math:`x > 6`.
 
-The prediction interval widths increase start to increase exponentially
-for :math:`|x| > 4` for the Jackknife-minmax, CV+, and CV-minmax
-methods. On the other hand, the prediction intervals estimated by
-Jackknife+ remain roughly constant until :math:`|x| ~ 5` before
-increasing.
+Let's now compare the prediction interval widths between all methods. 
+
 
 .. code:: python
 
@@ -335,6 +350,12 @@ increasing.
 
 .. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_30_1.png
 
+
+The prediction interval widths start to increase exponentially
+for :math:`|x| > 4` for the Jackknife-minmax, CV+, and CV-minmax
+methods. On the other hand, the prediction intervals estimated by
+Jackknife+ remain roughly constant until :math:`|x| ~ 5` before
+increasing.
 
 .. code:: python
 
@@ -424,16 +445,16 @@ out-of-distribution data.
 ==========================================================================
 
 MAPIE can be used with any kind of sklear-compatible regressor. Here, we
-compare the prediction intervals estimated by the CV+ method using
+illustrate this by comparing the prediction intervals estimated by the CV+ method using
 different models:
 
 - the same polynomial function as before.
  
-- a XGBoost model via the Scikit-learn API.
+- a XGBoost model using the Scikit-learn API.
 
-- a simple neural network, a Multilayer Perceptron with three dense layers, via the KerasRegressor wrapper.
+- a simple neural network, a Multilayer Perceptron with three dense layers, using the KerasRegressor wrapper.
 
-Once again, let’s use our noisy one-dimensional function with input data obtained from a
+Once again, let’s use our noisy one-dimensional data obtained from a
 uniform distribution.
 
 .. code:: python
@@ -455,8 +476,8 @@ uniform distribution.
 .. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_37_1.png
 
 
-We then define the models and use MAPIE to estimate the prediction
-intervals using the CV+ method.
+Let's then define the models. The boosing model considers 100 shallow trees with a max depth of 2 while
+the Multilayer Perceptron has two hidden dense layers with 20 neurons each followed by a relu activation.
 
 .. code:: python
 
@@ -491,6 +512,10 @@ intervals using the CV+ method.
         verbose=0
     )
 
+
+Let's now use MAPIE to estimate the prediction intervals using the CV+ method 
+and compare their prediction interval.
+
 .. code:: python
 
     preds_df = {}
@@ -503,6 +528,7 @@ intervals using the CV+ method.
         y_preds = predinterv.predict(X_test)
         preds_df[model_names[im]] = pd.DataFrame(np.stack([y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]], axis=1), columns=['pred', 'lower', 'upper'])
     preds_df = pd.concat(preds_df, axis=1)
+
 
 
 .. code:: python
@@ -538,3 +564,7 @@ intervals using the CV+ method.
 
 .. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_43_1.png
 
+As expected with the CV+ method, the prediction intervals are a bit 
+conservative since they are slightly wider than the true intervals.
+However, the CV+ method on the three models gives very promising results 
+since the prediction intervals closely follow the true intervals with :math:`x`. 
