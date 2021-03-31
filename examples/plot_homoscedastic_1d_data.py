@@ -7,10 +7,10 @@ Estimate the prediction intervals of 1D homoscedastic data
 the prediction intervals of 1D homoscedastic data using
 different methods.
 """
-import numpy as np
-import pandas as pd
-from numpy import random as npr
+from typing import Tuple, Optional, Any
 
+import numpy as np
+from sklearn.base import RegressorMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import Pipeline
@@ -19,25 +19,38 @@ from matplotlib import pyplot as plt
 from mapie import PredictionInterval
 
 
-def f(x):
+def f(x: np.ndarray) -> np.ndarray:
     return 5*x + 5*x ** 4 - 9*x**2
 
 
-def get_homoscedastic_data(n_samples=200, n_test=1000, sigma=.1):
-    npr.seed(0)
+def get_homoscedastic_data(
+    n_samples: str = 200,
+    n_test: int = 1000,
+    sigma: float = 0.1
+) -> Tuple[np.ndarray, np.ndarray, float, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]:
+    np.random.seed(0)
     q90 = 1.8
-    x_mesh = np.linspace(1e-3, 1.2, 2000, endpoint=False)
+    x_mesh = np.linspace(0.001, 1.2, 2000, endpoint=False)
     y_mesh = f(x_mesh)
-    y_mesh_sig = q90*sigma #np.std(y_test-f(x_test))
-    x_train = npr.exponential(.4, n_samples)
-    y_train = f(x_train) + npr.normal(0,sigma,n_samples) # x_train * 
-    x_test = npr.exponential(.4, n_test)
-    y_test = f(x_test) + npr.normal(0,sigma,n_test) # x_test * 
-    
+    y_mesh_sig = q90*sigma
+    x_train = np.random.exponential(0.4, n_samples)
+    y_train = f(x_train) + np.random.normal(0, sigma, n_samples)
+    x_test = np.random.exponential(0.4, n_test)
+    y_test = f(x_test) + np.random.normal(0, sigma, n_test)
     return x_mesh, y_mesh, y_mesh_sig, x_train, y_train, x_test, y_test, sigma
 
 
-def fit_and_predict(funct, X_train, y_train, X_test, y_test, method, alpha, n_splits, return_pred):
+def fit_and_predict(
+    funct: RegressorMixin,
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    X_test: np.ndarray,
+    y_test: np.ndarray,
+    method: str,
+    alpha: float,
+    n_splits: int,
+    return_pred: str
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     pireg = PredictionInterval(
         funct,
         method=method,
@@ -46,20 +59,32 @@ def fit_and_predict(funct, X_train, y_train, X_test, y_test, method, alpha, n_sp
         return_pred=return_pred
     )
     if len(X_train.shape) == 1:
-        X_train = X_train.reshape(-1,1)
-        X_test = X_test.reshape(-1,1)
+        X_train = X_train.reshape(-1, 1)
+        X_test = X_test.reshape(-1, 1)
     pireg.fit(X_train, y_train)
     y_preds = pireg.predict(X_test)
     y_pred, y_pred_low, y_pred_up = y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]
     return y_pred, y_pred_low, y_pred_up
 
 
-def plot_1d_data(X_train, y_train, X_mesh, y_mesh, y_sigma=None, X_test=None, y_test=None,
-                 y_pred=None, y_pred_low=None, y_pred_up=None, 
-                 ax=None, title=None):
-    ax.set_xlabel('x') ; ax.set_ylabel('y')
+def plot_1d_data(
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    X_mesh: np.ndarray,
+    y_mesh: np.ndarray,
+    y_sigma: np.ndarray = None,
+    X_test: np.ndarray = None,
+    y_test: np.ndarray = None,
+    y_pred: np.ndarray = None,
+    y_pred_low: np.ndarray = None,
+    y_pred_up: np.ndarray = None,
+    ax: Optional[Any] = None,
+    title: Optional[str] = None
+) -> None:
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
     ax.scatter(X_train, y_train, color='red', alpha=0.3, label='training')
-    ax.set_ylim([y_mesh.min()*1.2,y_mesh.max()*1.2])
+    ax.set_ylim([y_mesh.min()*1.2, y_mesh.max()*1.2])
     ax.set_ylim([0, 1])
     ax.set_xlim([0, 1.1])
     ax.plot(X_mesh, y_mesh, color='gray', label='True confidence intervals')
@@ -81,22 +106,43 @@ def plot_1d_data(X_train, y_train, X_mesh, y_mesh, y_sigma=None, X_test=None, y_
 
 
 (
-    X_mesh, y_mesh, y_mesh_sig, X_train, y_train, X_test, y_test, sigma
+    X_mesh,
+    y_mesh,
+    y_mesh_sig,
+    X_train,
+    y_train,
+    X_test,
+    y_test,
+    sigma
 ) = get_homoscedastic_data(n_samples=200, n_test=200, sigma=0.1)
 
-polyn_model = Pipeline([('poly', PolynomialFeatures(degree=4)),
-                        ('linear', LinearRegression(fit_intercept=False))])
+polyn_model = Pipeline(
+    [
+        ('poly', PolynomialFeatures(degree=4)),
+        ('linear', LinearRegression(fit_intercept=False))
+    ]
+)
 
-methods = ['jackknife', 'jackknife_plus', 'jackknife_minmax', 'cv', 'cv_plus', 'cv_minmax'] 
+methods = ['jackknife', 'jackknife_plus', 'jackknife_minmax', 'cv', 'cv_plus', 'cv_minmax']
 preds, lows, ups = [], [], []
 fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(3*6, 12))
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
 for i, method in enumerate(methods):
     y_pred, y_pred_low, y_pred_up = fit_and_predict(
-        polyn_model, X_train, y_train, X_test, y_test, 
+        polyn_model, X_train, y_train, X_test, y_test,
         method=method, alpha=0.1, n_splits=10, return_pred='ensemble'
     )
     preds.append(y_pred), lows.append(y_pred_low), preds.append(y_pred_up)
-    plot_1d_data(X_train, y_train, X_mesh, y_mesh, y_mesh_sig, X_test=X_test, y_test=None, 
-             y_pred=y_pred, y_pred_low=y_pred_low, y_pred_up=y_pred_up, 
-             ax=axs[i], title=method)
+    plot_1d_data(
+        X_train,
+        y_train,
+        X_mesh,
+        y_mesh,
+        y_mesh_sig,
+        X_test=X_test,
+        y_test=None,
+        y_pred=y_pred,
+        y_pred_low=y_pred_low,
+        y_pred_up=y_pred_up,
+        ax=axs[i], title=method
+    )

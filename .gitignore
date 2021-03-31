@@ -65,3 +65,6 @@ doc/generated/
 
 # PyBuilder
 target/
+
+# VSCode
+.vscode

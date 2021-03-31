@@ -1,4 +1,4 @@
-from ._prediction_interval import PredictionInterval
+from .prediction_interval import PredictionInterval
 
 from ._version import __version__
 

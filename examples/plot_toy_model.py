@@ -6,7 +6,6 @@ Plotting PredictionInterval with a toy dataset
 An example plot of :class:`mapie.PredictionInterval`
 """
 import numpy as np
-
 from sklearn.linear_model import LinearRegression
 from matplotlib import pyplot as plt
 
@@ -26,5 +25,4 @@ plt.xlabel('x')
 plt.ylabel('y')
 plt.scatter(X_toy, y_toy)
 plt.plot(X_toy, y_toy)
-
 plt.show()
