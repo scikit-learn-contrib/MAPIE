@@ -10,15 +10,37 @@ Estimate your prediction intervals
 1. Download and install the module
 ----------------------------------
 
-(TBD) Install via `pip`:
+Install via `pip`:
 
 .. code:: python
 
     pip install mapie
 
+To install directly from the github repository :
+
+.. code:: python
+
+    pip install git+https://github.com/simai-ml/MAPIE
+
 
 2. Run PredictionInterval
 -------------------------
+
+Before calling MAPIE, we first define a sklearn-compatible regressor as well as training and test sets.
+MAPIE is compliant with the standard scikit-learn API.
+
+.. code:: python
+
+    from sklearn.linear_model import LinearRegression
+    from sklearn.datasets import make_regression
+    from sklearn.model_selection import train_test_split
+
+    regressor = LinearRegression()
+    X, y = make_regression(n_samples=500, n_features=10)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
 
 Like any scikit-learn regressor, MAPIE follows the following sequential ``fit`` and ``predict`` process. 
 

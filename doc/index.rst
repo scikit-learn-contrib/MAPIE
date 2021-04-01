@@ -17,8 +17,8 @@ MAPIE allows you to easily estimate prediction intervals using your favourite sk
    :hidden:
    :caption: Documentation
 
-   method_description
-   user_guide
+   theoretical_description
+   tutorial
    api
 
 .. toctree::
@@ -28,27 +28,37 @@ MAPIE allows you to easily estimate prediction intervals using your favourite sk
 
    auto_examples/index
 
-`Getting started <quick_start.html>`_
--------------------------------------
+`Getting started`_
+------------------
+
+`Quick start with MAPIE <quick_start.html>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 How to install the module and estimate your first prediction intervals.
 
-`Theoretical description <method_description.html>`_
-----------------------------------------------------
+`Documentation`_
+----------------
+
+`Theoretical description <theoretical_description.html>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A brief introduction to the methods used in MAPIE to estimate prediction intervals.
 
-`Tutorial <user_guide.html>`_
------------------------------
+`Tutorial <tutorial.html>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A tutorial that presents some key features of MAPIE.
 
 `API Documentation <api.html>`_
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The API documentation.
 
-`Examples <auto_examples/index.html>`_
---------------------------------------
+
+`Examples`_
+-----------
+
+`General examples <auto_examples/index.html>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A set of examples.

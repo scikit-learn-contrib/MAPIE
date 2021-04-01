@@ -1,18 +1,18 @@
 .. title:: Tutorial : contents
 
-.. _user_guide:
+.. _tutorial:
 
 ========
 Tutorial
 ========
 
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a 
-simple, one-dimensional, function
+simple, one-dimensional, ground truth function
 
 .. math::
 
-
    f(x) = x \times sin(x)
+
 
 Throughout this tutorial, we will answer the following questions:
 
@@ -23,18 +23,20 @@ Throughout this tutorial, we will answer the following questions:
 
 - How do the prediction intervals vary between regressor models?
 
-We will start by fitting a simple polynomial function to the considered one-dimensional
-:math:`x \times sin(x)`. We will then compare the estimated prediction intervals using 
+Throughout this tutorial, we estimate the prediction intervals using 
 a polynomial function, a boosting model, and a simple neural network. 
+
+**For practical problems, we advise to use the faster CV+ method. 
+For conservative prediction interval estimates, you can alternatively 
+use the CV-minmax method.**
 
 
 1. Estimating the aleatoric uncertainty of homoscedastic noisy data
 ===================================================================
 
-Let’s start by generating noisy one-dimensional data obtained through 
-uniform distribution. 
-Here, the noise is considered as *homoscedastic*, since it remains constant 
-over :math:`x`.
+Let's start by defining the :math:`x \times sin(x)` function and another simple function
+that generates one-dimensional data with normal noise and obtained from a normal or 
+uniform distribution.
 
 .. code:: python
 
@@ -47,7 +49,6 @@ over :math:`x`.
     def generate_onedimensional_data(
         funct,
         distrib='normal',
-        noise=True,
         n_samples=100,
         mu=0,
         sig=1,
@@ -57,10 +58,6 @@ over :math:`x`.
         step=0.1,
         sig_noise=1
     ):
-        """
-        Generate one-dimensional data with homo- or hetero-scedastic noise
-        from an input function and some information on the noise.
-        """
         np.random.seed(59)
         if distrib == 'normal':
             X_train = npr.normal(mu,sig,n_samples)
@@ -71,26 +68,19 @@ over :math:`x`.
         y_train = funct(X_train)
         y_mesh = funct(X_test)
         y_test = funct(X_test)
-        n_test = y_test.shape[0]
-        if noise == True:
-            n_samples = len(X_train)
-            if isinstance(sig_noise, (int, float)):
-                y_noise_train = npr.normal(0, sig_noise, n_samples)
-                y_noise_test = npr.normal(0, sig_noise, n_test)
-            elif isinstance(sig_noise, (list)):
-                sig_noise_train = gauss_function(X_train, sig_noise[0], sig_noise[1], sig_noise[2])
-                sig_noise_test = gauss_function(X_test, sig_noise[0], sig_noise[1], sig_noise[2])
-                y_noise_train = np.array([npr.normal(0, noise, 1)[0] for noise in sig_noise_train])
-                y_noise_test = np.array([npr.normal(0, noise, 1)[0] for noise in sig_noise_test])
-            y_train += y_noise_train
-            y_test += y_noise_test
+        y_train += npr.normal(0, sig_noise, y_train.shape[0])
+        y_test += npr.normal(0, sig_noise, y_test.shape[0])
         return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
+
+
+We first generate noisy one-dimensional data obtained through a uniform distribution. 
+Here, the noise is considered as *homoscedastic*, since it remains constant 
+over :math:`x`.
 
 .. code:: python
 
-    sig_noise = 0.5
     X_train, y_train, X_test, y_test, y_mesh = generate_onedimensional_data(
-        x_sinx, distrib='uniform', noise=True, n_samples=100, mu=0, sig=1, sigfactor=1, step=0.1, sig_noise=sig_noise
+        x_sinx, distrib='uniform', n_samples=100, step=0.1, sig_noise=0.5
     )
 
 Let's visualize our noisy function. 
@@ -112,8 +102,12 @@ is able to perfectly fit :math:`x \times sin(x)`.
 .. code:: python
 
     degree_polyn = 10
-    polyn_model = Pipeline([('poly', PolynomialFeatures(degree=degree_polyn)),
-                            ('linear', LinearRegression(fit_intercept=False))])
+    polyn_model = Pipeline(
+        [
+            ('poly', PolynomialFeatures(degree=degree_polyn)),
+            ('linear', LinearRegression())
+        ]
+    )
 
 We then estimate the prediction intervals for all the methods very easily with a
 ``fit`` and ``predict`` process. The prediction interval lower and upper bounds
@@ -125,14 +119,19 @@ in order to obtain a 95% confidence for our prediction intervals.
     preds_df = {}
     methods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax' ,'cv', 'cv_plus', 'cv_minmax']
     for im, method in enumerate(methods):
-        predinterv = PredictionInterval(polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single')
+        predinterv = MAPIE(
+            polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single'
+        )
         predinterv.fit(X_train, y_train)
         y_preds = predinterv.predict(X_test)
-        preds_df[method] = pd.DataFrame(np.stack([y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]], axis=1), columns=['pred', 'lower', 'upper'])
+        preds_df[method] = pd.DataFrame(
+            np.stack(
+                [y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]], axis=1
+            ), columns=['pred', 'lower', 'upper'])
     preds_df = pd.concat(preds_df, axis=1)
 
 Let’s now compare the confidence intervals with the predicted intervals with obtained 
-by the Jackknife+ and CV+ methods.
+by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax methods.
 
 .. code:: python
 
@@ -181,7 +180,7 @@ by the Jackknife+ and CV+ methods.
 .. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_16_0.png
 
 
-At first glance, the two methods give identical results and the
+At first glance, the four methods give similar results and the
 prediction intervals are very close to the true confidence intervals.
 Let’s confirm this by comparing the prediction interval widths over
 :math:`x` between all methods.
@@ -276,8 +275,8 @@ the different methods.
     </table>
     </div>
 
-All methods except the Naive one give effective coverage close to 0.95,
-confirming the theoretical garantees.
+All methods except the Naive one give effective coverage close to the expected 
+0.95 value (recall that alpha = 0.05), confirming the theoretical garantees.
     
 
 
@@ -287,15 +286,16 @@ confirming the theoretical garantees.
 Let’s now consider one-dimensional data without noise, but normally distributed.
 The goal is to explore how the prediction intervals evolve for new data 
 that lie outside the distribution of the training data in order to see how the methods
-can capture the *epistemic* uncertainty.
+can capture the *epistemic* uncertainty. 
+For a comparison of the epistemic and aleatoric uncertainties, please have a look at this
+`source <https://en.wikipedia.org/wiki/Uncertainty_quantification>`_.
 
 Lets' start by generating and showing the data. 
 
 .. code:: python
 
-    sig_noise = 0.
     X_train, y_train, X_test, y_test, y_mesh = generate_onedimensional_data(
-        x_sinx, distrib='normal', noise=True, n_samples=300, mu=0, sig=2, sigfactor=4, step=0.1, sig_noise=sig_noise
+        x_sinx, distrib='normal', n_samples=300, mu=0, sig=2, sigfactor=4, sig_noise=0
     )
 
 .. code:: python
@@ -318,7 +318,7 @@ methods.
     preds_df = {}
     methods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax' ,'cv', 'cv_plus', 'cv_minmax']
     for im, method in enumerate(methods):
-        predinterv = PredictionInterval(polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single')
+        predinterv = MAPIE(polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single')
         predinterv.fit(X_train, y_train)
         y_preds = predinterv.predict(X_test)
         preds_df[method] = pd.DataFrame(np.stack([y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]], axis=1), columns=['pred', 'lower', 'upper'])
@@ -439,12 +439,14 @@ conservative than the Jackknife+ method, and tend to result in more
 reliable coverages for *out-of-distribution* data. It is therefore
 advised to use the three former methods for predictions with new
 out-of-distribution data.
+Note however that there is no theoretical guarantees on the coverage level 
+for out-of-distribution data.
 
 
 3. Estimating the uncertainty with different sklearn-compatible regressors
 ==========================================================================
 
-MAPIE can be used with any kind of sklear-compatible regressor. Here, we
+MAPIE can be used with any kind of sklearn-compatible regressor. Here, we
 illustrate this by comparing the prediction intervals estimated by the CV+ method using
 different models:
 
@@ -495,8 +497,12 @@ the Multilayer Perceptron has two hidden dense layers with 20 neurons each follo
 
 .. code:: python
 
-    polyn_model = Pipeline([('poly', PolynomialFeatures(degree=degree_polyn)),
-                            ('linear', LinearRegression(fit_intercept=False))])
+    polyn_model = Pipeline(
+        [
+            ('poly', PolynomialFeatures(degree=degree_polyn)),
+            ('linear', LinearRegression(fit_intercept=False))
+        ]
+    )
     xgb_model = XGBRegressor(
         max_depth=2,
         n_estimators=100,
@@ -523,10 +529,16 @@ and compare their prediction interval.
     models = [polyn_model, xgb_model, mlp_model]
     model_names = ['polyn', 'xgb', 'mlp']
     for im, model in enumerate(models):
-        predinterv = PredictionInterval(model, alpha=0.05, method=method, n_splits=5, return_pred='median')
+        predinterv = MAPIE(
+            model, alpha=0.05, method=method, n_splits=5, return_pred='median'
+        )
         predinterv.fit(X_train, y_train)
         y_preds = predinterv.predict(X_test)
-        preds_df[model_names[im]] = pd.DataFrame(np.stack([y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]], axis=1), columns=['pred', 'lower', 'upper'])
+        preds_df[model_names[im]] = pd.DataFrame(
+            np.stack(
+                [y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]], axis=1
+            ), columns=['pred', 'lower', 'upper']
+        )
     preds_df = pd.concat(preds_df, axis=1)
 
 
