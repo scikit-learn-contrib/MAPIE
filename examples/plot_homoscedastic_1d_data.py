@@ -20,6 +20,7 @@ from mapie import PredictionInterval
 
 
 def f(x: np.ndarray) -> np.ndarray:
+    """Polynomial function used to generate one-dimensional data"""
     return 5*x + 5*x ** 4 - 9*x**2
 
 
@@ -28,6 +29,20 @@ def get_homoscedastic_data(
     n_test: int = 1000,
     sigma: float = 0.1
 ) -> Tuple[np.ndarray, np.ndarray, float, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]:
+    """
+    Generate one-dimensional data from a given function, number of training and test samples
+    and a given standard deviation for the noise.
+
+    Parameters
+    ----------
+        n_samples (str, optional): [description]. Defaults to 200.
+        n_test (int, optional): [description]. Defaults to 1000.
+        sigma (float, optional): [description]. Defaults to 0.1.
+
+    Returns
+    -------
+        Tuple[np.ndarray, np.ndarray, float, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]: [description]
+    """
     np.random.seed(0)
     q90 = 1.8
     x_mesh = np.linspace(0.001, 1.2, 2000, endpoint=False)
