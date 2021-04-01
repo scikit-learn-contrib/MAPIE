@@ -6,7 +6,8 @@ install:
   - deactivate
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
-  - bash miniconda.sh -b
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH=/home/miniconda/bin:$PATH
   - conda update --yes conda
   - conda env create -n test-env --yes python=$TRAVIS_PYTHON_VERSION flake8 mypy scikit-learn pytest
   - conda activate mapie
