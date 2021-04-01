@@ -14,7 +14,7 @@ install:
   - export PATH=$HOME/miniconda/bin:$PATH
   - source $HOME/miniconda/etc/profile.d/conda.sh
   - conda update --yes conda
-  - conda create -n test-env --yes python=$TRAVIS_PYTHON_VERSION flake8 mypy numpy>=1.20 scikit-learn pytest
+  - conda create -n test-env --yes python=$TRAVIS_PYTHON_VERSION flake8 mypy numpy=1.20.2 scikit-learn pytest
   - conda activate test-env
 
 script:
