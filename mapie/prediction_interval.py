@@ -87,12 +87,18 @@ class PredictionInterval(BaseEstimator, RegressorMixin):  # type: ignore
     Examples
     --------
     >>> import numpy as np
-    >>> from prediction_interval import PredictionInterval
+    >>> from mapie.prediction_interval import PredictionInterval
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
-    >>> y_toy = np.array([5, 7, 9, 11, 13, 15])
+    >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> pireg = PredictionInterval(LinearRegression())
     >>> print(pireg.fit(X_toy, y_toy).predict(X_toy))
+    [[ 5.28571429  4.61627907  6.2       ]
+     [ 7.17142857  6.51744186  8.        ]
+     [ 9.05714286  8.4         9.8       ]
+     [10.94285714 10.2        11.6       ]
+     [12.82857143 12.         13.48255814]
+     [14.71428571 13.8        15.38372093]]
     """
 
     def __init__(
