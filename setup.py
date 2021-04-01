@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """A scikit-learn-compatible module for estimating prediction intervals."""
 
-import codecs
 import os
+import codecs
 
 from setuptools import find_packages, setup
 

@@ -8,6 +8,7 @@ install:
   - chmod +x miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH=$HOME/miniconda/bin:$PATH
+  - source $HOME/miniconda/etc/profile.d/conda.sh
   - conda update --yes conda
   - conda create -n test-env --yes python=$TRAVIS_PYTHON_VERSION flake8 mypy scikit-learn pytest
   - conda activate mapie
