@@ -11,7 +11,7 @@ using your favourite sklearn-compatible regressor.
 * `rm Miniconda3-latest-MacOSX-x86_64.sh`
 
 # Create virtual environment
-* `conda env create -f environment.yml`
+* `conda env create -f environment_dev.yml`
 * `conda activate mapie`
 * `python -m ipykernel install --user --name=mapie`
 
