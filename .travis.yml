@@ -1,22 +1,25 @@
 os: linux
-dist: trusty
+dist: xenial
 language: python
-
-before_install:
-  # install miniconda
-  - deactivate
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-  - MINICONDA_PATH=/home/travis/miniconda
-  - chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
-  - export PATH=$MINICONDA_PATH/bin:$PATH
-  - conda update --yes conda
+python:
+  - "3.7"
+  - "3.8"
+  - "3.9"
 
 install:
-  # create the testing environment
-  - conda env create -f environment.yml
-  - source activate mapie
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH=$HOME/miniconda/bin:$PATH
+  - source $HOME/miniconda/etc/profile.d/conda.sh
+  - conda update --yes conda
+  - conda create -n test-env --yes -c conda-forge python=$TRAVIS_PYTHON_VERSION flake8 mypy numpy>=1.20 scikit-learn pytest-cov
+  - conda activate test-env
 
 script:
-  - flake8 . --exclude doc,setup.py --max-line-length=120
+  - flake8 . --exclude doc --max-line-length=120
   # - mypy . --strict --config-file mypy.ini
-  - pytest -s mapie/tests
+  - pytest --cov-branch --cov=mapie --pyargs mapie
+
+# after_success:
+#   - codecov
