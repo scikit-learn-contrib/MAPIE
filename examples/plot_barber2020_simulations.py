@@ -3,7 +3,7 @@
 Reproducing the simulations from Foygel-Barber et al. (2020)
 ============================================================
 
-:class:`mapie.PredictionInterval` is used to investigate
+:class:`mapie.MapieRegressor` is used to investigate
 the coverage level and prediction interval width as function
 of the dimension using simulated data points.
 """
@@ -13,7 +13,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from matplotlib import pyplot as plt
 
-from mapie import PredictionInterval
+from mapie import MapieRegressor
 
 
 def PIs_vs_dim_vals(
@@ -41,7 +41,7 @@ def PIs_vs_dim_vals(
 
             preds = {}
             for method in methods:
-                predinterv = PredictionInterval(
+                predinterv = MapieRegressor(
                     LinearRegression(),
                     alpha=alpha,
                     method=method,
@@ -107,7 +107,7 @@ def plot_simulation_results(results: np.ndarray, methods: List[str], title: str)
 
 methods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax', 'cv', 'cv_plus', 'cv_minmax']
 alpha = 0.1
-ntrial = 1
-dim_vals = np.arange(5, 205, 5)
+ntrial = 10
+dim_vals = np.arange(5, 205, 50)
 results = PIs_vs_dim_vals(methods, alpha, ntrial, dim_vals)
 plot_simulation_results(results, methods, title='Coverages and interval widths')

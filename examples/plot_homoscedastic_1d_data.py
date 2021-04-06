@@ -3,7 +3,7 @@
 Estimate the prediction intervals of 1D homoscedastic data
 ==========================================================
 
-:class:`mapie.PredictionInterval` is used to estimate
+:class:`mapie.MapieRegressor` is used to estimate
 the prediction intervals of 1D homoscedastic data using
 different methods.
 """
@@ -16,7 +16,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import Pipeline
 from matplotlib import pyplot as plt
 
-from mapie import PredictionInterval
+from mapie import MapieRegressor
 
 
 def f(x: np.ndarray) -> np.ndarray:
@@ -66,7 +66,7 @@ def fit_and_predict(
     n_splits: int,
     return_pred: str
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    pireg = PredictionInterval(
+    pireg = MapieRegressor(
         funct,
         method=method,
         alpha=alpha,

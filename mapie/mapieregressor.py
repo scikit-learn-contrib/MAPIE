@@ -28,7 +28,7 @@ def check_not_none(estimator: Optional[RegressorMixin]) -> None:
         raise ValueError("Invalid none estimator.")
 
 
-class PredictionInterval(BaseEstimator, RegressorMixin):  # type: ignore
+class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
     Estimator implementing the jackknife+ method and its variations
     for estimating prediction intervals from leave-one-out models.

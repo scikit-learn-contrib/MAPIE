@@ -13,4 +13,4 @@ PredictionInterval
    :toctree: generated/
    :template: class.rst
 
-   PredictionInterval
+   MapieRegressor

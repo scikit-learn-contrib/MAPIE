@@ -1,5 +1,5 @@
 """
-Testing for  prediction_interval module.
+Testing for mapieregressor module.
 
 List of tests:
 - Test input parameters
@@ -17,7 +17,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.utils._testing import assert_almost_equal
 from sklearn.model_selection import LeaveOneOut
 
-from mapie.prediction_interval import PredictionInterval
+from mapie.mapieregressor import MapieRegressor
 
 
 X_boston, y_boston = load_boston(return_X_y=True)
@@ -59,7 +59,7 @@ expected_coverages = {
 
 def test_optional_input_values() -> None:
     """Test default values of input parameters."""
-    pireg = PredictionInterval(DummyRegressor())
+    pireg = MapieRegressor(DummyRegressor())
     assert pireg.method == "jackknife_plus"
     assert pireg.alpha == 0.1
     assert pireg.n_splits == 10
@@ -70,32 +70,32 @@ def test_optional_input_values() -> None:
 
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2])
 def test_invalid_alpha(alpha: int) -> None:
-    pireg = PredictionInterval(DummyRegressor(), alpha=alpha)
+    pireg = MapieRegressor(DummyRegressor(), alpha=alpha)
     with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
         pireg.fit(X_boston, y_boston)
 
 
 def test_initialized() -> None:
     """Test that initialization does not crash."""
-    PredictionInterval(DummyRegressor())
+    MapieRegressor(DummyRegressor())
 
 
 def test_fitted() -> None:
     """Test that fit does not crash."""
-    pireg = PredictionInterval(DummyRegressor())
+    pireg = MapieRegressor(DummyRegressor())
     pireg.fit(X_reg, y_reg)
 
 
 def test_predicted() -> None:
     """Test that predict does not crash."""
-    pireg = PredictionInterval(DummyRegressor())
+    pireg = MapieRegressor(DummyRegressor())
     pireg.fit(X_reg, y_reg)
     pireg.predict(X_reg)
 
 
 def test_not_fitted() -> None:
     """Test error message when predict is called before fit."""
-    pireg = PredictionInterval(DummyRegressor())
+    pireg = MapieRegressor(DummyRegressor())
     with pytest.raises(NotFittedError, match=r".*not fitted.*"):
         pireg.predict(X_reg)
 
@@ -103,7 +103,7 @@ def test_not_fitted() -> None:
 @pytest.mark.parametrize("method", ["dummy", "cv_dummy", "jackknife_dummy"])
 def test_invalid_method_in_check_parameters(method: str) -> None:
     """Test error in check_parameters when invalid method is selected."""
-    pireg = PredictionInterval(DummyRegressor(), method=method)
+    pireg = MapieRegressor(DummyRegressor(), method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         pireg.fit(X_boston, y_boston)
 
@@ -111,8 +111,8 @@ def test_invalid_method_in_check_parameters(method: str) -> None:
 @pytest.mark.parametrize("method", ["dummy"])
 def test_invalid_method_in_fit(monkeypatch: Any, method: str) -> None:
     """Test error in select_cv when invalid method is selected."""
-    monkeypatch.setattr(PredictionInterval, "_check_parameters", lambda _: None)
-    pireg = PredictionInterval(DummyRegressor(), method=method)
+    monkeypatch.setattr(MapieRegressor, "_check_parameters", lambda _: None)
+    pireg = MapieRegressor(DummyRegressor(), method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         pireg.fit(X_boston, y_boston)
 
@@ -120,9 +120,9 @@ def test_invalid_method_in_fit(monkeypatch: Any, method: str) -> None:
 @pytest.mark.parametrize("method", ["dummy"])
 def test_invalid_method_in_predict(monkeypatch: Any, method: str) -> None:
     """Test message in predict when invalid method is selected."""
-    monkeypatch.setattr(PredictionInterval, "_check_parameters", lambda _: None)
-    monkeypatch.setattr(PredictionInterval, "_select_cv", lambda _: LeaveOneOut())
-    pireg = PredictionInterval(DummyRegressor(), method=method)
+    monkeypatch.setattr(MapieRegressor, "_check_parameters", lambda _: None)
+    monkeypatch.setattr(MapieRegressor, "_select_cv", lambda _: LeaveOneOut())
+    pireg = MapieRegressor(DummyRegressor(), method=method)
     pireg.fit(X_boston, y_boston)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         pireg.predict(X_boston)
@@ -131,7 +131,7 @@ def test_invalid_method_in_predict(monkeypatch: Any, method: str) -> None:
 @pytest.mark.parametrize("method", all_methods)
 def test_single_estimator_attribute(method: str) -> None:
     """Test class attributes shared by all PI methods."""
-    pireg = PredictionInterval(DummyRegressor(), method=method)
+    pireg = MapieRegressor(DummyRegressor(), method=method)
     pireg.fit(X_reg, y_reg)
     assert hasattr(pireg, 'single_estimator_')
 
@@ -139,7 +139,7 @@ def test_single_estimator_attribute(method: str) -> None:
 @pytest.mark.parametrize("method", standard_methods)
 def test_quantile_attribute(method: str) -> None:
     """Test quantile attribute."""
-    pireg = PredictionInterval(DummyRegressor(), method=method)
+    pireg = MapieRegressor(DummyRegressor(), method=method)
     pireg.fit(X_reg, y_reg)
     assert hasattr(pireg, 'quantile_')
     assert (pireg.quantile_ >= 0)
@@ -148,7 +148,7 @@ def test_quantile_attribute(method: str) -> None:
 @pytest.mark.parametrize("method", jackknife_methods + cv_methods)
 def test_jkcv_attribute(method: str) -> None:
     """Test class attributes shared by jackknife and CV methods."""
-    pireg = PredictionInterval(DummyRegressor(), method=method)
+    pireg = MapieRegressor(DummyRegressor(), method=method)
     pireg.fit(X_reg, y_reg)
     assert hasattr(pireg, 'estimators_')
     assert hasattr(pireg, 'residuals_split_')
@@ -158,7 +158,7 @@ def test_jkcv_attribute(method: str) -> None:
 @pytest.mark.parametrize("method", cv_methods)
 def test_cv_attributes(method: str) -> None:
     """Test class attributes shared by CV methods."""
-    pireg = PredictionInterval(DummyRegressor(), method=method, shuffle=False)
+    pireg = MapieRegressor(DummyRegressor(), method=method, shuffle=False)
     pireg.fit(X_reg, y_reg)
     assert hasattr(pireg, 'val_fold_ids_')
     assert pireg.random_state is None
@@ -166,7 +166,7 @@ def test_cv_attributes(method: str) -> None:
 
 def test_none_estimator() -> None:
     """Test error raised when estimator is None."""
-    pireg = PredictionInterval(None)
+    pireg = MapieRegressor(None)
     with pytest.raises(ValueError, match=r".*Invalid none estimator.*"):
         pireg.fit(X_boston, y_boston)
 
@@ -176,7 +176,7 @@ def test_predinterv_outputshape() -> None:
     Test that number of observations given by predict method is equal to
     input data.
     """
-    pireg = PredictionInterval(DummyRegressor())
+    pireg = MapieRegressor(DummyRegressor())
     pireg.fit(X_reg, y_reg)
     assert pireg.predict(X_reg).shape[0] == X_reg.shape[0]
     assert pireg.predict(X_reg).shape[1] == 3
@@ -185,10 +185,10 @@ def test_predinterv_outputshape() -> None:
 @pytest.mark.parametrize("method", all_methods)
 def test_results(method: str) -> None:
     """
-    Test that PredictionInterval applied on a linear regression model
+    Test that MapieRegressor applied on a linear regression model
     fitted on a linear curve results in null uncertainty.
     """
-    pireg = PredictionInterval(LinearRegression(), method=method, n_splits=3)
+    pireg = MapieRegressor(LinearRegression(), method=method, n_splits=3)
     pireg.fit(X_toy, y_toy)
     y_preds = pireg.predict(X_toy)
     y_low, y_up = y_preds[:, 1], y_preds[:, 2]
@@ -198,7 +198,7 @@ def test_results(method: str) -> None:
 @pytest.mark.parametrize("return_pred", ["ensemble", "single"])
 def test_prediction_between_low_up(return_pred: str) -> None:
     """Test that prediction lies between low and up prediction intervals."""
-    pireg = PredictionInterval(LinearRegression(), return_pred=return_pred)
+    pireg = MapieRegressor(LinearRegression(), return_pred=return_pred)
     pireg.fit(X_boston, y_boston)
     y_preds = pireg.predict(X_boston)
     y_pred, y_low, y_up = y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]
@@ -211,7 +211,7 @@ def test_linreg_results(method: str) -> None:
     Test expected PIs for a multivariate linear regression problem
     with fixed random seed.
     """
-    pireg = PredictionInterval(
+    pireg = MapieRegressor(
         LinearRegression(), method=method, alpha=0.05, random_state=SEED
     )
     pireg.fit(X_reg, y_reg)

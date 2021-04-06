@@ -3,18 +3,18 @@
 Plotting PredictionInterval with a toy dataset
 ==============================================
 
-An example plot of :class:`mapie.PredictionInterval`
+An example plot of :class:`mapie.MapieRegressor`
 """
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from matplotlib import pyplot as plt
 
-from mapie import PredictionInterval
+from mapie import MapieRegressor
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 
-pireg = PredictionInterval(LinearRegression())
+pireg = MapieRegressor(LinearRegression())
 pireg.fit(X_toy, y_toy)
 
 y_preds = pireg.predict(X_toy)
