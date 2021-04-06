@@ -26,7 +26,7 @@ def PIs_vs_dim_vals(
     """
     Compute the prediction intervals estimated by a defined list of methods
     using a linear model on noisy linear data generated several times
-    for several dimensions. 
+    for several dimensions.
     Function adapted from Foygel-Barber et al. (2020).
 
     Parameters:
