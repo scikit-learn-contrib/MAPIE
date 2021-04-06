@@ -151,7 +151,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError("Invalid method.")
         return cv
 
-    def fit(self, X: ArrayLike, y: ArrayLike) -> PredictionInterval:
+    def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
         Fit all jackknife clones and rearrange them into a list.
         The initial estimator is fit apart.
