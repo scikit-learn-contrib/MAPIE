@@ -87,11 +87,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     Examples
     --------
     >>> import numpy as np
-    >>> from mapieregressor import MapieRegressor
+    >>> from mapie.mapieregressor import MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7, 9, 11, 13, 15])
-    >>> pireg = PredictionInterval(LinearRegression())
+    >>> pireg = MapieRegressor(LinearRegression())
     >>> print(pireg.fit(X_toy, y_toy).predict(X_toy))
     """
 
