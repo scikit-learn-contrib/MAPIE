@@ -3,7 +3,7 @@
 Plotting PredictionInterval with a toy dataset
 ==============================================
 
-An example plot of :class:`mapie.MapieRegressor`
+An example plot of :class:`mapie.MapieRegressor`.
 """
 import numpy as np
 from matplotlib import pyplot as plt
