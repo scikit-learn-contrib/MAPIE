@@ -5,14 +5,14 @@
 .. |Travis| image:: https://travis-ci.com/simai-ml/MAPIE.svg?branch=master
 .. _Travis: https://travis-ci.com/github/simai-ml/MAPIE
 
-.. .. |AppVeyor| image:: 
-.. .. _AppVeyor: 
+.. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/coy2qqaqr1rnnt5y/branch/master?svg=true
+.. _AppVeyor: https://ci.appveyor.com/project/mapie/notreadyyet
 
-.. |Codecov| image:: https://app.codecov.io/gh/simai-ml/MAPIE/branch/master/graph/badge.svg
-.. _Codecov: https://app.codecov.io/gh/simai-ml/MAPIE/branch/master
+.. |Codecov|:: https://codecov.io/gh/simai-ml/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
+.. _Codecov: https://codecov.io/gh/simai-ml/MAPIE
 
-.. .. |CircleCI| image:: https://circleci.com/gh/scikit-learn-contrib/project-template.svg?style=shield&circle-token=:circle-token
-.. .. _CircleCI: https://circleci.com/gh/scikit-learn-contrib/project-template/tree/master
+.. |CircleCI| image:: https://circleci.com/gh/scikit-learn-contrib/project-template.svg?style=shield&circle-token=:circle-token
+.. _CircleCI: https://circleci.com/gh/mapie/project-template/tree/master/notreadyyet
 
 .. |ReadTheDocs| image:: https://readthedocs.org/projects/mapie/badge/?version=latest
 .. _ReadTheDocs: https://mapie.readthedocs.io/en/latest/?badge=latest
