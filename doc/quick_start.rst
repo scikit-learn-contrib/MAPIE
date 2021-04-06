@@ -23,33 +23,28 @@ To install directly from the github repository :
     pip install git+https://github.com/simai-ml/MAPIE
 
 
-2. Run PredictionInterval
--------------------------
+2. Run MapieRegressor
+---------------------
 
 Before calling MAPIE, we first define a sklearn-compatible regressor as well as training and test sets.
 MAPIE is compliant with the standard scikit-learn API.
 
 .. code:: python
 
-    from sklearn.linear_model import LinearRegression
-    from sklearn.datasets import make_regression
-    from sklearn.model_selection import train_test_split
-
     regressor = LinearRegression()
-    X, y = make_regression(n_samples=500, n_features=10)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-
+    X_train, y_train = make_regression(n_samples=500, n_features=1)
+    y_train += np.random.normal(0, 5, y_train.shape[0])
+    X_test = np.linspace(X_train.min(), X_train.max(), 100).reshape(-1, 1)
 
 Like any scikit-learn regressor, MAPIE follows the following sequential ``fit`` and ``predict`` process. 
 
 .. code:: python
 
-    from mapie import PredictionInterval
-    mapie = PredictionInterval(regressor)
+    from mapie import MapieRegressor
+    mapie = MapieRegressor(regressor)
     mapie.fit(X_train, y_train)
-    y_preds = mapie.predict(X_test, y_test)
+    y_preds = mapie.predict(X_test)
+
 
 3. Show the results
 -------------------
@@ -59,7 +54,16 @@ as well as the lower and upper bounds of the prediction intervals for the target
 The estimated prediction interval can be easily plotted as follows.
 
 .. code:: python
-
+    
     from matplotlib import pyplot as plt
-    plt.plot(X_test, y_preds[0, :])
-    plt.fill_between(X_test.ravel(), y_preds[1, :], y_preds[2, :])
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.scatter(X_train, y_train, alpha=0.3)
+    plt.plot(X_test, y_preds[:, 0], color='C1')
+    plt.fill_between(X_test.ravel(), y_preds[:, 1], y_preds[:, 2], alpha=0.3)
+    plt.show()
+
+
+.. image:: images/quickstart_1.png
+    :width: 400
+    :align: center

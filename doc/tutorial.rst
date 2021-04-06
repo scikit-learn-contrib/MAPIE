@@ -46,32 +46,14 @@ uniform distribution.
 
 .. code:: python
 
-    def generate_onedimensional_data(
-        funct,
-        distrib='normal',
-        n_samples=100,
-        mu=0,
-        sig=1,
-        sigfactor=1,
-        min_x=-5,
-        max_x=5,
-        step=0.1,
-        sig_noise=1
-    ):
+    def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, sig_noise):
         np.random.seed(59)
-        if distrib == 'normal':
-            X_train = npr.normal(mu,sig,n_samples)
-            X_test = np.arange(mu-sigfactor*sig, mu+sigfactor*sig, sig/20.)
-        elif distrib == 'uniform':
-            X_train = np.arange(min_x, max_x+step, step)
-            X_test = np.arange(np.min(X_train), np.max(X_train), step/5.)
-        y_train = funct(X_train)
-        y_mesh = funct(X_test)
-        y_test = funct(X_test)
-        y_train += npr.normal(0, sig_noise, y_train.shape[0])
-        y_test += npr.normal(0, sig_noise, y_test.shape[0])
+        X_train = np.linspace(min_x, max_x, n_samples)
+        X_test = np.linspace(np.min(X_train), np.max(X_train), n_samples*5)
+        y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
+        y_train += np.random.normal(0, sig_noise, y_train.shape[0])
+        y_test += np.random.normal(0, sig_noise, y_test.shape[0])
         return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
-
 
 We first generate noisy one-dimensional data obtained through a uniform distribution. 
 Here, the noise is considered as *homoscedastic*, since it remains constant 
@@ -79,8 +61,9 @@ over :math:`x`.
 
 .. code:: python
 
-    X_train, y_train, X_test, y_test, y_mesh = generate_onedimensional_data(
-        x_sinx, distrib='uniform', n_samples=100, step=0.1, sig_noise=0.5
+    min_x, max_x, n_samples, sig_noise = -5, 5, 100, 0.5
+    X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
+        x_sinx, min_x, max_x, n_samples, sig_noise
     )
 
 Let's visualize our noisy function. 
@@ -88,12 +71,11 @@ Let's visualize our noisy function.
 .. code:: python
 
     plt.xlabel('x') ; plt.ylabel('y')
+    plt.scatter(X_train, y_train, color='C0')
     plt.plot(X_test, y_mesh, color='C1')
-    plt.scatter(X_train, y_train)
 
-
-.. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_9_1.png
-
+.. image:: images/tuto_1.png
+    :align: center
 
 As mentioned previously, we fit our training data with a simple
 polynomial function. Here, we choose a degree equal to 10 so the function 
@@ -116,19 +98,14 @@ in order to obtain a 95% confidence for our prediction intervals.
 
 .. code:: python
 
-    preds_df = {}
-    methods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax' ,'cv', 'cv_plus', 'cv_minmax']
-    for im, method in enumerate(methods):
-        predinterv = MAPIE(
+    allmethods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax' , 'cv', 'cv_plus', 'cv_minmax']
+    predintervs = {}
+    for im, method in enumerate(allmethods):
+        predinterv = MapieRegressor(
             polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single'
         )
         predinterv.fit(X_train, y_train)
-        y_preds = predinterv.predict(X_test)
-        preds_df[method] = pd.DataFrame(
-            np.stack(
-                [y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]], axis=1
-            ), columns=['pred', 'lower', 'upper'])
-    preds_df = pd.concat(preds_df, axis=1)
+        predintervs[method] = predinterv.predict(X_test)
 
 Let’s now compare the confidence intervals with the predicted intervals with obtained 
 by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax methods.
@@ -160,25 +137,26 @@ by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax methods.
 
 .. code:: python
 
+    methods2plot = ['jackknife_plus', 'jackknife_minmax' , 'cv_plus', 'cv_minmax']
     n_figs = len(methods)
-    fig, axs = plt.subplots(1, 2, figsize=(13, 6))
-    methods_plus = ['jackknife_plus', 'cv_plus']
-    coords_plus = [axs[0], axs[1]]
-    for i, method in enumerate(methods_plus):
-        y_up = preds_df[method]['upper']
-        y_low = preds_df[method]['lower']
-        y_pred = preds_df[method]['pred']
+    fig, axs = plt.subplots(2, 2, figsize=(13, 12))
+    coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
+    for im, method in enumerate(methods2plot):
         plot_1d_data(
-            X_train.ravel(), y_train.ravel(), 
-            X_test.ravel(), y_mesh.ravel(), 1.96*sig_noise, 
-            y_pred.ravel(), y_low.ravel(), y_up.ravel(), 
-            ax=coords_plus[i], title=method
+            X_train.ravel(),
+            y_train.ravel(), 
+            X_test.ravel(),
+            y_mesh.ravel(),
+            1.96*sig_noise, 
+            predintervs[method][:, 0].ravel(),
+            predintervs[method][:, 1].ravel(),
+            predintervs[method][:, 2].ravel(),
+            ax=coords[im],
+            title=method
         )
 
-
-
-.. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_16_0.png
-
+.. image:: images/tuto_2.png
+    :align: center
 
 At first glance, the four methods give similar results and the
 prediction intervals are very close to the true confidence intervals.
@@ -189,14 +167,14 @@ Let’s confirm this by comparing the prediction interval widths over
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     for im, method in enumerate(methods):
-        ax.plot(X_test, preds_df[method]["upper"]-preds_df[method]["lower"])
+        ax.plot(X_test, predintervs[method][:, 2] - predintervs[method][:, 1])
     ax.axhline(1.96*2*sig_noise, ls='--', color='k')
-    ax.set_xlabel("x") ; ax.set_ylabel("Prediction Interval Width")
+    ax.set_xlabel("x")
+    ax.set_ylabel("Prediction Interval Width")
     ax.legend(methods+["True width"], fontsize=8)
 
-
-
-.. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_18_1.png
+.. image:: images/tuto_3.png
+    :align: center
 
 
 As expected, the prediction intervals estimated by the Naive method
@@ -238,38 +216,38 @@ the different methods.
       <tbody>
         <tr>
           <th>naive</th>
-          <td>0.914</td>
-          <td>1.820095</td>
+          <td>0.92</td>
+          <td>1.89</td>
         </tr>
         <tr>
           <th>jackknife</th>
-          <td>0.938</td>
-          <td>1.993815</td>
+          <td>0.95</td>
+          <td>2.04</td>
         </tr>
         <tr>
           <th>jackknife_plus</th>
-          <td>0.944</td>
-          <td>1.997930</td>
+          <td>0.95</td>
+          <td>2.06</td>
         </tr>
         <tr>
           <th>jackknife_minmax</th>
-          <td>0.958</td>
-          <td>2.149547</td>
+          <td>0.96</td>
+          <td>2.20</td>
         </tr>
         <tr>
           <th>cv</th>
-          <td>0.950</td>
-          <td>2.040191</td>
+          <td>0.95</td>
+          <td>2.13</td>
         </tr>
         <tr>
           <th>cv_plus</th>
-          <td>0.948</td>
-          <td>2.023036</td>
+          <td>0.96</td>
+          <td>2.20</td>
         </tr>
         <tr>
           <th>cv_minmax</th>
-          <td>0.960</td>
-          <td>2.244389</td>
+          <td>0.97</td>
+          <td>2.36</td>
         </tr>
       </tbody>
     </table>
@@ -278,7 +256,6 @@ the different methods.
 All methods except the Naive one give effective coverage close to the expected 
 0.95 value (recall that alpha = 0.05), confirming the theoretical garantees.
     
-
 
 2. Estimating the epistemic uncertainty of out-of-distribution data
 ===================================================================
@@ -294,20 +271,30 @@ Lets' start by generating and showing the data.
 
 .. code:: python
 
-    X_train, y_train, X_test, y_test, y_mesh = generate_onedimensional_data(
-        x_sinx, distrib='normal', n_samples=300, mu=0, sig=2, sigfactor=4, sig_noise=0
+    def get_1d_data_with_normal_distrib(funct, mu, sig, n_samples, sig_noise):
+        np.random.seed(59)
+        X_train = npr.normal(mu, sig, n_samples)
+        X_test = np.arange(mu-4*sig, mu+4*sig, sig/20.)
+        y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
+        y_train += np.random.normal(0, sig_noise, y_train.shape[0])
+        y_test += np.random.normal(0, sig_noise, y_test.shape[0])
+        return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
+
+.. code:: python
+
+    mu = 0 ; sig = 2 ; n_samples = 300 ; sig_noise = 0.
+    X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_normal_distrib(
+        x_sinx, mu, sig, n_samples, sig_noise
     )
 
 .. code:: python
 
     plt.xlabel('x') ; plt.ylabel('y')
+    plt.scatter(X_train, y_train, color='C0')
     plt.plot(X_test, y_test, color='C1')
-    plt.scatter(X_train, y_train)
 
-
-
-.. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_25_1.png
-
+.. image:: images/tuto_4.png
+    :align: center
 
 As before, we estimate the prediction intervals using a polynomial
 function of degree 10 and show the results for the Jackknife+ and CV+
@@ -315,17 +302,38 @@ methods.
 
 .. code:: python
 
-    preds_df = {}
-    methods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax' ,'cv', 'cv_plus', 'cv_minmax']
-    for im, method in enumerate(methods):
-        predinterv = MAPIE(polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single')
+    allmethods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax' , 'cv', 'cv_plus', 'cv_minmax']
+    predintervs = {}
+    for im, method in enumerate(allmethods):
+        predinterv = MapieRegressor(
+            polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single'
+        )
         predinterv.fit(X_train, y_train)
-        y_preds = predinterv.predict(X_test)
-        preds_df[method] = pd.DataFrame(np.stack([y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]], axis=1), columns=['pred', 'lower', 'upper'])
-    preds_df = pd.concat(preds_df, axis=1)
+        predintervs[method] = predinterv.predict(X_test)
 
 
-.. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_28_0.png
+.. code:: python
+
+    methods2plot = ['jackknife_plus', 'jackknife_minmax' , 'cv_plus', 'cv_minmax']
+    n_figs = len(methods2plot)
+    fig, axs = plt.subplots(2, 2, figsize=(13, 12))
+    coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
+    for im, method in enumerate(methods2plot):
+        plot_1d_data(
+            X_train.ravel(),
+            y_train.ravel(), 
+            X_test.ravel(),
+            y_mesh.ravel(),
+            1.96*sig_noise, 
+            predintervs[method][:, 0].ravel(),
+            predintervs[method][:, 1].ravel(),
+            predintervs[method][:, 2].ravel(), 
+            ax=coords[im],
+            title=method
+        )
+
+.. image:: images/tuto_5.png
+    :align: center
 
 At first glance, our polynomial function does not give accurate
 predictions with respect to the true function when :math:`|x > 6|`. 
@@ -335,38 +343,24 @@ capture a high uncertainty when :math:`x > 6`.
 
 Let's now compare the prediction interval widths between all methods. 
 
-
 .. code:: python
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     ax.set_yscale("log")
-    for im, method in enumerate(methods):
-        ax.plot(X_test, preds_df[method]["upper"]-preds_df[method]["lower"])
+    for im, method in enumerate(allmethods):
+        ax.plot(X_test, predintervs[method][:, 2]-predintervs[method][:, 1])
     ax.axhline(1.96*2*sig_noise, ls='--', color='k')
     ax.set_xlabel("x") ; ax.set_ylabel("Prediction Interval Width")
-    ax.legend(methods+["True width"], fontsize=8)
+    ax.legend(allmethods+["True width"], fontsize=8)
 
-
-
-.. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_30_1.png
-
+.. image:: images/tuto_6.png
+    :align: center
 
 The prediction interval widths start to increase exponentially
 for :math:`|x| > 4` for the Jackknife-minmax, CV+, and CV-minmax
 methods. On the other hand, the prediction intervals estimated by
 Jackknife+ remain roughly constant until :math:`|x| ~ 5` before
 increasing.
-
-.. code:: python
-
-    pd.DataFrame([
-        [((preds_df[method]["upper"] >= y_test) & (preds_df[method]["lower"] <= y_test)).mean(),
-        (preds_df[method]["upper"] - preds_df[method]["lower"]).mean()]
-        for im, method in enumerate(methods)
-    ], index=methods, columns=["Coverage", "Mean width"])
-
-
-
 
 .. raw:: html
 
@@ -395,44 +389,42 @@ increasing.
       <tbody>
         <tr>
           <th>naive</th>
-          <td>0.49375</td>
-          <td>0.008543</td>
+          <td>0.49</td>
+          <td>0.01</td>
         </tr>
         <tr>
           <th>jackknife</th>
-          <td>0.53125</td>
-          <td>0.011721</td>
+          <td>0.53</td>
+          <td>0.01</td>
         </tr>
         <tr>
           <th>jackknife_plus</th>
-          <td>0.53125</td>
-          <td>0.037021</td>
+          <td>0.53</td>
+          <td>0.04</td>
         </tr>
         <tr>
           <th>jackknife_minmax</th>
-          <td>0.85625</td>
-          <td>9.784691</td>
+          <td>0.86</td>
+          <td>9.78</td>
         </tr>
         <tr>
           <th>cv</th>
-          <td>0.50625</td>
-          <td>0.008718</td>
+          <td>0.51</td>
+          <td>0.01</td>
         </tr>
         <tr>
           <th>cv_plus</th>
-          <td>0.88125</td>
-          <td>19.549235</td>
+          <td>0.88</td>
+          <td>19.55</td>
         </tr>
         <tr>
           <th>cv_minmax</th>
-          <td>0.82500</td>
-          <td>15.508213</td>
+          <td>0.82</td>
+          <td>15.51</td>
         </tr>
       </tbody>
     </table>
     </div>
-
-
 
 In conclusion, the Jackknife-minmax, CV+, and CV-minmax methods are more
 conservative than the Jackknife+ method, and tend to result in more
@@ -461,10 +453,8 @@ uniform distribution.
 
 .. code:: python
 
-    sig_noise = 0.5
-    X_train, y_train, X_test, y_test, y_mesh = generate_onedimensional_data(
-        x_sinx, distrib='uniform', noise=True, n_samples=300, mu=0, sig=2, sigfactor=4, step=0.1, sig_noise=sig_noise
-    )
+    min_x, max_x, n_samples, sig_noise = -5, 5, 100, 0.5
+    X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(x_sinx, min_x, max_x, n_samples, sig_noise)
 
 .. code:: python
 
@@ -472,11 +462,8 @@ uniform distribution.
     plt.plot(X_test, y_mesh, color='C1')
     plt.scatter(X_train, y_train)
 
-
-
-
-.. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_37_1.png
-
+.. image:: images/tuto_7.png
+    :align: center
 
 Let's then define the models. The boosing model considers 100 shallow trees with a max depth of 2 while
 the Multilayer Perceptron has two hidden dense layers with 20 neurons each followed by a relu activation.
@@ -518,63 +505,53 @@ the Multilayer Perceptron has two hidden dense layers with 20 neurons each follo
         verbose=0
     )
 
-
 Let's now use MAPIE to estimate the prediction intervals using the CV+ method 
 and compare their prediction interval.
 
 .. code:: python
 
-    preds_df = {}
     methods = ['cv_plus']
     models = [polyn_model, xgb_model, mlp_model]
     model_names = ['polyn', 'xgb', 'mlp']
+    predintervs = {}
     for im, model in enumerate(models):
-        predinterv = MAPIE(
+        predinterv = MapieRegressor(
             model, alpha=0.05, method=method, n_splits=5, return_pred='median'
         )
         predinterv.fit(X_train, y_train)
-        y_preds = predinterv.predict(X_test)
-        preds_df[model_names[im]] = pd.DataFrame(
-            np.stack(
-                [y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]], axis=1
-            ), columns=['pred', 'lower', 'upper']
-        )
-    preds_df = pd.concat(preds_df, axis=1)
-
-
+        predintervs[model_names[im]] = predinterv.predict(X_test)
 
 .. code:: python
 
     fig, axs = plt.subplots(1, 3, figsize=(20, 6))
     for im, model in enumerate(models):
-        y_up = preds_df[model_names[im]]['upper']
-        y_low = preds_df[model_names[im]]['lower']
-        y_pred = preds_df[model_names[im]]['pred']
         plot_1d_data(
-            X_train.ravel(), y_train.ravel(), 
-            X_test.ravel(), y_mesh.ravel(), 1.96*sig_noise, 
-            y_pred.ravel(), y_low.ravel(), y_up.ravel(), 
-            ax=axs[im], title=model_names[im]
+            X_train.ravel(),
+            y_train.ravel(), 
+            X_test.ravel(),
+            y_mesh.ravel(),
+            1.96*sig_noise,
+            predintervs[model_names[im]][:, 0].ravel(),
+            predintervs[model_names[im]][:, 1].ravel(),
+            predintervs[model_names[im]][:, 2].ravel(), 
+            ax=axs[im],
+            title=model_names[im]
         )
 
-
-
-.. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_42_0.png
-
+.. image:: images/tuto_8.png
+    :align: center
 
 .. code:: python
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     for im, model in enumerate(models):
-        ax.plot(X_test, preds_df[model_names[im]]["upper"]-preds_df[model_names[im]]["lower"])
+        ax.plot(X_test, predintervs[model_names[im]][:, 2]-predintervs[model_names[im]][:, 1])
     ax.axhline(1.96*2*sig_noise, ls='--', color='k')
     ax.set_xlabel("x") ; ax.set_ylabel("Prediction Interval Width")
     ax.legend(model_names+["True width"], fontsize=8)
 
-
-
-
-.. image:: VTA-03-pi-tuto-rtfd_files/VTA-03-pi-tuto-rtfd_43_1.png
+.. image:: images/tuto_9.png
+    :align: center
 
 As expected with the CV+ method, the prediction intervals are a bit 
 conservative since they are slightly wider than the true intervals.

@@ -51,6 +51,7 @@ The figure below illustrates the Naive method.
 
 .. image:: images/jackknife_naive.png
    :width: 200
+   :align: center
 
 2. The Jackknife method
 =======================
@@ -174,6 +175,34 @@ methods and emphasizes their main differences.
 
 .. image:: images/jackknife_cv.png
    :width: 800
+
+
+
+Key takeaways
+=============
+
+- The Jackknife+ method introduced by [1] allows the user to easily obtain theoretically guaranteed
+prediction intervals for any kind of sklearn-compatible Machine Learning regressor.
+
+- Since the typical coverage levels estimated by Jackknife+ follow very closely the target coverage levels,
+  this method should be used when accurate and robust prediction intervals are required.
+
+- For practical applications where :math:`n` is large and/or the the computational time of each 
+  *leave-one-out* simulation is high, it is advised to adopt the CV+ method, based on *out-of-fold* 
+  simulations, instead. 
+  Indeed, the methods based on the Jackknife resampling appproach are very cumbersome because they 
+  require to run a high number of simulations, equal to the number of training samples :math:`n`.
+
+- Although the CV+ method results in prediction intervals that are slightly larger than for the 
+  Jackknife+ method, it offers a good compromise between computational time and accurate predictions. 
+
+The Table below summarizes the key features of each method by focusing on the obtained coverages and the
+computational cost. :math:`n`, :math:`n_{\rm test}`, and :math:`K` are the number of training samples,
+test samples, and cross-validated folds, respectively.
+
+.. image:: images/comp-methods.png
+    :width: 800
+    :align: center
 
 
 References
