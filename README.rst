@@ -8,7 +8,7 @@
 .. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/coy2qqaqr1rnnt5y/branch/master?svg=true
 .. _AppVeyor: https://ci.appveyor.com/project/mapie/notreadyyet
 
-.. |Codecov|:: https://codecov.io/gh/simai-ml/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
+.. |Codecov| image:: https://codecov.io/gh/simai-ml/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
 .. _Codecov: https://codecov.io/gh/simai-ml/MAPIE
 
 .. |CircleCI| image:: https://circleci.com/gh/scikit-learn-contrib/project-template.svg?style=shield&circle-token=:circle-token
