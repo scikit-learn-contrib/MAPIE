@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """A scikit-learn-compatible module for estimating prediction intervals."""
 
-import codecs
 import os
+import codecs
 
 from setuptools import find_packages, setup
 
@@ -20,8 +20,8 @@ MAINTAINER_EMAIL = 'vtaquet@quantmetry.com, gmartinon@quantmetry.com'
 URL = 'https://github.com/simai-ml/MAPIE'
 LICENSE = 'new BSD'
 DOWNLOAD_URL = 'https://github.com/simai-ml/MAPIE'
-VERSION = __version__
-INSTALL_REQUIRES = ['numpy', 'pandas', 'scipy', 'scikit-learn']
+VERSION = __version__  # noqa
+INSTALL_REQUIRES = ['numpy', 'scikit-learn']
 CLASSIFIERS = [
     'Intended Audience :: Science/Research',
     'Intended Audience :: Developers',
@@ -33,10 +33,9 @@ CLASSIFIERS = [
     'Operating System :: POSIX',
     'Operating System :: Unix',
     'Operating System :: MacOS',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8'
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9'
 ]
 EXTRAS_REQUIRE = {
     'tests': [
