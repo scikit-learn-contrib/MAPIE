@@ -81,7 +81,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     Sources
     -------
-    Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshi-rani.
+    Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
     Predictive inference with the jackknife+. Ann. Statist., 49(1):486–507, 022021
 
     Examples
@@ -90,9 +90,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> from mapie.mapieregressor import MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
-    >>> y_toy = np.array([5, 7, 9, 11, 13, 15])
+    >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> pireg = MapieRegressor(LinearRegression())
     >>> print(pireg.fit(X_toy, y_toy).predict(X_toy))
+    [[ 5.28571429  4.61627907  6.2       ]
+     [ 7.17142857  6.51744186  8.        ]
+     [ 9.05714286  8.4         9.8       ]
+     [10.94285714 10.2        11.6       ]
+     [12.82857143 12.         13.48255814]
+     [14.71428571 13.8        15.38372093]]
     """
 
     def __init__(
