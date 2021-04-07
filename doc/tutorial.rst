@@ -46,13 +46,17 @@ uniform distribution.
 
 .. code:: python
 
-    def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, sig_noise):
+    def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, noise):
+        """
+        Generate 1D noisy data with uniform distribution from given function 
+        and noise standard deviation.
+        """
         np.random.seed(59)
         X_train = np.linspace(min_x, max_x, n_samples)
-        X_test = np.linspace(np.min(X_train), np.max(X_train), n_samples*5)
+        X_test = np.linspace(min_x, max_x, n_samples*5)
         y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
-        y_train += np.random.normal(0, sig_noise, y_train.shape[0])
-        y_test += np.random.normal(0, sig_noise, y_test.shape[0])
+        y_train += np.random.normal(0, noise, y_train.shape[0])
+        y_test += np.random.normal(0, noise, y_test.shape[0])
         return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
 
 We first generate noisy one-dimensional data obtained through a uniform distribution. 
@@ -61,9 +65,9 @@ over :math:`x`.
 
 .. code:: python
 
-    min_x, max_x, n_samples, sig_noise = -5, 5, 100, 0.5
+    min_x, max_x, n_samples, noise = -5, 5, 100, 0.5
     X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
-        x_sinx, min_x, max_x, n_samples, sig_noise
+        x_sinx, min_x, max_x, n_samples, noise
     )
 
 Let's visualize our noisy function. 
@@ -100,12 +104,12 @@ in order to obtain a 95% confidence for our prediction intervals.
 
     allmethods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax' , 'cv', 'cv_plus', 'cv_minmax']
     predintervs = {}
-    for im, method in enumerate(allmethods):
-        predinterv = MapieRegressor(
+    for method in allmethods:
+        mapie = MapieRegressor(
             polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single'
         )
-        predinterv.fit(X_train, y_train)
-        predintervs[method] = predinterv.predict(X_test)
+        mapie.fit(X_train, y_train)
+        predintervs[method] = mapie.predict(X_test)
 
 Let’s now compare the confidence intervals with the predicted intervals with obtained 
 by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax methods.
@@ -128,8 +132,8 @@ by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax methods.
         ax.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3)
         ax.scatter(X_train, y_train, color='red', alpha=0.3, label='Training data')
         ax.plot(X_test, y_test, color='gray', label='True confidence intervals')
-        ax.plot(X_test, y_test-y_sigma, color='gray', ls='--')
-        ax.plot(X_test, y_test+y_sigma, color='gray', ls='--')
+        ax.plot(X_test, y_test - y_sigma, color='gray', ls='--')
+        ax.plot(X_test, y_test + y_sigma, color='gray', ls='--')
         ax.plot(X_test, y_pred, color='blue', alpha=0.5, label='Prediction intervals')
         if title is not None:
             ax.set_title(title)
@@ -137,21 +141,21 @@ by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax methods.
 
 .. code:: python
 
-    methods2plot = ['jackknife_plus', 'jackknife_minmax' , 'cv_plus', 'cv_minmax']
+    methods = ['jackknife_plus', 'jackknife_minmax' , 'cv_plus', 'cv_minmax']
     n_figs = len(methods)
     fig, axs = plt.subplots(2, 2, figsize=(13, 12))
     coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
-    for im, method in enumerate(methods2plot):
+    for method, coord in zip(methods, coords): 
         plot_1d_data(
             X_train.ravel(),
             y_train.ravel(), 
             X_test.ravel(),
             y_mesh.ravel(),
-            1.96*sig_noise, 
+            1.96*noise, 
             predintervs[method][:, 0].ravel(),
             predintervs[method][:, 1].ravel(),
             predintervs[method][:, 2].ravel(),
-            ax=coords[im],
+            ax=coord,
             title=method
         )
 
@@ -166,12 +170,12 @@ Let’s confirm this by comparing the prediction interval widths over
 .. code:: python
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-    for im, method in enumerate(methods):
+    for method in methods:
         ax.plot(X_test, predintervs[method][:, 2] - predintervs[method][:, 1])
-    ax.axhline(1.96*2*sig_noise, ls='--', color='k')
+    ax.axhline(1.96*2*noise, ls='--', color='k')
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")
-    ax.legend(methods+["True width"], fontsize=8)
+    ax.legend(methods + ["True width"], fontsize=8)
 
 .. image:: images/tuto_3.png
     :align: center
@@ -271,20 +275,24 @@ Lets' start by generating and showing the data.
 
 .. code:: python
 
-    def get_1d_data_with_normal_distrib(funct, mu, sig, n_samples, sig_noise):
+    def get_1d_data_with_normal_distrib(funct, mu, sigma, n_samples, noise):
+        """
+        Generate noisy 1D data with normal distribution from given function 
+        and noise standard deviation.
+        """
         np.random.seed(59)
-        X_train = npr.normal(mu, sig, n_samples)
-        X_test = np.arange(mu-4*sig, mu+4*sig, sig/20.)
+        X_train = np.random.normal(mu, sigma, n_samples)
+        X_test = np.arange(mu-4*sigma, mu+4*sigma, sig/20.)
         y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
-        y_train += np.random.normal(0, sig_noise, y_train.shape[0])
-        y_test += np.random.normal(0, sig_noise, y_test.shape[0])
+        y_train += np.random.normal(0, noise, y_train.shape[0])
+        y_test += np.random.normal(0, noise, y_test.shape[0])
         return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
 
 .. code:: python
 
-    mu = 0 ; sig = 2 ; n_samples = 300 ; sig_noise = 0.
+    mu = 0 ; sigma = 2 ; n_samples = 300 ; noise = 0.
     X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_normal_distrib(
-        x_sinx, mu, sig, n_samples, sig_noise
+        x_sinx, mu, sigma, n_samples, noise
     )
 
 .. code:: python
@@ -304,12 +312,12 @@ methods.
 
     allmethods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax' , 'cv', 'cv_plus', 'cv_minmax']
     predintervs = {}
-    for im, method in enumerate(allmethods):
-        predinterv = MapieRegressor(
+    for method in allmethods:
+        mapie = MapieRegressor(
             polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single'
         )
-        predinterv.fit(X_train, y_train)
-        predintervs[method] = predinterv.predict(X_test)
+        mapie.fit(X_train, y_train)
+        predintervs[method] = mapie.predict(X_test)
 
 
 .. code:: python
@@ -318,17 +326,17 @@ methods.
     n_figs = len(methods2plot)
     fig, axs = plt.subplots(2, 2, figsize=(13, 12))
     coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
-    for im, method in enumerate(methods2plot):
+    for method, coord in zip(methods2plot, coords): 
         plot_1d_data(
             X_train.ravel(),
             y_train.ravel(), 
             X_test.ravel(),
             y_mesh.ravel(),
-            1.96*sig_noise, 
+            1.96*noise, 
             predintervs[method][:, 0].ravel(),
             predintervs[method][:, 1].ravel(),
             predintervs[method][:, 2].ravel(), 
-            ax=coords[im],
+            ax=coord,
             title=method
         )
 
@@ -347,11 +355,12 @@ Let's now compare the prediction interval widths between all methods.
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     ax.set_yscale("log")
-    for im, method in enumerate(allmethods):
-        ax.plot(X_test, predintervs[method][:, 2]-predintervs[method][:, 1])
-    ax.axhline(1.96*2*sig_noise, ls='--', color='k')
-    ax.set_xlabel("x") ; ax.set_ylabel("Prediction Interval Width")
-    ax.legend(allmethods+["True width"], fontsize=8)
+    for method in allmethods:
+        ax.plot(X_test, predintervs[method][:, 2] - predintervs[method][:, 1])
+    ax.axhline(1.96*2*noise, ls='--', color='k')
+    ax.set_xlabel("x")
+    ax.set_ylabel("Prediction Interval Width")
+    ax.legend(allmethods + ["True width"], fontsize=8)
 
 .. image:: images/tuto_6.png
     :align: center
@@ -453,8 +462,10 @@ uniform distribution.
 
 .. code:: python
 
-    min_x, max_x, n_samples, sig_noise = -5, 5, 100, 0.5
-    X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(x_sinx, min_x, max_x, n_samples, sig_noise)
+    min_x, max_x, n_samples, noise = -5, 5, 100, 0.5
+    X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
+        x_sinx, min_x, max_x, n_samples, noise
+    )
 
 .. code:: python
 
@@ -479,7 +490,7 @@ the Multilayer Perceptron has two hidden dense layers with 20 neurons each follo
             Dense(units=20, activation="relu"),
             Dense(units=1)
         ])
-        model.compile(loss='mean_squared_error', optimizer='adam') #, metrics=['accuracy']
+        model.compile(loss='mean_squared_error', optimizer='adam')
         return model
 
 .. code:: python
@@ -510,32 +521,31 @@ and compare their prediction interval.
 
 .. code:: python
 
-    methods = ['cv_plus']
     models = [polyn_model, xgb_model, mlp_model]
     model_names = ['polyn', 'xgb', 'mlp']
     predintervs = {}
-    for im, model in enumerate(models):
-        predinterv = MapieRegressor(
-            model, alpha=0.05, method=method, n_splits=5, return_pred='median'
+    for name, model in zip(model_names, models):
+        mapie = MapieRegressor(
+            model, alpha=0.05, method='cv_plus', n_splits=5, return_pred='median'
         )
-        predinterv.fit(X_train, y_train)
-        predintervs[model_names[im]] = predinterv.predict(X_test)
+        mapie.fit(X_train, y_train)
+        predintervs[name] = mapie.predict(X_test)
 
 .. code:: python
 
     fig, axs = plt.subplots(1, 3, figsize=(20, 6))
-    for im, model in enumerate(models):
+    for name, ax in zip(model_names, axs): 
         plot_1d_data(
             X_train.ravel(),
             y_train.ravel(), 
             X_test.ravel(),
             y_mesh.ravel(),
-            1.96*sig_noise,
-            predintervs[model_names[im]][:, 0].ravel(),
-            predintervs[model_names[im]][:, 1].ravel(),
-            predintervs[model_names[im]][:, 2].ravel(), 
-            ax=axs[im],
-            title=model_names[im]
+            1.96*noise,
+            predintervs[name][:, 0].ravel(),
+            predintervs[name][:, 1].ravel(),
+            predintervs[name][:, 2].ravel(), 
+            ax=ax,
+            title=name
         )
 
 .. image:: images/tuto_8.png
@@ -544,11 +554,12 @@ and compare their prediction interval.
 .. code:: python
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-    for im, model in enumerate(models):
-        ax.plot(X_test, predintervs[model_names[im]][:, 2]-predintervs[model_names[im]][:, 1])
-    ax.axhline(1.96*2*sig_noise, ls='--', color='k')
-    ax.set_xlabel("x") ; ax.set_ylabel("Prediction Interval Width")
-    ax.legend(model_names+["True width"], fontsize=8)
+    for name in model_names:
+        ax.plot(X_test, predintervs[name][:, 2] - predintervs[name][:, 1])
+    ax.axhline(1.96*2*noise, ls='--', color='k')
+    ax.set_xlabel("x")
+    ax.set_ylabel("Prediction Interval Width")
+    ax.legend(model_names + ["True width"], fontsize=8)
 
 .. image:: images/tuto_9.png
     :align: center

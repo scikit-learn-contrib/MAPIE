@@ -26,24 +26,28 @@ To install directly from the github repository :
 2. Run MapieRegressor
 ---------------------
 
-Before calling MAPIE, we first define a sklearn-compatible regressor as well as training and test sets.
-MAPIE is compliant with the standard scikit-learn API.
+Let us start with a basic regression problem. 
+Here, we generate one-dimensional noisy data that we fit with a linear model.
 
 .. code:: python
+
+    import numpy as np
+    from sklearn.linear_model import LinearRegression
+    from sklearn.datasets import make_regression
 
     regressor = LinearRegression()
-    X_train, y_train = make_regression(n_samples=500, n_features=1)
-    y_train += np.random.normal(0, 5, y_train.shape[0])
-    X_test = np.linspace(X_train.min(), X_train.max(), 100).reshape(-1, 1)
+    X, y = make_regression(n_samples=500, n_features=1, noise=20)
 
-Like any scikit-learn regressor, MAPIE follows the following sequential ``fit`` and ``predict`` process. 
+Since MAPIE is compliant with the standard scikit-learn API, we follow the standard
+sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
 
 .. code:: python
 
-    from mapie import MapieRegressor
+    from simai.prediction_interval import PredictionInterval
     mapie = MapieRegressor(regressor)
-    mapie.fit(X_train, y_train)
-    y_preds = mapie.predict(X_test)
+    mapie.fit(X, y)
+    X_pi = np.linspace(X.min(), X.max(), 100).reshape(-1, 1)
+    y_preds = mapie.predict(X_pi)
 
 
 3. Show the results
@@ -58,9 +62,9 @@ The estimated prediction interval can be easily plotted as follows.
     from matplotlib import pyplot as plt
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.scatter(X_train, y_train, alpha=0.3)
-    plt.plot(X_test, y_preds[:, 0], color='C1')
-    plt.fill_between(X_test.ravel(), y_preds[:, 1], y_preds[:, 2], alpha=0.3)
+    plt.scatter(X, y, alpha=0.3)
+    plt.plot(X_pi, y_preds[:, 0], color='C1')
+    plt.fill_between(X_pi.ravel(), y_preds[:, 1], y_preds[:, 2], alpha=0.3)
     plt.show()
 
 
