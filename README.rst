@@ -21,7 +21,7 @@
 MAPIE - Model Agnostic Prediction Interval Estimator
 ============================================================
 
-**MAPIE** is a module that allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
+**MAPIE** allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
 
 
 Install Conda
