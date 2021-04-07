@@ -27,16 +27,18 @@ MAPIE - Model Agnostic Prediction Interval Estimator
 Install Conda
 =============
 
-- :code:`curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh`
-- :code:`source Miniconda3-latest-MacOSX-x86_64.sh`
-- :code:`source ~/.bashrc`
-- :code:`rm Miniconda3-latest-MacOSX-x86_64.sh`
+- :code:`wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh`
+- :code:`chmod +x miniconda.sh`
+- :code:`bash miniconda.sh -b -p $HOME/miniconda`
+- :code:`export PATH=$HOME/miniconda/bin:$PATH`
+- :code:`source $HOME/miniconda/etc/profile.d/conda.sh`
+- :code:`conda update --yes conda`
 
 
 Create virtual environment
 ==========================
 
-- :code:`conda env create -f environment.yml`
+- :code:`conda env create -f environment_dev.yml`
 - :code:`conda activate mapie`
 - :code:`python -m ipykernel install --user --name=mapie`
 
