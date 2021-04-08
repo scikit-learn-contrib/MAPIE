@@ -8,7 +8,7 @@ the coverage level and the prediction interval width as function
 of the dimension using simulated data points as introduced in
 Foygel-Barber et al. (2020).
 """
-from typing import List, Dict
+from typing import List, Dict, Any
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -17,12 +17,12 @@ from matplotlib import pyplot as plt
 from mapie import MapieRegressor
 
 
-def PIs_vs_dim_vals(
+def PIs_vs_dimensions(
     methods: List[str],
     alpha: float,
     n_trial: int,
-    dim_vals: List[int]
-) -> Dict:
+    dimensions: List[int]
+) -> Dict[Any, Any]:
     """
     Compute the prediction intervals estimated by a defined list of methods
     using a linear model on noisy linear data generated several times
@@ -35,9 +35,10 @@ def PIs_vs_dim_vals(
         List of methods for estimating prediction intervals.
     alpha (float):
         1 - (target coverage level).
-    n_trial (int): [description]
+    n_trial (int):
         Number of trials for each dimension for estimating prediction intervals.
-    dim_vals (List[int]): [description]
+        For each trial, a new random noise is generated.
+    dimensions (List[int]):
         List of dimension values of input data.
 
     Returns:
@@ -47,25 +48,25 @@ def PIs_vs_dim_vals(
         and dimension value.
     """
     n = 100
-    n1 = 100
+    n_test = 100
     SNR = 10
 
-    results = {}
-    for d in dim_vals:
+    results: Dict[int, List[Any]] = {}
+    for dimension in dimensions:
         for i_trial in range(n_trial):
-            beta = np.random.normal(size=d)
+            beta = np.random.normal(size=dimension)
             beta_norm = np.sqrt((beta**2).sum())
             beta = beta/beta_norm * np.sqrt(SNR)
-            X = np.random.normal(size=(n, d))
+            X_train = np.random.normal(size=(n, dimension))
             noise = np.random.normal(size=n)
-            noise1 = np.random.normal(size=n1)
-            Y = X.dot(beta) + noise
-            X1 = np.random.normal(size=(n1, d))
-            Y1 = X1.dot(beta) + noise1
+            noise_test = np.random.normal(size=n_test)
+            y_train = X_train.dot(beta) + noise
+            X_test = np.random.normal(size=(n_test, dimension))
+            y_test = X_test.dot(beta) + noise_test
 
-            preds = {}
+            preds: Dict[str, Dict[str, np.ndarray]] = {}
             for method in methods:
-                predinterv = MapieRegressor(
+                mapie = MapieRegressor(
                     LinearRegression(),
                     alpha=alpha,
                     method=method,
@@ -73,28 +74,32 @@ def PIs_vs_dim_vals(
                     shuffle=False,
                     return_pred="ensemble"
                 )
-                predinterv.fit(X, Y)
-                y_preds = predinterv.predict(X1)
+                mapie.fit(X_train, y_train)
+                y_preds = mapie.predict(X_test)
                 preds_low, preds_up = y_preds[:, 1], y_preds[:, 2]
                 preds[method] = {"lower": preds_low, "upper": preds_up}
 
             for method in methods:
                 coverage = (
-                    (preds[method]['lower'] <= Y1) & (preds[method]['upper'] >= Y1)
+                    (preds[method]['lower'] <= y_test) & (preds[method]['upper'] >= y_test)
                 ).mean()
                 width = (preds[method]['upper'] - preds[method]['lower']).mean()
-                results[len(results)] = [i_trial, d, method, coverage, width]
+                results[len(results)] = [i_trial, dimension, method, coverage, width]
     return results
 
 
-def plot_simulation_results(results: Dict, methods: List[str], title: str) -> None:
+def plot_simulation_results(
+    results: Dict[np.ndarray, np.ndarray],
+    methods: List[str],
+    title: str
+) -> None:
     """
     Show the prediction interval coverages and widths as function of dimension values
     for selected methods with standard deviation given by different trials.
 
     Parameters:
     -----------
-    results Dict:
+    results (Dict):
         Prediction interval widths and coverages for each method, trial,
         and dimension value.
     methods (List[str]):
@@ -109,7 +114,7 @@ def plot_simulation_results(results: Dict, methods: List[str], title: str) -> No
     for method in methods:
         coverage_mean = []
         coverage_SE = []
-        for dim_val in dim_vals:
+        for dim_val in dimensions:
             coverage_mean.append(np.array([
                 results[key][3] for key in results
                 if (results[key][2] == method) & (results[key][1] == dim_val)
@@ -118,11 +123,14 @@ def plot_simulation_results(results: Dict, methods: List[str], title: str) -> No
                 results[key][3] for key in results
                 if (results[key][2] == method) & (results[key][1] == dim_val)
             ]).std()/np.sqrt(ntrial))
-        coverage_mean = np.array(coverage_mean)
-        coverage_SE = np.array(coverage_SE)
-        ax1.plot(dim_vals, coverage_mean, label=method)
+        coverage_mean_np = np.array(coverage_mean)
+        coverage_SE_np = np.array(coverage_SE)
+        ax1.plot(dimensions, coverage_mean_np, label=method)
         ax1.fill_between(
-            dim_vals, coverage_mean-coverage_SE, coverage_mean+coverage_SE, alpha=0.25
+            dimensions,
+            coverage_mean_np-coverage_SE_np,
+            coverage_mean_np+coverage_SE_np,
+            alpha=0.25
         )
     ax1.axhline(1-alpha, linestyle='dashed', c='k')
     ax1.set_ylim(0.0, 1.0)
@@ -132,7 +140,7 @@ def plot_simulation_results(results: Dict, methods: List[str], title: str) -> No
     for method in methods:
         width_mean = []
         width_SE = []
-        for dim_val in dim_vals:
+        for dim_val in dimensions:
             width_mean.append(np.array([
                 results[key][-1] for key in results
                 if (results[key][2] == method) & (results[key][1] == dim_val)
@@ -141,11 +149,11 @@ def plot_simulation_results(results: Dict, methods: List[str], title: str) -> No
                 results[key][-1] for key in results
                 if (results[key][2] == method) & (results[key][1] == dim_val)
             ]).std()/np.sqrt(ntrial))
-        width_mean = np.array(width_mean)
-        width_SE = np.array(width_SE)
-        ax2.plot(dim_vals, width_mean, label=method)
+        width_mean_np = np.array(width_mean)
+        width_SE_np = np.array(width_SE)
+        ax2.plot(dimensions, width_mean_np, label=method)
         ax2.fill_between(
-            dim_vals, width_mean-width_SE, width_mean+width_SE, alpha=0.25
+            dimensions, width_mean-width_SE_np, width_mean+width_SE_np, alpha=0.25
         )
     ax2.set_ylim(0, 20)
     ax2.set_xlabel('Dimension d')
@@ -158,6 +166,6 @@ methods = [
 ]
 alpha = 0.1
 ntrial = 10
-dim_vals = np.arange(5, 205, 5)
-results = PIs_vs_dim_vals(methods, alpha, ntrial, dim_vals)
+dimensions = np.arange(5, 205, 5)
+results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
 plot_simulation_results(results, methods, title='Coverages and interval widths')

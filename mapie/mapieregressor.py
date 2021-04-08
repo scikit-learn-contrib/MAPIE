@@ -171,7 +171,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        PredictionInterval
+        MapieRegressor
             The model itself.
         """
         self._check_parameters()

@@ -7,7 +7,7 @@ Estimate the prediction intervals of 1D homoscedastic data
 the prediction intervals of 1D homoscedastic data using
 different methods.
 """
-from typing import Any, Union
+from typing import Any, Tuple
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -18,25 +18,16 @@ from matplotlib import pyplot as plt
 from mapie import MapieRegressor
 
 
-def f(x: np.ndarray) -> np.ndarray:
+def f(x: np.ndarray) -> Any:
     """Polynomial function used to generate one-dimensional data"""
     return 5*x + 5*x ** 4 - 9*x**2
 
 
 def get_homoscedastic_data(
-    n_samples: str = 200,
+    n_samples: int = 200,
     n_test: int = 1000,
     sigma: float = 0.1
-) -> Union[
-    np.ndarray,
-    np.ndarray,
-    float,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    float
-]:
+) -> Tuple[Any, Any, np.ndarray, Any, float]:
     """
     Generate one-dimensional data from a given function,
     number of training and test samples and a given standard
@@ -53,16 +44,7 @@ def get_homoscedastic_data(
 
     Returns
     -------
-    Tuple[
-        np.ndarray,
-        np.ndarray,
-        float,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        float
-    ]:
+    Tuple[Any, Any, ndarray, Any, float]:
         Generated training and test data.
     """
     np.random.seed(59)
@@ -80,7 +62,7 @@ def plot_1d_data(
     y_train: np.ndarray,
     X_test: np.ndarray,
     y_test: np.ndarray,
-    y_test_sigma: np.ndarray,
+    y_test_sigma: float,
     y_pred: np.ndarray,
     y_pred_low: np.ndarray,
     y_pred_up: np.ndarray,
@@ -101,7 +83,7 @@ def plot_1d_data(
         Test data.
     y_test (np.ndarray):
         True function values on test data.
-    y_test_sigma (np.ndarray):
+    y_test_sigma (float):
         True standard deviation.
     y_pred (np.ndarray):
         Predictions on test data.
@@ -120,8 +102,8 @@ def plot_1d_data(
     ax.set_ylim([0, 1])
     ax.scatter(X_train, y_train, color='red', alpha=0.3, label='training')
     ax.plot(X_test, y_test, color='gray', label='True confidence intervals')
-    ax.plot(X_test, y_test-y_test_sigma, color='gray', ls='--')
-    ax.plot(X_test, y_test+y_test_sigma, color='gray', ls='--')
+    ax.plot(X_test, y_test - y_test_sigma, color='gray', ls='--')
+    ax.plot(X_test, y_test + y_test_sigma, color='gray', ls='--')
     ax.plot(X_test, y_pred, label='Prediction intervals')
     ax.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3)
     ax.set_title(title)
@@ -140,19 +122,18 @@ polyn_model = Pipeline(
 )
 
 methods = ['jackknife', 'jackknife_plus', 'jackknife_minmax', 'cv', 'cv_plus', 'cv_minmax']
-preds, lows, ups = [], [], []
 fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(3*6, 12))
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
 for i, method in enumerate(methods):
-    pireg = MapieRegressor(
+    mapie = MapieRegressor(
         polyn_model,
         method=method,
         alpha=0.05,
         n_splits=10,
         return_pred='ensemble'
     )
-    pireg.fit(X_train.reshape(-1, 1), y_train)
-    y_preds = pireg.predict(X_test.reshape(-1, 1))
+    mapie.fit(X_train.reshape(-1, 1), y_train)
+    y_preds = mapie.predict(X_test.reshape(-1, 1))
     plot_1d_data(
         X_train,
         y_train,

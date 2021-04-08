@@ -11,7 +11,7 @@ simple, one-dimensional, ground truth function
 
 .. math::
 
-   f(x) = x \times sin(x)
+   f(x) = x \times \sin(x)
 
 
 Throughout this tutorial, we will answer the following questions:
@@ -34,7 +34,7 @@ use the CV-minmax method.**
 1. Estimating the aleatoric uncertainty of homoscedastic noisy data
 ===================================================================
 
-Let's start by defining the :math:`x \times sin(x)` function and another simple function
+Let's start by defining the :math:`x \times \sin(x)` function and another simple function
 that generates one-dimensional data with normal noise and obtained from a normal or 
 uniform distribution.
 
@@ -83,7 +83,7 @@ Let's visualize our noisy function.
 
 As mentioned previously, we fit our training data with a simple
 polynomial function. Here, we choose a degree equal to 10 so the function 
-is able to perfectly fit :math:`x \times sin(x)`.
+is able to perfectly fit :math:`x \times \sin(x)`.
 
 .. code:: python
 
@@ -196,6 +196,7 @@ the different methods.
 .. raw:: html
 
     <div>
+    <center>
     <style scoped>
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
@@ -255,6 +256,7 @@ the different methods.
         </tr>
       </tbody>
     </table>
+    </center>
     </div>
 
 All methods except the Naive one give effective coverage close to the expected 
@@ -374,6 +376,7 @@ increasing.
 .. raw:: html
 
     <div>
+    <center>
     <style scoped>
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
@@ -434,6 +437,8 @@ increasing.
       </tbody>
     </table>
     </div>
+    </center>
+   </h1>
 
 In conclusion, the Jackknife-minmax, CV+, and CV-minmax methods are more
 conservative than the Jackknife+ method, and tend to result in more

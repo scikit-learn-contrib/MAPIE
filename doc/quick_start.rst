@@ -43,7 +43,7 @@ sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
 
 .. code:: python
 
-    from simai.prediction_interval import PredictionInterval
+    from mapie import MapieRegressor
     mapie = MapieRegressor(regressor)
     mapie.fit(X, y)
     X_pi = np.linspace(X.min(), X.max(), 100).reshape(-1, 1)

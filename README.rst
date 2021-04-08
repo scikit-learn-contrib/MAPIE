@@ -22,7 +22,7 @@ MAPIE - Model Agnostic Prediction Interval Estimator
 ============================================================
 
 **MAPIE** allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
-
+The documentation can be found `here <https://en.wikipedia.org/wiki/Uncertainty_quantification>`_.
 
 Install Conda
 =============
