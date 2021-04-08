@@ -10,7 +10,7 @@ matrix:
   fast_finish: true
 
 install:
-  - SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\bin;%PATH%
+  - SET PATH=%PYTHON%;%MINICONDA%;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\bin;%PATH%
   - conda update --yes conda
   - conda install --yes -c conda-forge codecov flake8 mypy numpy>=1.20 scikit-learn pytest-cov
   - python --version
