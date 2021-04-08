@@ -1,15 +1,11 @@
 build: false
 
 environment:
+  MINICONDA: "C:\\Miniconda3-x64"
   matrix:    
-    - MINICONDA: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.7"
-    
-    - MINICONDA: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.8"
-    
-    - MINICONDA: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.9"
+    - PYTHON_VERSION: "3.7"
+    - PYTHON_VERSION: "3.8"
+    - PYTHON_VERSION: "3.9"
 
 matrix:
   fast_finish: true
