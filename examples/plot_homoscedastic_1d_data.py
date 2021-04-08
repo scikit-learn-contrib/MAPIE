@@ -37,16 +37,16 @@ def get_homoscedastic_data(
 
     Parameters
     ----------
-    n_samples (str, optional):
-        Number of training samples. Defaults to 200.
-    n_test (int, optional):
-        Number of test samples. Defaults to 1000.
-    sigma (float, optional):
-        Standard deviation of noise. Defaults to 0.1.
+    n_samples : int, optional
+        Number of training samples, by default  200.
+    n_test : int, optional
+        Number of test samples, by default 1000.
+    sigma : float, optional
+        Standard deviation of noise, by default 0.1
 
     Returns
     -------
-    Tuple[Any, Any, ndarray, Any, float]:
+    Tuple[Any, Any, np.ndarray, Any, float]
         Generated training and test data.
         [0]: X_train
         [1]: y_train
@@ -82,25 +82,25 @@ def plot_1d_data(
 
     Parameters
     ----------
-    X_train (np.ndarray):
+    X_train : np.ndarray
         Training data.
-    y_train (np.ndarray):
+    y_train : np.ndarray
         Training labels.
-    X_test (np.ndarray):
+    X_test : np.ndarray
         Test data.
-    y_test (np.ndarray):
+    y_test : np.ndarray
         True function values on test data.
-    y_test_sigma (float):
+    y_test_sigma : float
         True standard deviation.
-    y_pred (np.ndarray):
+    y_pred : np.ndarray
         Predictions on test data.
-    y_pred_low (np.ndarray):
+    y_pred_low : np.ndarray
         Predicted lower bounds on test data.
-    y_pred_up (np.ndarray):
+    y_pred_up : np.ndarray
         Predicted upper bounds on test data.
-    ax (plt.Axes):
+    ax : plt.Axes
         Axis to plot.
-    title (str):
+    title : str
         Title of the figure.
     """
     ax.set_xlabel('x')

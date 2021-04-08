@@ -38,21 +38,21 @@ def PIs_vs_dimensions(
     intervals estimated by the Jackknife method when the dataset dimension is
     equal to the number of training samples (here 100).
 
-    Parameters:
-    -----------
-    methods (List[str]):
+    Parameters
+    ----------
+    methods : List[str]
         List of methods for estimating prediction intervals.
-    alpha (float):
+    alpha : float
         1 - (target coverage level).
-    n_trial (int):
+    n_trial : int
         Number of trials for each dimension for estimating prediction intervals.
         For each trial, a new random noise is generated.
-    dimensions (List[int]):
+    dimensions : List[int]
         List of dimension values of input data.
 
-    Returns:
-    --------
-    Dict:
+    Returns
+    -------
+    Dict[int, Dict[str, Any]]
         Prediction interval widths and coverages for each method, trial,
         and dimension value.
     """
@@ -90,9 +90,12 @@ def PIs_vs_dimensions(
 
             for method in methods:
                 coverage = (
-                    (preds[method]["lower"] <= y_test) & (preds[method]["upper"] >= y_test)
+                    (preds[method]["lower"] <= y_test) &
+                    (preds[method]["upper"] >= y_test)
                 ).mean()
-                width_mean = (preds[method]["upper"] - preds[method]["lower"]).mean()
+                width_mean = (
+                    preds[method]["upper"] - preds[method]["lower"]
+                ).mean()
                 results[len(results)] = {
                     "trial": trial,
                     "dimension": dimension,
@@ -112,14 +115,14 @@ def plot_simulation_results(
     Show the prediction interval coverages and widths as function of dimension values
     for selected methods with standard deviation given by different trials.
 
-    Parameters:
-    -----------
-    results (Dict):
+    Parameters
+    ----------
+    results : Dict[int, Dict[str, Any]]
         Prediction interval widths and coverages for each method, trial,
         and dimension value.
-    methods (List[str]):
+    methods : List[str]
         List of methods to show.
-    title (str):
+    title : str
         Title of the plot.
     """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
