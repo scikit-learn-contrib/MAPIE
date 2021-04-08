@@ -36,7 +36,7 @@ Here, we generate one-dimensional noisy data that we fit with a linear model.
     from sklearn.datasets import make_regression
 
     regressor = LinearRegression()
-    X, y = make_regression(n_samples=500, n_features=1, noise=20)
+    X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
 
 Since MAPIE is compliant with the standard scikit-learn API, we follow the standard
 sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.

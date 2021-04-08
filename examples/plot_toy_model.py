@@ -13,7 +13,7 @@ from sklearn.datasets import make_regression
 from mapie import MapieRegressor
 
 regressor = LinearRegression()
-X, y = make_regression(n_samples=500, n_features=1, noise=5)
+X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
 
 mapie = MapieRegressor(regressor)
 mapie.fit(X, y)

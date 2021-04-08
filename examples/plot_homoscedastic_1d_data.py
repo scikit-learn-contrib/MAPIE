@@ -10,6 +10,7 @@ different methods.
 from typing import Any, Tuple
 
 import numpy as np
+import scipy
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import Pipeline
@@ -20,7 +21,7 @@ from mapie import MapieRegressor
 
 def f(x: np.ndarray) -> Any:
     """Polynomial function used to generate one-dimensional data"""
-    return 5*x + 5*x ** 4 - 9*x**2
+    return 5*x + 5*x**4 - 9*x**2
 
 
 def get_homoscedastic_data(
@@ -32,6 +33,7 @@ def get_homoscedastic_data(
     Generate one-dimensional data from a given function,
     number of training and test samples and a given standard
     deviation for the noise.
+    The training data data is generated from an exponential distribution.
 
     Parameters
     ----------
@@ -46,15 +48,20 @@ def get_homoscedastic_data(
     -------
     Tuple[Any, Any, ndarray, Any, float]:
         Generated training and test data.
+        [0]: X_train
+        [1]: y_train
+        [2]: X_true
+        [3]: y_true
+        [4]: y_true_sigma
     """
     np.random.seed(59)
-    q90 = 1.8
+    q95 = scipy.stats.norm.ppf(0.95)
     X_train = np.random.exponential(0.4, n_samples)
-    X_test = np.linspace(0.001, 1.2, n_test, endpoint=False)
+    X_true = np.linspace(0.001, 1.2, n_test, endpoint=False)
     y_train = f(X_train) + np.random.normal(0, sigma, n_samples)
-    y_test = f(X_test)
-    y_test_sig = q90*sigma
-    return X_train, y_train, X_test, y_test, y_test_sig
+    y_true = f(X_true)
+    y_true_sigma = q95*sigma
+    return X_train, y_train, X_true, y_true, y_true_sigma
 
 
 def plot_1d_data(
@@ -66,7 +73,7 @@ def plot_1d_data(
     y_pred: np.ndarray,
     y_pred_low: np.ndarray,
     y_pred_up: np.ndarray,
-    ax: Any,
+    ax: plt.Axes,
     title: str
 ) -> None:
     """
@@ -91,7 +98,7 @@ def plot_1d_data(
         Predicted lower bounds on test data.
     y_pred_up (np.ndarray):
         Predicted upper bounds on test data.
-    axis (Any):
+    ax (plt.Axes):
         Axis to plot.
     title (str):
         Title of the figure.

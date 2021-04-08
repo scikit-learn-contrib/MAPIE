@@ -22,12 +22,21 @@ def PIs_vs_dimensions(
     alpha: float,
     n_trial: int,
     dimensions: List[int]
-) -> Dict[Any, Any]:
+) -> Dict[int, Dict[str, Any]]:
     """
-    Compute the prediction intervals estimated by a defined list of methods
-    using a linear model on noisy linear data generated several times
-    for several dimensions.
+    Compute the prediction intervals for a linear regression problem.
     Function adapted from Foygel-Barber et al. (2020).
+
+    It generates several times linear data with random noise whose signal-to-noise
+    is equal to 10 and for several given dimensions, given by the dimensions list.
+
+    MAPIE is used to estimate the width means and the coverage levels of the
+    prediction intervals estimated by all the available methods as function of
+    the dataset dimension. provided by MAPIE using a LinearRegression model.
+
+    This simulation is carried out to emphasize the instability of the prediction
+    intervals estimated by the Jackknife method when the dataset dimension is
+    equal to the number of training samples (here 100).
 
     Parameters:
     -----------
@@ -51,9 +60,9 @@ def PIs_vs_dimensions(
     n_test = 100
     SNR = 10
 
-    results: Dict[int, List[Any]] = {}
+    results: Dict[int, Dict[str, Any]] = {}
     for dimension in dimensions:
-        for i_trial in range(n_trial):
+        for trial in range(n_trial):
             beta = np.random.normal(size=dimension)
             beta_norm = np.sqrt((beta**2).sum())
             beta = beta/beta_norm * np.sqrt(SNR)
@@ -76,20 +85,26 @@ def PIs_vs_dimensions(
                 )
                 mapie.fit(X_train, y_train)
                 y_preds = mapie.predict(X_test)
-                preds_low, preds_up = y_preds[:, 1], y_preds[:, 2]
-                preds[method] = {"lower": preds_low, "upper": preds_up}
+                y_pred_low, y_pred_up = y_preds[:, 1], y_preds[:, 2]
+                preds[method] = {"lower": y_pred_low, "upper": y_pred_up}
 
             for method in methods:
                 coverage = (
-                    (preds[method]['lower'] <= y_test) & (preds[method]['upper'] >= y_test)
+                    (preds[method]["lower"] <= y_test) & (preds[method]["upper"] >= y_test)
                 ).mean()
-                width = (preds[method]['upper'] - preds[method]['lower']).mean()
-                results[len(results)] = [i_trial, dimension, method, coverage, width]
+                width_mean = (preds[method]["upper"] - preds[method]["lower"]).mean()
+                results[len(results)] = {
+                    "trial": trial,
+                    "dimension": dimension,
+                    "method": method,
+                    "coverage": coverage,
+                    "width_mean": width_mean
+                }
     return results
 
 
 def plot_simulation_results(
-    results: Dict[np.ndarray, np.ndarray],
+    results: Dict[int, Dict[str, Any]],
     methods: List[str],
     title: str
 ) -> None:
@@ -108,64 +123,75 @@ def plot_simulation_results(
         Title of the plot.
     """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
-    plt.rcParams.update({'font.size': 14})
+    plt.rcParams.update({"font.size": 14})
     if title is not None:
         plt.suptitle(title)
     for method in methods:
-        coverage_mean = []
-        coverage_SE = []
-        for dim_val in dimensions:
+        coverage_mean, coverage_SE = [], []
+        width_mean, width_SE = [], []
+        for dimension in dimensions:
             coverage_mean.append(np.array([
-                results[key][3] for key in results
-                if (results[key][2] == method) & (results[key][1] == dim_val)
+                results[key]["coverage"] for key in results
+                if (
+                    (results[key]["method"] == method) &
+                    (results[key]["dimension"] == dimension)
+                )
             ]).mean())
             coverage_SE.append(np.array([
-                results[key][3] for key in results
-                if (results[key][2] == method) & (results[key][1] == dim_val)
-            ]).std()/np.sqrt(ntrial))
-        coverage_mean_np = np.array(coverage_mean)
-        coverage_SE_np = np.array(coverage_SE)
+                results[key]["coverage"] for key in results
+                if (
+                    (results[key]["method"] == method) &
+                    (results[key]["dimension"] == dimension)
+                )
+            ]).std(ddof=np.sqrt(ntrial)))
+            width_mean.append(np.array([
+                results[key]["width_mean"] for key in results
+                if (
+                    (results[key]["method"] == method) &
+                    (results[key]["dimension"] == dimension)
+                )
+            ]).mean())
+            width_SE.append(np.array([
+                results[key]["width_mean"] for key in results
+                if (
+                    (results[key]["method"] == method) &
+                    (results[key]["dimension"] == dimension)
+                )
+            ]).std(ddof=np.sqrt(ntrial)))
+        coverage_mean_np = np.stack(coverage_mean)
+        coverage_SE_np = np.stack(coverage_SE)
+        width_mean_np = np.stack(width_mean)
+        width_SE_np = np.stack(width_SE)
         ax1.plot(dimensions, coverage_mean_np, label=method)
         ax1.fill_between(
             dimensions,
-            coverage_mean_np-coverage_SE_np,
-            coverage_mean_np+coverage_SE_np,
+            coverage_mean_np - coverage_SE_np,
+            coverage_mean_np + coverage_SE_np,
             alpha=0.25
         )
-    ax1.axhline(1-alpha, linestyle='dashed', c='k')
-    ax1.set_ylim(0.0, 1.0)
-    ax1.set_xlabel('Dimension d')
-    ax1.set_ylabel('Coverage')
-    ax1.legend()
-    for method in methods:
-        width_mean = []
-        width_SE = []
-        for dim_val in dimensions:
-            width_mean.append(np.array([
-                results[key][-1] for key in results
-                if (results[key][2] == method) & (results[key][1] == dim_val)
-            ]).mean())
-            width_SE.append(np.array([
-                results[key][-1] for key in results
-                if (results[key][2] == method) & (results[key][1] == dim_val)
-            ]).std()/np.sqrt(ntrial))
-        width_mean_np = np.array(width_mean)
-        width_SE_np = np.array(width_SE)
         ax2.plot(dimensions, width_mean_np, label=method)
         ax2.fill_between(
-            dimensions, width_mean-width_SE_np, width_mean+width_SE_np, alpha=0.25
+            dimensions,
+            width_mean - width_SE_np,
+            width_mean + width_SE_np,
+            alpha=0.25
         )
+    ax1.axhline(1-alpha, linestyle="dashed", c="k")
+    ax1.set_ylim(0.0, 1.0)
+    ax1.set_xlabel("Dimension d")
+    ax1.set_ylabel("Coverage")
+    ax1.legend()
     ax2.set_ylim(0, 20)
-    ax2.set_xlabel('Dimension d')
-    ax2.set_ylabel('Interval width')
+    ax2.set_xlabel("Dimension d")
+    ax2.set_ylabel("Interval width")
     ax2.legend()
 
 
 methods = [
-    'naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax', 'cv', 'cv_plus', 'cv_minmax'
+    "naive", "jackknife", "jackknife_plus", "jackknife_minmax", "cv", "cv_plus", "cv_minmax"
 ]
 alpha = 0.1
 ntrial = 10
 dimensions = np.arange(5, 205, 5)
 results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
-plot_simulation_results(results, methods, title='Coverages and interval widths')
+plot_simulation_results(results, methods, title="Coverages and interval widths")
