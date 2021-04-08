@@ -11,7 +11,6 @@ matrix:
 
 install:
   - SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\bin;%PATH%
-  - conda deactivate
   - conda update --yes conda
   - echo %PYTHON_VERSION%
   - echo $PYTHON_VERSION
