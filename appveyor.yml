@@ -3,6 +3,12 @@ build: false
 environment:
   matrix:    
     - MINICONDA: "C:\\Miniconda3-x64"
+      PYTHON_VERSION: "3.7"
+    
+    - MINICONDA: "C:\\Miniconda3-x64"
+      PYTHON_VERSION: "3.8"
+    
+    - MINICONDA: "C:\\Miniconda3-x64"
       PYTHON_VERSION: "3.9"
 
 matrix:
@@ -13,7 +19,6 @@ install:
   - conda update --yes conda
   - conda create -n test-env --yes -c conda-forge python=%PYTHON_VERSION% codecov flake8 mypy numpy>=1.20 scikit-learn pytest-cov
   - conda activate test-env
-  - python --version
 
 test_script:
   - flake8 . --exclude doc --max-line-length=120
