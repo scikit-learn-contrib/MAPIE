@@ -12,7 +12,7 @@ install:
   - cmd: call %MINICONDA%\Scripts\activate.bat
   - conda update --yes conda
   - conda create -n test-env --yes -c conda-forge python=%PYTHON_VERSION% codecov flake8 mypy numpy>=1.20 scikit-learn pytest-cov
-  - activate test-env
+  - conda activate test-env
   - python --version
 
 test_script:
