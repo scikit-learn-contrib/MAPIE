@@ -5,14 +5,25 @@ environment:
     - PYTHON: "C:\\Miniconda3-x64"
       PYTHON_VERSION: "3.7.x"
       PYTHON_ARCH: "64"
+    
+    - PYTHON: "C:\\Miniconda3-x64"
+      PYTHON_VERSION: "3.8.x"
+      PYTHON_ARCH: "64"
+    
+     - PYTHON: "C:\\Miniconda3-x64"
+      PYTHON_VERSION: "3.9.x"
+      PYTHON_ARCH: "64"
+
+matrix:
+  fast_finish: true
 
 install:
   # Prepend miniconda installed Python to the PATH of this build
   # Add Library/bin directory to fix issue
   # https://github.com/conda/conda/issues/1753#issuecomment-153534999
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PYTHON%\\Library\\bin;%PATH%"
-  - "conda update --yes conda"
-  - "conda install --yes -c conda-forge codecov flake8 mypy numpy>=1.20 scikit-learn pytest-cov"
+  - conda update --yes conda
+  - conda install --yes -c conda-forge codecov flake8 mypy numpy>=1.20 scikit-learn pytest-cov
 
 test_script:
   - flake8 . --exclude doc --max-line-length=120
