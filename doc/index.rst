@@ -1,7 +1,9 @@
-Welcome to MAPIE's documentation!
-======================================
+MAPIE: Model Agnostic Prediction Interval Estimator
+===================================================
 
-This module allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
+Welcome to MAPIE's documentation !
+
+MAPIE allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
 
 .. toctree::
    :maxdepth: 2
@@ -15,7 +17,8 @@ This module allows you to easily estimate prediction intervals using your favour
    :hidden:
    :caption: Documentation
 
-   user_guide
+   theoretical_description
+   tutorial
    api
 
 .. toctree::
@@ -25,22 +28,37 @@ This module allows you to easily estimate prediction intervals using your favour
 
    auto_examples/index
 
-`Getting started <quick_start.html>`_
--------------------------------------
+`Getting started`_
+------------------
+
+`Quick start with MAPIE <quick_start.html>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 How to install the module and estimate your first prediction intervals.
 
-`User Guide <user_guide.html>`_
--------------------------------
+`Documentation`_
+----------------
 
-A tutorial that presents the different methods for estimating prediction intervals.
+`Theoretical description <theoretical_description.html>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A brief introduction to the methods used in MAPIE to estimate prediction intervals.
+
+`Tutorial <tutorial.html>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A tutorial that presents some key features of MAPIE.
 
 `API Documentation <api.html>`_
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The API documentation.
 
-`Examples <auto_examples/index.html>`_
---------------------------------------
+
+`Examples`_
+-----------
+
+`General examples <auto_examples/index.html>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A set of examples.

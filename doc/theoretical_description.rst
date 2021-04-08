@@ -1,0 +1,218 @@
+.. title:: Theoretical Description : contents
+
+.. _theoretical_description:
+
+=======================
+Theoretical Description
+=======================
+
+This module uses various resampling methods based on the jackknife strategy
+recently introduced by Foygel-Barber et al. (2020) [1]. 
+They allow the user to estimate robust prediction intervals with any kind of
+Machine-Learning model for regression purposes. 
+We give here a brief theoretical description of the methods included in the module.
+
+Before describing the methods, let's briefly present the mathematical setting.
+For a regression problem in a standard independent and identically distributed
+(i.i.d) case, our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`
+has an unknown distribution :math:`P_{X, Y}`. We can assume that :math:`Y == \mu(X)+\epsilon`
+where :math:`\mu` is the model function we want to determine and
+:math:`\epsilon_i \sim P_{Y \vert X}` is the noise. 
+Given some target quantile :math:`\alpha` or associated target coverage level :math:`1-\alpha`,
+we aim at constructing a prediction interval :math:`\hat{C}_{n, \alpha}` for a new
+feature vector :math:`X_{n+1}` such that 
+
+.. math:: 
+    P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \} \geq 1 - \alpha
+
+1. The "Naive" method
+=====================
+
+The so-called naive method computes the residuals of the training data to estimate the 
+typical error obtained on a new test data point. 
+The prediction interval is therefore given by the prediction obtained by the 
+model trained on the entire training set :math:`\pm` the quantiles of the 
+residuals of the same training set:
+    
+.. math:: \hat{\mu}(X_{n+1}) \pm ((1-\alpha) \textrm{quantile of} |Y_1-\hat{\mu}(X_1)|, ..., |Y_n-\hat{\mu}(X_n)|)
+
+or
+
+.. math:: \hat{C}_{n, \alpha}^{\rm naive}(X_{n+1}) = \hat{\mu}(X_n+1) \pm \hat{q}_{n, \alpha}^+{|Y_i-\hat{\mu}(X_i)|}
+
+with :math:`\hat{q}_{n, \alpha}^+` is the :math:`(1-\alpha)` quantile of the distribution.
+
+Since this method estimates the residuals only on the training set, it tends to be too 
+optimistic and under-estimates the width of prediction intervals because of a potential overfit. 
+As a result, the probability that a new point lies in the interval given by the 
+naive method would be lower than the target level :math:`(1-\alpha)`.
+
+The figure below illustrates the Naive method. 
+
+.. image:: images/jackknife_naive.png
+   :width: 200
+   :align: center
+
+2. The Jackknife method
+=======================
+
+The *standard* Jackknife method is based on the construction of a set of 
+*leave-one-out* models. 
+Estimating the prediction intervals is carried out in three main steps:
+
+- For each instance *i = 1, ..., n* of the training set, we fit the regression function
+  :math:`\hat{\mu}_{-i}` on the entire training set with the :math:`i^{th}` point removed,
+  resulting in *n* leave-one-out models.
+
+- The corresponding leave-one-out residual is computed for each :math:`i^{th}` point
+  :math:`|Y_i - \hat{\mu}_{-i}(X_i)|`.
+
+- We fit the regression function :math:`\hat{\mu}` on the entire training set and we compute
+  the prediction interval using the computed leave-one-out residuals. 
+  
+.. math:: \hat{\mu}(X_{n+1}) \pm ((1-\alpha) \textrm{ quantile of } |Y_1-\hat{\mu}_{-1}(X_1)|, ..., |Y_n-\hat{\mu}_{-n}(X_n)|)
+
+The resulting confidence interval can therefore be summarized as follows
+
+.. math:: \hat{C}_{n, \alpha}^{\rm jackknife}(X_{n+1}) = [ \hat{q}_{n, \alpha}^-\{\hat{\mu}(X_{n+1}) - R_i^{\rm LOO} \}, \hat{q}_{n, \alpha}^+\{\hat{\mu}(X_{n+1}) + R_i^{\rm LOO} \}] 
+
+where
+
+.. math:: R_i^{\rm LOO} = |Y_i - \hat{\mu}_{-i}(X_i)|
+
+is the *leave-one-out* residual.
+
+This method avoids the overfitting problem but can loose its predictive 
+cover when :math:`\hat{\mu}` becomes unstable, for example when the 
+sample size is closed to the number of features
+(as seen in the "Reproducing the simulations from Foygel-Barber et al. (2020)" example). 
+
+
+3. The Jackknife+ method
+========================
+
+Unlike the standard Jackknife method which estimates a prediction interval centered 
+around the prediction of the model trained on the entire dataset, the so-called Jackknife+ 
+method uses each leave-one-out prediction on the new test point to take the variability of the 
+regression function into account.
+The resulting confidence interval can therefore be summarized as follows
+
+.. math:: \hat{C}_{n, \alpha}^{\rm jackknife+}(X_{n+1}) = [ \hat{q}_{n, \alpha}^-\{\hat{\mu}_{-i}(X_{n+1}) - R_I^{\rm LOO} \}, \hat{q}_{n, \alpha}^+\{\hat{\mu}_{-i}(X_{n+1}) + R_I^{\rm LOO} \}] 
+
+As described in [1], this method garantees a higher stability 
+with a coverage level of :math:`1-2\alpha` for a target coverage level of :math:`1-\alpha`,
+without any *a priori* assumption on the distribution of the data :math:`(X, Y)`
+nor on the predictive model.
+
+However, the Jackknife and Jackknife+ methods are computationally heavy since 
+they require to run as many simulations as the number of training points, and is prohibitive 
+for a typical data science usecase. 
+
+4. The Jackknife-minmax method
+==============================
+
+The Jackknife-minmax method offers a slightly more conservative alternative since it uses 
+the minimal and maximal values of the leave-one-out predictions to compute the prediction intervals.
+The estimated prediction intervals can be defined as follows
+
+.. math:: 
+
+    \hat{C}_{n, \alpha}^{\rm jackknife-mm}(X_{n+1}) = 
+    [\min \hat{\mu}_{-i}(X_{n+1}) - \hat{q}_{n, \alpha}^+\{R_I^{\rm LOO} \}, 
+    \max \hat{\mu}_{-i}(X_{n+1}) + \hat{q}_{n, \alpha}^+\{R_I^{\rm LOO} \}] 
+
+As justified by [1], this method garantees a coverage level of 
+:math:`1-\alpha` for a target coverage level of :math:`1-\alpha`.
+
+The figure below, adapted from Fig. 1 of [1], illustrates the three Jackknife
+methods and emphasizes their main differences.
+
+.. image:: images/jackknife_jackknife.png
+   :width: 800
+
+
+5. The CV+ method
+=================
+
+In order to reduce the computational time, one can adopt a cross-validation approach
+instead of a leave-one-out approach, called the CV+ method.
+
+By analogy with the jackknife+ method, estimating the prediction intervals with CV+
+is performed in four main steps:
+
+- We split the training set into *K* disjoint subsets :math:`S_1, S_2, ..., S_k` of equal size. 
+  
+- *K* regression functions :math:`\hat{\mu}_{-Sk}` are fitted on the training set with the 
+  corresponding :math:`k^{th}` fold removed.
+
+- The corresponding *out-of-fold* residual is computed for each :math:`i^{th}` point 
+  :math:`|Y_i - \hat{\mu}_{-Sk(i)}(X_i)|` where *k(i)* is the fold containing *i*.
+
+- Similar to the jackknife+, the regression functions :math:`\hat{\mu}_{-Sk(i)}(X_i)` 
+  are used to estimate the prediction intervals. 
+
+As for Jackknife+, this method garantees a coverage level higher than :math:`1-2\alpha` 
+for a target coverage level of :math:`1-\alpha`, without any *a priori* assumption on 
+the distribution of the data.
+As noted by [1], the Jackknife+ can be viewed as a special case of the CV+ 
+in which :math:`K = n`. 
+In practice, this method results in slightly wider prediction intervals and is therefore 
+more conservative, but gives a reasonable compromise for large datasets where the Jacknife+ 
+method is unfeasible.
+
+
+6. The CV and CV-minmax methods
+===============================
+
+By analogy with the standard Jackknife and Jackknife-minmax methods, the CV and CV-minmax approaches
+are also included in MAPIE. As for the CV+ method, they rely on out-of-fold regression models that
+are used to compute the prediction intervals but using the equations given in the Jackknife and
+Jackknife-minmax sections.  
+
+
+The figure below, adapted from Fig. 1 of [1], illustrates the three CV
+methods and emphasizes their main differences.
+
+.. image:: images/jackknife_cv.png
+   :width: 800
+
+
+
+Key takeaways
+=============
+
+- The Jackknife+ method introduced by [1] allows the user to easily obtain theoretically guaranteed
+  prediction intervals for any kind of sklearn-compatible Machine Learning regressor.
+
+- Since the typical coverage levels estimated by Jackknife+ follow very closely the target coverage levels,
+  this method should be used when accurate and robust prediction intervals are required.
+
+- For practical applications where :math:`n` is large and/or the the computational time of each 
+  *leave-one-out* simulation is high, it is advised to adopt the CV+ method, based on *out-of-fold* 
+  simulations, instead. 
+  Indeed, the methods based on the Jackknife resampling appproach are very cumbersome because they 
+  require to run a high number of simulations, equal to the number of training samples :math:`n`.
+
+- Although the CV+ method results in prediction intervals that are slightly larger than for the 
+  Jackknife+ method, it offers a good compromise between computational time and accurate predictions. 
+
+- The Jackknife-minmax and CV-minmax methods are more conservative since they result in higher
+  theoretical and practical coverages due to the larger widths of the prediction intervals.
+  It is therefore advised to use them when conservative estimates are needed.
+
+The Table below summarizes the key features of each method by focusing on the obtained coverages and the
+computational cost. :math:`n`, :math:`n_{\rm test}`, and :math:`K` are the number of training samples,
+test samples, and cross-validated folds, respectively.
+
+.. csv-table:: Key features of MAPIE methods (adapted from [1])*.
+   :file: images/comp-methods.csv
+   :header-rows: 1
+
+.. [*] Here, the training and evaluation costs correspond to the computational time of the MAPIE ``.fit()`` and ``.predict()`` methods.
+
+
+References
+==========
+
+[1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
+Predictive inference with the jackknife+. Ann. Statist., 49(1):486–507, 022021
