@@ -18,7 +18,7 @@ install:
   # Prepend miniconda installed Python to the PATH of this build
   # Add Library/bin directory to fix issue
   # https://github.com/conda/conda/issues/1753#issuecomment-153534999
-  - SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PYTHON%\\Library\\bin;%PATH%
+  # - SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PYTHON%\\Library\\bin;%PATH%
   - conda update --yes conda
   - conda install --yes -c conda-forge codecov flake8 mypy numpy>=1.20 scikit-learn pytest-cov
 
