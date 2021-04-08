@@ -4,7 +4,7 @@ environment:
   matrix:    
     - MINICONDA: "C:\\Miniconda3-x64"
       PYTHON: "C:\\Python39-x64"
-      PYTHON_VERSION: "3.9"
+      PYTHON_VERSION: "3.9.x"
 
 matrix:
   fast_finish: true
@@ -12,11 +12,7 @@ matrix:
 install:
   - SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\bin;%PATH%
   - conda update --yes conda
-  - echo %PYTHON_VERSION%
-  - echo $PYTHON_VERSION
-  - conda create -n test-env --yes -c conda-forge python=%PYTHON_VERSION% codecov flake8 mypy numpy>=1.20 scikit-learn pytest-cov
-  - python --version
-  - conda activate test-env
+  - conda install --yes -c conda-forge codecov flake8 mypy numpy>=1.20 scikit-learn pytest-cov
   - python --version
 
 test_script:
