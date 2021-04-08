@@ -3,14 +3,6 @@ build: false
 environment:
   matrix:    
     - MINICONDA: "C:\\Miniconda3-x64"
-      PYTHON: "C:\\Python37-x64"
-      PYTHON_VERSION: "3.7.x"
-    
-    - MINICONDA: "C:\\Miniconda3-x64"
-      PYTHON: "C:\\Python38-x64"
-      PYTHON_VERSION: "3.8.x"
-    
-    - MINICONDA: "C:\\Miniconda3-x64"
       PYTHON: "C:\\Python39-x64"
       PYTHON_VERSION: "3.9.x"
 
@@ -18,7 +10,7 @@ matrix:
   fast_finish: true
 
 install:
-  - SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PYTHON%\\Library\\bin;%PATH%
+  - SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\bin;%PATH%
   - python --version
   - conda update --yes conda
   - conda install --yes -c conda-forge codecov flake8 mypy numpy>=1.20 scikit-learn pytest-cov
