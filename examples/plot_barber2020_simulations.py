@@ -133,43 +133,40 @@ def plot_simulation_results(
     title : str
         Title of the plot.
     """
-    methods = list(results.keys())
-    dimensions = list(results[methods[0]].keys())
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
     plt.rcParams.update({"font.size": 14})
-    if title is not None:
-        plt.suptitle(title)
-        for method in methods:
-            coverage_mean = np.stack([
-                results[method][dimension]["coverage"].mean()
-                for dimension in dimensions
-            ])
-            coverage_SE = np.stack([
-                results[method][dimension]["coverage"].std()/np.sqrt(ntrial)
-                for dimension in dimensions
-            ])
-            width_mean = np.stack([
-                results[method][dimension]["width_mean"].mean()
-                for dimension in dimensions
-            ])
-            width_SE = np.stack([
-                results[method][dimension]["width_mean"].std()/np.sqrt(ntrial)
-                for dimension in dimensions
-            ])
-            ax1.plot(dimensions, coverage_mean, label=method)
-            ax1.fill_between(
-                dimensions,
-                coverage_mean - coverage_SE,
-                coverage_mean + coverage_SE,
-                alpha=0.25
-            )
-            ax2.plot(dimensions, width_mean, label=method)
-            ax2.fill_between(
-                dimensions,
-                width_mean - width_SE,
-                width_mean + width_SE,
-                alpha=0.25
-            )
+    plt.suptitle(title)
+    for method in results:
+        coverage_mean = np.stack([
+            results[method][dimension]["coverage"].mean()
+            for dimension in dimensions
+        ])
+        coverage_SE = np.stack([
+            results[method][dimension]["coverage"].std()/np.sqrt(ntrial)
+            for dimension in dimensions
+        ])
+        width_mean = np.stack([
+            results[method][dimension]["width_mean"].mean()
+            for dimension in dimensions
+        ])
+        width_SE = np.stack([
+            results[method][dimension]["width_mean"].std()/np.sqrt(ntrial)
+            for dimension in dimensions
+        ])
+        ax1.plot(dimensions, coverage_mean, label=method)
+        ax1.fill_between(
+            dimensions,
+            coverage_mean - coverage_SE,
+            coverage_mean + coverage_SE,
+            alpha=0.25
+        )
+        ax2.plot(dimensions, width_mean, label=method)
+        ax2.fill_between(
+            dimensions,
+            width_mean - width_SE,
+            width_mean + width_SE,
+            alpha=0.25
+        )
     ax1.axhline(1-alpha, linestyle="dashed", c="k")
     ax1.set_ylim(0.0, 1.0)
     ax1.set_xlabel("Dimension d")
