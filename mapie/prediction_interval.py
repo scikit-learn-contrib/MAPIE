@@ -10,7 +10,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import KFold, LeaveOneOut
 
 
-def check_not_none(estimator: Optional[RegressorMixin]) -> None:
+def check_not_none(estimator:Optional[RegressorMixin]) -> None:
     """
     Check that estimator is not None.
 
