@@ -28,7 +28,7 @@ def check_not_none(estimator: Optional[RegressorMixin]) -> None:
         raise ValueError("Invalid none estimator.")
 
 
-class PredictionInterval(BaseEstimator, RegressorMixin):  # type: ignore
+class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
     Estimator implementing the jackknife+ method and its variations
     for estimating prediction intervals from leave-one-out models.
@@ -81,17 +81,17 @@ class PredictionInterval(BaseEstimator, RegressorMixin):  # type: ignore
 
     Sources
     -------
-    Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshi-rani.
+    Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
     Predictive inference with the jackknife+. Ann. Statist., 49(1):486–507, 022021
 
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.prediction_interval import PredictionInterval
+    >>> from mapie.mapieregressor import MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> pireg = PredictionInterval(LinearRegression())
+    >>> pireg = MapieRegressor(LinearRegression())
     >>> print(pireg.fit(X_toy, y_toy).predict(X_toy))
     [[ 5.28571429  4.61627907  6.2       ]
      [ 7.17142857  6.51744186  8.        ]
@@ -157,7 +157,7 @@ class PredictionInterval(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError("Invalid method.")
         return cv
 
-    def fit(self, X: ArrayLike, y: ArrayLike) -> PredictionInterval:
+    def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
         Fit all jackknife clones and rearrange them into a list.
         The initial estimator is fit apart.
@@ -171,7 +171,7 @@ class PredictionInterval(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        PredictionInterval
+        MapieRegressor
             The model itself.
         """
         self._check_parameters()

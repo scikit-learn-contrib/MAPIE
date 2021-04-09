@@ -18,7 +18,7 @@ install:
 
 script:
   - flake8 . --exclude doc --max-line-length=120
-  # - mypy mapie examples --strict --config-file mypy.ini
+  - mypy mapie examples --strict --config-file mypy.ini
   - pytest --cov-branch --cov=mapie --pyargs mapie
 
 after_success:

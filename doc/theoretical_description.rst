@@ -97,7 +97,7 @@ method uses each leave-one-out prediction on the new test point to take the vari
 regression function into account.
 The resulting confidence interval can therefore be summarized as follows
 
-.. math:: \hat{C}_{n, \alpha}^{\rm jackknife+}(X_{n+1}) = [ \hat{q}_{n, \alpha}^-\{\hat{\mu}_{-i}(X_{n+1}) - R_I^{\rm LOO} \}, \hat{q}_{n, \alpha}^+\{\hat{\mu}_{-i}(X_{n+1}) + R_I^{\rm LOO} \}] 
+.. math:: \hat{C}_{n, \alpha}^{\rm jackknife+}(X_{n+1}) = [ \hat{q}_{n, \alpha}^-\{\hat{\mu}_{-i}(X_{n+1}) - R_i^{\rm LOO} \}, \hat{q}_{n, \alpha}^+\{\hat{\mu}_{-i}(X_{n+1}) + R_i^{\rm LOO} \}] 
 
 As described in [1], this method garantees a higher stability 
 with a coverage level of :math:`1-2\alpha` for a target coverage level of :math:`1-\alpha`,
@@ -142,13 +142,13 @@ is performed in four main steps:
 
 - We split the training set into *K* disjoint subsets :math:`S_1, S_2, ..., S_k` of equal size. 
   
-- *K* regression functions :math:`\hat{\mu}_{-Sk}` are fitted on the training set with the 
+- *K* regression functions :math:`\hat{\mu}_{-S_k}` are fitted on the training set with the 
   corresponding :math:`k^{th}` fold removed.
 
 - The corresponding *out-of-fold* residual is computed for each :math:`i^{th}` point 
-  :math:`|Y_i - \hat{\mu}_{-Sk(i)}(X_i)|` where *k(i)* is the fold containing *i*.
+  :math:`|Y_i - \hat{\mu}_{-S_{k(i)}}(X_i)|` where *k(i)* is the fold containing *i*.
 
-- Similar to the jackknife+, the regression functions :math:`\hat{\mu}_{-Sk(i)}(X_i)` 
+- Similar to the jackknife+, the regression functions :math:`\hat{\mu}_{-S_{k(i)}}(X_i)` 
   are used to estimate the prediction intervals. 
 
 As for Jackknife+, this method garantees a coverage level higher than :math:`1-2\alpha` 
