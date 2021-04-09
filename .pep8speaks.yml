@@ -1,0 +1,17 @@
+scanner:
+  diff_only: False
+  linter: flake8
+
+flake8:
+  max-line-length: 120
+
+no_blank_comment: False
+
+message:
+  opened:
+    header: "Hello @{name}! Thanks for opening this PR."
+    footer: "Do see the [Hitchhiker's guide to code style](https://goo.gl/hqbW4r)"
+  updated:
+    header: "Hello @{name}! Thanks for updating this PR. "
+    footer: ""
+  no_errors: "There are currently no PEP 8 issues detected in this Pull Request. Cheers! :beers: "
