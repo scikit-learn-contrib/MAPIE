@@ -7,7 +7,7 @@ Estimate the prediction intervals of 1D homoscedastic data
 the prediction intervals of 1D homoscedastic data using
 different methods.
 """
-from typing import Any, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy
@@ -19,16 +19,16 @@ from matplotlib import pyplot as plt
 from mapie import MapieRegressor
 
 
-def f(x: np.ndarray) -> Any:
+def f(x: np.ndarray) -> np.ndarray:
     """Polynomial function used to generate one-dimensional data"""
-    return 5*x + 5*x**4 - 9*x**2
+    return np.stack(5*x + 5*x**4 - 9*x**2)
 
 
 def get_homoscedastic_data(
     n_samples: int = 200,
     n_test: int = 1000,
     sigma: float = 0.1
-) -> Tuple[Any, Any, np.ndarray, Any, float]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]:
     """
     Generate one-dimensional data from a given function,
     number of training and test samples and a given standard
