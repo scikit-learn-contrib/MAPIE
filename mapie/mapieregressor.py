@@ -101,9 +101,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
      [14.71428571 13.8        15.38372093]]
     """
 
-    def __init__(self,
+    def __init__(
+        self,
         estimator: Optional[RegressorMixin] = None,
-        alpha: float = 0.1, method: str = "jackknife_plus", n_splits: int = 10, shuffle: bool = True, return_pred: str = "single", random_state: Optional[int] = None
+        alpha: float = 0.1,
+        method: str = "jackknife_plus",
+        n_splits: int = 10,
+        shuffle: bool = True,
+        return_pred: str = "single",
+        random_state: Optional[int] = None
     ) -> None:
         self.estimator = estimator
         self.alpha = alpha
