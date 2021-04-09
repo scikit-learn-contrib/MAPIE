@@ -137,35 +137,23 @@ def plot_simulation_results(
     plt.rcParams.update({"font.size": 14})
     plt.suptitle(title)
     for method in results:
-        coverage_mean = np.stack([
-            results[method][dimension]["coverage"].mean()
-            for dimension in dimensions
-        ])
-        coverage_SE = np.stack([
-            results[method][dimension]["coverage"].std()/np.sqrt(ntrial)
-            for dimension in dimensions
-        ])
-        width_mean = np.stack([
-            results[method][dimension]["width_mean"].mean()
-            for dimension in dimensions
-        ])
-        width_SE = np.stack([
-            results[method][dimension]["width_mean"].std()/np.sqrt(ntrial)
-            for dimension in dimensions
-        ])
+        dimensions = list(results[method].keys())
+        n_dim = len(dimensions)
+        coverage_mean, coverage_SE, width_mean, width_SE = (
+            np.zeros(n_dim), np.zeros(n_dim), np.zeros(n_dim), np.zeros(n_dim)
+        )
+        for idim, dimension in enumerate(dimensions):
+            coverage_mean[idim] = results[method][dimension]["coverage"].mean()
+            coverage_SE[idim] = results[method][dimension]["coverage"].std()/np.sqrt(ntrial)
+            width_mean[idim] = results[method][dimension]["width_mean"].mean()
+            width_SE[idim] = results[method][dimension]["width_mean"].std()/np.sqrt(ntrial)
         ax1.plot(dimensions, coverage_mean, label=method)
         ax1.fill_between(
-            dimensions,
-            coverage_mean - coverage_SE,
-            coverage_mean + coverage_SE,
-            alpha=0.25
+            dimensions, coverage_mean - coverage_SE, coverage_mean + coverage_SE, alpha=0.25
         )
         ax2.plot(dimensions, width_mean, label=method)
         ax2.fill_between(
-            dimensions,
-            width_mean - width_SE,
-            width_mean + width_SE,
-            alpha=0.25
+            dimensions, width_mean - width_SE, width_mean + width_SE, alpha=0.25
         )
     ax1.axhline(1-alpha, linestyle="dashed", c="k")
     ax1.set_ylim(0.0, 1.0)
@@ -182,7 +170,7 @@ methods = [
     "naive", "jackknife", "jackknife_plus", "jackknife_minmax", "cv", "cv_plus", "cv_minmax"
 ]
 alpha = 0.1
-ntrial = 10
-dimensions = np.arange(5, 205, 5)
+ntrial = 1
+dimensions = np.arange(5, 205, 50)
 results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
 plot_simulation_results(results, methods, title="Coverages and interval widths")

@@ -5,8 +5,8 @@
 .. |Travis| image:: https://travis-ci.com/simai-ml/MAPIE.svg?branch=master
 .. _Travis: https://travis-ci.com/github/simai-ml/MAPIE
 
-.. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/coy2qqaqr1rnnt5y/branch/master?svg=true
-.. _AppVeyor: https://ci.appveyor.com/project/mapie/notreadyyet
+.. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/9xgj1vqnd11g3uv5?svg=true
+.. _AppVeyor: https://ci.appveyor.com/project/vtaquet/mapie
 
 .. |Codecov| image:: https://codecov.io/gh/simai-ml/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
 .. _Codecov: https://codecov.io/gh/simai-ml/MAPIE
