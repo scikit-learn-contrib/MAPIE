@@ -3,7 +3,7 @@ scanner:
   diff_only: False
 
 flake8:
-  max-line-length: 79
+  max-line-length: 50
 
 no_blank_comment: False
 
