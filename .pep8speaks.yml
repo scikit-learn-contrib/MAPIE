@@ -5,6 +5,8 @@ scanner:
 flake8:
   max-line-length: 120
 
+no_blank_comment: False
+
 message:
   opened:
     header: "Hello @{name}! Thanks for opening this PR."
