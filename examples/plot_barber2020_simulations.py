@@ -170,7 +170,7 @@ methods = [
     "naive", "jackknife", "jackknife_plus", "jackknife_minmax", "cv", "cv_plus", "cv_minmax"
 ]
 alpha = 0.1
-ntrial = 1
-dimensions = np.arange(5, 205, 50)
+ntrial = 10
+dimensions = np.arange(5, 205, 5)
 results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
 plot_simulation_results(results, methods, title="Coverages and interval widths")
