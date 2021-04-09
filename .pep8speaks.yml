@@ -4,7 +4,6 @@ scanner:
 
 flake8:
   max-line-length: 120
-  exclude: doc
 
 no_blank_comment: False
 
