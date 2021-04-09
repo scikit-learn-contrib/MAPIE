@@ -102,8 +102,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
 
     def __init__(
-        self,
-        estimator: Optional[RegressorMixin] = None,
+        self, estimator: Optional[RegressorMixin] = None,
         alpha: float = 0.1,
         method: str = "jackknife_plus",
         n_splits: int = 10,
