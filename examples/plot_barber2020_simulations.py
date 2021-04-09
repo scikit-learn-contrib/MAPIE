@@ -79,7 +79,7 @@ def PIs_vs_dimensions(
         for trial in range(n_trial):
             beta = np.random.normal(size=dimension)
             beta_norm = np.sqrt((beta**2).sum())
-            beta = beta/beta_norm * np.sqrt(SNR)
+            beta = beta/beta_norm*np.sqrt(SNR)
             X_train = np.random.normal(size=(n_train, dimension))
             noise_train = np.random.normal(size=n_train)
             noise_test = np.random.normal(size=n_test)
@@ -155,13 +155,13 @@ def plot_simulation_results(
                 ).mean()
                 coverage_SE[idim] = np.stack(
                     [results[dimension][trial][method]["coverage"] for trial in trials]
-                    ).std()/np.sqrt(ntrial)
+                ).std()/np.sqrt(ntrial)
                 width_mean[idim] = np.stack(
                     [results[dimension][trial][method]["width_mean"] for trial in trials]
                 ).mean()
                 width_SE[idim] = np.stack(
                     [results[dimension][trial][method]["width_mean"] for trial in trials]
-                    ).std()/np.sqrt(ntrial)
+                ).std()/np.sqrt(ntrial)
             ax1.plot(dimensions, coverage_mean, label=method)
             ax1.fill_between(
                 dimensions,
