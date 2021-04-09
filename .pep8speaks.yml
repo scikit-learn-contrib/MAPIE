@@ -1,5 +1,6 @@
 scanner:
     linter: flake8
+    diff_only: False
 
 flake8:
     max-line-length: 40
