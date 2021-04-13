@@ -9,7 +9,7 @@ Theoretical Description
 This module uses various resampling methods based on the jackknife strategy
 recently introduced by Foygel-Barber et al. (2020) [1]. 
 They allow the user to estimate robust prediction intervals with any kind of
-Machine-Learning model for regression purposes. 
+Machine-Learning model for regression purposes on single-output data. 
 We give here a brief theoretical description of the methods included in the module.
 
 Before describing the methods, let's briefly present the mathematical setting.
