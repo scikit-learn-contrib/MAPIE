@@ -14,4 +14,3 @@ dependencies:
     - sphinx=3.5.3
     - sphinx_rtd_theme=0.5.2
     - sphinx-gallery=0.8.2
-    
