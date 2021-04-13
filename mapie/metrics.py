@@ -1,11 +1,10 @@
 import numpy as np
 from typing import List, Union, Any
-import pandas as pd
 
 
 def coverage(
-    y_true: Union[List[Any], np.ndarray, pd.DataFrame],
-    y_preds: Union[List[Any], np.ndarray, pd.DataFrame]
+    y_true: Union[List[Any], np.ndarray],
+    y_preds: Union[List[Any], np.ndarray]
 ) -> np.float64:
     """
     Effective coverage obtained by the prediction intervals.
@@ -15,9 +14,9 @@ def coverage(
 
     Parameters
     ----------
-    y_true : Union[List, np.ndarray, pd.DataFrame] of shape (n_samples,)
+    y_true : Union[List, np.ndarray] of shape (n_samples,)
         True labels.
-    y_preds : Union[List, np.ndarray, pd.DataFrame] of shape (n_samples, 3)
+    y_preds : Union[List, np.ndarray] of shape (n_samples, 3)
         Predictions as returned by `MapieRegressor.predict()`.
 
     Returns
