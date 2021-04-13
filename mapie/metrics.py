@@ -25,12 +25,12 @@ def coverage(y_true: np.ndarray, y_preds: np.ndarray) -> float:
     >>> from mapie.metrics import coverage
     >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
     >>> y_preds = np.array([
-        [5, 4, 6],
-        [7.5, 6., 9.],
-        [9.5, 9, 10.],
-        [10.5, 8.5, 12.5],
-        [11.5, 10.5, 12.]
-    ])
+    ...    [5, 4, 6],
+    ...    [7.5, 6., 9.],
+    ...    [9.5, 9, 10.],
+    ...    [10.5, 8.5, 12.5],
+    ...    [11.5, 10.5, 12.]
+    ... ])
     >>> print(coverage(y_true, y_preds))
     0.8
     """
