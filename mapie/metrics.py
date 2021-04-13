@@ -40,4 +40,5 @@ def coverage(
     y_true = column_or_1d(y_true)
     y_pred_low = column_or_1d(y_pred_low)
     y_pred_up = column_or_1d(y_pred_up)
-    return ((y_pred_low <= y_true) & (y_pred_up >= y_true)).mean().item()  # type: ignore
+    coverage = ((y_pred_low <= y_true) & (y_pred_up >= y_true)).mean()  # type: ignore
+    return float(coverage)

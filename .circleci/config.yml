@@ -17,6 +17,7 @@ jobs:
               conda update --yes conda
               conda create -n test-env --yes -c conda-forge python=3.9 numpy>=1.20 numpydoc scikit-learn matplotlib sphinx sphinx-gallery sphinx_rtd_theme
               conda activate test-env
+              conda env export
               pip install .
       - run: 
           name: build documentation
