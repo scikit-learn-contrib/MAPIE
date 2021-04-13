@@ -37,9 +37,7 @@ def coverage(
     >>> print(coverage(y_true, y_pred_low, y_pred_up))
     0.8
     """
-    y_true_rav = column_or_1d(y_true)
-    y_pred_low_rav = column_or_1d(y_pred_low)
-    y_pred_up_rav = column_or_1d(y_pred_up)
-    return float((
-        (y_pred_low_rav <= y_true_rav) & (y_pred_up_rav >= y_true_rav)
-    ).mean())
+    y_true = column_or_1d(y_true)
+    y_pred_low = column_or_1d(y_pred_low)
+    y_pred_up = column_or_1d(y_pred_up)
+    return ((y_pred_low <= y_true) & (y_pred_up >= y_true)).mean().item()  # type: ignore
