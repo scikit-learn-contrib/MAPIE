@@ -17,18 +17,6 @@ y_toy_preds = np.array([
 ])
 
 
-def test_ytrue_type() -> None:
-    "Test that y_true is a numpy array."
-    with pytest.raises(ValueError, match=r".*not an np.ndarray*"):
-        coverage(list(y_toy), y_toy_preds)
-
-
-def test_ypreds_type() -> None:
-    "Test that y_preds is a numpy array."
-    with pytest.raises(ValueError, match=r".*not an np.ndarray*"):
-        coverage(y_toy, list(y_toy_preds))
-
-
 def test_same_length() -> None:
     "Test when y_true and y_preds have different lengths."
     with pytest.raises(ValueError, match=r".*different lengths*"):
@@ -44,3 +32,13 @@ def test_ypreds_shape() -> None:
 def test_toydata() -> None:
     "Test coverage for toy data"
     assert (coverage(y_toy, y_toy_preds) == 0.8)
+
+
+def test_ytrue_type() -> None:
+    "Test that list(y_true) gives right coverage."
+    assert (coverage(list(y_toy), y_toy_preds) == 0.8)
+
+
+def test_ypreds_type() -> None:
+    "Test that list(y_preds) gives right coverage."
+    assert (coverage(y_toy, list(y_toy_preds)) == 0.8)
