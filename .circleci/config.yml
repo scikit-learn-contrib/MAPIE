@@ -15,7 +15,7 @@ jobs:
               export PATH=$HOME/miniconda/bin:$PATH
               source $HOME/miniconda/etc/profile.d/conda.sh
               conda update --yes conda
-              conda create -n test-env --yes python=3.9 numpy>=1.20 scikit-learn matplotlib
+              conda create -n test-env --yes python=3.9 numpy>=1.20 scikit-learn matplotlib sphinx
               conda activate test-env
               pip install .
       - run: 
