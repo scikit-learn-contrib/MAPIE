@@ -1,38 +1,37 @@
-version: 2
+version: 2.1
 
 jobs:
   build:
     docker:
-      - image: circleci/python:3.6.1
-    working_directory: ~/repo
+      - image: cimg/python:3.9.4
     steps:
       - checkout
-      - run:
+      - run: 
           name: install dependencies
           command: |
-            wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-            chmod +x miniconda.sh && ./miniconda.sh -b -p ~/miniconda
-            export PATH="~/miniconda/bin:$PATH"
-            conda update --yes --quiet conda
-            conda create -n testenv --yes --quiet python=3
-            source activate testenv
-            conda install --yes pip numpy scipy scikit-learn matplotlib sphinx sphinx_rtd_theme numpydoc pillow
-            pip install sphinx-gallery
-            pip install .
-            cd doc
-            make html
+              wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+              chmod +x miniconda.sh 
+              bash miniconda.sh -b -p $HOME/miniconda
+              export PATH=$HOME/miniconda/bin:$PATH
+              source $HOME/miniconda/etc/profile.d/conda.sh
+              conda update --yes conda
+              conda create -n test-env --yes python=3.9 numpy>=1.20 scikit-learn
+              conda activate test-env
+              pip install .
+      - run: 
+          name: build documentation
+          command: |
+              cd doc
+              make html
       - store_artifacts:
           path: doc/_build/html/
           destination: doc
       - store_artifacts:
           path: ~/log.txt
       - run: ls -ltrh doc/_build/html
-    filters:
-      branches:
-        ignore: gh-pages
 
 workflows:
   version: 2
-  workflow:
+    workflow:
     jobs:
       - build
