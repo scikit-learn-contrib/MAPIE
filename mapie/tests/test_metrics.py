@@ -17,28 +17,39 @@ y_toy_preds = np.array([
 ])
 
 
+def test_ypredlow_shape() -> None:
+    "Test shape of y_pred_low."
+    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
+        coverage(y_toy, y_toy_preds[:, :2], y_toy_preds[:, 2])
+
+
+def test_ypredup_shape() -> None:
+    "Test shape of y_pred_low."
+    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
+        coverage(y_toy, y_toy_preds[:, 1], y_toy_preds[:, 1:])
+
+
 def test_same_length() -> None:
     "Test when y_true and y_preds have different lengths."
-    with pytest.raises(ValueError, match=r".*different lengths*"):
-        coverage(y_toy, y_toy_preds[:-1, :])
-
-
-def test_ypreds_shape() -> None:
-    "Test that y_preds.shape[1] is equal to 3."
-    with pytest.raises(ValueError, match=r".*not equal to 3*"):
-        coverage(y_toy, y_toy_preds[:, :2])
+    with pytest.raises(ValueError, match=r".*could not be broadcast*"):
+        coverage(y_toy, y_toy_preds[:-1, 1], y_toy_preds[:-1, 2])
 
 
 def test_toydata() -> None:
     "Test coverage for toy data"
-    assert (coverage(y_toy, y_toy_preds) == 0.8)
+    assert (coverage(y_toy, y_toy_preds[:, 1], y_toy_preds[:, 2]) == 0.8)
 
 
 def test_ytrue_type() -> None:
     "Test that list(y_true) gives right coverage."
-    assert (coverage(list(y_toy), y_toy_preds) == 0.8)
+    assert (coverage(list(y_toy), y_toy_preds[:, 1], y_toy_preds[:, 2]) == 0.8)
 
 
-def test_ypreds_type() -> None:
-    "Test that list(y_preds) gives right coverage."
-    assert (coverage(y_toy, list(y_toy_preds)) == 0.8)
+def test_ypredlow_type() -> None:
+    "Test that list(y_pred_low) gives right coverage."
+    assert (coverage(y_toy, list(y_toy_preds[:, 1]), y_toy_preds[:, 2]) == 0.8)
+
+
+def test_ypredup_type() -> None:
+    "Test that list(y_pred_up) gives right coverage."
+    assert (coverage(y_toy, y_toy_preds[:, 1], list(y_toy_preds[:, 2])) == 0.8)

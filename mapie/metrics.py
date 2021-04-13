@@ -1,11 +1,12 @@
-import numpy as np
-from typing import List, Union, Any
+from numpy.typing import ArrayLike
+from sklearn.utils.validation import column_or_1d
 
 
 def coverage(
-    y_true: Union[List[Any], np.ndarray],
-    y_preds: Union[List[Any], np.ndarray]
-) -> np.float64:
+    y_true: ArrayLike,
+    y_pred_low: ArrayLike,
+    y_pred_up: ArrayLike,
+) -> float:
     """
     Effective coverage obtained by the prediction intervals.
 
@@ -14,10 +15,12 @@ def coverage(
 
     Parameters
     ----------
-    y_true : Union[List, np.ndarray] of shape (n_samples,)
+    y_true : ArrayLike of shape (n_samples,)
         True labels.
-    y_preds : Union[List, np.ndarray] of shape (n_samples, 3)
-        Predictions as returned by `MapieRegressor.predict()`.
+    y_pred_low : ArrayLike of shape (n_samples,)
+        Lower bound of prediction intervals.
+    y_pred_up : ArrayLike of shape (n_samples,)
+        Upper bound of prediction intervals.
 
     Returns
     -------
@@ -27,25 +30,16 @@ def coverage(
     Examples
     --------
     >>> from mapie.metrics import coverage
+    >>> import numpy as np
     >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
-    >>> y_preds = np.array([
-    ...    [5, 4, 6],
-    ...    [7.5, 6., 9.],
-    ...    [9.5, 9, 10.],
-    ...    [10.5, 8.5, 12.5],
-    ...    [11.5, 10.5, 12.]
-    ... ])
-    >>> print(coverage(y_true, y_preds))
+    >>> y_pred_low = np.array([4, 6, 9, 8.5, 10.5])
+    >>> y_pred_up = np.array([6, 9, 10, 12.5, 12])
+    >>> print(coverage(y_true, y_pred_low, y_pred_up))
     0.8
     """
-    if isinstance(y_true, List):
-        y_true = np.stack(y_true)
-    if isinstance(y_preds, List):
-        y_preds = np.stack(y_preds, axis=0)
-    if y_true.shape[0] != y_preds.shape[0]:
-        raise ValueError("y_true and y_preds have different lengths.")
-    if y_preds.shape[1] != 3:
-        raise ValueError("y_preds.shape[1] is not equal to 3.")
-    return np.float64((
-        (y_preds[:, 1] <= y_true) & (y_preds[:, 2] >= y_true)
+    y_true_rav = column_or_1d(y_true)
+    y_pred_low_rav = column_or_1d(y_pred_low)
+    y_pred_up_rav = column_or_1d(y_pred_up)
+    return float((
+        (y_pred_low_rav <= y_true_rav) & (y_pred_up_rav >= y_true_rav)
     ).mean())
