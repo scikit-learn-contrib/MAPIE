@@ -1,7 +1,12 @@
 import numpy as np
+from typing import List, Union, Any
+import pandas as pd
 
 
-def coverage(y_true: np.ndarray, y_preds: np.ndarray) -> np.float64:
+def coverage(
+    y_true: Union[List[Any], np.ndarray, pd.DataFrame],
+    y_preds: Union[List[Any], np.ndarray, pd.DataFrame]
+) -> np.float64:
     """
     Effective coverage obtained by the prediction intervals.
 
@@ -10,9 +15,9 @@ def coverage(y_true: np.ndarray, y_preds: np.ndarray) -> np.float64:
 
     Parameters
     ----------
-    y_true : np.ndarray of shape (n_samples,)
+    y_true : Union[List, np.ndarray, pd.DataFrame] of shape (n_samples,)
         True labels.
-    y_preds : np.ndarray of shape (n_samples, 3)
+    y_preds : Union[List, np.ndarray, pd.DataFrame] of shape (n_samples, 3)
         Predictions as returned by `MapieRegressor.predict()`.
 
     Returns
@@ -34,10 +39,10 @@ def coverage(y_true: np.ndarray, y_preds: np.ndarray) -> np.float64:
     >>> print(coverage(y_true, y_preds))
     0.8
     """
-    if not isinstance(y_true, np.ndarray):
-        raise ValueError("y_true is not an np.ndarray.")
-    if not isinstance(y_preds, np.ndarray):
-        raise ValueError("y_preds is not an np.ndarray.")
+    if isinstance(y_true, List):
+        y_true = np.stack(y_true)
+    if isinstance(y_preds, List):
+        y_preds = np.stack(y_preds, axis=0)
     if y_true.shape[0] != y_preds.shape[0]:
         raise ValueError("y_true and y_preds have different lengths.")
     if y_preds.shape[1] != 3:
