@@ -31,7 +31,8 @@ def check_not_none(estimator: Optional[RegressorMixin]) -> None:
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
     Estimator implementing the jackknife+ method and its variations
-    for estimating prediction intervals from leave-one-out models.
+    for estimating prediction intervals from leave-one-out regressors on
+    single-output data.
 
     Parameters
     ----------

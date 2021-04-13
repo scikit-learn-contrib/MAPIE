@@ -18,6 +18,7 @@ from sklearn.utils._testing import assert_almost_equal
 from sklearn.model_selection import LeaveOneOut
 
 from mapie.mapieregressor import MapieRegressor
+from mapie.metrics import coverage
 
 
 X_boston, y_boston = load_boston(return_X_y=True)
@@ -218,4 +219,4 @@ def test_linreg_results(method: str) -> None:
     y_preds = mapie.predict(X_reg)
     preds_low, preds_up = y_preds[:, 1], y_preds[:, 2]
     assert_almost_equal((preds_up-preds_low).mean(), expected_widths[method], 2)
-    assert_almost_equal(((preds_up >= y_reg) & (preds_low <= y_reg)).mean(), expected_coverages[method], 2)
+    assert_almost_equal(coverage(y_reg, preds_low, preds_up), expected_coverages[method], 2)
