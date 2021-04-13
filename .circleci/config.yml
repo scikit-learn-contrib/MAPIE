@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run: 
-          name: install dependencies
+          name: install dependencies and build documentation
           command: |
               wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
               chmod +x miniconda.sh 
@@ -18,10 +18,6 @@ jobs:
               conda create -n test-env --yes -c conda-forge python=3.9 numpy>=1.20 numpydoc scikit-learn matplotlib sphinx sphinx-gallery sphinx_rtd_theme
               conda activate test-env
               pip install .
-      - run: 
-          name: build documentation
-          command: |
-              conda env export
               cd doc
               make html
       - store_artifacts:
