@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def coverage(y_true: np.ndarray, y_preds: np.ndarray) -> float:
+def coverage(y_true: np.ndarray, y_preds: np.ndarray) -> np.float64:
     """
     Effective coverage obtained by the prediction intervals.
 
@@ -42,6 +42,6 @@ def coverage(y_true: np.ndarray, y_preds: np.ndarray) -> float:
         raise ValueError("y_true and y_preds have different lengths.")
     if y_preds.shape[1] != 3:
         raise ValueError("y_preds.shape[1] is not equal to 3.")
-    return (
+    return np.float64((
         (y_preds[:, 1] <= y_true) & (y_preds[:, 2] >= y_true)
-    ).mean()
+    ).mean())
