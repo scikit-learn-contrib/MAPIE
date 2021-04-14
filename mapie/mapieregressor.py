@@ -80,8 +80,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     val_fold_ids_: np.ndarray of shape(n_samples,)
         Attributes the corresponding out-of-folds model to each training point.
 
-    Sources
-    -------
+    References
+    ----------
     Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
     Predictive inference with the jackknife+. Ann. Statist., 49(1):486–507, 022021
 

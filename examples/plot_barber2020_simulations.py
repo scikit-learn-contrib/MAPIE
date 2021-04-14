@@ -29,6 +29,7 @@ from sklearn.linear_model import LinearRegression
 from matplotlib import pyplot as plt
 
 from mapie import MapieRegressor
+from mapie import coverage
 
 
 def PIs_vs_dimensions(
@@ -104,13 +105,12 @@ def PIs_vs_dimensions(
                 )
                 mapie.fit(X_train, y_train)
                 y_preds = mapie.predict(X_test)
-                coverage = (
-                    (y_preds[:, 1] <= y_test) &
-                    (y_preds[:, 2] >= y_test)
+                results[method][dimension]["coverage"][trial] = coverage(
+                    y_test, y_preds[:, 1], y_preds[:, 2]
+                )
+                results[method][dimension]["width_mean"][trial] = (
+                    y_preds[:, 2] - y_preds[:, 1]
                 ).mean()
-                width_mean = (y_preds[:, 2] - y_preds[:, 1]).mean()
-                results[method][dimension]["coverage"][trial] = coverage
-                results[method][dimension]["width_mean"][trial] = width_mean
     return results
 
 
@@ -170,7 +170,7 @@ methods = [
     "naive", "jackknife", "jackknife_plus", "jackknife_minmax", "cv", "cv_plus", "cv_minmax"
 ]
 alpha = 0.1
-ntrial = 10
-dimensions = np.arange(5, 205, 5)
+ntrial = 5
+dimensions = np.arange(10, 210, 10)
 results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
 plot_simulation_results(results, methods, title="Coverages and interval widths")
