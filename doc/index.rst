@@ -3,7 +3,8 @@ MAPIE: Model Agnostic Prediction Interval Estimator
 
 Welcome to MAPIE's documentation !
 
-MAPIE allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
+MAPIE allows you to easily estimate prediction intervals on single-output data
+using your favourite sklearn-compatible regressor.
 
 .. toctree::
    :maxdepth: 2
