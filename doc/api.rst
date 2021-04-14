@@ -2,15 +2,23 @@
 MAPIE API
 ##############
 
-
-
 .. currentmodule:: mapie
 
-PredictionInterval
-==================
+MAPIE
+=====
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
 
    MapieRegressor
+
+Metrics
+=======
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   
+   coverage
+
