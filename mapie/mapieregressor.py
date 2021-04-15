@@ -67,10 +67,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Whether to shuffle the data before splitting into batches.
     return_pred: str, optional
         Return the predictions from either
-            - the single estimator trained on the full training
-            dataset ("single")
-            - the median of the prediction intervals computed from
-            the leave-one-out or out-of-folds models ("ensemble")
+            - the single estimator trained on the full training dataset ("single")
+            - the median of the prediction intervals computed from the leave-one-out
+            or out-of-folds models ("ensemble")
         Valid for the jackknife_plus, jackknife_minmax, cv_plus, or cv_minmax methods.
         By  default, returns "single"
     random_state : int, optional
@@ -86,7 +85,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     residuals_ : np.ndarray of shape (n_samples_train,)
         Residuals between y_train and y_pred.
     k_: np.ndarray of shape(n_samples_train,)
-        Id of the fold containing each sample.
+        Id of the fold containing each trainig sample.
 
     References
     ----------
