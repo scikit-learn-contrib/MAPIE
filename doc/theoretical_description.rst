@@ -140,7 +140,7 @@ instead of a leave-one-out approach, called the CV+ method.
 By analogy with the jackknife+ method, estimating the prediction intervals with CV+
 is performed in four main steps:
 
-- We split the training set into *K* disjoint subsets :math:`S_1, S_2, ..., S_k` of equal size. 
+- We split the training set into *K* disjoint subsets :math:`S_1, S_2, ..., S_K` of equal size. 
   
 - *K* regression functions :math:`\hat{\mu}_{-S_k}` are fitted on the training set with the 
   corresponding :math:`k^{th}` fold removed.

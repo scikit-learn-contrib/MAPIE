@@ -152,8 +152,7 @@ def test_jkcv_attribute(method: str) -> None:
     mapie = MapieRegressor(DummyRegressor(), method=method)
     mapie.fit(X_reg, y_reg)
     assert hasattr(mapie, 'estimators_')
-    assert hasattr(mapie, 'residuals_split_')
-    assert hasattr(mapie, 'y_train_pred_split_')
+    assert hasattr(mapie, 'residuals_')
 
 
 @pytest.mark.parametrize("method", cv_methods)
@@ -161,7 +160,7 @@ def test_cv_attributes(method: str) -> None:
     """Test class attributes shared by CV methods."""
     mapie = MapieRegressor(DummyRegressor(), method=method, shuffle=False)
     mapie.fit(X_reg, y_reg)
-    assert hasattr(mapie, 'val_fold_ids_')
+    assert hasattr(mapie, 'k_')
     assert mapie.random_state is None
 
 
