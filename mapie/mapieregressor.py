@@ -48,42 +48,53 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     ----------
     estimator : sklearn.RegressorMixin, optional
         Any scikit-learn regressor, by default None.
+
     alpha: float, optional
         1 - (target coverage level), by default 0.1.
+
     method: str, optional
         Method to choose for prediction interval estimates.
-        Choose among:
-            - "naive"
-            - "jackknife"
-            - "jackknife_plus"
-            - "jackknife_minmax"
-            - "cv"
-            - "cv_plus"
-            - "cv_minmax"
         By default, returns "jackknife_plus" method.
+        Choose among:
+        - "naive"
+        - "jackknife"
+        - "jackknife_plus"
+        - "jackknife_minmax"
+        - "cv"
+        - "cv_plus"
+        - "cv_minmax"
+
     n_splits: int, optional
         Number of splits for cross-validation, by default 10.
+
     shuffle: bool, default=True
         Whether to shuffle the data before splitting into batches.
+
     return_pred: str, optional
         Return the predictions from either
-            - the single estimator trained on the full training dataset ("single")
-            - the median of the prediction intervals computed from the leave-one-out
-            or out-of-folds models ("ensemble")
+        - the single estimator trained on the full training dataset ("single")
+        - the median of the prediction intervals computed from the leave-one-out or out-of-folds models ("ensemble")
+
         Valid for the jackknife_plus, jackknife_minmax, cv_plus, or cv_minmax methods.
-        By  default, returns "single"
+        By default, returns "single".
+
     random_state : int, optional
+        Control randomness of cross-validation if relevant.
 
     Attributes
     ----------
     single_estimator_ : sklearn.RegressorMixin
         Estimator fit on the whole training set.
+
     estimators_ : list
         List of leave-one-out estimators.
+
     quantile_: float
         Quantile of the naive, jackknife, or CV residuals.
+
     residuals_ : np.ndarray of shape (n_samples_train,)
         Residuals between y_train and y_pred.
+
     k_: np.ndarray of shape(n_samples_train,)
         Id of the fold containing each trainig sample.
 
@@ -141,8 +152,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         Define the object that splits the dataset into training
         and validation folds depending on the method:
-        - LeaveOneOut for jackknife methods
-        - KFold for CV methods
+            - LeaveOneOut for jackknife methods
+            - KFold for CV methods
 
         Returns
         -------
@@ -167,6 +178,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ----------
         X : ArrayLike of shape (n_samples, n_features)
             Training data.
+
         y : ArrayLike of shape (n_samples,)
             Training labels.
 
