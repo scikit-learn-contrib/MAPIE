@@ -83,9 +83,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         List of leave-one-out estimators.
     quantile_: float
         Quantile of the naive, jackknife, or CV residuals.
-    residuals_ : np.ndarray of shape (n_samples, n_splits)
+    residuals_ : np.ndarray of shape (n_samples_train,)
         Residuals between y_train and y_pred.
-    k_: np.ndarray of shape(n_samples,)
+    k_: np.ndarray of shape(n_samples_train,)
         Id of the fold containing each sample.
 
     References
