@@ -1,7 +1,8 @@
 version: 2
 
 python:
-  install:
+  version: 3.8
+  install: 
     - method: pip
       path: .
 
