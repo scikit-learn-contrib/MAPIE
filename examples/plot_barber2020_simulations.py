@@ -99,7 +99,7 @@ def PIs_vs_dimensions(
                     LinearRegression(),
                     alpha=alpha,
                     method=method,
-                    n_splits=10,
+                    n_splits=5,
                     shuffle=False,
                     return_pred="ensemble"
                 )
@@ -116,7 +116,6 @@ def PIs_vs_dimensions(
 
 def plot_simulation_results(
     results: Dict[str, Dict[int, Dict[str, np.ndarray]]],
-    methods: List[str],
     title: str
 ) -> None:
     """
@@ -128,8 +127,6 @@ def plot_simulation_results(
     results : Dict[str, Dict[int, Dict[str, np.ndarray]]]
         Prediction interval widths and coverages for each method, trial,
         and dimension value.
-    methods : List[str]
-        List of methods to show.
     title : str
         Title of the plot.
     """
@@ -155,7 +152,7 @@ def plot_simulation_results(
         ax2.fill_between(
             dimensions, width_mean - width_SE, width_mean + width_SE, alpha=0.25
         )
-    ax1.axhline(1-alpha, linestyle="dashed", c="k")
+    ax1.axhline(1 - alpha, linestyle="dashed", c="k")
     ax1.set_ylim(0.0, 1.0)
     ax1.set_xlabel("Dimension d")
     ax1.set_ylabel("Coverage")
@@ -167,10 +164,12 @@ def plot_simulation_results(
 
 
 methods = [
-    "naive", "jackknife", "jackknife_plus", "jackknife_minmax", "cv", "cv_plus", "cv_minmax"
+    "naive",
+    "cv",
+    "cv_plus"
 ]
 alpha = 0.1
-ntrial = 5
-dimensions = np.arange(10, 210, 10)
+ntrial = 1
+dimensions = np.arange(10, 150, 10)
 results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
-plot_simulation_results(results, methods, title="Coverages and interval widths")
+plot_simulation_results(results, title="Coverages and interval widths")

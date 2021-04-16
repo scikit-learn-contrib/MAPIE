@@ -9,6 +9,16 @@ from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import KFold, LeaveOneOut
 
+valid_methods = [
+    "naive",
+    "jackknife",
+    "jackknife_plus",
+    "jackknife_minmax",
+    "cv",
+    "cv_plus",
+    "cv_minmax"
+]
+
 
 def check_not_none(estimator: Optional[RegressorMixin]) -> None:
     """
@@ -38,47 +48,55 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     ----------
     estimator : sklearn.RegressorMixin, optional
         Any scikit-learn regressor, by default None.
+
     alpha: float, optional
         1 - (target coverage level), by default 0.1.
+
     method: str, optional
         Method to choose for prediction interval estimates.
-        Choose among:
-            - "naive"
-            - "jackknife"
-            - "jackknife_plus"
-            - "jackknife_minmax"
-            - "cv"
-            - "cv_plus"
-            - "cv_minmax"
         By default, returns "jackknife_plus" method.
+        Choose among:
+        - "naive"
+        - "jackknife"
+        - "jackknife_plus"
+        - "jackknife_minmax"
+        - "cv"
+        - "cv_plus"
+        - "cv_minmax"
+
     n_splits: int, optional
         Number of splits for cross-validation, by default 10.
+
     shuffle: bool, default=True
         Whether to shuffle the data before splitting into batches.
+
     return_pred: str, optional
         Return the predictions from either
-            - the single estimator trained on the full training
-            dataset ("single")
-            - the median of the prediction intervals computed from
-            the leave-one-out or out-of-folds models ("ensemble")
+        - the single estimator trained on the full training dataset ("single")
+        - the median of the prediction intervals computed from the leave-one-out or out-of-folds models ("ensemble")
+
         Valid for the jackknife_plus, jackknife_minmax, cv_plus, or cv_minmax methods.
-        By  default, returns "single"
+        By default, returns "single".
+
     random_state : int, optional
+        Control randomness of cross-validation if relevant.
 
     Attributes
     ----------
     single_estimator_ : sklearn.RegressorMixin
         Estimator fit on the whole training set.
+
     estimators_ : list
         List of leave-one-out estimators.
-    y_train_pred_split_ : np.ndarray of shape (n_samples,) or (n_splits,)
-        Training label predictions by leave-one-out or out-of-fold estimators.
+
     quantile_: float
         Quantile of the naive, jackknife, or CV residuals.
-    residuals_split_ : np.ndarray of shape (n_samples,)
-        Residuals between y_train and y_train_pred_split_.
-    val_fold_ids_: np.ndarray of shape(n_samples,)
-        Attributes the corresponding out-of-folds model to each training point.
+
+    residuals_ : np.ndarray of shape (n_samples_train,)
+        Residuals between y_train and y_pred.
+
+    k_: np.ndarray of shape(n_samples_train,)
+        Id of the fold containing each trainig sample.
 
     References
     ----------
@@ -126,9 +144,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         if not 0 < self.alpha < 1:
             raise ValueError("Invalid alpha. Please choose an alpha value between 0 and <1.")
-        valid_methods = [
-            "naive", "jackknife", "jackknife_plus", "jackknife_minmax", "cv", "cv_plus", "cv_minmax"
-        ]
         if self.method not in valid_methods:
             raise ValueError("Invalid method.")
         check_not_none(self.estimator)
@@ -137,8 +152,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         Define the object that splits the dataset into training
         and validation folds depending on the method:
-        - LeaveOneOut for jackknife methods
-        - KFold for CV methods
+            - LeaveOneOut for jackknife methods
+            - KFold for CV methods
 
         Returns
         -------
@@ -147,11 +162,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if self.method.startswith("cv"):
             if not self.shuffle:
                 self.random_state = None
-            cv = KFold(
-                n_splits=self.n_splits,
-                shuffle=self.shuffle,
-                random_state=self.random_state
-            )
+            cv = KFold(n_splits=self.n_splits, shuffle=self.shuffle, random_state=self.random_state)
         elif self.method.startswith("jackknife"):
             cv = LeaveOneOut()
         else:
@@ -167,6 +178,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ----------
         X : ArrayLike of shape (n_samples, n_features)
             Training data.
+
         y : ArrayLike of shape (n_samples,)
             Training labels.
 
@@ -176,53 +188,30 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             The model itself.
         """
         self._check_parameters()
-        X, y = check_X_y(
-            X, y, force_all_finite=False, dtype=["float64", "object"]
-        )
+        X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
         self.single_estimator_ = clone(self.estimator)
         self.single_estimator_.fit(X, y)
         if self.method == "naive":
-            y_train_pred = self.single_estimator_.predict(X)
-            residuals = np.abs(y_train_pred - y)
-            self.quantile_ = np.quantile(
-                residuals, 1 - self.alpha, interpolation="higher"
-            )
+            y_pred = self.single_estimator_.predict(X)
+            residuals = np.abs(y - y_pred)
+            self.quantile_ = np.quantile(residuals, 1 - self.alpha, interpolation="higher")
         else:
             cv = self._select_cv()
+            n_samples = len(y)  # type: ignore
             self.estimators_ = []
-            self.y_train_pred_split_ = np.array([], dtype=float)
+            y_pred = np.empty(n_samples, dtype=float)
             if self.method.startswith("cv"):
-                self.val_fold_ids_ = np.array([], dtype=int)
-                index_cv = np.array([], dtype=int)
-            for val_fold_id, (train_fold, val_fold) in enumerate(cv.split(X)):
+                self.k_ = np.empty(n_samples, dtype=int)
+            for k, (train_fold, val_fold) in enumerate(cv.split(X)):
                 if self.method.startswith("cv"):
-                    self.val_fold_ids_ = np.concatenate(
-                        (
-                            self.val_fold_ids_,
-                            np.full(len(val_fold), val_fold_id)
-                        )
-                    )
-                    index_cv = np.concatenate((index_cv, val_fold))
+                    self.k_[val_fold] = k
                 e = clone(self.estimator)
                 e.fit(X[train_fold], y[train_fold])  # type: ignore
                 self.estimators_.append(e)
-                self.y_train_pred_split_ = np.concatenate(
-                    (
-                        self.y_train_pred_split_,
-                        e.predict(X[val_fold])  # type: ignore
-                    )
-                )
-            if self.method.startswith("cv"):
-                order = np.argsort(index_cv)
-                self.val_fold_ids_ = self.val_fold_ids_[order]
-                self.y_train_pred_split_ = self.y_train_pred_split_[order]
-            self.residuals_split_ = np.abs(self.y_train_pred_split_ - y)
+                y_pred[val_fold] = e.predict(X[val_fold])  # type: ignore
+            self.residuals_ = np.abs(y - y_pred)
             if self.method in ["cv", "jackknife"]:
-                self.quantile_ = np.quantile(
-                    self.residuals_split_,
-                    1 - self.alpha,
-                    interpolation="higher"
-                )
+                self.quantile_ = np.quantile(self.residuals_, 1 - self.alpha, interpolation="higher")
         return self
 
     def predict(self, X: ArrayLike) -> np.ndarray:
@@ -244,34 +233,24 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         check_is_fitted(self, ["single_estimator_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
-        y_test_pred = self.single_estimator_.predict(X)
+        y_pred = self.single_estimator_.predict(X)
         if self.method in ["naive", "jackknife", "cv"]:
-            y_test_pred_low = y_test_pred - self.quantile_
-            y_test_pred_up = y_test_pred + self.quantile_
+            y_pred_low = y_pred - self.quantile_
+            y_pred_up = y_pred + self.quantile_
         else:
-            y_test_pred_split = np.stack(
-                [e.predict(X) for e in self.estimators_], axis=1
-            )
+            y_pred_multi = np.stack([e.predict(X) for e in self.estimators_], axis=1)
             if self.return_pred == "ensemble":
-                y_test_pred = np.median(y_test_pred_split, axis=1)
+                y_pred = np.median(y_pred_multi, axis=1)
             if self.method == "cv_plus":
-                y_test_pred_split = y_test_pred_split[:, self.val_fold_ids_]
+                y_pred_multi = y_pred_multi[:, self.k_]
             if self.method.endswith("plus"):
-                lower_bounds = y_test_pred_split - self.residuals_split_
-                upper_bounds = y_test_pred_split + self.residuals_split_
+                lower_bounds = y_pred_multi - self.residuals_
+                upper_bounds = y_pred_multi + self.residuals_
             elif self.method.endswith("minmax"):
-                lower_bounds = np.min(
-                    y_test_pred_split, axis=1, keepdims=True
-                ) - self.residuals_split_
-                upper_bounds = np.max(
-                    y_test_pred_split, axis=1, keepdims=True
-                ) + self.residuals_split_
+                lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True) - self.residuals_
+                upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True) + self.residuals_
             else:
                 raise ValueError("Invalid method.")
-            y_test_pred_low = np.quantile(
-                lower_bounds, self.alpha, axis=1, interpolation="lower"
-            )
-            y_test_pred_up = np.quantile(
-                upper_bounds, 1 - self.alpha, axis=1, interpolation="higher"
-            )
-        return np.stack([y_test_pred, y_test_pred_low, y_test_pred_up], axis=1)
+            y_pred_low = np.quantile(lower_bounds, self.alpha, axis=1, interpolation="lower")
+            y_pred_up = np.quantile(upper_bounds, 1 - self.alpha, axis=1, interpolation="higher")
+        return np.stack([y_pred, y_pred_low, y_pred_up], axis=1)
