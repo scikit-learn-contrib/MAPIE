@@ -1,5 +1,11 @@
 version: 2
 
+python:
+  version: 3.9.2
+  install:
+    - method: pip
+      path: .
+
 sphinx:
   builder: html
   configuration: doc/conf.py
