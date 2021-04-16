@@ -99,7 +99,7 @@ def PIs_vs_dimensions(
                     LinearRegression(),
                     alpha=alpha,
                     method=method,
-                    n_splits=10,
+                    n_splits=5,
                     shuffle=False,
                     return_pred="ensemble"
                 )
@@ -170,6 +170,6 @@ methods = [
 ]
 alpha = 0.1
 ntrial = 1
-dimensions = np.arange(20, 160, 20)
+dimensions = np.arange(20, 160, 10)
 results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
 plot_simulation_results(results, title="Coverages and interval widths")
