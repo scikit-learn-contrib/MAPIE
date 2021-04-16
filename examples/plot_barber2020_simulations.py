@@ -164,10 +164,9 @@ def plot_simulation_results(
 
 
 methods = [
-    # "naive",  # 20 seconds for 10 distinct dimensions on Circle CI, comment est-ce que ça augmente avec la dimension ?
-    # "cv",  # .. secondes up to dimension 140, 3 splits
-    # "cv_plus",  # .. secondes up to dimension 140, 3 splits
-    "cv_minmax"  # .. secondes up to dimension 140, 3 splits
+    "naive",
+    "cv",
+    "cv_plus",
 ]
 alpha = 0.1
 ntrial = 1
