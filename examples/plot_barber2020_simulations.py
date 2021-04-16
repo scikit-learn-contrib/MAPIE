@@ -168,8 +168,8 @@ methods = [
     # "jackknife",
     # "jackknife_plus",
     # "jackknife_minmax",
-    "cv",  # .. secondes up to dimension 140, 3 splits
-    # "cv_plus",
+    # "cv",  # .. secondes up to dimension 140, 3 splits
+    "cv_plus",  # .. secondes up to dimension 140, 3 splits
     # "cv_minmax"
 ]
 alpha = 0.1
