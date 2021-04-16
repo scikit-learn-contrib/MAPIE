@@ -1,9 +1,12 @@
-formats:
-  - none
-requirements_file: requirements.txt
-python:
-  version: 3.8
-  pip_install: true
-  extra_requirements:
-    - tests
-    - docs
+version: 2
+
+sphinx:
+  builder: html
+  configuration: docs/conf.py
+  fail_on_warning: false
+
+build:
+  image: latest
+
+conda:
+  environment: environment_dev.yml
