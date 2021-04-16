@@ -166,8 +166,7 @@ def plot_simulation_results(
 methods = [
     "naive",
     "cv",
-    "cv_plus",
-    "cv_minmax"
+    "cv_plus"
 ]
 alpha = 0.1
 ntrial = 5
