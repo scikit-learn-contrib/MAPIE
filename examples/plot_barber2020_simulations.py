@@ -169,7 +169,7 @@ methods = [
     "cv_plus",
 ]
 alpha = 0.1
-ntrial = 10
+ntrial = 10 
 dimensions = np.arange(20, 160, 10)
 results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
 plot_simulation_results(results, title="Coverages and interval widths")
