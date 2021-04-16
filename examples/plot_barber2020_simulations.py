@@ -99,7 +99,7 @@ def PIs_vs_dimensions(
                     LinearRegression(),
                     alpha=alpha,
                     method=method,
-                    n_splits=10,
+                    n_splits=3,
                     shuffle=False,
                     return_pred="ensemble"
                 )
@@ -164,16 +164,16 @@ def plot_simulation_results(
 
 
 methods = [
-    "naive",  # 20 seconds for 10 distinct dimensions on Circle CI, comment est-ce que ça augmente avec la dimension ?
+    # "naive",  # 20 seconds for 10 distinct dimensions on Circle CI, comment est-ce que ça augmente avec la dimension ?
     # "jackknife",
     # "jackknife_plus",
     # "jackknife_minmax",
-    # "cv",
+    "cv",  # .. secondes up to dimension 140, 3 splits
     # "cv_plus",
     # "cv_minmax"
 ]
 alpha = 0.1
 ntrial = 1
-dimensions = np.arange(20, 150, 20)
+dimensions = np.arange(20, 160, 20)
 results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
 plot_simulation_results(results, title="Coverages and interval widths")
