@@ -99,7 +99,7 @@ def PIs_vs_dimensions(
                     LinearRegression(),
                     alpha=alpha,
                     method=method,
-                    n_splits=5,
+                    n_splits=10,
                     shuffle=False,
                     return_pred="ensemble"
                 )
