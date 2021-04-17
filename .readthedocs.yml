@@ -1,7 +1,6 @@
 version: 2
 
 python:
-  version: 3.8
   install: 
     - method: pip
       path: .
@@ -15,4 +14,4 @@ build:
   image: latest
 
 conda:
-  environment: environment_dev.yml
+  environment: environment_doc.yml
