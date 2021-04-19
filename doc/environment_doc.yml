@@ -1,0 +1,12 @@
+name: mapie-doc
+channels:
+    - defaults
+    - conda-forge
+dependencies:
+    - numpy=1.20.2
+    - numpydoc=1.1.0
+    - python=3.8
+    - scikit-learn=0.24.1
+    - sphinx=3.5.3
+    - sphinx-gallery=0.8.2
+    - sphinx_rtd_theme=0.5.2
