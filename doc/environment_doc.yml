@@ -1,4 +1,4 @@
-name: mapie
+name: mapie-doc
 channels:
     - defaults
     - conda-forge
