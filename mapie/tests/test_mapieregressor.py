@@ -17,7 +17,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.utils._testing import assert_almost_equal
 from sklearn.model_selection import LeaveOneOut
 
-from mapie.mapieregressor import MapieRegressor
+from mapie.estimators import MapieRegressor
 from mapie.metrics import coverage
 
 

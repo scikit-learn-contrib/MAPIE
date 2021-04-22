@@ -10,7 +10,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.datasets import make_regression
-from mapie import MapieRegressor
+from mapie.estimators import MapieRegressor
 
 regressor = LinearRegression()
 X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)

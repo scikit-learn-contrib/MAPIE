@@ -28,8 +28,8 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from matplotlib import pyplot as plt
 
-from mapie import MapieRegressor
-from mapie import coverage
+from mapie.estimators import MapieRegressor
+from mapie.metrics import coverage
 
 
 def PIs_vs_dimensions(

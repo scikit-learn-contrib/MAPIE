@@ -13,16 +13,6 @@ try:
 except AttributeError:
     ArrayLike = Union[np.ndarray, List[List[float]]]
 
-valid_methods = [
-    "naive",
-    "jackknife",
-    "jackknife_plus",
-    "jackknife_minmax",
-    "cv",
-    "cv_plus",
-    "cv_minmax"
-]
-
 
 def check_not_none(estimator: Optional[RegressorMixin]) -> None:
     """
@@ -87,6 +77,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     Attributes
     ----------
+    valid_methods_: List[str]
+        List of all valid methods.
+
     single_estimator_ : sklearn.RegressorMixin
         Estimator fit on the whole training set.
 
@@ -124,6 +117,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
      [14.71428571 13.8        15.38372093]]
     """
 
+    valid_methods_ = [
+        "naive",
+        "jackknife",
+        "jackknife_plus",
+        "jackknife_minmax",
+        "cv",
+        "cv_plus",
+        "cv_minmax"
+    ]
+
     def __init__(
         self,
         estimator: Optional[RegressorMixin] = None,
@@ -148,7 +151,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         if not 0 < self.alpha < 1:
             raise ValueError("Invalid alpha. Please choose an alpha value between 0 and <1.")
-        if self.method not in valid_methods:
+        if self.method not in self.valid_methods_:
             raise ValueError("Invalid method.")
         check_not_none(self.estimator)
 
