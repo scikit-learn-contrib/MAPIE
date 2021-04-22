@@ -14,4 +14,4 @@ build:
   image: latest
 
 conda:
-  environment: doc/environment_doc.yml
+  environment: doc/environment.yml
