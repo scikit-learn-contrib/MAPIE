@@ -25,12 +25,6 @@ $ conda env create -f environment.dev.yml
 $ conda activate mapie
 ```
 
-Next, install `mapie` in [development mode]:
-
-```sh
-$ pip install -e .
-```
-
 ## Documenting your change
 
 If you're adding a class or a function, then you'll need to add a docstring. We follow the [numpy docstring convention](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html), so please do too.
@@ -41,6 +35,13 @@ $ cd doc
 $ make clean
 $ make html
 ```
+
+## Updating changelog
+
+You can make your contribution visible by :
+
+1. adding your name to the Contributors sections of [CONTRIBUTING.rst](https://github.com/simai-ml/MAPIE/CONTRIBUTING.rst)
+2. adding a line describing your change into [HISTORY.rst](https://github.com/simai-ml/MAPIE/HISTORY.rst)
 
 ## Testing
 
@@ -65,5 +66,13 @@ $ mypy mapie examples --strict --config-file mypy.ini
 These tests absolutely have to pass.
 
 ```sh
-$ flake8 . --max-line-length=120 --exclude=doc
+$ flake8 . --exclude=doc
+```
+
+## Bump version
+
+Patch the current version of the package by running :
+
+```sh
+bump2version patch
 ```

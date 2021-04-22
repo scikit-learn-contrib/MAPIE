@@ -12,5 +12,5 @@ Release checklist
 - [ ] Create new release on GitHub for this tag, with all of the links.
 - [ ] Switch default readthedocs version to the latest version
 - [ ] Create maintenance branch if major version update
-- [ ] Bump version to development version with ``bumpversion patch`` (for X.Y.1 --> X.Y.2) or ``bumpversion minor`` (for X.1.0 --> X.2.0).
+- [ ] Bump version to development version with ``bumpversion patch``
 - [ ] Start on next version changes in HISTORY file
