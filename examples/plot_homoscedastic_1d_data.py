@@ -16,7 +16,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import Pipeline
 from matplotlib import pyplot as plt
 
-from mapieapie.estimators import MapieRegressor
+from mapie.estimators import MapieRegressor
 
 
 def f(x: np.ndarray) -> np.ndarray:
