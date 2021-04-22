@@ -3,7 +3,7 @@
 |Travis|_ |AppVeyor|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_ |License|_ |PythonVersion|_ |PyPi|_ |Anaconda|_
 
 .. |Travis| image:: https://travis-ci.com/simai-ml/MAPIE.svg?branch=master
-   _Travis: https://travis-ci.com/simai-ml/MAPIE
+..   _Travis: https://travis-ci.com/simai-ml/MAPIE
 
 .. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/github/MAPIE
 .. _AppVeyor: https://ci.appveyor.com/project/gmartinonQM/mapie
@@ -27,7 +27,7 @@
 .. _PyPi: https://pypi.org/project/mapie/
 
 .. |Anaconda|:: https://anaconda.org/conda-forge/mapie/badges/version.svg
-   _Anaconda: https://anaconda.org/conda-forge/hdbscan
+.. _Anaconda: https://anaconda.org/conda-forge/hdbscan
 
 
 MAPIE - Model Agnostic Prediction Interval Estimator
