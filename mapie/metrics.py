@@ -3,8 +3,8 @@ from typing import Union, List
 from sklearn.utils.validation import column_or_1d
 
 try:
-    ArrayLike = np.typing.ArrayLike
-except AttributeError:
+    from np.typing import ArrayLike
+except (AttributeError, ModuleNotFoundError):
     ArrayLike = Union[np.ndarray, List[List[float]]]
 
 
@@ -46,5 +46,5 @@ def coverage(
     y_true = column_or_1d(y_true)
     y_pred_low = column_or_1d(y_pred_low)
     y_pred_up = column_or_1d(y_pred_up)
-    coverage = ((y_pred_low <= y_true) & (y_pred_up >= y_true)).mean()  # type: ignore
+    coverage = ((y_pred_low <= y_true) & (y_pred_up >= y_true)).mean()
     return float(coverage)

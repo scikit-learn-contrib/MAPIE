@@ -1,21 +1,33 @@
 .. -*- mode: rst -*-
 
-|Travis|_ |AppVeyor|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_
+|Travis|_ |AppVeyor|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_ |License|_ |PythonVersion|_ |PyPi|_ |Anaconda|_
 
 .. |Travis| image:: https://travis-ci.com/simai-ml/MAPIE.svg?branch=master
-.. _Travis: https://travis-ci.com/github/simai-ml/MAPIE
+   _Travis: https://travis-ci.com/simai-ml/MAPIE
 
-.. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/9xgj1vqnd11g3uv5?svg=true
-.. _AppVeyor: https://ci.appveyor.com/project/vtaquet/mapie
+.. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/github/MAPIE
+.. _AppVeyor: https://ci.appveyor.com/project/gmartinonQM/mapie
 
 .. |Codecov| image:: https://codecov.io/gh/simai-ml/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
 .. _Codecov: https://codecov.io/gh/simai-ml/MAPIE
 
-.. |CircleCI| image:: https://circleci.com/gh/scikit-learn-contrib/project-template.svg?style=shield&circle-token=:circle-token
-.. _CircleCI: https://circleci.com/gh/mapie/project-template/tree/master/notreadyyet
+.. |CircleCI| image:: https://circleci.com/gh/simai-ml/MAPIE.svg?style=shield&circle-token=:circle-token
+.. _CircleCI: https://circleci.com/gh/simai-ml/MAPIE
 
-.. |ReadTheDocs| image:: https://readthedocs.org/projects/mapie/badge/?version=latest
-.. _ReadTheDocs: https://mapie.readthedocs.io/en/latest/?badge=latest
+.. |ReadTheDocs| image:: https://readthedocs.org/projects/mapie/badge
+.. _ReadTheDocs: https://mapie.readthedocs.io/en/latest
+
+.. |License| image:: https://img.shields.io/github/license/simai-ml/MAPIE
+.. _Licence: https://github.com/simai-ml/MAPIE/blob/master/LICENSE
+
+.. |PythonVersion| image:: https://img.shields.io/pypi/pyversions/mapie
+.. _PythonVersion: https://pypi.org/project/mapie/
+
+.. |PyPi| image:: https://img.shields.io/pypi/v/mapie
+.. _PyPi: https://pypi.org/project/mapie/
+
+.. |Anaconda|:: https://anaconda.org/conda-forge/mapie/badges/version.svg
+   _Anaconda: https://anaconda.org/conda-forge/hdbscan
 
 
 MAPIE - Model Agnostic Prediction Interval Estimator

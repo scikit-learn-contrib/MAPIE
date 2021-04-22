@@ -9,8 +9,8 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import KFold, LeaveOneOut
 
 try:
-    ArrayLike = np.typing.ArrayLike
-except AttributeError:
+    from np.typing import ArrayLike
+except (AttributeError, ModuleNotFoundError):
     ArrayLike = Union[np.ndarray, List[List[float]]]
 
 
@@ -204,7 +204,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             self.quantile_ = np.quantile(residuals, 1 - self.alpha, interpolation="higher")
         else:
             cv = self._select_cv()
-            n_samples = len(y)  # type: ignore
+            n_samples = len(y)
             self.estimators_ = []
             y_pred = np.empty(n_samples, dtype=float)
             if self.method.startswith("cv"):
@@ -213,9 +213,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 if self.method.startswith("cv"):
                     self.k_[val_fold] = k
                 e = clone(self.estimator)
-                e.fit(X[train_fold], y[train_fold])  # type: ignore
+                e.fit(X[train_fold], y[train_fold])
                 self.estimators_.append(e)
-                y_pred[val_fold] = e.predict(X[val_fold])  # type: ignore
+                y_pred[val_fold] = e.predict(X[val_fold])
             self.residuals_ = np.abs(y - y_pred)
             if self.method in ["cv", "jackknife"]:
                 self.quantile_ = np.quantile(self.residuals_, 1 - self.alpha, interpolation="higher")
