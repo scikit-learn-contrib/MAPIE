@@ -17,7 +17,7 @@ jobs:
               conda update --yes conda
               conda create -n test-env --yes -c conda-forge python=3.9.2 numpydoc scikit-learn matplotlib sphinx sphinx-gallery sphinx_rtd_theme
               conda activate test-env
-              python setup.py develop
+              pip install .
               cd doc
               make html
       - store_artifacts:
