@@ -25,6 +25,12 @@ $ conda env create -f environment.dev.yml
 $ conda activate mapie
 ```
 
+Then install `mapie` in development mode:
+
+```sh
+pip install -e .
+```
+
 ## Documenting your change
 
 If you're adding a class or a function, then you'll need to add a docstring. We follow the [numpy docstring convention](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html), so please do too.

@@ -11,7 +11,7 @@ MAPIE
    :toctree: generated/
    :template: class.rst
 
-   MapieRegressor
+   estimators.MapieRegressor
 
 Metrics
 =======
@@ -20,5 +20,5 @@ Metrics
    :toctree: generated/
    :template: function.rst
    
-   coverage
+   metrics.coverage
 
