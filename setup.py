@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 
 DISTNAME = 'MAPIE'
-VERSION = "0.0.0"
+VERSION = "0.1.0"
 DESCRIPTION = 'A scikit-learn-compatible module for estimating prediction intervals.'
 with codecs.open('README.rst', encoding='utf-8-sig') as f:
     LONG_DESCRIPTION = f.read()
