@@ -1,13 +1,17 @@
 from __future__ import annotations
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import numpy as np
-from numpy.typing import ArrayLike
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import KFold, LeaveOneOut
+
+try:
+    ArrayLike = np.typing.ArrayLike
+except AttributeError:
+    ArrayLike = Union[np.ndarray, List[List[float]]]
 
 valid_methods = [
     "naive",

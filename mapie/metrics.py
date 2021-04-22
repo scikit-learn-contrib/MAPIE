@@ -1,5 +1,11 @@
-from numpy.typing import ArrayLike
+import numpy as np
+from typing import Union, List
 from sklearn.utils.validation import column_or_1d
+
+try:
+    ArrayLike = np.typing.ArrayLike
+except AttributeError:
+    ArrayLike = Union[np.ndarray, List[List[float]]]
 
 
 def coverage(

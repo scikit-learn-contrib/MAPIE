@@ -4,8 +4,11 @@ environment:
   MINICONDA: "C:\\Miniconda3-x64"
   matrix:    
     - PYTHON_VERSION: "3.7"
+      NUMPY_VERSION: "1.18.4"
     - PYTHON_VERSION: "3.8"
+      NUMPY_VERSION: "1.19.5"
     - PYTHON_VERSION: "3.9"
+      NUMPY_VERSION: "1.20.2"
 
 matrix:
   fast_finish: true
@@ -13,12 +16,12 @@ matrix:
 install:
   - cmd: call %MINICONDA%\Scripts\activate.bat
   - conda update --yes conda
-  - conda create -n test-env --yes -c conda-forge python=%PYTHON_VERSION% codecov mypy numpy>=1.20 scikit-learn pytest-cov
+  - conda create -n test-env --yes -c conda-forge python=%PYTHON_VERSION% codecov mypy numpy=%NUMPY_VERSION% scikit-learn pytest-cov
   - conda activate test-env
 
 test_script:
   - mypy mapie examples --strict --config-file mypy.ini
-  - pytest --cov-branch --cov=mapie --pyargs mapie
+  - pytest --doctest-modules --cov-branch --cov=mapie --pyargs mapie
 
 after_test:
   - codecov
