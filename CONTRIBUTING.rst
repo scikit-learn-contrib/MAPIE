@@ -45,12 +45,12 @@ You can make your contribution visible by :
 
 ## Testing
 
-**Unit tests**
+**Linting**
 
 These tests absolutely have to pass.
 
 ```sh
-$ pytest --doctest-modules mapie
+$ flake8 . --exclude=doc
 ```
 
 **Static typing**
@@ -61,12 +61,12 @@ These tests absolutely have to pass.
 $ mypy mapie examples --strict --config-file mypy.ini
 ```
 
-**Linting**
+**Unit tests**
 
 These tests absolutely have to pass.
 
 ```sh
-$ flake8 . --exclude=doc
+$ pytest --doctest-modules mapie
 ```
 
 ## Bump version
