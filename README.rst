@@ -137,4 +137,4 @@ Predictive inference with the jackknife+. Ann. Statist., 49(1):486–507, 022021
 📝 License
 ==========
 
-MAPIE is free and open-source software licensed under the `3-clause BSD license` <https://github.com/simai-ml/MAPIE/blob/master/LICENSE>_.
+MAPIE is free and open-source software licensed under the `3-clause BSD license <https://github.com/simai-ml/MAPIE/blob/master/LICENSE>`_.
