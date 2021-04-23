@@ -106,9 +106,35 @@ The estimated prediction interval can be easily plotted as follows.
 You are welcome to propose and contribute new ideas.
 We encourage you to `open an issue <https://github.com/simai-ml/MAPIE/issues>`_ so that we can align on the work to be done.
 It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
-For more information on the contribution process, please go to `CONTRIBUTING <CONTRIBUTING.rst>`_.
+For more information on the contribution process, please go `here <CONTRIBUTING.rst>`_.
 
 
-(c) Copyright
+🤝  Affiliations
+================
+
+MAPIE has been developed thanks to the support of Quantmetry and Michelin.
+
+|Quantmetry|_ |Michelin|_ 
+
+.. |Quantmetry| image:: https://www.quantmetry.com/wp-content/uploads/2020/08/08-Logo-quant-Texte-noir.svg
+    :width: 150
+.. _Quantmetry: https://www.quantmetry.com/
+
+.. |Michelin| image:: https://www.michelin.com/wp-content/themes/michelin/public/img/michelin-logo-en.svg
+    :width: 100
+.. _Michelin: https://www.michelin.com/en/
+
+
+💬  Citations
 =============
 
+MAPIE methods are based on the work by `Foygel-Barber et al. (2020) <https://www.stat.uchicago.edu/~rina/jackknife.html>`_.
+
+Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
+Predictive inference with the jackknife+. Ann. Statist., 49(1):486–507, 022021
+
+
+📝 License
+==========
+
+MAPIE is free and open-source software licensed under the [3-clause BSD license](https://github.com/simai-ml/MAPIE/blob/master/LICENSE).
