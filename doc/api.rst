@@ -4,8 +4,8 @@ MAPIE API
 
 .. currentmodule:: mapie
 
-MAPIE
-=====
+Estimators
+==========
 
 .. autosummary::
    :toctree: generated/
