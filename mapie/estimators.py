@@ -161,7 +161,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        Either a KFold or a LeaveOneOut object.
+        Union[KFold, LeaveOneOut]
+            Either a KFold or a LeaveOneOut object.
         """
         if self.method.startswith("cv"):
             if not self.shuffle:

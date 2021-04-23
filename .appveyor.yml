@@ -21,7 +21,7 @@ install:
 
 test_script:
   - mypy mapie examples --strict --config-file mypy.ini
-  - pytest --doctest-modules --cov-branch --cov=mapie --pyargs mapie
+  - pytest -s --doctest-modules --cov-branch --cov=mapie --pyargs mapie
 
 after_test:
   - codecov

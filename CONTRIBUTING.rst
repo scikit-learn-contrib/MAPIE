@@ -57,8 +57,8 @@ Updating changelog
 
 You can make your contribution visible by :
 
-1. adding your name to the Contributors sections of `CONTRIBUTING.rst <https://github.com/simai-ml/MAPIE/CONTRIBUTING.rst>`_
-2. adding a line describing your change into `HISTORY.rst <https://github.com/simai-ml/MAPIE/HISTORY.rst>`_
+1. adding your name to the Contributors sections of `CONTRIBUTING.rst <https://github.com/simai-ml/MAPIE/blob/master/CONTRIBUTING.rst>`_
+2. adding a line describing your change into `HISTORY.rst <https://github.com/simai-ml/MAPIE/blob/master/HISTORY.rst>`_
 
 Testing
 -------
@@ -90,7 +90,7 @@ These tests absolutely have to pass.
 
 .. code:: sh
 
-    $ pytest --doctest-modules mapie
+    $ pytest -s --doctest-modules mapie
 
 
 Bump version
@@ -100,4 +100,4 @@ Patch the current version of the package by running :
 
 .. code:: sh
 
-    bump2version patch
+    $ bump2version patch

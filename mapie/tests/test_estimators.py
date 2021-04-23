@@ -71,6 +71,7 @@ def test_optional_input_values() -> None:
 
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2])
 def test_invalid_alpha(alpha: int) -> None:
+    """Test that invalid alphas raise errors."""
     mapie = MapieRegressor(DummyRegressor(), alpha=alpha)
     with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
         mapie.fit(X_boston, y_boston)
@@ -172,10 +173,7 @@ def test_none_estimator() -> None:
 
 
 def test_predinterv_outputshape() -> None:
-    """
-    Test that number of observations given by predict method is equal to
-    input data.
-    """
+    """Test that number of observations given by predict method is equal to input data."""
     mapie = MapieRegressor(DummyRegressor())
     mapie.fit(X_reg, y_reg)
     assert mapie.predict(X_reg).shape[0] == X_reg.shape[0]
@@ -207,10 +205,7 @@ def test_prediction_between_low_up(return_pred: str) -> None:
 
 @pytest.mark.parametrize("method", all_methods)
 def test_linreg_results(method: str) -> None:
-    """
-    Test expected PIs for a multivariate linear regression problem
-    with fixed random seed.
-    """
+    """Test expected PIs for a multivariate linear regression problem with fixed random seed."""
     mapie = MapieRegressor(
         LinearRegression(), method=method, alpha=0.05, random_state=SEED
     )

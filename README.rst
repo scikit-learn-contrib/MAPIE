@@ -5,7 +5,7 @@
 .. |Travis| image:: https://travis-ci.com/simai-ml/MAPIE.svg?branch=master
 .. _Travis: https://travis-ci.com/simai-ml/MAPIE
 
-.. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/github/MAPIE
+.. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/js4d7km6ckr801nj/branch/master?svg=true
 .. _AppVeyor: https://ci.appveyor.com/project/gmartinonQM/mapie
 
 .. |Codecov| image:: https://codecov.io/gh/simai-ml/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
@@ -80,7 +80,7 @@ sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
     y_preds = mapie.predict(X_pi)
 
 
-MAPIE returns a ``np.ndarray`` of shape (3, n_sample) giving the predictions,
+MAPIE returns a ``np.ndarray`` of shape (n_samples, 3) giving the predictions,
 as well as the lower and upper bounds of the prediction intervals for the target quantile.
 The estimated prediction interval can be easily plotted as follows.
 
