@@ -2,22 +2,13 @@ from __future__ import annotations
 from typing import Optional, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import KFold, LeaveOneOut
 
-valid_methods = [
-    "naive",
-    "jackknife",
-    "jackknife_plus",
-    "jackknife_minmax",
-    "cv",
-    "cv_plus",
-    "cv_minmax"
-]
+from ._typing import ArrayLike
 
 
 def check_not_none(estimator: Optional[RegressorMixin]) -> None:
@@ -83,6 +74,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     Attributes
     ----------
+    valid_methods_: List[str]
+        List of all valid methods.
+
     single_estimator_ : sklearn.RegressorMixin
         Estimator fit on the whole training set.
 
@@ -106,7 +100,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.mapieregressor import MapieRegressor
+    >>> from mapie.estimators import MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
@@ -119,6 +113,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
      [12.82857143 12.         13.48255814]
      [14.71428571 13.8        15.38372093]]
     """
+
+    valid_methods_ = [
+        "naive",
+        "jackknife",
+        "jackknife_plus",
+        "jackknife_minmax",
+        "cv",
+        "cv_plus",
+        "cv_minmax"
+    ]
 
     def __init__(
         self,
@@ -144,7 +148,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         if not 0 < self.alpha < 1:
             raise ValueError("Invalid alpha. Please choose an alpha value between 0 and <1.")
-        if self.method not in valid_methods:
+        if self.method not in self.valid_methods_:
             raise ValueError("Invalid method.")
         check_not_none(self.estimator)
 
@@ -197,7 +201,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             self.quantile_ = np.quantile(residuals, 1 - self.alpha, interpolation="higher")
         else:
             cv = self._select_cv()
-            n_samples = len(y)  # type: ignore
+            n_samples = len(y)
             self.estimators_ = []
             y_pred = np.empty(n_samples, dtype=float)
             if self.method.startswith("cv"):
@@ -206,9 +210,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 if self.method.startswith("cv"):
                     self.k_[val_fold] = k
                 e = clone(self.estimator)
-                e.fit(X[train_fold], y[train_fold])  # type: ignore
+                e.fit(X[train_fold], y[train_fold])
                 self.estimators_.append(e)
-                y_pred[val_fold] = e.predict(X[val_fold])  # type: ignore
+                y_pred[val_fold] = e.predict(X[val_fold])
             self.residuals_ = np.abs(y - y_pred)
             if self.method in ["cv", "jackknife"]:
                 self.quantile_ = np.quantile(self.residuals_, 1 - self.alpha, interpolation="higher")

@@ -1,10 +1,15 @@
 os: linux
 dist: xenial
 language: python
-python:
-  - "3.7"
-  - "3.8"
-  - "3.9"
+
+jobs:
+  include:
+    - python: "3.7"
+      env: NUMPY_VERSION="1.18.4"
+    - python: "3.8"
+      env: NUMPY_VERSION="1.19.5"
+    - python: "3.9"
+      env: NUMPY_VERSION="1.20.2"
 
 install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -13,12 +18,12 @@ install:
   - export PATH=$HOME/miniconda/bin:$PATH
   - source $HOME/miniconda/etc/profile.d/conda.sh
   - conda update --yes conda
-  - conda create -n test-env --yes -c conda-forge python=$TRAVIS_PYTHON_VERSION codecov mypy numpy>=1.20 scikit-learn pytest-cov
+  - conda create -n test-env --yes -c conda-forge python=$TRAVIS_PYTHON_VERSION codecov mypy numpy=$NUMPY_VERSION scikit-learn pytest-cov
   - conda activate test-env
 
 script:
   - mypy mapie examples --strict --config-file mypy.ini
-  - pytest --cov-branch --cov=mapie --pyargs mapie
+  - pytest --doctest-modules --cov-branch --cov=mapie --pyargs mapie
 
 after_success:
   - codecov

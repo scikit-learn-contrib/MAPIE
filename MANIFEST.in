@@ -1,0 +1,4 @@
+include LICENSE
+include AUTHORS.rst
+recursive-exclude doc *
+recursive-include examples *.py

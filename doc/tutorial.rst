@@ -11,7 +11,7 @@ simple, one-dimensional, ground truth function
 
 .. math::
 
-   f(x) = x \times \sin(x)
+   f(x) = x \sin(x)
 
 
 Throughout this tutorial, we will answer the following questions:
@@ -102,6 +102,7 @@ in order to obtain a 95% confidence for our prediction intervals.
 
 .. code:: python
 
+    from mapie.estimators import MapieRegressor
     allmethods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax' , 'cv', 'cv_plus', 'cv_minmax']
     predintervs = {}
     for method in allmethods:
@@ -312,6 +313,7 @@ methods.
 
 .. code:: python
 
+    from mapie.estimators import MapieRegressor
     allmethods = ['naive', 'jackknife', 'jackknife_plus', 'jackknife_minmax' , 'cv', 'cv_plus', 'cv_minmax']
     predintervs = {}
     for method in allmethods:
@@ -526,6 +528,7 @@ and compare their prediction interval.
 
 .. code:: python
 
+    from mapie.estimators import MapieRegressor
     models = [polyn_model, xgb_model, mlp_model]
     model_names = ['polyn', 'xgb', 'mlp']
     predintervs = {}

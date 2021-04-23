@@ -44,7 +44,7 @@ sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
 
 .. code:: python
 
-    from mapie import MapieRegressor
+    from mapie.estimators import MapieRegressor
     mapie = MapieRegressor(regressor)
     mapie.fit(X, y)
     X_pi = np.linspace(X.min(), X.max(), 100).reshape(-1, 1)

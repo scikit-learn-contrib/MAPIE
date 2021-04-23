@@ -1,32 +1,28 @@
-#! /usr/bin/env python
-"""A scikit-learn-compatible module for estimating prediction intervals."""
-
-import os
 import codecs
-
 from setuptools import find_packages, setup
 
-# get __version__ from _version.py
-ver_file = os.path.join('mapie', '_version.py')
-with open(ver_file) as f:
-    exec(f.read())
 
 DISTNAME = 'MAPIE'
+VERSION = "0.1.0"
 DESCRIPTION = 'A scikit-learn-compatible module for estimating prediction intervals.'
 with codecs.open('README.rst', encoding='utf-8-sig') as f:
     LONG_DESCRIPTION = f.read()
+URL = 'https://github.com/simai-ml/MAPIE'
+DOWNLOAD_URL = 'https://github.com/simai-ml/MAPIE'
+LICENSE = 'new BSD'
 MAINTAINER = 'V. Taquet, G. Martinon'
 MAINTAINER_EMAIL = 'vtaquet@quantmetry.com, gmartinon@quantmetry.com'
-URL = 'https://github.com/simai-ml/MAPIE'
-LICENSE = 'new BSD'
-DOWNLOAD_URL = 'https://github.com/simai-ml/MAPIE'
-VERSION = __version__  # noqa
-INSTALL_REQUIRES = ['numpy', 'scikit-learn']
+PYTHON_REQUIRES = ">=3.7"
+PACKAGES = find_packages()
+INSTALL_REQUIRES = ['scikit-learn']
+EXTRAS_REQUIRE = {
+    'tests': ['flake8', 'mypy', 'pytest', 'pytest-cov'],
+    'docs': ['sphinx', 'sphinx-gallery', 'sphinx_rtd_theme', 'numpydoc', 'matplotlib']
+}
 CLASSIFIERS = [
     'Intended Audience :: Science/Research',
     'Intended Audience :: Developers',
     'License :: OSI Approved',
-    'Programming Language :: Python',
     'Topic :: Software Development',
     'Topic :: Scientific/Engineering',
     'Operating System :: Microsoft :: Windows',
@@ -37,33 +33,21 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9'
 ]
-EXTRAS_REQUIRE = {
-    'tests': [
-        'pytest',
-        'pytest-cov'
-    ],
-    'docs': [
-        'sphinx',
-        'sphinx-gallery',
-        'sphinx_rtd_theme',
-        'numpydoc',
-        'matplotlib'
-    ]
-}
 
 setup(
     name=DISTNAME,
+    version=VERSION,
+    description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
+    url=URL,
+    download_url=DOWNLOAD_URL,
+    license=LICENSE,
     maintainer=MAINTAINER,
     maintainer_email=MAINTAINER_EMAIL,
-    description=DESCRIPTION,
-    license=LICENSE,
-    url=URL,
-    version=VERSION,
-    download_url=DOWNLOAD_URL,
-    long_description=LONG_DESCRIPTION,
-    zip_safe=False,  # the package can run out of an .egg file
-    classifiers=CLASSIFIERS,
-    packages=find_packages(),
+    packages=PACKAGES,
+    python_requires=PYTHON_REQUIRES,
     install_requires=INSTALL_REQUIRES,
-    extras_require=EXTRAS_REQUIRE
+    extras_require=EXTRAS_REQUIRE,
+    classifiers=CLASSIFIERS,
+    zip_safe=False  # the package can run out of an .egg file
 )
