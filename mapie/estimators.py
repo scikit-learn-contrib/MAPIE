@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union, List
+from typing import Optional, Union
 
 import numpy as np
 from sklearn.utils import check_X_y, check_array
@@ -8,10 +8,7 @@ from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import KFold, LeaveOneOut
 
-try:
-    from np.typing import ArrayLike
-except (AttributeError, ModuleNotFoundError):
-    ArrayLike = Union[np.ndarray, List[List[float]]]
+from ._typing import ArrayLike
 
 
 def check_not_none(estimator: Optional[RegressorMixin]) -> None:

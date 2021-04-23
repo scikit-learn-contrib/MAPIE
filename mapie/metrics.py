@@ -1,11 +1,6 @@
-import numpy as np
-from typing import Union, List
 from sklearn.utils.validation import column_or_1d
 
-try:
-    from np.typing import ArrayLike
-except (AttributeError, ModuleNotFoundError):
-    ArrayLike = Union[np.ndarray, List[List[float]]]
+from ._typing import ArrayLike
 
 
 def coverage(
