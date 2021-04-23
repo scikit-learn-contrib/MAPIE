@@ -18,7 +18,7 @@
 .. _ReadTheDocs: https://mapie.readthedocs.io/en/latest
 
 .. |License| image:: https://img.shields.io/github/license/simai-ml/MAPIE
-.. _Licence: https://github.com/simai-ml/MAPIE/blob/master/LICENSE
+.. _License: https://github.com/simai-ml/MAPIE/blob/master/LICENSE
 
 .. |PythonVersion| image:: https://img.shields.io/pypi/pyversions/mapie
 .. _PythonVersion: https://pypi.org/project/mapie/
@@ -100,28 +100,15 @@ The estimated prediction interval can be easily plotted as follows.
     :align: center
 
 
-Install Conda
+👍 Contributing
+===============
+
+You are welcome to propose and contribute new ideas.
+We encourage you to `open an issue <https://github.com/simai-ml/MAPIE/issues>`_ so that we can align on the work to be done.
+It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
+For more information on the contribution process, please go to `CONTRIBUTING <CONTRIBUTING.rst>`_.
+
+
+(c) Copyright
 =============
 
-- :code:`wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh`
-- :code:`chmod +x miniconda.sh`
-- :code:`bash miniconda.sh -b -p $HOME/miniconda`
-- :code:`export PATH=$HOME/miniconda/bin:$PATH`
-- :code:`source $HOME/miniconda/etc/profile.d/conda.sh`
-- :code:`conda update --yes conda`
-
-
-Create virtual environment
-==========================
-
-- :code:`conda env create -f environment_dev.yml`
-- :code:`conda activate mapie`
-- :code:`python -m ipykernel install --user --name=mapie`
-
-Create html documentation from rst files
-========================================
-
-- :code:`pip install -e .`
-- :code:`cd doc/`
-- :code:`make clean`
-- :code:`make html`
