@@ -29,6 +29,7 @@ using your favourite sklearn-compatible regressor.
 
    auto_examples/index
 
+
 `Getting started`_
 ------------------
 
