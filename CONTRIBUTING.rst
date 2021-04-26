@@ -90,7 +90,7 @@ These tests absolutely have to pass.
 
 .. code:: sh
 
-    $ pytest -s --doctest-modules mapie
+    $ pytest -vs --doctest-modules mapie
 
 
 Bump version

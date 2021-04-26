@@ -15,7 +15,7 @@ We give here a brief theoretical description of the methods included in the modu
 Before describing the methods, let's briefly present the mathematical setting.
 For a regression problem in a standard independent and identically distributed
 (i.i.d) case, our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`
-has an unknown distribution :math:`P_{X, Y}`. We can assume that :math:`Y == \mu(X)+\epsilon`
+has an unknown distribution :math:`P_{X, Y}`. We can assume that :math:`Y = \mu(X)+\epsilon`
 where :math:`\mu` is the model function we want to determine and
 :math:`\epsilon_i \sim P_{Y \vert X}` is the noise. 
 Given some target quantile :math:`\alpha` or associated target coverage level :math:`1-\alpha`,
