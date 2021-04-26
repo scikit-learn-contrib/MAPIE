@@ -6,21 +6,23 @@ Non-nested versus nested cross-validation for estimating prediction intervals
 This example compares non-nested and nested cross-validation strategies for
 estimating prediction intervals with :class:`mapie.estimators.MapieRegressor`.
 
-In the regular sequential method, a cross-validation parameter searchis
+In the regular sequential method, a cross-validation parameter search is
 carried out over the entire training set.
 The model with the set of parameter that gives the best score is then used in
 MAPIE to estimate the prediction intervals associated with the predictions.
-A limitation of this method is that the "best" model found for the entire
-dataset is not necessarily the one that gives the best score on each
-*leave-one-out* or *out-of-fold* dataset.
+A limitation of this method is that residuals used by MAPIE are computed on
+validation dataset, which can be subject to overfitting as far as hyperparameter
+tuning is concerned.
+This fools MAPIE in being slightly too optimistic with confidence intervals.
 
 To solve this problem, an alternative option is to perform a nested
 cross-validation parameter search directly within the MAPIE estimator on each
-*leave-one-out* dataset.
-For each resampled dataset, the best set of parameters that maximizes the score
-is found and used to estimate the residuals.
+*out-of-fold* dataset.
+For each testing fold used by MAPIE to store residuals, an internal cross-validation
+occurs on the training fold, optimizing hyperparameters.
+This ensures that residuals seen by MAPIE are never seen by the algorithm beforehand.
 However, this method is much computationally heavier since it results in
-:math:`N \times P` calculations, where *N* is the number of *leave-one-out*
+:math:`N \times P` calculations, where *N* is the number of *out-of-fold*
 models and *P* the number of parameter search iterations, versus :math:`N + P`
 for the non-nested approach.
 
@@ -31,7 +33,7 @@ number of iterations and with a reproducible random state.
 
 It is found that estimating prediction intervals via the CV+ method with the nested
 and non-nested approaches gives very similar scores and identical effective coverages.
-In practice, the nested cross-validated parameter search approach gives *leave-one-out*
+In practice, the nested cross-validated parameter search approach gives *out-of-fold*
 models which have slightly different best parameters.
 The two approaches therefore give slightly different predictions with the nested CV approach
 estimating slightly larger prediction interval widths by a few percents at most (apart from a
@@ -67,6 +69,7 @@ rf_params = {
 n_cv = 5
 n_iter = 10
 alpha = 0.05
+random_state = 59
 
 # Non-nested approach with the CV+ method using the Random Forest model.
 cv_obj = RandomizedSearchCV(
@@ -78,7 +81,7 @@ cv_obj = RandomizedSearchCV(
     return_train_score=True,
     verbose=0,
     n_jobs=-1,
-    random_state=59
+    random_state=random_state
 )
 cv_obj.fit(X_train, y_train)
 best_est = cv_obj.best_estimator_
@@ -88,7 +91,7 @@ mapie_non_nested = MapieRegressor(
     method='cv_plus',
     n_splits=n_cv,
     return_pred='median',
-    random_state=59
+    random_state=random_state
 )
 mapie_non_nested.fit(X_train, y_train)
 y_preds_non_nested = mapie_non_nested.predict(X_test)
@@ -106,7 +109,7 @@ cv_obj = RandomizedSearchCV(
     return_train_score=True,
     verbose=0,
     n_jobs=-1,
-    random_state=59
+    random_state=random_state
 )
 mapie_nested = MapieRegressor(
     cv_obj,
@@ -114,7 +117,7 @@ mapie_nested = MapieRegressor(
     method='cv_plus',
     n_splits=n_cv,
     return_pred='median',
-    random_state=59
+    random_state=random_state
 )
 mapie_nested.fit(X_train, y_train)
 y_preds_nested = mapie_nested.predict(X_test)
