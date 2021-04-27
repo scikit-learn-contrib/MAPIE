@@ -1,5 +1,5 @@
 ---
-name: BDocumentation
+name: Documentation
 about: Add or improve MAPIE documentation
 title: "[DOCUMENTATION]"
 labels: documentation
