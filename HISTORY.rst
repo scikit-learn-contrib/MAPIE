@@ -5,7 +5,7 @@ History
 0.1.2 (2021-04-27)
 ------------------
 
-* First release on TestPyPi.
+* First release on PyPi.
 
 0.1.1 (2021-04-27)
 ------------------
