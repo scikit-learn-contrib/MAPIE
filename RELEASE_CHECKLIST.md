@@ -22,5 +22,5 @@
     * `conda env remove -n test-mapie`
 - [ ] Add new tag to your commit: `git tag x.y.z`
 - [ ] Push new tag: `git push --tags`
-- [ ] Push to master: `git push origin master`
-- [ ] Create new release on GitHub for this tag, with all of the links (documentation, PyPi)
+- [ ] Push to master: `git push origin master`
+- [ ] Create new release on GitHub for this tag, with all of the links.
