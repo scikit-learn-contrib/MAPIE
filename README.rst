@@ -144,7 +144,7 @@ and with the financial support from Région Ile de France.
 
 .. |IledeFrance| image:: https://www.iledefrance.fr/themes/custom/portail_idf/logo.svg
     :width: 100
-.. _Michelin: https://www.iledefrance.fr/
+.. _IledeFrance: https://www.iledefrance.fr/
 
 
 💬  Citations
