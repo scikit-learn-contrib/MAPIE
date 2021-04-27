@@ -20,8 +20,7 @@
     * `conda activate test-mapie`
     * `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie`
     * `conda env remove -n test-mapie`
-- [ ] Upload to PyPi: `twine upload dist/*`
 - [ ] Add new tag to your commit: `git tag x.y.z`
 - [ ] Push new tag: `git push --tags`
 - [ ] Push to master: `git push origin master`
-- [ ] Create new release on GitHub for this tag, with all of the links.
+- [ ] Create new release on GitHub for this tag, with all of the links (documentation, PyPi)
