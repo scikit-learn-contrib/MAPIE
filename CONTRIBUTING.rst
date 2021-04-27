@@ -48,7 +48,7 @@ Finally install `mapie` in development mode:
 Documenting your change
 -----------------------
 
-If you're adding a class or a function, then you'll need to add a docstring. We follow the `numpy docstring convention <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html>`_, so please do too.
+If you're adding a class or a function, then you'll need to add a docstring with a doctest. We follow the `numpy docstring convention <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html>`_, so please do too.
 In order to build the documentation locally, run :
 
 .. code:: sh
