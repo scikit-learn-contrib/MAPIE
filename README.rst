@@ -79,7 +79,7 @@ sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
     y_preds = mapie.predict(X)
 
 
-MAPIE returns a ``np.ndarray`` of shape (n_sample, 3) giving the predictions,
+MAPIE returns a ``np.ndarray`` of shape (n_samples, 3) giving the predictions,
 as well as the lower and upper bounds of the prediction intervals for the target quantile.
 The estimated prediction intervals can then be plotted as follows. 
 
