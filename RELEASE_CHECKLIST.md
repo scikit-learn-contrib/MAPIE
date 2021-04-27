@@ -23,10 +23,5 @@
 - [ ] Upload to PyPi: `twine upload dist/*`
 - [ ] Add new tag to your commit: `git tag x.y.z`
 - [ ] Push new tag: `git push --tags`
-- [ ] Push to master: `git push origin master`
+- [ ] Push to master: `git push origin master`
 - [ ] Create new release on GitHub for this tag, with all of the links.
-- [ ] Create maintenance branch if major version update:
-    * `git checkout -b maintenance-x.y.z`
-    * `git push origin maintenance-x.y.z`
-- [ ] Bump version to development version with `bump2version patch`
-- [ ] Start on next version changes in HISTORY.rst
