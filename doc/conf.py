@@ -233,8 +233,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'mapie.tex', u'MAPIE Documentation',
-   u'Quantmetry', 'manual'),
+    ('index', 'mapie.tex', u'MAPIE Documentation', u'Quantmetry', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -263,8 +262,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'mapie', u'MAPIE Documentation',
-     [u'Quantmetry'], 1)
+    ('index', 'mapie', u'MAPIE Documentation', [u'Quantmetry'], 1)
 ]
 
 # If true, show URL addresses after external links.
