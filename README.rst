@@ -99,7 +99,7 @@ The estimated prediction interval can be easily plotted as follows.
     plt.show()
 
 
-.. image:: https://github.com/simai-ml/MAPIE/blob/master/doc/images/quickstart_1.png
+.. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/quickstart_1.png
     :width: 400
     :align: center
 
