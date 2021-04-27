@@ -3,10 +3,11 @@ from setuptools import find_packages, setup
 
 
 DISTNAME = 'MAPIE'
-VERSION = "0.1.0"
+VERSION = "0.1.2"
 DESCRIPTION = 'A scikit-learn-compatible module for estimating prediction intervals.'
 with codecs.open('README.rst', encoding='utf-8-sig') as f:
     LONG_DESCRIPTION = f.read()
+LONG_DESCRIPTION_CONTENT_TYPE = 'text/x-rst'
 URL = 'https://github.com/simai-ml/MAPIE'
 DOWNLOAD_URL = 'https://github.com/simai-ml/MAPIE'
 LICENSE = 'new BSD'
@@ -39,6 +40,7 @@ setup(
     version=VERSION,
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
+    long_description_content_type=LONG_DESCRIPTION_CONTENT_TYPE,
     url=URL,
     download_url=DOWNLOAD_URL,
     license=LICENSE,

@@ -6,7 +6,7 @@ Fixes #(issue)
 
 ## Type of change
 
-Please delete options that are not relevant.
+Please check options that are relevant.
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
@@ -23,7 +23,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 **Test Configuration**:
 * OS version:
 * Python version:
-* MAPIE version
+* MAPIE version:
 
 # Checklist:
 

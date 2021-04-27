@@ -54,7 +54,7 @@ To install directly from the github repository :
 
 
 ⚡️ Quickstart
-============
+==============
 
 Let us start with a basic regression problem. 
 Here, we generate one-dimensional noisy data that we fit with a linear model.
@@ -99,7 +99,7 @@ The estimated prediction interval can be easily plotted as follows.
     plt.show()
 
 
-.. image:: doc/images/quickstart_1.png
+.. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/quickstart_1.png
     :width: 400
     :align: center
 
@@ -107,7 +107,7 @@ The estimated prediction interval can be easily plotted as follows.
 📘 Documentation
 ================
 
-The documentation can be found `here <https://mapie.readthedocs.io/en/latest/>`_.
+The documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
 It contains the following sections:
 
 - `Quickstart <https://mapie.readthedocs.io/en/latest/quick_start.html>`_
