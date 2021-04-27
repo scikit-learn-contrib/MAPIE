@@ -20,7 +20,7 @@
     * `conda activate test-mapie`
     * `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie`
     * `conda env remove -n test-mapie`
-- [ ] Add new tag to your commit: `git tag x.y.z`
-- [ ] Push new tag: `git push --tags`
-- [ ] Push to master: `git push origin master`
+- [ ] Add and push new tag to your commit:
+    * `git tag x.y.z`
+    * `git push --tags`
 - [ ] Create new release on GitHub for this tag, with all of the links.
