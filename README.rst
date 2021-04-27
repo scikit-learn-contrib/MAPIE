@@ -76,8 +76,7 @@ sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
     from mapie.estimators import MapieRegressor
     mapie = MapieRegressor(regressor, method="jackknife_plus")
     mapie.fit(X, y)
-    X_pi = np.linspace(X.min(), X.max(), 100).reshape(-1, 1)
-    y_preds = mapie.predict(X_pi)
+    y_preds = mapie.predict(X)
 
 
 MAPIE returns a ``np.ndarray`` of shape (n_samples, 3) giving the predictions,
@@ -87,11 +86,16 @@ The estimated prediction interval can be easily plotted as follows.
 .. code:: python
     
     from matplotlib import pyplot as plt
+    from mapie.metrics import coverage_score
     plt.xlabel('x')
     plt.ylabel('y')
     plt.scatter(X, y, alpha=0.3)
     plt.plot(X_pi, y_preds[:, 0], color='C1')
-    plt.fill_between(X_pi.ravel(), y_preds[:, 1], y_preds[:, 2], alpha=0.3)
+    order = np.argsort(X[:, 0])
+    plt.fill_between(X[order].ravel(), y_preds[:, 1][order], y_preds[:, 2][order], alpha=0.3)
+    plt.title(
+        f"Target and effective coverages: 0.9, {coverage_score(y, y_preds[:, 1], y_preds[:, 2])}"
+    )
     plt.show()
 
 
@@ -126,7 +130,7 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 ================
 
 MAPIE has been developed through a collaboration between Quantmetry, Michelin, and ENS Paris-Saclay
-and with the financial support from Région Ile de France.
+with the financial support from Région Ile de France.
 
 |Quantmetry|_ |Michelin|_ |ENS|_ |IledeFrance|_ 
 

@@ -3,13 +3,13 @@ from sklearn.utils.validation import column_or_1d
 from ._typing import ArrayLike
 
 
-def coverage(
+def coverage_score(
     y_true: ArrayLike,
     y_pred_low: ArrayLike,
     y_pred_up: ArrayLike,
 ) -> float:
     """
-    Effective coverage obtained by the prediction intervals.
+    Effective coverage score obtained by the prediction intervals.
 
     The effective coverage is obtained by estimating the fraction
     of true labels that lie within the prediction intervals.
@@ -30,12 +30,12 @@ def coverage(
 
     Examples
     --------
-    >>> from mapie.metrics import coverage
+    >>> from mapie.metrics import coverage_score
     >>> import numpy as np
     >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
     >>> y_pred_low = np.array([4, 6, 9, 8.5, 10.5])
     >>> y_pred_up = np.array([6, 9, 10, 12.5, 12])
-    >>> print(coverage(y_true, y_pred_low, y_pred_up))
+    >>> print(coverage_score(y_true, y_pred_low, y_pred_up))
     0.8
     """
     y_true = column_or_1d(y_true)

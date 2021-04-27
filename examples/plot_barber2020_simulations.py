@@ -29,7 +29,7 @@ from sklearn.linear_model import LinearRegression
 from matplotlib import pyplot as plt
 
 from mapie.estimators import MapieRegressor
-from mapie.metrics import coverage
+from mapie.metrics import coverage_score
 
 
 def PIs_vs_dimensions(
@@ -105,7 +105,7 @@ def PIs_vs_dimensions(
                 )
                 mapie.fit(X_train, y_train)
                 y_preds = mapie.predict(X_test)
-                results[method][dimension]["coverage"][trial] = coverage(
+                results[method][dimension]["coverage"][trial] = coverage_score(
                     y_test, y_preds[:, 1], y_preds[:, 2]
                 )
                 results[method][dimension]["width_mean"][trial] = (
