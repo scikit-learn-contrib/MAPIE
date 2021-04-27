@@ -1,7 +1,7 @@
 """
-=============================================================================
-Non-nested versus nested cross-validation for estimating prediction intervals
-=============================================================================
+===========================================================
+Nested cross-validation for estimating prediction intervals
+===========================================================
 
 This example compares non-nested and nested cross-validation strategies for
 estimating prediction intervals with :class:`mapie.estimators.MapieRegressor`.
@@ -40,6 +40,10 @@ estimating slightly larger prediction interval widths by a few percents at most 
 handful of exceptions).
 For this exemple, the two approaches result in identical scores and in identical effective
 coverages.
+
+In the general case, the recommended approach is to use nested cross-validation, since it
+does not understimate residuals and hence prediction intervals. However, in this particular
+example, effective coverages of both nested and non-nested methods are the same.
 """
 
 import matplotlib.pyplot as plt
@@ -145,7 +149,7 @@ ax1.set_xlim([min_x, max_x])
 ax1.set_ylim([min_x, max_x])
 ax1.scatter(widths_nested, widths_non_nested)
 ax1.plot([min_x, max_x], [min_x, max_x], ls='--', color='k')
-ax2.set_xlabel("Relative prediction interval widths between non-nested and nested.")
+ax2.set_xlabel("[width(non-nested CV) - width(nested CV)] / width(non-nested CV)")
 ax2.set_ylabel("Counts")
 ax2.hist((widths_non_nested - widths_nested)/widths_non_nested, bins=15)
 plt.show()
