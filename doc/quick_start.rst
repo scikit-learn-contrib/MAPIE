@@ -38,8 +38,6 @@ Here, we generate one-dimensional noisy data (ordered by X) that we fit with a l
 
     regressor = LinearRegression()
     X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
-    order = np.argsort(X[:, 0])
-    X, y = X[order], y[order]
 
 Since MAPIE is compliant with the standard scikit-learn API, we follow the standard
 sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
@@ -67,13 +65,14 @@ The estimated prediction interval can be easily plotted as follows.
     plt.ylabel('y')
     plt.scatter(X, y, alpha=0.3)
     plt.plot(X_pi, y_preds[:, 0], color='C1')
-    plt.fill_between(X_pi.ravel(), y_preds[:, 1], y_preds[:, 2], alpha=0.3)
+    order = np.argsort(X[:, 0])
+    plt.fill_between(X[order].ravel(), y_preds[:, 1][order], y_preds[:, 2][order], alpha=0.3)
     plt.title(
         f"Target and effective coverages: 0.9, {coverage_score(y, y_preds[:, 1], y_preds[:, 2])}"
     )
     plt.show()
 
 
-.. image:: _build/html/_images/sphx_glr_plot_toy_model_001.png
+.. image:: doc/images/quickstart_1.png
     :width: 400
     :align: center

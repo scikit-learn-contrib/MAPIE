@@ -37,19 +37,19 @@ def test_same_length() -> None:
 
 def test_toydata() -> None:
     "Test coverage_score for toy data"
-    assert (coverage_score(y_toy, y_toy_preds[:, 1], y_toy_preds[:, 2]) == 0.8)
+    assert coverage_score(y_toy, y_toy_preds[:, 1], y_toy_preds[:, 2]) == 0.8
 
 
 def test_ytrue_type() -> None:
     "Test that list(y_true) gives right coverage."
-    assert (coverage_score(list(y_toy), y_toy_preds[:, 1], y_toy_preds[:, 2]) == 0.8)
+    assert coverage_score(list(y_toy), y_toy_preds[:, 1], y_toy_preds[:, 2]) == 0.8
 
 
 def test_ypredlow_type() -> None:
     "Test that list(y_pred_low) gives right coverage."
-    assert (coverage_score(y_toy, list(y_toy_preds[:, 1]), y_toy_preds[:, 2]) == 0.8)
+    assert coverage_score(y_toy, list(y_toy_preds[:, 1]), y_toy_preds[:, 2]) == 0.8
 
 
 def test_ypredup_type() -> None:
     "Test that list(y_pred_up) gives right coverage."
-    assert (coverage_score(y_toy, y_toy_preds[:, 1], list(y_toy_preds[:, 2])) == 0.8)
+    assert coverage_score(y_toy, y_toy_preds[:, 1], list(y_toy_preds[:, 2])) == 0.8
