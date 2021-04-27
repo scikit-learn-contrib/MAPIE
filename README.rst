@@ -109,8 +109,8 @@ The effective coverage is the actual fraction of true labels lying in the predic
     :align: center
 
 
-:blue_book: Documentation
-=========================
+📘 Documentation
+================
 
 The documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
 It contains the following sections:
