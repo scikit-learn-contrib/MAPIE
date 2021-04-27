@@ -57,7 +57,7 @@ To install directly from the github repository :
 ============
 
 Let us start with a basic regression problem. 
-Here, we generate one-dimensional noisy data (ordered by X) that we fit with a linear model.
+Here, we generate one-dimensional noisy data that we fit with a linear model.
 
 .. code:: python
 
@@ -92,7 +92,7 @@ The estimated prediction interval can be easily plotted as follows.
     plt.scatter(X, y, alpha=0.3)
     plt.plot(X_pi, y_preds[:, 0], color='C1')
     order = np.argsort(X[:, 0])
-    plt.fill_between(X.ravel(), y_preds[:, 1][order], y_preds[:, 2][order], alpha=0.3)
+    plt.fill_between(X[order].ravel(), y_preds[:, 1][order], y_preds[:, 2][order], alpha=0.3)
     plt.title(
         f"Target and effective coverages: 0.9, {coverage_score(y, y_preds[:, 1], y_preds[:, 2])}"
     )

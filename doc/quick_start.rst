@@ -28,7 +28,7 @@ To install directly from the github repository :
 ---------------------
 
 Let us start with a basic regression problem. 
-Here, we generate one-dimensional noisy data (ordered by X) that we fit with a linear model.
+Here, we generate one-dimensional noisy data that we fit with a linear model.
 
 .. code:: python
 
