@@ -45,7 +45,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     method: str, optional
         Method to choose for prediction interval estimates.
-        By default, returns "jackknife_plus" method.
+        By default, "cv_plus".
         Choose among:
         - "naive"
         - "jackknife"
@@ -56,7 +56,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - "cv_minmax"
 
     n_splits: int, optional
-        Number of splits for cross-validation, by default 10.
+        Number of splits for cross-validation, by default 5.
 
     shuffle: bool, default=True
         Whether to shuffle the data before splitting into batches.
@@ -104,7 +104,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> pireg = MapieRegressor(LinearRegression())
+    >>> pireg = MapieRegressor(LinearRegression(), method="jackknife_plus")
     >>> print(pireg.fit(X_toy, y_toy).predict(X_toy))
     [[ 5.28571429  4.61627907  6.2       ]
      [ 7.17142857  6.51744186  8.        ]
@@ -128,8 +128,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self,
         estimator: Optional[RegressorMixin] = None,
         alpha: float = 0.1,
-        method: str = "jackknife_plus",
-        n_splits: int = 10,
+        method: str = "cv_plus",
+        n_splits: int = 5,
         shuffle: bool = True,
         return_pred: str = "single",
         random_state: Optional[int] = None
@@ -161,7 +161,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        Either a KFold or a LeaveOneOut object.
+        Union[KFold, LeaveOneOut]
+            Either a KFold or a LeaveOneOut object.
         """
         if self.method.startswith("cv"):
             if not self.shuffle:

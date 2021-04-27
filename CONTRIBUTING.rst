@@ -14,11 +14,11 @@ Fork/clone/pull
 
 The typical workflow for contributing to `mapie` is:
 
-1. Fork the `master` branch from the `GitHub repository <https://github.com/simai-ml/MAPIE>`_.
+1. Fork the `dev` branch from the `GitHub repository <https://github.com/simai-ml/tree/dev>`_.
 2. Clone your fork locally.
 3. Commit changes.
 4. Push the changes to your fork.
-5. Send a pull request from your fork back to the original `master` branch.
+5. Send a pull request from your fork back to the original `dev` branch.
 
 Local setup
 -----------
@@ -32,7 +32,13 @@ You can create a virtual environment via `conda`:
     $ conda env create -f environment.dev.yml
     $ conda activate mapie
 
-Then install `mapie` in development mode:
+Alternatively, you can install dependencies with `pip`:
+
+.. code:: sh
+
+    $ pip install requirements.dev.txt
+
+Finally install `mapie` in development mode:
 
 .. code:: sh
 
@@ -57,8 +63,8 @@ Updating changelog
 
 You can make your contribution visible by :
 
-1. adding your name to the Contributors sections of `CONTRIBUTING.rst <https://github.com/simai-ml/MAPIE/CONTRIBUTING.rst>`_
-2. adding a line describing your change into `HISTORY.rst <https://github.com/simai-ml/MAPIE/HISTORY.rst>`_
+1. adding your name to the Contributors sections of `CONTRIBUTING.rst <https://github.com/simai-ml/MAPIE/blob/master/CONTRIBUTING.rst>`_
+2. adding a line describing your change into `HISTORY.rst <https://github.com/simai-ml/MAPIE/blob/master/HISTORY.rst>`_
 
 Testing
 -------
@@ -90,7 +96,16 @@ These tests absolutely have to pass.
 
 .. code:: sh
 
-    $ pytest --doctest-modules mapie
+    $ pytest -vs --doctest-modules mapie
+
+Coverage
+^^^^^^^^
+
+The coverage should absolutely be 100%.
+
+.. code:: sh
+
+    $ pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie
 
 
 Bump version
@@ -100,4 +115,4 @@ Patch the current version of the package by running :
 
 .. code:: sh
 
-    bump2version patch
+    $ bump2version patch

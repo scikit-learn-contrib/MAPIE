@@ -15,7 +15,7 @@ from mapie.estimators import MapieRegressor
 regressor = LinearRegression()
 X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
 
-mapie = MapieRegressor(regressor)
+mapie = MapieRegressor(regressor, method="jackknife_plus")
 mapie.fit(X, y)
 X_pi = np.linspace(X.min(), X.max(), 100).reshape(-1, 1)
 y_preds = mapie.predict(X_pi)
