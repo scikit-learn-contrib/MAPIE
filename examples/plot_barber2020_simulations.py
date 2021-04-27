@@ -3,7 +3,7 @@
 Reproducing the simulations from Foygel-Barber et al. (2020)
 ============================================================
 
-:class:`mapie.MapieRegressor` is used to investigate
+:class:`mapie.estimators.MapieRegressor` is used to investigate
 the coverage level and the prediction interval width as function
 of the dimension using simulated data points as introduced in
 Foygel-Barber et al. (2020).
