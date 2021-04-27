@@ -15,4 +15,5 @@ History
 0.1.0 (2021-04-27)
 ------------------
 
-* Implement estimators.MapieRegressor and metrics.coverage.
+* Implement metrics.coverage
+* Implement estimators.MapieRegressor
