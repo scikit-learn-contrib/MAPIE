@@ -30,7 +30,7 @@ def coverage_score(
 
     Examples
     --------
-    >>> from mapie.metrics import coverage
+    >>> from mapie.metrics import coverage_score
     >>> import numpy as np
     >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
     >>> y_pred_low = np.array([4, 6, 9, 8.5, 10.5])
