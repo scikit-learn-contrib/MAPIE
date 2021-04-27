@@ -16,6 +16,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression
 from sklearn.utils._testing import assert_almost_equal
 from sklearn.model_selection import LeaveOneOut
+from sklearn.utils.estimator_checks import parametrize_with_checks
 
 from mapie.estimators import MapieRegressor
 from mapie.metrics import coverage_score
@@ -55,6 +56,12 @@ expected_coverages = {
     "cv": 0.958,
     "cv_plus": 0.956,
     "cv_minmax": 0.966
+}
+
+SKLEARN_EXCLUDED_CHECKS = {
+    "check_regressors_train",
+    "check_pipeline_consistency",
+    "check_fit_score_takes_y",
 }
 
 
@@ -214,3 +221,10 @@ def test_linreg_results(method: str) -> None:
     preds_low, preds_up = y_preds[:, 1], y_preds[:, 2]
     assert_almost_equal((preds_up-preds_low).mean(), expected_widths[method], 2)
     assert_almost_equal(coverage_score(y_reg, preds_low, preds_up), expected_coverages[method], 2)
+
+
+@parametrize_with_checks([MapieRegressor(LinearRegression())]) # type: ignore
+def test_sklearn_compatible_estimator(estimator: Any, check: Any) -> None:
+    """check compatibility with sklearn, using sklearn estimator checks API"""
+    if check.func.__name__ not in SKLEARN_EXCLUDED_CHECKS:
+        check(estimator)
