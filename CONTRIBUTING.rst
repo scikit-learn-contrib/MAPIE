@@ -14,11 +14,11 @@ Fork/clone/pull
 
 The typical workflow for contributing to `mapie` is:
 
-1. Fork the `dev` branch from the `GitHub repository <https://github.com/simai-ml/tree/dev>`_.
+1. Fork the `master` branch from the `GitHub repository <https://github.com/simai-ml/MAPIE>`_.
 2. Clone your fork locally.
 3. Commit changes.
 4. Push the changes to your fork.
-5. Send a pull request from your fork back to the original `dev` branch.
+5. Send a pull request from your fork back to the original `master` branch.
 
 Local setup
 -----------
