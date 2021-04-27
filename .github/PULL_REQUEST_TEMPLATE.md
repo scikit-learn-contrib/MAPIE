@@ -27,11 +27,9 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 
 # Checklist:
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
+- [ ] I have read the [contributing guidelines](https://github.com/simai-ml/MAPIE/blob/master/CONTRIBUTING.rst)
+- [ ] The following command passes successfully : `flake8 . --exclude=doc`
+- [ ] The following command passes successfully : `mypy mapie examples --strict --config-file mypy.ini`
+- [ ] The following command passes successfully : `pytest -vs --doctest-modules mapie`
+- [ ] The following command gives 100% coverage : `pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie`
+- [ ] The documentation builds successfully : `cd doc; make clean; make html`
