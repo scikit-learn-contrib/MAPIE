@@ -43,9 +43,9 @@ expected_widths = {
     "jackknife": 3.85,
     "jackknife_plus": 3.86,
     "jackknife_minmax": 3.91,
-    "cv": 4.02,
-    "cv_plus": 4.01,
-    "cv_minmax": 4.21
+    "cv": 3.92,
+    "cv_plus": 3.99,
+    "cv_minmax": 4.13
 }
 expected_coverages = {
     "naive": 0.952,
@@ -61,9 +61,9 @@ expected_coverages = {
 def test_optional_input_values() -> None:
     """Test default values of input parameters."""
     mapie = MapieRegressor(DummyRegressor())
-    assert mapie.method == "jackknife_plus"
+    assert mapie.method == "cv_plus"
     assert mapie.alpha == 0.1
-    assert mapie.n_splits == 10
+    assert mapie.n_splits == 5
     assert mapie.shuffle
     assert mapie.return_pred == "single"
     assert mapie.random_state is None
