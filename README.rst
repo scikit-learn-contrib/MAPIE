@@ -100,7 +100,7 @@ The estimated prediction interval can be easily plotted as follows.
 
 
 .. image:: doc/images/quickstart_1.png
-    :width: 100
+    :width: 400
     :align: center
 
 
