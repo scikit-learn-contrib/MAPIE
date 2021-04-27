@@ -34,7 +34,7 @@ MAPIE - Model Agnostic Prediction Interval Estimator
 ====================================================
 
 **MAPIE** allows you to easily estimate prediction intervals using your favourite sklearn-compatible regressor.
-The documentation can be found `here <https://mapie.readthedocs.io/en/latest/>`_.
+
 
 
 🛠 Installation
@@ -100,7 +100,20 @@ The estimated prediction interval can be easily plotted as follows.
     :align: center
 
 
-👍 Contributing
+📘 Documentation
+================
+
+The documentation can be found `here <https://mapie.readthedocs.io/en/latest/>`_.
+It contains the following sections:
+
+- `Quickstart <https://mapie.readthedocs.io/en/latest/quick_start.html>`_
+- `Theoretical description <https://mapie.readthedocs.io/en/latest/theoretical_description.html>`_
+- `Tutorial <https://mapie.readthedocs.io/en/latest/tutorial.html>`_
+- `API <https://mapie.readthedocs.io/en/latest/api.html>`_
+- `Examples <https://mapie.readthedocs.io/en/latest/auto_examples/index.html>`_
+
+
+📝 Contributing
 ===============
 
 You are welcome to propose and contribute new ideas.
@@ -112,7 +125,8 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 🤝  Affiliations
 ================
 
-MAPIE has been developed thanks to the support of Quantmetry and Michelin.
+MAPIE has been developed through a collaboration of Quantmetry, Michelin, and ENS Paris-Saclay with a financial support from
+Région Ile de France.
 
 |Quantmetry|_ |Michelin|_ 
 
@@ -123,6 +137,14 @@ MAPIE has been developed thanks to the support of Quantmetry and Michelin.
 .. |Michelin| image:: https://www.michelin.com/wp-content/themes/michelin/public/img/michelin-logo-en.svg
     :width: 100
 .. _Michelin: https://www.michelin.com/en/
+
+.. |ENS| image:: https://ens-paris-saclay.fr/sites/default/files/LOGOS_ENS-PARIS-SACLAY_UPSAY_2.png
+    :width: 150
+.. _ENS: https://ens-paris-saclay.fr/en
+
+.. |IledeFrance| image:: https://www.iledefrance.fr/themes/custom/portail_idf/logo.svg
+    :width: 100
+.. _Michelin: https://www.iledefrance.fr/
 
 
 💬  Citations
