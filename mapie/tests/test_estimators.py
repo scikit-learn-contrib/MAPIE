@@ -216,6 +216,7 @@ def test_linreg_results(method: str) -> None:
     assert_almost_equal((preds_up-preds_low).mean(), expected_widths[method], 2)
     assert_almost_equal(coverage_score(y_reg, preds_low, preds_up), expected_coverages[method], 2)
 
+
 @parametrize_with_checks([MapieRegressor(LinearRegression())])
 def test_sklearn_compatible_estimator(estimator, check):
     check(estimator)
