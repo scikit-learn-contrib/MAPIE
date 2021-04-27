@@ -125,8 +125,8 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 🤝  Affiliations
 ================
 
-MAPIE has been developed through a collaboration of Quantmetry, Michelin, and ENS Paris-Saclay with a financial support from
-Région Ile de France.
+MAPIE has been developed through a collaboration between Quantmetry, Michelin, and ENS Paris-Saclay
+and with the financial support from Région Ile de France.
 
 |Quantmetry|_ |Michelin|_ 
 
