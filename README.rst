@@ -138,8 +138,8 @@ and with the financial support from Région Ile de France.
     :width: 100
 .. _Michelin: https://www.michelin.com/en/
 
-.. |ENS| image:: https://ens-paris-saclay.fr/sites/default/files/LOGOS_ENS-PARIS-SACLAY_UPSAY_2.png
-    :width: 10
+.. |ENS| image:: https://file.diplomeo-static.com/file/00/00/01/34/13434.svg
+    :width: 100
 .. _ENS: https://ens-paris-saclay.fr/en
 
 .. |IledeFrance| image:: https://www.iledefrance.fr/themes/custom/portail_idf/logo.svg
