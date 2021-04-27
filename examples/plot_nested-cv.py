@@ -54,7 +54,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import mean_squared_error
 from mapie.estimators import MapieRegressor
-from mapie.metrics import coverage
+from mapie.metrics import coverage_score
 
 # Load the Boston data and split it into training and test sets.
 X_boston, y_boston = load_boston(return_X_y=True)
@@ -100,7 +100,7 @@ mapie_non_nested = MapieRegressor(
 mapie_non_nested.fit(X_train, y_train)
 y_preds_non_nested = mapie_non_nested.predict(X_test)
 widths_non_nested = y_preds_non_nested[:, 2] - y_preds_non_nested[:, 1]
-coverage_non_nested = coverage(y_test, y_preds_non_nested[:, 1], y_preds_non_nested[:, 2])
+coverage_non_nested = coverage_score(y_test, y_preds_non_nested[:, 1], y_preds_non_nested[:, 2])
 score_non_nested = mean_squared_error(y_test, y_preds_non_nested[:, 0], squared=False)
 
 # Nested approach with the CV+ method using the Random Forest model.
@@ -126,7 +126,7 @@ mapie_nested = MapieRegressor(
 mapie_nested.fit(X_train, y_train)
 y_preds_nested = mapie_nested.predict(X_test)
 widths_nested = y_preds_nested[:, 2] - y_preds_nested[:, 1]
-coverage_nested = coverage(y_test, y_preds_nested[:, 1], y_preds_nested[:, 2])
+coverage_nested = coverage_score(y_test, y_preds_nested[:, 1], y_preds_nested[:, 2])
 score_nested = mean_squared_error(y_test, y_preds_nested[:, 0], squared=False)
 
 # Print scores and effective coverages.

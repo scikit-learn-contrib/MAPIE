@@ -28,7 +28,7 @@ To install directly from the github repository :
 ---------------------
 
 Let us start with a basic regression problem. 
-Here, we generate one-dimensional noisy data that we fit with a linear model.
+Here, we generate one-dimensional noisy data (ordered by X) that we fit with a linear model.
 
 .. code:: python
 
@@ -38,6 +38,8 @@ Here, we generate one-dimensional noisy data that we fit with a linear model.
 
     regressor = LinearRegression()
     X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
+    order = np.argsort(X[:, 0])
+    X, y = X[order], y[order]
 
 Since MAPIE is compliant with the standard scikit-learn API, we follow the standard
 sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
@@ -47,8 +49,7 @@ sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
     from mapie.estimators import MapieRegressor
     mapie = MapieRegressor(regressor, method="jackknife_plus")
     mapie.fit(X, y)
-    X_pi = np.linspace(X.min(), X.max(), 100).reshape(-1, 1)
-    y_preds = mapie.predict(X_pi)
+    y_preds = mapie.predict(X)
 
 
 3. Show the results
@@ -61,14 +62,18 @@ The estimated prediction interval can be easily plotted as follows.
 .. code:: python
     
     from matplotlib import pyplot as plt
+    from mapie.metrics import coverage_score
     plt.xlabel('x')
     plt.ylabel('y')
     plt.scatter(X, y, alpha=0.3)
     plt.plot(X_pi, y_preds[:, 0], color='C1')
     plt.fill_between(X_pi.ravel(), y_preds[:, 1], y_preds[:, 2], alpha=0.3)
+    plt.title(
+        f"Target and effective coverages: 0.9, {coverage_score(y, y_preds[:, 1], y_preds[:, 2])}"
+    )
     plt.show()
 
 
-.. image:: images/quickstart_1.png
+.. image:: _build/html/_images/sphx_glr_plot_toy_model_001.png
     :width: 400
     :align: center
