@@ -81,7 +81,7 @@ sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
 
 MAPIE returns a ``np.ndarray`` of shape (n_samples, 3) giving the predictions,
 as well as the lower and upper bounds of the prediction intervals for the target quantile.
-The estimated prediction interval can be easily plotted as follows.
+The estimated prediction intervals can then be plotted as follows. 
 
 .. code:: python
     
@@ -90,13 +90,20 @@ The estimated prediction interval can be easily plotted as follows.
     plt.xlabel('x')
     plt.ylabel('y')
     plt.scatter(X, y, alpha=0.3)
-    plt.plot(X_pi, y_preds[:, 0], color='C1')
+    plt.plot(X, y_preds[:, 0], color='C1')
     order = np.argsort(X[:, 0])
     plt.fill_between(X[order].ravel(), y_preds[:, 1][order], y_preds[:, 2][order], alpha=0.3)
     plt.title(
         f"Target and effective coverages: 0.9, {coverage_score(y, y_preds[:, 1], y_preds[:, 2])}"
     )
     plt.show()
+
+The title of the plot compares the target coverage with the effective coverage.
+The target coverage, or the confidence interval, is the fraction of true labels lying in the
+prediction intervals that we aim to obtain for a given dataset.
+It is given by the alpha parameter defined in `MapieRegressor`, here equal to the default value of
+0.1 thus giving a target coverage of 0.9.
+The effective coverage is the actual fraction of true labels lying in the prediction intervals.
 
 
 .. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/quickstart_1.png
