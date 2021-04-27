@@ -55,12 +55,7 @@ sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
 
 MAPIE returns a ``np.ndarray`` of shape (3, n_sample) giving the predictions,
 as well as the lower and upper bounds of the prediction intervals for the target quantile.
-The estimated prediction interval, plotted as follows, are used to compute the effective coverage.
-The target coverage is the fraction of true labels lying in the prediction intervals that we aim 
-to obtain for a given dataset.
-It is given by the alpha parameter defined in `MapieRegressor`, here equal to the default value of
-0.1 giving a target coverage of 0.9.
-The effective coverage is the actual fraction of true labels lying in the prediction intervals.
+The estimated prediction intervals can then be plotted as follows. 
 
 .. code:: python
     
@@ -81,3 +76,10 @@ The effective coverage is the actual fraction of true labels lying in the predic
 .. image:: doc/images/quickstart_1.png
     :width: 400
     :align: center
+
+The title of the plot compares the target coverage with the effective coverage.
+The target coverage, or the confidence interval, is the fraction of true labels lying in the
+prediction intervals that we aim to obtain for a given dataset.
+It is given by the alpha parameter defined in `MapieRegressor`, here equal to the default value of
+0.1 thus giving a target coverage of 0.9.
+The effective coverage is the actual fraction of true labels lying in the prediction intervals.
