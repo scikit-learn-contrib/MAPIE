@@ -26,9 +26,6 @@
 .. |PyPi| image:: https://img.shields.io/pypi/v/mapie
 .. _PyPi: https://pypi.org/project/mapie/
 
-.. |Anaconda| image:: https://anaconda.org/conda-forge/mapie/badges/version.svg
-.. _Anaconda: https://anaconda.org/conda-forge/mapie
-
 
 MAPIE - Model Agnostic Prediction Interval Estimator
 ====================================================

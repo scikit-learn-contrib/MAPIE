@@ -223,8 +223,8 @@ def test_linreg_results(method: str) -> None:
     assert_almost_equal(coverage_score(y_reg, preds_low, preds_up), expected_coverages[method], 2)
 
 
-@parametrize_with_checks([MapieRegressor(LinearRegression())]) # type: ignore
+@parametrize_with_checks([MapieRegressor(LinearRegression())])  # type: ignore
 def test_sklearn_compatible_estimator(estimator: Any, check: Any) -> None:
-    """check compatibility with sklearn, using sklearn estimator checks API"""
+    """Check compatibility with sklearn, using sklearn estimator checks API."""
     if check.func.__name__ not in SKLEARN_EXCLUDED_CHECKS:
         check(estimator)
