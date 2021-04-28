@@ -91,7 +91,7 @@ The estimated prediction intervals can then be plotted as follows.
     order = np.argsort(X[:, 0])
     plt.fill_between(X[order].ravel(), y_preds[:, 1][order], y_preds[:, 2][order], alpha=0.3)
     plt.title(
-        f"Target and effective coverages: 0.9, {coverage_score(y, y_preds[:, 1], y_preds[:, 2])}"
+        f"Target coverage = 0.9; Effective coverage = {coverage_score(y, y_preds[:, 1], y_preds[:, 2])}"
     )
     plt.show()
 
