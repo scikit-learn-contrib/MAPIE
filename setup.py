@@ -2,37 +2,42 @@ import codecs
 from setuptools import find_packages, setup
 
 
-DISTNAME = 'MAPIE'
-VERSION = "0.1.2"
-DESCRIPTION = 'A scikit-learn-compatible module for estimating prediction intervals.'
-with codecs.open('README.rst', encoding='utf-8-sig') as f:
+DISTNAME = "MAPIE"
+VERSION = "0.1.3"
+DESCRIPTION = "A scikit-learn-compatible module for estimating prediction intervals."
+with codecs.open("README.rst", encoding="utf-8-sig") as f:
     LONG_DESCRIPTION = f.read()
-LONG_DESCRIPTION_CONTENT_TYPE = 'text/x-rst'
-URL = 'https://github.com/simai-ml/MAPIE'
-DOWNLOAD_URL = 'https://github.com/simai-ml/MAPIE'
-LICENSE = 'new BSD'
-MAINTAINER = 'V. Taquet, G. Martinon'
-MAINTAINER_EMAIL = 'vtaquet@quantmetry.com, gmartinon@quantmetry.com'
+LONG_DESCRIPTION_CONTENT_TYPE = "text/x-rst"
+URL = "https://github.com/simai-ml/MAPIE"
+DOWNLOAD_URL = "https://pypi.org/project/MAPIE/#files"
+PROJECT_URLS = {
+    "Bug Tracker": "https://github.com/simai-ml/MAPIE/issues",
+    "Documentation": "https://mapie.readthedocs.io/en/latest/",
+    "Source Code": "https://github.com/simai-ml/MAPIE"
+}
+LICENSE = "new BSD"
+MAINTAINER = "V. Taquet, G. Martinon"
+MAINTAINER_EMAIL = "vtaquet@quantmetry.com, gmartinon@quantmetry.com"
 PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
-INSTALL_REQUIRES = ['scikit-learn']
+INSTALL_REQUIRES = ["scikit-learn"]
 EXTRAS_REQUIRE = {
-    'tests': ['flake8', 'mypy', 'pytest', 'pytest-cov'],
-    'docs': ['sphinx', 'sphinx-gallery', 'sphinx_rtd_theme', 'numpydoc', 'matplotlib']
+    "tests": ["flake8", "mypy", "pytest", "pytest-cov"],
+    "docs": ["sphinx", "sphinx-gallery", "sphinx_rtd_theme", "numpydoc", "matplotlib"]
 }
 CLASSIFIERS = [
-    'Intended Audience :: Science/Research',
-    'Intended Audience :: Developers',
-    'License :: OSI Approved',
-    'Topic :: Software Development',
-    'Topic :: Scientific/Engineering',
-    'Operating System :: Microsoft :: Windows',
-    'Operating System :: POSIX',
-    'Operating System :: Unix',
-    'Operating System :: MacOS',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9'
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved",
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9"
 ]
 
 setup(
@@ -43,6 +48,7 @@ setup(
     long_description_content_type=LONG_DESCRIPTION_CONTENT_TYPE,
     url=URL,
     download_url=DOWNLOAD_URL,
+    project_urls=PROJECT_URLS,
     license=LICENSE,
     maintainer=MAINTAINER,
     maintainer_email=MAINTAINER_EMAIL,
