@@ -19,6 +19,7 @@
     * `conda create -n test-mapie --yes python=3.9.2`
     * `conda activate test-mapie`
     * `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie`
+    * `conda activate`
     * `conda env remove -n test-mapie`
 - [ ] Add and push new tag to your commit:
     * `git tag x.y.z`
