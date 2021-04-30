@@ -16,6 +16,7 @@
 - [ ] Upload it to TestPyPi: `twine upload --repository-url https://test.pypi.org/legacy/ dist/*`
 - [ ] Test upload on TestPyPi:
     * `cd`
+    * `conda activate`
     * `conda create -n test-mapie --yes python=3.9.2`
     * `conda activate test-mapie`
     * `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie`
