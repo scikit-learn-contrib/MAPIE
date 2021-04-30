@@ -23,7 +23,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 # Checklist:
 
 - [ ] I have read the [contributing guidelines](https://github.com/simai-ml/MAPIE/blob/master/CONTRIBUTING.rst)
-- [ ] I have updated the [HISTORY.rst](https://github.com/simai-ml/MAPIE/blob/master/HISTORY.rst) files with a short description of my changes.
+- [ ] I have updated the [HISTORY.rst](https://github.com/simai-ml/MAPIE/blob/master/HISTORY.rst) and [AUTHORS.rst](https://github.com/simai-ml/MAPIE/blob/master/AUTHORS.rst) files
 - [ ] Linting passes successfully : `flake8 . --exclude=doc`
 - [ ] Typing passes successfully : `mypy mapie examples --strict --config-file mypy.ini`
 - [ ] Unit tests pass successfully : `pytest -vs --doctest-modules mapie`

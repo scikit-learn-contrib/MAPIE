@@ -64,7 +64,7 @@ Updating changelog
 
 You can make your contribution visible by :
 
-1. adding your name to the Contributors sections of `CONTRIBUTING.rst <https://github.com/simai-ml/MAPIE/blob/master/CONTRIBUTING.rst>`_
+1. adding your name to the Contributors sections of `AUTHORS.rst <https://github.com/simai-ml/MAPIE/blob/master/AUTHORS.rst>`_
 2. adding a line describing your change into `HISTORY.rst <https://github.com/simai-ml/MAPIE/blob/master/HISTORY.rst>`_
 
 Testing
