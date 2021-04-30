@@ -7,6 +7,8 @@ History
 
 * Update PyPi homepage
 * Set up publication workflows as a github action
+* Update issue and pull request templates
+* Increase sklearn compatibility (coverage_score and unit tests)
 
 0.1.2 (2021-04-27)
 ------------------
