@@ -2,6 +2,11 @@
 History
 =======
 
+0.1.4 (2021-04-30)
+------------------
+
+* Move all alpha related operations to predict
+
 0.1.3 (2021-04-30)
 ------------------
 
