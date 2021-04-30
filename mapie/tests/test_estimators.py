@@ -109,11 +109,19 @@ def test_not_fitted() -> None:
         mapie.predict(X_reg)
 
 
-@pytest.mark.parametrize("method", ["dummy", "cv_dummy", "jackknife_dummy"])
+@pytest.mark.parametrize("method", ["dummy", "cv_dummy", "jackknife_dummy", "dummy_plus", "dummy_minmax"])
 def test_invalid_method_in_check_parameters(method: str) -> None:
     """Test error in check_parameters when invalid method is selected."""
     mapie = MapieRegressor(DummyRegressor(), method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
+        mapie.fit(X_boston, y_boston)
+
+
+@pytest.mark.parametrize("return_pred", ["dummy", "ensemble", "multi", "mean"])
+def test_invalid_return_pred_in_check_parameters(return_pred: str) -> None:
+    """Test error in check_parameters when invalid return_pred is selected."""
+    mapie = MapieRegressor(DummyRegressor(), return_pred=return_pred)
+    with pytest.raises(ValueError, match=r".*Invalid return_pred.*"):
         mapie.fit(X_boston, y_boston)
 
 
@@ -137,30 +145,32 @@ def test_invalid_method_in_predict(monkeypatch: Any, method: str) -> None:
         mapie.predict(X_boston)
 
 
+@pytest.mark.parametrize("return_pred", ["dummy"])
+def test_invalid_return_in_predict(monkeypatch: Any, return_pred: str) -> None:
+    """Test message in predict when invalid return_pred is selected."""
+    monkeypatch.setattr(MapieRegressor, "_check_parameters", lambda _: None)
+    mapie = MapieRegressor(DummyRegressor(), return_pred=return_pred)
+    mapie.fit(X_boston, y_boston)
+    with pytest.raises(ValueError, match=r".*Invalid return_pred.*"):
+        mapie.predict(X_boston)
+
+
 @pytest.mark.parametrize("method", all_methods)
-def test_single_estimator_attribute(method: str) -> None:
+def test_fit_attribute(method: str) -> None:
     """Test class attributes shared by all PI methods."""
     mapie = MapieRegressor(DummyRegressor(), method=method)
     mapie.fit(X_reg, y_reg)
     assert hasattr(mapie, 'single_estimator_')
-
-
-@pytest.mark.parametrize("method", standard_methods)
-def test_quantile_attribute(method: str) -> None:
-    """Test quantile attribute."""
-    mapie = MapieRegressor(DummyRegressor(), method=method)
-    mapie.fit(X_reg, y_reg)
-    assert hasattr(mapie, 'quantile_')
-    assert (mapie.quantile_ >= 0)
+    assert hasattr(mapie, 'residuals_')
 
 
 @pytest.mark.parametrize("method", jackknife_methods + cv_methods)
-def test_jkcv_attribute(method: str) -> None:
+def test_jkcv_fit_attribute(method: str) -> None:
     """Test class attributes shared by jackknife and CV methods."""
     mapie = MapieRegressor(DummyRegressor(), method=method)
     mapie.fit(X_reg, y_reg)
     assert hasattr(mapie, 'estimators_')
-    assert hasattr(mapie, 'residuals_')
+    assert hasattr(mapie, 'k_')
 
 
 @pytest.mark.parametrize("method", cv_methods)
@@ -168,7 +178,6 @@ def test_cv_attributes(method: str) -> None:
     """Test class attributes shared by CV methods."""
     mapie = MapieRegressor(DummyRegressor(), method=method, shuffle=False)
     mapie.fit(X_reg, y_reg)
-    assert hasattr(mapie, 'k_')
     assert mapie.random_state is None
 
 
@@ -200,7 +209,7 @@ def test_results(method: str) -> None:
     assert_almost_equal(y_up, y_low, 10)
 
 
-@pytest.mark.parametrize("return_pred", ["ensemble", "single"])
+@pytest.mark.parametrize("return_pred", ["single", "median"])
 def test_prediction_between_low_up(return_pred: str) -> None:
     """Test that prediction lies between low and up prediction intervals."""
     mapie = MapieRegressor(LinearRegression(), return_pred=return_pred)

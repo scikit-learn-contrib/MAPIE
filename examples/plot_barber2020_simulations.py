@@ -101,7 +101,7 @@ def PIs_vs_dimensions(
                     method=method,
                     n_splits=5,
                     shuffle=False,
-                    return_pred="ensemble"
+                    return_pred="median"
                 )
                 mapie.fit(X_train, y_train)
                 y_preds = mapie.predict(X_test)

@@ -42,6 +42,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     alpha: float, optional
         1 - (target coverage level), by default 0.1.
+        Only used at prediction time.
 
     method: str, optional
         Method to choose for prediction interval estimates.
@@ -64,7 +65,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     return_pred: str, optional
         Return the predictions from either
         - the single estimator trained on the full training dataset ("single")
-        - the median of the prediction intervals computed from the leave-one-out or out-of-folds models ("ensemble")
+        - the median of the prediction intervals computed from the leave-one-out or out-of-folds models ("median")
 
         Valid for the jackknife_plus, jackknife_minmax, cv_plus, or cv_minmax methods.
         By default, returns "single".
@@ -82,9 +83,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     estimators_ : list
         List of leave-one-out estimators.
-
-    quantile_: float
-        Quantile of the naive, jackknife, or CV residuals.
 
     residuals_ : np.ndarray of shape (n_samples_train,)
         Residuals between y_train and y_pred.
@@ -114,7 +112,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
      [14.71428571 13.8        15.38372093]]
     """
 
-    valid_methods_ = [
+    valid_methods = [
         "naive",
         "jackknife",
         "jackknife_plus",
@@ -122,6 +120,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "cv",
         "cv_plus",
         "cv_minmax"
+    ]
+
+    valid_return_preds = [
+        "single",
+        "median"
     ]
 
     def __init__(
@@ -148,8 +151,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         if not 0 < self.alpha < 1:
             raise ValueError("Invalid alpha. Please choose an alpha value between 0 and <1.")
-        if self.method not in self.valid_methods_:
+        if self.method not in self.valid_methods:
             raise ValueError("Invalid method.")
+        if self.return_pred not in self.valid_return_preds:
+            raise ValueError("Invalid return_pred argument.")
         check_not_none(self.estimator)
 
     def _select_cv(self) -> Union[KFold, LeaveOneOut]:
@@ -198,25 +203,20 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self.single_estimator_.fit(X, y)
         if self.method == "naive":
             y_pred = self.single_estimator_.predict(X)
-            residuals = np.abs(y - y_pred)
-            self.quantile_ = np.quantile(residuals, 1 - self.alpha, interpolation="higher")
+            self.residuals_ = np.abs(y - y_pred)
         else:
             cv = self._select_cv()
             n_samples = len(y)
             self.estimators_ = []
             y_pred = np.empty(n_samples, dtype=float)
-            if self.method.startswith("cv"):
-                self.k_ = np.empty(n_samples, dtype=int)
+            self.k_ = np.empty(n_samples, dtype=int)
             for k, (train_fold, val_fold) in enumerate(cv.split(X)):
-                if self.method.startswith("cv"):
-                    self.k_[val_fold] = k
+                self.k_[val_fold] = k
                 e = clone(self.estimator)
                 e.fit(X[train_fold], y[train_fold])
                 self.estimators_.append(e)
                 y_pred[val_fold] = e.predict(X[val_fold])
             self.residuals_ = np.abs(y - y_pred)
-            if self.method in ["cv", "jackknife"]:
-                self.quantile_ = np.quantile(self.residuals_, 1 - self.alpha, interpolation="higher")
         return self
 
     def predict(self, X: ArrayLike) -> np.ndarray:
@@ -240,12 +240,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
         if self.method in ["naive", "jackknife", "cv"]:
-            y_pred_low = y_pred - self.quantile_
-            y_pred_up = y_pred + self.quantile_
+            quantile = np.quantile(self.residuals_, 1 - self.alpha, interpolation="higher")
+            y_pred_low = y_pred - quantile
+            y_pred_up = y_pred + quantile
         else:
             y_pred_multi = np.stack([e.predict(X) for e in self.estimators_], axis=1)
-            if self.return_pred == "ensemble":
+            if self.return_pred == "single":
+                pass
+            elif self.return_pred == "median":
                 y_pred = np.median(y_pred_multi, axis=1)
+            else:
+                raise ValueError("Invalid return_pred.")
             if self.method == "cv_plus":
                 y_pred_multi = y_pred_multi[:, self.k_]
             if self.method.endswith("plus"):
