@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-|Travis|_ |AppVeyor|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_ |License|_ |PythonVersion|_ |PyPi|_ |Anaconda|_
+|Travis|_ |AppVeyor|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_ |License|_ |PythonVersion|_ |PyPi|_
 
 .. |Travis| image:: https://travis-ci.com/simai-ml/MAPIE.svg?branch=master
 .. _Travis: https://travis-ci.com/simai-ml/MAPIE

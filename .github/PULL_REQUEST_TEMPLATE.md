@@ -29,8 +29,8 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 # Checklist:
 
 - [ ] I have read the [contributing guidelines](https://github.com/simai-ml/MAPIE/blob/master/CONTRIBUTING.rst)
-- [ ] The following command passes successfully : `flake8 . --exclude=doc`
-- [ ] The following command passes successfully : `mypy mapie examples --strict --config-file mypy.ini`
-- [ ] The following command passes successfully : `pytest -vs --doctest-modules mapie`
-- [ ] The following command gives 100% coverage : `pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie`
-- [ ] The documentation builds successfully : `cd doc; make clean; make html`
+- [ ] Linting passes successfully : `flake8 . --exclude=doc`
+- [ ] Typing passes successfully : `mypy mapie examples --strict --config-file mypy.ini`
+- [ ] Unit tests pass successfully : `pytest -vs --doctest-modules mapie`
+- [ ] Coverage is 100% : `pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie`
+- [ ] Documentation builds successfully : `cd doc; make clean; make html`

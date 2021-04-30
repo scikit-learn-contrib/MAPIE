@@ -73,7 +73,7 @@ The estimated prediction intervals can then be plotted as follows.
     plt.show()
 
 
-.. image:: doc/images/quickstart_1.png
+.. image:: images/quickstart_1.png
     :width: 400
     :align: center
 
