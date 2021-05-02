@@ -32,7 +32,7 @@ def check_not_none(estimator: Optional[RegressorMixin]) -> None:
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
     Estimator implementing the jackknife+ method and its variations
-    for estimating prediction intervals from leave-one-out regressors on
+    for estimating prediction intervals from leave-one-out or out-of-fold regressors on
     single-output data.
 
     Parameters
@@ -181,7 +181,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
-        Fit all jackknife clones and rearrange them into a list.
+        Fit all estimator clones and rearrange them into a list.
         The initial estimator is fit apart.
 
         Parameters
