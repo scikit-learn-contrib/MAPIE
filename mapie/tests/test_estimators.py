@@ -145,16 +145,6 @@ def test_invalid_method_in_predict(monkeypatch: Any, method: str) -> None:
         mapie.predict(X_boston)
 
 
-@pytest.mark.parametrize("return_pred", ["dummy"])
-def test_invalid_return_in_predict(monkeypatch: Any, return_pred: str) -> None:
-    """Test message in predict when invalid return_pred is selected."""
-    monkeypatch.setattr(MapieRegressor, "_check_parameters", lambda _: None)
-    mapie = MapieRegressor(DummyRegressor(), return_pred=return_pred)
-    mapie.fit(X_boston, y_boston)
-    with pytest.raises(ValueError, match=r".*Invalid return_pred.*"):
-        mapie.predict(X_boston)
-
-
 @pytest.mark.parametrize("method", all_methods)
 def test_fit_attribute(method: str) -> None:
     """Test class attributes shared by all PI methods."""
@@ -184,8 +174,8 @@ def test_cv_attributes(method: str) -> None:
 def test_none_estimator() -> None:
     """Test error raised when estimator is None."""
     mapie = MapieRegressor(None)
-    with pytest.raises(ValueError, match=r".*Invalid none estimator.*"):
-        mapie.fit(X_boston, y_boston)
+    mapie.fit(X_boston, y_boston)
+    assert isinstance(mapie.estimator, LinearRegression)
 
 
 def test_predinterv_outputshape() -> None:

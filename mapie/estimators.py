@@ -7,33 +7,20 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import KFold, LeaveOneOut
+from sklearn.linear_model import LinearRegression
 
 from ._typing import ArrayLike
 
 
-def check_not_none(estimator: Optional[RegressorMixin]) -> None:
-    """
-    Check that estimator is not None.
-
-    Parameters
-    ----------
-    estimator : RegressorMixin
-        Any scikit-learn regressor.
-
-    Raises
-    ------
-    ValueError
-        If the estimator is None.
-    """
-    if estimator is None:
-        raise ValueError("Invalid none estimator.")
-
-
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
-    Estimator implementing the jackknife+ method and its variations
-    for estimating prediction intervals from leave-one-out or out-of-fold regressors on
-    single-output data.
+    Prediction interval with out-of-fold residuals.
+
+    This class implements the jackknife+ method and its variations
+    for estimating prediction intervals on single-output data. The
+    idea is to evaluate out-of-fold residuals on hold-out validation
+    sets and to deduce valid confidence intervals with strong theoretical
+    guarantees.
 
     Parameters
     ----------
@@ -41,12 +28,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Any scikit-learn regressor, by default None.
 
     alpha: float, optional
-        1 - (target coverage level), by default 0.1.
-        Only used at prediction time.
+        Between 0 and 1, represent the uncertainty of the confidence interval.
+        Lower alpha produce larger (more conservative) prediction intervals.
+        alpha is the complement of the target coverage level.
+        Only used at prediction time. By default 0.1.
 
     method: str, optional
         Method to choose for prediction interval estimates.
-        By default, "cv_plus".
         Choose among:
         - "naive"
         - "jackknife"
@@ -55,6 +43,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - "cv"
         - "cv_plus"
         - "cv_minmax"
+
+        By default "cv_plus".
 
     n_splits: int, optional
         Number of splits for cross-validation, by default 5.
@@ -68,7 +58,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - the median of the prediction intervals computed from the leave-one-out or out-of-folds models ("median")
 
         Valid for the jackknife_plus, jackknife_minmax, cv_plus, or cv_minmax methods.
-        By default, returns "single".
+        By default "single".
 
     random_state : int, optional
         Control randomness of cross-validation if relevant.
@@ -147,15 +137,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def _check_parameters(self) -> None:
         """
-        Perform several checks on input parameters and estimator
+        Perform several checks on input parameters and estimator.
         """
         if not 0 < self.alpha < 1:
-            raise ValueError("Invalid alpha. Please choose an alpha value between 0 and <1.")
+            raise ValueError("Invalid alpha. Please choose an alpha value between 0 and 1.")
         if self.method not in self.valid_methods:
             raise ValueError("Invalid method.")
         if self.return_pred not in self.valid_return_preds:
             raise ValueError("Invalid return_pred argument.")
-        check_not_none(self.estimator)
+        if self.estimator is None:
+            self.estimator = LinearRegression()
 
     def _select_cv(self) -> Union[KFold, LeaveOneOut]:
         """
@@ -181,8 +172,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
-        Fit all estimator clones and rearrange them into a list.
-        The initial estimator is fit apart.
+        Fit estimator and compute residuals used for prediction intervals.
+        Fit the base estimator under the single_estimator_ attribute.
+        Fit all cross-validated estimator clones and rearrange them into a list, the estimators_ attribute.
+        Out-of-fold residuals are stored under the residuals_ attribute.
 
         Parameters
         ----------
@@ -199,30 +192,30 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         self._check_parameters()
         X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
-        self.single_estimator_ = clone(self.estimator)
-        self.single_estimator_.fit(X, y)
+        self.single_estimator_ = clone(self.estimator).fit(X, y)
         if self.method == "naive":
             y_pred = self.single_estimator_.predict(X)
-            self.residuals_ = np.abs(y - y_pred)
         else:
             cv = self._select_cv()
-            n_samples = len(y)
             self.estimators_ = []
-            y_pred = np.empty(n_samples, dtype=float)
-            self.k_ = np.empty(n_samples, dtype=int)
+            y_pred = np.empty_like(y, dtype=float)
+            self.k_ = np.empty_like(y, dtype=int)
             for k, (train_fold, val_fold) in enumerate(cv.split(X)):
                 self.k_[val_fold] = k
-                e = clone(self.estimator)
-                e.fit(X[train_fold], y[train_fold])
+                e = clone(self.estimator).fit(X[train_fold], y[train_fold])
                 self.estimators_.append(e)
                 y_pred[val_fold] = e.predict(X[val_fold])
-            self.residuals_ = np.abs(y - y_pred)
+        self.residuals_ = np.abs(y - y_pred)
         return self
 
     def predict(self, X: ArrayLike) -> np.ndarray:
         """
-        Compute Prediction Intervals (PIs) for a given alpha from the trained
-        leave-one-out or out-of-fold models using the chosen method.
+        Predict target on new samples with confidence intervals.
+        Residuals from the training set and predictions from the model clones
+        are central to the computation. Prediction Intervals for a given alpha are deduced from either
+        - quantiles of residuals (naive, jacknife, cv)
+        - quantiles of (predictions +/- residuals) (jacknife_plus, cv_plus)
+        - quantiles of (max/min(predictions) +/- residuals) (jackinfe_minmax, cv_minmax)
 
         Parameters
         ----------
@@ -245,12 +238,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             y_pred_up = y_pred + quantile
         else:
             y_pred_multi = np.stack([e.predict(X) for e in self.estimators_], axis=1)
-            if self.return_pred == "single":
-                pass
-            elif self.return_pred == "median":
+            if self.return_pred == "median":
                 y_pred = np.median(y_pred_multi, axis=1)
-            else:
-                raise ValueError("Invalid return_pred.")
             if self.method == "cv_plus":
                 y_pred_multi = y_pred_multi[:, self.k_]
             if self.method.endswith("plus"):
