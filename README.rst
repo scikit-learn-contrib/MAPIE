@@ -27,7 +27,7 @@
 .. _PyPi: https://pypi.org/project/mapie/
 
 
-.. image:: doc/images/mapie_logo_nobg_cut.png
+.. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
     :align: center
 
