@@ -14,5 +14,6 @@ Contributors
 * Nicolas Brunel <nbrunel@quantmetry.com>
 * Issam Ibnouhsein <iibnouhsein@quantmetry.com>
 * François Deheeger <francois.deheeger@michelin.com>
+* Rémi Adon <remi.adon@protonmail.com>
 
 To be continued ...

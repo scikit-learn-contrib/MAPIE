@@ -31,13 +31,10 @@ Forest Regressor as a base regressor for the CV+ method. For the sake of light
 computation, we adopt a RandomizedSearchCV parameter search strategy with a low
 number of iterations and with a reproducible random state.
 
-It is found that estimating prediction intervals via the CV+ method with the nested
-and non-nested approaches gives very similar scores and identical effective coverages.
-In practice, the nested cross-validated parameter search approach gives *out-of-fold*
-models which have slightly different best parameters.
-The two approaches therefore give slightly different predictions with the nested CV approach
+The two approaches give slightly different predictions with the nested CV approach
 estimating slightly larger prediction interval widths by a few percents at most (apart from a
 handful of exceptions).
+
 For this exemple, the two approaches result in identical scores and in identical effective
 coverages.
 

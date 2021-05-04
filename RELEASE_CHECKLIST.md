@@ -9,6 +9,7 @@
     * `pytest -vs --doctest-modules mapie`
     * `pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie`
 - [ ] Update the version number with `bump2version major|minor|patch`.
+- [ ] Push new tag to your commit: `git push --tags`
 - [ ] Build source distribution:
     * `rm -rf build dist`
     * `python setup.py sdist bdist_wheel`
@@ -22,5 +23,4 @@
     * `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie`
     * `conda activate`
     * `conda env remove -n test-mapie`
-- [ ] Add and push new tag to your commit: `git push --tags`
 - [ ] Create new release on GitHub for this tag, with all of the links.

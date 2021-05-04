@@ -101,7 +101,7 @@ def PIs_vs_dimensions(
                     method=method,
                     n_splits=5,
                     shuffle=False,
-                    return_pred="ensemble"
+                    return_pred="median"
                 )
                 mapie.fit(X_train, y_train)
                 y_preds = mapie.predict(X_test)
@@ -169,7 +169,7 @@ methods = [
     "cv_plus"
 ]
 alpha = 0.1
-ntrial = 1
+ntrial = 3
 dimensions = np.arange(10, 150, 10)
 results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
 plot_simulation_results(results, title="Coverages and interval widths")
