@@ -21,25 +21,25 @@ import sphinx_rtd_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-# sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath("."))
 
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-# needs_sphinx = '1.0'
+# needs_sphinx = "1.0"
 
 # Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
+# extensions coming with Sphinx (named "sphinx.ext.*") or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.viewcode',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.doctest",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
-    'numpydoc',
-    'sphinx_gallery.gen_gallery'
+    "numpydoc",
+    "sphinx_gallery.gen_gallery"
 ]
 mathjax_path = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 
@@ -51,36 +51,36 @@ numpydoc_show_class_members = False
 # pngmath / imgmath compatibility layer for different sphinx versions
 import sphinx
 from distutils.version import LooseVersion
-if LooseVersion(sphinx.__version__) < LooseVersion('1.4'):
-    extensions.append('sphinx.ext.pngmath')
+if LooseVersion(sphinx.__version__) < LooseVersion("1.4"):
+    extensions.append("sphinx.ext.pngmath")
 else:
-    extensions.append('sphinx.ext.imgmath')
+    extensions.append("sphinx.ext.imgmath")
 
-autodoc_default_flags = ['members', 'inherited-members']
+autodoc_default_flags = ["members", "inherited-members"]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # generate autosummary even if no references
 autosummary_generate = True
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The encoding of source files.
-# source_encoding = 'utf-8-sig'
+# source_encoding = "utf-8-sig"
 
 # Generate the plots for the gallery
-plot_gallery = 'True'
+plot_gallery = "True"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = u'MAPIE'
-copyright = u'2021, Quantmetry'
+project = u"MAPIE"
+copyright = u"2021, Quantmetry"
 
-# The version info for the project you're documenting, acts as replacement for
+# The version info for the project you"re documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
@@ -95,19 +95,19 @@ release = version
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
-# today = ''
+# today = ""
 # Else, today_fmt is used as the format for a strftime call.
-# today_fmt = '%B %d, %Y'
+# today_fmt = "%B %d, %Y"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', '_templates']
+exclude_patterns = ["_build", "_templates"]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
 # default_role = None
 
-# If true, '()' will be appended to :func: etc. cross-reference text.
+# If true, "()" will be appended to :func: etc. cross-reference text.
 # add_function_parentheses = True
 
 # If true, the current module name will be prepended to all description
@@ -119,10 +119,10 @@ exclude_patterns = ['_build', '_templates']
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # Custom style
-html_style = 'css/project-template.css'
+html_style = "css/project-template.css"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -135,7 +135,7 @@ html_style = 'css/project-template.css'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -154,7 +154,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-# html_logo = None
+html_logo = "images/mapie_logo_white_cut.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -164,16 +164,16 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
 # directly to the root of the documentation.
 # html_extra_path = []
 
-# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
+# If not "", a "Last updated on:" timestamp is inserted at every page bottom,
 # using the given strftime format.
-# html_last_updated_fmt = '%b %d, %Y'
+# html_last_updated_fmt = "%b %d, %Y"
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -207,33 +207,33 @@ html_static_path = ['_static']
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
-# html_use_opensearch = ''
+# html_use_opensearch = ""
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'mapiedoc'
+htmlhelp_basename = "mapiedoc"
 
 
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    # 'papersize': 'letterpaper',
+    # The paper size ("letterpaper" or "a4paper").
+    # "papersize": "letterpaper",
 
-    # The font size ('10pt', '11pt' or '12pt').
-    # 'pointsize': '10pt',
+    # The font size ("10pt", "11pt" or "12pt").
+    # "pointsize": "10pt",
 
     # Additional stuff for the LaTeX preamble.
-    # 'preamble': '',
+    # "preamble": "",
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ('index', 'mapie.tex', u'MAPIE Documentation', u'Quantmetry', 'manual'),
+    ("index", "mapie.tex", u"MAPIE Documentation", u"Quantmetry", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -262,7 +262,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'mapie', u'MAPIE Documentation', [u'Quantmetry'], 1)
+    ("index", "mapie", u"MAPIE Documentation", [u"Quantmetry"], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -276,13 +276,13 @@ man_pages = [
 # dir menu entry, description, category)
 texinfo_documents = [
     (
-        'index',
-        'mapie',
-        u'MAPIE Documentation',
-        u'Quantmetry',
-        'MAPIE',
-        'One line description of project.',
-        'Miscellaneous'
+        "index",
+        "mapie",
+        u"MAPIE Documentation",
+        u"Quantmetry",
+        "MAPIE",
+        "One line description of project.",
+        "Miscellaneous"
     ),
 ]
 
@@ -292,31 +292,31 @@ texinfo_documents = [
 # If false, no module index is generated.
 # texinfo_domain_indices = True
 
-# How to display URL addresses: 'footnote', 'no', or 'inline'.
-# texinfo_show_urls = 'footnote'
+# How to display URL addresses: "footnote", "no", or "inline".
+# texinfo_show_urls = "footnote"
 
-# If true, do not generate a @detailmenu in the "Top" node's menu.
+# If true, do not generate a @detailmenu in the "Top" node"s menu.
 # texinfo_no_detailmenu = False
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
 # intersphinx configuration
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/{.major}'.format(sys.version_info), None),
-    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-    'matplotlib': ('https://matplotlib.org/', None),
-    'sklearn': ('http://scikit-learn.org/stable', None)
+    "python": ("https://docs.python.org/{.major}".format(sys.version_info), None),
+    "numpy": ("https://docs.scipy.org/doc/numpy/", None),
+    "matplotlib": ("https://matplotlib.org/", None),
+    "sklearn": ("http://scikit-learn.org/stable", None)
 }
 
 # sphinx-gallery configuration
 sphinx_gallery_conf = {
-    'doc_module': 'mapie',
-    'backreferences_dir': os.path.join('generated'),
-    'reference_url': {
-        'mapie': None}
+    "doc_module": "mapie",
+    "backreferences_dir": os.path.join("generated"),
+    "reference_url": {
+        "mapie": None}
 }
 
 
 def setup(app):
     # a copy button to copy snippet of code from the documentation
-    app.add_js_file('js/copybutton.js')
+    app.add_js_file("js/copybutton.js")
