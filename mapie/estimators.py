@@ -67,7 +67,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     ----------
     valid_methods: List[str]
         List of all valid methods.
-    
+
     valid_return_preds: List[str]
         List of all valid return_pred values..
 
