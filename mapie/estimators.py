@@ -65,8 +65,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     Attributes
     ----------
-    valid_methods_: List[str]
+    valid_methods: List[str]
         List of all valid methods.
+    
+    valid_return_preds: List[str]
+        List of all valid return_pred values..
 
     single_estimator_ : sklearn.RegressorMixin
         Estimator fit on the whole training set.
@@ -213,9 +216,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Predict target on new samples with confidence intervals.
         Residuals from the training set and predictions from the model clones
         are central to the computation. Prediction Intervals for a given alpha are deduced from either
-        - quantiles of residuals (naive, jacknife, cv)
-        - quantiles of (predictions +/- residuals) (jacknife_plus, cv_plus)
-        - quantiles of (max/min(predictions) +/- residuals) (jackinfe_minmax, cv_minmax)
+        - quantiles of residuals (naive, jackknife, cv)
+        - quantiles of (predictions +/- residuals) (jackknife_plus, cv_plus)
+        - quantiles of (max/min(predictions) +/- residuals) (jackknife_minmax, cv_minmax)
 
         Parameters
         ----------
