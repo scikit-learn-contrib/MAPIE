@@ -167,7 +167,7 @@ def test_valid_return_pred(return_pred: str) -> None:
     mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", ["cv", DummyRegressor()])
+@pytest.mark.parametrize("cv", [-3.14, -2, -1, 0, 1, "cv", DummyRegressor()])
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""
     mapie = MapieRegressor(cv=cv)
@@ -175,31 +175,19 @@ def test_invalid_cv(cv: Any) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [None, 5, Kfold(), LeaveOneOut()])
+@pytest.mark.parametrize("cv", [None, 2, 3, 4, 5, 10, Kfold(), LeaveOneOut()])
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     mapie = MapieRegressor(cv=cv)
     mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("method", ["dummy"])
-def test_invalid_method_in_fit(monkeypatch: Any, method: str) -> None:
+def test_fit_call_checks(monkeypatch: Any, method: str) -> None:
     """Test error in select_cv when invalid method is selected."""
     monkeypatch.setattr(MapieRegressor, "_check_parameters", lambda _: None)
     mapie = MapieRegressor(DummyRegressor(), method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         mapie.fit(X_boston, y_boston)
-
-
-@pytest.mark.parametrize("method", ["dummy"])
-def test_invalid_method_in_predict(monkeypatch: Any, method: str) -> None:
-    """Test message in predict when invalid method is selected."""
-    monkeypatch.setattr(MapieRegressor, "_check_parameters", lambda _: None)
-    monkeypatch.setattr(MapieRegressor, "_select_cv", lambda _: LeaveOneOut())
-    mapie = MapieRegressor(DummyRegressor(), method=method)
-    mapie.fit(X_boston, y_boston)
-    with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie.predict(X_boston)
 
 
 @pytest.mark.parametrize("method", all_methods)

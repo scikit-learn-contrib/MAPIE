@@ -50,7 +50,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         distinction between jackknife and cv variants. Choose among:
         - sklearn.model_selection.LeaveOneOut(), jacknife variants are used,
         - sklearn.model_selection.Kfold(), cross-validation variants are used,
-        - integer, equivalent to sklearn.model_selection.Kfold() with a given of folds,
+        - integer, at least 2, equivalent to sklearn.model_selection.Kfold() with a given of folds,
         - None, equivalent to default 5-fold cross-validation.
 
         Be default None.
@@ -191,11 +191,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         if cv is None:
             return Kfold()
-        if isinstance(self.cv, int):
+        if isinstance(self.cv, int) and self.cv >= 2:
             return Kfold(n_splits=self.cv)
         if isinstance(self.cv, Kfold) or isinstance(self.cv, LeaveOneOut):
             return cv
-        raise ValueError("Invalid cv argument. Allowed values are None, int, Kfold or LeaveOneOut.")
+        raise ValueError("Invalid cv argument. Allowed values are None, int >= 2, Kfold or LeaveOneOut.")
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
@@ -257,7 +257,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         [1]: Lower bound of the prediction interval
         [2]: Upper bound of the prediction interval
         """
-        check_is_fitted(self, ["single_estimator_"])
+        check_is_fitted(self, ["single_estimator_", "estimators_", "k_", "residuals_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
         if self.method in ["naive", "base"]:
