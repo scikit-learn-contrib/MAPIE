@@ -2,6 +2,11 @@
 History
 =======
 
+0.2.0 (2021-04-30)
+------------------
+
+* Introduce the `cv` parameter to get closer to scikit-learn API
+
 0.1.4 (2021-04-30)
 ------------------
 

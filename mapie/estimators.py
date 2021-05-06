@@ -50,10 +50,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         distinction between jackknife and cv variants. Choose among:
         - sklearn.model_selection.LeaveOneOut(), jacknife variants are used,
         - sklearn.model_selection.Kfold(), cross-validation variants are used,
-        - integer, at least 2, equivalent to sklearn.model_selection.Kfold() with a given of folds,
+        - integer, at least 2, equivalent to sklearn.model_selection.Kfold() with a given number of folds,
         - None, equivalent to default 5-fold cross-validation.
 
-        Be default None.
+        By default None.
 
     return_pred: str, optional
         Return the predictions from either
@@ -95,7 +95,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> pireg = MapieRegressor(LinearRegression(), method="plus", cv=5)
+    >>> pireg = MapieRegressor(LinearRegression())
     >>> print(pireg.fit(X_toy, y_toy).predict(X_toy))
     [[ 5.28571429  4.61627907  6.2       ]
      [ 7.17142857  6.51744186  8.        ]
@@ -156,7 +156,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Returns
         -------
         RegressorMixin
-            The estimator itself or a LinearRegression instance.
+            The estimator itself or a default LinearRegression instance.
 
         Raises
         ------
@@ -182,7 +182,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Returns
         -------
         BaseCrossValidator
-            The cross-validator itself or a LinearRegression instance.
+            The cross-validator itself or a default Kfold instance.
 
         Raises
         ------
