@@ -72,7 +72,7 @@ def test_optional_input_values() -> None:
     assert mapie.alpha == 0.1
     assert mapie.n_splits == 5
     assert mapie.shuffle
-    assert mapie.return_pred == "single"
+    assert mapie.ensemble is False
     assert mapie.random_state is None
 
 
@@ -117,11 +117,11 @@ def test_invalid_method_in_check_parameters(method: str) -> None:
         mapie.fit(X_boston, y_boston)
 
 
-@pytest.mark.parametrize("return_pred", ["dummy", "ensemble", "multi", "mean"])
-def test_invalid_return_pred_in_check_parameters(return_pred: str) -> None:
-    """Test error in check_parameters when invalid return_pred is selected."""
-    mapie = MapieRegressor(DummyRegressor(), return_pred=return_pred)
-    with pytest.raises(ValueError, match=r".*Invalid return_pred.*"):
+@pytest.mark.parametrize("ensemble", ["dummy", 1, 2., [1, 2]])
+def test_invalid_ensemble_in_check_parameters(ensemble: Any) -> None:
+    """Test error in check_parameters when invalid ensemble is selected."""
+    mapie = MapieRegressor(DummyRegressor(), ensemble=ensemble)
+    with pytest.raises(ValueError, match=r".*Invalid ensemble.*"):
         mapie.fit(X_boston, y_boston)
 
 
@@ -199,10 +199,10 @@ def test_results(method: str) -> None:
     assert_almost_equal(y_up, y_low, 10)
 
 
-@pytest.mark.parametrize("return_pred", ["single", "median"])
-def test_prediction_between_low_up(return_pred: str) -> None:
+@pytest.mark.parametrize("ensemble", [True, False])
+def test_prediction_between_low_up(ensemble: bool) -> None:
     """Test that prediction lies between low and up prediction intervals."""
-    mapie = MapieRegressor(LinearRegression(), return_pred=return_pred)
+    mapie = MapieRegressor(LinearRegression(), ensemble=ensemble)
     mapie.fit(X_boston, y_boston)
     y_preds = mapie.predict(X_boston)
     y_pred, y_low, y_up = y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]
