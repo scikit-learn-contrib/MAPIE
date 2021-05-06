@@ -8,6 +8,7 @@ History
 * Move all alpha related operations to predict
 * Assume default LinearRegression if estimator is None
 * Improve documentation
+* `return_pred` argument is now `ensemble` boolean
 
 0.1.3 (2021-04-30)
 ------------------
