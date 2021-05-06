@@ -6,7 +6,7 @@ flake8:
   max-line-length: 120
   ignore:
     - E226
-  exlude:
+  exclude:
     - doc
 
 message:

@@ -11,11 +11,12 @@ from typing import Any
 import pytest
 import numpy as np
 from sklearn.datasets import load_boston, make_regression
+from sklearn.base import RegressorMixin
 from sklearn.dummy import DummyRegressor
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression
 from sklearn.utils._testing import assert_almost_equal
-from sklearn.model_selection import LeaveOneOut
+from sklearn.model_selection import LeaveOneOut, Kfold
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
 from mapie.estimators import MapieRegressor
@@ -25,21 +26,17 @@ from mapie.metrics import coverage_score
 X_boston, y_boston = load_boston(return_X_y=True)
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
-X_reg, y_reg = make_regression(
-    n_samples=500, n_features=10, random_state=1
-)
+X_reg, y_reg = make_regression(n_samples=500, n_features=10, random_state=1)
+
 SEED = 59
 np.random.seed(SEED)
 y_reg = y_reg + np.random.normal(0, 1, 500)
-all_methods = [
-    "naive", "jackknife", "jackknife_plus", "jackknife_minmax", "cv", "cv_plus", "cv_minmax"
-]
-cv_methods = ["cv", "cv_plus", "cv_minmax"]
-jackknife_methods = ["jackknife", "jackknife_plus", "jackknife_minmax"]
-standard_methods = ["naive", "jackknife", "cv"]
-plus_methods = ["jackknife_plus", "cv_plus"]
-minmax_methods = ["jackknife_minmax", "cv_minmax"]
-expected_widths = {
+
+ALL_RETURN_PREDS = ["single", "median"]
+ALL_METHODS = ["naive", "base", "plus", "minmax"]
+NAIVE_METHOD = "naive"
+NON_NAIVE_METHODS = ["base", "plus", "minmax"]
+EXPECTED_WIDTHS = {
     "naive": 3.76,
     "jackknife": 3.85,
     "jackknife_plus": 3.86,
@@ -48,7 +45,7 @@ expected_widths = {
     "cv_plus": 3.99,
     "cv_minmax": 4.13
 }
-expected_coverages = {
+EXPECTED_COVERAGES = {
     "naive": 0.952,
     "jackknife": 0.952,
     "jackknife_plus": 0.952,
@@ -65,64 +62,124 @@ SKLEARN_EXCLUDED_CHECKS = {
 }
 
 
-def test_optional_input_values() -> None:
+def test_initialized() -> None:
+    """Test that initialization does not crash."""
+    MapieRegressor()
+
+
+def test_fit() -> None:
+    """Test that fit raises no errors."""
+    mapie = MapieRegressor()
+    mapie.fit(X_toy, y_toy)
+
+
+def test_fit_predict() -> None:
+    """Test that fit-predict raises no errors."""
+    mapie = MapieRegressor()
+    mapie.fit(X_toy, y_toy)
+    mapie.predict(X_toy)
+
+
+def test_no_fit_predict() -> None:
+    """Test that predict before fit raises errors"""
+    mapie = MapieRegressor(estimator=DummyRegressor())
+    with pytest.raises(NotFittedError, match=r".*not fitted.*"):
+        mapie.predict(X_toy)
+
+
+def test_default_parameters() -> None:
     """Test default values of input parameters."""
-    mapie = MapieRegressor(DummyRegressor())
-    assert mapie.method == "cv_plus"
+    mapie = MapieRegressor(estimator=DummyRegressor())
+    assert mapie.estimator is None
     assert mapie.alpha == 0.1
-    assert mapie.n_splits == 5
-    assert mapie.shuffle
+    assert mapie.method == "plus"
+    assert mapie.cv == 5
     assert mapie.return_pred == "single"
-    assert mapie.random_state is None
+
+
+@pytest.mark.parametrize("estimator", [0, "estimator", Kfold()])
+def test_invalid_estimator(estimator: Any) -> None:
+    """Test that invalid estimators raise errors."""
+    mapie = MapieRegressor(estimator=estimator)
+    with pytest.raises(ValueError, match=r".*Invalid estimator.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+def test_none_estimator() -> None:
+    """Test that None estimator defaults to LinearRegression."""
+    mapie = MapieRegressor(estimator=None)
+    mapie.fit(X_toy, y_toy)
+    assert isinstance(mapie.single_estimator_, LinearRegression)
+
+
+@pytest.mark.parametrize("method", ALL_METHODS)
+def test_valid_estimator(method: str) -> None:
+    """Test that valid estimators are not corrupted."""
+    mapie = MapieRegressor(estimator=DummyRegressor(), method=method)
+    mapie.fit(X_toy, y_toy)
+    assert isinstance(mapie.single_estimator_, DummyRegressor)
+    for estimator in mapie.estimators_:
+        assert isinstance(estimator, DummyRegressor)
 
 
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2])
 def test_invalid_alpha(alpha: int) -> None:
     """Test that invalid alphas raise errors."""
-    mapie = MapieRegressor(DummyRegressor(), alpha=alpha)
+    mapie = MapieRegressor(alpha=alpha)
     with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
-        mapie.fit(X_boston, y_boston)
+        mapie.fit(X_toy, y_toy)
 
 
-def test_initialized() -> None:
-    """Test that initialization does not crash."""
-    MapieRegressor(DummyRegressor())
-
-
-def test_fitted() -> None:
-    """Test that fit does not crash."""
-    mapie = MapieRegressor(DummyRegressor())
-    mapie.fit(X_reg, y_reg)
-
-
-def test_predicted() -> None:
-    """Test that predict does not crash."""
-    mapie = MapieRegressor(DummyRegressor())
-    mapie.fit(X_reg, y_reg)
-    mapie.predict(X_reg)
-
-
-def test_not_fitted() -> None:
-    """Test error message when predict is called before fit."""
-    mapie = MapieRegressor(DummyRegressor())
-    with pytest.raises(NotFittedError, match=r".*not fitted.*"):
-        mapie.predict(X_reg)
+@pytest.mark.parametrize("alpha", np.linspace(0, 1, 5))
+def test_valid_alpha(alpha: int) -> None:
+    """Test that valid alphas raise no errors."""
+    mapie = MapieRegressor(alpha=alpha)
+    mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("method", ["dummy", "cv_dummy", "jackknife_dummy", "dummy_plus", "dummy_minmax"])
-def test_invalid_method_in_check_parameters(method: str) -> None:
-    """Test error in check_parameters when invalid method is selected."""
-    mapie = MapieRegressor(DummyRegressor(), method=method)
+def test_invalid_method(method: str) -> None:
+    """Test that invalid methods raise errors."""
+    mapie = MapieRegressor(method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie.fit(X_boston, y_boston)
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("method", ALL_METHODS)
+def test_valid_method(method: str) -> None:
+    """Test that valid methods raise no errors."""
+    mapie = MapieRegressor(method=method)
+    mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("return_pred", ["dummy", "ensemble", "multi", "mean"])
-def test_invalid_return_pred_in_check_parameters(return_pred: str) -> None:
-    """Test error in check_parameters when invalid return_pred is selected."""
-    mapie = MapieRegressor(DummyRegressor(), return_pred=return_pred)
+def test_invalid_return_pred(return_pred: str) -> None:
+    """Test that invalid return_pred raise errors."""
+    mapie = MapieRegressor(return_pred=return_pred)
     with pytest.raises(ValueError, match=r".*Invalid return_pred.*"):
-        mapie.fit(X_boston, y_boston)
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("return_pred", ALL_RETURN_PREDS)
+def test_valid_return_pred(return_pred: str) -> None:
+    """Test that valid return_pred raise no errors."""
+    mapie = MapieRegressor(return_pred=return_pred)
+    mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("cv", ["cv", DummyRegressor()])
+def test_invalid_cv(cv: Any) -> None:
+    """Test that invalid cv raise errors."""
+    mapie = MapieRegressor(cv=cv)
+    with pytest.raises(ValueError, match=r".*Invalid cv.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("cv", [None, 5, Kfold(), LeaveOneOut()])
+def test_valid_cv(cv: Any) -> None:
+    """Test that valid cv raise no errors."""
+    mapie = MapieRegressor(cv=cv)
+    mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("method", ["dummy"])
@@ -169,13 +226,6 @@ def test_cv_attributes(method: str) -> None:
     mapie = MapieRegressor(DummyRegressor(), method=method, shuffle=False)
     mapie.fit(X_reg, y_reg)
     assert mapie.random_state is None
-
-
-def test_none_estimator() -> None:
-    """Test error raised when estimator is None."""
-    mapie = MapieRegressor(None)
-    mapie.fit(X_boston, y_boston)
-    assert isinstance(mapie.estimator, LinearRegression)
 
 
 def test_predinterv_outputshape() -> None:
