@@ -137,7 +137,7 @@ for i, method in enumerate(methods):
         method=method,
         alpha=0.05,
         n_splits=10,
-        return_pred='median'
+        ensemble=True
     )
     mapie.fit(X_train.reshape(-1, 1), y_train)
     y_preds = mapie.predict(X_test.reshape(-1, 1))

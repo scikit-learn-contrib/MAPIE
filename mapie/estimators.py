@@ -52,13 +52,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     shuffle: bool, default=True
         Whether to shuffle the data before splitting into batches.
 
-    return_pred: str, optional
-        Return the predictions from either
-        - the single estimator trained on the full training dataset ("single")
-        - the median of the prediction intervals computed from the leave-one-out or out-of-folds models ("median")
+    ensemble: bool, default=False
+        Determines how to return the predictions.
+        If False, returns the predictions from the single estimator trained on the full training dataset.
+        If True, returns the median of the prediction intervals computed from the out-of-folds models.
 
-        Valid for the jackknife_plus, jackknife_minmax, cv_plus, or cv_minmax methods.
-        By default "single".
+        By default `True`.
 
     random_state : int, optional
         Control randomness of cross-validation if relevant.
@@ -115,11 +114,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "cv_minmax"
     ]
 
-    valid_return_preds = [
-        "single",
-        "median"
-    ]
-
     def __init__(
         self,
         estimator: Optional[RegressorMixin] = None,
@@ -127,7 +121,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         method: str = "cv_plus",
         n_splits: int = 5,
         shuffle: bool = True,
-        return_pred: str = "single",
+        ensemble: bool = False,
         random_state: Optional[int] = None
     ) -> None:
         self.estimator = estimator
@@ -135,7 +129,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self.method = method
         self.n_splits = n_splits
         self.shuffle = shuffle
-        self.return_pred = return_pred
+        self.ensemble = ensemble
         self.random_state = random_state
 
     def _check_parameters(self) -> None:
@@ -146,8 +140,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError("Invalid alpha. Please choose an alpha value between 0 and 1.")
         if self.method not in self.valid_methods:
             raise ValueError("Invalid method.")
-        if self.return_pred not in self.valid_return_preds:
-            raise ValueError("Invalid return_pred argument.")
+        if not isinstance(self.ensemble, bool):
+            raise ValueError("Invalid ensemble argument. Must be a boolean.")
         if self.estimator is None:
             self.estimator = LinearRegression()
 
@@ -241,7 +235,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             y_pred_up = y_pred + quantile
         else:
             y_pred_multi = np.stack([e.predict(X) for e in self.estimators_], axis=1)
-            if self.return_pred == "median":
+            if self.ensemble:
                 y_pred = np.median(y_pred_multi, axis=1)
             if self.method == "cv_plus":
                 y_pred_multi = y_pred_multi[:, self.k_]

@@ -107,7 +107,7 @@ in order to obtain a 95% confidence for our prediction intervals.
     predintervs = {}
     for method in allmethods:
         mapie = MapieRegressor(
-            polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single'
+            polyn_model, alpha=0.05, method=method, n_splits=5, ensemble=False
         )
         mapie.fit(X_train, y_train)
         predintervs[method] = mapie.predict(X_test)
@@ -318,7 +318,7 @@ methods.
     predintervs = {}
     for method in allmethods:
         mapie = MapieRegressor(
-            polyn_model, alpha=0.05, method=method, n_splits=5, return_pred='single'
+            polyn_model, alpha=0.05, method=method, n_splits=5, ensemble=False
         )
         mapie.fit(X_train, y_train)
         predintervs[method] = mapie.predict(X_test)
@@ -534,7 +534,7 @@ and compare their prediction interval.
     predintervs = {}
     for name, model in zip(model_names, models):
         mapie = MapieRegressor(
-            model, alpha=0.05, method='cv_plus', n_splits=5, return_pred='median'
+            model, alpha=0.05, method='cv_plus', n_splits=5, ensemble=True
         )
         mapie.fit(X_train, y_train)
         predintervs[name] = mapie.predict(X_test)
