@@ -200,7 +200,7 @@ def test_results(method: str) -> None:
 
 
 @pytest.mark.parametrize("ensemble", [True, False])
-def test_prediction_between_low_up(ensemble: Any) -> None:
+def test_prediction_between_low_up(ensemble: bool) -> None:
     """Test that prediction lies between low and up prediction intervals."""
     mapie = MapieRegressor(LinearRegression(), ensemble=ensemble)
     mapie.fit(X_boston, y_boston)

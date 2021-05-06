@@ -56,6 +56,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Determines how to return the predictions.
         If False, returns the predictions from the single estimator trained on the full training dataset.
         If True, returns the median of the prediction intervals computed from the out-of-folds models.
+        The Jackknife+ interval can be interpreted as an interval around the median prediction,
+        and is guaranteed to lie inside the interval, unlike the single estimator predictions.
 
         By default `False`.
 
