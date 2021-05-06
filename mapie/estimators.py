@@ -49,18 +49,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     n_splits: int, optional
         Number of splits for cross-validation, by default 5.
 
-    shuffle: bool, default=True
-        Whether to shuffle the data before splitting into batches.
+    shuffle: bool, optional
+        Whether to shuffle the data before splitting into batches, by default True.
 
-    ensemble: bool, default=False
+    ensemble: bool, optional
         Determines how to return the predictions.
         If False, returns the predictions from the single estimator trained on the full training dataset.
         If True, returns the median of the prediction intervals computed from the out-of-folds models.
 
-        By default `True`.
+        By default `False`.
 
     random_state : int, optional
-        Control randomness of cross-validation if relevant.
+        Control randomness of cross-validation if relevant, by default None.
 
     Attributes
     ----------
