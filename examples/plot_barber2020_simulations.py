@@ -4,7 +4,7 @@ Reproducing the simulations from Foygel-Barber et al. (2020)
 ============================================================
 
 :class:`mapie.estimators.MapieRegressor` is used to investigate
-the coverage level and the prediction interval width as function
+the coverage level and the prediction interval width as a function
 of the dimension using simulated data points as introduced in
 Foygel-Barber et al. (2020).
 
@@ -13,9 +13,9 @@ whose signal-to-noise is equal to 10 and for several given dimensions.
 
 Here we use MAPIE, with a LinearRegression base model, to estimate the width
 means and the coverage levels of the prediction intervals estimated by all the
-available methods as function of the dataset dimension.
+available methods as a function of the dataset dimension.
 
-We then show the prediction interval coverages and widths as function of the
+We then estimate the prediction interval coverages and widths as a function of the
 dimension values for selected methods with standard error given by the different trials.
 
 This simulation is carried out to emphasize the instability of the prediction
@@ -47,7 +47,7 @@ def PIs_vs_dimensions(
 
     Here we use MAPIE, with a LinearRegression base model, to estimate the width
     means and the coverage levels of the prediction intervals estimated by all the
-    available methods as function of the dataset dimension.
+    available methods as a function of the dataset dimension.
 
     This simulation is carried out to emphasize the instability of the prediction
     intervals estimated by the Jackknife method when the dataset dimension is
@@ -119,7 +119,7 @@ def plot_simulation_results(
     title: str
 ) -> None:
     """
-    Show the prediction interval coverages and widths as function of dimension values
+    Show the prediction interval coverages and widths as a function of dimension values
     for selected methods with standard error given by different trials.
 
     Parameters

@@ -38,7 +38,7 @@ residuals of the same training set:
 
 or
 
-.. math:: \hat{C}_{n, \alpha}^{\rm naive}(X_{n+1}) = \hat{\mu}(X_n+1) \pm \hat{q}_{n, \alpha}^+{|Y_i-\hat{\mu}(X_i)|}
+.. math:: \hat{C}_{n, \alpha}^{\rm naive}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{q}_{n, \alpha}^+{|Y_i-\hat{\mu}(X_i)|}
 
 with :math:`\hat{q}_{n, \alpha}^+` is the :math:`(1-\alpha)` quantile of the distribution.
 
@@ -105,8 +105,8 @@ without any *a priori* assumption on the distribution of the data :math:`(X, Y)`
 nor on the predictive model.
 
 However, the Jackknife and Jackknife+ methods are computationally heavy since 
-they require to run as many simulations as the number of training points, and is prohibitive 
-for a typical data science usecase. 
+they require to run as many simulations as the number of training points, which is prohibitive 
+for a typical data science use case. 
 
 4. The Jackknife-minmax method
 ==============================
@@ -187,10 +187,10 @@ Key takeaways
 - Since the typical coverage levels estimated by Jackknife+ follow very closely the target coverage levels,
   this method should be used when accurate and robust prediction intervals are required.
 
-- For practical applications where :math:`n` is large and/or the the computational time of each 
+- For practical applications where :math:`n` is large and/or the computational time of each 
   *leave-one-out* simulation is high, it is advised to adopt the CV+ method, based on *out-of-fold* 
   simulations, instead. 
-  Indeed, the methods based on the Jackknife resampling appproach are very cumbersome because they 
+  Indeed, the methods based on the Jackknife resampling approach are very cumbersome because they 
   require to run a high number of simulations, equal to the number of training samples :math:`n`.
 
 - Although the CV+ method results in prediction intervals that are slightly larger than for the 
@@ -200,7 +200,7 @@ Key takeaways
   theoretical and practical coverages due to the larger widths of the prediction intervals.
   It is therefore advised to use them when conservative estimates are needed.
 
-The Table below summarizes the key features of each method by focusing on the obtained coverages and the
+The table below summarizes the key features of each method by focusing on the obtained coverages and the
 computational cost. :math:`n`, :math:`n_{\rm test}`, and :math:`K` are the number of training samples,
 test samples, and cross-validated folds, respectively.
 

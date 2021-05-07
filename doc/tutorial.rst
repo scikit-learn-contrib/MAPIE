@@ -26,7 +26,7 @@ Throughout this tutorial, we will answer the following questions:
 Throughout this tutorial, we estimate the prediction intervals using 
 a polynomial function, a boosting model, and a simple neural network. 
 
-**For practical problems, we advise to use the faster CV+ method. 
+**For practical problems, we advise using the faster CV+ method. 
 For conservative prediction interval estimates, you can alternatively 
 use the CV-minmax method.**
 
@@ -35,8 +35,7 @@ use the CV-minmax method.**
 ===================================================================
 
 Let's start by defining the :math:`x \times \sin(x)` function and another simple function
-that generates one-dimensional data with normal noise and obtained from a normal or 
-uniform distribution.
+that generates one-dimensional data with normal noise uniformely in a given interval.
 
 .. code:: python
 
@@ -48,8 +47,8 @@ uniform distribution.
 
     def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, noise):
         """
-        Generate 1D noisy data with uniform distribution from given function 
-        and noise standard deviation.
+        Generate 1D noisy data uniformely from the given function 
+        and standard deviation for the noise.
         """
         np.random.seed(59)
         X_train = np.linspace(min_x, max_x, n_samples)
@@ -59,7 +58,7 @@ uniform distribution.
         y_test += np.random.normal(0, noise, y_test.shape[0])
         return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
 
-We first generate noisy one-dimensional data obtained through a uniform distribution. 
+We first generate noisy one-dimensional data uniformely on an interval. 
 Here, the noise is considered as *homoscedastic*, since it remains constant 
 over :math:`x`.
 
@@ -96,7 +95,7 @@ is able to perfectly fit :math:`x \times \sin(x)`.
     )
 
 We then estimate the prediction intervals for all the methods very easily with a
-``fit`` and ``predict`` process. The prediction interval lower and upper bounds
+``fit`` and ``predict`` process. The prediction interval's lower and upper bounds
 are then saved in a DataFrame. Here, we set an alpha value of 0.05
 in order to obtain a 95% confidence for our prediction intervals.
 
@@ -443,11 +442,11 @@ increasing.
    </h1>
 
 In conclusion, the Jackknife-minmax, CV+, and CV-minmax methods are more
-conservative than the Jackknife+ method, and tend to result in more
+conservative than the Jackknife+ method and tend to result in more
 reliable coverages for *out-of-distribution* data. It is therefore
 advised to use the three former methods for predictions with new
 out-of-distribution data.
-Note however that there is no theoretical guarantees on the coverage level 
+Note however that there are no theoretical guarantees on the coverage level 
 for out-of-distribution data.
 
 
