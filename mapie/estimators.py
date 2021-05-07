@@ -26,7 +26,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     ----------
     estimator : Optional[RegressorMixin]
         Any regressor with scikit-learn API (i.e. with fit and predict methods), by default None.
-        If None, estimator defaults to a LinearRegression instance.
+        If None, estimator defaults to a `LinearRegression` instance.
 
     alpha: float, optional
         Between 0 and 1, represent the uncertainty of the confidence interval.
@@ -37,28 +37,30 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     method: str, optional
         Method to choose for prediction interval estimates.
         Choose among:
+
         - "naive", based on training set residuals,
         - "base", based on cross-validation sets residuals,
         - "plus", based on cross-validation sets residuals and testing set predictions,
         - "minmax", based on cross-validation sets residuals and testing set predictions
-        (min/max among cross-validation clones).
+          (min/max among cross-validation clones).
 
         By default "plus".
 
     cv: Optional[Union[int, BaseCrossValidator]]
         The cross-validation strategy for computing residuals. It directly drives the
         distinction between jackknife and cv variants. Choose among:
-        - sklearn.model_selection.LeaveOneOut(), jacknife variants are used,
-        - sklearn.model_selection.KFold(), cross-validation variants are used,
-        - integer, at least 2, equivalent to sklearn.model_selection.KFold() with a given number of folds,
-        - None, equivalent to default 5-fold cross-validation.
+
+        - `sklearn.model_selection.LeaveOneOut()`, jacknife variants are used,
+        - `sklearn.model_selection.KFold()`, cross-validation variants are used,
+        - `int`, at least 2, equivalent to `sklearn.model_selection.KFold()` with a given number of folds,
+        - `None`, equivalent to default 5-fold cross-validation.
 
         By default None.
 
     ensemble: bool, optional
         Determines how to return the predictions.
-        If False, returns the predictions from the single estimator trained on the full training dataset.
-        If True, returns the median of the prediction intervals computed from the out-of-folds models.
+        If `False`, returns the predictions from the single estimator trained on the full training dataset.
+        If `True`, returns the median of the prediction intervals computed from the out-of-folds models.
         The Jackknife+ interval can be interpreted as an interval around the median prediction,
         and is guaranteed to lie inside the interval, unlike the single estimator predictions.
 
@@ -73,10 +75,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Estimator fit on the whole training set.
 
     estimators_ : list
-        List of leave-one-out estimators.
+        List of out-of-folds estimators.
 
     residuals_ : np.ndarray of shape (n_samples_train,)
-        Residuals between y_train and y_pred.
+        Residuals between `y_train` and `y_pred`.
 
     k_: np.ndarray of shape(n_samples_train,)
         Id of the fold containing each trainig sample.
@@ -106,7 +108,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
      [14.71428571 13.8        15.38372093]]
     """
 
-    valid_methods = [
+    valid_methods_ = [
         "naive",
         "base",
         "plus",
@@ -134,7 +136,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if not isinstance(self.alpha, float) or not 0 < self.alpha < 1:
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
 
-        if self.method not in self.valid_methods:
+        if self.method not in self.valid_methods_:
             raise ValueError("Invalid method. Allowed values are 'naive', 'base', 'plus' and 'minmax'.")
 
         if not isinstance(self.ensemble, bool):
@@ -142,22 +144,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def _check_estimator(self, estimator: Optional[RegressorMixin] = None) -> RegressorMixin:
         """
-        Check if estimator is None, and returns a LinearRegression instance if necessary.
+        Check if estimator is `None`, and returns a `LinearRegression` instance if necessary.
 
         Parameters
         ----------
         estimator : Optional[RegressorMixin], optional
-            Estimator to check, by default None
+            Estimator to check, by default `None`
 
         Returns
         -------
         RegressorMixin
-            The estimator itself or a default LinearRegression instance.
+            The estimator itself or a default `LinearRegression` instance.
 
         Raises
         ------
         ValueError
-            If the estimator is not None and has no fit nor predict methods.
+            If the estimator is not `None` and has no fit nor predict methods.
         """
         if estimator is None:
             return LinearRegression()
@@ -167,23 +169,23 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def _check_cv(self, cv: Optional[Union[int, BaseCrossValidator]] = None) -> BaseCrossValidator:
         """
-        Check if cross-validator is None, int, KFold or LeaveOneOut.
-        Return a KFold instance if None. Else raise error.
+        Check if cross-validator is `None`, `int`, `KFold` or `LeaveOneOut`.
+        Return a `KFold` instance if `None`. Else raise error.
 
         Parameters
         ----------
         cv : Optional[Union[int, BaseCrossValidator]], optional
-            Cross-validator to check, by default None
+            Cross-validator to check, by default `None`
 
         Returns
         -------
         BaseCrossValidator
-            The cross-validator itself or a default KFold instance.
+            The cross-validator itself or a default `KFold` instance.
 
         Raises
         ------
         ValueError
-            If the cross-validator is not None, not int, nor a valid cross validator.
+            If the cross-validator is not `None`, not `int`, nor a valid cross validator.
         """
         if cv is None:
             return KFold()
@@ -196,9 +198,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
-        Fit the base estimator under the single_estimator_ attribute.
-        Fit all cross-validated estimator clones and rearrange them into a list, the estimators_ attribute.
-        Out-of-fold residuals are stored under the residuals_ attribute.
+        Fit the base estimator under the `single_estimator_` attribute.
+        Fit all cross-validated estimator clones and rearrange them into a list, the `estimators_` attribute.
+        Out-of-fold residuals are stored under the `residuals_` attribute.
 
         Parameters
         ----------
@@ -237,7 +239,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         Predict target on new samples with confidence intervals.
         Residuals from the training set and predictions from the model clones
-        are central to the computation. Prediction Intervals for a given alpha are deduced from either
+        are central to the computation. Prediction Intervals for a given `alpha` are deduced from either
+
         - quantiles of residuals (naive and base methods)
         - quantiles of (predictions +/- residuals) (plus methods)
         - quantiles of (max/min(predictions) +/- residuals) (minmax methods)
@@ -250,9 +253,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Returns
         -------
         np.ndarray of shape (n_samples, 3)
-        [0]: Center of the prediction interval
-        [1]: Lower bound of the prediction interval
-        [2]: Upper bound of the prediction interval
+
+            - [0]: Center of the prediction interval
+            - [1]: Lower bound of the prediction interval
+            - [2]: Upper bound of the prediction interval
         """
         check_is_fitted(self, ["single_estimator_", "estimators_", "k_", "residuals_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])

@@ -26,5 +26,7 @@ plt.scatter(X, y, alpha=0.3)
 plt.plot(X, y_preds[:, 0], color="C1")
 order = np.argsort(X[:, 0])
 plt.fill_between(X[order].ravel(), y_preds[:, 1][order], y_preds[:, 2][order], alpha=0.3)
-plt.title(f"Target coverage = 0.9; Effective coverage = {coverage_score(y, y_preds[:, 1], y_preds[:, 2])}")
+plt.title(
+    f"Target coverage = 0.9; Effective coverage = {coverage_score(y, y_preds[:, 1], y_preds[:, 2])}"
+)
 plt.show()
