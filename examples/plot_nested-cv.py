@@ -89,9 +89,9 @@ best_est = cv_obj.best_estimator_
 mapie_non_nested = MapieRegressor(
     best_est,
     alpha=alpha,
-    method='cv_plus',
+    method="cv_plus",
     n_splits=n_cv,
-    return_pred='median',
+    ensemble=True,
     random_state=random_state
 )
 mapie_non_nested.fit(X_train, y_train)
@@ -115,9 +115,9 @@ cv_obj = RandomizedSearchCV(
 mapie_nested = MapieRegressor(
     cv_obj,
     alpha=alpha,
-    method='cv_plus',
+    method="cv_plus",
     n_splits=n_cv,
-    return_pred='median',
+    ensemble=True,
     random_state=random_state
 )
 mapie_nested.fit(X_train, y_train)
@@ -145,7 +145,7 @@ ax1.set_ylabel("Prediction interval width using the non-nested CV approach")
 ax1.set_xlim([min_x, max_x])
 ax1.set_ylim([min_x, max_x])
 ax1.scatter(widths_nested, widths_non_nested)
-ax1.plot([min_x, max_x], [min_x, max_x], ls='--', color='k')
+ax1.plot([min_x, max_x], [min_x, max_x], ls="--", color="k")
 ax2.set_xlabel("[width(non-nested CV) - width(nested CV)] / width(non-nested CV)")
 ax2.set_ylabel("Counts")
 ax2.hist((widths_non_nested - widths_nested)/widths_non_nested, bins=15)

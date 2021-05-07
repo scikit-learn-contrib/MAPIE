@@ -29,7 +29,6 @@ SEED = 59
 np.random.seed(SEED)
 y_reg = y_reg + np.random.normal(0, 1, 500)
 
-ALL_RETURN_PREDS = ["single", "median"]
 ALL_METHODS = ["naive", "base", "plus", "minmax"]
 NAIVE_METHOD = "naive"
 NON_NAIVE_METHODS = ["base", "plus", "minmax"]
@@ -62,7 +61,6 @@ SKLEARN_EXCLUDED_CHECKS = {
 # TODO:
 # beware of ALL_METHODS, you should also check for cv et return_pred
 # rethink all tests, especially the last ones with expected widths/coverage
-# merge with last version of master
 # assert checks are called during fit
 # assert checks are called during predict
 # assert all corner cases of predict
@@ -101,7 +99,7 @@ def test_default_parameters() -> None:
     assert mapie.alpha == 0.1
     assert mapie.method == "plus"
     assert mapie.cv == 5
-    assert mapie.return_pred == "single"
+    assert not mapie.ensemble
 
 
 @pytest.mark.parametrize("estimator", [0, "estimator", Kfold()])
@@ -159,18 +157,18 @@ def test_valid_method(method: str) -> None:
     mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("return_pred", ["dummy", "ensemble", "multi", "mean"])
-def test_invalid_return_pred(return_pred: str) -> None:
+@pytest.mark.parametrize("ensemble", ["dummy", 1, 2., [1, 2]])
+def test_invalid_ensemble(ensemble: Any) -> None:
     """Test that invalid return_pred raise errors."""
-    mapie = MapieRegressor(return_pred=return_pred)
-    with pytest.raises(ValueError, match=r".*Invalid return_pred.*"):
+    mapie = MapieRegressor(DummyRegressor(), ensemble=ensemble)
+    with pytest.raises(ValueError, match=r".*Invalid ensemble.*"):
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("return_pred", ALL_RETURN_PREDS)
-def test_valid_return_pred(return_pred: str) -> None:
-    """Test that valid return_pred raise no errors."""
-    mapie = MapieRegressor(return_pred=return_pred)
+@pytest.mark.parametrize("ensemble", [True, False])
+def test_valid_ensemble(ensemble: str) -> None:
+    """Test that valid ensemble raise no errors."""
+    mapie = MapieRegressor(ensemble=ensemble)
     mapie.fit(X_toy, y_toy)
 
 
@@ -222,11 +220,10 @@ def test_linear_confidence_interval(method: str) -> None:
     np.testing.assert_almost_equal(y_up, y_low)
 
 
-@pytest.mark.parametrize("return_pred", ["single", "median"])
-@pytest.mark.parametrize("method", ALL_METHODS)
-def test_prediction_between_low_up(return_pred: str, method: str) -> None:
+@pytest.mark.parametrize("ensemble", [True, False])
+def test_prediction_between_low_up(ensemble: bool) -> None:
     """Test that prediction lies between low and up prediction intervals."""
-    mapie = MapieRegressor(estimator=LinearRegression(), method=method, return_pred=return_pred)
+    mapie = MapieRegressor(estimator=LinearRegression(), ensemble=ensemble)
     mapie.fit(X_reg, y_reg)
     y_preds = mapie.predict(X_reg)
     y_pred, y_low, y_up = y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]
