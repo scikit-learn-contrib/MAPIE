@@ -6,7 +6,7 @@ History
 ------------------
 
 * Introduce the `cv` parameter to get closer to scikit-learn API
-* Remove the `n_splits` and `shuffle` parameters
+* Remove the `n_splits`, `shuffle` and `random_state` parameters
 * Simplify the `method` parameter
 * Fix typos in documentation and add methods descriptions in sphinx
 
