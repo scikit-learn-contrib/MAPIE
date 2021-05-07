@@ -8,12 +8,12 @@ estimating prediction intervals with :class:`mapie.estimators.MapieRegressor`.
 
 In the regular sequential method, a cross-validation parameter search is
 carried out over the entire training set.
-The model with the set of parameter that gives the best score is then used in
+The model with the set of parameters that gives the best score is then used in
 MAPIE to estimate the prediction intervals associated with the predictions.
 A limitation of this method is that residuals used by MAPIE are computed on
-validation dataset, which can be subject to overfitting as far as hyperparameter
+the validation dataset, which can be subject to overfitting as far as hyperparameter
 tuning is concerned.
-This fools MAPIE in being slightly too optimistic with confidence intervals.
+This fools MAPIE into being slightly too optimistic with confidence intervals.
 
 To solve this problem, an alternative option is to perform a nested
 cross-validation parameter search directly within the MAPIE estimator on each
@@ -35,11 +35,11 @@ The two approaches give slightly different predictions with the nested CV approa
 estimating slightly larger prediction interval widths by a few percents at most (apart from a
 handful of exceptions).
 
-For this exemple, the two approaches result in identical scores and in identical effective
+For this example, the two approaches result in identical scores and identical effective
 coverages.
 
 In the general case, the recommended approach is to use nested cross-validation, since it
-does not understimate residuals and hence prediction intervals. However, in this particular
+does not underestimate residuals and hence prediction intervals. However, in this particular
 example, effective coverages of both nested and non-nested methods are the same.
 """
 

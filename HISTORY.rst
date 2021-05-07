@@ -8,6 +8,7 @@ History
 * Introduce the `cv` parameter to get closer to scikit-learn API
 * Remove the `n_splits` and `shuffle` parameters
 * Simplify the `method` parameter
+* Fix typos in documentation and add methods descriptions in sphinx
 
 0.1.4 (2021-05-07)
 ------------------
