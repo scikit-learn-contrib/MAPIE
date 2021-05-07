@@ -10,6 +10,7 @@
     * `pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie`
 - [ ] Update the version number with `bump2version major|minor|patch`.
 - [ ] Push new tag to your commit: `git push --tags`
+- [ ] Push files updated by bump2version: `git push origin master`
 - [ ] Build source distribution:
     * `rm -rf build dist`
     * `python setup.py sdist bdist_wheel`
