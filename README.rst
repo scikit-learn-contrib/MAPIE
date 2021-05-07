@@ -77,7 +77,7 @@ sequential ``fit`` and ``predict`` process  like any scikit-learn regressor.
 .. code:: python
 
     from mapie.estimators import MapieRegressor
-    mapie = MapieRegressor(regressor, method="jackknife_plus")
+    mapie = MapieRegressor(regressor)
     mapie.fit(X, y)
     y_preds = mapie.predict(X)
 

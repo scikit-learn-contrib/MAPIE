@@ -13,16 +13,16 @@ whose signal-to-noise is equal to 10 and for several given dimensions.
 
 Here we use MAPIE, with a LinearRegression base model, to estimate the width
 means and the coverage levels of the prediction intervals estimated by all the
-available methods as function of the dataset dimension.
+available strategies as function of the dataset dimension.
 
 We then show the prediction interval coverages and widths as function of the
-dimension values for selected methods with standard error given by the different trials.
+dimension values for selected strategies with standard error given by the different trials.
 
 This simulation is carried out to emphasize the instability of the prediction
-intervals estimated by the Jackknife method when the dataset dimension is
+intervals estimated by the Jackknife strategy when the dataset dimension is
 equal to the number of training samples (here 100).
 """
-from typing import List, Dict
+from typing import List, Dict, Any
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -33,7 +33,7 @@ from mapie.metrics import coverage_score
 
 
 def PIs_vs_dimensions(
-    methods: List[str],
+    strategies: Dict[str, Any],
     alpha: float,
     n_trial: int,
     dimensions: List[int]
@@ -47,16 +47,16 @@ def PIs_vs_dimensions(
 
     Here we use MAPIE, with a LinearRegression base model, to estimate the width
     means and the coverage levels of the prediction intervals estimated by all the
-    available methods as function of the dataset dimension.
+    available strategies as function of the dataset dimension.
 
     This simulation is carried out to emphasize the instability of the prediction
-    intervals estimated by the Jackknife method when the dataset dimension is
+    intervals estimated by the Jackknife strategy when the dataset dimension is
     equal to the number of training samples (here 100).
 
     Parameters
     ----------
-    methods : List[str]
-        List of methods for estimating prediction intervals.
+    strategies : Dict[str, Dict[str, Any]]
+        List of strategies for estimating prediction intervals, with corresponding parameters.
     alpha : float
         1 - (target coverage level).
     n_trial : int
@@ -68,19 +68,19 @@ def PIs_vs_dimensions(
     Returns
     -------
     Dict[str, Dict[int, Dict[str, np.ndarray]]]
-        Prediction interval widths and coverages for each method, trial,
+        Prediction interval widths and coverages for each strategy, trial,
         and dimension value.
     """
     n_train = 100
     n_test = 100
     SNR = 10
     results: Dict[str, Dict[int, Dict[str, np.ndarray]]] = {
-        method: {
+        strategy: {
             dimension: {
                 "coverage": np.empty(n_trial),
                 "width_mean": np.empty(n_trial)
             } for dimension in dimensions
-        } for method in methods
+        } for strategy in strategies
     }
     for dimension in dimensions:
         for trial in range(n_trial):
@@ -94,21 +94,19 @@ def PIs_vs_dimensions(
             X_test = np.random.normal(size=(n_test, dimension))
             y_test = X_test.dot(beta) + noise_test
 
-            for method in methods:
+            for strategy, params in strategies.items():
                 mapie = MapieRegressor(
                     LinearRegression(),
                     alpha=alpha,
-                    method=method,
-                    n_splits=5,
-                    shuffle=False,
-                    ensemble=True
+                    ensemble=True,
+                    **params
                 )
                 mapie.fit(X_train, y_train)
                 y_preds = mapie.predict(X_test)
-                results[method][dimension]["coverage"][trial] = coverage_score(
+                results[strategy][dimension]["coverage"][trial] = coverage_score(
                     y_test, y_preds[:, 1], y_preds[:, 2]
                 )
-                results[method][dimension]["width_mean"][trial] = (
+                results[strategy][dimension]["width_mean"][trial] = (
                     y_preds[:, 2] - y_preds[:, 1]
                 ).mean()
     return results
@@ -120,12 +118,12 @@ def plot_simulation_results(
 ) -> None:
     """
     Show the prediction interval coverages and widths as function of dimension values
-    for selected methods with standard error given by different trials.
+    for selected strategies with standard error given by different trials.
 
     Parameters
     ----------
     results : Dict[str, Dict[int, Dict[str, np.ndarray]]]
-        Prediction interval widths and coverages for each method, trial,
+        Prediction interval widths and coverages for each strategy, trial,
         and dimension value.
     title : str
         Title of the plot.
@@ -133,22 +131,22 @@ def plot_simulation_results(
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
     plt.rcParams.update({"font.size": 14})
     plt.suptitle(title)
-    for method in results:
-        dimensions = list(results[method].keys())
+    for strategy in results:
+        dimensions = list(results[strategy].keys())
         n_dim = len(dimensions)
         coverage_mean, coverage_SE, width_mean, width_SE = (
             np.zeros(n_dim), np.zeros(n_dim), np.zeros(n_dim), np.zeros(n_dim)
         )
         for idim, dimension in enumerate(dimensions):
-            coverage_mean[idim] = results[method][dimension]["coverage"].mean()
-            coverage_SE[idim] = results[method][dimension]["coverage"].std()/np.sqrt(ntrial)
-            width_mean[idim] = results[method][dimension]["width_mean"].mean()
-            width_SE[idim] = results[method][dimension]["width_mean"].std()/np.sqrt(ntrial)
-        ax1.plot(dimensions, coverage_mean, label=method)
+            coverage_mean[idim] = results[strategy][dimension]["coverage"].mean()
+            coverage_SE[idim] = results[strategy][dimension]["coverage"].std()/np.sqrt(ntrial)
+            width_mean[idim] = results[strategy][dimension]["width_mean"].mean()
+            width_SE[idim] = results[strategy][dimension]["width_mean"].std()/np.sqrt(ntrial)
+        ax1.plot(dimensions, coverage_mean, label=strategy)
         ax1.fill_between(
             dimensions, coverage_mean - coverage_SE, coverage_mean + coverage_SE, alpha=0.25
         )
-        ax2.plot(dimensions, width_mean, label=method)
+        ax2.plot(dimensions, width_mean, label=strategy)
         ax2.fill_between(
             dimensions, width_mean - width_SE, width_mean + width_SE, alpha=0.25
         )
@@ -163,13 +161,13 @@ def plot_simulation_results(
     ax2.legend()
 
 
-methods = [
-    "naive",
-    "cv",
-    "cv_plus"
-]
+STRATEGIES = {
+    "naive": dict(method="naive"),
+    "cv": dict(method="base", cv=5),
+    "cv_plus": dict(method="plus", cv=5)
+}
 alpha = 0.1
 ntrial = 3
 dimensions = np.arange(10, 150, 10)
-results = PIs_vs_dimensions(methods, alpha, ntrial, dimensions)
+results = PIs_vs_dimensions(STRATEGIES, alpha, ntrial, dimensions)
 plot_simulation_results(results, title="Coverages and interval widths")

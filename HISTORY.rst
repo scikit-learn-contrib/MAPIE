@@ -2,12 +2,14 @@
 History
 =======
 
-0.2.0 (2021-04-30)
+0.2.0 (???)
 ------------------
 
 * Introduce the `cv` parameter to get closer to scikit-learn API
+* Remove the `n_splits` and `shuffle` parameters
+* Simplify the `method` parameter
 
-0.1.4 (2021-04-30)
+0.1.4 (2021-05-07)
 ------------------
 
 * Move all alpha related operations to predict

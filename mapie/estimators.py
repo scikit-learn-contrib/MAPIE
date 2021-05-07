@@ -7,7 +7,7 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator, Kfold, LeaveOneOut
+from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 
 from ._typing import ArrayLike
 
@@ -16,7 +16,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
     Prediction interval with out-of-fold residuals.
 
-    This class implements the jackknife+ method and its variations
+    This class implements the jackknife+ strategy and its variations
     for estimating prediction intervals on single-output data. The
     idea is to evaluate out-of-fold residuals on hold-out validation
     sets and to deduce valid confidence intervals with strong theoretical
@@ -49,8 +49,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         The cross-validation strategy for computing residuals. It directly drives the
         distinction between jackknife and cv variants. Choose among:
         - sklearn.model_selection.LeaveOneOut(), jacknife variants are used,
-        - sklearn.model_selection.Kfold(), cross-validation variants are used,
-        - integer, at least 2, equivalent to sklearn.model_selection.Kfold() with a given number of folds,
+        - sklearn.model_selection.KFold(), cross-validation variants are used,
+        - integer, at least 2, equivalent to sklearn.model_selection.KFold() with a given number of folds,
         - None, equivalent to default 5-fold cross-validation.
 
         By default None.
@@ -69,9 +69,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     valid_methods: List[str]
         List of all valid methods.
 
-    valid_return_preds: List[str]
-        List of all valid return_pred values..
-
     single_estimator_ : sklearn.RegressorMixin
         Estimator fit on the whole training set.
 
@@ -83,6 +80,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     k_: np.ndarray of shape(n_samples_train,)
         Id of the fold containing each trainig sample.
+
+    n_features_in_: int
+        Number of features passed to the fit method.
 
     References
     ----------
@@ -98,10 +98,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> pireg = MapieRegressor(LinearRegression())
     >>> print(pireg.fit(X_toy, y_toy).predict(X_toy))
-    [[ 5.28571429  4.61627907  6.2       ]
-     [ 7.17142857  6.51744186  8.        ]
-     [ 9.05714286  8.4         9.8       ]
-     [10.94285714 10.2        11.6       ]
+    [[ 5.28571429  4.61627907  6.        ]
+     [ 7.17142857  6.51744186  7.8       ]
+     [ 9.05714286  8.4         9.68023256]
+     [10.94285714 10.2        11.58139535]
      [12.82857143 12.         13.48255814]
      [14.71428571 13.8        15.38372093]]
     """
@@ -131,7 +131,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         Perform several checks on input parameters.
         """
-        if not 0 < self.alpha < 1:
+        if not isinstance(self.alpha, float) or not 0 < self.alpha < 1:
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
 
         if self.method not in self.valid_methods:
@@ -157,7 +157,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Raises
         ------
         ValueError
-            If the estimator is not None and has no fit nor predict method.
+            If the estimator is not None and has no fit nor predict methods.
         """
         if estimator is None:
             return LinearRegression()
@@ -167,8 +167,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def _check_cv(self, cv: Optional[Union[int, BaseCrossValidator]] = None) -> BaseCrossValidator:
         """
-        Check if cross-validator is None, int, Kfold or LeaveOneOut.
-        Return a Kfold instance if None. Else raise error.
+        Check if cross-validator is None, int, KFold or LeaveOneOut.
+        Return a KFold instance if None. Else raise error.
 
         Parameters
         ----------
@@ -178,7 +178,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Returns
         -------
         BaseCrossValidator
-            The cross-validator itself or a default Kfold instance.
+            The cross-validator itself or a default KFold instance.
 
         Raises
         ------
@@ -186,12 +186,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             If the cross-validator is not None, not int, nor a valid cross validator.
         """
         if cv is None:
-            return Kfold()
+            return KFold()
         if isinstance(self.cv, int) and self.cv >= 2:
-            return Kfold(n_splits=self.cv)
-        if isinstance(self.cv, Kfold) or isinstance(self.cv, LeaveOneOut):
+            return KFold(n_splits=self.cv)
+        if isinstance(self.cv, KFold) or isinstance(self.cv, LeaveOneOut):
             return cv
-        raise ValueError("Invalid cv argument. Allowed values are None, int >= 2, Kfold or LeaveOneOut.")
+        raise ValueError("Invalid cv argument. Allowed values are None, int >= 2, KFold or LeaveOneOut.")
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
@@ -217,6 +217,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         estimator = self._check_estimator(self.estimator)
         cv = self._check_cv(self.cv)
         X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
+        self.n_features_in_ = X.shape[1]
         self.estimators_ = []
         self.k_ = np.empty_like(y, dtype=int)
         self.single_estimator_ = clone(estimator).fit(X, y)
@@ -227,8 +228,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             for k, (train_fold, val_fold) in enumerate(cv.split(X)):
                 self.k_[val_fold] = k
                 e = clone(estimator).fit(X[train_fold], y[train_fold])
-                self.estimators_.append(e)
                 y_pred[val_fold] = e.predict(X[val_fold])
+                self.estimators_.append(e)
         self.residuals_ = np.abs(y - y_pred)
         return self
 
