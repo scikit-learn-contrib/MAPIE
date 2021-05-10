@@ -2,11 +2,15 @@
 History
 =======
 
-0.1.5 (2021-05-07)
+0.2.0 (???)
 ------------------
-* Improve documentation
 
-0.1.4 (2021-04-30)
+* Introduce the `cv` parameter to get closer to scikit-learn API
+* Remove the `n_splits`, `shuffle` and `random_state` parameters
+* Simplify the `method` parameter
+* Fix typos in documentation and add methods descriptions in sphinx
+
+0.1.4 (2021-05-07)
 ------------------
 
 * Move all alpha related operations to predict

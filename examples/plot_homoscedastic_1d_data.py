@@ -5,15 +5,16 @@ Estimate the prediction intervals of 1D homoscedastic data
 
 :class:`mapie.estimators.MapieRegressor` is used to estimate
 the prediction intervals of 1D homoscedastic data using
-different methods.
+different strategies.
 """
 from typing import Tuple
 
 import numpy as np
 import scipy
-from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import LeaveOneOut
 from matplotlib import pyplot as plt
 
 from mapie.estimators import MapieRegressor
@@ -103,15 +104,15 @@ def plot_1d_data(
     title : str
         Title of the figure.
     """
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
     ax.set_xlim([0, 1.1])
     ax.set_ylim([0, 1])
-    ax.scatter(X_train, y_train, color='red', alpha=0.3, label='training')
-    ax.plot(X_test, y_test, color='gray', label='True confidence intervals')
-    ax.plot(X_test, y_test - y_test_sigma, color='gray', ls='--')
-    ax.plot(X_test, y_test + y_test_sigma, color='gray', ls='--')
-    ax.plot(X_test, y_pred, label='Prediction intervals')
+    ax.scatter(X_train, y_train, color="red", alpha=0.3, label="training")
+    ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
+    ax.plot(X_test, y_test - y_test_sigma, color="gray", ls="--")
+    ax.plot(X_test, y_test + y_test_sigma, color="gray", ls="--")
+    ax.plot(X_test, y_pred, label="Prediction intervals")
     ax.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3)
     ax.set_title(title)
     ax.legend()
@@ -123,21 +124,27 @@ X_train, y_train, X_test, y_test, y_test_sigma = get_homoscedastic_data(
 
 polyn_model = Pipeline(
     [
-        ('poly', PolynomialFeatures(degree=4)),
-        ('linear', LinearRegression(fit_intercept=False))
+        ("poly", PolynomialFeatures(degree=4)),
+        ("linear", LinearRegression(fit_intercept=False))
     ]
 )
 
-methods = ['jackknife', 'jackknife_plus', 'jackknife_minmax', 'cv', 'cv_plus', 'cv_minmax']
+STRATEGIES = {
+    "jackknife": dict(method="base", cv=LeaveOneOut()),
+    "jackknife_plus": dict(method="plus", cv=LeaveOneOut()),
+    "jackknife_minmax": dict(method="minmax", cv=LeaveOneOut()),
+    "cv": dict(method="base", cv=10),
+    "cv_plus": dict(method="plus", cv=10),
+    "cv_minmax": dict(method="minmax", cv=10),
+}
 fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(3*6, 12))
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
-for i, method in enumerate(methods):
+for i, (strategy, params) in enumerate(STRATEGIES.items()):
     mapie = MapieRegressor(
         polyn_model,
-        method=method,
         alpha=0.05,
-        n_splits=10,
-        ensemble=True
+        ensemble=True,
+        **params
     )
     mapie.fit(X_train.reshape(-1, 1), y_train)
     y_preds = mapie.predict(X_test.reshape(-1, 1))
@@ -151,5 +158,5 @@ for i, method in enumerate(methods):
         y_preds[:, 1],
         y_preds[:, 2],
         axs[i],
-        method
+        strategy
     )

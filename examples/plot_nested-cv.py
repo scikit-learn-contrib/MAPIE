@@ -27,7 +27,7 @@ models and *P* the number of parameter search iterations, versus :math:`N + P`
 for the non-nested approach.
 
 Here, we compare the two strategies on the Boston dataset. We use the Random
-Forest Regressor as a base regressor for the CV+ method. For the sake of light
+Forest Regressor as a base regressor for the CV+ strategy. For the sake of light
 computation, we adopt a RandomizedSearchCV parameter search strategy with a low
 number of iterations and with a reproducible random state.
 
@@ -67,17 +67,17 @@ rf_params = {
 }
 
 # Cross-validation and prediction-interval parameters.
-n_cv = 5
+cv = 5
 n_iter = 10
 alpha = 0.05
 random_state = 59
 
-# Non-nested approach with the CV+ method using the Random Forest model.
+# Non-nested approach with the CV+ strategy using the Random Forest model.
 cv_obj = RandomizedSearchCV(
     rf_model,
     param_distributions=rf_params,
     n_iter=n_iter,
-    cv=n_cv,
+    cv=cv,
     scoring="neg_root_mean_squared_error",
     return_train_score=True,
     verbose=0,
@@ -89,10 +89,9 @@ best_est = cv_obj.best_estimator_
 mapie_non_nested = MapieRegressor(
     best_est,
     alpha=alpha,
-    method="cv_plus",
-    n_splits=n_cv,
-    ensemble=True,
-    random_state=random_state
+    method="plus",
+    cv=cv,
+    ensemble=True
 )
 mapie_non_nested.fit(X_train, y_train)
 y_preds_non_nested = mapie_non_nested.predict(X_test)
@@ -100,12 +99,12 @@ widths_non_nested = y_preds_non_nested[:, 2] - y_preds_non_nested[:, 1]
 coverage_non_nested = coverage_score(y_test, y_preds_non_nested[:, 1], y_preds_non_nested[:, 2])
 score_non_nested = mean_squared_error(y_test, y_preds_non_nested[:, 0], squared=False)
 
-# Nested approach with the CV+ method using the Random Forest model.
+# Nested approach with the CV+ strategy using the Random Forest model.
 cv_obj = RandomizedSearchCV(
     rf_model,
     param_distributions=rf_params,
     n_iter=n_iter,
-    cv=n_cv,
+    cv=cv,
     scoring="neg_root_mean_squared_error",
     return_train_score=True,
     verbose=0,
@@ -115,10 +114,9 @@ cv_obj = RandomizedSearchCV(
 mapie_nested = MapieRegressor(
     cv_obj,
     alpha=alpha,
-    method="cv_plus",
-    n_splits=n_cv,
-    ensemble=True,
-    random_state=random_state
+    method="plus",
+    cv=cv,
+    ensemble=True
 )
 mapie_nested.fit(X_train, y_train)
 y_preds_nested = mapie_nested.predict(X_test)
@@ -127,7 +125,7 @@ coverage_nested = coverage_score(y_test, y_preds_nested[:, 1], y_preds_nested[:,
 score_nested = mean_squared_error(y_test, y_preds_nested[:, 0], squared=False)
 
 # Print scores and effective coverages.
-print("Scores and effective coverages for the CV+ method using the Random Forest model.")
+print("Scores and effective coverages for the CV+ strategy using the Random Forest model.")
 print(
     "Score on the test set for the non-nested and nested CV approaches: ",
     f"{score_non_nested: .3f}, {score_nested: .3f}"

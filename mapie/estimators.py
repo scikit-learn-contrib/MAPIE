@@ -6,8 +6,8 @@ from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.model_selection import KFold, LeaveOneOut
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 
 from ._typing import ArrayLike
 
@@ -16,7 +16,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
     Prediction interval with out-of-fold residuals.
 
-    This class implements the jackknife+ method and its variations
+    This class implements the jackknife+ strategy and its variations
     for estimating prediction intervals on single-output data. The
     idea is to evaluate out-of-fold residuals on hold-out validation
     sets and to deduce valid confidence intervals with strong theoretical
@@ -24,8 +24,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     Parameters
     ----------
-    estimator : sklearn.RegressorMixin, optional
-        Any scikit-learn regressor, by default None.
+    estimator : Optional[RegressorMixin]
+        Any regressor with scikit-learn API (i.e. with fit and predict methods), by default None.
+        If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
     alpha: float, optional
         Between 0 and 1, represent the uncertainty of the confidence interval.
@@ -36,53 +37,54 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     method: str, optional
         Method to choose for prediction interval estimates.
         Choose among:
-        - "naive"
-        - "jackknife"
-        - "jackknife_plus"
-        - "jackknife_minmax"
-        - "cv"
-        - "cv_plus"
-        - "cv_minmax"
 
-        By default "cv_plus".
+        - "naive", based on training set residuals,
+        - "base", based on cross-validation sets residuals,
+        - "plus", based on cross-validation sets residuals and testing set predictions,
+        - "minmax", based on cross-validation sets residuals and testing set predictions
+          (min/max among cross-validation clones).
 
-    n_splits: int, optional
-        Number of splits for cross-validation, by default 5.
+        By default "plus".
 
-    shuffle: bool, optional
-        Whether to shuffle the data before splitting into batches, by default True.
+    cv: Optional[Union[int, BaseCrossValidator]]
+        The cross-validation strategy for computing residuals. It directly drives the
+        distinction between jackknife and cv variants. Choose among:
+
+        - ``None``, to use the default 5-fold cross-validation
+        - integer, to specify the number of folds
+        - CV splitter: ``sklearn.model_selection.LeaveOneOut()`` (jackknife variants) or
+          ``sklearn.model_selection.KFold()`` (cross-validation variants)
+
+        By default ``None``.
 
     ensemble: bool, optional
         Determines how to return the predictions.
-        If False, returns the predictions from the single estimator trained on the full training dataset.
-        If True, returns the median of the prediction intervals computed from the out-of-folds models.
+        If ``False``, returns the predictions from the single estimator trained on the full training dataset.
+        If ``True``, returns the median of the prediction intervals computed from the out-of-folds models.
         The Jackknife+ interval can be interpreted as an interval around the median prediction,
         and is guaranteed to lie inside the interval, unlike the single estimator predictions.
 
-        By default `False`.
-
-    random_state : int, optional
-        Control randomness of cross-validation if relevant, by default None.
+        By default ``False``.
 
     Attributes
     ----------
     valid_methods: List[str]
         List of all valid methods.
 
-    valid_return_preds: List[str]
-        List of all valid return_pred values..
-
     single_estimator_ : sklearn.RegressorMixin
         Estimator fit on the whole training set.
 
     estimators_ : list
-        List of leave-one-out estimators.
+        List of out-of-folds estimators.
 
     residuals_ : np.ndarray of shape (n_samples_train,)
-        Residuals between y_train and y_pred.
+        Residuals between ``y_train`` and ``y_pred``.
 
     k_: np.ndarray of shape(n_samples_train,)
         Id of the fold containing each trainig sample.
+
+    n_features_in_: int
+        Number of features passed to the fit method.
 
     References
     ----------
@@ -96,85 +98,114 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> pireg = MapieRegressor(LinearRegression(), method="jackknife_plus")
+    >>> pireg = MapieRegressor(LinearRegression())
     >>> print(pireg.fit(X_toy, y_toy).predict(X_toy))
-    [[ 5.28571429  4.61627907  6.2       ]
-     [ 7.17142857  6.51744186  8.        ]
-     [ 9.05714286  8.4         9.8       ]
-     [10.94285714 10.2        11.6       ]
+    [[ 5.28571429  4.61627907  6.        ]
+     [ 7.17142857  6.51744186  7.8       ]
+     [ 9.05714286  8.4         9.68023256]
+     [10.94285714 10.2        11.58139535]
      [12.82857143 12.         13.48255814]
      [14.71428571 13.8        15.38372093]]
     """
 
-    valid_methods = [
+    valid_methods_ = [
         "naive",
-        "jackknife",
-        "jackknife_plus",
-        "jackknife_minmax",
-        "cv",
-        "cv_plus",
-        "cv_minmax"
+        "base",
+        "plus",
+        "minmax"
     ]
 
     def __init__(
         self,
         estimator: Optional[RegressorMixin] = None,
         alpha: float = 0.1,
-        method: str = "cv_plus",
-        n_splits: int = 5,
-        shuffle: bool = True,
-        ensemble: bool = False,
-        random_state: Optional[int] = None
+        method: str = "plus",
+        cv: Optional[Union[int, BaseCrossValidator]] = None,
+        ensemble: bool = False
     ) -> None:
         self.estimator = estimator
         self.alpha = alpha
         self.method = method
-        self.n_splits = n_splits
-        self.shuffle = shuffle
+        self.cv = cv
         self.ensemble = ensemble
-        self.random_state = random_state
 
     def _check_parameters(self) -> None:
         """
-        Perform several checks on input parameters and estimator.
+        Perform several checks on input parameters.
+
+        Raises
+        ------
+        ValueError
+            Is parameters are not valid.
         """
-        if not 0 < self.alpha < 1:
-            raise ValueError("Invalid alpha. Please choose an alpha value between 0 and 1.")
-        if self.method not in self.valid_methods:
-            raise ValueError("Invalid method.")
+        if not isinstance(self.alpha, float) or not 0 < self.alpha < 1:
+            raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
+
+        if self.method not in self.valid_methods_:
+            raise ValueError("Invalid method. Allowed values are 'naive', 'base', 'plus' and 'minmax'.")
+
         if not isinstance(self.ensemble, bool):
             raise ValueError("Invalid ensemble argument. Must be a boolean.")
-        if self.estimator is None:
-            self.estimator = LinearRegression()
 
-    def _select_cv(self) -> Union[KFold, LeaveOneOut]:
+    def _check_estimator(self, estimator: Optional[RegressorMixin] = None) -> RegressorMixin:
         """
-        Define the object that splits the dataset into training
-        and validation folds depending on the method:
-            - LeaveOneOut for jackknife methods
-            - KFold for CV methods
+        Check if estimator is ``None``, and returns a ``LinearRegression`` instance if necessary.
+
+        Parameters
+        ----------
+        estimator : Optional[RegressorMixin], optional
+            Estimator to check, by default ``None``
 
         Returns
         -------
-        Union[KFold, LeaveOneOut]
-            Either a KFold or a LeaveOneOut object.
+        RegressorMixin
+            The estimator itself or a default ``LinearRegression`` instance.
+
+        Raises
+        ------
+        ValueError
+            If the estimator is not ``None`` and has no fit nor predict methods.
         """
-        if self.method.startswith("cv"):
-            if not self.shuffle:
-                self.random_state = None
-            cv = KFold(n_splits=self.n_splits, shuffle=self.shuffle, random_state=self.random_state)
-        elif self.method.startswith("jackknife"):
-            cv = LeaveOneOut()
-        else:
-            raise ValueError("Invalid method.")
-        return cv
+        if estimator is None:
+            return LinearRegression()
+        if not hasattr(estimator, "fit") and not hasattr(estimator, "predict"):
+            raise ValueError("Invalid estimator. Please provide a regressor with fit and predict methods.")
+        return estimator
+
+    def _check_cv(self, cv: Optional[Union[int, BaseCrossValidator]] = None) -> BaseCrossValidator:
+        """
+        Check if cross-validator is ``None``, ``int``, ``KFold`` or ``LeaveOneOut``.
+        Return a ``KFold`` instance if ``None``. Else raise error.
+
+        Parameters
+        ----------
+        cv : Optional[Union[int, BaseCrossValidator]], optional
+            Cross-validator to check, by default ``None``
+
+        Returns
+        -------
+        BaseCrossValidator
+            The cross-validator itself or a default ``KFold`` instance.
+
+        Raises
+        ------
+        ValueError
+            If the cross-validator is not ``None``, not ``int``, nor a valid cross validator.
+        """
+        if cv is None:
+            return KFold(n_splits=5)
+        if isinstance(self.cv, int) and self.cv >= 2:
+            return KFold(n_splits=self.cv)
+        if isinstance(self.cv, KFold) or isinstance(self.cv, LeaveOneOut):
+            return cv
+        raise ValueError("Invalid cv argument. Allowed values are None, int >= 2, KFold or LeaveOneOut.")
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
-        Fit the base estimator under the single_estimator_ attribute.
-        Fit all cross-validated estimator clones and rearrange them into a list, the estimators_ attribute.
-        Out-of-fold residuals are stored under the residuals_ attribute.
+        Fit the base estimator under the ``single_estimator_`` attribute.
+        Fit all cross-validated estimator clones and rearrange them into a list, the ``estimators_`` attribute.
+        Out-of-fold residuals are stored under the ``residuals_`` attribute.
 
         Parameters
         ----------
@@ -190,20 +221,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             The model itself.
         """
         self._check_parameters()
+        estimator = self._check_estimator(self.estimator)
+        cv = self._check_cv(self.cv)
         X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
-        self.single_estimator_ = clone(self.estimator).fit(X, y)
+        self.n_features_in_ = X.shape[1]
+        self.estimators_ = []
+        self.k_ = np.empty_like(y, dtype=int)
+        self.single_estimator_ = clone(estimator).fit(X, y)
         if self.method == "naive":
             y_pred = self.single_estimator_.predict(X)
         else:
-            cv = self._select_cv()
-            self.estimators_ = []
             y_pred = np.empty_like(y, dtype=float)
-            self.k_ = np.empty_like(y, dtype=int)
             for k, (train_fold, val_fold) in enumerate(cv.split(X)):
                 self.k_[val_fold] = k
-                e = clone(self.estimator).fit(X[train_fold], y[train_fold])
-                self.estimators_.append(e)
+                e = clone(estimator).fit(X[train_fold], y[train_fold])
                 y_pred[val_fold] = e.predict(X[val_fold])
+                self.estimators_.append(e)
         self.residuals_ = np.abs(y - y_pred)
         return self
 
@@ -211,10 +244,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         Predict target on new samples with confidence intervals.
         Residuals from the training set and predictions from the model clones
-        are central to the computation. Prediction Intervals for a given alpha are deduced from either
-        - quantiles of residuals (naive, jackknife, cv)
-        - quantiles of (predictions +/- residuals) (jackknife_plus, cv_plus)
-        - quantiles of (max/min(predictions) +/- residuals) (jackknife_minmax, cv_minmax)
+        are central to the computation. Prediction Intervals for a given ``alpha`` are deduced from either
+
+        - quantiles of residuals (naive and base methods)
+        - quantiles of (predictions +/- residuals) (plus methods)
+        - quantiles of (max/min(predictions) +/- residuals) (minmax methods)
 
         Parameters
         ----------
@@ -224,31 +258,30 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Returns
         -------
         np.ndarray of shape (n_samples, 3)
-        [0]: Center of the prediction interval
-        [1]: Lower bound of the prediction interval
-        [2]: Upper bound of the prediction interval
+
+            - [0]: Center of the prediction interval
+            - [1]: Lower bound of the prediction interval
+            - [2]: Upper bound of the prediction interval
         """
-        check_is_fitted(self, ["single_estimator_"])
+        check_is_fitted(self, ["single_estimator_", "estimators_", "k_", "residuals_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
-        if self.method in ["naive", "jackknife", "cv"]:
+        if self.method in ["naive", "base"]:
             quantile = np.quantile(self.residuals_, 1 - self.alpha, interpolation="higher")
             y_pred_low = y_pred - quantile
             y_pred_up = y_pred + quantile
         else:
             y_pred_multi = np.stack([e.predict(X) for e in self.estimators_], axis=1)
-            if self.ensemble:
-                y_pred = np.median(y_pred_multi, axis=1)
-            if self.method == "cv_plus":
-                y_pred_multi = y_pred_multi[:, self.k_]
-            if self.method.endswith("plus"):
+            if self.method == "plus":
+                if len(self.estimators_) < len(self.k_):
+                    y_pred_multi = y_pred_multi[:, self.k_]
                 lower_bounds = y_pred_multi - self.residuals_
                 upper_bounds = y_pred_multi + self.residuals_
-            elif self.method.endswith("minmax"):
+            if self.method == "minmax":
                 lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True) - self.residuals_
                 upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True) + self.residuals_
-            else:
-                raise ValueError("Invalid method.")
             y_pred_low = np.quantile(lower_bounds, self.alpha, axis=1, interpolation="lower")
             y_pred_up = np.quantile(upper_bounds, 1 - self.alpha, axis=1, interpolation="higher")
+            if self.ensemble:
+                y_pred = np.median(y_pred_multi, axis=1)
         return np.stack([y_pred, y_pred_low, y_pred_up], axis=1)
