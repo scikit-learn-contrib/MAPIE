@@ -26,7 +26,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     ----------
     estimator : Optional[RegressorMixin]
         Any regressor with scikit-learn API (i.e. with fit and predict methods), by default None.
-        If None, estimator defaults to a `LinearRegression` instance.
+        If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
     alpha: float, optional
         Between 0 and 1, represent the uncertainty of the confidence interval.
@@ -50,21 +50,21 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         The cross-validation strategy for computing residuals. It directly drives the
         distinction between jackknife and cv variants. Choose among:
 
-        - None, to use the default 5-fold cross-validation
+        - ``None``, to use the default 5-fold cross-validation
         - integer, to specify the number of folds
-        - CV splitter: `sklearn.model_selection.LeaveOneOut()` (jackknife variants) or
-          `sklearn.model_selection.KFold()` (cross-validation variants)
+        - CV splitter: ``sklearn.model_selection.LeaveOneOut()`` (jackknife variants) or
+          ``sklearn.model_selection.KFold()`` (cross-validation variants)
 
-        By default None.
+        By default ``None``.
 
     ensemble: bool, optional
         Determines how to return the predictions.
-        If `False`, returns the predictions from the single estimator trained on the full training dataset.
-        If `True`, returns the median of the prediction intervals computed from the out-of-folds models.
+        If ``False``, returns the predictions from the single estimator trained on the full training dataset.
+        If ``True``, returns the median of the prediction intervals computed from the out-of-folds models.
         The Jackknife+ interval can be interpreted as an interval around the median prediction,
         and is guaranteed to lie inside the interval, unlike the single estimator predictions.
 
-        By default `False`.
+        By default ``False``.
 
     Attributes
     ----------
@@ -78,7 +78,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         List of out-of-folds estimators.
 
     residuals_ : np.ndarray of shape (n_samples_train,)
-        Residuals between `y_train` and `y_pred`.
+        Residuals between ``y_train`` and ``y_pred``.
 
     k_: np.ndarray of shape(n_samples_train,)
         Id of the fold containing each trainig sample.
@@ -149,22 +149,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def _check_estimator(self, estimator: Optional[RegressorMixin] = None) -> RegressorMixin:
         """
-        Check if estimator is `None`, and returns a `LinearRegression` instance if necessary.
+        Check if estimator is ``None``, and returns a ``LinearRegression`` instance if necessary.
 
         Parameters
         ----------
         estimator : Optional[RegressorMixin], optional
-            Estimator to check, by default `None`
+            Estimator to check, by default ``None``
 
         Returns
         -------
         RegressorMixin
-            The estimator itself or a default `LinearRegression` instance.
+            The estimator itself or a default ``LinearRegression`` instance.
 
         Raises
         ------
         ValueError
-            If the estimator is not `None` and has no fit nor predict methods.
+            If the estimator is not ``None`` and has no fit nor predict methods.
         """
         if estimator is None:
             return LinearRegression()
@@ -174,23 +174,23 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def _check_cv(self, cv: Optional[Union[int, BaseCrossValidator]] = None) -> BaseCrossValidator:
         """
-        Check if cross-validator is `None`, `int`, `KFold` or `LeaveOneOut`.
-        Return a `KFold` instance if `None`. Else raise error.
+        Check if cross-validator is ``None``, ``int``, ``KFold`` or ``LeaveOneOut``.
+        Return a ``KFold`` instance if ``None``. Else raise error.
 
         Parameters
         ----------
         cv : Optional[Union[int, BaseCrossValidator]], optional
-            Cross-validator to check, by default `None`
+            Cross-validator to check, by default ``None``
 
         Returns
         -------
         BaseCrossValidator
-            The cross-validator itself or a default `KFold` instance.
+            The cross-validator itself or a default ``KFold`` instance.
 
         Raises
         ------
         ValueError
-            If the cross-validator is not `None`, not `int`, nor a valid cross validator.
+            If the cross-validator is not ``None``, not ``int``, nor a valid cross validator.
         """
         if cv is None:
             return KFold(n_splits=5)
@@ -203,9 +203,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
-        Fit the base estimator under the `single_estimator_` attribute.
-        Fit all cross-validated estimator clones and rearrange them into a list, the `estimators_` attribute.
-        Out-of-fold residuals are stored under the `residuals_` attribute.
+        Fit the base estimator under the ``single_estimator_`` attribute.
+        Fit all cross-validated estimator clones and rearrange them into a list, the ``estimators_`` attribute.
+        Out-of-fold residuals are stored under the ``residuals_`` attribute.
 
         Parameters
         ----------
@@ -244,7 +244,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         Predict target on new samples with confidence intervals.
         Residuals from the training set and predictions from the model clones
-        are central to the computation. Prediction Intervals for a given `alpha` are deduced from either
+        are central to the computation. Prediction Intervals for a given ``alpha`` are deduced from either
 
         - quantiles of residuals (naive and base methods)
         - quantiles of (predictions +/- residuals) (plus methods)
