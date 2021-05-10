@@ -117,7 +117,7 @@ def test_none_estimator() -> None:
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_valid_estimator(strategy: str) -> None:
-    """Test that valid estimators are not corrupted."""
+    """Test that valid estimators are not corrupted, for all strategies."""
     mapie = MapieRegressor(estimator=DummyRegressor(), **STRATEGIES[strategy])
     mapie.fit(X_toy, y_toy)
     assert isinstance(mapie.single_estimator_, DummyRegressor)
@@ -221,8 +221,7 @@ def test_prediction_between_low_up(strategy: str, ensemble: bool) -> None:
     """Test that prediction lies between low and up prediction intervals."""
     mapie = MapieRegressor(ensemble=ensemble, **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
-    y_preds = mapie.predict(X_reg)
-    y_pred, y_pred_low, y_pred_up = y_preds.T
+    y_pred, y_pred_low, y_pred_up = mapie.predict(X_reg).T
     assert (y_pred >= y_pred_low).all()
     assert (y_pred <= y_pred_up).all()
 
@@ -251,18 +250,17 @@ def test_linear_data_confidence_interval(strategy: str, ensemble: bool) -> None:
     """
     mapie = MapieRegressor(ensemble=ensemble, **STRATEGIES[strategy])
     mapie.fit(X_toy, y_toy)
-    y_preds = mapie.predict(X_toy)
-    _, y_pred_low, y_pred_up = y_preds.T
+    y_pred, y_pred_low, y_pred_up = mapie.predict(X_toy).T
     np.testing.assert_almost_equal(y_pred_up, y_pred_low)
+    np.testing.assert_almost_equal(y_pred, y_pred_low)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_linear_regression_results(strategy: str) -> None:
-    """Test expected PIs for a multivariate linear regression problem with fixed random seed."""
+    """Test expected PIs for a multivariate linear regression problem with fixed random state."""
     mapie = MapieRegressor(estimator=LinearRegression(), alpha=0.05, **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
-    y_preds = mapie.predict(X_reg)
-    _, y_pred_low, y_pred_up = y_preds.T
+    _, y_pred_low, y_pred_up = mapie.predict(X_reg).T
     width_mean = (y_pred_up - y_pred_low).mean()
     coverage = coverage_score(y_reg, y_pred_low, y_pred_up)
     np.testing.assert_almost_equal(width_mean, EXPECTED_WIDTHS[strategy], 2)

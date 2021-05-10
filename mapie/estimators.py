@@ -50,10 +50,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         The cross-validation strategy for computing residuals. It directly drives the
         distinction between jackknife and cv variants. Choose among:
 
-        - `sklearn.model_selection.LeaveOneOut()`, jacknife variants are used,
-        - `sklearn.model_selection.KFold()`, cross-validation variants are used,
-        - `int`, at least 2, equivalent to `sklearn.model_selection.KFold()` with a given number of folds,
-        - `None`, equivalent to default 5-fold cross-validation.
+        - None, to use the default 5-fold cross-validation
+        - integer, to specify the number of folds
+        - CV splitter: `sklearn.model_selection.LeaveOneOut()` (jackknife variants) or
+          `sklearn.model_selection.KFold()` (cross-validation variants)
 
         By default None.
 
@@ -132,6 +132,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def _check_parameters(self) -> None:
         """
         Perform several checks on input parameters.
+
+        Raises
+        ------
+        ValueError
+            Is parameters are not valid.
         """
         if not isinstance(self.alpha, float) or not 0 < self.alpha < 1:
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
@@ -188,7 +193,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             If the cross-validator is not `None`, not `int`, nor a valid cross validator.
         """
         if cv is None:
-            return KFold()
+            return KFold(n_splits=5)
         if isinstance(self.cv, int) and self.cv >= 2:
             return KFold(n_splits=self.cv)
         if isinstance(self.cv, KFold) or isinstance(self.cv, LeaveOneOut):
