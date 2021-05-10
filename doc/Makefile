@@ -52,9 +52,6 @@ clean:
 	-rm -rf generated/*
 	-rm -rf modules/generated/*
 
-copyquickstartimage:
-	cp _build/html/_images/sphx_glr_plot_toy_model_001.png images/quickstart_1.png
-
 html:
 	# These two lines make the build a bit more lengthy, and the
 	# the embedding of images more robust
