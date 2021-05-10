@@ -5,6 +5,7 @@ History
 0.2.0 (???)
 ------------------
 
+* Allow `cv` to take the value -1 equivalently to `LeaveOneOut()`
 * Introduce the `cv` parameter to get closer to scikit-learn API
 * Remove the `n_splits`, `shuffle` and `random_state` parameters
 * Simplify the `method` parameter
