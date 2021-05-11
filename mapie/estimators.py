@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import numpy as np
 from sklearn.utils import check_X_y, check_array
@@ -28,10 +28,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Any regressor with scikit-learn API (i.e. with fit and predict methods), by default None.
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
-    alpha: float, optional
+    alpha: Union[float, List[float], np.ndarray], optional
         Between 0 and 1, represent the uncertainty of the confidence interval.
         Lower alpha produce larger (more conservative) prediction intervals.
         alpha is the complement of the target coverage level.
+        Can be a float, a list of floats, or a np.ndarray of floats.
         Only used at prediction time. By default 0.1.
 
     method: str, optional
@@ -118,7 +119,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def __init__(
         self,
         estimator: Optional[RegressorMixin] = None,
-        alpha: float = 0.1,
+        alpha: Union[float, List[float], np.ndarray] = 0.1,
         method: str = "plus",
         cv: Optional[Union[int, BaseCrossValidator]] = None,
         ensemble: bool = False
@@ -138,7 +139,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ValueError
             Is parameters are not valid.
         """
-        if not isinstance(self.alpha, float) or not 0 < self.alpha < 1:
+        if isinstance(self.alpha, (list, np.ndarray)):
+            for alpha in self.alpha:
+                if not isinstance(alpha, float) or not 0 < alpha < 1:
+                    raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
+        elif isinstance(self.alpha, float):
+            if not 0 < self.alpha < 1:
+                raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
+        else:
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
 
         if self.method not in self.valid_methods_:
@@ -257,19 +265,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        np.ndarray of shape (n_samples, 3)
-
-            - [0]: Center of the prediction interval
-            - [1]: Lower bound of the prediction interval
-            - [2]: Upper bound of the prediction interval
+        np.ndarray of shape (n_samples, 3, len(alpha))
+            - [:, 0, :]: Center of the prediction interval
+            - [:, 1, :]: Lower bound of the prediction interval
+            - [:, 2, :]: Upper bound of the prediction interval
         """
         check_is_fitted(self, ["single_estimator_", "estimators_", "k_", "residuals_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
+        if isinstance(self.alpha, float):
+            self.alpha = np.stack([self.alpha])
+        elif isinstance(self.alpha, list):
+            self.alpha = np.stack(self.alpha)
         if self.method in ["naive", "base"]:
             quantile = np.quantile(self.residuals_, 1 - self.alpha, interpolation="higher")
-            y_pred_low = y_pred - quantile
-            y_pred_up = y_pred + quantile
+            y_pred_low = y_pred[:, np.newaxis] - quantile
+            y_pred_up = y_pred[:, np.newaxis] + quantile
         else:
             y_pred_multi = np.stack([e.predict(X) for e in self.estimators_], axis=1)
             if self.method == "plus":
@@ -280,8 +291,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             if self.method == "minmax":
                 lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True) - self.residuals_
                 upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True) + self.residuals_
-            y_pred_low = np.quantile(lower_bounds, self.alpha, axis=1, interpolation="lower")
-            y_pred_up = np.quantile(upper_bounds, 1 - self.alpha, axis=1, interpolation="higher")
+            y_pred_low = np.quantile(lower_bounds, self.alpha, axis=1, interpolation="lower").T
+            y_pred_up = np.quantile(upper_bounds, 1 - self.alpha, axis=1, interpolation="higher").T
             if self.ensemble:
                 y_pred = np.median(y_pred_multi, axis=1)
+        if y_pred_low.shape[1] == 1:
+            y_pred_low = y_pred_low.ravel()
+            y_pred_up = y_pred_up.ravel()
+        else:
+            y_pred = np.tile(y_pred, (self.alpha.shape[0], 1)).T
         return np.stack([y_pred, y_pred_low, y_pred_up], axis=1)

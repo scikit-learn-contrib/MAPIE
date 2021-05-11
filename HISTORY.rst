@@ -9,6 +9,8 @@ History
 * Remove the `n_splits`, `shuffle` and `random_state` parameters
 * Simplify the `method` parameter
 * Fix typos in documentation and add methods descriptions in sphinx
+* Accept alpha parameter as a list or np.ndarray
+* If alpha is a list, `.predict()` returns a np.ndarray of shape (n_samples, 3, len(alpha))
 
 0.1.4 (2021-05-07)
 ------------------

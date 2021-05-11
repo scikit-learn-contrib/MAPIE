@@ -61,7 +61,7 @@ EXPECTED_COVERAGES = {
 SKLEARN_EXCLUDED_CHECKS = {
     "check_regressors_train",
     "check_pipeline_consistency",
-    "check_fit_score_takes_y",
+    "check_fit_score_takes_y"
 }
 
 
@@ -133,11 +133,12 @@ def test_invalid_alpha(alpha: int) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("alpha", np.linspace(0.01, 0.99, 5))
+@pytest.mark.parametrize("alpha", [np.linspace(0.01, 0.99, 5), [0.01, 0.99], np.array([0.01, 0.99])])
 def test_valid_alpha(alpha: int) -> None:
     """Test that valid alphas raise no errors."""
     mapie = MapieRegressor(alpha=alpha)
     mapie.fit(X_toy, y_toy)
+    mapie.predict(X_toy)
 
 
 @pytest.mark.parametrize("method", [0, 1, "jackknife", "cv", ["base", "plus"]])
@@ -265,3 +266,15 @@ def test_linear_regression_results(strategy: str) -> None:
     coverage = coverage_score(y_reg, y_pred_low, y_pred_up)
     np.testing.assert_almost_equal(width_mean, EXPECTED_WIDTHS[strategy], 2)
     np.testing.assert_almost_equal(coverage, EXPECTED_COVERAGES[strategy], 2)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [[0.1, 0.1]])
+def test_results_for_same_alpha(strategy: str, alpha: list[float]) -> None:
+    """Test that predictions and intervals are similar with two equal values of alpha."""
+    mapie = MapieRegressor(estimator=LinearRegression(), alpha=alpha, **STRATEGIES[strategy])
+    mapie.fit(X_reg, y_reg)
+    y_preds = mapie.predict(X_reg)
+    np.testing.assert_almost_equal(y_preds[:, 0, 0], y_preds[:, 0, 1], 2)
+    np.testing.assert_almost_equal(y_preds[:, 1, 0], y_preds[:, 1, 1], 2)
+    np.testing.assert_almost_equal(y_preds[:, 2, 0], y_preds[:, 2, 1], 2)
