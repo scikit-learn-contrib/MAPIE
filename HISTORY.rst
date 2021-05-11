@@ -10,6 +10,7 @@ History
 * Remove the `n_splits`, `shuffle` and `random_state` parameters
 * Simplify the `method` parameter
 * Fix typos in documentation and add methods descriptions in sphinx
+* Add n_jobs argument using joblib parallel processing
 
 0.1.4 (2021-05-07)
 ------------------
