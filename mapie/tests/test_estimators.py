@@ -1,12 +1,5 @@
-"""
-Testing for mapieregressor module.
-
-List of tests:
-- Test input parameters
-- Test created attributes depending on the method
-- Test output and results
-"""
-from typing import Any, Union
+from typing import Any, Union, Optional
+from typing_extensions import TypedDict
 
 import pytest
 import numpy as np
@@ -23,32 +16,31 @@ from mapie.metrics import coverage_score
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
-X_reg, y_reg = make_regression(n_samples=500, n_features=10, random_state=1)
-
-SEED = 59
-np.random.seed(SEED)
-y_reg = y_reg + np.random.normal(0, 1, 500)
-
+X_reg, y_reg = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
 
 METHODS = ["naive", "base", "plus", "minmax"]
+
+Params = TypedDict("Params", {"method": str, "cv": Optional[Union[int, KFold]]})
 STRATEGIES = {
-    "naive": dict(method="naive"),
-    "jackknife": dict(method="base", cv=LeaveOneOut()),
-    "jackknife_plus": dict(method="plus", cv=LeaveOneOut()),
-    "jackknife_minmax": dict(method="minmax", cv=LeaveOneOut()),
-    "cv": dict(method="base", cv=KFold(n_splits=3, shuffle=True, random_state=1)),
-    "cv_plus": dict(method="plus", cv=KFold(n_splits=3, shuffle=True, random_state=1)),
-    "cv_minmax": dict(method="minmax", cv=KFold(n_splits=3, shuffle=True, random_state=1)),
+    "naive": Params(method="naive", cv=None),
+    "jackknife": Params(method="base", cv=-1),
+    "jackknife_plus": Params(method="plus", cv=-1),
+    "jackknife_minmax": Params(method="minmax", cv=-1),
+    "cv": Params(method="base", cv=KFold(n_splits=3, shuffle=True, random_state=1)),
+    "cv_plus": Params(method="plus", cv=KFold(n_splits=3, shuffle=True, random_state=1)),
+    "cv_minmax": Params(method="minmax", cv=KFold(n_splits=3, shuffle=True, random_state=1)),
 }
+
 EXPECTED_WIDTHS = {
-    "naive": 3.76,
-    "jackknife": 3.85,
-    "jackknife_plus": 3.86,
-    "jackknife_minmax": 3.91,
-    "cv": 4.04,
-    "cv_plus": 4.07,
-    "cv_minmax": 4.30
+    "naive": 3.81,
+    "jackknife": 3.89,
+    "jackknife_plus": 3.90,
+    "jackknife_minmax": 3.96,
+    "cv": 3.85,
+    "cv_plus": 3.90,
+    "cv_minmax": 4.04
 }
+
 EXPECTED_COVERAGES = {
     "naive": 0.952,
     "jackknife": 0.952,
@@ -58,6 +50,7 @@ EXPECTED_COVERAGES = {
     "cv_plus": 0.956,
     "cv_minmax": 0.966
 }
+
 SKLEARN_EXCLUDED_CHECKS = {
     "check_regressors_train",
     "check_pipeline_consistency",
@@ -170,7 +163,7 @@ def test_valid_ensemble(ensemble: bool) -> None:
     mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [-3.14, -2, -1, 0, 1, "cv", DummyRegressor()])
+@pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, "cv", DummyRegressor()])
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""
     mapie = MapieRegressor(cv=cv)
@@ -178,7 +171,15 @@ def test_invalid_cv(cv: Any) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [None, 2, KFold(), LeaveOneOut()])
+@pytest.mark.parametrize("cv", [100, 200, 300])
+def test_too_large_cv(cv: Any) -> None:
+    """Test that too large cv raise sklearn errors."""
+    mapie = MapieRegressor(cv=cv)
+    with pytest.raises(ValueError, match=rf".*Cannot have number of splits n_splits={cv} greater.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     mapie = MapieRegressor(cv=cv)
@@ -227,7 +228,7 @@ def test_prediction_between_low_up(strategy: str, ensemble: bool) -> None:
 
 
 @pytest.mark.parametrize("method", ["plus", "minmax"])
-@pytest.mark.parametrize("cv", [LeaveOneOut(), KFold(n_splits=3, shuffle=True, random_state=1)])
+@pytest.mark.parametrize("cv", [-1, 2, 3, 5])
 def test_prediction_ensemble(method: str, cv: Union[LeaveOneOut, KFold]) -> None:
     """Test that predictions differs when ensemble is True/False, but not prediction intervals."""
     mapie = MapieRegressor(method=method, cv=cv, ensemble=True)

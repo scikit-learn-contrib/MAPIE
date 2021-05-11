@@ -102,12 +102,11 @@ in order to obtain a 95% confidence for our prediction intervals.
 .. code:: python
 
     from mapie.estimators import MapieRegressor
-    from sklearn.model_selection import LeaveOneOut
     STRATEGIES = {
         "naive": dict(method="naive"),
-        "jackknife": dict(method="base", cv=LeaveOneOut()),
-        "jackknife_plus": dict(method="plus", cv=LeaveOneOut()),
-        "jackknife_minmax": dict(method="minmax", cv=LeaveOneOut()),
+        "jackknife": dict(method="base", cv=-1),
+        "jackknife_plus": dict(method="plus", cv=-1),
+        "jackknife_minmax": dict(method="minmax", cv=-1),
         "cv": dict(method="base"),
         "cv_plus": dict(method="plus"),
         "cv_minmax": dict(method="minmax"),
@@ -322,9 +321,9 @@ strategies.
     from mapie.estimators import MapieRegressor
     STRATEGIES = {
         "naive": dict(method="naive"),
-        "jackknife": dict(method="base", cv=LeaveOneOut()),
-        "jackknife_plus": dict(method="plus", cv=LeaveOneOut()),
-        "jackknife_minmax": dict(method="minmax", cv=LeaveOneOut()),
+        "jackknife": dict(method="base", cv=-1),
+        "jackknife_plus": dict(method="plus", cv=-1),
+        "jackknife_minmax": dict(method="minmax", cv=-1),
         "cv": dict(method="base"),
         "cv_plus": dict(method="plus"),
         "cv_minmax": dict(method="minmax"),

@@ -51,7 +51,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         distinction between jackknife and cv variants. Choose among:
 
         - ``None``, to use the default 5-fold cross-validation
-        - integer, to specify the number of folds
+        - integer, to specify the number of folds.
+          If equal to -1, equivalent to ``sklearn.model_selection.LeaveOneOut()``.
         - CV splitter: ``sklearn.model_selection.LeaveOneOut()`` (jackknife variants) or
           ``sklearn.model_selection.KFold()`` (cross-validation variants)
 
@@ -175,7 +176,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def _check_cv(self, cv: Optional[Union[int, BaseCrossValidator]] = None) -> BaseCrossValidator:
         """
         Check if cross-validator is ``None``, ``int``, ``KFold`` or ``LeaveOneOut``.
-        Return a ``KFold`` instance if ``None``. Else raise error.
+        Return a ``LeaveOneOut`` instance if integer equal to -1.
+        Return a ``KFold`` instance if integer superior or equal to 2.
+        Return a ``KFold`` instance if ``None``.
+        Else raise error.
 
         Parameters
         ----------
@@ -190,15 +194,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Raises
         ------
         ValueError
-            If the cross-validator is not ``None``, not ``int``, nor a valid cross validator.
+            If the cross-validator is not ``None``, not a valid ``int``, nor a valid cross validator.
         """
         if cv is None:
             return KFold(n_splits=5)
-        if isinstance(self.cv, int) and self.cv >= 2:
-            return KFold(n_splits=self.cv)
+        if isinstance(self.cv, int):
+            if self.cv == -1:
+                return LeaveOneOut()
+            if self.cv >= 2:
+                return KFold(n_splits=self.cv)
         if isinstance(self.cv, KFold) or isinstance(self.cv, LeaveOneOut):
             return cv
-        raise ValueError("Invalid cv argument. Allowed values are None, int >= 2, KFold or LeaveOneOut.")
+        raise ValueError("Invalid cv argument. Allowed values are None, -1, int >= 2, KFold or LeaveOneOut.")
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
