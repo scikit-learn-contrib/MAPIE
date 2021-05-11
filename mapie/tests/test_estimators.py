@@ -163,11 +163,18 @@ def test_valid_ensemble(ensemble: bool) -> None:
     mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, 1000, "cv", DummyRegressor()])
+@pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, "cv", DummyRegressor()])
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""
     mapie = MapieRegressor(cv=cv)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r".*Invalid cv.*"):
+        mapie.fit(X_toy, y_toy)
+
+@pytest.mark.parametrize("cv", [100, 200, 300])
+def test_too_large_cv(cv: Any) -> None:
+    """Test that too large cv raise sklearn errors."""
+    mapie = MapieRegressor(cv=cv)
+    with pytest.raises(ValueError, match=rf".*Cannot have number of splits n_splits={cv} greater.*"):
         mapie.fit(X_toy, y_toy)
 
 
