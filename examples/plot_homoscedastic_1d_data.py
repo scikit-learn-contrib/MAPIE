@@ -8,13 +8,13 @@ the prediction intervals of 1D homoscedastic data using
 different strategies.
 """
 from typing import Tuple
+from typing_extensions import TypedDict
 
 import numpy as np
 import scipy
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import LeaveOneOut
 from matplotlib import pyplot as plt
 
 from mapie.estimators import MapieRegressor
@@ -129,13 +129,14 @@ polyn_model = Pipeline(
     ]
 )
 
+Params = TypedDict("Params", {"method": str, "cv": int})
 STRATEGIES = {
-    "jackknife": dict(method="base", cv=LeaveOneOut()),
-    "jackknife_plus": dict(method="plus", cv=LeaveOneOut()),
-    "jackknife_minmax": dict(method="minmax", cv=LeaveOneOut()),
-    "cv": dict(method="base", cv=10),
-    "cv_plus": dict(method="plus", cv=10),
-    "cv_minmax": dict(method="minmax", cv=10),
+    "jackknife": Params(method="base", cv=-1),
+    "jackknife_plus": Params(method="plus", cv=-1),
+    "jackknife_minmax": Params(method="minmax", cv=-1),
+    "cv": Params(method="base", cv=10),
+    "cv_plus": Params(method="plus", cv=10),
+    "cv_minmax": Params(method="minmax", cv=10),
 }
 fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(3*6, 12))
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
