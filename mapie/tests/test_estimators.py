@@ -170,6 +170,7 @@ def test_invalid_cv(cv: Any) -> None:
     with pytest.raises(ValueError, match=r".*Invalid cv.*"):
         mapie.fit(X_toy, y_toy)
 
+
 @pytest.mark.parametrize("cv", [100, 200, 300])
 def test_too_large_cv(cv: Any) -> None:
     """Test that too large cv raise sklearn errors."""
