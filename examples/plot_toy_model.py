@@ -16,7 +16,7 @@ from mapie.metrics import coverage_score
 regressor = LinearRegression()
 X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
 
-mapie = MapieRegressor(regressor)
+mapie = MapieRegressor(regressor, n_jobs=-1)
 mapie.fit(X, y)
 y_preds = mapie.predict(X)
 

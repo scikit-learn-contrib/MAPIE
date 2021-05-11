@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -61,10 +61,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     n_jobs: int, optional
         Number of jobs to run in parallel.
-        None means 1 unless in a joblib.parallel_backend context.
         -1 means using all processors.
 
-        By default ``None``.
+        By default 1.
 
     ensemble: bool, optional
         Determines how to return the predictions.
@@ -135,7 +134,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         alpha: float = 0.1,
         method: str = "plus",
         cv: Optional[Union[int, BaseCrossValidator]] = None,
-        n_jobs: int = None,
+        n_jobs: int = 1,
         ensemble: bool = False,
         verbose: int = 0
     ) -> None:
@@ -224,49 +223,39 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return cv
         raise ValueError("Invalid cv argument. Allowed values are None, -1, int >= 2, KFold or LeaveOneOut.")
 
-    def _fit_oof_model(self, estimator: RegressorMixin, X: ArrayLike, y: ArrayLike) -> RegressorMixin():
+    def _fit_and_predict_oof_model(
+        self,
+        estimator: RegressorMixin,
+        X_train: ArrayLike,
+        y_train: ArrayLike,
+        X_test: ArrayLike
+    ) -> Tuple[RegressorMixin, np.ndarray]:
         """
-        Fit a single oof model on a given training/test split.
+        Fit a single oof model on a given training set and
+        perform predictions on a test set.
 
         Parameters
         ----------
         estimator : RegressorMixin
-            Estimator.
+            Estimator to train.
 
-        X : ArrayLike of shape (n_samples, n_features)
+        X_train : ArrayLike of shape (n_samples, n_features)
             Training data.
 
-        y : ArrayLike of shape (n_samples,)
+        y_train : ArrayLike of shape (n_samples,)
             Training labels.
+
+        X_test : ArrayLike of shape (n_testsamples, n_features)
+            Test data.
 
         Returns
         -------
         RegressorMixin
             Fitted estimator.
         """
-        return estimator.fit(X, y)
-
-    def _predict_oof_model(self, estimator: RegressorMixin, X: ArrayLike) -> np.ndarray:
-        """
-        Fit a single oof model on a given training/test split.
-
-        Parameters
-        ----------
-        estimator : RegressorMixin
-            Estimator.
-
-        X : ArrayLike of shape (n_samples, n_features)
-            Training data.
-
-        y : ArrayLike of shape (n_samples,)
-            Training labels.
-
-        Returns
-        -------
-        RegressorMixin
-            Fitted estimator.
-        """
-        return estimator.predict(X)
+        estimator.fit(X_train, y_train)
+        y_pred = estimator.predict(X_test)
+        return estimator, y_pred
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
@@ -300,29 +289,20 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             y_pred = self.single_estimator_.predict(X)
         else:
             parallel = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)
-            self.estimators_ = parallel(
-                delayed(self._fit_oof_model)(
+            estimators_and_predictions = parallel(
+                delayed(self._fit_and_predict_oof_model)(
                     clone(estimator),
                     X[train_fold],
-                    y[train_fold]
-                ) for k, (train_fold, val_fold) in enumerate(cv.split(X))
-            )
-            y_pred_ = parallel(
-                delayed(self._predict_oof_model)(
-                    self.estimators_[k],
+                    y[train_fold],
                     X[val_fold]
                 ) for k, (train_fold, val_fold) in enumerate(cv.split(X))
             )
+            self.estimators_ = [est[0] for est in estimators_and_predictions]
+            predictions = [pred[1] for pred in estimators_and_predictions]
             y_pred = np.empty_like(y, dtype=float)
             for k, (train_fold, val_fold) in enumerate(cv.split(X)):
                 self.k_[val_fold] = k
-                y_pred[val_fold] = y_pred_[k]
-            # y_pred = np.empty_like(y, dtype=float)
-            # for k, (train_fold, val_fold) in enumerate(cv.split(X)):
-            #     self.k_[val_fold] = k
-            #     e = clone(estimator).fit(X[train_fold], y[train_fold])
-            #     y_pred[val_fold] = e.predict(X[val_fold])
-            #     self.estimators_.append(e)
+                y_pred[val_fold] = predictions[k]
         self.residuals_ = np.abs(y - y_pred)
         return self
 

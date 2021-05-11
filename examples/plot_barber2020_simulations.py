@@ -98,6 +98,7 @@ def PIs_vs_dimensions(
                 mapie = MapieRegressor(
                     LinearRegression(),
                     alpha=alpha,
+                    n_jobs=-1,
                     ensemble=True,
                     **params
                 )

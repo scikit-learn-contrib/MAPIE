@@ -91,6 +91,7 @@ mapie_non_nested = MapieRegressor(
     alpha=alpha,
     method="plus",
     cv=cv,
+    n_jobs=-1,
     ensemble=True
 )
 mapie_non_nested.fit(X_train, y_train)
