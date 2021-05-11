@@ -205,7 +205,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 return KFold(n_splits=self.cv)
         if isinstance(self.cv, KFold) or isinstance(self.cv, LeaveOneOut):
             return cv
-        raise ValueError("Invalid cv argument. Allowed values are None, int >= 2, KFold or LeaveOneOut.")
+        raise ValueError("Invalid cv argument. Allowed values are None, -1, int >= 2, KFold or LeaveOneOut.")
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
