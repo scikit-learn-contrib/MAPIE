@@ -270,7 +270,7 @@ def test_linear_regression_results(strategy: str) -> None:
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("alpha", [[0.1, 0.1]])
-def test_results_for_same_alpha(strategy: str, alpha: list[float]) -> None:
+def test_results_for_same_alpha(strategy: str, alpha: Any) -> None:
     """Test that predictions and intervals are similar with two equal values of alpha."""
     mapie = MapieRegressor(estimator=LinearRegression(), alpha=alpha, **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
