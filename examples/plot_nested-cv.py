@@ -81,8 +81,8 @@ cv_obj = RandomizedSearchCV(
     scoring="neg_root_mean_squared_error",
     return_train_score=True,
     verbose=0,
+    random_state=random_state,
     n_jobs=-1,
-    random_state=random_state
 )
 cv_obj.fit(X_train, y_train)
 best_est = cv_obj.best_estimator_
@@ -91,7 +91,8 @@ mapie_non_nested = MapieRegressor(
     alpha=alpha,
     method="plus",
     cv=cv,
-    ensemble=True
+    ensemble=True,
+    n_jobs=-1
 )
 mapie_non_nested.fit(X_train, y_train)
 y_preds_non_nested = mapie_non_nested.predict(X_test)
@@ -108,8 +109,8 @@ cv_obj = RandomizedSearchCV(
     scoring="neg_root_mean_squared_error",
     return_train_score=True,
     verbose=0,
+    random_state=random_state,
     n_jobs=-1,
-    random_state=random_state
 )
 mapie_nested = MapieRegressor(
     cv_obj,
