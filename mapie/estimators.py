@@ -134,7 +134,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         alpha: float = 0.1,
         method: str = "plus",
         cv: Optional[Union[int, BaseCrossValidator]] = None,
-        n_jobs: int = 1,
+        n_jobs: Optional[Union[int, None]] = None,
         ensemble: bool = False,
         verbose: int = 0
     ) -> None:
@@ -163,6 +163,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         if not isinstance(self.ensemble, bool):
             raise ValueError("Invalid ensemble argument. Must be a boolean.")
+
+        if not isinstance(self.n_jobs, (int, type(None))):
+            raise ValueError("Invalid n_jobs argument. Must be a integer.")
+
+        if not isinstance(self.verbose, int):
+            raise ValueError("Invalid verbose argument. Must be a integer.")
 
     def _check_estimator(self, estimator: Optional[RegressorMixin] = None) -> RegressorMixin:
         """
@@ -226,10 +232,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def _fit_and_predict_oof_model(
         self,
         estimator: RegressorMixin,
-        X_train: ArrayLike,
-        y_train: ArrayLike,
-        X_test: ArrayLike
-    ) -> Tuple[RegressorMixin, np.ndarray]:
+        X: ArrayLike,
+        y: ArrayLike,
+        train_fold: np.ndarray,
+        val_fold: np.ndarray,
+        k: int
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, RegressorMixin]:
         """
         Fit a single oof model on a given training set and
         perform predictions on a test set.
@@ -239,23 +247,30 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         estimator : RegressorMixin
             Estimator to train.
 
-        X_train : ArrayLike of shape (n_samples, n_features)
-            Training data.
+        X : ArrayLike of shape (n_samples, n_features)
+            Input data.
 
-        y_train : ArrayLike of shape (n_samples,)
-            Training labels.
+        y : ArrayLike of shape (n_samples,)
+            Input labels.
 
-        X_test : ArrayLike of shape (n_testsamples, n_features)
-            Test data.
+        train_fold : np.ndarray of shape (n_)
+            Indices of training data.
+
+        val_fold : np.ndarray of shape (n_)
+            Indices of test data.
+
+        k : int
+            Indice of split.
 
         Returns
         -------
         RegressorMixin
             Fitted estimator.
         """
+        X_train, y_train, X_test = X[train_fold], y[train_fold], X[val_fold]
         estimator.fit(X_train, y_train)
         y_pred = estimator.predict(X_test)
-        return estimator, y_pred
+        return np.full(val_fold.shape, k), val_fold, y_pred, estimator
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
@@ -291,18 +306,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             parallel = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)
             estimators_and_predictions = parallel(
                 delayed(self._fit_and_predict_oof_model)(
-                    clone(estimator),
-                    X[train_fold],
-                    y[train_fold],
-                    X[val_fold]
+                    clone(estimator), X, y, train_fold, val_fold, k
                 ) for k, (train_fold, val_fold) in enumerate(cv.split(X))
             )
-            self.estimators_ = [est[0] for est in estimators_and_predictions]
-            predictions = [pred[1] for pred in estimators_and_predictions]
+            ks, val_folds, predictions, self.estimators_, = zip(*estimators_and_predictions)
+            ks = np.concatenate(ks).ravel()
+            val_folds = np.concatenate(val_folds).ravel()
+            predictions = np.concatenate(predictions).ravel()
+            self.k_[val_folds] = ks
             y_pred = np.empty_like(y, dtype=float)
-            for k, (train_fold, val_fold) in enumerate(cv.split(X)):
-                self.k_[val_fold] = k
-                y_pred[val_fold] = predictions[k]
+            y_pred[val_folds] = predictions
         self.residuals_ = np.abs(y - y_pred)
         return self
 

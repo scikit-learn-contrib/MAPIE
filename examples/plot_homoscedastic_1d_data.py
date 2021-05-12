@@ -144,8 +144,8 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
     mapie = MapieRegressor(
         polyn_model,
         alpha=0.05,
-        n_jobs=-1,
         ensemble=True,
+        n_jobs=-1,
         **params
     )
     mapie.fit(X_train.reshape(-1, 1), y_train)

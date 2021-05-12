@@ -70,7 +70,7 @@ def test_default_parameters() -> None:
     assert mapie.alpha == 0.1
     assert mapie.method == "plus"
     assert mapie.cv is None
-    assert mapie.n_jobs == 1
+    assert mapie.n_jobs is None
     assert not mapie.ensemble
     assert mapie.verbose == 0
 
@@ -150,19 +150,19 @@ def test_valid_method(method: str) -> None:
     mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("n_jobs", ["dummy"])
-def test_str_n_jobs(n_jobs: Any) -> None:
-    """Test that invalid ensemble raise errors."""
+@pytest.mark.parametrize("n_jobs", ["dummy", 1.5, [1, 2]])
+def test_invalid_n_jobs(n_jobs: Any) -> None:
+    """Test that invalid n_jobs raise errors."""
     mapie = MapieRegressor(n_jobs=n_jobs)
-    with pytest.raises(TypeError, match=r".*not supported between instances.*"):
+    with pytest.raises(ValueError, match=r".*Invalid n_jobs argument.*"):
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("n_jobs", [False])
-def test_false_n_jobs(n_jobs: Any) -> None:
+@pytest.mark.parametrize("verbose", ["dummy", 1.5, [1, 2]])
+def test_invalid_verbose(verbose: Any) -> None:
     """Test that invalid ensemble raise errors."""
-    mapie = MapieRegressor(n_jobs=n_jobs)
-    with pytest.raises(ValueError, match=r".*n_jobs == 0 in Parallel has no meaning.*"):
+    mapie = MapieRegressor(verbose=verbose)
+    with pytest.raises(ValueError, match=r".*Invalid verbose argument.*"):
         mapie.fit(X_toy, y_toy)
 
 
