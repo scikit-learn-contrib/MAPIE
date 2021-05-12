@@ -239,7 +239,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         k: int
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, RegressorMixin]:
         """
-        Fit a single oof model on a given training set and
+        Fit a single out-of-fold model on a given training set and
         perform predictions on a test set.
 
         Parameters
