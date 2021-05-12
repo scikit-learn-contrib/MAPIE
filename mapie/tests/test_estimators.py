@@ -70,9 +70,9 @@ def test_default_parameters() -> None:
     assert mapie.alpha == 0.1
     assert mapie.method == "plus"
     assert mapie.cv is None
-    assert mapie.n_jobs is None
     assert not mapie.ensemble
     assert mapie.verbose == 0
+    assert mapie.n_jobs is None
 
 
 def test_fit() -> None:
@@ -195,7 +195,7 @@ def test_valid_ensemble(ensemble: bool) -> None:
     mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, "cv", DummyRegressor()])
+@pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, "cv", DummyRegressor(), [1, 2]])
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""
     mapie = MapieRegressor(cv=cv)

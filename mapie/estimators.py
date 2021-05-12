@@ -260,10 +260,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             Input labels.
 
         train_fold : np.ndarray of shape (n_)
-            Indices of training data.
+            Training data indices.
 
         val_fold : np.ndarray of shape (n_)
-            Indices of test data.
+            Validation data indices.
 
         k : int
             Indice of split.
@@ -273,9 +273,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         RegressorMixin
             Fitted estimator.
         """
-        X_train, y_train, X_test = X[train_fold], y[train_fold], X[val_fold]
+        X_train, y_train, X_val = X[train_fold], y[train_fold], X[val_fold]
         estimator.fit(X_train, y_train)
-        y_pred = estimator.predict(X_test)
+        y_pred = estimator.predict(X_val)
         return np.full(val_fold.shape, k), val_fold, y_pred, estimator
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
@@ -315,10 +315,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     clone(estimator), X, y, train_fold, val_fold, k
                 ) for k, (train_fold, val_fold) in enumerate(cv.split(X))
             )
-            ks, val_folds, predictions, self.estimators_, = zip(*estimators_and_predictions)
+            ks, val_folds, predictions, self.estimators_ = zip(*estimators_and_predictions)
             ks = np.concatenate(ks).ravel()
             val_folds = np.concatenate(val_folds).ravel()
             predictions = np.concatenate(predictions).ravel()
+            self.estimators_ = list(self.estimators_)
             self.k_[val_folds] = ks
             y_pred = np.empty_like(y, dtype=float)
             y_pred[val_folds] = predictions
