@@ -265,10 +265,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y : ArrayLike of shape (n_samples,)
             Input labels.
 
-        train_index : np.ndarray of shape (n_)
+        train_index : np.ndarray of shape (n_samples_train)
             Training data indices.
 
-        val_index : np.ndarray of shape (n_)
+        val_index : np.ndarray of shape (n_samples_val)
             Validation data indices.
 
         k : int
