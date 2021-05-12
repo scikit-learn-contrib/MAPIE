@@ -63,7 +63,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Number of jobs for parallel processing using joblib via the "locky" backend.
         If ``-1`` all CPUs are used.
         If ``1`` is given, no parallel computing code is used at all, which is useful for debugging.
-        For n_jobs below ``-1``, (n_cpus + 1 + n_jobs) are used.
+        For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
         None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1`` (sequential execution).
 
         By default ``None``.
