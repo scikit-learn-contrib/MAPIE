@@ -61,10 +61,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib via the "locky" backend.
-        If -1 all CPUs are used.
-        If 1 is given, no parallel computing code is used at all, which is useful for debugging.
-        For n_jobs below -1, (n_cpus + 1 + n_jobs) are used.
-        None is a marker for ‘unset’ that will be interpreted as n_jobs=1 (sequential execution).
+        If ``-1`` all CPUs are used.
+        If ``1`` is given, no parallel computing code is used at all, which is useful for debugging.
+        For n_jobs below ``-1``, (n_cpus + 1 + n_jobs) are used.
+        None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1`` (sequential execution).
 
         By default ``None``.
 
@@ -80,10 +80,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
         The frequency of the messages increases with the verbosity level.
-        If it more than 10, all iterations are reported.
-        Above 50, the output is sent to stdout.
+        If it more than ``10``, all iterations are reported.
+        Above ``50``, the output is sent to stdout.
 
-        By default 0.
+        By default ``0``.
 
     Attributes
     ----------
