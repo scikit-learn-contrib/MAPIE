@@ -165,13 +165,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError("Invalid ensemble argument. Must be a boolean.")
 
         if not isinstance(self.n_jobs, (int, type(None))):
-            raise ValueError("Invalid n_jobs argument. Must be a integer.")
+            raise ValueError("Invalid n_jobs argument. Must be an integer.")
 
         if self.n_jobs == 0:
             raise ValueError("Invalid n_jobs argument. Must be different than 0.")
 
         if not isinstance(self.verbose, int):
-            raise ValueError("Invalid verbose argument. Must be a integer.")
+            raise ValueError("Invalid verbose argument. Must be an integer.")
 
         if self.verbose < 0:
             raise ValueError("Invalid verbose argument. Must be non-negative.")
