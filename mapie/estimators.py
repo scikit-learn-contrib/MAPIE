@@ -316,9 +316,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 ) for k, (train_fold, val_fold) in enumerate(cv.split(X))
             )
             ks, val_folds, predictions, self.estimators_ = zip(*estimators_and_predictions)
-            ks = np.concatenate(ks).ravel()
-            val_folds = np.concatenate(val_folds).ravel()
-            predictions = np.concatenate(predictions).ravel()
+            ks, val_folds, predictions = np.concatenate(ks), np.concatenate(val_folds), np.concatenate(predictions)
             self.estimators_ = list(self.estimators_)
             self.k_[val_folds] = ks
             y_pred = np.empty_like(y, dtype=float)

@@ -92,7 +92,7 @@ mapie_non_nested = MapieRegressor(
     method="plus",
     cv=cv,
     ensemble=True,
-    n_jobs=-1,
+    n_jobs=-1
 )
 mapie_non_nested.fit(X_train, y_train)
 y_preds_non_nested = mapie_non_nested.predict(X_test)

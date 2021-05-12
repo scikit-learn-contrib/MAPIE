@@ -122,7 +122,7 @@ def test_valid_estimator(strategy: str) -> None:
 
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", ["a", "b"]])
 def test_invalid_alpha(alpha: int) -> None:
-    """Test that invalid alphas raises errors."""
+    """Test that invalid alphas raise errors."""
     mapie = MapieRegressor(alpha=alpha)
     with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
         mapie.fit(X_toy, y_toy)
@@ -130,14 +130,14 @@ def test_invalid_alpha(alpha: int) -> None:
 
 @pytest.mark.parametrize("alpha", np.linspace(0.01, 0.99, 5))
 def test_valid_alpha(alpha: int) -> None:
-    """Test that valid alphas raises no errors."""
+    """Test that valid alphas raise no errors."""
     mapie = MapieRegressor(alpha=alpha)
     mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("method", [0, 1, "jackknife", "cv", ["base", "plus"]])
 def test_invalid_method(method: str) -> None:
-    """Test that invalid methods raises errors."""
+    """Test that invalid methods raise errors."""
     mapie = MapieRegressor(method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         mapie.fit(X_toy, y_toy)
@@ -145,14 +145,14 @@ def test_invalid_method(method: str) -> None:
 
 @pytest.mark.parametrize("method", METHODS)
 def test_valid_method(method: str) -> None:
-    """Test that valid methods raises no errors."""
+    """Test that valid methods raise no errors."""
     mapie = MapieRegressor(method=method)
     mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("n_jobs", ["dummy", 0, 1.5, [1, 2]])
 def test_invalid_n_jobs(n_jobs: Any) -> None:
-    """Test that invalid n_jobs raises errors."""
+    """Test that invalid n_jobs raise errors."""
     mapie = MapieRegressor(n_jobs=n_jobs)
     with pytest.raises(ValueError, match=r".*Invalid n_jobs argument.*"):
         mapie.fit(X_toy, y_toy)
@@ -160,29 +160,29 @@ def test_invalid_n_jobs(n_jobs: Any) -> None:
 
 @pytest.mark.parametrize("n_jobs", [-5, -1, 1, 4])
 def test_valid_n_jobs(n_jobs: Any) -> None:
-    """Test that valid n_jobs raises no errors."""
+    """Test that valid n_jobs raise no errors."""
     mapie = MapieRegressor(n_jobs=n_jobs)
     mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("verbose", ["dummy", -1, 1.5, [1, 2]])
 def test_invalid_verbose(verbose: Any) -> None:
-    """Test that invalid verbose raises errors."""
+    """Test that invalid verboses raise errors."""
     mapie = MapieRegressor(verbose=verbose)
     with pytest.raises(ValueError, match=r".*Invalid verbose argument.*"):
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("verbose", [0, 50])
+@pytest.mark.parametrize("verbose", [0, 10, 50])
 def test_valid_verbose(verbose: Any) -> None:
-    """Test that valid verbose raises no errors."""
+    """Test that valid verboses raise no errors."""
     mapie = MapieRegressor(verbose=verbose)
     mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("ensemble", ["dummy", 0, 1, 2.5, [1, 2]])
 def test_invalid_ensemble(ensemble: Any) -> None:
-    """Test that invalid ensemble raise errors."""
+    """Test that invalid ensembles raise errors."""
     mapie = MapieRegressor(ensemble=ensemble)
     with pytest.raises(ValueError, match=r".*Invalid ensemble.*"):
         mapie.fit(X_toy, y_toy)
@@ -190,7 +190,7 @@ def test_invalid_ensemble(ensemble: Any) -> None:
 
 @pytest.mark.parametrize("ensemble", [True, False])
 def test_valid_ensemble(ensemble: bool) -> None:
-    """Test that valid ensemble raise no errors."""
+    """Test that valid ensembles raise no errors."""
     mapie = MapieRegressor(ensemble=ensemble)
     mapie.fit(X_toy, y_toy)
 
