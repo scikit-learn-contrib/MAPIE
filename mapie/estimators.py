@@ -59,7 +59,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         By default ``None``.
 
-    n_jobs: int, optional
+    n_jobs: Optional[int]
         Number of jobs to run in parallel.
         -1 means using all processors.
 
@@ -134,7 +134,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         alpha: float = 0.1,
         method: str = "plus",
         cv: Optional[Union[int, BaseCrossValidator]] = None,
-        n_jobs: Optional[Union[int, None]] = None,
+        n_jobs: Optional[int] = None,
         ensemble: bool = False,
         verbose: int = 0
     ) -> None:
@@ -167,8 +167,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if not isinstance(self.n_jobs, (int, type(None))):
             raise ValueError("Invalid n_jobs argument. Must be a integer.")
 
+        if self.n_jobs == 0:
+            raise ValueError("Invalid n_jobs argument. Must be different than 0.")
+
         if not isinstance(self.verbose, int):
             raise ValueError("Invalid verbose argument. Must be a integer.")
+
+        if self.verbose < 0:
+            raise ValueError("Invalid verbose argument. Must be non-negative.")
 
     def _check_estimator(self, estimator: Optional[RegressorMixin] = None) -> RegressorMixin:
         """
