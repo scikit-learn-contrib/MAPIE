@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union, Tuple
+from typing import Optional, Union, Tuple, List
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -314,7 +314,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         estimator = self._check_estimator(self.estimator)
         X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
         y_pred = np.empty_like(y, dtype=float)
-        self.estimators_ = []
+        self.estimators_: List[RegressorMixin] = []
         self.n_features_in_ = X.shape[1]
         self.k_ = np.empty_like(y, dtype=int)
         self.single_estimator_ = clone(estimator).fit(X, y)
@@ -326,7 +326,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     clone(estimator), X, y, train_index, val_index, k
                 ) for k, (train_index, val_index) in enumerate(cv.split(X))
             )
-            self.estimators_, predictions, val_ids, val_indices  = map(list, zip(*cv_outputs))
+            self.estimators_, predictions, val_ids, val_indices = map(list, zip(*cv_outputs))
             predictions, val_ids, val_indices = map(np.concatenate, (predictions, val_ids, val_indices))
             self.k_[val_indices] = val_ids
             y_pred[val_indices] = predictions
