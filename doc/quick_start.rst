@@ -28,7 +28,8 @@ To install directly from the github repository :
 ---------------------
 
 Let us start with a basic regression problem. 
-Here, we generate one-dimensional noisy data that we fit with a linear model.
+Here, we generate one-dimensional noisy data with normal distribution
+that we fit with a linear model.
 
 .. code:: python
 
@@ -41,11 +42,14 @@ Here, we generate one-dimensional noisy data that we fit with a linear model.
 
 Since MAPIE is compliant with the standard scikit-learn API, we follow the standard
 sequential `fit` and `predict` process  like any scikit-learn regressor.
+We set two values for alpha to estimate prediction intervals at approximately one
+and two standard deviations from the mean.
 
 .. code:: python
 
     from mapie.estimators import MapieRegressor
-    mapie = MapieRegressor(regressor)
+    alpha = [0.05, 0.32]
+    mapie = MapieRegressor(regressor, alpha=alpha, method="plus")
     mapie.fit(X, y)
     y_preds = mapie.predict(X)
 
@@ -53,8 +57,9 @@ sequential `fit` and `predict` process  like any scikit-learn regressor.
 3. Show the results
 -------------------
 
-MAPIE returns a `np.ndarray` of shape (n_samples, 3) giving the predictions,
-as well as the lower and upper bounds of the prediction intervals for the target quantile.
+MAPIE returns a `np.ndarray` of shape (n_samples, 3, len(alpha)) giving the predictions,
+as well as the lower and upper bounds of the prediction intervals for the target quantile
+for each desired alpha value.
 The estimated prediction intervals can then be plotted as follows. 
 
 .. code:: python
@@ -77,9 +82,9 @@ The estimated prediction intervals can then be plotted as follows.
     :width: 400
     :align: center
 
-The title of the plot compares the target coverage with the effective coverage.
+The title of the plot compares the target coverages with the effective coverages.
 The target coverage, or the confidence interval, is the fraction of true labels lying in the
 prediction intervals that we aim to obtain for a given dataset.
-It is given by the alpha parameter defined in `MapieRegressor`, here equal to the default value of
-0.1 thus giving a target coverage of 0.9.
+It is given by the alpha parameter defined in `MapieRegressor`, here equal to 0.05 and 0.32,
+thus giving target coverages of 0.95 and 0.68.
 The effective coverage is the actual fraction of true labels lying in the prediction intervals.

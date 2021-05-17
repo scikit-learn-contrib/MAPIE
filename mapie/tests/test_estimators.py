@@ -1,4 +1,4 @@
-from typing import Any, Union, Optional
+from typing import Any, Union, Optional, Tuple
 from typing_extensions import TypedDict
 
 import pytest
@@ -122,11 +122,15 @@ def test_valid_estimator(strategy: str) -> None:
 def test_invalid_alpha(alpha: int) -> None:
     """Test that invalid alphas raise errors."""
     mapie = MapieRegressor(alpha=alpha)
+    mapie.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
-        mapie.fit(X_toy, y_toy)
+        mapie.predict(X_toy)
 
 
-@pytest.mark.parametrize("alpha", [np.linspace(0.01, 0.99, 5), [0.01, 0.99], np.array([0.01, 0.99])])
+@pytest.mark.parametrize(
+    "alpha",
+    [np.linspace(0.05, 0.95, 5), [0.05, 0.95], (0.05, 0.95), np.array([0.05, 0.95])]
+)
 def test_valid_alpha(alpha: int) -> None:
     """Test that valid alphas raise no errors."""
     mapie = MapieRegressor(alpha=alpha)
@@ -207,14 +211,14 @@ def test_fit_attributes(method: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("ensemble", [True, False])
-def test_predict_output_shape(strategy: str, ensemble: bool) -> None:
+@pytest.mark.parametrize("datasets", [(X_reg, y_reg), (X_toy, y_toy)])
+@pytest.mark.parametrize("alpha", [0.1, [0.1, 0.2], (0.1, 0.2)])
+def test_predict_output_shape(strategy: str, alpha: Any, datasets: Tuple):
     """Test predict output shape."""
-    mapie = MapieRegressor(ensemble=ensemble, **STRATEGIES[strategy])
-    mapie.fit(X_reg, y_reg)
-    y_preds = mapie.predict(X_reg)
-    assert y_preds.shape[0] == X_reg.shape[0]
-    assert y_preds.shape[1] == 3
+    mapie = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
+    mapie.fit(datasets[0], datasets[1])
+    y_preds = mapie.predict(datasets[0])
+    assert y_preds.shape == (datasets[0].shape[0], 3, mapie.alpha.shape[0])
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -223,7 +227,7 @@ def test_prediction_between_low_up(strategy: str, ensemble: bool) -> None:
     """Test that prediction lies between low and up prediction intervals."""
     mapie = MapieRegressor(ensemble=ensemble, **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
-    y_pred, y_pred_low, y_pred_up = mapie.predict(X_reg).T
+    y_pred, y_pred_low, y_pred_up = mapie.predict(X_reg)[:, :, 0].T
     assert (y_pred >= y_pred_low).all()
     assert (y_pred <= y_pred_up).all()
 
@@ -234,9 +238,9 @@ def test_prediction_ensemble(method: str, cv: Union[LeaveOneOut, KFold]) -> None
     """Test that predictions differs when ensemble is True/False, but not prediction intervals."""
     mapie = MapieRegressor(method=method, cv=cv, ensemble=True)
     mapie.fit(X_reg, y_reg)
-    y_preds_ensemble = mapie.predict(X_reg)
+    y_preds_ensemble = mapie.predict(X_reg)[:, :, 0]
     mapie.ensemble = False
-    y_preds_no_ensemble = mapie.predict(X_reg)
+    y_preds_no_ensemble = mapie.predict(X_reg)[:, :, 0]
     np.testing.assert_almost_equal(y_preds_ensemble[:, 1], y_preds_no_ensemble[:, 1])
     np.testing.assert_almost_equal(y_preds_ensemble[:, 2], y_preds_no_ensemble[:, 2])
     with pytest.raises(AssertionError):
@@ -252,7 +256,7 @@ def test_linear_data_confidence_interval(strategy: str, ensemble: bool) -> None:
     """
     mapie = MapieRegressor(ensemble=ensemble, **STRATEGIES[strategy])
     mapie.fit(X_toy, y_toy)
-    y_pred, y_pred_low, y_pred_up = mapie.predict(X_toy).T
+    y_pred, y_pred_low, y_pred_up = mapie.predict(X_toy)[:, :, 0].T
     np.testing.assert_almost_equal(y_pred_up, y_pred_low)
     np.testing.assert_almost_equal(y_pred, y_pred_low)
 
@@ -262,7 +266,7 @@ def test_linear_regression_results(strategy: str) -> None:
     """Test expected PIs for a multivariate linear regression problem with fixed random state."""
     mapie = MapieRegressor(estimator=LinearRegression(), alpha=0.05, **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
-    _, y_pred_low, y_pred_up = mapie.predict(X_reg).T
+    _, y_pred_low, y_pred_up = mapie.predict(X_reg)[:, :, 0].T
     width_mean = (y_pred_up - y_pred_low).mean()
     coverage = coverage_score(y_reg, y_pred_low, y_pred_up)
     np.testing.assert_almost_equal(width_mean, EXPECTED_WIDTHS[strategy], 2)
@@ -276,6 +280,31 @@ def test_results_for_same_alpha(strategy: str, alpha: Any) -> None:
     mapie = MapieRegressor(estimator=LinearRegression(), alpha=alpha, **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
     y_preds = mapie.predict(X_reg)
-    np.testing.assert_almost_equal(y_preds[:, 0, 0], y_preds[:, 0, 1], 2)
-    np.testing.assert_almost_equal(y_preds[:, 1, 0], y_preds[:, 1, 1], 2)
-    np.testing.assert_almost_equal(y_preds[:, 2, 0], y_preds[:, 2, 1], 2)
+    np.testing.assert_almost_equal(y_preds[:, 0, 0], y_preds[:, 0, 1], 7)
+    np.testing.assert_almost_equal(y_preds[:, 1, 0], y_preds[:, 1, 1], 7)
+    np.testing.assert_almost_equal(y_preds[:, 2, 0], y_preds[:, 2, 1], 7)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [[0.05, 0.1]])
+def test_results_for_ordered_alpha(strategy: str, alpha: Any) -> None:
+    """Test that prediction intervals lower (upper) bounds give consistent results for ordered alphas."""
+    mapie = MapieRegressor(estimator=LinearRegression(), alpha=alpha, **STRATEGIES[strategy])
+    mapie.fit(X_reg, y_reg)
+    y_preds = mapie.predict(X_reg)
+    assert (y_preds[:, 1, 0] <= y_preds[:, 1, 1]).all()
+    assert (y_preds[:, 2, 0] >= y_preds[:, 2, 1]).all()
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)])
+def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> None:
+    """Test that output values do not depend on type of alpha."""
+    mapie_float1 = MapieRegressor(estimator=LinearRegression(), alpha=alpha[0], **STRATEGIES[strategy])
+    y_preds_float1 = mapie_float1.fit(X_reg, y_reg).predict(X_reg)
+    mapie_float2 = MapieRegressor(estimator=LinearRegression(), alpha=alpha[1], **STRATEGIES[strategy])
+    y_preds_float2 = mapie_float2.fit(X_reg, y_reg).predict(X_reg)
+    mapie_array = MapieRegressor(estimator=LinearRegression(), alpha=alpha, **STRATEGIES[strategy])
+    y_preds_array = mapie_array.fit(X_reg, y_reg).predict(X_reg)
+    np.testing.assert_almost_equal(y_preds_float1[:, :, 0], y_preds_array[:, :, 0], 7)
+    np.testing.assert_almost_equal(y_preds_float2[:, :, 0], y_preds_array[:, :, 1], 7)
