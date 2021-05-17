@@ -94,7 +94,7 @@ mapie_non_nested = MapieRegressor(
     ensemble=True
 )
 mapie_non_nested.fit(X_train, y_train)
-y_preds_non_nested = mapie_non_nested.predict(X_test)
+y_preds_non_nested = mapie_non_nested.predict(X_test)[:, :, 0]
 widths_non_nested = y_preds_non_nested[:, 2] - y_preds_non_nested[:, 1]
 coverage_non_nested = coverage_score(y_test, y_preds_non_nested[:, 1], y_preds_non_nested[:, 2])
 score_non_nested = mean_squared_error(y_test, y_preds_non_nested[:, 0], squared=False)
@@ -119,7 +119,7 @@ mapie_nested = MapieRegressor(
     ensemble=True
 )
 mapie_nested.fit(X_train, y_train)
-y_preds_nested = mapie_nested.predict(X_test)
+y_preds_nested = mapie_nested.predict(X_test)[:, :, 0]
 widths_nested = y_preds_nested[:, 2] - y_preds_nested[:, 1]
 coverage_nested = coverage_score(y_test, y_preds_nested[:, 1], y_preds_nested[:, 2])
 score_nested = mean_squared_error(y_test, y_preds_nested[:, 0], squared=False)

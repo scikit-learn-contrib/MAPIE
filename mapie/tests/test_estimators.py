@@ -1,4 +1,4 @@
-from typing import Any, Union, Optional, Tuple
+from typing import Any, Union, Optional
 from typing_extensions import TypedDict
 
 import pytest
@@ -213,12 +213,16 @@ def test_fit_attributes(method: str) -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("datasets", [(X_reg, y_reg), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.1, [0.1, 0.2], (0.1, 0.2)])
-def test_predict_output_shape(strategy: str, alpha: Any, datasets: Tuple):
+def test_predict_output_shape(strategy: str, alpha: Any, datasets: Any) -> None:
     """Test predict output shape."""
     mapie = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
     mapie.fit(datasets[0], datasets[1])
     y_preds = mapie.predict(datasets[0])
-    assert y_preds.shape == (datasets[0].shape[0], 3, mapie.alpha.shape[0])
+    if isinstance(alpha, float):
+        n_alpha = 1
+    else:
+        n_alpha = len(alpha)
+    assert y_preds.shape == (datasets[0].shape[0], 3, n_alpha)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])

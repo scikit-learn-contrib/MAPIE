@@ -28,7 +28,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Any regressor with scikit-learn API (i.e. with fit and predict methods), by default None.
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
-    alpha: Union[float, List[float], np.ndarray], optional
+    alpha: Union[float, Iterable[float]], optional
         Can be a float, a list of floats, or a np.ndarray of floats.
         Between 0 and 1, represent the uncertainty of the confidence interval.
         Lower alpha produce larger (more conservative) prediction intervals.
@@ -120,7 +120,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def __init__(
         self,
         estimator: Optional[RegressorMixin] = None,
-        alpha: Iterable[float] = 0.1,
+        alpha: Union[float, Iterable[float]] = 0.1,
         method: str = "plus",
         cv: Optional[Union[int, BaseCrossValidator]] = None,
         ensemble: bool = False
@@ -205,13 +205,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return cv
         raise ValueError("Invalid cv argument. Allowed values are None, -1, int >= 2, KFold or LeaveOneOut.")
 
-    def _check_alpha(self, alpha: Iterable[float]) -> np.ndarray:
+    def _check_alpha(self, alpha: Union[float, Iterable[float]]) -> np.ndarray:
         """
         Check alpha and prepare it as a np.ndarray
 
         Parameters
         ----------
-        alpha : Iterable[float]
+        alpha : Union[float, Iterable[float]]
         Can be a float, a list of floats, or a np.ndarray of floats.
         Between 0 and 1, represent the uncertainty of the confidence interval.
         Lower alpha produce larger (more conservative) prediction intervals.
@@ -242,10 +242,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
 
         if isinstance(alpha, float):
-            alpha = np.stack([alpha])
-        elif isinstance(self.alpha, list) or isinstance(self.alpha, tuple):
-            alpha = np.stack(alpha)
-        return alpha
+            alpha = [alpha]
+        alpha_out = np.array(alpha)
+        return alpha_out
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
@@ -313,9 +312,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         check_is_fitted(self, ["single_estimator_", "estimators_", "k_", "residuals_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
-        self.alpha = self._check_alpha(self.alpha)
+        alpha = self._check_alpha(self.alpha)
         if self.method in ["naive", "base"]:
-            quantile = np.quantile(self.residuals_, 1 - self.alpha, interpolation="higher")
+            quantile = np.quantile(self.residuals_, 1 - alpha, interpolation="higher")
             # broadcast y_pred to get y_pred_low/up of shape (n_samples_test, len(alpha))
             y_pred_low = y_pred[:, np.newaxis] - quantile
             y_pred_up = y_pred[:, np.newaxis] + quantile
@@ -330,10 +329,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True) - self.residuals_
                 upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True) + self.residuals_
             # transpose to get array of shape (n_test_samples, len(alpha))
-            y_pred_low = np.quantile(lower_bounds, self.alpha, axis=1, interpolation="lower").T
-            y_pred_up = np.quantile(upper_bounds, 1 - self.alpha, axis=1, interpolation="higher").T
+            y_pred_low = np.quantile(lower_bounds, alpha, axis=1, interpolation="lower").T
+            y_pred_up = np.quantile(upper_bounds, 1 - alpha, axis=1, interpolation="higher").T
             if self.ensemble:
                 y_pred = np.median(y_pred_multi, axis=1)
         # tile y_pred to get same shape as y_pred_low/up
-        y_pred = np.tile(y_pred, (self.alpha.shape[0], 1)).T
+        y_pred = np.tile(y_pred, (alpha.shape[0], 1)).T
         return np.stack([y_pred, y_pred_low, y_pred_up], axis=1)
