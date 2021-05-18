@@ -226,25 +226,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Raises
         ------
         ValueError
-            [description]
+            If alpha is not a float or an Iterable of floats between 0 and 1.
         """
-        flag = 0
-        if isinstance(alpha, Iterable):
-            for aa in alpha:
-                if not isinstance(aa, float) or not 0 < aa < 1:
-                    flag += 1
-        elif isinstance(alpha, float):
-            if not 0 < alpha < 1:
-                flag += 1
-        else:
-            flag += 1
-        if flag > 0:
-            raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
-
         if isinstance(alpha, float):
-            alpha = [alpha]
-        alpha_out = np.array(alpha)
-        return alpha_out
+            alpha = np.array([alpha])
+        elif isinstance(alpha, Iterable):
+            alpha = np.array(alpha)
+        else:
+            raise ValueError("Invalid alpha. Allowed values are float or Iterable.")
+        if len(alpha.shape) != 1:
+            raise ValueError("Invalid alpha. Please provide a one-dimensional list of values.")
+        for alpha_ in alpha:
+            if not isinstance(alpha_, float):
+                raise ValueError("Invalid alpha. Allowed values are Iterable of floats.")
+        if np.any((alpha <= 0) | (alpha >= 1)):
+            raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
+        return alpha
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
@@ -328,9 +325,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             if self.method == "minmax":
                 lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True) - self.residuals_
                 upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True) + self.residuals_
-            # transpose to get array of shape (n_test_samples, len(alpha))
-            y_pred_low = np.quantile(lower_bounds, alpha, axis=1, interpolation="lower").T
-            y_pred_up = np.quantile(upper_bounds, 1 - alpha, axis=1, interpolation="higher").T
+            y_pred_low = np.stack([
+                np.quantile(lower_bounds, aa, axis=1, interpolation="lower") for aa in alpha
+            ], axis=1)
+            y_pred_up = np.stack([
+                np.quantile(upper_bounds, 1 - aa, axis=1, interpolation="higher") for aa in alpha
+            ], axis=1)
             if self.ensemble:
                 y_pred = np.median(y_pred_multi, axis=1)
         # tile y_pred to get same shape as y_pred_low/up

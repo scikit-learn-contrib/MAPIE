@@ -118,7 +118,7 @@ def test_valid_estimator(strategy: str) -> None:
         assert isinstance(estimator, DummyRegressor)
 
 
-@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", ["a", "b"]])
+@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
 def test_invalid_alpha(alpha: int) -> None:
     """Test that invalid alphas raise errors."""
     mapie = MapieRegressor(alpha=alpha)
@@ -211,18 +211,19 @@ def test_fit_attributes(method: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("datasets", [(X_reg, y_reg), (X_toy, y_toy)])
+@pytest.mark.parametrize("dataset", [(X_reg, y_reg), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.1, [0.1, 0.2], (0.1, 0.2)])
-def test_predict_output_shape(strategy: str, alpha: Any, datasets: Any) -> None:
+def test_predict_output_shape(strategy: str, alpha: Any, dataset: Any) -> None:
     """Test predict output shape."""
     mapie = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
-    mapie.fit(datasets[0], datasets[1])
-    y_preds = mapie.predict(datasets[0])
+    X, y = dataset
+    mapie.fit(X, y)
+    y_preds = mapie.predict(X)
     if isinstance(alpha, float):
         n_alpha = 1
     else:
         n_alpha = len(alpha)
-    assert y_preds.shape == (datasets[0].shape[0], 3, n_alpha)
+    assert y_preds.shape == (X.shape[0], 3, n_alpha)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -268,7 +269,7 @@ def test_linear_data_confidence_interval(strategy: str, ensemble: bool) -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_linear_regression_results(strategy: str) -> None:
     """Test expected PIs for a multivariate linear regression problem with fixed random state."""
-    mapie = MapieRegressor(estimator=LinearRegression(), alpha=0.05, **STRATEGIES[strategy])
+    mapie = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
     _, y_pred_low, y_pred_up = mapie.predict(X_reg)[:, :, 0].T
     width_mean = (y_pred_up - y_pred_low).mean()
@@ -281,7 +282,7 @@ def test_linear_regression_results(strategy: str) -> None:
 @pytest.mark.parametrize("alpha", [[0.1, 0.1]])
 def test_results_for_same_alpha(strategy: str, alpha: Any) -> None:
     """Test that predictions and intervals are similar with two equal values of alpha."""
-    mapie = MapieRegressor(estimator=LinearRegression(), alpha=alpha, **STRATEGIES[strategy])
+    mapie = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
     y_preds = mapie.predict(X_reg)
     np.testing.assert_almost_equal(y_preds[:, 0, 0], y_preds[:, 0, 1], 7)
@@ -290,10 +291,9 @@ def test_results_for_same_alpha(strategy: str, alpha: Any) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("alpha", [[0.05, 0.1]])
-def test_results_for_ordered_alpha(strategy: str, alpha: Any) -> None:
+def test_results_for_ordered_alpha(strategy: str) -> None:
     """Test that prediction intervals lower (upper) bounds give consistent results for ordered alphas."""
-    mapie = MapieRegressor(estimator=LinearRegression(), alpha=alpha, **STRATEGIES[strategy])
+    mapie = MapieRegressor(alpha=[0.05, 0.1], **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
     y_preds = mapie.predict(X_reg)
     assert (y_preds[:, 1, 0] <= y_preds[:, 1, 1]).all()
@@ -304,11 +304,11 @@ def test_results_for_ordered_alpha(strategy: str, alpha: Any) -> None:
 @pytest.mark.parametrize("alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)])
 def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> None:
     """Test that output values do not depend on type of alpha."""
-    mapie_float1 = MapieRegressor(estimator=LinearRegression(), alpha=alpha[0], **STRATEGIES[strategy])
+    mapie_float1 = MapieRegressor(alpha=alpha[0], **STRATEGIES[strategy])
     y_preds_float1 = mapie_float1.fit(X_reg, y_reg).predict(X_reg)
-    mapie_float2 = MapieRegressor(estimator=LinearRegression(), alpha=alpha[1], **STRATEGIES[strategy])
+    mapie_float2 = MapieRegressor(alpha=alpha[1], **STRATEGIES[strategy])
     y_preds_float2 = mapie_float2.fit(X_reg, y_reg).predict(X_reg)
-    mapie_array = MapieRegressor(estimator=LinearRegression(), alpha=alpha, **STRATEGIES[strategy])
+    mapie_array = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
     y_preds_array = mapie_array.fit(X_reg, y_reg).predict(X_reg)
     np.testing.assert_almost_equal(y_preds_float1[:, :, 0], y_preds_array[:, :, 0], 7)
     np.testing.assert_almost_equal(y_preds_float2[:, :, 0], y_preds_array[:, :, 1], 7)
