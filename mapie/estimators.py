@@ -229,9 +229,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             If alpha is not a float or an Iterable of floats between 0 and 1.
         """
         if isinstance(alpha, float):
-            alpha = np.array([alpha])
+            alpha = np.array([alpha]).copy()
         elif isinstance(alpha, Iterable):
-            alpha = np.array(alpha)
+            alpha = np.array(alpha).copy()
         else:
             raise ValueError("Invalid alpha. Allowed values are float or Iterable.")
         if len(alpha.shape) != 1:
