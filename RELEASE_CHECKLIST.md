@@ -13,7 +13,7 @@
     * `make html`
     * `cd ..`
 - [ ] Build source distribution:
-    * `rm -rf build dist`
+    * `rm -rf build dist MAPIE.egg-info`
     * `python setup.py sdist bdist_wheel`
 - [ ] Check that your package is ready for publication: `twine check dist/*`
 - [ ] Update the version number with `bump2version major|minor|patch`
