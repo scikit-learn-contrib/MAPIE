@@ -308,7 +308,7 @@ def test_linear_regression_results(strategy: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_results_for_same_alpha(strategy: str, alpha: Any) -> None:
+def test_results_for_same_alpha(strategy: str) -> None:
     """Test that predictions and intervals are similar with two equal values of alpha."""
     mapie = MapieRegressor(alpha=[0.1, 0.1], **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
@@ -341,6 +341,8 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
     np.testing.assert_almost_equal(y_preds_float1[:, :, 0], y_preds_array[:, :, 0], 7)
     np.testing.assert_almost_equal(y_preds_float2[:, :, 0], y_preds_array[:, :, 1], 7)
 
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_single_and_multi_jobs(strategy: str) -> None:
     """
     Test that MapieRegressor gives equal predictions regardless of number of parallel jobs.
@@ -349,8 +351,6 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     mapie_single.fit(X_toy, y_toy)
     mapie_multi = MapieRegressor(n_jobs=-1, **STRATEGIES[strategy])
     mapie_multi.fit(X_toy, y_toy)
-    y_pred_single, y_low_single, y_up_single = mapie_single.predict(X_toy).T
-    y_pred_multi, y_low_multi, y_up_multi = mapie_multi.predict(X_toy).T
-    np.testing.assert_almost_equal(y_pred_single, y_pred_multi)
-    np.testing.assert_almost_equal(y_low_single, y_low_multi)
-    np.testing.assert_almost_equal(y_up_single, y_up_multi)
+    y_preds_single = mapie_single.predict(X_toy)
+    y_preds_multi = mapie_multi.predict(X_toy)
+    np.testing.assert_almost_equal(y_preds_single, y_preds_multi, 7)

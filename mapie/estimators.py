@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union, Iterable
+from typing import Optional, Union, Iterable, Tuple, List
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -239,7 +239,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return cv
         raise ValueError("Invalid cv argument. Allowed values are None, -1, int >= 2, KFold or LeaveOneOut.")
 
-
     def _check_alpha(self, alpha: Union[float, Iterable[float]]) -> np.ndarray:
         """
         Check alpha and prepare it as a np.ndarray
@@ -273,7 +272,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError("Invalid alpha. Please provide a one-dimensional list of values.")
         if alpha_np.dtype.type not in [np.float64, np.float32]:
             raise ValueError("Invalid alpha. Allowed values are Iterable of floats.")
-
         if np.any((alpha_np <= 0) | (alpha_np >= 1)):
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
         return alpha_np
