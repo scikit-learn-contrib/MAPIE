@@ -313,9 +313,9 @@ def test_results_for_same_alpha(strategy: str) -> None:
     mapie = MapieRegressor(alpha=[0.1, 0.1], **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
     y_preds = mapie.predict(X_reg)
-    np.testing.assert_almost_equal(y_preds[:, 0, 0], y_preds[:, 0, 1], 7)
-    np.testing.assert_almost_equal(y_preds[:, 1, 0], y_preds[:, 1, 1], 7)
-    np.testing.assert_almost_equal(y_preds[:, 2, 0], y_preds[:, 2, 1], 7)
+    np.testing.assert_almost_equal(y_preds[:, 0, 0], y_preds[:, 0, 1])
+    np.testing.assert_almost_equal(y_preds[:, 1, 0], y_preds[:, 1, 1])
+    np.testing.assert_almost_equal(y_preds[:, 2, 0], y_preds[:, 2, 1])
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -338,8 +338,8 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
     y_preds_float2 = mapie_float2.fit(X_reg, y_reg).predict(X_reg)
     mapie_array = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
     y_preds_array = mapie_array.fit(X_reg, y_reg).predict(X_reg)
-    np.testing.assert_almost_equal(y_preds_float1[:, :, 0], y_preds_array[:, :, 0], 7)
-    np.testing.assert_almost_equal(y_preds_float2[:, :, 0], y_preds_array[:, :, 1], 7)
+    np.testing.assert_almost_equal(y_preds_float1[:, :, 0], y_preds_array[:, :, 0])
+    np.testing.assert_almost_equal(y_preds_float2[:, :, 0], y_preds_array[:, :, 1])
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -353,4 +353,4 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     mapie_multi.fit(X_toy, y_toy)
     y_preds_single = mapie_single.predict(X_toy)
     y_preds_multi = mapie_multi.predict(X_toy)
-    np.testing.assert_almost_equal(y_preds_single, y_preds_multi, 7)
+    np.testing.assert_almost_equal(y_preds_single, y_preds_multi)
