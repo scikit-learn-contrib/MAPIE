@@ -229,19 +229,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             If alpha is not a float or an Iterable of floats between 0 and 1.
         """
         if isinstance(alpha, float):
-            alpha = np.array([alpha]).copy()
+            alpha_np = np.array([alpha])
         elif isinstance(alpha, Iterable):
-            alpha = np.array(alpha).copy()
+            alpha_np = np.array(alpha)
         else:
             raise ValueError("Invalid alpha. Allowed values are float or Iterable.")
-        if len(alpha.shape) != 1:
+        if len(alpha_np.shape) != 1:
             raise ValueError("Invalid alpha. Please provide a one-dimensional list of values.")
-        for alpha_ in alpha:
-            if not isinstance(alpha_, float):
-                raise ValueError("Invalid alpha. Allowed values are Iterable of floats.")
-        if np.any((alpha <= 0) | (alpha >= 1)):
+        if alpha_np.dtype.type not in [np.float64, np.float32]:
+            raise ValueError("Invalid alpha. Allowed values are Iterable of floats.")
+
+        if np.any((alpha_np <= 0) | (alpha_np >= 1)):
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
-        return alpha
+        return alpha_np
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
@@ -326,10 +326,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True) - self.residuals_
                 upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True) + self.residuals_
             y_pred_low = np.stack([
-                np.quantile(lower_bounds, aa, axis=1, interpolation="lower") for aa in alpha
+                np.quantile(lower_bounds, _alpha, axis=1, interpolation="lower") for _alpha in alpha
             ], axis=1)
             y_pred_up = np.stack([
-                np.quantile(upper_bounds, 1 - aa, axis=1, interpolation="higher") for aa in alpha
+                np.quantile(upper_bounds, 1 - _alpha, axis=1, interpolation="higher") for _alpha in alpha
             ], axis=1)
             if self.ensemble:
                 y_pred = np.median(y_pred_multi, axis=1)

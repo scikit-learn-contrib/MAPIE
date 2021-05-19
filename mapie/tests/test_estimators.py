@@ -219,10 +219,7 @@ def test_predict_output_shape(strategy: str, alpha: Any, dataset: Any) -> None:
     X, y = dataset
     mapie.fit(X, y)
     y_preds = mapie.predict(X)
-    if isinstance(alpha, float):
-        n_alpha = 1
-    else:
-        n_alpha = len(alpha)
+    n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_preds.shape == (X.shape[0], 3, n_alpha)
 
 
