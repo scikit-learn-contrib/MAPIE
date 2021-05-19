@@ -99,6 +99,7 @@ def PIs_vs_dimensions(
                     LinearRegression(),
                     alpha=alpha,
                     ensemble=True,
+                    n_jobs=-1,
                     **params
                 )
                 mapie.fit(X_train, y_train)

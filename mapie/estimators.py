@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Optional, Union, Iterable
 
 import numpy as np
+from joblib import Parallel, delayed
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
@@ -59,6 +60,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         By default ``None``.
 
+    n_jobs: Optional[int]
+        Number of jobs for parallel processing using joblib via the "locky" backend.
+        If ``-1`` all CPUs are used.
+        If ``1`` is given, no parallel computing code is used at all, which is useful for debugging.
+        For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
+        None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1`` (sequential execution).
+
+        By default ``None``.
+
     ensemble: bool, optional
         Determines how to return the predictions.
         If ``False``, returns the predictions from the single estimator trained on the full training dataset.
@@ -67,6 +77,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         and is guaranteed to lie inside the interval, unlike the single estimator predictions.
 
         By default ``False``.
+
+    verbose : int, optional
+        The verbosity level, used with joblib for multiprocessing.
+        The frequency of the messages increases with the verbosity level.
+        If it more than ``10``, all iterations are reported.
+        Above ``50``, the output is sent to stdout.
+
+        By default ``0``.
 
     Attributes
     ----------
@@ -123,13 +141,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         alpha: Union[float, Iterable[float]] = 0.1,
         method: str = "plus",
         cv: Optional[Union[int, BaseCrossValidator]] = None,
-        ensemble: bool = False
+        n_jobs: Optional[int] = None,
+        ensemble: bool = False,
+        verbose: int = 0
     ) -> None:
         self.estimator = estimator
         self.alpha = alpha
         self.method = method
         self.cv = cv
+        self.n_jobs = n_jobs
         self.ensemble = ensemble
+        self.verbose = verbose
 
     def _check_parameters(self) -> None:
         """
@@ -145,6 +167,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         if not isinstance(self.ensemble, bool):
             raise ValueError("Invalid ensemble argument. Must be a boolean.")
+
+        if not isinstance(self.n_jobs, (int, type(None))):
+            raise ValueError("Invalid n_jobs argument. Must be an integer.")
+
+        if self.n_jobs == 0:
+            raise ValueError("Invalid n_jobs argument. Must be different than 0.")
+
+        if not isinstance(self.verbose, int):
+            raise ValueError("Invalid verbose argument. Must be an integer.")
+
+        if self.verbose < 0:
+            raise ValueError("Invalid verbose argument. Must be non-negative.")
 
     def _check_estimator(self, estimator: Optional[RegressorMixin] = None) -> RegressorMixin:
         """
@@ -205,6 +239,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return cv
         raise ValueError("Invalid cv argument. Allowed values are None, -1, int >= 2, KFold or LeaveOneOut.")
 
+
     def _check_alpha(self, alpha: Union[float, Iterable[float]]) -> np.ndarray:
         """
         Check alpha and prepare it as a np.ndarray
@@ -243,6 +278,54 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
         return alpha_np
 
+    def _fit_and_predict_oof_model(
+        self,
+        estimator: RegressorMixin,
+        X: ArrayLike,
+        y: ArrayLike,
+        train_index: ArrayLike,
+        val_index: ArrayLike,
+        k: int
+    ) -> Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]:
+        """
+        Fit a single out-of-fold model on a given training set and
+        perform predictions on a test set.
+
+        Parameters
+        ----------
+        estimator : RegressorMixin
+            Estimator to train.
+
+        X : ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        y : ArrayLike of shape (n_samples,)
+            Input labels.
+
+        train_index : np.ndarray of shape (n_samples_train)
+            Training data indices.
+
+        val_index : np.ndarray of shape (n_samples_val)
+            Validation data indices.
+
+        k : int
+            Split identification number.
+
+        Returns
+        -------
+        Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]
+
+            - [0]: Fitted estimator
+            - [1]: Estimator predictions on the validation fold, of shape (n_samples_val,)
+            - [2]: Identification number of the validation fold, of shape (n_samples_val,)
+            - [3]: Validation data indices, of shapes (n_samples_val,)
+        """
+        X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
+        estimator.fit(X_train, y_train)
+        y_pred = estimator.predict(X_val)
+        val_id = np.full_like(y_pred, k)
+        return estimator, y_pred, val_id, val_index
+
     def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
@@ -264,22 +347,26 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             The model itself.
         """
         self._check_parameters()
-        estimator = self._check_estimator(self.estimator)
         cv = self._check_cv(self.cv)
+        estimator = self._check_estimator(self.estimator)
         X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
+        y_pred = np.empty_like(y, dtype=float)
+        self.estimators_: List[RegressorMixin] = []
         self.n_features_in_ = X.shape[1]
-        self.estimators_ = []
         self.k_ = np.empty_like(y, dtype=int)
         self.single_estimator_ = clone(estimator).fit(X, y)
         if self.method == "naive":
             y_pred = self.single_estimator_.predict(X)
         else:
-            y_pred = np.empty_like(y, dtype=float)
-            for k, (train_fold, val_fold) in enumerate(cv.split(X)):
-                self.k_[val_fold] = k
-                e = clone(estimator).fit(X[train_fold], y[train_fold])
-                y_pred[val_fold] = e.predict(X[val_fold])
-                self.estimators_.append(e)
+            cv_outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                delayed(self._fit_and_predict_oof_model)(
+                    clone(estimator), X, y, train_index, val_index, k
+                ) for k, (train_index, val_index) in enumerate(cv.split(X))
+            )
+            self.estimators_, predictions, val_ids, val_indices = map(list, zip(*cv_outputs))
+            predictions, val_ids, val_indices = map(np.concatenate, (predictions, val_ids, val_indices))
+            self.k_[val_indices] = val_ids
+            y_pred[val_indices] = predictions
         self.residuals_ = np.abs(y - y_pred)
         return self
 

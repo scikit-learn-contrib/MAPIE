@@ -71,6 +71,8 @@ def test_default_parameters() -> None:
     assert mapie.method == "plus"
     assert mapie.cv is None
     assert not mapie.ensemble
+    assert mapie.verbose == 0
+    assert mapie.n_jobs is None
 
 
 def test_fit() -> None:
@@ -153,9 +155,39 @@ def test_valid_method(method: str) -> None:
     mapie.fit(X_toy, y_toy)
 
 
+@pytest.mark.parametrize("n_jobs", ["dummy", 0, 1.5, [1, 2]])
+def test_invalid_n_jobs(n_jobs: Any) -> None:
+    """Test that invalid n_jobs raise errors."""
+    mapie = MapieRegressor(n_jobs=n_jobs)
+    with pytest.raises(ValueError, match=r".*Invalid n_jobs argument.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("n_jobs", [-5, -1, 1, 4])
+def test_valid_n_jobs(n_jobs: Any) -> None:
+    """Test that valid n_jobs raise no errors."""
+    mapie = MapieRegressor(n_jobs=n_jobs)
+    mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("verbose", ["dummy", -1, 1.5, [1, 2]])
+def test_invalid_verbose(verbose: Any) -> None:
+    """Test that invalid verboses raise errors."""
+    mapie = MapieRegressor(verbose=verbose)
+    with pytest.raises(ValueError, match=r".*Invalid verbose argument.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("verbose", [0, 10, 50])
+def test_valid_verbose(verbose: Any) -> None:
+    """Test that valid verboses raise no errors."""
+    mapie = MapieRegressor(verbose=verbose)
+    mapie.fit(X_toy, y_toy)
+
+
 @pytest.mark.parametrize("ensemble", ["dummy", 0, 1, 2.5, [1, 2]])
 def test_invalid_ensemble(ensemble: Any) -> None:
-    """Test that invalid return_pred raise errors."""
+    """Test that invalid ensembles raise errors."""
     mapie = MapieRegressor(ensemble=ensemble)
     with pytest.raises(ValueError, match=r".*Invalid ensemble.*"):
         mapie.fit(X_toy, y_toy)
@@ -163,12 +195,12 @@ def test_invalid_ensemble(ensemble: Any) -> None:
 
 @pytest.mark.parametrize("ensemble", [True, False])
 def test_valid_ensemble(ensemble: bool) -> None:
-    """Test that valid ensemble raise no errors."""
+    """Test that valid ensembles raise no errors."""
     mapie = MapieRegressor(ensemble=ensemble)
     mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, "cv", DummyRegressor()])
+@pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, "cv", DummyRegressor(), [1, 2]])
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""
     mapie = MapieRegressor(cv=cv)
@@ -276,10 +308,9 @@ def test_linear_regression_results(strategy: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("alpha", [[0.1, 0.1]])
 def test_results_for_same_alpha(strategy: str, alpha: Any) -> None:
     """Test that predictions and intervals are similar with two equal values of alpha."""
-    mapie = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
+    mapie = MapieRegressor(alpha=[0.1, 0.1], **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
     y_preds = mapie.predict(X_reg)
     np.testing.assert_almost_equal(y_preds[:, 0, 0], y_preds[:, 0, 1], 7)
@@ -309,3 +340,17 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
     y_preds_array = mapie_array.fit(X_reg, y_reg).predict(X_reg)
     np.testing.assert_almost_equal(y_preds_float1[:, :, 0], y_preds_array[:, :, 0], 7)
     np.testing.assert_almost_equal(y_preds_float2[:, :, 0], y_preds_array[:, :, 1], 7)
+
+def test_results_single_and_multi_jobs(strategy: str) -> None:
+    """
+    Test that MapieRegressor gives equal predictions regardless of number of parallel jobs.
+    """
+    mapie_single = MapieRegressor(n_jobs=1, **STRATEGIES[strategy])
+    mapie_single.fit(X_toy, y_toy)
+    mapie_multi = MapieRegressor(n_jobs=-1, **STRATEGIES[strategy])
+    mapie_multi.fit(X_toy, y_toy)
+    y_pred_single, y_low_single, y_up_single = mapie_single.predict(X_toy).T
+    y_pred_multi, y_low_multi, y_up_multi = mapie_multi.predict(X_toy).T
+    np.testing.assert_almost_equal(y_pred_single, y_pred_multi)
+    np.testing.assert_almost_equal(y_low_single, y_low_multi)
+    np.testing.assert_almost_equal(y_up_single, y_up_multi)
