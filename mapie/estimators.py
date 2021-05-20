@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union, Tuple, List
+from typing import Optional, Union, Iterable, Tuple, List
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -29,7 +29,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Any regressor with scikit-learn API (i.e. with fit and predict methods), by default None.
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
-    alpha: float, optional
+    alpha: Union[float, Iterable[float]], optional
+        Can be a float, a list of floats, or a np.ndarray of floats.
         Between 0 and 1, represent the uncertainty of the confidence interval.
         Lower alpha produce larger (more conservative) prediction intervals.
         alpha is the complement of the target coverage level.
@@ -118,7 +119,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> pireg = MapieRegressor(LinearRegression())
-    >>> print(pireg.fit(X_toy, y_toy).predict(X_toy))
+    >>> print(pireg.fit(X_toy, y_toy).predict(X_toy)[:, :, 0])
     [[ 5.28571429  4.61627907  6.        ]
      [ 7.17142857  6.51744186  7.8       ]
      [ 9.05714286  8.4         9.68023256]
@@ -137,7 +138,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def __init__(
         self,
         estimator: Optional[RegressorMixin] = None,
-        alpha: float = 0.1,
+        alpha: Union[float, Iterable[float]] = 0.1,
         method: str = "plus",
         cv: Optional[Union[int, BaseCrossValidator]] = None,
         n_jobs: Optional[int] = None,
@@ -161,9 +162,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ValueError
             Is parameters are not valid.
         """
-        if not isinstance(self.alpha, float) or not 0 < self.alpha < 1:
-            raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
-
         if self.method not in self.valid_methods_:
             raise ValueError("Invalid method. Allowed values are 'naive', 'base', 'plus' and 'minmax'.")
 
@@ -240,6 +238,43 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if isinstance(self.cv, KFold) or isinstance(self.cv, LeaveOneOut):
             return cv
         raise ValueError("Invalid cv argument. Allowed values are None, -1, int >= 2, KFold or LeaveOneOut.")
+
+    def _check_alpha(self, alpha: Union[float, Iterable[float]]) -> np.ndarray:
+        """
+        Check alpha and prepare it as a np.ndarray
+
+        Parameters
+        ----------
+        alpha : Union[float, Iterable[float]]
+        Can be a float, a list of floats, or a np.ndarray of floats.
+        Between 0 and 1, represent the uncertainty of the confidence interval.
+        Lower alpha produce larger (more conservative) prediction intervals.
+        alpha is the complement of the target coverage level.
+        Only used at prediction time. By default 0.1.
+
+        Returns
+        -------
+        np.ndarray
+            Prepared alpha.
+
+        Raises
+        ------
+        ValueError
+            If alpha is not a float or an Iterable of floats between 0 and 1.
+        """
+        if isinstance(alpha, float):
+            alpha_np = np.array([alpha])
+        elif isinstance(alpha, Iterable):
+            alpha_np = np.array(alpha)
+        else:
+            raise ValueError("Invalid alpha. Allowed values are float or Iterable.")
+        if len(alpha_np.shape) != 1:
+            raise ValueError("Invalid alpha. Please provide a one-dimensional list of values.")
+        if alpha_np.dtype.type not in [np.float64, np.float32]:
+            raise ValueError("Invalid alpha. Allowed values are Iterable of floats.")
+        if np.any((alpha_np <= 0) | (alpha_np >= 1)):
+            raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
+        return alpha_np
 
     def _fit_and_predict_oof_model(
         self,
@@ -350,19 +385,21 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        np.ndarray of shape (n_samples, 3)
+        np.ndarray of shape (n_samples, 3, len(alpha))
 
-            - [0]: Center of the prediction interval
-            - [1]: Lower bound of the prediction interval
-            - [2]: Upper bound of the prediction interval
+            - [:, 0, :]: Center of the prediction interval
+            - [:, 1, :]: Lower bound of the prediction interval
+            - [:, 2, :]: Upper bound of the prediction interval
         """
         check_is_fitted(self, ["single_estimator_", "estimators_", "k_", "residuals_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
+        alpha = self._check_alpha(self.alpha)
         if self.method in ["naive", "base"]:
-            quantile = np.quantile(self.residuals_, 1 - self.alpha, interpolation="higher")
-            y_pred_low = y_pred - quantile
-            y_pred_up = y_pred + quantile
+            quantile = np.quantile(self.residuals_, 1 - alpha, interpolation="higher")
+            # broadcast y_pred to get y_pred_low/up of shape (n_samples_test, len(alpha))
+            y_pred_low = y_pred[:, np.newaxis] - quantile
+            y_pred_up = y_pred[:, np.newaxis] + quantile
         else:
             y_pred_multi = np.stack([e.predict(X) for e in self.estimators_], axis=1)
             if self.method == "plus":
@@ -373,8 +410,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             if self.method == "minmax":
                 lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True) - self.residuals_
                 upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True) + self.residuals_
-            y_pred_low = np.quantile(lower_bounds, self.alpha, axis=1, interpolation="lower")
-            y_pred_up = np.quantile(upper_bounds, 1 - self.alpha, axis=1, interpolation="higher")
+            y_pred_low = np.stack([
+                np.quantile(lower_bounds, _alpha, axis=1, interpolation="lower") for _alpha in alpha
+            ], axis=1)
+            y_pred_up = np.stack([
+                np.quantile(upper_bounds, 1 - _alpha, axis=1, interpolation="higher") for _alpha in alpha
+            ], axis=1)
             if self.ensemble:
                 y_pred = np.median(y_pred_multi, axis=1)
+        # tile y_pred to get same shape as y_pred_low/up
+        y_pred = np.tile(y_pred, (alpha.shape[0], 1)).T
         return np.stack([y_pred, y_pred_low, y_pred_up], axis=1)

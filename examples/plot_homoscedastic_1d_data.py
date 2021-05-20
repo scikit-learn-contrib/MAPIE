@@ -149,7 +149,7 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         **params
     )
     mapie.fit(X_train.reshape(-1, 1), y_train)
-    y_preds = mapie.predict(X_test.reshape(-1, 1))
+    y_preds = mapie.predict(X_test.reshape(-1, 1))[:, :, 0]
     plot_1d_data(
         X_train,
         y_train,

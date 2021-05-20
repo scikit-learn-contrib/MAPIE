@@ -115,7 +115,7 @@ in order to obtain a 95% confidence for our prediction intervals.
     for strategy, params in STRATEGIES:
         mapie = MapieRegressor(polyn_model, alpha=0.05, ensemble=False, **params)
         mapie.fit(X_train, y_train)
-        prediction_interval[method] = mapie.predict(X_test)
+        prediction_interval[method] = mapie.predict(X_test)[:, :, 0]
 
 Let’s now compare the confidence intervals with the predicted intervals with obtained 
 by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax strategies.
@@ -332,7 +332,7 @@ strategies.
     for strategy, params in STRATEGIES:
         mapie = MapieRegressor(polyn_model, alpha=0.05, ensemble=False, **params)
         mapie.fit(X_train, y_train)
-        prediction_interval[method] = mapie.predict(X_test)
+        prediction_interval[method] = mapie.predict(X_test)[:, :, 0]
 
 
 .. code:: python
@@ -546,7 +546,7 @@ and compare their prediction interval.
     for name, model in zip(model_names, models):
         mapie = MapieRegressor(model, alpha=0.05, method="plus", cv=5, ensemble=True)
         mapie.fit(X_train, y_train)
-        prediction_interval[name] = mapie.predict(X_test)
+        prediction_interval[name] = mapie.predict(X_test)[:, :, 0]
 
 .. code:: python
 
