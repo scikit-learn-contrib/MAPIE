@@ -49,7 +49,7 @@ and two standard deviations from the mean.
 
     from mapie.estimators import MapieRegressor
     alpha = [0.05, 0.32]
-    mapie = MapieRegressor(regressor, alpha=alpha, method="plus")
+    mapie = MapieRegressor(regressor, alpha=alpha)
     mapie.fit(X, y)
     y_preds = mapie.predict(X)
 

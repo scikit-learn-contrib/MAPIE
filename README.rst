@@ -45,7 +45,7 @@ Prediction intervals output by **MAPIE** encompass both aleatoric and epistemic 
 
 Python 3.7+
 
-**MAPIE** stands on the shoulders of giant.
+**MAPIE** stands on the shoulders of giants.
 
 Its only internal dependency is `scikit-learn <https://scikit-learn.org/stable/>`_.
 
@@ -89,9 +89,11 @@ and two standard deviations from the mean.
 .. code:: python
 
     from mapie.estimators import MapieRegressor
-    mapie = MapieRegressor(regressor)
+    alpha = [0.05, 0.32]
+    mapie = MapieRegressor(regressor, alpha=alpha)
     mapie.fit(X, y)
     y_preds = mapie.predict(X)
+
 
 
 MAPIE returns a ``np.ndarray`` of shape (n_samples, 3, len(alpha)) giving the predictions,
@@ -103,14 +105,18 @@ The estimated prediction intervals can then be plotted as follows.
     
     from matplotlib import pyplot as plt
     from mapie.metrics import coverage_score
-    plt.xlabel('x')
-    plt.ylabel('y')
+    plt.xlabel("x")
+    plt.ylabel("y")
     plt.scatter(X, y, alpha=0.3)
-    plt.plot(X, y_preds[:, 0], color='C1')
+    plt.plot(X, y_preds[:, 0, 0], color="C1")
     order = np.argsort(X[:, 0])
-    plt.fill_between(X[order].ravel(), y_preds[:, 1][order], y_preds[:, 2][order], alpha=0.3)
+    plt.plot(X[order], y_preds[order][:, 1, 1], color="C1", ls="--")
+    plt.plot(X[order], y_preds[order][:, 2, 1], color="C1", ls="--")
+    plt.fill_between(X[order].ravel(), y_preds[:, 1, 0][order].ravel(), y_preds[:, 2, 0][order].ravel(), alpha=0.2)
+    coverage_scores = [coverage_score(y, y_preds[:, 1, i], y_preds[:, 2, i]) for i, _ in enumerate(alpha)]
     plt.title(
-        f"Target coverage = 0.9; Effective coverage = {coverage_score(y, y_preds[:, 1], y_preds[:, 2])}"
+        f"Target and effective coverages for alpha={alpha[0]:.2f}: ({1-alpha[0]:.3f}, {coverage_scores[0]:.3f})\n" +
+        f"Target and effective coverages for alpha={alpha[1]:.2f}: ({1-alpha[1]:.3f}, {coverage_scores[1]:.3f})"
     )
     plt.show()
 
