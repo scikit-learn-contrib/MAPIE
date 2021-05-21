@@ -2,7 +2,7 @@
 History
 =======
 
-0.2.0 (???)
+0.2.0 (2020-05-21)
 ------------------
 
 * Add n_jobs argument using joblib parallel processing
@@ -12,7 +12,7 @@ History
 * Simplify the `method` parameter
 * Fix typos in documentation and add methods descriptions in sphinx
 * Accept alpha parameter as a list or np.ndarray
-* If alpha is a list, `.predict()` returns a np.ndarray of shape (n_samples, 3, len(alpha))
+* If alpha is an Iterable, `.predict()` returns a np.ndarray of shape (n_samples, 3, len(alpha))
 
 0.1.4 (2021-05-07)
 ------------------
