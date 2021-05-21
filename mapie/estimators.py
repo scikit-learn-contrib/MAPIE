@@ -277,7 +277,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
         return alpha_np
 
-    def _check_and_adjust_weight(self, sample_weight: ArrayLike, X: ArrayLike, y: ArrayLike):
+    def _check_and_remove_null_weight(
+        self,
+        sample_weight: ArrayLike,
+        X: ArrayLike,
+        y: ArrayLike
+    ) -> Tuple[ArrayLike, ArrayLike, ArrayLike]:
         """[summary]
 
         Parameters
@@ -393,7 +398,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
         fit_parameters = signature(estimator.fit).parameters
         supports_sw = "sample_weight" in fit_parameters
-        sample_weight, X, y = self._check_and_adjust_weight(sample_weight, X, y)
+        sample_weight, X, y = self._check_and_remove_null_weight(sample_weight, X, y)
         y_pred = np.empty_like(y, dtype=float)
         self.estimators_: List[RegressorMixin] = []
         self.n_features_in_ = X.shape[1]
