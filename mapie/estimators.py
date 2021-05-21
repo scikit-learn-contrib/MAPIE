@@ -4,7 +4,7 @@ from typing import Optional, Union, Iterable, Tuple, List
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.utils import check_X_y, check_array
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, _check_sample_weight
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LinearRegression
@@ -281,6 +281,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         estimator: RegressorMixin,
         X: ArrayLike,
         y: ArrayLike,
+        sample_weight: ArrayLike,
         train_index: ArrayLike,
         val_index: ArrayLike,
         k: int
@@ -299,6 +300,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         y : ArrayLike of shape (n_samples,)
             Input labels.
+
+        sample_weight : ArrayLike of shape (n_samples,), default=None
+            Sample weights. If None, then samples are equally weighted.
 
         train_index : np.ndarray of shape (n_samples_train)
             Training data indices.
@@ -319,12 +323,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             - [3]: Validation data indices, of shapes (n_samples_val,)
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
-        estimator.fit(X_train, y_train)
+        estimator.fit(X_train, y_train, sample_weight=sample_weight)
         y_pred = estimator.predict(X_val)
         val_id = np.full_like(y_pred, k)
         return estimator, y_pred, val_id, val_index
 
-    def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
+    def fit(self, X: ArrayLike, y: ArrayLike, sample_weight: Optional[ArrayLike] = None) -> MapieRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
         Fit the base estimator under the ``single_estimator_`` attribute.
@@ -339,12 +343,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y : ArrayLike of shape (n_samples,)
             Training labels.
 
+        sample_weight : ArrayLike of shape (n_samples,), default=None
+            Sample weights. If None, then samples are equally weighted.
+
         Returns
         -------
         MapieRegressor
             The model itself.
         """
         self._check_parameters()
+        sample_weight = _check_sample_weight(sample_weight, X)
         cv = self._check_cv(self.cv)
         estimator = self._check_estimator(self.estimator)
         X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
@@ -358,7 +366,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         else:
             cv_outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self._fit_and_predict_oof_model)(
-                    clone(estimator), X, y, train_index, val_index, k
+                    clone(estimator), X, y, sample_weight, train_index, val_index, k
                 ) for k, (train_index, val_index) in enumerate(cv.split(X))
             )
             self.estimators_, predictions, val_ids, val_indices = map(list, zip(*cv_outputs))
