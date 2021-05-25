@@ -4,10 +4,12 @@ from inspect import signature
 
 import pytest
 import numpy as np
+from sklearn.base import RegressorMixin
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import LeaveOneOut, KFold
+from sklearn.pipeline import make_pipeline
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
@@ -128,6 +130,33 @@ def test_valid_estimator(strategy: str) -> None:
         assert isinstance(estimator, DummyRegressor)
 
 
+@pytest.mark.parametrize(
+    "estimator",
+    [
+        LinearRegression(),
+        make_pipeline(LinearRegression())
+    ]
+)
+def test_invalid_prefit_estimator(estimator: RegressorMixin) -> None:
+    """Test that non-fitted estimator with prefit cv raise errors."""
+    mapie = MapieRegressor(estimator=estimator, cv="prefit")
+    with pytest.raises(NotFittedError):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize(
+    "estimator",
+    [
+        LinearRegression().fit(X_toy, y_toy),
+        make_pipeline(LinearRegression()).fit(X_toy, y_toy)
+    ]
+)
+def test_valid_prefit_estimator(estimator: RegressorMixin) -> None:
+    """Test that fitted estimator with prefit cv raise no errors."""
+    mapie = MapieRegressor(estimator=estimator, cv="prefit")
+    mapie.fit(X_toy, y_toy)
+
+
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
 def test_invalid_alpha(alpha: int) -> None:
     """Test that invalid alphas raise errors."""
@@ -139,7 +168,12 @@ def test_invalid_alpha(alpha: int) -> None:
 
 @pytest.mark.parametrize(
     "alpha",
-    [np.linspace(0.05, 0.95, 5), [0.05, 0.95], (0.05, 0.95), np.array([0.05, 0.95])]
+    [
+        np.linspace(0.05, 0.95, 5),
+        [0.05, 0.95],
+        (0.05, 0.95),
+        np.array([0.05, 0.95])
+    ]
 )
 def test_valid_alpha(alpha: int) -> None:
     """Test that valid alphas raise no errors."""
@@ -224,7 +258,7 @@ def test_too_large_cv(cv: Any) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])
+@pytest.mark.parametrize("cv", [None, -1, 2, "prefit", KFold(), LeaveOneOut()])
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     mapie = MapieRegressor(cv=cv)

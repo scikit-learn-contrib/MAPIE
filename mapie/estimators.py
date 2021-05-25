@@ -5,13 +5,15 @@ from inspect import signature
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.utils import check_X_y, check_array
-from sklearn.utils.validation import check_is_fitted, _check_sample_weight
+from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
+from sklearn.pipeline import Pipeline
 
 from ._typing import ArrayLike
+from .utils import get_n_features_in, check_null_weight, fit_estimator
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
@@ -58,6 +60,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           If equal to -1, equivalent to ``sklearn.model_selection.LeaveOneOut()``.
         - CV splitter: ``sklearn.model_selection.LeaveOneOut()`` (jackknife variants) or
           ``sklearn.model_selection.KFold()`` (cross-validation variants)
+        - ``"prefit"``, assumes that ``estimator`` has been fitted already
+          and all data is used for computing residuals.
 
         By default ``None``.
 
@@ -184,6 +188,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def _check_estimator(self, estimator: Optional[RegressorMixin] = None) -> RegressorMixin:
         """
         Check if estimator is ``None``, and returns a ``LinearRegression`` instance if necessary.
+        If the ``cv`` attribute is ``"prefit"``, check if estimator is indeed already fitted.
 
         Parameters
         ----------
@@ -199,16 +204,27 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ------
         ValueError
             If the estimator is not ``None`` and has no fit nor predict methods.
+
+        NotFittedError
+            If the estimator is not fitted and ``cv`` attribute is "prefit".
         """
         if estimator is None:
             return LinearRegression()
         if not hasattr(estimator, "fit") and not hasattr(estimator, "predict"):
             raise ValueError("Invalid estimator. Please provide a regressor with fit and predict methods.")
+        if self.cv == "prefit":
+            if isinstance(self.estimator, Pipeline):
+                check_is_fitted(self.estimator[-1])
+            else:
+                check_is_fitted(self.estimator)
         return estimator
 
-    def _check_cv(self, cv: Optional[Union[int, BaseCrossValidator]] = None) -> BaseCrossValidator:
+    def _check_cv(
+        self,
+        cv: Optional[Union[int, str, BaseCrossValidator]] = None
+    ) -> Union[str, BaseCrossValidator]:
         """
-        Check if cross-validator is ``None``, ``int``, ``KFold`` or ``LeaveOneOut``.
+        Check if cross-validator is ``None``, ``int``, ``"prefit"``, ``KFold`` or ``LeaveOneOut``.
         Return a ``LeaveOneOut`` instance if integer equal to -1.
         Return a ``KFold`` instance if integer superior or equal to 2.
         Return a ``KFold`` instance if ``None``.
@@ -216,18 +232,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Parameters
         ----------
-        cv : Optional[Union[int, BaseCrossValidator]], optional
+        cv : Optional[Union[int, str, BaseCrossValidator]], optional
             Cross-validator to check, by default ``None``
 
         Returns
         -------
-        BaseCrossValidator
+        Union[str, BaseCrossValidator]
             The cross-validator itself or a default ``KFold`` instance.
 
         Raises
         ------
         ValueError
-            If the cross-validator is not ``None``, not a valid ``int``, nor a valid cross validator.
+            If the cross-validator is not valid.
         """
         if cv is None:
             return KFold(n_splits=5)
@@ -236,9 +252,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 return LeaveOneOut()
             if self.cv >= 2:
                 return KFold(n_splits=self.cv)
-        if isinstance(self.cv, KFold) or isinstance(self.cv, LeaveOneOut):
+        if isinstance(self.cv, KFold) or isinstance(self.cv, LeaveOneOut) or cv == "prefit":
             return cv
-        raise ValueError("Invalid cv argument. Allowed values are None, -1, int >= 2, KFold or LeaveOneOut.")
+        raise ValueError(
+            "Invalid cv argument. Allowed values are None, -1, int >= 2, 'prefit', KFold or LeaveOneOut."
+        )
 
     def _check_alpha(self, alpha: Union[float, Iterable[float]]) -> np.ndarray:
         """
@@ -276,81 +294,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if np.any((alpha_np <= 0) | (alpha_np >= 1)):
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
         return alpha_np
-
-    def _check_null_weight(
-        self,
-        sample_weight: ArrayLike,
-        X: ArrayLike,
-        y: ArrayLike
-    ) -> Tuple[ArrayLike, ArrayLike, ArrayLike]:
-        """
-        Check sample weights and remove samples with null sample weights.
-
-        Parameters
-        ----------
-        sample_weight : ArrayLike
-            Sample weights.
-        X : ArrayLike
-            Training samples.
-        y : ArrayLike
-            Training labels.
-
-        Returns
-        -------
-        sample_weight : ArrayLike
-            Non-null sample weights.
-        X : ArrayLike
-            Training samples with non-null weights.
-        y : ArrayLike
-            Training labels with non-null weights.
-        """
-        if sample_weight is not None:
-            sample_weight = _check_sample_weight(sample_weight, X)
-            non_null_weight = sample_weight != 0
-            X, y = X[non_null_weight, :], y[non_null_weight]
-            sample_weight = sample_weight[non_null_weight]
-        return sample_weight, X, y
-
-    def _fit_estimator(
-        self,
-        estimator: RegressorMixin,
-        X: ArrayLike,
-        y: ArrayLike,
-        supports_sw: bool,
-        sample_weight: ArrayLike
-    ) -> RegressorMixin:
-        """
-        Fit an estimator on training data by distinguishing two cases:
-        - the estimator supports sample weights and sample weights are provided.
-        - the estimator does not support samples weights or samples weights are not provided
-
-        Parameters
-        ----------
-        estimator : RegressorMixin
-            Estimator to train.
-
-        X : ArrayLike of shape (n_samples, n_features)
-            Input data.
-
-        y : ArrayLike of shape (n_samples,)
-            Input labels.
-
-        supports_sw : bool
-            Whether or not estimator supports sample weights.
-
-        sample_weight : ArrayLike of shape (n_samples,)
-            Sample weights. If None, then samples are equally weighted. By default None.
-
-        Returns
-        -------
-        RegressorMixin
-            Fitted estimator.
-        """
-        if sample_weight is not None and supports_sw:
-            estimator.fit(X, y, sample_weight=sample_weight)
-        else:
-            estimator.fit(X, y)
-        return estimator
 
     def _fit_and_predict_oof_model(
         self,
@@ -405,7 +348,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
         if sample_weight is not None:
             sample_weight = sample_weight[train_index]
-        estimator = self._fit_estimator(estimator, X_train, y_train, supports_sw, sample_weight)
+        estimator = fit_estimator(estimator, X_train, y_train, supports_sw, sample_weight)
         y_pred = estimator.predict(X_val)
         val_id = np.full_like(y_pred, k)
         return estimator, y_pred, val_id, val_index
@@ -443,29 +386,32 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
         fit_parameters = signature(estimator.fit).parameters
         supports_sw = "sample_weight" in fit_parameters
-        sample_weight, X, y = self._check_null_weight(sample_weight, X, y)
+        sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
         # Initialization
         self.estimators_: List[RegressorMixin] = []
-        self.n_features_in_ = X.shape[1]
+        self.n_features_in_ = get_n_features_in(cv, estimator, X)
         self.k_ = np.empty_like(y, dtype=int)
         y_pred = np.empty_like(y, dtype=float)
 
         # Work
-        self.single_estimator_ = self._fit_estimator(clone(estimator), X, y, supports_sw, sample_weight)
-        if self.method == "naive":
-            y_pred = self.single_estimator_.predict(X)
+        if cv == "prefit":
+            pass
         else:
-            cv_outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                delayed(self._fit_and_predict_oof_model)(
-                    clone(estimator), X, y, train_index, val_index, k, supports_sw, sample_weight
-                ) for k, (train_index, val_index) in enumerate(cv.split(X))
-            )
-            self.estimators_, predictions, val_ids, val_indices = map(list, zip(*cv_outputs))
-            predictions, val_ids, val_indices = map(np.concatenate, (predictions, val_ids, val_indices))
-            self.k_[val_indices] = val_ids
-            y_pred[val_indices] = predictions
-        self.residuals_ = np.abs(y - y_pred)
+            self.single_estimator_ = fit_estimator(clone(estimator), X, y, supports_sw, sample_weight)
+            if self.method == "naive":
+                y_pred = self.single_estimator_.predict(X)
+            else:
+                cv_outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                    delayed(self._fit_and_predict_oof_model)(
+                        clone(estimator), X, y, train_index, val_index, k, supports_sw, sample_weight
+                    ) for k, (train_index, val_index) in enumerate(cv.split(X))
+                )
+                self.estimators_, predictions, val_ids, val_indices = map(list, zip(*cv_outputs))
+                predictions, val_ids, val_indices = map(np.concatenate, (predictions, val_ids, val_indices))
+                self.k_[val_indices] = val_ids
+                y_pred[val_indices] = predictions
+            self.residuals_ = np.abs(y - y_pred)
         return self
 
     def predict(self, X: ArrayLike) -> np.ndarray:
