@@ -321,7 +321,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     ) -> RegressorMixin:
         """
         Fit an estimator on training data by distinguishing two cases:
-        - the estimator supports sample weights and sample weights and provided.
+        - the estimator supports sample weights and sample weights are provided.
         - the estimator does not support samples weights or samples weights are not provided
 
         Parameters
@@ -403,9 +403,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             - [3]: Validation data indices, of shapes (n_samples_val,)
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
+        sample_weight_train = sample_weight
         if sample_weight is not None:
-            sample_weight = sample_weight[train_index]
-        estimator = self._fit_estimator(estimator, X_train, y_train, supports_sw, sample_weight)
+            sample_weight_train = sample_weight[train_index]
+        estimator = self._fit_estimator(estimator, X_train, y_train, supports_sw, sample_weight_train)
         y_pred = estimator.predict(X_val)
         val_id = np.full_like(y_pred, k)
         return estimator, y_pred, val_id, val_index
