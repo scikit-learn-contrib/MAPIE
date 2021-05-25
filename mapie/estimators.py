@@ -60,8 +60,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           If equal to -1, equivalent to ``sklearn.model_selection.LeaveOneOut()``.
         - CV splitter: ``sklearn.model_selection.LeaveOneOut()`` (jackknife variants) or
           ``sklearn.model_selection.KFold()`` (cross-validation variants)
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already
-          and all data is used for computing residuals.
+        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
+          All data provided in the ``fit`` method is then used for computing residuals only.
 
         By default ``None``.
 
@@ -396,7 +396,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         # Work
         if cv == "prefit":
-            pass
+            self.single_estimator_ = estimator
+            y_pred = self.single_estimator_.predict(X)
         else:
             self.single_estimator_ = fit_estimator(clone(estimator), X, y, supports_sw, sample_weight)
             if self.method == "naive":
@@ -411,7 +412,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 predictions, val_ids, val_indices = map(np.concatenate, (predictions, val_ids, val_indices))
                 self.k_[val_indices] = val_ids
                 y_pred[val_indices] = predictions
-            self.residuals_ = np.abs(y - y_pred)
+        self.residuals_ = np.abs(y - y_pred)
         return self
 
     def predict(self, X: ArrayLike) -> np.ndarray:
@@ -438,7 +439,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             - [:, 2, :]: Upper bound of the prediction interval
         """
         # Checks
-        check_is_fitted(self, ["single_estimator_", "estimators_", "k_", "residuals_"])
+        check_is_fitted(self, "residuals_")
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         alpha = self._check_alpha(self.alpha)
 
