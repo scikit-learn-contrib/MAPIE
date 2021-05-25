@@ -439,7 +439,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             - [:, 2, :]: Upper bound of the prediction interval
         """
         # Checks
-        check_is_fitted(self, "residuals_")
+        check_is_fitted(self,  ["single_estimator_", "estimators_", "k_", "residuals_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         alpha = self._check_alpha(self.alpha)
 
@@ -451,7 +451,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         n_alpha = len(alpha)
         y_pred = self.single_estimator_.predict(X)
         # At this point, y_pred is of shape (n_samples_test,)
-        if self.method in ["naive", "base"]:
+        if self.method in ["naive", "base"] or self.cv == "prefit":
             quantile = np.quantile(self.residuals_, 1 - alpha, interpolation="higher")
             y_pred_low = y_pred[:, np.newaxis] - quantile
             y_pred_up = y_pred[:, np.newaxis] + quantile
