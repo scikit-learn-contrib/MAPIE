@@ -403,7 +403,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             - [3]: Validation data indices, of shapes (n_samples_val,)
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
-        sample_weight_train = sample_weight
+        sample_weight_train = sample_weight.copy()
         if sample_weight is not None:
             sample_weight_train = sample_weight[train_index]
         estimator = self._fit_estimator(estimator, X_train, y_train, supports_sw, sample_weight_train)
