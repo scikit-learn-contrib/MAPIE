@@ -4,7 +4,7 @@
 - [ ] Check whether any new files need to go in MANIFEST.in
 - [ ] Make sure tests run, pass and cover 100% of the package:
     * `flake8 . --exclude=doc`
-    * `mypy mapie examples --strict --config-file mypy.ini`
+    * `mypy mapie examples --strict`
     * `pytest -vs --doctest-modules mapie`
     * `pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie`
 - [ ] Make sure documentation builds without warnings and shows nicely:

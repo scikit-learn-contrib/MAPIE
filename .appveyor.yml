@@ -16,7 +16,7 @@ matrix:
 install:
   - cmd: call %MINICONDA%\Scripts\activate.bat
   - conda update --yes conda
-  - conda create -n test-env --yes -c conda-forge python=%PYTHON_VERSION% codecov mypy numpy=%NUMPY_VERSION% scikit-learn pytest-cov
+  - conda create -n test-env --yes -c conda-forge python=%PYTHON_VERSION% codecov mypy numpy=%NUMPY_VERSION% scikit-learn pandas pytest-cov
   - conda activate test-env
 
 test_script:
