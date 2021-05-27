@@ -1,40 +1,10 @@
-from typing import Union, Tuple
+from typing import Tuple
+from inspect import signature
 
 from sklearn.utils.validation import _check_sample_weight
 from sklearn.base import RegressorMixin
-from sklearn.model_selection import BaseCrossValidator
 
 from ._typing import ArrayLike
-
-
-def get_n_features_in(
-    cv: Union[str, BaseCrossValidator],
-    estimator: RegressorMixin,
-    X: ArrayLike
-) -> int:
-    """
-    Get the expected number of training features.
-    In general it is simply the number of columns of the data.
-    If ``cv=="prefit"`` however, it can be deduced from the estimator's ``n_features_in_`` attribute.
-
-    Parameters
-    ----------
-    cv : Union[str, BaseCrossValidator]
-        Cross-validator.
-    estimator : RegressorMixin
-        Backend estimator of MAPE.
-    X : ArrayLike of shape (n_samples, n_features)
-        Data passed into the ``fit`` method.
-
-    Returns
-    -------
-    int
-        Expected number of training features.
-    """
-    n_features_in = X.shape[1]
-    if cv == "prefit" and hasattr(estimator, "n_features_in_"):
-        n_features_in = estimator.n_features_in_
-    return n_features_in
 
 
 def check_null_weight(
@@ -62,6 +32,25 @@ def check_null_weight(
         Training samples with non-null weights.
     y : ArrayLike of shape (n_samples,)
         Training labels with non-null weights.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.utils import check_null_weight
+    >>> X = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
+    >>> y = np.array([5, 7, 9, 11, 13, 15])
+    >>> sample_weight = np.array([0, 1, 1, 1, 1, 1])
+    >>> sample_weight, X, y = check_null_weight(sample_weight, X, y)
+    >>> print(sample_weight)
+    [1. 1. 1. 1. 1.]
+    >>> print(X)
+    [[1]
+     [2]
+     [3]
+     [4]
+     [5]]
+    >>> print(y)
+    [ 7  9 11 13 15]
     """
     if sample_weight is not None:
         sample_weight = _check_sample_weight(sample_weight, X)
@@ -75,7 +64,6 @@ def fit_estimator(
     estimator: RegressorMixin,
     X: ArrayLike,
     y: ArrayLike,
-    supports_sw: bool,
     sample_weight: ArrayLike
 ) -> RegressorMixin:
     """
@@ -94,9 +82,6 @@ def fit_estimator(
     y : ArrayLike of shape (n_samples,)
         Input labels.
 
-    supports_sw : bool
-        Whether or not estimator supports sample weights.
-
     sample_weight : ArrayLike of shape (n_samples,)
         Sample weights. If None, then samples are equally weighted. By default None.
 
@@ -105,7 +90,9 @@ def fit_estimator(
     RegressorMixin
         Fitted estimator.
     """
-    if sample_weight is not None and supports_sw:
+    fit_parameters = signature(estimator.fit).parameters
+    supports_sw = "sample_weight" in fit_parameters
+    if supports_sw and sample_weight is not None:
         estimator.fit(X, y, sample_weight=sample_weight)
     else:
         estimator.fit(X, y)

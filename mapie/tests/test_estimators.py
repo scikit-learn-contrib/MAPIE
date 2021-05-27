@@ -1,4 +1,4 @@
-from typing import Any, Union, Optional
+from typing import Any, Union, Optional, Tuple
 from typing_extensions import TypedDict
 from inspect import signature
 
@@ -12,6 +12,7 @@ from sklearn.model_selection import LeaveOneOut, KFold
 from sklearn.pipeline import make_pipeline
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.estimator_checks import parametrize_with_checks
+from sklearn.utils.validation import check_is_fitted
 
 from mapie.estimators import MapieRegressor
 from mapie.metrics import coverage_score
@@ -79,7 +80,7 @@ def test_default_parameters() -> None:
 
 
 def test_default_sample_weight() -> None:
-    """Test default sample weights"""
+    """Test default sample weights."""
     mapie = MapieRegressor()
     mapie.fit(X_toy, y_toy)
     assert signature(mapie.fit).parameters["sample_weight"].default is None
@@ -131,8 +132,7 @@ def test_valid_estimator(strategy: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "estimator",
-    [
+    "estimator", [
         LinearRegression(),
         make_pipeline(LinearRegression())
     ]
@@ -144,17 +144,28 @@ def test_invalid_prefit_estimator(estimator: RegressorMixin) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize(
-    "estimator",
-    [
-        LinearRegression().fit(X_toy, y_toy),
-        make_pipeline(LinearRegression()).fit(X_toy, y_toy)
-    ]
-)
-def test_valid_prefit_estimator(estimator: RegressorMixin) -> None:
-    """Test that fitted estimator with prefit cv raise no errors."""
+def test_valid_prefit_raw_estimator() -> None:
+    """Test that fitted raw estimator with prefit cv raise no errors."""
+    estimator = LinearRegression().fit(X_toy, y_toy)
     mapie = MapieRegressor(estimator=estimator, cv="prefit")
     mapie.fit(X_toy, y_toy)
+    check_is_fitted(mapie.single_estimator_)
+
+
+def test_valid_prefit_pipeline() -> None:
+    """Test that fitted pipeline with prefit cv raise no errors."""
+    estimator = make_pipeline(LinearRegression()).fit(X_toy, y_toy)
+    mapie = MapieRegressor(estimator=estimator, cv="prefit")
+    mapie.fit(X_toy, y_toy)
+    check_is_fitted(mapie.single_estimator_[-1])
+
+
+def test_invalid_prefit_estimator_shape() -> None:
+    """Test that estimators fitted with a wrong number of features raise errors."""
+    estimator = LinearRegression().fit(X_reg, y_reg)
+    mapie = MapieRegressor(estimator=estimator, cv="prefit")
+    with pytest.raises(ValueError, match=r".*mismatch between.*"):
+        mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
@@ -258,7 +269,7 @@ def test_too_large_cv(cv: Any) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [None, -1, 2, "prefit", KFold(), LeaveOneOut()])
+@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     mapie = MapieRegressor(cv=cv)
@@ -287,7 +298,7 @@ def test_fit_attributes(method: str) -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("dataset", [(X_reg, y_reg), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.1, [0.1, 0.2], (0.1, 0.2)])
-def test_predict_output_shape(strategy: str, alpha: Any, dataset: Any) -> None:
+def test_predict_output_shape(strategy: str, alpha: Any, dataset: Tuple[np.ndarray, np.ndarray]) -> None:
     """Test predict output shape."""
     mapie = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
     X, y = dataset
