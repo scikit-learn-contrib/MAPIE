@@ -346,9 +346,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - [3]: Validation data indices, of shapes (n_samples_val,)
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
-        if sample_weight is not None:
-            sample_weight = sample_weight[train_index]
-        estimator = fit_estimator(estimator, X_train, y_train, supports_sw, sample_weight)
+        sample_weight_train = sample_weight[train_index] if sample_weight is not None else None
+        estimator = fit_estimator(estimator, X_train, y_train, supports_sw, sample_weight_train)
         y_pred = estimator.predict(X_val)
         val_id = np.full_like(y_pred, k)
         return estimator, y_pred, val_id, val_index

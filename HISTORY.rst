@@ -2,7 +2,12 @@
 History
 =======
 
-0.2.0 (2020-05-21)
+0.2.1 (2020-XX-XX)
+------------------
+
+* Add sample_weight argument in fit method
+
+0.2.0 (2021-05-21)
 ------------------
 
 * Add n_jobs argument using joblib parallel processing
