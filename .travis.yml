@@ -18,7 +18,7 @@ install:
   - export PATH=$HOME/miniconda/bin:$PATH
   - source $HOME/miniconda/etc/profile.d/conda.sh
   - conda update --yes conda
-  - conda create -n test-env --yes -c conda-forge python=$TRAVIS_PYTHON_VERSION codecov mypy numpy=$NUMPY_VERSION scikit-learn pytest-cov
+  - conda create -n test-env --yes -c conda-forge python=$TRAVIS_PYTHON_VERSION codecov mypy numpy=$NUMPY_VERSION scikit-learn pandas pytest-cov
   - conda activate test-env
 
 script:

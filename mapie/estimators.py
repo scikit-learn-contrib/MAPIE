@@ -435,6 +435,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         MapieRegressor
             The model itself.
         """
+        # Checks
         self._check_parameters()
         cv = self._check_cv(self.cv)
         estimator = self._check_estimator(self.estimator)
@@ -442,10 +443,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         fit_parameters = signature(estimator.fit).parameters
         supports_sw = "sample_weight" in fit_parameters
         sample_weight, X, y = self._check_null_weight(sample_weight, X, y)
-        y_pred = np.empty_like(y, dtype=float)
+
+        # Initialization
         self.estimators_: List[RegressorMixin] = []
         self.n_features_in_ = X.shape[1]
         self.k_ = np.empty_like(y, dtype=int)
+        y_pred = np.empty_like(y, dtype=float)
+
+        # Work
         self.single_estimator_ = self._fit_estimator(clone(estimator), X, y, supports_sw, sample_weight)
         if self.method == "naive":
             y_pred = self.single_estimator_.predict(X)
@@ -479,24 +484,34 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        np.ndarray of shape (n_samples, 3, len(alpha))
+        np.ndarray of shape (n_samples, 3, n_alpha)
 
             - [:, 0, :]: Center of the prediction interval
             - [:, 1, :]: Lower bound of the prediction interval
             - [:, 2, :]: Upper bound of the prediction interval
         """
+        # Checks
         check_is_fitted(self, ["single_estimator_", "estimators_", "k_", "residuals_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
-        y_pred = self.single_estimator_.predict(X)
         alpha = self._check_alpha(self.alpha)
+
+        # SHAPES:
+        # (n_samples_train,) : self.residuals_
+        # (n_alpha,) : alpha
+        # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
+        # (n_samples_test, n_samples_train) : y_pred_multi, lower_bounds, upper_bounds
+        n_alpha = len(alpha)
+        y_pred = self.single_estimator_.predict(X)
+        # At this point, y_pred is of shape (n_samples_test,)
         if self.method in ["naive", "base"]:
             quantile = np.quantile(self.residuals_, 1 - alpha, interpolation="higher")
-            # broadcast y_pred to get y_pred_low/up of shape (n_samples_test, len(alpha))
             y_pred_low = y_pred[:, np.newaxis] - quantile
             y_pred_up = y_pred[:, np.newaxis] + quantile
         else:
-            y_pred_multi = np.stack([e.predict(X) for e in self.estimators_], axis=1)
+            y_pred_multi = np.column_stack([e.predict(X) for e in self.estimators_])
             if self.method == "plus":
+                # At this point, y_pred_multi is of shape (n_samples_test, n_estimators_)
+                # We thus enforce y_pred_multi to be of shape (n_samples_test, n_samples_train)
                 if len(self.estimators_) < len(self.k_):
                     y_pred_multi = y_pred_multi[:, self.k_]
                 lower_bounds = y_pred_multi - self.residuals_
@@ -504,14 +519,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             if self.method == "minmax":
                 lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True) - self.residuals_
                 upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True) + self.residuals_
-            y_pred_low = np.stack([
+            y_pred_low = np.column_stack([
                 np.quantile(lower_bounds, _alpha, axis=1, interpolation="lower") for _alpha in alpha
-            ], axis=1)
-            y_pred_up = np.stack([
+            ])
+            y_pred_up = np.column_stack([
                 np.quantile(upper_bounds, 1 - _alpha, axis=1, interpolation="higher") for _alpha in alpha
-            ], axis=1)
+            ])
             if self.ensemble:
                 y_pred = np.median(y_pred_multi, axis=1)
-        # tile y_pred to get same shape as y_pred_low/up
-        y_pred = np.tile(y_pred, (alpha.shape[0], 1)).T
-        return np.stack([y_pred, y_pred_low, y_pred_up], axis=1)
+        y_pred = np.column_stack([y_pred]*n_alpha)
+        # At this point, y_pred is of shape (n_samples_test, n_alpha)
+        y_preds = np.stack([y_pred, y_pred_low, y_pred_up], axis=1)
+        return y_preds
