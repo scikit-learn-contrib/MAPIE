@@ -340,10 +340,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         -------
         Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]
 
-            - [0]: Fitted estimator
-            - [1]: Estimator predictions on the validation fold, of shape (n_samples_val,)
-            - [2]: Identification number of the validation fold, of shape (n_samples_val,)
-            - [3]: Validation data indices, of shapes (n_samples_val,)
+        - [0]: Fitted estimator
+        - [1]: Estimator predictions on the validation fold, of shape (n_samples_val,)
+        - [2]: Identification number of the validation fold, of shape (n_samples_val,)
+        - [3]: Validation data indices, of shapes (n_samples_val,)
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
         if sample_weight is not None:
@@ -434,9 +434,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         -------
         np.ndarray of shape (n_samples, 3, n_alpha)
 
-            - [:, 0, :]: Center of the prediction interval
-            - [:, 1, :]: Lower bound of the prediction interval
-            - [:, 2, :]: Upper bound of the prediction interval
+        - [:, 0, :]: Center of the prediction interval
+        - [:, 1, :]: Lower bound of the prediction interval
+        - [:, 2, :]: Upper bound of the prediction interval
         """
         # Checks
         check_is_fitted(self,  ["single_estimator_", "estimators_", "k_", "residuals_"])

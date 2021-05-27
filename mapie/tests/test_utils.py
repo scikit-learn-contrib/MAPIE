@@ -8,6 +8,7 @@ y_toy = np.array([5, 7, 9, 11, 13, 15])
 # TODO: add doctests to utils.py
 # TODO: add non-corruption test of single_estimator_ with prefit
 # TODO: document interaction between cv and method parameters
+# TODO: write an example using cv="prefit"
 
 def test_get_n_features_in():
     pass
