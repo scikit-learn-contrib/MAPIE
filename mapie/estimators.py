@@ -1,10 +1,11 @@
 from __future__ import annotations
 from typing import Optional, Union, Iterable, Tuple, List
+from inspect import signature
 
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.utils import check_X_y, check_array
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, _check_sample_weight
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LinearRegression
@@ -276,6 +277,81 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
         return alpha_np
 
+    def _check_null_weight(
+        self,
+        sample_weight: ArrayLike,
+        X: ArrayLike,
+        y: ArrayLike
+    ) -> Tuple[ArrayLike, ArrayLike, ArrayLike]:
+        """
+        Check sample weights and remove samples with null sample weights.
+
+        Parameters
+        ----------
+        sample_weight : ArrayLike
+            Sample weights.
+        X : ArrayLike
+            Training samples.
+        y : ArrayLike
+            Training labels.
+
+        Returns
+        -------
+        sample_weight : ArrayLike
+            Non-null sample weights.
+        X : ArrayLike
+            Training samples with non-null weights.
+        y : ArrayLike
+            Training labels with non-null weights.
+        """
+        if sample_weight is not None:
+            sample_weight = _check_sample_weight(sample_weight, X)
+            non_null_weight = sample_weight != 0
+            X, y = X[non_null_weight, :], y[non_null_weight]
+            sample_weight = sample_weight[non_null_weight]
+        return sample_weight, X, y
+
+    def _fit_estimator(
+        self,
+        estimator: RegressorMixin,
+        X: ArrayLike,
+        y: ArrayLike,
+        supports_sw: bool,
+        sample_weight: ArrayLike
+    ) -> RegressorMixin:
+        """
+        Fit an estimator on training data by distinguishing two cases:
+        - the estimator supports sample weights and sample weights are provided.
+        - the estimator does not support samples weights or samples weights are not provided
+
+        Parameters
+        ----------
+        estimator : RegressorMixin
+            Estimator to train.
+
+        X : ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        y : ArrayLike of shape (n_samples,)
+            Input labels.
+
+        supports_sw : bool
+            Whether or not estimator supports sample weights.
+
+        sample_weight : ArrayLike of shape (n_samples,)
+            Sample weights. If None, then samples are equally weighted. By default None.
+
+        Returns
+        -------
+        RegressorMixin
+            Fitted estimator.
+        """
+        if sample_weight is not None and supports_sw:
+            estimator.fit(X, y, sample_weight=sample_weight)
+        else:
+            estimator.fit(X, y)
+        return estimator
+
     def _fit_and_predict_oof_model(
         self,
         estimator: RegressorMixin,
@@ -283,7 +359,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y: ArrayLike,
         train_index: ArrayLike,
         val_index: ArrayLike,
-        k: int
+        k: int,
+        supports_sw: bool,
+        sample_weight: Optional[ArrayLike] = None
     ) -> Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]:
         """
         Fit a single out-of-fold model on a given training set and
@@ -309,6 +387,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         k : int
             Split identification number.
 
+        supports_sw : bool
+            Whether or not estimator supports sample weights.
+
+        sample_weight : ArrayLike of shape (n_samples,)
+            Sample weights. If None, then samples are equally weighted. By default None.
+
         Returns
         -------
         Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]
@@ -319,12 +403,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             - [3]: Validation data indices, of shapes (n_samples_val,)
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
-        estimator.fit(X_train, y_train)
+        sample_weight_train = sample_weight[train_index] if sample_weight is not None else None
+        estimator = self._fit_estimator(estimator, X_train, y_train, supports_sw, sample_weight_train)
         y_pred = estimator.predict(X_val)
         val_id = np.full_like(y_pred, k)
         return estimator, y_pred, val_id, val_index
 
-    def fit(self, X: ArrayLike, y: ArrayLike) -> MapieRegressor:
+    def fit(self, X: ArrayLike, y: ArrayLike, sample_weight: Optional[ArrayLike] = None) -> MapieRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
         Fit the base estimator under the ``single_estimator_`` attribute.
@@ -339,6 +424,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y : ArrayLike of shape (n_samples,)
             Training labels.
 
+        sample_weight : ArrayLike of shape (n_samples,), default=None
+            Sample weights for fitting the out-of-fold models. If None, then samples are equally weighted.
+            If some weights are null, their corresponding observations are removed before the fitting process and
+            hence have no residuals.
+            If weights are non-uniform, residuals are still uniformly weighted.
+
         Returns
         -------
         MapieRegressor
@@ -348,17 +439,20 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         cv = self._check_cv(self.cv)
         estimator = self._check_estimator(self.estimator)
         X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
+        fit_parameters = signature(estimator.fit).parameters
+        supports_sw = "sample_weight" in fit_parameters
+        sample_weight, X, y = self._check_null_weight(sample_weight, X, y)
         y_pred = np.empty_like(y, dtype=float)
         self.estimators_: List[RegressorMixin] = []
         self.n_features_in_ = X.shape[1]
         self.k_ = np.empty_like(y, dtype=int)
-        self.single_estimator_ = clone(estimator).fit(X, y)
+        self.single_estimator_ = self._fit_estimator(clone(estimator), X, y, supports_sw, sample_weight)
         if self.method == "naive":
             y_pred = self.single_estimator_.predict(X)
         else:
             cv_outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self._fit_and_predict_oof_model)(
-                    clone(estimator), X, y, train_index, val_index, k
+                    clone(estimator), X, y, train_index, val_index, k, supports_sw, sample_weight
                 ) for k, (train_index, val_index) in enumerate(cv.split(X))
             )
             self.estimators_, predictions, val_ids, val_indices = map(list, zip(*cv_outputs))

@@ -1,5 +1,6 @@
 from typing import Any, Union, Optional
 from typing_extensions import TypedDict
+from inspect import signature
 
 import pytest
 import numpy as np
@@ -54,7 +55,7 @@ EXPECTED_COVERAGES = {
 SKLEARN_EXCLUDED_CHECKS = {
     "check_regressors_train",
     "check_pipeline_consistency",
-    "check_fit_score_takes_y"
+    "check_fit_score_takes_y",
 }
 
 
@@ -73,6 +74,13 @@ def test_default_parameters() -> None:
     assert not mapie.ensemble
     assert mapie.verbose == 0
     assert mapie.n_jobs is None
+
+
+def test_default_sample_weight() -> None:
+    """Test default sample weights"""
+    mapie = MapieRegressor()
+    mapie.fit(X_toy, y_toy)
+    assert signature(mapie.fit).parameters["sample_weight"].default is None
 
 
 def test_fit() -> None:
@@ -354,3 +362,20 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     y_preds_single = mapie_single.predict(X_toy)
     y_preds_multi = mapie_multi.predict(X_toy)
     np.testing.assert_almost_equal(y_preds_single, y_preds_multi)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_results_with_constant_sample_weights(strategy: str) -> None:
+    """Test PIs when sample weights are None or constant with different values."""
+    n_samples = len(X_reg)
+    mapie0 = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
+    mapie0.fit(X_reg, y_reg, sample_weight=None)
+    mapie1 = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
+    mapie1.fit(X_reg, y_reg, sample_weight=np.ones(shape=n_samples))
+    mapie2 = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
+    mapie2.fit(X_reg, y_reg, sample_weight=np.ones(shape=n_samples)*5)
+    y_preds0 = mapie0.predict(X_reg)
+    y_preds1 = mapie1.predict(X_reg)
+    y_preds2 = mapie2.predict(X_reg)
+    np.testing.assert_almost_equal(y_preds0, y_preds1)
+    np.testing.assert_almost_equal(y_preds1, y_preds2)
