@@ -61,6 +61,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           ``sklearn.model_selection.KFold()`` (cross-validation variants)
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used for computing residuals only.
+          At prediction time, quantiles of these residual are used to provide a prediction interval
+          with fixed width.
 
         By default ``None``.
 
@@ -301,14 +303,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     ) -> int:
         """
         Check the expected number of training features.
-        In general it is simply the number of columns of the data.
+        In general it is simply the number of columns in the data.
         If ``cv=="prefit"`` however, it can be deduced from the estimator's ``n_features_in_`` attribute.
-        The two values must be rigorously equal.
+        These two values absolutely must coincide.
 
         Parameters
         ----------
         estimator : RegressorMixin
-            Backend estimator of MAPE.
+            Backend estimator of MAPIE.
         X : ArrayLike of shape (n_samples, n_features)
             Data passed into the ``fit`` method.
 

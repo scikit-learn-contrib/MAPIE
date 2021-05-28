@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 from inspect import signature
 
 from sklearn.utils.validation import _check_sample_weight
@@ -64,7 +64,7 @@ def fit_estimator(
     estimator: RegressorMixin,
     X: ArrayLike,
     y: ArrayLike,
-    sample_weight: ArrayLike
+    sample_weight: Optional[ArrayLike] = None
 ) -> RegressorMixin:
     """
     Fit an estimator on training data by distinguishing two cases:
@@ -82,13 +82,24 @@ def fit_estimator(
     y : ArrayLike of shape (n_samples,)
         Input labels.
 
-    sample_weight : ArrayLike of shape (n_samples,)
+    sample_weight : Optional[ArrayLike] of shape (n_samples,)
         Sample weights. If None, then samples are equally weighted. By default None.
 
     Returns
     -------
     RegressorMixin
         Fitted estimator.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from sklearn.linear_model import LinearRegression
+    >>> from sklearn.utils.validation import check_is_fitted
+    >>> X = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
+    >>> y = np.array([5, 7, 9, 11, 13, 15])
+    >>> estimator = LinearRegression()
+    >>> estimator = fit_estimator(estimator, X, y)
+    >>> check_is_fitted(estimator)
     """
     fit_parameters = signature(estimator.fit).parameters
     supports_sw = "sample_weight" in fit_parameters
