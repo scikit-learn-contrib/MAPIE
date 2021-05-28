@@ -13,9 +13,6 @@ X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 
 
-# TODO: write an example using cv="prefit"
-# TODO: complete unit test for estimators
-
 class DumbRegressor:
 
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None) -> DumbRegressor:

@@ -59,7 +59,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           If equal to -1, equivalent to ``sklearn.model_selection.LeaveOneOut()``.
         - CV splitter: ``sklearn.model_selection.LeaveOneOut()`` (jackknife variants) or
           ``sklearn.model_selection.KFold()`` (cross-validation variants)
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
+        - ``"prefit"``, assumes that ``estimator`` has been fitted already, and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used for computing residuals only.
           At prediction time, quantiles of these residual are used to provide a prediction interval
           with fixed width.
@@ -469,7 +469,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - [:, 2, :]: Upper bound of the prediction interval
         """
         # Checks
-        check_is_fitted(self,  ["single_estimator_", "estimators_", "k_", "residuals_"])
+        check_is_fitted(self,  ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         alpha = self._check_alpha(self.alpha)
 
