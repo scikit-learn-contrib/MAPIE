@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union, Iterable, Tuple, List
+from typing import Optional, Union, Iterable, Tuple, List, Any, cast
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -248,12 +248,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         if cv is None:
             return KFold(n_splits=5)
-        if isinstance(self.cv, int):
-            if self.cv == -1:
+        if isinstance(cv, int):
+            if cv == -1:
                 return LeaveOneOut()
-            if self.cv >= 2:
-                return KFold(n_splits=self.cv)
-        if isinstance(self.cv, KFold) or isinstance(self.cv, LeaveOneOut) or cv == "prefit":
+            if cv >= 2:
+                return KFold(n_splits=cv)
+        if isinstance(cv, KFold) or isinstance(cv, LeaveOneOut) or cv == "prefit":
             return cv
         raise ValueError(
             "Invalid cv argument. Allowed values are None, -1, int >= 2, 'prefit', KFold or LeaveOneOut."
@@ -325,9 +325,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             If there is an inconsistency between the shape of the dataset
             and the one expected by the estimator.
         """
-        n_features_in = X.shape[1]
+        n_features_in: int = X.shape[1]
         if self.cv == "prefit" and hasattr(estimator, "n_features_in_"):
-            if estimator.n_features_in_ != n_features_in:
+            if cast(Any, estimator).n_features_in_ != n_features_in:
                 raise ValueError("Invalid mismatch between X.shape and estimator.n_features_in_.")
         return n_features_in
 
@@ -378,7 +378,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - [3]: Validation data indices, of shapes (n_samples_val,)
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
-        sample_weight_train = sample_weight[train_index] if sample_weight is not None else None
+        sample_weight_train = None if sample_weight is None else sample_weight[train_index]
         estimator = fit_estimator(estimator, X_train, y_train, sample_weight_train)
         y_pred = estimator.predict(X_val)
         val_id = np.full_like(y_pred, k)

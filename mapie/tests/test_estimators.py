@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Any, Union, Optional, Tuple
 from typing_extensions import TypedDict
 from inspect import signature
@@ -21,6 +22,17 @@ from mapie.metrics import coverage_score
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 X_reg, y_reg = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
+
+
+class DumbRegressor:
+
+    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None) -> DumbRegressor:
+        self.fitted_ = True
+        return self
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        return np.ones(len(X))
+
 
 METHODS = ["naive", "base", "plus", "minmax"]
 
@@ -150,6 +162,7 @@ def test_valid_prefit_raw_estimator() -> None:
     mapie = MapieRegressor(estimator=estimator, cv="prefit")
     mapie.fit(X_toy, y_toy)
     check_is_fitted(mapie.single_estimator_)
+    assert mapie.n_features_in_ == 1
 
 
 def test_valid_prefit_pipeline() -> None:
@@ -158,6 +171,7 @@ def test_valid_prefit_pipeline() -> None:
     mapie = MapieRegressor(estimator=estimator, cv="prefit")
     mapie.fit(X_toy, y_toy)
     check_is_fitted(mapie.single_estimator_[-1])
+    assert mapie.n_features_in_ == 1
 
 
 def test_invalid_prefit_estimator_shape() -> None:
@@ -166,6 +180,17 @@ def test_invalid_prefit_estimator_shape() -> None:
     mapie = MapieRegressor(estimator=estimator, cv="prefit")
     with pytest.raises(ValueError, match=r".*mismatch between.*"):
         mapie.fit(X_toy, y_toy)
+
+
+def test_valid_prefit_estimator_shape_no_n_features_in() -> None:
+    """
+    Test that estimators fitted with a right number of features
+    but missing an n_features_in_ attribute raise no errors.
+    """
+    estimator = DumbRegressor().fit(X_reg, y_reg)
+    mapie = MapieRegressor(estimator=estimator, cv="prefit")
+    mapie.fit(X_reg, y_reg)
+    assert mapie.n_features_in_ == 10
 
 
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
