@@ -10,6 +10,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.datasets import make_regression
+
 from mapie.estimators import MapieRegressor
 from mapie.metrics import coverage_score
 

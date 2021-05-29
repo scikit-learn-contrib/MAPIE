@@ -24,8 +24,6 @@ X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 X_reg, y_reg = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
 
-# TODO: write an example using cv="prefit"
-
 
 class DumbRegressor:
 
