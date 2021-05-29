@@ -33,9 +33,9 @@ y = f(X) + np.random.normal(0, sigma, n_samples)
 # Train/validation/test split
 train_cutoff = int(n_samples*0.8)
 val_cutoff = int(n_samples*0.9)
-X_train, y_train = X[:train_cutoff]
-X_val, y_val = X[train_cutoff:val_cutoff]
-X_test, y_test = X[val_cutoff:]
+X_train, y_train = X[:train_cutoff], y[:train_cutoff]
+X_val, y_val = X[train_cutoff:val_cutoff], y[train_cutoff:val_cutoff]
+X_test, y_test = X[val_cutoff:], y[val_cutoff:]
 
 # Train model on training set
 model = MLPRegressor()
