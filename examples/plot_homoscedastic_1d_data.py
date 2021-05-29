@@ -57,8 +57,8 @@ def get_homoscedastic_data(
     """
     np.random.seed(59)
     q95 = scipy.stats.norm.ppf(0.95)
-    X_train = np.random.exponential(0.4, n_train)
-    X_true = np.linspace(0, 1.1, n_true)
+    X_train = np.linspace(0, 1, n_train)
+    X_true = np.linspace(0, 1, n_true)
     y_train = f(X_train) + np.random.normal(0, sigma, n_train)
     y_true = f(X_true)
     y_true_sigma = q95*sigma
@@ -106,7 +106,7 @@ def plot_1d_data(
     """
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.set_xlim([0, 1.1])
+    ax.set_xlim([0, 1])
     ax.set_ylim([0, 1])
     ax.scatter(X_train, y_train, color="red", alpha=0.3, label="training")
     ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
