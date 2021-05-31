@@ -23,7 +23,7 @@ from mapie.metrics import coverage_score
 
 def f(x: np.ndarray) -> np.ndarray:
     """Polynomial function used to generate one-dimensional data."""
-    return 5*x + 5*x**4 - 9*x**2
+    return np.array(5*x + 5*x**4 - 9*x**2)
 
 
 # Generate data
