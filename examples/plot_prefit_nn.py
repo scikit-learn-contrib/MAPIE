@@ -11,7 +11,9 @@ In this example, we first fit a neural network on the training set. We
 then compute residuals on a validation set with the `cv="prefit"` parameter.
 Finally, we evaluate the model with prediction intervals on a testing set.
 """
+import scipy
 import numpy as np
+from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
 from matplotlib import pyplot as plt
 
@@ -31,34 +33,37 @@ X = np.linspace(0, 1, n_samples)
 y = f(X) + np.random.normal(0, sigma, n_samples)
 
 # Train/validation/test split
-train_cutoff = int(n_samples*0.8)
-val_cutoff = int(n_samples*0.9)
-X_train, y_train = X[:train_cutoff], y[:train_cutoff]
-X_val, y_val = X[train_cutoff:val_cutoff], y[train_cutoff:val_cutoff]
-X_test, y_test = X[val_cutoff:], y[val_cutoff:]
+X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=1/10)
+X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=1/9)
 
 # Train model on training set
-model = MLPRegressor()
-model.fit(X_train, y_train)
+model = MLPRegressor(activation="relu", random_state=1)
+model.fit(X_train.reshape(-1, 1), y_train)
 
 # Calibrate uncertainties on validation set
 mapie = MapieRegressor(model, cv="prefit")
-mapie.fit(X_val, y_val)
+mapie.fit(X_val.reshape(-1, 1), y_val)
 
 # Evaluate prediction and coverage level on testing set
-y_pred, y_pred_low, y_pred_up = mapie.predict(X_test)[:, :, 0].T
-coverage_score = coverage_score(y_test, y_pred_low, y_pred_up)
+y_pred, y_pred_low, y_pred_up = mapie.predict(X_test.reshape(-1, 1))[:, :, 0].T
+coverage = coverage_score(y_test, y_pred_low, y_pred_up)
+
+# Plot obtained prediction intervals on testing set
+theoretical_semi_width = scipy.stats.norm.ppf(0.9)*sigma
+y_test_theoretical = f(X_test)
+order = np.argsort(X_test)
 
 plt.figure(figsize=(18, 12))
-plt.set_xlabel("x")
-plt.set_ylabel("y")
-plt.set_xlim([0, 1.1])
-plt.set_ylim([0, 1])
-plt.scatter(X_train, y_train, color="red", alpha=0.3, label="training")
-plt.plot(X_test, y_test, color="gray", label="True confidence intervals")
-plt.plot(X_test, y_test - y_test_sigma, color="gray", ls="--")
-plt.plot(X_test, y_test + y_test_sigma, color="gray", ls="--")
-plt.plot(X_test, y_pred, label="Prediction intervals")
-plt.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3)
-plt.set_title(title)
+plt.scatter(X_test, y_test, color="red", alpha=0.3, label="testing")
+plt.plot(X_test[order], y_test_theoretical[order], color="gray", label="True confidence intervals")
+plt.plot(X_test[order], y_test_theoretical[order] - theoretical_semi_width, color="gray", ls="--")
+plt.plot(X_test[order], y_test_theoretical[order] + theoretical_semi_width, color="gray", ls="--")
+plt.plot(X_test[order], y_pred[order], label="Prediction intervals")
+plt.fill_between(X_test[order], y_pred_low[order], y_pred_up[order], alpha=0.3)
+plt.title(
+    f"Target and effective coverages for alpha={mapie.alpha}: ({1-mapie.alpha:.3f}, {coverage:.3f})"
+)
+plt.xlabel("x")
+plt.ylabel("y")
 plt.legend()
+plt.show()
