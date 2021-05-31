@@ -469,7 +469,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - [:, 2, :]: Upper bound of the prediction interval
         """
         # Checks
-        check_is_fitted(self,  ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
+        check_is_fitted(self, ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         alpha = self._check_alpha(self.alpha)
 

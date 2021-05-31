@@ -165,7 +165,7 @@ def test_valid_prefit_raw_estimator() -> None:
     mapie = MapieRegressor(estimator=estimator, cv="prefit")
     mapie.fit(X_toy, y_toy)
     check_is_fitted(mapie.single_estimator_)
-    check_is_fitted(mapie,  ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
+    check_is_fitted(mapie, ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
     assert mapie.n_features_in_ == 1
 
 
@@ -235,7 +235,7 @@ def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
     mapie = MapieRegressor(method=method)
     mapie.fit(X_toy, y_toy)
-    check_is_fitted(mapie,  ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
+    check_is_fitted(mapie, ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
 
 
 @pytest.mark.parametrize("n_jobs", ["dummy", 0, 1.5, [1, 2]])
@@ -318,7 +318,7 @@ def test_fit_attributes(method: str) -> None:
     """Test fit attributes shared by all PI methods."""
     mapie = MapieRegressor(method=method)
     mapie.fit(X_toy, y_toy)
-    check_is_fitted(mapie,  ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
+    check_is_fitted(mapie, ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
