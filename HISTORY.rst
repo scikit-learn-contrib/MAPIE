@@ -2,9 +2,10 @@
 History
 =======
 
-0.2.1 (2020-XX-XX)
+0.2.1 (2021-XX-XX)
 ------------------
 
+* Add `cv="prefit"` option
 * Add sample_weight argument in fit method
 
 0.2.0 (2021-05-21)
@@ -16,8 +17,7 @@ History
 * Remove the `n_splits`, `shuffle` and `random_state` parameters
 * Simplify the `method` parameter
 * Fix typos in documentation and add methods descriptions in sphinx
-* Accept alpha parameter as a list or np.ndarray
-* If alpha is an Iterable, `.predict()` returns a np.ndarray of shape (n_samples, 3, len(alpha))
+* Accept alpha parameter as a list or np.ndarray. If alpha is an Iterable, `.predict()` returns a np.ndarray of shape (n_samples, 3, len(alpha)).
 
 0.1.4 (2021-05-07)
 ------------------

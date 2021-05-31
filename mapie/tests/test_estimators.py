@@ -10,7 +10,7 @@ from sklearn.base import RegressorMixin
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import LeaveOneOut, KFold
+from sklearn.model_selection import LeaveOneOut, KFold, train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.estimator_checks import parametrize_with_checks
@@ -56,7 +56,7 @@ EXPECTED_WIDTHS = {
     "cv": 3.85,
     "cv_plus": 3.90,
     "cv_minmax": 4.04,
-    "prefit": 3.18
+    "prefit": 4.81
 }
 
 EXPECTED_COVERAGES = {
@@ -67,7 +67,7 @@ EXPECTED_COVERAGES = {
     "cv": 0.958,
     "cv_plus": 0.956,
     "cv_minmax": 0.966,
-    "prefit": 0.902
+    "prefit": 0.980
 }
 
 SKLEARN_EXCLUDED_CHECKS = {
@@ -468,16 +468,31 @@ def test_results_prefit_ignore_method() -> None:
         np.testing.assert_allclose(y_preds1, y_preds2)
 
 
-def test_results_prefit() -> None:
+def test_results_prefit_naive() -> None:
     """
-    Test expected prediction intervals for a multivariate linear regression problem
-    with fixed random state and ``cv=="prefit"``.
+    Test that prefit, fit and predict on the same dataset is equivalent to the "naive" method.
     """
     estimator = LinearRegression().fit(X_reg, y_reg)
-    mapie = MapieRegressor(estimator=estimator, cv="prefit")
+    mapie = MapieRegressor(alpha=0.05, estimator=estimator, cv="prefit")
     mapie.fit(X_reg, y_reg)
     _, y_pred_low, y_pred_up = mapie.predict(X_reg)[:, :, 0].T
     width_mean = (y_pred_up - y_pred_low).mean()
     coverage = coverage_score(y_reg, y_pred_low, y_pred_up)
+    np.testing.assert_allclose(width_mean, EXPECTED_WIDTHS["naive"], rtol=1e-2)
+    np.testing.assert_allclose(coverage, EXPECTED_COVERAGES["naive"], rtol=1e-2)
+
+
+def test_results_prefit() -> None:
+    """
+    Test prefit results on a standard train/validation/test split.
+    """
+    X_train_val, X_test, y_train_val, y_test = train_test_split(X_reg, y_reg, test_size=1/10, random_state=1)
+    X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=1/9, random_state=1)
+    estimator = LinearRegression().fit(X_train, y_train)
+    mapie = MapieRegressor(alpha=0.05, estimator=estimator, cv="prefit")
+    mapie.fit(X_val, y_val)
+    _, y_pred_low, y_pred_up = mapie.predict(X_test)[:, :, 0].T
+    width_mean = (y_pred_up - y_pred_low).mean()
+    coverage = coverage_score(y_test, y_pred_low, y_pred_up)
     np.testing.assert_allclose(width_mean, EXPECTED_WIDTHS["prefit"], rtol=1e-2)
     np.testing.assert_allclose(coverage, EXPECTED_COVERAGES["prefit"], rtol=1e-2)

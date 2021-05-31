@@ -41,7 +41,8 @@ model = MLPRegressor(activation="relu", random_state=1)
 model.fit(X_train.reshape(-1, 1), y_train)
 
 # Calibrate uncertainties on validation set
-mapie = MapieRegressor(model, cv="prefit")
+alpha = 0.1
+mapie = MapieRegressor(model, alpha=alpha, cv="prefit")
 mapie.fit(X_val.reshape(-1, 1), y_val)
 
 # Evaluate prediction and coverage level on testing set
@@ -49,19 +50,18 @@ y_pred, y_pred_low, y_pred_up = mapie.predict(X_test.reshape(-1, 1))[:, :, 0].T
 coverage = coverage_score(y_test, y_pred_low, y_pred_up)
 
 # Plot obtained prediction intervals on testing set
-theoretical_semi_width = scipy.stats.norm.ppf(0.9)*sigma
+theoretical_semi_width = scipy.stats.norm.ppf(1 - alpha)*sigma
 y_test_theoretical = f(X_test)
 order = np.argsort(X_test)
 
-plt.figure(figsize=(18, 12))
-plt.scatter(X_test, y_test, color="red", alpha=0.3, label="testing")
+plt.scatter(X_test, y_test, color="red", alpha=0.3, label="testing", s=2)
 plt.plot(X_test[order], y_test_theoretical[order], color="gray", label="True confidence intervals")
 plt.plot(X_test[order], y_test_theoretical[order] - theoretical_semi_width, color="gray", ls="--")
 plt.plot(X_test[order], y_test_theoretical[order] + theoretical_semi_width, color="gray", ls="--")
 plt.plot(X_test[order], y_pred[order], label="Prediction intervals")
-plt.fill_between(X_test[order], y_pred_low[order], y_pred_up[order], alpha=0.3)
+plt.fill_between(X_test[order], y_pred_low[order], y_pred_up[order], alpha=0.2)
 plt.title(
-    f"Target and effective coverages for alpha={mapie.alpha}: ({1-mapie.alpha:.3f}, {coverage:.3f})"
+    f"Target and effective coverages for alpha={alpha}: ({1 - alpha:.3f}, {coverage:.3f})"
 )
 plt.xlabel("x")
 plt.ylabel("y")
