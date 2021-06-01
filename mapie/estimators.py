@@ -62,7 +62,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - ``"prefit"``, assumes that ``estimator`` has been fitted already, and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used for computing residuals only.
           At prediction time, quantiles of these residuals are used to provide a prediction interval
-          with fixed width.
+          with fixed width. The user has to take care manually that data for model fitting and
+          residual estimate are disjoint.
 
         By default ``None``.
 
