@@ -50,7 +50,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         By default "plus".
 
-    cv: Optional[Union[int, BaseCrossValidator]]
+    cv: Optional[Union[int, str, BaseCrossValidator]]
         The cross-validation strategy for computing residuals. It directly drives the
         distinction between jackknife and cv variants. Choose among:
 
@@ -61,7 +61,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           ``sklearn.model_selection.KFold()`` (cross-validation variants)
         - ``"prefit"``, assumes that ``estimator`` has been fitted already, and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used for computing residuals only.
-          At prediction time, quantiles of these residual are used to provide a prediction interval
+          At prediction time, quantiles of these residuals are used to provide a prediction interval
           with fixed width.
 
         By default ``None``.
@@ -146,7 +146,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         estimator: Optional[RegressorMixin] = None,
         alpha: Union[float, Iterable[float]] = 0.1,
         method: str = "plus",
-        cv: Optional[Union[int, BaseCrossValidator]] = None,
+        cv: Optional[Union[int, str, BaseCrossValidator]] = None,
         n_jobs: Optional[int] = None,
         ensemble: bool = False,
         verbose: int = 0
