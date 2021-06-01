@@ -11,7 +11,7 @@ from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import LeaveOneOut, KFold, train_test_split
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.validation import check_is_fitted
@@ -159,22 +159,22 @@ def test_invalid_prefit_estimator(estimator: RegressorMixin) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-def test_valid_prefit_raw_estimator() -> None:
-    """Test that fitted raw estimator with prefit cv raise no errors."""
-    estimator = LinearRegression().fit(X_toy, y_toy)
+@pytest.mark.parametrize(
+    "estimator", [
+        LinearRegression(),
+        make_pipeline(LinearRegression())
+    ]
+)
+def test_valid_prefit_estimator(estimator: RegressorMixin) -> None:
+    """Test that fitted estimators with prefit cv raise no errors."""
+    estimator.fit(X_toy, y_toy)
     mapie = MapieRegressor(estimator=estimator, cv="prefit")
     mapie.fit(X_toy, y_toy)
-    check_is_fitted(mapie.single_estimator_)
+    if isinstance(estimator, Pipeline):
+        check_is_fitted(mapie.single_estimator_[-1])
+    else:
+        check_is_fitted(mapie.single_estimator_)
     check_is_fitted(mapie, ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
-    assert mapie.n_features_in_ == 1
-
-
-def test_valid_prefit_pipeline() -> None:
-    """Test that fitted pipeline with prefit cv raise no errors."""
-    estimator = make_pipeline(LinearRegression()).fit(X_toy, y_toy)
-    mapie = MapieRegressor(estimator=estimator, cv="prefit")
-    mapie.fit(X_toy, y_toy)
-    check_is_fitted(mapie.single_estimator_[-1])
     assert mapie.n_features_in_ == 1
 
 
@@ -469,9 +469,7 @@ def test_results_prefit_ignore_method() -> None:
 
 
 def test_results_prefit_naive() -> None:
-    """
-    Test that prefit, fit and predict on the same dataset is equivalent to the "naive" method.
-    """
+    """Test that prefit, fit and predict on the same dataset is equivalent to the "naive" method."""
     estimator = LinearRegression().fit(X_reg, y_reg)
     mapie = MapieRegressor(alpha=0.05, estimator=estimator, cv="prefit")
     mapie.fit(X_reg, y_reg)
@@ -483,9 +481,7 @@ def test_results_prefit_naive() -> None:
 
 
 def test_results_prefit() -> None:
-    """
-    Test prefit results on a standard train/validation/test split.
-    """
+    """Test prefit results on a standard train/validation/test split."""
     X_train_val, X_test, y_train_val, y_test = train_test_split(X_reg, y_reg, test_size=1/10, random_state=1)
     X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=1/9, random_state=1)
     estimator = LinearRegression().fit(X_train, y_train)
