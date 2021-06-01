@@ -10,6 +10,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.datasets import make_regression
+
 from mapie.estimators import MapieRegressor
 from mapie.metrics import coverage_score
 
@@ -31,7 +32,7 @@ plt.plot(X[order], y_preds[order][:, 2, 1], color="C1", ls="--")
 plt.fill_between(X[order].ravel(), y_preds[:, 1, 0][order].ravel(), y_preds[:, 2, 0][order].ravel(), alpha=0.2)
 coverage_scores = [coverage_score(y, y_preds[:, 1, i], y_preds[:, 2, i]) for i, _ in enumerate(alpha)]
 plt.title(
-    f"Target and effective coverages for alpha={alpha[0]:.2f}: ({1-alpha[0]:.3f}, {coverage_scores[0]:.3f})\n" +
+    f"Target and effective coverages for alpha={alpha[0]:.2f}: ({1-alpha[0]:.3f}, {coverage_scores[0]:.3f})\n"
     f"Target and effective coverages for alpha={alpha[1]:.2f}: ({1-alpha[1]:.3f}, {coverage_scores[1]:.3f})"
 )
 plt.show()

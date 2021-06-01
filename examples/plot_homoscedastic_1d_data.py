@@ -22,12 +22,12 @@ from mapie.estimators import MapieRegressor
 
 def f(x: np.ndarray) -> np.ndarray:
     """Polynomial function used to generate one-dimensional data"""
-    return np.stack(5*x + 5*x**4 - 9*x**2)
+    return np.array(5*x + 5*x**4 - 9*x**2)
 
 
 def get_homoscedastic_data(
-    n_samples: int = 200,
-    n_test: int = 1000,
+    n_train: int = 200,
+    n_true: int = 200,
     sigma: float = 0.1
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]:
     """
@@ -38,9 +38,9 @@ def get_homoscedastic_data(
 
     Parameters
     ----------
-    n_samples : int, optional
+    n_train : int, optional
         Number of training samples, by default  200.
-    n_test : int, optional
+    n_true : int, optional
         Number of test samples, by default 1000.
     sigma : float, optional
         Standard deviation of noise, by default 0.1
@@ -57,9 +57,9 @@ def get_homoscedastic_data(
     """
     np.random.seed(59)
     q95 = scipy.stats.norm.ppf(0.95)
-    X_train = np.random.exponential(0.4, n_samples)
-    X_true = np.linspace(0.001, 1.2, n_test, endpoint=False)
-    y_train = f(X_train) + np.random.normal(0, sigma, n_samples)
+    X_train = np.linspace(0, 1, n_train)
+    X_true = np.linspace(0, 1, n_true)
+    y_train = f(X_train) + np.random.normal(0, sigma, n_train)
     y_true = f(X_true)
     y_true_sigma = q95*sigma
     return X_train, y_train, X_true, y_true, y_true_sigma
@@ -106,7 +106,7 @@ def plot_1d_data(
     """
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.set_xlim([0, 1.1])
+    ax.set_xlim([0, 1])
     ax.set_ylim([0, 1])
     ax.scatter(X_train, y_train, color="red", alpha=0.3, label="training")
     ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
@@ -118,16 +118,12 @@ def plot_1d_data(
     ax.legend()
 
 
-X_train, y_train, X_test, y_test, y_test_sigma = get_homoscedastic_data(
-    n_samples=200, n_test=200, sigma=0.1
-)
+X_train, y_train, X_test, y_test, y_test_sigma = get_homoscedastic_data()
 
-polyn_model = Pipeline(
-    [
-        ("poly", PolynomialFeatures(degree=4)),
-        ("linear", LinearRegression(fit_intercept=False))
-    ]
-)
+polyn_model = Pipeline([
+    ("poly", PolynomialFeatures(degree=4)),
+    ("linear", LinearRegression(fit_intercept=False))
+])
 
 Params = TypedDict("Params", {"method": str, "cv": int})
 STRATEGIES = {

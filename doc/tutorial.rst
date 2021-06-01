@@ -69,7 +69,7 @@ over :math:`x`.
         x_sinx, min_x, max_x, n_samples, noise
     )
 
-Let"s visualize our noisy function. 
+Let's visualize our noisy function. 
 
 .. code:: python
 
@@ -494,11 +494,14 @@ uniform distribution.
 .. image:: images/tuto_7.png
     :align: center
 
-Let"s then define the models. The boosing model considers 100 shallow trees with a max depth of 2 while
+Let's then define the models. The boosing model considers 100 shallow trees with a max depth of 2 while
 the Multilayer Perceptron has two hidden dense layers with 20 neurons each followed by a relu activation.
 
 .. code:: python
 
+    from tensorflow.keras import Sequential
+    from tensorflow.keras.layers import Dense
+    from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
     def mlp():
         """
         Two-layer MLP model
@@ -519,6 +522,8 @@ the Multilayer Perceptron has two hidden dense layers with 20 neurons each follo
             ("linear", LinearRegression(fit_intercept=False))
         ]
     )
+
+    from xgboost import XGBRegressor
     xgb_model = XGBRegressor(
         max_depth=2,
         n_estimators=100,
@@ -534,7 +539,7 @@ the Multilayer Perceptron has two hidden dense layers with 20 neurons each follo
         verbose=0
     )
 
-Let"s now use MAPIE to estimate the prediction intervals using the CV+ method 
+Let's now use MAPIE to estimate the prediction intervals using the CV+ method 
 and compare their prediction interval.
 
 .. code:: python
