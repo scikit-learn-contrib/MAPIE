@@ -293,9 +293,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             if cv >= 2:
                 return KFold(n_splits=cv)
         if (
-            isinstance(cv, KFold) or
-            isinstance(cv, LeaveOneOut) or
-            cv == "prefit"
+            isinstance(cv, KFold)
+            or isinstance(cv, LeaveOneOut)
+            or cv == "prefit"
         ):
             return cv
         raise ValueError(
