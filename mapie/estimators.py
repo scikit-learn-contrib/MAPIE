@@ -441,12 +441,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
         if sample_weight is None:
-            sample_weight_train = None
+            estimator = fit_estimator(estimator, X_train, y_train)
         else:
-            sample_weight_train = sample_weight[train_index]
-        estimator = fit_estimator(
-            estimator, X_train, y_train, sample_weight_train
-        )
+            estimator = fit_estimator(
+                estimator, X_train, y_train, sample_weight[train_index]
+            )
         y_pred = estimator.predict(X_val)
         val_id = np.full_like(y_pred, k)
         return estimator, y_pred, val_id, val_index
@@ -555,7 +554,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         # Checks
         check_is_fitted(
-            self, 
+            self,
             [
                 "n_features_in_",
                 "single_estimator_",

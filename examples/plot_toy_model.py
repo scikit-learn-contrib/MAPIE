@@ -22,6 +22,11 @@ mapie = MapieRegressor(regressor, alpha=alpha, method="plus")
 mapie.fit(X, y)
 y_preds = mapie.predict(X)
 
+coverage_scores = [
+    coverage_score(y, y_preds[:, 1, i], y_preds[:, 2, i])
+    for i, _ in enumerate(alpha)
+]
+
 plt.xlabel("x")
 plt.ylabel("y")
 plt.scatter(X, y, alpha=0.3)
@@ -35,10 +40,6 @@ plt.fill_between(
     y_preds[:, 2, 0][order].ravel(),
     alpha=0.2
 )
-coverage_scores = [
-    coverage_score(y, y_preds[:, 1, i], y_preds[:, 2, i])
-    for i, _ in enumerate(alpha)
-]
 plt.title(
     f"Target and effective coverages for "
     f"alpha={alpha[0]:.2f}: ({1-alpha[0]:.3f}, {coverage_scores[0]:.3f})\n"
