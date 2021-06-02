@@ -16,7 +16,8 @@ means and the coverage levels of the prediction intervals estimated by all the
 available strategies as function of the dataset dimension.
 
 We then show the prediction interval coverages and widths as a function of the
-dimension values for selected strategies with standard error given by the different trials.
+dimension values for selected strategies with standard error given by
+the different trials.
 
 This simulation is carried out to emphasize the instability of the prediction
 intervals estimated by the Jackknife strategy when the dataset dimension is
@@ -42,25 +43,30 @@ def PIs_vs_dimensions(
     Compute the prediction intervals for a linear regression problem.
     Function adapted from Foygel-Barber et al. (2020).
 
-    It generates several times linear data with random noise whose signal-to-noise
-    is equal to 10 and for several given dimensions, given by the dimensions list.
+    It generates several times linear data with random noise whose
+    signal-to-noise     is equal to 10 and for several given dimensions,
+    given by the dimensions list.
 
-    Here we use MAPIE, with a LinearRegression base model, to estimate the width
-    means and the coverage levels of the prediction intervals estimated by all the
-    available strategies as a function of the dataset dimension.
+    Here we use MAPIE, with a LinearRegression base model, to estimate
+    the width means and the coverage levels of the prediction intervals
+    estimated by all the available strategies as a function of
+    the dataset dimension.
 
-    This simulation is carried out to emphasize the instability of the prediction
-    intervals estimated by the Jackknife strategy when the dataset dimension is
-    equal to the number of training samples (here 100).
+    This simulation is carried out to emphasize the instability
+    of the prediction intervals estimated by the Jackknife strategy
+    when the dataset dimension is equal to the number
+    of training samples (here 100).
 
     Parameters
     ----------
     strategies : Dict[str, Dict[str, Any]]
-        List of strategies for estimating prediction intervals, with corresponding parameters.
+        List of strategies for estimating prediction intervals,
+        with corresponding parameters.
     alpha : float
         1 - (target coverage level).
     n_trial : int
-        Number of trials for each dimension for estimating prediction intervals.
+        Number of trials for each dimension for estimating
+        prediction intervals.
         For each trial, a new random noise is generated.
     dimensions : List[int]
         List of dimension values of input data.
@@ -104,8 +110,8 @@ def PIs_vs_dimensions(
                 )
                 mapie.fit(X_train, y_train)
                 y_preds = mapie.predict(X_test)[:, :, 0]
-                results[strategy][dimension]["coverage"][trial] = coverage_score(
-                    y_test, y_preds[:, 1], y_preds[:, 2]
+                results[strategy][dimension]["coverage"][trial] = (
+                    coverage_score(y_test, y_preds[:, 1], y_preds[:, 2])
                 )
                 results[strategy][dimension]["width_mean"][trial] = (
                     y_preds[:, 2] - y_preds[:, 1]
@@ -118,8 +124,9 @@ def plot_simulation_results(
     title: str
 ) -> None:
     """
-    Show the prediction interval coverages and widths as a function of dimension values
-    for selected strategies with standard error given by different trials.
+    Show the prediction interval coverages and widths as a function
+    of dimension values for selected strategies with standard error
+    given by different trials.
 
     Parameters
     ----------
@@ -138,18 +145,32 @@ def plot_simulation_results(
         coverage_mean, coverage_SE, width_mean, width_SE = (
             np.zeros(n_dim), np.zeros(n_dim), np.zeros(n_dim), np.zeros(n_dim)
         )
-        for idim, dimension in enumerate(dimensions):
-            coverage_mean[idim] = results[strategy][dimension]["coverage"].mean()
-            coverage_SE[idim] = results[strategy][dimension]["coverage"].std()/np.sqrt(ntrial)
-            width_mean[idim] = results[strategy][dimension]["width_mean"].mean()
-            width_SE[idim] = results[strategy][dimension]["width_mean"].std()/np.sqrt(ntrial)
+        for idim, dim in enumerate(dimensions):
+            coverage_mean[idim] = (
+                results[strategy][dim]["coverage"].mean()
+            )
+            coverage_SE[idim] = (
+                results[strategy][dim]["coverage"].std()/np.sqrt(ntrial)
+            )
+            width_mean[idim] = (
+                results[strategy][dim]["width_mean"].mean()
+            )
+            width_SE[idim] = (
+                results[strategy][dim]["width_mean"].std()/np.sqrt(ntrial)
+            )
         ax1.plot(dimensions, coverage_mean, label=strategy)
         ax1.fill_between(
-            dimensions, coverage_mean - coverage_SE, coverage_mean + coverage_SE, alpha=0.25
+            dimensions,
+            coverage_mean - coverage_SE,
+            coverage_mean + coverage_SE,
+            alpha=0.25
         )
         ax2.plot(dimensions, width_mean, label=strategy)
         ax2.fill_between(
-            dimensions, width_mean - width_SE, width_mean + width_SE, alpha=0.25
+            dimensions,
+            width_mean - width_SE,
+            width_mean + width_SE,
+            alpha=0.25
         )
     ax1.axhline(1 - alpha, linestyle="dashed", c="k")
     ax1.set_ylim(0.0, 1.0)

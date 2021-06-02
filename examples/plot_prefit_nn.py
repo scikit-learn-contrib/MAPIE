@@ -33,8 +33,12 @@ X = np.linspace(0, 1, n_samples)
 y = f(X) + np.random.normal(0, sigma, n_samples)
 
 # Train/validation/test split
-X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=1/10)
-X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=1/9)
+X_train_val, X_test, y_train_val, y_test = train_test_split(
+    X, y, test_size=1/10
+)
+X_train, X_val, y_train, y_val = train_test_split(
+    X_train_val, y_train_val, test_size=1/9
+)
 
 # Train model on training set
 model = MLPRegressor(activation="relu", random_state=1)
@@ -55,13 +59,29 @@ y_test_theoretical = f(X_test)
 order = np.argsort(X_test)
 
 plt.scatter(X_test, y_test, color="red", alpha=0.3, label="testing", s=2)
-plt.plot(X_test[order], y_test_theoretical[order], color="gray", label="True confidence intervals")
-plt.plot(X_test[order], y_test_theoretical[order] - theoretical_semi_width, color="gray", ls="--")
-plt.plot(X_test[order], y_test_theoretical[order] + theoretical_semi_width, color="gray", ls="--")
+plt.plot(
+    X_test[order],
+    y_test_theoretical[order],
+    color="gray",
+    label="True confidence intervals"
+)
+plt.plot(
+    X_test[order],
+    y_test_theoretical[order] - theoretical_semi_width,
+    color="gray",
+    ls="--"
+)
+plt.plot(
+    X_test[order],
+    y_test_theoretical[order] + theoretical_semi_width,
+    color="gray",
+    ls="--"
+)
 plt.plot(X_test[order], y_pred[order], label="Prediction intervals")
 plt.fill_between(X_test[order], y_pred_low[order], y_pred_up[order], alpha=0.2)
 plt.title(
-    f"Target and effective coverages for alpha={alpha}: ({1 - alpha:.3f}, {coverage:.3f})"
+    f"Target and effective coverages for "
+    f"alpha={alpha}: ({1 - alpha:.3f}, {coverage:.3f})"
 )
 plt.xlabel("x")
 plt.ylabel("y")

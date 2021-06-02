@@ -69,7 +69,8 @@ def fit_estimator(
     """
     Fit an estimator on training data by distinguishing two cases:
     - the estimator supports sample weights and sample weights are provided.
-    - the estimator does not support samples weights or samples weights are not provided
+    - the estimator does not support samples weights or
+      samples weights are not provided
 
     Parameters
     ----------
@@ -83,7 +84,8 @@ def fit_estimator(
         Input labels.
 
     sample_weight : Optional[ArrayLike] of shape (n_samples,)
-        Sample weights. If None, then samples are equally weighted. By default None.
+        Sample weights. If None, then samples are equally weighted.
+        By default None.
 
     Returns
     -------

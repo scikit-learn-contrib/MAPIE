@@ -4,7 +4,10 @@ from setuptools import find_packages, setup
 
 DISTNAME = "MAPIE"
 VERSION = "0.2.0"
-DESCRIPTION = "A scikit-learn-compatible module for estimating prediction intervals."
+DESCRIPTION = (
+    "A scikit-learn-compatible module"
+    "for estimating prediction intervals."
+)
 with codecs.open("README.rst", encoding="utf-8-sig") as f:
     LONG_DESCRIPTION = f.read()
 LONG_DESCRIPTION_CONTENT_TYPE = "text/x-rst"
@@ -22,8 +25,19 @@ PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
 INSTALL_REQUIRES = ["scikit-learn"]
 EXTRAS_REQUIRE = {
-    "tests": ["flake8", "mypy", "pytest", "pytest-cov"],
-    "docs": ["sphinx", "sphinx-gallery", "sphinx_rtd_theme", "numpydoc", "matplotlib"]
+    "tests": [
+        "flake8",
+        "mypy",
+        "pytest",
+        "pytest-cov"
+    ],
+    "docs": [
+        "sphinx",
+        "sphinx-gallery",
+        "sphinx_rtd_theme",
+        "numpydoc",
+        "matplotlib"
+    ]
 }
 CLASSIFIERS = [
     "Intended Audience :: Science/Research",
