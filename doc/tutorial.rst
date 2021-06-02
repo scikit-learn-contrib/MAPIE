@@ -52,6 +52,7 @@ that generates one-dimensional data with normal noise uniformely in a given inte
         """
         np.random.seed(59)
         X_train = np.linspace(min_x, max_x, n_samples)
+        np.random.shuffle(X_train)
         X_test = np.linspace(min_x, max_x, n_samples*5)
         y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
         y_train += np.random.normal(0, noise, y_train.shape[0])
@@ -107,15 +108,15 @@ in order to obtain a 95% confidence for our prediction intervals.
         "jackknife": dict(method="base", cv=-1),
         "jackknife_plus": dict(method="plus", cv=-1),
         "jackknife_minmax": dict(method="minmax", cv=-1),
-        "cv": dict(method="base"),
-        "cv_plus": dict(method="plus"),
-        "cv_minmax": dict(method="minmax"),
+        "cv": dict(method="base", cv=10),
+        "cv_plus": dict(method="plus", cv=10),
+        "cv_minmax": dict(method="minmax", cv=10),
     }
-    prediction_interval = {}
-    for strategy, params in STRATEGIES:
+    y_preds = {}
+    for strategy, params in STRATEGIES.items():
         mapie = MapieRegressor(polyn_model, alpha=0.05, ensemble=False, **params)
         mapie.fit(X_train, y_train)
-        prediction_interval[method] = mapie.predict(X_test)[:, :, 0]
+        y_preds[strategy] = mapie.predict(X_test)[:, :, 0]
 
 Let’s now compare the confidence intervals with the predicted intervals with obtained 
 by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax strategies.
@@ -151,16 +152,16 @@ by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax strategies.
     n_figs = len(strategies)
     fig, axs = plt.subplots(2, 2, figsize=(13, 12))
     coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
-    for strategy, coord in zip(strategies, coords): 
+    for strategy, coord in zip(strategies, coords):
         plot_1d_data(
             X_train.ravel(),
-            y_train.ravel(), 
+            y_train.ravel(),
             X_test.ravel(),
             y_mesh.ravel(),
-            1.96*noise, 
-            prediction_interval[strategy][:, 0].ravel(),
-            prediction_interval[strategy][:, 1].ravel(),
-            prediction_interval[strategy][:, 2].ravel(),
+            1.96*noise,
+            y_preds[strategy][:, 0].ravel(),
+            y_preds[strategy][:, 1].ravel(),
+            y_preds[strategy][:, 2].ravel(),
             ax=coord,
             title=strategy
         )
@@ -176,8 +177,8 @@ Let’s confirm this by comparing the prediction interval widths over
 .. code:: python
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-    for strategy in strategies:
-        ax.plot(X_test, prediction_interval[strategy][:, 2] - prediction_interval[strategy][:, 1])
+    for strategy in STRATEGIES:
+        ax.plot(X_test, y_preds[strategy][:, 2] - y_preds[strategy][:, 1])
     ax.axhline(1.96*2*noise, ls="--", color="k")
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")
@@ -201,69 +202,52 @@ the different strategies.
 
 .. raw:: html
 
-    <div>
-    <center>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
     <table border="1" class="dataframe">
-      <thead>
+    <thead>
         <tr style="text-align: right;">
-          <th></th>
-          <th>Coverage</th>
-          <th>Mean width</th>
+        <th></th>
+        <th>Coverage</th>
+        <th>Mean width</th>
         </tr>
-      </thead>
-      <tbody>
+    </thead>
+    <tbody>
         <tr>
-          <th>naive</th>
-          <td>0.92</td>
-          <td>1.89</td>
-        </tr>
-        <tr>
-          <th>jackknife</th>
-          <td>0.95</td>
-          <td>2.04</td>
+        <th>naive</th>
+        <td>0.94</td>
+        <td>2.00</td>
         </tr>
         <tr>
-          <th>jackknife_plus</th>
-          <td>0.95</td>
-          <td>2.06</td>
+        <th>jackknife</th>
+        <td>0.97</td>
+        <td>2.38</td>
         </tr>
         <tr>
-          <th>jackknife_minmax</th>
-          <td>0.96</td>
-          <td>2.20</td>
+        <th>jackknife_plus</th>
+        <td>0.97</td>
+        <td>2.36</td>
         </tr>
         <tr>
-          <th>cv</th>
-          <td>0.95</td>
-          <td>2.13</td>
+        <th>jackknife_minmax</th>
+        <td>0.98</td>
+        <td>2.53</td>
         </tr>
         <tr>
-          <th>cv_plus</th>
-          <td>0.96</td>
-          <td>2.20</td>
+        <th>cv</th>
+        <td>0.98</td>
+        <td>2.42</td>
         </tr>
         <tr>
-          <th>cv_minmax</th>
-          <td>0.97</td>
-          <td>2.36</td>
+        <th>cv_plus</th>
+        <td>0.97</td>
+        <td>2.34</td>
         </tr>
-      </tbody>
+        <tr>
+        <th>cv_minmax</th>
+        <td>0.98</td>
+        <td>2.62</td>
+        </tr>
+    </tbody>
     </table>
-    </center>
-    </div>
 
 All strategies except the Naive one give effective coverage close to the expected 
 0.95 value (recall that alpha = 0.05), confirming the theoretical garantees.
@@ -318,39 +302,38 @@ strategies.
 
 .. code:: python
 
-    from mapie.estimators import MapieRegressor
     STRATEGIES = {
         "naive": dict(method="naive"),
         "jackknife": dict(method="base", cv=-1),
         "jackknife_plus": dict(method="plus", cv=-1),
         "jackknife_minmax": dict(method="minmax", cv=-1),
-        "cv": dict(method="base"),
-        "cv_plus": dict(method="plus"),
-        "cv_minmax": dict(method="minmax"),
+        "cv": dict(method="base", cv=10),
+        "cv_plus": dict(method="plus", cv=10),
+        "cv_minmax": dict(method="minmax", cv=10),
     }
     prediction_interval = {}
-    for strategy, params in STRATEGIES:
+    for strategy, params in STRATEGIES.items():
         mapie = MapieRegressor(polyn_model, alpha=0.05, ensemble=False, **params)
         mapie.fit(X_train, y_train)
-        prediction_interval[method] = mapie.predict(X_test)[:, :, 0]
+        y_preds[strategy] = mapie.predict(X_test)[:, :, 0]
 
 
 .. code:: python
 
-    strats2plot = ["jackknife_plus", "jackknife_minmax" , "cv_plus", "cv_minmax"]
-    n_figs = len(strats2plot)
+    strategies = ["jackknife_plus", "jackknife_minmax" , "cv_plus", "cv_minmax"]
+    n_figs = len(strategy)
     fig, axs = plt.subplots(2, 2, figsize=(13, 12))
     coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
-    for strategy, coord in zip(strats2plot, coords): 
+    for strategy, coord in zip(strategies, coords): 
         plot_1d_data(
             X_train.ravel(),
             y_train.ravel(), 
             X_test.ravel(),
             y_mesh.ravel(),
             1.96*noise, 
-            prediction_interval[strategy][:, 0].ravel(),
-            prediction_interval[strategy][:, 1].ravel(),
-            prediction_interval[strategy][:, 2].ravel(), 
+            y_preds[strategy][:, 0].ravel(),
+            y_preds[strategy][:, 1].ravel(),
+            y_preds[strategy][:, 2].ravel(), 
             ax=coord,
             title=strategy
         )
@@ -371,7 +354,7 @@ Let's now compare the prediction interval widths between all strategies.
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     ax.set_yscale("log")
     for strategy in STRATEGIES:
-        ax.plot(X_test, prediction_interval[method][:, 2] - prediction_interval[method][:, 1])
+        ax.plot(X_test, y_preds[strategy][:, 2] - y_preds[strategy][:, 1])
     ax.axhline(1.96*2*noise, ls="--", color="k")
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")
@@ -388,70 +371,52 @@ increasing.
 
 .. raw:: html
 
-    <div>
-    <center>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
     <table border="1" class="dataframe">
-      <thead>
+    <thead>
         <tr style="text-align: right;">
-          <th></th>
-          <th>Coverage</th>
-          <th>Mean width</th>
+        <th></th>
+        <th>Coverage</th>
+        <th>Mean width</th>
         </tr>
-      </thead>
-      <tbody>
+    </thead>
+    <tbody>
         <tr>
-          <th>naive</th>
-          <td>0.49</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>jackknife</th>
-          <td>0.53</td>
-          <td>0.01</td>
+        <th>naive</th>
+        <td>0.49</td>
+        <td>0.01</td>
         </tr>
         <tr>
-          <th>jackknife_plus</th>
-          <td>0.53</td>
-          <td>0.04</td>
+        <th>jackknife</th>
+        <td>0.53</td>
+        <td>0.01</td>
         </tr>
         <tr>
-          <th>jackknife_minmax</th>
-          <td>0.86</td>
-          <td>9.78</td>
+        <th>jackknife_plus</th>
+        <td>0.53</td>
+        <td>0.04</td>
         </tr>
         <tr>
-          <th>cv</th>
-          <td>0.51</td>
-          <td>0.01</td>
+        <th>jackknife_minmax</th>
+        <td>0.86</td>
+        <td>9.78</td>
         </tr>
         <tr>
-          <th>cv_plus</th>
-          <td>0.88</td>
-          <td>19.55</td>
+        <th>cv</th>
+        <td>0.52</td>
+        <td>0.01</td>
         </tr>
         <tr>
-          <th>cv_minmax</th>
-          <td>0.82</td>
-          <td>15.51</td>
+        <th>cv_plus</th>
+        <td>0.81</td>
+        <td>9.80</td>
         </tr>
-      </tbody>
-    </table>
-    </div>
-    </center>
-   </h1>
+        <tr>
+        <th>cv_minmax</th>
+        <td>0.86</td>
+        <td>9.80</td>
+        </tr>
+    </tbody>
+    </table>   
 
 In conclusion, the Jackknife-minmax, CV+, and CV-minmax strategies are more
 conservative than the Jackknife+ strategy, and tend to result in more
@@ -501,7 +466,7 @@ the Multilayer Perceptron has two hidden dense layers with 20 neurons each follo
 
     from tensorflow.keras import Sequential
     from tensorflow.keras.layers import Dense
-    from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
+    from scikeras.wrappers import KerasRegressor
     def mlp():
         """
         Two-layer MLP model
@@ -551,21 +516,21 @@ and compare their prediction interval.
     for name, model in zip(model_names, models):
         mapie = MapieRegressor(model, alpha=0.05, method="plus", cv=5, ensemble=True)
         mapie.fit(X_train, y_train)
-        prediction_interval[name] = mapie.predict(X_test)[:, :, 0]
+        y_preds[name] = mapie.predict(X_test)[:, :, 0]
 
 .. code:: python
 
     fig, axs = plt.subplots(1, 3, figsize=(20, 6))
-    for name, ax in zip(model_names, axs): 
+    for name, ax in zip(model_names, axs):
         plot_1d_data(
             X_train.ravel(),
-            y_train.ravel(), 
+            y_train.ravel(),
             X_test.ravel(),
             y_mesh.ravel(),
             1.96*noise,
-            prediction_interval[name][:, 0].ravel(),
-            prediction_interval[name][:, 1].ravel(),
-            prediction_interval[name][:, 2].ravel(), 
+            y_preds[name][:, 0].ravel(),
+            y_preds[name][:, 1].ravel(),
+            y_preds[name][:, 2].ravel(),
             ax=ax,
             title=name
         )
@@ -577,7 +542,7 @@ and compare their prediction interval.
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     for name in model_names:
-        ax.plot(X_test, prediction_interval[name][:, 2] - prediction_interval[name][:, 1])
+        ax.plot(X_test, y_preds[name][:, 2] - y_preds[name][:, 1])
     ax.axhline(1.96*2*noise, ls="--", color="k")
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")
