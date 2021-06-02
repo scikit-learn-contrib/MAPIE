@@ -177,7 +177,7 @@ Let’s confirm this by comparing the prediction interval widths over
 .. code:: python
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-    for strategy in STRATEGIES.keys():
+    for strategy in STRATEGIES:
         ax.plot(X_test, y_preds[strategy][:, 2] - y_preds[strategy][:, 1])
     ax.axhline(1.96*2*noise, ls="--", color="k")
     ax.set_xlabel("x")
@@ -320,7 +320,7 @@ strategies.
 
 .. code:: python
 
-    strategies = ['jackknife_plus', 'jackknife_minmax' , 'cv_plus', 'cv_minmax']
+    strategies = ["jackknife_plus", "jackknife_minmax" , "cv_plus", "cv_minmax"]
     n_figs = len(strategy)
     fig, axs = plt.subplots(2, 2, figsize=(13, 12))
     coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
@@ -353,7 +353,7 @@ Let's now compare the prediction interval widths between all strategies.
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     ax.set_yscale("log")
-    for strategy in STRATEGIES.keys():
+    for strategy in STRATEGIES:
         ax.plot(X_test, y_preds[strategy][:, 2] - y_preds[strategy][:, 1])
     ax.axhline(1.96*2*noise, ls="--", color="k")
     ax.set_xlabel("x")
