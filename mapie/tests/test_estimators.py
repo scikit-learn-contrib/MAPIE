@@ -404,7 +404,7 @@ def test_prediction_ensemble(
     cv: Union[LeaveOneOut, KFold]
 ) -> None:
     """
-    Test that predictions differs when ensemble is True/False,
+    Test that predictions differ when ensemble is True/False,
     but not prediction intervals.
     """
     mapie = MapieRegressor(method=method, cv=cv, ensemble=True)

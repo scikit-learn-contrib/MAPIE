@@ -571,7 +571,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         # (n_samples_train,) : self.residuals_
         # (n_alpha,) : alpha
         # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
-        # (n_samples_test, n_samples_train) :y_pred_multi, lower/upper_bounds
+        # (n_samples_test, n_samples_train) : y_pred_multi, lower/upper_bounds
         n_alpha = len(alpha)
         y_pred = self.single_estimator_.predict(X)
         # At this point, y_pred is of shape (n_samples_test,)
