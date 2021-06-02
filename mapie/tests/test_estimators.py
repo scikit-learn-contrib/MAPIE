@@ -22,12 +22,18 @@ from mapie.metrics import coverage_score
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
-X_reg, y_reg = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
+X_reg, y_reg = make_regression(
+    n_samples=500, n_features=10, noise=1.0, random_state=1
+)
 
 
 class DumbRegressor:
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None) -> DumbRegressor:
+    def fit(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None
+    ) -> DumbRegressor:
         self.fitted_ = True
         return self
 
@@ -37,18 +43,26 @@ class DumbRegressor:
 
 METHODS = ["naive", "base", "plus", "minmax"]
 
-Params = TypedDict("Params", {"method": str, "cv": Optional[Union[int, KFold]]})
+Params = TypedDict(
+    "Params", {"method": str, "cv": Optional[Union[int, KFold]]}
+)
 STRATEGIES = {
     "naive": Params(method="naive", cv=None),
     "jackknife": Params(method="base", cv=-1),
     "jackknife_plus": Params(method="plus", cv=-1),
     "jackknife_minmax": Params(method="minmax", cv=-1),
-    "cv": Params(method="base", cv=KFold(n_splits=3, shuffle=True, random_state=1)),
-    "cv_plus": Params(method="plus", cv=KFold(n_splits=3, shuffle=True, random_state=1)),
-    "cv_minmax": Params(method="minmax", cv=KFold(n_splits=3, shuffle=True, random_state=1)),
+    "cv": Params(
+        method="base", cv=KFold(n_splits=3, shuffle=True, random_state=1)
+    ),
+    "cv_plus": Params(
+        method="plus", cv=KFold(n_splits=3, shuffle=True, random_state=1)
+    ),
+    "cv_minmax": Params(
+        method="minmax", cv=KFold(n_splits=3, shuffle=True, random_state=1)
+    ),
 }
 
-EXPECTED_WIDTHS = {
+WIDTHS = {
     "naive": 3.81,
     "jackknife": 3.89,
     "jackknife_plus": 3.90,
@@ -59,7 +73,7 @@ EXPECTED_WIDTHS = {
     "prefit": 4.81
 }
 
-EXPECTED_COVERAGES = {
+COVERAGES = {
     "naive": 0.952,
     "jackknife": 0.952,
     "jackknife_plus": 0.952,
@@ -174,12 +188,23 @@ def test_valid_prefit_estimator(estimator: RegressorMixin) -> None:
         check_is_fitted(mapie.single_estimator_[-1])
     else:
         check_is_fitted(mapie.single_estimator_)
-    check_is_fitted(mapie, ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
+    check_is_fitted(
+        mapie,
+        [
+            "n_features_in_",
+            "single_estimator_",
+            "estimators_",
+            "k_",
+            "residuals_"
+        ]
+    )
     assert mapie.n_features_in_ == 1
 
 
 def test_invalid_prefit_estimator_shape() -> None:
-    """Test that estimators fitted with a wrong number of features raise errors."""
+    """
+    Test that estimators fitted with a wrong number of features raise errors.
+    """
     estimator = LinearRegression().fit(X_reg, y_reg)
     mapie = MapieRegressor(estimator=estimator, cv="prefit")
     with pytest.raises(ValueError, match=r".*mismatch between.*"):
@@ -235,7 +260,16 @@ def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
     mapie = MapieRegressor(method=method)
     mapie.fit(X_toy, y_toy)
-    check_is_fitted(mapie, ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
+    check_is_fitted(
+        mapie,
+        [
+            "n_features_in_",
+            "single_estimator_",
+            "estimators_",
+            "k_",
+            "residuals_"
+        ]
+    )
 
 
 @pytest.mark.parametrize("n_jobs", ["dummy", 0, 1.5, [1, 2]])
@@ -283,7 +317,9 @@ def test_valid_ensemble(ensemble: bool) -> None:
     mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, "cv", DummyRegressor(), [1, 2]])
+@pytest.mark.parametrize(
+    "cv", [-3.14, -2, 0, 1, "cv", DummyRegressor(), [1, 2]]
+)
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""
     mapie = MapieRegressor(cv=cv)
@@ -295,7 +331,10 @@ def test_invalid_cv(cv: Any) -> None:
 def test_too_large_cv(cv: Any) -> None:
     """Test that too large cv raise sklearn errors."""
     mapie = MapieRegressor(cv=cv)
-    with pytest.raises(ValueError, match=rf".*Cannot have number of splits n_splits={cv} greater.*"):
+    with pytest.raises(
+        ValueError,
+        match=rf".*Cannot have number of splits n_splits={cv} greater.*"
+    ):
         mapie.fit(X_toy, y_toy)
 
 
@@ -318,13 +357,26 @@ def test_fit_attributes(method: str) -> None:
     """Test fit attributes shared by all PI methods."""
     mapie = MapieRegressor(method=method)
     mapie.fit(X_toy, y_toy)
-    check_is_fitted(mapie, ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
+    check_is_fitted(
+        mapie,
+        [
+            "n_features_in_",
+            "single_estimator_",
+            "estimators_",
+            "k_",
+            "residuals_"
+        ]
+    )
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("dataset", [(X_reg, y_reg), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.1, [0.1, 0.2], (0.1, 0.2)])
-def test_predict_output_shape(strategy: str, alpha: Any, dataset: Tuple[np.ndarray, np.ndarray]) -> None:
+def test_predict_output_shape(
+    strategy: str,
+    alpha: Any,
+    dataset: Tuple[np.ndarray, np.ndarray]
+) -> None:
     """Test predict output shape."""
     mapie = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
     X, y = dataset
@@ -347,22 +399,31 @@ def test_prediction_between_low_up(strategy: str, ensemble: bool) -> None:
 
 @pytest.mark.parametrize("method", ["plus", "minmax"])
 @pytest.mark.parametrize("cv", [-1, 2, 3, 5])
-def test_prediction_ensemble(method: str, cv: Union[LeaveOneOut, KFold]) -> None:
-    """Test that predictions differs when ensemble is True/False, but not prediction intervals."""
+def test_prediction_ensemble(
+    method: str,
+    cv: Union[LeaveOneOut, KFold]
+) -> None:
+    """
+    Test that predictions differ when ensemble is True/False,
+    but not prediction intervals.
+    """
     mapie = MapieRegressor(method=method, cv=cv, ensemble=True)
     mapie.fit(X_reg, y_reg)
-    y_preds_ensemble = mapie.predict(X_reg)[:, :, 0]
+    y_preds_1 = mapie.predict(X_reg)[:, :, 0]
     mapie.ensemble = False
-    y_preds_no_ensemble = mapie.predict(X_reg)[:, :, 0]
-    np.testing.assert_allclose(y_preds_ensemble[:, 1], y_preds_no_ensemble[:, 1])
-    np.testing.assert_allclose(y_preds_ensemble[:, 2], y_preds_no_ensemble[:, 2])
+    y_preds_2 = mapie.predict(X_reg)[:, :, 0]
+    np.testing.assert_allclose(y_preds_1[:, 1], y_preds_2[:, 1])
+    np.testing.assert_allclose(y_preds_1[:, 2], y_preds_2[:, 2])
     with pytest.raises(AssertionError):
-        np.testing.assert_allclose(y_preds_ensemble[:, 0], y_preds_no_ensemble[:, 0])
+        np.testing.assert_allclose(y_preds_1[:, 0], y_preds_2[:, 0])
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("ensemble", [True, False])
-def test_linear_data_confidence_interval(strategy: str, ensemble: bool) -> None:
+def test_linear_data_confidence_interval(
+    strategy: str,
+    ensemble: bool
+) -> None:
     """
     Test that MapieRegressor applied on a linear regression model
     fitted on a linear curve results in null uncertainty.
@@ -377,7 +438,8 @@ def test_linear_data_confidence_interval(strategy: str, ensemble: bool) -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_linear_regression_results(strategy: str) -> None:
     """
-    Test expected prediction intervals for a multivariate linear regression problem
+    Test expected prediction intervals for
+    a multivariate linear regression problem
     with fixed random state.
     """
     mapie = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
@@ -385,13 +447,16 @@ def test_linear_regression_results(strategy: str) -> None:
     _, y_pred_low, y_pred_up = mapie.predict(X_reg)[:, :, 0].T
     width_mean = (y_pred_up - y_pred_low).mean()
     coverage = coverage_score(y_reg, y_pred_low, y_pred_up)
-    np.testing.assert_allclose(width_mean, EXPECTED_WIDTHS[strategy], rtol=1e-2)
-    np.testing.assert_allclose(coverage, EXPECTED_COVERAGES[strategy], rtol=1e-2)
+    np.testing.assert_allclose(width_mean, WIDTHS[strategy], rtol=1e-2)
+    np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_for_same_alpha(strategy: str) -> None:
-    """Test that predictions and intervals are similar with two equal values of alpha."""
+    """
+    Test that predictions and intervals
+    are similar with two equal values of alpha.
+    """
     mapie = MapieRegressor(alpha=[0.1, 0.1], **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
     y_preds = mapie.predict(X_reg)
@@ -402,7 +467,10 @@ def test_results_for_same_alpha(strategy: str) -> None:
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_for_ordered_alpha(strategy: str) -> None:
-    """Test that prediction intervals lower (upper) bounds give consistent results for ordered alphas."""
+    """
+    Test that prediction intervals lower (upper) bounds give
+    consistent results for ordered alphas.
+    """
     mapie = MapieRegressor(alpha=[0.05, 0.1], **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
     y_preds = mapie.predict(X_reg)
@@ -411,8 +479,13 @@ def test_results_for_ordered_alpha(strategy: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)])
-def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> None:
+@pytest.mark.parametrize(
+    "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
+)
+def test_results_for_alpha_as_float_and_arraylike(
+    strategy: str,
+    alpha: Any
+) -> None:
     """Test that output values do not depend on type of alpha."""
     mapie_float1 = MapieRegressor(alpha=alpha[0], **STRATEGIES[strategy])
     mapie_float2 = MapieRegressor(alpha=alpha[1], **STRATEGIES[strategy])
@@ -427,7 +500,8 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_single_and_multi_jobs(strategy: str) -> None:
     """
-    Test that MapieRegressor gives equal predictions regardless of number of parallel jobs.
+    Test that MapieRegressor gives equal predictions
+    regardless of number of parallel jobs.
     """
     mapie_single = MapieRegressor(n_jobs=1, **STRATEGIES[strategy])
     mapie_multi = MapieRegressor(n_jobs=-1, **STRATEGIES[strategy])
@@ -440,7 +514,9 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_with_constant_sample_weights(strategy: str) -> None:
-    """Test PIs when sample weights are None or constant with different values."""
+    """
+    Test PIs when sample weights are None or constant with different values.
+    """
     n_samples = len(X_reg)
     mapie0 = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
     mapie1 = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
@@ -469,26 +545,33 @@ def test_results_prefit_ignore_method() -> None:
 
 
 def test_results_prefit_naive() -> None:
-    """Test that prefit, fit and predict on the same dataset is equivalent to the "naive" method."""
+    """
+    Test that prefit, fit and predict on the same dataset
+    is equivalent to the "naive" method.
+    """
     estimator = LinearRegression().fit(X_reg, y_reg)
     mapie = MapieRegressor(alpha=0.05, estimator=estimator, cv="prefit")
     mapie.fit(X_reg, y_reg)
     _, y_pred_low, y_pred_up = mapie.predict(X_reg)[:, :, 0].T
     width_mean = (y_pred_up - y_pred_low).mean()
     coverage = coverage_score(y_reg, y_pred_low, y_pred_up)
-    np.testing.assert_allclose(width_mean, EXPECTED_WIDTHS["naive"], rtol=1e-2)
-    np.testing.assert_allclose(coverage, EXPECTED_COVERAGES["naive"], rtol=1e-2)
+    np.testing.assert_allclose(width_mean, WIDTHS["naive"], rtol=1e-2)
+    np.testing.assert_allclose(coverage, COVERAGES["naive"], rtol=1e-2)
 
 
 def test_results_prefit() -> None:
     """Test prefit results on a standard train/validation/test split."""
-    X_train_val, X_test, y_train_val, y_test = train_test_split(X_reg, y_reg, test_size=1/10, random_state=1)
-    X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=1/9, random_state=1)
+    X_train_val, X_test, y_train_val, y_test = train_test_split(
+        X_reg, y_reg, test_size=1/10, random_state=1
+    )
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train_val, y_train_val, test_size=1/9, random_state=1
+    )
     estimator = LinearRegression().fit(X_train, y_train)
     mapie = MapieRegressor(alpha=0.05, estimator=estimator, cv="prefit")
     mapie.fit(X_val, y_val)
     _, y_pred_low, y_pred_up = mapie.predict(X_test)[:, :, 0].T
     width_mean = (y_pred_up - y_pred_low).mean()
     coverage = coverage_score(y_test, y_pred_low, y_pred_up)
-    np.testing.assert_allclose(width_mean, EXPECTED_WIDTHS["prefit"], rtol=1e-2)
-    np.testing.assert_allclose(coverage, EXPECTED_COVERAGES["prefit"], rtol=1e-2)
+    np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
+    np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)

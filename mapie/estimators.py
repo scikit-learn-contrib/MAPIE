@@ -28,7 +28,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     Parameters
     ----------
     estimator : Optional[RegressorMixin]
-        Any regressor with scikit-learn API (i.e. with fit and predict methods), by default None.
+        Any regressor with scikit-learn API
+        (i.e. with fit and predict methods), by default None.
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
     alpha: Union[float, Iterable[float]], optional
@@ -43,45 +44,58 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Choose among:
 
         - "naive", based on training set residuals,
-        - "base", based on cross-validation sets residuals,
-        - "plus", based on cross-validation sets residuals and testing set predictions,
-        - "minmax", based on cross-validation sets residuals and testing set predictions
+        - "base", based on validation sets residuals,
+        - "plus", based on validation residuals and testing predictions,
+        - "minmax", based on validation residuals and testing predictions
           (min/max among cross-validation clones).
 
         By default "plus".
 
     cv: Optional[Union[int, str, BaseCrossValidator]]
-        The cross-validation strategy for computing residuals. It directly drives the
-        distinction between jackknife and cv variants. Choose among:
+        The cross-validation strategy for computing residuals.
+        It directly drives the distinction between jackknife and cv variants.
+        Choose among:
 
         - ``None``, to use the default 5-fold cross-validation
         - integer, to specify the number of folds.
-          If equal to -1, equivalent to ``sklearn.model_selection.LeaveOneOut()``.
-        - CV splitter: ``sklearn.model_selection.LeaveOneOut()`` (jackknife variants) or
-          ``sklearn.model_selection.KFold()`` (cross-validation variants)
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already, and the ``method`` parameter is ignored.
-          All data provided in the ``fit`` method is then used for computing residuals only.
-          At prediction time, quantiles of these residuals are used to provide a prediction interval
-          with fixed width. The user has to take care manually that data for model fitting and
+          If equal to -1, equivalent to
+          ``sklearn.model_selection.LeaveOneOut()``.
+        - CV splitter: ``sklearn.model_selection.LeaveOneOut()``
+          (jackknife variants) or ``sklearn.model_selection.KFold()``
+          (cross-validation variants)
+        - ``"prefit"``, assumes that ``estimator`` has been fitted already,
+          and the ``method`` parameter is ignored.
+          All data provided in the ``fit`` method is then used
+          for computing residuals only.
+          At prediction time, quantiles of these residuals are used to provide
+          a prediction interval with fixed width.
+          The user has to take care manually that data for model fitting and
           residual estimate are disjoint.
 
         By default ``None``.
 
     n_jobs: Optional[int]
-        Number of jobs for parallel processing using joblib via the "locky" backend.
+        Number of jobs for parallel processing using joblib
+        via the "locky" backend.
         If ``-1`` all CPUs are used.
-        If ``1`` is given, no parallel computing code is used at all, which is useful for debugging.
+        If ``1`` is given, no parallel computing code is used at all,
+        which is useful for debugging.
         For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
-        None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1`` (sequential execution).
+        None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1``
+        (sequential execution).
 
         By default ``None``.
 
     ensemble: bool, optional
         Determines how to return the predictions.
-        If ``False``, returns the predictions from the single estimator trained on the full training dataset.
-        If ``True``, returns the median of the prediction intervals computed from the out-of-folds models.
-        The Jackknife+ interval can be interpreted as an interval around the median prediction,
-        and is guaranteed to lie inside the interval, unlike the single estimator predictions.
+        If ``False``, returns the predictions from the single estimator
+        trained on the full training dataset.
+        If ``True``, returns the median of the prediction intervals computed
+        from the out-of-folds models.
+        The Jackknife+ interval can be interpreted as an interval
+        around the median prediction,
+        and is guaranteed to lie inside the interval,
+        unlike the single estimator predictions.
 
         By default ``False``.
 
@@ -115,8 +129,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     References
     ----------
-    Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
-    Predictive inference with the jackknife+. Ann. Statist., 49(1):486–507, 022021
+    Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas,
+    and Ryan J. Tibshirani. Predictive inference with the jackknife+.
+    Ann. Statist., 49(1):486–507, 022021
 
     Examples
     --------
@@ -170,27 +185,45 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             Is parameters are not valid.
         """
         if self.method not in self.valid_methods_:
-            raise ValueError("Invalid method. Allowed values are 'naive', 'base', 'plus' and 'minmax'.")
+            raise ValueError(
+                "Invalid method. "
+                "Allowed values are 'naive', 'base', 'plus' and 'minmax'."
+            )
 
         if not isinstance(self.ensemble, bool):
-            raise ValueError("Invalid ensemble argument. Must be a boolean.")
+            raise ValueError(
+                "Invalid ensemble argument. Must be a boolean."
+            )
 
         if not isinstance(self.n_jobs, (int, type(None))):
-            raise ValueError("Invalid n_jobs argument. Must be an integer.")
+            raise ValueError(
+                "Invalid n_jobs argument. Must be an integer."
+            )
 
         if self.n_jobs == 0:
-            raise ValueError("Invalid n_jobs argument. Must be different than 0.")
+            raise ValueError(
+                "Invalid n_jobs argument. Must be different than 0."
+            )
 
         if not isinstance(self.verbose, int):
-            raise ValueError("Invalid verbose argument. Must be an integer.")
+            raise ValueError(
+                "Invalid verbose argument. Must be an integer."
+            )
 
         if self.verbose < 0:
-            raise ValueError("Invalid verbose argument. Must be non-negative.")
+            raise ValueError(
+                "Invalid verbose argument. Must be non-negative."
+            )
 
-    def _check_estimator(self, estimator: Optional[RegressorMixin] = None) -> RegressorMixin:
+    def _check_estimator(
+        self,
+        estimator: Optional[RegressorMixin] = None
+    ) -> RegressorMixin:
         """
-        Check if estimator is ``None``, and returns a ``LinearRegression`` instance if necessary.
-        If the ``cv`` attribute is ``"prefit"``, check if estimator is indeed already fitted.
+        Check if estimator is ``None``,
+        and returns a ``LinearRegression`` instance if necessary.
+        If the ``cv`` attribute is ``"prefit"``,
+        check if estimator is indeed already fitted.
 
         Parameters
         ----------
@@ -205,7 +238,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Raises
         ------
         ValueError
-            If the estimator is not ``None`` and has no fit nor predict methods.
+            If the estimator is not ``None``
+            and has no fit nor predict methods.
 
         NotFittedError
             If the estimator is not fitted and ``cv`` attribute is "prefit".
@@ -213,7 +247,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if estimator is None:
             return LinearRegression()
         if not hasattr(estimator, "fit") and not hasattr(estimator, "predict"):
-            raise ValueError("Invalid estimator. Please provide a regressor with fit and predict methods.")
+            raise ValueError(
+                "Invalid estimator. "
+                "Please provide a regressor with fit and predict methods."
+            )
         if self.cv == "prefit":
             if isinstance(self.estimator, Pipeline):
                 check_is_fitted(self.estimator[-1])
@@ -226,7 +263,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         cv: Optional[Union[int, str, BaseCrossValidator]] = None
     ) -> Union[str, BaseCrossValidator]:
         """
-        Check if cross-validator is ``None``, ``int``, ``"prefit"``, ``KFold`` or ``LeaveOneOut``.
+        Check if cross-validator is
+        ``None``, ``int``, ``"prefit"``, ``KFold`` or ``LeaveOneOut``.
         Return a ``LeaveOneOut`` instance if integer equal to -1.
         Return a ``KFold`` instance if integer superior or equal to 2.
         Return a ``KFold`` instance if ``None``.
@@ -254,10 +292,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 return LeaveOneOut()
             if cv >= 2:
                 return KFold(n_splits=cv)
-        if isinstance(cv, KFold) or isinstance(cv, LeaveOneOut) or cv == "prefit":
+        if (
+            isinstance(cv, KFold) or
+            isinstance(cv, LeaveOneOut) or
+            cv == "prefit"
+        ):
             return cv
         raise ValueError(
-            "Invalid cv argument. Allowed values are None, -1, int >= 2, 'prefit', KFold or LeaveOneOut."
+            "Invalid cv argument. "
+            "Allowed values are None, -1, int >= 2, 'prefit', "
+            "KFold or LeaveOneOut."
         )
 
     def _check_alpha(self, alpha: Union[float, Iterable[float]]) -> np.ndarray:
@@ -288,13 +332,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         elif isinstance(alpha, Iterable):
             alpha_np = np.array(alpha)
         else:
-            raise ValueError("Invalid alpha. Allowed values are float or Iterable.")
+            raise ValueError(
+                "Invalid alpha. Allowed values are float or Iterable."
+            )
         if len(alpha_np.shape) != 1:
-            raise ValueError("Invalid alpha. Please provide a one-dimensional list of values.")
+            raise ValueError(
+                "Invalid alpha. "
+                "Please provide a one-dimensional list of values."
+            )
         if alpha_np.dtype.type not in [np.float64, np.float32]:
-            raise ValueError("Invalid alpha. Allowed values are Iterable of floats.")
+            raise ValueError(
+                "Invalid alpha. Allowed values are Iterable of floats."
+            )
         if np.any((alpha_np <= 0) | (alpha_np >= 1)):
-            raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
+            raise ValueError(
+                "Invalid alpha. Allowed values are between 0 and 1."
+            )
         return alpha_np
 
     def _check_n_features_in(
@@ -305,7 +358,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         Check the expected number of training features.
         In general it is simply the number of columns in the data.
-        If ``cv=="prefit"`` however, it can be deduced from the estimator's ``n_features_in_`` attribute.
+        If ``cv=="prefit"`` however,
+        it can be deduced from the estimator's ``n_features_in_`` attribute.
         These two values absolutely must coincide.
 
         Parameters
@@ -329,7 +383,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         n_features_in: int = X.shape[1]
         if self.cv == "prefit" and hasattr(estimator, "n_features_in_"):
             if cast(Any, estimator).n_features_in_ != n_features_in:
-                raise ValueError("Invalid mismatch between X.shape and estimator.n_features_in_.")
+                raise ValueError(
+                    "Invalid mismatch between "
+                    "X.shape and estimator.n_features_in_."
+                )
         return n_features_in
 
     def _fit_and_predict_oof_model(
@@ -367,29 +424,44 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             Split identification number.
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
-            Sample weights. If None, then samples are equally weighted. By default None.
+            Sample weights. If None, then samples are equally weighted.
+            By default None.
 
         Returns
         -------
         Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]
 
         - [0]: Fitted estimator
-        - [1]: Estimator predictions on the validation fold, of shape (n_samples_val,)
-        - [2]: Identification number of the validation fold, of shape (n_samples_val,)
-        - [3]: Validation data indices, of shapes (n_samples_val,)
+        - [1]: Estimator predictions on the validation fold,
+          of shape (n_samples_val,)
+        - [2]: Identification number of the validation fold,
+          of shape (n_samples_val,)
+        - [3]: Validation data indices,
+          of shapes (n_samples_val,)
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
-        sample_weight_train = None if sample_weight is None else sample_weight[train_index]
-        estimator = fit_estimator(estimator, X_train, y_train, sample_weight_train)
+        if sample_weight is None:
+            sample_weight_train = None
+        else:
+            sample_weight_train = sample_weight[train_index]
+        estimator = fit_estimator(
+            estimator, X_train, y_train, sample_weight_train
+        )
         y_pred = estimator.predict(X_val)
         val_id = np.full_like(y_pred, k)
         return estimator, y_pred, val_id, val_index
 
-    def fit(self, X: ArrayLike, y: ArrayLike, sample_weight: Optional[ArrayLike] = None) -> MapieRegressor:
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None
+    ) -> MapieRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
         Fit the base estimator under the ``single_estimator_`` attribute.
-        Fit all cross-validated estimator clones and rearrange them into a list, the ``estimators_`` attribute.
+        Fit all cross-validated estimator clones
+        and rearrange them into a list, the ``estimators_`` attribute.
         Out-of-fold residuals are stored under the ``residuals_`` attribute.
 
         Parameters
@@ -401,9 +473,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             Training labels.
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models. If None, then samples are equally weighted.
-            If some weights are null, their corresponding observations are removed before the fitting process and
-            hence have no residuals.
+            Sample weights for fitting the out-of-fold models.
+            If None, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no residuals.
             If weights are non-uniform, residuals are still uniformly weighted.
             By default None.
 
@@ -416,7 +490,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self._check_parameters()
         cv = self._check_cv(self.cv)
         estimator = self._check_estimator(self.estimator)
-        X, y = check_X_y(X, y, force_all_finite=False, dtype=["float64", "object"])
+        X, y = check_X_y(
+            X, y, force_all_finite=False, dtype=["float64", "object"]
+        )
         self.n_features_in_ = self._check_n_features_in(X, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
@@ -430,17 +506,24 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
         else:
-            self.single_estimator_ = fit_estimator(clone(estimator), X, y, sample_weight)
+            self.single_estimator_ = fit_estimator(
+                clone(estimator), X, y, sample_weight
+            )
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
             else:
-                cv_outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
-                        clone(estimator), X, y, train_index, val_index, k, sample_weight
+                        clone(estimator),
+                        X, y, train_index, val_index, k, sample_weight
                     ) for k, (train_index, val_index) in enumerate(cv.split(X))
                 )
-                self.estimators_, predictions, val_ids, val_indices = map(list, zip(*cv_outputs))
-                predictions, val_ids, val_indices = map(np.concatenate, (predictions, val_ids, val_indices))
+                self.estimators_, predictions, val_ids, val_indices = map(
+                    list, zip(*outputs)
+                )
+                predictions, val_ids, val_indices = map(
+                    np.concatenate, (predictions, val_ids, val_indices)
+                )
                 self.k_[val_indices] = val_ids
                 y_pred[val_indices] = predictions
         self.residuals_ = np.abs(y - y_pred)
@@ -450,7 +533,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         Predict target on new samples with confidence intervals.
         Residuals from the training set and predictions from the model clones
-        are central to the computation. Prediction Intervals for a given ``alpha`` are deduced from either
+        are central to the computation.
+        Prediction Intervals for a given ``alpha`` are deduced from either
 
         - quantiles of residuals (naive and base methods)
         - quantiles of (predictions +/- residuals) (plus methods)
@@ -470,7 +554,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - [:, 2, :]: Upper bound of the prediction interval
         """
         # Checks
-        check_is_fitted(self, ["n_features_in_", "single_estimator_", "estimators_", "k_", "residuals_"])
+        check_is_fitted(
+            self, 
+            [
+                "n_features_in_",
+                "single_estimator_",
+                "estimators_",
+                "k_",
+                "residuals_"
+            ]
+        )
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         alpha = self._check_alpha(self.alpha)
 
@@ -478,31 +571,43 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         # (n_samples_train,) : self.residuals_
         # (n_alpha,) : alpha
         # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
-        # (n_samples_test, n_samples_train) : y_pred_multi, lower_bounds, upper_bounds
+        # (n_samples_test, n_samples_train) : y_pred_multi, lower/upper_bounds
         n_alpha = len(alpha)
         y_pred = self.single_estimator_.predict(X)
         # At this point, y_pred is of shape (n_samples_test,)
         if self.method in ["naive", "base"] or self.cv == "prefit":
-            quantile = np.quantile(self.residuals_, 1 - alpha, interpolation="higher")
+            quantile = np.quantile(
+                self.residuals_, 1 - alpha, interpolation="higher"
+            )
             y_pred_low = y_pred[:, np.newaxis] - quantile
             y_pred_up = y_pred[:, np.newaxis] + quantile
         else:
-            y_pred_multi = np.column_stack([e.predict(X) for e in self.estimators_])
+            y_pred_multi = np.column_stack(
+                [e.predict(X) for e in self.estimators_]
+            )
             if self.method == "plus":
-                # At this point, y_pred_multi is of shape (n_samples_test, n_estimators_)
-                # We thus enforce y_pred_multi to be of shape (n_samples_test, n_samples_train)
+                # At this point,
+                # y_pred_multi is of shape (n_samples_test, n_estimators_)
+                # We thus enforce y_pred_multi
+                # to be of shape (n_samples_test, n_samples_train)
                 if len(self.estimators_) < len(self.k_):
                     y_pred_multi = y_pred_multi[:, self.k_]
                 lower_bounds = y_pred_multi - self.residuals_
                 upper_bounds = y_pred_multi + self.residuals_
             if self.method == "minmax":
-                lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True) - self.residuals_
-                upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True) + self.residuals_
+                lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
+                upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
+                lower_bounds = lower_bounds - self.residuals_
+                upper_bounds = upper_bounds + self.residuals_
             y_pred_low = np.column_stack([
-                np.quantile(lower_bounds, _alpha, axis=1, interpolation="lower") for _alpha in alpha
+                np.quantile(
+                    lower_bounds, _alpha, axis=1, interpolation="lower"
+                ) for _alpha in alpha
             ])
             y_pred_up = np.column_stack([
-                np.quantile(upper_bounds, 1 - _alpha, axis=1, interpolation="higher") for _alpha in alpha
+                np.quantile(
+                    upper_bounds, 1 - _alpha, axis=1, interpolation="higher"
+                ) for _alpha in alpha
             ])
             if self.ensemble:
                 y_pred = np.median(y_pred_multi, axis=1)
