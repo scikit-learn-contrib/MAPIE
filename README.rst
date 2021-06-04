@@ -151,7 +151,7 @@ How does **MAPIE** works ? It is basically based on cross-validation and relies 
 **MAPIE** then combines all these elements in a way that provides prediction intervals on new data with strong theoretical guarantees [1].
 
 .. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_internals.png
-    :width: 300px
+    :width: 100px
     :align: center
 
 The full documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
