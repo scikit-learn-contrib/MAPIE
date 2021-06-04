@@ -1,17 +1,12 @@
 version: 2
 
-python:
-  install: 
-    - method: pip
-      path: .
-
-sphinx:
-  builder: html
-  configuration: doc/conf.py
-  fail_on_warning: false
-
 build:
   image: latest
 
 conda:
   environment: doc/environment.yml
+  
+sphinx:
+  builder: html
+  configuration: doc/conf.py
+  fail_on_warning: false
