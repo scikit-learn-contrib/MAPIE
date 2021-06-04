@@ -143,7 +143,7 @@ The effective coverage is the actual fraction of true labels lying in the predic
 📘 Documentation
 ================
 
-How does **MAPIE** works ? Is basically  based on cross-validation relies on:
+How does **MAPIE** works ? It is basically based on cross-validation and relies on:
 
 - Residuals on the whole trainig set obtained by cross-validation,
 - Perturbed models generated during the cross-validation.
