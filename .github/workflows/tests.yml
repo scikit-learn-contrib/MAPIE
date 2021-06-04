@@ -7,9 +7,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: [3.7, 3.8, 3.9]
-        numpy-version: [1.18.5, 1.19.5, 1.20.3]
+        include:
+          - os: [ubuntu-latest, windows-latest]
+            python-version: 3.7
+            numpy-version: 1.18.5
+          - os: [ubuntu-latest, windows-latest]
+            python-version: 3.8
+            numpy-version: 1.19.5
+          - os: [ubuntu-latest, windows-latest]
+            python-version: 3.9
+            numpy-version: 1.20.3
     defaults:
       run:
         shell: bash -l {0}
