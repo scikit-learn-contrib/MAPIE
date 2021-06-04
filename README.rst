@@ -1,12 +1,9 @@
 .. -*- mode: rst -*-
 
-|Travis|_ |AppVeyor|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_ |License|_ |PythonVersion|_ |PyPi|_
+|GitHubActions|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_ |License|_ |PythonVersion|_ |PyPi|_
 
-.. |Travis| image:: https://travis-ci.com/simai-ml/MAPIE.svg?branch=master
-.. _Travis: https://travis-ci.com/simai-ml/MAPIE
-
-.. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/js4d7km6ckr801nj/branch/master?svg=true
-.. _AppVeyor: https://ci.appveyor.com/project/gmartinonQM/mapie
+.. |GitHubActions| image:: https://github.com/simai-ml/MAPIE/actions/workflows/tests.yml/badge.svg
+.. _GitHubActions: https://github.com/simai-ml/MAPIE/actions
 
 .. |Codecov| image:: https://codecov.io/gh/simai-ml/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
 .. _Codecov: https://codecov.io/gh/simai-ml/MAPIE
