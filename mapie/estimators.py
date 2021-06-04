@@ -129,9 +129,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     References
     ----------
-    Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas,
-    and Ryan J. Tibshirani. Predictive inference with the jackknife+.
-    Ann. Statist., 49(1):486–507, 022021
+    Rina Foygel Barber, Emmanuel J. Candès,
+    Aaditya Ramdas, and Ryan J. Tibshirani.
+    "Predictive inference with the jackknife+."
+    Ann. Statist., 49(1):486–507, February 2021.
 
     Examples
     --------
@@ -555,7 +556,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         # Checks
         check_is_fitted(
-            self, 
+            self,
             [
                 "n_features_in_",
                 "single_estimator_",

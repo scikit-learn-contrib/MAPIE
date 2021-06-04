@@ -2,7 +2,7 @@
 
 |GitHubActions|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_ |License|_ |PythonVersion|_ |PyPi|_
 
-.. |GitHubActions| image:: https://github.com/simai-ml/MAPIE/actions/workflows/tests.yml/badge.svg
+.. |GitHubActions| image:: https://github.com/simai-ml/MAPIE/actions/workflows/test.yml/badge.svg
 .. _GitHubActions: https://github.com/simai-ml/MAPIE/actions
 
 .. |Codecov| image:: https://codecov.io/gh/simai-ml/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
@@ -93,7 +93,7 @@ and two standard deviations from the mean.
 
 
 
-MAPIE returns a ``np.ndarray`` of shape (n_samples, 3, len(alpha)) giving the predictions,
+MAPIE returns a ``np.ndarray`` of shape ``(n_samples, 3, len(alpha))`` giving the predictions,
 as well as the lower and upper bounds of the prediction intervals for the target quantile
 for each desired alpha value.
 The estimated prediction intervals can then be plotted as follows. 
@@ -143,7 +143,18 @@ The effective coverage is the actual fraction of true labels lying in the predic
 📘 Documentation
 ================
 
-The documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
+How does **MAPIE** works ? Is basically  based on cross-validation relies on:
+
+- Residuals on the whole trainig set obtained by cross-validation,
+- Perturbed models generated during the cross-validation.
+
+**MAPIE** then combines all these elements in a way that provides prediction intervals on new data with strong theoretical guarantees [1].
+
+.. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_internals.png
+    :width: 400
+    :align: center
+
+The full documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
 It contains the following sections:
 
 - `Quickstart <https://mapie.readthedocs.io/en/latest/quick_start.html>`_
@@ -190,10 +201,10 @@ with the financial support from Région Ile de France.
 🔍  References
 ==============
 
-MAPIE methods are based on the work by `Foygel-Barber et al. (2020) <https://www.stat.uchicago.edu/~rina/jackknife.html>`_.
+MAPIE methods are based on the work by `Foygel-Barber et al. (2021) <https://doi.org/10.1214/20-AOS1965>`_.
 
 [1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
-Predictive inference with the jackknife+. Ann. Statist., 49(1):486–507, 022021
+"Predictive inference with the jackknife+." Ann. Statist., 49(1):486–507, February 2021.
 
 📝 License
 ==========
