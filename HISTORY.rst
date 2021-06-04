@@ -2,6 +2,12 @@
 History
 =======
 
+0.2.2 (2021-06-XX)
+------------------
+
+* Switch to github actions for continuous integration of the code
+* Add image explaining MAPIE internals on the README
+
 0.2.1 (2021-06-04)
 ------------------
 

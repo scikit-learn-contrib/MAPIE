@@ -6,7 +6,7 @@ Reproducing the simulations from Foygel-Barber et al. (2020)
 :class:`mapie.estimators.MapieRegressor` is used to investigate
 the coverage level and the prediction interval width as a function
 of the dimension using simulated data points as introduced in
-Foygel-Barber et al. (2020).
+Foygel-Barber et al. (2021) [1].
 
 This simulation generates several times linear data with random noise
 whose signal-to-noise is equal to 10 and for several given dimensions.
@@ -22,6 +22,11 @@ the different trials.
 This simulation is carried out to emphasize the instability of the prediction
 intervals estimated by the Jackknife strategy when the dataset dimension is
 equal to the number of training samples (here 100).
+
+[1] Rina Foygel Barber, Emmanuel J. Candès,
+Aaditya Ramdas, and Ryan J. Tibshirani.
+"Predictive inference with the jackknife+."
+Ann. Statist., 49(1):486–507, February 2021.
 """
 from typing import List, Dict, Any
 

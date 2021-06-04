@@ -1,5 +1,6 @@
 # Release checklist
 
+- [ ] Update the version number with `bump2version major|minor|patch`
 - [ ] Edit HISTORY.rst and AUTHORS.rst to make sure it’s up-to-date and add release date
 - [ ] Check whether any new files need to go in MANIFEST.in
 - [ ] Make sure tests run, pass and cover 100% of the package:
@@ -16,7 +17,6 @@
     * `rm -rf build dist MAPIE.egg-info`
     * `python setup.py sdist bdist_wheel`
 - [ ] Check that your package is ready for publication: `twine check dist/*`
-- [ ] Update the version number with `bump2version major|minor|patch`
 - [ ] Make sure everything is committed and pushed: `git push origin master`
 - [ ] Push new tag to your commit: `git push --tags`
 - [ ] Upload it to TestPyPi: `twine upload --repository-url https://test.pypi.org/legacy/ dist/*`
