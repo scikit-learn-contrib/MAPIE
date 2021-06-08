@@ -84,12 +84,6 @@ COVERAGES = {
     "prefit": 0.980
 }
 
-SKLEARN_EXCLUDED_CHECKS = {
-    "check_regressors_train",
-    "check_pipeline_consistency",
-    "check_fit_score_takes_y",
-}
-
 
 def test_initialized() -> None:
     """Test that initialization does not crash."""
@@ -354,8 +348,7 @@ def test_valid_cv(cv: Any) -> None:
 @parametrize_with_checks([MapieRegressor()])  # type: ignore
 def test_sklearn_compatible_estimator(estimator: Any, check: Any) -> None:
     """Check compatibility with sklearn, using sklearn estimator checks API."""
-    if check.func.__name__ not in SKLEARN_EXCLUDED_CHECKS:
-        check(estimator)
+    check(estimator)
 
 
 @pytest.mark.parametrize("method", METHODS)
