@@ -32,13 +32,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         (i.e. with fit and predict methods), by default None.
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
-    alpha: Union[float, Iterable[float]], optional
-        Can be a float, a list of floats, or a np.ndarray of floats.
-        Between 0 and 1, represent the uncertainty of the confidence interval.
-        Lower alpha produce larger (more conservative) prediction intervals.
-        alpha is the complement of the target coverage level.
-        Only used at prediction time. By default 0.1.
-
     method: str, optional
         Method to choose for prediction interval estimates.
         Choose among:
@@ -141,14 +134,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> pireg = MapieRegressor(LinearRegression())
-    >>> print(pireg.fit(X_toy, y_toy).predict(X_toy)[:, :, 0])
-    [[ 5.28571429  4.61627907  6.        ]
-     [ 7.17142857  6.51744186  7.8       ]
-     [ 9.05714286  8.4         9.68023256]
-     [10.94285714 10.2        11.58139535]
-     [12.82857143 12.         13.48255814]
-     [14.71428571 13.8        15.38372093]]
+    >>> pireg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
+    >>> y_pred, y_pis = pireg.predict(X_toy, alpha=0.1)
+    >>> print(y_pis[:, :, 0])
+    [[ 4.61627907  6.        ]
+     [ 6.51744186  7.8       ]
+     [ 8.4         9.68023256]
+     [10.2        11.58139535]
+     [12.         13.48255814]
+     [13.8        15.38372093]]
     """
 
     valid_methods_ = [
@@ -161,7 +155,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def __init__(
         self,
         estimator: Optional[RegressorMixin] = None,
-        alpha: Union[float, Iterable[float]] = 0.1,
         method: str = "plus",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
         n_jobs: Optional[int] = None,
@@ -169,7 +162,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
-        self.alpha = alpha
         self.method = method
         self.cv = cv
         self.n_jobs = n_jobs
@@ -529,7 +521,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self.residuals_ = np.abs(y - y_pred)
         return self
 
-    def predict(self, X: ArrayLike) -> np.ndarray:
+    def predict(
+        self,
+        X: ArrayLike,
+        alpha: Optional[Union[float, Iterable[float]]] = None
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Predict target on new samples with confidence intervals.
         Residuals from the training set and predictions from the model clones
@@ -545,13 +541,26 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         X : ArrayLike of shape (n_samples, n_features)
             Test data.
 
+        alpha: Optional[Union[float, Iterable[float]]]
+            Can be a float, a list of floats, or a np.ndarray of floats.
+            Between 0 and 1, represent the uncertainty of the confidence
+            interval.
+            Lower alpha produce larger (more conservative) prediction
+            intervals.
+            alpha is the complement of the target coverage level.
+            By default None.
+
         Returns
         -------
-        np.ndarray of shape (n_samples, 3, n_alpha)
+        Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]
 
-        - [:, 0, :]: Center of the prediction interval
-        - [:, 1, :]: Lower bound of the prediction interval
-        - [:, 2, :]: Upper bound of the prediction interval
+        - np.ndarray of shape (n_samples,) if alpha is None
+
+        - Tuple[np.ndarray, np.ndarray] of shapes
+        (n_samples,) and (n_samples, 2, n_alpha) if alpha is not None
+
+            - [:, 0, :]: Lower bound of the prediction interval
+            - [:, 1, :]: Upper bound of the prediction interval
         """
         # Checks
         check_is_fitted(
@@ -565,53 +574,57 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             ]
         )
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
-        alpha = self._check_alpha(self.alpha)
-
-        # SHAPES:
-        # (n_samples_train,) : self.residuals_
-        # (n_alpha,) : alpha
-        # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
-        # (n_samples_test, n_samples_train) : y_pred_multi, lower/upper_bounds
-        n_alpha = len(alpha)
         y_pred = self.single_estimator_.predict(X)
-        # At this point, y_pred is of shape (n_samples_test,)
-        if self.method in ["naive", "base"] or self.cv == "prefit":
-            quantile = np.quantile(
-                self.residuals_, 1 - alpha, interpolation="higher"
-            )
-            y_pred_low = y_pred[:, np.newaxis] - quantile
-            y_pred_up = y_pred[:, np.newaxis] + quantile
+
+        if alpha is None:
+            return np.array(y_pred)
         else:
-            y_pred_multi = np.column_stack(
-                [e.predict(X) for e in self.estimators_]
-            )
-            if self.method == "plus":
-                # At this point,
-                # y_pred_multi is of shape (n_samples_test, n_estimators_)
-                # We thus enforce y_pred_multi
-                # to be of shape (n_samples_test, n_samples_train)
-                if len(self.estimators_) < len(self.k_):
-                    y_pred_multi = y_pred_multi[:, self.k_]
-                lower_bounds = y_pred_multi - self.residuals_
-                upper_bounds = y_pred_multi + self.residuals_
-            if self.method == "minmax":
-                lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
-                upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
-                lower_bounds = lower_bounds - self.residuals_
-                upper_bounds = upper_bounds + self.residuals_
-            y_pred_low = np.column_stack([
-                np.quantile(
-                    lower_bounds, _alpha, axis=1, interpolation="lower"
-                ) for _alpha in alpha
-            ])
-            y_pred_up = np.column_stack([
-                np.quantile(
-                    upper_bounds, 1 - _alpha, axis=1, interpolation="higher"
-                ) for _alpha in alpha
-            ])
-            if self.ensemble:
-                y_pred = np.median(y_pred_multi, axis=1)
-        y_pred = np.column_stack([y_pred]*n_alpha)
-        # At this point, y_pred is of shape (n_samples_test, n_alpha)
-        y_preds = np.stack([y_pred, y_pred_low, y_pred_up], axis=1)
-        return y_preds
+            # SHAPES:
+            # (n_samples_train,) : self.residuals_
+            # (n_alpha,) : alpha
+            # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
+            # (n_samples_test, n_samples_train) : y_pred_multi, low/up_bounds
+            alpha_np = self._check_alpha(alpha)
+            if self.method in ["naive", "base"] or self.cv == "prefit":
+                quantile = np.quantile(
+                    self.residuals_, 1 - alpha_np, interpolation="higher"
+                )
+                y_pred_low = y_pred[:, np.newaxis] - quantile
+                y_pred_up = y_pred[:, np.newaxis] + quantile
+            else:
+                y_pred_multi = np.column_stack(
+                    [e.predict(X) for e in self.estimators_]
+                )
+                if self.method == "plus":
+                    # At this point,
+                    # y_pred_multi is of shape (n_samples_test, n_estimators_)
+                    # We thus enforce y_pred_multi
+                    # to be of shape (n_samples_test, n_samples_train)
+                    if len(self.estimators_) < len(self.k_):
+                        y_pred_multi = y_pred_multi[:, self.k_]
+                    lower_bounds = y_pred_multi - self.residuals_
+                    upper_bounds = y_pred_multi + self.residuals_
+                if self.method == "minmax":
+                    lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
+                    upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
+                    lower_bounds = lower_bounds - self.residuals_
+                    upper_bounds = upper_bounds + self.residuals_
+                y_pred_low = np.column_stack([
+                    np.quantile(
+                        lower_bounds,
+                        _alpha,
+                        axis=1,
+                        interpolation="lower"
+                    ) for _alpha in alpha_np
+                ])
+                y_pred_up = np.column_stack([
+                    np.quantile(
+                        upper_bounds,
+                        1 - _alpha,
+                        axis=1,
+                        interpolation="higher"
+                    ) for _alpha in alpha_np
+                ])
+                if self.ensemble:
+                    y_pred = np.median(y_pred_multi, axis=1)
+            return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)

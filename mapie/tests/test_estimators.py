@@ -100,7 +100,6 @@ def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie = MapieRegressor()
     assert mapie.estimator is None
-    assert mapie.alpha == 0.1
     assert mapie.method == "plus"
     assert mapie.cv is None
     assert not mapie.ensemble
@@ -108,17 +107,17 @@ def test_default_parameters() -> None:
     assert mapie.n_jobs is None
 
 
+def test_fit() -> None:
+    """Test that fit raises no errors."""
+    mapie = MapieRegressor()
+    mapie.fit(X_toy, y_toy)
+
+
 def test_default_sample_weight() -> None:
     """Test default sample weights."""
     mapie = MapieRegressor()
     mapie.fit(X_toy, y_toy)
     assert signature(mapie.fit).parameters["sample_weight"].default is None
-
-
-def test_fit() -> None:
-    """Test that fit raises no errors."""
-    mapie = MapieRegressor()
-    mapie.fit(X_toy, y_toy)
 
 
 def test_fit_predict() -> None:
@@ -133,6 +132,13 @@ def test_no_fit_predict() -> None:
     mapie = MapieRegressor(estimator=DummyRegressor())
     with pytest.raises(NotFittedError, match=r".*not fitted.*"):
         mapie.predict(X_toy)
+
+
+def test_default_alpha() -> None:
+    """Test default alpha."""
+    mapie = MapieRegressor()
+    mapie.fit(X_toy, y_toy)
+    assert signature(mapie.predict).parameters["alpha"].default is None
 
 
 @pytest.mark.parametrize("estimator", [0, "estimator", KFold(), ["a", "b"]])
@@ -223,12 +229,12 @@ def test_valid_prefit_estimator_shape_no_n_features_in() -> None:
 
 
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
-def test_invalid_alpha(alpha: int) -> None:
+def test_invalid_alpha(alpha: Any) -> None:
     """Test that invalid alphas raise errors."""
-    mapie = MapieRegressor(alpha=alpha)
+    mapie = MapieRegressor()
     mapie.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
-        mapie.predict(X_toy)
+        mapie.predict(X_toy, alpha=alpha)
 
 
 @pytest.mark.parametrize(
@@ -240,11 +246,11 @@ def test_invalid_alpha(alpha: int) -> None:
         np.array([0.05, 0.95])
     ]
 )
-def test_valid_alpha(alpha: int) -> None:
+def test_valid_alpha(alpha: Any) -> None:
     """Test that valid alphas raise no errors."""
-    mapie = MapieRegressor(alpha=alpha)
+    mapie = MapieRegressor()
     mapie.fit(X_toy, y_toy)
-    mapie.predict(X_toy)
+    mapie.predict(X_toy, alpha=alpha)
 
 
 @pytest.mark.parametrize("method", [0, 1, "jackknife", "cv", ["base", "plus"]])
@@ -378,12 +384,12 @@ def test_predict_output_shape(
     dataset: Tuple[np.ndarray, np.ndarray]
 ) -> None:
     """Test predict output shape."""
-    mapie = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
+    mapie = MapieRegressor(**STRATEGIES[strategy])
     X, y = dataset
     mapie.fit(X, y)
-    y_preds = mapie.predict(X)
+    y_pred, y_pis = mapie.predict(X, alpha=alpha)
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
-    assert y_preds.shape == (X.shape[0], 3, n_alpha)
+    assert y_pis.shape == (X.shape[0], 2, n_alpha)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -392,16 +398,18 @@ def test_prediction_between_low_up(strategy: str, ensemble: bool) -> None:
     """Test that prediction lies between low and up prediction intervals."""
     mapie = MapieRegressor(ensemble=ensemble, **STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
-    y_pred, y_pred_low, y_pred_up = mapie.predict(X_reg)[:, :, 0].T
-    assert (y_pred >= y_pred_low).all()
-    assert (y_pred <= y_pred_up).all()
+    y_pred, y_pis = mapie.predict(X_reg, alpha=0.1)
+    assert (y_pred >= y_pis[:, 0, 0]).all()
+    assert (y_pred <= y_pis[:, 1, 0]).all()
 
 
 @pytest.mark.parametrize("method", ["plus", "minmax"])
 @pytest.mark.parametrize("cv", [-1, 2, 3, 5])
+@pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2])
 def test_prediction_ensemble(
     method: str,
-    cv: Union[LeaveOneOut, KFold]
+    cv: Union[LeaveOneOut, KFold],
+    alpha: int
 ) -> None:
     """
     Test that predictions differ when ensemble is True/False,
@@ -409,13 +417,13 @@ def test_prediction_ensemble(
     """
     mapie = MapieRegressor(method=method, cv=cv, ensemble=True)
     mapie.fit(X_reg, y_reg)
-    y_preds_1 = mapie.predict(X_reg)[:, :, 0]
+    y_pred_1, y_pis_1 = mapie.predict(X_reg, alpha=alpha)
     mapie.ensemble = False
-    y_preds_2 = mapie.predict(X_reg)[:, :, 0]
-    np.testing.assert_allclose(y_preds_1[:, 1], y_preds_2[:, 1])
-    np.testing.assert_allclose(y_preds_1[:, 2], y_preds_2[:, 2])
+    y_pred_2, y_pis_2 = mapie.predict(X_reg, alpha=alpha)
+    np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
+    np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     with pytest.raises(AssertionError):
-        np.testing.assert_allclose(y_preds_1[:, 0], y_preds_2[:, 0])
+        np.testing.assert_allclose(y_pred_1, y_pred_2)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -430,9 +438,9 @@ def test_linear_data_confidence_interval(
     """
     mapie = MapieRegressor(ensemble=ensemble, **STRATEGIES[strategy])
     mapie.fit(X_toy, y_toy)
-    y_pred, y_pred_low, y_pred_up = mapie.predict(X_toy)[:, :, 0].T
-    np.testing.assert_allclose(y_pred_up, y_pred_low)
-    np.testing.assert_allclose(y_pred, y_pred_low)
+    y_pred, y_pis = mapie.predict(X_toy, alpha=0.1)
+    np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 1, 0])
+    np.testing.assert_allclose(y_pred, y_pis[:, 0, 0])
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -442,13 +450,25 @@ def test_linear_regression_results(strategy: str) -> None:
     a multivariate linear regression problem
     with fixed random state.
     """
-    mapie = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
+    mapie = MapieRegressor(**STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
-    _, y_pred_low, y_pred_up = mapie.predict(X_reg)[:, :, 0].T
+    _, y_pis = mapie.predict(X_reg, alpha=0.05)
+    y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
     coverage = coverage_score(y_reg, y_pred_low, y_pred_up)
     np.testing.assert_allclose(width_mean, WIDTHS[strategy], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_none_alpha_results(strategy: str) -> None:
+    estimator = LinearRegression()
+    estimator.fit(X_reg, y_reg)
+    y_pred_est = estimator.predict(X_reg)
+    mapie = MapieRegressor(estimator=estimator, cv="prefit")
+    mapie.fit(X_reg, y_reg)
+    y_pred_mapie = mapie.predict(X_reg)
+    np.testing.assert_allclose(y_pred_est, y_pred_mapie)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -457,12 +477,11 @@ def test_results_for_same_alpha(strategy: str) -> None:
     Test that predictions and intervals
     are similar with two equal values of alpha.
     """
-    mapie = MapieRegressor(alpha=[0.1, 0.1], **STRATEGIES[strategy])
+    mapie = MapieRegressor(**STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
-    y_preds = mapie.predict(X_reg)
-    np.testing.assert_allclose(y_preds[:, 0, 0], y_preds[:, 0, 1])
-    np.testing.assert_allclose(y_preds[:, 1, 0], y_preds[:, 1, 1])
-    np.testing.assert_allclose(y_preds[:, 2, 0], y_preds[:, 2, 1])
+    _, y_pis = mapie.predict(X_reg, alpha=[0.1, 0.1])
+    np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 0, 1])
+    np.testing.assert_allclose(y_pis[:, 1, 0], y_pis[:, 1, 1])
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -471,11 +490,11 @@ def test_results_for_ordered_alpha(strategy: str) -> None:
     Test that prediction intervals lower (upper) bounds give
     consistent results for ordered alphas.
     """
-    mapie = MapieRegressor(alpha=[0.05, 0.1], **STRATEGIES[strategy])
+    mapie = MapieRegressor(**STRATEGIES[strategy])
     mapie.fit(X_reg, y_reg)
-    y_preds = mapie.predict(X_reg)
-    assert (y_preds[:, 1, 0] <= y_preds[:, 1, 1]).all()
-    assert (y_preds[:, 2, 0] >= y_preds[:, 2, 1]).all()
+    y_pred, y_pis = mapie.predict(X_reg, alpha=[0.05, 0.1])
+    assert (y_pis[:, 0, 0] <= y_pis[:, 0, 1]).all()
+    assert (y_pis[:, 1, 0] >= y_pis[:, 1, 1]).all()
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -487,14 +506,15 @@ def test_results_for_alpha_as_float_and_arraylike(
     alpha: Any
 ) -> None:
     """Test that output values do not depend on type of alpha."""
-    mapie_float1 = MapieRegressor(alpha=alpha[0], **STRATEGIES[strategy])
-    mapie_float2 = MapieRegressor(alpha=alpha[1], **STRATEGIES[strategy])
-    mapie_array = MapieRegressor(alpha=alpha, **STRATEGIES[strategy])
-    y_preds_float1 = mapie_float1.fit(X_reg, y_reg).predict(X_reg)
-    y_preds_float2 = mapie_float2.fit(X_reg, y_reg).predict(X_reg)
-    y_preds_array = mapie_array.fit(X_reg, y_reg).predict(X_reg)
-    np.testing.assert_allclose(y_preds_float1[:, :, 0], y_preds_array[:, :, 0])
-    np.testing.assert_allclose(y_preds_float2[:, :, 0], y_preds_array[:, :, 1])
+    mapie = MapieRegressor(**STRATEGIES[strategy])
+    mapie.fit(X_reg, y_reg)
+    y_pred_float1, y_pis_float1 = mapie.predict(X_reg, alpha=alpha[0])
+    y_pred_float2, y_pis_float2 = mapie.predict(X_reg, alpha=alpha[1])
+    y_pred_array, y_pis_array = mapie.predict(X_reg, alpha=alpha)
+    np.testing.assert_allclose(y_pred_float1, y_pred_array)
+    np.testing.assert_allclose(y_pred_float2, y_pred_array)
+    np.testing.assert_allclose(y_pis_float1[:, :, 0], y_pis_array[:, :, 0])
+    np.testing.assert_allclose(y_pis_float2[:, :, 0], y_pis_array[:, :, 1])
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -507,9 +527,10 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     mapie_multi = MapieRegressor(n_jobs=-1, **STRATEGIES[strategy])
     mapie_single.fit(X_toy, y_toy)
     mapie_multi.fit(X_toy, y_toy)
-    y_preds_single = mapie_single.predict(X_toy)
-    y_preds_multi = mapie_multi.predict(X_toy)
-    np.testing.assert_allclose(y_preds_single, y_preds_multi)
+    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.1)
+    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.1)
+    np.testing.assert_allclose(y_pred_single, y_pred_multi)
+    np.testing.assert_allclose(y_pis_single, y_pis_multi)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -518,30 +539,32 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     Test PIs when sample weights are None or constant with different values.
     """
     n_samples = len(X_reg)
-    mapie0 = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
-    mapie1 = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
-    mapie2 = MapieRegressor(alpha=0.05, **STRATEGIES[strategy])
+    mapie0 = MapieRegressor(**STRATEGIES[strategy])
+    mapie1 = MapieRegressor(**STRATEGIES[strategy])
+    mapie2 = MapieRegressor(**STRATEGIES[strategy])
     mapie0.fit(X_reg, y_reg, sample_weight=None)
     mapie1.fit(X_reg, y_reg, sample_weight=np.ones(shape=n_samples))
     mapie2.fit(X_reg, y_reg, sample_weight=np.ones(shape=n_samples)*5)
-    y_preds0 = mapie0.predict(X_reg)
-    y_preds1 = mapie1.predict(X_reg)
-    y_preds2 = mapie2.predict(X_reg)
-    np.testing.assert_allclose(y_preds0, y_preds1)
-    np.testing.assert_allclose(y_preds1, y_preds2)
+    y_pred0, y_pis0 = mapie0.predict(X_reg, alpha=0.05)
+    y_pred1, y_pis1 = mapie1.predict(X_reg, alpha=0.05)
+    y_pred2, y_pis2 = mapie2.predict(X_reg, alpha=0.05)
+    np.testing.assert_allclose(y_pred0, y_pred1)
+    np.testing.assert_allclose(y_pred1, y_pred2)
+    np.testing.assert_allclose(y_pis0, y_pis1)
+    np.testing.assert_allclose(y_pis1, y_pis2)
 
 
 def test_results_prefit_ignore_method() -> None:
     """Test that method is ignored when ``cv="prefit"``."""
     estimator = LinearRegression().fit(X_reg, y_reg)
-    all_y_preds: List[np.ndarray] = []
+    all_y_pis: List[np.ndarray] = []
     for method in METHODS:
         mapie = MapieRegressor(estimator=estimator, cv="prefit", method=method)
         mapie.fit(X_reg, y_reg)
-        y_preds = mapie.predict(X_reg)
-        all_y_preds.append(y_preds)
-    for y_preds1, y_preds2 in combinations(all_y_preds, 2):
-        np.testing.assert_allclose(y_preds1, y_preds2)
+        y_pred, y_pis = mapie.predict(X_reg, alpha=0.1)
+        all_y_pis.append(y_pis)
+    for y_pis1, y_pis2 in combinations(all_y_pis, 2):
+        np.testing.assert_allclose(y_pis1, y_pis2)
 
 
 def test_results_prefit_naive() -> None:
@@ -550,11 +573,11 @@ def test_results_prefit_naive() -> None:
     is equivalent to the "naive" method.
     """
     estimator = LinearRegression().fit(X_reg, y_reg)
-    mapie = MapieRegressor(alpha=0.05, estimator=estimator, cv="prefit")
+    mapie = MapieRegressor(estimator=estimator, cv="prefit")
     mapie.fit(X_reg, y_reg)
-    _, y_pred_low, y_pred_up = mapie.predict(X_reg)[:, :, 0].T
-    width_mean = (y_pred_up - y_pred_low).mean()
-    coverage = coverage_score(y_reg, y_pred_low, y_pred_up)
+    _, y_pis = mapie.predict(X_reg, alpha=0.05)
+    width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
+    coverage = coverage_score(y_reg, y_pis[:, 0, 0], y_pis[:, 1, 0])
     np.testing.assert_allclose(width_mean, WIDTHS["naive"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["naive"], rtol=1e-2)
 
@@ -568,10 +591,10 @@ def test_results_prefit() -> None:
         X_train_val, y_train_val, test_size=1/9, random_state=1
     )
     estimator = LinearRegression().fit(X_train, y_train)
-    mapie = MapieRegressor(alpha=0.05, estimator=estimator, cv="prefit")
+    mapie = MapieRegressor(estimator=estimator, cv="prefit")
     mapie.fit(X_val, y_val)
-    _, y_pred_low, y_pred_up = mapie.predict(X_test)[:, :, 0].T
-    width_mean = (y_pred_up - y_pred_low).mean()
-    coverage = coverage_score(y_test, y_pred_low, y_pred_up)
+    _, y_pis = mapie.predict(X_test, alpha=0.05)
+    width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
+    coverage = coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
     np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)

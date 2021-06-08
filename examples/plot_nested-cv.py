@@ -90,20 +90,21 @@ cv_obj.fit(X_train, y_train)
 best_est = cv_obj.best_estimator_
 mapie_non_nested = MapieRegressor(
     best_est,
-    alpha=alpha,
     method="plus",
     cv=cv,
     ensemble=True,
     n_jobs=-1
 )
 mapie_non_nested.fit(X_train, y_train)
-y_preds_non_nested = mapie_non_nested.predict(X_test)[:, :, 0]
-widths_non_nested = y_preds_non_nested[:, 2] - y_preds_non_nested[:, 1]
+y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict(
+    X_test, alpha=alpha
+)
+widths_non_nested = y_pis_non_nested[:, 1] - y_pis_non_nested[:, 0]
 coverage_non_nested = coverage_score(
-    y_test, y_preds_non_nested[:, 1], y_preds_non_nested[:, 2]
+    y_test, y_pis_non_nested[:, 0], y_pis_non_nested[:, 1]
 )
 score_non_nested = mean_squared_error(
-    y_test, y_preds_non_nested[:, 0], squared=False
+    y_test, y_pred_non_nested, squared=False
 )
 
 # Nested approach with the CV+ strategy using the Random Forest model.
@@ -120,18 +121,17 @@ cv_obj = RandomizedSearchCV(
 )
 mapie_nested = MapieRegressor(
     cv_obj,
-    alpha=alpha,
     method="plus",
     cv=cv,
     ensemble=True
 )
 mapie_nested.fit(X_train, y_train)
-y_preds_nested = mapie_nested.predict(X_test)[:, :, 0]
-widths_nested = y_preds_nested[:, 2] - y_preds_nested[:, 1]
+y_pred_nested, y_pis_nested = mapie_nested.predict(X_test, alpha=alpha)
+widths_nested = y_pis_nested[:, 1] - y_pis_nested[:, 0]
 coverage_nested = coverage_score(
-    y_test, y_preds_nested[:, 1], y_preds_nested[:, 2]
+    y_test, y_pis_nested[:, 0], y_pis_nested[:, 1]
 )
-score_nested = mean_squared_error(y_test, y_preds_nested[:, 0], squared=False)
+score_nested = mean_squared_error(y_test, y_pred_nested, squared=False)
 
 # Print scores and effective coverages.
 print(

@@ -49,9 +49,9 @@ and two standard deviations from the mean.
 
     from mapie.estimators import MapieRegressor
     alpha = [0.05, 0.32]
-    mapie = MapieRegressor(regressor, alpha=alpha)
+    mapie = MapieRegressor(regressor)
     mapie.fit(X, y)
-    y_preds = mapie.predict(X)
+    y_pred, y_pis = mapie.predict(X, alpha=alpha)
 
 
 3. Show the results
@@ -68,7 +68,7 @@ The estimated prediction intervals can then be plotted as follows.
     from mapie.metrics import coverage_score
 
     coverage_scores = [
-        coverage_score(y, y_preds[:, 1, i], y_preds[:, 2, i])
+        coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
         for i, _ in enumerate(alpha)
     ]
 
@@ -77,12 +77,12 @@ The estimated prediction intervals can then be plotted as follows.
     plt.scatter(X, y, alpha=0.3)
     plt.plot(X, y_preds[:, 0, 0], color="C1")
     order = np.argsort(X[:, 0])
-    plt.plot(X[order], y_preds[order][:, 1, 1], color="C1", ls="--")
-    plt.plot(X[order], y_preds[order][:, 2, 1], color="C1", ls="--")
+    plt.plot(X[order], y_pis[order][:, 0, 1], color="C1", ls="--")
+    plt.plot(X[order], y_pis[order][:, 1, 1], color="C1", ls="--")
     plt.fill_between(
         X[order].ravel(),
-        y_preds[:, 1, 0][order].ravel(),
-        y_preds[:, 2, 0][order].ravel(),
+        y_pis[:, 0, 0][order].ravel(),
+        y_pis[:, 1, 0][order].ravel(),
         alpha=0.2
     )
     plt.title(

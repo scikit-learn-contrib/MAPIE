@@ -112,11 +112,11 @@ in order to obtain a 95% confidence for our prediction intervals.
         "cv_plus": dict(method="plus", cv=10),
         "cv_minmax": dict(method="minmax", cv=10),
     }
-    y_preds = {}
+    y_pred, y_pis = {}, {}
     for strategy, params in STRATEGIES.items():
-        mapie = MapieRegressor(polyn_model, alpha=0.05, ensemble=False, **params)
+        mapie = MapieRegressor(polyn_model, ensemble=False, **params)
         mapie.fit(X_train, y_train)
-        y_preds[strategy] = mapie.predict(X_test)[:, :, 0]
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
 Let’s now compare the confidence intervals with the predicted intervals with obtained 
 by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax strategies.
@@ -159,9 +159,9 @@ by the Jackknife+, Jackknife-minmax, CV+, and CV-minmax strategies.
             X_test.ravel(),
             y_mesh.ravel(),
             1.96*noise,
-            y_preds[strategy][:, 0].ravel(),
-            y_preds[strategy][:, 1].ravel(),
-            y_preds[strategy][:, 2].ravel(),
+            y_pred[strategy].ravel(),
+            y_pis[strategy][:, 0, 0].ravel(),
+            y_pis[strategy][:, 1, 0].ravel(),
             ax=coord,
             title=strategy
         )
@@ -178,7 +178,7 @@ Let’s confirm this by comparing the prediction interval widths over
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     for strategy in STRATEGIES:
-        ax.plot(X_test, y_preds[strategy][:, 2] - y_preds[strategy][:, 1])
+        ax.plot(X_test, y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0])
     ax.axhline(1.96*2*noise, ls="--", color="k")
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")
@@ -311,11 +311,11 @@ strategies.
         "cv_plus": dict(method="plus", cv=10),
         "cv_minmax": dict(method="minmax", cv=10),
     }
-    prediction_interval = {}
+    y_pred, y_pis = {}, {}
     for strategy, params in STRATEGIES.items():
-        mapie = MapieRegressor(polyn_model, alpha=0.05, ensemble=False, **params)
+        mapie = MapieRegressor(polyn_model, ensemble=False, **params)
         mapie.fit(X_train, y_train)
-        y_preds[strategy] = mapie.predict(X_test)[:, :, 0]
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
 
 .. code:: python
@@ -331,9 +331,9 @@ strategies.
             X_test.ravel(),
             y_mesh.ravel(),
             1.96*noise, 
-            y_preds[strategy][:, 0].ravel(),
-            y_preds[strategy][:, 1].ravel(),
-            y_preds[strategy][:, 2].ravel(), 
+            y_pred[strategy].ravel(),
+            y_pis[strategy][:, 0, :].ravel(),
+            y_pis[strategy][:, 1, :].ravel(), 
             ax=coord,
             title=strategy
         )
@@ -354,7 +354,7 @@ Let's now compare the prediction interval widths between all strategies.
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     ax.set_yscale("log")
     for strategy in STRATEGIES:
-        ax.plot(X_test, y_preds[strategy][:, 2] - y_preds[strategy][:, 1])
+        ax.plot(X_test, y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0])
     ax.axhline(1.96*2*noise, ls="--", color="k")
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")
@@ -514,9 +514,9 @@ and compare their prediction interval.
     model_names = ["polyn", "xgb", "mlp"]
     prediction_interval = {}
     for name, model in zip(model_names, models):
-        mapie = MapieRegressor(model, alpha=0.05, method="plus", cv=5, ensemble=True)
+        mapie = MapieRegressor(model, method="plus", cv=5, ensemble=True)
         mapie.fit(X_train, y_train)
-        y_preds[name] = mapie.predict(X_test)[:, :, 0]
+        y_preds[name] = mapie.predict(X_test, alpha=0.05)[:, :, 0]
 
 .. code:: python
 
@@ -528,9 +528,9 @@ and compare their prediction interval.
             X_test.ravel(),
             y_mesh.ravel(),
             1.96*noise,
-            y_preds[name][:, 0].ravel(),
-            y_preds[name][:, 1].ravel(),
-            y_preds[name][:, 2].ravel(),
+            y_pred[name].ravel(),
+            y_pis[name][:, 0, 0].ravel(),
+            y_pis[name][:, 1, 0].ravel(),
             ax=ax,
             title=name
         )
