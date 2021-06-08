@@ -110,7 +110,6 @@ def test_fit() -> None:
 def test_default_sample_weight() -> None:
     """Test default sample weights."""
     mapie = MapieRegressor()
-    mapie.fit(X_toy, y_toy)
     assert signature(mapie.fit).parameters["sample_weight"].default is None
 
 
@@ -131,7 +130,6 @@ def test_no_fit_predict() -> None:
 def test_default_alpha() -> None:
     """Test default alpha."""
     mapie = MapieRegressor()
-    mapie.fit(X_toy, y_toy)
     assert signature(mapie.predict).parameters["alpha"].default is None
 
 
@@ -237,7 +235,8 @@ def test_invalid_alpha(alpha: Any) -> None:
         np.linspace(0.05, 0.95, 5),
         [0.05, 0.95],
         (0.05, 0.95),
-        np.array([0.05, 0.95])
+        np.array([0.05, 0.95]),
+        None
     ]
 )
 def test_valid_alpha(alpha: Any) -> None:
@@ -455,6 +454,10 @@ def test_linear_regression_results(strategy: str) -> None:
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_none_alpha_results(strategy: str) -> None:
+    """
+    Test that alpha set to None in Mapie gives same predictions
+    as base regressor.
+    """
     estimator = LinearRegression()
     estimator.fit(X_reg, y_reg)
     y_pred_est = estimator.predict(X_reg)
@@ -554,7 +557,7 @@ def test_results_prefit_ignore_method() -> None:
     for method in METHODS:
         mapie = MapieRegressor(estimator=estimator, cv="prefit", method=method)
         mapie.fit(X_reg, y_reg)
-        y_pred, y_pis = mapie.predict(X_reg, alpha=0.1)
+        _, y_pis = mapie.predict(X_reg, alpha=0.1)
         all_y_pis.append(y_pis)
     for y_pis1, y_pis2 in combinations(all_y_pis, 2):
         np.testing.assert_allclose(y_pis1, y_pis2)

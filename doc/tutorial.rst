@@ -516,7 +516,7 @@ and compare their prediction interval.
     for name, model in zip(model_names, models):
         mapie = MapieRegressor(model, method="plus", cv=5, ensemble=True)
         mapie.fit(X_train, y_train)
-        y_preds[name] = mapie.predict(X_test, alpha=0.05)[:, :, 0]
+        y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
 
 .. code:: python
 

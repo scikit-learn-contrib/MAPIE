@@ -143,6 +143,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
      [10.2        11.58139535]
      [12.         13.48255814]
      [13.8        15.38372093]]
+    >>> print(y_pred)
+    [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
 
     valid_methods_ = [
@@ -297,7 +299,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             "KFold or LeaveOneOut."
         )
 
-    def _check_alpha(self, alpha: Union[float, Iterable[float]]) -> np.ndarray:
+    def _check_alpha(
+        self,
+        alpha: Optional[Union[float, Iterable[float]]] = None
+    ) -> np.ndarray:
         """
         Check alpha and prepare it as a np.ndarray
 
@@ -320,27 +325,30 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ValueError
             If alpha is not a float or an Iterable of floats between 0 and 1.
         """
-        if isinstance(alpha, float):
-            alpha_np = np.array([alpha])
-        elif isinstance(alpha, Iterable):
-            alpha_np = np.array(alpha)
+        if alpha is None:
+            alpha_np = None
         else:
-            raise ValueError(
-                "Invalid alpha. Allowed values are float or Iterable."
-            )
-        if len(alpha_np.shape) != 1:
-            raise ValueError(
-                "Invalid alpha. "
-                "Please provide a one-dimensional list of values."
-            )
-        if alpha_np.dtype.type not in [np.float64, np.float32]:
-            raise ValueError(
-                "Invalid alpha. Allowed values are Iterable of floats."
-            )
-        if np.any((alpha_np <= 0) | (alpha_np >= 1)):
-            raise ValueError(
-                "Invalid alpha. Allowed values are between 0 and 1."
-            )
+            if isinstance(alpha, float):
+                alpha_np = np.array([alpha])
+            elif isinstance(alpha, Iterable):
+                alpha_np = np.array(alpha)
+            else:
+                raise ValueError(
+                    "Invalid alpha. Allowed values are float or Iterable."
+                )
+            if len(alpha_np.shape) != 1:
+                raise ValueError(
+                    "Invalid alpha. "
+                    "Please provide a one-dimensional list of values."
+                )
+            if alpha_np.dtype.type not in [np.float64, np.float32]:
+                raise ValueError(
+                    "Invalid alpha. Allowed values are Iterable of floats."
+                )
+            if np.any((alpha_np <= 0) | (alpha_np >= 1)):
+                raise ValueError(
+                    "Invalid alpha. Allowed values are between 0 and 1."
+                )
         return alpha_np
 
     def _check_n_features_in(
@@ -542,13 +550,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             Test data.
 
         alpha: Optional[Union[float, Iterable[float]]]
-            Can be a float, a list of floats, or a np.ndarray of floats.
+            Can be a float, a list of floats, or a ``np.ndarray`` of floats.
             Between 0 and 1, represent the uncertainty of the confidence
             interval.
-            Lower alpha produce larger (more conservative) prediction
+            Lower ``alpha`` produce larger (more conservative) prediction
             intervals.
-            alpha is the complement of the target coverage level.
-            By default None.
+            ``alpha`` is the complement of the target coverage level.
+            By default ``None``.
 
         Returns
         -------
@@ -574,6 +582,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             ]
         )
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
+        alpha_ = self._check_alpha(alpha)
         y_pred = self.single_estimator_.predict(X)
 
         if alpha is None:
@@ -584,10 +593,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             # (n_alpha,) : alpha
             # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
             # (n_samples_test, n_samples_train) : y_pred_multi, low/up_bounds
-            alpha_np = self._check_alpha(alpha)
             if self.method in ["naive", "base"] or self.cv == "prefit":
                 quantile = np.quantile(
-                    self.residuals_, 1 - alpha_np, interpolation="higher"
+                    self.residuals_, 1 - alpha_, interpolation="higher"
                 )
                 y_pred_low = y_pred[:, np.newaxis] - quantile
                 y_pred_up = y_pred[:, np.newaxis] + quantile
@@ -615,7 +623,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         _alpha,
                         axis=1,
                         interpolation="lower"
-                    ) for _alpha in alpha_np
+                    ) for _alpha in alpha_
                 ])
                 y_pred_up = np.column_stack([
                     np.quantile(
@@ -623,7 +631,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         1 - _alpha,
                         axis=1,
                         interpolation="higher"
-                    ) for _alpha in alpha_np
+                    ) for _alpha in alpha_
                 ])
                 if self.ensemble:
                     y_pred = np.median(y_pred_multi, axis=1)
