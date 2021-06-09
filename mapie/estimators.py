@@ -302,7 +302,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def _check_alpha(
         self,
         alpha: Optional[Union[float, Iterable[float]]] = None
-    ) -> np.ndarray:
+    ) -> Optional[np.ndarray]:
         """
         Check alpha and prepare it as a np.ndarray
 
@@ -326,30 +326,29 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             If alpha is not a float or an Iterable of floats between 0 and 1.
         """
         if alpha is None:
-            return np.zeros(1)
+            return alpha
+        if isinstance(alpha, float):
+            alpha_np = np.array([alpha])
+        elif isinstance(alpha, Iterable):
+            alpha_np = np.array(alpha)
         else:
-            if isinstance(alpha, float):
-                alpha_np = np.array([alpha])
-            elif isinstance(alpha, Iterable):
-                alpha_np = np.array(alpha)
-            else:
-                raise ValueError(
-                    "Invalid alpha. Allowed values are float or Iterable."
-                )
-            if len(alpha_np.shape) != 1:
-                raise ValueError(
-                    "Invalid alpha. "
-                    "Please provide a one-dimensional list of values."
-                )
-            if alpha_np.dtype.type not in [np.float64, np.float32]:
-                raise ValueError(
-                    "Invalid alpha. Allowed values are Iterable of floats."
-                )
-            if np.any((alpha_np <= 0) | (alpha_np >= 1)):
-                raise ValueError(
-                    "Invalid alpha. Allowed values are between 0 and 1."
-                )
-            return alpha_np
+            raise ValueError(
+                "Invalid alpha. Allowed values are float or Iterable."
+            )
+        if len(alpha_np.shape) != 1:
+            raise ValueError(
+                "Invalid alpha. "
+                "Please provide a one-dimensional list of values."
+            )
+        if alpha_np.dtype.type not in [np.float64, np.float32]:
+            raise ValueError(
+                "Invalid alpha. Allowed values are Iterable of floats."
+            )
+        if np.any((alpha_np <= 0) | (alpha_np >= 1)):
+            raise ValueError(
+                "Invalid alpha. Allowed values are between 0 and 1."
+            )
+        return alpha_np
 
     def _check_n_features_in(
         self,
@@ -593,6 +592,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             # (n_alpha,) : alpha
             # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
             # (n_samples_test, n_samples_train) : y_pred_multi, low/up_bounds
+            alpha_ = cast(np.ndarray, alpha_)
             if self.method in ["naive", "base"] or self.cv == "prefit":
                 quantile = np.quantile(
                     self.residuals_, 1 - alpha_, interpolation="higher"
