@@ -36,8 +36,8 @@ plt.plot(X[order], y_pis[order][:, 0, 1], color="C1", ls="--")
 plt.plot(X[order], y_pis[order][:, 1, 1], color="C1", ls="--")
 plt.fill_between(
     X[order].ravel(),
-    y_pis[:, 0, 0][order].ravel(),
-    y_pis[:, 1, 0][order].ravel(),
+    y_pis[order][:, 0, 0].ravel(),
+    y_pis[order][:, 1, 0].ravel(),
     alpha=0.2
 )
 plt.title(
