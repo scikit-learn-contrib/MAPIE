@@ -18,26 +18,26 @@ regressor = LinearRegression()
 X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
 
 alpha = [0.05, 0.32]
-mapie = MapieRegressor(regressor, alpha=alpha, method="plus")
+mapie = MapieRegressor(regressor, method="plus")
 mapie.fit(X, y)
-y_preds = mapie.predict(X)
+y_pred, y_pis = mapie.predict(X, alpha=alpha)
 
 coverage_scores = [
-    coverage_score(y, y_preds[:, 1, i], y_preds[:, 2, i])
+    coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
     for i, _ in enumerate(alpha)
 ]
 
 plt.xlabel("x")
 plt.ylabel("y")
 plt.scatter(X, y, alpha=0.3)
-plt.plot(X, y_preds[:, 0, 0], color="C1")
+plt.plot(X, y_pred, color="C1")
 order = np.argsort(X[:, 0])
-plt.plot(X[order], y_preds[order][:, 1, 1], color="C1", ls="--")
-plt.plot(X[order], y_preds[order][:, 2, 1], color="C1", ls="--")
+plt.plot(X[order], y_pis[order][:, 0, 1], color="C1", ls="--")
+plt.plot(X[order], y_pis[order][:, 1, 1], color="C1", ls="--")
 plt.fill_between(
     X[order].ravel(),
-    y_preds[:, 1, 0][order].ravel(),
-    y_preds[:, 2, 0][order].ravel(),
+    y_pis[order][:, 0, 0].ravel(),
+    y_pis[order][:, 1, 0].ravel(),
     alpha=0.2
 )
 plt.title(
