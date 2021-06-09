@@ -108,18 +108,17 @@ def PIs_vs_dimensions(
             for strategy, params in strategies.items():
                 mapie = MapieRegressor(
                     LinearRegression(),
-                    alpha=alpha,
                     ensemble=True,
                     n_jobs=-1,
                     **params
                 )
                 mapie.fit(X_train, y_train)
-                y_preds = mapie.predict(X_test)[:, :, 0]
+                y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
                 results[strategy][dimension]["coverage"][trial] = (
-                    coverage_score(y_test, y_preds[:, 1], y_preds[:, 2])
+                    coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
                 )
                 results[strategy][dimension]["width_mean"][trial] = (
-                    y_preds[:, 2] - y_preds[:, 1]
+                    y_pis[:, 1, 0] - y_pis[:, 0, 0]
                 ).mean()
     return results
 
@@ -198,3 +197,4 @@ ntrial = 3
 dimensions = np.arange(10, 150, 10)
 results = PIs_vs_dimensions(STRATEGIES, alpha, ntrial, dimensions)
 plot_simulation_results(results, title="Coverages and interval widths")
+plt.show()

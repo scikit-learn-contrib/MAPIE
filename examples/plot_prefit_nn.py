@@ -45,12 +45,13 @@ model = MLPRegressor(activation="relu", random_state=1)
 model.fit(X_train.reshape(-1, 1), y_train)
 
 # Calibrate uncertainties on validation set
-alpha = 0.1
-mapie = MapieRegressor(model, alpha=alpha, cv="prefit")
+mapie = MapieRegressor(model, cv="prefit")
 mapie.fit(X_val.reshape(-1, 1), y_val)
 
 # Evaluate prediction and coverage level on testing set
-y_pred, y_pred_low, y_pred_up = mapie.predict(X_test.reshape(-1, 1))[:, :, 0].T
+alpha = 0.1
+y_pred, y_pis = mapie.predict(X_test.reshape(-1, 1), alpha=alpha)
+y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
 coverage = coverage_score(y_test, y_pred_low, y_pred_up)
 
 # Plot obtained prediction intervals on testing set
