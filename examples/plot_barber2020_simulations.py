@@ -20,7 +20,7 @@ dimension values for selected strategies with standard error given by
 the different trials.
 
 This simulation is carried out to emphasize the instability of the prediction
-intervals estimated by the Jackknife strategy when the dataset dimension is
+intervals estimated by the jackknife strategy when the dataset dimension is
 equal to the number of training samples (here 100).
 
 [1] Rina Foygel Barber, Emmanuel J. Candès,
