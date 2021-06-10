@@ -127,7 +127,7 @@ mapie_nested = MapieRegressor(
 )
 mapie_nested.fit(X_train, y_train)
 y_pred_nested, y_pis_nested = mapie_nested.predict(X_test, alpha=alpha)
-widths_nested = y_pis_nested[:, 1] - y_pis_nested[:, 0]
+widths_nested = y_pis_nested[:, 1, 0] - y_pis_nested[:, 0, 0]
 coverage_nested = coverage_score(
     y_test, y_pis_nested[:, 0, 0], y_pis_nested[:, 1, 0]
 )
