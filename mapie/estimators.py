@@ -8,7 +8,8 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
+from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import KFold, LeaveOneOut, TimeSeriesSplit
 from sklearn.pipeline import Pipeline
 
 from ._typing import ArrayLike
@@ -290,13 +291,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if (
             isinstance(cv, KFold)
             or isinstance(cv, LeaveOneOut)
+            or isinstance(cv, TimeSeriesSplit)
             or cv == "prefit"
         ):
             return cv
         raise ValueError(
             "Invalid cv argument. "
             "Allowed values are None, -1, int >= 2, 'prefit', "
-            "KFold or LeaveOneOut."
+            "KFold, LeaveOneOut, or TimeSeriesSplit."
         )
 
     def _check_alpha(
@@ -524,8 +526,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     np.concatenate, (predictions, val_ids, val_indices)
                 )
                 self.k_[val_indices] = val_ids
+                self.k_ = self.k_[min(val_indices):]
                 y_pred[val_indices] = predictions
-        self.residuals_ = np.abs(y - y_pred)
+        self.residuals_ = np.abs(
+            y[min(val_indices):] - y_pred[min(val_indices):]
+        )
         return self
 
     def predict(
