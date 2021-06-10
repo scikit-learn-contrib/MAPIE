@@ -4,6 +4,7 @@ channels:
     - conda-forge
 dependencies:
     - numpydoc=1.1.0
+    - pandas=1.2.1
     - python=3.9.2
     - scikit-learn=0.24.1
     - scipy=1.6.1
