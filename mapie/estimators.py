@@ -438,7 +438,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - [2]: Identification number of the validation fold,
           of shape (n_samples_val,)
         - [3]: Validation data indices,
-          of shapes (n_samples_val,)
+          of shape (n_samples_val,)
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
         if sample_weight is None:
