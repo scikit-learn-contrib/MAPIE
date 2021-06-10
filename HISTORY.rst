@@ -2,7 +2,7 @@
 History
 =======
 
-0.2.2 (2021-06-XX)
+0.2.2 (2021-06-10)
 ------------------
 
 * Set alpha parameter as predict argument, with None as default value
