@@ -501,6 +501,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self.estimators_: List[RegressorMixin] = []
         self.k_ = np.empty_like(y, dtype=int)
         y_pred = np.empty_like(y, dtype=float)
+        min_vals = 0
 
         # Work
         if cv == "prefit":
@@ -526,10 +527,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     np.concatenate, (predictions, val_ids, val_indices)
                 )
                 self.k_[val_indices] = val_ids
-                self.k_ = self.k_[min(val_indices):]
+                min_vals = np.min(val_indices)
+                self.k_ = self.k_[min_vals:]
                 y_pred[val_indices] = predictions
         self.residuals_ = np.abs(
-            y[min(val_indices):] - y_pred[min(val_indices):]
+            y[min_vals:] - y_pred[min_vals:]
         )
         return self
 

@@ -13,13 +13,16 @@ We use here the Victoria electricity demand dataset used in the book
 "Forecasting: Principles and Practice" by R. J. Hyndman and G. Athanasopoulos.
 The electricity demand features daily and weekly seasonalities and is impacted
 by the temperature, considered here as a exogeneous variable.
-The data is modelled by a Random Forest model with a `RandomizedSearchCV`
-using a `TimeSeriesSplit` cross validation.
+The data is modelled by a Random Forest model with a
+:class:`sklearn.model_selection.RandomizedSearchCV`
+using a `sklearn.model_selection.TimeSeriesSplit` cross validation.
 
-The best model is then feeded into `MapieRegressor` to estimate the associated
+The best model is then feeded into :class:`mapie.estimators.MapieRegressor`
+to estimate the associated
 prediction intervals. We consider four strategies, with the CV and CV+
-resampling method and using either a standard `Kfold` or a sequential
-`TimeSeriesSplit` method for estimating the residuals.
+resampling method and using either a standard `sklearn.model_selection.KFold`
+or a sequential
+`sklearn.model_selection.TimeSeriesSplit` method for estimating the residuals.
 
 It is found that the sequential cross-validation induces larger prediction
 intervals since the perturbed models are trained on smaller training sets
@@ -50,10 +53,10 @@ demand_df["Hour"] = demand_df.index.hour
 num_forecast_steps = 24 * 7 * 2
 demand_train = demand_df.iloc[:-num_forecast_steps, :].copy()
 demand_test = demand_df.iloc[-num_forecast_steps:, :].copy()
-X_train = demand_train.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]].to_numpy()
-y_train = demand_train["Demand"].to_numpy()
-X_test = demand_test.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]].to_numpy()
-y_test = demand_test["Demand"].to_numpy()
+X_train = demand_train.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]]
+y_train = demand_train["Demand"]
+X_test = demand_test.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]]
+y_test = demand_test["Demand"]
 
 # CV parameter search
 n_iter = 10
