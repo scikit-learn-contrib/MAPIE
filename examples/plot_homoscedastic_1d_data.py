@@ -139,22 +139,22 @@ axs = [ax1, ax2, ax3, ax4, ax5, ax6]
 for i, (strategy, params) in enumerate(STRATEGIES.items()):
     mapie = MapieRegressor(
         polyn_model,
-        alpha=0.05,
         ensemble=True,
         n_jobs=-1,
         **params
     )
     mapie.fit(X_train.reshape(-1, 1), y_train)
-    y_preds = mapie.predict(X_test.reshape(-1, 1))[:, :, 0]
+    y_pred, y_pis = mapie.predict(X_test.reshape(-1, 1), alpha=0.05,)
     plot_1d_data(
         X_train,
         y_train,
         X_test,
         y_test,
         y_test_sigma,
-        y_preds[:, 0],
-        y_preds[:, 1],
-        y_preds[:, 2],
+        y_pred,
+        y_pis[:, 0, 0],
+        y_pis[:, 1, 0],
         axs[i],
         strategy
     )
+plt.show()
