@@ -55,8 +55,10 @@ from sklearn.metrics import mean_squared_error
 from mapie.estimators import MapieRegressor
 from mapie.metrics import coverage_score
 
-# Load the Boston data and split it into training and test sets.
+# Load the Boston data
 X_boston, y_boston = load_boston(return_X_y=True)
+
+# Split the data into training and test sets.
 X_train, X_test, y_train, y_test = train_test_split(
     X_boston, y_boston, test_size=0.2, random_state=42
 )
@@ -70,7 +72,7 @@ rf_params = {
 
 # Cross-validation and prediction-interval parameters.
 cv = 5
-n_iter = 10
+n_iter = 5
 alpha = 0.05
 random_state = 59
 
@@ -127,7 +129,7 @@ mapie_nested = MapieRegressor(
 )
 mapie_nested.fit(X_train, y_train)
 y_pred_nested, y_pis_nested = mapie_nested.predict(X_test, alpha=alpha)
-widths_nested = y_pis_nested[:, 1] - y_pis_nested[:, 0]
+widths_nested = y_pis_nested[:, 1, 0] - y_pis_nested[:, 0, 0]
 coverage_nested = coverage_score(
     y_test, y_pis_nested[:, 0, 0], y_pis_nested[:, 1, 0]
 )
@@ -150,7 +152,8 @@ print(
 
 # Compare prediction interval widths.
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 6))
-min_x, max_x = 14, 16
+min_x = 14.5
+max_x = 16.0
 ax1.set_xlabel("Prediction interval width using the nested CV approach")
 ax1.set_ylabel("Prediction interval width using the non-nested CV approach")
 ax1.set_xlim([min_x, max_x])
