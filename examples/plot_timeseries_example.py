@@ -18,13 +18,7 @@ The data is modelled by a Random Forest model with a
 training set is prior to the validation set.
 The best model is then feeded into :class:`mapie.estimators.MapieRegressor`
 to estimate the associated prediction intervals.
-We consider two strategies: the standard CV+ resampling method and the "prefit"
-method in which residuals are estimated on a validation set.
-
-It is found that the sequential cross-validation induces larger prediction
-intervals since the perturbed models are trained on smaller training sets
-than with the standard cross-validation, hence inducing larger differences
-of their predictions.
+We consider the standard CV+ resampling method.
 """
 import pandas as pd
 from scipy.stats import randint
@@ -47,13 +41,10 @@ demand_df["Hour"] = demand_df.index.hour
 
 # Train/validation/test split
 num_test_steps = 24*7*2
-demand_train = demand_df.iloc[:-2*num_test_steps, :].copy()
-demand_val = demand_df.iloc[-2*num_test_steps:-num_test_steps, :].copy()
+demand_train = demand_df.iloc[:-num_test_steps, :].copy()
 demand_test = demand_df.iloc[-num_test_steps:, :].copy()
 X_train = demand_train.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]]
 y_train = demand_train["Demand"]
-X_val = demand_val.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]]
-y_val = demand_val["Demand"]
 X_test = demand_test.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]]
 y_test = demand_test["Demand"]
 
@@ -82,33 +73,25 @@ best_est = cv_obj.best_estimator_
 
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.1
-strategies = {
-    "cv_plus": dict(method="plus", cv=n_splits),
-    "prefit": dict(cv="prefit"),
-}
-y_pred, y_pis, coverages, widths = {}, {}, {}, {}
-
-for strategy, params in strategies.items():
-    mapie = MapieRegressor(best_est, **params)
-    if strategy == "cv_plus":
-        mapie.fit(pd.concat([X_train, X_val]), pd.concat([y_train, y_val]))
-    elif strategy == "prefit":
-        mapie.fit(X_val, y_val)
-    y_pred_, y_pis_ = mapie.predict(X_test, alpha=alpha)
-    y_pred[strategy] = y_pred_
-    y_pis[strategy] = y_pis_
-    coverages[strategy] = coverage_score(
-        y_test, y_pis_[:, 0, 0], y_pis_[:, 1, 0]
-    )
-    widths[strategy] = (y_pis_[:, 1, 0] - y_pis_[:, 0, 0]).mean()
+mapie = MapieRegressor(
+    best_est,
+    method="plus",
+    cv=n_splits,
+    ensemble=True,
+    n_jobs=-1
+)
+mapie.fit(X_train, y_train)
+y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
+coverage = coverage_score(
+    y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
+)
+width = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
 
 # Print results
-for strategy in strategies:
-    print(
-        "Coverage and prediction interval width mean for "
-        f"{strategy:8} strategy: "
-        f"{coverages[strategy]:.3f}, {widths[strategy]:.3f}"
-    )
+print(
+    "Coverage and prediction interval width mean for CV+: "
+    f"{coverage:.3f}, {width:.3f}"
+)
 
 # Plot estimated prediction intervals on test set
 fig = plt.figure(figsize=(15, 5))
@@ -117,31 +100,18 @@ ax.set_ylabel("Hourly demand (GW)")
 ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
 ax.plot(
     demand_test.index,
-    best_est.predict(X_test),
+    y_pred,
     lw=2,
     c="C2",
     label="Predictions"
 )
 ax.fill_between(
     demand_test.index,
-    y_pis["cv_plus"][:, 0, 0],
-    y_pis["cv_plus"][:, 1, 0],
+    y_pis[:, 0, 0],
+    y_pis[:, 1, 0],
     color="C2",
     alpha=0.2,
-    label="CV+"
-)
-ax.plot(
-    demand_test.index,
-    y_pis["prefit"][:, 0, 0],
-    color="C2",
-    ls="--",
-    label="Prefit"
-)
-ax.plot(
-    demand_test.index,
-    y_pis["prefit"][:, 1, 0],
-    color="C2",
-    ls="--"
+    label="CV+ PIs"
 )
 ax.legend()
 plt.show()
