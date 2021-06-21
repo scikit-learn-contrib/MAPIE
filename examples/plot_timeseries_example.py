@@ -2,24 +2,25 @@
 =======================================================
 Estimating prediction intervals of time series forecast
 =======================================================
-This example uses MAPIE to estimate prediction intervals associated with
-time series forecast. We use the standard cross-validation approach to
-estimate residuals and associated prediction intervals.
+This example uses :class:`mapie.estimators.MapieRegressor` to estimate
+prediction intervals associated with time series forecast. We use the
+standard cross-validation approach to estimate residuals and associated
+prediction intervals.
+
 We use here the Victoria electricity demand dataset used in the book
 "Forecasting: Principles and Practice" by R. J. Hyndman and G. Athanasopoulos.
 The electricity demand features daily and weekly seasonalities and is impacted
 by the temperature, considered here as a exogeneous variable.
+
 The data is modelled by a Random Forest model with a
 :class:`sklearn.model_selection.RandomizedSearchCV` using a sequential
-`sklearn.model_selection.TimeSeriesSplit` cross validation, used with
-time-series data in which the training set is prior to the validation set,
-to estimate residuals and associated prediction intervals.
+`sklearn.model_selection.TimeSeriesSplit` cross validation, in which the
+training set is prior to the validation set.
 The best model is then feeded into :class:`mapie.estimators.MapieRegressor`
 to estimate the associated prediction intervals.
-We consider four strategies, with the CV and CV+
-resampling method and using either a standard `sklearn.model_selection.KFold`
-or a sequential
-`sklearn.model_selection.TimeSeriesSplit` method for estimating the residuals.
+We consider two strategies: the standard CV+ resampling method and the "prefit"
+method in which residuals are estimated on a validation set.
+
 It is found that the sequential cross-validation induces larger prediction
 intervals since the perturbed models are trained on smaller training sets
 than with the standard cross-validation, hence inducing larger differences
@@ -44,12 +45,15 @@ demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype('int64')
 demand_df["Weekday"] = demand_df.Date.dt.isocalendar().day.astype('int64')
 demand_df["Hour"] = demand_df.index.hour
 
-# Train/test split
-num_forecast_steps = 24 * 7 * 2
-demand_train = demand_df.iloc[:-num_forecast_steps, :].copy()
-demand_test = demand_df.iloc[-num_forecast_steps:, :].copy()
+# Train/validation/test split
+num_test_steps = 24*7*2
+demand_train = demand_df.iloc[:-2*num_test_steps, :].copy()
+demand_val = demand_df.iloc[-2*num_test_steps:-num_test_steps, :].copy()
+demand_test = demand_df.iloc[-num_test_steps:, :].copy()
 X_train = demand_train.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]]
 y_train = demand_train["Demand"]
+X_val = demand_val.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]]
+y_val = demand_val["Demand"]
 X_test = demand_test.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]]
 y_test = demand_test["Demand"]
 
@@ -79,13 +83,17 @@ best_est = cv_obj.best_estimator_
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.1
 strategies = {
-    "cv": dict(method="base", cv=n_splits),
     "cv_plus": dict(method="plus", cv=n_splits),
+    "prefit": dict(cv="prefit"),
 }
 y_pred, y_pis, coverages, widths = {}, {}, {}, {}
+
 for strategy, params in strategies.items():
     mapie = MapieRegressor(best_est, **params)
-    mapie.fit(X_train, y_train)
+    if strategy == "cv_plus":
+        mapie.fit(pd.concat([X_train, X_val]), pd.concat([y_train, y_val]))
+    elif strategy == "prefit":
+        mapie.fit(X_val, y_val)
     y_pred_, y_pis_ = mapie.predict(X_test, alpha=alpha)
     y_pred[strategy] = y_pred_
     y_pis[strategy] = y_pis_
@@ -98,7 +106,7 @@ for strategy, params in strategies.items():
 for strategy in strategies:
     print(
         "Coverage and prediction interval width mean for "
-        f"{strategy:18} strategy: "
+        f"{strategy:8} strategy: "
         f"{coverages[strategy]:.3f}, {widths[strategy]:.3f}"
     )
 
@@ -120,18 +128,18 @@ ax.fill_between(
     y_pis["cv_plus"][:, 1, 0],
     color="C2",
     alpha=0.2,
-    label="CV+(standard)"
+    label="CV+"
 )
 ax.plot(
     demand_test.index,
-    y_pis["cv"][:, 0, 0],
+    y_pis["prefit"][:, 0, 0],
     color="C2",
     ls="--",
-    label="CV+(sequential)"
+    label="Prefit"
 )
 ax.plot(
     demand_test.index,
-    y_pis["cv"][:, 1, 0],
+    y_pis["prefit"][:, 1, 0],
     color="C2",
     ls="--"
 )
