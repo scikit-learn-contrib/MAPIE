@@ -15,7 +15,7 @@ jobs:
               export PATH=$HOME/miniconda/bin:$PATH
               source $HOME/miniconda/etc/profile.d/conda.sh
               conda update --yes conda
-              conda create -n test-env --yes -c conda-forge python=3.9.2 numpydoc scikit-learn matplotlib sphinx sphinx-gallery sphinx_rtd_theme typing_extensions
+              conda create -n test-env --yes -c conda-forge python=3.9.2 numpydoc pandas scikit-learn matplotlib sphinx sphinx-gallery sphinx_rtd_theme typing_extensions
               conda activate test-env
               pip install .
               cd doc
