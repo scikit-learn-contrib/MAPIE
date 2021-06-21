@@ -6,6 +6,8 @@ This example uses :class:`mapie.estimators.MapieRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
+from typing import Tuple, Any
+from typing_extensions import TypedDict
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.pipeline import Pipeline
@@ -15,12 +17,18 @@ from mapie.estimators import MapieRegressor
 
 
 # Functions for generating our dataset
-def x_sinx(x):
+def x_sinx(x: np.ndarray) -> Any:
     """One-dimensional x*sin(x) function."""
     return x*np.sin(x)
 
 
-def get_1d_data_with_normal_distrib(funct, mu, sigma, n_samples, noise):
+def get_1d_data_with_normal_distrib(
+    funct: Any,
+    mu: float,
+    sigma: float,
+    n_samples: int,
+    noise: float
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Generate noisy 1D data with normal distribution from given function
     and noise standard deviation.
@@ -52,11 +60,12 @@ polyn_model = Pipeline(
 )
 
 # Estimating prediction intervals
+Params = TypedDict("Params", {"method": str, "cv": int})
 STRATEGIES = {
-    "jackknife_plus": dict(method="plus", cv=-1),
-    "jackknife_minmax": dict(method="minmax", cv=-1),
-    "cv_plus": dict(method="plus", cv=10),
-    "cv_minmax": dict(method="minmax", cv=10),
+    "jackknife_plus": Params(method="plus", cv=-1),
+    "jackknife_minmax": Params(method="minmax", cv=-1),
+    "cv_plus": Params(method="plus", cv=10),
+    "cv_minmax": Params(method="minmax", cv=10),
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
@@ -67,17 +76,17 @@ for strategy, params in STRATEGIES.items():
 
 # Visualization
 def plot_1d_data(
-    X_train,
-    y_train,
-    X_test,
-    y_test,
-    y_sigma,
-    y_pred,
-    y_pred_low,
-    y_pred_up,
-    ax=None,
-    title=None
-):
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    X_test: np.ndarray,
+    y_test: np.ndarray,
+    y_sigma: float,
+    y_pred: np.ndarray,
+    y_pred_low: np.ndarray,
+    y_pred_up: np.ndarray,
+    ax: plt.Axes,
+    title: str
+) -> None:
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_xlim([-10, 10])
