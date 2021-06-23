@@ -37,7 +37,7 @@ def get_1d_data_with_normal_distrib(
     Parameters
     ----------
     funct : F
-        Based function used to generate the dataset.
+        Base function used to generate the dataset.
     mu : float
         Mean of normal training distribution.
     sigma : float
