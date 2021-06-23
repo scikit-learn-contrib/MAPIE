@@ -19,6 +19,15 @@ training set is prior to the validation set.
 The best model is then feeded into :class:`mapie.estimators.MapieRegressor`
 to estimate the associated prediction intervals.
 We consider the standard CV+ resampling method.
+
+We wish to emphasize one main limitation with this example.
+We use a standard cross-validation in Mapie to estimate the prediction
+intervals, through the `sklearn.model_selection.KFold()` object.
+Residuals are therefore estimated using models trained on data with higher
+indices than the validation data, which is inappropriate for time-series data.
+Howerver, using a `sklearn.model_selection.TimeSeriesSplit` cross validation
+object for estimating the residuals breaks the theoretical guarantees of the
+Jackknife+ and CV+ methods.
 """
 import pandas as pd
 from scipy.stats import randint
@@ -72,6 +81,9 @@ cv_obj.fit(X_train, y_train)
 best_est = cv_obj.best_estimator_
 
 # Estimate prediction intervals on test set with best estimator
+# Here, a non-nested CV approach is used for the sake of computational
+# time, but a nested CV approach is preferred.
+# See the dedicated example in the gallery for more information.
 alpha = 0.1
 mapie = MapieRegressor(
     best_est,

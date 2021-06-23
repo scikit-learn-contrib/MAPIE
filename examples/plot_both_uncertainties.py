@@ -6,7 +6,7 @@ This example uses :class:`mapie.estimators.MapieRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
-from typing import Tuple, Any
+from typing import Tuple, Any, TypeVar, Callable
 from typing_extensions import TypedDict
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,6 +14,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from mapie.estimators import MapieRegressor
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 # Functions for generating our dataset
@@ -23,7 +24,7 @@ def x_sinx(x: np.ndarray) -> Any:
 
 
 def get_1d_data_with_normal_distrib(
-    funct: Any,
+    funct: F,
     mu: float,
     sigma: float,
     n_samples: int,
@@ -32,10 +33,33 @@ def get_1d_data_with_normal_distrib(
     """
     Generate noisy 1D data with normal distribution from given function
     and noise standard deviation.
+
+    Parameters
+    ----------
+    funct : F
+        Based function used to generate the dataset.
+    mu : float
+        Mean of normal training distribution.
+    sigma : float
+        Standard deviation of normal training distribution.
+    n_samples : int
+        Number of training samples.
+    noise : float
+        Standard deviation of noise.
+
+    Returns
+    -------
+    Tuple[Any, Any, np.ndarray, Any, float]
+        Generated training and test data.
+        [0]: X_train
+        [1]: y_train
+        [2]: X_test
+        [3]: y_test
+        [4]: y_mesh
     """
     np.random.seed(42)
     X_train = np.random.normal(mu, sigma, n_samples)
-    X_test = np.arange(mu-4*sigma, mu+4*sigma, sigma/20.)
+    X_test = np.arange(mu - 4*sigma, mu + 4*sigma, sigma/20.)
     y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
     y_train += np.random.normal(0, noise, y_train.shape[0])
     y_test += np.random.normal(0, noise, y_test.shape[0])
