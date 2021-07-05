@@ -39,7 +39,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
         channels: defaults, conda-forge
     - name: Install dependencies
-      run: conda install codecov mypy numpy=${{ matrix.numpy-version }} scikit-learn pandas pytest-cov
+      run: conda install codecov mypy numpy=${{ matrix.numpy-version }} scikit-learn pandas pytest-cov typed-ast
+    - name: Check linting
+      run: flake8 . --exclude=doc
     - name: Check static typing
       run: mypy mapie examples --strict
     - name: Test with pytest
