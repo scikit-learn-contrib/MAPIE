@@ -2,6 +2,16 @@
 History
 =======
 
+0.2.3 (2021-07-XX)
+------------------
+
+* Inclusion in conda-forge
+* Add time series example
+* Add epistemic uncertainty example
+* Remove CicleCI redundancy with ReadTheDocs
+* Include linting in CI/CD
+* Use PyPa github actions for releases
+
 0.2.2 (2021-06-10)
 ------------------
 
