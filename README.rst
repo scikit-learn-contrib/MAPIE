@@ -2,17 +2,17 @@
 
 |GitHubActions|_ |Codecov|_ |ReadTheDocs|_ |License|_ |PythonVersion|_ |PyPi|_ |Conda|_ |Release|_ |Commits|_
 
-.. |GitHubActions| image:: https://github.com/simai-ml/MAPIE/actions/workflows/test.yml/badge.svg
-.. _GitHubActions: https://github.com/simai-ml/MAPIE/actions
+.. |GitHubActions| image:: https://github.com/scikit-learn-contrib/MAPIE/actions/workflows/test.yml/badge.svg
+.. _GitHubActions: https://github.com/scikit-learn-contrib/MAPIE/actions
 
-.. |Codecov| image:: https://codecov.io/gh/simai-ml/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
-.. _Codecov: https://codecov.io/gh/simai-ml/MAPIE
+.. |Codecov| image:: https://codecov.io/gh/scikit-learn-contrib/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
+.. _Codecov: https://codecov.io/gh/scikit-learn-contrib/MAPIE
 
 .. |ReadTheDocs| image:: https://readthedocs.org/projects/mapie/badge
 .. _ReadTheDocs: https://mapie.readthedocs.io/en/latest
 
 .. |License| image:: https://img.shields.io/github/license/simai-ml/MAPIE
-.. _License: https://github.com/simai-ml/MAPIE/blob/master/LICENSE
+.. _License: https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE
 
 .. |PythonVersion| image:: https://img.shields.io/pypi/pyversions/mapie
 .. _PythonVersion: https://pypi.org/project/mapie/
