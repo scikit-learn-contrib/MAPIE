@@ -117,3 +117,4 @@ Patch the current version of the package by running :
 .. code:: sh
 
     $ bump2version patch
+    $ git push --tags

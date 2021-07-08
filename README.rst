@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-|GitHubActions|_ |Codecov|_ |ReadTheDocs|_ |License|_ |PythonVersion|_ |PyPi|_
+|GitHubActions|_ |Codecov|_ |ReadTheDocs|_ |License|_ |PythonVersion|_ |PyPi|_ |Conda|_ |Release|_ |Commits|_
 
 .. |GitHubActions| image:: https://github.com/simai-ml/MAPIE/actions/workflows/test.yml/badge.svg
 .. _GitHubActions: https://github.com/simai-ml/MAPIE/actions
@@ -20,6 +20,14 @@
 .. |PyPi| image:: https://img.shields.io/pypi/v/mapie
 .. _PyPi: https://pypi.org/project/mapie/
 
+.. |Conda| image:: https://img.shields.io/conda/vn/conda-forge/mapie
+.. _Conda: https://anaconda.org/conda-forge/mapie
+
+.. |Release| image:: https://img.shields.io/github/v/release/scikit-learn-contrib/mapie
+.. _Release: https://github.com/scikit-learn-contrib/MAPIE/releases
+
+.. |Commits| image:: https://img.shields.io/github/commits-since/scikit-learn-contrib/mapie/latest/master
+.. _Commits: https://github.com/scikit-learn-contrib/MAPIE/commits/master
 
 .. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
@@ -52,6 +60,12 @@ Install via `pip`:
 .. code:: python
 
     pip install mapie
+
+or via `conda`:
+
+.. code:: python
+
+    conda install mapie
 
 To install directly from the github repository :
 
