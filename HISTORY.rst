@@ -5,10 +5,11 @@ History
 0.2.3 (2021-07-XX)
 ------------------
 
-* Inclusion in conda-forge
+* Inclusion in conda-forge with updated release checklist
 * Add time series example
 * Add epistemic uncertainty example
 * Remove CicleCI redundancy with ReadTheDocs
+* Remove Pep8speaks
 * Include linting in CI/CD
 * Use PyPa github actions for releases
 
