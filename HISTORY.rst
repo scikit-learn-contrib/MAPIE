@@ -2,7 +2,7 @@
 History
 =======
 
-0.2.3 (2021-07-XX)
+0.2.3 (2021-07-09)
 ------------------
 
 * Inclusion in conda-forge with updated release checklist
