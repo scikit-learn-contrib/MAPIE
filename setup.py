@@ -11,12 +11,12 @@ DESCRIPTION = (
 with codecs.open("README.rst", encoding="utf-8-sig") as f:
     LONG_DESCRIPTION = f.read()
 LONG_DESCRIPTION_CONTENT_TYPE = "text/x-rst"
-URL = "https://github.com/simai-ml/MAPIE"
+URL = "https://github.com/scikit-learn-contrib/MAPIE"
 DOWNLOAD_URL = "https://pypi.org/project/MAPIE/#files"
 PROJECT_URLS = {
-    "Bug Tracker": "https://github.com/simai-ml/MAPIE/issues",
+    "Bug Tracker": "https://github.com/scikit-learn-contrib/MAPIE/issues",
     "Documentation": "https://mapie.readthedocs.io/en/latest/",
-    "Source Code": "https://github.com/simai-ml/MAPIE"
+    "Source Code": "https://github.com/scikit-learn-contrib/MAPIE"
 }
 LICENSE = "new BSD"
 MAINTAINER = "V. Taquet, G. Martinon"
@@ -29,14 +29,17 @@ EXTRAS_REQUIRE = {
         "flake8",
         "mypy",
         "pytest",
-        "pytest-cov"
+        "pytest-cov",
+        "typed-ast"
     ],
     "docs": [
+        "matplotlib",
+        "numpydoc",
+        "pandas",
         "sphinx",
         "sphinx-gallery",
         "sphinx_rtd_theme",
-        "numpydoc",
-        "matplotlib"
+        "typing_extensions"
     ]
 }
 CLASSIFIERS = [

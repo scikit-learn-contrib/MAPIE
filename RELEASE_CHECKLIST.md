@@ -23,7 +23,7 @@
 - [ ] Test upload on TestPyPi:
     * `cd`
     * `conda activate`
-    * `conda create -n test-mapie --yes python=3.9.2`
+    * `conda create -n test-mapie --yes python=3.9`
     * `conda activate test-mapie`
     * `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie`
     * `conda activate`
