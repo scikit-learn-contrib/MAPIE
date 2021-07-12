@@ -28,4 +28,5 @@
     * `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie`
     * `conda activate`
     * `conda env remove -n test-mapie`
-- [ ] Create new release on GitHub for this tag, with all of the links.
+- [ ] Create new release on GitHub for this tag.
+- [ ] Merge the automatically created pull request on https://github.com/conda-forge/mapie-feedstock

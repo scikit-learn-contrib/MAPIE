@@ -57,21 +57,21 @@ Its only internal dependency is `scikit-learn <https://scikit-learn.org/stable/>
 
 Install via `pip`:
 
-.. code:: python
+.. code:: sh
 
-    pip install mapie
+    $ pip install mapie
 
 or via `conda`:
 
-.. code:: python
+.. code:: sh
 
-    conda install mapie
+    $ conda install -c conda-forge mapie
 
 To install directly from the github repository :
 
-.. code:: python
+.. code:: sh
 
-    pip install git+https://github.com/simai-ml/MAPIE
+    $ pip install git+https://github.com/simai-ml/MAPIE
 
 
 ⚡️ Quickstart
