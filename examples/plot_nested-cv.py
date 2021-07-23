@@ -4,7 +4,7 @@ Nested cross-validation for estimating prediction intervals
 ===========================================================
 
 This example compares non-nested and nested cross-validation strategies for
-estimating prediction intervals with :class:`mapie.estimators.MapieRegressor`.
+estimating prediction intervals with :class:`mapie.regression.MapieRegressor`.
 
 In the regular sequential method, a cross-validation parameter search is
 carried out over the entire training set.

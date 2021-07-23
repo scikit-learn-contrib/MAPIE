@@ -3,7 +3,7 @@
 Estimate the prediction intervals of 1D homoscedastic data
 ==========================================================
 
-:class:`mapie.estimators.MapieRegressor` is used to estimate
+:class:`mapie.regression.MapieRegressor` is used to estimate
 the prediction intervals of 1D homoscedastic data using
 different strategies.
 """

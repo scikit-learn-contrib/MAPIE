@@ -3,7 +3,7 @@
 Plotting MAPIE prediction intervals with a toy dataset
 ======================================================
 
-An example plot of :class:`mapie.estimators.MapieRegressor` used
+An example plot of :class:`mapie.regression.MapieRegressor` used
 in the Quickstart.
 """
 import numpy as np

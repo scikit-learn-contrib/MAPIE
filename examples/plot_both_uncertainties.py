@@ -2,7 +2,7 @@
 ================================================
 Estimating aleatoric and epistemic uncertainties
 ================================================
-This example uses :class:`mapie.estimators.MapieRegressor` to estimate
+This example uses :class:`mapie.regression.MapieRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """

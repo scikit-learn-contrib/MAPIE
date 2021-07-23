@@ -3,7 +3,7 @@
 Example use of the prefit parameter with neural networks
 ========================================================
 
-:class:`mapie.estimators.MapieRegressor` is used to calibrate
+:class:`mapie.regression.MapieRegressor` is used to calibrate
 uncertainties for large models for which the cost of cross-validation
 is too high. Typically, neural networks rely on a single validation set.
 
