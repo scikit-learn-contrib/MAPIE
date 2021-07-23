@@ -52,7 +52,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import mean_squared_error
 
-from mapie.estimators import MapieRegressor
+from mapie.regression import MapieRegressor
 from mapie.metrics import coverage_score
 
 # Load the Boston data

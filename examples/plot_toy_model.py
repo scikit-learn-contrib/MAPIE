@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.datasets import make_regression
 
-from mapie.estimators import MapieRegressor
+from mapie.regression import MapieRegressor
 from mapie.metrics import coverage_score
 
 regressor = LinearRegression()

@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
-from mapie.estimators import MapieRegressor
+from mapie.regression import MapieRegressor
 F = TypeVar("F", bound=Callable[..., Any])
 
 

@@ -34,7 +34,7 @@ from scipy.stats import randint
 from matplotlib import pylab as plt
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
-from mapie.estimators import MapieRegressor
+from mapie.regression import MapieRegressor
 from mapie.metrics import coverage_score
 
 # Load input data and feature engineering

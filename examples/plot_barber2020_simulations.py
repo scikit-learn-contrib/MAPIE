@@ -34,7 +34,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from matplotlib import pyplot as plt
 
-from mapie.estimators import MapieRegressor
+from mapie.regression import MapieRegressor
 from mapie.metrics import coverage_score
 
 
