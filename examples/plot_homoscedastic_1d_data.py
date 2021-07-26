@@ -3,7 +3,7 @@
 Estimate the prediction intervals of 1D homoscedastic data
 ==========================================================
 
-:class:`mapie.estimators.MapieRegressor` is used to estimate
+:class:`mapie.regression.MapieRegressor` is used to estimate
 the prediction intervals of 1D homoscedastic data using
 different strategies.
 """
@@ -17,7 +17,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
 from matplotlib import pyplot as plt
 
-from mapie.estimators import MapieRegressor
+from mapie.regression import MapieRegressor
 
 
 def f(x: np.ndarray) -> np.ndarray:

@@ -4,7 +4,7 @@ Nested cross-validation for estimating prediction intervals
 ===========================================================
 
 This example compares non-nested and nested cross-validation strategies for
-estimating prediction intervals with :class:`mapie.estimators.MapieRegressor`.
+estimating prediction intervals with :class:`mapie.regression.MapieRegressor`.
 
 In the regular sequential method, a cross-validation parameter search is
 carried out over the entire training set.
@@ -52,7 +52,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import mean_squared_error
 
-from mapie.estimators import MapieRegressor
+from mapie.regression import MapieRegressor
 from mapie.metrics import coverage_score
 
 # Load the Boston data

@@ -4,14 +4,14 @@ MAPIE API
 
 .. currentmodule:: mapie
 
-Estimators
+Regression
 ==========
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
 
-   estimators.MapieRegressor
+   regression.MapieRegressor
 
 Metrics
 =======

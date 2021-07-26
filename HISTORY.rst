@@ -2,6 +2,12 @@
 History
 =======
 
+0.2.4 (XXXX-XX-XX)
+------------------
+
+* Renaming estimators.py module to regression.py
+* Modification of the documentation architecture 
+
 0.2.3 (2021-07-09)
 ------------------
 

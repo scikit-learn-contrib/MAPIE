@@ -102,7 +102,7 @@ in order to obtain a 95% confidence for our prediction intervals.
 
 .. code:: python
 
-    from mapie.estimators import MapieRegressor
+    from mapie.regression import MapieRegressor
     STRATEGIES = {
         "naive": dict(method="naive"),
         "jackknife": dict(method="base", cv=-1),
@@ -509,7 +509,7 @@ and compare their prediction interval.
 
 .. code:: python
 
-    from mapie.estimators import MapieRegressor
+    from mapie.regression import MapieRegressor
     models = [polyn_model, xgb_model, mlp_model]
     model_names = ["polyn", "xgb", "mlp"]
     prediction_interval = {}

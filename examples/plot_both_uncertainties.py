@@ -2,7 +2,7 @@
 ================================================
 Estimating aleatoric and epistemic uncertainties
 ================================================
-This example uses :class:`mapie.estimators.MapieRegressor` to estimate
+This example uses :class:`mapie.regression.MapieRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
-from mapie.estimators import MapieRegressor
+from mapie.regression import MapieRegressor
 F = TypeVar("F", bound=Callable[..., Any])
 
 
