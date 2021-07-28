@@ -390,7 +390,6 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         # Work
         if cv == "prefit":
             self.single_estimator_ = estimator
-            y_pred= self.single_estimator_.predict(X)
         else:
             self.single_estimator_ = fit_estimator(
                 clone(estimator), X, y, sample_weight
@@ -433,7 +432,6 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 "n_samples_in_train_"
             ]
         )
-        alpha_ = self._check_alpha(alpha)
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = np.array(self.single_estimator_.predict(X))
         return y_pred

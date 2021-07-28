@@ -1,23 +1,20 @@
 from __future__ import annotations
-from typing import Any, Union, Optional, Tuple, List
+from typing import Any, Union, Optional
 from typing_extensions import TypedDict
 from inspect import signature
-from itertools import combinations
 
 import pytest
 import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.datasets import make_classification
-from sklearn.model_selection import LeaveOneOut, KFold, train_test_split
+from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
-from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.validation import check_is_fitted
 from sklearn.dummy import DummyClassifier
 
 from mapie.classification import MapieClassifier
-from mapie.metrics import coverage_score
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([1, 1, 0, 1, 1, 0])
@@ -218,9 +215,8 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     mapie0.fit(X_lr, y_lr, sample_weight=None)
     mapie1.fit(X_lr, y_lr, sample_weight=np.ones(shape=n_samples))
     mapie2.fit(X_lr, y_lr, sample_weight=np.ones(shape=n_samples)*5)
-    y_pred0 = mapie0.predict(X_lr, alpha=0.05)
-    y_pred1 = mapie1.predict(X_lr, alpha=0.05)
-    y_pred2 = mapie2.predict(X_lr, alpha=0.05)
+    y_pred0 = mapie0.predict(X_lr)
+    y_pred1 = mapie1.predict(X_lr)
+    y_pred2 = mapie2.predict(X_lr)
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred1, y_pred2)
-
