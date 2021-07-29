@@ -47,7 +47,7 @@ and two standard deviations from the mean.
 
 .. code:: python
 
-    from mapie.estimators import MapieRegressor
+    from mapie.regression import MapieRegressor
     alpha = [0.05, 0.32]
     mapie = MapieRegressor(regressor)
     mapie.fit(X, y)
