@@ -10,10 +10,19 @@
 .. toctree::
    :maxdepth: 2
    :hidden:
+   :caption: CLASSIFICATION
+
+   theoretical_description_classification
+   tutorial_classification
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
    :caption: REGRESSION
 
-   theoretical_description
-   tutorial
+   theoretical_description_regression
+   tutorial_regression
+
 
 .. toctree::
    :maxdepth: 2

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Union, Optional
+from typing import Any, Optional
 from typing_extensions import TypedDict
 from inspect import signature
 
@@ -30,12 +30,11 @@ class DumbClassifier:
         self.fitted_ = True
         return self
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
-        return np.ones(len(X))
 
+METHODS = ["naive"]
 
 Params = TypedDict(
-    "Params", {"method": str, "cv": Optional[Union[int, KFold]]}
+    "Params", {"method": str, "cv": Optional[str]}
 )
 
 STRATEGIES = {
@@ -58,7 +57,6 @@ def test_default_parameters() -> None:
     assert mapie.estimator is None
     assert mapie.method == "naive"
     assert mapie.cv is None
-    assert not mapie.ensemble
     assert mapie.verbose == 0
     assert mapie.n_jobs is None
 
@@ -176,7 +174,7 @@ def test_valid_prefit_estimator_shape_no_n_features_in() -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_none_alpha_results(strategy: str) -> None:
     """
-    Test that alpha set to None in Mapie gives same predictions
+    Test that alpha set to None in MapieClassifier gives same predictions
     as base Classifier.
     """
     estimator = LogisticRegression()
@@ -206,7 +204,8 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_with_constant_sample_weights(strategy: str) -> None:
     """
-    Test PIs when sample weights are None or constant with different values.
+    Test predictions when sample weights are None
+    or constant with different values.
     """
     n_samples = len(X_lr)
     mapie0 = MapieClassifier(**STRATEGIES[strategy])
@@ -220,3 +219,99 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     y_pred2 = mapie2.predict(X_lr)
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred1, y_pred2)
+
+
+@pytest.mark.parametrize("n_jobs", ["dummy", 0, 1.5, [1, 2]])
+def test_invalid_n_jobs(n_jobs: Any) -> None:
+    """Test that invalid n_jobs raise errors."""
+    mapie = MapieClassifier(n_jobs=n_jobs)
+    with pytest.raises(ValueError, match=r".*Invalid n_jobs argument.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("n_jobs", [-5, -1, 1, 4])
+def test_valid_n_jobs(n_jobs: Any) -> None:
+    """Test that valid n_jobs raise no errors."""
+    mapie = MapieClassifier(n_jobs=n_jobs)
+    mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("verbose", ["dummy", -1, 1.5, [1, 2]])
+def test_invalid_verbose(verbose: Any) -> None:
+    """Test that invalid verboses raise errors."""
+    mapie = MapieClassifier(verbose=verbose)
+    with pytest.raises(ValueError, match=r".*Invalid verbose argument.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("verbose", [0, 10, 50])
+def test_valid_verbose(verbose: Any) -> None:
+    """Test that valid verboses raise no errors."""
+    mapie = MapieClassifier(verbose=verbose)
+    mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize(
+    "cv", [-3.14, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
+)
+def test_invalid_cv(cv: Any) -> None:
+    """Test that invalid cv raise errors."""
+    mapie = MapieClassifier(cv=cv)
+    with pytest.raises(ValueError, match=r".*Invalid cv.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("cv", [None, 'prefit'])
+def test_valid_cv(cv: Any) -> None:
+    """Test that valid cv raise no errors."""
+    mapie = MapieClassifier(cv=cv)
+    mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("method", [0, 1, "jackknife", "cv", ["base", "plus"]])
+def test_invalid_method(method: str) -> None:
+    """Test that invalid methods raise errors."""
+    mapie = MapieClassifier(method=method)
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("method", METHODS)
+def test_valid_method(method: str) -> None:
+    """Test that valid methods raise no errors."""
+    mapie = MapieClassifier(method=method)
+    mapie.fit(X_toy, y_toy)
+    check_is_fitted(
+        mapie,
+        [
+            "single_estimator_",
+            "n_features_in_",
+            "n_samples_in_train_"
+        ]
+    )
+
+
+@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
+def test_invalid_alpha(alpha: Any) -> None:
+    """Test that invalid alphas raise errors."""
+    mapie = MapieClassifier()
+    mapie.fit(X_toy, y_toy)
+    with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
+        mapie.predict(X_toy, alpha=alpha)
+
+
+@pytest.mark.parametrize(
+    "alpha",
+    [
+        np.linspace(0.05, 0.95, 5),
+        [0.05, 0.95],
+        (0.05, 0.95),
+        np.array([0.05, 0.95]),
+        None
+    ]
+)
+def test_valid_alpha(alpha: Any) -> None:
+    """Test that valid alphas raise no errors."""
+    mapie = MapieClassifier()
+    mapie.fit(X_toy, y_toy)
+    mapie.predict(X_toy, alpha=alpha)

@@ -7,7 +7,6 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.pipeline import Pipeline
 
 from ._typing import ArrayLike
@@ -16,14 +15,15 @@ from .utils import check_null_weight, fit_estimator
 
 class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     """
-    TO BE CONTINUED
+    Prediction intervals for classification
+    using conformal predictions (in development).
 
     Parameters
     ----------
     estimator : Optional[ClassifierMixin]
         Any classifier with scikit-learn API
         (i.e. with fit and predict methods), by default None.
-        If ``None``, estimator defaults to a ``LinearRegression`` instance.
+        If ``None``, estimator defaults to a ``LogisticRegression`` instance.
 
     method: str, optional
         Method to choose for prediction interval estimates.
@@ -68,19 +68,6 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         By default ``None``.
 
-    ensemble: bool, optional
-        Determines how to return the predictions.
-        If ``False``, returns the predictions from the single estimator
-        trained on the full training dataset.
-        If ``True``, returns the median of the prediction intervals computed
-        from the out-of-folds models.
-        The Jackknife+ interval can be interpreted as an interval
-        around the median prediction,
-        and is guaranteed to lie inside the interval,
-        unlike the single estimator predictions.
-
-        By default ``False``.
-
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
         The frequency of the messages increases with the verbosity level.
@@ -116,16 +103,14 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         estimator: Optional[ClassifierMixin] = None,
         method: str = "naive",
-        cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        cv: Optional[str] = None,
         n_jobs: Optional[int] = None,
-        ensemble: bool = False,
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
         self.method = method
         self.cv = cv
         self.n_jobs = n_jobs
-        self.ensemble = ensemble
         self.verbose = verbose
 
     def _check_parameters(self) -> None:
@@ -141,11 +126,6 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             raise ValueError(
                 "Invalid method. "
                 "Allowed values are 'naive'."
-            )
-
-        if not isinstance(self.ensemble, bool):
-            raise ValueError(
-                "Invalid ensemble argument. Must be a boolean."
             )
 
         if not isinstance(self.n_jobs, (int, type(None))):
@@ -180,7 +160,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
-        estimator : Optional[RegressorMixin], optional
+        estimator : Optional[ClassifierMixin], optional
             Estimator to check, by default ``None``
 
         Returns
@@ -213,48 +193,32 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
     def _check_cv(
         self,
-        cv: Optional[Union[int, str, BaseCrossValidator]] = None
-    ) -> Union[str, BaseCrossValidator]:
+        cv: Optional[str] = None
+    ) -> Union[str, None]:
         """
         Check if cross-validator is
-        ``None``, ``int``, ``"prefit"``, ``KFold`` or ``LeaveOneOut``.
-        Return a ``LeaveOneOut`` instance if integer equal to -1.
-        Return a ``KFold`` instance if integer superior or equal to 2.
-        Return a ``KFold`` instance if ``None``.
+        ``None`` or ``"prefit"``.
         Else raise error.
 
         Parameters
         ----------
-        cv : Optional[Union[int, str, BaseCrossValidator]], optional
-            Cross-validator to check, by default ``None``
+        cv : Optional[str],by default ``None``
 
         Returns
         -------
-        Union[str, BaseCrossValidator]
-            The cross-validator itself or a default ``KFold`` instance.
+        Union[str, None]
+            'prefit' or None.
 
         Raises
         ------
         ValueError
             If the cross-validator is not valid.
         """
-        if cv is None:
-            return KFold(n_splits=5)
-        if isinstance(cv, int):
-            if cv == -1:
-                return LeaveOneOut()
-            if cv >= 2:
-                return KFold(n_splits=cv)
-        if (
-            isinstance(cv, KFold)
-            or isinstance(cv, LeaveOneOut)
-            or cv == "prefit"
-        ):
+        if (cv is None or cv == "prefit"):
             return cv
         raise ValueError(
-            "Invalid cv argument. "
-            "Allowed values are None, -1, int >= 2, 'prefit', "
-            "KFold or LeaveOneOut."
+            "Invalid cv argument."
+            "Allowed value 'prefit'."
         )
 
     def _check_alpha(
@@ -354,6 +318,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         sample_weight: Optional[ArrayLike] = None
     ) -> MapieClassifier:
         """
+        Fit the base estimator or use the fitted base estimator.
 
         Parameters
         ----------
@@ -374,7 +339,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         Returns
         -------
-
+        MapieClassifier
+            The model itself.
         """
         # Checks
         self._check_parameters()
@@ -424,6 +390,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         """
         # Checks
+        self._check_alpha(alpha)
         check_is_fitted(
             self,
             [
