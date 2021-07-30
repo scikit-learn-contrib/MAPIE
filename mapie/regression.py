@@ -13,6 +13,7 @@ from sklearn.pipeline import Pipeline
 
 from ._typing import ArrayLike
 from .utils import check_null_weight, fit_estimator
+from .utils import check_n_features_in, check_alpha
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
@@ -492,7 +493,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         X, y = check_X_y(
             X, y, force_all_finite=False, dtype=["float64", "object"]
         )
-        self.n_features_in_ = self._check_n_features_in(X, estimator)
+        self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
         # Initialization
@@ -580,7 +581,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 "residuals_"
             ]
         )
-        alpha_ = self._check_alpha(alpha)
+        alpha_ = check_alpha(alpha)
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
 

@@ -11,6 +11,8 @@ from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.validation import check_is_fitted
 from sklearn.dummy import DummyClassifier
 
@@ -171,13 +173,16 @@ def test_valid_prefit_estimator_shape_no_n_features_in() -> None:
     assert mapie.n_features_in_ == 10
 
 
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_none_alpha_results(strategy: str) -> None:
+@pytest.mark.parametrize(
+    "logistic_estimators",
+    [LogisticRegression(), DecisionTreeClassifier(), RandomForestClassifier()]
+)
+def test_none_alpha_results(logistic_estimators: Any) -> None:
     """
     Test that alpha set to None in MapieClassifier gives same predictions
     as base Classifier.
     """
-    estimator = LogisticRegression()
+    estimator = logistic_estimators
     estimator.fit(X_lr, y_lr)
     y_pred_est = estimator.predict(X_lr)
     mapie = MapieClassifier(estimator=estimator, cv="prefit")
