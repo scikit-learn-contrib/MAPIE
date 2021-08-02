@@ -1,6 +1,6 @@
 .. title:: Theoretical Description : contents
 
-.. _theoretical_description:
+.. _theoretical_description_regression:
 
 =======================
 Theoretical Description

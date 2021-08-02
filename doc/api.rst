@@ -13,6 +13,15 @@ Regression
 
    regression.MapieRegressor
 
+Classification
+==============
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   classification.MapieClassifier
+
 Metrics
 =======
 
