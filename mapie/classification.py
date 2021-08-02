@@ -37,7 +37,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     cv: Optional[str]
         The cross-validation strategy for computing scores :
 
-        - ``None``, to use mapie for fitting.
+        - ``None``, MapieClassifier will be used for fitting the base model.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used
           for computing scores only.
