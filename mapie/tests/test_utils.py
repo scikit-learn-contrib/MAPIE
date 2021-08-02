@@ -5,12 +5,22 @@ import pytest
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
+from sklearn.datasets import make_regression, make_classification
 
 from mapie.utils import check_null_weight, fit_estimator
+from mapie.utils import check_alpha, check_n_features_in
 
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
+
+X_reg, y_reg = make_regression(
+    n_samples=500, n_features=10, noise=1.0, random_state=1
+)
+
+X_lr, y_lr = make_classification(
+    n_samples=500, n_features=10, n_informative=3, n_classes=4, random_state=1
+)
 
 
 class DumbRegressor:
@@ -19,6 +29,17 @@ class DumbRegressor:
         self, X: np.ndarray,
         y: Optional[np.ndarray] = None
     ) -> DumbRegressor:
+        self.fitted_ = True
+        return self
+
+
+class DumbClassifier:
+
+    def fit(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None
+    ) -> DumbClassifier:
         self.fitted_ = True
         return self
 
@@ -72,3 +93,42 @@ def test_fit_estimator_sample_weight() -> None:
     y_pred_2 = estimator_2.predict(X)
     with pytest.raises(AssertionError):
         np.testing.assert_almost_equal(y_pred_1, y_pred_2)
+
+
+@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
+def test_invalid_alpha(alpha: Any) -> None:
+    """Test that invalid alphas raise errors."""
+    with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
+        check_alpha(alpha=alpha)
+
+
+@pytest.mark.parametrize(
+    "alpha",
+    [
+        np.linspace(0.05, 0.95, 5),
+        [0.05, 0.95],
+        (0.05, 0.95),
+        np.array([0.05, 0.95]),
+        None
+    ]
+)
+def test_valid_alpha(alpha: Any) -> None:
+    """Test that valid alphas raise no errors."""
+    check_alpha(alpha=alpha)
+
+
+@pytest.mark.parametrize(
+    "Estimator",
+    [DumbRegressor().fit(X_reg, y_reg), DumbClassifier().fit(X_lr, y_lr)])
+@pytest.mark.parametrize("CV", ["prefit", None])
+def test_valid_shape_no_n_features_in(
+        Estimator: Any, CV: Any) -> None:
+    """
+    Test that estimators fitted with a right number of features
+    but missing an n_features_in_ attribute raise no errors.
+    """
+    estimator = Estimator
+    n_features_in = check_n_features_in(
+        X=X_reg, cv="prefit", estimator=estimator
+    )
+    assert n_features_in == 10

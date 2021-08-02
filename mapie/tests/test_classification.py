@@ -173,24 +173,6 @@ def test_valid_prefit_estimator_shape_no_n_features_in() -> None:
     assert mapie.n_features_in_ == 10
 
 
-@pytest.mark.parametrize(
-    "logistic_estimators",
-    [LogisticRegression(), DecisionTreeClassifier(), RandomForestClassifier()]
-)
-def test_none_alpha_results(logistic_estimators: Any) -> None:
-    """
-    Test that alpha set to None in MapieClassifier gives same predictions
-    as base Classifier.
-    """
-    estimator = logistic_estimators
-    estimator.fit(X_lr, y_lr)
-    y_pred_est = estimator.predict(X_lr)
-    mapie = MapieClassifier(estimator=estimator, cv="prefit")
-    mapie.fit(X_lr, y_lr)
-    y_pred_mapie = mapie.predict(X_lr)
-    np.testing.assert_allclose(y_pred_est, y_pred_mapie)
-
-
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_single_and_multi_jobs(strategy: str) -> None:
     """
@@ -320,3 +302,22 @@ def test_valid_alpha(alpha: Any) -> None:
     mapie = MapieClassifier()
     mapie.fit(X_toy, y_toy)
     mapie.predict(X_toy, alpha=alpha)
+
+
+@pytest.mark.parametrize(
+    "classifier",
+    [LogisticRegression(), DecisionTreeClassifier(), RandomForestClassifier()]
+)
+@pytest.mark.parametrize("CV", ["prefit", None])
+def test_none_alpha_results(classifier: Any, CV: Any) -> None:
+    """
+    Test that alpha set to None in MapieClassifier gives same predictions
+    as base Classifier.
+    """
+    estimator = classifier
+    estimator.fit(X_lr, y_lr)
+    y_pred_est = estimator.predict(X_lr)
+    mapie = MapieClassifier(estimator=estimator, cv=CV)
+    mapie.fit(X_lr, y_lr)
+    y_pred_mapie = mapie.predict(X_lr)
+    np.testing.assert_allclose(y_pred_est, y_pred_mapie)

@@ -34,26 +34,16 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         By default "naive".
 
-    cv: Optional[Union[int, str, BaseCrossValidator]]
-        The cross-validation strategy for computing residuals.
-        It directly drives the distinction between jackknife and cv variants.
-        Choose among:
+    cv: Optional[str]
+        The cross-validation strategy for computing scores :
 
-        - ``None``, to use the default 5-fold cross-validation
-        - integer, to specify the number of folds.
-          If equal to -1, equivalent to
-          ``sklearn.model_selection.LeaveOneOut()``.
-        - CV splitter: ``sklearn.model_selection.LeaveOneOut()``
-          (jackknife variants) or ``sklearn.model_selection.KFold()``
-          (cross-validation variants)
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already,
-          and the ``method`` parameter is ignored.
+        - ``None``, to use mapie for fitting.
+        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used
-          for computing residuals only.
-          At prediction time, quantiles of these residuals are used to provide
+          for computing scores only.
+          At prediction time, quantiles of these scores are used to provide
           a prediction interval with fixed width.
-          The user has to take care manually that data for model fitting and
-          residual estimate are disjoint.
+          The user has to take care manually that data for model fitting.
 
         By default ``None``.
 
@@ -219,7 +209,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             return cv
         raise ValueError(
             "Invalid cv argument."
-            "Allowed value 'prefit'."
+            "Allowed value is 'prefit'."
         )
 
     def fit(

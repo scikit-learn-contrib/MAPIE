@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union, Iterable, Tuple, List, Any, cast
+from typing import Optional, Union, Iterable, Tuple, List, cast
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -299,96 +299,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             "Allowed values are None, -1, int >= 2, 'prefit', "
             "KFold or LeaveOneOut."
         )
-
-    def _check_alpha(
-        self,
-        alpha: Optional[Union[float, Iterable[float]]] = None
-    ) -> Optional[np.ndarray]:
-        """
-        Check alpha and prepare it as a np.ndarray
-
-        Parameters
-        ----------
-        alpha : Union[float, Iterable[float]]
-        Can be a float, a list of floats, or a np.ndarray of floats.
-        Between 0 and 1, represent the uncertainty of the confidence interval.
-        Lower alpha produce larger (more conservative) prediction intervals.
-        alpha is the complement of the target coverage level.
-        Only used at prediction time. By default 0.1.
-
-        Returns
-        -------
-        np.ndarray
-            Prepared alpha.
-
-        Raises
-        ------
-        ValueError
-            If alpha is not a float or an Iterable of floats between 0 and 1.
-        """
-        if alpha is None:
-            return alpha
-        if isinstance(alpha, float):
-            alpha_np = np.array([alpha])
-        elif isinstance(alpha, Iterable):
-            alpha_np = np.array(alpha)
-        else:
-            raise ValueError(
-                "Invalid alpha. Allowed values are float or Iterable."
-            )
-        if len(alpha_np.shape) != 1:
-            raise ValueError(
-                "Invalid alpha. "
-                "Please provide a one-dimensional list of values."
-            )
-        if alpha_np.dtype.type not in [np.float64, np.float32]:
-            raise ValueError(
-                "Invalid alpha. Allowed values are Iterable of floats."
-            )
-        if np.any((alpha_np <= 0) | (alpha_np >= 1)):
-            raise ValueError(
-                "Invalid alpha. Allowed values are between 0 and 1."
-            )
-        return alpha_np
-
-    def _check_n_features_in(
-        self,
-        X: ArrayLike,
-        estimator: Optional[RegressorMixin] = None,
-    ) -> int:
-        """
-        Check the expected number of training features.
-        In general it is simply the number of columns in the data.
-        If ``cv=="prefit"`` however,
-        it can be deduced from the estimator's ``n_features_in_`` attribute.
-        These two values absolutely must coincide.
-
-        Parameters
-        ----------
-        estimator : RegressorMixin
-            Backend estimator of MAPIE.
-        X : ArrayLike of shape (n_samples, n_features)
-            Data passed into the ``fit`` method.
-
-        Returns
-        -------
-        int
-            Expected number of training features.
-
-        Raises
-        ------
-        ValueError
-            If there is an inconsistency between the shape of the dataset
-            and the one expected by the estimator.
-        """
-        n_features_in: int = X.shape[1]
-        if self.cv == "prefit" and hasattr(estimator, "n_features_in_"):
-            if cast(Any, estimator).n_features_in_ != n_features_in:
-                raise ValueError(
-                    "Invalid mismatch between "
-                    "X.shape and estimator.n_features_in_."
-                )
-        return n_features_in
 
     def _fit_and_predict_oof_model(
         self,
