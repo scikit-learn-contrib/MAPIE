@@ -1,10 +1,10 @@
 .. title:: Tutorial : contents
 
-.. _tutorial:
+.. _tutorial_regression:
 
-========
-Tutorial
-========
+===================
+Tutorial Regression
+===================
 
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a 
 simple, one-dimensional, ground truth function
