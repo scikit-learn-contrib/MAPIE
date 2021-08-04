@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.datasets import make_classification
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, train_test_split
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
@@ -19,7 +19,7 @@ from sklearn.dummy import DummyClassifier
 from mapie.classification import MapieClassifier
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
-y_toy = np.array([1, 1, 0, 1, 1, 0])
+y_toy = np.array([1, 3, 0, 2, 1, 0])
 
 
 class DumbClassifier:
@@ -31,6 +31,9 @@ class DumbClassifier:
     ) -> DumbClassifier:
         self.fitted_ = True
         return self
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        return X
 
 
 METHODS = ["naive"]
@@ -248,7 +251,7 @@ def test_invalid_cv(cv: Any) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [None, 'prefit'])
+@pytest.mark.parametrize("cv", [None])
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     mapie = MapieClassifier(cv=cv)
@@ -321,3 +324,21 @@ def test_none_alpha_results(classifier: Any, CV: Any) -> None:
     mapie.fit(X_lr, y_lr)
     y_pred_mapie = mapie.predict(X_lr)
     np.testing.assert_allclose(y_pred_est, y_pred_mapie)
+
+
+def test_valid_prediction() -> None:
+    X, Y = make_classification(
+        n_samples=10000,
+        n_features=2, n_redundant=0, n_informative=2,
+        n_clusters_per_class=1, n_classes=4)
+    x_train_cal, x_test, y_train_cal, y_test = train_test_split(
+        X, Y, test_size=1/10
+    )
+    x_train, x_cal, y_train, y_cal = train_test_split(
+        x_train_cal, y_train_cal, test_size=1/9
+    )
+    model = LogisticRegression(multi_class="multinomial")
+    model.fit(x_train, y_train)
+    mapie = MapieClassifier(estimator=model, cv="prefit")
+    mapie.fit(x_cal, y_cal)
+    mapie.predict(x_test, alpha=0.05)

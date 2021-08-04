@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import Optional, Union, Iterable
+from typing import Optional, Union, Tuple, Iterable
 
 import numpy as np
-from sklearn.utils import check_X_y, check_array
+from sklearn.utils import check_X_y, check_array, multiclass
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -77,6 +77,9 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
     n_samples_in_train_:int
         Number of samples passed to the fit method.
+
+    scores_ : np.ndarray of shape (n_samples_train)
+        the softmax scores of the true class
 
     References
     ----------
@@ -170,10 +173,12 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         """
         if estimator is None:
             return LogisticRegression()
-        if not hasattr(estimator, "fit") and not hasattr(estimator, "predict"):
+        if (not hasattr(estimator, "fit") and not hasattr(estimator, "predict")
+                and not hasattr(estimator, 'predict_proba')):
             raise ValueError(
                 "Invalid estimator. "
-                "Please provide a regressor with fit and predict methods."
+                "Please provide a classifier with fit,"
+                "predict and predict_proba methods."
             )
         if self.cv == "prefit":
             if isinstance(self.estimator, Pipeline):
@@ -250,6 +255,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         X, y = check_X_y(
             X, y, force_all_finite=False, dtype=["float64", "int", "object"]
         )
+        multiclass.check_classification_targets(y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         self.n_samples_in_train_ = X.shape[0]
@@ -257,17 +263,21 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         # Work
         if cv == "prefit":
             self.single_estimator_ = estimator
+            y_pred = self.single_estimator_.predict_proba(X)
+            self.scores_ = 1-y_pred[np.arange(len(y_pred)), y]
         else:
             self.single_estimator_ = fit_estimator(
                 clone(estimator), X, y, sample_weight
             )
+            y_pred = self.single_estimator_.predict_proba(X)
+            self.scores_ = 1-y_pred[np.arange(len(y_pred)), y]
         return self
 
     def predict(
         self,
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None
-    ) -> np.ndarray:
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
 
         Parameters
@@ -291,15 +301,30 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         """
         # Checks
-        check_alpha(alpha)
+        alpha_ = check_alpha(alpha)
         check_is_fitted(
             self,
             [
                 "single_estimator_",
                 "n_features_in_",
-                "n_samples_in_train_"
+                "n_samples_in_train_",
+                "scores_"
             ]
         )
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
-        y_pred = np.array(self.single_estimator_.predict(X))
-        return y_pred
+        y_pred = self.single_estimator_.predict(X)
+        n = self.n_samples_in_train_
+        if alpha_ is None:
+            return np.array(y_pred)
+        else:
+            if self.cv == "prefit":
+                quantile = np.quantile(
+                    self.scores_,
+                    ((n+1)*(1-alpha_))/n,
+                    interpolation="higher"
+                    )
+                prediction_sets = (
+                    self.single_estimator_.predict_proba(X) > (1-quantile))
+                return y_pred, np.stack(prediction_sets, axis=0)
+            else:
+                return np.array(y_pred)
