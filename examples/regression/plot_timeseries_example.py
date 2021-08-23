@@ -39,7 +39,7 @@ from mapie.metrics import coverage_score
 
 # Load input data and feature engineering
 demand_df = pd.read_csv(
-    "data/demand_temperature.csv",
+    "../data/demand_temperature.csv",
     parse_dates=True,
     index_col=0
 )

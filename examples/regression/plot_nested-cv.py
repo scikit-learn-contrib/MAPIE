@@ -72,7 +72,7 @@ rf_params = {
 
 # Cross-validation and prediction-interval parameters.
 cv = 5
-n_iter = 5
+n_iter = 1
 alpha = 0.05
 random_state = 59
 
