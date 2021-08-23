@@ -18,9 +18,6 @@ from sklearn.dummy import DummyClassifier
 
 from mapie.classification import MapieClassifier
 
-X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
-y_toy = np.array([1, 3, 0, 2, 1, 0])
-
 
 class DumbClassifier:
 
@@ -45,6 +42,9 @@ Params = TypedDict(
 STRATEGIES = {
     "score": Params(method="score", cv=None)
 }
+
+X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
+y_toy = np.array([1, 3, 0, 2, 1, 0])
 
 X_lr, y_lr = make_classification(
     n_samples=500, n_features=10, n_informative=3, n_classes=4, random_state=1
@@ -348,7 +348,7 @@ def test_none_alpha_results(classifier: Any, CV: Any) -> None:
     ]
 )
 def test_valid_prediction(alpha: Any) -> None:
-    """Test fit and predict """
+    """Test fit and predict. """
     model = LogisticRegression(multi_class="multinomial")
     model.fit(X_train, y_train)
     mapie = MapieClassifier(estimator=model, cv="prefit")
@@ -371,3 +371,37 @@ def test_predict_output_shape(
     y_pred, y_pis = mapie.predict(X, alpha=alpha)
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pis.shape == (X.shape[0], 4, n_alpha)
+    assert y_pred.shape == (X.shape[0],)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_results_for_same_alpha(strategy: str) -> None:
+    """
+    Test that predictions and intervals
+    are similar with two equal values of alpha.
+    """
+    mapie = MapieClassifier(**STRATEGIES[strategy])
+    mapie.fit(X_lr, y_lr)
+    _, y_pis = mapie.predict(X_lr, alpha=[0.1, 0.1])
+    np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 0, 1])
+    np.testing.assert_allclose(y_pis[:, 1, 0], y_pis[:, 1, 1])
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize(
+    "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
+)
+def test_results_for_alpha_as_float_and_arraylike(
+    strategy: str,
+    alpha: Any
+) -> None:
+    """Test that output values do not depend on type of alpha."""
+    mapie = MapieClassifier(**STRATEGIES[strategy])
+    mapie.fit(X_lr, y_lr)
+    y_pred_float1, y_pis_float1 = mapie.predict(X_lr, alpha=alpha[0])
+    y_pred_float2, y_pis_float2 = mapie.predict(X_lr, alpha=alpha[1])
+    y_pred_array, y_pis_array = mapie.predict(X_lr, alpha=alpha)
+    np.testing.assert_allclose(y_pred_float1, y_pred_array)
+    np.testing.assert_allclose(y_pred_float2, y_pred_array)
+    np.testing.assert_allclose(y_pis_float1[:, :, 0], y_pis_array[:, :, 0])
+    np.testing.assert_allclose(y_pis_float2[:, :, 0], y_pis_array[:, :, 1])
