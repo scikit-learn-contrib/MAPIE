@@ -81,7 +81,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         Number of samples passed to the fit method.
 
     scores_ : np.ndarray of shape (n_samples_train)
-        The softmax scores of the true class
+        The softmax scores of the true class.
 
     References
     ----------
@@ -266,7 +266,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         - [2]: Validation data,
           of shape (n_samples_val,)
         - [3]: Validation data target,
-          of shape (n_samples_val,)
+          of shape (n_samples_val,).
         """
         X_train, y_train = X[train_index], y[train_index]
         X_val, y_val = X[val_index], y[val_index]
@@ -366,7 +366,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         Returns
         -------
 
-        - np.ndarray of shape (n_samples,) if alpha is None
+        - np.ndarray of shape (n_samples,) if alpha is None.
 
         """
         # Checks
@@ -396,6 +396,6 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 ])
                 prediction_sets = np.stack([
                     self.single_estimator_.predict_proba(X) > (1 - quantile)
-                    for quantile in quantiles], axis=2
-                )
+                    for quantile in quantiles
+                ], axis=2)
             return y_pred, prediction_sets
