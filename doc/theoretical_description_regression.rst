@@ -6,7 +6,7 @@
 Theoretical Description
 =======================
 
-The :class:`mapie.classification.MapieClassifier` class uses various
+The :class:`mapie.classification.MapieRegressor` class uses various
 resampling methods based on the jackknife strategy
 recently introduced by Foygel-Barber et al. (2020) [1]. 
 They allow the user to estimate robust prediction intervals with any kind of
