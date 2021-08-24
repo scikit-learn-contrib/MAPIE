@@ -17,6 +17,12 @@ Install via ``pip``:
 
     pip install mapie
 
+or via `conda`:
+
+.. code:: sh
+
+    $ conda install -c conda-forge mapie
+
 To install directly from the github repository :
 
 .. code:: python
