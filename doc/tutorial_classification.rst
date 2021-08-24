@@ -2,8 +2,8 @@
 
 .. _tutorial_classification:
 
-=======================
-Tutorial Classification
-=======================
+========
+Tutorial
+========
 
 TO BE CONTINUED

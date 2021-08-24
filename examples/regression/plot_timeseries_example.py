@@ -14,7 +14,7 @@ by the temperature, considered here as a exogeneous variable.
 
 The data is modelled by a Random Forest model with a
 :class:`sklearn.model_selection.RandomizedSearchCV` using a sequential
-`sklearn.model_selection.TimeSeriesSplit` cross validation, in which the
+:class:`sklearn.model_selection.TimeSeriesSplit` cross validation, in which the
 training set is prior to the validation set.
 The best model is then feeded into :class:`mapie.regression.MapieRegressor`
 to estimate the associated prediction intervals.
@@ -39,7 +39,7 @@ from mapie.metrics import coverage_score
 
 # Load input data and feature engineering
 demand_df = pd.read_csv(
-    "data/demand_temperature.csv",
+    "../data/demand_temperature.csv",
     parse_dates=True,
     index_col=0
 )

@@ -15,6 +15,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.validation import check_is_fitted
 from sklearn.dummy import DummyClassifier
+from sklearn.naive_bayes import GaussianNB
 
 from mapie.classification import MapieClassifier
 
@@ -43,13 +44,23 @@ STRATEGIES = {
     "score": Params(method="score", cv=None)
 }
 
-X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
-y_toy = np.array([1, 3, 0, 2, 1, 0])
+X_toy = np.arange(9).reshape(-1, 1)
+y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
+y_toy_mapie = [
+    [True, False, False],
+    [True, False, False],
+    [True, False, False],
+    [True, True, False],
+    [False, True, False],
+    [False, True, True],
+    [False, False, True],
+    [False, False, True],
+    [False, False, True]
+]
 
 X_lr, y_lr = make_classification(
     n_samples=500, n_features=10, n_informative=3, n_classes=4, random_state=1
 )
-
 
 X_train_cal, X_test, y_train_cal, y_test = train_test_split(
         X_lr, y_lr, test_size=1/10
@@ -405,3 +416,11 @@ def test_results_for_alpha_as_float_and_arraylike(
     np.testing.assert_allclose(y_pred_float2, y_pred_array)
     np.testing.assert_allclose(y_pis_float1[:, :, 0], y_pis_array[:, :, 0])
     np.testing.assert_allclose(y_pis_float2[:, :, 0], y_pis_array[:, :, 1])
+
+
+def test_toy_dataset_predictions() -> None:
+    """Test prediction sets estimated by MapieClassifier on a toy dataset"""
+    clf = GaussianNB().fit(X_toy, y_toy)
+    mapie = MapieClassifier(estimator=clf, cv="prefit").fit(X_toy, y_toy)
+    _, y_pi_mapie = mapie.predict(X_toy, alpha=0.1)
+    np.testing.assert_allclose(y_pi_mapie[:, :, 0], y_toy_mapie)

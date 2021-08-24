@@ -18,40 +18,47 @@ from .utils import check_n_features_in, check_alpha
 
 class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     """
-    Prediction intervals for classification
-    using conformal predictions (in development).
+    Prediction sets for classification.
+
+    This class implements several conformal prediction strategies for
+    estimating prediction sets for classification. Instead of giving a
+    single predicted label, the idea is to give a set of predicted labels
+    which come with mathematically guaranteed coverages.
 
     Parameters
     ----------
     estimator : Optional[ClassifierMixin]
         Any classifier with scikit-learn API
-        (i.e. with fit and predict methods), by default None.
+        (i.e. with fit, predict, and predict_proba methods), by default None.
         If ``None``, estimator defaults to a ``LogisticRegression`` instance.
 
     method: str, optional
         Method to choose for prediction interval estimates.
         Choose among:
 
-        - "score", based on training set scores
-
-        By default "score".
+        - "score", based on the the scores
+          (i.e. 1 minus the softmax score of the true label)
+          on the calibration set.
+        - "cumulated_score", based on the sum of the softmax outputs of the
+          labels until the true label is reached, on the calibration set.
+          By default "score".
 
     cv: Optional[str]
         The cross-validation strategy for computing scores :
 
-        - ``None``, MapieClassifier will be used for fitting the base model.
+        - ``None``, MapieClassifier will be used to fit the base model.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used
-          for computing scores only.
-          At prediction time, quantiles of these scores are used to provide
-          a prediction interval with fixed width.
-          The user has to take care manually that data for model fitting.
+          to calibrate the predictions through the score computation.
+          At prediction time, quantiles of these scores are used to estimate
+          prediction sets.
 
         By default ``None``.
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
+        At this moment, parallel processing is disabled.
         If ``-1`` all CPUs are used.
         If ``1`` is given, no parallel computing code is used at all,
         which is useful for debugging.
@@ -63,6 +70,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
+        At this moment, parallel processing is disabled.
         The frequency of the messages increases with the verbosity level.
         If it more than ``10``, all iterations are reported.
         Above ``50``, the output is sent to stdout.
@@ -72,7 +80,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     Attributes
     ----------
     single_estimator_ : sklearn.ClassifierMixin
-        Estimator fit on the whole training set.
+        Estimator fitted on the whole training set.
 
     n_features_in_: int
         Number of features passed to the fit method.
@@ -81,16 +89,36 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         Number of samples passed to the fit method.
 
     scores_ : np.ndarray of shape (n_samples_train)
-        The softmax scores of the true class.
+        The scores used to calibrate the prediction sets.
 
     References
     ----------
-
+    Mauricio Sadinle, Jing Lei, and Larry Wasserman.
+    "Least Ambiguous Set-Valued Classifiers with Bounded Error Levels",
+    Journal of the American Statistical Association, 114, 2019.
 
     Examples
     --------
-
+    >>> import numpy as np
+    >>> from sklearn.naive_bayes import GaussianNB
+    >>> from mapie.classification import MapieClassifier
+    >>> X_toy = np.arange(9).reshape(-1, 1)
+    >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
+    >>> clf = GaussianNB().fit(X_toy, y_toy)
+    >>> mapie = MapieClassifier(estimator=clf, cv="prefit").fit(X_toy, y_toy)
+    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.1)
+    >>> print(y_pi_mapie[:, :, 0])
+    [[ True False False]
+     [ True False False]
+     [ True False False]
+     [ True  True False]
+     [False  True False]
+     [False  True  True]
+     [False False  True]
+     [False False  True]
+     [False False  True]]
     """
+
     valid_methods_ = [
         "score"
     ]
@@ -116,7 +144,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         Raises
         ------
         ValueError
-            Is parameters are not valid.
+            If parameters are not valid.
         """
         if self.method not in self.valid_methods_:
             raise ValueError(
@@ -168,7 +196,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         ------
         ValueError
             If the estimator is not ``None``
-            and has no fit nor predict methods.
+            and has no fit, predict, nor predict_proba methods.
 
         NotFittedError
             If the estimator is not fitted and ``cv`` attribute is "prefit".
@@ -197,17 +225,16 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         cv: Optional[str] = None
     ) -> Union[str, None]:
         """
-        Check if cross-validator is
-        ``None`` or ``"prefit"``.
+        Check if cross-validator is ``None`` or ``"prefit"``.
         Else raise error.
 
         Parameters
         ----------
-        cv : Optional[str],by default ``None``
+        cv : Optional[str], by default ``None``.
 
         Returns
         -------
-        Union[str, None]
+        Optional[str]
             'prefit' or None.
 
         Raises
@@ -265,7 +292,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
           of shape (n_samples_val,)
         - [2]: Validation data,
           of shape (n_samples_val,)
-        - [3]: Validation data target,
+        - [3]: Validation data labels,
           of shape (n_samples_val,).
         """
         X_train, y_train = X[train_index], y[train_index]
@@ -301,8 +328,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             If None, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
+            before the fitting process and hence have no prediction sets.
             By default None.
 
         Returns
@@ -359,15 +385,18 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             Between 0 and 1, represent the uncertainty of the confidence
             interval.
             Lower ``alpha`` produce larger (more conservative) prediction
-            intervals.
+            sets.
             ``alpha`` is the complement of the target coverage level.
             By default ``None``.
 
         Returns
         -------
+        Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]
 
         - np.ndarray of shape (n_samples,) if alpha is None.
 
+        - Tuple[np.ndarray, np.ndarray] of shapes
+        (n_samples,) and (n_samples, n_labels, n_alpha) if alpha is not None.
         """
         # Checks
         alpha_ = check_alpha(alpha)
@@ -386,16 +415,15 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         if alpha_ is None:
             return np.array(y_pred)
         else:
-            if self.method == "score":
-                quantiles = np.stack([
-                    np.quantile(
-                        self.scores_,
-                        ((n + 1) * (1 - _alpha)) / n,
-                        interpolation="higher"
-                    ) for _alpha in alpha_
-                ])
-                prediction_sets = np.stack([
-                    self.single_estimator_.predict_proba(X) > (1 - quantile)
-                    for quantile in quantiles
-                ], axis=2)
+            quantiles = np.stack([
+                np.quantile(
+                    self.scores_,
+                    ((n + 1) * (1 - _alpha)) / n,
+                    interpolation="higher"
+                ) for _alpha in alpha_
+            ])
+            prediction_sets = np.stack([
+                self.single_estimator_.predict_proba(X) > (1 - quantile)
+                for quantile in quantiles
+            ], axis=2)
             return y_pred, prediction_sets

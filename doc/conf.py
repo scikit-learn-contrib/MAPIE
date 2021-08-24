@@ -310,6 +310,8 @@ intersphinx_mapping = {
 
 # sphinx-gallery configuration
 sphinx_gallery_conf = {
+    'examples_dirs': ['../examples/regression', '../examples/classification'],
+    'gallery_dirs': ['examples_regression', 'examples_classification'],
     "doc_module": "mapie",
     "backreferences_dir": os.path.join("generated"),
     "reference_url": {

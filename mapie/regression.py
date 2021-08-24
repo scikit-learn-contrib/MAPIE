@@ -107,7 +107,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         List of all valid methods.
 
     single_estimator_ : sklearn.RegressorMixin
-        Estimator fit on the whole training set.
+        Estimator fitted on the whole training set.
 
     estimators_ : list
         List of out-of-folds estimators.
@@ -178,7 +178,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Raises
         ------
         ValueError
-            Is parameters are not valid.
+            If parameters are not valid.
         """
         if self.method not in self.valid_methods_:
             raise ValueError(

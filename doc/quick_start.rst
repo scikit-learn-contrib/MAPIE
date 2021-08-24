@@ -3,7 +3,7 @@ Quick Start with MAPIE
 ######################
 
 This package allows you to easily estimate prediction intervals using your
-favourite sklearn-compatible regressor on single-output data.
+favourite sklearn-compatible regressor (on single-output data) or classifier.
 
 Estimate your prediction intervals
 ==================================
@@ -16,6 +16,12 @@ Install via ``pip``:
 .. code:: python
 
     pip install mapie
+
+or via `conda`:
+
+.. code:: sh
+
+    $ conda install -c conda-forge mapie
 
 To install directly from the github repository :
 
