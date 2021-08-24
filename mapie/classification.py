@@ -58,7 +58,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
-        via the "locky" backend. 
+        via the "locky" backend.
         At this moment, parallel processing is disabled.
         If ``-1`` all CPUs are used.
         If ``1`` is given, no parallel computing code is used at all,
