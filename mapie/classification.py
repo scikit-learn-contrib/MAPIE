@@ -101,7 +101,6 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     --------
     >>> import numpy as np
     >>> from sklearn.naive_bayes import GaussianNB
-    >>> import matplotlib.pyplot as plt
     >>> from mapie.classification import MapieClassifier
     >>> X_toy = np.arange(9).reshape(-1, 1)
     >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
