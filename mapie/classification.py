@@ -23,7 +23,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     This class implements several conformal prediction strategies for
     estimating prediction sets for classification. Instead of giving a
     single predicted label, the idea is to give a set of predicted labels
-    with mathematically guaranteed coverages.
+    which come with mathematically guaranteed coverages.
 
     Parameters
     ----------
@@ -39,9 +39,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         - "score", based on the the scores
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set.
-        - "cumulated_score", based on the sum of the scores
-          (i.e. 1 minus the softmax score of the true label)
-          on the calibration set.
+        - "cumulated_score", based on the sum of the softmax outputs of the
+          labels until the true label is reached, on the calibration set.
           By default "score".
 
     cv: Optional[str]
@@ -51,7 +50,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used
           to calibrate the predictions through the score computation.
-          At prediction time, quantiles of these scores are used to provide
+          At prediction time, quantiles of these scores are used to estimate
           prediction sets.
 
         By default ``None``.
@@ -71,6 +70,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
+        At this moment, parallel processing is disabled.
         The frequency of the messages increases with the verbosity level.
         If it more than ``10``, all iterations are reported.
         Above ``50``, the output is sent to stdout.
@@ -80,7 +80,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     Attributes
     ----------
     single_estimator_ : sklearn.ClassifierMixin
-        Estimator fit on the whole training set.
+        Estimator fitted on the whole training set.
 
     n_features_in_: int
         Number of features passed to the fit method.
@@ -89,7 +89,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         Number of samples passed to the fit method.
 
     scores_ : np.ndarray of shape (n_samples_train)
-        The softmax scores of the true class.
+        The scores used to calibrate the prediction sets.
 
     References
     ----------
@@ -99,8 +99,27 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
     Examples
     --------
-    
+    >>> import numpy as np
+    >>> from sklearn.naive_bayes import GaussianNB
+    >>> import matplotlib.pyplot as plt
+    >>> from mapie.classification import MapieClassifier
+    >>> X_toy = np.arange(9).reshape(-1, 1)
+    >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
+    >>> clf = GaussianNB().fit(X_toy, y_toy)
+    >>> mapie = MapieClassifier(estimator=clf, cv="prefit").fit(X_toy, y_toy)
+    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.1)
+    >>> print(y_pi_mapie[:, :, 0])
+    [[ True False False]
+     [ True False False]
+     [ True False False]
+     [ True  True False]
+     [False  True False]
+     [False  True  True]
+     [False False  True]
+     [False False  True]
+     [False False  True]]
     """
+
     valid_methods_ = [
         "score"
     ]
@@ -126,7 +145,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         Raises
         ------
         ValueError
-            Is parameters are not valid.
+            If parameters are not valid.
         """
         if self.method not in self.valid_methods_:
             raise ValueError(
@@ -310,8 +329,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             If None, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
+            before the fitting process and hence have no prediction sets.
             By default None.
 
         Returns
@@ -348,9 +366,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 )
             )
             self.n_samples_in_train_ = X_val.shape[0]
-            print(self.method == "score")
-            if self.method == "score":
-                self.scores_ = 1 - y_pred[np.arange(len(y_pred)), y_val]
+            self.scores_ = 1 - y_pred[np.arange(len(y_pred)), y_val]
         return self
 
     def predict(
@@ -400,16 +416,15 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         if alpha_ is None:
             return np.array(y_pred)
         else:
-            if self.method == "score":
-                quantiles = np.stack([
-                    np.quantile(
-                        self.scores_,
-                        ((n + 1) * (1 - _alpha)) / n,
-                        interpolation="higher"
-                    ) for _alpha in alpha_
-                ])
-                prediction_sets = np.stack([
-                    self.single_estimator_.predict_proba(X) > (1 - quantile)
-                    for quantile in quantiles
-                ], axis=2)
+            quantiles = np.stack([
+                np.quantile(
+                    self.scores_,
+                    ((n + 1) * (1 - _alpha)) / n,
+                    interpolation="higher"
+                ) for _alpha in alpha_
+            ])
+            prediction_sets = np.stack([
+                self.single_estimator_.predict_proba(X) > (1 - quantile)
+                for quantile in quantiles
+            ], axis=2)
             return y_pred, prediction_sets

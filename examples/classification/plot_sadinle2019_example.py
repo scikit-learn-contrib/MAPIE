@@ -1,12 +1,26 @@
 """
-=============================================================
-Reproducing the first example from Sadinle et al. (2019)
-=============================================================
+================================================
+Reproducing Example 7 from Sadinle et al. (2019)
+================================================
 
 We use :class:`mapie.classification.MapieClassifier` to reproduce
-Example 3 from Sadinle et al. (2019).
+Example 7 from Sadinle et al. (2019).
+
+We consider a two-dimensional dataset with three labels. The distribution
+of the data is a bivariate normal with diagonal covariance matrices for
+each label.
+We model the data with Gaussian Naive Bayes classifier
+:class:`sklearn.naive_bayes.GaussianNB` as a base model.
+
+Prediction sets are estimated by :class:`mapie.classification.MapieClassifier`
+from the distribution of the softmax scores of the true labels for three
+alpha values (0.2, 0.1, and 0.05) giving different class coverages.
+
+When the class coverage is not large enough, the prediction sets can be empty
+when the model is uncertain at the border between two labels. The null region
+disappears for larger class coverages but ambiguous classification regions
+arise with several labels included in the prediction sets.
 """
-from __future__ import annotations
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -39,7 +53,7 @@ X_test = np.stack([
 ])
 
 
-# Apply MapieClassifier on the calibration set to get prediction sets
+# Apply MapieClassifier on the dataset to get prediction sets
 clf = GaussianNB().fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
