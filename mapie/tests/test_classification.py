@@ -418,7 +418,7 @@ def test_results_for_alpha_as_float_and_arraylike(
     np.testing.assert_allclose(y_pis_float2[:, :, 0], y_pis_array[:, :, 1])
 
 
-def test_toy_dataset_predictions():
+def test_toy_dataset_predictions() -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     clf = GaussianNB().fit(X_toy, y_toy)
     mapie = MapieClassifier(estimator=clf, cv="prefit").fit(X_toy, y_toy)

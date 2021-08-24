@@ -6,7 +6,11 @@ History
 ------------------
 
 * Renaming estimators.py module to regression.py
-* Modification of the documentation architecture 
+* New classification.py module with MapieClassifier class, that estimate prediction sets from softmax score and cumulative softmax strategies
+* New set of unit tests for classification.py module
+* Modification of the documentation architecture
+* Split example gallery into separate regression and classification galleries
+* Add classification examples
 
 0.2.3 (2021-07-09)
 ------------------
