@@ -11,6 +11,7 @@ History
 * Modification of the documentation architecture
 * Split example gallery into separate regression and classification galleries
 * Add classification examples
+* Add method classification_coverage_score in the module metrics.py
 
 0.2.3 (2021-07-09)
 ------------------
