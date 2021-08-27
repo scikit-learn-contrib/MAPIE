@@ -18,6 +18,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.naive_bayes import GaussianNB
 
 from mapie.classification import MapieClassifier
+from mapie.metrics import classification_coverage_score
 
 
 class DumbClassifier:
@@ -423,4 +424,5 @@ def test_toy_dataset_predictions() -> None:
     clf = GaussianNB().fit(X_toy, y_toy)
     mapie = MapieClassifier(estimator=clf, cv="prefit").fit(X_toy, y_toy)
     _, y_pi_mapie = mapie.predict(X_toy, alpha=0.1)
+    classification_coverage_score(y_toy, y_pi_mapie)
     np.testing.assert_allclose(y_pi_mapie[:, :, 0], y_toy_mapie)
