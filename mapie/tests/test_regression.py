@@ -591,6 +591,8 @@ def test_results_prefit() -> None:
     mapie.fit(X_val, y_val)
     _, y_pis = mapie.predict(X_test, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
+    coverage = regression_coverage_score(
+        y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
+    )
     np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)

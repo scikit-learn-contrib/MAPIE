@@ -115,7 +115,9 @@ def PIs_vs_dimensions(
                 mapie.fit(X_train, y_train)
                 y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
                 results[strategy][dimension]["coverage"][trial] = (
-                    regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
+                    regression_coverage_score(
+                        y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
+                    )
                 )
                 results[strategy][dimension]["width_mean"][trial] = (
                     y_pis[:, 1, 0] - y_pis[:, 0, 0]
