@@ -53,7 +53,7 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import mean_squared_error
 
 from mapie.regression import MapieRegressor
-from mapie.metrics import coverage_score
+from mapie.metrics import regression_coverage_score
 
 # Load the Boston data
 X_boston, y_boston = load_boston(return_X_y=True)
@@ -102,7 +102,7 @@ y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict(
     X_test, alpha=alpha
 )
 widths_non_nested = y_pis_non_nested[:, 1, 0] - y_pis_non_nested[:, 0, 0]
-coverage_non_nested = coverage_score(
+coverage_non_nested = regression_coverage_score(
     y_test, y_pis_non_nested[:, 0, 0], y_pis_non_nested[:, 1, 0]
 )
 score_non_nested = mean_squared_error(
@@ -130,7 +130,7 @@ mapie_nested = MapieRegressor(
 mapie_nested.fit(X_train, y_train)
 y_pred_nested, y_pis_nested = mapie_nested.predict(X_test, alpha=alpha)
 widths_nested = y_pis_nested[:, 1, 0] - y_pis_nested[:, 0, 0]
-coverage_nested = coverage_score(
+coverage_nested = regression_coverage_score(
     y_test, y_pis_nested[:, 0, 0], y_pis_nested[:, 1, 0]
 )
 score_nested = mean_squared_error(y_test, y_pred_nested, squared=False)

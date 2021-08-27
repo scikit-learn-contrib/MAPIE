@@ -35,7 +35,7 @@ from matplotlib import pylab as plt
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 from mapie.regression import MapieRegressor
-from mapie.metrics import coverage_score
+from mapie.metrics import regression_coverage_score
 
 # Load input data and feature engineering
 demand_df = pd.read_csv(
@@ -94,7 +94,7 @@ mapie = MapieRegressor(
 )
 mapie.fit(X_train, y_train)
 y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
-coverage = coverage_score(
+coverage = regression_coverage_score(
     y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
 )
 width = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()

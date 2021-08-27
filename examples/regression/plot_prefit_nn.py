@@ -18,7 +18,7 @@ from sklearn.neural_network import MLPRegressor
 from matplotlib import pyplot as plt
 
 from mapie.regression import MapieRegressor
-from mapie.metrics import coverage_score
+from mapie.metrics import regression_coverage_score
 
 
 def f(x: np.ndarray) -> np.ndarray:
@@ -52,7 +52,7 @@ mapie.fit(X_val.reshape(-1, 1), y_val)
 alpha = 0.1
 y_pred, y_pis = mapie.predict(X_test.reshape(-1, 1), alpha=alpha)
 y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
-coverage = coverage_score(y_test, y_pred_low, y_pred_up)
+coverage = regression_coverage_score(y_test, y_pred_low, y_pred_up)
 
 # Plot obtained prediction intervals on testing set
 theoretical_semi_width = scipy.stats.norm.ppf(1 - alpha)*sigma
