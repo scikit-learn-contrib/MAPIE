@@ -120,6 +120,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     """
 
     valid_methods_ = [
+        "naive",
         "score"
     ]
 
@@ -354,17 +355,25 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             y_pred = self.single_estimator_.predict_proba(X)
             self.scores_ = 1 - y_pred[np.arange(len(y_pred)), y]
         else:
-            indices = np.arange(X.shape[0])
-            train_index, val_index = train_test_split(
-                indices, test_size=0.2, random_state=1
-            )
-            self.single_estimator_, y_pred, X_val, y_val = (
-                self._fit_and_predict_oof_model(
-                    clone(estimator), X, y, train_index,
-                    val_index, sample_weight
+            if self.method == "naive":
+                self.n_samples_in_train_ = X.shape[0]
+                self.single_estimator_ = fit_estimator(
+                    clone(estimator), X, y, sample_weight
                 )
-            )
-            self.n_samples_in_train_ = X_val.shape[0]
+                y_pred = self.single_estimator_.predict_proba(X)
+                y_val = y
+            else:
+                indices = np.arange(X.shape[0])
+                train_index, val_index = train_test_split(
+                    indices, test_size=0.2, random_state=1
+                )
+                self.single_estimator_, y_pred, X_val, y_val = (
+                    self._fit_and_predict_oof_model(
+                        clone(estimator), X, y, train_index,
+                        val_index, sample_weight
+                    )
+                )
+                self.n_samples_in_train_ = X_val.shape[0]
             self.scores_ = 1 - y_pred[np.arange(len(y_pred)), y_val]
         return self
 

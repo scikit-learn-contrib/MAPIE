@@ -35,13 +35,14 @@ class DumbClassifier:
         return X
 
 
-METHODS = ["score"]
+METHODS = ["naive", "score"]
 
 Params = TypedDict(
     "Params", {"method": str, "cv": Optional[str]}
 )
 
 STRATEGIES = {
+    "naive": Params(method="naive", cv=None),
     "score": Params(method="score", cv=None)
 }
 
