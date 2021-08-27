@@ -29,5 +29,6 @@ Metrics
    :toctree: generated/
    :template: function.rst
    
-   metrics.coverage_score
+   metrics.regression_coverage_score
+   metrics.classification_coverage_score
 

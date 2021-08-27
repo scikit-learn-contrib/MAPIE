@@ -17,7 +17,7 @@ from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.validation import check_is_fitted
 
 from mapie.regression import MapieRegressor
-from mapie.metrics import coverage_score
+from mapie.metrics import regression_coverage_score
 
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -447,7 +447,7 @@ def test_linear_regression_results(strategy: str) -> None:
     _, y_pis = mapie.predict(X_reg, alpha=0.05)
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
-    coverage = coverage_score(y_reg, y_pred_low, y_pred_up)
+    coverage = regression_coverage_score(y_reg, y_pred_low, y_pred_up)
     np.testing.assert_allclose(width_mean, WIDTHS[strategy], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
@@ -573,7 +573,7 @@ def test_results_prefit_naive() -> None:
     mapie.fit(X_reg, y_reg)
     _, y_pis = mapie.predict(X_reg, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = coverage_score(y_reg, y_pis[:, 0, 0], y_pis[:, 1, 0])
+    coverage = regression_coverage_score(y_reg, y_pis[:, 0, 0], y_pis[:, 1, 0])
     np.testing.assert_allclose(width_mean, WIDTHS["naive"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["naive"], rtol=1e-2)
 
@@ -591,6 +591,6 @@ def test_results_prefit() -> None:
     mapie.fit(X_val, y_val)
     _, y_pis = mapie.predict(X_test, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
+    coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
     np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
