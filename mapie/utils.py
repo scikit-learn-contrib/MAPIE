@@ -202,3 +202,28 @@ def check_n_features_in(
                 "X.shape and estimator.n_features_in_."
             )
     return n_features_in
+
+
+def check_calcul_of_quantile(alphas: np.ndarray, n: int) -> None:
+    """
+    Check if the quantile is calculable
+
+    Parameters
+    ----------
+    alphas : Optional[np.ndarray]
+        np.ndarray of floats .
+    n : int
+        number of samples.
+
+    Raises
+    ------
+    ValueError
+        If the number of samples of the score too low,
+        1 / alpha must be less than the number of samples.
+    """
+    for alpha in alphas:
+        if n < 1/alpha:
+            raise ValueError(
+                    "Number of samples of the score too low,"
+                    " 1 / alpha must be less than the number of samples."
+                )

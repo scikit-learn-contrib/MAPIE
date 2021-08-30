@@ -170,7 +170,7 @@ def test_valid_prefit_estimator(estimator: ClassifierMixin) -> None:
         [
             "single_estimator_",
             "n_features_in_",
-            "n_samples_in_train_"
+            "n_samples_in_val_"
         ]
     )
     assert mapie.n_features_in_ == 10
@@ -299,7 +299,7 @@ def test_valid_method(method: str) -> None:
         [
             "single_estimator_",
             "n_features_in_",
-            "n_samples_in_train_",
+            "n_samples_in_val_",
             "scores_"
         ]
     )
@@ -423,7 +423,7 @@ def test_toy_dataset_predictions() -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     clf = GaussianNB().fit(X_toy, y_toy)
     mapie = MapieClassifier(estimator=clf, cv="prefit").fit(X_toy, y_toy)
-    _, y_pi_mapie = mapie.predict(X_toy, alpha=0.1)
+    _, y_pi_mapie = mapie.predict(X_toy, alpha=0.2)
     np.testing.assert_allclose(
         classification_coverage_score(y_toy, y_pi_mapie), 7/9
     )
