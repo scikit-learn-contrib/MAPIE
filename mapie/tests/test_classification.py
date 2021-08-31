@@ -170,7 +170,7 @@ def test_valid_prefit_estimator(estimator: ClassifierMixin) -> None:
         [
             "single_estimator_",
             "n_features_in_",
-            "n_samples_in_val_"
+            "n_samples_val_"
         ]
     )
     assert mapie.n_features_in_ == 10
@@ -259,16 +259,16 @@ def test_valid_verbose(verbose: Any) -> None:
 
 
 @pytest.mark.parametrize(
-    "cv", [-3.14, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
+    "cv", [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
 )
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""
     mapie = MapieClassifier(cv=cv)
-    with pytest.raises(ValueError, match=r".*Invalid cv.*"):
+    with pytest.raises(ValueError, match=r".*Invalid cv argument.*"):
         mapie.fit(X_lr, y_lr)
 
 
-@pytest.mark.parametrize("cv", [None, "prefit"])
+@pytest.mark.parametrize("cv", [None, "prefit", 0.2, 0.3])
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     if cv == "prefit":
@@ -299,7 +299,7 @@ def test_valid_method(method: str) -> None:
         [
             "single_estimator_",
             "n_features_in_",
-            "n_samples_in_val_",
+            "n_samples_val_",
             "scores_"
         ]
     )

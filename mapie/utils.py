@@ -166,7 +166,7 @@ def check_alpha(
 
 def check_n_features_in(
     X: ArrayLike,
-    cv: Optional[str] = None,
+    cv: Union[float, str, None] = None,
     estimator: Optional[Union[RegressorMixin, ClassifierMixin]] = None
 ) -> int:
     """
@@ -204,13 +204,14 @@ def check_n_features_in(
     return n_features_in
 
 
-def check_calcul_of_quantile(alphas: np.ndarray, n: int) -> None:
+def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
     """
-    Check if the quantile is calculable
+    Check if the quantile can be computed based
+    on the number of samples and the alpha value.
 
     Parameters
     ----------
-    alphas : Optional[np.ndarray]
+    alphas : Iterable[float]
         np.ndarray of floats .
     n : int
         number of samples.
@@ -219,11 +220,11 @@ def check_calcul_of_quantile(alphas: np.ndarray, n: int) -> None:
     ------
     ValueError
         If the number of samples of the score too low,
-        1 / alpha must be less than the number of samples.
+        1 / alpha must be lower than the number of samples.
     """
     for alpha in alphas:
         if n < 1/alpha:
             raise ValueError(
-                    "Number of samples of the score too low,"
-                    " 1 / alpha must be less than the number of samples."
+                    "Number of samples of the score is too low,"
+                    " 1 / alpha must be lower than the number of samples."
                 )

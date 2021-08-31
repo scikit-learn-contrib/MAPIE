@@ -9,7 +9,7 @@ from sklearn.datasets import make_regression, make_classification
 
 from mapie.utils import check_null_weight, fit_estimator
 from mapie.utils import check_alpha, check_n_features_in
-from mapie.utils import check_calcul_of_quantile
+from mapie.utils import check_alpha_and_n_samples
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -146,7 +146,7 @@ def test_valid_shape_no_n_features_in(
 def test_valid_calcul_of_quantile(alpha: Any) -> None:
     """Test that valid alphas raise no errors."""
     n = 30
-    check_calcul_of_quantile(alpha, n)
+    check_alpha_and_n_samples(alpha, n)
 
 
 @pytest.mark.parametrize(
@@ -162,6 +162,6 @@ def test_invalid_calcul_of_quantile(alpha: Any) -> None:
     """Test that alpha with 1/alpha < number of samples  raise errors."""
     n = 10
     with pytest.raises(
-        ValueError, match=r".*Number of samples of the score too low*"
+        ValueError, match=r".*Number of samples of the score is too low*"
     ):
-        check_calcul_of_quantile(alpha, n)
+        check_alpha_and_n_samples(alpha, n)
