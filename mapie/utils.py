@@ -166,7 +166,7 @@ def check_alpha(
 
 def check_n_features_in(
     X: ArrayLike,
-    cv: Union[float, str, None] = None,
+    cv: Optional[Union[float, str]] = None,
     estimator: Optional[Union[RegressorMixin, ClassifierMixin]] = None
 ) -> int:
     """
@@ -212,18 +212,18 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
     Parameters
     ----------
     alphas : Iterable[float]
-        np.ndarray of floats .
+        np.ndarray of floats.
     n : int
         number of samples.
 
     Raises
     ------
     ValueError
-        If the number of samples of the score too low,
+        If the number of samples of the score is too low,
         1 / alpha must be lower than the number of samples.
     """
     for alpha in alphas:
-        if n < 1/alpha:
+        if n < 1/alpha or n < 1/(1-alpha):
             raise ValueError(
                     "Number of samples of the score is too low,"
                     " 1 / alpha must be lower than the number of samples."

@@ -83,6 +83,7 @@ def test_default_parameters() -> None:
     assert mapie.estimator is None
     assert mapie.method == "score"
     assert mapie.cv is None
+    assert mapie.random_state is None
     assert mapie.verbose == 0
     assert mapie.n_jobs is None
 
@@ -203,8 +204,12 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     Test that MapieRegressor gives equal predictions
     regardless of number of parallel jobs.
     """
-    mapie_single = MapieClassifier(n_jobs=1, **STRATEGIES[strategy])
-    mapie_multi = MapieClassifier(n_jobs=-1, **STRATEGIES[strategy])
+    mapie_single = MapieClassifier(
+        random_state=1, n_jobs=1, **STRATEGIES[strategy]
+    )
+    mapie_multi = MapieClassifier(
+        random_state=1, n_jobs=-1, **STRATEGIES[strategy]
+    )
     mapie_single.fit(X_lr, y_lr)
     mapie_multi.fit(X_lr, y_lr)
     y_pred_single = mapie_single.predict(X_lr)
@@ -219,8 +224,8 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     or constant with different values.
     """
     n_samples = 500
-    mapie0 = MapieClassifier(**STRATEGIES[strategy])
-    mapie1 = MapieClassifier(**STRATEGIES[strategy])
+    mapie0 = MapieClassifier(random_state=1, **STRATEGIES[strategy])
+    mapie1 = MapieClassifier(random_state=1, **STRATEGIES[strategy])
     mapie0.fit(X_lr, y_lr, sample_weight=None)
     mapie1.fit(X_lr, y_lr, sample_weight=np.ones(shape=n_samples))
     y_pred0 = mapie0.predict(X_lr)
@@ -233,6 +238,14 @@ def test_invalid_n_jobs(n_jobs: Any) -> None:
     """Test that invalid n_jobs raise errors."""
     mapie = MapieClassifier(n_jobs=n_jobs)
     with pytest.raises(ValueError, match=r".*Invalid n_jobs argument.*"):
+        mapie.fit(X_lr, y_lr)
+
+
+@pytest.mark.parametrize("random_state", ["dummy", 1.5, [1, 2]])
+def test_invalid_random_state(random_state: Any) -> None:
+    """Test that invalid n_jobs raise errors."""
+    mapie = MapieClassifier(random_state=random_state)
+    with pytest.raises(ValueError, match=r".*Invalid random_state argument.*"):
         mapie.fit(X_lr, y_lr)
 
 

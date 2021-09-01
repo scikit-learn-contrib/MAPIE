@@ -143,7 +143,7 @@ def test_valid_shape_no_n_features_in(
         np.array([0.05, 0.95])
     ]
 )
-def test_valid_calcul_of_quantile(alpha: Any) -> None:
+def test_valid_calculation_of_quantile(alpha: Any) -> None:
     """Test that valid alphas raise no errors."""
     n = 30
     check_alpha_and_n_samples(alpha, n)
@@ -153,13 +153,13 @@ def test_valid_calcul_of_quantile(alpha: Any) -> None:
     "alpha",
     [
         np.linspace(0.05, 0.07),
-        [0.05, 0.07],
-        (0.05, 0.07),
-        np.array([0.05, 0.07])
+        [0.05, 0.07, 0.9],
+        (0.05, 0.07, 0.9),
+        np.array([0.05, 0.07, 0.9])
     ]
 )
-def test_invalid_calcul_of_quantile(alpha: Any) -> None:
-    """Test that alpha with 1/alpha < number of samples  raise errors."""
+def test_invalid_calculation_of_quantile(alpha: Any) -> None:
+    """Test that alpha with 1/alpha > number of samples  raise errors."""
     n = 10
     with pytest.raises(
         ValueError, match=r".*Number of samples of the score is too low*"
