@@ -38,11 +38,13 @@ class DumbClassifier:
 METHODS = ["score"]
 
 Params = TypedDict(
-    "Params", {"method": str, "cv": Optional[str]}
+    "Params", {
+        "method": str, "cv": Optional[str], "random_state": Optional[int]
+    }
 )
 
 STRATEGIES = {
-    "score": Params(method="score", cv=None)
+    "score": Params(method="score", cv=None, random_state=1)
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -83,6 +85,7 @@ def test_default_parameters() -> None:
     assert mapie.estimator is None
     assert mapie.method == "score"
     assert mapie.cv is None
+    assert mapie.random_state is None
     assert mapie.verbose == 0
     assert mapie.n_jobs is None
 
@@ -170,7 +173,7 @@ def test_valid_prefit_estimator(estimator: ClassifierMixin) -> None:
         [
             "single_estimator_",
             "n_features_in_",
-            "n_samples_in_train_"
+            "n_samples_val_"
         ]
     )
     assert mapie.n_features_in_ == 10
@@ -236,6 +239,14 @@ def test_invalid_n_jobs(n_jobs: Any) -> None:
         mapie.fit(X_lr, y_lr)
 
 
+@pytest.mark.parametrize("random_state", ["dummy", 1.5, [1, 2]])
+def test_invalid_random_state(random_state: Any) -> None:
+    """Test that invalid random_state raise errors."""
+    mapie = MapieClassifier(random_state=random_state)
+    with pytest.raises(ValueError, match=r".*Invalid random_state argument.*"):
+        mapie.fit(X_lr, y_lr)
+
+
 @pytest.mark.parametrize("n_jobs", [-5, -1, 1, 4])
 def test_valid_n_jobs(n_jobs: Any) -> None:
     """Test that valid n_jobs raise no errors."""
@@ -259,16 +270,16 @@ def test_valid_verbose(verbose: Any) -> None:
 
 
 @pytest.mark.parametrize(
-    "cv", [-3.14, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
+    "cv", [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
 )
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""
     mapie = MapieClassifier(cv=cv)
-    with pytest.raises(ValueError, match=r".*Invalid cv.*"):
+    with pytest.raises(ValueError, match=r".*Invalid cv argument.*"):
         mapie.fit(X_lr, y_lr)
 
 
-@pytest.mark.parametrize("cv", [None, "prefit"])
+@pytest.mark.parametrize("cv", [None, "prefit", 0.2, 0.3])
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     if cv == "prefit":
@@ -299,7 +310,7 @@ def test_valid_method(method: str) -> None:
         [
             "single_estimator_",
             "n_features_in_",
-            "n_samples_in_train_",
+            "n_samples_val_",
             "scores_"
         ]
     )
@@ -423,7 +434,7 @@ def test_toy_dataset_predictions() -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     clf = GaussianNB().fit(X_toy, y_toy)
     mapie = MapieClassifier(estimator=clf, cv="prefit").fit(X_toy, y_toy)
-    _, y_pi_mapie = mapie.predict(X_toy, alpha=0.1)
+    _, y_pi_mapie = mapie.predict(X_toy, alpha=0.2)
     np.testing.assert_allclose(
         classification_coverage_score(y_toy, y_pi_mapie), 7/9
     )
