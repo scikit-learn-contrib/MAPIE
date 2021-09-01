@@ -212,7 +212,7 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
     Parameters
     ----------
     alphas : Iterable[float]
-        np.ndarray of floats.
+        Iterable of floats.
     n : int
         number of samples.
 
@@ -220,11 +220,12 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
     ------
     ValueError
         If the number of samples of the score is too low,
-        1 / alpha must be lower than the number of samples.
+        1/alpha (or 1/(1-alpha)) must be lower than the number of samples.
     """
     for alpha in alphas:
         if n < 1/alpha or n < 1/(1-alpha):
             raise ValueError(
                     "Number of samples of the score is too low,"
-                    " 1 / alpha must be lower than the number of samples."
+                    " 1/alpha (or 1/(1-alpha)) must be lower"
+                    "than the number of samples."
                 )

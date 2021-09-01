@@ -145,8 +145,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     ) -> None:
         self.estimator = estimator
         self.method = method
-        self.random_state = random_state
         self.cv = cv
+        self.random_state = random_state
         self.n_jobs = n_jobs
         self.verbose = verbose
 
@@ -261,7 +261,10 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         ValueError
             If the cross-validator is not valid.
         """
-        if (cv is None or cv == "prefit"):
+        if cv is None:
+            cv = 0.2
+            return cv
+        if cv == "prefit":
             return cv
         if isinstance(cv, float) and cv > 0.0 and cv < 1.0:
             return cv
@@ -375,14 +378,9 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             X_val, y_val = X, y
         else:
             indices = np.arange(X.shape[0])
-            if isinstance(cv, float):
-                train_index, val_index = train_test_split(
-                    indices, test_size=cv, random_state=self.random_state
-                )
-            else:
-                train_index, val_index = train_test_split(
-                    indices, test_size=0.2, random_state=self.random_state
-                )
+            train_index, val_index = train_test_split(
+                indices, test_size=cv, random_state=self.random_state
+            )
             self.single_estimator_, y_pred, X_val, y_val = (
                 self._fit_and_predict_oof_model(
                     clone(estimator), X, y, train_index,
