@@ -24,7 +24,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     This class implements several conformal prediction strategies for
     estimating prediction sets for classification. Instead of giving a
     single predicted label, the idea is to give a set of predicted labels
-    which come with mathematically guaranteed coverages.
+    (or prediction sets) which come with mathematically guaranteed coverages.
 
     Parameters
     ----------
@@ -41,7 +41,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set.
         - "cumulated_score", based on the sum of the softmax outputs of the
-          labels until the true label is reached, on the calibration set.
+          labels until the true label is reached, on the calibration set
+          (to be implemented).
           By default "score".
 
     cv: Optional[Union[float, str]]
@@ -76,7 +77,6 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
         None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1``
         (sequential execution).
-
         By default ``None``.
 
     verbose : int, optional
@@ -85,7 +85,6 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         The frequency of the messages increases with the verbosity level.
         If it more than ``10``, all iterations are reported.
         Above ``50``, the output is sent to stdout.
-
         By default ``0``.
 
     Attributes
@@ -397,6 +396,10 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         alpha: Optional[Union[float, Iterable[float]]] = None
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
+        Prediction prediction sets on new samples based on target confidence
+        interval.
+        Prediction sets for a given ``alpha`` are deduced from :
+        - quantiles of softmax scores (score method)
 
         Parameters
         ----------

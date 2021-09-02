@@ -2,8 +2,9 @@
 Quick Start with MAPIE
 ######################
 
-This package allows you to easily estimate prediction intervals using your
-favourite sklearn-compatible regressor (on single-output data) or classifier.
+This package allows you to easily estimate prediction intervals (or prediction sets)
+using your favourite sklearn-compatible regressor (on single-output data) or classifier
+(on multi-class data).
 
 Estimate your prediction intervals
 ==================================
