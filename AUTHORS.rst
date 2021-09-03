@@ -16,5 +16,6 @@ Contributors
 * François Deheeger <francois.deheeger@michelin.com>
 * Rémi Adon <remi.adon@protonmail.com>
 * Alizé Papp <alize.papp@outlook.com>
+* Adirtha Borgohain <adirthaborgohain@gmail.com>
 
 To be continued ...

@@ -2,6 +2,12 @@
 History
 =======
 
+0.2.4 (2021-09-03)
+------------------
+
+* Fixed code error for plotting of interval widths in tutorial of documentation
+* Added missing import statements in tutorial of documentation
+
 0.2.3 (2021-07-09)
 ------------------
 
