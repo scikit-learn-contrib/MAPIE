@@ -5,20 +5,35 @@ import pytest
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
+from sklearn.datasets import make_regression, make_classification
 
-from mapie.utils import check_null_weight, fit_estimator
-
+from mapie.utils import (
+    check_null_weight,
+    fit_estimator,
+    check_alpha,
+    check_n_features_in,
+    check_alpha_and_n_samples
+)
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 
+n_features = 10
+X_reg, y_reg = make_regression(
+    n_samples=500, n_features=n_features, noise=1.0, random_state=1
+)
 
-class DumbRegressor:
+X_classif, y_classif = make_classification(
+    n_samples=500, n_features=10, n_informative=3, n_classes=4, random_state=1
+)
+
+
+class DumbEstimator:
 
     def fit(
         self, X: np.ndarray,
         y: Optional[np.ndarray] = None
-    ) -> DumbRegressor:
+    ) -> DumbEstimator:
         self.fitted_ = True
         return self
 
@@ -50,7 +65,7 @@ def test_check_null_weight_with_zeros() -> None:
     np.testing.assert_almost_equal(y_out, np.array([7, 9, 11, 13, 15]))
 
 
-@pytest.mark.parametrize("estimator", [LinearRegression(), DumbRegressor()])
+@pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
 def test_fit_estimator(
     estimator: Any,
@@ -72,3 +87,83 @@ def test_fit_estimator_sample_weight() -> None:
     y_pred_2 = estimator_2.predict(X)
     with pytest.raises(AssertionError):
         np.testing.assert_almost_equal(y_pred_1, y_pred_2)
+
+
+@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
+def test_invalid_alpha(alpha: Any) -> None:
+    """Test that invalid alphas raise errors."""
+    with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
+        check_alpha(alpha=alpha)
+
+
+@pytest.mark.parametrize(
+    "alpha",
+    [
+        np.linspace(0.05, 0.95, 5),
+        [0.05, 0.95],
+        (0.05, 0.95),
+        np.array([0.05, 0.95]),
+        None
+    ]
+)
+def test_valid_alpha(alpha: Any) -> None:
+    """Test that valid alphas raise no errors."""
+    check_alpha(alpha=alpha)
+
+
+@pytest.mark.parametrize("cv", ["prefit", None])
+def test_valid_shape_no_n_features_in(cv: Any) -> None:
+    """
+    Test that estimators fitted with a right number of features
+    but missing an n_features_in_ attribute raise no errors.
+    """
+    estimator = DumbEstimator()
+    n_features_in = check_n_features_in(
+        X=X_reg, cv=cv, estimator=estimator
+    )
+    assert n_features_in == n_features
+
+
+@pytest.mark.parametrize(
+    "alpha",
+    [
+        np.linspace(0.05, 0.95, 5),
+        [0.05, 0.95],
+        (0.05, 0.95),
+        np.array([0.05, 0.95])
+    ]
+)
+def test_valid_calculation_of_quantile(alpha: Any) -> None:
+    """Test that valid alphas raise no errors."""
+    n = 30
+    check_alpha_and_n_samples(alpha, n)
+
+
+@pytest.mark.parametrize(
+    "alpha",
+    [
+        np.linspace(0.05, 0.07),
+        [0.05, 0.07, 0.9],
+        (0.05, 0.07, 0.9),
+        np.array([0.05, 0.07, 0.9])
+    ]
+)
+def test_invalid_calculation_of_quantile(alpha: Any) -> None:
+    """Test that alpha with 1/alpha > number of samples  raise errors."""
+    n = 10
+    with pytest.raises(
+        ValueError, match=r".*Number of samples of the score is too low*"
+    ):
+        check_alpha_and_n_samples(alpha, n)
+
+
+def test_invalid_prefit_estimator_shape() -> None:
+    """
+    Test that estimators fitted with a wrong number of features raise errors.
+    """
+    estimator = LinearRegression().fit(X_reg, y_reg)
+    # mapie = MapieClassifier(estimator=estimator, cv="prefit")
+    with pytest.raises(ValueError, match=r".*mismatch between.*"):
+        check_n_features_in(
+            X_toy, cv="prefit", estimator=estimator
+        )

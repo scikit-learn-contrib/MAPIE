@@ -48,7 +48,8 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
-	-rm -rf auto_examples/
+	-rm -rf examples_regression/
+	-rm -rf examples_classification/
 	-rm -rf generated/*
 	-rm -rf modules/generated/*
 

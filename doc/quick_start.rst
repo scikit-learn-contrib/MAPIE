@@ -2,8 +2,10 @@
 Quick Start with MAPIE
 ######################
 
-This package allows you to easily estimate prediction intervals using your
-favourite sklearn-compatible regressor on single-output data.
+This package allows you to easily estimate uncertainties in both regression and classification settings.
+In regression settings, MAPIE provides prediction intervals on single-output data.
+In classification settings, MAPIE provides prediction sets on multi-class data.
+In any case, MAPIE is compatible with any scikit-learn-compatible estimator.
 
 Estimate your prediction intervals
 ==================================
@@ -16,6 +18,12 @@ Install via ``pip``:
 .. code:: python
 
     pip install mapie
+
+or via `conda`:
+
+.. code:: sh
+
+    $ conda install -c conda-forge mapie
 
 To install directly from the github repository :
 
@@ -47,7 +55,7 @@ and two standard deviations from the mean.
 
 .. code:: python
 
-    from mapie.estimators import MapieRegressor
+    from mapie.regression import MapieRegressor
     alpha = [0.05, 0.32]
     mapie = MapieRegressor(regressor)
     mapie.fit(X, y)

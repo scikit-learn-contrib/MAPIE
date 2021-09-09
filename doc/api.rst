@@ -4,14 +4,23 @@ MAPIE API
 
 .. currentmodule:: mapie
 
-Estimators
+Regression
 ==========
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
 
-   estimators.MapieRegressor
+   regression.MapieRegressor
+
+Classification
+==============
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   classification.MapieClassifier
 
 Metrics
 =======
@@ -20,5 +29,6 @@ Metrics
    :toctree: generated/
    :template: function.rst
    
-   metrics.coverage_score
+   metrics.regression_coverage_score
+   metrics.classification_coverage_score
 

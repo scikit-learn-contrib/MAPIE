@@ -2,9 +2,16 @@
 History
 =======
 
-0.2.4 (2021-09-03)
+0.2.4 (XXXX-XX-XX)
 ------------------
 
+* Renaming estimators.py module to regression.py
+* New classification.py module with MapieClassifier class, that estimates prediction sets from softmax score
+* New set of unit tests for classification.py module
+* Modification of the documentation architecture
+* Split example gallery into separate regression and classification galleries
+* Add first classification examples
+* Add method classification_coverage_score in the module metrics.py
 * Fixed code error for plotting of interval widths in tutorial of documentation
 * Added missing import statements in tutorial of documentation
 

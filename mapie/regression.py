@@ -1,18 +1,24 @@
 from __future__ import annotations
-from typing import Optional, Union, Iterable, Tuple, List, Any, cast
+from typing import Optional, Union, Iterable, Tuple, List, cast
 
 import numpy as np
 from joblib import Parallel, delayed
-from sklearn.utils import check_X_y, check_array
-from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.pipeline import Pipeline
+from sklearn.utils import check_X_y, check_array
+from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
-from .utils import check_null_weight, fit_estimator
+from .utils import (
+    check_null_weight,
+    fit_estimator,
+    check_n_features_in,
+    check_alpha,
+    check_alpha_and_n_samples
+)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
@@ -106,7 +112,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         List of all valid methods.
 
     single_estimator_ : sklearn.RegressorMixin
-        Estimator fit on the whole training set.
+        Estimator fitted on the whole training set.
 
     estimators_ : list
         List of out-of-folds estimators.
@@ -120,6 +126,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     n_features_in_: int
         Number of features passed to the fit method.
 
+    n_samples_val_: List[int]
+        Number of samples passed to the fit method.
+
     References
     ----------
     Rina Foygel Barber, Emmanuel J. Candès,
@@ -130,19 +139,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.estimators import MapieRegressor
+    >>> from mapie.regression import MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> pireg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
-    >>> y_pred, y_pis = pireg.predict(X_toy, alpha=0.1)
+    >>> y_pred, y_pis = pireg.predict(X_toy, alpha=0.5)
     >>> print(y_pis[:, :, 0])
-    [[ 4.61627907  6.        ]
-     [ 6.51744186  7.8       ]
-     [ 8.4         9.68023256]
-     [10.2        11.58139535]
-     [12.         13.48255814]
-     [13.8        15.38372093]]
+    [[ 4.7972973   5.8       ]
+     [ 6.69767442  7.65540541]
+     [ 8.59883721  9.58108108]
+     [10.5        11.40116279]
+     [12.4        13.30232558]
+     [14.25       15.20348837]]
     >>> print(y_pred)
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
@@ -177,7 +186,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Raises
         ------
         ValueError
-            Is parameters are not valid.
+            If parameters are not valid.
         """
         if self.method not in self.valid_methods_:
             raise ValueError(
@@ -268,7 +277,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Parameters
         ----------
         cv : Optional[Union[int, str, BaseCrossValidator]], optional
-            Cross-validator to check, by default ``None``
+            Cross-validator to check, by default ``None``.
 
         Returns
         -------
@@ -298,96 +307,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             "Allowed values are None, -1, int >= 2, 'prefit', "
             "KFold or LeaveOneOut."
         )
-
-    def _check_alpha(
-        self,
-        alpha: Optional[Union[float, Iterable[float]]] = None
-    ) -> Optional[np.ndarray]:
-        """
-        Check alpha and prepare it as a np.ndarray
-
-        Parameters
-        ----------
-        alpha : Union[float, Iterable[float]]
-        Can be a float, a list of floats, or a np.ndarray of floats.
-        Between 0 and 1, represent the uncertainty of the confidence interval.
-        Lower alpha produce larger (more conservative) prediction intervals.
-        alpha is the complement of the target coverage level.
-        Only used at prediction time. By default 0.1.
-
-        Returns
-        -------
-        np.ndarray
-            Prepared alpha.
-
-        Raises
-        ------
-        ValueError
-            If alpha is not a float or an Iterable of floats between 0 and 1.
-        """
-        if alpha is None:
-            return alpha
-        if isinstance(alpha, float):
-            alpha_np = np.array([alpha])
-        elif isinstance(alpha, Iterable):
-            alpha_np = np.array(alpha)
-        else:
-            raise ValueError(
-                "Invalid alpha. Allowed values are float or Iterable."
-            )
-        if len(alpha_np.shape) != 1:
-            raise ValueError(
-                "Invalid alpha. "
-                "Please provide a one-dimensional list of values."
-            )
-        if alpha_np.dtype.type not in [np.float64, np.float32]:
-            raise ValueError(
-                "Invalid alpha. Allowed values are Iterable of floats."
-            )
-        if np.any((alpha_np <= 0) | (alpha_np >= 1)):
-            raise ValueError(
-                "Invalid alpha. Allowed values are between 0 and 1."
-            )
-        return alpha_np
-
-    def _check_n_features_in(
-        self,
-        X: ArrayLike,
-        estimator: Optional[RegressorMixin] = None,
-    ) -> int:
-        """
-        Check the expected number of training features.
-        In general it is simply the number of columns in the data.
-        If ``cv=="prefit"`` however,
-        it can be deduced from the estimator's ``n_features_in_`` attribute.
-        These two values absolutely must coincide.
-
-        Parameters
-        ----------
-        estimator : RegressorMixin
-            Backend estimator of MAPIE.
-        X : ArrayLike of shape (n_samples, n_features)
-            Data passed into the ``fit`` method.
-
-        Returns
-        -------
-        int
-            Expected number of training features.
-
-        Raises
-        ------
-        ValueError
-            If there is an inconsistency between the shape of the dataset
-            and the one expected by the estimator.
-        """
-        n_features_in: int = X.shape[1]
-        if self.cv == "prefit" and hasattr(estimator, "n_features_in_"):
-            if cast(Any, estimator).n_features_in_ != n_features_in:
-                raise ValueError(
-                    "Invalid mismatch between "
-                    "X.shape and estimator.n_features_in_."
-                )
-        return n_features_in
 
     def _fit_and_predict_oof_model(
         self,
@@ -478,6 +397,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             their corresponding observations are removed
             before the fitting process and hence have no residuals.
             If weights are non-uniform, residuals are still uniformly weighted.
+
             By default None.
 
         Returns
@@ -490,9 +410,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         cv = self._check_cv(self.cv)
         estimator = self._check_estimator(self.estimator)
         X, y = check_X_y(
-            X, y, force_all_finite=False, dtype=["float64", "object"]
+            X, y, force_all_finite=False, dtype=["float64", "int", "object"]
         )
-        self.n_features_in_ = self._check_n_features_in(X, estimator)
+        self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
         # Initialization
@@ -504,12 +424,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
+            self.n_samples_val_ = [X.shape[0]]
         else:
             self.single_estimator_ = fit_estimator(
                 clone(estimator), X, y, sample_weight
             )
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
+                self.n_samples_val_ = [X.shape[0]]
             else:
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
@@ -520,6 +442,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 self.estimators_, predictions, val_ids, val_indices = map(
                     list, zip(*outputs)
                 )
+                self.n_samples_val_ = [
+                    np.array(pred).shape[0] for pred in predictions
+                ]
                 predictions, val_ids, val_indices = map(
                     np.concatenate, (predictions, val_ids, val_indices)
                 )
@@ -573,14 +498,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         check_is_fitted(
             self,
             [
-                "n_features_in_",
                 "single_estimator_",
                 "estimators_",
                 "k_",
-                "residuals_"
+                "residuals_",
+                "n_features_in_",
+                "n_samples_val_",
             ]
         )
-        alpha_ = self._check_alpha(alpha)
+        alpha_ = check_alpha(alpha)
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
 
@@ -593,6 +519,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
             # (n_samples_test, n_samples_train) : y_pred_multi, low/up_bounds
             alpha_ = cast(np.ndarray, alpha_)
+            check_alpha_and_n_samples(alpha_, self.residuals_.shape[0])
             if self.method in ["naive", "base"] or self.cv == "prefit":
                 quantile = np.quantile(
                     self.residuals_, 1 - alpha_, interpolation="higher"

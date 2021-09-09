@@ -3,7 +3,7 @@
 Reproducing the simulations from Foygel-Barber et al. (2020)
 ============================================================
 
-:class:`mapie.estimators.MapieRegressor` is used to investigate
+:class:`mapie.regression.MapieRegressor` is used to investigate
 the coverage level and the prediction interval width as a function
 of the dimension using simulated data points as introduced in
 Foygel-Barber et al. (2021) [1].
@@ -34,8 +34,8 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from matplotlib import pyplot as plt
 
-from mapie.estimators import MapieRegressor
-from mapie.metrics import coverage_score
+from mapie.regression import MapieRegressor
+from mapie.metrics import regression_coverage_score
 
 
 def PIs_vs_dimensions(
@@ -115,7 +115,9 @@ def PIs_vs_dimensions(
                 mapie.fit(X_train, y_train)
                 y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
                 results[strategy][dimension]["coverage"][trial] = (
-                    coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
+                    regression_coverage_score(
+                        y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
+                    )
                 )
                 results[strategy][dimension]["width_mean"][trial] = (
                     y_pis[:, 1, 0] - y_pis[:, 0, 0]

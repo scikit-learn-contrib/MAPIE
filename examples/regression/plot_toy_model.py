@@ -2,8 +2,7 @@
 ======================================================
 Plotting MAPIE prediction intervals with a toy dataset
 ======================================================
-
-An example plot of :class:`mapie.estimators.MapieRegressor` used
+An example plot of :class:`mapie.regression.MapieRegressor` used
 in the Quickstart.
 """
 import numpy as np
@@ -11,8 +10,8 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.datasets import make_regression
 
-from mapie.estimators import MapieRegressor
-from mapie.metrics import coverage_score
+from mapie.regression import MapieRegressor
+from mapie.metrics import regression_coverage_score
 
 regressor = LinearRegression()
 X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
@@ -23,7 +22,7 @@ mapie.fit(X, y)
 y_pred, y_pis = mapie.predict(X, alpha=alpha)
 
 coverage_scores = [
-    coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
+    regression_coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
     for i, _ in enumerate(alpha)
 ]
 
