@@ -3,17 +3,22 @@ from typing import Optional, Union, Iterable, Tuple, List, cast
 
 import numpy as np
 from joblib import Parallel, delayed
-from sklearn.utils import check_X_y, check_array
-from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.pipeline import Pipeline
+from sklearn.utils import check_X_y, check_array
+from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
-from .utils import check_null_weight, fit_estimator
-from .utils import check_n_features_in, check_alpha
+from .utils import (
+    check_null_weight,
+    fit_estimator,
+    check_n_features_in,
+    check_alpha,
+    check_alpha_and_n_samples
+)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
@@ -121,6 +126,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     n_features_in_: int
         Number of features passed to the fit method.
 
+    n_samples_val_: List[int]
+        Number of samples passed to the fit method.
+
     References
     ----------
     Rina Foygel Barber, Emmanuel J. Candès,
@@ -136,14 +144,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> pireg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
-    >>> y_pred, y_pis = pireg.predict(X_toy, alpha=0.1)
+    >>> y_pred, y_pis = pireg.predict(X_toy, alpha=0.5)
     >>> print(y_pis[:, :, 0])
-    [[ 4.61627907  6.        ]
-     [ 6.51744186  7.8       ]
-     [ 8.4         9.68023256]
-     [10.2        11.58139535]
-     [12.         13.48255814]
-     [13.8        15.38372093]]
+    [[ 4.7972973   5.8       ]
+     [ 6.69767442  7.65540541]
+     [ 8.59883721  9.58108108]
+     [10.5        11.40116279]
+     [12.4        13.30232558]
+     [14.25       15.20348837]]
     >>> print(y_pred)
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
@@ -269,7 +277,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Parameters
         ----------
         cv : Optional[Union[int, str, BaseCrossValidator]], optional
-            Cross-validator to check, by default ``None``
+            Cross-validator to check, by default ``None``.
 
         Returns
         -------
@@ -389,6 +397,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             their corresponding observations are removed
             before the fitting process and hence have no residuals.
             If weights are non-uniform, residuals are still uniformly weighted.
+
             By default None.
 
         Returns
@@ -401,7 +410,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         cv = self._check_cv(self.cv)
         estimator = self._check_estimator(self.estimator)
         X, y = check_X_y(
-            X, y, force_all_finite=False, dtype=["float64", "object"]
+            X, y, force_all_finite=False, dtype=["float64", "int", "object"]
         )
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
@@ -415,12 +424,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
+            self.n_samples_val_ = [X.shape[0]]
         else:
             self.single_estimator_ = fit_estimator(
                 clone(estimator), X, y, sample_weight
             )
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
+                self.n_samples_val_ = [X.shape[0]]
             else:
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
@@ -431,6 +442,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 self.estimators_, predictions, val_ids, val_indices = map(
                     list, zip(*outputs)
                 )
+                self.n_samples_val_ = [
+                    np.array(pred).shape[0] for pred in predictions
+                ]
                 predictions, val_ids, val_indices = map(
                     np.concatenate, (predictions, val_ids, val_indices)
                 )
@@ -484,11 +498,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         check_is_fitted(
             self,
             [
-                "n_features_in_",
                 "single_estimator_",
                 "estimators_",
                 "k_",
-                "residuals_"
+                "residuals_",
+                "n_features_in_",
+                "n_samples_val_",
             ]
         )
         alpha_ = check_alpha(alpha)
@@ -504,6 +519,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
             # (n_samples_test, n_samples_train) : y_pred_multi, low/up_bounds
             alpha_ = cast(np.ndarray, alpha_)
+            check_alpha_and_n_samples(alpha_, self.residuals_.shape[0])
             if self.method in ["naive", "base"] or self.cv == "prefit":
                 quantile = np.quantile(
                     self.residuals_, 1 - alpha_, interpolation="higher"

@@ -29,8 +29,10 @@ def check_null_weight(
     -------
     sample_weight : ArrayLike of shape (n_samples,)
         Non-null sample weights.
+
     X : ArrayLike of shape (n_samples, n_features)
         Training samples with non-null weights.
+
     y : ArrayLike of shape (n_samples,)
         Training labels with non-null weights.
 
@@ -122,11 +124,11 @@ def check_alpha(
     Parameters
     ----------
     alpha : Union[float, Iterable[float]]
-    Can be a float, a list of floats, or a np.ndarray of floats.
-    Between 0 and 1, represent the uncertainty of the confidence interval.
-    Lower alpha produce larger (more conservative) prediction intervals.
-    alpha is the complement of the target coverage level.
-    Only used at prediction time. By default 0.1.
+        Can be a float, a list of floats, or a np.ndarray of floats.
+        Between 0 and 1, represent the uncertainty of the confidence interval.
+        Lower alpha produce larger (more conservative) prediction intervals.
+        alpha is the complement of the target coverage level.
+        Only used at prediction time. By default 0.1.
 
     Returns
     -------
@@ -178,10 +180,15 @@ def check_n_features_in(
 
     Parameters
     ----------
-    estimator : RegressorMixin
-        Backend estimator of MAPIE.
+    cv : Optional[Union[float, str]]
+        The cross-validation strategy for computing scores,
+        by default ``None``.
+
     X : ArrayLike of shape (n_samples, n_features)
         Data passed into the ``fit`` method.
+
+    estimator : RegressorMixin
+        Backend estimator of MAPIE.
 
     Returns
     -------
@@ -213,6 +220,7 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
     ----------
     alphas : Iterable[float]
         Iterable of floats.
+
     n : int
         number of samples.
 
@@ -223,9 +231,9 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
         1/alpha (or 1/(1-alpha)) must be lower than the number of samples.
     """
     for alpha in alphas:
-        if n < 1/alpha or n < 1/(1-alpha):
+        if n < 1/alpha or n < 1/(1 - alpha):
             raise ValueError(
                     "Number of samples of the score is too low,"
-                    " 1/alpha (or 1/(1-alpha)) must be lower"
+                    " 1/alpha (or 1/(1 - alpha)) must be lower "
                     "than the number of samples."
                 )

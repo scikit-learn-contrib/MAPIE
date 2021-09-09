@@ -1,4 +1,4 @@
-from sklearn.utils.validation import column_or_1d
+from sklearn.utils.validation import column_or_1d, check_array
 import numpy as np
 from ._typing import ArrayLike
 
@@ -73,15 +73,20 @@ def classification_coverage_score(
     >>> import numpy as np
     >>> y_true = np.array([3, 3, 1, 2, 2])
     >>> y_pred_set = np.array([
-    ...     [False, False, False,  True],
-    ...     [False, False, False,  True],
-    ...     [False,  True, False, False],
-    ...     [False, False,  True, False],
-    ...     [False,  True, False, False]
+    ...     [False, False,  True,  True],
+    ...     [False,  True, False,  True],
+    ...     [False,  True,  True, False],
+    ...     [False, False,  True,  True],
+    ...     [False,  True, False,  True]
     ... ])
     >>> print(classification_coverage_score(y_true, y_pred_set))
     0.8
     """
     y_true = column_or_1d(y_true)
-    coverage = y_pred_set[np.arange(len(y_true)), y_true].mean()
+    y_pred_set = check_array(
+        y_pred_set, force_all_finite=True, dtype=["bool"]
+    )
+    coverage = np.take_along_axis(
+        y_pred_set, y_true.reshape(-1, 1), axis=1
+    ).mean()
     return float(coverage)

@@ -2,19 +2,21 @@ from __future__ import annotations
 from typing import Optional, Union, Tuple, Iterable
 
 import numpy as np
-from sklearn.utils import check_X_y, check_array
-from sklearn.utils.multiclass import check_classification_targets
-from sklearn.utils.validation import check_is_fitted
-from sklearn.model_selection import train_test_split
-from sklearn.base import clone
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
+from sklearn.utils import check_X_y, check_array
+from sklearn.utils.multiclass import type_of_target
+from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
-from .utils import check_null_weight, fit_estimator
-from .utils import check_n_features_in, check_alpha
-from .utils import check_alpha_and_n_samples
+from .utils import (
+    check_null_weight,
+    check_n_features_in,
+    check_alpha,
+    check_alpha_and_n_samples
+)
 
 
 class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
@@ -43,29 +45,19 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         - "cumulated_score", based on the sum of the softmax outputs of the
           labels until the true label is reached, on the calibration set
           (to be implemented).
+
           By default "score".
 
     cv: Optional[Union[float, str]]
         The cross-validation strategy for computing scores :
 
-        - ``None``, MapieClassifier will be used to fit the base model
-          and the proportion of the dataset used for scores calculation is 20%.
-        - float should be between 0.0 and 1.0 and represents the proportion
-          of the dataset used for calibrating the prediction sets through
-          the distribution of scores.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used
           to calibrate the predictions through the score computation.
           At prediction time, quantiles of these scores are used to estimate
           prediction sets.
 
-        By default ``None``.
-
-    random_state:  Optional[int]
-        Controls the shuffling applied to the data before applying the split
-        for calibrating the prediction sets through the distribution of scores.
-        Pass an int for reproducible output across multiple function calls.
-        By default ``None``.
+        By default ``prefit``.
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
@@ -77,6 +69,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
         None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1``
         (sequential execution).
+
         By default ``None``.
 
     verbose : int, optional
@@ -85,21 +78,28 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         The frequency of the messages increases with the verbosity level.
         If it more than ``10``, all iterations are reported.
         Above ``50``, the output is sent to stdout.
+
         By default ``0``.
 
     Attributes
     ----------
+    valid_methods: List[str]
+        List of all valid methods.
+
     single_estimator_ : sklearn.ClassifierMixin
         Estimator fitted on the whole training set.
 
     n_features_in_: int
         Number of features passed to the fit method.
 
-    n_samples_val_: int
+    n_samples_val_: Union[int, List[int]]
         Number of samples passed to the fit method.
 
     scores_ : np.ndarray of shape (n_samples_train)
         The scores used to calibrate the prediction sets.
+
+    quantiles_ : np.ndarray of shape (n_alpha)
+        The quantiles estimated from scores_ and alpha values.
 
     References
     ----------
@@ -137,15 +137,13 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         estimator: Optional[ClassifierMixin] = None,
         method: str = "score",
-        cv: Optional[Union[float, str]] = None,
-        random_state: Optional[int] = None,
+        cv: Optional[Union[int, str, BaseCrossValidator]] = "prefit",
         n_jobs: Optional[int] = None,
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
         self.method = method
         self.cv = cv
-        self.random_state = random_state
         self.n_jobs = n_jobs
         self.verbose = verbose
 
@@ -162,11 +160,6 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             raise ValueError(
                 "Invalid method. "
                 "Allowed values are 'score'."
-            )
-
-        if not isinstance(self.random_state, (int, type(None))):
-            raise ValueError(
-                "Invalid random_state argument. Must be an integer."
             )
 
         if not isinstance(self.n_jobs, (int, type(None))):
@@ -191,7 +184,9 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
     def _check_estimator(
         self,
-        estimator: Optional[ClassifierMixin] = None
+        X: ArrayLike,
+        y: ArrayLike,
+        estimator: Optional[ClassifierMixin] = None,
     ) -> ClassifierMixin:
         """
         Check if estimator is ``None``,
@@ -201,6 +196,12 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Training data.
+
+        y : ArrayLike of shape (n_samples,)
+            Training labels.
+
         estimator : Optional[ClassifierMixin], optional
             Estimator to check, by default ``None``
 
@@ -219,7 +220,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             If the estimator is not fitted and ``cv`` attribute is "prefit".
         """
         if estimator is None:
-            return LogisticRegression(multi_class="multinomial")
+            return LogisticRegression(multi_class="multinomial").fit(X, y)
         if (
                 not hasattr(estimator, "fit")
                 and not hasattr(estimator, "predict")
@@ -239,21 +240,21 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
     def _check_cv(
         self,
-        cv: Optional[Union[float, str]] = None
+        cv: Optional[Union[int, str, BaseCrossValidator]] = None
     ) -> Optional[Union[float, str]]:
         """
-        Check if cross-validator is ``None``, ``"prefit"``, or
-        float between 0 and 1.
+        Check if cross-validator is ``None`` or ``"prefit"``.
         Else raise error.
 
         Parameters
         ----------
-        cv : Optional[Union[float, str]], by default ``None``.
+        cv : Optional[Union[int, str, BaseCrossValidator]], optional
+            Cross-validator to check, by default ``None``.
 
         Returns
         -------
         Optional[Union[float, str]]
-            'prefit', None, or float between 0.0 and 1.0.
+            'prefit' or None.
 
         Raises
         ------
@@ -261,73 +262,13 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             If the cross-validator is not valid.
         """
         if cv is None:
-            cv = 0.2
-            return cv
+            return "prefit"
         if cv == "prefit":
-            return cv
-        if isinstance(cv, float) and cv > 0.0 and cv < 1.0:
             return cv
         raise ValueError(
             "Invalid cv argument."
-            "Allowed value is 'prefit' or float between 0.0 and 1.0."
+            "Allowed value is 'prefit'."
         )
-
-    def _fit_and_predict_oof_model(
-        self,
-        estimator: ClassifierMixin,
-        X: ArrayLike,
-        y: ArrayLike,
-        train_index: ArrayLike,
-        val_index: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None
-    ) -> Tuple[ClassifierMixin, ArrayLike, ArrayLike, ArrayLike]:
-        """
-        Fit a single out-of-fold model on a given training set and
-        perform predictions on a test set.
-
-        Parameters
-        ----------
-        estimator : RegressorMixin
-            Estimator to train.
-
-        X : ArrayLike of shape (n_samples, n_features)
-            Input data.
-
-        y : ArrayLike of shape (n_samples,)
-            Input labels.
-
-        train_index : np.ndarray of shape (n_samples_train)
-            Training data indices.
-
-        val_index : np.ndarray of shape (n_samples_val)
-            Validation data indices.
-
-        sample_weight : Optional[ArrayLike] of shape (n_samples,)
-            Sample weights. If None, then samples are equally weighted.
-            By default None.
-
-        Returns
-        -------
-        Tuple[ClassifierMixin, ArrayLike, ArrayLike, ArrayLike]
-
-        - [0]: Fitted estimator
-        - [1]: Estimator predictions on the validation data,
-          of shape (n_samples_val,)
-        - [2]: Validation data,
-          of shape (n_samples_val,)
-        - [3]: Validation data labels,
-          of shape (n_samples_val,).
-        """
-        X_train, y_train = X[train_index], y[train_index]
-        X_val, y_val = X[val_index], y[val_index]
-        if sample_weight is None:
-            estimator = fit_estimator(estimator, X_train, y_train)
-        else:
-            estimator = fit_estimator(
-                estimator, X_train, y_train, sample_weight[train_index]
-            )
-        y_pred = estimator.predict_proba(X_val)
-        return estimator, y_pred, X_val, y_val
 
     def fit(
         self,
@@ -352,6 +293,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             If some weights are null,
             their corresponding observations are removed
             before the fitting process and hence have no prediction sets.
+
             By default None.
 
         Returns
@@ -362,32 +304,21 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         # Checks
         self._check_parameters()
         cv = self._check_cv(self.cv)
-        estimator = self._check_estimator(self.estimator)
+        estimator = self._check_estimator(X, y, self.estimator)
         X, y = check_X_y(
             X, y, force_all_finite=False, dtype=["float64", "int", "object"]
         )
-        check_classification_targets(y)
+        assert type_of_target(y) == "multiclass"
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
         # Work
-        if cv == "prefit":
-            self.single_estimator_ = estimator
-            y_pred = self.single_estimator_.predict_proba(X)
-            X_val, y_val = X, y
-        else:
-            indices = np.arange(X.shape[0])
-            train_index, val_index = train_test_split(
-                indices, test_size=cv, random_state=self.random_state
-            )
-            self.single_estimator_, y_pred, X_val, y_val = (
-                self._fit_and_predict_oof_model(
-                    clone(estimator), X, y, train_index,
-                    val_index, sample_weight
-                )
-            )
-        self.n_samples_val_ = X_val.shape[0]
-        self.scores_ = 1 - y_pred[np.arange(len(y_pred)), y_val]
+        self.single_estimator_ = estimator
+        y_pred = self.single_estimator_.predict_proba(X)
+        self.n_samples_val_ = X.shape[0]
+        self.scores_ = np.take_along_axis(
+            y_pred, y.reshape(-1, 1), axis=1
+        )
         return self
 
     def predict(
@@ -422,7 +353,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         - np.ndarray of shape (n_samples,) if alpha is None.
 
         - Tuple[np.ndarray, np.ndarray] of shapes
-        (n_samples,) and (n_samples, n_labels, n_alpha) if alpha is not None.
+        (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
         # Checks
         alpha_ = check_alpha(alpha)
@@ -430,27 +361,28 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             self,
             [
                 "single_estimator_",
+                "scores_",
                 "n_features_in_",
-                "n_samples_val_",
-                "scores_"
+                "n_samples_val_"
             ]
         )
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
+        y_pred_proba = self.single_estimator_.predict_proba(X)
         n = self.n_samples_val_
         if alpha_ is None:
             return np.array(y_pred)
         else:
             check_alpha_and_n_samples(alpha_, n)
-            quantiles = np.stack([
+            self.quantiles_ = np.stack([
                 np.quantile(
                     self.scores_,
-                    ((n + 1) * (1 - _alpha)) / n,
-                    interpolation="higher"
+                    ((n + 1) * (_alpha)) / n,
+                    interpolation="lower"
                 ) for _alpha in alpha_
             ])
             prediction_sets = np.stack([
-                self.single_estimator_.predict_proba(X) > (1 - quantile)
-                for quantile in quantiles
+                y_pred_proba > (quantile)
+                for quantile in self.quantiles_
             ], axis=2)
             return y_pred, prediction_sets

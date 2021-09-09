@@ -27,20 +27,6 @@ X_reg, y_reg = make_regression(
 )
 
 
-class DumbRegressor:
-
-    def fit(
-        self,
-        X: np.ndarray,
-        y: Optional[np.ndarray] = None
-    ) -> DumbRegressor:
-        self.fitted_ = True
-        return self
-
-    def predict(self, X: np.ndarray) -> np.ndarray:
-        return np.ones(len(X))
-
-
 METHODS = ["naive", "base", "plus", "minmax"]
 
 Params = TypedDict(
@@ -209,43 +195,6 @@ def test_invalid_prefit_estimator_shape() -> None:
         mapie.fit(X_toy, y_toy)
 
 
-def test_valid_prefit_estimator_shape_no_n_features_in() -> None:
-    """
-    Test that estimators fitted with a right number of features
-    but missing an n_features_in_ attribute raise no errors.
-    """
-    estimator = DumbRegressor().fit(X_reg, y_reg)
-    mapie = MapieRegressor(estimator=estimator, cv="prefit")
-    mapie.fit(X_reg, y_reg)
-    assert mapie.n_features_in_ == 10
-
-
-@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
-def test_invalid_alpha(alpha: Any) -> None:
-    """Test that invalid alphas raise errors."""
-    mapie = MapieRegressor()
-    mapie.fit(X_toy, y_toy)
-    with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
-        mapie.predict(X_toy, alpha=alpha)
-
-
-@pytest.mark.parametrize(
-    "alpha",
-    [
-        np.linspace(0.05, 0.95, 5),
-        [0.05, 0.95],
-        (0.05, 0.95),
-        np.array([0.05, 0.95]),
-        None
-    ]
-)
-def test_valid_alpha(alpha: Any) -> None:
-    """Test that valid alphas raise no errors."""
-    mapie = MapieRegressor()
-    mapie.fit(X_toy, y_toy)
-    mapie.predict(X_toy, alpha=alpha)
-
-
 @pytest.mark.parametrize("method", [0, 1, "jackknife", "cv", ["base", "plus"]])
 def test_invalid_method(method: str) -> None:
     """Test that invalid methods raise errors."""
@@ -350,26 +299,9 @@ def test_sklearn_compatible_estimator(estimator: Any, check: Any) -> None:
     check(estimator)
 
 
-@pytest.mark.parametrize("method", METHODS)
-def test_fit_attributes(method: str) -> None:
-    """Test fit attributes shared by all PI methods."""
-    mapie = MapieRegressor(method=method)
-    mapie.fit(X_toy, y_toy)
-    check_is_fitted(
-        mapie,
-        [
-            "n_features_in_",
-            "single_estimator_",
-            "estimators_",
-            "k_",
-            "residuals_"
-        ]
-    )
-
-
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("dataset", [(X_reg, y_reg), (X_toy, y_toy)])
-@pytest.mark.parametrize("alpha", [0.1, [0.1, 0.2], (0.1, 0.2)])
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.4], (0.2, 0.4)])
 def test_predict_output_shape(
     strategy: str,
     alpha: Any,
@@ -381,6 +313,7 @@ def test_predict_output_shape(
     mapie.fit(X, y)
     y_pred, y_pis = mapie.predict(X, alpha=alpha)
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
+    assert y_pred.shape == (X.shape[0],)
     assert y_pis.shape == (X.shape[0], 2, n_alpha)
 
 
@@ -430,7 +363,7 @@ def test_linear_data_confidence_interval(
     """
     mapie = MapieRegressor(ensemble=ensemble, **STRATEGIES[strategy])
     mapie.fit(X_toy, y_toy)
-    y_pred, y_pis = mapie.predict(X_toy, alpha=0.1)
+    y_pred, y_pis = mapie.predict(X_toy, alpha=0.2)
     np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 1, 0])
     np.testing.assert_allclose(y_pred, y_pis[:, 0, 0])
 
@@ -523,8 +456,8 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     mapie_multi = MapieRegressor(n_jobs=-1, **STRATEGIES[strategy])
     mapie_single.fit(X_toy, y_toy)
     mapie_multi.fit(X_toy, y_toy)
-    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.1)
-    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.1)
+    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.2)
+    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.2)
     np.testing.assert_allclose(y_pred_single, y_pred_multi)
     np.testing.assert_allclose(y_pis_single, y_pis_multi)
 

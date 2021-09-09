@@ -41,22 +41,13 @@ X_train = np.vstack([
     for center, cov in zip(centers, covs)
 ])
 y_train = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
-# y_train = np.stack([i for i in range(3) for _ in range(n_samples)]).ravel()
 
 
 # Create test from (x, y) coordinates
-# X_test = np.stack([
-#     [x, y]
-#     for x in np.arange(x_min, x_max, step)
-#     for y in np.arange(x_min, x_max, step)
-# ])
 xx, yy = np.meshgrid(
     np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
 )
 X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
-
-# print(xx.shape, yy.shape, X_test.shape)
-# print(np.stack((xx.ravel(), yy.ravel()), axis=1))
 
 # Apply MapieClassifier on the dataset to get prediction sets
 clf = GaussianNB().fit(X_train, y_train)
@@ -72,8 +63,6 @@ tab10 = plt.cm.get_cmap("Purples", 4)
 colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
 y_pred_col = list(map(colors.get, y_pred_mapie))
 y_train_col = list(map(colors.get, y_train))
-# colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
-# y_pred_col = [colors[int(i)] for _, i in enumerate(y_pred_mapie)]
 y_train_col = [colors[int(i)] for _, i in enumerate(y_train)]
 fig, axs = plt.subplots(1, 4, figsize=(20, 4))
 axs[0].scatter(
