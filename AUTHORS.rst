@@ -17,5 +17,6 @@ Contributors
 * Rémi Adon <remi.adon@protonmail.com>
 * Alizé Papp <alize.papp@outlook.com>
 * Abdou Akim Goumbala <aagoumbala@quantmetry.com>
+* Adirtha Borgohain <adirthaborgohain@gmail.com>
 
 To be continued ...

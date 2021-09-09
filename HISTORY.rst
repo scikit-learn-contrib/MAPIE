@@ -12,6 +12,8 @@ History
 * Split example gallery into separate regression and classification galleries
 * Add first classification examples
 * Add method classification_coverage_score in the module metrics.py
+* Fixed code error for plotting of interval widths in tutorial of documentation
+* Added missing import statements in tutorial of documentation
 
 0.2.3 (2021-07-09)
 ------------------

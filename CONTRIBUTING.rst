@@ -77,7 +77,7 @@ These tests absolutely have to pass.
 
 .. code:: sh
 
-    $ flake8 . --exclude=doc
+    $ make lint
 
 
 Static typing
@@ -87,7 +87,7 @@ These tests absolutely have to pass.
 
 .. code:: sh
 
-    $ mypy mapie examples --strict --config-file mypy.ini
+    $ make type-check
 
 
 Unit tests
@@ -97,7 +97,7 @@ These tests absolutely have to pass.
 
 .. code:: sh
 
-    $ pytest -vs --doctest-modules mapie
+    $ make tests
 
 Coverage
 ^^^^^^^^
@@ -106,15 +106,4 @@ The coverage should absolutely be 100%.
 
 .. code:: sh
 
-    $ pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie
-
-
-Bump version
-------------
-
-Patch the current version of the package by running :
-
-.. code:: sh
-
-    $ bump2version patch
-    $ git push --tags
+    $ make coverage
