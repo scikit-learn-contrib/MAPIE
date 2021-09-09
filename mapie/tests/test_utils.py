@@ -18,8 +18,9 @@ from mapie.utils import (
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 
+n_features = 10
 X_reg, y_reg = make_regression(
-    n_samples=500, n_features=10, noise=1.0, random_state=1
+    n_samples=500, n_features=n_features, noise=1.0, random_state=1
 )
 
 X_classif, y_classif = make_classification(
@@ -110,16 +111,8 @@ def test_valid_alpha(alpha: Any) -> None:
     check_alpha(alpha=alpha)
 
 
-@pytest.mark.parametrize(
-    "Estimator",
-    [
-        DumbEstimator().fit(X_reg, y_reg),
-        DumbEstimator().fit(X_classif, y_classif)
-    ]
-)
 @pytest.mark.parametrize("cv", ["prefit", None])
-def test_valid_shape_no_n_features_in(
-        Estimator: Any, cv: Any) -> None:
+def test_valid_shape_no_n_features_in(cv: Any) -> None:
     """
     Test that estimators fitted with a right number of features
     but missing an n_features_in_ attribute raise no errors.
@@ -128,7 +121,7 @@ def test_valid_shape_no_n_features_in(
     n_features_in = check_n_features_in(
         X=X_reg, cv=cv, estimator=estimator
     )
-    assert n_features_in == 10
+    assert n_features_in == n_features
 
 
 @pytest.mark.parametrize(

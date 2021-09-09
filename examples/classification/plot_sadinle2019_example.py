@@ -16,7 +16,8 @@ Prediction sets are estimated by :class:`mapie.classification.MapieClassifier`
 from the distribution of the softmax scores of the true labels for three
 alpha values (0.2, 0.1, and 0.05) giving different class coverage levels.
 
-When the class coverage is not large enough, the prediction sets can be empty.
+When the class coverage level is not large enough, the prediction sets can be
+empty.
 This happens because the model is uncertain at the border between two labels.
 These so-called null regions disappear for larger coverage levels.
 """
