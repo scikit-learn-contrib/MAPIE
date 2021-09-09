@@ -155,6 +155,8 @@ The effective coverage is the actual fraction of true labels lying in the predic
 📘 Documentation
 ================
 
+The full documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
+
 How does **MAPIE** work on regression ? It is basically based on cross-validation and relies on:
 
 - Residuals on the whole trainig set obtained by cross-validation,
@@ -162,18 +164,9 @@ How does **MAPIE** work on regression ? It is basically based on cross-validatio
 
 **MAPIE** then combines all these elements in a way that provides prediction intervals on new data with strong theoretical guarantees [1].
 
-.. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_internals.png
+.. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_internals_regression.png
     :width: 300
     :align: center
-
-The full documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
-It contains the following sections:
-
-- `Quickstart <https://mapie.readthedocs.io/en/latest/quick_start.html>`_
-- `Theoretical description <https://mapie.readthedocs.io/en/latest/theoretical_description.html>`_
-- `Tutorial <https://mapie.readthedocs.io/en/latest/tutorial.html>`_
-- `API <https://mapie.readthedocs.io/en/latest/api.html>`_
-- `Examples <https://mapie.readthedocs.io/en/latest/auto_examples/index.html>`_
 
 
 📝 Contributing
@@ -221,6 +214,12 @@ MAPIE methods are based on the work by `Foygel-Barber et al. (2021) <https://doi
 [2] Mauricio Sadinle, Jing Lei, and Larry Wasserman.
 "Least Ambiguous Set-Valued Classifiers With Bounded Error Levels." Journal of the American Statistical Association, 114:525, 223-234, 2019.
 
+[3] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
+"Classification with Valid and Adaptive Coverage." NeurIPS 202 (spotlight).
+
+[4] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan and Jitendra Malik.
+"Uncertainty Sets for Image Classifiers using Conformal Prediction."
+International Conference on Learning Representations 2021.
 
 📝 License
 ==========

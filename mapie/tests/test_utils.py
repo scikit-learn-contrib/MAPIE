@@ -12,26 +12,37 @@ from mapie.utils import (
     fit_estimator,
     check_alpha,
     check_n_features_in,
-    check_alpha_and_n_samples
+    check_alpha_and_n_samples,
+    check_n_jobs,
+    check_verbose
 )
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 
 n_features = 10
+
 X_reg, y_reg = make_regression(
-    n_samples=500, n_features=n_features, noise=1.0, random_state=1
+    n_samples=500,
+    n_features=n_features,
+    noise=1.0,
+    random_state=1
 )
 
-X_classif, y_classif = make_classification(
-    n_samples=500, n_features=10, n_informative=3, n_classes=4, random_state=1
+X_clf, y_clf = make_classification(
+    n_samples=500,
+    n_features=n_features,
+    n_informative=3,
+    n_classes=4,
+    random_state=1
 )
 
 
 class DumbEstimator:
 
     def fit(
-        self, X: np.ndarray,
+        self,
+        X: np.ndarray,
         y: Optional[np.ndarray] = None
     ) -> DumbEstimator:
         self.fitted_ = True
@@ -162,8 +173,33 @@ def test_invalid_prefit_estimator_shape() -> None:
     Test that estimators fitted with a wrong number of features raise errors.
     """
     estimator = LinearRegression().fit(X_reg, y_reg)
-    # mapie = MapieClassifier(estimator=estimator, cv="prefit")
     with pytest.raises(ValueError, match=r".*mismatch between.*"):
         check_n_features_in(
             X_toy, cv="prefit", estimator=estimator
         )
+
+
+@pytest.mark.parametrize("n_jobs", ["dummy", 0, 1.5, [1, 2]])
+def test_invalid_n_jobs(n_jobs: Any) -> None:
+    """Test that invalid n_jobs raise errors."""
+    with pytest.raises(ValueError, match=r".*Invalid n_jobs argument.*"):
+        check_n_jobs(n_jobs)
+
+
+@pytest.mark.parametrize("n_jobs", [-5, -1, 1, 4])
+def test_valid_n_jobs(n_jobs: Any) -> None:
+    """Test that valid n_jobs raise no errors."""
+    check_n_jobs(n_jobs)
+
+
+@pytest.mark.parametrize("verbose", ["dummy", -1, 1.5, [1, 2]])
+def test_invalid_verbose(verbose: Any) -> None:
+    """Test that invalid verboses raise errors."""
+    with pytest.raises(ValueError, match=r".*Invalid verbose argument.*"):
+        check_verbose(verbose)
+
+
+@pytest.mark.parametrize("verbose", [0, 10, 50])
+def test_valid_verbose(verbose: Any) -> None:
+    """Test that valid verboses raise no errors."""
+    check_verbose(verbose)

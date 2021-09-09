@@ -16,12 +16,12 @@ doc:
 	$(MAKE) clean -C doc
 	$(MAKE) html -C doc
 
+build:
+	python setup.py sdist bdist_wheel
+
 clean-build:
 	rm -rf build dist MAPIE.egg-info
 
 clean:
 	rm -rf build dist MAPIE.egg-info .mypy_cache .pytest_cache .coverage*
 	$(MAKE) clean -C doc
-
-build:
-	python setup.py sdist bdist_wheel
