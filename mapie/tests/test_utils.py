@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
-from sklearn.datasets import make_regression, make_classification
+from sklearn.datasets import make_regression
 
 from mapie.utils import (
     check_null_weight,
