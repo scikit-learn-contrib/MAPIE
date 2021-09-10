@@ -2,7 +2,7 @@
 History
 =======
 
-0.2.4 (XXXX-XX-XX)
+0.3.0 (XXXX-XX-XX)
 ------------------
 
 * Renaming estimators.py module to regression.py
@@ -14,6 +14,7 @@ History
 * Add method classification_coverage_score in the module metrics.py
 * Fixed code error for plotting of interval widths in tutorial of documentation
 * Added missing import statements in tutorial of documentation
+* Refactorize tests of `n_jobs` and `verbose` in `utils.py`
 
 0.2.3 (2021-07-09)
 ------------------

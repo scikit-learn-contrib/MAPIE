@@ -15,7 +15,9 @@ from .utils import (
     check_null_weight,
     check_n_features_in,
     check_alpha,
-    check_alpha_and_n_samples
+    check_alpha_and_n_samples,
+    check_n_jobs,
+    check_verbose
 )
 
 
@@ -99,7 +101,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         The scores used to calibrate the prediction sets.
 
     quantiles_ : np.ndarray of shape (n_alpha)
-        The quantiles estimated from scores_ and alpha values.
+        The quantiles estimated from ``scores_`` and alpha values.
 
     References
     ----------
@@ -162,25 +164,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 "Allowed values are 'score'."
             )
 
-        if not isinstance(self.n_jobs, (int, type(None))):
-            raise ValueError(
-                "Invalid n_jobs argument. Must be an integer."
-            )
-
-        if self.n_jobs == 0:
-            raise ValueError(
-                "Invalid n_jobs argument. Must be different than 0."
-            )
-
-        if not isinstance(self.verbose, int):
-            raise ValueError(
-                "Invalid verbose argument. Must be an integer."
-            )
-
-        if self.verbose < 0:
-            raise ValueError(
-                "Invalid verbose argument. Must be non-negative."
-            )
+        check_n_jobs(self.n_jobs)
+        check_verbose(self.verbose)
 
     def _check_estimator(
         self,

@@ -11,8 +11,6 @@ from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.validation import check_is_fitted
 from sklearn.dummy import DummyClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -48,7 +46,7 @@ y_toy_mapie = [
 ]
 
 n_classes = 4
-X_lr, y_lr = make_classification(
+X, y = make_classification(
     n_samples=500,
     n_features=10,
     n_informative=3,
@@ -78,6 +76,12 @@ def test_default_sample_weight() -> None:
     assert signature(mapie.fit).parameters["sample_weight"].default is None
 
 
+def test_default_alpha() -> None:
+    """Test default alpha."""
+    mapie = MapieClassifier()
+    assert signature(mapie.predict).parameters["alpha"].default is None
+
+
 def test_fit() -> None:
     """Test that fit raises no errors."""
     mapie = MapieClassifier()
@@ -89,12 +93,6 @@ def test_fit_predict() -> None:
     mapie = MapieClassifier()
     mapie.fit(X_toy, y_toy)
     mapie.predict(X_toy)
-
-
-def test_default_alpha() -> None:
-    """Test default alpha."""
-    mapie = MapieClassifier()
-    assert signature(mapie.predict).parameters["alpha"].default is None
 
 
 def test_no_fit_predict() -> None:
@@ -170,6 +168,116 @@ def test_valid_prefit_estimator(estimator: ClassifierMixin) -> None:
     assert mapie.n_features_in_ == 1
 
 
+@pytest.mark.parametrize(
+    "method", [0.5, 1, "jackknife", "cv", ["base", "plus"]]
+)
+def test_invalid_method(method: str) -> None:
+    """Test that invalid methods raise errors."""
+    mapie = MapieClassifier(method=method)
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("method", METHODS)
+def test_valid_method(method: str) -> None:
+    """Test that valid methods raise no errors."""
+    mapie = MapieClassifier(method=method)
+    mapie.fit(X_toy, y_toy)
+    check_is_fitted(
+        mapie,
+        [
+            "single_estimator_",
+            "n_features_in_",
+            "n_samples_val_",
+            "scores_"
+        ]
+    )
+
+
+@pytest.mark.parametrize("cv", [None, "prefit"])
+def test_valid_cv(cv: Any) -> None:
+    """Test that valid cv raise no errors."""
+    model = LogisticRegression(multi_class="multinomial")
+    model.fit(X_toy, y_toy)
+    mapie = MapieClassifier(estimator=model, cv=cv)
+    mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize(
+    "cv", [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
+)
+def test_invalid_cv(cv: Any) -> None:
+    """Test that invalid cv raise errors."""
+    mapie = MapieClassifier(cv=cv)
+    with pytest.raises(ValueError, match=r".*Invalid cv argument.*"):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_predict_output_shape(
+    strategy: str,
+    alpha: Any,
+    dataset: Tuple[np.ndarray, np.ndarray]
+) -> None:
+    """Test predict output shape."""
+    mapie = MapieClassifier(**STRATEGIES[strategy])
+    X, y = dataset
+    mapie.fit(X, y)
+    y_pred, y_ps = mapie.predict(X, alpha=alpha)
+    n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
+    assert y_pred.shape == (X.shape[0],)
+    assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
+
+
+def test_none_alpha_results() -> None:
+    """
+    Test that alpha set to None in MapieClassifier gives same predictions
+    as base Classifier.
+    """
+    estimator = LogisticRegression()
+    estimator.fit(X, y)
+    y_pred_est = estimator.predict(X)
+    mapie = MapieClassifier(estimator=estimator, cv="prefit")
+    mapie.fit(X, y)
+    y_pred_mapie = mapie.predict(X)
+    np.testing.assert_allclose(y_pred_est, y_pred_mapie)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_results_for_same_alpha(strategy: str) -> None:
+    """
+    Test that predictions and intervals
+    are similar with two equal values of alpha.
+    """
+    mapie = MapieClassifier(**STRATEGIES[strategy])
+    mapie.fit(X, y)
+    _, y_ps = mapie.predict(X, alpha=[0.1, 0.1])
+    np.testing.assert_allclose(y_ps[:, 0, 0], y_ps[:, 0, 1])
+    np.testing.assert_allclose(y_ps[:, 1, 0], y_ps[:, 1, 1])
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize(
+    "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
+)
+def test_results_for_alpha_as_float_and_arraylike(
+    strategy: str,
+    alpha: Any
+) -> None:
+    """Test that output values do not depend on type of alpha."""
+    mapie = MapieClassifier(**STRATEGIES[strategy])
+    mapie.fit(X, y)
+    y_pred_float1, y_ps_float1 = mapie.predict(X, alpha=alpha[0])
+    y_pred_float2, y_ps_float2 = mapie.predict(X, alpha=alpha[1])
+    y_pred_array, y_ps_array = mapie.predict(X, alpha=alpha)
+    np.testing.assert_allclose(y_pred_float1, y_pred_array)
+    np.testing.assert_allclose(y_pred_float2, y_pred_array)
+    np.testing.assert_allclose(y_ps_float1[:, :, 0], y_ps_array[:, :, 0])
+    np.testing.assert_allclose(y_ps_float2[:, :, 0], y_ps_array[:, :, 1])
+
+
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_single_and_multi_jobs(strategy: str) -> None:
     """
@@ -208,100 +316,6 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     np.testing.assert_allclose(y_ps0, y_ps2)
 
 
-@pytest.mark.parametrize("n_jobs", ["dummy", 0, 1.5, [1, 2]])
-def test_invalid_n_jobs(n_jobs: Any) -> None:
-    """Test that invalid n_jobs raise errors."""
-    mapie = MapieClassifier(n_jobs=n_jobs)
-    with pytest.raises(ValueError, match=r".*Invalid n_jobs argument.*"):
-        mapie.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize("n_jobs", [-5, -1, 1, 4])
-def test_valid_n_jobs(n_jobs: Any) -> None:
-    """Test that valid n_jobs raise no errors."""
-    mapie = MapieClassifier(n_jobs=n_jobs)
-    mapie.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize("verbose", ["dummy", -1, 1.5, [1, 2]])
-def test_invalid_verbose(verbose: Any) -> None:
-    """Test that invalid verboses raise errors."""
-    mapie = MapieClassifier(verbose=verbose)
-    with pytest.raises(ValueError, match=r".*Invalid verbose argument.*"):
-        mapie.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize("verbose", [0, 10, 50])
-def test_valid_verbose(verbose: Any) -> None:
-    """Test that valid verboses raise no errors."""
-    mapie = MapieClassifier(verbose=verbose)
-    mapie.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize(
-    "cv", [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
-)
-def test_invalid_cv(cv: Any) -> None:
-    """Test that invalid cv raise errors."""
-    mapie = MapieClassifier(cv=cv)
-    with pytest.raises(ValueError, match=r".*Invalid cv argument.*"):
-        mapie.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize("cv", [None, "prefit"])
-def test_valid_cv(cv: Any) -> None:
-    """Test that valid cv raise no errors."""
-    model = LogisticRegression(multi_class="multinomial")
-    model.fit(X_toy, y_toy)
-    mapie = MapieClassifier(estimator=model, cv=cv)
-    mapie.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize(
-    "method", [0.5, 1, "jackknife", "cv", ["base", "plus"]]
-)
-def test_invalid_method(method: str) -> None:
-    """Test that invalid methods raise errors."""
-    mapie = MapieClassifier(method=method)
-    with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize("method", METHODS)
-def test_valid_method(method: str) -> None:
-    """Test that valid methods raise no errors."""
-    mapie = MapieClassifier(method=method)
-    mapie.fit(X_toy, y_toy)
-    check_is_fitted(
-        mapie,
-        [
-            "single_estimator_",
-            "n_features_in_",
-            "n_samples_val_",
-            "scores_"
-        ]
-    )
-
-
-@pytest.mark.parametrize(
-    "classifier",
-    [LogisticRegression(), DecisionTreeClassifier(), RandomForestClassifier()]
-)
-@pytest.mark.parametrize("CV", ["prefit"])
-def test_none_alpha_results(classifier: Any, CV: Any) -> None:
-    """
-    Test that alpha set to None in MapieClassifier gives same predictions
-    as base Classifier.
-    """
-    estimator = classifier
-    estimator.fit(X_lr, y_lr)
-    y_pred_est = estimator.predict(X_lr)
-    mapie = MapieClassifier(estimator=estimator, cv=CV)
-    mapie.fit(X_lr, y_lr)
-    y_pred_mapie = mapie.predict(X_lr)
-    np.testing.assert_allclose(y_pred_est, y_pred_mapie)
-
-
 @pytest.mark.parametrize(
     "alpha",
     [
@@ -318,57 +332,6 @@ def test_valid_prediction(alpha: Any) -> None:
     mapie = MapieClassifier(estimator=model, cv="prefit")
     mapie.fit(X_toy, y_toy)
     mapie.predict(X_toy, alpha=alpha)
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("dataset", [(X_lr, y_lr), (X_toy, y_toy)])
-@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
-def test_predict_output_shape(
-    strategy: str,
-    alpha: Any,
-    dataset: Tuple[np.ndarray, np.ndarray]
-) -> None:
-    """Test predict output shape."""
-    mapie = MapieClassifier(**STRATEGIES[strategy])
-    X, y = dataset
-    mapie.fit(X, y)
-    y_pred, y_ps = mapie.predict(X, alpha=alpha)
-    n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
-    assert y_pred.shape == (X.shape[0],)
-    assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_results_for_same_alpha(strategy: str) -> None:
-    """
-    Test that predictions and intervals
-    are similar with two equal values of alpha.
-    """
-    mapie = MapieClassifier(**STRATEGIES[strategy])
-    mapie.fit(X_lr, y_lr)
-    _, y_ps = mapie.predict(X_lr, alpha=[0.1, 0.1])
-    np.testing.assert_allclose(y_ps[:, 0, 0], y_ps[:, 0, 1])
-    np.testing.assert_allclose(y_ps[:, 1, 0], y_ps[:, 1, 1])
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize(
-    "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
-)
-def test_results_for_alpha_as_float_and_arraylike(
-    strategy: str,
-    alpha: Any
-) -> None:
-    """Test that output values do not depend on type of alpha."""
-    mapie = MapieClassifier(**STRATEGIES[strategy])
-    mapie.fit(X_lr, y_lr)
-    y_pred_float1, y_ps_float1 = mapie.predict(X_lr, alpha=alpha[0])
-    y_pred_float2, y_ps_float2 = mapie.predict(X_lr, alpha=alpha[1])
-    y_pred_array, y_ps_array = mapie.predict(X_lr, alpha=alpha)
-    np.testing.assert_allclose(y_pred_float1, y_pred_array)
-    np.testing.assert_allclose(y_pred_float2, y_pred_array)
-    np.testing.assert_allclose(y_ps_float1[:, :, 0], y_ps_array[:, :, 0])
-    np.testing.assert_allclose(y_ps_float2[:, :, 0], y_ps_array[:, :, 1])
 
 
 def test_toy_dataset_predictions() -> None:
