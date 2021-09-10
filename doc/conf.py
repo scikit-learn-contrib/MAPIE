@@ -38,8 +38,8 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
+    "numpydoc",
     "sphinx_gallery.gen_gallery",
-    "numpydoc"
 ]
 mathjax_path = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 

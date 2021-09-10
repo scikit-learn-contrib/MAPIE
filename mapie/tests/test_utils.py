@@ -22,18 +22,10 @@ y_toy = np.array([5, 7, 9, 11, 13, 15])
 
 n_features = 10
 
-X_reg, y_reg = make_regression(
+X, y = make_regression(
     n_samples=500,
     n_features=n_features,
     noise=1.0,
-    random_state=1
-)
-
-X_clf, y_clf = make_classification(
-    n_samples=500,
-    n_features=n_features,
-    n_informative=3,
-    n_classes=4,
     random_state=1
 )
 
@@ -130,7 +122,7 @@ def test_valid_shape_no_n_features_in(cv: Any) -> None:
     """
     estimator = DumbEstimator()
     n_features_in = check_n_features_in(
-        X=X_reg, cv=cv, estimator=estimator
+        X=X, cv=cv, estimator=estimator
     )
     assert n_features_in == n_features
 
@@ -172,7 +164,7 @@ def test_invalid_prefit_estimator_shape() -> None:
     """
     Test that estimators fitted with a wrong number of features raise errors.
     """
-    estimator = LinearRegression().fit(X_reg, y_reg)
+    estimator = LinearRegression().fit(X, y)
     with pytest.raises(ValueError, match=r".*mismatch between.*"):
         check_n_features_in(
             X_toy, cv="prefit", estimator=estimator

@@ -41,7 +41,7 @@ MAPIE - Model Agnostic Prediction Interval Estimator
 **MAPIE** allows you to easily estimate prediction intervals (or prediction sets) using your favourite scikit-learn-compatible model for
 single-output regression or multi-class classification settings.
 
-Prediction intervals output by **MAPIE** encompass both aleatoric and epistemic uncertainties and are backed by strong theoretical guarantees [1, 2].
+Prediction intervals output by **MAPIE** encompass both aleatoric and epistemic uncertainties and are backed by strong theoretical guarantees [1-4].
 
 🔗 Requirements
 ===============
@@ -206,7 +206,7 @@ with the financial support from Région Ile de France.
 🔍  References
 ==============
 
-MAPIE methods are based on the work by `Foygel-Barber et al. (2021) <https://doi.org/10.1214/20-AOS1965>`_.
+MAPIE methods belong to the field of conformal inference.
 
 [1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
 "Predictive inference with the jackknife+." Ann. Statist., 49(1):486–507, February 2021.
