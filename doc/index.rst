@@ -12,13 +12,22 @@
    :hidden:
    :caption: REGRESSION
 
-   theoretical_description
-   tutorial
+   theoretical_description_regression
+   tutorial_regression
+   examples_regression/index
 
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: API & Examples
+   :caption: CLASSIFICATION
+
+   theoretical_description_classification
+   tutorial_classification
+   examples_classification/index
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: API
 
    api
-   auto_examples/index

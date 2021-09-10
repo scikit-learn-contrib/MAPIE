@@ -1,6 +1,6 @@
 .. title:: Tutorial : contents
 
-.. _tutorial:
+.. _tutorial_regression:
 
 ========
 Tutorial
@@ -86,6 +86,10 @@ polynomial function. Here, we choose a degree equal to 10 so the function
 is able to perfectly fit :math:`x \times \sin(x)`.
 
 .. code:: python
+
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.linear_model import LinearRegression
+    from sklearn.pipeline import Pipeline
 
     degree_polyn = 10
     polyn_model = Pipeline(
@@ -542,7 +546,7 @@ and compare their prediction interval.
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     for name in model_names:
-        ax.plot(X_test, y_preds[name][:, 2] - y_preds[name][:, 1])
+        ax.plot(X_test, y_pis[name][:, 1, 0] - y_pis[name][:, 0, 0])
     ax.axhline(1.96*2*noise, ls="--", color="k")
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")

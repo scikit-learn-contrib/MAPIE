@@ -5,18 +5,15 @@
 - [ ] Edit HISTORY.rst and AUTHORS.rst to make sure it’s up-to-date and add release date
 - [ ] Check whether any new files need to go in MANIFEST.in
 - [ ] Make sure tests run, pass and cover 100% of the package:
-    * `flake8 . --exclude=doc`
-    * `mypy mapie examples --strict`
-    * `pytest -vs --doctest-modules mapie`
-    * `pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie`
+    * `make lint`
+    * `make type-check`
+    * `make tests`
+    * `make coverage`
 - [ ] Make sure documentation builds without warnings and shows nicely:
-    * `cd doc`
-    * `make clean`
-    * `make html`
-    * `cd ..`
+    * `make doc`
 - [ ] Build source distribution:
-    * `rm -rf build dist MAPIE.egg-info`
-    * `python setup.py sdist bdist_wheel`
+    * `make clean-build`
+    * `make build`
 - [ ] Check that your package is ready for publication: `twine check dist/*`
 - [ ] Make sure everything is committed and pushed: `git push origin master`
 - [ ] Upload it to TestPyPi: `twine upload --repository-url https://test.pypi.org/legacy/ dist/*`

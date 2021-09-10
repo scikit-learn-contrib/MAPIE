@@ -39,7 +39,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
     "numpydoc",
-    "sphinx_gallery.gen_gallery"
+    "sphinx_gallery.gen_gallery",
 ]
 mathjax_path = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 
@@ -85,7 +85,7 @@ copyright = u"2021, Quantmetry"
 # built documents.
 #
 # The short X.Y version.
-version = "0.2.3"
+version = "0.2.4"
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -310,6 +310,8 @@ intersphinx_mapping = {
 
 # sphinx-gallery configuration
 sphinx_gallery_conf = {
+    'examples_dirs': ['../examples/regression', '../examples/classification'],
+    'gallery_dirs': ['examples_regression', 'examples_classification'],
     "doc_module": "mapie",
     "backreferences_dir": os.path.join("generated"),
     "reference_url": {

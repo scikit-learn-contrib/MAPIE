@@ -1,12 +1,13 @@
 .. title:: Theoretical Description : contents
 
-.. _theoretical_description:
+.. _theoretical_description_regression:
 
 =======================
 Theoretical Description
 =======================
 
-This module uses various resampling methods based on the jackknife strategy
+The :class:`mapie.regression.MapieRegressor` class uses various
+resampling methods based on the jackknife strategy
 recently introduced by Foygel-Barber et al. (2020) [1]. 
 They allow the user to estimate robust prediction intervals with any kind of
 machine learning model for regression purposes on single-output data. 
