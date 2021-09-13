@@ -19,7 +19,7 @@ from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
 
 
-METHODS = ["score"]
+METHODS = ["score", "cumulated_score"]
 
 Params = TypedDict(
     "Params", {
@@ -28,7 +28,8 @@ Params = TypedDict(
 )
 
 STRATEGIES = {
-    "score": Params(method="score", cv="prefit")
+    "score": Params(method="score", cv="prefit"),
+    "cumulated_score": Params(method="cumulated_score", cv="prefit")
 }
 
 X_toy = np.arange(9).reshape(-1, 1)

@@ -132,7 +132,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     """
 
     valid_methods_ = [
-        "score"
+        "score",
+        "cumulated_score"
     ]
 
     def __init__(
@@ -161,7 +162,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         if self.method not in self.valid_methods_:
             raise ValueError(
                 "Invalid method. "
-                "Allowed values are 'score'."
+                "Allowed values are 'score' or 'cumulated_score'."
             )
 
         check_n_jobs(self.n_jobs)
@@ -301,9 +302,15 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         self.single_estimator_ = estimator
         y_pred = self.single_estimator_.predict_proba(X)
         self.n_samples_val_ = X.shape[0]
-        self.scores_ = np.take_along_axis(
-            y_pred, y.reshape(-1, 1), axis=1
-        )
+        if self.method == "score":
+            self.scores_ = np.take_along_axis(
+                y_pred, y.reshape(-1, 1), axis=1
+            )
+        else:
+            self.scores_ = np.take_along_axis(
+                np.cumsum(-np.sort(-y_pred), axis=1),
+                y.reshape(-1, 1), axis=1
+            )
         return self
 
     def predict(
@@ -366,8 +373,14 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                     interpolation="lower"
                 ) for _alpha in alpha_
             ])
-            prediction_sets = np.stack([
-                y_pred_proba > (quantile)
-                for quantile in self.quantiles_
-            ], axis=2)
+            if self.method == "score":
+                prediction_sets = np.stack([
+                    y_pred_proba > (quantile)
+                    for quantile in self.quantiles_
+                ], axis=2)
+            else:
+                prediction_sets = np.stack([
+                    np.cumsum(y_pred_proba, axis=1) <= (quantile)
+                    for quantile in self.quantiles_
+                ], axis=2)
             return y_pred, prediction_sets
