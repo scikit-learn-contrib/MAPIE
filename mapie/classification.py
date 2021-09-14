@@ -45,8 +45,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set.
         - "cumulated_score", based on the sum of the softmax outputs of the
-          labels until the true label is reached, on the calibration set
-          (to be implemented).
+          labels until the true label is reached, on the calibration set.
 
           By default "score".
 
@@ -309,7 +308,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         else:
             self.scores_ = np.take_along_axis(
                 np.cumsum(-np.sort(-y_pred), axis=1),
-                y.reshape(-1, 1), axis=1
+                np.where(np.argsort(-y_pred) == y[:, None])[1].reshape(-1, 1),
+                axis=1
             )
         return self
 
@@ -379,8 +379,31 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                     for quantile in self.quantiles_
                 ], axis=2)
             else:
-                prediction_sets = np.stack([
-                    np.cumsum(y_pred_proba, axis=1) <= (quantile)
+                # sort probabilities by descending order
+                y_pred_sorted = -np.sort(-y_pred_proba)
+                # get corresponding order of classes
+                y_pred_sorted_classes = np.argsort(-y_pred_proba)
+                # compute number of classes to include in prediction sets
+                num_classes_sorted = np.stack([
+                    np.cumsum(y_pred_sorted, axis=1) <= (quantile)
                     for quantile in self.quantiles_
+                ], axis=2).sum(axis=1) + 1
+                # get corresponding classes
+                prediction_sets_int = np.array([
+                    [
+                        pred[:num_classes_sorted[j, i]]
+                        for i, _ in enumerate(self.quantiles_)
+                    ] for j, pred in enumerate(y_pred_sorted_classes)
+                ], dtype=object)
+                # convert to boolean table
+                y_pred_class = np.tile(
+                    np.arange(y_pred_proba.shape[1]),
+                    (y_pred_proba.shape[0], 1)
+                )
+                prediction_sets = np.stack([
+                    [
+                        np.in1d(pred_class, prediction_sets_int[i, j])
+                        for i, pred_class in enumerate(y_pred_class)
+                    ] for j, _ in enumerate(self.quantiles_)
                 ], axis=2)
             return y_pred, prediction_sets
