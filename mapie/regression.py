@@ -7,7 +7,7 @@ from sklearn.base import clone
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline, _name_estimators
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import check_is_fitted
 
@@ -17,7 +17,8 @@ from .utils import (
     fit_estimator,
     check_n_features_in,
     check_alpha,
-    check_alpha_and_n_samples
+    check_alpha_and_n_samples,
+    ReSampling,
 )
 
 
@@ -156,12 +157,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
 
-    valid_methods_ = [
-        "naive",
-        "base",
-        "plus",
-        "minmax"
-    ]
+    valid_methods_ = ["naive", "base", "plus", "minmax"]
 
     def __init__(
         self,
@@ -170,7 +166,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
         n_jobs: Optional[int] = None,
         ensemble: bool = False,
-        verbose: int = 0
+        verbose: int = 0,
     ) -> None:
         self.estimator = estimator
         self.method = method
@@ -195,33 +191,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             )
 
         if not isinstance(self.ensemble, bool):
-            raise ValueError(
-                "Invalid ensemble argument. Must be a boolean."
-            )
+            raise ValueError("Invalid ensemble argument. Must be a boolean.")
 
         if not isinstance(self.n_jobs, (int, type(None))):
-            raise ValueError(
-                "Invalid n_jobs argument. Must be an integer."
-            )
+            raise ValueError("Invalid n_jobs argument. Must be an integer.")
 
         if self.n_jobs == 0:
-            raise ValueError(
-                "Invalid n_jobs argument. Must be different than 0."
-            )
+            raise ValueError("Invalid n_jobs argument. Must be different than 0.")
 
         if not isinstance(self.verbose, int):
-            raise ValueError(
-                "Invalid verbose argument. Must be an integer."
-            )
+            raise ValueError("Invalid verbose argument. Must be an integer.")
 
         if self.verbose < 0:
-            raise ValueError(
-                "Invalid verbose argument. Must be non-negative."
-            )
+            raise ValueError("Invalid verbose argument. Must be non-negative.")
 
     def _check_estimator(
-        self,
-        estimator: Optional[RegressorMixin] = None
+        self, estimator: Optional[RegressorMixin] = None
     ) -> RegressorMixin:
         """
         Check if estimator is ``None``,
@@ -263,12 +248,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         return estimator
 
     def _check_cv(
-        self,
-        cv: Optional[Union[int, str, BaseCrossValidator]] = None
-    ) -> Union[str, BaseCrossValidator]:
+        self, cv: Optional[Union[int, str, BaseCrossValidator, ReSampling]] = None
+    ) -> Union[str, BaseCrossValidator, ReSampling]:
         """
         Check if cross-validator is
-        ``None``, ``int``, ``"prefit"``, ``KFold`` or ``LeaveOneOut``.
+        ``None``, ``int``, ``"prefit"``, ``KFold``, ``ReSampling`` or ``LeaveOneOut``.
         Return a ``LeaveOneOut`` instance if integer equal to -1.
         Return a ``KFold`` instance if integer superior or equal to 2.
         Return a ``KFold`` instance if ``None``.
@@ -299,13 +283,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if (
             isinstance(cv, KFold)
             or isinstance(cv, LeaveOneOut)
-            or cv == "prefit"
+            or isinstance(cv, ReSampling)
+            or (cv == "prefit")
         ):
             return cv
         raise ValueError(
             "Invalid cv argument. "
             "Allowed values are None, -1, int >= 2, 'prefit', "
-            "KFold or LeaveOneOut."
+            "KFold, ReSampling or LeaveOneOut."
         )
 
     def _fit_and_predict_oof_model(
@@ -316,7 +301,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         train_index: ArrayLike,
         val_index: ArrayLike,
         k: int,
-        sample_weight: Optional[ArrayLike] = None
+        sample_weight: Optional[ArrayLike] = None,
     ) -> Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]:
         """
         Fit a single out-of-fold model on a given training set and
@@ -366,14 +351,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 estimator, X_train, y_train, sample_weight[train_index]
             )
         y_pred = estimator.predict(X_val)
-        val_id = np.full_like(y_pred, k)
+        val_id = np.full_like(y_pred, k, dtype=int)
         return estimator, y_pred, val_id, val_index
 
     def fit(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None
+        self, X: ArrayLike, y: ArrayLike, sample_weight: Optional[ArrayLike] = None
     ) -> MapieRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
@@ -417,7 +399,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         # Initialization
         self.estimators_: List[RegressorMixin] = []
-        self.k_ = np.empty_like(y, dtype=int)
+
+        if isinstance(cv, ReSampling):
+            self.cv_is_resampling = True
+            self.k_ = np.zeros(shape=(cv.n_resamplings, len(y)), dtype=float)
+        else:
+            self.cv_is_resampling = False
+            self.k_ = np.empty_like(y, dtype=int)
         y_pred = np.empty_like(y, dtype=float)
 
         # Work
@@ -435,28 +423,38 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             else:
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
-                        clone(estimator),
-                        X, y, train_index, val_index, k, sample_weight
-                    ) for k, (train_index, val_index) in enumerate(cv.split(X))
+                        clone(estimator), X, y, train_index, val_index, k, sample_weight
+                    )
+                    for k, (train_index, val_index) in enumerate(cv.split(X))
                 )
                 self.estimators_, predictions, val_ids, val_indices = map(
                     list, zip(*outputs)
                 )
-                self.n_samples_val_ = [
-                    np.array(pred).shape[0] for pred in predictions
-                ]
-                predictions, val_ids, val_indices = map(
-                    np.concatenate, (predictions, val_ids, val_indices)
-                )
-                self.k_[val_indices] = val_ids
-                y_pred[val_indices] = predictions
+
+                self.n_samples_val_ = [np.array(pred).shape[0] for pred in predictions]
+
+                if isinstance(cv, ReSampling):
+                    pred_after_resampling = np.zeros(
+                        shape=(len(self.estimators_), X.shape[0]), dtype=float
+                    )
+
+                    for est_ in range(len(self.estimators_)):
+                        pred_after_resampling[est_, val_ids[est_]] = predictions[est_]
+                        self.k_[est_, np.where((val_ids[est_]) == est_)[0]] = 1
+
+                    y_pred = np.nanmean(pred_after_resampling, axis=0)
+                else:
+                    predictions, val_ids, val_indices = map(
+                        np.concatenate, (predictions, val_ids, val_indices)
+                    )
+                    self.k_[val_indices] = val_ids
+                    y_pred[val_indices] = predictions
+
         self.residuals_ = np.abs(y - y_pred)
         return self
 
     def predict(
-        self,
-        X: ArrayLike,
-        alpha: Optional[Union[float, Iterable[float]]] = None
+        self, X: ArrayLike, alpha: Optional[Union[float, Iterable[float]]] = None
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -504,7 +502,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 "residuals_",
                 "n_features_in_",
                 "n_samples_val_",
-            ]
+            ],
         )
         alpha_ = check_alpha(alpha)
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
@@ -527,39 +525,43 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_low = y_pred[:, np.newaxis] - quantile
                 y_pred_up = y_pred[:, np.newaxis] + quantile
             else:
-                y_pred_multi = np.column_stack(
-                    [e.predict(X) for e in self.estimators_]
-                )
+                y_pred_multi = np.column_stack([e.predict(X) for e in self.estimators_])
                 if self.method == "plus":
                     # At this point,
                     # y_pred_multi is of shape (n_samples_test, n_estimators_)
                     # We thus enforce y_pred_multi
                     # to be of shape (n_samples_test, n_samples_train)
-                    if len(self.estimators_) < len(self.k_):
+
+                    if self.cv_is_resampling:
+                        y_pred_multi = np.matmul(
+                            y_pred_multi, self.k_ / self.k_.sum(axis=1, keepdims=True)
+                        )
+                    elif len(self.estimators_) < len(self.k_):
                         y_pred_multi = y_pred_multi[:, self.k_]
                     lower_bounds = y_pred_multi - self.residuals_
                     upper_bounds = y_pred_multi + self.residuals_
                 if self.method == "minmax":
+                    if self.cv_is_resampling:
+                        y_pred_multi = np.matmul(y_pred_multi, sel.k_)
                     lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
                     upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
                     lower_bounds = lower_bounds - self.residuals_
                     upper_bounds = upper_bounds + self.residuals_
-                y_pred_low = np.column_stack([
-                    np.quantile(
-                        lower_bounds,
-                        _alpha,
-                        axis=1,
-                        interpolation="lower"
-                    ) for _alpha in alpha_
-                ])
-                y_pred_up = np.column_stack([
-                    np.quantile(
-                        upper_bounds,
-                        1 - _alpha,
-                        axis=1,
-                        interpolation="higher"
-                    ) for _alpha in alpha_
-                ])
+
+                y_pred_low = np.column_stack(
+                    [
+                        np.quantile(lower_bounds, _alpha, axis=1, interpolation="lower")
+                        for _alpha in alpha_
+                    ]
+                )
+                y_pred_up = np.column_stack(
+                    [
+                        np.quantile(
+                            upper_bounds, 1 - _alpha, axis=1, interpolation="higher"
+                        )
+                        for _alpha in alpha_
+                    ]
+                )
                 if self.ensemble:
                     y_pred = np.median(y_pred_multi, axis=1)
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)

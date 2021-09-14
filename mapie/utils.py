@@ -1,17 +1,21 @@
-from typing import Tuple, Optional, Union, Iterable, Any, cast
+from os import replace
+from typing import Tuple, List, Optional, Union, Iterable, Any, cast, Type
 from inspect import signature
+
+import pandas as pd
 import numpy as np
+from scipy.sparse.construct import rand, random
 
 from sklearn.utils.validation import _check_sample_weight
+from sklearn.utils import resample
+from sklearn.utils.validation import _num_samples
 from sklearn.base import RegressorMixin, ClassifierMixin
 
 from ._typing import ArrayLike
 
 
 def check_null_weight(
-    sample_weight: ArrayLike,
-    X: ArrayLike,
-    y: ArrayLike
+    sample_weight: ArrayLike, X: ArrayLike, y: ArrayLike
 ) -> Tuple[ArrayLike, ArrayLike, ArrayLike]:
     """
     Check sample weights and remove samples with null sample weights.
@@ -67,7 +71,7 @@ def fit_estimator(
     estimator: RegressorMixin,
     X: ArrayLike,
     y: ArrayLike,
-    sample_weight: Optional[ArrayLike] = None
+    sample_weight: Optional[ArrayLike] = None,
 ) -> RegressorMixin:
     """
     Fit an estimator on training data by distinguishing two cases:
@@ -147,29 +151,22 @@ def check_alpha(
     elif isinstance(alpha, Iterable):
         alpha_np = np.array(alpha)
     else:
-        raise ValueError(
-            "Invalid alpha. Allowed values are float or Iterable."
-        )
+        raise ValueError("Invalid alpha. Allowed values are float or Iterable.")
     if len(alpha_np.shape) != 1:
         raise ValueError(
-            "Invalid alpha. "
-            "Please provide a one-dimensional list of values."
+            "Invalid alpha. " "Please provide a one-dimensional list of values."
         )
     if alpha_np.dtype.type not in [np.float64, np.float32]:
-        raise ValueError(
-            "Invalid alpha. Allowed values are Iterable of floats."
-        )
+        raise ValueError("Invalid alpha. Allowed values are Iterable of floats.")
     if np.any((alpha_np <= 0) | (alpha_np >= 1)):
-        raise ValueError(
-            "Invalid alpha. Allowed values are between 0 and 1."
-        )
+        raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
     return alpha_np
 
 
 def check_n_features_in(
     X: ArrayLike,
     cv: Optional[Union[float, str]] = None,
-    estimator: Optional[Union[RegressorMixin, ClassifierMixin]] = None
+    estimator: Optional[Union[RegressorMixin, ClassifierMixin]] = None,
 ) -> int:
     """
     Check the expected number of training features.
@@ -205,8 +202,7 @@ def check_n_features_in(
     if cv == "prefit" and hasattr(estimator, "n_features_in_"):
         if cast(Any, estimator).n_features_in_ != n_features_in:
             raise ValueError(
-                "Invalid mismatch between "
-                "X.shape and estimator.n_features_in_."
+                "Invalid mismatch between " "X.shape and estimator.n_features_in_."
             )
     return n_features_in
 
@@ -231,9 +227,62 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
         1/alpha (or 1/(1-alpha)) must be lower than the number of samples.
     """
     for alpha in alphas:
-        if n < 1/alpha or n < 1/(1 - alpha):
+        if n < 1 / alpha or n < 1 / (1 - alpha):
             raise ValueError(
-                    "Number of samples of the score is too low,"
-                    " 1/alpha (or 1/(1 - alpha)) must be lower "
-                    "than the number of samples."
-                )
+                "Number of samples of the score is too low,"
+                " 1/alpha (or 1/(1 - alpha)) must be lower "
+                "than the number of samples."
+            )
+
+
+class ReSampling:
+    def __init__(
+        self,
+        n_resamplings: int,
+        n_samples: Optional[Union[Type[None], int]] = None,
+        bootstrap: bool = True,
+        random_states: Union[Type[None], list] = None,
+    ) -> None:
+        self.n_resamplings = n_resamplings
+        self.n_samples = n_samples
+        self.boostrap = bootstrap
+        if random_states is None:
+            self.random_states = [None] * n_resamplings
+        else:
+            if len(random_states) != n_samples:
+                raise ValueError("Incoherent number of random states")
+            else:
+                self.random_states = random_states
+
+    def split(self, X: ArrayLike):
+        """Generate indices to split data into training and test set.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data, where n_samples is the number of samples
+            and n_features is the number of features.
+        y : array-like of shape (n_samples,)
+            The target variable for supervised learning problems.
+        groups : array-like of shape (n_samples,), default=None
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+        Yields
+        ------
+        train : ndarray
+            The training set indices for that split.
+        test : ndarray
+            The testing set indices for that split.
+        """
+        indices = np.arange(_num_samples(X))
+        n_samples = self.n_samples if self.n_samples is not None else len(indices)
+
+        for k in range(self.n_resamplings):
+            train_index = resample(
+                indices,
+                replace=self.boostrap,
+                n_samples=n_samples,
+                random_state=self.random_states[k],
+                stratify=None,
+            )
+            test_index = pd.Index(data=set(indices) - set(train_index), dtype=np.int64)
+            yield train_index, test_index
