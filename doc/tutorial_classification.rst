@@ -18,8 +18,8 @@ We will use MAPIE to estimate a prediction set of several classes such that the 
 
 * First we generate a dataset with train and test and the Model is fitted in the training set.
 * We set the conformal score :math:`Si = f(X_{i})_{yi}` the softmax output of the true class for each sample in the training set.
-* Then we define :math:`q` as being the :math:`(n + 1) (α) / n` previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the quantile :math:`α`, but with a small correction). 
-* Finally, for a new test data point (where Xn + 1 is known but Yn + 1 is not), create a prediction set :math:`T(X_{n+1}) = {y: f(X_{n+1})_{y} > q}` which includes all the classes with a sufficiently high softmax output.
+* Then we define :math:`q` as being the :math:`(n + 1) (alpha) / n` previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the quantile :math:`alpha`, but with a small correction). 
+* Finally, for a new test data point (where :math:`X_{n + 1}` is known but :math:`Y_{n + 1}` is not), create a prediction set :math:`T(X_{n+1}) = {y: f(X_{n+1})_{y} > q}` which includes all the classes with a sufficiently high softmax output.
 
 We use a two-dimensional dataset with three labels. The distribution of the data is a bivariate normal with diagonal covariance matrices for each label. 
 
