@@ -6,54 +6,55 @@
 Tutorial
 ========
 
-In this tutorial, we compare the prediction sets estimating by Mapieclassifier in a two-dimensional dataset with three labels. The distribution of the data is a bivariate normal with diagonal covariance matrices for each label. 
+In this tutorial, we compare the prediction sets estimating by :class:`mapie.classification.MapieClassifier`.
 
 Throughout this tutorial, we will answer the following questions:
 
-How do the number of class in the prediction sets vary according to the values ​​of alpha with the Conformal Prediction method ?
+- How do the number of classes in the prediction sets vary according to the significance level alpha values and the conformity scores ?
 
 1. Conformal Prediction method using the softmax score of the true label
-=====================================================================
+========================================================================
+We will use MAPIE to estimate a prediction set of several classes such that the probability that the true label of a new test point is included in the prediction set is always higher than the target confidence level 1−alpha.
 
+* First we generate a dataset with train and test and the Model is fitted in the training set.
+* We set the conformal score :math:`Si = f(X_{i})_{yi}` the softmax output of the true class for each sample in the training set.
+* Then we define :math:`q` as being the :math:`(n + 1) (α) / n` previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the quantile :math:`α`, but with a small correction). 
+* Finally, for a new test data point (where Xn + 1 is known but Yn + 1 is not), create a prediction set :math:`T(X_{n+1}) = {y: f(X_{n+1})_{y} > q}` which includes all the classes with a sufficiently high softmax output.
 
-* First we split the dataset in train/calib/test and the Model is fitted in the training set.
-* We set the conformal score Si = f(Xi)Yi the softmax output of the true class for each sample in the calibration set.
-* Then we define q as being the (n + 1) (α) ⌉ / n previous quantile of S1, ..., Sn (this is essentially the quantile α, but with a small correction). 
-* Finally, for a new test data point (where Xn + 1 is known but Yn + 1 is not), create a prediction set T (Xn + 1) = {y: f (Xn + 1) y > q} which includes all the classes with a sufficiently high softmax output.
+We use a two-dimensional dataset with three labels. The distribution of the data is a bivariate normal with diagonal covariance matrices for each label. 
 
 .. code-block:: python
 
-   import numpy as np
-   # Create training set from multivariate normal distribution
-   centers = [(0, 3.5), (-2, 0), (2, 0)]
-   covs = [[[1, 0], [0, 1]], [[2, 0], [0, 2]], [[5, 0], [0, 1]]]
-   x_min, x_max, y_min, y_max, step = -5, 7, -5, 7, 0.1
-   n_samples = 500
-   alphas = [0.2, 0.1, 0.05]
-   X_train = np.zeros((3*n_samples, 2))
-   i = 0
-   for center, cov in zip(centers, covs):
-       (
-           X_train[i*n_samples:(i+1)*n_samples, 0],
-           X_train[i*n_samples:(i+1)*n_samples, 1]
-       ) = np.random.multivariate_normal(center, cov, n_samples).T
-       i += 1
-   y_train = np.stack([i for i in range(3) for _ in range(n_samples)]).ravel()
+    import numpy as np
+    # Create training set from multivariate normal distribution
+    centers = [(0, 3.5), (-2, 0), (2, 0)]
+    # covs = [[[1, 0], [0, 1]], [[2, 0], [0, 2]], [[5, 0], [0, 1]]]
+    covs = [np.eye(2), np.eye(2)*2, np.diag([5, 1])]
+    x_min, x_max, y_min, y_max, step = -6, 8, -6, 8, 0.1
+    n_samples = 500
+    n_classes = 3
+    alpha = [0.2, 0.1, 0.05]
+    np.random.seed(42)
+    X_train = np.vstack([
+        np.random.multivariate_normal(center, cov, n_samples)
+        for center, cov in zip(centers, covs)
+    ])
+    y_train = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 
-   # Create test from (x, y) coordinates
-   X_test = np.stack([
-       [x, y]
-       for x in np.arange(x_min, x_max, step)
-       for y in np.arange(x_min, x_max, step)
-   ])
+
+    # Create test from (x, y) coordinates
+    xx, yy = np.meshgrid(
+        np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
+    )
+    X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
 Let's see our training data
 
 .. code-block:: python
 
    import matplotlib.pyplot as plt
-   colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
-   y_train_col = [colors[int(i)] for _, i in enumerate(y_train)]
+   colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
+   y_train_col = list(map(colors.get, y_train))
    fig = plt.figure()
    plt.scatter(
        X_train[:, 0],
@@ -70,7 +71,7 @@ Let's see our training data
 .. image:: images/tuto_classification_1.jpeg
     :align: center
 
-We fit our training data with a Gaussian Naive Base estimator. And then we apply mapieclassifier to the estimator indicating that it has already been fitted.
+We fit our training data with a Gaussian Naive Base estimator. And then we apply :class:`mapie.classification.MapieClassifier` with the method ``score`` to the estimator indicating that it has already been fitted.
 We then estimate the prediction sets with differents alphas with a
 ``fit`` and ``predict`` process. 
 
@@ -93,9 +94,8 @@ We then estimate the prediction sets with differents alphas with a
 
 .. code-block:: python
 
-   def plot_scores(n, scores, quantiles):    
-       print(quantiles)   
-       colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
+   def plot_scores(n, scores, quantiles):      
+       colors = {0:'#1f77b4', 1:'#ff7f0e', 2:'#2ca02c'}
        fig = plt.figure()
        plt.hist(scores, bins='auto')
        i=0         
@@ -103,15 +103,17 @@ We then estimate the prediction sets with differents alphas with a
            plt.vlines(x = quantile, ymin=0, ymax=600, color = colors[i], linestyles = 'dashed',label='test') 
            i=i+1
        plt.title("Distribution of scores")
-       plt.legend(alphas)
+       plt.legend(alphas,title="alpha = ")
        plt.xlabel("scores")
        plt.ylabel("count")
        plt.show()
 
    def plot_result(alphas, y_pred_mapie, y_ps_mapie):
        tab10 = plt.cm.get_cmap('Purples', 4)
-       y_pred_col = [colors[int(i)] for _, i in enumerate(y_pred_mapie)]
-       fig, axs = plt.subplots(1, 4, figsize=(20, 4))
+       colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
+       y_pred_col = list(map(colors.get, y_pred_mapie))
+       fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
+       axs = {0: ax1, 1: ax2, 2:  ax3, 3: ax4}
        axs[0].scatter(
            X_test[:, 0],
            X_test[:, 1],
@@ -136,10 +138,7 @@ We then estimate the prediction sets with differents alphas with a
            )
            cbar = plt.colorbar(num_labels, ax=axs[i+1])
            coverage= classification_coverage_score(y_pred_mapie,y_ps_mapie[:,:,i])
-           axs[i+1].set_title(
-               f"Number of labels for alpha={alpha}: ({1 - alpha:.3f}, {coverage:.3f})",
-               fontsize=8
-           )
+           axs[i+1].set_title(f"Number of labels for alpha={alpha_}")
        plt.show()
 
 Let's see the distribution of the scores with the calculated quantiles.
@@ -154,6 +153,8 @@ Let's see the distribution of the scores with the calculated quantiles.
 .. image:: images/tuto_classification_2.jpeg
     :align: center
 
+The estimated quantile depends on alpha and a high value of alpha can potentially lead to a high quantile which would not necessarily be reached by any class in uncertain areas.
+
 We will now compare the differences between the prediction sets of the different values ​​of alpha.
 
 .. code-block:: python
@@ -164,6 +165,6 @@ We will now compare the differences between the prediction sets of the different
     :align: center
 
 When the class coverage is not large enough, the prediction sets can be empty
-when the model is uncertain at the border between two labels. The null region
+when the model is uncertain at the border between two class. The null region
 disappears for larger class coverages but ambiguous classification regions
 arise with several labels included in the prediction sets.
