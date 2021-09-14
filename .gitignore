@@ -6,11 +6,17 @@ __pycache__/
 # C extensions
 *.so
 
-# scikit-learn specific
+# documentation specific
+doc/_static/
 doc/_build/
+doc/_templates/
+doc/examples_classification/
+doc/examples_regression/
+doc/_templates/
 doc/auto_examples/
 doc/modules/generated/
 doc/datasets/generated/
+doc/generated/
 
 # Distribution / packaging
 
@@ -68,3 +74,6 @@ target/
 
 # VSCode
 .vscode
+
+# old
+old/

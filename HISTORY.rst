@@ -2,7 +2,7 @@
 History
 =======
 
-0.3.0 (XXXX-XX-XX)
+0.3.0 (2021-09-10)
 ------------------
 
 * Renaming estimators.py module to regression.py

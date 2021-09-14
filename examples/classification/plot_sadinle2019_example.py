@@ -55,9 +55,11 @@ clf = GaussianNB().fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
-mapie = MapieClassifier(estimator=clf, cv="prefit")
+mapie = MapieClassifier(estimator=clf, cv="prefit", method="cumulated_score")
 mapie.fit(X_train, y_train)
 y_pred_mapie, y_ps_mapie = mapie.predict(X_test, alpha=alpha)
+
+plt.hist(mapie.scores_)
 
 # Plot the results
 tab10 = plt.cm.get_cmap("Purples", 4)
