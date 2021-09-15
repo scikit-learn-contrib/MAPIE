@@ -1,8 +1,19 @@
 from os import replace
-from typing import Tuple, List, Optional, Union, Iterable, Any, cast, Type
+from typing import (
+    Tuple,
+    List,
+    TypeVar,
+    Optional,
+    Union,
+    Iterable,
+    Any,
+    cast,
+    Type,
+    Generator,
+    Sequence,
+)
 from inspect import signature
 
-import pandas as pd
 import numpy as np
 from scipy.sparse.construct import rand, random
 
@@ -12,6 +23,60 @@ from sklearn.utils.validation import _num_samples
 from sklearn.base import RegressorMixin, ClassifierMixin
 
 from ._typing import ArrayLike
+
+
+class ReSampling:
+    def __init__(
+        self,
+        n_resamplings: int,
+        n_samples: Optional[Union[Type[None], int]] = None,
+        bootstrap: bool = True,
+        random_states: Optional[List[int]] = None,
+    ) -> None:
+        self.n_resamplings = n_resamplings
+        self.n_samples = n_samples
+        self.boostrap = bootstrap
+        if (random_states is not None) and (len(random_states) != n_samples):
+            raise ValueError("Incoherent number of random states")
+        else:
+            self.random_states = random_states
+
+    def split(self, X: ArrayLike) -> Generator[Tuple[Any, ArrayLike], None, None]:
+        """Generate indices to split data into training and test set.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data, where n_samples is the number of samples
+            and n_features is the number of features.
+        y : array-like of shape (n_samples,)
+            The target variable for supervised learning problems.
+        groups : array-like of shape (n_samples,), default=None
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+        Yields
+        ------
+        train : ndarray
+            The training set indices for that split.
+        test : ndarray
+            The testing set indices for that split.
+        """
+        indices = np.arange(_num_samples(X))
+        n_samples = self.n_samples if self.n_samples is not None else len(indices)
+
+        for k in range(self.n_resamplings):
+            if self.random_states is None:
+                rnd_state = None
+            else:
+                rnd_state = self.random_states[k]
+            train_index = resample(
+                indices,
+                replace=self.boostrap,
+                n_samples=n_samples,
+                random_state=rnd_state,
+                stratify=None,
+            )
+            test_index = np.array(list(set(indices) - set(train_index)), dtype=np.int64)
+            yield train_index, test_index
 
 
 def check_null_weight(
@@ -165,7 +230,7 @@ def check_alpha(
 
 def check_n_features_in(
     X: ArrayLike,
-    cv: Optional[Union[float, str]] = None,
+    cv: Optional[Union[float, str, ReSampling]] = None,
     estimator: Optional[Union[RegressorMixin, ClassifierMixin]] = None,
 ) -> int:
     """
@@ -233,56 +298,3 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
                 " 1/alpha (or 1/(1 - alpha)) must be lower "
                 "than the number of samples."
             )
-
-
-class ReSampling:
-    def __init__(
-        self,
-        n_resamplings: int,
-        n_samples: Optional[Union[Type[None], int]] = None,
-        bootstrap: bool = True,
-        random_states: Union[Type[None], list] = None,
-    ) -> None:
-        self.n_resamplings = n_resamplings
-        self.n_samples = n_samples
-        self.boostrap = bootstrap
-        if random_states is None:
-            self.random_states = [None] * n_resamplings
-        else:
-            if len(random_states) != n_samples:
-                raise ValueError("Incoherent number of random states")
-            else:
-                self.random_states = random_states
-
-    def split(self, X: ArrayLike):
-        """Generate indices to split data into training and test set.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Training data, where n_samples is the number of samples
-            and n_features is the number of features.
-        y : array-like of shape (n_samples,)
-            The target variable for supervised learning problems.
-        groups : array-like of shape (n_samples,), default=None
-            Group labels for the samples used while splitting the dataset into
-            train/test set.
-        Yields
-        ------
-        train : ndarray
-            The training set indices for that split.
-        test : ndarray
-            The testing set indices for that split.
-        """
-        indices = np.arange(_num_samples(X))
-        n_samples = self.n_samples if self.n_samples is not None else len(indices)
-
-        for k in range(self.n_resamplings):
-            train_index = resample(
-                indices,
-                replace=self.boostrap,
-                n_samples=n_samples,
-                random_state=self.random_states[k],
-                stratify=None,
-            )
-            test_index = pd.Index(data=set(indices) - set(train_index), dtype=np.int64)
-            yield train_index, test_index
