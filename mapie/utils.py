@@ -1,6 +1,7 @@
 from inspect import signature
 from typing import (
     Any,
+    Callable,
     Generator,
     Iterable,
     List,
@@ -12,6 +13,7 @@ from typing import (
 )
 
 import numpy as np
+import numpy.ma as ma
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.utils import resample
 from sklearn.utils.validation import _check_sample_weight, _num_samples
@@ -19,7 +21,72 @@ from sklearn.utils.validation import _check_sample_weight, _num_samples
 from ._typing import ArrayLike
 
 
+class AggFunction:
+    def __init__(
+        self,
+        numpy_function: Callable[[ArrayLike], float],
+        *args: Optional[Any],
+        **kwargs: Optional[Any]
+    ) -> None:
+        """Defines a function that could be the aggregation function of MAPIE
+        from a function whose argument is a 1D numpy array and result is a
+        scalar
+        Becareful: this method uses a loop 'np.apply_along_axis' which is quite
+        slow. For 'median' and 'mean' type directly the string 'median', 'mean'
+        ----------
+        numpy_function : a function whose argument is a 1D numpy array, that
+        returns a scalar
+        *args, **kargs: argument to be passed to the function
+
+        Attributes
+        ------
+        fx: a function adapted to MAPIE format
+
+        Examples
+        --------
+        >>> from scipy.stats import trim_mean
+        >>> trim_mean=AggFunction(numpy_function=trim_mean,proportion_cut=0.05)
+        """
+
+        def fx(x: ArrayLike) -> ArrayLike:
+            return np.apply_along_axis(
+                func1d=numpy_function,
+                axis=0,
+                arr=ma.masked_invalid(x),
+                *args,
+                **kwargs
+            )
+
+        self.fx = fx
+
+    def __call__(self, x: ArrayLike) -> ArrayLike:
+        return self.fx(x)
+
+
 class ReSampling:
+    """Generate a sampling method that resample the training set with
+    possible bootstrap. It can replace KFold as cv argument in the MAPIE
+    class
+
+    Parameters
+    ----------
+    n_resamplings : number of resamplings
+    n_samples: number of samples in each resampling. By default the size
+    of the training set
+    bootstrap: True/False
+    random_states: Optional: list to fix random states
+    *args, **kargs: argument to be passed to the function
+
+    Attributes
+    ----------
+    split: equivalent of KFold's split method
+
+    Examples
+    --------
+    >>> from mapie.utils import ReSampling
+    >>> cv = ReSampling(n_resamplings=30)
+    """
+
     def __init__(
         self,
         n_resamplings: int,
@@ -30,7 +97,9 @@ class ReSampling:
         self.n_resamplings = n_resamplings
         self.n_samples = n_samples
         self.boostrap = bootstrap
-        if (random_states is not None) and (len(random_states) != n_samples):
+        if (random_states is not None) and (
+            len(random_states) != n_resamplings
+        ):
             raise ValueError("Incoherent number of random states")
         else:
             self.random_states = random_states
@@ -304,3 +373,15 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
                 " 1/alpha (or 1/(1 - alpha)) must be lower "
                 "than the number of samples."
             )
+
+
+def phi1D(
+    x: ArrayLike, B: ArrayLike, fun: Callable[[ArrayLike], ArrayLike]
+) -> ArrayLike:
+    return fun(x * B)
+
+
+def phi2D(
+    A: ArrayLike, B: ArrayLike, fun: Callable[[ArrayLike], ArrayLike]
+) -> ArrayLike:
+    return np.apply_along_axis(phi1D, axis=1, arr=A, B=B, fun=fun)

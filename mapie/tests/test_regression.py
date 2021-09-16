@@ -1,50 +1,92 @@
 from __future__ import annotations
-from typing import Any, Union, Optional, Tuple, List
-from typing_extensions import TypedDict
+
 from inspect import signature
 from itertools import combinations
+from typing import Any, List, Optional, Tuple, Union
 
-import pytest
 import numpy as np
+import pytest
+from mapie.metrics import regression_coverage_score
+from mapie.regression import MapieRegressor
+from mapie.utils import AggFunction, ReSampling
+from scipy.stats import trim_mean
 from sklearn.base import RegressorMixin
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import LeaveOneOut, KFold, train_test_split
-from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.exceptions import NotFittedError
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.validation import check_is_fitted
-
-from mapie.regression import MapieRegressor
-from mapie.metrics import regression_coverage_score
-
+from typing_extensions import TypedDict
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 X_reg, y_reg = make_regression(
     n_samples=500, n_features=10, noise=1.0, random_state=1
 )
-
+trim_mean = AggFunction(numpy_function=trim_mean, proportion_cut=0.05, axis=0)
 
 METHODS = ["naive", "base", "plus", "minmax"]
 
 Params = TypedDict(
-    "Params", {"method": str, "cv": Optional[Union[int, KFold]]}
+    "Params",
+    {
+        "method": str,
+        "cv": Optional[Union[int, KFold, ReSampling]],
+        "agg_function": Union[str, AggFunction],
+    },
 )
 STRATEGIES = {
-    "naive": Params(method="naive", cv=None),
-    "jackknife": Params(method="base", cv=-1),
-    "jackknife_plus": Params(method="plus", cv=-1),
-    "jackknife_minmax": Params(method="minmax", cv=-1),
+    "naive": Params(method="naive", cv=None, agg_function="mean"),
+    "jackknife": Params(method="base", cv=-1, agg_function="mean"),
+    "jackknife_plus": Params(method="plus", cv=-1, agg_function="mean"),
+    "jackknife_minmax": Params(method="minmax", cv=-1, agg_function="mean"),
     "cv": Params(
-        method="base", cv=KFold(n_splits=3, shuffle=True, random_state=1)
+        method="base",
+        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        agg_function="mean",
     ),
     "cv_plus": Params(
-        method="plus", cv=KFold(n_splits=3, shuffle=True, random_state=1)
+        method="plus",
+        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        agg_function="mean",
     ),
     "cv_minmax": Params(
-        method="minmax", cv=KFold(n_splits=3, shuffle=True, random_state=1)
+        method="minmax",
+        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        agg_function="mean",
+    ),
+    "cv_plus_median": Params(
+        method="plus",
+        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        agg_function="median",
+    ),
+    "cv_minmax_trim_mean": Params(
+        method="minmax",
+        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        agg_function=trim_mean,
+    ),
+    "resampling_plus": Params(
+        method="plus",
+        cv=ReSampling(n_resamplings=30, random_states=list(range(30))),
+        agg_function="mean",
+    ),
+    "resampling_minmax": Params(
+        method="minmax",
+        cv=ReSampling(n_resamplings=30, random_states=list(range(30))),
+        agg_function="mean",
+    ),
+    "resampling_plus_median": Params(
+        method="plus",
+        cv=ReSampling(n_resamplings=30, random_states=list(range(30))),
+        agg_function="median",
+    ),
+    "resampling_plus_trim_mean": Params(
+        method="plus",
+        cv=ReSampling(n_resamplings=30, random_states=list(range(30))),
+        agg_function=trim_mean,
     ),
 }
 
@@ -56,7 +98,13 @@ WIDTHS = {
     "cv": 3.85,
     "cv_plus": 3.90,
     "cv_minmax": 4.04,
-    "prefit": 4.81
+    "prefit": 4.81,
+    "cv_plus_median": 3.90,
+    "cv_minmax_trim_mean": 4.03,
+    "resampling_plus": 3.90,
+    "resampling_minmax": 4.13,
+    "resampling_plus_median": 3.87,
+    "resampling_plus_trim_mean": 3.91,
 }
 
 COVERAGES = {
@@ -67,7 +115,13 @@ COVERAGES = {
     "cv": 0.958,
     "cv_plus": 0.956,
     "cv_minmax": 0.966,
-    "prefit": 0.980
+    "prefit": 0.980,
+    "cv_plus_median": 0.954,
+    "cv_minmax_trim_mean": 0.962,
+    "resampling_plus": 0.966,
+    "resampling_minmax": 0.970,
+    "resampling_plus_median": 0.960,
+    "resampling_plus_trim_mean": 0.958,
 }
 
 
@@ -145,10 +199,7 @@ def test_valid_estimator(strategy: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "estimator", [
-        LinearRegression(),
-        make_pipeline(LinearRegression())
-    ]
+    "estimator", [LinearRegression(), make_pipeline(LinearRegression())]
 )
 def test_invalid_prefit_estimator(estimator: RegressorMixin) -> None:
     """Test that non-fitted estimator with prefit cv raise errors."""
@@ -158,10 +209,7 @@ def test_invalid_prefit_estimator(estimator: RegressorMixin) -> None:
 
 
 @pytest.mark.parametrize(
-    "estimator", [
-        LinearRegression(),
-        make_pipeline(LinearRegression())
-    ]
+    "estimator", [LinearRegression(), make_pipeline(LinearRegression())]
 )
 def test_valid_prefit_estimator(estimator: RegressorMixin) -> None:
     """Test that fitted estimators with prefit cv raise no errors."""
@@ -179,8 +227,8 @@ def test_valid_prefit_estimator(estimator: RegressorMixin) -> None:
             "single_estimator_",
             "estimators_",
             "k_",
-            "residuals_"
-        ]
+            "residuals_",
+        ],
     )
     assert mapie.n_features_in_ == 1
 
@@ -215,8 +263,8 @@ def test_valid_method(method: str) -> None:
             "single_estimator_",
             "estimators_",
             "k_",
-            "residuals_"
-        ]
+            "residuals_",
+        ],
     )
 
 
@@ -281,7 +329,7 @@ def test_too_large_cv(cv: Any) -> None:
     mapie = MapieRegressor(cv=cv)
     with pytest.raises(
         ValueError,
-        match=rf".*Cannot have number of splits n_splits={cv} greater.*"
+        match=rf".*Cannot have number of splits n_splits={cv} greater.*",
     ):
         mapie.fit(X_toy, y_toy)
 
@@ -303,9 +351,7 @@ def test_sklearn_compatible_estimator(estimator: Any, check: Any) -> None:
 @pytest.mark.parametrize("dataset", [(X_reg, y_reg), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.4], (0.2, 0.4)])
 def test_predict_output_shape(
-    strategy: str,
-    alpha: Any,
-    dataset: Tuple[np.ndarray, np.ndarray]
+    strategy: str, alpha: Any, dataset: Tuple[np.ndarray, np.ndarray]
 ) -> None:
     """Test predict output shape."""
     mapie = MapieRegressor(**STRATEGIES[strategy])
@@ -332,9 +378,7 @@ def test_prediction_between_low_up(strategy: str, ensemble: bool) -> None:
 @pytest.mark.parametrize("cv", [-1, 2, 3, 5])
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2])
 def test_prediction_ensemble(
-    method: str,
-    cv: Union[LeaveOneOut, KFold],
-    alpha: int
+    method: str, cv: Union[LeaveOneOut, KFold], alpha: int
 ) -> None:
     """
     Test that predictions differ when ensemble is True/False,
@@ -354,8 +398,7 @@ def test_prediction_ensemble(
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("ensemble", [True, False])
 def test_linear_data_confidence_interval(
-    strategy: str,
-    ensemble: bool
+    strategy: str, ensemble: bool
 ) -> None:
     """
     Test that MapieRegressor applied on a linear regression model
@@ -431,8 +474,7 @@ def test_results_for_ordered_alpha(strategy: str) -> None:
     "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
 )
 def test_results_for_alpha_as_float_and_arraylike(
-    strategy: str,
-    alpha: Any
+    strategy: str, alpha: Any
 ) -> None:
     """Test that output values do not depend on type of alpha."""
     mapie = MapieRegressor(**STRATEGIES[strategy])
@@ -473,7 +515,7 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     mapie2 = MapieRegressor(**STRATEGIES[strategy])
     mapie0.fit(X_reg, y_reg, sample_weight=None)
     mapie1.fit(X_reg, y_reg, sample_weight=np.ones(shape=n_samples))
-    mapie2.fit(X_reg, y_reg, sample_weight=np.ones(shape=n_samples)*5)
+    mapie2.fit(X_reg, y_reg, sample_weight=np.ones(shape=n_samples) * 5)
     y_pred0, y_pis0 = mapie0.predict(X_reg, alpha=0.05)
     y_pred1, y_pis1 = mapie1.predict(X_reg, alpha=0.05)
     y_pred2, y_pis2 = mapie2.predict(X_reg, alpha=0.05)
@@ -514,10 +556,10 @@ def test_results_prefit_naive() -> None:
 def test_results_prefit() -> None:
     """Test prefit results on a standard train/validation/test split."""
     X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X_reg, y_reg, test_size=1/10, random_state=1
+        X_reg, y_reg, test_size=1 / 10, random_state=1
     )
     X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val, y_train_val, test_size=1/9, random_state=1
+        X_train_val, y_train_val, test_size=1 / 9, random_state=1
     )
     estimator = LinearRegression().fit(X_train, y_train)
     mapie = MapieRegressor(estimator=estimator, cv="prefit")
