@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, List, Optional, Tuple, Union, cast
+from typing import Callable, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -20,6 +20,18 @@ from .utils import (
     check_null_weight,
     fit_estimator,
 )
+
+
+def phi1D(
+    x: ArrayLike, B: ArrayLike, fun: Callable[[ArrayLike], ArrayLike]
+) -> ArrayLike:
+    return fun(x * B)
+
+
+def phi2D(
+    A: ArrayLike, B: ArrayLike, fun: Callable[[ArrayLike], ArrayLike]
+) -> ArrayLike:
+    return np.apply_along_axis(phi1D, axis=1, arr=A, B=B, fun=fun)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
@@ -158,11 +170,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
 
     valid_methods_ = ["naive", "base", "plus", "minmax"]
+    valid_aggregation_function_ = ["mean", "median"]
 
     def __init__(
         self,
         estimator: Optional[RegressorMixin] = None,
         method: str = "plus",
+        aggregation_function: str = "mean",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
         n_jobs: Optional[int] = None,
         ensemble: bool = False,
@@ -170,6 +184,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     ) -> None:
         self.estimator = estimator
         self.method = method
+        self.aggregation_function = aggregation_function
         self.cv = cv
         self.n_jobs = n_jobs
         self.ensemble = ensemble
@@ -188,6 +203,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError(
                 "Invalid method. "
                 "Allowed values are 'naive', 'base', 'plus' and 'minmax'."
+            )
+
+        if self.aggregation_function not in self.valid_aggregation_function_:
+            raise ValueError(
+                "Invalid aggregation function. "
+                "Allowed values are 'mean', 'median'."
             )
 
         if not isinstance(self.ensemble, bool):
@@ -409,7 +430,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         if isinstance(cv, ReSampling):
             self.cv_is_resampling_ = True
-            self.k_ = np.zeros(shape=(cv.n_resamplings, len(y)), dtype=float)
+            self.k_ = np.full(
+                shape=(len(y), cv.n_resamplings),
+                fill_value=np.nan,
+                dtype=float,
+            )
         else:
             self.cv_is_resampling_ = False
             self.k_ = np.empty_like(y, dtype=int)
@@ -450,15 +475,24 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
                 if isinstance(cv, ReSampling):
                     pred_after_resampling = np.full(
-                        shape=(len(self.estimators_), X.shape[0]),
+                        shape=(X.shape[0], len(self.estimators_)),
                         fill_value=np.nan,
                         dtype=float,
                     )
 
-                    for i, val_indices in enumerate(val_indices):
-                        pred_after_resampling[i, val_indices] = predictions[i]
-                        self.k_[i, val_indices] = 1
-                    y_pred = np.nanmean(pred_after_resampling, axis=0)
+                    for i, val_ind in enumerate(val_indices):
+                        pred_after_resampling[val_ind, i] = predictions[i]
+                        self.k_[val_ind, i] = 1
+                    if np.any(np.all(np.isnan(pred_after_resampling), axis=1)):
+                        print(
+                            "WARNING: at least one point of training set "
+                            + "belongs to every resamplings. Increase the "
+                            + "number of resamplings"
+                        )
+                    if self.aggregation_function == "median":
+                        y_pred = np.nanmedian(pred_after_resampling, axis=1)
+                    else:
+                        y_pred = np.nanmean(pred_after_resampling, axis=1)
 
                 else:
                     predictions, val_ids, val_indices = map(
@@ -527,6 +561,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
 
+        if self.aggregation_function == "median":
+
+            def agg_fun_(x: ArrayLike) -> ArrayLike:
+                return np.nanmedian(x, axis=1)
+
+        else:
+
+            def agg_fun_(x: ArrayLike) -> ArrayLike:
+                return np.nanmean(x, axis=1)
+
         if alpha is None:
             return np.array(y_pred)
         else:
@@ -554,24 +598,28 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     # to be of shape (n_samples_test, n_samples_train)
 
                     if self.cv_is_resampling_:
-                        k2 = np.where(self.k_ == 0, np.nan, 1)
-                        np.matmul(y_pred_multi, k2)
-                        # y_pred_multi[~self.k_] = np.nan
-                        # y_pred_multi = y_pred_multi.quantile(axis=1)
-
-                        y_pred_multi = np.matmul(
-                            y_pred_multi,
-                            self.k_ / self.k_.sum(axis=0, keepdims=True),
+                        y_pred_multi = phi2D(
+                            A=y_pred_multi,
+                            B=self.k_,
+                            fun=agg_fun_,
                         )
+                        # y_pred_multi = np.matmul(
+                        #     y_pred_multi,
+                        #     self.k_ / self.k_.sum(axis=0, keepdims=True),
+                        # )
+
                     elif len(self.estimators_) < len(self.k_):
                         y_pred_multi = y_pred_multi[:, self.k_]
+
                     lower_bounds = y_pred_multi - self.residuals_
                     upper_bounds = y_pred_multi + self.residuals_
+
                 if self.method == "minmax":
                     if self.cv_is_resampling_:
-                        y_pred_multi = np.matmul(
-                            y_pred_multi,
-                            self.k_ / self.k_.sum(axis=1, keepdims=True),
+                        y_pred_multi = phi2D(
+                            A=y_pred_multi,
+                            B=self.k_,
+                            fun=agg_fun_,
                         )
                     lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
                     upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)

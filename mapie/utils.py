@@ -1,26 +1,20 @@
-from os import replace
-from typing import (
-    Tuple,
-    List,
-    TypeVar,
-    Optional,
-    Union,
-    Iterable,
-    Any,
-    cast,
-    Type,
-    Generator,
-    Sequence,
-)
 from inspect import signature
+from typing import (
+    Any,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 import numpy as np
-from scipy.sparse.construct import rand, random
-
-from sklearn.utils.validation import _check_sample_weight
+from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.utils import resample
-from sklearn.utils.validation import _num_samples
-from sklearn.base import RegressorMixin, ClassifierMixin
+from sklearn.utils.validation import _check_sample_weight, _num_samples
 
 from ._typing import ArrayLike
 
@@ -41,7 +35,9 @@ class ReSampling:
         else:
             self.random_states = random_states
 
-    def split(self, X: ArrayLike) -> Generator[Tuple[Any, ArrayLike], None, None]:
+    def split(
+        self, X: ArrayLike
+    ) -> Generator[Tuple[Any, ArrayLike], None, None]:
         """Generate indices to split data into training and test set.
         Parameters
         ----------
@@ -61,7 +57,9 @@ class ReSampling:
             The testing set indices for that split.
         """
         indices = np.arange(_num_samples(X))
-        n_samples = self.n_samples if self.n_samples is not None else len(indices)
+        n_samples = (
+            self.n_samples if self.n_samples is not None else len(indices)
+        )
 
         for k in range(self.n_resamplings):
             if self.random_states is None:
@@ -75,7 +73,9 @@ class ReSampling:
                 random_state=rnd_state,
                 stratify=None,
             )
-            test_index = np.array(list(set(indices) - set(train_index)), dtype=np.int64)
+            test_index = np.array(
+                list(set(indices) - set(train_index)), dtype=np.int64
+            )
             yield train_index, test_index
 
 
@@ -216,13 +216,18 @@ def check_alpha(
     elif isinstance(alpha, Iterable):
         alpha_np = np.array(alpha)
     else:
-        raise ValueError("Invalid alpha. Allowed values are float or Iterable.")
+        raise ValueError(
+            "Invalid alpha. Allowed values are float or Iterable."
+        )
     if len(alpha_np.shape) != 1:
         raise ValueError(
-            "Invalid alpha. " "Please provide a one-dimensional list of values."
+            "Invalid alpha. "
+            "Please provide a one-dimensional list of values."
         )
     if alpha_np.dtype.type not in [np.float64, np.float32]:
-        raise ValueError("Invalid alpha. Allowed values are Iterable of floats.")
+        raise ValueError(
+            "Invalid alpha. Allowed values are Iterable of floats."
+        )
     if np.any((alpha_np <= 0) | (alpha_np >= 1)):
         raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
     return alpha_np
@@ -267,7 +272,8 @@ def check_n_features_in(
     if cv == "prefit" and hasattr(estimator, "n_features_in_"):
         if cast(Any, estimator).n_features_in_ != n_features_in:
             raise ValueError(
-                "Invalid mismatch between " "X.shape and estimator.n_features_in_."
+                "Invalid mismatch between "
+                "X.shape and estimator.n_features_in_."
             )
     return n_features_in
 
