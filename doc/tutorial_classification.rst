@@ -10,15 +10,16 @@ In this tutorial, we compare the prediction sets estimating by :class:`mapie.cla
 
 Throughout this tutorial, we will answer the following questions:
 
-- How do the number of classes in the prediction sets vary according to the significance level alpha values and the conformity scores ?
+- How does the number of classes in the prediction sets vary according to the significance level alpha values and the conformity scores ?
 
 1. Conformal Prediction method using the softmax score of the true label
 ========================================================================
-We will use MAPIE to estimate a prediction set of several classes such that the probability that the true label of a new test point is included in the prediction set is always higher than the target confidence level 1−alpha.
+We will use MAPIE to estimate a prediction set of several classes such that the probability that the true label of a new test point is included in the prediction set is always higher than the target confidence level : :math:`1 - \alpha`.
+We start by using the softmax score output by the base classifier as the conformity score on a toy two-dimensional dataset. We estimate the prediction sets as follows :
 
 * First we generate a dataset with train and test and the Model is fitted in the training set.
 * We set the conformal score :math:`Si = f(X_{i})_{yi}` the softmax output of the true class for each sample in the training set.
-* Then we define :math:`q` as being the :math:`(n + 1) (alpha) / n` previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the quantile :math:`alpha`, but with a small correction). 
+* Then we define :math:`q` as being the :math:`(n + 1) (\alpha) / n` previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the quantile :math:`\alpha`, but with a small correction). 
 * Finally, for a new test data point (where :math:`X_{n + 1}` is known but :math:`Y_{n + 1}` is not), create a prediction set :math:`T(X_{n+1}) = {y: f(X_{n+1})_{y} > q}` which includes all the classes with a sufficiently high softmax output.
 
 We use a two-dimensional dataset with three labels. The distribution of the data is a bivariate normal with diagonal covariance matrices for each label. 
@@ -26,9 +27,7 @@ We use a two-dimensional dataset with three labels. The distribution of the data
 .. code-block:: python
 
     import numpy as np
-    # Create training set from multivariate normal distribution
     centers = [(0, 3.5), (-2, 0), (2, 0)]
-    # covs = [[[1, 0], [0, 1]], [[2, 0], [0, 2]], [[5, 0], [0, 1]]]
     covs = [np.eye(2), np.eye(2)*2, np.diag([5, 1])]
     x_min, x_max, y_min, y_max, step = -6, 8, -6, 8, 0.1
     n_samples = 500
@@ -41,8 +40,6 @@ We use a two-dimensional dataset with three labels. The distribution of the data
     ])
     y_train = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 
-
-    # Create test from (x, y) coordinates
     xx, yy = np.meshgrid(
         np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
     )
@@ -71,8 +68,8 @@ Let's see our training data
 .. image:: images/tuto_classification_1.jpeg
     :align: center
 
-We fit our training data with a Gaussian Naive Base estimator. And then we apply :class:`mapie.classification.MapieClassifier` with the method ``score`` to the estimator indicating that it has already been fitted.
-We then estimate the prediction sets with differents alphas with a
+We fit our training data with a Gaussian Naive Base estimator. And then we apply :class:`mapie.classification.MapieClassifier` with the method ``score`` to the estimator indicating that it has already been fitted with `cv="prefit"`.
+We then estimate the prediction sets with differents alpha values with a
 ``fit`` and ``predict`` process. 
 
 .. code-block:: python
@@ -81,34 +78,34 @@ We then estimate the prediction sets with differents alphas with a
    from mapie.classification import MapieClassifier
    from mapie.metrics import classification_coverage_score
    clf = GaussianNB().fit(X_train, y_train)
-   nb_y_pred = clf.predict(X_test)
-   nb_y_pred_proba = clf.predict_proba(X_test)
-   nb_y_pred_proba_max = np.max(nb_y_pred_proba, axis=1)
-   nb_mapie = MapieClassifier(estimator=clf, cv="prefit")
-   nb_mapie.fit(X_train, y_train)
-   nb_y_pred_mapie, nb_y_ps_mapie = nb_mapie.predict(X_test, alpha=alphas)
+   y_pred = clf.predict(X_test)
+   y_pred_proba = clf.predict_proba(X_test)
+   y_pred_proba_max = np.max(y_pred_proba, axis=1)
+   mapie = MapieClassifier(estimator=clf, cv="prefit")
+   mapie.fit(X_train, y_train)
+   y_pred_mapie, y_ps_mapie = nb_mapie.predict(X_test, alpha=alphas)
 
 
-* y_pred_mapie: represents the prediction in the test set with the estimator.
-* y_ps_mapie: the prediction sets with mapie.
+* y_pred_mapie: represents the prediction in the test set by the base estimator.
+* y_ps_mapie: the prediction sets estimated by MAPIE.
 
 .. code-block:: python
 
-   def plot_scores(n, scores, quantiles):      
-       colors = {0:'#1f77b4', 1:'#ff7f0e', 2:'#2ca02c'}
-       fig = plt.figure()
-       plt.hist(scores, bins='auto')
-       i=0         
-       for quantile in quantiles:
-           plt.vlines(x = quantile, ymin=0, ymax=600, color = colors[i], linestyles = 'dashed',label='test') 
-           i=i+1
-       plt.title("Distribution of scores")
-       plt.legend(alphas,title="alpha = ")
-       plt.xlabel("scores")
-       plt.ylabel("count")
-       plt.show()
+   def plot_scores(n, alphas, scores, quantiles):      
+    colors = {0:'#1f77b4', 1:'#ff7f0e', 2:'#2ca02c'}
+    fig = plt.figure()
+    plt.hist(scores, bins='auto')
+    i=0         
+    for quantile in quantiles:
+        plt.vlines(x = quantile, ymin=0, ymax=600, color = colors[i], linestyles = 'dashed',label=f'alpha = {alphas[i]}') 
+        i=i+1
+    plt.title("Distribution of scores")
+    plt.legend()
+    plt.xlabel("scores")
+    plt.ylabel("count")
+    plt.show()
 
-   def plot_result(alphas, y_pred_mapie, y_ps_mapie):
+   def plot_results(alphas, y_pred_mapie, y_ps_mapie):
        tab10 = plt.cm.get_cmap('Purples', 4)
        colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
        y_pred_col = list(map(colors.get, y_pred_mapie))
@@ -145,10 +142,10 @@ Let's see the distribution of the scores with the calculated quantiles.
 
 .. code-block:: python
 
-   scores = nb_mapie.scores_
-   n = nb_mapie.n_samples_val_
-   quantiles = nb_mapie.quantiles_ 
-   plot_scores(n, scores, quantiles)
+   scores = mapie.scores_
+   n = mapie.n_samples_val_
+   quantiles = mapie.quantiles_ 
+   plot_scores(n, alphas, scores, quantiles)
 
 .. image:: images/tuto_classification_2.jpeg
     :align: center
@@ -159,7 +156,7 @@ We will now compare the differences between the prediction sets of the different
 
 .. code-block:: python
 
-   plot_result(alphas,nb_y_pred_mapie,  nb_y_ps_mapie)
+   plot_results(alphas, y_pred_mapie, y_ps_mapie)
 
 .. image:: images/tuto_classification_3.jpeg
     :align: center
