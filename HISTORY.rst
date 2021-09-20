@@ -2,6 +2,11 @@
 History
 =======
 
+0.3.1 (XXXX-XX-XX)
+------------------
+
+* Add Jackknife+-after-Bootstrap method and add mean and median as aggregation functions
+
 0.2.4 (XXXX-XX-XX)
 ------------------
 
