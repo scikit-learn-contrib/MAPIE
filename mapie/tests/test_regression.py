@@ -8,8 +8,7 @@ import numpy as np
 import pytest
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
-from mapie.utils import AggFunction, ReSampling
-from scipy.stats import trim_mean
+from mapie.utils import JackknifeAB
 from sklearn.base import RegressorMixin
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
@@ -26,7 +25,6 @@ y_toy = np.array([5, 7, 9, 11, 13, 15])
 X_reg, y_reg = make_regression(
     n_samples=500, n_features=10, noise=1.0, random_state=1
 )
-trim_mean = AggFunction(numpy_function=trim_mean, proportion_cut=0.05, axis=0)
 
 METHODS = ["naive", "base", "plus", "minmax"]
 
@@ -34,60 +32,63 @@ Params = TypedDict(
     "Params",
     {
         "method": str,
-        "cv": Optional[Union[int, KFold, ReSampling]],
-        "agg_function": Union[str, AggFunction],
+        "cv": Optional[Union[int, KFold, JackknifeAB]],
     },
 )
 STRATEGIES = {
-    "naive": Params(method="naive", cv=None, agg_function="mean"),
-    "jackknife": Params(method="base", cv=-1, agg_function="mean"),
-    "jackknife_plus": Params(method="plus", cv=-1, agg_function="mean"),
-    "jackknife_minmax": Params(method="minmax", cv=-1, agg_function="mean"),
+    "naive": Params(method="naive", cv=None),
+    "jackknife": Params(method="base", cv=-1),
+    "jackknife_plus": Params(method="plus", cv=-1),
+    "jackknife_minmax": Params(method="minmax", cv=-1),
     "cv": Params(
         method="base",
         cv=KFold(n_splits=3, shuffle=True, random_state=1),
-        agg_function="mean",
     ),
     "cv_plus": Params(
         method="plus",
         cv=KFold(n_splits=3, shuffle=True, random_state=1),
-        agg_function="mean",
     ),
     "cv_minmax": Params(
         method="minmax",
         cv=KFold(n_splits=3, shuffle=True, random_state=1),
-        agg_function="mean",
     ),
     "cv_plus_median": Params(
         method="plus",
         cv=KFold(n_splits=3, shuffle=True, random_state=1),
-        agg_function="median",
-    ),
-    "cv_minmax_trim_mean": Params(
-        method="minmax",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
-        agg_function=trim_mean,
     ),
     "resampling_plus": Params(
         method="plus",
-        cv=ReSampling(n_resamplings=30, random_states=list(range(30))),
-        agg_function="mean",
+        cv=JackknifeAB(
+            agg_function="mean",
+            n_resamplings=30,
+            random_states=list(range(30)),
+        ),
     ),
     "resampling_minmax": Params(
         method="minmax",
-        cv=ReSampling(n_resamplings=30, random_states=list(range(30))),
-        agg_function="mean",
+        cv=JackknifeAB(
+            agg_function="mean",
+            n_resamplings=30,
+            random_states=list(range(30)),
+        ),
     ),
     "resampling_plus_median": Params(
         method="plus",
-        cv=ReSampling(n_resamplings=30, random_states=list(range(30))),
-        agg_function="median",
+        cv=JackknifeAB(
+            agg_function="median",
+            n_resamplings=30,
+            random_states=list(range(30)),
+        ),
     ),
-    "resampling_plus_trim_mean": Params(
-        method="plus",
-        cv=ReSampling(n_resamplings=30, random_states=list(range(30))),
-        agg_function=trim_mean,
-    ),
+    # "resampling_plus_trim_mean": Params(
+    #     method="plus",
+    #     cv=JackknifeAB(
+    #         agg_function="trim_mean",
+    #         n_resamplings=30,
+    #         random_states=list(range(30)),
+    #         proportiontocut=0.10,
+    #     ),
+    # ),
 }
 
 WIDTHS = {
@@ -100,11 +101,10 @@ WIDTHS = {
     "cv_minmax": 4.04,
     "prefit": 4.81,
     "cv_plus_median": 3.90,
-    "cv_minmax_trim_mean": 4.03,
     "resampling_plus": 3.90,
     "resampling_minmax": 4.13,
     "resampling_plus_median": 3.87,
-    "resampling_plus_trim_mean": 3.91,
+    # "resampling_plus_trim_mean": 3.91,
 }
 
 COVERAGES = {
@@ -117,11 +117,11 @@ COVERAGES = {
     "cv_minmax": 0.966,
     "prefit": 0.980,
     "cv_plus_median": 0.954,
-    "cv_minmax_trim_mean": 0.962,
+    # "cv_minmax_trim_mean": 0.962,
     "resampling_plus": 0.966,
     "resampling_minmax": 0.970,
     "resampling_plus_median": 0.960,
-    "resampling_plus_trim_mean": 0.958,
+    # "resampling_plus_trim_mean": 0.958,
 }
 
 
@@ -571,3 +571,47 @@ def test_results_prefit() -> None:
     )
     np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
+
+
+def test_not_enough_resamplings() -> None:
+    """Test that fit-predict raises no errors."""
+    with pytest.warns(Warning):
+        mapie = MapieRegressor(
+            cv=JackknifeAB(agg_function="mean", n_resamplings=1)
+        )
+        mapie.fit(X_reg, y_reg)
+
+
+def test_invalid_agg_function() -> None:
+    """
+    Test that wrong aggreation functions  in JackknifeAB class raise errors.
+    """
+
+    with pytest.raises(ValueError):
+        JackknifeAB(agg_function="medium", n_resamplings=30, bootstrap=True)
+
+
+def test_invalid_randomstates() -> None:
+    """
+    Test that wrong list of random states  in JackknifeAB class raise errors.
+    """
+
+    with pytest.raises(ValueError):
+        JackknifeAB(
+            agg_function="mean",
+            n_resamplings=30,
+            bootstrap=True,
+            random_states=[0, 1],
+        )
+
+
+def test_default_JAB() -> None:
+    """Test default values of Jackknife+-after-Bootstrap."""
+    MapieRegressor(
+        cv=JackknifeAB(
+            agg_function="mean",
+            n_resamplings=30,
+            bootstrap=True,
+            random_states=None,
+        )
+    )

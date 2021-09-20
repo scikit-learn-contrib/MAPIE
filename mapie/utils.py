@@ -13,7 +13,8 @@ from typing import (
 )
 
 import numpy as np
-import numpy.ma as ma
+
+# from scipy.stats.mstats import winsorize
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.utils import resample
 from sklearn.utils.validation import _check_sample_weight, _num_samples
@@ -21,79 +22,77 @@ from sklearn.utils.validation import _check_sample_weight, _num_samples
 from ._typing import ArrayLike
 
 
-class AggFunction:
-    def __init__(
-        self,
-        numpy_function: Callable[[ArrayLike], float],
-        *args: Optional[Any],
-        **kwargs: Optional[Any]
-    ) -> None:
-        """Defines a function that could be the aggregation function of MAPIE
-        from a function whose argument is a 1D numpy array and result is a
-        scalar
-        Becareful: this method uses a loop 'np.apply_along_axis' which is quite
-        slow. For 'median' and 'mean' type directly the string 'median', 'mean'
-        ----------
-        numpy_function : a function whose argument is a 1D numpy array, that
-        returns a scalar
-        *args, **kargs: argument to be passed to the function
-
-        Attributes
-        ------
-        fx: a function adapted to MAPIE format
-
-        Examples
-        --------
-        >>> from scipy.stats import trim_mean
-        >>> trim_mean=AggFunction(numpy_function=trim_mean,proportion_cut=0.05)
-        """
-
-        def fx(x: ArrayLike) -> ArrayLike:
-            return np.apply_along_axis(
-                func1d=numpy_function,
-                axis=0,
-                arr=ma.masked_invalid(x),
-                *args,
-                **kwargs
-            )
-
-        self.fx = fx
-
-    def __call__(self, x: ArrayLike) -> ArrayLike:
-        return self.fx(x)
+def phi1D(
+    x: ArrayLike,
+    B: ArrayLike,
+    fun: Callable[[ArrayLike], ArrayLike],
+) -> ArrayLike:
+    return fun(x * B)
 
 
-class ReSampling:
+def phi2D(
+    A: ArrayLike,
+    B: ArrayLike,
+    fun: Callable[[ArrayLike], ArrayLike],
+) -> ArrayLike:
+    return np.apply_along_axis(
+        phi1D,
+        axis=1,
+        arr=A,
+        B=B,
+        fun=fun,
+    )
+
+
+class JackknifeAB:
     """Generate a sampling method that resample the training set with
     possible bootstrap. It can replace KFold as cv argument in the MAPIE
     class
 
     Parameters
     ----------
+    agg_function: str,
+        Choose among:
+
+        - "mean"
+        - "median"
+
     n_resamplings : number of resamplings
     n_samples: number of samples in each resampling. By default the size
     of the training set
     bootstrap: True/False
     random_states: Optional: list to fix random states
-    *args, **kargs: argument to be passed to the function
 
     Attributes
     ----------
     split: equivalent of KFold's split method
+    phi_fit: aggregation function to determine residuals on the training set
+    phi_predict: aggregation function to make prediction
 
     Examples
     --------
-    >>> from mapie.utils import ReSampling
-    >>> cv = ReSampling(n_resamplings=30)
+    >>> from mapie.utils import JackknifeAB
+    >>> cv = JackknifeAB(agg_function="mean", n_resamplings=30)
     """
 
     def __init__(
         self,
         n_resamplings: int,
+        agg_function: Optional[Union[str, Callable[..., ArrayLike]]] = "mean",
         n_samples: Optional[Union[Type[None], int]] = None,
         bootstrap: bool = True,
         random_states: Optional[List[int]] = None,
     ) -> None:
+
+        valid_agg_functions_ = ["mean", "median"]
+
+        if not (agg_function in valid_agg_functions_):
+            raise ValueError(
+                "Invalid aggregation function. "
+                "Allowed values are 'mean', 'median', and in the "
+                "last case 'proportiontocut' has to be between 0 and 1"
+            )
+        self.agg_function = agg_function
         self.n_resamplings = n_resamplings
         self.n_samples = n_samples
         self.boostrap = bootstrap
@@ -146,6 +145,40 @@ class ReSampling:
                 list(set(indices) - set(train_index)), dtype=np.int64
             )
             yield train_index, test_index
+
+    def phi_fit(self, x: ArrayLike) -> ArrayLike:
+        if self.agg_function == "median":
+            return np.nanmedian(x, axis=1)
+        # elif self.agg_function == "trim_mean":
+        #     return np.nanmean(
+        #         winsorize(
+        #             x, limits=self.proportiontocut, axis=1, nan_policy="omit"
+        #         ),
+        #         axis=1,
+        #     )
+        else:
+            return np.nanmean(x, axis=1)
+
+    def phi_predict(self, x: ArrayLike, k: ArrayLike) -> ArrayLike:
+        if self.agg_function == "median":
+            return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
+        # elif self.agg_function == "trim_mean":
+        #     return phi2D(
+        #         A=x,
+        #         B=k,
+        #         fun=lambda x: np.nanmean(
+        #             winsorize(
+        #                 x,
+        #                 limits=self.proportiontocut,
+        #                 axis=1,
+        #                 nan_policy="omit",
+        #             ),
+        #             axis=1,
+        #         ),
+        #     )
+        else:
+            K = np.where(np.isnan(k), 0.0, k)
+            return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
 
 
 def check_null_weight(
@@ -304,7 +337,7 @@ def check_alpha(
 
 def check_n_features_in(
     X: ArrayLike,
-    cv: Optional[Union[float, str, ReSampling]] = None,
+    cv: Optional[Union[float, str, JackknifeAB]] = None,
     estimator: Optional[Union[RegressorMixin, ClassifierMixin]] = None,
 ) -> int:
     """
@@ -373,15 +406,3 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
                 " 1/alpha (or 1/(1 - alpha)) must be lower "
                 "than the number of samples."
             )
-
-
-def phi1D(
-    x: ArrayLike, B: ArrayLike, fun: Callable[[ArrayLike], ArrayLike]
-) -> ArrayLike:
-    return fun(x * B)
-
-
-def phi2D(
-    A: ArrayLike, B: ArrayLike, fun: Callable[[ArrayLike], ArrayLike]
-) -> ArrayLike:
-    return np.apply_along_axis(phi1D, axis=1, arr=A, B=B, fun=fun)

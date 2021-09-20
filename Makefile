@@ -10,7 +10,7 @@ tests:
 	pytest -vs --doctest-modules mapie
 
 coverage:
-	pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie
+	pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs --cov-report term-missing mapie
 
 doc:
 	$(MAKE) clean -C doc
