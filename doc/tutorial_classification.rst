@@ -8,19 +8,19 @@ Tutorial
 
 In this tutorial, we compare the prediction sets estimating by :class:`mapie.classification.MapieClassifier`.
 
-Throughout this tutorial, we will answer the following questions:
+Throughout this tutorial, we will answer the following question:
 
-- How does the number of classes in the prediction sets vary according to the significance level alpha values and the conformity scores ?
+How does the number of classes in the prediction sets vary according to the significance level alpha values and the conformity scores ?
 
 1. Conformal Prediction method using the softmax score of the true label
 ========================================================================
 We will use MAPIE to estimate a prediction set of several classes such that the probability that the true label of a new test point is included in the prediction set is always higher than the target confidence level : :math:`1 - \alpha`.
 We start by using the softmax score output by the base classifier as the conformity score on a toy two-dimensional dataset. We estimate the prediction sets as follows :
 
-* First we generate a dataset with train and test and the Model is fitted in the training set.
-* We set the conformal score :math:`Si = f(X_{i})_{yi}` the softmax output of the true class for each sample in the training set.
-* Then we define :math:`q` as being the :math:`(n + 1) (\alpha) / n` previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the quantile :math:`\alpha`, but with a small correction). 
-* Finally, for a new test data point (where :math:`X_{n + 1}` is known but :math:`Y_{n + 1}` is not), create a prediction set :math:`T(X_{n+1}) = {y: f(X_{n+1})_{y} > q}` which includes all the classes with a sufficiently high softmax output.
+* First we generate a dataset with train, calibration and test, the model is fitted in the training set.
+* We set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}` the softmax output of the true class for each sample in the calibration set.
+* Then we define :math:`\hat{q}` as being the :math:`(n + 1) (\alpha) / n` previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the quantile :math:`\alpha`, but with a small sample correction). 
+* Finally, for a new test data point (where :math:`X_{n + 1}` is known but :math:`Y_{n + 1}` is not), create a prediction set :math:`T(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}` which includes all the classes with a sufficiently high softmax output.
 
 We use a two-dimensional dataset with three labels. The distribution of the data is a bivariate normal with diagonal covariance matrices for each label. 
 
@@ -34,11 +34,12 @@ We use a two-dimensional dataset with three labels. The distribution of the data
     n_classes = 3
     alpha = [0.2, 0.1, 0.05]
     np.random.seed(42)
-    X_train = np.vstack([
+    X = np.vstack([
         np.random.multivariate_normal(center, cov, n_samples)
         for center, cov in zip(centers, covs)
     ])
-    y_train = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
+    y = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
+    X_train, X_cal, y_train, y_cal = train_test_split(X, y, test_size=0.5)
 
     xx, yy = np.meshgrid(
         np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
@@ -68,7 +69,7 @@ Let's see our training data
 .. image:: images/tuto_classification_1.jpeg
     :align: center
 
-We fit our training data with a Gaussian Naive Base estimator. And then we apply :class:`mapie.classification.MapieClassifier` with the method ``score`` to the estimator indicating that it has already been fitted with `cv="prefit"`.
+We fit our training data with a Gaussian Naive Base estimator. And then we apply :class:`mapie.classification.MapieClassifier` in the calibration data with the method ``score`` to the estimator indicating that it has already been fitted with `cv="prefit"`.
 We then estimate the prediction sets with differents alpha values with a
 ``fit`` and ``predict`` process. 
 
@@ -82,8 +83,8 @@ We then estimate the prediction sets with differents alpha values with a
    y_pred_proba = clf.predict_proba(X_test)
    y_pred_proba_max = np.max(y_pred_proba, axis=1)
    mapie = MapieClassifier(estimator=clf, cv="prefit")
-   mapie.fit(X_train, y_train)
-   y_pred_mapie, y_ps_mapie = nb_mapie.predict(X_test, alpha=alphas)
+   mapie.fit(X_cal, y_cal)
+   y_pred_mapie, y_ps_mapie = mapie.predict(X_test, alpha=alpha)
 
 
 * y_pred_mapie: represents the prediction in the test set by the base estimator.
