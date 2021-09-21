@@ -27,6 +27,13 @@ def phi1D(
     B: ArrayLike,
     fun: Callable[[ArrayLike], ArrayLike],
 ) -> ArrayLike:
+    """
+    The function phi1D is used by phi2D. It aims at multiplying the vector of
+    predictions by every refitted estimators by a 1-nan matrix specifying, for
+    each training sample, if it has to be taken into account by the aggregating
+    function, before aggregation
+    """
+
     return fun(x * B)
 
 
@@ -35,6 +42,12 @@ def phi2D(
     B: ArrayLike,
     fun: Callable[[ArrayLike], ArrayLike],
 ) -> ArrayLike:
+    """
+    The function phi2D is a loop along the testing set. For each sample of the
+    testing set, it call phi1D to multiply the vector of predictions by the
+    refitted estimators by a 1-nan matrix, to compute the aggragted predictions
+    ignoring the nans
+    """
     return np.apply_along_axis(
         phi1D,
         axis=1,
