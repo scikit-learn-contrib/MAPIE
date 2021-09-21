@@ -19,6 +19,7 @@ History
 * Add method classification_coverage_score in the module metrics.py
 * Fixed code error for plotting of interval widths in tutorial of documentation
 * Added missing import statements in tutorial of documentation
+* Refactorize tests of `n_jobs` and `verbose` in `utils.py`
 
 0.2.3 (2021-07-09)
 ------------------

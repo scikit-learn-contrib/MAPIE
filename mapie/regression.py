@@ -18,7 +18,9 @@ from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
     check_n_features_in,
+    check_n_jobs,
     check_null_weight,
+    check_verbose,
     fit_estimator,
 )
 
@@ -201,19 +203,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if not isinstance(self.ensemble, bool):
             raise ValueError("Invalid ensemble argument. Must be a boolean.")
 
-        if not isinstance(self.n_jobs, (int, type(None))):
-            raise ValueError("Invalid n_jobs argument. Must be an integer.")
-
-        if self.n_jobs == 0:
-            raise ValueError(
-                "Invalid n_jobs argument. Must be different than 0."
-            )
-
-        if not isinstance(self.verbose, int):
-            raise ValueError("Invalid verbose argument. Must be an integer.")
-
-        if self.verbose < 0:
-            raise ValueError("Invalid verbose argument. Must be non-negative.")
+        check_n_jobs(self.n_jobs)
+        check_verbose(self.verbose)
 
     def _check_estimator(
         self, estimator: Optional[RegressorMixin] = None
@@ -422,12 +413,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 dtype=float,
             )
 
-            pred_after_resampling = np.full(
-                shape=(len(y), len(self.estimators_)),
-                fill_value=np.nan,
-                dtype=float,
-            )
-
         else:
             self.k_ = np.empty_like(y, dtype=int)
 
@@ -467,6 +452,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 ]
 
                 if isinstance(cv, JackknifeAB):
+                    pred_after_resampling = np.full(
+                        shape=(len(y), len(self.estimators_)),
+                        fill_value=np.nan,
+                        dtype=float,
+                    )
+
                     for i, val_ind in enumerate(val_indices):
                         pred_after_resampling[val_ind, i] = predictions[i]
                         self.k_[val_ind, i] = 1

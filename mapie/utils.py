@@ -410,7 +410,7 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
     ------
     ValueError
         If the number of samples of the score is too low,
-        1/alpha (or 1/(1-alpha)) must be lower than the number of samples.
+        1/alpha (or 1/(1 - alpha)) must be lower than the number of samples.
     """
     for alpha in alphas:
         if n < 1 / alpha or n < 1 / (1 - alpha):
@@ -419,3 +419,35 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
                 " 1/alpha (or 1/(1 - alpha)) must be lower "
                 "than the number of samples."
             )
+
+
+def check_n_jobs(n_jobs: Optional[int] = None) -> None:
+    """
+    Check parameter ``n_jobs``.
+
+    Raises
+    ------
+    ValueError
+        If parameter is not valid.
+    """
+    if not isinstance(n_jobs, (int, type(None))):
+        raise ValueError("Invalid n_jobs argument. Must be an integer.")
+
+    if n_jobs == 0:
+        raise ValueError("Invalid n_jobs argument. Must be different than 0.")
+
+
+def check_verbose(verbose: int) -> None:
+    """
+    Check parameter ``verbose``.
+
+    Raises
+    ------
+    ValueError
+        If parameter is not valid.
+    """
+    if not isinstance(verbose, int):
+        raise ValueError("Invalid verbose argument. Must be an integer.")
+
+    if verbose < 0:
+        raise ValueError("Invalid verbose argument. Must be non-negative.")
