@@ -1,25 +1,27 @@
 from __future__ import annotations
-from typing import Optional, Union, Iterable, Tuple, List, cast
+
+from typing import Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
-from sklearn.base import clone
-from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.pipeline import Pipeline
-from sklearn.utils import check_X_y, check_array
+from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
 from .utils import (
-    check_null_weight,
-    fit_estimator,
-    check_n_features_in,
+    JackknifeAfterBootstrap,
     check_alpha,
     check_alpha_and_n_samples,
+    check_n_features_in,
     check_n_jobs,
-    check_verbose
+    check_nan_in_aposteriori_prediction,
+    check_null_weight,
+    check_verbose,
+    fit_estimator,
 )
 
 
@@ -64,6 +66,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - CV splitter: ``sklearn.model_selection.LeaveOneOut()``
           (jackknife variants) or ``sklearn.model_selection.KFold()``
           (cross-validation variants)
+        - ``utils.JacknnifeAB`` object (bootstrap variant)
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
@@ -122,8 +125,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     residuals_ : np.ndarray of shape (n_samples_train,)
         Residuals between ``y_train`` and ``y_pred``.
 
-    k_: np.ndarray of shape(n_samples_train,)
-        Id of the fold containing each trainig sample.
+    k_ : np.ndarray
+        - Id of the fold containing each training sample,
+        if cv is not JacknnifeAB. Of shape(n_samples_train,).
+        - Dummy array of folds containing each training sample, otherwise.
+        Of shape (n_samples_train, n_resamplings).
 
     n_features_in_: int
         Number of features passed to the fit method.
@@ -137,6 +143,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     Aaditya Ramdas, and Ryan J. Tibshirani.
     "Predictive inference with the jackknife+."
     Ann. Statist., 49(1):486–507, February 2021.
+
+    Byol Kim, Chen Xu, and Rina Foygel Barber.
+    "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
+    34th Conference on Neural Information Processing Systems (NeurIPS 2020)
+
+
 
     Examples
     --------
@@ -158,21 +170,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
 
-    valid_methods_ = [
-        "naive",
-        "base",
-        "plus",
-        "minmax"
-    ]
+    valid_methods_ = ["naive", "base", "plus", "minmax"]
 
     def __init__(
         self,
         estimator: Optional[RegressorMixin] = None,
         method: str = "plus",
-        cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        cv: Optional[
+            Union[int, str, BaseCrossValidator, JackknifeAfterBootstrap]
+        ] = None,
         n_jobs: Optional[int] = None,
         ensemble: bool = False,
-        verbose: int = 0
+        verbose: int = 0,
     ) -> None:
         self.estimator = estimator
         self.method = method
@@ -197,16 +206,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             )
 
         if not isinstance(self.ensemble, bool):
-            raise ValueError(
-                "Invalid ensemble argument. Must be a boolean."
-            )
+            raise ValueError("Invalid ensemble argument. Must be a boolean.")
 
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
 
     def _check_estimator(
-        self,
-        estimator: Optional[RegressorMixin] = None
+        self, estimator: Optional[RegressorMixin] = None
     ) -> RegressorMixin:
         """
         Check if estimator is ``None``,
@@ -249,11 +255,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def _check_cv(
         self,
-        cv: Optional[Union[int, str, BaseCrossValidator]] = None
-    ) -> Union[str, BaseCrossValidator]:
+        cv: Optional[
+            Union[int, str, BaseCrossValidator, JackknifeAfterBootstrap]
+        ] = None,
+    ) -> Union[str, BaseCrossValidator, JackknifeAfterBootstrap]:
         """
         Check if cross-validator is
-        ``None``, ``int``, ``"prefit"``, ``KFold`` or ``LeaveOneOut``.
+        ``None``, ``int``, ``"prefit"``, ``KFold``, ``LeaveOneOut``
+        or ``JackknifeAfterBootstrap``.
         Return a ``LeaveOneOut`` instance if integer equal to -1.
         Return a ``KFold`` instance if integer superior or equal to 2.
         Return a ``KFold`` instance if ``None``.
@@ -284,13 +293,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if (
             isinstance(cv, KFold)
             or isinstance(cv, LeaveOneOut)
-            or cv == "prefit"
+            or isinstance(cv, JackknifeAfterBootstrap)
+            or (cv == "prefit")
         ):
             return cv
         raise ValueError(
             "Invalid cv argument. "
             "Allowed values are None, -1, int >= 2, 'prefit', "
-            "KFold or LeaveOneOut."
+            "KFold, LeaveOneOut or JackknifeAfterBootstrap."
         )
 
     def _fit_and_predict_oof_model(
@@ -301,7 +311,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         train_index: ArrayLike,
         val_index: ArrayLike,
         k: int,
-        sample_weight: Optional[ArrayLike] = None
+        sample_weight: Optional[ArrayLike] = None,
     ) -> Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]:
         """
         Fit a single out-of-fold model on a given training set and
@@ -351,14 +361,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 estimator, X_train, y_train, sample_weight[train_index]
             )
         y_pred = estimator.predict(X_val)
-        val_id = np.full_like(y_pred, k)
+        val_id = np.full_like(y_pred, k, dtype=int)
         return estimator, y_pred, val_id, val_index
 
     def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None
+        sample_weight: Optional[ArrayLike] = None,
     ) -> MapieRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
@@ -402,7 +412,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         # Initialization
         self.estimators_: List[RegressorMixin] = []
-        self.k_ = np.empty_like(y, dtype=int)
+
+        if isinstance(cv, JackknifeAfterBootstrap):
+            self.k_ = np.full(
+                shape=(len(y), cv.n_resamplings),
+                fill_value=np.nan,
+                dtype=float,
+            )
+
+            pred_after_resampling = np.full(
+                shape=(len(y), cv.n_resamplings),
+                fill_value=np.nan,
+                dtype=float,
+            )
+        else:
+            self.k_ = np.empty_like(y, dtype=int)
+
         y_pred = np.empty_like(y, dtype=float)
 
         # Work
@@ -421,27 +446,44 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
                         clone(estimator),
-                        X, y, train_index, val_index, k, sample_weight
-                    ) for k, (train_index, val_index) in enumerate(cv.split(X))
+                        X,
+                        y,
+                        train_index,
+                        val_index,
+                        k,
+                        sample_weight,
+                    )
+                    for k, (train_index, val_index) in enumerate(cv.split(X))
                 )
                 self.estimators_, predictions, val_ids, val_indices = map(
                     list, zip(*outputs)
                 )
+
                 self.n_samples_val_ = [
                     np.array(pred).shape[0] for pred in predictions
                 ]
-                predictions, val_ids, val_indices = map(
-                    np.concatenate, (predictions, val_ids, val_indices)
-                )
-                self.k_[val_indices] = val_ids
-                y_pred[val_indices] = predictions
+
+                if isinstance(cv, JackknifeAfterBootstrap):
+                    for i, val_ind in enumerate(val_indices):
+                        pred_after_resampling[val_ind, i] = predictions[i]
+                        self.k_[val_ind, i] = 1
+                    check_nan_in_aposteriori_prediction(pred_after_resampling)
+
+                    y_pred = cv.aggregate_fit(pred_after_resampling)
+                else:
+                    predictions, val_ids, val_indices = map(
+                        np.concatenate, (predictions, val_ids, val_indices)
+                    )
+                    self.k_[val_indices] = val_ids
+                    y_pred[val_indices] = predictions
+
         self.residuals_ = np.abs(y - y_pred)
         return self
 
     def predict(
         self,
         X: ArrayLike,
-        alpha: Optional[Union[float, Iterable[float]]] = None
+        alpha: Optional[Union[float, Iterable[float]]] = None,
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -489,7 +531,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 "residuals_",
                 "n_features_in_",
                 "n_samples_val_",
-            ]
+            ],
         )
         alpha_ = check_alpha(alpha)
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
@@ -515,36 +557,46 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_multi = np.column_stack(
                     [e.predict(X) for e in self.estimators_]
                 )
+
+                if isinstance(self.cv, JackknifeAfterBootstrap):
+                    y_pred_multi = self.cv.aggregate_predict(
+                        y_pred_multi, self.k_
+                    )
+
                 if self.method == "plus":
-                    # At this point,
-                    # y_pred_multi is of shape (n_samples_test, n_estimators_)
-                    # We thus enforce y_pred_multi
-                    # to be of shape (n_samples_test, n_samples_train)
-                    if len(self.estimators_) < len(self.k_):
+                    if (not isinstance(self.cv, JackknifeAfterBootstrap)) and (
+                        len(self.estimators_) < len(self.k_)
+                    ):
                         y_pred_multi = y_pred_multi[:, self.k_]
+
                     lower_bounds = y_pred_multi - self.residuals_
                     upper_bounds = y_pred_multi + self.residuals_
+
                 if self.method == "minmax":
                     lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
                     upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
                     lower_bounds = lower_bounds - self.residuals_
                     upper_bounds = upper_bounds + self.residuals_
-                y_pred_low = np.column_stack([
-                    np.quantile(
-                        lower_bounds,
-                        _alpha,
-                        axis=1,
-                        interpolation="lower"
-                    ) for _alpha in alpha_
-                ])
-                y_pred_up = np.column_stack([
-                    np.quantile(
-                        upper_bounds,
-                        1 - _alpha,
-                        axis=1,
-                        interpolation="higher"
-                    ) for _alpha in alpha_
-                ])
+
+                y_pred_low = np.column_stack(
+                    [
+                        np.nanquantile(
+                            lower_bounds, _alpha, axis=1, interpolation="lower"
+                        )
+                        for _alpha in alpha_
+                    ]
+                )
+                y_pred_up = np.column_stack(
+                    [
+                        np.nanquantile(
+                            upper_bounds,
+                            1 - _alpha,
+                            axis=1,
+                            interpolation="higher",
+                        )
+                        for _alpha in alpha_
+                    ]
+                )
                 if self.ensemble:
-                    y_pred = np.median(y_pred_multi, axis=1)
+                    y_pred = np.nanmedian(y_pred_multi, axis=1)
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
