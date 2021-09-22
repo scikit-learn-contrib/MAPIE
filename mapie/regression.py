@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -14,11 +13,12 @@ from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
 from .utils import (
-    JackknifeAB,
+    JackknifeAfterBootstrap,
     check_alpha,
     check_alpha_and_n_samples,
     check_n_features_in,
     check_n_jobs,
+    check_nan_in_aposterio_prediction,
     check_null_weight,
     check_verbose,
     fit_estimator,
@@ -173,7 +173,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self,
         estimator: Optional[RegressorMixin] = None,
         method: str = "plus",
-        cv: Optional[Union[int, str, BaseCrossValidator, JackknifeAB]] = None,
+        cv: Optional[
+            Union[int, str, BaseCrossValidator, JackknifeAfterBootstrap]
+        ] = None,
         n_jobs: Optional[int] = None,
         ensemble: bool = False,
         verbose: int = 0,
@@ -250,12 +252,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def _check_cv(
         self,
-        cv: Optional[Union[int, str, BaseCrossValidator, JackknifeAB]] = None,
-    ) -> Union[str, BaseCrossValidator, JackknifeAB]:
+        cv: Optional[
+            Union[int, str, BaseCrossValidator, JackknifeAfterBootstrap]
+        ] = None,
+    ) -> Union[str, BaseCrossValidator, JackknifeAfterBootstrap]:
         """
         Check if cross-validator is
         ``None``, ``int``, ``"prefit"``, ``KFold``, ``LeaveOneOut``
-        or ``JackknifeAB``.
+        or ``JackknifeAfterBootstrap``.
         Return a ``LeaveOneOut`` instance if integer equal to -1.
         Return a ``KFold`` instance if integer superior or equal to 2.
         Return a ``KFold`` instance if ``None``.
@@ -286,14 +290,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if (
             isinstance(cv, KFold)
             or isinstance(cv, LeaveOneOut)
-            or isinstance(cv, JackknifeAB)
+            or isinstance(cv, JackknifeAfterBootstrap)
             or (cv == "prefit")
         ):
             return cv
         raise ValueError(
             "Invalid cv argument. "
             "Allowed values are None, -1, int >= 2, 'prefit', "
-            "KFold, LeaveOneOut or JackknifeAB."
+            "KFold, LeaveOneOut or JackknifeAfterBootstrap."
         )
 
     def _fit_and_predict_oof_model(
@@ -406,13 +410,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         # Initialization
         self.estimators_: List[RegressorMixin] = []
 
-        if isinstance(cv, JackknifeAB):
+        if isinstance(cv, JackknifeAfterBootstrap):
             self.k_ = np.full(
                 shape=(len(y), cv.n_resamplings),
                 fill_value=np.nan,
                 dtype=float,
             )
 
+            pred_after_resampling = np.full(
+                shape=(len(y), cv.n_resamplings),
+                fill_value=np.nan,
+                dtype=float,
+            )
         else:
             self.k_ = np.empty_like(y, dtype=int)
 
@@ -451,24 +460,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     np.array(pred).shape[0] for pred in predictions
                 ]
 
-                if isinstance(cv, JackknifeAB):
-                    pred_after_resampling = np.full(
-                        shape=(len(y), len(self.estimators_)),
-                        fill_value=np.nan,
-                        dtype=float,
-                    )
-
+                if isinstance(cv, JackknifeAfterBootstrap):
                     for i, val_ind in enumerate(val_indices):
                         pred_after_resampling[val_ind, i] = predictions[i]
                         self.k_[val_ind, i] = 1
-                    if np.any(np.all(np.isnan(pred_after_resampling), axis=1)):
-                        warnings.warn(
-                            "WARNING: at least one point of training set "
-                            + "belongs to every resamplings. Increase the "
-                            + "number of resamplings"
-                        )
+                    check_nan_in_aposterio_prediction(pred_after_resampling)
 
-                    y_pred = cv.phi_fit(pred_after_resampling)
+                    y_pred = cv.aggregate_fit(pred_after_resampling)
                 else:
                     predictions, val_ids, val_indices = map(
                         np.concatenate, (predictions, val_ids, val_indices)
@@ -556,29 +554,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_multi = np.column_stack(
                     [e.predict(X) for e in self.estimators_]
                 )
+
+                if isinstance(self.cv, JackknifeAfterBootstrap):
+                    y_pred_multi = self.cv.aggregate_predict(
+                        y_pred_multi, self.k_
+                    )
+
                 if self.method == "plus":
-                    # At this point,
-                    # y_pred_multi is of shape (n_samples_test, n_estimators_)
-                    # We thus enforce y_pred_multi
-                    # to be of shape (n_samples_test, n_samples_train)
-
-                    if isinstance(self.cv, JackknifeAB):
-                        y_pred_multi = self.cv.phi_predict(
-                            x=y_pred_multi,
-                            k=self.k_,
-                        )
-
-                    elif len(self.estimators_) < len(self.k_):
+                    if (not isinstance(self.cv, JackknifeAfterBootstrap)) and (
+                        len(self.estimators_) < len(self.k_)
+                    ):
                         y_pred_multi = y_pred_multi[:, self.k_]
 
                     lower_bounds = y_pred_multi - self.residuals_
                     upper_bounds = y_pred_multi + self.residuals_
 
                 if self.method == "minmax":
-                    if isinstance(self.cv, JackknifeAB):
-                        y_pred_multi = self.cv.phi_predict(
-                            y_pred_multi, self.k_
-                        )
                     lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
                     upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
                     lower_bounds = lower_bounds - self.residuals_

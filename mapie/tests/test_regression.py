@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
-from mapie.utils import JackknifeAB
+from mapie.utils import JackknifeAfterBootstrap
 from sklearn.base import RegressorMixin
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
@@ -30,7 +30,7 @@ Params = TypedDict(
     "Params",
     {
         "method": str,
-        "cv": Optional[Union[int, KFold, JackknifeAB]],
+        "cv": Optional[Union[int, KFold, JackknifeAfterBootstrap]],
     },
 )
 STRATEGIES = {
@@ -50,13 +50,9 @@ STRATEGIES = {
         method="minmax",
         cv=KFold(n_splits=3, shuffle=True, random_state=1),
     ),
-    "cv_plus_median": Params(
-        method="plus",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
-    ),
     "resampling_plus": Params(
         method="plus",
-        cv=JackknifeAB(
+        cv=JackknifeAfterBootstrap(
             agg_function="mean",
             n_resamplings=30,
             random_states=list(range(30)),
@@ -64,7 +60,7 @@ STRATEGIES = {
     ),
     "resampling_minmax": Params(
         method="minmax",
-        cv=JackknifeAB(
+        cv=JackknifeAfterBootstrap(
             agg_function="mean",
             n_resamplings=30,
             random_states=list(range(30)),
@@ -72,21 +68,12 @@ STRATEGIES = {
     ),
     "resampling_plus_median": Params(
         method="plus",
-        cv=JackknifeAB(
+        cv=JackknifeAfterBootstrap(
             agg_function="median",
             n_resamplings=30,
             random_states=list(range(30)),
         ),
     ),
-    # "resampling_plus_trim_mean": Params(
-    #     method="plus",
-    #     cv=JackknifeAB(
-    #         agg_function="trim_mean",
-    #         n_resamplings=30,
-    #         random_states=list(range(30)),
-    #         proportiontocut=0.10,
-    #     ),
-    # ),
 }
 
 WIDTHS = {
@@ -102,7 +89,6 @@ WIDTHS = {
     "resampling_plus": 3.90,
     "resampling_minmax": 4.13,
     "resampling_plus_median": 3.87,
-    # "resampling_plus_trim_mean": 3.91,
 }
 
 COVERAGES = {
@@ -115,11 +101,9 @@ COVERAGES = {
     "cv_minmax": 0.966,
     "prefit": 0.980,
     "cv_plus_median": 0.954,
-    # "cv_minmax_trim_mean": 0.962,
     "resampling_plus": 0.966,
     "resampling_minmax": 0.970,
     "resampling_plus_median": 0.960,
-    # "resampling_plus_trim_mean": 0.958,
 }
 
 
@@ -531,44 +515,52 @@ def test_results_prefit() -> None:
 
 
 def test_not_enough_resamplings() -> None:
-    """Test that fit-predict raises no errors."""
+    """Test that a warining is raised if at least one residual is nan."""
     with pytest.warns(Warning):
         mapie = MapieRegressor(
-            cv=JackknifeAB(agg_function="mean", n_resamplings=1)
+            cv=JackknifeAfterBootstrap(agg_function="mean", n_resamplings=1)
         )
         mapie.fit(X, y)
 
 
 def test_invalid_agg_function() -> None:
     """
-    Test that wrong aggreation functions  in JackknifeAB class raise errors.
+    Test that a wrong aggregation function in JackknifeAfterBootstrap
+    class raises an error.
     """
 
-    with pytest.raises(ValueError):
-        JackknifeAB(agg_function="medium", n_resamplings=30, bootstrap=True)
+    with pytest.raises(ValueError, match=r".*Invalid aggregation function*"):
+        JackknifeAfterBootstrap(
+            agg_function="medium", n_resamplings=30, replace=True
+        )
 
 
 def test_invalid_randomstates() -> None:
     """
-    Test that wrong list of random states  in JackknifeAB class raise errors.
+    Test that wrong list of random states in JackknifeAfterBootstrap
+    class raise errors.
     """
 
-    with pytest.raises(ValueError):
-        JackknifeAB(
+    with pytest.raises(
+        ValueError, match=r".*Incoherent number of random states*"
+    ):
+        JackknifeAfterBootstrap(
             agg_function="mean",
             n_resamplings=30,
-            bootstrap=True,
+            replace=True,
             random_states=[0, 1],
         )
 
 
-def test_default_JAB() -> None:
+def test_default_JackknifeAfterBootstrap() -> None:
     """Test default values of Jackknife+-after-Bootstrap."""
-    MapieRegressor(
-        cv=JackknifeAB(
-            agg_function="mean",
-            n_resamplings=30,
-            bootstrap=True,
-            random_states=None,
-        )
+    cv = JackknifeAfterBootstrap(
+        agg_function="mean",
+        n_resamplings=30,
+        replace=True,
+        random_states=None,
     )
+    assert cv.agg_function == "mean"
+    assert cv.n_resamplings == 30
+    assert cv.n_samples is None
+    assert cv.random_states is None

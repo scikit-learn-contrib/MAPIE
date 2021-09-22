@@ -1,3 +1,4 @@
+import warnings
 from inspect import signature
 from typing import (
     Any,
@@ -7,14 +8,11 @@ from typing import (
     List,
     Optional,
     Tuple,
-    Type,
     Union,
     cast,
 )
 
 import numpy as np
-
-# from scipy.stats.mstats import winsorize
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.utils import resample
 from sklearn.utils.validation import _check_sample_weight, _num_samples
@@ -28,10 +26,26 @@ def phi1D(
     fun: Callable[[ArrayLike], ArrayLike],
 ) -> ArrayLike:
     """
-    The function phi1D is used by phi2D. It aims at multiplying the vector of
-    predictions by every refitted estimators by a 1-nan matrix specifying, for
+    The function phi1D is called by phi2D. It aims at multiplying the vector of
+    predictions, made by refitted estimators, by a 1-nan matrix specifying, for
     each training sample, if it has to be taken into account by the aggregating
     function, before aggregation
+
+    Parameters
+    ----------
+    x : ArrayLike
+        1D vector
+    B : ArrayLike
+        2D vector whose number of columns is the length of x
+    fun : function
+        Vectorized function applying to Arraylike, and that should ignore nan
+
+    Returns
+    -------
+    phi1D(x, B, fun): ArrayLike
+        Each row of B is multiply by x and then the function fun is applied.
+        Typically, ``fun`` is a numpy function, with argument ``axis`` set to 1
+
     """
 
     return fun(x * B)
@@ -44,9 +58,23 @@ def phi2D(
 ) -> ArrayLike:
     """
     The function phi2D is a loop along the testing set. For each sample of the
-    testing set, it call phi1D to multiply the vector of predictions by the
-    refitted estimators by a 1-nan matrix, to compute the aggragted predictions
-    ignoring the nans
+    testing set it applies phi1D to multiply the vector of predictions, made by
+    the refitted estimators, by a 1-nan matrix, to compute the aggregated
+    predictions ignoring the nans
+
+    Parameters
+    ----------
+    A : ArrayLike
+    B : ArrayLike
+        A and B must have the same number of columns
+    fun : function
+        Vectorized function applying to Arraylike, and that should ignore nan
+
+    Returns
+    -------
+    phi2D(A, B, fun): ArrayLike
+        Apply phi1D(x, B, fun) to each row x of A
+
     """
     return np.apply_along_axis(
         phi1D,
@@ -57,8 +85,25 @@ def phi2D(
     )
 
 
-class JackknifeAB:
-    """Generate a sampling method that resample the training set with
+def check_parameters_JackknifeAfterBoostrap(
+    agg_function: Optional[str],
+    valid_agg_functions: List[str],
+    random_states: Optional[List[int]],
+    n_resamplings: int,
+) -> None:
+    if not (agg_function in valid_agg_functions):
+        raise ValueError(
+            "Invalid aggregation function. "
+            "Allowed values are 'mean', 'median', and in the "
+            "last case 'proportiontocut' has to be between 0 and 1"
+        )
+    if (random_states is not None) and (len(random_states) != n_resamplings):
+        raise ValueError("Incoherent number of random states")
+
+
+class JackknifeAfterBootstrap:
+    """
+    Generate a sampling method, that resamples the training set with
     possible bootstrap. It can replace KFold as cv argument in the MAPIE
     class
 
@@ -66,75 +111,87 @@ class JackknifeAB:
     ----------
     agg_function: str,
         Choose among:
-
         - "mean"
         - "median"
 
-    n_resamplings : number of resamplings
-    n_samples: number of samples in each resampling. By default the size
-    of the training set
-    bootstrap: True/False
-    random_states: Optional: list to fix random states
+    n_resamplings : int
+        Number of resamplings
+    n_samples: int
+        Number of samples in each resampling. By default None,
+        the size of the training set
+    replace: bool
+        Wheter to replace samples in resamplings or not
+    random_states: Optional
+        List to fix random states
 
     Attributes
     ----------
-    split: equivalent of KFold's split method
-    phi_fit: aggregation function to determine residuals on the training set
-    phi_predict: aggregation function to make prediction
+    split: method
+        Equivalent of KFold's split method
+    aggregate_fit: method
+        Aggregation function to determine aggregated predictions
+        on the training set
+    aggregation_predict: method
+        Aggregation function to determine aggregated predictions
+        on the testing set
 
     Examples
     --------
-    >>> from mapie.utils import JackknifeAB
-    >>> cv = JackknifeAB(agg_function="mean", n_resamplings=30)
+    >>> import pandas as pd
+    >>> from mapie.utils import JackknifeAfterBootstrap
+    >>> cv = JackknifeAfterBootstrap(n_resamplings=2,random_states=[0,1])
+    >>> X = pd.DataFrame(np.array([1,2,3,4,5,6,7,8,9,10]))
+    >>> for train_index, test_index in cv.split(X):
+    ...    print(f"train index is {train_index}, test index is {test_index}")
+    train index is [5 0 3 3 7 9 3 5 2 4], test index is [8 1 6]
+    train index is [5 8 9 5 0 0 1 7 6 9], test index is [2 3 4]
     """
+
+    valid_agg_functions_ = ["mean", "median"]
 
     def __init__(
         self,
         n_resamplings: int,
-        agg_function: Optional[Union[str, Callable[..., ArrayLike]]] = "mean",
-        n_samples: Optional[Union[Type[None], int]] = None,
-        bootstrap: bool = True,
+        agg_function: Optional[str] = "mean",
+        n_samples: Optional[int] = None,
+        replace: bool = True,
         random_states: Optional[List[int]] = None,
     ) -> None:
 
-        valid_agg_functions_ = ["mean", "median"]
-
-        if not (agg_function in valid_agg_functions_):
-            raise ValueError(
-                "Invalid aggregation function. "
-                "Allowed values are 'mean', 'median', and in the "
-                "last case 'proportiontocut' has to be between 0 and 1"
-            )
+        check_parameters_JackknifeAfterBoostrap(
+            agg_function=agg_function,
+            valid_agg_functions=self.valid_agg_functions_,
+            random_states=random_states,
+            n_resamplings=n_resamplings,
+        )
         self.agg_function = agg_function
         self.n_resamplings = n_resamplings
         self.n_samples = n_samples
-        self.boostrap = bootstrap
-        if (random_states is not None) and (
-            len(random_states) != n_resamplings
-        ):
-            raise ValueError("Incoherent number of random states")
-        else:
-            self.random_states = random_states
+        self.replace = replace
+        self.random_states = random_states
 
     def split(
         self, X: ArrayLike
     ) -> Generator[Tuple[Any, ArrayLike], None, None]:
-        """Generate indices to split data into training and test set.
+        """
+        Generate indices to split data into training and test set.
+
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : ArrayLike of shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
-        y : array-like of shape (n_samples,)
+        y : ArrayLike of shape (n_samples,)
             The target variable for supervised learning problems.
-        groups : array-like of shape (n_samples,), default=None
+        groups : ArrayLike of shape (n_samples,), default=None
             Group labels for the samples used while splitting the dataset into
             train/test set.
+
         Yields
         ------
-        train : ndarray
+        train : ArrayLike
             The training set indices for that split.
-        test : ndarray
+        test : ArrayLike
             The testing set indices for that split.
         """
         indices = np.arange(_num_samples(X))
@@ -149,7 +206,7 @@ class JackknifeAB:
                 rnd_state = self.random_states[k]
             train_index = resample(
                 indices,
-                replace=self.boostrap,
+                replace=self.replace,
                 n_samples=n_samples,
                 random_state=rnd_state,
                 stratify=None,
@@ -159,36 +216,53 @@ class JackknifeAB:
             )
             yield train_index, test_index
 
-    def phi_fit(self, x: ArrayLike) -> ArrayLike:
+    def aggregate_fit(self, x: ArrayLike) -> ArrayLike:
+        """
+        Take the array of predictions, made by the refitted estimators,
+        on the training set, and aggregate to produce phi-{i}(x_i) for
+        each training sample x_i
+
+        Parameters:
+        -----------
+            x : ArrayLike
+            Array of predictions, made by the refitted estimators
+
+        Returns:
+        --------
+            ArrayLike:
+            Array of phi-{i}(x_i) for each training sample x_i
+        """
         if self.agg_function == "median":
             return np.nanmedian(x, axis=1)
-        # elif self.agg_function == "trim_mean":
-        #     return np.nanmean(
-        #         winsorize(
-        #             x, limits=self.proportiontocut, axis=1, nan_policy="omit"
-        #         ),
-        #         axis=1,
-        #     )
         else:
             return np.nanmean(x, axis=1)
 
-    def phi_predict(self, x: ArrayLike, k: ArrayLike) -> ArrayLike:
+    def aggregate_predict(self, x: ArrayLike, k: ArrayLike) -> ArrayLike:
+        """
+        Take the array of predictions, made by the refitted estimators,
+        on the testing set, and the 1-nan array indicating for each training
+        sample which one to integrate, and aggregate to produce phi-{t}(x_t)
+        for each training sample x_t
+
+
+        Parameters:
+        -----------
+            x : ArrayLike
+                Array of predictions, made by the refitted estimators,
+                for each sample of the testing set
+            k : ArrayLike
+                1-nan array, that indicate whether to integrate the prediction
+                of a given estimator into the aggregation, for each training
+                sample
+
+        Returns:
+            ArrayLike
+            Array of shape (testing set size,) of aggregated predictions for
+            each testing  sample
+
+        """
         if self.agg_function == "median":
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
-        # elif self.agg_function == "trim_mean":
-        #     return phi2D(
-        #         A=x,
-        #         B=k,
-        #         fun=lambda x: np.nanmean(
-        #             winsorize(
-        #                 x,
-        #                 limits=self.proportiontocut,
-        #                 axis=1,
-        #                 nan_policy="omit",
-        #             ),
-        #             axis=1,
-        #         ),
-        #     )
         else:
             K = np.where(np.isnan(k), 0.0, k)
             return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
@@ -350,7 +424,7 @@ def check_alpha(
 
 def check_n_features_in(
     X: ArrayLike,
-    cv: Optional[Union[float, str, JackknifeAB]] = None,
+    cv: Optional[Union[float, str, JackknifeAfterBootstrap]] = None,
     estimator: Optional[Union[RegressorMixin, ClassifierMixin]] = None,
 ) -> int:
     """
@@ -451,3 +525,24 @@ def check_verbose(verbose: int) -> None:
 
     if verbose < 0:
         raise ValueError("Invalid verbose argument. Must be non-negative.")
+
+
+def check_nan_in_aposterio_prediction(X: ArrayLike) -> None:
+    """
+    Parameters
+    ----------
+    X : Array of shape (size of training set, number of estimators) whose rows
+    are the predictions by each estimator of each training sample.
+
+    Raises
+    ------
+    Warning
+        If the aggregated predictions of any training sample would be nan.
+    """
+
+    if np.any(np.all(np.isnan(X), axis=1), axis=0):
+        warnings.warn(
+            "WARNING: at least one point of training set "
+            + "belongs to every resamplings. Increase the "
+            + "number of resamplings"
+        )
