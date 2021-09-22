@@ -18,7 +18,7 @@ from .utils import (
     check_alpha_and_n_samples,
     check_n_features_in,
     check_n_jobs,
-    check_nan_in_aposterio_prediction,
+    check_nan_in_aposteriori_prediction,
     check_null_weight,
     check_verbose,
     fit_estimator,
@@ -27,144 +27,147 @@ from .utils import (
 
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
-     Prediction interval with out-of-fold residuals.
+    Prediction interval with out-of-fold residuals.
 
-     This class implements the jackknife+ strategy and its variations
-     for estimating prediction intervals on single-output data. The
-     idea is to evaluate out-of-fold residuals on hold-out validation
-     sets and to deduce valid confidence intervals with strong theoretical
-     guarantees.
+    This class implements the jackknife+ strategy and its variations
+    for estimating prediction intervals on single-output data. The
+    idea is to evaluate out-of-fold residuals on hold-out validation
+    sets and to deduce valid confidence intervals with strong theoretical
+    guarantees.
 
-     Parameters
-     ----------
-     estimator : Optional[RegressorMixin]
-         Any regressor with scikit-learn API
-         (i.e. with fit and predict methods), by default None.
-         If ``None``, estimator defaults to a ``LinearRegression`` instance.
+    Parameters
+    ----------
+    estimator : Optional[RegressorMixin]
+        Any regressor with scikit-learn API
+        (i.e. with fit and predict methods), by default None.
+        If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
-     method: str, optional
-         Method to choose for prediction interval estimates.
-         Choose among:
+    method: str, optional
+        Method to choose for prediction interval estimates.
+        Choose among:
 
-         - "naive", based on training set residuals,
-         - "base", based on validation sets residuals,
-         - "plus", based on validation residuals and testing predictions,
-         - "minmax", based on validation residuals and testing predictions
-           (min/max among cross-validation clones).
+        - "naive", based on training set residuals,
+        - "base", based on validation sets residuals,
+        - "plus", based on validation residuals and testing predictions,
+        - "minmax", based on validation residuals and testing predictions
+          (min/max among cross-validation clones).
 
-         By default "plus".
+        By default "plus".
 
-     cv: Optional[Union[int, str, BaseCrossValidator]]
-         The cross-validation strategy for computing residuals.
-         It directly drives the distinction between jackknife and cv variants.
-         Choose among:
+    cv: Optional[Union[int, str, BaseCrossValidator]]
+        The cross-validation strategy for computing residuals.
+        It directly drives the distinction between jackknife and cv variants.
+        Choose among:
 
-         - ``None``, to use the default 5-fold cross-validation
-         - integer, to specify the number of folds.
-           If equal to -1, equivalent to
-           ``sklearn.model_selection.LeaveOneOut()``.
-         - CV splitter: ``sklearn.model_selection.LeaveOneOut()``
-           (jackknife variants) or ``sklearn.model_selection.KFold()``
-           (cross-validation variants)
-         - ``utils.JacknnifeAB`` object (bootstrap variant)
-         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
-           and the ``method`` parameter is ignored.
-           All data provided in the ``fit`` method is then used
-           for computing residuals only.
-           At prediction time, quantiles of these residuals are used to provide
-           a prediction interval with fixed width.
-           The user has to take care manually that data for model fitting and
-           residual estimate are disjoint.
+        - ``None``, to use the default 5-fold cross-validation
+        - integer, to specify the number of folds.
+          If equal to -1, equivalent to
+          ``sklearn.model_selection.LeaveOneOut()``.
+        - CV splitter: ``sklearn.model_selection.LeaveOneOut()``
+          (jackknife variants) or ``sklearn.model_selection.KFold()``
+          (cross-validation variants)
+        - ``utils.JacknnifeAB`` object (bootstrap variant)
+        - ``"prefit"``, assumes that ``estimator`` has been fitted already,
+          and the ``method`` parameter is ignored.
+          All data provided in the ``fit`` method is then used
+          for computing residuals only.
+          At prediction time, quantiles of these residuals are used to provide
+          a prediction interval with fixed width.
+          The user has to take care manually that data for model fitting and
+          residual estimate are disjoint.
 
-         By default ``None``.
+        By default ``None``.
 
-     n_jobs: Optional[int]
-         Number of jobs for parallel processing using joblib
-         via the "locky" backend.
-         If ``-1`` all CPUs are used.
-         If ``1`` is given, no parallel computing code is used at all,
-         which is useful for debugging.
-         For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
-         None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1``
-         (sequential execution).
+    n_jobs: Optional[int]
+        Number of jobs for parallel processing using joblib
+        via the "locky" backend.
+        If ``-1`` all CPUs are used.
+        If ``1`` is given, no parallel computing code is used at all,
+        which is useful for debugging.
+        For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
+        None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1``
+        (sequential execution).
 
-         By default ``None``.
+        By default ``None``.
 
-     ensemble: bool, optional
-         Determines how to return the predictions.
-         If ``False``, returns the predictions from the single estimator
-         trained on the full training dataset.
-         If ``True``, returns the median of the prediction intervals computed
-         from the out-of-folds models.
-         The Jackknife+ interval can be interpreted as an interval
-         around the median prediction,
-         and is guaranteed to lie inside the interval,
-         unlike the single estimator predictions.
+    ensemble: bool, optional
+        Determines how to return the predictions.
+        If ``False``, returns the predictions from the single estimator
+        trained on the full training dataset.
+        If ``True``, returns the median of the prediction intervals computed
+        from the out-of-folds models.
+        The Jackknife+ interval can be interpreted as an interval
+        around the median prediction,
+        and is guaranteed to lie inside the interval,
+        unlike the single estimator predictions.
 
-         By default ``False``.
+        By default ``False``.
 
-     verbose : int, optional
-         The verbosity level, used with joblib for multiprocessing.
-         The frequency of the messages increases with the verbosity level.
-         If it more than ``10``, all iterations are reported.
-         Above ``50``, the output is sent to stdout.
+    verbose : int, optional
+        The verbosity level, used with joblib for multiprocessing.
+        The frequency of the messages increases with the verbosity level.
+        If it more than ``10``, all iterations are reported.
+        Above ``50``, the output is sent to stdout.
 
-         By default ``0``.
+        By default ``0``.
 
-     Attributes
-     ----------
-     valid_methods: List[str]
-         List of all valid methods.
+    Attributes
+    ----------
+    valid_methods: List[str]
+        List of all valid methods.
 
-     single_estimator_ : sklearn.RegressorMixin
-         Estimator fitted on the whole training set.
+    single_estimator_ : sklearn.RegressorMixin
+        Estimator fitted on the whole training set.
 
-     estimators_ : list
-         List of out-of-folds estimators.
+    estimators_ : list
+        List of out-of-folds estimators.
 
-     residuals_ : np.ndarray of shape (n_samples_train,)
-         Residuals between ``y_train`` and ``y_pred``.
+    residuals_ : np.ndarray of shape (n_samples_train,)
+        Residuals between ``y_train`` and ``y_pred``.
 
-     k_ : np.ndarray
-    - Id of the fold containing each training sample, if cv is not JacknnifeAB.
-     Of shape(n_samples_train,).
-    - Dummy array of folds containing each training sample, otherwise.
-     Of shape (n_samples_train, n_resamplings).
+    k_ : np.ndarray
+        - Id of the fold containing each training sample,
+        if cv is not JacknnifeAB. Of shape(n_samples_train,).
+        - Dummy array of folds containing each training sample, otherwise.
+        Of shape (n_samples_train, n_resamplings).
 
-         np.ndarray of shape(n_samples_train, n_resamplings)
-         Dummy array of folds containing each training sample, otherwise
+    n_features_in_: int
+        Number of features passed to the fit method.
 
-     n_features_in_: int
-         Number of features passed to the fit method.
+    n_samples_val_: List[int]
+        Number of samples passed to the fit method.
 
-     n_samples_val_: List[int]
-         Number of samples passed to the fit method.
+    References
+    ----------
+    Rina Foygel Barber, Emmanuel J. Candès,
+    Aaditya Ramdas, and Ryan J. Tibshirani.
+    "Predictive inference with the jackknife+."
+    Ann. Statist., 49(1):486–507, February 2021.
 
-     References
-     ----------
-     Rina Foygel Barber, Emmanuel J. Candès,
-     Aaditya Ramdas, and Ryan J. Tibshirani.
-     "Predictive inference with the jackknife+."
-     Ann. Statist., 49(1):486–507, February 2021.
+    Byol Kim, Chen Xu, and Rina Foygel Barber.
+    "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
+    34th Conference on Neural Information Processing Systems (NeurIPS 2020)
 
-     Examples
-     --------
-     >>> import numpy as np
-     >>> from mapie.regression import MapieRegressor
-     >>> from sklearn.linear_model import LinearRegression
-     >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
-     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-     >>> pireg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
-     >>> y_pred, y_pis = pireg.predict(X_toy, alpha=0.5)
-     >>> print(y_pis[:, :, 0])
-     [[ 4.7972973   5.8       ]
-      [ 6.69767442  7.65540541]
-      [ 8.59883721  9.58108108]
-      [10.5        11.40116279]
-      [12.4        13.30232558]
-      [14.25       15.20348837]]
-     >>> print(y_pred)
-     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
+
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.regression import MapieRegressor
+    >>> from sklearn.linear_model import LinearRegression
+    >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
+    >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
+    >>> pireg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
+    >>> y_pred, y_pis = pireg.predict(X_toy, alpha=0.5)
+    >>> print(y_pis[:, :, 0])
+    [[ 4.7972973   5.8       ]
+     [ 6.69767442  7.65540541]
+     [ 8.59883721  9.58108108]
+     [10.5        11.40116279]
+     [12.4        13.30232558]
+     [14.25       15.20348837]]
+    >>> print(y_pred)
+    [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
 
     valid_methods_ = ["naive", "base", "plus", "minmax"]
@@ -464,7 +467,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     for i, val_ind in enumerate(val_indices):
                         pred_after_resampling[val_ind, i] = predictions[i]
                         self.k_[val_ind, i] = 1
-                    check_nan_in_aposterio_prediction(pred_after_resampling)
+                    check_nan_in_aposteriori_prediction(pred_after_resampling)
 
                     y_pred = cv.aggregate_fit(pred_after_resampling)
                 else:

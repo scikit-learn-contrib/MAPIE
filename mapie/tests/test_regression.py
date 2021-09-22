@@ -515,7 +515,7 @@ def test_results_prefit() -> None:
 
 
 def test_not_enough_resamplings() -> None:
-    """Test that a warining is raised if at least one residual is nan."""
+    """Test that a warning is raised if at least one residual is nan."""
     with pytest.warns(Warning):
         mapie = MapieRegressor(
             cv=JackknifeAfterBootstrap(agg_function="mean", n_resamplings=1)
@@ -554,12 +554,7 @@ def test_invalid_randomstates() -> None:
 
 def test_default_JackknifeAfterBootstrap() -> None:
     """Test default values of Jackknife+-after-Bootstrap."""
-    cv = JackknifeAfterBootstrap(
-        agg_function="mean",
-        n_resamplings=30,
-        replace=True,
-        random_states=None,
-    )
+    cv = JackknifeAfterBootstrap(n_resamplings=30)
     assert cv.agg_function == "mean"
     assert cv.n_resamplings == 30
     assert cv.n_samples is None

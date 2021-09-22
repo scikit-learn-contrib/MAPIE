@@ -85,22 +85,6 @@ def phi2D(
     )
 
 
-def check_parameters_JackknifeAfterBoostrap(
-    agg_function: Optional[str],
-    valid_agg_functions: List[str],
-    random_states: Optional[List[int]],
-    n_resamplings: int,
-) -> None:
-    if not (agg_function in valid_agg_functions):
-        raise ValueError(
-            "Invalid aggregation function. "
-            "Allowed values are 'mean', 'median', and in the "
-            "last case 'proportiontocut' has to be between 0 and 1"
-        )
-    if (random_states is not None) and (len(random_states) != n_resamplings):
-        raise ValueError("Incoherent number of random states")
-
-
 class JackknifeAfterBootstrap:
     """
     Generate a sampling method, that resamples the training set with
@@ -158,7 +142,7 @@ class JackknifeAfterBootstrap:
         random_states: Optional[List[int]] = None,
     ) -> None:
 
-        check_parameters_JackknifeAfterBoostrap(
+        self.check_parameters_JackknifeAfterBoostrap(
             agg_function=agg_function,
             valid_agg_functions=self.valid_agg_functions_,
             random_states=random_states,
@@ -169,6 +153,24 @@ class JackknifeAfterBootstrap:
         self.n_samples = n_samples
         self.replace = replace
         self.random_states = random_states
+
+    def check_parameters_JackknifeAfterBoostrap(
+        self,
+        agg_function: Optional[str],
+        valid_agg_functions: List[str],
+        random_states: Optional[List[int]],
+        n_resamplings: int,
+    ) -> None:
+        if not (agg_function in valid_agg_functions):
+            raise ValueError(
+                "Invalid aggregation function. "
+                "Allowed values are 'mean', 'median', and in the "
+                "last case 'proportiontocut' has to be between 0 and 1"
+            )
+        if (random_states is not None) and (
+            len(random_states) != n_resamplings
+        ):
+            raise ValueError("Incoherent number of random states")
 
     def split(
         self, X: ArrayLike
@@ -256,9 +258,10 @@ class JackknifeAfterBootstrap:
                 sample
 
         Returns:
-            ArrayLike
-            Array of shape (testing set size,) of aggregated predictions for
-            each testing  sample
+        --------
+                ArrayLike
+                Array of shape (testing set size,) of aggregated predictions
+                for each testing  sample
 
         """
         if self.agg_function == "median":
@@ -527,7 +530,7 @@ def check_verbose(verbose: int) -> None:
         raise ValueError("Invalid verbose argument. Must be non-negative.")
 
 
-def check_nan_in_aposterio_prediction(X: ArrayLike) -> None:
+def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
     """
     Parameters
     ----------
