@@ -20,7 +20,7 @@ We start by using the softmax score output by the base classifier as the conform
 * First we generate a dataset with train, calibration and test, the model is fitted in the training set.
 * We set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}` the softmax output of the true class for each sample in the calibration set.
 * Then we define :math:`\hat{q}` as being the :math:`(n + 1) (\alpha) / n` previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the quantile :math:`\alpha`, but with a small sample correction). 
-* Finally, for a new test data point (where :math:`X_{n + 1}` is known but :math:`Y_{n + 1}` is not), create a prediction set :math:`T(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}` which includes all the classes with a sufficiently high softmax output.
+* Finally, for a new test data point (where :math:`X_{n + 1}` is known but :math:`Y_{n + 1}` is not), create a prediction set :math:`C(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}` which includes all the classes with a sufficiently high softmax output.
 
 We use a two-dimensional dataset with three labels. The distribution of the data is a bivariate normal with diagonal covariance matrices for each label. 
 
@@ -32,14 +32,13 @@ We use a two-dimensional dataset with three labels. The distribution of the data
     x_min, x_max, y_min, y_max, step = -6, 8, -6, 8, 0.1
     n_samples = 500
     n_classes = 3
-    alpha = [0.2, 0.1, 0.05]
     np.random.seed(42)
     X = np.vstack([
         np.random.multivariate_normal(center, cov, n_samples)
         for center, cov in zip(centers, covs)
     ])
     y = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
-    X_train, X_cal, y_train, y_cal = train_test_split(X, y, test_size=0.5)
+    X_train, X_cal, y_train, y_cal = train_test_split(X, y, test_size=0.3)
 
     xx, yy = np.meshgrid(
         np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
@@ -84,6 +83,7 @@ We then estimate the prediction sets with differents alpha values with a
    y_pred_proba_max = np.max(y_pred_proba, axis=1)
    mapie = MapieClassifier(estimator=clf, cv="prefit")
    mapie.fit(X_cal, y_cal)
+   alpha = [0.2, 0.1, 0.05]
    y_pred_mapie, y_ps_mapie = mapie.predict(X_test, alpha=alpha)
 
 
@@ -98,46 +98,13 @@ We then estimate the prediction sets with differents alpha values with a
     plt.hist(scores, bins='auto')
     i=0         
     for quantile in quantiles:
-        plt.vlines(x = quantile, ymin=0, ymax=600, color = colors[i], linestyles = 'dashed',label=f'alpha = {alphas[i]}') 
+        plt.vlines(x = quantile, ymin=0, ymax=400, color = colors[i], linestyles = 'dashed',label=f'alpha = {alphas[i]}') 
         i=i+1
     plt.title("Distribution of scores")
     plt.legend()
     plt.xlabel("scores")
     plt.ylabel("count")
     plt.show()
-
-   def plot_results(alphas, y_pred_mapie, y_ps_mapie):
-       tab10 = plt.cm.get_cmap('Purples', 4)
-       colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
-       y_pred_col = list(map(colors.get, y_pred_mapie))
-       fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
-       axs = {0: ax1, 1: ax2, 2:  ax3, 3: ax4}
-       axs[0].scatter(
-           X_test[:, 0],
-           X_test[:, 1],
-           color=y_pred_col,
-           marker='.',
-           s=10,
-           alpha=0.4
-       )
-       axs[0].set_title("Predicted labels")
-       for i, alpha in enumerate(alphas):
-           y_pi_sums = y_ps_mapie[:, :, i].sum(axis=1)
-           num_labels = axs[i+1].scatter(
-               X_test[:, 0],
-               X_test[:, 1],
-               c=y_pi_sums,
-               marker='.',
-               s=10,
-               alpha=1,
-               cmap=tab10,
-               vmin=0,
-               vmax=3
-           )
-           cbar = plt.colorbar(num_labels, ax=axs[i+1])
-           coverage= classification_coverage_score(y_pred_mapie,y_ps_mapie[:,:,i])
-           axs[i+1].set_title(f"Number of labels for alpha={alpha_}")
-       plt.show()
 
 Let's see the distribution of the scores with the calculated quantiles.
 
@@ -146,7 +113,7 @@ Let's see the distribution of the scores with the calculated quantiles.
    scores = mapie.scores_
    n = mapie.n_samples_val_
    quantiles = mapie.quantiles_ 
-   plot_scores(n, alphas, scores, quantiles)
+   plot_scores(n, alpha, scores, quantiles)
 
 .. image:: images/tuto_classification_2.jpeg
     :align: center
@@ -157,7 +124,42 @@ We will now compare the differences between the prediction sets of the different
 
 .. code-block:: python
 
-   plot_results(alphas, y_pred_mapie, y_ps_mapie)
+   def plot_results(alphas, y_pred_mapie, y_ps_mapie):
+    tab10 = plt.cm.get_cmap('Purples', 4)
+    colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
+    y_pred_col = list(map(colors.get, y_pred_mapie))
+    fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
+    axs = {0: ax1, 1: ax2, 2:  ax3, 3: ax4}
+    axs[0].scatter(
+       X_test[:, 0],
+       X_test[:, 1],
+       color=y_pred_col,
+       marker='.',
+       s=10,
+       alpha=0.4
+    )
+    axs[0].set_title("Predicted labels")
+    for i, alpha in enumerate(alphas):
+       y_pi_sums = y_ps_mapie[:, :, i].sum(axis=1)
+       num_labels = axs[i+1].scatter(
+           X_test[:, 0],
+           X_test[:, 1],
+           c=y_pi_sums,
+           marker='.',
+           s=10,
+           alpha=1,
+           cmap=tab10,
+           vmin=0,
+           vmax=3
+       )
+       cbar = plt.colorbar(num_labels, ax=axs[i+1])
+       coverage= classification_coverage_score(y_pred_mapie,y_ps_mapie[:,:,i])
+       axs[i+1].set_title(f"Number of labels for alpha={alpha_}")
+    plt.show()
+
+.. code-block:: python
+
+   plot_results(alpha, y_pred_mapie, y_ps_mapie)
 
 .. image:: images/tuto_classification_3.jpeg
     :align: center
