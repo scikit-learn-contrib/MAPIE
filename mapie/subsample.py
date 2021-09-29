@@ -1,27 +1,16 @@
-import warnings
-from inspect import signature
-from typing import (
-    Any,
-    Callable,
-    Generator,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from __future__ import annotations
+
+from typing import Any, Generator, List, Optional, Tuple
 
 import numpy as np
-from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import resample
 from sklearn.utils.validation import _num_samples
-from sklearn.model_selection import BaseCrossValidator
 
 from ._typing import ArrayLike
 
 
-class Subsample(BaseCrossValidator):
+class Subsample(BaseCrossValidator):  # type: ignore
     """
     Generate a sampling method, that resamples the training set with
     possible bootstrap. It can replace KFold as cv argument in the MAPIE
@@ -61,7 +50,8 @@ class Subsample(BaseCrossValidator):
     ) -> None:
 
         self.check_parameters_Subsample(
-            random_states=random_states, n_resamplings=n_resamplings,
+            random_states=random_states,
+            n_resamplings=n_resamplings,
         )
         self.n_resamplings = n_resamplings
         self.n_samples = n_samples
@@ -69,7 +59,9 @@ class Subsample(BaseCrossValidator):
         self.random_states = random_states
 
     def check_parameters_Subsample(
-        self, random_states: Optional[List[int]], n_resamplings: int,
+        self,
+        random_states: Optional[List[int]],
+        n_resamplings: int,
     ) -> None:
         if (random_states is not None) and (
             len(random_states) != n_resamplings
@@ -122,7 +114,12 @@ class Subsample(BaseCrossValidator):
             )
             yield train_index, test_index
 
-    def get_n_splits(self, X=None, y=None, groups=None):
+    def get_n_splits(
+        self,
+        X: Optional[ArrayLike] = None,
+        y: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+    ) -> int:
         """Returns the number of splitting iterations in the cross-validator
         Parameters
         ----------
@@ -137,4 +134,4 @@ class Subsample(BaseCrossValidator):
         n_splits : int
             Returns the number of splitting iterations in the cross-validator.
         """
-        return self.n_resamplings()
+        return self.n_resamplings

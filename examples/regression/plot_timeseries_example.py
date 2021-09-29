@@ -30,26 +30,24 @@ object for estimating the residuals breaks the theoretical guarantees of the
 Jackknife+ and CV+ methods.
 """
 import pandas as pd
-from scipy.stats import randint
+from mapie.metrics import regression_coverage_score
+from mapie.regression import MapieRegressor
 from matplotlib import pylab as plt
+from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
-from mapie.regression import MapieRegressor
-from mapie.metrics import regression_coverage_score
 
 # Load input data and feature engineering
 demand_df = pd.read_csv(
-    "../data/demand_temperature.csv",
-    parse_dates=True,
-    index_col=0
+    "../data/demand_temperature.csv", parse_dates=True, index_col=0
 )
 demand_df["Date"] = pd.to_datetime(demand_df.index)
-demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype('int64')
-demand_df["Weekday"] = demand_df.Date.dt.isocalendar().day.astype('int64')
+demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype("int64")
+demand_df["Weekday"] = demand_df.Date.dt.isocalendar().day.astype("int64")
 demand_df["Hour"] = demand_df.index.hour
 
 # Train/validation/test split
-num_test_steps = 24*7*2
+num_test_steps = 24 * 7 * 2
 demand_train = demand_df.iloc[:-num_test_steps, :].copy()
 demand_test = demand_df.iloc[-num_test_steps:, :].copy()
 X_train = demand_train.loc[:, ["Weekofyear", "Weekday", "Hour", "Temperature"]]
@@ -63,10 +61,7 @@ n_splits = 5
 tscv = TimeSeriesSplit(n_splits=n_splits)
 random_state = 59
 rf_model = RandomForestRegressor(random_state=random_state)
-rf_params = {
-    "max_depth": randint(2, 30),
-    "n_estimators": randint(10, 1e3)
-}
+rf_params = {"max_depth": randint(2, 30), "n_estimators": randint(10, 1e3)}
 cv_obj = RandomizedSearchCV(
     rf_model,
     param_distributions=rf_params,
@@ -86,17 +81,11 @@ best_est = cv_obj.best_estimator_
 # See the dedicated example in the gallery for more information.
 alpha = 0.1
 mapie = MapieRegressor(
-    best_est,
-    method="plus",
-    cv=n_splits,
-    ensemble=True,
-    n_jobs=-1
+    best_est, method="plus", cv=n_splits, agg_function="median", n_jobs=-1
 )
 mapie.fit(X_train, y_train)
 y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
-coverage = regression_coverage_score(
-    y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
-)
+coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
 width = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
 
 # Print results
@@ -110,20 +99,14 @@ fig = plt.figure(figsize=(15, 5))
 ax = fig.add_subplot(1, 1, 1)
 ax.set_ylabel("Hourly demand (GW)")
 ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
-ax.plot(
-    demand_test.index,
-    y_pred,
-    lw=2,
-    c="C2",
-    label="Predictions"
-)
+ax.plot(demand_test.index, y_pred, lw=2, c="C2", label="Predictions")
 ax.fill_between(
     demand_test.index,
     y_pis[:, 0, 0],
     y_pis[:, 1, 0],
     color="C2",
     alpha=0.2,
-    label="CV+ PIs"
+    label="CV+ PIs",
 )
 ax.legend()
 plt.show()

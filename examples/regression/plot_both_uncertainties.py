@@ -6,29 +6,27 @@ This example uses :class:`mapie.regression.MapieRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
-from typing import Tuple, Any, TypeVar, Callable
-from typing_extensions import TypedDict
-import numpy as np
+from typing import Any, Callable, Tuple, TypeVar
+
 import matplotlib.pyplot as plt
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
+import numpy as np
 from mapie.regression import MapieRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from typing_extensions import TypedDict
+
 F = TypeVar("F", bound=Callable[..., Any])
 
 
 # Functions for generating our dataset
 def x_sinx(x: np.ndarray) -> Any:
     """One-dimensional x*sin(x) function."""
-    return x*np.sin(x)
+    return x * np.sin(x)
 
 
 def get_1d_data_with_normal_distrib(
-    funct: F,
-    mu: float,
-    sigma: float,
-    n_samples: int,
-    noise: float
+    funct: F, mu: float, sigma: float, n_samples: int, noise: float
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Generate noisy 1D data with normal distribution from given function
@@ -59,12 +57,16 @@ def get_1d_data_with_normal_distrib(
     """
     np.random.seed(42)
     X_train = np.random.normal(mu, sigma, n_samples)
-    X_test = np.arange(mu - 4*sigma, mu + 4*sigma, sigma/20.)
+    X_test = np.arange(mu - 4 * sigma, mu + 4 * sigma, sigma / 20.0)
     y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
     y_train += np.random.normal(0, noise, y_train.shape[0])
     y_test += np.random.normal(0, noise, y_test.shape[0])
     return (
-        X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
+        X_train.reshape(-1, 1),
+        y_train,
+        X_test.reshape(-1, 1),
+        y_test,
+        y_mesh,
     )
 
 
@@ -79,7 +81,7 @@ degree_polyn = 10
 polyn_model = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", LinearRegression())
+        ("linear", LinearRegression()),
     ]
 )
 
@@ -93,7 +95,7 @@ STRATEGIES = {
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
-    mapie = MapieRegressor(polyn_model, ensemble=False, **params)
+    mapie = MapieRegressor(polyn_model, **params)
     mapie.fit(X_train, y_train)
     y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
@@ -109,12 +111,12 @@ def plot_1d_data(
     y_pred_low: np.ndarray,
     y_pred_up: np.ndarray,
     ax: plt.Axes,
-    title: str
+    title: str,
 ) -> None:
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_xlim([-10, 10])
-    ax.set_ylim([np.min(y_test)*1.3, np.max(y_test)*1.3])
+    ax.set_ylim([np.min(y_test) * 1.3, np.max(y_test) * 1.3])
     ax.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3)
     ax.scatter(X_train, y_train, color="red", alpha=0.3, label="Training data")
     ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
@@ -135,12 +137,12 @@ for strategy, coord in zip(STRATEGIES, coords):
         y_train.ravel(),
         X_test.ravel(),
         y_mesh.ravel(),
-        1.96*noise,
+        1.96 * noise,
         y_pred[strategy].ravel(),
         y_pis[strategy][:, 0, 0].ravel(),
         y_pis[strategy][:, 1, 0].ravel(),
         ax=coord,
-        title=strategy
+        title=strategy,
     )
 
 
@@ -149,7 +151,7 @@ ax.set_xlim([-8, 8])
 ax.set_ylim([0, 4])
 for strategy in STRATEGIES:
     ax.plot(X_test, y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0])
-ax.axhline(1.96*2*noise, ls="--", color="k")
+ax.axhline(1.96 * 2 * noise, ls="--", color="k")
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 ax.legend(list(STRATEGIES.keys()) + ["True width"], fontsize=8)

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import warnings
 from typing import Iterable, List, Optional, Tuple, Union, cast
 
-import warnings
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, RegressorMixin, clone
@@ -13,6 +13,7 @@ from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
+from .subsample import Subsample
 from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
@@ -24,7 +25,6 @@ from .utils import (
     fit_estimator,
     phi2D,
 )
-from .subsample import Subsample
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
@@ -258,7 +258,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         return estimator
 
     def _check_cv(
-        self, cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        self,
+        cv: Optional[Union[int, str, BaseCrossValidator]] = None,
     ) -> Union[str, BaseCrossValidator]:
         """
         Check if cross-validator is

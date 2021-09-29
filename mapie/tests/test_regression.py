@@ -23,40 +23,57 @@ from typing_extensions import TypedDict
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 X, y = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
-
+k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
 
 Params = TypedDict(
-    "Params", {"method": str, "cv": Optional[Union[int, KFold, Subsample]]},
+    "Params",
+    {
+        "method": str,
+        "agg_function": str,
+        "cv": Optional[Union[int, KFold, Subsample]],
+    },
 )
 STRATEGIES = {
-    "naive": Params(method="naive", cv=None),
-    "jackknife": Params(method="base", cv=-1),
-    "jackknife_plus": Params(method="plus", cv=-1),
-    "jackknife_minmax": Params(method="minmax", cv=-1),
+    "naive": Params(method="naive", agg_function="mean", cv=None),
+    "jackknife": Params(method="base", agg_function="mean", cv=-1),
+    "jackknife_plus": Params(method="plus", agg_function="mean", cv=-1),
+    "jackknife_minmax": Params(method="minmax", agg_function="mean", cv=-1),
     "cv": Params(
-        method="base", cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        method="base",
+        agg_function="mean",
+        cv=KFold(n_splits=3, shuffle=True, random_state=1),
     ),
     "cv_plus": Params(
-        method="plus", cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        method="plus",
+        agg_function="mean",
+        cv=KFold(n_splits=3, shuffle=True, random_state=1),
     ),
     "cv_minmax": Params(
-        method="minmax", cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        method="minmax",
+        agg_function="mean",
+        cv=KFold(n_splits=3, shuffle=True, random_state=1),
     ),
     "resampling_plus": Params(
         method="plus",
-        cv=Subsample(n_resamplings=30, random_states=list(range(30)),),
-        agg_function="median",
+        agg_function="mean",
+        cv=Subsample(n_resamplings=30, random_states=list(range(30))),
     ),
     "resampling_minmax": Params(
         method="minmax",
-        cv=Subsample(n_resamplings=30, random_states=list(range(30)),),
-        agg_function="median",
+        agg_function="mean",
+        cv=Subsample(
+            n_resamplings=30,
+            random_states=list(range(30)),
+        ),
     ),
     "resampling_plus_median": Params(
         method="plus",
-        cv=Subsample(n_resamplings=30, random_states=list(range(30)),),
         agg_function="median",
+        cv=Subsample(
+            n_resamplings=30,
+            random_states=list(range(30)),
+        ),
     ),
 }
 
@@ -495,9 +512,18 @@ def test_results_prefit() -> None:
 
 def test_not_enough_resamplings() -> None:
     """Test that a warning is raised if at least one residual is nan."""
-    with pytest.warns(Warning):
+    with pytest.warns(UserWarning, match=r"WARNING: at least one point of*"):
         mapie = MapieRegressor(
             cv=Subsample(n_resamplings=1), agg_function="mean"
+        )
+        mapie.fit(X, y)
+
+
+def test_no_agg_fx_specified_with_subsample() -> None:
+    """Test that a warning is raised if at least one residual is nan."""
+    with pytest.warns(Warning, match=r"WARNING: you need to specify*"):
+        mapie = MapieRegressor(
+            cv=Subsample(n_resamplings=1), agg_function=None
         )
         mapie.fit(X, y)
 
@@ -512,8 +538,34 @@ def test_invalid_randomstates() -> None:
         ValueError, match=r".*Incoherent number of random states*"
     ):
         Subsample(
-            n_resamplings=30, replace=True, random_states=[0, 1],
+            n_resamplings=30,
+            replace=True,
+            random_states=[0, 1],
         )
+
+
+def test_invalid_aggregate_all() -> None:
+    """
+    Test that wrong aggregation in MAPIE raise errors.
+    """
+    with pytest.raises(
+        AssertionError,
+        match=r".*Aggregation function called but not defined.*",
+    ):
+        mapie = MapieRegressor()
+        mapie.aggregate_all(X)
+
+
+def test_invalid_aggregate_mask() -> None:
+    """
+    Test that wrong aggregation in MAPIE raise errors.
+    """
+    with pytest.raises(
+        AssertionError,
+        match=r".*Aggregation function called but not defined.*",
+    ):
+        mapie = MapieRegressor()
+        mapie.aggregate_with_mask(X, k)
 
 
 def test_default_Subsample() -> None:
@@ -522,3 +574,9 @@ def test_default_Subsample() -> None:
     assert cv.n_resamplings == 30
     assert cv.n_samples is None
     assert cv.random_states is None
+
+
+def test_get_n_splits() -> None:
+    """Test default values of Jackknife+-after-Bootstrap."""
+    cv = Subsample(n_resamplings=30)
+    assert cv.get_n_splits() == 30

@@ -28,21 +28,20 @@ Aaditya Ramdas, and Ryan J. Tibshirani.
 "Predictive inference with the jackknife+."
 Ann. Statist., 49(1):486–507, February 2021.
 """
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import numpy as np
-from sklearn.linear_model import LinearRegression
-from matplotlib import pyplot as plt
-
-from mapie.regression import MapieRegressor
 from mapie.metrics import regression_coverage_score
+from mapie.regression import MapieRegressor
+from matplotlib import pyplot as plt
+from sklearn.linear_model import LinearRegression
 
 
 def PIs_vs_dimensions(
     strategies: Dict[str, Any],
     alpha: float,
     n_trial: int,
-    dimensions: List[int]
+    dimensions: List[int],
 ) -> Dict[str, Dict[int, Dict[str, np.ndarray]]]:
     """
     Compute the prediction intervals for a linear regression problem.
@@ -89,15 +88,17 @@ def PIs_vs_dimensions(
         strategy: {
             dimension: {
                 "coverage": np.empty(n_trial),
-                "width_mean": np.empty(n_trial)
-            } for dimension in dimensions
-        } for strategy in strategies
+                "width_mean": np.empty(n_trial),
+            }
+            for dimension in dimensions
+        }
+        for strategy in strategies
     }
     for dimension in dimensions:
         for trial in range(n_trial):
             beta = np.random.normal(size=dimension)
-            beta_norm = np.sqrt((beta**2).sum())
-            beta = beta/beta_norm*np.sqrt(SNR)
+            beta_norm = np.sqrt((beta ** 2).sum())
+            beta = beta / beta_norm * np.sqrt(SNR)
             X_train = np.random.normal(size=(n_train, dimension))
             noise_train = np.random.normal(size=n_train)
             noise_test = np.random.normal(size=n_test)
@@ -108,16 +109,16 @@ def PIs_vs_dimensions(
             for strategy, params in strategies.items():
                 mapie = MapieRegressor(
                     LinearRegression(),
-                    ensemble=True,
+                    agg_function="median",
                     n_jobs=-1,
                     **params
                 )
                 mapie.fit(X_train, y_train)
                 y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
-                results[strategy][dimension]["coverage"][trial] = (
-                    regression_coverage_score(
-                        y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
-                    )
+                results[strategy][dimension]["coverage"][
+                    trial
+                ] = regression_coverage_score(
+                    y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
                 )
                 results[strategy][dimension]["width_mean"][trial] = (
                     y_pis[:, 1, 0] - y_pis[:, 0, 0]
@@ -126,8 +127,7 @@ def PIs_vs_dimensions(
 
 
 def plot_simulation_results(
-    results: Dict[str, Dict[int, Dict[str, np.ndarray]]],
-    title: str
+    results: Dict[str, Dict[int, Dict[str, np.ndarray]]], title: str
 ) -> None:
     """
     Show the prediction interval coverages and widths as a function
@@ -149,34 +149,33 @@ def plot_simulation_results(
         dimensions = list(results[strategy].keys())
         n_dim = len(dimensions)
         coverage_mean, coverage_SE, width_mean, width_SE = (
-            np.zeros(n_dim), np.zeros(n_dim), np.zeros(n_dim), np.zeros(n_dim)
+            np.zeros(n_dim),
+            np.zeros(n_dim),
+            np.zeros(n_dim),
+            np.zeros(n_dim),
         )
         for idim, dim in enumerate(dimensions):
-            coverage_mean[idim] = (
-                results[strategy][dim]["coverage"].mean()
-            )
-            coverage_SE[idim] = (
-                results[strategy][dim]["coverage"].std()/np.sqrt(ntrial)
-            )
-            width_mean[idim] = (
-                results[strategy][dim]["width_mean"].mean()
-            )
-            width_SE[idim] = (
-                results[strategy][dim]["width_mean"].std()/np.sqrt(ntrial)
-            )
+            coverage_mean[idim] = results[strategy][dim]["coverage"].mean()
+            coverage_SE[idim] = results[strategy][dim][
+                "coverage"
+            ].std() / np.sqrt(ntrial)
+            width_mean[idim] = results[strategy][dim]["width_mean"].mean()
+            width_SE[idim] = results[strategy][dim][
+                "width_mean"
+            ].std() / np.sqrt(ntrial)
         ax1.plot(dimensions, coverage_mean, label=strategy)
         ax1.fill_between(
             dimensions,
             coverage_mean - coverage_SE,
             coverage_mean + coverage_SE,
-            alpha=0.25
+            alpha=0.25,
         )
         ax2.plot(dimensions, width_mean, label=strategy)
         ax2.fill_between(
             dimensions,
             width_mean - width_SE,
             width_mean + width_SE,
-            alpha=0.25
+            alpha=0.25,
         )
     ax1.axhline(1 - alpha, linestyle="dashed", c="k")
     ax1.set_ylim(0.0, 1.0)
@@ -192,7 +191,7 @@ def plot_simulation_results(
 STRATEGIES = {
     "naive": dict(method="naive"),
     "cv": dict(method="base", cv=5),
-    "cv_plus": dict(method="plus", cv=5)
+    "cv_plus": dict(method="plus", cv=5),
 }
 alpha = 0.1
 ntrial = 3
