@@ -32,6 +32,36 @@ STRATEGIES = {
     "cumulated_score": Params(method="cumulated_score", cv="prefit")
 }
 
+COVERAGES = {
+    "score": 7/9,
+    "cumulated_score": 9/9
+}
+
+y_toy_mapie = {
+    "score": [
+        [True, False, False],
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [False, True, False],
+        [False, True, True],
+        [False, False, True],
+        [False, False, True],
+        [False, False, True]
+    ],
+    "cumulated_score": [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, True, True],
+        [False, False, True],
+        [False, False, True]
+    ]
+}
+
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2])
 y_toy_mapie_score = [
@@ -347,23 +377,15 @@ def test_valid_prediction(alpha: Any) -> None:
     mapie.predict(X_toy, alpha=alpha)
 
 
-def test_toy_dataset_predictions() -> None:
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_toy_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     clf = GaussianNB().fit(X_toy, y_toy)
-    mapie1 = MapieClassifier(
-        estimator=clf, method="score", cv="prefit").fit(X_toy, y_toy)
-    mapie2 = MapieClassifier(
-        estimator=clf, method="cumulated_score", cv="prefit").fit(X_toy, y_toy)
-
-    _, y_ps1 = mapie1.predict(X_toy, alpha=0.2)
-    _, y_ps2 = mapie2.predict(X_toy, alpha=0.2)
-
+    mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy])
+    mapie.fit(X_toy, y_toy)
+    _, y_ps = mapie.predict(X_toy, alpha=0.2)
     np.testing.assert_allclose(
-        classification_coverage_score(y_toy, y_ps1[:, :, 0]), 7/9
+        classification_coverage_score(y_toy, y_ps[:, :, 0]),
+        COVERAGES[strategy]
     )
-    np.testing.assert_allclose(y_ps1[:, :, 0], y_toy_mapie_score)
-
-    np.testing.assert_allclose(
-        classification_coverage_score(y_toy, y_ps2[:, :, 0]), 9/9
-    )
-    np.testing.assert_allclose(y_ps2[:, :, 0], y_toy_mapie_cum_score)
+    np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
