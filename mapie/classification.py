@@ -304,7 +304,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         self.n_samples_val_ = X.shape[0]
         if self.method == "score":
             self.scores_ = np.take_along_axis(
-                y_pred, y.reshape(-1, 1), axis=1
+                1 - y_pred, y.reshape(-1, 1), axis=1
             )
         else:
             encoder = LabelBinarizer().fit(y)
@@ -371,28 +371,20 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         if alpha_ is None:
             return np.array(y_pred)
         else:
+            check_alpha_and_n_samples(alpha_, n)
+            self.quantiles_ = np.stack([
+                np.quantile(
+                    self.scores_,
+                    ((n + 1) * (1-_alpha)) / n,
+                    interpolation="lower"
+                ) for _alpha in alpha_
+            ])
             if self.method == "score":
-                check_alpha_and_n_samples(alpha_, n)
-                self.quantiles_ = np.stack([
-                    np.quantile(
-                        self.scores_,
-                        ((n + 1) * (_alpha)) / n,
-                        interpolation="lower"
-                    ) for _alpha in alpha_
-                ])
                 prediction_sets = np.stack([
-                    y_pred_proba > quantile
+                    y_pred_proba > 1 - quantile
                     for quantile in self.quantiles_
                 ], axis=2)
             else:
-                check_alpha_and_n_samples(alpha_, n)
-                self.quantiles_ = np.stack([
-                    np.quantile(
-                        self.scores_,
-                        ((n + 1) * (1-_alpha)) / n,
-                        interpolation="lower"
-                    ) for _alpha in alpha_
-                ])
                 index = np.fliplr(np.argsort(y_pred_proba, axis=1))
                 y_pred_sorted = np.take_along_axis(y_pred_proba, index, axis=1)
                 y_pred_sorted_cumsum = np.cumsum(y_pred_sorted, axis=1)
