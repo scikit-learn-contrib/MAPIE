@@ -1,14 +1,6 @@
 import warnings
 from inspect import signature
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import Any, Callable, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
@@ -42,8 +34,17 @@ def phi1D(
         Each row of B is multiply by x and then the function fun is applied.
         Typically, ``fun`` is a numpy function, with argument ``axis`` set to 1
 
+    Examples
+    --------
+    >>> import numpy as np
+    >>> x = np.array([1,2,3,4,5])
+    >>> B = np.array([1,1,1,np.nan,np.nan,np.nan,np.nan,1,1,1])
+    >>> B = B.reshape(-1, 5)
+    >>> fun = lambda x: np.nanmean(x, axis =1)
+    >>> res = phi1D(x, B, fun)
+    >>> print(res)
+    [2. 4.]
     """
-
     return fun(x * B)
 
 
@@ -69,6 +70,19 @@ def phi2D(
     phi2D(A, B, fun): ArrayLike
         Apply phi1D(x, B, fun) to each row x of A
 
+    Examples
+    --------
+    >>> import numpy as np
+    >>> A = np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
+    >>> A = A.reshape(-1,5)
+    >>> B = np.array([1,1,1,np.nan,np.nan,np.nan,np.nan,1,1,1])
+    >>> B = B.reshape(-1, 5)
+    >>> fun = lambda x: np.nanmean(x, axis =1)
+    >>> res = phi2D(A, B, fun)
+    >>> print(res)
+    [[ 2.  4.]
+     [ 7.  9.]
+     [12. 14.]]
     """
     return np.apply_along_axis(phi1D, axis=1, arr=A, B=B, fun=fun,)
 

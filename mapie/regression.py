@@ -97,6 +97,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         function is also used to aggregate the insample predictions.
         If ``None``, returns the predictions from the single estimator
         trained on the full training dataset.
+        In the case of the Jackknife+-after-Bootstrap method, if ``None``, the
+        default aggregation function to compute residauls is "mean".
         If "mean" or "median", returns the aggregation of the predictions
         computed from the out-of-folds models.
         The Jackknife+ interval can be interpreted as an interval around the
@@ -304,7 +306,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         raise ValueError(
             "Invalid cv argument. "
             "Allowed values are None, -1, int >= 2, 'prefit', "
-            "KFold, LeaveOneOut or Subsample."
+            "KFold, LeaveOneOut, or Subsample."
         )
 
     def _fit_and_predict_oof_model(
@@ -410,7 +412,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns:
         --------
-                ArrayLike
+            ArrayLike
                 Array of shape (testing set size,) of aggregated predictions
                 for each testing  sample
 

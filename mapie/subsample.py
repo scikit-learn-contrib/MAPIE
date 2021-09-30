@@ -13,8 +13,8 @@ from ._typing import ArrayLike
 class Subsample(BaseCrossValidator):  # type: ignore
     """
     Generate a sampling method, that resamples the training set with
-    possible bootstrap. It can replace KFold as cv argument in the MAPIE
-    class
+    possible bootstraps. It can replace KFold or  LeaveOneOut as cv argument
+    in the MAPIE class
 
     Parameters
     ----------
@@ -24,7 +24,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
         Number of samples in each resampling. By default None,
         the size of the training set
     replace: bool
-        Wheter to replace samples in resamplings or not
+        Whether to replace samples in resamplings or not
     random_states: Optional
         List to fix random states
 
@@ -72,7 +72,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
         self, X: ArrayLike
     ) -> Generator[Tuple[Any, ArrayLike], None, None]:
         """
-        Generate indices to split data into training and test set.
+        Generate indices to split data into training and test sets.
 
         Parameters
         ----------
@@ -120,15 +120,19 @@ class Subsample(BaseCrossValidator):  # type: ignore
         y: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
     ) -> int:
+
         """Returns the number of splitting iterations in the cross-validator
         Parameters
         ----------
         X : object
-            Always ignored, exists for compatibility.
+            Always ignored, exists for compatibility with BaseCrossValidator
+            object.
         y : object
-            Always ignored, exists for compatibility.
+            Always ignored, exists for compatibility with BaseCrossValidator
+            object.
         groups : object
-            Always ignored, exists for compatibility.
+            Always ignored, exists for compatibility with BaseCrossValidator
+            object.
         Returns
         -------
         n_splits : int

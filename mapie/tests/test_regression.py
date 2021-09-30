@@ -35,7 +35,7 @@ Params = TypedDict(
     },
 )
 STRATEGIES = {
-    "naive": Params(method="naive", agg_function="mean", cv=None),
+    "naive": Params(method="naive", agg_function="median", cv=None),
     "jackknife": Params(method="base", agg_function="mean", cv=-1),
     "jackknife_plus": Params(method="plus", agg_function="mean", cv=-1),
     "jackknife_minmax": Params(method="minmax", agg_function="mean", cv=-1),
@@ -62,18 +62,12 @@ STRATEGIES = {
     "resampling_minmax": Params(
         method="minmax",
         agg_function="mean",
-        cv=Subsample(
-            n_resamplings=30,
-            random_states=list(range(30)),
-        ),
+        cv=Subsample(n_resamplings=30, random_states=list(range(30)),),
     ),
     "resampling_plus_median": Params(
         method="plus",
         agg_function="median",
-        cv=Subsample(
-            n_resamplings=30,
-            random_states=list(range(30)),
-        ),
+        cv=Subsample(n_resamplings=30, random_states=list(range(30)),),
     ),
 }
 
@@ -116,6 +110,7 @@ def test_initialized() -> None:
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie = MapieRegressor()
+    assert mapie.agg_function is None
     assert mapie.estimator is None
     assert mapie.method == "plus"
     assert mapie.cv is None
@@ -325,7 +320,7 @@ def test_prediction_ensemble(
     Test that predictions differ when agg_function if None/"mean",
     but not prediction intervals.
     """
-    mapie = MapieRegressor(method=method, cv=cv, agg_function="mean")
+    mapie = MapieRegressor(method=method, cv=cv, agg_function="median")
     mapie.fit(X, y)
     y_pred_1, y_pis_1 = mapie.predict(X, alpha=alpha)
     mapie.agg_function = None
@@ -528,22 +523,6 @@ def test_no_agg_fx_specified_with_subsample() -> None:
         mapie.fit(X, y)
 
 
-def test_invalid_randomstates() -> None:
-    """
-    Test that wrong list of random states in Subsample
-    class raise errors.
-    """
-
-    with pytest.raises(
-        ValueError, match=r".*Incoherent number of random states*"
-    ):
-        Subsample(
-            n_resamplings=30,
-            replace=True,
-            random_states=[0, 1],
-        )
-
-
 def test_invalid_aggregate_all() -> None:
     """
     Test that wrong aggregation in MAPIE raise errors.
@@ -566,17 +545,3 @@ def test_invalid_aggregate_mask() -> None:
     ):
         mapie = MapieRegressor()
         mapie.aggregate_with_mask(X, k)
-
-
-def test_default_Subsample() -> None:
-    """Test default values of Jackknife+-after-Bootstrap."""
-    cv = Subsample(n_resamplings=30)
-    assert cv.n_resamplings == 30
-    assert cv.n_samples is None
-    assert cv.random_states is None
-
-
-def test_get_n_splits() -> None:
-    """Test default values of Jackknife+-after-Bootstrap."""
-    cv = Subsample(n_resamplings=30)
-    assert cv.get_n_splits() == 30
