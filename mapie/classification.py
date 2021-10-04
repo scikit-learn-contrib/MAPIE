@@ -109,6 +109,15 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     "Least Ambiguous Set-Valued Classifiers with Bounded Error Levels",
     Journal of the American Statistical Association, 114, 2019.
 
+    Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
+    "Classification with Valid and Adaptive Coverage."
+    NeurIPS 202 (spotlight).
+
+    Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
+    and Jitendra Malik.
+    "Uncertainty Sets for Image Classifiers using Conformal Prediction."
+    International Conference on Learning Representations 2021.
+
     Examples
     --------
     >>> import numpy as np

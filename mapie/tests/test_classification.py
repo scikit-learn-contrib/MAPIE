@@ -64,29 +64,6 @@ y_toy_mapie = {
 
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2])
-# y_toy_mapie_score = [
-#     [True, False, False],
-#     [True, False, False],
-#     [True, False, False],
-#     [True, True, False],
-#     [False, True, False],
-#     [False, True, True],
-#     [False, False, True],
-#     [False, False, True],
-#     [False, False, True]
-# ]
-
-# y_toy_mapie_cum_score = [
-#     [True, False, False],
-#     [True, True, False],
-#     [True, True, False],
-#     [True, True, False],
-#     [True, True, False],
-#     [False, True, True],
-#     [False, True, True],
-#     [False, True, True],
-#     [False, False, True]
-# ]
 
 n_classes = 4
 X, y = make_classification(

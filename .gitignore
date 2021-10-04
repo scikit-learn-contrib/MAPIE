@@ -7,12 +7,9 @@ __pycache__/
 *.so
 
 # documentation specific
-doc/_static/
 doc/_build/
-doc/_templates/
 doc/examples_classification/
 doc/examples_regression/
-doc/_templates/
 doc/auto_examples/
 doc/modules/generated/
 doc/datasets/generated/
@@ -74,6 +71,3 @@ target/
 
 # VSCode
 .vscode
-
-# old
-old/
