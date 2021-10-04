@@ -44,8 +44,6 @@ from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
 import matplotlib.pyplot as plt
 
-from ._typing import ArrayLike
-
 centers = [(0, 3.5), (-2, 0), (2, 0)]
 covs = [np.eye(2), np.eye(2)*2, np.diag([5, 1])]
 x_min, x_max, y_min, y_max, step = -6, 8, -6, 8, 0.1
@@ -113,9 +111,9 @@ for method in methods:
 # - y_ps_mapie: the prediction sets with mapie.
 
 def plot_scores(
-    alphas: ArrayLike,
-    scores: ArrayLike,
-    quantiles: ArrayLike,
+    alphas: list,
+    scores: np.ndarray,
+    quantiles: np.ndarray,
     method: str,
     ax: plt.Axes
 ) -> None:
@@ -139,7 +137,7 @@ def plot_scores(
 
 
 def plot_result(
-    alphas: ArrayLike, y_pred_mapie: np.ndarray, y_ps_mapie: np.ndarray
+    alphas: list, y_pred_mapie: np.ndarray, y_ps_mapie: np.ndarray
 ) -> None:
     tab10 = plt.cm.get_cmap('Purples', 4)
     colors = {
@@ -184,7 +182,7 @@ for i, method in enumerate(methods):
     scores = mapie[method].scores_
     n = mapie[method].n_samples_val_
     quantiles = mapie[method].quantiles_
-    plot_scores(n, alpha, scores, quantiles, method, axs[i])
+    plot_scores(alpha, scores, quantiles, method, axs[i])
 plt.show()
 
 ##############################################################################
@@ -232,3 +230,4 @@ for method in methods:
 axs[2].set_xlabel("1 - alpha")
 axs[2].set_ylabel("Average size of prediction sets")
 axs[2].legend()
+plt.show()
