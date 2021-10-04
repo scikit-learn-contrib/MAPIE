@@ -9,6 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
+from sklearn.preprocessing import LabelBinarizer
 
 from ._typing import ArrayLike
 from .utils import (
@@ -45,8 +46,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set.
         - "cumulated_score", based on the sum of the softmax outputs of the
-          labels until the true label is reached, on the calibration set
-          (to be implemented).
+          labels until the true label is reached, on the calibration set.
 
           By default "score".
 
@@ -304,14 +304,18 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         self.n_samples_val_ = X.shape[0]
         if self.method == "score":
             self.scores_ = np.take_along_axis(
-                y_pred, y.reshape(-1, 1), axis=1
+                1 - y_pred, y.reshape(-1, 1), axis=1
             )
         else:
-            # y_true_sorted = 
+            encoder = LabelBinarizer().fit(y)
+            y_true = encoder.transform(y)
+            index = np.fliplr(np.argsort(y_pred, axis=1))
+            y_pred_sorted = np.take_along_axis(y_pred, index, axis=1)
+            y_true_sorted = np.take_along_axis(y_true, index, axis=1)
+            y_pred_sorted_cumsum = np.cumsum(y_pred_sorted, axis=1)
+            cutoff = encoder.inverse_transform(y_true_sorted)
             self.scores_ = np.take_along_axis(
-                np.cumsum(-np.sort(-y_pred), axis=1),
-                np.where(np.argsort(-y_pred) == y[:, None])[1],
-                axis=1
+                y_pred_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
             )
         return self
 
@@ -371,38 +375,30 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             self.quantiles_ = np.stack([
                 np.quantile(
                     self.scores_,
-                    ((n + 1) * (_alpha)) / n,
+                    ((n + 1) * (1 - _alpha)) / n,
                     interpolation="lower"
                 ) for _alpha in alpha_
             ])
             if self.method == "score":
                 prediction_sets = np.stack([
-                    y_pred_proba > (quantile)
+                    y_pred_proba > 1 - quantile
                     for quantile in self.quantiles_
                 ], axis=2)
             else:
-                # sort probabilies by descending order
-                y_pred_sorted = -np.sort(-y_pred_proba)
-                # get corresponding order of classes
-                y_pred_sorted_classes = np.argsort(-y_pred_proba)
-                # compute number of classes to include in prediction sets
-                num_classes_sorted = np.stack([
-                    np.cumsum(y_pred_sorted, axis=1) <= (quantile)
-                    for quantile in self.quantiles_
-                ], axis=2).sum(axis=1) + 1
-                # get corresponding classes
-                prediction_sets_int = np.array([
-                    [
-                        pred[:num_classes_sorted[j, i]]
-                        for i, _ in enumerate(self.quantiles_)
-                    ] for j, pred in enumerate(y_pred_sorted_classes)
+                index = np.fliplr(np.argsort(y_pred_proba, axis=1))
+                y_pred_sorted = np.take_along_axis(y_pred_proba, index, axis=1)
+                y_pred_sorted_cumsum = np.hstack([
+                    np.zeros((X.shape[0], 1)),
+                    np.cumsum(y_pred_sorted, axis=1)
                 ])
-                # convert to boolean table
-                y_pred_labels = np.tile(np.arange(3), (y_pred.shape[0], 1))
+                y_preds_sorted = np.stack([
+                    np.invert(y_pred_sorted_cumsum > quantile)[:, :-1]
+                    for quantile in self.quantiles_
+                ], axis=2)
                 prediction_sets = np.stack([
-                    [
-                        np.in1d(pred_labels, prediction_sets_int[i, j])
-                        for i, pred_labels in enumerate(y_pred_labels)
-                    ] for j, _ in enumerate(self.quantiles_)
+                    np.take_along_axis(
+                        y_preds_sorted[:, :, i], index, axis=1
+                    )
+                    for i, _ in enumerate(self.quantiles_)
                 ], axis=2)
             return y_pred, prediction_sets

@@ -32,19 +32,61 @@ STRATEGIES = {
     "cumulated_score": Params(method="cumulated_score", cv="prefit")
 }
 
+COVERAGES = {
+    "score": 7/9,
+    "cumulated_score": 9/9
+}
+
+y_toy_mapie = {
+    "score": [
+        [True, False, False],
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [False, True, False],
+        [False, True, True],
+        [False, False, True],
+        [False, False, True],
+        [False, False, True]
+    ],
+    "cumulated_score": [
+        [True, True, False],
+        [True, True, False],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [False, True, True],
+        [False, True, True]
+    ]
+}
+
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2])
-y_toy_mapie = [
-    [True, False, False],
-    [True, False, False],
-    [True, False, False],
-    [True, True, False],
-    [False, True, False],
-    [False, True, True],
-    [False, False, True],
-    [False, False, True],
-    [False, False, True]
-]
+# y_toy_mapie_score = [
+#     [True, False, False],
+#     [True, False, False],
+#     [True, False, False],
+#     [True, True, False],
+#     [False, True, False],
+#     [False, True, True],
+#     [False, False, True],
+#     [False, False, True],
+#     [False, False, True]
+# ]
+
+# y_toy_mapie_cum_score = [
+#     [True, False, False],
+#     [True, True, False],
+#     [True, True, False],
+#     [True, True, False],
+#     [True, True, False],
+#     [False, True, True],
+#     [False, True, True],
+#     [False, True, True],
+#     [False, False, True]
+# ]
 
 n_classes = 4
 X, y = make_classification(
@@ -54,6 +96,35 @@ X, y = make_classification(
     n_classes=n_classes,
     random_state=1
 )
+
+
+class CumulatedscoreClassifier:
+
+    def __init__(self) -> None:
+        self.X_calib = np.array([0, 1, 2]).reshape(-1, 1)
+        self.y_calib = np.array([0, 1, 2])
+        self.y_calib_scores = np.array([[0.9], [0.6], [1.0]])
+        self.X_test = np.array([3, 4, 5]).reshape(-1, 1)
+        self.y_pred_sets = np.array(
+            [[False, True, False], [False, False, True], [True, True, False]]
+        )
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> CumulatedscoreClassifier:
+        self.fitted_ = True
+        return self
+
+    def predict(self, X: np.ndarray) -> np.ndarray():
+        return np.array([1, 2, 1])
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray():
+        if np.max(X) <= 2:
+            return np.array(
+                [[0.4, 0.5, 0.1], [0.2, 0.6, 0.2], [0.6, 0.3, 0.1]]
+            )
+        else:
+            return np.array(
+                [[0.2, 0.7, 0.1], [0.1, 0.2, 0.7], [0.3, 0.5, 0.2]]
+            )
 
 
 def test_initialized() -> None:
@@ -335,12 +406,31 @@ def test_valid_prediction(alpha: Any) -> None:
     mapie.predict(X_toy, alpha=alpha)
 
 
-def test_toy_dataset_predictions() -> None:
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_toy_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     clf = GaussianNB().fit(X_toy, y_toy)
-    mapie = MapieClassifier(estimator=clf, cv="prefit").fit(X_toy, y_toy)
+    mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy])
+    mapie.fit(X_toy, y_toy)
     _, y_ps = mapie.predict(X_toy, alpha=0.2)
     np.testing.assert_allclose(
-        classification_coverage_score(y_toy, y_ps[:, :, 0]), 7/9
+        classification_coverage_score(y_toy, y_ps[:, :, 0]),
+        COVERAGES[strategy]
     )
-    np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie)
+    np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
+
+
+def test_cumulated_scores() -> None:
+    """Test cumulated score method on a tiny dataset."""
+    alpha = [0.65]
+    quantile = [0.6]
+    # fit
+    cumclf = CumulatedscoreClassifier()
+    cumclf.fit(cumclf.X_calib, cumclf.y_calib)
+    mapie = MapieClassifier(cumclf, method="cumulated_score", cv="prefit")
+    mapie.fit(cumclf.X_calib, cumclf.y_calib)
+    np.testing.assert_allclose(mapie.scores_, cumclf.y_calib_scores)
+    # predict
+    y_pred, y_ps = mapie.predict(cumclf.X_test, alpha=alpha)
+    np.testing.assert_allclose(mapie.quantiles_, quantile)
+    np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
