@@ -9,6 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
+from sklearn.preprocessing import LabelBinarizer
 
 from ._typing import ArrayLike
 from .utils import (
@@ -45,8 +46,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set.
         - "cumulated_score", based on the sum of the softmax outputs of the
-          labels until the true label is reached, on the calibration set
-          (to be implemented).
+          labels until the true label is reached, on the calibration set.
 
           By default "score".
 
@@ -109,6 +109,15 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     "Least Ambiguous Set-Valued Classifiers with Bounded Error Levels",
     Journal of the American Statistical Association, 114, 2019.
 
+    Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
+    "Classification with Valid and Adaptive Coverage."
+    NeurIPS 202 (spotlight).
+
+    Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
+    and Jitendra Malik.
+    "Uncertainty Sets for Image Classifiers using Conformal Prediction."
+    International Conference on Learning Representations 2021.
+
     Examples
     --------
     >>> import numpy as np
@@ -132,7 +141,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     """
 
     valid_methods_ = [
-        "score"
+        "score",
+        "cumulated_score"
     ]
 
     def __init__(
@@ -161,7 +171,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         if self.method not in self.valid_methods_:
             raise ValueError(
                 "Invalid method. "
-                "Allowed values are 'score'."
+                "Allowed values are 'score' or 'cumulated_score'."
             )
 
         check_n_jobs(self.n_jobs)
@@ -301,9 +311,21 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         self.single_estimator_ = estimator
         y_pred = self.single_estimator_.predict_proba(X)
         self.n_samples_val_ = X.shape[0]
-        self.scores_ = np.take_along_axis(
-            y_pred, y.reshape(-1, 1), axis=1
-        )
+        if self.method == "score":
+            self.scores_ = np.take_along_axis(
+                1 - y_pred, y.reshape(-1, 1), axis=1
+            )
+        else:
+            encoder = LabelBinarizer().fit(y)
+            y_true = encoder.transform(y)
+            index = np.fliplr(np.argsort(y_pred, axis=1))
+            y_pred_sorted = np.take_along_axis(y_pred, index, axis=1)
+            y_true_sorted = np.take_along_axis(y_true, index, axis=1)
+            y_pred_sorted_cumsum = np.cumsum(y_pred_sorted, axis=1)
+            cutoff = encoder.inverse_transform(y_true_sorted)
+            self.scores_ = np.take_along_axis(
+                y_pred_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
+            )
         return self
 
     def predict(
@@ -362,12 +384,30 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             self.quantiles_ = np.stack([
                 np.quantile(
                     self.scores_,
-                    ((n + 1) * (_alpha)) / n,
+                    ((n + 1) * (1 - _alpha)) / n,
                     interpolation="lower"
                 ) for _alpha in alpha_
             ])
-            prediction_sets = np.stack([
-                y_pred_proba > (quantile)
-                for quantile in self.quantiles_
-            ], axis=2)
+            if self.method == "score":
+                prediction_sets = np.stack([
+                    y_pred_proba > 1 - quantile
+                    for quantile in self.quantiles_
+                ], axis=2)
+            else:
+                index = np.fliplr(np.argsort(y_pred_proba, axis=1))
+                y_pred_sorted = np.take_along_axis(y_pred_proba, index, axis=1)
+                y_pred_sorted_cumsum = np.hstack([
+                    np.zeros((X.shape[0], 1)),
+                    np.cumsum(y_pred_sorted, axis=1)
+                ])
+                y_preds_sorted = np.stack([
+                    np.invert(y_pred_sorted_cumsum > quantile)[:, :-1]
+                    for quantile in self.quantiles_
+                ], axis=2)
+                prediction_sets = np.stack([
+                    np.take_along_axis(
+                        y_preds_sorted[:, :, i], index, axis=1
+                    )
+                    for i, _ in enumerate(self.quantiles_)
+                ], axis=2)
             return y_pred, prediction_sets
