@@ -38,7 +38,12 @@
 # Journal of the American Statistical Association, 114:525, 223-234, 2019.
 
 import numpy as np
+from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
+from mapie.classification import MapieClassifier
+from mapie.metrics import classification_coverage_score
+import matplotlib.pyplot as plt
+
 centers = [(0, 3.5), (-2, 0), (2, 0)]
 covs = [np.eye(2), np.eye(2)*2, np.diag([5, 1])]
 x_min, x_max, y_min, y_max, step = -6, 8, -6, 8, 0.1
@@ -61,7 +66,6 @@ X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 ##############################################################################
 # Let's see our training data
 
-import matplotlib.pyplot as plt
 colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
 y_train_col = list(map(colors.get, y_train))
 fig = plt.figure()
@@ -86,9 +90,6 @@ plt.show()
 # We then estimate the prediction sets with differents alpha values with a
 # ``fit`` and ``predict`` process.
 
-from sklearn.naive_bayes import GaussianNB
-from mapie.classification import MapieClassifier
-from mapie.metrics import classification_coverage_score
 clf = GaussianNB().fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
@@ -109,7 +110,7 @@ for method in methods:
 # - y_pred_mapie: represents the prediction in the test set with the estimator.
 # - y_ps_mapie: the prediction sets with mapie.
 
-def plot_scores(n, alphas, scores, quantiles, method, ax): 
+def plot_scores(n, alphas, scores, quantiles, method, ax):
     colors = {0: '#1f77b4', 1: '#ff7f0e', 2: '#2ca02c'}
     ax.hist(scores, bins='auto')
     i = 0
@@ -132,7 +133,7 @@ def plot_scores(n, alphas, scores, quantiles, method, ax):
 def plot_result(alphas, y_pred_mapie, y_ps_mapie):
     tab10 = plt.cm.get_cmap('Purples', 4)
     colors = {
-        0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728", 4:"#c896af",
+        0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728", 4: "#c896af",
         5: "#94a98a", 6: "#8a94a9", 7: "#a99f8a", 8: "#1e1b16", 9: "#4a4336"
     }
     y_pred_col = list(map(colors.get, y_pred_mapie))
@@ -160,7 +161,7 @@ def plot_result(alphas, y_pred_mapie, y_ps_mapie):
             vmin=0,
             vmax=3
         )
-        cbar = plt.colorbar(num_labels, ax=axs[i+1])
+        plt.colorbar(num_labels, ax=axs[i+1])
         axs[i+1].set_title(f"Number of labels for alpha={alpha_}")
     plt.show()
     fig.savefig('doc/images/tuto_classification_3.jpeg')
@@ -222,4 +223,3 @@ for method in methods:
 axs[2].set_xlabel("1 - alpha")
 axs[2].set_ylabel("Average size of prediction sets")
 axs[2].legend()
-
