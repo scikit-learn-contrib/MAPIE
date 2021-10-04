@@ -111,7 +111,7 @@ for method in methods:
 # - y_ps_mapie: the prediction sets with mapie.
 
 def plot_scores(
-    alphas: list,
+    alphas: list[float],
     scores: np.ndarray,
     quantiles: np.ndarray,
     method: str,
@@ -137,7 +137,7 @@ def plot_scores(
 
 
 def plot_result(
-    alphas: list, y_pred_mapie: np.ndarray, y_ps_mapie: np.ndarray
+    alphas: list[float], y_pred_mapie: np.ndarray, y_ps_mapie: np.ndarray
 ) -> None:
     tab10 = plt.cm.get_cmap('Purples', 4)
     colors = {
