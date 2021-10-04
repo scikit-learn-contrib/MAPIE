@@ -44,6 +44,8 @@ from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
 import matplotlib.pyplot as plt
 
+from ._typing import ArrayLike
+
 centers = [(0, 3.5), (-2, 0), (2, 0)]
 covs = [np.eye(2), np.eye(2)*2, np.diag([5, 1])]
 x_min, x_max, y_min, y_max, step = -6, 8, -6, 8, 0.1
@@ -110,7 +112,13 @@ for method in methods:
 # - y_pred_mapie: represents the prediction in the test set with the estimator.
 # - y_ps_mapie: the prediction sets with mapie.
 
-def plot_scores(n, alphas, scores, quantiles, method, ax):
+def plot_scores(
+    alphas: ArrayLike,
+    scores: ArrayLike,
+    quantiles: ArrayLike,
+    method: str,
+    ax: plt.Axes
+) -> None:
     colors = {0: '#1f77b4', 1: '#ff7f0e', 2: '#2ca02c'}
     ax.hist(scores, bins='auto')
     i = 0
@@ -130,7 +138,9 @@ def plot_scores(n, alphas, scores, quantiles, method, ax):
     ax.set_ylabel("count")
 
 
-def plot_result(alphas, y_pred_mapie, y_ps_mapie):
+def plot_result(
+    alphas: ArrayLike, y_pred_mapie: np.ndarray, y_ps_mapie: np.ndarray
+) -> None:
     tab10 = plt.cm.get_cmap('Purples', 4)
     colors = {
         0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728", 4: "#c896af",
@@ -164,7 +174,6 @@ def plot_result(alphas, y_pred_mapie, y_ps_mapie):
         plt.colorbar(num_labels, ax=axs[i+1])
         axs[i+1].set_title(f"Number of labels for alpha={alpha_}")
     plt.show()
-    fig.savefig('doc/images/tuto_classification_3.jpeg')
 
 ##############################################################################
 # Let's see the distribution of the scores with the calculated quantiles.
