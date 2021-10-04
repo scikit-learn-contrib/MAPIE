@@ -9,6 +9,7 @@ and "cumulated_score" on the two-dimensional dataset presented
 by Sadinle et al. (2019).
 """
 
+##############################################################################
 # We will use MAPIE to estimate a prediction set of several classes such that
 # the probability that the true label of a new test point is included in the
 # prediction set is always higher than the target confidence level :
@@ -132,7 +133,7 @@ def plot_scores(
             label=f'alpha = {alphas[i]}'
         )
         i = i + 1
-    ax.set_title(f"Distribution of scores for {method}")
+    ax.set_title(f"Distribution of scores for '{method}' method")
     ax.legend()
     ax.set_xlabel("scores")
     ax.set_ylabel("count")
