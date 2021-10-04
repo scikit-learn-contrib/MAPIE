@@ -65,9 +65,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - integer, to specify the number of folds.
           If equal to -1, equivalent to
           ``sklearn.model_selection.LeaveOneOut()``.
-        - CV splitter: ``sklearn.model_selection.LeaveOneOut()`` (jackknife
-        variants), ``sklearn.model_selection.KFold()`` (cross-validation
-        variants) or ``subsample.Subsample`` object (bootstrap variant)
+        - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
+          Main variants are:
+            - ``sklearn.model_selection.LeaveOneOut`` (jackknife)
+            - ``sklearn.model_selection.KFold`` (cross-validation)
+            - ``subsample.Subsample`` object (bootstrap)
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
@@ -97,8 +99,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         function is also used to aggregate the insample predictions.
         If ``None``, returns the predictions from the single estimator
         trained on the full training dataset.
-        In the case of the Jackknife+-after-Bootstrap method, if ``None``, the
-        default aggregation function to compute residauls is "mean".
+        When the cross-validation strategy is Subsample (e.g. for the
+        Jackknife+-after-Bootstrap method), if ``None``, the
+        default aggregation function to compute residuals is "mean".
         If "mean" or "median", returns the aggregation of the predictions
         computed from the out-of-folds models.
         The Jackknife+ interval can be interpreted as an interval around the
@@ -260,8 +263,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         return estimator
 
     def _check_cv(
-        self,
-        cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        self, cv: Optional[Union[int, str, BaseCrossValidator]] = None,
     ) -> Union[str, BaseCrossValidator]:
         """
         Check if cross-validator is
@@ -390,7 +392,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return np.nanmedian(x, axis=1)
         elif self.agg_function == "mean":
             return np.nanmean(x, axis=1)
-        raise AssertionError("Aggregation function called but not defined.")
+        raise ValueError("Aggregation function called but not defined.")
 
     def aggregate_with_mask(self, x: ArrayLike, k: ArrayLike) -> ArrayLike:
         """
@@ -422,7 +424,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         elif self.agg_function == "mean":
             K = np.where(np.isnan(k), 0.0, k)
             return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
-        raise AssertionError("Aggregation function called but not defined.")
+        raise ValueError("Aggregation function called but not defined.")
 
     def fit(
         self,

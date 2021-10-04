@@ -115,14 +115,12 @@ def PIs_vs_dimensions(
                 )
                 mapie.fit(X_train, y_train)
                 y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
-                results[strategy][dimension]["coverage"][
-                    trial
-                ] = regression_coverage_score(
+                coverage = regression_coverage_score(
                     y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
                 )
-                results[strategy][dimension]["width_mean"][trial] = (
-                    y_pis[:, 1, 0] - y_pis[:, 0, 0]
-                ).mean()
+                results[strategy][dimension]["coverage"][trial] = coverage
+                width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
+                results[strategy][dimension]["width_mean"][trial] = width_mean
     return results
 
 
@@ -148,21 +146,18 @@ def plot_simulation_results(
     for strategy in results:
         dimensions = list(results[strategy].keys())
         n_dim = len(dimensions)
-        coverage_mean, coverage_SE, width_mean, width_SE = (
-            np.zeros(n_dim),
-            np.zeros(n_dim),
-            np.zeros(n_dim),
-            np.zeros(n_dim),
-        )
+        coverage_mean = np.zeros(n_dim)
+        coverage_SE = np.zeros(n_dim)
+        width_mean = np.zeros(n_dim)
+        width_SE = np.zeros(n_dim)
+
         for idim, dim in enumerate(dimensions):
-            coverage_mean[idim] = results[strategy][dim]["coverage"].mean()
-            coverage_SE[idim] = results[strategy][dim][
-                "coverage"
-            ].std() / np.sqrt(ntrial)
-            width_mean[idim] = results[strategy][dim]["width_mean"].mean()
-            width_SE[idim] = results[strategy][dim][
-                "width_mean"
-            ].std() / np.sqrt(ntrial)
+            coverage = results[strategy][dim]["coverage"]
+            coverage_mean[idim] = coverage.mean()
+            coverage_SE[idim] = coverage.std() / np.sqrt(ntrial)
+            width_mean = results[strategy][dim]["width_mean"]
+            width_mean[idim] = width_mean.mean()
+            width_SE[idim] = width_mean.std() / np.sqrt(ntrial)
         ax1.plot(dimensions, coverage_mean, label=strategy)
         ax1.fill_between(
             dimensions,
