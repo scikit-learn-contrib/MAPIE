@@ -528,8 +528,7 @@ def test_invalid_aggregate_all() -> None:
     Test that wrong aggregation in MAPIE raise errors.
     """
     with pytest.raises(
-        AssertionError,
-        match=r".*Aggregation function called but not defined.*",
+        ValueError, match=r".*Aggregation function called but not defined.*",
     ):
         mapie = MapieRegressor()
         mapie.aggregate_all(X)
@@ -540,8 +539,7 @@ def test_invalid_aggregate_mask() -> None:
     Test that wrong aggregation in MAPIE raise errors.
     """
     with pytest.raises(
-        AssertionError,
-        match=r".*Aggregation function called but not defined.*",
+        ValueError, match=r".*Aggregation function called but not defined.*",
     ):
         mapie = MapieRegressor()
         mapie.aggregate_with_mask(X, k)

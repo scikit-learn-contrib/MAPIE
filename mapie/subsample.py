@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 from typing import Any, Generator, List, Optional, Tuple
 
 import numpy as np
@@ -50,8 +49,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
     ) -> None:
 
         self.check_parameters_Subsample(
-            random_states=random_states,
-            n_resamplings=n_resamplings,
+            random_states=random_states, n_resamplings=n_resamplings,
         )
         self.n_resamplings = n_resamplings
         self.n_samples = n_samples
@@ -59,9 +57,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
         self.random_states = random_states
 
     def check_parameters_Subsample(
-        self,
-        random_states: Optional[List[int]],
-        n_resamplings: int,
+        self, random_states: Optional[List[int]], n_resamplings: int,
     ) -> None:
         if (random_states is not None) and (
             len(random_states) != n_resamplings

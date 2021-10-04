@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.DS_Store
 
 # C extensions
 *.so
@@ -11,6 +12,8 @@ doc/_build/
 doc/auto_examples/
 doc/modules/generated/
 doc/datasets/generated/
+doc/examples_regression/
+doc/examples_classification/
 
 # Distribution / packaging
 

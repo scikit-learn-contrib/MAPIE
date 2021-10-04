@@ -155,9 +155,9 @@ def plot_simulation_results(
             coverage = results[strategy][dim]["coverage"]
             coverage_mean[idim] = coverage.mean()
             coverage_SE[idim] = coverage.std() / np.sqrt(ntrial)
-            width_mean = results[strategy][dim]["width_mean"]
-            width_mean[idim] = width_mean.mean()
-            width_SE[idim] = width_mean.std() / np.sqrt(ntrial)
+            width = results[strategy][dim]["width_mean"]
+            width_mean[idim] = width.mean()
+            width_SE[idim] = width.std() / np.sqrt(ntrial)
         ax1.plot(dimensions, coverage_mean, label=strategy)
         ax1.fill_between(
             dimensions,
