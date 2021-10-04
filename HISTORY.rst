@@ -2,6 +2,13 @@
 History
 =======
 
+0.3.1 (XXXX-XX-XX)
+------------------
+
+* Add Jackknife+-after-Bootstrap method and add mean and median as aggregation functions
+* Add "cumulative_score" method in MapieClassifier
+
+
 0.3.0 (2021-09-10)
 ------------------
 

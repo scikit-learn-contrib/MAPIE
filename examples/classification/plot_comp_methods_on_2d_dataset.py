@@ -1,7 +1,7 @@
 """
-====================================================
-Comparing prediction sets on two-dimensional dataset
-====================================================
+======================================================
+Comparing prediction sets on a two-dimensional dataset
+======================================================
 
 In this tutorial, we compare the prediction sets estimated by
 :class:`mapie.classification.MapieClassifier` with the "score"
@@ -17,15 +17,19 @@ by Sadinle et al. (2019).
 # We start by using the softmax score output by the base classifier as the
 # conformity score on a toy two-dimensional dataset. We estimate the
 # prediction sets as follows :
+#
 # * First we generate a dataset with train, calibration and test, the model
 # is fitted in the training set.
+#
 # * We set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}`
 # from the softmax utput of the true class or the cumulated score
 # (by decreasing order) for each sample in the calibration set.
+#
 # * Then we define :math:`\hat{q}` as being the
 # :math:`(n + 1) (1 - \alpha) / n`
 # previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the
 # quantile :math:`\alpha`, but with a small sample correction).
+#
 # * Finally, for a new test data point (where :math:`X_{n + 1}` is known but
 # :math:`Y_{n + 1}` is not), create a prediction set
 # :math:`C(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}` which includes
