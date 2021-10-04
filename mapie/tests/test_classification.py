@@ -113,10 +113,10 @@ class CumulatedscoreClassifier:
         self.fitted_ = True
         return self
 
-    def predict(self, X: np.ndarray) -> np.ndarray():
+    def predict(self, X: np.ndarray) -> np.ndarray:
         return np.array([1, 2, 1])
 
-    def predict_proba(self, X: np.ndarray) -> np.ndarray():
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
         if np.max(X) <= 2:
             return np.array(
                 [[0.4, 0.5, 0.1], [0.2, 0.6, 0.2], [0.6, 0.3, 0.1]]
