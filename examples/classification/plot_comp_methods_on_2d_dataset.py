@@ -1,12 +1,14 @@
-##############################################################################
-# Comparing prediction sets on two-dimensional dataset
-# ----------------------------------------------------
-#
-# In this tutorial, we compare the prediction sets estimated by
-# :class:`mapie.classification.MapieClassifier` with the "score"
-# and "cumulated_score" on the two-dimensional dataset presented
-# by Sadinle et al. (2019).
-#
+"""""
+====================================================
+Comparing prediction sets on two-dimensional dataset
+====================================================
+
+In this tutorial, we compare the prediction sets estimated by
+:class:`mapie.classification.MapieClassifier` with the "score"
+and "cumulated_score" on the two-dimensional dataset presented
+by Sadinle et al. (2019).
+"""
+
 # We will use MAPIE to estimate a prediction set of several classes such that
 # the probability that the true label of a new test point is included in the
 # prediction set is always higher than the target confidence level :
