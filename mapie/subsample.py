@@ -120,15 +120,15 @@ class Subsample(BaseCrossValidator):  # type: ignore
         """Returns the number of splitting iterations in the cross-validator
         Parameters
         ----------
-        X : object
+        X : ArrayLike
             Always ignored, exists for compatibility with BaseCrossValidator
-            object.
-        y : object
+            object. By default, None.
+        y : ArrayLike
             Always ignored, exists for compatibility with BaseCrossValidator
-            object.
-        groups : object
+            object. By default, None.
+        groups : ArrayLike
             Always ignored, exists for compatibility with BaseCrossValidator
-            object.
+            object. By default, None.
         Returns
         -------
         n_splits : int
