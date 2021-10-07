@@ -7,13 +7,19 @@ __pycache__/
 # C extensions
 *.so
 
-# scikit-learn specific
+# documentation specific
 doc/_build/
+doc/examples_classification/
+doc/examples_regression/
 doc/auto_examples/
 doc/modules/generated/
 doc/datasets/generated/
+<<<<<<< HEAD
 doc/examples_regression/
 doc/examples_classification/
+=======
+doc/generated/
+>>>>>>> dev
 
 # Distribution / packaging
 
