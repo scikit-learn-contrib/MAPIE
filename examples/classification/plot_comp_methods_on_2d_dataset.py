@@ -88,9 +88,10 @@ plt.xlabel("X")
 plt.ylabel("Y")
 plt.show()
 
+
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator.
-# And then we apply :class:`mapie.classification.MapieClassifier` in the
+# Then we apply :class:`mapie.classification.MapieClassifier` in the
 # calibration data with the methods ``score`` and ``cumulated_score```
 # to the estimator indicating that it has already been fitted with
 # `cv="prefit"`.
@@ -110,7 +111,7 @@ for method in methods:
         estimator=clf,
         method=method,
         cv="prefit",
-        random_sets=True,
+        random_sets=False,
         random_state=42
     )
     mapie[method].fit(X_cal, y_cal)
@@ -120,8 +121,15 @@ for method in methods:
 
 
 ##############################################################################
-# - y_pred_mapie: represents the prediction in the test set with the estimator.
-# - y_ps_mapie: the prediction sets with mapie.
+# MAPIE produces two outputs:
+#
+# - y_pred_mapie: the prediction in the test set given by the base estimator.
+#
+# - y_ps_mapie: the prediction sets estimated by MAPIE using the selected
+# method.
+#
+# Let's now visualize the distribution of the conformity scores with the two
+# methods with the calculated quantiles for the three alpha values.
 
 def plot_scores(
     alphas: list[float],
@@ -148,8 +156,20 @@ def plot_scores(
     ax.set_xlabel("scores")
     ax.set_ylabel("count")
 
+fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+for i, method in enumerate(methods):
+    scores = mapie[method].scores_
+    n = mapie[method].n_samples_val_
+    quantiles = mapie[method].quantiles_
+    plot_scores(alpha, scores, quantiles, method, axs[i])
+plt.show()
 
-def plot_result(
+
+##############################################################################
+# We will now compare the differences between the prediction sets of the
+# different values ​​of alpha.
+
+def plot_results(
     alphas: list[float], y_pred_mapie: np.ndarray, y_ps_mapie: np.ndarray
 ) -> None:
     tab10 = plt.cm.get_cmap('Purples', 4)
@@ -186,37 +206,36 @@ def plot_result(
         axs[i+1].set_title(f"Number of labels for alpha={alpha_}")
     plt.show()
 
-##############################################################################
-# Let's see the distribution of the scores with the calculated quantiles.
-
-
-fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-for i, method in enumerate(methods):
-    scores = mapie[method].scores_
-    n = mapie[method].n_samples_val_
-    quantiles = mapie[method].quantiles_
-    plot_scores(alpha, scores, quantiles, method, axs[i])
-plt.show()
-
-##############################################################################
-# We will now compare the differences between the prediction sets of the
-# different values ​​of alpha.
-
 for method in methods:
-    plot_result(alpha, y_pred_mapie[method],  y_ps_mapie[method])
+    plot_results(alpha, y_pred_mapie[method],  y_ps_mapie[method])
+
 
 ##############################################################################
-# When the class coverage is not large enough, the prediction sets can be empty
-# when the model is uncertain at the border between two labels. The null region
-# disappears for larger class coverages but ambiguous classification regions
-# arise with several labels included in the prediction sets.
+# For the "score" method, When the class coverage is not large enough, the
+# prediction sets can be empty when the model is uncertain at the border
+# between two labels. The null region disappears for larger class coverages
+# but ambiguous classification regions arise with several labels included in
+# the prediction sets.
+# By definition, the "cumulated_score" method does not produce empty
+# prediction sets. However, the prediction sets tend to be slightly bigger
+# in ambiguous regions.
+#
+# Let's now compare the effective coverage and the average of prediction set
+# widths as function of the :math:`1-\alpha` target coverage.
 
 alpha_ = np.arange(0.02, 0.98, 0.02)
-y_ps_mapie_2 = {}
-coverage = {}
-mean_width = {}
+coverage, mean_width = {}, {}
+mapie_2, y_ps_mapie_2 = {}, {}
 for method in methods:
-    _, y_ps_mapie_2[method] = mapie[method].predict(X, alpha=alpha_)
+    mapie_2[method] = MapieClassifier(
+        estimator=clf,
+        method=method,
+        cv="prefit",
+        random_sets=True,
+        random_state=42
+    )
+    mapie_2[method].fit(X_cal, y_cal)
+    _, y_ps_mapie_2[method] = mapie_2[method].predict(X, alpha=alpha_)
     coverage[method] = [
         classification_coverage_score(y, y_ps_mapie_2[method][:, :, i])
         for i, _ in enumerate(alpha_)
@@ -230,7 +249,7 @@ fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 axs[0].set_xlabel("1 - alpha")
 axs[0].set_ylabel("Quantile")
 for method in methods:
-    axs[0].scatter(1 - alpha_, mapie[method].quantiles_, label=method)
+    axs[0].scatter(1 - alpha_, mapie_2[method].quantiles_, label=method)
 axs[0].legend()
 for method in methods:
     axs[1].scatter(1 - alpha_, coverage[method], label=method)
@@ -244,3 +263,8 @@ axs[2].set_xlabel("1 - alpha")
 axs[2].set_ylabel("Average size of prediction sets")
 axs[2].legend()
 plt.show()
+
+##############################################################################
+# It is seen that both methods give coverages close to the target coverages,
+# regardless of the :math:`\alpha` value. However, the "cumulated_score"
+# produces slightly bigger prediction sets, but without empty regions.
