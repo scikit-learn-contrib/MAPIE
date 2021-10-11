@@ -156,6 +156,7 @@ def plot_scores(
     ax.set_xlabel("scores")
     ax.set_ylabel("count")
 
+
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 for i, method in enumerate(methods):
     scores = mapie[method].scores_
@@ -205,6 +206,7 @@ def plot_results(
         plt.colorbar(num_labels, ax=axs[i+1])
         axs[i+1].set_title(f"Number of labels for alpha={alpha_}")
     plt.show()
+
 
 for method in methods:
     plot_results(alpha, y_pred_mapie[method],  y_ps_mapie[method])
