@@ -168,7 +168,7 @@ def check_alpha(
 
 def check_random_state(
     random_state: Optional[int] = None
-) -> Optional[np.ndarray]:
+) -> Optional[int]:
     """
     Check random_state parameter.
 
@@ -179,7 +179,7 @@ def check_random_state(
 
     Returns
     -------
-    np.ndarray
+    int
         The random_state itself.
 
     Raises

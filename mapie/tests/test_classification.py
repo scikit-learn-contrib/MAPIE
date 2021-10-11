@@ -23,7 +23,10 @@ METHODS = ["score", "cumulated_score"]
 
 Params = TypedDict(
     "Params", {
-        "method": str, "cv": Optional[str]
+        "method": str,
+        "cv": Optional[str],
+        "random_sets": Optional[bool],
+        "random_state": Optional[int]
     }
 )
 

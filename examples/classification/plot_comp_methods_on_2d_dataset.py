@@ -14,15 +14,15 @@ by Sadinle et al. (2019).
 # the probability that the true label of a new test point is included in the
 # prediction set is always higher than the target confidence level :
 # :math:`1 - \alpha`.
-# We start by using the softmax score output by the base classifier as the
-# conformity score on a toy two-dimensional dataset. We estimate the
-# prediction sets as follows :
+# We start by using the softmax score or cumulated score output by the base
+# classifier as the conformity score on a toy two-dimensional dataset.
+# We estimate the prediction sets as follows :
 #
 # * First we generate a dataset with train, calibration and test, the model
 # is fitted in the training set.
 #
 # * We set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}`
-# from the softmax utput of the true class or the cumulated score
+# from the softmax output of the true class or the cumulated score
 # (by decreasing order) for each sample in the calibration set.
 #
 # * Then we define :math:`\hat{q}` as being the
@@ -106,7 +106,13 @@ methods = ["score", "cumulated_score"]
 mapie, y_pred_mapie, y_ps_mapie = {}, {}, {}
 alpha = [0.2, 0.1, 0.05]
 for method in methods:
-    mapie[method] = MapieClassifier(estimator=clf, method=method, cv="prefit")
+    mapie[method] = MapieClassifier(
+        estimator=clf,
+        method=method,
+        cv="prefit",
+        random_sets=True,
+        random_state=42
+    )
     mapie[method].fit(X_cal, y_cal)
     y_pred_mapie[method], y_ps_mapie[method] = (
         mapie[method].predict(X_test, alpha=alpha)
