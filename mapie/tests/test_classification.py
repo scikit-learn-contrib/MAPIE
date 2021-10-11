@@ -31,7 +31,12 @@ Params = TypedDict(
 )
 
 STRATEGIES = {
-    "score": Params(method="score", cv="prefit"),
+    "score": Params(
+        method="score",
+        cv="prefit",
+        random_sets=False,
+        random_state=None
+    ),
     "cumulated_score": Params(
         method="cumulated_score",
         cv="prefit",

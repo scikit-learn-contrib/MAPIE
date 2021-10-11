@@ -197,6 +197,7 @@ def check_random_state(
         raise ValueError(
             "Invalid random_state argument. Should be an non-negative integer."
         )
+    return random_state
 
 
 def check_n_features_in(
