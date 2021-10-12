@@ -348,9 +348,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 y_pred, y.reshape(-1, 1), axis=1
             )
             np.random.seed(self.random_state)
-            rnds = np.stack([
-                np.random.uniform() for _ in range(len(y_pred))
-            ]).reshape(-1, 1)
+            rnds = np.random.uniform(size=y_pred.shape[0]).reshape(-1, 1)
             self.scores_ += -y_proba_true + rnds*y_proba_true
         return self
 
@@ -470,9 +468,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                     ], axis=1)
                     # get random numbers for each observation and alpha value
                     np.random.seed(self.random_state)
-                    rnds = np.stack([
-                        np.random.uniform() for _ in range(len(y_pred))
-                    ])
+                    rnds = np.random.uniform(size=y_pred.shape[0])
                     # remove last label from prediction set if V <= rnd
                     # did not find a more elegant way to do it
                     for iy in range(len(y_pred)):
