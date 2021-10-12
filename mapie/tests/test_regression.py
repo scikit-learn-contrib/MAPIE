@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
-from mapie.utils import JackknifeAfterBootstrap
+from mapie.subsample import Subsample
 from sklearn.base import RegressorMixin
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
@@ -23,56 +23,51 @@ from typing_extensions import TypedDict
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 X, y = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
-
+k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
 
 Params = TypedDict(
     "Params",
     {
         "method": str,
-        "cv": Optional[Union[int, KFold, JackknifeAfterBootstrap]],
+        "agg_function": str,
+        "cv": Optional[Union[int, KFold, Subsample]],
     },
 )
 STRATEGIES = {
-    "naive": Params(method="naive", cv=None),
-    "jackknife": Params(method="base", cv=-1),
-    "jackknife_plus": Params(method="plus", cv=-1),
-    "jackknife_minmax": Params(method="minmax", cv=-1),
+    "naive": Params(method="naive", agg_function="median", cv=None),
+    "jackknife": Params(method="base", agg_function="mean", cv=-1),
+    "jackknife_plus": Params(method="plus", agg_function="mean", cv=-1),
+    "jackknife_minmax": Params(method="minmax", agg_function="mean", cv=-1),
     "cv": Params(
         method="base",
+        agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=1),
     ),
     "cv_plus": Params(
         method="plus",
+        agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=1),
     ),
     "cv_minmax": Params(
         method="minmax",
+        agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=1),
     ),
     "resampling_plus": Params(
         method="plus",
-        cv=JackknifeAfterBootstrap(
-            agg_function="mean",
-            n_resamplings=30,
-            random_states=list(range(30)),
-        ),
+        agg_function="mean",
+        cv=Subsample(n_resamplings=30, random_states=list(range(30))),
     ),
     "resampling_minmax": Params(
         method="minmax",
-        cv=JackknifeAfterBootstrap(
-            agg_function="mean",
-            n_resamplings=30,
-            random_states=list(range(30)),
-        ),
+        agg_function="mean",
+        cv=Subsample(n_resamplings=30, random_states=list(range(30)),),
     ),
     "resampling_plus_median": Params(
         method="plus",
-        cv=JackknifeAfterBootstrap(
-            agg_function="median",
-            n_resamplings=30,
-            random_states=list(range(30)),
-        ),
+        agg_function="median",
+        cv=Subsample(n_resamplings=30, random_states=list(range(30)),),
     ),
 }
 
@@ -115,10 +110,10 @@ def test_initialized() -> None:
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie = MapieRegressor()
+    assert mapie.agg_function is None
     assert mapie.estimator is None
     assert mapie.method == "plus"
     assert mapie.cv is None
-    assert not mapie.ensemble
     assert mapie.verbose == 0
     assert mapie.n_jobs is None
 
@@ -240,18 +235,18 @@ def test_valid_method(method: str) -> None:
     )
 
 
-@pytest.mark.parametrize("ensemble", ["dummy", 0, 1, 2.5, [1, 2]])
-def test_invalid_ensemble(ensemble: Any) -> None:
-    """Test that invalid ensembles raise errors."""
-    mapie = MapieRegressor(ensemble=ensemble)
-    with pytest.raises(ValueError, match=r".*Invalid ensemble.*"):
+@pytest.mark.parametrize("agg_function", ["dummy", 0, 1, 2.5, [1, 2]])
+def test_invalid_agg_function(agg_function: Any) -> None:
+    """Test that invalid agg_functions raise errors."""
+    mapie = MapieRegressor(agg_function=agg_function)
+    with pytest.raises(ValueError, match=r".*Invalid aggregation function.*"):
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("ensemble", [True, False])
-def test_valid_ensemble(ensemble: bool) -> None:
-    """Test that valid ensembles raise no errors."""
-    mapie = MapieRegressor(ensemble=ensemble)
+@pytest.mark.parametrize("agg_function", [None, "mean"])
+def test_valid_agg_function(agg_function: str) -> None:
+    """Test that valid agg_functions raise no errors."""
+    mapie = MapieRegressor(agg_function=agg_function)
     mapie.fit(X_toy, y_toy)
 
 
@@ -306,10 +301,9 @@ def test_predict_output_shape(
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("ensemble", [True, False])
-def test_prediction_between_low_up(strategy: str, ensemble: bool) -> None:
+def test_prediction_between_low_up(strategy: str) -> None:
     """Test that prediction lies between low and up prediction intervals."""
-    mapie = MapieRegressor(ensemble=ensemble, **STRATEGIES[strategy])
+    mapie = MapieRegressor(**STRATEGIES[strategy])
     mapie.fit(X, y)
     y_pred, y_pis = mapie.predict(X, alpha=0.1)
     assert (y_pred >= y_pis[:, 0, 0]).all()
@@ -323,13 +317,13 @@ def test_prediction_ensemble(
     method: str, cv: Union[LeaveOneOut, KFold], alpha: int
 ) -> None:
     """
-    Test that predictions differ when ensemble is True/False,
+    Test that predictions differ when agg_function if None/"mean",
     but not prediction intervals.
     """
-    mapie = MapieRegressor(method=method, cv=cv, ensemble=True)
+    mapie = MapieRegressor(method=method, cv=cv, agg_function="median")
     mapie.fit(X, y)
     y_pred_1, y_pis_1 = mapie.predict(X, alpha=alpha)
-    mapie.ensemble = False
+    mapie.agg_function = None
     y_pred_2, y_pis_2 = mapie.predict(X, alpha=alpha)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
@@ -338,15 +332,12 @@ def test_prediction_ensemble(
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("ensemble", [True, False])
-def test_linear_data_confidence_interval(
-    strategy: str, ensemble: bool
-) -> None:
+def test_linear_data_confidence_interval(strategy: str) -> None:
     """
     Test that MapieRegressor applied on a linear regression model
     fitted on a linear curve results in null uncertainty.
     """
-    mapie = MapieRegressor(ensemble=ensemble, **STRATEGIES[strategy])
+    mapie = MapieRegressor(**STRATEGIES[strategy])
     mapie.fit(X_toy, y_toy)
     y_pred, y_pis = mapie.predict(X_toy, alpha=0.2)
     np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 1, 0])
@@ -516,46 +507,39 @@ def test_results_prefit() -> None:
 
 def test_not_enough_resamplings() -> None:
     """Test that a warning is raised if at least one residual is nan."""
-    with pytest.warns(Warning):
+    with pytest.warns(UserWarning, match=r"WARNING: at least one point of*"):
         mapie = MapieRegressor(
-            cv=JackknifeAfterBootstrap(agg_function="mean", n_resamplings=1)
+            cv=Subsample(n_resamplings=1), agg_function="mean"
         )
         mapie.fit(X, y)
 
 
-def test_invalid_agg_function() -> None:
-    """
-    Test that a wrong aggregation function in JackknifeAfterBootstrap
-    class raises an error.
-    """
-
-    with pytest.raises(ValueError, match=r".*Invalid aggregation function*"):
-        JackknifeAfterBootstrap(
-            agg_function="medium", n_resamplings=30, replace=True
+def test_no_agg_fx_specified_with_subsample() -> None:
+    """Test that a warning is raised if at least one residual is nan."""
+    with pytest.warns(Warning, match=r"WARNING: you need to specify*"):
+        mapie = MapieRegressor(
+            cv=Subsample(n_resamplings=1), agg_function=None
         )
+        mapie.fit(X, y)
 
 
-def test_invalid_randomstates() -> None:
+def test_invalid_aggregate_all() -> None:
     """
-    Test that wrong list of random states in JackknifeAfterBootstrap
-    class raise errors.
+    Test that wrong aggregation in MAPIE raise errors.
     """
-
     with pytest.raises(
-        ValueError, match=r".*Incoherent number of random states*"
+        ValueError, match=r".*Aggregation function called but not defined.*",
     ):
-        JackknifeAfterBootstrap(
-            agg_function="mean",
-            n_resamplings=30,
-            replace=True,
-            random_states=[0, 1],
-        )
+        mapie = MapieRegressor()
+        mapie.aggregate_all(X)
 
 
-def test_default_JackknifeAfterBootstrap() -> None:
-    """Test default values of Jackknife+-after-Bootstrap."""
-    cv = JackknifeAfterBootstrap(n_resamplings=30)
-    assert cv.agg_function == "mean"
-    assert cv.n_resamplings == 30
-    assert cv.n_samples is None
-    assert cv.random_states is None
+def test_invalid_aggregate_mask() -> None:
+    """
+    Test that wrong aggregation in MAPIE raise errors.
+    """
+    with pytest.raises(
+        ValueError, match=r".*Aggregation function called but not defined.*",
+    ):
+        mapie = MapieRegressor()
+        mapie.aggregate_with_mask(X, k)
