@@ -432,7 +432,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 # filter labels with cumulated score lower than quantile
                 # (and keep label just higher than quantile)
                 y_preds_sorted = np.stack([
-                    (y_proba_cumsum_sorted < quantile)[:, :-1]
+                    (y_proba_cumsum_sorted <= quantile)[:, :-1]
                     for quantile in self.quantiles_
                 ], axis=2)
                 # filter sorting probabilities with kept labels
@@ -457,7 +457,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                     for i, _ in enumerate(self.quantiles_)
                 ], axis=1)[:, :, 0]
                 if self.random_sets:
-                    # compute V parameter in Romano+(2020)
+                    # compute V parameter from Romano+(2020)
                     vs = np.stack([
                         (
                             np.cumsum(
