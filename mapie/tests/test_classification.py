@@ -23,18 +23,31 @@ METHODS = ["score", "cumulated_score"]
 
 Params = TypedDict(
     "Params", {
-        "method": str, "cv": Optional[str]
+        "method": str,
+        "cv": Optional[str],
+        "random_sets": Optional[bool],
+        "random_state": Optional[int]
     }
 )
 
 STRATEGIES = {
-    "score": Params(method="score", cv="prefit"),
-    "cumulated_score": Params(method="cumulated_score", cv="prefit")
+    "score": Params(
+        method="score",
+        cv="prefit",
+        random_sets=False,
+        random_state=None
+    ),
+    "cumulated_score": Params(
+        method="cumulated_score",
+        cv="prefit",
+        random_sets=True,
+        random_state=42
+    )
 }
 
 COVERAGES = {
     "score": 7/9,
-    "cumulated_score": 9/9
+    "cumulated_score": 7/9
 }
 
 y_toy_mapie = {
@@ -50,18 +63,17 @@ y_toy_mapie = {
         [False, False, True]
     ],
     "cumulated_score": [
+        [True, False, False],
+        [True, False, False],
         [True, True, False],
         [True, True, False],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [False, True, True],
-        [False, True, True]
+        [False, True, False],
+        [False, True, False],
+        [False, False, True],
+        [False, False, True],
+        [False, False, True]
     ]
 }
-
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2])
 
@@ -80,7 +92,9 @@ class CumulatedscoreClassifier:
     def __init__(self) -> None:
         self.X_calib = np.array([0, 1, 2]).reshape(-1, 1)
         self.y_calib = np.array([0, 1, 2])
-        self.y_calib_scores = np.array([[0.9], [0.6], [1.0]])
+        self.y_calib_scores = np.array(
+            [[0.64981605], [0.57042858], [0.97319939]]
+        )
         self.X_test = np.array([3, 4, 5]).reshape(-1, 1)
         self.y_pred_sets = np.array(
             [[False, True, False], [False, False, True], [True, True, False]]
@@ -115,7 +129,9 @@ def test_default_parameters() -> None:
     assert mapie.estimator is None
     assert mapie.method == "score"
     assert mapie.cv == "prefit"
+    assert mapie.random_sets is False
     assert mapie.verbose == 0
+    assert mapie.random_state is None
     assert mapie.n_jobs is None
 
 
@@ -262,6 +278,16 @@ def test_invalid_cv(cv: Any) -> None:
         mapie.fit(X_toy, y_toy)
 
 
+@pytest.mark.parametrize(
+    "random_sets", [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
+)
+def test_invalid_random_sets(random_sets: Any) -> None:
+    """Test that invalid random_sets raise errors."""
+    mapie = MapieClassifier(random_sets=random_sets)
+    with pytest.raises(ValueError, match=r".*Invalid random_sets argument.*"):
+        mapie.fit(X_toy, y_toy)
+
+
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
@@ -400,11 +426,13 @@ def test_toy_dataset_predictions(strategy: str) -> None:
 def test_cumulated_scores() -> None:
     """Test cumulated score method on a tiny dataset."""
     alpha = [0.65]
-    quantile = [0.6]
+    quantile = [0.57042858]
     # fit
     cumclf = CumulatedscoreClassifier()
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
-    mapie = MapieClassifier(cumclf, method="cumulated_score", cv="prefit")
+    mapie = MapieClassifier(
+        cumclf, method="cumulated_score", cv="prefit", random_state=42
+    )
     mapie.fit(cumclf.X_calib, cumclf.y_calib)
     np.testing.assert_allclose(mapie.scores_, cumclf.y_calib_scores)
     # predict

@@ -18,6 +18,7 @@ from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
     check_n_jobs,
+    check_random_state,
     check_verbose
 )
 
@@ -61,6 +62,10 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         By default ``prefit``.
 
+    random_sets: Optional[bool]
+        Whether or not to include randomness to include last label in
+        prediction sets for "cumulated_score" method.
+
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
@@ -73,6 +78,11 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         (sequential execution).
 
         By default ``None``.
+
+    random_state: Optional[int]
+        Pseudo random number generator state used for random uniform sampling
+        for evaluation quantiles and prediction sets in cumulated_score.
+        Pass an int for reproducible output across multiple function calls.
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
@@ -150,13 +160,17 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         estimator: Optional[ClassifierMixin] = None,
         method: str = "score",
         cv: Optional[Union[int, str, BaseCrossValidator]] = "prefit",
+        random_sets: Optional[bool] = False,
         n_jobs: Optional[int] = None,
+        random_state: Optional[int] = None,
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
         self.method = method
         self.cv = cv
+        self.random_sets = random_sets
         self.n_jobs = n_jobs
+        self.random_state = random_state
         self.verbose = verbose
 
     def _check_parameters(self) -> None:
@@ -173,9 +187,13 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 "Invalid method. "
                 "Allowed values are 'score' or 'cumulated_score'."
             )
-
+        if not isinstance(self.random_sets, bool):
+            raise ValueError(
+                "Invalid random_sets argument. Should be a boolean."
+            )
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
+        check_random_state(self.random_state)
 
     def _check_estimator(
         self,
@@ -326,6 +344,12 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             self.scores_ = np.take_along_axis(
                 y_pred_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
             )
+            y_proba_true = np.take_along_axis(
+                y_pred, y.reshape(-1, 1), axis=1
+            )
+            np.random.seed(self.random_state)
+            rnds = np.random.uniform(size=y_pred.shape[0]).reshape(-1, 1)
+            self.scores_ += -y_proba_true + rnds*y_proba_true
         return self
 
     def predict(
@@ -394,19 +418,71 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                     for quantile in self.quantiles_
                 ], axis=2)
             else:
-                index = np.fliplr(np.argsort(y_pred_proba, axis=1))
-                y_pred_sorted = np.take_along_axis(y_pred_proba, index, axis=1)
-                y_pred_sorted_cumsum = np.hstack([
+                # sort labels by decreasing probability
+                index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
+                # sort probabilities by decreasing order
+                y_proba_sorted = np.take_along_axis(
+                    y_pred_proba, index_sorted, axis=1
+                )
+                # get sorted cumulated score starting from 0
+                y_proba_cumsum_sorted = np.hstack([
                     np.zeros((X.shape[0], 1)),
-                    np.cumsum(y_pred_sorted, axis=1)
+                    np.cumsum(y_proba_sorted, axis=1)
                 ])
+                # filter labels with cumulated score lower than quantile
+                # (and keep label just higher than quantile)
                 y_preds_sorted = np.stack([
-                    np.invert(y_pred_sorted_cumsum > quantile)[:, :-1]
+                    (y_proba_cumsum_sorted <= quantile)[:, :-1]
                     for quantile in self.quantiles_
                 ], axis=2)
+                # filter sorting probabilities with kept labels
+                y_proba_sorted_filtered = np.stack([
+                    y_proba_sorted * y_preds_sorted[:, :, iq]
+                    for iq, _ in enumerate(self.quantiles_)
+                ], axis=2)
+                # get last label included in prediction set
+                y_proba_sorted_argmin = np.stack([
+                    np.argmin(
+                        y_proba_sorted_filtered[:, :, iq] > 0, axis=1
+                    ) - 1
+                    for iq, _ in enumerate(self.quantiles_)
+                ], axis=1)
+                # get probability of last label included in prediction set
+                y_proba_last = np.stack([
+                    np.take_along_axis(
+                        y_proba_sorted_filtered[:, :, i],
+                        y_proba_sorted_argmin[:, i].reshape(-1, 1),
+                        axis=1
+                    )
+                    for i, _ in enumerate(self.quantiles_)
+                ], axis=1)[:, :, 0]
+                if self.random_sets:
+                    # compute V parameter from Romano+(2020)
+                    vs = np.stack([
+                        (
+                            np.cumsum(
+                                y_proba_sorted_filtered[:, :, iq], axis=1
+                            )[:, -1] - quantile
+                        ) / y_proba_last[:, iq]
+                        for iq, quantile in enumerate(self.quantiles_)
+                    ], axis=1)
+                    # get random numbers for each observation and alpha value
+                    np.random.seed(self.random_state)
+                    rnds = np.random.uniform(size=y_pred.shape[0])
+                    # remove last label from prediction set if V <= rnd
+                    # did not find a more elegant way to do it
+                    for iy in range(len(y_pred)):
+                        for iq, _ in enumerate(self.quantiles_):
+                            if vs[iy, iq] >= rnds[iy]:
+                                y_preds_sorted[
+                                    iy, y_proba_sorted_argmin[iy, iq], iq
+                                ] = False
+                # rearrange boolean values from initial label order
                 prediction_sets = np.stack([
                     np.take_along_axis(
-                        y_preds_sorted[:, :, i], index, axis=1
+                        y_preds_sorted[:, :, i],
+                        np.argsort(index_sorted),
+                        axis=1
                     )
                     for i, _ in enumerate(self.quantiles_)
                 ], axis=2)
