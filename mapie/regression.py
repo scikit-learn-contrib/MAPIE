@@ -13,7 +13,7 @@ from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
-from .subsample import Subsample
+from .subsample import Subsample, phi2D
 from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
@@ -23,7 +23,6 @@ from .utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
-    phi2D,
 )
 
 
@@ -67,9 +66,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           ``sklearn.model_selection.LeaveOneOut()``.
         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
           Main variants are:
-            - ``sklearn.model_selection.LeaveOneOut`` (jackknife)
-            - ``sklearn.model_selection.KFold`` (cross-validation)
-            - ``subsample.Subsample`` object (bootstrap)
+            - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
+            - ``sklearn.model_selection.KFold`` (cross-validation),
+            - ``subsample.Subsample`` object (bootstrap).
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
@@ -153,7 +152,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     Byol Kim, Chen Xu, and Rina Foygel Barber.
     "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
-    34th Conference on Neural Information Processing Systems (NeurIPS 2020)
+    34th Conference on Neural Information Processing Systems (NeurIPS 2020).
 
 
 
@@ -232,7 +231,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Parameters
         ----------
         estimator : Optional[RegressorMixin], optional
-            Estimator to check, by default ``None``
+            Estimator to check, by default ``None``.
 
         Returns
         -------
@@ -263,7 +262,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         return estimator
 
     def _check_cv(
-        self, cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        self,
+        cv: Optional[Union[int, str, BaseCrossValidator]] = None,
     ) -> Union[str, BaseCrossValidator]:
         """
         Check if cross-validator is
@@ -359,7 +359,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - [2]: Identification number of the validation fold,
           of shape (n_samples_val,)
         - [3]: Validation data indices,
-          of shape (n_samples_val,)
+          of shape (n_samples_val,).
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
         if sample_weight is None:
@@ -376,17 +376,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         Take the array of predictions, made by the refitted estimators,
         on the training set, and aggregate to produce phi-{i}(x_i) for
-        each training sample x_i
+        each training sample x_i.
 
         Parameters:
         -----------
-            x : ArrayLike
-            Array of predictions, made by the refitted estimators
+            x : ArrayLike of shape (n_samples, n_estimators)
+            Array of predictions, made by the refitted estimators.
 
         Returns:
         --------
-            ArrayLike:
-            Array of phi-{i}(x_i) for each training sample x_i
+            ArrayLike of shape (n_samples, 1):
+            Array of phi-{i}(x_i) for each training sample x_i.
         """
         if self.agg_function == "median":
             return np.nanmedian(x, axis=1)
@@ -399,24 +399,23 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Take the array of predictions, made by the refitted estimators,
         on the testing set, and the 1-nan array indicating for each training
         sample which one to integrate, and aggregate to produce phi-{t}(x_t)
-        for each training sample x_t
+        for each training sample x_t.
 
 
         Parameters:
         -----------
-            x : ArrayLike
+            x : ArrayLike of shape (n_samples_test, n_estimators)
                 Array of predictions, made by the refitted estimators,
-                for each sample of the testing set
-            k : ArrayLike
+                for each sample of the testing set.
+            k : ArrayLike of shape (n_samples_training, n_estimators)
                 1-nan array, that indicate whether to integrate the prediction
                 of a given estimator into the aggregation, for each training
-                sample
+                sample.
 
         Returns:
         --------
-            ArrayLike
-                Array of shape (testing set size,) of aggregated predictions
-                for each testing  sample
+            ArrayLike of shape (n_samples_test,)
+                Array of aggregated predictions for each testing  sample.
 
         """
         if self.agg_function == "median":
@@ -553,9 +552,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         are central to the computation.
         Prediction Intervals for a given ``alpha`` are deduced from either
 
-        - quantiles of residuals (naive and base methods)
-        - quantiles of (predictions +/- residuals) (plus methods)
-        - quantiles of (max/min(predictions) +/- residuals) (minmax methods)
+        - quantiles of residuals (naive and base methods),
+        - quantiles of (predictions +/- residuals) (plus methods),
+        - quantiles of (max/min(predictions) +/- residuals) (minmax methods).
 
         Parameters
         ----------
@@ -575,13 +574,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         -------
         Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]
 
-        - np.ndarray of shape (n_samples,) if alpha is None
+        - np.ndarray of shape (n_samples,) if alpha is None.
 
         - Tuple[np.ndarray, np.ndarray] of shapes
-        (n_samples,) and (n_samples, 2, n_alpha) if alpha is not None
+        (n_samples,) and (n_samples, 2, n_alpha) if alpha is not None.
 
-            - [:, 0, :]: Lower bound of the prediction interval
-            - [:, 1, :]: Upper bound of the prediction interval
+            - [:, 0, :]: Lower bound of the prediction interval.
+            - [:, 1, :]: Upper bound of the prediction interval.
         """
         # Checks
         check_is_fitted(

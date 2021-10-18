@@ -1,10 +1,11 @@
 from __future__ import annotations
-from typing import Any, Generator, List, Optional, Tuple
+
+from typing import Any, Callable, Generator, Optional, Tuple, Union
 
 import numpy as np
+from numpy.random import RandomState
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils import resample
-from sklearn.utils.validation import _num_samples
+from sklearn.utils import check_random_state, resample
 
 from ._typing import ArrayLike
 
@@ -13,31 +14,31 @@ class Subsample(BaseCrossValidator):  # type: ignore
     """
     Generate a sampling method, that resamples the training set with
     possible bootstraps. It can replace KFold or  LeaveOneOut as cv argument
-    in the MAPIE class
+    in the MAPIE class.
 
     Parameters
     ----------
     n_resamplings : int
-        Number of resamplings
+        Number of resamplings.
     n_samples: int
         Number of samples in each resampling. By default None,
-        the size of the training set
+        the size of the training set.
     replace: bool
-        Whether to replace samples in resamplings or not
-    random_states: Optional
-        List to fix random states
+        Whether to replace samples in resamplings or not.
+    random_state: Optional
+        int or RandomState instance.
 
 
     Examples
     --------
     >>> import pandas as pd
     >>> from mapie.subsample import Subsample
-    >>> cv = Subsample(n_resamplings=2,random_states=[0,1])
+    >>> cv = Subsample(n_resamplings=2,random_state=0)
     >>> X = pd.DataFrame(np.array([1,2,3,4,5,6,7,8,9,10]))
     >>> for train_index, test_index in cv.split(X):
     ...    print(f"train index is {train_index}, test index is {test_index}")
     train index is [5 0 3 3 7 9 3 5 2 4], test index is [8 1 6]
-    train index is [5 8 9 5 0 0 1 7 6 9], test index is [2 3 4]
+    train index is [7 6 8 8 1 6 7 7 8 1], test index is [0 2 3 4 5 9]
     """
 
     def __init__(
@@ -45,24 +46,12 @@ class Subsample(BaseCrossValidator):  # type: ignore
         n_resamplings: int,
         n_samples: Optional[int] = None,
         replace: bool = True,
-        random_states: Optional[List[int]] = None,
+        random_state: Optional[Union[int, RandomState]] = None,
     ) -> None:
-
-        self.check_parameters_Subsample(
-            random_states=random_states, n_resamplings=n_resamplings,
-        )
         self.n_resamplings = n_resamplings
         self.n_samples = n_samples
         self.replace = replace
-        self.random_states = random_states
-
-    def check_parameters_Subsample(
-        self, random_states: Optional[List[int]], n_resamplings: int,
-    ) -> None:
-        if (random_states is not None) and (
-            len(random_states) != n_resamplings
-        ):
-            raise ValueError("Incoherent number of random states")
+        self.random_state = random_state
 
     def split(
         self, X: ArrayLike
@@ -73,8 +62,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
         Parameters
         ----------
         X : ArrayLike of shape (n_samples, n_features)
-            Training data, where n_samples is the number of samples
-            and n_features is the number of features.
+            Training data.
         y : ArrayLike of shape (n_samples,)
             The target variable for supervised learning problems.
         groups : ArrayLike of shape (n_samples,), default=None
@@ -83,26 +71,22 @@ class Subsample(BaseCrossValidator):  # type: ignore
 
         Yields
         ------
-        train : ArrayLike
+        train : ArrayLike of shape (n_indices_training,)
             The training set indices for that split.
-        test : ArrayLike
+        test : ArrayLike of shape (n_indices_test,)
             The testing set indices for that split.
         """
-        indices = np.arange(_num_samples(X))
+        indices = np.arange(len(X))
         n_samples = (
             self.n_samples if self.n_samples is not None else len(indices)
         )
-
+        random_state = check_random_state(self.random_state)
         for k in range(self.n_resamplings):
-            if self.random_states is None:
-                rnd_state = None
-            else:
-                rnd_state = self.random_states[k]
             train_index = resample(
                 indices,
                 replace=self.replace,
                 n_samples=n_samples,
-                random_state=rnd_state,
+                random_state=random_state,
                 stratify=None,
             )
             test_index = np.array(
@@ -117,7 +101,8 @@ class Subsample(BaseCrossValidator):  # type: ignore
         groups: Optional[ArrayLike] = None,
     ) -> int:
 
-        """Returns the number of splitting iterations in the cross-validator
+        """Returns the number of splitting iterations in the cross-validator.
+
         Parameters
         ----------
         X : ArrayLike
@@ -129,9 +114,84 @@ class Subsample(BaseCrossValidator):  # type: ignore
         groups : ArrayLike
             Always ignored, exists for compatibility with BaseCrossValidator
             object. By default, None.
+
         Returns
         -------
         n_splits : int
             Returns the number of splitting iterations in the cross-validator.
         """
         return self.n_resamplings
+
+
+def phi1D(
+    x: ArrayLike,
+    B: ArrayLike,
+    fun: Callable[[ArrayLike], ArrayLike],
+) -> ArrayLike:
+    """
+    The function phi1D is called by phi2D. It aims at multiplying two matrices
+    and apply a function to the product.
+
+    Parameters
+    ----------
+    x : ArrayLike
+        1D vector.
+    B : ArrayLike
+        2D vector whose number of columns is the length of x.
+    fun : function
+        Vectorized function applying to Arraylike, and that should ignore nan.
+
+    Returns
+    -------
+    ArrayLike
+        Each row of ``B`` is multiply by ``x`` and then the function fun is
+        applied. Typically, ``fun`` is a numpy function, with argument
+        ``axis = 1``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> x = np.array([1, 2, 3, 4, 5])
+    >>> B = np.array([[1, 1, 1, np.nan, np.nan], [np.nan, np.nan, 1, 1, 1]])
+    >>> fun = lambda x: np.nanmean(x, axis=1)
+    >>> res = phi1D(x, B, fun)
+    >>> print(res)
+    [2. 4.]
+    """
+    return fun(x * B)
+
+
+def phi2D(
+    A: ArrayLike,
+    B: ArrayLike,
+    fun: Callable[[ArrayLike], ArrayLike],
+) -> ArrayLike:
+    """
+    The function phi2D is a loop applying phi1D.
+
+    Parameters
+    ----------
+    A : ArrayLike of shape (n_rowsA, n_columns)
+    B : ArrayLike of shape (n_rowsB, n_columns)
+        A and B must have the same number of columns.
+    fun : function
+        Vectorized function applying to Arraylike, and that should ignore nan.
+
+    Returns
+    -------
+    ArrayLike of shape (n_rowsA, n_rowsB)
+        Apply phi1D(x, B, fun) to each row x of A.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> A = np.array([[1, 2, 3, 4, 5],[6, 7, 8, 9, 10],[11, 12, 13, 14, 15]])
+    >>> B = np.array([[1, 1, 1, np.nan, np.nan],[np.nan, np.nan, 1, 1, 1]])
+    >>> fun = lambda x: np.nanmean(x, axis=1)
+    >>> res = phi2D(A, B, fun)
+    >>> print(res)
+    [[ 2.  4.]
+     [ 7.  9.]
+     [12. 14.]]
+    """
+    return np.apply_along_axis(phi1D, axis=1, arr=A, B=B, fun=fun)

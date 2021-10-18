@@ -57,17 +57,20 @@ STRATEGIES = {
     "resampling_plus": Params(
         method="plus",
         agg_function="mean",
-        cv=Subsample(n_resamplings=30, random_states=list(range(30))),
+        cv=Subsample(n_resamplings=30, random_state=1),
     ),
     "resampling_minmax": Params(
         method="minmax",
         agg_function="mean",
-        cv=Subsample(n_resamplings=30, random_states=list(range(30)),),
+        cv=Subsample(n_resamplings=30, random_state=1),
     ),
     "resampling_plus_median": Params(
         method="plus",
         agg_function="median",
-        cv=Subsample(n_resamplings=30, random_states=list(range(30)),),
+        cv=Subsample(
+            n_resamplings=30,
+            random_state=1,
+        ),
     ),
 }
 
@@ -96,7 +99,7 @@ COVERAGES = {
     "cv_minmax": 0.966,
     "prefit": 0.980,
     "cv_plus_median": 0.954,
-    "resampling_plus": 0.966,
+    "resampling_plus": 0.952,
     "resampling_minmax": 0.970,
     "resampling_plus_median": 0.960,
 }
@@ -292,7 +295,7 @@ def test_predict_output_shape(
 ) -> None:
     """Test predict output shape."""
     mapie = MapieRegressor(**STRATEGIES[strategy])
-    X, y = dataset
+    (X, y) = dataset
     mapie.fit(X, y)
     y_pred, y_pis = mapie.predict(X, alpha=alpha)
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
@@ -528,7 +531,8 @@ def test_invalid_aggregate_all() -> None:
     Test that wrong aggregation in MAPIE raise errors.
     """
     with pytest.raises(
-        ValueError, match=r".*Aggregation function called but not defined.*",
+        ValueError,
+        match=r".*Aggregation function called but not defined.*",
     ):
         mapie = MapieRegressor()
         mapie.aggregate_all(X)
@@ -539,7 +543,8 @@ def test_invalid_aggregate_mask() -> None:
     Test that wrong aggregation in MAPIE raise errors.
     """
     with pytest.raises(
-        ValueError, match=r".*Aggregation function called but not defined.*",
+        ValueError,
+        match=r".*Aggregation function called but not defined.*",
     ):
         mapie = MapieRegressor()
         mapie.aggregate_with_mask(X, k)

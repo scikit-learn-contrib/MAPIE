@@ -1,6 +1,6 @@
 import warnings
 from inspect import signature
-from typing import Any, Callable, Iterable, Optional, Tuple, Union, cast
+from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
@@ -8,83 +8,6 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.validation import _check_sample_weight
 
 from ._typing import ArrayLike
-
-
-def phi1D(
-    x: ArrayLike, B: ArrayLike, fun: Callable[[ArrayLike], ArrayLike],
-) -> ArrayLike:
-    """
-    The function phi1D is called by phi2D. It aims at multiplying the vector of
-    predictions, made by refitted estimators, by a 1-nan matrix specifying, for
-    each training sample, if it has to be taken into account by the aggregating
-    function, before aggregation
-
-    Parameters
-    ----------
-    x : ArrayLike
-        1D vector
-    B : ArrayLike
-        2D vector whose number of columns is the length of x
-    fun : function
-        Vectorized function applying to Arraylike, and that should ignore nan
-
-    Returns
-    -------
-    phi1D(x, B, fun): ArrayLike
-        Each row of B is multiply by x and then the function fun is applied.
-        Typically, ``fun`` is a numpy function, with argument ``axis`` set to 1
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> x = np.array([1,2,3,4,5])
-    >>> B = np.array([1,1,1,np.nan,np.nan,np.nan,np.nan,1,1,1])
-    >>> B = B.reshape(-1, 5)
-    >>> fun = lambda x: np.nanmean(x, axis =1)
-    >>> res = phi1D(x, B, fun)
-    >>> print(res)
-    [2. 4.]
-    """
-    return fun(x * B)
-
-
-def phi2D(
-    A: ArrayLike, B: ArrayLike, fun: Callable[[ArrayLike], ArrayLike],
-) -> ArrayLike:
-    """
-    The function phi2D is a loop along the testing set. For each sample of the
-    testing set it applies phi1D to multiply the vector of predictions, made by
-    the refitted estimators, by a 1-nan matrix, to compute the aggregated
-    predictions ignoring the nans
-
-    Parameters
-    ----------
-    A : ArrayLike
-    B : ArrayLike
-        A and B must have the same number of columns
-    fun : function
-        Vectorized function applying to Arraylike, and that should ignore nan
-
-    Returns
-    -------
-    phi2D(A, B, fun): ArrayLike
-        Apply phi1D(x, B, fun) to each row x of A
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> A = np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
-    >>> A = A.reshape(-1,5)
-    >>> B = np.array([1,1,1,np.nan,np.nan,np.nan,np.nan,1,1,1])
-    >>> B = B.reshape(-1, 5)
-    >>> fun = lambda x: np.nanmean(x, axis =1)
-    >>> res = phi2D(A, B, fun)
-    >>> print(res)
-    [[ 2.  4.]
-     [ 7.  9.]
-     [12. 14.]]
-    """
-    return np.apply_along_axis(phi1D, axis=1, arr=A, B=B, fun=fun,)
 
 
 def check_null_weight(
@@ -150,7 +73,7 @@ def fit_estimator(
     Fit an estimator on training data by distinguishing two cases:
     - the estimator supports sample weights and sample weights are provided.
     - the estimator does not support samples weights or
-      samples weights are not provided
+      samples weights are not provided.
 
     Parameters
     ----------
@@ -196,7 +119,7 @@ def check_alpha(
     alpha: Optional[Union[float, Iterable[float]]] = None
 ) -> Optional[np.ndarray]:
     """
-    Check alpha and prepare it as a np.ndarray
+    Check alpha and prepare it as a np.ndarray.
 
     Parameters
     ----------
@@ -241,9 +164,7 @@ def check_alpha(
     return alpha_np
 
 
-def check_random_state(
-    random_state: Optional[int] = None
-) -> Optional[int]:
+def check_random_state(random_state: Optional[int] = None) -> Optional[int]:
     """
     Check random_state parameter.
 
