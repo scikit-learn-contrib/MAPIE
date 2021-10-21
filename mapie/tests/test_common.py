@@ -78,7 +78,8 @@ def test_invalid_estimator(
 
 @parametrize_with_checks(
     [
-        MapieRegressor(),  # MapieEstimator() for MapieEstimator in MapieEstimators()
+        MapieRegressor(),
+        # MapieEstimator() for MapieEstimator in MapieEstimators()
     ]
 )  # type: ignore
 def test_sklearn_compatible_estimator(

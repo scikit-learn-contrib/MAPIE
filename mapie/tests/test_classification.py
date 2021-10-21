@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.datasets import make_classification
-from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.pipeline import make_pipeline
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
 from sklearn.utils.validation import check_is_fitted
@@ -187,8 +187,9 @@ def test_valid_method(method: str) -> None:
     mapie.fit(X_toy, y_toy)
     check_is_fitted(mapie, mapie.fit_attributes)
 
+
 @pytest.mark.parametrize(
-    "cv", [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
+    "cv", [-3.14, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
 )
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""
@@ -301,16 +302,16 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     Test predictions when sample weights are None
     or constant with different values.
     """
-    n_samples = len(X_toy)
+    n_samples = len(X)
     mapie0 = MapieClassifier(**STRATEGIES[strategy])
     mapie1 = MapieClassifier(**STRATEGIES[strategy])
     mapie2 = MapieClassifier(**STRATEGIES[strategy])
-    mapie0.fit(X_toy, y_toy, sample_weight=None)
-    mapie1.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples))
-    mapie2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples)*5)
-    y_pred0, y_ps0 = mapie0.predict(X_toy, alpha=0.2)
-    y_pred1, y_ps1 = mapie1.predict(X_toy, alpha=0.2)
-    y_pred2, y_ps2 = mapie2.predict(X_toy, alpha=0.2)
+    mapie0.fit(X, y, sample_weight=None)
+    mapie1.fit(X, y, sample_weight=np.ones(shape=n_samples))
+    mapie2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
+    y_pred0, y_ps0 = mapie0.predict(X, alpha=0.2)
+    y_pred1, y_ps1 = mapie1.predict(X, alpha=0.2)
+    y_pred2, y_ps2 = mapie2.predict(X, alpha=0.2)
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred0, y_pred2)
     np.testing.assert_allclose(y_ps0, y_ps1)

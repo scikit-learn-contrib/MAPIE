@@ -226,6 +226,103 @@ def test_predict_output_shape(
     assert y_pis.shape == (X.shape[0], 2, n_alpha)
 
 
+def test_none_alpha_results() -> None:
+    """
+    Test that alpha set to None in Mapie gives same predictions
+    as base regressor.
+    """
+    estimator = LinearRegression()
+    estimator.fit(X, y)
+    y_pred_est = estimator.predict(X)
+    mapie = MapieRegressor(estimator=estimator, cv="prefit")
+    mapie.fit(X, y)
+    y_pred_mapie = mapie.predict(X)
+    np.testing.assert_allclose(y_pred_est, y_pred_mapie)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_results_for_same_alpha(strategy: str) -> None:
+    """
+    Test that predictions and intervals
+    are similar with two equal values of alpha.
+    """
+    mapie = MapieRegressor(**STRATEGIES[strategy])
+    mapie.fit(X, y)
+    _, y_pis = mapie.predict(X, alpha=[0.1, 0.1])
+    np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 0, 1])
+    np.testing.assert_allclose(y_pis[:, 1, 0], y_pis[:, 1, 1])
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize(
+    "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
+)
+def test_results_for_alpha_as_float_and_arraylike(
+    strategy: str, alpha: Any
+) -> None:
+    """Test that output values do not depend on type of alpha."""
+    mapie = MapieRegressor(**STRATEGIES[strategy])
+    mapie.fit(X, y)
+    y_pred_float1, y_pis_float1 = mapie.predict(X, alpha=alpha[0])
+    y_pred_float2, y_pis_float2 = mapie.predict(X, alpha=alpha[1])
+    y_pred_array, y_pis_array = mapie.predict(X, alpha=alpha)
+    np.testing.assert_allclose(y_pred_float1, y_pred_array)
+    np.testing.assert_allclose(y_pred_float2, y_pred_array)
+    np.testing.assert_allclose(y_pis_float1[:, :, 0], y_pis_array[:, :, 0])
+    np.testing.assert_allclose(y_pis_float2[:, :, 0], y_pis_array[:, :, 1])
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_results_for_ordered_alpha(strategy: str) -> None:
+    """
+    Test that prediction intervals lower (upper) bounds give
+    consistent results for ordered alphas.
+    """
+    mapie = MapieRegressor(**STRATEGIES[strategy])
+    mapie.fit(X, y)
+    y_pred, y_pis = mapie.predict(X, alpha=[0.05, 0.1])
+    assert (y_pis[:, 0, 0] <= y_pis[:, 0, 1]).all()
+    assert (y_pis[:, 1, 0] >= y_pis[:, 1, 1]).all()
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_results_single_and_multi_jobs(strategy: str) -> None:
+    """
+    Test that MapieRegressor gives equal predictions
+    regardless of number of parallel jobs.
+    """
+    mapie_single = MapieRegressor(n_jobs=1, **STRATEGIES[strategy])
+    mapie_multi = MapieRegressor(n_jobs=-1, **STRATEGIES[strategy])
+    mapie_single.fit(X_toy, y_toy)
+    mapie_multi.fit(X_toy, y_toy)
+    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.2)
+    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.2)
+    np.testing.assert_allclose(y_pred_single, y_pred_multi)
+    np.testing.assert_allclose(y_pis_single, y_pis_multi)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_results_with_constant_sample_weights(strategy: str) -> None:
+    """
+    Test predictions when sample weights are None
+    or constant with different values.
+    """
+    n_samples = len(X)
+    mapie0 = MapieRegressor(**STRATEGIES[strategy])
+    mapie1 = MapieRegressor(**STRATEGIES[strategy])
+    mapie2 = MapieRegressor(**STRATEGIES[strategy])
+    mapie0.fit(X, y, sample_weight=None)
+    mapie1.fit(X, y, sample_weight=np.ones(shape=n_samples))
+    mapie2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
+    y_pred0, y_pis0 = mapie0.predict(X, alpha=0.05)
+    y_pred1, y_pis1 = mapie1.predict(X, alpha=0.05)
+    y_pred2, y_pis2 = mapie2.predict(X, alpha=0.05)
+    np.testing.assert_allclose(y_pred0, y_pred1)
+    np.testing.assert_allclose(y_pred1, y_pred2)
+    np.testing.assert_allclose(y_pis0, y_pis1)
+    np.testing.assert_allclose(y_pis1, y_pis2)
+
+
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_prediction_between_low_up(strategy: str) -> None:
     """Test that prediction lies between low and up prediction intervals."""
@@ -239,7 +336,7 @@ def test_prediction_between_low_up(strategy: str) -> None:
 @pytest.mark.parametrize("method", ["plus", "minmax"])
 @pytest.mark.parametrize("cv", [-1, 2, 3, 5])
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2])
-def test_prediction_ensemble(
+def test_prediction_agg_function(
     method: str, cv: Union[LeaveOneOut, KFold], alpha: int
 ) -> None:
     """
@@ -285,102 +382,6 @@ def test_linear_regression_results(strategy: str) -> None:
     coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
     np.testing.assert_allclose(width_mean, WIDTHS[strategy], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
-
-
-def test_none_alpha_results() -> None:
-    """
-    Test that alpha set to None in Mapie gives same predictions
-    as base regressor.
-    """
-    estimator = LinearRegression()
-    estimator.fit(X, y)
-    y_pred_est = estimator.predict(X)
-    mapie = MapieRegressor(estimator=estimator, cv="prefit")
-    mapie.fit(X, y)
-    y_pred_mapie = mapie.predict(X)
-    np.testing.assert_allclose(y_pred_est, y_pred_mapie)
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_results_for_same_alpha(strategy: str) -> None:
-    """
-    Test that predictions and intervals
-    are similar with two equal values of alpha.
-    """
-    mapie = MapieRegressor(**STRATEGIES[strategy])
-    mapie.fit(X, y)
-    _, y_pis = mapie.predict(X, alpha=[0.1, 0.1])
-    np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 0, 1])
-    np.testing.assert_allclose(y_pis[:, 1, 0], y_pis[:, 1, 1])
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_results_for_ordered_alpha(strategy: str) -> None:
-    """
-    Test that prediction intervals lower (upper) bounds give
-    consistent results for ordered alphas.
-    """
-    mapie = MapieRegressor(**STRATEGIES[strategy])
-    mapie.fit(X, y)
-    y_pred, y_pis = mapie.predict(X, alpha=[0.05, 0.1])
-    assert (y_pis[:, 0, 0] <= y_pis[:, 0, 1]).all()
-    assert (y_pis[:, 1, 0] >= y_pis[:, 1, 1]).all()
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize(
-    "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
-)
-def test_results_for_alpha_as_float_and_arraylike(
-    strategy: str, alpha: Any
-) -> None:
-    """Test that output values do not depend on type of alpha."""
-    mapie = MapieRegressor(**STRATEGIES[strategy])
-    mapie.fit(X, y)
-    y_pred_float1, y_pis_float1 = mapie.predict(X, alpha=alpha[0])
-    y_pred_float2, y_pis_float2 = mapie.predict(X, alpha=alpha[1])
-    y_pred_array, y_pis_array = mapie.predict(X, alpha=alpha)
-    np.testing.assert_allclose(y_pred_float1, y_pred_array)
-    np.testing.assert_allclose(y_pred_float2, y_pred_array)
-    np.testing.assert_allclose(y_pis_float1[:, :, 0], y_pis_array[:, :, 0])
-    np.testing.assert_allclose(y_pis_float2[:, :, 0], y_pis_array[:, :, 1])
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_results_single_and_multi_jobs(strategy: str) -> None:
-    """
-    Test that MapieRegressor gives equal predictions
-    regardless of number of parallel jobs.
-    """
-    mapie_single = MapieRegressor(n_jobs=1, **STRATEGIES[strategy])
-    mapie_multi = MapieRegressor(n_jobs=-1, **STRATEGIES[strategy])
-    mapie_single.fit(X_toy, y_toy)
-    mapie_multi.fit(X_toy, y_toy)
-    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.2)
-    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.2)
-    np.testing.assert_allclose(y_pred_single, y_pred_multi)
-    np.testing.assert_allclose(y_pis_single, y_pis_multi)
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_results_with_constant_sample_weights(strategy: str) -> None:
-    """
-    Test PIs when sample weights are None or constant with different values.
-    """
-    n_samples = len(X)
-    mapie0 = MapieRegressor(**STRATEGIES[strategy])
-    mapie1 = MapieRegressor(**STRATEGIES[strategy])
-    mapie2 = MapieRegressor(**STRATEGIES[strategy])
-    mapie0.fit(X, y, sample_weight=None)
-    mapie1.fit(X, y, sample_weight=np.ones(shape=n_samples))
-    mapie2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
-    y_pred0, y_pis0 = mapie0.predict(X, alpha=0.05)
-    y_pred1, y_pis1 = mapie1.predict(X, alpha=0.05)
-    y_pred2, y_pis2 = mapie2.predict(X, alpha=0.05)
-    np.testing.assert_allclose(y_pred0, y_pred1)
-    np.testing.assert_allclose(y_pred1, y_pred2)
-    np.testing.assert_allclose(y_pis0, y_pis1)
-    np.testing.assert_allclose(y_pis1, y_pis2)
 
 
 def test_results_prefit_ignore_method() -> None:
