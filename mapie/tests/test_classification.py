@@ -1,13 +1,12 @@
 from __future__ import annotations
+
 from typing import Any, Optional, Tuple
 from typing_extensions import TypedDict
-from inspect import signature
 
 import pytest
 import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.datasets import make_classification
-from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
@@ -118,11 +117,6 @@ class CumulatedscoreClassifier:
             )
 
 
-def test_initialized() -> None:
-    """Test that initialization does not crash."""
-    MapieClassifier()
-
-
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie = MapieClassifier()
@@ -135,51 +129,11 @@ def test_default_parameters() -> None:
     assert mapie.n_jobs is None
 
 
-def test_default_sample_weight() -> None:
-    """Test default sample weights."""
-    mapie = MapieClassifier()
-    assert signature(mapie.fit).parameters["sample_weight"].default is None
-
-
-def test_default_alpha() -> None:
-    """Test default alpha."""
-    mapie = MapieClassifier()
-    assert signature(mapie.predict).parameters["alpha"].default is None
-
-
-def test_fit() -> None:
-    """Test that fit raises no errors."""
-    mapie = MapieClassifier()
-    mapie.fit(X_toy, y_toy)
-
-
-def test_fit_predict() -> None:
-    """Test that fit-predict raises no errors."""
-    mapie = MapieClassifier()
-    mapie.fit(X_toy, y_toy)
-    mapie.predict(X_toy)
-
-
-def test_no_fit_predict() -> None:
-    """Test that predict before fit raises errors"""
-    mapie = MapieClassifier(estimator=DummyClassifier())
-    with pytest.raises(NotFittedError, match=r".*not fitted.*"):
-        mapie.predict(X_toy)
-
-
 def test_none_estimator() -> None:
     """Test that None estimator defaults to LogisticRegression."""
     mapie = MapieClassifier(estimator=None)
     mapie.fit(X_toy, y_toy)
     assert isinstance(mapie.single_estimator_, LogisticRegression)
-
-
-@pytest.mark.parametrize("estimator", [0, "estimator", KFold(), ["a", "b"]])
-def test_invalid_estimator(estimator: Any) -> None:
-    """Test that invalid estimators raise errors."""
-    mapie = MapieClassifier(estimator=estimator)
-    with pytest.raises(ValueError, match=r".*Invalid estimator.*"):
-        mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -195,10 +149,7 @@ def test_valid_estimator(strategy: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "estimator", [
-        LogisticRegression(),
-        make_pipeline(LogisticRegression())
-    ]
+    "estimator", [LogisticRegression(), make_pipeline(LogisticRegression())]
 )
 def test_invalid_prefit_estimator(estimator: ClassifierMixin) -> None:
     """Test that non-fitted estimator with prefit cv raise errors."""
@@ -208,28 +159,14 @@ def test_invalid_prefit_estimator(estimator: ClassifierMixin) -> None:
 
 
 @pytest.mark.parametrize(
-    "estimator", [
-        LogisticRegression(),
-        make_pipeline(LogisticRegression())
-    ]
+    "estimator", [LogisticRegression(), make_pipeline(LogisticRegression())]
 )
 def test_valid_prefit_estimator(estimator: ClassifierMixin) -> None:
     """Test that fitted estimators with prefit cv raise no errors."""
     estimator.fit(X_toy, y_toy)
     mapie = MapieClassifier(estimator=estimator, cv="prefit")
     mapie.fit(X_toy, y_toy)
-    if isinstance(estimator, Pipeline):
-        check_is_fitted(mapie.single_estimator_[-1])
-    else:
-        check_is_fitted(mapie.single_estimator_)
-    check_is_fitted(
-        mapie,
-        [
-            "single_estimator_",
-            "n_features_in_",
-            "n_samples_val_"
-        ]
-    )
+    check_is_fitted(mapie, mapie.fit_attributes)
     assert mapie.n_features_in_ == 1
 
 
@@ -248,25 +185,7 @@ def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
     mapie = MapieClassifier(method=method)
     mapie.fit(X_toy, y_toy)
-    check_is_fitted(
-        mapie,
-        [
-            "single_estimator_",
-            "n_features_in_",
-            "n_samples_val_",
-            "scores_"
-        ]
-    )
-
-
-@pytest.mark.parametrize("cv", [None, "prefit"])
-def test_valid_cv(cv: Any) -> None:
-    """Test that valid cv raise no errors."""
-    model = LogisticRegression(multi_class="multinomial")
-    model.fit(X_toy, y_toy)
-    mapie = MapieClassifier(estimator=model, cv=cv)
-    mapie.fit(X_toy, y_toy)
-
+    check_is_fitted(mapie, mapie.fit_attributes)
 
 @pytest.mark.parametrize(
     "cv", [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
@@ -276,6 +195,15 @@ def test_invalid_cv(cv: Any) -> None:
     mapie = MapieClassifier(cv=cv)
     with pytest.raises(ValueError, match=r".*Invalid cv argument.*"):
         mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("cv", [None, "prefit"])
+def test_valid_cv(cv: Any) -> None:
+    """Test that valid cv raise no errors."""
+    model = LogisticRegression(multi_class="multinomial")
+    model.fit(X_toy, y_toy)
+    mapie = MapieClassifier(estimator=model, cv=cv)
+    mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize(
@@ -292,9 +220,7 @@ def test_invalid_random_sets(random_sets: Any) -> None:
 @pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_predict_output_shape(
-    strategy: str,
-    alpha: Any,
-    dataset: Tuple[np.ndarray, np.ndarray]
+    strategy: str, alpha: Any, dataset: Tuple[np.ndarray, np.ndarray]
 ) -> None:
     """Test predict output shape."""
     mapie = MapieClassifier(**STRATEGIES[strategy])

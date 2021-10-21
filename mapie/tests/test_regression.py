@@ -1,24 +1,23 @@
 from __future__ import annotations
 
-from inspect import signature
 from itertools import combinations
 from typing import Any, List, Optional, Tuple, Union
+from typing_extensions import TypedDict
 
-import numpy as np
 import pytest
-from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieRegressor
-from mapie.subsample import Subsample
+import numpy as np
 from sklearn.base import RegressorMixin
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.utils.estimator_checks import parametrize_with_checks
+from sklearn.pipeline import make_pipeline
 from sklearn.utils.validation import check_is_fitted
-from typing_extensions import TypedDict
+
+from mapie.metrics import regression_coverage_score
+from mapie.regression import MapieRegressor
+from mapie.subsample import Subsample
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -102,11 +101,6 @@ COVERAGES = {
 }
 
 
-def test_initialized() -> None:
-    """Test that initialization does not crash."""
-    MapieRegressor()
-
-
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie = MapieRegressor()
@@ -118,51 +112,11 @@ def test_default_parameters() -> None:
     assert mapie.n_jobs is None
 
 
-def test_default_sample_weight() -> None:
-    """Test default sample weights."""
-    mapie = MapieRegressor()
-    assert signature(mapie.fit).parameters["sample_weight"].default is None
-
-
-def test_default_alpha() -> None:
-    """Test default alpha."""
-    mapie = MapieRegressor()
-    assert signature(mapie.predict).parameters["alpha"].default is None
-
-
-def test_fit() -> None:
-    """Test that fit raises no errors."""
-    mapie = MapieRegressor()
-    mapie.fit(X_toy, y_toy)
-
-
-def test_fit_predict() -> None:
-    """Test that fit-predict raises no errors."""
-    mapie = MapieRegressor()
-    mapie.fit(X_toy, y_toy)
-    mapie.predict(X_toy)
-
-
-def test_no_fit_predict() -> None:
-    """Test that predict before fit raises errors"""
-    mapie = MapieRegressor(estimator=DummyRegressor())
-    with pytest.raises(NotFittedError, match=r".*not fitted.*"):
-        mapie.predict(X_toy)
-
-
 def test_none_estimator() -> None:
     """Test that None estimator defaults to LinearRegression."""
     mapie = MapieRegressor(estimator=None)
     mapie.fit(X_toy, y_toy)
     assert isinstance(mapie.single_estimator_, LinearRegression)
-
-
-@pytest.mark.parametrize("estimator", [0, "estimator", KFold(), ["a", "b"]])
-def test_invalid_estimator(estimator: Any) -> None:
-    """Test that invalid estimators raise errors."""
-    mapie = MapieRegressor(estimator=estimator)
-    with pytest.raises(ValueError, match=r".*Invalid estimator.*"):
-        mapie.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -193,20 +147,7 @@ def test_valid_prefit_estimator(estimator: RegressorMixin) -> None:
     estimator.fit(X_toy, y_toy)
     mapie = MapieRegressor(estimator=estimator, cv="prefit")
     mapie.fit(X_toy, y_toy)
-    if isinstance(estimator, Pipeline):
-        check_is_fitted(mapie.single_estimator_[-1])
-    else:
-        check_is_fitted(mapie.single_estimator_)
-    check_is_fitted(
-        mapie,
-        [
-            "n_features_in_",
-            "single_estimator_",
-            "estimators_",
-            "k_",
-            "residuals_",
-        ],
-    )
+    check_is_fitted(mapie, mapie.fit_attributes)
     assert mapie.n_features_in_ == 1
 
 
@@ -223,16 +164,7 @@ def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
     mapie = MapieRegressor(method=method)
     mapie.fit(X_toy, y_toy)
-    check_is_fitted(
-        mapie,
-        [
-            "n_features_in_",
-            "single_estimator_",
-            "estimators_",
-            "k_",
-            "residuals_",
-        ],
-    )
+    check_is_fitted(mapie, mapie.fit_attributes)
 
 
 @pytest.mark.parametrize("agg_function", ["dummy", 0, 1, 2.5, [1, 2]])
@@ -243,7 +175,7 @@ def test_invalid_agg_function(agg_function: Any) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("agg_function", [None, "mean"])
+@pytest.mark.parametrize("agg_function", [None, "mean", "median"])
 def test_valid_agg_function(agg_function: str) -> None:
     """Test that valid agg_functions raise no errors."""
     mapie = MapieRegressor(agg_function=agg_function)
@@ -260,6 +192,13 @@ def test_invalid_cv(cv: Any) -> None:
         mapie.fit(X_toy, y_toy)
 
 
+@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])
+def test_valid_cv(cv: Any) -> None:
+    """Test that valid cv raise no errors."""
+    mapie = MapieRegressor(cv=cv)
+    mapie.fit(X_toy, y_toy)
+
+
 @pytest.mark.parametrize("cv", [100, 200, 300])
 def test_too_large_cv(cv: Any) -> None:
     """Test that too large cv raise sklearn errors."""
@@ -269,19 +208,6 @@ def test_too_large_cv(cv: Any) -> None:
         match=rf".*Cannot have number of splits n_splits={cv} greater.*",
     ):
         mapie.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])
-def test_valid_cv(cv: Any) -> None:
-    """Test that valid cv raise no errors."""
-    mapie = MapieRegressor(cv=cv)
-    mapie.fit(X_toy, y_toy)
-
-
-@parametrize_with_checks([MapieRegressor()])  # type: ignore
-def test_sklearn_compatible_estimator(estimator: Any, check: Any) -> None:
-    """Check compatibility with sklearn, using sklearn estimator checks API."""
-    check(estimator)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])

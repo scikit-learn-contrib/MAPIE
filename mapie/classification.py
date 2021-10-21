@@ -154,6 +154,12 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         "score",
         "cumulated_score"
     ]
+    fit_attributes = [
+        "single_estimator_",
+        "scores_",
+        "n_features_in_",
+        "n_samples_val_"
+    ]
 
     def __init__(
         self,
@@ -388,15 +394,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         """
         # Checks
         alpha_ = check_alpha(alpha)
-        check_is_fitted(
-            self,
-            [
-                "single_estimator_",
-                "scores_",
-                "n_features_in_",
-                "n_samples_val_"
-            ]
-        )
+        check_is_fitted(self, self.fit_attributes)
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
         y_pred_proba = self.single_estimator_.predict_proba(X)

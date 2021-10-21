@@ -179,6 +179,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     valid_methods_ = ["naive", "base", "plus", "minmax"]
     valid_agg_functions_ = [None, "median", "mean"]
+    fit_attributes = [
+        "single_estimator_",
+        "estimators_",
+        "k_",
+        "residuals_",
+        "n_features_in_",
+        "n_samples_val_",
+    ]
 
     def __init__(
         self,
@@ -584,17 +592,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             - [:, 1, :]: Upper bound of the prediction interval
         """
         # Checks
-        check_is_fitted(
-            self,
-            [
-                "single_estimator_",
-                "estimators_",
-                "k_",
-                "residuals_",
-                "n_features_in_",
-                "n_samples_val_",
-            ],
-        )
+        check_is_fitted(self, self.fit_attributes)
         alpha_ = check_alpha(alpha)
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
