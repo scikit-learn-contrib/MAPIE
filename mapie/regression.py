@@ -4,6 +4,7 @@ import warnings
 from typing import Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
+import numpy.ma as ma
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
@@ -13,7 +14,8 @@ from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
-from .subsample import Subsample, phi2D
+from .aggregation_functions import phi2D
+from .subsample import Subsample
 from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
@@ -154,17 +156,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
     34th Conference on Neural Information Processing Systems (NeurIPS 2020).
 
-
-
     Examples
     --------
     >>> import numpy as np
     >>> from mapie.regression import MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
-    >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
+    >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> pireg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
-    >>> y_pred, y_pis = pireg.predict(X_toy, alpha=0.5)
+    >>> mapie_reg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
+    >>> y_pred, y_pis = mapie_reg.predict(X_toy, alpha=0.5)
     >>> print(y_pis[:, :, 0])
     [[ 4.7972973   5.8       ]
      [ 6.69767442  7.65540541]
@@ -206,23 +206,36 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Examples
         --------
+        >>> import warnings
+        >>> warnings.filterwarnings("error")
         >>> from mapie.regression import MapieRegressor
-        >>> MapieRegressor(method="minus")
-        Invalid method. 
+        >>> mapie_reg = MapieRegressor(method="minus")
+        >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
+        >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
+        >>> try:
+        ...     mapie_reg = mapie_reg.fit(X_toy, y_toy)
+        ... except Exception as exception:
+        ...    print(exception)
+        Invalid method.
         Allowed values are 'naive', 'base', 'plus' and 'minmax'.
-        >>> MapieRegressor(agg_function="medium")
+        >>> mapie_reg = MapieRegressor(agg_function="medium")
+        >>> try:
+        ...     mapie_reg = mapie_reg.fit(X_toy, y_toy)
+        ... except Exception as exception:
+        ...    print(exception)
+        ...
         Invalid aggregation function.
         Allowed values are None, 'mean', 'median'.
         """
         if self.method not in self.valid_methods_:
             raise ValueError(
-                "Invalid method. "
+                "Invalid method.\n"
                 "Allowed values are 'naive', 'base', 'plus' and 'minmax'."
             )
 
         if self.agg_function not in self.valid_agg_functions_:
             raise ValueError(
-                "Invalid aggregation function. "
+                "Invalid aggregation function.\n"
                 "Allowed values are None, 'mean', 'median'."
             )
 
@@ -259,17 +272,26 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Examples
         --------
+        >>> import warnings
+        >>> warnings.filterwarnings("error")
         >>> from sklearn.impute import SimpleImputer
         >>> from mapie.regression import MapieRegressor
-        >>> MapieRegressor(method="minus")
+        >>> mapie_reg = MapieRegressor(SimpleImputer())
+        >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
+        >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
+        >>> try:
+        ...     mapie_reg = mapie_reg.fit(X_toy, y_toy)
+        ... except Exception as exception:
+        ...    print(exception)
+        ...
         Invalid estimator.
         Please provide a regressor with fit and predict methods.
         """
         if estimator is None:
             return LinearRegression()
-        if not hasattr(estimator, "fit") and not hasattr(estimator, "predict"):
+        if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
             raise ValueError(
-                "Invalid estimator. "
+                "Invalid estimator.\n"
                 "Please provide a regressor with fit and predict methods."
             )
         if self.cv == "prefit":
@@ -310,21 +332,34 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         --------
         >>> from mapie.regression import MapieRegressor
         >>> from mapie.subsample import Subsample
+        >>> import warnings
+        >>> warnings.filterwarnings("error")
         >>> cv = Subsample(n_resamplings=2,random_state=0)
-        >>> MapieRegressor(cv=cv)
+        >>> mapie_reg = MapieRegressor(cv=cv)
+        >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
+        >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
+        >>> try:
+        ...     mapie_reg = mapie_reg.fit(X_toy, y_toy)
+        ... except Exception as exception:
+        ...    print(exception)
+        ...
         WARNING: you need to specify an aggregation function when
-        using Subsample as cross validator.
-        agg_function set to 'mean'.
-        >>> MapieRegressor(cv="subsample")
-        Invalid cv argument. 
-        Allowed values are None, -1, int >= 2, 'prefit', 
+         using Subsample as cross validator. agg_function set to 'mean'.
+        >>> mapie_reg = MapieRegressor(cv="subsample")
+        >>> try:
+        ...     mapie_reg = mapie_reg.fit(X_toy, y_toy)
+        ... except Exception as exception:
+        ...    print(exception)
+        ...
+        Invalid cv argument.
+        Allowed values are None, -1, int >= 2, 'prefit',
         KFold, LeaveOneOut, or Subsample.
 
         """
         if isinstance(cv, Subsample) and (self.agg_function is None):
             warnings.warn(
-                "WARNING: you need to specify an aggregation function when"
-                "using Subsample as cross validator."
+                "WARNING: you need to specify an aggregation function when\n "
+                "using Subsample as cross validator. "
                 "agg_function set to 'mean'."
             )
             self.agg_function = "mean"
@@ -339,8 +374,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
             return cv
         raise ValueError(
-            "Invalid cv argument. "
-            "Allowed values are None, -1, int >= 2, 'prefit', "
+            "Invalid cv argument.\n"
+            "Allowed values are None, -1, int >= 2, 'prefit',\n"
             "KFold, LeaveOneOut, or Subsample."
         )
 
@@ -399,14 +434,25 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         >>> import numpy as np
         >>> from sklearn.datasets import make_regression
         >>> from sklearn.linear_model import LinearRegression
-        >>> from mapie.subsample import Subsample 
+        >>> from mapie.subsample import Subsample
         >>> from mapie.regression import MapieRegressor
         >>> regressor = LinearRegression()
-        >>> X, y = make_regression(n_samples=50, n_features=1, noise=20, random_state=59)
-        >>> cv = Subsample(n_resamplings = 30, n_samples=None)
-        >>> mapie = MapieRegressor(estimator=regressor, method="plus", cv = cv, agg_function="mean")
-        >>> print([estimator.predict(np.array([[0]]))[0] for estimator in mapie.estimators_[:2]])
-        [0.5244092881490869, -0.3577943709004754]
+        >>> X, y = make_regression(n_samples=50,
+        ... n_features=1,
+        ... noise=20,
+        ... random_state=59,
+        ... )
+        >>> cv = Subsample(n_resamplings=30, n_samples=None, random_state=1)
+        >>> mapie_reg = MapieRegressor(estimator=regressor,
+        ... method="plus",
+        ... cv = cv,
+        ... agg_function="mean",
+        ... )
+        >>> mapie_reg = mapie_reg.fit(X, y)
+        >>> print(
+        ...    [estimator.predict(np.array([[0]]))[0]
+        ...     for estimator in mapie_reg.estimators_[:2]])
+        [-3.6403551565577574, 5.331509965753009]
 
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
@@ -416,7 +462,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             estimator = fit_estimator(
                 estimator, X_train, y_train, sample_weight[train_index]
             )
-        y_pred = estimator.predict(X_val)
+        if X_val.shape[0] > 0:
+            y_pred = estimator.predict(X_val)
+        else:
+            y_pred = np.array([])
         val_id = np.full_like(y_pred, k, dtype=int)
         return estimator, y_pred, val_id, val_index
 
@@ -435,17 +484,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         --------
             ArrayLike of shape (n_samples, 1):
             Array of phi-{i}(x_i) for each training sample x_i.
-        
+
         Examples
         --------
         >>> import numpy as np
         >>> from sklearn.datasets import make_regression
         >>> from sklearn.linear_model import LinearRegression
-        >>> from mapie.subsample import Subsample 
+        >>> from mapie.subsample import Subsample
         >>> from mapie.regression import MapieRegressor
         >>> cv = Subsample(n_resamplings = 30, n_samples=None)
-        >>> mapie = MapieRegressor(method="plus", cv = cv, agg_function="mean")
-        >>> mapie.aggregate_all(np.array([list(range(30)),list(range(30))]))
+        >>> mapie_reg = MapieRegressor(method="plus",
+        ... cv = cv,
+        ... agg_function="mean",
+        ... )
+        >>> mapie_reg.aggregate_all(
+        ...     np.array([list(range(30)),
+        ...     list(range(30))]))
         array([14.5, 14.5])
 
         """
@@ -483,15 +537,26 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         >>> import numpy as np
         >>> from sklearn.datasets import make_regression
         >>> from sklearn.linear_model import LinearRegression
-        >>> from mapie.subsample import Subsample 
+        >>> from mapie.subsample import Subsample
         >>> from mapie.regression import MapieRegressor
         >>> regressor = LinearRegression()
-        >>> X, y = make_regression(n_samples=50, n_features=1, noise=20, random_state=59)
+        >>> X, y = make_regression(n_samples=50,
+        ... n_features=1,
+        ... noise=20,
+        ... random_state=59,
+        ... )
         >>> cv = Subsample(n_resamplings = 30, n_samples=None)
-        >>> mapie = MapieRegressor(estimator=regressor, method="plus", cv = cv, agg_function="mean")
-        >>> mapie.aggregate_with_mask(np.array([list(range(30)),list(range(30))]), np.ones((2, 30)))
+        >>> mapie_reg = MapieRegressor(
+        ...     estimator=regressor,
+        ...     method="plus",
+        ...     cv = cv,
+        ...     agg_function="mean",
+        ...     )
+        >>> mapie_reg.aggregate_with_mask(
+        ...     np.array([list(range(30)),list(range(30))]),
+        ...     np.ones((2, 30)))
         array([[14.5, 14.5],
-       [14.5, 14.5]])
+               [14.5, 14.5]])
         """
         if self.agg_function == "median":
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
@@ -540,14 +605,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         -------
         >>> from sklearn.datasets import make_regression
         >>> from mapie.regression import MapieRegressor
-        >>> X, y = make_regression(n_samples=50, n_features=1, noise=20, random_state=59)
-        >>> mapie = MapieRegressor()
-        >>> hasattr(mapie, "estimators_"))
+        >>> X, y = make_regression(
+        ...     n_samples=50,
+        ...     n_features=1,
+        ...     noise=20,
+        ...     random_state=59)
+        >>> mapie_reg = MapieRegressor()
+        >>> hasattr(mapie_reg, "estimators_")
         False
-        >>> mapie = mapie.fit(X, y)
-        >>> hasattr(mapie, "estimators_"))
+        >>> mapie_reg = mapie_reg.fit(X, y)
+        >>> hasattr(mapie_reg, "estimators_")
         True
-        
+
         """
         # Checks
         self._check_parameters()
@@ -689,11 +758,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if alpha is None:
             return np.array(y_pred)
         else:
-            # SHAPES:
-            # (n_samples_train,) : self.residuals_
-            # (n_alpha,) : alpha
-            # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
-            # (n_samples_test, n_samples_train) : y_pred_multi, low/up_bounds
             alpha_ = cast(np.ndarray, alpha_)
             check_alpha_and_n_samples(alpha_, self.residuals_.shape[0])
             if self.method in ["naive", "base"] or self.cv == "prefit":
@@ -729,16 +793,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
                 y_pred_low = np.column_stack(
                     [
-                        np.nanquantile(
-                            lower_bounds, _alpha, axis=1, interpolation="lower"
+                        np.quantile(
+                            ma.masked_invalid(lower_bounds),
+                            _alpha,
+                            axis=1,
+                            interpolation="lower",
                         )
                         for _alpha in alpha_
                     ]
                 )
                 y_pred_up = np.column_stack(
                     [
-                        np.nanquantile(
-                            upper_bounds,
+                        np.quantile(
+                            ma.masked_invalid(upper_bounds),
                             1 - _alpha,
                             axis=1,
                             interpolation="higher",

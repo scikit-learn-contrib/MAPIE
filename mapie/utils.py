@@ -18,7 +18,7 @@ def check_null_weight(
 
     Parameters
     ----------
-    sample_weight : ArrayLike
+    sample_weight : ArrayLike of shape (n_samples,)
         Sample weights.
     X : ArrayLike of shape (n_samples, n_features)
         Training samples.
@@ -40,7 +40,7 @@ def check_null_weight(
     --------
     >>> import numpy as np
     >>> from mapie.utils import check_null_weight
-    >>> X = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
+    >>> X = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y = np.array([5, 7, 9, 11, 13, 15])
     >>> sample_weight = np.array([0, 1, 1, 1, 1, 1])
     >>> sample_weight, X, y = check_null_weight(sample_weight, X, y)
@@ -100,7 +100,7 @@ def fit_estimator(
     >>> import numpy as np
     >>> from sklearn.linear_model import LinearRegression
     >>> from sklearn.utils.validation import check_is_fitted
-    >>> X = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
+    >>> X = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y = np.array([5, 7, 9, 11, 13, 15])
     >>> estimator = LinearRegression()
     >>> estimator = fit_estimator(estimator, X, y)
@@ -139,6 +139,12 @@ def check_alpha(
     ------
     ValueError
         If alpha is not a float or an Iterable of floats between 0 and 1.
+
+    Examples
+    --------
+    >>> from mapie.utils import check_alpha
+    >>> check_alpha([0.5, 0.75, 0.9])
+    array([0.5 , 0.75, 0.9 ])
     """
     if alpha is None:
         return alpha
@@ -182,6 +188,12 @@ def check_random_state(random_state: Optional[int] = None) -> Optional[int]:
     ------
     ValueError
         If random_state is not a positive integer.
+
+    Examples
+    --------
+    >>> from mapie.utils import check_random_state
+    >>> print(check_random_state(10))
+    10
     """
     if random_state is None:
         return random_state
@@ -230,6 +242,14 @@ def check_n_features_in(
     ValueError
         If there is an inconsistency between the shape of the dataset
         and the one expected by the estimator.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.utils import check_n_features_in
+    >>> X = np.array([[1,2,3,4,5], [6,7,8,9,10], [11,12,13,14,15]])
+    >>> print(check_n_features_in(X))
+    5
     """
     n_features_in: int = X.shape[1]
     if cv == "prefit" and hasattr(estimator, "n_features_in_"):
@@ -259,12 +279,24 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
     ValueError
         If the number of samples of the score is too low,
         1/alpha (or 1/(1 - alpha)) must be lower than the number of samples.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.utils import check_alpha_and_n_samples
+    >>> try:
+    ...     check_alpha_and_n_samples(np.array([1,2,3]), 0.5)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    Number of samples of the score is too low,
+    1/alpha (or 1/(1 - alpha)) must be lower than the number of samples.
     """
     for alpha in alphas:
         if n < 1 / alpha or n < 1 / (1 - alpha):
             raise ValueError(
-                "Number of samples of the score is too low,"
-                " 1/alpha (or 1/(1 - alpha)) must be lower "
+                "Number of samples of the score is too low,\n"
+                "1/alpha (or 1/(1 - alpha)) must be lower "
                 "than the number of samples."
             )
 
@@ -277,6 +309,16 @@ def check_n_jobs(n_jobs: Optional[int] = None) -> None:
     ------
     ValueError
         If parameter is not valid.
+
+    Examples
+    --------
+    >>> from mapie.utils import check_n_jobs
+    >>> try:
+    ...     check_n_jobs(0)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    Invalid n_jobs argument. Must be different than 0.
     """
     if not isinstance(n_jobs, (int, type(None))):
         raise ValueError("Invalid n_jobs argument. Must be an integer.")
@@ -293,6 +335,16 @@ def check_verbose(verbose: int) -> None:
     ------
     ValueError
         If parameter is not valid.
+
+    Examples
+    --------
+    >>> from mapie.utils import check_verbose
+    >>> try:
+    ...     check_verbose(-1)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    Invalid verbose argument. Must be non-negative.
     """
     if not isinstance(verbose, int):
         raise ValueError("Invalid verbose argument. Must be an integer.")
@@ -302,7 +354,7 @@ def check_verbose(verbose: int) -> None:
 
 
 def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
-    """
+    """ "
     Parameters
     ----------
     X : Array of shape (size of training set, number of estimators) whose rows
@@ -312,11 +364,25 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
     ------
     Warning
         If the aggregated predictions of any training sample would be nan.
+    Examples
+    --------
+    >>> import warnings
+    >>> warnings.filterwarnings("error")
+    >>> import numpy as np
+    >>> from mapie.utils import check_nan_in_aposteriori_prediction
+    >>> X = np.array([[1, 2, 3],[np.nan, np.nan, np.nan],[3, 4, 5]])
+    >>> try:
+    ...     check_nan_in_aposteriori_prediction(X)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    WARNING: at least one point of training set belongs to every resamplings.
+    Increase the number of resamplings
     """
 
     if np.any(np.all(np.isnan(X), axis=1), axis=0):
         warnings.warn(
             "WARNING: at least one point of training set "
-            + "belongs to every resamplings. Increase the "
-            + "number of resamplings"
+            + "belongs to every resamplings.\n"
+            "Increase the number of resamplings"
         )
