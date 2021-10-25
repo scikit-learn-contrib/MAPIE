@@ -461,7 +461,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                     y_pred_proba > 1 - quantile
                     for quantile in self.quantiles_
                 ], axis=2)
-            elif (self.method == "cumulated_score") or (self.method == "naive"):
+            elif ((self.method == "cumulated_score") or
+                    (self.method == "naive")):
                 # sort labels by decreasing probability
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                 # sort probabilities by decreasing order
