@@ -19,7 +19,7 @@ from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
 
 
-METHODS = ["score", "cumulated_score"]
+METHODS = ["score", "cumulated_score", "naive", "top_k"]
 
 Params = TypedDict(
     "Params", {
@@ -42,12 +42,26 @@ STRATEGIES = {
         cv="prefit",
         random_sets=True,
         random_state=42
+    ),
+    "naive": Params(
+        method="naive",
+        cv="prefit",
+        random_sets=False,
+        random_state=42
+    ),
+    "top_k": Params(
+        method="top_k",
+        cv="prefit",
+        random_sets=False,
+        random_state=42
     )
 }
 
 COVERAGES = {
     "score": 7/9,
-    "cumulated_score": 7/9
+    "cumulated_score": 7/9,
+    "naive": 1,
+    "top_k": 1
 }
 
 y_toy_mapie = {
@@ -72,6 +86,28 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True],
         [False, False, True]
+    ],
+    "naive": [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, True, True],
+        [False, False, True],
+        [False, False, True]
+    ],
+    "top_k": [
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True]
     ]
 }
 X_toy = np.arange(9).reshape(-1, 1)

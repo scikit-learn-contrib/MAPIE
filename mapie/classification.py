@@ -48,6 +48,9 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
           on the calibration set.
         - "cumulated_score", based on the sum of the softmax outputs of the
           labels until the true label is reached, on the calibration set.
+        - "naive", sum of the probabilities until the 1-alpha thresold
+        - "top_k", based on the index of the true label in the softmax outputs
+          of the model, on the calibration set
 
           By default "score".
 
@@ -152,7 +155,9 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
     valid_methods_ = [
         "score",
-        "cumulated_score"
+        "cumulated_score",
+        "naive",
+        "top_k"
     ]
 
     def __init__(
@@ -333,7 +338,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             self.scores_ = np.take_along_axis(
                 1 - y_pred, y.reshape(-1, 1), axis=1
             )
-        else:
+        elif self.method == "cumulated_score":
             encoder = LabelBinarizer().fit(y)
             y_true = encoder.transform(y)
             index = np.fliplr(np.argsort(y_pred, axis=1))
@@ -350,6 +355,19 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             np.random.seed(self.random_state)
             rnds = np.random.uniform(size=y_pred.shape[0]).reshape(-1, 1)
             self.scores_ += -y_proba_true + rnds*y_proba_true
+        elif self.method == "naive":
+            self.scores_ = None
+        else:
+            y_labels = [i for i in range(len(y_pred[0]))]
+            encoder = LabelBinarizer().fit(y_labels)
+            y_true = encoder.transform(y)
+            index = np.fliplr(np.argsort(y_pred, axis=1))
+            y_pred_sorted = np.take_along_axis(y_pred, index, axis=1)
+            y_true_sorted = np.take_along_axis(y_true, index, axis=1)
+            y_pred_sorted_cumsum = np.cumsum(y_pred_sorted, axis=1)
+            cutoff = encoder.inverse_transform(y_true_sorted)
+            self.scores_ = cutoff.reshape(-1, 1)
+
         return self
 
     def predict(
@@ -404,20 +422,46 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         if alpha_ is None:
             return np.array(y_pred)
         else:
+
+            # Choice of the quantile
             check_alpha_and_n_samples(alpha_, n)
-            self.quantiles_ = np.stack([
-                np.quantile(
-                    self.scores_,
-                    ((n + 1) * (1 - _alpha)) / n,
-                    interpolation="lower"
-                ) for _alpha in alpha_
-            ])
+
+            if self.method == 'score':
+                self.quantiles_ = np.stack([
+                    np.quantile(
+                        self.scores_,
+                        ((n + 1) * (1 - _alpha)) / n,
+                        interpolation="lower"
+                    ) for _alpha in alpha_
+                ])
+            elif self.method == "cumulated_score":
+                self.quantiles_ = np.stack([
+                    np.quantile(
+                        self.scores_,
+                        ((n + 1) * (1 - _alpha)) / n,
+                        interpolation="lower"
+                    ) for _alpha in alpha_
+                ])
+            elif self.method == "naive":
+                self.quantiles_ = np.stack([
+                    1 - _alpha for _alpha in alpha_
+                ])
+            elif self.method == "top_k":
+                self.quantiles_ = np.stack([
+                    np.quantile(
+                        self.scores_,
+                        ((n + 1) * (1 - _alpha)) / n,
+                        interpolation="lower"
+                        ) for _alpha in alpha_
+                ])
+
+            # Prediction sets
             if self.method == "score":
                 prediction_sets = np.stack([
                     y_pred_proba > 1 - quantile
                     for quantile in self.quantiles_
                 ], axis=2)
-            else:
+            elif (self.method == "cumulated_score") or (self.method == "naive"):
                 # sort labels by decreasing probability
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                 # sort probabilities by decreasing order
@@ -486,4 +530,22 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                     )
                     for i, _ in enumerate(self.quantiles_)
                 ], axis=2)
+
+            else:
+                # sort labels by decreasing probability
+                index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
+                y_bool = np.stack([
+                    np.array([[True if i <= quantile else False
+                               for i in range(len(y_pred_proba[0]))]])
+                    for quantile in self.quantiles_
+                    ], axis=2)
+                prediction_sets = np.stack([
+                    np.take_along_axis(
+                        y_bool[:, :, i],
+                        np.argsort(index_sorted),
+                        axis=1
+                    )
+                    for i, _ in enumerate(self.quantiles_)
+                ], axis=2)
+
             return y_pred, prediction_sets
