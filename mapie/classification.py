@@ -446,7 +446,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 self.quantiles_ = np.stack([
                     1 - _alpha for _alpha in alpha_
                 ])
-            elif self.method == "top_k":
+            else:
                 self.quantiles_ = np.stack([
                     np.quantile(
                         self.scores_,
