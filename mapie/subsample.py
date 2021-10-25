@@ -100,7 +100,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
             )
             yield train_index, test_index
 
-    def get_n_splits(self, *args, **kargs) -> int:
+    def get_n_splits(self, *args: Any, **kargs: Any) -> int:
         """Returns the number of splitting iterations in the cross-validator.
 
         Parameters
