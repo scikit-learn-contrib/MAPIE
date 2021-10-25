@@ -450,9 +450,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ... )
         >>> mapie_reg = mapie_reg.fit(X, y)
         >>> print(
-        ...    [estimator.predict(np.array([[0]]))[0]
+        ...    [np.around(estimator.predict(np.array([[0]])), 2)[0]
         ...     for estimator in mapie_reg.estimators_[:2]])
-        [-3.6403551565577574, 5.331509965753009]
+        [-3.64, 5.33]
 
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
