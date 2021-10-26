@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 
 import numpy as np
 
@@ -81,7 +81,7 @@ def phi2D(
     return np.apply_along_axis(phi1D, axis=1, arr=A, B=B, fun=fun)
 
 
-def aggregate_all(agg_function: str, X: ArrayLike) -> ArrayLike:
+def aggregate_all(agg_function: Optional[str], X: ArrayLike) -> ArrayLike:
     """
     Applies np.nanmean(, axis=1) or np.nanmedian(, axis=1) according
     to the string ``agg_function``.
