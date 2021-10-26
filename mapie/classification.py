@@ -39,7 +39,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         (i.e. with fit, predict, and predict_proba methods), by default None.
         If ``None``, estimator defaults to a ``LogisticRegression`` instance.
 
-    method: str, optional
+    method: Optional[str]
         Method to choose for prediction interval estimates.
         Choose among:
 
@@ -51,7 +51,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
           By default "score".
 
-    cv: Optional[Union[float, str]]
+    cv: Optional[str]
         The cross-validation strategy for computing scores :
 
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
@@ -62,9 +62,15 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         By default ``prefit``.
 
-    random_sets: Optional[bool]
-        Whether or not to include randomness to include last label in
-        prediction sets for "cumulated_score" method.
+    include_last_label: Optional[Union[bool, str]]
+        Whether or not to include last label in
+        prediction sets for the "cumulated_score" method. Choose among:
+
+        - False, does not include label whose cumulated score is just over the
+        quantile.
+        - True, includes label whose cumulated score is just over the quantile.
+        - "randomized", includes label whose cumulated score is just over the
+        quantile randomly from uniform number.
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
@@ -107,11 +113,11 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     n_samples_val_: Union[int, List[int]]
         Number of samples passed to the fit method.
 
-    scores_ : np.ndarray of shape (n_samples_train)
-        The scores used to calibrate the prediction sets.
+    conformity_scores_ : np.ndarray of shape (n_samples_train)
+        The conformity scores used to calibrate the prediction sets.
 
     quantiles_ : np.ndarray of shape (n_alpha)
-        The quantiles estimated from ``scores_`` and alpha values.
+        The quantiles estimated from ``conformity_scores_`` and alpha values.
 
     References
     ----------
@@ -159,8 +165,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         estimator: Optional[ClassifierMixin] = None,
         method: str = "score",
-        cv: Optional[Union[int, str, BaseCrossValidator]] = "prefit",
-        random_sets: Optional[bool] = False,
+        cv: Optional[str] = "prefit",
+        include_last_label: Optional[Union[bool, str]] = True,
         n_jobs: Optional[int] = None,
         random_state: Optional[int] = None,
         verbose: int = 0
@@ -168,7 +174,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         self.estimator = estimator
         self.method = method
         self.cv = cv
-        self.random_sets = random_sets
+        self.include_last_label = include_last_label
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
@@ -187,9 +193,13 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 "Invalid method. "
                 "Allowed values are 'score' or 'cumulated_score'."
             )
-        if not isinstance(self.random_sets, bool):
+        if (
+            (not isinstance(self.include_last_label, bool)) and
+            (not self.include_last_label == "randomized")
+        ):
             raise ValueError(
-                "Invalid random_sets argument. Should be a boolean."
+                "Invalid include_last_label argument."
+                "Should be a boolean or 'randomized'."
             )
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
@@ -330,7 +340,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         y_pred = self.single_estimator_.predict_proba(X)
         self.n_samples_val_ = X.shape[0]
         if self.method == "score":
-            self.scores_ = np.take_along_axis(
+            self.conformity_scores_ = np.take_along_axis(
                 1 - y_pred, y.reshape(-1, 1), axis=1
             )
         else:
@@ -341,7 +351,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             y_true_sorted = np.take_along_axis(y_true, index, axis=1)
             y_pred_sorted_cumsum = np.cumsum(y_pred_sorted, axis=1)
             cutoff = encoder.inverse_transform(y_true_sorted)
-            self.scores_ = np.take_along_axis(
+            self.conformity_scores_ = np.take_along_axis(
                 y_pred_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
             )
             y_proba_true = np.take_along_axis(
@@ -349,7 +359,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             )
             np.random.seed(self.random_state)
             rnds = np.random.uniform(size=y_pred.shape[0]).reshape(-1, 1)
-            self.scores_ += -y_proba_true + rnds*y_proba_true
+            self.conformity_scores_ += -y_proba_true + rnds*y_proba_true
         return self
 
     def predict(
@@ -392,7 +402,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             self,
             [
                 "single_estimator_",
-                "scores_",
+                "conformity_scores_",
                 "n_features_in_",
                 "n_samples_val_"
             ]
@@ -407,7 +417,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             check_alpha_and_n_samples(alpha_, n)
             self.quantiles_ = np.stack([
                 np.quantile(
-                    self.scores_,
+                    self.conformity_scores_,
                     ((n + 1) * (1 - _alpha)) / n,
                     interpolation="lower"
                 ) for _alpha in alpha_
@@ -456,7 +466,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                     )
                     for i, _ in enumerate(self.quantiles_)
                 ], axis=1)[:, :, 0]
-                if self.random_sets:
+                if self.include_last_label:
                     # compute V parameter from Romano+(2020)
                     vs = np.stack([
                         (

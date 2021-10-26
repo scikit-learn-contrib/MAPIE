@@ -6,9 +6,6 @@ from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 import pytest
-from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieRegressor
-from mapie.subsample import Subsample
 from sklearn.base import RegressorMixin
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
@@ -19,6 +16,10 @@ from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
+
+from mapie.metrics import regression_coverage_score
+from mapie.regression import MapieRegressor
+from mapie.subsample import Subsample
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])

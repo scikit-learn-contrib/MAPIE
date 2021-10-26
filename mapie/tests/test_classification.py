@@ -25,7 +25,7 @@ Params = TypedDict(
     "Params", {
         "method": str,
         "cv": Optional[str],
-        "random_sets": Optional[bool],
+        "include_last_label": Optional[bool],
         "random_state": Optional[int]
     }
 )
@@ -34,13 +34,13 @@ STRATEGIES = {
     "score": Params(
         method="score",
         cv="prefit",
-        random_sets=False,
+        include_last_label=False,
         random_state=None
     ),
     "cumulated_score": Params(
         method="cumulated_score",
         cv="prefit",
-        random_sets=True,
+        include_last_label=True,
         random_state=42
     )
 }
@@ -129,7 +129,7 @@ def test_default_parameters() -> None:
     assert mapie.estimator is None
     assert mapie.method == "score"
     assert mapie.cv == "prefit"
-    assert mapie.random_sets is False
+    assert mapie.include_last_label is True
     assert mapie.verbose == 0
     assert mapie.random_state is None
     assert mapie.n_jobs is None
@@ -254,7 +254,7 @@ def test_valid_method(method: str) -> None:
             "single_estimator_",
             "n_features_in_",
             "n_samples_val_",
-            "scores_"
+            "conformity_scores_"
         ]
     )
 
@@ -279,12 +279,15 @@ def test_invalid_cv(cv: Any) -> None:
 
 
 @pytest.mark.parametrize(
-    "random_sets", [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
+    "include_last_label",
+    [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
 )
-def test_invalid_random_sets(random_sets: Any) -> None:
-    """Test that invalid random_sets raise errors."""
-    mapie = MapieClassifier(random_sets=random_sets)
-    with pytest.raises(ValueError, match=r".*Invalid random_sets argument.*"):
+def test_invalid_include_last_label(include_last_label: Any) -> None:
+    """Test that invalid include_last_label raise errors."""
+    mapie = MapieClassifier(include_last_label=include_last_label)
+    with pytest.raises(
+        ValueError, match=r".*Invalid include_last_label argument.*"
+    ):
         mapie.fit(X_toy, y_toy)
 
 
@@ -431,10 +434,14 @@ def test_cumulated_scores() -> None:
     cumclf = CumulatedscoreClassifier()
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
     mapie = MapieClassifier(
-        cumclf, method="cumulated_score", cv="prefit", random_state=42
+        cumclf,
+        method="cumulated_score",
+        cv="prefit",
+        include_last_label=False,
+        random_state=42
     )
     mapie.fit(cumclf.X_calib, cumclf.y_calib)
-    np.testing.assert_allclose(mapie.scores_, cumclf.y_calib_scores)
+    np.testing.assert_allclose(mapie.conformity_scores_, cumclf.y_calib_scores)
     # predict
     y_pred, y_ps = mapie.predict(cumclf.X_test, alpha=alpha)
     np.testing.assert_allclose(mapie.quantiles_, quantile)

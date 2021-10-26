@@ -14,26 +14,28 @@ by Sadinle et al. (2019).
 # the probability that the true label of a new test point is included in the
 # prediction set is always higher than the target confidence level :
 # :math:`1 - \alpha`.
+# Throughout this tutorial, we compare two conformity scores :
+# softmax score or cumulated softmax score.
 # We start by using the softmax score or cumulated score output by the base
 # classifier as the conformity score on a toy two-dimensional dataset.
 # We estimate the prediction sets as follows :
 #
 # * First we generate a dataset with train, calibration and test, the model
-# is fitted in the training set.
+#   is fitted in the training set.
 #
 # * We set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}`
-# from the softmax output of the true class or the cumulated score
-# (by decreasing order) for each sample in the calibration set.
+#   from the softmax output of the true class or the cumulated score
+#   (by decreasing order) for each sample in the calibration set.
 #
 # * Then we define :math:`\hat{q}` as being the
-# :math:`(n + 1) (1 - \alpha) / n`
-# previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the
-# quantile :math:`\alpha`, but with a small sample correction).
+#   :math:`(n + 1) (1 - \alpha) / n`
+#   previous quantile of :math:`S_{1}, ..., S_{n}` (this is essentially the
+#   quantile :math:`\alpha`, but with a small sample correction).
 #
 # * Finally, for a new test data point (where :math:`X_{n + 1}` is known but
-# :math:`Y_{n + 1}` is not), create a prediction set
-# :math:`C(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}` which includes
-# all the classes with a sufficiently high conformity score.
+#   :math:`Y_{n + 1}` is not), create a prediction set
+#   :math:`C(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}` which includes
+#   all the classes with a sufficiently high conformity score.
 #
 # We use a two-dimensional dataset with three labels.
 # The distribution of the data is a bivariate normal with diagonal covariance
@@ -159,10 +161,10 @@ def plot_scores(
 
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 for i, method in enumerate(methods):
-    scores = mapie[method].scores_
+    conformity_scores = mapie[method].conformity_scores_
     n = mapie[method].n_samples_val_
     quantiles = mapie[method].quantiles_
-    plot_scores(alpha, scores, quantiles, method, axs[i])
+    plot_scores(alpha, conformity_scores, quantiles, method, axs[i])
 plt.show()
 
 
@@ -213,9 +215,9 @@ for method in methods:
 
 
 ##############################################################################
-# For the "score" method, When the class coverage is not large enough, the
+# For the "score" method, when the class coverage is not large enough, the
 # prediction sets can be empty when the model is uncertain at the border
-# between two labels. The null region disappears for larger class coverages
+# between two labels. These null regions disappear for larger class coverages
 # but ambiguous classification regions arise with several labels included in
 # the prediction sets.
 # By definition, the "cumulated_score" method does not produce empty
@@ -227,23 +229,23 @@ for method in methods:
 
 alpha_ = np.arange(0.02, 0.98, 0.02)
 coverage, mean_width = {}, {}
-mapie_2, y_ps_mapie_2 = {}, {}
+mapie, y_ps_mapie = {}, {}
 for method in methods:
-    mapie_2[method] = MapieClassifier(
+    mapie[method] = MapieClassifier(
         estimator=clf,
         method=method,
         cv="prefit",
         random_sets=True,
         random_state=42
     )
-    mapie_2[method].fit(X_cal, y_cal)
-    _, y_ps_mapie_2[method] = mapie_2[method].predict(X, alpha=alpha_)
+    mapie[method].fit(X_cal, y_cal)
+    _, y_ps_mapie[method] = mapie[method].predict(X, alpha=alpha_)
     coverage[method] = [
-        classification_coverage_score(y, y_ps_mapie_2[method][:, :, i])
+        classification_coverage_score(y, y_ps_mapie[method][:, :, i])
         for i, _ in enumerate(alpha_)
     ]
     mean_width[method] = [
-        y_ps_mapie_2[method][:, :, i].sum(axis=1).mean()
+        y_ps_mapie[method][:, :, i].sum(axis=1).mean()
         for i, _ in enumerate(alpha_)
     ]
 
@@ -251,7 +253,7 @@ fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 axs[0].set_xlabel("1 - alpha")
 axs[0].set_ylabel("Quantile")
 for method in methods:
-    axs[0].scatter(1 - alpha_, mapie_2[method].quantiles_, label=method)
+    axs[0].scatter(1 - alpha_, mapie[method].quantiles_, label=method)
 axs[0].legend()
 for method in methods:
     axs[1].scatter(1 - alpha_, coverage[method], label=method)
@@ -269,4 +271,5 @@ plt.show()
 ##############################################################################
 # It is seen that both methods give coverages close to the target coverages,
 # regardless of the :math:`\alpha` value. However, the "cumulated_score"
-# produces slightly bigger prediction sets, but without empty regions.
+# produces slightly bigger prediction sets, but without empty regions
+# (if the selection of the last label is not randomized).
