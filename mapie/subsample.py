@@ -21,7 +21,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
     n_resamplings : int
         Number of resamplings.
     n_samples: int
-        Number of samples in each resampling. By default None,
+        Number of samples in each resampling. By default ``None``,
         the size of the training set.
     replace: bool
         Whether to replace samples in resamplings or not.
@@ -31,10 +31,10 @@ class Subsample(BaseCrossValidator):  # type: ignore
 
     Examples
     --------
-    >>> import pandas as pd
+    >>> import numpy as np
     >>> from mapie.subsample import Subsample
     >>> cv = Subsample(n_resamplings=2,random_state=0)
-    >>> X = pd.DataFrame(np.array([1,2,3,4,5,6,7,8,9,10]))
+    >>> X = np.array([1,2,3,4,5,6,7,8,9,10])
     >>> for train_index, test_index in cv.split(X):
     ...    print(f"train index is {train_index}, test index is {test_index}")
     train index is [5 0 3 3 7 9 3 5 2 4], test index is [8 1 6]
@@ -70,17 +70,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
             The training set indices for that split.
         test : ArrayLike of shape (n_indices_test,)
             The testing set indices for that split.
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> from mapie.subsample import Subsample
-        >>> cv = Subsample(n_resamplings=2,random_state=0)
-        >>> X = pd.DataFrame(np.array([1,2,3,4,5,6,7,8,9,10]))
-        >>> for train_index, test_index in cv.split(X):
-        ...    print(f"train index is {train_index}, "
-        ...          f"test index is {test_index}")
-        train index is [5 0 3 3 7 9 3 5 2 4], test index is [8 1 6]
-        train index is [7 6 8 8 1 6 7 7 8 1], test index is [0 2 3 4 5 9]
+
         """
         indices = np.arange(len(X))
         n_samples = (
@@ -111,12 +101,5 @@ class Subsample(BaseCrossValidator):  # type: ignore
         n_splits : int
             Returns the number of splitting iterations in the cross-validator.
 
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> from mapie.subsample import Subsample
-        >>> cv = Subsample(n_resamplings=2,random_state=0)
-        >>> print(cv.get_n_splits())
-        2
         """
         return self.n_resamplings

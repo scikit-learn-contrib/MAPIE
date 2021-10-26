@@ -4,6 +4,10 @@ from typing import Any, Optional
 
 import numpy as np
 import pytest
+from sklearn.datasets import make_regression
+from sklearn.linear_model import LinearRegression
+from sklearn.utils.validation import check_is_fitted
+
 from mapie.utils import (
     check_alpha,
     check_alpha_and_n_samples,
@@ -14,9 +18,6 @@ from mapie.utils import (
     check_verbose,
     fit_estimator,
 )
-from sklearn.datasets import make_regression
-from sklearn.linear_model import LinearRegression
-from sklearn.utils.validation import check_is_fitted
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])

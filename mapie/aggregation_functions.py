@@ -12,14 +12,15 @@ def phi1D(
 ) -> ArrayLike:
     """
     The function phi1D is called by phi2D.
-    It aims at applying a function to x multiply by B.
+    It aims at applying a function ``fun`` after multiplying each row
+    of B by x.
 
     Parameters
     ----------
     x : ArrayLike of shape (n, )
         1D vector.
     B : ArrayLike of shape (k, n)
-        2D vector whose number of columns is the length of x.
+        2D vector whose number of columns is the number of rows of x.
     fun : function
         Vectorized function applying to Arraylike.
 
@@ -50,7 +51,7 @@ def phi2D(
     fun: Callable[[ArrayLike], ArrayLike],
 ) -> ArrayLike:
     """
-    The function phi2D is a loop applying phi1D.
+    The function phi2D is a loop applying phi1D on each row of A.
 
     Parameters
     ----------
@@ -78,3 +79,39 @@ def phi2D(
     [ 2.  4.  7.  9. 12. 14.]
     """
     return np.apply_along_axis(phi1D, axis=1, arr=A, B=B, fun=fun)
+
+
+def aggregate_all(agg_function: str, X: ArrayLike) -> ArrayLike:
+    """
+    Applies np.nanmean(, axis=1) or np.nanmedian(, axis=1) according
+    to the string ``agg_function``.
+
+    Parameters:
+    -----------
+    X : ArrayLike of shape (n, p)
+        Array of floats and nans
+
+    Returns:
+    --------
+    ArrayLike of shape (n, 1):
+        Array of the means or medians of each row of X
+
+    Raises
+    ------
+    ValueError
+        If agg_function is ``None``
+
+    Examples
+    --------
+    >>> agg_function = "mean"
+    >>> aggregate_all(agg_function,
+    ...     np.array([list(range(30)),
+    ...     list(range(30))]))
+    array([14.5, 14.5])
+
+    """
+    if agg_function == "median":
+        return np.nanmedian(X, axis=1)
+    elif agg_function == "mean":
+        return np.nanmean(X, axis=1)
+    raise ValueError("Aggregation function called but not defined.")
