@@ -12,7 +12,7 @@ def test_phi1D() -> None:
 
 
 def test_phi2D() -> None:
-    """Test the result of phi1D."""
+    """Test the result of phi2D."""
     A = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
     B = np.array([[1, 1, 1, np.nan, np.nan], [np.nan, np.nan, np.nan, 1, 1]])
     res = phi2D(A, B, fun=lambda x: np.nanmean(x, axis=1))

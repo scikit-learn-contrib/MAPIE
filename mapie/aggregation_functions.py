@@ -103,6 +103,8 @@ def aggregate_all(agg_function: Optional[str], X: ArrayLike) -> ArrayLike:
 
     Examples
     --------
+    >>> import numpy as np
+    >>> from mapie.aggregation_functions import aggregate_all
     >>> agg_function = "mean"
     >>> aggregate_all(agg_function,
     ...     np.array([list(range(30)),

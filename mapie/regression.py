@@ -107,7 +107,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         median prediction, and is guaranteed to lie inside the interval,
         unlike the single estimator predictions.
 
-        When the cross-validation strategy is Subsample (e.i. for the
+        When the cross-validation strategy is Subsample (i.e. for the
         Jackknife+-after-Bootstrap method), this function is also used to
         aggregate the training set insample predictions. If ``None``, the
         default aggregation function to compute residuals is then "mean".
@@ -410,6 +410,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if self.agg_function == "median":
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
         elif self.agg_function == "mean":
+            # If self.agg_function == "mean", the aggregation coud be done
+            # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
+            # However, phi2D contains a np.apply_along_axis loop which
+            # is much slower than the matrices multiplication that can
+            # be used to compute the means.
             K = np.where(np.isnan(k), 0.0, k)
             return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
         raise ValueError("Aggregation function called but not defined.")

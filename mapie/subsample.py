@@ -70,7 +70,6 @@ class Subsample(BaseCrossValidator):  # type: ignore
             The training set indices for that split.
         test : ArrayLike of shape (n_indices_test,)
             The testing set indices for that split.
-
         """
         indices = np.arange(len(X))
         n_samples = (
@@ -100,6 +99,5 @@ class Subsample(BaseCrossValidator):  # type: ignore
         -------
         n_splits : int
             Returns the number of splitting iterations in the cross-validator.
-
         """
         return self.n_resamplings
