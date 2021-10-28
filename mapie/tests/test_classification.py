@@ -20,6 +20,7 @@ from mapie.metrics import classification_coverage_score
 
 
 METHODS = ["score", "cumulated_score"]
+WRONG_METHODS = ["scores", "cumulated", "test", ""]
 
 Params = TypedDict(
     "Params", {
@@ -165,6 +166,18 @@ def test_no_fit_predict() -> None:
     mapie = MapieClassifier(estimator=DummyClassifier())
     with pytest.raises(NotFittedError, match=r".*not fitted.*"):
         mapie.predict(X_toy)
+
+
+@pytest.mark.parametrize("method", WRONG_METHODS)
+def test_method_error_in_fit(monkeypatch, method) -> None:
+    def mock_check_parameter(*args):
+        pass
+    monkeypatch.setattr(
+        MapieClassifier, "_check_parameters", mock_check_parameter
+    )
+    mapie = MapieClassifier(method=method)
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
+        mapie.fit(X_toy, y_toy)
 
 
 def test_none_estimator() -> None:

@@ -6,7 +6,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
-from sklearn.utils import check_X_y, check_array
+from sklearn.utils import check_X_y, check_array, check_random_state
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 from sklearn.preprocessing import LabelBinarizer
@@ -18,7 +18,6 @@ from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
     check_n_jobs,
-    check_random_state,
     check_verbose
 )
 
@@ -85,7 +84,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         By default ``None``.
 
-    random_state: Optional[int]
+    random_state: Optional[Union[int, RandomState]], default=0
         Pseudo random number generator state used for random uniform sampling
         for evaluation quantiles and prediction sets in cumulated_score.
         Pass an int for reproducible output across multiple function calls.
@@ -124,10 +123,6 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     Mauricio Sadinle, Jing Lei, and Larry Wasserman.
     "Least Ambiguous Set-Valued Classifiers with Bounded Error Levels",
     Journal of the American Statistical Association, 114, 2019.
-
-    Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
-    "Classification with Valid and Adaptive Coverage."
-    NeurIPS 202 (spotlight).
 
     Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
     and Jitendra Malik.
@@ -168,7 +163,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         cv: Optional[str] = "prefit",
         include_last_label: Optional[Union[bool, str]] = True,
         n_jobs: Optional[int] = None,
-        random_state: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
@@ -328,6 +323,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         self._check_parameters()
         cv = self._check_cv(self.cv)
         estimator = self._check_estimator(X, y, self.estimator)
+
         X, y = check_X_y(
             X, y, force_all_finite=False, dtype=["float64", "int", "object"]
         )
@@ -337,29 +333,39 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
 
         # Work
         self.single_estimator_ = estimator
-        y_pred = self.single_estimator_.predict_proba(X)
+        y_pred_proba = self.single_estimator_.predict_proba(X)
+        y_pred_proba.sum(axis=1) == 1
         self.n_samples_val_ = X.shape[0]
         if self.method == "score":
             self.conformity_scores_ = np.take_along_axis(
-                1 - y_pred, y.reshape(-1, 1), axis=1
+                1 - y_pred_proba, y.reshape(-1, 1), axis=1
             )
-        else:
+        elif self.method == "cumulated_score":
             encoder = LabelBinarizer().fit(y)
             y_true = encoder.transform(y)
-            index = np.fliplr(np.argsort(y_pred, axis=1))
-            y_pred_sorted = np.take_along_axis(y_pred, index, axis=1)
+            index = np.fliplr(np.argsort(y_pred_proba, axis=1))
+            y_pred_proba_sorted = np.take_along_axis(
+                y_pred_proba, index, axis=1
+            )
             y_true_sorted = np.take_along_axis(y_true, index, axis=1)
-            y_pred_sorted_cumsum = np.cumsum(y_pred_sorted, axis=1)
+            y_pred_proba_sorted_cumsum = np.cumsum(y_pred_proba_sorted, axis=1)
             cutoff = encoder.inverse_transform(y_true_sorted)
             self.conformity_scores_ = np.take_along_axis(
-                y_pred_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
+                y_pred_proba_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
             )
             y_proba_true = np.take_along_axis(
-                y_pred, y.reshape(-1, 1), axis=1
+                y_pred_proba, y.reshape(-1, 1), axis=1
             )
-            np.random.seed(self.random_state)
-            rnds = np.random.uniform(size=y_pred.shape[0]).reshape(-1, 1)
-            self.conformity_scores_ += -y_proba_true + rnds*y_proba_true
+            random_state = check_random_state(self.random_state)
+            rnds = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
+            self.conformity_scores_ += (rnds - 1)*y_proba_true
+
+        else:
+            raise ValueError(
+                "Invalid method. "
+                "Allowed values are 'score' or 'cumulated_score'."
+            )
+
         return self
 
     def predict(
@@ -410,6 +416,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
         y_pred_proba = self.single_estimator_.predict_proba(X)
+        y_pred_proba.sum(axis=1) == 1
         n = self.n_samples_val_
         if alpha_ is None:
             return np.array(y_pred)
@@ -436,32 +443,33 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 )
                 # get sorted cumulated score starting from 0
                 y_proba_cumsum_sorted = np.hstack([
-                    np.zeros((X.shape[0], 1)),
                     np.cumsum(y_proba_sorted, axis=1)
                 ])
+
+                y_proba_sorted_argmax = np.stack([
+                    np.argmax(
+                        y_proba_cumsum_sorted >= quantile, axis=1
+                    )
+                    for quantile in self.quantiles_
+                ], axis=1)
                 # filter labels with cumulated score lower than quantile
                 # (and keep label just higher than quantile)
                 y_preds_sorted = np.stack([
-                    (y_proba_cumsum_sorted <= quantile)[:, :-1]
-                    for quantile in self.quantiles_
+                    (np.argsort(y_proba_cumsum_sorted) <=
+                        y_proba_sorted_argmax[:, iq].reshape(-1, 1))
+                    for iq, _ in enumerate(self.quantiles_)
                 ], axis=2)
                 # filter sorting probabilities with kept labels
                 y_proba_sorted_filtered = np.stack([
                     y_proba_sorted * y_preds_sorted[:, :, iq]
                     for iq, _ in enumerate(self.quantiles_)
                 ], axis=2)
-                # get last label included in prediction set
-                y_proba_sorted_argmin = np.stack([
-                    np.argmin(
-                        y_proba_sorted_filtered[:, :, iq] > 0, axis=1
-                    ) - 1
-                    for iq, _ in enumerate(self.quantiles_)
-                ], axis=1)
+
                 # get probability of last label included in prediction set
                 y_proba_last = np.stack([
                     np.take_along_axis(
                         y_proba_sorted_filtered[:, :, i],
-                        y_proba_sorted_argmin[:, i].reshape(-1, 1),
+                        y_proba_sorted_argmax[:, i].reshape(-1, 1),
                         axis=1
                     )
                     for i, _ in enumerate(self.quantiles_)
@@ -485,7 +493,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                         for iq, _ in enumerate(self.quantiles_):
                             if vs[iy, iq] >= rnds[iy]:
                                 y_preds_sorted[
-                                    iy, y_proba_sorted_argmin[iy, iq], iq
+                                    iy, y_proba_sorted_argmax[iy, iq], iq
                                 ] = False
                 # rearrange boolean values from initial label order
                 prediction_sets = np.stack([
