@@ -22,7 +22,7 @@ from .utils import (
 )
 
 
-class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
+class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     """
     Prediction sets for classification.
 
@@ -151,10 +151,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
      [False False  True]]
     """
 
-    valid_methods_ = [
-        "score",
-        "cumulated_score"
-    ]
+    valid_methods_ = ["score", "cumulated_score"]
 
     def __init__(
         self,
@@ -240,9 +237,9 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         if estimator is None:
             return LogisticRegression(multi_class="multinomial").fit(X, y)
         if (
-                not hasattr(estimator, "fit")
-                and not hasattr(estimator, "predict")
-                and not hasattr(estimator, 'predict_proba')
+            not hasattr(estimator, "fit")
+            and not hasattr(estimator, "predict")
+            and not hasattr(estimator, "predict_proba")
         ):
             raise ValueError(
                 "Invalid estimator. "
@@ -257,8 +254,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
         return estimator
 
     def _check_cv(
-        self,
-        cv: Optional[Union[int, str, BaseCrossValidator]] = None
+        self, cv: Optional[Union[int, str, BaseCrossValidator]] = None
     ) -> Optional[Union[float, str]]:
         """
         Check if cross-validator is ``None`` or ``"prefit"``.
@@ -283,16 +279,13 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
             return "prefit"
         if cv == "prefit":
             return cv
-        raise ValueError(
-            "Invalid cv argument."
-            "Allowed value is 'prefit'."
-        )
+        raise ValueError("Invalid cv argument." "Allowed value is 'prefit'.")
 
     def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None
+        sample_weight: Optional[ArrayLike] = None,
     ) -> MapieClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -371,7 +364,7 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
     def predict(
         self,
         X: ArrayLike,
-        alpha: Optional[Union[float, Iterable[float]]] = None
+        alpha: Optional[Union[float, Iterable[float]]] = None,
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Prediction prediction sets on new samples based on target confidence
@@ -410,8 +403,8 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 "single_estimator_",
                 "conformity_scores_",
                 "n_features_in_",
-                "n_samples_val_"
-            ]
+                "n_samples_val_",
+            ],
         )
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
@@ -430,10 +423,13 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 ) for _alpha in alpha_
             ])
             if self.method == "score":
-                prediction_sets = np.stack([
-                    y_pred_proba > 1 - quantile
-                    for quantile in self.quantiles_
-                ], axis=2)
+                prediction_sets = np.stack(
+                    [
+                        y_pred_proba > 1 - quantile
+                        for quantile in self.quantiles_
+                    ],
+                    axis=2,
+                )
             else:
                 # sort labels by decreasing probability
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
@@ -476,14 +472,19 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                 ], axis=1)[:, :, 0]
                 if self.include_last_label:
                     # compute V parameter from Romano+(2020)
-                    vs = np.stack([
-                        (
-                            np.cumsum(
-                                y_proba_sorted_filtered[:, :, iq], axis=1
-                            )[:, -1] - quantile
-                        ) / y_proba_last[:, iq]
-                        for iq, quantile in enumerate(self.quantiles_)
-                    ], axis=1)
+                    vs = np.stack(
+                        [
+                            (
+                                np.cumsum(
+                                    y_proba_sorted_filtered[:, :, iq], axis=1
+                                )[:, -1]
+                                - quantile
+                            )
+                            / y_proba_last[:, iq]
+                            for iq, quantile in enumerate(self.quantiles_)
+                        ],
+                        axis=1,
+                    )
                     # get random numbers for each observation and alpha value
                     np.random.seed(self.random_state)
                     rnds = np.random.uniform(size=y_pred.shape[0])
@@ -496,12 +497,15 @@ class MapieClassifier (BaseEstimator, ClassifierMixin):  # type: ignore
                                     iy, y_proba_sorted_argmax[iy, iq], iq
                                 ] = False
                 # rearrange boolean values from initial label order
-                prediction_sets = np.stack([
-                    np.take_along_axis(
-                        y_preds_sorted[:, :, i],
-                        np.argsort(index_sorted),
-                        axis=1
-                    )
-                    for i, _ in enumerate(self.quantiles_)
-                ], axis=2)
+                prediction_sets = np.stack(
+                    [
+                        np.take_along_axis(
+                            y_preds_sorted[:, :, i],
+                            np.argsort(index_sorted),
+                            axis=1,
+                        )
+                        for i, _ in enumerate(self.quantiles_)
+                    ],
+                    axis=2,
+                )
             return y_pred, prediction_sets

@@ -54,15 +54,17 @@ from mapie.metrics import classification_coverage_score
 import matplotlib.pyplot as plt
 
 centers = [(0, 3.5), (-2, 0), (2, 0)]
-covs = [np.eye(2), np.eye(2)*2, np.diag([5, 1])]
+covs = [np.eye(2), np.eye(2) * 2, np.diag([5, 1])]
 x_min, x_max, y_min, y_max, step = -6, 8, -6, 8, 0.1
 n_samples = 500
 n_classes = 3
 np.random.seed(42)
-X = np.vstack([
-    np.random.multivariate_normal(center, cov, n_samples)
-    for center, cov in zip(centers, covs)
-])
+X = np.vstack(
+    [
+        np.random.multivariate_normal(center, cov, n_samples)
+        for center, cov in zip(centers, covs)
+    ]
+)
 y = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 X_train, X_cal, y_train, y_cal = train_test_split(X, y, test_size=0.3)
 
@@ -75,16 +77,16 @@ X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 ##############################################################################
 # Let's see our training data
 
-colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
+colors = {0: "#1f77b4", 1: "#ff7f0e", 2: "#2ca02c", 3: "#d62728"}
 y_train_col = list(map(colors.get, y_train))
 fig = plt.figure()
 plt.scatter(
     X_train[:, 0],
     X_train[:, 1],
     color=y_train_col,
-    marker='o',
+    marker="o",
     s=10,
-    edgecolor='k'
+    edgecolor="k",
 )
 plt.xlabel("X")
 plt.ylabel("Y")
@@ -114,11 +116,11 @@ for method in methods:
         method=method,
         cv="prefit",
         random_sets=False,
-        random_state=42
+        random_state=42,
     )
     mapie[method].fit(X_cal, y_cal)
-    y_pred_mapie[method], y_ps_mapie[method] = (
-        mapie[method].predict(X_test, alpha=alpha)
+    y_pred_mapie[method], y_ps_mapie[method] = mapie[method].predict(
+        X_test, alpha=alpha
     )
 
 
@@ -133,15 +135,16 @@ for method in methods:
 # Let's now visualize the distribution of the conformity scores with the two
 # methods with the calculated quantiles for the three alpha values.
 
+
 def plot_scores(
     alphas: list[float],
     scores: np.ndarray,
     quantiles: np.ndarray,
     method: str,
-    ax: plt.Axes
+    ax: plt.Axes,
 ) -> None:
-    colors = {0: '#1f77b4', 1: '#ff7f0e', 2: '#2ca02c'}
-    ax.hist(scores, bins='auto')
+    colors = {0: "#1f77b4", 1: "#ff7f0e", 2: "#2ca02c"}
+    ax.hist(scores, bins="auto")
     i = 0
     for quantile in quantiles:
         ax.vlines(
@@ -149,8 +152,8 @@ def plot_scores(
             ymin=0,
             ymax=500,
             color=colors[i],
-            linestyles='dashed',
-            label=f'alpha = {alphas[i]}'
+            linestyles="dashed",
+            label=f"alpha = {alphas[i]}",
         )
         i = i + 1
     ax.set_title(f"Distribution of scores for '{method}' method")
@@ -172,46 +175,55 @@ plt.show()
 # We will now compare the differences between the prediction sets of the
 # different values ​​of alpha.
 
+
 def plot_results(
     alphas: list[float], y_pred_mapie: np.ndarray, y_ps_mapie: np.ndarray
 ) -> None:
-    tab10 = plt.cm.get_cmap('Purples', 4)
+    tab10 = plt.cm.get_cmap("Purples", 4)
     colors = {
-        0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728", 4: "#c896af",
-        5: "#94a98a", 6: "#8a94a9", 7: "#a99f8a", 8: "#1e1b16", 9: "#4a4336"
+        0: "#1f77b4",
+        1: "#ff7f0e",
+        2: "#2ca02c",
+        3: "#d62728",
+        4: "#c896af",
+        5: "#94a98a",
+        6: "#8a94a9",
+        7: "#a99f8a",
+        8: "#1e1b16",
+        9: "#4a4336",
     }
     y_pred_col = list(map(colors.get, y_pred_mapie))
     fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
-    axs = {0: ax1, 1: ax2, 2:  ax3, 3: ax4}
+    axs = {0: ax1, 1: ax2, 2: ax3, 3: ax4}
     axs[0].scatter(
         X_test[:, 0],
         X_test[:, 1],
         color=y_pred_col,
-        marker='.',
+        marker=".",
         s=10,
-        alpha=0.4
+        alpha=0.4,
     )
     axs[0].set_title("Predicted labels")
     for i, alpha_ in enumerate(alphas):
         y_pi_sums = y_ps_mapie[:, :, i].sum(axis=1)
-        num_labels = axs[i+1].scatter(
+        num_labels = axs[i + 1].scatter(
             X_test[:, 0],
             X_test[:, 1],
             c=y_pi_sums,
-            marker='o',
+            marker="o",
             s=10,
             alpha=1,
             cmap=tab10,
             vmin=0,
-            vmax=3
+            vmax=3,
         )
-        plt.colorbar(num_labels, ax=axs[i+1])
-        axs[i+1].set_title(f"Number of labels for alpha={alpha_}")
+        plt.colorbar(num_labels, ax=axs[i + 1])
+        axs[i + 1].set_title(f"Number of labels for alpha={alpha_}")
     plt.show()
 
 
 for method in methods:
-    plot_results(alpha, y_pred_mapie[method],  y_ps_mapie[method])
+    plot_results(alpha, y_pred_mapie[method], y_ps_mapie[method])
 
 
 ##############################################################################
@@ -236,7 +248,7 @@ for method in methods:
         method=method,
         cv="prefit",
         random_sets=True,
-        random_state=42
+        random_state=42,
     )
     mapie[method].fit(X_cal, y_cal)
     _, y_ps_mapie[method] = mapie[method].predict(X, alpha=alpha_)
@@ -259,7 +271,7 @@ for method in methods:
     axs[1].scatter(1 - alpha_, coverage[method], label=method)
 axs[1].set_xlabel("1 - alpha")
 axs[1].set_ylabel("Coverage score")
-axs[1].plot([0, 1], [0, 1], label='x=y', color="black")
+axs[1].plot([0, 1], [0, 1], label="x=y", color="black")
 axs[1].legend()
 for method in methods:
     axs[2].scatter(1 - alpha_, mean_width[method], label=method)

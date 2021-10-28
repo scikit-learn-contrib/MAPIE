@@ -4,6 +4,7 @@ import warnings
 from typing import Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
+import numpy.ma as ma
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
@@ -13,6 +14,7 @@ from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
+from .aggregation_functions import aggregate_all, phi2D
 from .subsample import Subsample
 from .utils import (
     check_alpha,
@@ -23,7 +25,6 @@ from .utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
-    phi2D,
 )
 
 
@@ -67,9 +68,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           ``sklearn.model_selection.LeaveOneOut()``.
         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
           Main variants are:
-            - ``sklearn.model_selection.LeaveOneOut`` (jackknife)
-            - ``sklearn.model_selection.KFold`` (cross-validation)
-            - ``subsample.Subsample`` object (bootstrap)
+            - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
+            - ``sklearn.model_selection.KFold`` (cross-validation),
+            - ``subsample.Subsample`` object (bootstrap).
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
@@ -95,18 +96,21 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     agg_function : str
         Determines if and how the final prediction is aggregated from the fold
-        predictions. In the case of the Jackknife+-after-Bootstrap method, this
-        function is also used to aggregate the insample predictions.
+        predictions.
+
         If ``None``, returns the predictions from the single estimator
         trained on the full training dataset.
-        When the cross-validation strategy is Subsample (e.g. for the
-        Jackknife+-after-Bootstrap method), if ``None``, the
-        default aggregation function to compute residuals is "mean".
-        If "mean" or "median", returns the aggregation of the predictions
+        If "mean" or "median", returns the mean or median of the predictions
         computed from the out-of-folds models.
+
         The Jackknife+ interval can be interpreted as an interval around the
         median prediction, and is guaranteed to lie inside the interval,
         unlike the single estimator predictions.
+
+        When the cross-validation strategy is Subsample (e.i. for the
+        Jackknife+-after-Bootstrap method), this function is also used to
+        aggregate the training set insample predictions. If ``None``, the
+        default aggregation function to compute residuals is then "mean".
 
         By default ``None``.
 
@@ -153,19 +157,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     Byol Kim, Chen Xu, and Rina Foygel Barber.
     "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
-    34th Conference on Neural Information Processing Systems (NeurIPS 2020)
-
-
+    34th Conference on Neural Information Processing Systems (NeurIPS 2020).
 
     Examples
     --------
     >>> import numpy as np
     >>> from mapie.regression import MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
-    >>> X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
+    >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> pireg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
-    >>> y_pred, y_pis = pireg.predict(X_toy, alpha=0.5)
+    >>> mapie_reg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
+    >>> y_pred, y_pis = mapie_reg.predict(X_toy, alpha=0.5)
     >>> print(y_pis[:, :, 0])
     [[ 4.7972973   5.8       ]
      [ 6.69767442  7.65540541]
@@ -204,16 +206,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ------
         ValueError
             If parameters are not valid.
+
         """
         if self.method not in self.valid_methods_:
             raise ValueError(
-                "Invalid method. "
+                "Invalid method.\n"
                 "Allowed values are 'naive', 'base', 'plus' and 'minmax'."
             )
 
         if self.agg_function not in self.valid_agg_functions_:
             raise ValueError(
-                "Invalid aggregation function. "
+                "Invalid aggregation function.\n"
                 "Allowed values are None, 'mean', 'median'."
             )
 
@@ -232,7 +235,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Parameters
         ----------
         estimator : Optional[RegressorMixin], optional
-            Estimator to check, by default ``None``
+            Estimator to check, by default ``None``.
 
         Returns
         -------
@@ -247,12 +250,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         NotFittedError
             If the estimator is not fitted and ``cv`` attribute is "prefit".
+
         """
         if estimator is None:
             return LinearRegression()
-        if not hasattr(estimator, "fit") and not hasattr(estimator, "predict"):
+        if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
             raise ValueError(
-                "Invalid estimator. "
+                "Invalid estimator.\n"
                 "Please provide a regressor with fit and predict methods."
             )
         if self.cv == "prefit":
@@ -263,7 +267,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         return estimator
 
     def _check_cv(
-        self, cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        self,
+        cv: Optional[Union[int, str, BaseCrossValidator]] = None,
     ) -> Union[str, BaseCrossValidator]:
         """
         Check if cross-validator is
@@ -287,11 +292,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ------
         ValueError
             If the cross-validator is not valid.
+
         """
         if isinstance(cv, Subsample) and (self.agg_function is None):
             warnings.warn(
-                "WARNING: you need to specify an aggregation function when"
-                "using Subsample as cross validator."
+                "WARNING: you need to specify an aggregation function when\n "
+                "using Subsample as cross validator. "
                 "agg_function set to 'mean'."
             )
             self.agg_function = "mean"
@@ -306,8 +312,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
             return cv
         raise ValueError(
-            "Invalid cv argument. "
-            "Allowed values are None, -1, int >= 2, 'prefit', "
+            "Invalid cv argument.\n"
+            "Allowed values are None, -1, int >= 2, 'prefit',\n"
             "KFold, LeaveOneOut, or Subsample."
         )
 
@@ -359,7 +365,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - [2]: Identification number of the validation fold,
           of shape (n_samples_val,)
         - [3]: Validation data indices,
-          of shape (n_samples_val,)
+          of shape (n_samples_val,).
+
         """
         X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
         if sample_weight is None:
@@ -368,55 +375,36 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             estimator = fit_estimator(
                 estimator, X_train, y_train, sample_weight[train_index]
             )
-        y_pred = estimator.predict(X_val)
+        if X_val.shape[0] > 0:
+            y_pred = estimator.predict(X_val)
+        else:
+            y_pred = np.array([])
         val_id = np.full_like(y_pred, k, dtype=int)
         return estimator, y_pred, val_id, val_index
-
-    def aggregate_all(self, x: ArrayLike) -> ArrayLike:
-        """
-        Take the array of predictions, made by the refitted estimators,
-        on the training set, and aggregate to produce phi-{i}(x_i) for
-        each training sample x_i
-
-        Parameters:
-        -----------
-            x : ArrayLike
-            Array of predictions, made by the refitted estimators
-
-        Returns:
-        --------
-            ArrayLike:
-            Array of phi-{i}(x_i) for each training sample x_i
-        """
-        if self.agg_function == "median":
-            return np.nanmedian(x, axis=1)
-        elif self.agg_function == "mean":
-            return np.nanmean(x, axis=1)
-        raise ValueError("Aggregation function called but not defined.")
 
     def aggregate_with_mask(self, x: ArrayLike, k: ArrayLike) -> ArrayLike:
         """
         Take the array of predictions, made by the refitted estimators,
         on the testing set, and the 1-nan array indicating for each training
         sample which one to integrate, and aggregate to produce phi-{t}(x_t)
-        for each training sample x_t
+        for each training sample x_t.
 
 
         Parameters:
         -----------
-            x : ArrayLike
+            x : ArrayLike of shape (n_samples_test, n_estimators)
                 Array of predictions, made by the refitted estimators,
-                for each sample of the testing set
-            k : ArrayLike
-                1-nan array, that indicate whether to integrate the prediction
+                for each sample of the testing set.
+            k : ArrayLike of shape (n_samples_training, n_estimators)
+                1-or-nan array: indicates whether to integrate the prediction
                 of a given estimator into the aggregation, for each training
-                sample
+                sample.
 
         Returns:
         --------
-            ArrayLike
-                Array of shape (testing set size,) of aggregated predictions
-                for each testing  sample
+        ArrayLike of shape (n_samples_test,)
+            Array of aggregated predictions for each testing  sample.
+
 
         """
         if self.agg_function == "median":
@@ -461,6 +449,23 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         -------
         MapieRegressor
             The model itself.
+
+        Example
+        -------
+        >>> from sklearn.datasets import make_regression
+        >>> from mapie.regression import MapieRegressor
+        >>> X, y = make_regression(
+        ...     n_samples=50,
+        ...     n_features=1,
+        ...     noise=20,
+        ...     random_state=59)
+        >>> mapie_reg = MapieRegressor()
+        >>> hasattr(mapie_reg, "estimators_")
+        False
+        >>> mapie_reg = mapie_reg.fit(X, y)
+        >>> hasattr(mapie_reg, "estimators_")
+        True
+
         """
         # Checks
         self._check_parameters()
@@ -531,7 +536,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         self.k_[val_ind, i] = 1
                     check_nan_in_aposteriori_prediction(pred_after_resampling)
 
-                    y_pred = self.aggregate_all(pred_after_resampling)
+                    y_pred = aggregate_all(
+                        self.agg_function, pred_after_resampling
+                    )
                 else:
                     predictions, val_ids, val_indices = map(
                         np.concatenate, (predictions, val_ids, val_indices)
@@ -553,9 +560,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         are central to the computation.
         Prediction Intervals for a given ``alpha`` are deduced from either
 
-        - quantiles of residuals (naive and base methods)
-        - quantiles of (predictions +/- residuals) (plus methods)
-        - quantiles of (max/min(predictions) +/- residuals) (minmax methods)
+        - quantiles of residuals (naive and base methods),
+        - quantiles of (predictions +/- residuals) (plus methods),
+        - quantiles of (max/min(predictions) +/- residuals) (minmax methods).
 
         Parameters
         ----------
@@ -575,13 +582,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         -------
         Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]
 
-        - np.ndarray of shape (n_samples,) if alpha is None
+        - np.ndarray of shape (n_samples,) if alpha is None.
 
         - Tuple[np.ndarray, np.ndarray] of shapes
-        (n_samples,) and (n_samples, 2, n_alpha) if alpha is not None
+        (n_samples,) and (n_samples, 2, n_alpha) if alpha is not None.
 
-            - [:, 0, :]: Lower bound of the prediction interval
-            - [:, 1, :]: Upper bound of the prediction interval
+            - [:, 0, :]: Lower bound of the prediction interval.
+            - [:, 1, :]: Upper bound of the prediction interval.
         """
         # Checks
         check_is_fitted(
@@ -602,11 +609,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if alpha is None:
             return np.array(y_pred)
         else:
-            # SHAPES:
-            # (n_samples_train,) : self.residuals_
-            # (n_alpha,) : alpha
-            # (n_samples_test, n_alpha) : y_pred_low, y_pred_up
-            # (n_samples_test, n_samples_train) : y_pred_multi, low/up_bounds
             alpha_ = cast(np.ndarray, alpha_)
             check_alpha_and_n_samples(alpha_, self.residuals_.shape[0])
             if self.method in ["naive", "base"] or self.cv == "prefit":
@@ -619,6 +621,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_multi = np.column_stack(
                     [e.predict(X) for e in self.estimators_]
                 )
+
+                # At this point, y_pred_multi is of shape
+                # (n_samples_test, n_estimators_).
+                # If ``method`` is "plus":
+                #   - if ``cv`` is not a ``Subsample``,
+                #       we enforce y_pred_multi to be of shape
+                #       (n_samples_test, n_samples_train),
+                #       thanks to the folds identifier.
+                #   - if ``cv``is a ``Subsample``, the methode
+                #       ``aggregate_with_mask`` fits it to the right size
+                #       thanks to the shape of k_.
 
                 if isinstance(self.cv, Subsample):
                     y_pred_multi = self.aggregate_with_mask(
@@ -642,16 +655,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
                 y_pred_low = np.column_stack(
                     [
-                        np.nanquantile(
-                            lower_bounds, _alpha, axis=1, interpolation="lower"
+                        np.quantile(
+                            ma.masked_invalid(lower_bounds),
+                            _alpha,
+                            axis=1,
+                            interpolation="lower",
                         )
                         for _alpha in alpha_
                     ]
                 )
                 y_pred_up = np.column_stack(
                     [
-                        np.nanquantile(
-                            upper_bounds,
+                        np.quantile(
+                            ma.masked_invalid(upper_bounds),
                             1 - _alpha,
                             axis=1,
                             interpolation="higher",
@@ -660,5 +676,5 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     ]
                 )
                 if self.agg_function is not None:
-                    y_pred = self.aggregate_all(y_pred_multi)
+                    y_pred = aggregate_all(self.agg_function, y_pred_multi)
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)

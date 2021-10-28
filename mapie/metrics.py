@@ -46,8 +46,7 @@ def regression_coverage_score(
 
 
 def classification_coverage_score(
-    y_true: ArrayLike,
-    y_pred_set: ArrayLike
+    y_true: ArrayLike, y_pred_set: ArrayLike
 ) -> float:
     """
     Effective coverage score obtained by the prediction sets.
@@ -83,9 +82,7 @@ def classification_coverage_score(
     0.8
     """
     y_true = column_or_1d(y_true)
-    y_pred_set = check_array(
-        y_pred_set, force_all_finite=True, dtype=["bool"]
-    )
+    y_pred_set = check_array(y_pred_set, force_all_finite=True, dtype=["bool"])
     coverage = np.take_along_axis(
         y_pred_set, y_true.reshape(-1, 1), axis=1
     ).mean()

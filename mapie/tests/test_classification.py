@@ -23,7 +23,8 @@ METHODS = ["score", "cumulated_score"]
 WRONG_METHODS = ["scores", "cumulated", "test", ""]
 
 Params = TypedDict(
-    "Params", {
+    "Params",
+    {
         "method": str,
         "cv": Optional[str],
         "include_last_label": Optional[bool],
@@ -46,10 +47,7 @@ STRATEGIES = {
     )
 }
 
-COVERAGES = {
-    "score": 7/9,
-    "cumulated_score": 7/9
-}
+COVERAGES = {"score": 7 / 9, "cumulated_score": 7 / 9}
 
 y_toy_mapie = {
     "score": [
@@ -61,7 +59,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True],
         [False, False, True],
-        [False, False, True]
+        [False, False, True],
     ],
     "cumulated_score": [
         [True, False, False],
@@ -72,8 +70,8 @@ y_toy_mapie = {
         [False, True, False],
         [False, False, True],
         [False, False, True],
-        [False, False, True]
-    ]
+        [False, False, True],
+    ],
 }
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2])
@@ -84,12 +82,11 @@ X, y = make_classification(
     n_features=10,
     n_informative=3,
     n_classes=n_classes,
-    random_state=1
+    random_state=1,
 )
 
 
 class CumulatedscoreClassifier:
-
     def __init__(self) -> None:
         self.X_calib = np.array([0, 1, 2]).reshape(-1, 1)
         self.y_calib = np.array([0, 1, 2])
@@ -199,19 +196,13 @@ def test_invalid_estimator(estimator: Any) -> None:
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
     clf = LogisticRegression().fit(X_toy, y_toy)
-    mapie = MapieClassifier(
-        estimator=clf,
-        **STRATEGIES[strategy]
-    )
+    mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy])
     mapie.fit(X_toy, y_toy)
     assert isinstance(mapie.single_estimator_, LogisticRegression)
 
 
 @pytest.mark.parametrize(
-    "estimator", [
-        LogisticRegression(),
-        make_pipeline(LogisticRegression())
-    ]
+    "estimator", [LogisticRegression(), make_pipeline(LogisticRegression())]
 )
 def test_invalid_prefit_estimator(estimator: ClassifierMixin) -> None:
     """Test that non-fitted estimator with prefit cv raise errors."""
@@ -221,10 +212,7 @@ def test_invalid_prefit_estimator(estimator: ClassifierMixin) -> None:
 
 
 @pytest.mark.parametrize(
-    "estimator", [
-        LogisticRegression(),
-        make_pipeline(LogisticRegression())
-    ]
+    "estimator", [LogisticRegression(), make_pipeline(LogisticRegression())]
 )
 def test_valid_prefit_estimator(estimator: ClassifierMixin) -> None:
     """Test that fitted estimators with prefit cv raise no errors."""
@@ -236,12 +224,7 @@ def test_valid_prefit_estimator(estimator: ClassifierMixin) -> None:
     else:
         check_is_fitted(mapie.single_estimator_)
     check_is_fitted(
-        mapie,
-        [
-            "single_estimator_",
-            "n_features_in_",
-            "n_samples_val_"
-        ]
+        mapie, ["single_estimator_", "n_features_in_", "n_samples_val_"]
     )
     assert mapie.n_features_in_ == 1
 
@@ -308,9 +291,7 @@ def test_invalid_include_last_label(include_last_label: Any) -> None:
 @pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_predict_output_shape(
-    strategy: str,
-    alpha: Any,
-    dataset: Tuple[np.ndarray, np.ndarray]
+    strategy: str, alpha: Any, dataset: Tuple[np.ndarray, np.ndarray]
 ) -> None:
     """Test predict output shape."""
     mapie = MapieClassifier(**STRATEGIES[strategy])
@@ -354,8 +335,7 @@ def test_results_for_same_alpha(strategy: str) -> None:
     "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
 )
 def test_results_for_alpha_as_float_and_arraylike(
-    strategy: str,
-    alpha: Any
+    strategy: str, alpha: Any
 ) -> None:
     """Test that output values do not depend on type of alpha."""
     mapie = MapieClassifier(**STRATEGIES[strategy])
@@ -397,7 +377,7 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     mapie2 = MapieClassifier(**STRATEGIES[strategy])
     mapie0.fit(X_toy, y_toy, sample_weight=None)
     mapie1.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples))
-    mapie2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples)*5)
+    mapie2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples) * 5)
     y_pred0, y_ps0 = mapie0.predict(X_toy, alpha=0.2)
     y_pred1, y_ps1 = mapie1.predict(X_toy, alpha=0.2)
     y_pred2, y_ps2 = mapie2.predict(X_toy, alpha=0.2)
@@ -408,16 +388,10 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "alpha",
-    [
-        [0.2, 0.8],
-        (0.2, 0.8),
-        np.array([0.2, 0.8]),
-        None
-    ]
+    "alpha", [[0.2, 0.8], (0.2, 0.8), np.array([0.2, 0.8]), None]
 )
 def test_valid_prediction(alpha: Any) -> None:
-    """Test fit and predict. """
+    """Test fit and predict."""
     model = LogisticRegression(multi_class="multinomial")
     model.fit(X_toy, y_toy)
     mapie = MapieClassifier(estimator=model, cv="prefit")
@@ -434,7 +408,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     _, y_ps = mapie.predict(X_toy, alpha=0.2)
     np.testing.assert_allclose(
         classification_coverage_score(y_toy, y_ps[:, :, 0]),
-        COVERAGES[strategy]
+        COVERAGES[strategy],
     )
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
 
