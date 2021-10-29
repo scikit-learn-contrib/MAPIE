@@ -304,7 +304,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         random_state = check_random_state(self.random_state)
         rnds = random_state.uniform(size=y_preds_sorted.shape[0])
         # remove last label from prediction set if V <= rnd
-        # did not find a more elegant way to do it
         for iy in range(len(y_preds_sorted)):
             for iq, _ in enumerate(self.quantiles_):
                 if vs[iy, iq] >= rnds[iy]:
@@ -462,7 +461,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     ],
                     axis=2,
                 )
-            else:
+            elif self.method == "cumulated_score":
                 # sort labels by decreasing probability
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                 # sort probabilities by decreasing order
@@ -538,4 +537,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     ],
                     axis=2,
                 )
+            else:
+                raise ValueError(
+                    "Invalid method. "
+                    "Allowed values are 'score' or 'cumulated_score'."
+                )
+
             return y_pred, prediction_sets

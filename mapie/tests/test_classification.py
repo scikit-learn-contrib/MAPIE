@@ -206,6 +206,7 @@ def test_no_fit_predict() -> None:
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
 def test_method_error_in_fit(monkeypatch, method) -> None:
+    """Test else condition for the method in .fit"""
     def mock_check_parameter(*args):
         pass
     monkeypatch.setattr(
@@ -216,11 +217,23 @@ def test_method_error_in_fit(monkeypatch, method) -> None:
         mapie.fit(X_toy, y_toy)
 
 
+@pytest.mark.parametrize("method", WRONG_METHODS)
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_method_error_in_predict(method, alpha) -> None:
+    """Test else condition for the method in .predict"""
+    mapie = MapieClassifier(method='score')
+    mapie.fit(X_toy, y_toy)
+    mapie.method = method
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
+        mapie.predict(X_toy, alpha=alpha)
+
+
 @pytest.mark.parametrize("include_labels", WRONG_INCLUDE_LABELS)
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_include_label_error_in_predict(
     monkeypatch, include_labels, alpha
 ) -> None:
+    """Test else condition for include_label parameter in .predict"""
     def mock_check_parameter(*args):
         pass
     monkeypatch.setattr(
