@@ -115,7 +115,7 @@ for method in methods:
         estimator=clf,
         method=method,
         cv="prefit",
-        random_sets=False,
+        include_last_label=True,
         random_state=42,
     )
     mapie[method].fit(X_cal, y_cal)
@@ -247,7 +247,7 @@ for method in methods:
         estimator=clf,
         method=method,
         cv="prefit",
-        random_sets=True,
+        include_last_label="randomized",
         random_state=42,
     )
     mapie[method].fit(X_cal, y_cal)
