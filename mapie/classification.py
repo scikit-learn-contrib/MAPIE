@@ -67,9 +67,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         - False, does not include label whose cumulated score is just over the
         quantile.
-        - True, includes label whose cumulated score is just over the quantile.
-        - "randomized", includes label whose cumulated score is just over the
-        quantile randomly from uniform number.
+        - True, includes label whose cumulated score is just over the quantile,
+        unless there is only one label in the prediction set.
+        - "randomized", randomly includes label whose cumulated score is just
+        over the quantile based on the comparison of a uniform number and the
+        difference between the cumulated score of the last label and the
+        quantile.
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
@@ -123,6 +126,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     Mauricio Sadinle, Jing Lei, and Larry Wasserman.
     "Least Ambiguous Set-Valued Classifiers with Bounded Error Levels",
     Journal of the American Statistical Association, 114, 2019.
+
+    Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
+    "Classification with Valid and Adaptive Coverage."
+    NeurIPS 202 (spotlight).
 
     Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
     and Jitendra Malik.
@@ -288,7 +295,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         y_preds_sorted: ArrayLike,
         y_proba_sorted_argmax: ArrayLike
     ) -> ArrayLike:
-        """Randomly remove last label from prediction set based on the
+        """
+        Randomly remove last label from prediction set based on the
         comparison between a random number and the difference between
         cumulated score of the last included label and the quantile.
 
@@ -296,18 +304,18 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         ----------
         y_proba_sorted_filtered : ArrayLike
             Array with sorted probabilities. Labels which are not kept in the
-            prediction set have a probability set to 0
+            prediction set have a probability set to 0.
         y_proba_last : ArrayLike
-            Array with the probability of the last included label
+            Array with the probability of the last included label.
         y_preds_sorted : ArrayLike
-            Array with sorted probabilities
+            Array with sorted probabilities.
         y_proba_sorted_argmax : ArrayLike
-            Index of the last included label
+            Index of the last included label.
 
         Returns
         -------
         ArrayLike
-            Updated y_preds_sorted
+            Updated y_preds_sorted.
         """
         # compute V parameter from Romano+(2020)
         vs = np.stack(
@@ -317,11 +325,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         y_proba_sorted_filtered[:, :, iq], axis=1
                     )[:, -1]
                     - quantile
-                )
-                / y_proba_last[:, iq]
+                ) / y_proba_last[:, iq]
                 for iq, quantile in enumerate(self.quantiles_)
-            ],
-            axis=1,
+            ], axis=1,
         )
         # get random numbers for each observation and alpha value
         random_state = check_random_state(self.random_state)
@@ -495,23 +501,24 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_proba_cumsum_sorted = np.hstack([
                     np.cumsum(y_proba_sorted, axis=1)
                 ])
-                if (self.include_last_label is True or
-                        self.include_last_label == 'randomized'):
+                # get the index of the last included label
+                if (
+                    (self.include_last_label is True) or
+                    (self.include_last_label == 'randomized')
+                ):
                     y_proba_sorted_argmax = np.stack([
                         np.argmax(
                             y_proba_cumsum_sorted >= quantile, axis=1
                         )
                         for quantile in self.quantiles_
                     ], axis=1)
-                elif (self.include_last_label is False and
-                        not isinstance(self.include_last_label, str)):
+                elif (self.include_last_label is False):
                     y_proba_sorted_argmax = np.stack([
                         np.maximum(np.argmax(
                             y_proba_cumsum_sorted > quantile, axis=1
                         ) - 1, 0)
                         for quantile in self.quantiles_
                     ], axis=1)
-
                 else:
                     raise ValueError(
                         "Invalid include_last_label argument."
@@ -530,7 +537,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     y_proba_sorted * y_preds_sorted[:, :, iq]
                     for iq, _ in enumerate(self.quantiles_)
                 ], axis=2)
-
                 # get probability of last label included in prediction set
                 y_proba_last = np.stack([
                     np.take_along_axis(
@@ -540,13 +546,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     )
                     for i, _ in enumerate(self.quantiles_)
                 ], axis=1)[:, :, 0]
+                # remove last label randomly
                 if self.include_last_label == 'randomized':
                     y_preds_sorted = self._add_random_tie_breaking(
-                                        y_proba_sorted_filtered,
-                                        y_proba_last,
-                                        y_preds_sorted,
-                                        y_proba_sorted_argmax
-                                    )
+                        y_proba_sorted_filtered,
+                        y_proba_last,
+                        y_preds_sorted,
+                        y_proba_sorted_argmax
+                    )
 
                 # rearrange boolean values from initial label order
                 prediction_sets = np.stack(

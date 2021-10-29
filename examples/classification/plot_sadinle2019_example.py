@@ -61,8 +61,6 @@ mapie = MapieClassifier(estimator=clf, cv="prefit", method="score")
 mapie.fit(X_train, y_train)
 y_pred_mapie, y_ps_mapie = mapie.predict(X_test, alpha=alpha)
 
-plt.hist(mapie.scores_)
-
 # Plot the results
 tab10 = plt.cm.get_cmap("Purples", 4)
 colors = {0: "#1f77b4", 1: "#ff7f0e", 2: "#2ca02c", 3: "#d62728"}
