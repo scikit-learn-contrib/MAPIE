@@ -27,7 +27,7 @@ Params = TypedDict(
     {
         "method": str,
         "cv": Optional[str],
-        "include_last_label": Optional[bool],
+        "include_last_label": Optional[Union[str, bool]],
         "random_state": Optional[int]
     }
 )
@@ -207,7 +207,7 @@ def test_no_fit_predict() -> None:
 @pytest.mark.parametrize("method", WRONG_METHODS)
 def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
     """Test else condition for the method in .fit"""
-    def mock_check_parameter(*args):
+    def mock_check_parameter(*args: Any) -> None:
         pass
     monkeypatch.setattr(
         MapieClassifier, "_check_parameters", mock_check_parameter
@@ -234,7 +234,7 @@ def test_include_label_error_in_predict(
     monkeypatch: Any, include_labels: Union[bool, str], alpha: float
 ) -> None:
     """Test else condition for include_label parameter in .predict"""
-    def mock_check_parameter(*args):
+    def mock_check_parameter(*args: Any) -> None:
         pass
     monkeypatch.setattr(
         MapieClassifier, "_check_parameters", mock_check_parameter
