@@ -281,6 +281,38 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             return cv
         raise ValueError("Invalid cv argument." "Allowed value is 'prefit'.")
 
+    def _add_random_tie_breaking(self,
+                                 y_proba_sorted_filtered,
+                                 y_proba_last,
+                                 y_preds_sorted,
+                                 y_proba_sorted_argmax):
+        # compute V parameter from Romano+(2020)
+        vs = np.stack(
+            [
+                (
+                    np.cumsum(
+                        y_proba_sorted_filtered[:, :, iq], axis=1
+                    )[:, -1]
+                    - quantile
+                )
+                / y_proba_last[:, iq]
+                for iq, quantile in enumerate(self.quantiles_)
+            ],
+            axis=1,
+        )
+        # get random numbers for each observation and alpha value
+        random_state = check_random_state(self.random_state)
+        rnds = random_state.uniform(size=y_preds_sorted.shape[0])
+        # remove last label from prediction set if V <= rnd
+        # did not find a more elegant way to do it
+        for iy in range(len(y_preds_sorted)):
+            for iq, _ in enumerate(self.quantiles_):
+                if vs[iy, iq] >= rnds[iy]:
+                    y_preds_sorted[
+                        iy, y_proba_sorted_argmax[iy, iq], iq
+                    ] = False
+        return y_preds_sorted
+
     def fit(
         self,
         X: ArrayLike,
@@ -419,7 +451,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 np.quantile(
                     self.conformity_scores_,
                     ((n + 1) * (1 - _alpha)) / n,
-                    interpolation="lower"
+                    interpolation="higher"
                 ) for _alpha in alpha_
             ])
             if self.method == "score":
@@ -441,13 +473,29 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_proba_cumsum_sorted = np.hstack([
                     np.cumsum(y_proba_sorted, axis=1)
                 ])
+                if (self.include_last_label is True or
+                        self.include_last_label == 'randomized'):
+                    y_proba_sorted_argmax = np.stack([
+                        np.argmax(
+                            y_proba_cumsum_sorted >= quantile, axis=1
+                        )
+                        for quantile in self.quantiles_
+                    ], axis=1)
+                elif (self.include_last_label is False and
+                        not isinstance(self.include_last_label, str)):
+                    y_proba_sorted_argmax = np.stack([
+                        np.maximum(np.argmax(
+                            y_proba_cumsum_sorted > quantile, axis=1
+                        ) - 1, 0)
+                        for quantile in self.quantiles_
+                    ], axis=1)
 
-                y_proba_sorted_argmax = np.stack([
-                    np.argmax(
-                        y_proba_cumsum_sorted >= quantile, axis=1
+                else:
+                    raise ValueError(
+                        "Invalid include_last_label argument."
+                        "Should be a boolean or 'randomized'."
                     )
-                    for quantile in self.quantiles_
-                ], axis=1)
+
                 # filter labels with cumulated score lower than quantile
                 # (and keep label just higher than quantile)
                 y_preds_sorted = np.stack([
@@ -470,32 +518,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     )
                     for i, _ in enumerate(self.quantiles_)
                 ], axis=1)[:, :, 0]
-                if self.include_last_label:
-                    # compute V parameter from Romano+(2020)
-                    vs = np.stack(
-                        [
-                            (
-                                np.cumsum(
-                                    y_proba_sorted_filtered[:, :, iq], axis=1
-                                )[:, -1]
-                                - quantile
-                            )
-                            / y_proba_last[:, iq]
-                            for iq, quantile in enumerate(self.quantiles_)
-                        ],
-                        axis=1,
-                    )
-                    # get random numbers for each observation and alpha value
-                    np.random.seed(self.random_state)
-                    rnds = np.random.uniform(size=y_pred.shape[0])
-                    # remove last label from prediction set if V <= rnd
-                    # did not find a more elegant way to do it
-                    for iy in range(len(y_pred)):
-                        for iq, _ in enumerate(self.quantiles_):
-                            if vs[iy, iq] >= rnds[iy]:
-                                y_preds_sorted[
-                                    iy, y_proba_sorted_argmax[iy, iq], iq
-                                ] = False
+                if self.include_last_label == 'randomized':
+                    y_preds_sorted = self._add_random_tie_breaking(
+                                        y_proba_sorted_filtered,
+                                        y_proba_last,
+                                        y_preds_sorted,
+                                        y_proba_sorted_argmax
+                                    )
+
                 # rearrange boolean values from initial label order
                 prediction_sets = np.stack(
                     [

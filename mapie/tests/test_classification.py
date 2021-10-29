@@ -21,7 +21,7 @@ from mapie.metrics import classification_coverage_score
 
 METHODS = ["score", "cumulated_score"]
 WRONG_METHODS = ["scores", "cumulated", "test", ""]
-
+WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "", "other"]
 Params = TypedDict(
     "Params",
     {
@@ -39,15 +39,32 @@ STRATEGIES = {
         include_last_label=False,
         random_state=None
     ),
-    "cumulated_score": Params(
+    "cumulated_score_include": Params(
         method="cumulated_score",
         cv="prefit",
         include_last_label=True,
         random_state=42
-    )
+    ),
+    "cumulated_score_not_include": Params(
+        method="cumulated_score",
+        cv="prefit",
+        include_last_label=False,
+        random_state=42
+    ),
+    "cumulated_score_randomized": Params(
+        method="cumulated_score",
+        cv="prefit",
+        include_last_label='randomized',
+        random_state=42
+    ),
 }
 
-COVERAGES = {"score": 7 / 9, "cumulated_score": 7 / 9}
+COVERAGES = {
+    "score": 7 / 9,
+    "cumulated_score_include": 1,
+    "cumulated_score_not_include": 5/9,
+    "cumulated_score_randomized": 7/9,
+}
 
 y_toy_mapie = {
     "score": [
@@ -61,15 +78,37 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True],
     ],
-    "cumulated_score": [
-        [True, False, False],
+    "cumulated_score_include": [
         [True, False, False],
         [True, True, False],
         [True, True, False],
+        [True, True, False],
+        [True, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, False, True],
+    ],
+    "cumulated_score_not_include": [
+        [True, False, False],
+        [True, False, False],
+        [True, False, False],
         [False, True, False],
+        [True, True, False],
         [False, True, False],
         [False, False, True],
         [False, False, True],
+        [False, False, True],
+    ],
+    "cumulated_score_randomized": [
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, False],
+        [False, False, True],
+        [False, True, True],
         [False, False, True],
     ],
 }
@@ -175,6 +214,23 @@ def test_method_error_in_fit(monkeypatch, method) -> None:
     mapie = MapieClassifier(method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("include_labels", WRONG_INCLUDE_LABELS)
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_include_label_error_in_predict(
+    monkeypatch, include_labels, alpha
+) -> None:
+    def mock_check_parameter(*args):
+        pass
+    monkeypatch.setattr(
+        MapieClassifier, "_check_parameters", mock_check_parameter
+    )
+    mapie = MapieClassifier(method='cumulated_score',
+                            include_last_label=include_labels)
+    mapie.fit(X_toy, y_toy)
+    with pytest.raises(ValueError, match=r".*Invalid include.*"):
+        mapie.predict(X_toy, alpha=alpha)
 
 
 def test_none_estimator() -> None:
@@ -291,7 +347,9 @@ def test_invalid_include_last_label(include_last_label: Any) -> None:
 @pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_predict_output_shape(
-    strategy: str, alpha: Any, dataset: Tuple[np.ndarray, np.ndarray]
+    strategy: str,
+    alpha: Any,
+    dataset: Tuple[np.ndarray, np.ndarray]
 ) -> None:
     """Test predict output shape."""
     mapie = MapieClassifier(**STRATEGIES[strategy])
@@ -366,7 +424,10 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_results_with_constant_sample_weights(strategy: str) -> None:
+def test_results_with_constant_sample_weights(
+    monkeypatch,
+    strategy: str
+) -> None:
     """
     Test predictions when sample weights are None
     or constant with different values.
@@ -400,7 +461,7 @@ def test_valid_prediction(alpha: Any) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_toy_dataset_predictions(strategy: str) -> None:
+def test_toy_dataset_predictions(monkeypatch, strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     clf = GaussianNB().fit(X_toy, y_toy)
     mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy])
@@ -416,7 +477,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
 def test_cumulated_scores() -> None:
     """Test cumulated score method on a tiny dataset."""
     alpha = [0.65]
-    quantile = [0.57042858]
+    quantile = [0.64981605]
     # fit
     cumclf = CumulatedscoreClassifier()
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
@@ -424,12 +485,12 @@ def test_cumulated_scores() -> None:
         cumclf,
         method="cumulated_score",
         cv="prefit",
-        include_last_label=False,
+        include_last_label=True,
         random_state=42
     )
     mapie.fit(cumclf.X_calib, cumclf.y_calib)
     np.testing.assert_allclose(mapie.conformity_scores_, cumclf.y_calib_scores)
     # predict
-    y_pred, y_ps = mapie.predict(cumclf.X_test, alpha=alpha)
+    _, y_ps = mapie.predict(cumclf.X_test, alpha=alpha)
     np.testing.assert_allclose(mapie.quantiles_, quantile)
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)

@@ -170,44 +170,6 @@ def check_alpha(
     return alpha_np
 
 
-def check_random_state(random_state: Optional[int] = None) -> Optional[int]:
-    """
-    Check random_state parameter.
-
-    Parameters
-    ----------
-    random_state : Optional[int]
-        Can be an integer or ``None``.
-
-    Returns
-    -------
-    int
-        The random_state itself.
-
-    Raises
-    ------
-    ValueError
-        If random_state is not a positive integer.
-
-    Examples
-    --------
-    >>> from mapie.utils import check_random_state
-    >>> print(check_random_state(10))
-    10
-    """
-    if random_state is None:
-        return random_state
-    if not isinstance(random_state, int):
-        raise ValueError(
-            "Invalid random_state argument. Should be an integer."
-        )
-    elif (isinstance(random_state, int)) & (random_state < 0):
-        raise ValueError(
-            "Invalid random_state argument. Should be an non-negative integer."
-        )
-    return random_state
-
-
 def check_n_features_in(
     X: ArrayLike,
     cv: Optional[Union[float, str, BaseCrossValidator]] = None,
