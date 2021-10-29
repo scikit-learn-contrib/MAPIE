@@ -14,7 +14,6 @@ from mapie.utils import (
     check_n_features_in,
     check_n_jobs,
     check_null_weight,
-    check_random_state,
     check_verbose,
     fit_estimator,
 )
@@ -167,13 +166,6 @@ def test_invalid_n_jobs(n_jobs: Any) -> None:
     """Test that invalid n_jobs raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid n_jobs argument.*"):
         check_n_jobs(n_jobs)
-
-
-@pytest.mark.parametrize("random_state", ["dummy", -1, 1.5, [1, 2]])
-def test_invalid_random_state(random_state: Any) -> None:
-    """Test that invalid random_state raise errors."""
-    with pytest.raises(ValueError, match=r".*Invalid random_state argument.*"):
-        check_random_state(random_state)
 
 
 @pytest.mark.parametrize("n_jobs", [-5, -1, 1, 4])
