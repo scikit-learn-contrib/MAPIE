@@ -281,11 +281,34 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             return cv
         raise ValueError("Invalid cv argument." "Allowed value is 'prefit'.")
 
-    def _add_random_tie_breaking(self,
-                                 y_proba_sorted_filtered,
-                                 y_proba_last,
-                                 y_preds_sorted,
-                                 y_proba_sorted_argmax):
+    def _add_random_tie_breaking(
+        self,
+        y_proba_sorted_filtered: ArrayLike,
+        y_proba_last: ArrayLike,
+        y_preds_sorted: ArrayLike,
+        y_proba_sorted_argmax: ArrayLike
+    ) -> ArrayLike:
+        """Randomly remove last label from prediction set based on the
+        comparison between a random number and the difference between
+        cumulated score of the last included label and the quantile.
+
+        Parameters
+        ----------
+        y_proba_sorted_filtered : ArrayLike
+            Array with sorted probabilities. Labels which are not kept in the
+            prediction set have a probability set to 0
+        y_proba_last : ArrayLike
+            Array with the probability of the last included label
+        y_preds_sorted : ArrayLike
+            Array with sorted probabilities
+        y_proba_sorted_argmax : ArrayLike
+            Index of the last included label
+
+        Returns
+        -------
+        ArrayLike
+            Updated y_preds_sorted
+        """
         # compute V parameter from Romano+(2020)
         vs = np.stack(
             [

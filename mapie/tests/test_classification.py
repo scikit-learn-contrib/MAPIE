@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Union
 from typing_extensions import TypedDict
 from inspect import signature
 
@@ -205,7 +205,7 @@ def test_no_fit_predict() -> None:
 
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
-def test_method_error_in_fit(monkeypatch, method) -> None:
+def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
     """Test else condition for the method in .fit"""
     def mock_check_parameter(*args):
         pass
@@ -219,7 +219,7 @@ def test_method_error_in_fit(monkeypatch, method) -> None:
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
-def test_method_error_in_predict(method, alpha) -> None:
+def test_method_error_in_predict(method: Any, alpha: float) -> None:
     """Test else condition for the method in .predict"""
     mapie = MapieClassifier(method='score')
     mapie.fit(X_toy, y_toy)
@@ -231,7 +231,7 @@ def test_method_error_in_predict(method, alpha) -> None:
 @pytest.mark.parametrize("include_labels", WRONG_INCLUDE_LABELS)
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_include_label_error_in_predict(
-    monkeypatch, include_labels, alpha
+    monkeypatch: Any, include_labels: Union[bool, str], alpha: float
 ) -> None:
     """Test else condition for include_label parameter in .predict"""
     def mock_check_parameter(*args):
@@ -438,7 +438,6 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_with_constant_sample_weights(
-    monkeypatch,
     strategy: str
 ) -> None:
     """
@@ -474,7 +473,7 @@ def test_valid_prediction(alpha: Any) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_toy_dataset_predictions(monkeypatch, strategy: str) -> None:
+def test_toy_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     clf = GaussianNB().fit(X_toy, y_toy)
     mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy])
