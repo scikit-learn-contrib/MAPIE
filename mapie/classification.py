@@ -271,7 +271,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         y_proba_sorted: ArrayLike,
         y_preds_sorted: ArrayLike,
-        y_proba_sorted_argmax: ArrayLike
+        y_proba_sorted_last: ArrayLike
     ) -> ArrayLike:
         """
         Randomly remove last label from prediction set based on the
@@ -285,7 +285,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         y_preds_sorted : ArrayLike
             Array with predicitons to keep, sorted according to their
             respective probabilities.
-        y_proba_sorted_argmax : ArrayLike
+        y_proba_sorted_last : ArrayLike
             Index of the last included label.
 
         Returns
@@ -302,7 +302,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         y_proba_last = np.stack([
             np.take_along_axis(
                 y_proba_sorted_filtered[:, :, i],
-                y_proba_sorted_argmax[:, i].reshape(-1, 1),
+                y_proba_sorted_last[:, i].reshape(-1, 1),
                 axis=1
             )
             for i, _ in enumerate(self.quantiles_)
@@ -328,7 +328,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             for iq, _ in enumerate(self.quantiles_):
                 if vs[iy, iq] >= rnds[iy]:
                     y_preds_sorted[
-                        iy, y_proba_sorted_argmax[iy, iq], iq
+                        iy, y_proba_sorted_last[iy, iq], iq
                     ] = False
         return y_preds_sorted
 
@@ -549,22 +549,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     y_pred_proba, index_sorted, axis=1
                 )
                 # get sorted cumulated score starting from 0
-                y_proba_cumsum_sorted = np.hstack([
-                    np.cumsum(y_proba_sorted, axis=1)
-                ])
+                y_proba_cumsum_sorted = np.cumsum(y_proba_sorted, axis=1)
                 # get the index of the last included label
                 if (
                     (include_last_label is True) or
                     (include_last_label == 'randomized')
                 ):
-                    y_proba_sorted_argmax = np.stack([
+                    y_proba_sorted_last = np.stack([
                         np.argmax(
                             y_proba_cumsum_sorted >= quantile, axis=1
                         )
                         for quantile in self.quantiles_
                     ], axis=1)
                 elif (include_last_label is False):
-                    y_proba_sorted_argmax = np.stack([
+                    y_proba_sorted_last = np.stack([
                         np.maximum(np.argmax(
                             y_proba_cumsum_sorted > quantile, axis=1
                         ) - 1, 0)
@@ -580,7 +578,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 # (and keep label just higher than quantile)
                 y_preds_sorted = np.stack([
                     (np.argsort(y_proba_cumsum_sorted) <=
-                        y_proba_sorted_argmax[:, iq].reshape(-1, 1))
+                        y_proba_sorted_last[:, iq].reshape(-1, 1))
                     for iq, _ in enumerate(self.quantiles_)
                 ], axis=2)
 
@@ -589,7 +587,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     y_preds_sorted = self._add_random_tie_breaking(
                         y_proba_sorted,
                         y_preds_sorted,
-                        y_proba_sorted_argmax
+                        y_proba_sorted_last
                     )
 
                 # rearrange boolean values from initial label order
