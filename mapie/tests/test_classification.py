@@ -27,35 +27,56 @@ Params = TypedDict(
     {
         "method": str,
         "cv": Optional[str],
-        "include_last_label": Optional[Union[str, bool]],
         "random_state": Optional[int]
+    }
+)
+ParamsPredict = TypedDict(
+    "Params",
+    {
+        "include_last_label": Optional[Union[bool, str]],
     }
 )
 
 STRATEGIES = {
-    "score": Params(
-        method="score",
-        cv="prefit",
-        include_last_label=False,
-        random_state=None
+    "score": (
+        Params(
+            method="score",
+            cv="prefit",
+            random_state=None
+        ),
+        ParamsPredict(
+            include_last_label=False
+        )
     ),
-    "cumulated_score_include": Params(
-        method="cumulated_score",
-        cv="prefit",
-        include_last_label=True,
-        random_state=42
+    "cumulated_score_include": (
+        Params(
+            method="cumulated_score",
+            cv="prefit",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True
+        )
     ),
-    "cumulated_score_not_include": Params(
-        method="cumulated_score",
-        cv="prefit",
-        include_last_label=False,
-        random_state=42
+    "cumulated_score_not_include": (
+        Params(
+            method="cumulated_score",
+            cv="prefit",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=False
+        )
     ),
-    "cumulated_score_randomized": Params(
-        method="cumulated_score",
-        cv="prefit",
-        include_last_label='randomized',
-        random_state=42
+    "cumulated_score_randomized": (
+        Params(
+            method="cumulated_score",
+            cv="prefit",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label='randomized'
+        )
     ),
 }
 
@@ -166,9 +187,8 @@ def test_default_parameters() -> None:
     assert mapie.estimator is None
     assert mapie.method == "score"
     assert mapie.cv == "prefit"
-    assert mapie.include_last_label is True
     assert mapie.verbose == 0
-    assert mapie.random_state is None
+    assert mapie.random_state == 0
     assert mapie.n_jobs is None
 
 
@@ -234,16 +254,20 @@ def test_include_label_error_in_predict(
     monkeypatch: Any, include_labels: Union[bool, str], alpha: float
 ) -> None:
     """Test else condition for include_label parameter in .predict"""
-    def mock_check_parameter(*args: Any) -> None:
+    def mock_check_include_last_label(*args: Any) -> None:
         pass
     monkeypatch.setattr(
-        MapieClassifier, "_check_parameters", mock_check_parameter
+        MapieClassifier,
+        "_check_include_last_label",
+        mock_check_include_last_label
     )
-    mapie = MapieClassifier(method='cumulated_score',
-                            include_last_label=include_labels)
+    mapie = MapieClassifier(method='cumulated_score')
     mapie.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid include.*"):
-        mapie.predict(X_toy, alpha=alpha)
+        mapie.predict(
+            X_toy, alpha=alpha,
+            include_last_label=include_labels
+        )
 
 
 def test_none_estimator() -> None:
@@ -265,7 +289,7 @@ def test_invalid_estimator(estimator: Any) -> None:
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
     clf = LogisticRegression().fit(X_toy, y_toy)
-    mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy])
+    mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
     mapie.fit(X_toy, y_toy)
     assert isinstance(mapie.single_estimator_, LogisticRegression)
 
@@ -349,11 +373,16 @@ def test_invalid_cv(cv: Any) -> None:
 )
 def test_invalid_include_last_label(include_last_label: Any) -> None:
     """Test that invalid include_last_label raise errors."""
-    mapie = MapieClassifier(include_last_label=include_last_label)
+    mapie = MapieClassifier()
+    mapie.fit(X_toy, y_toy)
     with pytest.raises(
         ValueError, match=r".*Invalid include_last_label argument.*"
     ):
-        mapie.fit(X_toy, y_toy)
+        mapie.predict(
+            X_toy, 
+            y_toy,
+            include_last_label=include_last_label
+        )
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -365,10 +394,16 @@ def test_predict_output_shape(
     dataset: Tuple[np.ndarray, np.ndarray]
 ) -> None:
     """Test predict output shape."""
-    mapie = MapieClassifier(**STRATEGIES[strategy])
+    args_init, args_predict = STRATEGIES[strategy]
+    include_last_label = args_predict['include_last_label']
+    mapie = MapieClassifier(**args_init)
     X, y = dataset
     mapie.fit(X, y)
-    y_pred, y_ps = mapie.predict(X, alpha=alpha)
+    y_pred, y_ps = mapie.predict(
+        X,
+        include_last_label=include_last_label,
+        alpha=alpha
+    )
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
     assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
@@ -394,9 +429,15 @@ def test_results_for_same_alpha(strategy: str) -> None:
     Test that predictions and intervals
     are similar with two equal values of alpha.
     """
-    mapie = MapieClassifier(**STRATEGIES[strategy])
+    args_init, args_predict = STRATEGIES[strategy]
+    include_last_label = args_predict['include_last_label']
+    mapie = MapieClassifier(**args_init)
     mapie.fit(X, y)
-    _, y_ps = mapie.predict(X, alpha=[0.1, 0.1])
+    _, y_ps = mapie.predict(
+        X,
+        include_last_label=include_last_label,
+        alpha=[0.1, 0.1]
+    )
     np.testing.assert_allclose(y_ps[:, 0, 0], y_ps[:, 0, 1])
     np.testing.assert_allclose(y_ps[:, 1, 0], y_ps[:, 1, 1])
 
@@ -409,11 +450,25 @@ def test_results_for_alpha_as_float_and_arraylike(
     strategy: str, alpha: Any
 ) -> None:
     """Test that output values do not depend on type of alpha."""
-    mapie = MapieClassifier(**STRATEGIES[strategy])
+    args_init, args_predict = STRATEGIES[strategy]
+    include_last_label = args_predict['include_last_label']
+    mapie = MapieClassifier(**args_init)
     mapie.fit(X, y)
-    y_pred_float1, y_ps_float1 = mapie.predict(X, alpha=alpha[0])
-    y_pred_float2, y_ps_float2 = mapie.predict(X, alpha=alpha[1])
-    y_pred_array, y_ps_array = mapie.predict(X, alpha=alpha)
+    y_pred_float1, y_ps_float1 = mapie.predict(
+        X,
+        include_last_label=include_last_label,
+        alpha=alpha[0]
+    )
+    y_pred_float2, y_ps_float2 = mapie.predict(
+        X,
+        include_last_label=include_last_label,
+        alpha=alpha[1]
+    )
+    y_pred_array, y_ps_array = mapie.predict(
+        X,
+        include_last_label=include_last_label,
+        alpha=alpha
+    )
     np.testing.assert_allclose(y_pred_float1, y_pred_array)
     np.testing.assert_allclose(y_pred_float2, y_pred_array)
     np.testing.assert_allclose(y_ps_float1[:, :, 0], y_ps_array[:, :, 0])
@@ -426,12 +481,22 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     Test that MapieRegressor gives equal predictions
     regardless of number of parallel jobs.
     """
-    mapie_single = MapieClassifier(n_jobs=1, **STRATEGIES[strategy])
-    mapie_multi = MapieClassifier(n_jobs=-1, **STRATEGIES[strategy])
+    args_init, args_predict = STRATEGIES[strategy]
+    include_last_label = args_predict['include_last_label']
+    mapie_single = MapieClassifier(n_jobs=1, **args_init)
+    mapie_multi = MapieClassifier(n_jobs=-1, **args_init)
     mapie_single.fit(X_toy, y_toy)
     mapie_multi.fit(X_toy, y_toy)
-    y_pred_single, y_ps_single = mapie_single.predict(X_toy, alpha=0.2)
-    y_pred_multi, y_ps_multi = mapie_multi.predict(X_toy, alpha=0.2)
+    y_pred_single, y_ps_single = mapie_single.predict(
+        X_toy,
+        include_last_label=include_last_label,
+        alpha=0.2
+    )
+    y_pred_multi, y_ps_multi = mapie_multi.predict(
+        X_toy,
+        include_last_label=include_last_label,
+        alpha=0.2
+    )
     np.testing.assert_allclose(y_pred_single, y_pred_multi)
     np.testing.assert_allclose(y_ps_single, y_ps_multi)
 
@@ -444,16 +509,30 @@ def test_results_with_constant_sample_weights(
     Test predictions when sample weights are None
     or constant with different values.
     """
+    args_init, args_predict = STRATEGIES[strategy]
+    include_last_label = args_predict['include_last_label']
     n_samples = len(X_toy)
-    mapie0 = MapieClassifier(**STRATEGIES[strategy])
-    mapie1 = MapieClassifier(**STRATEGIES[strategy])
-    mapie2 = MapieClassifier(**STRATEGIES[strategy])
+    mapie0 = MapieClassifier(**args_init)
+    mapie1 = MapieClassifier(**args_init)
+    mapie2 = MapieClassifier(**args_init)
     mapie0.fit(X_toy, y_toy, sample_weight=None)
     mapie1.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples))
     mapie2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples) * 5)
-    y_pred0, y_ps0 = mapie0.predict(X_toy, alpha=0.2)
-    y_pred1, y_ps1 = mapie1.predict(X_toy, alpha=0.2)
-    y_pred2, y_ps2 = mapie2.predict(X_toy, alpha=0.2)
+    y_pred0, y_ps0 = mapie0.predict(
+        X_toy,
+        include_last_label=include_last_label,
+        alpha=0.2
+    )
+    y_pred1, y_ps1 = mapie1.predict(
+        X_toy,
+        include_last_label=include_last_label,
+        alpha=0.2
+    )
+    y_pred2, y_ps2 = mapie2.predict(
+        X_toy,
+        include_last_label=include_last_label,
+        alpha=0.2
+    )
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred0, y_pred2)
     np.testing.assert_allclose(y_ps0, y_ps1)
@@ -475,10 +554,16 @@ def test_valid_prediction(alpha: Any) -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_toy_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
+    args_init, args_predict = STRATEGIES[strategy]
+    include_last_label = args_predict['include_last_label']
     clf = GaussianNB().fit(X_toy, y_toy)
-    mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy])
+    mapie = MapieClassifier(estimator=clf, **args_init)
     mapie.fit(X_toy, y_toy)
-    _, y_ps = mapie.predict(X_toy, alpha=0.2)
+    _, y_ps = mapie.predict(
+        X_toy,
+        include_last_label=include_last_label,
+        alpha=0.2
+    )
     np.testing.assert_allclose(
         classification_coverage_score(y_toy, y_ps[:, :, 0]),
         COVERAGES[strategy],
@@ -497,12 +582,15 @@ def test_cumulated_scores() -> None:
         cumclf,
         method="cumulated_score",
         cv="prefit",
-        include_last_label=True,
         random_state=42
     )
     mapie.fit(cumclf.X_calib, cumclf.y_calib)
     np.testing.assert_allclose(mapie.conformity_scores_, cumclf.y_calib_scores)
     # predict
-    _, y_ps = mapie.predict(cumclf.X_test, alpha=alpha)
+    _, y_ps = mapie.predict(
+        cumclf.X_test,
+        include_last_label=True,
+        alpha=alpha
+    )
     np.testing.assert_allclose(mapie.quantiles_, quantile)
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)

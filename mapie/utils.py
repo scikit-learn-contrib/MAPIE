@@ -316,7 +316,7 @@ def check_verbose(verbose: int) -> None:
 
 
 def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
-    """ "
+    """
     Parameters
     ----------
     X : Array of shape (size of training set, number of estimators) whose rows

@@ -86,12 +86,12 @@ def aggregate_all(agg_function: Optional[str], X: ArrayLike) -> ArrayLike:
     Applies np.nanmean(, axis=1) or np.nanmedian(, axis=1) according
     to the string ``agg_function``.
 
-    Parameters:
+    Parameters
     -----------
     X : ArrayLike of shape (n, p)
         Array of floats and nans
 
-    Returns:
+    Returns
     --------
     ArrayLike of shape (n, 1):
         Array of the means or medians of each row of X

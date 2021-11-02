@@ -61,19 +61,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         By default ``prefit``.
 
-    include_last_label: Optional[Union[bool, str]]
-        Whether or not to include last label in
-        prediction sets for the "cumulated_score" method. Choose among:
-
-        - False, does not include label whose cumulated score is just over the
-        quantile.
-        - True, includes label whose cumulated score is just over the quantile,
-        unless there is only one label in the prediction set.
-        - "randomized", randomly includes label whose cumulated score is just
-        over the quantile based on the comparison of a uniform number and the
-        difference between the cumulated score of the last label and the
-        quantile.
-
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
@@ -87,10 +74,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         By default ``None``.
 
-    random_state: Optional[Union[int, RandomState]], default=0
+    random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random uniform sampling
         for evaluation quantiles and prediction sets in cumulated_score.
         Pass an int for reproducible output across multiple function calls.
+
+        By default ```0``.
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
@@ -165,15 +154,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         estimator: Optional[ClassifierMixin] = None,
         method: str = "score",
         cv: Optional[str] = "prefit",
-        include_last_label: Optional[Union[bool, str]] = True,
         n_jobs: Optional[int] = None,
-        random_state: Optional[Union[int, np.random.RandomState]] = None,
+        random_state: Optional[Union[int, np.random.RandomState]] = 0,
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
         self.method = method
         self.cv = cv
-        self.include_last_label = include_last_label
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
@@ -191,14 +178,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             raise ValueError(
                 "Invalid method. "
                 "Allowed values are 'score' or 'cumulated_score'."
-            )
-        if (
-            (not isinstance(self.include_last_label, bool)) and
-            (not self.include_last_label == "randomized")
-        ):
-            raise ValueError(
-                "Invalid include_last_label argument."
-                "Should be a boolean or 'randomized'."
             )
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
@@ -341,6 +320,50 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     ] = False
         return y_preds_sorted
 
+    def _check_include_last_label(
+        self,
+        include_last_label: Optional[Union[bool, str]]
+    ) -> Optional[Union[bool, str]]:
+        """
+        Check if include_last_label is a boolean or a string.
+        Else raise error.
+
+        Parameters
+        ----------
+        include_last_label : Optional[Union[bool, str]]
+            Whether or not to include last label in
+            prediction sets for the "cumulated_score" method. Choose among:
+
+            - False, does not include label whose cumulated score is just over
+             the quantile.
+            - True, includes label whose cumulated score is just over the
+            quantile, unless there is only one label in the prediction set.
+            - "randomized", randomly includes label whose cumulated score is
+            just over the quantile based on the comparison of a uniform number
+            and the difference between the cumulated score of the last label
+            and the quantile.
+
+        Returns
+        -------
+        Optional[Union[bool, str]]
+
+        Raises
+        ------
+        ValueError
+            "Invalid include_last_label argument. "
+            "Should be a boolean or 'randomized'."
+        """
+        if (
+            (not isinstance(include_last_label, bool)) and
+            (not include_last_label == "randomized")
+        ):
+            raise ValueError(
+                "Invalid include_last_label argument. "
+                "Should be a boolean or 'randomized'."
+            )
+        else:
+            return include_last_label
+
     def fit(
         self,
         X: ArrayLike,
@@ -425,6 +448,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
+        include_last_label: Optional[Union[bool, str]] = True,
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Prediction prediction sets on new samples based on target confidence
@@ -446,6 +470,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             ``alpha`` is the complement of the target coverage level.
             By default ``None``.
 
+        include_last_label: Optional[Union[bool, str]]
+            Whether or not to include last label in
+            prediction sets for the "cumulated_score" method. Choose among:
+
+            - False, does not include label whose cumulated score is just over
+             the quantile.
+            - True, includes label whose cumulated score is just over the
+            quantile, unless there is only one label in the prediction set.
+            - "randomized", randomly includes label whose cumulated score is
+            just over the quantile based on the comparison of a uniform number
+            and the difference between the cumulated score of the last label
+            and the quantile.
+            By default ``True``.
+
         Returns
         -------
         Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]
@@ -456,6 +494,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
         # Checks
+        include_last_label = self._check_include_last_label(include_last_label)
         alpha_ = check_alpha(alpha)
         check_is_fitted(
             self,
@@ -503,8 +542,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 ])
                 # get the index of the last included label
                 if (
-                    (self.include_last_label is True) or
-                    (self.include_last_label == 'randomized')
+                    (include_last_label is True) or
+                    (include_last_label == 'randomized')
                 ):
                     y_proba_sorted_argmax = np.stack([
                         np.argmax(
@@ -512,7 +551,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         )
                         for quantile in self.quantiles_
                     ], axis=1)
-                elif (self.include_last_label is False):
+                elif (include_last_label is False):
                     y_proba_sorted_argmax = np.stack([
                         np.maximum(np.argmax(
                             y_proba_cumsum_sorted > quantile, axis=1
@@ -547,7 +586,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     for i, _ in enumerate(self.quantiles_)
                 ], axis=1)[:, :, 0]
                 # remove last label randomly
-                if self.include_last_label == 'randomized':
+                if include_last_label == 'randomized':
                     y_preds_sorted = self._add_random_tie_breaking(
                         y_proba_sorted_filtered,
                         y_proba_last,

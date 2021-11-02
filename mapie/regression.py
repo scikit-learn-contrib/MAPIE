@@ -206,17 +206,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ------
         ValueError
             If parameters are not valid.
-
         """
         if self.method not in self.valid_methods_:
             raise ValueError(
-                "Invalid method.\n"
+                "Invalid method. "
                 "Allowed values are 'naive', 'base', 'plus' and 'minmax'."
             )
 
         if self.agg_function not in self.valid_agg_functions_:
             raise ValueError(
-                "Invalid aggregation function.\n"
+                "Invalid aggregation function "
                 "Allowed values are None, 'mean', 'median'."
             )
 
@@ -250,13 +249,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         NotFittedError
             If the estimator is not fitted and ``cv`` attribute is "prefit".
-
         """
         if estimator is None:
             return LinearRegression()
         if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
             raise ValueError(
-                "Invalid estimator.\n"
+                "Invalid estimator. "
                 "Please provide a regressor with fit and predict methods."
             )
         if self.cv == "prefit":
@@ -292,11 +290,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ------
         ValueError
             If the cross-validator is not valid.
-
         """
         if isinstance(cv, Subsample) and (self.agg_function is None):
             warnings.warn(
-                "WARNING: you need to specify an aggregation function when\n "
+                "WARNING: you need to specify an aggregation function when "
                 "using Subsample as cross validator. "
                 "agg_function set to 'mean'."
             )
@@ -312,8 +309,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
             return cv
         raise ValueError(
-            "Invalid cv argument.\n"
-            "Allowed values are None, -1, int >= 2, 'prefit',\n"
+            "Invalid cv argument. "
+            "Allowed values are None, -1, int >= 2, 'prefit', "
             "KFold, LeaveOneOut, or Subsample."
         )
 
