@@ -379,7 +379,7 @@ def test_invalid_include_last_label(include_last_label: Any) -> None:
         ValueError, match=r".*Invalid include_last_label argument.*"
     ):
         mapie.predict(
-            X_toy, 
+            X_toy,
             y_toy,
             include_last_label=include_last_label
         )

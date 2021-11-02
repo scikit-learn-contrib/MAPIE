@@ -269,8 +269,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
     def _add_random_tie_breaking(
         self,
-        y_proba_sorted_filtered: ArrayLike,
-        y_proba_last: ArrayLike,
+        y_proba_sorted: ArrayLike,
         y_preds_sorted: ArrayLike,
         y_proba_sorted_argmax: ArrayLike
     ) -> ArrayLike:
@@ -281,13 +280,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
-        y_proba_sorted_filtered : ArrayLike
-            Array with sorted probabilities. Labels which are not kept in the
-            prediction set have a probability set to 0.
-        y_proba_last : ArrayLike
-            Array with the probability of the last included label.
-        y_preds_sorted : ArrayLike
+        y_proba_sorted : ArrayLike
             Array with sorted probabilities.
+        y_preds_sorted : ArrayLike
+            Array with predicitons to keep, sorted according to their
+            respective probabilities.
         y_proba_sorted_argmax : ArrayLike
             Index of the last included label.
 
@@ -296,6 +293,21 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         ArrayLike
             Updated y_preds_sorted.
         """
+        # filter sorting probabilities with kept labels
+        y_proba_sorted_filtered = np.stack([
+            y_proba_sorted * y_preds_sorted[:, :, iq]
+            for iq, _ in enumerate(self.quantiles_)
+        ], axis=2)
+        # get probability of last label included in prediction set
+        y_proba_last = np.stack([
+            np.take_along_axis(
+                y_proba_sorted_filtered[:, :, i],
+                y_proba_sorted_argmax[:, i].reshape(-1, 1),
+                axis=1
+            )
+            for i, _ in enumerate(self.quantiles_)
+        ], axis=1)[:, :, 0]
+
         # compute V parameter from Romano+(2020)
         vs = np.stack(
             [
@@ -571,25 +583,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         y_proba_sorted_argmax[:, iq].reshape(-1, 1))
                     for iq, _ in enumerate(self.quantiles_)
                 ], axis=2)
-                # filter sorting probabilities with kept labels
-                y_proba_sorted_filtered = np.stack([
-                    y_proba_sorted * y_preds_sorted[:, :, iq]
-                    for iq, _ in enumerate(self.quantiles_)
-                ], axis=2)
-                # get probability of last label included in prediction set
-                y_proba_last = np.stack([
-                    np.take_along_axis(
-                        y_proba_sorted_filtered[:, :, i],
-                        y_proba_sorted_argmax[:, i].reshape(-1, 1),
-                        axis=1
-                    )
-                    for i, _ in enumerate(self.quantiles_)
-                ], axis=1)[:, :, 0]
+
                 # remove last label randomly
                 if include_last_label == 'randomized':
                     y_preds_sorted = self._add_random_tie_breaking(
-                        y_proba_sorted_filtered,
-                        y_proba_last,
+                        y_proba_sorted,
                         y_preds_sorted,
                         y_proba_sorted_argmax
                     )
