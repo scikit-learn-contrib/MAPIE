@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Optional, Tuple, Union, list
+from typing import Any, Optional, Tuple, Union, Iterable
 from typing_extensions import TypedDict
 from inspect import signature
 
@@ -209,13 +209,12 @@ class WrongOutputModel():
         self.proba_out = proba_out
 
     def fit(self, *args: Any) -> None:
-        self.fitted_ = True
-        return self
+        pass
 
-    def predict_proba(self, *args: Any) -> None:
+    def predict_proba(self, *args: Any) -> ArrayLike:
         return self.proba_out
 
-    def predict(self, *args: Any) -> None:
+    def predict(self, *args: Any) -> ArrayLike:
         pred = (
             self.proba_out == self.proba_out.max(axis=1)[:, None]
         ).astype(int)
@@ -662,7 +661,7 @@ def test_sum_proba_to_one_fit(y_pred_proba: ArrayLike) -> None:
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_sum_proba_to_one_predict(
     y_pred_proba: ArrayLike,
-    alpha: Union[list, float]
+    alpha: Union[float, Iterable[float]]
 ) -> None:
     """
     Test if when the output probabilities of the model do not
