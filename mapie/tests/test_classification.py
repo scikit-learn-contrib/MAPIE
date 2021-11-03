@@ -17,6 +17,7 @@ from sklearn.naive_bayes import GaussianNB
 
 from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
+from mapie._typing import ArrayLike
 
 
 METHODS = ["score", "cumulated_score"]
@@ -643,7 +644,11 @@ def test_cumulated_scores() -> None:
 
 
 @pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA)
-def test_sum_proba_to_one_fit(y_pred_proba) -> None:
+def test_sum_proba_to_one_fit(y_pred_proba: ArrayLike) -> None:
+    """
+    Test if when the output probabilities of the model do not
+    sum to one, return an error in the fit method.
+    """
     wrong_model = WrongOutputModel(y_pred_proba)
     wrong_model.fit(X_toy, y_toy)
     mapie = MapieClassifier(wrong_model)
@@ -655,7 +660,14 @@ def test_sum_proba_to_one_fit(y_pred_proba) -> None:
 
 @pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA)
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
-def test_sum_proba_to_one_predict(y_pred_proba, alpha) -> None:
+def test_sum_proba_to_one_predict(
+    y_pred_proba: ArrayLike,
+    alpha: Union[list, float]
+) -> None:
+    """
+    Test if when the output probabilities of the model do not
+    sum to one, return an error in the predict method.
+    """
     wrong_model = WrongOutputModel(y_pred_proba)
     wrong_model.fit(X_toy, y_toy)
     mapie = MapieClassifier(method='score')
