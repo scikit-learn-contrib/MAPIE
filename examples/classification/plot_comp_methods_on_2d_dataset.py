@@ -115,12 +115,11 @@ for method in methods:
         estimator=clf,
         method=method,
         cv="prefit",
-        include_last_label=True,
         random_state=42,
     )
     mapie[method].fit(X_cal, y_cal)
     y_pred_mapie[method], y_ps_mapie[method] = mapie[method].predict(
-        X_test, alpha=alpha
+        X_test, alpha=alpha, include_last_label=True,
     )
 
 
@@ -247,11 +246,12 @@ for method in methods:
         estimator=clf,
         method=method,
         cv="prefit",
-        include_last_label="randomized",
         random_state=42,
     )
     mapie[method].fit(X_cal, y_cal)
-    _, y_ps_mapie[method] = mapie[method].predict(X, alpha=alpha_)
+    _, y_ps_mapie[method] = mapie[method].predict(
+        X, alpha=alpha_, include_last_label="randomized"
+    )
     coverage[method] = [
         classification_coverage_score(y, y_ps_mapie[method][:, :, i])
         for i, _ in enumerate(alpha_)
