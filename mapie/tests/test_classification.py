@@ -22,6 +22,31 @@ from mapie.metrics import classification_coverage_score
 METHODS = ["score", "cumulated_score"]
 WRONG_METHODS = ["scores", "cumulated", "test", ""]
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "", "other"]
+Y_PRED_PROBA = [
+    np.array(
+        [
+            [.8, .01, .1, .05],
+            [1, .1, 0, 0]
+        ]
+    ),
+    np.array(
+        [
+            [1, .0001, 0]
+        ]
+    ),
+    np.array(
+        [
+            [.8, .1, .05, .05],
+            [.9, .01, .04, .06]
+        ]
+    ),
+    np.array(
+        [
+            [.8, .1, .02, .05],
+            [.9, .01, .03, .06]
+        ]
+    )
+]
 Params = TypedDict(
     "Params",
     {
@@ -174,6 +199,27 @@ class CumulatedscoreClassifier:
             return np.array(
                 [[0.2, 0.7, 0.1], [0.1, 0.2, 0.7], [0.3, 0.5, 0.2]]
             )
+
+
+class WrongOutputModel():
+
+    def __init__(self, proba_out):
+        self.trained_ = True
+        self.proba_out = proba_out
+
+    def fit(self, *args):
+        self.fitted_ = True
+        return self
+
+    def predict_proba(self, *args):
+        return self.proba_out
+
+    def predict(self, *args):
+        pred = (
+            self.proba_out == self.proba_out.max(axis=1)[:, None]
+        ).astype(int)
+
+        return pred
 
 
 def test_initialized() -> None:
@@ -594,3 +640,28 @@ def test_cumulated_scores() -> None:
     )
     np.testing.assert_allclose(mapie.quantiles_, quantile)
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
+
+
+@pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA)
+def test_sum_proba_to_one_fit(y_pred_proba) -> None:
+    wrong_model = WrongOutputModel(y_pred_proba)
+    wrong_model.fit(X_toy, y_toy)
+    mapie = MapieClassifier(wrong_model)
+    with pytest.raises(
+        ValueError, match=r".*The sum of the.*"
+    ):
+        mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA)
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_sum_proba_to_one_predict(y_pred_proba, alpha) -> None:
+    wrong_model = WrongOutputModel(y_pred_proba)
+    wrong_model.fit(X_toy, y_toy)
+    mapie = MapieClassifier(method='score')
+    mapie.fit(X_toy, y_toy)
+    mapie.single_estimator_ = wrong_model
+    with pytest.raises(
+        ValueError, match=r".*The sum of the.*"
+    ):
+        mapie.predict(X_toy, alpha=alpha)

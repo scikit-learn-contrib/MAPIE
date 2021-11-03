@@ -324,12 +324,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         random_state = check_random_state(self.random_state)
         rnds = random_state.uniform(size=y_preds_sorted.shape[0])
         # remove last label from prediction set if V <= rnd
-        for iy in range(len(y_preds_sorted)):
-            for iq, _ in enumerate(self.quantiles_):
-                if vs[iy, iq] >= rnds[iy]:
-                    y_preds_sorted[
-                        iy, y_proba_sorted_last[iy, iq], iq
-                    ] = False
+
+        for iq, _ in enumerate(self.quantiles_):
+            y_preds_sorted[
+                np.arange(y_preds_sorted.shape[0]),
+                y_proba_sorted_last[:, iq],
+                iq
+            ] = vs[:, iq] < rnds
+
         return y_preds_sorted
 
     def _check_include_last_label(
@@ -375,6 +377,37 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             )
         else:
             return include_last_label
+
+    def _check_proba_normalized(
+        self,
+        y_pred_proba: ArrayLike
+    ) -> Optional[ArrayLike]:
+        """
+        Check if, for all the observations, the sum of
+        the probabilities is equal to one
+
+        Parameters
+        ----------
+        y_pred_proba : ArrayLike
+            Softmax output of a model.
+
+        Returns
+        -------
+        Optional[ArrayLike]
+            Softmax output of a model if the scores all sum
+            to one.
+        Raises
+        ------
+        ValueError(
+                "The sum of the scores is not equal to one."
+            )
+        """
+        if (abs((1-np.sum(y_pred_proba, axis=1))) > 1e-7).any():
+            raise ValueError(
+                "The sum of the scores is not equal to one."
+            )
+        else:
+            return y_pred_proba
 
     def fit(
         self,
@@ -422,7 +455,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         # Work
         self.single_estimator_ = estimator
         y_pred_proba = self.single_estimator_.predict_proba(X)
-        y_pred_proba.sum(axis=1) == 1
+        y_pred_proba = self._check_proba_normalized(y_pred_proba)
         self.n_samples_val_ = X.shape[0]
         if self.method == "score":
             self.conformity_scores_ = np.take_along_axis(
@@ -520,7 +553,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
         y_pred_proba = self.single_estimator_.predict_proba(X)
-        y_pred_proba.sum(axis=1) == 1
+        y_pred_proba = self._check_proba_normalized(y_pred_proba)
         n = self.n_samples_val_
         if alpha_ is None:
             return np.array(y_pred)
