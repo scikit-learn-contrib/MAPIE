@@ -589,16 +589,21 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     (include_last_label == 'randomized')
                 ):
                     y_proba_sorted_last = np.stack([
-                        np.argmax(
-                            y_proba_cumsum_sorted >= quantile, axis=1
+                        np.argmin(
+                            np.ma.masked_less(y_proba_cumsum_sorted, quantile),
+                            axis=1
                         )
                         for quantile in self.quantiles_
                     ], axis=1)
                 elif (include_last_label is False):
                     y_proba_sorted_last = np.stack([
-                        np.maximum(np.argmax(
-                            y_proba_cumsum_sorted > quantile, axis=1
-                        ) - 1, 0)
+                        np.argmax(
+                            np.ma.masked_greater(
+                                y_proba_cumsum_sorted,
+                                quantile
+                            ),
+                            axis=1
+                        )
                         for quantile in self.quantiles_
                     ], axis=1)
                 else:
