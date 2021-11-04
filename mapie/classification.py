@@ -271,6 +271,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         y_proba_sorted: ArrayLike,
         y_preds_sorted: ArrayLike,
+        y_proba_last: ArrayLike,
         y_proba_sorted_last: ArrayLike
     ) -> ArrayLike:
         """
@@ -285,6 +286,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         y_preds_sorted : ArrayLike
             Array with predicitons to keep, sorted according to their
             respective probabilities.
+        y_proba_last: ArrayLike
+            Array with the cumsumed probability of the last included
+            label
         y_proba_sorted_last : ArrayLike
             Index of the last included label.
 
@@ -298,15 +302,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             y_proba_sorted * y_preds_sorted[:, :, iq]
             for iq, _ in enumerate(self.quantiles_)
         ], axis=2)
-        # get probability of last label included in prediction set
-        y_proba_last = np.stack([
-            np.take_along_axis(
-                y_proba_sorted_filtered[:, :, i],
-                y_proba_sorted_last[:, i].reshape(-1, 1),
-                axis=1
-            )
-            for i, _ in enumerate(self.quantiles_)
-        ], axis=1)[:, :, 0]
 
         # compute V parameter from Romano+(2020)
         vs = np.stack(
@@ -590,7 +585,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 ):
                     y_proba_sorted_last = np.stack([
                         np.argmin(
-                            np.ma.masked_less(y_proba_cumsum_sorted, quantile),
+                            np.ma.masked_less_equal(
+                                y_proba_cumsum_sorted,
+                                quantile
+                            ),
                             axis=1
                         )
                         for quantile in self.quantiles_
@@ -608,23 +606,34 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     ], axis=1)
                 else:
                     raise ValueError(
-                        "Invalid include_last_label argument."
+                        "Invalid include_last_label argument. "
                         "Should be a boolean or 'randomized'."
                     )
 
-                # filter labels with cumulated score lower than quantile
-                # (and keep label just higher than quantile)
-                y_preds_sorted = np.stack([
-                    (np.argsort(y_proba_cumsum_sorted) <=
-                        y_proba_sorted_last[:, iq].reshape(-1, 1))
-                    for iq, _ in enumerate(self.quantiles_)
-                ], axis=2)
+                y_proba_last = np.stack(
+                    [
+                        y_proba_sorted[
+                            np.arange(len(y_proba_sorted)),
+                            y_proba_sorted_last[:, iq]
+                        ] for iq, _ in enumerate(self.quantiles_)
+                    ], axis=1
+                )
+                y_preds_sorted = np.stack(
+                    [
+                        np.ma.masked_greater_equal(
+                            y_proba_sorted,
+                            y_proba_last[:, iq].reshape(-1, 1)
+                        ).mask
+                        for iq, _ in enumerate(self.quantiles_)
+                    ], axis=2
+                )
 
                 # remove last label randomly
                 if include_last_label == 'randomized':
                     y_preds_sorted = self._add_random_tie_breaking(
                         y_proba_sorted,
                         y_preds_sorted,
+                        y_proba_last,
                         y_proba_sorted_last
                     )
 
