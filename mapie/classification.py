@@ -288,7 +288,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             respective probabilities.
         y_proba_last: ArrayLike
             Array with the cumsumed probability of the last included
-            label
+            label.
         y_proba_sorted_last : ArrayLike
             Index of the last included label.
 
@@ -319,10 +319,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         random_state = check_random_state(self.random_state)
         rnds = random_state.uniform(size=y_preds_sorted.shape[0])
         # remove last label from prediction set if V <= rnd
-
         for iq, _ in enumerate(self.quantiles_):
             y_preds_sorted[
-                np.arange(y_preds_sorted.shape[0]),
+                np.arange(len(y_preds_sorted)),
                 y_proba_sorted_last[:, iq],
                 iq
             ] = vs[:, iq] < rnds
@@ -379,7 +378,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     ) -> Optional[ArrayLike]:
         """
         Check if, for all the observations, the sum of
-        the probabilities is equal to one
+        the probabilities is equal to one.
 
         Parameters
         ----------
@@ -391,13 +390,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         Optional[ArrayLike]
             Softmax output of a model if the scores all sum
             to one.
+
         Raises
         ------
-        ValueError(
-                "The sum of the scores is not equal to one."
-            )
+            ValueError
+            If the sum of the scores is not equal to one.
         """
-        if (abs((1-np.sum(y_pred_proba, axis=1))) > 1e-7).any():
+        if (abs((1 - np.sum(y_pred_proba, axis=1))) > 1e-7).any():
             raise ValueError(
                 "The sum of the scores is not equal to one."
             )
@@ -609,7 +608,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         "Invalid include_last_label argument. "
                         "Should be a boolean or 'randomized'."
                     )
-
                 y_proba_last = np.stack(
                     [
                         y_proba_sorted[
@@ -627,7 +625,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         for iq, _ in enumerate(self.quantiles_)
                     ], axis=2
                 )
-
                 # remove last label randomly
                 if include_last_label == 'randomized':
                     y_preds_sorted = self._add_random_tie_breaking(
@@ -636,7 +633,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         y_proba_last,
                         y_proba_sorted_last
                     )
-
                 # rearrange boolean values from initial label order
                 prediction_sets = np.stack(
                     [
