@@ -412,7 +412,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             # However, phi2D contains a np.apply_along_axis loop which
             # is much slower than the matrices multiplication that can
             # be used to compute the means.
-            K = np.where(np.isnan(k), 0.0, k)
+            K = np.nan_to_num(k, nan=0.0)
             return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
         raise ValueError("Aggregation function called but not defined.")
 
@@ -451,23 +451,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         -------
         MapieRegressor
             The model itself.
-
-        Example
-        -------
-        >>> from sklearn.datasets import make_regression
-        >>> from mapie.regression import MapieRegressor
-        >>> X, y = make_regression(
-        ...     n_samples=50,
-        ...     n_features=1,
-        ...     noise=20,
-        ...     random_state=59)
-        >>> mapie_reg = MapieRegressor()
-        >>> hasattr(mapie_reg, "estimators_")
-        False
-        >>> mapie_reg = mapie_reg.fit(X, y)
-        >>> hasattr(mapie_reg, "estimators_")
-        True
-
         """
         # Checks
         self._check_parameters()
@@ -563,8 +546,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Prediction Intervals for a given ``alpha`` are deduced from either
 
         - quantiles of residuals (naive and base methods),
-        - quantiles of (predictions +/- residuals) (plus methods),
-        - quantiles of (max/min(predictions) +/- residuals) (minmax methods).
+        - quantiles of (predictions +/- residuals) (plus method),
+        - quantiles of (max/min(predictions) +/- residuals) (minmax method).
 
         Parameters
         ----------
