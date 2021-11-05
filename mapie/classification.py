@@ -318,13 +318,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         # get random numbers for each observation and alpha value
         random_state = check_random_state(self.random_state)
         rnds = random_state.uniform(size=y_preds_sorted.shape[0])
-        # remove last label from prediction set if V <= rnd
-        for iq, _ in enumerate(self.quantiles_):
-            y_preds_sorted[
-                np.arange(len(y_preds_sorted)),
-                y_proba_sorted_last[:, iq],
-                iq
-            ] = vs[:, iq] < rnds
+        # remove last label from comparison between uniform number and V
+        vs_lt_rnds = vs < rnds[:, np.newaxis]
+        np.put_along_axis(
+            y_preds_sorted,
+            y_proba_sorted_last[:, np.newaxis, :],
+            vs_lt_rnds[:, np.newaxis, :],
+            axis=1
+        )
 
         return y_preds_sorted
 
