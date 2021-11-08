@@ -172,7 +172,7 @@ X, y = make_classification(
 )
 
 
-class CumulatedscoreClassifier:
+class CumulatedScoreClassifier:
     def __init__(self) -> None:
         self.X_calib = np.array([0, 1, 2]).reshape(-1, 1)
         self.y_calib = np.array([0, 1, 2])
@@ -184,7 +184,7 @@ class CumulatedscoreClassifier:
             [[False, True, False], [False, False, True], [True, True, False]]
         )
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> CumulatedscoreClassifier:
+    def fit(self, X: np.ndarray, y: np.ndarray) -> CumulatedScoreClassifier:
         self.fitted_ = True
         return self
 
@@ -623,7 +623,7 @@ def test_cumulated_scores() -> None:
     alpha = [0.65]
     quantile = [0.64981605]
     # fit
-    cumclf = CumulatedscoreClassifier()
+    cumclf = CumulatedScoreClassifier()
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
     mapie = MapieClassifier(
         cumclf,

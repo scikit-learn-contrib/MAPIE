@@ -342,6 +342,62 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         )
         return y_pred_proba
 
+    def _get_last_score_included(
+        self,
+        y_pred_proba_sorted_cumsum: ArrayLike,
+        include_last_label: Union[bool, str]
+    ) -> Optional[ArrayLike]:
+        """
+        Return the index of the last included sorted probability
+        depending if we included the firts label over the quantile
+        or not.
+
+        Parameters
+        ----------
+        y_pred_proba_sorted_cumsum : ArrayLike
+            Sorted cumsumed probabilities.
+        include_last_label : Union[bool, str]
+            Whether or not include the last last. If 'randomized',
+            the last label is included.
+
+        Returns
+        -------
+        ArrayLike
+            Index of the last included sorted probability.
+        """
+        if (
+            (include_last_label is True) or
+            (include_last_label == 'randomized')
+        ):
+            y_pred_proba_sorted_last = np.stack([
+                np.argmin(
+                    np.ma.masked_less_equal(
+                        y_pred_proba_sorted_cumsum,
+                        quantile
+                    ),
+                    axis=1
+                )
+                for quantile in self.quantiles_
+            ], axis=1)
+        elif (include_last_label is False):
+            y_pred_proba_sorted_last = np.stack([
+                np.argmax(
+                    np.ma.masked_greater(
+                        y_pred_proba_sorted_cumsum,
+                        quantile
+                    ),
+                    axis=1
+                )
+                for quantile in self.quantiles_
+            ], axis=1)
+        else:
+            raise ValueError(
+                "Invalid include_last_label argument. "
+                "Should be a boolean or 'randomized'."
+            )
+
+        return y_pred_proba_sorted_last
+
     def _add_random_tie_breaking(
         self,
         y_pred_proba_sorted: ArrayLike,
@@ -576,49 +632,23 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_pred_proba_sorted = np.take_along_axis(
                     y_pred_proba, index_sorted, axis=1
                 )
-                # get sorted cumulated score starting from 0
+                # get sorted cumulated score
                 y_pred_proba_sorted_cumsum = np.cumsum(
                     y_pred_proba_sorted, axis=1
                 )
                 # get the index of the last included label
-                if (
-                    (include_last_label is True) or
-                    (include_last_label == 'randomized')
-                ):
-                    y_pred_proba_sorted_last = np.stack([
-                        np.argmin(
-                            np.ma.masked_less_equal(
-                                y_pred_proba_sorted_cumsum,
-                                quantile
-                            ),
-                            axis=1
-                        )
-                        for quantile in self.quantiles_
-                    ], axis=1)
-                elif (include_last_label is False):
-                    y_pred_proba_sorted_last = np.stack([
-                        np.argmax(
-                            np.ma.masked_greater(
-                                y_pred_proba_sorted_cumsum,
-                                quantile
-                            ),
-                            axis=1
-                        )
-                        for quantile in self.quantiles_
-                    ], axis=1)
-                else:
-                    raise ValueError(
-                        "Invalid include_last_label argument. "
-                        "Should be a boolean or 'randomized'."
-                    )
-                y_proba_last = np.stack(
-                    [
-                        y_pred_proba_sorted[
-                            np.arange(len(y_pred_proba_sorted)),
-                            y_pred_proba_sorted_last[:, iq]
-                        ] for iq, _ in enumerate(self.quantiles_)
-                    ], axis=1
+
+                y_pred_proba_sorted_last = self._get_last_score_included(
+                    y_pred_proba_sorted_cumsum,
+                    include_last_label
                 )
+
+                y_proba_last = np.take_along_axis(
+                    y_pred_proba_sorted,
+                    y_pred_proba_sorted_last,
+                    axis=1
+                )
+
                 y_preds_sorted = np.stack(
                     [
                         np.ma.masked_greater_equal(
