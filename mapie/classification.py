@@ -345,7 +345,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     def _get_last_score_included(
         self,
         y_pred_proba_sorted_cumsum: ArrayLike,
-        include_last_label: Union[bool, str]
+        include_last_label: Optional[Union[bool, str]]
     ) -> Optional[ArrayLike]:
         """
         Return the index of the last included sorted probability
