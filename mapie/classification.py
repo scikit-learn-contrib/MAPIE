@@ -527,7 +527,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_pred_proba, y.reshape(-1, 1), axis=1
             )
             random_state = check_random_state(self.random_state)
-            u = 1 - random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
+            u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
             self.conformity_scores_ -= u*y_proba_true
 
         else:
