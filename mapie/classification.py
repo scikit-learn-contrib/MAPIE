@@ -349,7 +349,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     ) -> Optional[ArrayLike]:
         """
         Return the index of the last included sorted probability
-        depending if we included the firts label over the quantile
+        depending if we included the first label over the quantile
         or not.
 
         Parameters
@@ -357,7 +357,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         y_pred_proba_sorted_cumsum : ArrayLike
             Sorted cumsumed probabilities.
         include_last_label : Union[bool, str]
-            Whether or not include the last last. If 'randomized',
+            Whether or not include the last label. If 'randomized',
             the last label is included.
 
         Returns
