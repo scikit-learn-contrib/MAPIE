@@ -222,6 +222,11 @@ class WrongOutputModel():
         return pred
 
 
+def do_nothing(*args: Any) -> None:
+    "Mock function that does nothing."
+    pass
+
+
 def test_initialized() -> None:
     """Test that initialization does not crash."""
     MapieClassifier()
@@ -234,7 +239,7 @@ def test_default_parameters() -> None:
     assert mapie.method == "score"
     assert mapie.cv == "prefit"
     assert mapie.verbose == 0
-    assert mapie.random_state == 0
+    assert mapie.random_state is None
     assert mapie.n_jobs is None
 
 
@@ -273,10 +278,8 @@ def test_no_fit_predict() -> None:
 @pytest.mark.parametrize("method", WRONG_METHODS)
 def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
     """Test else condition for the method in .fit"""
-    def mock_check_parameter(*args: Any) -> None:
-        pass
     monkeypatch.setattr(
-        MapieClassifier, "_check_parameters", mock_check_parameter
+        MapieClassifier, "_check_parameters", do_nothing
     )
     mapie = MapieClassifier(method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
@@ -300,12 +303,10 @@ def test_include_label_error_in_predict(
     monkeypatch: Any, include_labels: Union[bool, str], alpha: float
 ) -> None:
     """Test else condition for include_label parameter in .predict"""
-    def mock_check_include_last_label(*args: Any) -> None:
-        pass
     monkeypatch.setattr(
         MapieClassifier,
         "_check_include_last_label",
-        mock_check_include_last_label
+        do_nothing
     )
     mapie = MapieClassifier(method='cumulated_score')
     mapie.fit(X_toy, y_toy)
@@ -652,7 +653,7 @@ def test_sum_proba_to_one_fit(y_pred_proba: ArrayLike) -> None:
     wrong_model.fit(X_toy, y_toy)
     mapie = MapieClassifier(wrong_model)
     with pytest.raises(
-        ValueError, match=r".*The sum of the.*"
+        AssertionError, match=r".*The sum of the.*"
     ):
         mapie.fit(X_toy, y_toy)
 
@@ -673,6 +674,6 @@ def test_sum_proba_to_one_predict(
     mapie.fit(X_toy, y_toy)
     mapie.single_estimator_ = wrong_model
     with pytest.raises(
-        ValueError, match=r".*The sum of the.*"
+        AssertionError, match=r".*The sum of the.*"
     ):
         mapie.predict(X_toy, alpha=alpha)

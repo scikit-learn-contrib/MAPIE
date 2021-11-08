@@ -155,7 +155,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         method: str = "score",
         cv: Optional[str] = "prefit",
         n_jobs: Optional[int] = None,
-        random_state: Optional[Union[int, np.random.RandomState]] = 0,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
@@ -267,68 +267,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             return cv
         raise ValueError("Invalid cv argument." "Allowed value is 'prefit'.")
 
-    def _add_random_tie_breaking(
-        self,
-        y_proba_sorted: ArrayLike,
-        y_preds_sorted: ArrayLike,
-        y_proba_last: ArrayLike,
-        y_proba_sorted_last: ArrayLike
-    ) -> ArrayLike:
-        """
-        Randomly remove last label from prediction set based on the
-        comparison between a random number and the difference between
-        cumulated score of the last included label and the quantile.
-
-        Parameters
-        ----------
-        y_proba_sorted : ArrayLike
-            Array with sorted probabilities.
-        y_preds_sorted : ArrayLike
-            Array with predicitons to keep, sorted according to their
-            respective probabilities.
-        y_proba_last: ArrayLike
-            Array with the cumsumed probability of the last included
-            label.
-        y_proba_sorted_last : ArrayLike
-            Index of the last included label.
-
-        Returns
-        -------
-        ArrayLike
-            Updated y_preds_sorted.
-        """
-        # filter sorting probabilities with kept labels
-        y_proba_sorted_filtered = np.stack([
-            y_proba_sorted * y_preds_sorted[:, :, iq]
-            for iq, _ in enumerate(self.quantiles_)
-        ], axis=2)
-
-        # compute V parameter from Romano+(2020)
-        vs = np.stack(
-            [
-                (
-                    np.cumsum(
-                        y_proba_sorted_filtered[:, :, iq], axis=1
-                    )[:, -1]
-                    - quantile
-                ) / y_proba_last[:, iq]
-                for iq, quantile in enumerate(self.quantiles_)
-            ], axis=1,
-        )
-        # get random numbers for each observation and alpha value
-        random_state = check_random_state(self.random_state)
-        rnds = random_state.uniform(size=y_preds_sorted.shape[0])
-        # remove last label from comparison between uniform number and V
-        vs_lt_rnds = vs < rnds[:, np.newaxis]
-        np.put_along_axis(
-            y_preds_sorted,
-            y_proba_sorted_last[:, np.newaxis, :],
-            vs_lt_rnds[:, np.newaxis, :],
-            axis=1
-        )
-
-        return y_preds_sorted
-
     def _check_include_last_label(
         self,
         include_last_label: Optional[Union[bool, str]]
@@ -397,12 +335,72 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             ValueError
             If the sum of the scores is not equal to one.
         """
-        if (abs((1 - np.sum(y_pred_proba, axis=1))) > 1e-7).any():
-            raise ValueError(
-                "The sum of the scores is not equal to one."
-            )
-        else:
-            return y_pred_proba
+        np.testing.assert_allclose(
+            np.sum(y_pred_proba, axis=1),
+            1,
+            err_msg="The sum of the scores is not equal to one."
+        )
+        return y_pred_proba
+
+    def _add_random_tie_breaking(
+        self,
+        y_pred_proba_sorted: ArrayLike,
+        y_preds_sorted: ArrayLike,
+        y_pred_proba_last: ArrayLike,
+        y_pred_proba_sorted_last: ArrayLike
+    ) -> ArrayLike:
+        """
+        Randomly remove last label from prediction set based on the
+        comparison between a random number and the difference between
+        cumulated score of the last included label and the quantile.
+
+        Parameters
+        ----------
+        y_pred_proba_sorted : ArrayLike
+            Array with sorted probabilities.
+        y_preds_sorted : ArrayLike
+            Array with predictions to keep, sorted according to their
+            respective probabilities.
+        y_pred_proba_last: ArrayLike
+            Array with the cumsumed probability of the last included
+            label.
+        y_pred_proba_sorted_last : ArrayLike
+            Index of the last included label.
+
+        Returns
+        -------
+        ArrayLike
+            Updated y_preds_sorted.
+        """
+        # filter sorting probabilities with kept labels
+        y_proba_sorted_filtered = np.stack([
+            y_pred_proba_sorted * y_preds_sorted[:, :, iq]
+            for iq, _ in enumerate(self.quantiles_)
+        ], axis=2)
+        # compute V parameter from Romano+(2020)
+        vs = np.stack(
+            [
+                (
+                    np.cumsum(
+                        y_proba_sorted_filtered[:, :, iq], axis=1
+                    )[:, -1]
+                    - quantile
+                ) / y_pred_proba_last[:, iq]
+                for iq, quantile in enumerate(self.quantiles_)
+            ], axis=1,
+        )
+        # get random numbers for each observation and alpha value
+        random_state = check_random_state(self.random_state)
+        us = random_state.uniform(size=y_preds_sorted.shape[0])
+        # remove last label from comparison between uniform number and V
+        vs_less_than_us = vs < us[:, np.newaxis]
+        np.put_along_axis(
+            y_preds_sorted,
+            y_pred_proba_sorted_last[:, np.newaxis, :],
+            vs_less_than_us[:, np.newaxis, :],
+            axis=1
+        )
+        return y_preds_sorted
 
     def fit(
         self,
@@ -459,11 +457,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         elif self.method == "cumulated_score":
             encoder = LabelBinarizer().fit(y)
             y_true = encoder.transform(y)
-            index = np.fliplr(np.argsort(y_pred_proba, axis=1))
+            index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
             y_pred_proba_sorted = np.take_along_axis(
-                y_pred_proba, index, axis=1
+                y_pred_proba, index_sorted, axis=1
             )
-            y_true_sorted = np.take_along_axis(y_true, index, axis=1)
+            y_true_sorted = np.take_along_axis(y_true, index_sorted, axis=1)
             y_pred_proba_sorted_cumsum = np.cumsum(y_pred_proba_sorted, axis=1)
             cutoff = encoder.inverse_transform(y_true_sorted)
             self.conformity_scores_ = np.take_along_axis(
@@ -473,8 +471,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_pred_proba, y.reshape(-1, 1), axis=1
             )
             random_state = check_random_state(self.random_state)
-            rnds = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
-            self.conformity_scores_ += (rnds - 1)*y_proba_true
+            u = 1 - random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
+            self.conformity_scores_ -= u*y_proba_true
 
         else:
             raise ValueError(
@@ -494,7 +492,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         Prediction prediction sets on new samples based on target confidence
         interval.
         Prediction sets for a given ``alpha`` are deduced from :
-        - quantiles of softmax scores (score method)
+
+        - quantiles of softmax scores ("score" method)
+        - quantiles of cumulated scores ("cumulated_score" method)
 
         Parameters
         ----------
@@ -573,20 +573,22 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 # sort labels by decreasing probability
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                 # sort probabilities by decreasing order
-                y_proba_sorted = np.take_along_axis(
+                y_pred_proba_sorted = np.take_along_axis(
                     y_pred_proba, index_sorted, axis=1
                 )
                 # get sorted cumulated score starting from 0
-                y_proba_cumsum_sorted = np.cumsum(y_proba_sorted, axis=1)
+                y_pred_proba_sorted_cumsum = np.cumsum(
+                    y_pred_proba_sorted, axis=1
+                )
                 # get the index of the last included label
                 if (
                     (include_last_label is True) or
                     (include_last_label == 'randomized')
                 ):
-                    y_proba_sorted_last = np.stack([
+                    y_pred_proba_sorted_last = np.stack([
                         np.argmin(
                             np.ma.masked_less_equal(
-                                y_proba_cumsum_sorted,
+                                y_pred_proba_sorted_cumsum,
                                 quantile
                             ),
                             axis=1
@@ -594,10 +596,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         for quantile in self.quantiles_
                     ], axis=1)
                 elif (include_last_label is False):
-                    y_proba_sorted_last = np.stack([
+                    y_pred_proba_sorted_last = np.stack([
                         np.argmax(
                             np.ma.masked_greater(
-                                y_proba_cumsum_sorted,
+                                y_pred_proba_sorted_cumsum,
                                 quantile
                             ),
                             axis=1
@@ -611,16 +613,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     )
                 y_proba_last = np.stack(
                     [
-                        y_proba_sorted[
-                            np.arange(len(y_proba_sorted)),
-                            y_proba_sorted_last[:, iq]
+                        y_pred_proba_sorted[
+                            np.arange(len(y_pred_proba_sorted)),
+                            y_pred_proba_sorted_last[:, iq]
                         ] for iq, _ in enumerate(self.quantiles_)
                     ], axis=1
                 )
                 y_preds_sorted = np.stack(
                     [
                         np.ma.masked_greater_equal(
-                            y_proba_sorted,
+                            y_pred_proba_sorted,
                             y_proba_last[:, iq].reshape(-1, 1)
                         ).mask
                         for iq, _ in enumerate(self.quantiles_)
@@ -629,10 +631,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 # remove last label randomly
                 if include_last_label == 'randomized':
                     y_preds_sorted = self._add_random_tie_breaking(
-                        y_proba_sorted,
+                        y_pred_proba_sorted,
                         y_preds_sorted,
                         y_proba_last,
-                        y_proba_sorted_last
+                        y_pred_proba_sorted_last
                     )
                 # rearrange boolean values from initial label order
                 prediction_sets = np.stack(
