@@ -233,13 +233,13 @@ def test_initialized() -> None:
 
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
-    mapie = MapieClassifier()
-    assert mapie.estimator is None
-    assert mapie.method == "score"
-    assert mapie.cv == "prefit"
-    assert mapie.verbose == 0
-    assert mapie.random_state is None
-    assert mapie.n_jobs is None
+    mapie_clf = MapieClassifier()
+    assert mapie_clf.estimator is None
+    assert mapie_clf.method == "score"
+    assert mapie_clf.cv == "prefit"
+    assert mapie_clf.verbose == 0
+    assert mapie_clf.random_state is None
+    assert mapie_clf.n_jobs is None
 
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
@@ -248,20 +248,20 @@ def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
     monkeypatch.setattr(
         MapieClassifier, "_check_parameters", do_nothing
     )
-    mapie = MapieClassifier(method=method)
+    mapie_clf = MapieClassifier(method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie.fit(X_toy, y_toy)
+        mapie_clf.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_method_error_in_predict(method: Any, alpha: float) -> None:
     """Test else condition for the method in .predict"""
-    mapie = MapieClassifier(method='score')
-    mapie.fit(X_toy, y_toy)
-    mapie.method = method
+    mapie_clf = MapieClassifier(method='score')
+    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.method = method
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie.predict(X_toy, alpha=alpha)
+        mapie_clf.predict(X_toy, alpha=alpha)
 
 
 @pytest.mark.parametrize("include_labels", WRONG_INCLUDE_LABELS)
@@ -275,10 +275,10 @@ def test_include_label_error_in_predict(
         "_check_include_last_label",
         do_nothing
     )
-    mapie = MapieClassifier(method='cumulated_score')
-    mapie.fit(X_toy, y_toy)
+    mapie_clf = MapieClassifier(method='cumulated_score')
+    mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid include.*"):
-        mapie.predict(
+        mapie_clf.predict(
             X_toy, alpha=alpha,
             include_last_label=include_labels
         )
@@ -286,18 +286,18 @@ def test_include_label_error_in_predict(
 
 def test_none_estimator() -> None:
     """Test that None estimator defaults to LogisticRegression."""
-    mapie = MapieClassifier(estimator=None)
-    mapie.fit(X_toy, y_toy)
-    assert isinstance(mapie.single_estimator_, LogisticRegression)
+    mapie_clf = MapieClassifier(estimator=None)
+    mapie_clf.fit(X_toy, y_toy)
+    assert isinstance(mapie_clf.single_estimator_, LogisticRegression)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
     clf = LogisticRegression().fit(X_toy, y_toy)
-    mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
-    mapie.fit(X_toy, y_toy)
-    assert isinstance(mapie.single_estimator_, LogisticRegression)
+    mapie_clf = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
+    mapie_clf.fit(X_toy, y_toy)
+    assert isinstance(mapie_clf.single_estimator_, LogisticRegression)
 
 
 @pytest.mark.parametrize(
@@ -305,9 +305,9 @@ def test_valid_estimator(strategy: str) -> None:
 )
 def test_invalid_prefit_estimator(estimator: ClassifierMixin) -> None:
     """Test that non-fitted estimator with prefit cv raise errors."""
-    mapie = MapieClassifier(estimator=estimator, cv="prefit")
+    mapie_clf = MapieClassifier(estimator=estimator, cv="prefit")
     with pytest.raises(NotFittedError):
-        mapie.fit(X_toy, y_toy)
+        mapie_clf.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize(
@@ -316,10 +316,10 @@ def test_invalid_prefit_estimator(estimator: ClassifierMixin) -> None:
 def test_valid_prefit_estimator(estimator: ClassifierMixin) -> None:
     """Test that fitted estimators with prefit cv raise no errors."""
     estimator.fit(X_toy, y_toy)
-    mapie = MapieClassifier(estimator=estimator, cv="prefit")
-    mapie.fit(X_toy, y_toy)
-    check_is_fitted(mapie, mapie.fit_attributes)
-    assert mapie.n_features_in_ == 1
+    mapie_clf = MapieClassifier(estimator=estimator, cv="prefit")
+    mapie_clf.fit(X_toy, y_toy)
+    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
+    assert mapie_clf.n_features_in_ == 1
 
 
 @pytest.mark.parametrize(
@@ -327,17 +327,17 @@ def test_valid_prefit_estimator(estimator: ClassifierMixin) -> None:
 )
 def test_invalid_method(method: str) -> None:
     """Test that invalid methods raise errors."""
-    mapie = MapieClassifier(method=method)
+    mapie_clf = MapieClassifier(method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie.fit(X_toy, y_toy)
+        mapie_clf.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("method", METHODS)
 def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
-    mapie = MapieClassifier(method=method)
-    mapie.fit(X_toy, y_toy)
-    check_is_fitted(mapie, mapie.fit_attributes)
+    mapie_clf = MapieClassifier(method=method)
+    mapie_clf.fit(X_toy, y_toy)
+    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
 
 @pytest.mark.parametrize(
@@ -345,9 +345,9 @@ def test_valid_method(method: str) -> None:
 )
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""
-    mapie = MapieClassifier(cv=cv)
+    mapie_clf = MapieClassifier(cv=cv)
     with pytest.raises(ValueError, match=r".*Invalid cv argument.*"):
-        mapie.fit(X_toy, y_toy)
+        mapie_clf.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("cv", [None, "prefit"])
@@ -355,8 +355,8 @@ def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     model = LogisticRegression(multi_class="multinomial")
     model.fit(X_toy, y_toy)
-    mapie = MapieClassifier(estimator=model, cv=cv)
-    mapie.fit(X_toy, y_toy)
+    mapie_clf = MapieClassifier(estimator=model, cv=cv)
+    mapie_clf.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize(
@@ -365,12 +365,12 @@ def test_valid_cv(cv: Any) -> None:
 )
 def test_invalid_include_last_label(include_last_label: Any) -> None:
     """Test that invalid include_last_label raise errors."""
-    mapie = MapieClassifier()
-    mapie.fit(X_toy, y_toy)
+    mapie_clf = MapieClassifier()
+    mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(
         ValueError, match=r".*Invalid include_last_label argument.*"
     ):
-        mapie.predict(
+        mapie_clf.predict(
             X_toy,
             y_toy,
             include_last_label=include_last_label
@@ -386,10 +386,10 @@ def test_predict_output_shape(
     """Test predict output shape."""
     args_init, args_predict = STRATEGIES[strategy]
     include_last_label = args_predict['include_last_label']
-    mapie = MapieClassifier(**args_init)
+    mapie_clf = MapieClassifier(**args_init)
     X, y = dataset
-    mapie.fit(X, y)
-    y_pred, y_ps = mapie.predict(
+    mapie_clf.fit(X, y)
+    y_pred, y_ps = mapie_clf.predict(
         X,
         include_last_label=include_last_label,
         alpha=alpha
@@ -407,10 +407,10 @@ def test_none_alpha_results() -> None:
     estimator = LogisticRegression()
     estimator.fit(X, y)
     y_pred_est = estimator.predict(X)
-    mapie = MapieClassifier(estimator=estimator, cv="prefit")
-    mapie.fit(X, y)
-    y_pred_mapie = mapie.predict(X)
-    np.testing.assert_allclose(y_pred_est, y_pred_mapie)
+    mapie_clf = MapieClassifier(estimator=estimator, cv="prefit")
+    mapie_clf.fit(X, y)
+    y_pred = mapie_clf.predict(X)
+    np.testing.assert_allclose(y_pred_est, y_pred)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -421,9 +421,9 @@ def test_results_for_same_alpha(strategy: str) -> None:
     """
     args_init, args_predict = STRATEGIES[strategy]
     include_last_label = args_predict['include_last_label']
-    mapie = MapieClassifier(**args_init)
-    mapie.fit(X, y)
-    _, y_ps = mapie.predict(
+    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf.fit(X, y)
+    _, y_ps = mapie_clf.predict(
         X,
         include_last_label=include_last_label,
         alpha=[0.1, 0.1]
@@ -442,19 +442,19 @@ def test_results_for_alpha_as_float_and_arraylike(
     """Test that output values do not depend on type of alpha."""
     args_init, args_predict = STRATEGIES[strategy]
     include_last_label = args_predict['include_last_label']
-    mapie = MapieClassifier(**args_init)
-    mapie.fit(X, y)
-    y_pred_float1, y_ps_float1 = mapie.predict(
+    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf.fit(X, y)
+    y_pred_float1, y_ps_float1 = mapie_clf.predict(
         X,
         include_last_label=include_last_label,
         alpha=alpha[0]
     )
-    y_pred_float2, y_ps_float2 = mapie.predict(
+    y_pred_float2, y_ps_float2 = mapie_clf.predict(
         X,
         include_last_label=include_last_label,
         alpha=alpha[1]
     )
-    y_pred_array, y_ps_array = mapie.predict(
+    y_pred_array, y_ps_array = mapie_clf.predict(
         X,
         include_last_label=include_last_label,
         alpha=alpha
@@ -473,16 +473,16 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     """
     args_init, args_predict = STRATEGIES[strategy]
     include_last_label = args_predict['include_last_label']
-    mapie_single = MapieClassifier(n_jobs=1, **args_init)
-    mapie_multi = MapieClassifier(n_jobs=-1, **args_init)
-    mapie_single.fit(X_toy, y_toy)
-    mapie_multi.fit(X_toy, y_toy)
-    y_pred_single, y_ps_single = mapie_single.predict(
+    mapie_clf_single = MapieClassifier(n_jobs=1, **args_init)
+    mapie_clf_multi = MapieClassifier(n_jobs=-1, **args_init)
+    mapie_clf_single.fit(X_toy, y_toy)
+    mapie_clf_multi.fit(X_toy, y_toy)
+    y_pred_single, y_ps_single = mapie_clf_single.predict(
         X_toy,
         include_last_label=include_last_label,
         alpha=0.2
     )
-    y_pred_multi, y_ps_multi = mapie_multi.predict(
+    y_pred_multi, y_ps_multi = mapie_clf_multi.predict(
         X_toy,
         include_last_label=include_last_label,
         alpha=0.2
@@ -502,23 +502,23 @@ def test_results_with_constant_sample_weights(
     args_init, args_predict = STRATEGIES[strategy]
     include_last_label = args_predict['include_last_label']
     n_samples = len(X_toy)
-    mapie0 = MapieClassifier(**args_init)
-    mapie1 = MapieClassifier(**args_init)
-    mapie2 = MapieClassifier(**args_init)
-    mapie0.fit(X_toy, y_toy, sample_weight=None)
-    mapie1.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples))
-    mapie2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples) * 5)
-    y_pred0, y_ps0 = mapie0.predict(
+    mapie_clf0 = MapieClassifier(**args_init)
+    mapie_clf1 = MapieClassifier(**args_init)
+    mapie_clf2 = MapieClassifier(**args_init)
+    mapie_clf0.fit(X_toy, y_toy, sample_weight=None)
+    mapie_clf1.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples))
+    mapie_clf2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples) * 5)
+    y_pred0, y_ps0 = mapie_clf0.predict(
         X_toy,
         include_last_label=include_last_label,
         alpha=0.2
     )
-    y_pred1, y_ps1 = mapie1.predict(
+    y_pred1, y_ps1 = mapie_clf1.predict(
         X_toy,
         include_last_label=include_last_label,
         alpha=0.2
     )
-    y_pred2, y_ps2 = mapie2.predict(
+    y_pred2, y_ps2 = mapie_clf2.predict(
         X_toy,
         include_last_label=include_last_label,
         alpha=0.2
@@ -536,9 +536,9 @@ def test_valid_prediction(alpha: Any) -> None:
     """Test fit and predict."""
     model = LogisticRegression(multi_class="multinomial")
     model.fit(X_toy, y_toy)
-    mapie = MapieClassifier(estimator=model, cv="prefit")
-    mapie.fit(X_toy, y_toy)
-    mapie.predict(X_toy, alpha=alpha)
+    mapie_clf = MapieClassifier(estimator=model, cv="prefit")
+    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.predict(X_toy, alpha=alpha)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -547,9 +547,9 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     args_init, args_predict = STRATEGIES[strategy]
     include_last_label = args_predict['include_last_label']
     clf = GaussianNB().fit(X_toy, y_toy)
-    mapie = MapieClassifier(estimator=clf, **args_init)
-    mapie.fit(X_toy, y_toy)
-    _, y_ps = mapie.predict(
+    mapie_clf = MapieClassifier(estimator=clf, **args_init)
+    mapie_clf.fit(X_toy, y_toy)
+    _, y_ps = mapie_clf.predict(
         X_toy,
         include_last_label=include_last_label,
         alpha=0.2
@@ -568,21 +568,21 @@ def test_cumulated_scores() -> None:
     # fit
     cumclf = CumulatedscoreClassifier()
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
-    mapie = MapieClassifier(
+    mapie_clf = MapieClassifier(
         cumclf,
         method="cumulated_score",
         cv="prefit",
         random_state=42
     )
-    mapie.fit(cumclf.X_calib, cumclf.y_calib)
-    np.testing.assert_allclose(mapie.conformity_scores_, cumclf.y_calib_scores)
+    mapie_clf.fit(cumclf.X_calib, cumclf.y_calib)
+    np.testing.assert_allclose(mapie_clf.conformity_scores_, cumclf.y_calib_scores)
     # predict
-    _, y_ps = mapie.predict(
+    _, y_ps = mapie_clf.predict(
         cumclf.X_test,
         include_last_label=True,
         alpha=alpha
     )
-    np.testing.assert_allclose(mapie.quantiles_, quantile)
+    np.testing.assert_allclose(mapie_clf.quantiles_, quantile)
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
 
 
@@ -594,11 +594,11 @@ def test_sum_proba_to_one_fit(y_pred_proba: ArrayLike) -> None:
     """
     wrong_model = WrongOutputModel(y_pred_proba)
     wrong_model.fit(X_toy, y_toy)
-    mapie = MapieClassifier(wrong_model)
+    mapie_clf = MapieClassifier(wrong_model)
     with pytest.raises(
         AssertionError, match=r".*The sum of the.*"
     ):
-        mapie.fit(X_toy, y_toy)
+        mapie_clf.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA)
@@ -613,10 +613,10 @@ def test_sum_proba_to_one_predict(
     """
     wrong_model = WrongOutputModel(y_pred_proba)
     wrong_model.fit(X_toy, y_toy)
-    mapie = MapieClassifier(method='score')
-    mapie.fit(X_toy, y_toy)
-    mapie.single_estimator_ = wrong_model
+    mapie_clf = MapieClassifier(method='score')
+    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.single_estimator_ = wrong_model
     with pytest.raises(
         AssertionError, match=r".*The sum of the.*"
     ):
-        mapie.predict(X_toy, alpha=alpha)
+        mapie_clf.predict(X_toy, alpha=alpha)
