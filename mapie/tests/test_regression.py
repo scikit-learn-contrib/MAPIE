@@ -484,7 +484,6 @@ def test_invalid_aggregate_mask() -> None:
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
     mapie_reg = MapieRegressor()
-    mapie_reg.fit(X_toy, y_toy)
     _, y_pred, _, _ = mapie_reg._fit_and_predict_oof_model(
         estimator=LinearRegression(),
         X=X_toy,
