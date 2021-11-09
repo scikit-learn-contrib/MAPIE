@@ -20,30 +20,30 @@ from mapie._typing import ArrayLike
 
 
 METHODS = ["score", "cumulated_score"]
-WRONG_METHODS = ["scores", "cumulated", "test", ""]
-WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "", "other"]
-Y_PRED_PROBA = [
+WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]
+WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "other", 1, 2.5, (1, 2)]
+Y_PRED_PROBA_WRONG = [
     np.array(
         [
-            [.8, .01, .1, .05],
-            [1, .1, 0, 0]
+            [0.8, 0.01, 0.1, 0.05],
+            [1.0, 0.1, 0.0, 0.0]
         ]
     ),
     np.array(
         [
-            [1, .0001, 0]
+            [1.0, 0.0001, 0.0]
         ]
     ),
     np.array(
         [
-            [.8, .1, .05, .05],
-            [.9, .01, .04, .06]
+            [0.8, 0.1, 0.05, 0.05],
+            [0.9, 0.01, 0.04, 0.06]
         ]
     ),
     np.array(
         [
-            [.8, .1, .02, .05],
-            [.9, .01, .03, .06]
+            [0.8, 0.1, 0.02, 0.05],
+            [0.9, 0.01, 0.03, 0.06]
         ]
     )
 ]
@@ -172,6 +172,7 @@ X, y = make_classification(
 
 
 class CumulatedScoreClassifier:
+
     def __init__(self) -> None:
         self.X_calib = np.array([0, 1, 2]).reshape(-1, 1)
         self.y_calib = np.array([0, 1, 2])
@@ -217,7 +218,6 @@ class WrongOutputModel():
         pred = (
             self.proba_out == self.proba_out.max(axis=1)[:, None]
         ).astype(int)
-
         return pred
 
 
@@ -575,7 +575,9 @@ def test_cumulated_scores() -> None:
         random_state=42
     )
     mapie_clf.fit(cumclf.X_calib, cumclf.y_calib)
-    np.testing.assert_allclose(mapie_clf.conformity_scores_, cumclf.y_calib_scores)
+    np.testing.assert_allclose(
+        mapie_clf.conformity_scores_, cumclf.y_calib_scores
+    )
     # predict
     _, y_ps = mapie_clf.predict(
         cumclf.X_test,
@@ -586,22 +588,21 @@ def test_cumulated_scores() -> None:
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
 
 
-@pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA)
+@pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA_WRONG)
 def test_sum_proba_to_one_fit(y_pred_proba: ArrayLike) -> None:
     """
     Test if when the output probabilities of the model do not
     sum to one, return an error in the fit method.
     """
     wrong_model = WrongOutputModel(y_pred_proba)
-    wrong_model.fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(wrong_model)
     with pytest.raises(
-        AssertionError, match=r".*The sum of the.*"
+        AssertionError, match=r".*The sum of the scores is not equal to one.*"
     ):
         mapie_clf.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA)
+@pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA_WRONG)
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_sum_proba_to_one_predict(
     y_pred_proba: ArrayLike,
@@ -612,11 +613,10 @@ def test_sum_proba_to_one_predict(
     sum to one, return an error in the predict method.
     """
     wrong_model = WrongOutputModel(y_pred_proba)
-    wrong_model.fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(method='score')
+    mapie_clf = MapieClassifier()
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.single_estimator_ = wrong_model
     with pytest.raises(
-        AssertionError, match=r".*The sum of the.*"
+        AssertionError, match=r".*The sum of the scores is not equal to one.*"
     ):
         mapie_clf.predict(X_toy, alpha=alpha)

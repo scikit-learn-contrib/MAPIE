@@ -150,7 +150,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     valid_methods_ = ["score", "cumulated_score"]
     fit_attributes = [
         "single_estimator_",
-        "scores_",
         "n_features_in_",
         "n_samples_val_",
         "conformity_scores_"
@@ -625,18 +624,21 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     axis=2,
                 )
             elif self.method == "cumulated_score":
+
                 # sort labels by decreasing probability
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
+
                 # sort probabilities by decreasing order
                 y_pred_proba_sorted = np.take_along_axis(
                     y_pred_proba, index_sorted, axis=1
                 )
+
                 # get sorted cumulated score
                 y_pred_proba_sorted_cumsum = np.cumsum(
                     y_pred_proba_sorted, axis=1
                 )
-                # get the index of the last included label
 
+                # get the index of the last included label
                 y_pred_proba_sorted_last = self._get_last_score_included(
                     y_pred_proba_sorted_cumsum,
                     include_last_label
@@ -657,6 +659,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         for iq, _ in enumerate(self.quantiles_)
                     ], axis=2
                 )
+
                 # remove last label randomly
                 if include_last_label == 'randomized':
                     y_preds_sorted = self._add_random_tie_breaking(
@@ -665,6 +668,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         y_proba_last,
                         y_pred_proba_sorted_last
                     )
+
                 # rearrange boolean values from initial label order
                 prediction_sets = np.stack(
                     [
