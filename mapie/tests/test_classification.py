@@ -209,7 +209,7 @@ class WrongOutputModel():
         self.proba_out = proba_out
 
     def fit(self, *args: Any) -> None:
-        pass
+        """Dummy fit."""
 
     def predict_proba(self, *args: Any) -> ArrayLike:
         return self.proba_out
