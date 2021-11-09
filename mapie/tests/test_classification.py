@@ -109,7 +109,7 @@ COVERAGES = {
     "score": 7 / 9,
     "cumulated_score_include": 1,
     "cumulated_score_not_include": 5/9,
-    "cumulated_score_randomized": 7/9,
+    "cumulated_score_randomized": 8/9,
 }
 
 y_toy_mapie = {
@@ -125,7 +125,7 @@ y_toy_mapie = {
         [False, False, True],
     ],
     "cumulated_score_include": [
-        [True, False, False],
+        [True, True, False],
         [True, True, False],
         [True, True, False],
         [True, True, False],
@@ -133,7 +133,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True],
         [False, True, True],
-        [False, False, True],
+        [False, True, True],
     ],
     "cumulated_score_not_include": [
         [True, False, False],
@@ -147,15 +147,15 @@ y_toy_mapie = {
         [False, False, True],
     ],
     "cumulated_score_randomized": [
-        [True, False, False],
         [True, True, False],
         [True, True, False],
         [True, True, False],
         [True, True, False],
-        [False, True, False],
-        [False, False, True],
+        [True, True, False],
         [False, True, True],
         [False, False, True],
+        [False, True, True],
+        [False, True, True],
     ],
 }
 X_toy = np.arange(9).reshape(-1, 1)
@@ -171,19 +171,19 @@ X, y = make_classification(
 )
 
 
-class CumulatedscoreClassifier:
+class CumulatedScoreClassifier:
     def __init__(self) -> None:
         self.X_calib = np.array([0, 1, 2]).reshape(-1, 1)
         self.y_calib = np.array([0, 1, 2])
         self.y_calib_scores = np.array(
-            [[0.64981605], [0.57042858], [0.97319939]]
+            [[0.750183952461055], [0.029571416154050345], [0.9268006058188594]]
         )
         self.X_test = np.array([3, 4, 5]).reshape(-1, 1)
         self.y_pred_sets = np.array(
-            [[False, True, False], [False, False, True], [True, True, False]]
+            [[True, True, False], [False, True, True], [True, True, False]]
         )
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> CumulatedscoreClassifier:
+    def fit(self, X: np.ndarray, y: np.ndarray) -> CumulatedScoreClassifier:
         self.fitted_ = True
         return self
 
@@ -564,9 +564,9 @@ def test_toy_dataset_predictions(strategy: str) -> None:
 def test_cumulated_scores() -> None:
     """Test cumulated score method on a tiny dataset."""
     alpha = [0.65]
-    quantile = [0.64981605]
+    quantile = [0.750183952461055]
     # fit
-    cumclf = CumulatedscoreClassifier()
+    cumclf = CumulatedScoreClassifier()
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
     mapie_clf = MapieClassifier(
         cumclf,
