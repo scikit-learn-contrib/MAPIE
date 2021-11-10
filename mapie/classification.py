@@ -374,7 +374,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         y_pred_proba_cumsum: ArrayLike,
         include_last_label: Optional[Union[bool, str]]
-    ) -> Optional[ArrayLike]:
+    ) -> Union[ArrayLike, None]:
         """
         Return the index of the last included sorted probability
         depending if we included the first label over the quantile
@@ -427,7 +427,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 "Should be a boolean or 'randomized'."
             )
 
-        return y_pred_last
+        return y_pred_last.T
 
     def _add_random_tie_breaking(
         self,
