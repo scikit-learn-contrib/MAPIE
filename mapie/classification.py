@@ -12,6 +12,7 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.preprocessing import LabelBinarizer
 
 from ._typing import ArrayLike
+from ._machine_precision import EPSILON
 from .utils import (
     check_null_weight,
     check_n_features_in,
@@ -342,6 +343,33 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         )
         return y_pred_proba
 
+    def _adaptive_mask_quantile(
+        self,
+        arr: ArrayLike,
+        quantile: float
+    ) -> int:
+        """
+        Adapt the quantile of the mask to the case where the minimum value
+        is greater than the quantile.
+
+        Parameters
+        ----------
+        arr : ArrayLike
+            1D-array given by the apply_along_axid method. It contains the
+            values of one observation.
+        quantile : float
+            quantile with which we want to compare.
+
+        Returns
+        -------
+        int
+            Index of the last included label for a specific observation and
+            and specific quantile.
+        """
+        quantile = np.maximum(quantile, np.min(arr))
+
+        return np.argmax(np.ma.masked_greater(arr, quantile + EPSILON))
+
     def _get_last_score_included(
         self,
         y_pred_proba_cumsum: ArrayLike,
@@ -354,8 +382,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
-        y_pred_proba_sorted_cumsum : ArrayLike
-            Sorted cumsumed probabilities.
+        y_pred_proba_cumsum : ArrayLike
+            Cumsumed probabilities in the original order.
         include_last_label : Union[bool, str]
             Whether or not include the last label. If 'randomized',
             the last label is included.
@@ -382,30 +410,31 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 ]
             )
         elif (include_last_label is False):
-            y_pred_last = np.stack([
-                np.argmax(
-                    np.ma.masked_greater(
-                        y_pred_proba_cumsum,
-                        quantile
-                    ),
-                    axis=1
-                )
-                for quantile in self.quantiles_
-            ], axis=1)
+            y_pred_last = np.stack(
+                [
+                    np.apply_along_axis(
+                        self._adaptive_mask_quantile,
+                        axis=1,
+                        arr=y_pred_proba_cumsum,
+                        quantile=quantile
+                    )
+                    for quantile in self.quantiles_
+                ]
+            )
         else:
             raise ValueError(
                 "Invalid include_last_label argument. "
                 "Should be a boolean or 'randomized'."
             )
 
-        return y_pred_last
+        return y_pred_last.T
 
     def _add_random_tie_breaking(
         self,
-        prediction_sets,
-        y_pred_last,
-        y_pred_proba,
-        y_pred_proba_last
+        prediction_sets: ArrayLike,
+        y_pred_last: ArrayLike,
+        y_pred_proba: ArrayLike,
+        y_pred_proba_last: ArrayLike
     ) -> ArrayLike:
         """
         Randomly remove last label from prediction set based on the
@@ -414,21 +443,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
-        y_pred_proba_sorted : ArrayLike
-            Array with sorted probabilities.
-        y_preds_sorted : ArrayLike
-            Array with predictions to keep, sorted according to their
-            respective probabilities.
-        y_pred_proba_last: ArrayLike
-            Array with the cumsumed probability of the last included
-            label.
-        y_pred_proba_sorted_last : ArrayLike
+        prediction_sets : ArrayLike
+            Prediction set for each observation and each alpha.
+        y_pred_last : ArrayLike
             Index of the last included label.
+        y_pred_proba : ArrayLike
+            Probability output of the model.
+        y_pred_proba_last : ArrayLike
+            Last included probability.
 
         Returns
         -------
         ArrayLike
-            Updated y_preds_sorted.
+            Updated version of prediction_sets with randomly removed
+            labels.
         """
         # filter sorting probabilities with kept labels
         y_proba_filtered = np.stack([
@@ -454,8 +482,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         vs_less_than_us = vs < us[:, np.newaxis]
         np.put_along_axis(
             prediction_sets,
-            y_pred_last[:, :, np.newaxis],
-            vs_less_than_us[:, :, np.newaxis],
+            y_pred_last[:, np.newaxis, :],
+            vs_less_than_us[:, np.newaxis, :],
             axis=1
         )
         return prediction_sets
@@ -638,16 +666,18 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_pred_proba_sorted_cumsum = np.cumsum(
                     y_pred_proba_sorted, axis=1
                 )
-                # get the index of the last included label
+                # get cumulated score at their original position
                 y_pred_proba_cumsum = np.take_along_axis(
                     y_pred_proba_sorted_cumsum,
                     np.argsort(index_sorted),
                     axis=1
                 )
+                # get index of the last included label
                 y_pred_last = self._get_last_score_included(
                     y_pred_proba_cumsum,
                     include_last_label
-                ).T
+                )
+                # get the probability of the last included label
                 y_pred_proba_last = np.stack(
                     [
                         np.take_along_axis(
@@ -658,6 +688,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         for iq, _ in enumerate(self.quantiles_)
                     ]
                 )
+                # get the prediciton set by taking all probabilities above the
+                # last one
                 prediction_sets = np.stack(
                     [
                         np.ma.masked_greater_equal(
