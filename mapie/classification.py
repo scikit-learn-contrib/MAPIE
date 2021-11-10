@@ -427,7 +427,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 "Should be a boolean or 'randomized'."
             )
 
-        return y_pred_last.T
+        return y_pred_last
 
     def _add_random_tie_breaking(
         self,
