@@ -374,7 +374,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         y_pred_proba_cumsum: ArrayLike,
         include_last_label: Optional[Union[bool, str]]
-    ) -> Union[ArrayLike, None]:
+    ) -> ArrayLike:
         """
         Return the index of the last included sorted probability
         depending if we included the first label over the quantile
@@ -390,7 +390,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Returns
         -------
-        ArrayLike
+        Optional[ArrayLike]
             Index of the last included sorted probability.
         """
         if (
