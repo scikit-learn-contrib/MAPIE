@@ -113,7 +113,7 @@ The estimated prediction intervals can then be plotted as follows.
 .. code:: python
     
     from matplotlib import pyplot as plt
-    from mapie.metrics import coverage_score
+    from mapie.metrics import regression_coverage_score
     plt.xlabel("x")
     plt.ylabel("y")
     plt.scatter(X, y, alpha=0.3)
@@ -128,7 +128,7 @@ The estimated prediction intervals can then be plotted as follows.
         alpha=0.2
     )
     coverage_scores = [
-        coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
+        regression_coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
         for i, _ in enumerate(alpha)
     ]
     plt.title(
