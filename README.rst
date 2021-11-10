@@ -103,17 +103,25 @@ and two standard deviations from the mean.
     mapie.fit(X, y)
     y_pred, y_pis = mapie.predict(X, alpha=alpha)
 
-
-
 MAPIE returns a ``np.ndarray`` of shape ``(n_samples, 3, len(alpha))`` giving the predictions,
 as well as the lower and upper bounds of the prediction intervals for the target quantile
 for each desired alpha value.
-The estimated prediction intervals can then be plotted as follows. 
+
+You can compute the coverage of your prediction intervals.
 
 .. code:: python
     
-    from matplotlib import pyplot as plt
     from mapie.metrics import regression_coverage_score
+    coverage_scores = [
+        regression_coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
+        for i, _ in enumerate(alpha)
+    ]
+
+The estimated prediction intervals can then be plotted as follows. 
+
+.. code:: python
+
+    from matplotlib import pyplot as plt
     plt.xlabel("x")
     plt.ylabel("y")
     plt.scatter(X, y, alpha=0.3)
@@ -127,10 +135,6 @@ The estimated prediction intervals can then be plotted as follows.
         y_pis[order][:, 1, 0].ravel(),
         alpha=0.2
     )
-    coverage_scores = [
-        regression_coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
-        for i, _ in enumerate(alpha)
-    ]
     plt.title(
         f"Target and effective coverages for "
         f"alpha={alpha[0]:.2f}: ({1-alpha[0]:.3f}, {coverage_scores[0]:.3f})\n"
