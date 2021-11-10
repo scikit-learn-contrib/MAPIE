@@ -11,7 +11,7 @@ from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 from sklearn.preprocessing import LabelBinarizer
 
-from ._typing import ArrayLike
+from ._typing import ArrayLike, NumpyInt
 from ._machine_precision import EPSILON
 from .utils import (
     check_null_weight,
@@ -347,7 +347,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         arr: ArrayLike,
         quantile: float
-    ) -> int:
+    ) -> NumpyInt:
         """
         Adapt the quantile of the mask to the case where the minimum value
         is greater than the quantile.
