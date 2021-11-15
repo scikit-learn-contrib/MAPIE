@@ -673,7 +673,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     [
                         np.ma.masked_greater_equal(
                             y_pred_proba,
-                            y_pred_proba_last[:, iq].reshape(-1, 1)
+                            y_pred_proba_last[:, iq].reshape(-1, 1) - EPSILON
                         ).mask
                         for iq, _ in enumerate(self.quantiles_)
                     ], axis=2
