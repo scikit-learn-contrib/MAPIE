@@ -11,7 +11,7 @@ from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 from sklearn.preprocessing import LabelBinarizer
 
-from ._typing import ArrayLike, NumpyInt
+from ._typing import ArrayLike
 from ._machine_precision import EPSILON
 from .utils import (
     check_null_weight,
@@ -322,12 +322,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
-        y_pred_proba : ArrayLike
+        y_pred_proba : ArrayLike of shape (n_samples, n_classes)
             Softmax output of a model.
 
         Returns
         -------
-        Optional[ArrayLike]
+        Optional[ArrayLike] of shape (n_samples, n_classes)
             Softmax output of a model if the scores all sum
             to one.
 
@@ -343,34 +343,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         )
         return y_pred_proba
 
-    def _adaptive_mask_quantile(
-        self,
-        arr: ArrayLike,
-        quantile: float
-    ) -> NumpyInt:
-        """
-        Adapt the quantile of the mask to the case where the minimum value
-        is greater than the quantile.
-
-        Parameters
-        ----------
-        arr : ArrayLike
-            1D-array given by the apply_along_axid method. It contains the
-            values of one observation.
-        quantile : float
-            quantile with which we want to compare.
-
-        Returns
-        -------
-        int
-            Index of the last included label for a specific observation and
-            and specific quantile.
-        """
-        quantile = np.maximum(quantile, np.min(arr))
-
-        return np.argmax(np.ma.masked_greater(arr, quantile + EPSILON))
-
-    def _get_last_score_included(
+    def _get_last_index_included(
         self,
         y_pred_proba_cumsum: ArrayLike,
         include_last_label: Optional[Union[bool, str]]
@@ -382,7 +355,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
-        y_pred_proba_cumsum : ArrayLike
+        y_pred_proba_cumsum : ArrayLike of shape (n_samples, n_classes)
             Cumsumed probabilities in the original order.
         include_last_label : Union[bool, str]
             Whether or not include the last label. If 'randomized',
@@ -390,14 +363,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Returns
         -------
-        Optional[ArrayLike]
+        Optional[ArrayLike] of shape (n_samples, n_classes)
             Index of the last included sorted probability.
         """
         if (
             (include_last_label is True) or
             (include_last_label == 'randomized')
         ):
-            y_pred_last = np.stack(
+            y_pred_index_last = np.stack(
                 [
                     np.argmin(
                         np.ma.masked_less(
@@ -407,19 +380,23 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         axis=1
                     )
                     for quantile in self.quantiles_
-                ]
+                ], axis=1
             )
         elif (include_last_label is False):
-            y_pred_last = np.stack(
+            y_pred_index_last = np.stack(
                 [
-                    np.apply_along_axis(
-                        self._adaptive_mask_quantile,
-                        axis=1,
-                        arr=y_pred_proba_cumsum,
-                        quantile=quantile
+                    np.argmax(
+                        np.ma.masked_where(
+                            y_pred_proba_cumsum > np.maximum(
+                                quantile,
+                                np.min(y_pred_proba_cumsum, axis=1) + EPSILON
+                            ).reshape(-1, 1),
+                            y_pred_proba_cumsum
+                        ),
+                        axis=1
                     )
                     for quantile in self.quantiles_
-                ]
+                ], axis=1
             )
         else:
             raise ValueError(
@@ -427,12 +404,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 "Should be a boolean or 'randomized'."
             )
 
-        return y_pred_last.T
+        return y_pred_index_last
 
     def _add_random_tie_breaking(
         self,
         prediction_sets: ArrayLike,
-        y_pred_last: ArrayLike,
+        y_pred_index_last: ArrayLike,
         y_pred_proba: ArrayLike,
         y_pred_proba_last: ArrayLike
     ) -> ArrayLike:
@@ -443,18 +420,18 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
-        prediction_sets : ArrayLike
+        prediction_sets : ArrayLike of shape (n_samples, n_classes, n_alpha)
             Prediction set for each observation and each alpha.
-        y_pred_last : ArrayLike
+        y_pred_index_last : ArrayLike of shape (n_samples, n_alpha)
             Index of the last included label.
-        y_pred_proba : ArrayLike
+        y_pred_proba : ArrayLike of shape (n_samples, n_classes)
             Probability output of the model.
-        y_pred_proba_last : ArrayLike
+        y_pred_proba_last : ArrayLike of shape (n_samples, n_alpha)
             Last included probability.
 
         Returns
         -------
-        ArrayLike
+        ArrayLike of shape (n_samples, n_classes, n_alpha)
             Updated version of prediction_sets with randomly removed
             labels.
         """
@@ -467,11 +444,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         vs = np.stack(
             [
                 (
-                    np.max(np.cumsum(
+                    np.sum(
                         y_proba_filtered[:, :, iq], axis=1
-                    ), axis=1)
+                    )
                     - quantile
-                ) / np.squeeze(y_pred_proba_last[iq, :].reshape(-1, 1))
+                ) / y_pred_proba_last[:, iq]
                 for iq, quantile in enumerate(self.quantiles_)
             ], axis=1,
         )
@@ -482,7 +459,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         vs_less_than_us = vs < us[:, np.newaxis]
         np.put_along_axis(
             prediction_sets,
-            y_pred_last[:, np.newaxis, :],
+            y_pred_index_last[:, np.newaxis, :],
             vs_less_than_us[:, np.newaxis, :],
             axis=1
         )
@@ -673,28 +650,30 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     axis=1
                 )
                 # get index of the last included label
-                y_pred_last = self._get_last_score_included(
+                y_pred_index_last = self._get_last_index_included(
                     y_pred_proba_cumsum,
                     include_last_label
                 )
                 # get the probability of the last included label
                 y_pred_proba_last = np.stack(
                     [
-                        np.take_along_axis(
-                            y_pred_proba,
-                            y_pred_last[:, iq].reshape(-1, 1),
-                            axis=1
+                        np.squeeze(
+                            np.take_along_axis(
+                                y_pred_proba,
+                                y_pred_index_last[:, iq].reshape(-1, 1),
+                                axis=1
+                            )
                         )
                         for iq, _ in enumerate(self.quantiles_)
-                    ]
+                    ], axis=1
                 )
-                # get the prediciton set by taking all probabilities above the
+                # get the prediction set by taking all probabilities above the
                 # last one
                 prediction_sets = np.stack(
                     [
                         np.ma.masked_greater_equal(
                             y_pred_proba,
-                            y_pred_proba_last[iq, :].reshape(-1, 1)
+                            y_pred_proba_last[:, iq].reshape(-1, 1)
                         ).mask
                         for iq, _ in enumerate(self.quantiles_)
                     ], axis=2
@@ -703,7 +682,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 if include_last_label == 'randomized':
                     prediction_sets = self._add_random_tie_breaking(
                         prediction_sets,
-                        y_pred_last,
+                        y_pred_index_last,
                         y_pred_proba,
                         y_pred_proba_last
                     )
