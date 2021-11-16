@@ -410,7 +410,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         prediction_sets: ArrayLike,
         y_pred_index_last: ArrayLike,
-        y_pred_proba: ArrayLike,
+        y_pred_proba_cumsum: ArrayLike,
         y_pred_proba_last: ArrayLike
     ) -> ArrayLike:
         """
@@ -424,8 +424,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             Prediction set for each observation and each alpha.
         y_pred_index_last : ArrayLike of shape (n_samples, n_alpha)
             Index of the last included label.
-        y_pred_proba : ArrayLike of shape (n_samples, n_classes)
-            Probability output of the model.
+        y_pred_proba_cumsum : ArrayLike of shape (n_samples, n_classes)
+            Cumsumed probability of the model in the original order.
         y_pred_proba_last : ArrayLike of shape (n_samples, n_alpha)
             Last included probability.
 
@@ -436,17 +436,23 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             labels.
         """
         # filter sorting probabilities with kept labels
-        y_proba_filtered = np.stack([
-            y_pred_proba * prediction_sets[:, :, iq]
-            for iq, _ in enumerate(self.quantiles_)
-        ], axis=2)
+        y_proba_last_cumsumed = np.stack(
+            [
+                np.squeeze(
+                    np.take_along_axis(
+                        y_pred_proba_cumsum,
+                        y_pred_index_last[:, iq].reshape(-1, 1),
+                        axis=1
+                    )
+                )
+                for iq, _ in enumerate(self.quantiles_)
+            ], axis=1
+        )
         # compute V parameter from Romano+(2020)
         vs = np.stack(
             [
                 (
-                    np.sum(
-                        y_proba_filtered[:, :, iq], axis=1
-                    )
+                    y_proba_last_cumsumed[:, iq]
                     - quantile
                 ) / y_pred_proba_last[:, iq]
                 for iq, quantile in enumerate(self.quantiles_)
@@ -454,7 +460,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         )
         # get random numbers for each observation and alpha value
         random_state = check_random_state(self.random_state)
-        us = random_state.uniform(size=y_pred_proba.shape[0])
+        us = random_state.uniform(size=prediction_sets.shape[0])
         # remove last label from comparison between uniform number and V
         vs_less_than_us = vs < us[:, np.newaxis]
         np.put_along_axis(
@@ -683,7 +689,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     prediction_sets = self._add_random_tie_breaking(
                         prediction_sets,
                         y_pred_index_last,
-                        y_pred_proba,
+                        y_pred_proba_cumsum,
                         y_pred_proba_last
                     )
             else:
