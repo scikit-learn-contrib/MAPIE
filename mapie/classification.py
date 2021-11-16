@@ -441,7 +441,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             Updated version of prediction_sets with randomly removed
             labels.
         """
-        # filter sorting probabilities with kept labels
+        # get cumsumed probabilities up to last retained label
         y_proba_last_cumsumed = np.stack(
             [
                 np.squeeze(
@@ -458,8 +458,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         vs = np.stack(
             [
                 (
-                    y_proba_last_cumsumed[:, iq]
-                    - quantile
+                    y_proba_last_cumsumed[:, iq] - quantile
                 ) / y_pred_proba_last[:, iq]
                 for iq, quantile in enumerate(self.quantiles_)
             ], axis=1,
