@@ -23,7 +23,7 @@ from mapie.metrics import regression_coverage_score
 
 def f(x: np.ndarray) -> np.ndarray:
     """Polynomial function used to generate one-dimensional data."""
-    return np.array(5*x + 5*x**4 - 9*x**2)
+    return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
 
 
 # Generate data
@@ -34,10 +34,10 @@ y = f(X) + np.random.normal(0, sigma, n_samples)
 
 # Train/validation/test split
 X_train_val, X_test, y_train_val, y_test = train_test_split(
-    X, y, test_size=1/10
+    X, y, test_size=1 / 10
 )
 X_train, X_val, y_train, y_val = train_test_split(
-    X_train_val, y_train_val, test_size=1/9
+    X_train_val, y_train_val, test_size=1 / 9
 )
 
 # Train model on training set
@@ -55,7 +55,7 @@ y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
 coverage = regression_coverage_score(y_test, y_pred_low, y_pred_up)
 
 # Plot obtained prediction intervals on testing set
-theoretical_semi_width = scipy.stats.norm.ppf(1 - alpha)*sigma
+theoretical_semi_width = scipy.stats.norm.ppf(1 - alpha) * sigma
 y_test_theoretical = f(X_test)
 order = np.argsort(X_test)
 
@@ -64,19 +64,19 @@ plt.plot(
     X_test[order],
     y_test_theoretical[order],
     color="gray",
-    label="True confidence intervals"
+    label="True confidence intervals",
 )
 plt.plot(
     X_test[order],
     y_test_theoretical[order] - theoretical_semi_width,
     color="gray",
-    ls="--"
+    ls="--",
 )
 plt.plot(
     X_test[order],
     y_test_theoretical[order] + theoretical_semi_width,
     color="gray",
-    ls="--"
+    ls="--",
 )
 plt.plot(X_test[order], y_pred[order], label="Prediction intervals")
 plt.fill_between(X_test[order], y_pred_low[order], y_pred_up[order], alpha=0.2)

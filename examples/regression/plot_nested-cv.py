@@ -45,15 +45,13 @@ coverages of both nested and non-nested methods are the same.
 """
 
 import matplotlib.pyplot as plt
+from mapie.metrics import regression_coverage_score
+from mapie.regression import MapieRegressor
 from scipy.stats import randint
 from sklearn.datasets import load_boston
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import mean_squared_error
-
-from mapie.regression import MapieRegressor
-from mapie.metrics import regression_coverage_score
+from sklearn.model_selection import RandomizedSearchCV, train_test_split
 
 # Load the Boston data
 X_boston, y_boston = load_boston(return_X_y=True)
@@ -65,10 +63,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # Define the Random Forest model as base regressor with parameter ranges.
 rf_model = RandomForestRegressor(random_state=59, verbose=0)
-rf_params = {
-    "max_depth": randint(2, 30),
-    "n_estimators": randint(10, 1e3)
-}
+rf_params = {"max_depth": randint(2, 30), "n_estimators": randint(10, 1e3)}
 
 # Cross-validation and prediction-interval parameters.
 cv = 5
@@ -91,11 +86,7 @@ cv_obj = RandomizedSearchCV(
 cv_obj.fit(X_train, y_train)
 best_est = cv_obj.best_estimator_
 mapie_non_nested = MapieRegressor(
-    best_est,
-    method="plus",
-    cv=cv,
-    ensemble=True,
-    n_jobs=-1
+    best_est, method="plus", cv=cv, agg_function="median", n_jobs=-1
 )
 mapie_non_nested.fit(X_train, y_train)
 y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict(
@@ -105,9 +96,7 @@ widths_non_nested = y_pis_non_nested[:, 1, 0] - y_pis_non_nested[:, 0, 0]
 coverage_non_nested = regression_coverage_score(
     y_test, y_pis_non_nested[:, 0, 0], y_pis_non_nested[:, 1, 0]
 )
-score_non_nested = mean_squared_error(
-    y_test, y_pred_non_nested, squared=False
-)
+score_non_nested = mean_squared_error(y_test, y_pred_non_nested, squared=False)
 
 # Nested approach with the CV+ strategy using the Random Forest model.
 cv_obj = RandomizedSearchCV(
@@ -122,10 +111,7 @@ cv_obj = RandomizedSearchCV(
     n_jobs=-1,
 )
 mapie_nested = MapieRegressor(
-    cv_obj,
-    method="plus",
-    cv=cv,
-    ensemble=True
+    cv_obj, method="plus", cv=cv, agg_function="median"
 )
 mapie_nested.fit(X_train, y_train)
 y_pred_nested, y_pis_nested = mapie_nested.predict(X_test, alpha=alpha)
@@ -142,12 +128,12 @@ print(
 )
 print(
     "Score on the test set for the non-nested and nested CV approaches: ",
-    f"{score_non_nested: .3f}, {score_nested: .3f}"
+    f"{score_non_nested: .3f}, {score_nested: .3f}",
 )
 print(
     "Effective coverage on the test set for the non-nested "
     "and nested CV approaches: ",
-    f"{coverage_non_nested: .3f}, {coverage_nested: .3f}"
+    f"{coverage_non_nested: .3f}, {coverage_nested: .3f}",
 )
 
 # Compare prediction interval widths.
@@ -166,8 +152,8 @@ ax2.set_xlabel(
 )
 ax2.set_ylabel("Counts")
 ax2.hist(
-    (widths_non_nested - widths_nested)/widths_non_nested,
+    (widths_non_nested - widths_nested) / widths_non_nested,
     bins=15,
-    edgecolor="black"
+    edgecolor="black",
 )
 plt.show()

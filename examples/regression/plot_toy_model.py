@@ -37,7 +37,7 @@ plt.fill_between(
     X[order].ravel(),
     y_pis[order][:, 0, 0].ravel(),
     y_pis[order][:, 1, 0].ravel(),
-    alpha=0.2
+    alpha=0.2,
 )
 plt.title(
     f"Target and effective coverages for "

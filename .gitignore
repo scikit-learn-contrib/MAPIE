@@ -2,15 +2,19 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.DS_Store
 
 # C extensions
 *.so
 
-# scikit-learn specific
+# documentation specific
 doc/_build/
+doc/examples_classification/
+doc/examples_regression/
 doc/auto_examples/
 doc/modules/generated/
 doc/datasets/generated/
+doc/generated/
 
 # Distribution / packaging
 
@@ -68,3 +72,7 @@ target/
 
 # VSCode
 .vscode
+
+# Images
+*.png
+*.jpeg

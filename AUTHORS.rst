@@ -18,5 +18,6 @@ Contributors
 * Alizé Papp <alize.papp@outlook.com>
 * Abdou Akim Goumbala <aagoumbala@quantmetry.com>
 * Adirtha Borgohain <adirthaborgohain@gmail.com>
-
+* Thomas Morzadec <tmorzadec@quantmetry.com>
+* Julien Roussel <jroussel@quantmetry.com>
 To be continued ...
