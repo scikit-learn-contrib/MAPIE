@@ -1,21 +1,21 @@
 from __future__ import annotations
-from typing import Optional, Any
 
-import pytest
+from typing import Any, Optional
+
 import numpy as np
+import pytest
+from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
-from sklearn.datasets import make_regression
 
 from mapie.utils import (
-    check_null_weight,
-    fit_estimator,
     check_alpha,
-    check_n_features_in,
     check_alpha_and_n_samples,
+    check_n_features_in,
     check_n_jobs,
-    check_random_state,
-    check_verbose
+    check_null_weight,
+    check_verbose,
+    fit_estimator,
 )
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -24,19 +24,13 @@ y_toy = np.array([5, 7, 9, 11, 13, 15])
 n_features = 10
 
 X, y = make_regression(
-    n_samples=500,
-    n_features=n_features,
-    noise=1.0,
-    random_state=1
+    n_samples=500, n_features=n_features, noise=1.0, random_state=1
 )
 
 
 class DumbEstimator:
-
     def fit(
-        self,
-        X: np.ndarray,
-        y: Optional[np.ndarray] = None
+        self, X: np.ndarray, y: Optional[np.ndarray] = None
     ) -> DumbEstimator:
         self.fitted_ = True
         return self
@@ -72,8 +66,7 @@ def test_check_null_weight_with_zeros() -> None:
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
 def test_fit_estimator(
-    estimator: Any,
-    sample_weight: Optional[np.ndarray]
+    estimator: Any, sample_weight: Optional[np.ndarray]
 ) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = fit_estimator(estimator, X_toy, y_toy, sample_weight)
@@ -107,8 +100,8 @@ def test_invalid_alpha(alpha: Any) -> None:
         [0.05, 0.95],
         (0.05, 0.95),
         np.array([0.05, 0.95]),
-        None
-    ]
+        None,
+    ],
 )
 def test_valid_alpha(alpha: Any) -> None:
     """Test that valid alphas raise no errors."""
@@ -122,9 +115,7 @@ def test_valid_shape_no_n_features_in(cv: Any) -> None:
     but missing an n_features_in_ attribute raise no errors.
     """
     estimator = DumbEstimator()
-    n_features_in = check_n_features_in(
-        X=X, cv=cv, estimator=estimator
-    )
+    n_features_in = check_n_features_in(X=X, cv=cv, estimator=estimator)
     assert n_features_in == n_features
 
 
@@ -134,8 +125,8 @@ def test_valid_shape_no_n_features_in(cv: Any) -> None:
         np.linspace(0.05, 0.95, 5),
         [0.05, 0.95],
         (0.05, 0.95),
-        np.array([0.05, 0.95])
-    ]
+        np.array([0.05, 0.95]),
+    ],
 )
 def test_valid_calculation_of_quantile(alpha: Any) -> None:
     """Test that valid alphas raise no errors."""
@@ -149,8 +140,8 @@ def test_valid_calculation_of_quantile(alpha: Any) -> None:
         np.linspace(0.05, 0.07),
         [0.05, 0.07, 0.9],
         (0.05, 0.07, 0.9),
-        np.array([0.05, 0.07, 0.9])
-    ]
+        np.array([0.05, 0.07, 0.9]),
+    ],
 )
 def test_invalid_calculation_of_quantile(alpha: Any) -> None:
     """Test that alpha with 1/alpha > number of samples  raise errors."""
@@ -167,9 +158,7 @@ def test_invalid_prefit_estimator_shape() -> None:
     """
     estimator = LinearRegression().fit(X, y)
     with pytest.raises(ValueError, match=r".*mismatch between.*"):
-        check_n_features_in(
-            X_toy, cv="prefit", estimator=estimator
-        )
+        check_n_features_in(X_toy, cv="prefit", estimator=estimator)
 
 
 @pytest.mark.parametrize("n_jobs", ["dummy", 0, 1.5, [1, 2]])
@@ -177,13 +166,6 @@ def test_invalid_n_jobs(n_jobs: Any) -> None:
     """Test that invalid n_jobs raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid n_jobs argument.*"):
         check_n_jobs(n_jobs)
-
-
-@pytest.mark.parametrize("random_state", ["dummy", -1, 1.5, [1, 2]])
-def test_invalid_random_state(random_state: Any) -> None:
-    """Test that invalid random_state raise errors."""
-    with pytest.raises(ValueError, match=r".*Invalid random_state argument.*"):
-        check_random_state(random_state)
 
 
 @pytest.mark.parametrize("n_jobs", [-5, -1, 1, 4])
