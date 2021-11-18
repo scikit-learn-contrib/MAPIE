@@ -151,7 +151,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
      [False False  True]]
     """
 
-    valid_methods_ = ["score", "cumulated_score"]
+    valid_methods_ = ["score", "cumulated_score", "naive"]
 
     def __init__(
         self,
@@ -545,6 +545,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             random_state = check_random_state(self.random_state)
             u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
             self.conformity_scores_ -= u*y_proba_true
+        elif self.method == "naive":
+            self.conformity_scores_ = None
 
         else:
             raise ValueError(
@@ -628,13 +630,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
             # Choice of the quantile
             check_alpha_and_n_samples(alpha_, n)
-            self.quantiles_ = np.stack([
-                np.quantile(
-                    self.conformity_scores_,
-                    ((n + 1) * (1 - _alpha)) / n,
-                    interpolation="higher"
-                ) for _alpha in alpha_
-            ])
+            if self.method == "naive":
+                self.quantiles_ = 1 - alpha_
+            else:
+                self.quantiles_ = np.stack([
+                    np.quantile(
+                        self.conformity_scores_,
+                        ((n + 1) * (1 - _alpha)) / n,
+                        interpolation="higher"
+                    ) for _alpha in alpha_
+                ])
             if self.method == "score":
                 prediction_sets = np.stack(
                     [
@@ -643,7 +648,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     ],
                     axis=2,
                 )
-            elif self.method == "cumulated_score":
+            elif (self.method == "cumulated_score" or
+                    self.method == "naive"):
                 # sort labels by decreasing probability
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                 # sort probabilities by decreasing order

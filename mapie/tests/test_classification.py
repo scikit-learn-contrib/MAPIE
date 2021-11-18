@@ -21,7 +21,7 @@ from mapie._typing import ArrayLike
 
 
 METHODS = ["score", "cumulated_score"]
-WRONG_METHODS = ["scores", "cumulated", "test", ""]
+WRONG_METHODS = ["scores", "cumulated", "test", "nave", ""]
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "", "other"]
 Y_PRED_PROBA = [
     np.array(
@@ -104,6 +104,16 @@ STRATEGIES = {
             include_last_label='randomized'
         )
     ),
+    "naive": (
+        Params(
+            method="naive",
+            cv="prefit",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True
+        )
+    ),
 }
 
 COVERAGES = {
@@ -111,6 +121,7 @@ COVERAGES = {
     "cumulated_score_include": 1,
     "cumulated_score_not_include": 5/9,
     "cumulated_score_randomized": 8/9,
+    "naive": 1
 }
 
 y_toy_mapie = {
@@ -157,6 +168,17 @@ y_toy_mapie = {
         [False, False, True],
         [False, True, True],
         [False, True, True],
+    ],
+    "naive": [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, False, True],
+        [False, False, True],
     ],
 }
 X_toy = np.arange(9).reshape(-1, 1)
