@@ -131,8 +131,6 @@ prediction intervals.
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
 
-.. parsed-literal::
-
 
 
 Let’s now compare the confidence intervals with the predicted intervals
@@ -391,9 +389,6 @@ strategies.
         mapie = MapieRegressor(polyn_model, **params)
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
-
-
-.. parsed-literal::
 
 
 
