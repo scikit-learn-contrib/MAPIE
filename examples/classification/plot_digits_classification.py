@@ -93,7 +93,16 @@ for ax, image, label in zip_imgs:
 #   can subsequently be used to predict the value of the digit for the samples
 #   in the calibration and test subsets.
 
-def fit_base_clf(dataset: Any) -> Tuple:
+def fit_base_clf(dataset: Any) -> Tuple[
+    Any,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray
+]:
     n_samples = len(digits.images)
     data = dataset.images.reshape((n_samples, -1))
     clf = svm.SVC(gamma=0.001, probability=True)
@@ -179,11 +188,11 @@ alpha = np.arange(0.01, 1, 0.01)
 
 def estimate_prediction_sets(
     clf: Any,
-    X_calib: np.array,
-    y_calib: np.array,
-    X_test: np.array,
-    alpha: np.array
-) -> Tuple:
+    X_calib: np.ndarray,
+    y_calib: np.ndarray,
+    X_test: np.ndarray,
+    alpha: np.ndarray
+) -> Tuple[Any, np.ndarray, np.ndarray]:
     mapie_clf = MapieClassifier(clf, method="cumulated_score", cv="prefit")
     mapie_clf.fit(X_calib, y_calib)
     y_pred, y_ps = mapie_clf.predict(
