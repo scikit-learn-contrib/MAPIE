@@ -43,7 +43,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
 
     def __init__(
         self,
-        n_resamplings: int,
+        n_resamplings: int = 30,
         n_samples: Optional[int] = None,
         replace: bool = True,
         random_state: Optional[Union[int, RandomState]] = None,
