@@ -79,7 +79,7 @@ Let’s visualize our noisy function.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_nb_9_0.png
+.. image:: tutorial_regression_files/tutorial_regression_9_0.png
 
 
 As mentioned previously, we fit our training data with a simple
@@ -112,7 +112,7 @@ prediction intervals.
     from typing_extensions import TypedDict
     from mapie.regression import MapieRegressor
     from mapie.subsample import Subsample 
-    Params = TypedDict("Params", {"method": str, "agg_function":str, "cv": Union[int, Subsample]})
+    Params = TypedDict("Params", {"method": str, "cv": Union[int, Subsample]})
     STRATEGIES = {
         "naive": Params(method="naive"),
         "jackknife": Params(method="base", cv=-1),
@@ -121,8 +121,8 @@ prediction intervals.
         "cv": Params(method="base", cv=10),
         "cv_plus": Params(method="plus", cv=10),
         "cv_minmax": Params(method="minmax", cv=10),
-        "jackknife_plus_ab": Params(method="plus", cv=Subsample(n_resamplings=50), agg_function = "mean"),
-        "jackknife_minmax_ab": Params(method="minmax", cv=Subsample(n_resamplings=50), agg_function = "mean"),
+        "jackknife_plus_ab": Params(method="plus", cv=Subsample(n_resamplings=50)),
+        "jackknife_minmax_ab": Params(method="minmax", cv=Subsample(n_resamplings=50)),
     }
     y_pred, y_pis = {}, {}
     for strategy, params in STRATEGIES.items():
@@ -134,8 +134,8 @@ Let’s now compare the confidence intervals with the predicted intervals
 with obtained by the Jackknife+, Jackknife-minmax, CV+, CV-minmax,
 Jackknife+-after-Boostrap, and Jackknife-minmax-after-Bootstrap
 strategies. Note that for the Jackknife-after-Bootstrap method, we call
-the :class:``Subsample`` object that allows us to train bootstrapped
-models.
+the :class:``mapie.subsample.Subsample`` object that allows us to train
+bootstrapped models.
 
 .. code:: ipython3
 
@@ -184,7 +184,7 @@ models.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_nb_16_0.png
+.. image:: tutorial_regression_files/tutorial_regression_16_0.png
 
 
 At first glance, the four strategies give similar results and the
@@ -204,7 +204,7 @@ Let’s confirm this by comparing the prediction interval widths over
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_nb_18_0.png
+.. image:: tutorial_regression_files/tutorial_regression_18_0.png
 
 
 As expected, the prediction intervals estimated by the Naive method are
@@ -212,8 +212,8 @@ slightly too narrow. The Jackknife, Jackknife+, CV, CV+, JaB, and J+aB
 give similar widths that are very close to the true width. On the other
 hand, the widths estimated by Jackknife-minmax and CV-minmax are
 slightly too wide. Note that the widths given by the Naive, Jackknife,
-and CV strategies are constant since the prediction intervals are
-estimated upon the residuals of the training data only.
+and CV strategies are constant there is a single model used for prediction,
+perturbed models are ignored at prediction time.
 
 Let’s now compare the *effective* coverage, namely the fraction of test
 points whose true values lie within the prediction intervals, given by
@@ -360,7 +360,7 @@ Lets" start by generating and showing the data.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_nb_28_0.png
+.. image:: tutorial_regression_files/tutorial_regression_28_0.png
 
 
 As before, we estimate the prediction intervals using a polynomial
@@ -369,7 +369,7 @@ strategies.
 
 .. code:: ipython3
 
-    Params = TypedDict("Params", {"method": str, "agg_function":str, "cv": Union[int, Subsample]})
+    Params = TypedDict("Params", {"method": str, "cv": Union[int, Subsample]})
     STRATEGIES = {
         "naive": Params(method="naive"),
         "jackknife": Params(method="base", cv=-1),
@@ -378,8 +378,8 @@ strategies.
         "cv": Params(method="base", cv=10),
         "cv_plus": Params(method="plus", cv=10),
         "cv_minmax": Params(method="minmax", cv=10),
-        "jackknife_plus_ab": Params(method="plus", agg_function = "mean", cv=Subsample(n_resamplings=50)),
-        "jackknife_minmax_ab": Params(method="minmax", agg_function = "mean", cv=Subsample(n_resamplings=50)),
+        "jackknife_plus_ab": Params(method="plus", cv=Subsample(n_resamplings=50)),
+        "jackknife_minmax_ab": Params(method="minmax", cv=Subsample(n_resamplings=50)),
     }
     y_pred, y_pis = {}, {}
     for strategy, params in STRATEGIES.items():
@@ -409,7 +409,7 @@ strategies.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_nb_31_0.png
+.. image:: tutorial_regression_files/tutorial_regression_31_0.png
 
 
 At first glance, our polynomial function does not give accurate
@@ -432,7 +432,7 @@ Let’s now compare the prediction interval widths between all strategies.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_nb_34_0.png
+.. image:: tutorial_regression_files/tutorial_regression_34_0.png
 
 
 The prediction interval widths start to increase exponentially for
@@ -571,7 +571,7 @@ uniform distribution.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_nb_41_0.png
+.. image:: tutorial_regression_files/tutorial_regression_41_0.png
 
 
 Let’s then define the models. The boosing model considers 100 shallow
@@ -653,7 +653,7 @@ method and compare their prediction interval.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_nb_48_0.png
+.. image:: tutorial_regression_files/tutorial_regression_48_0.png
 
 
 .. code:: ipython3
@@ -668,7 +668,7 @@ method and compare their prediction interval.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_nb_49_0.png
+.. image:: tutorial_regression_files/tutorial_regression_49_0.png
 
 
 As expected with the CV+ method, the prediction intervals are a bit

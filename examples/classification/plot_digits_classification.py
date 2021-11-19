@@ -3,7 +3,7 @@
 Capturing the aleatoric uncertainties on corrupted images with MAPIE
 ====================================================================
 
-In this tutorial, we use the famous hand-written digits dataset from
+In this tutorial, we use the MNIST famous hand-written digits dataset from
 scikit-learn
 to assess how MAPIE captures the addition of some noise in training
 images on the estimate of prediction sets.
@@ -93,19 +93,11 @@ for ax, image, label in zip_imgs:
 #   can subsequently be used to predict the value of the digit for the samples
 #   in the calibration and test subsets.
 
-def fit_base_clf(dataset: Any) -> Tuple[
-    Any,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray
+def get_datasets(dataset: Any) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
 ]:
     n_samples = len(digits.images)
     data = dataset.images.reshape((n_samples, -1))
-    clf = svm.SVC(gamma=0.001, probability=True)
     X_train_calib, X_test, y_train_calib, y_test = train_test_split(
         data, digits.target, test_size=0.2, shuffle=True, random_state=42
     )
@@ -116,17 +108,22 @@ def fit_base_clf(dataset: Any) -> Tuple[
         shuffle=True,
         random_state=42
     )
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
-    return clf, X_train, X_calib, X_test, y_train, y_calib, y_test, y_pred
+    return X_train, X_calib, X_test, y_train, y_calib, y_test
 
 
-clf1, X_train1, X_calib1, X_test1, y_train1, y_calib1, y_test1, y_pred1 = (
-    fit_base_clf(digits)
+X_train1, X_calib1, X_test1, y_train1, y_calib1, y_test1 = (
+    get_datasets(digits)
 )
-clf2, X_train2, X_calib2, X_test2, y_train2, y_calib2, y_test2, y_pred2 = (
-    fit_base_clf(digits_corrupted)
+X_train2, X_calib2, X_test2, y_train2, y_calib2, y_test2 = (
+    get_datasets(digits_corrupted)
 )
+
+clf1 = svm.SVC(gamma=0.001, probability=True, random_state=42)
+clf1.fit(X_train1, y_train1)
+y_pred1 = clf1.predict(X_test1)
+clf2 = svm.SVC(gamma=0.001, probability=True, random_state=42)
+clf2.fit(X_train2, y_train2)
+y_pred2 = clf2.predict(X_test2)
 
 ##############################################################################
 # Below we visualize the first 5 test samples with their predicted digit value
@@ -185,27 +182,20 @@ disp1.figure_.suptitle("Confusion matrix - Original vs Corrupted datasets")
 
 alpha = np.arange(0.01, 1, 0.01)
 
-
-def estimate_prediction_sets(
-    clf: Any,
-    X_calib: np.ndarray,
-    y_calib: np.ndarray,
-    X_test: np.ndarray,
-    alpha: np.ndarray
-) -> Tuple[Any, np.ndarray, np.ndarray]:
-    mapie_clf = MapieClassifier(clf, method="cumulated_score", cv="prefit")
-    mapie_clf.fit(X_calib, y_calib)
-    y_pred, y_ps = mapie_clf.predict(
-        X_test, alpha=alpha, include_last_label="randomized"
+mapie_clf1 = MapieClassifier(
+    clf1, method="cumulated_score", cv="prefit", random_state=42
     )
-    return mapie_clf, y_pred, y_ps
-
-
-mapie_clf1, y_pred1, y_ps1 = estimate_prediction_sets(
-    clf1, X_calib1, y_calib1, X_test1, alpha
+mapie_clf1.fit(X_calib1, y_calib1)
+y_pred1, y_ps1 = mapie_clf1.predict(
+    X_test1, alpha=alpha, include_last_label="randomized"
 )
-mapie_clf2, y_pred2, y_ps2 = estimate_prediction_sets(
-    clf2, X_calib2, y_calib2, X_test2, alpha
+
+mapie_clf2 = MapieClassifier(
+    clf2, method="cumulated_score", cv="prefit", random_state=42
+    )
+mapie_clf2.fit(X_calib2, y_calib2)
+y_pred2, y_ps2 = mapie_clf2.predict(
+    X_test2, alpha=alpha, include_last_label="randomized"
 )
 
 ##############################################################################
