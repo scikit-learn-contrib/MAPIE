@@ -2,7 +2,7 @@
 History
 =======
 
-0.3.1 (XXXX-XX-XX)
+0.3.1 (2021-11-19)
 ------------------
 
 * Add Jackknife+-after-Bootstrap method and add mean and median as aggregation functions
