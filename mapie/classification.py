@@ -526,7 +526,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self.n_samples_val_ = X.shape[0]
 
         if self.method == "naive":
-            self.conformity_scores_ = None
+            self.conformity_scores_ = np.empty(y_pred_proba.shape)
         elif self.method == "score":
             self.conformity_scores_ = np.take_along_axis(
                 1 - y_pred_proba, y.reshape(-1, 1), axis=1
