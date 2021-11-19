@@ -341,7 +341,7 @@ def test_valid_method(method: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "cv", [-3.14, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
+    "cv", [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
 )
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid cv raise errors."""

@@ -346,7 +346,7 @@ def test_prediction_agg_function(
     method: str, cv: Union[LeaveOneOut, KFold], alpha: int
 ) -> None:
     """
-    Test that predictions differ when agg_function if None/"mean",
+    Test that predictions differ when agg_function is None/"mean",
     but not prediction intervals.
     """
     mapie = MapieRegressor(method=method, cv=cv, agg_function="median")
