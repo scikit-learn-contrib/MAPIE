@@ -48,9 +48,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
           on the calibration set.
         - "cumulated_score", based on the sum of the softmax outputs of the
           labels until the true label is reached, on the calibration set.
-        - "naive", sum of the probabilities until the 1-alpha thresold
-        - "top_k", based on the index of the true label in the softmax outputs
-          of the model, on the calibration set
+        - "naive", sum of the probabilities until the 1-alpha thresold.
+        - "top_k", based on the sorted index of the probability of the true
+        label in the softmax outputs, on the calibration set. In case two
+        probabilities are equal, both are taken, thus, the size of some p
+        redicition sets may be different from the others.
 
           By default "score".
 
@@ -151,7 +153,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
      [False False  True]]
     """
 
-    valid_methods_ = ["score", "cumulated_score", "naive"]
+    valid_methods_ = ["score", "cumulated_score", "naive", "top_k"]
 
     def __init__(
         self,
@@ -547,6 +549,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             self.conformity_scores_ -= u*y_proba_true
         elif self.method == "naive":
             self.conformity_scores_ = None
+        elif self.method == "top_k":
+            index = np.fliplr(np.argsort(y_pred_proba, axis=1))
+            self.conformity_scores_ = np.take_along_axis(
+                index,
+                y.reshape(-1, 1),
+                axis=1
+            )
 
         else:
             raise ValueError(
@@ -632,6 +641,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             check_alpha_and_n_samples(alpha_, n)
             if self.method == "naive":
                 self.quantiles_ = 1 - alpha_
+            elif self.method == "top_k":
+                self.quantiles_ = np.stack([
+                        np.quantile(
+                            self.conformity_scores_,
+                            ((n + 1) * (1 - _alpha)) / n,
+                            interpolation="higher"
+                            ) for _alpha in alpha_
+                    ])
             else:
                 self.quantiles_ = np.stack([
                     np.quantile(
@@ -703,6 +720,37 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         y_pred_proba_cumsum,
                         y_pred_proba_last
                     )
+            elif self.method == "top_k":
+                index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
+                y_pred_index_last = np.stack(
+                    [
+                        index_sorted[:, quantile]
+                        for quantile in self.quantiles_
+                    ], axis=1
+                )
+                y_pred_proba_last = np.stack(
+                    [
+                        np.squeeze(
+                            np.take_along_axis(
+                                y_pred_proba,
+                                y_pred_index_last[:, iq].reshape(-1, 1),
+                                axis=1
+                            )
+                        )
+                        for iq, _ in enumerate(self.quantiles_)
+                    ], axis=1
+                )
+                prediction_sets = np.stack(
+                    [
+                        np.ma.masked_where(
+                            (y_pred_proba >=
+                                y_pred_proba_last[:, iq].reshape(-1, 1) -
+                                EPSILON),
+                            y_pred_proba
+                        ).mask
+                        for iq, _ in enumerate(self.quantiles_)
+                    ], axis=2
+                )
             else:
                 raise ValueError(
                     "Invalid method. "

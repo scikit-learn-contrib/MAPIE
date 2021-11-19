@@ -114,6 +114,16 @@ STRATEGIES = {
             include_last_label=True
         )
     ),
+    "top_k": (
+        Params(
+            method="top_k",
+            cv="prefit",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True
+        )
+    ),
 }
 
 COVERAGES = {
@@ -121,7 +131,8 @@ COVERAGES = {
     "cumulated_score_include": 1,
     "cumulated_score_not_include": 5/9,
     "cumulated_score_randomized": 8/9,
-    "naive": 1
+    "naive": 1,
+    "top_k": 1
 }
 
 y_toy_mapie = {
@@ -179,6 +190,17 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True],
         [False, False, True],
+    ],
+    "top_k": [
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
     ],
 }
 X_toy = np.arange(9).reshape(-1, 1)
