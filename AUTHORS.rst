@@ -20,4 +20,5 @@ Contributors
 * Adirtha Borgohain <adirthaborgohain@gmail.com>
 * Thomas Morzadec <tmorzadec@quantmetry.com>
 * Julien Roussel <jroussel@quantmetry.com>
+* Vincent Blot <vblot@quantmetry.com>
 To be continued ...
