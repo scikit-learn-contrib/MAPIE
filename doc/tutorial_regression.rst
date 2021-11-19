@@ -130,6 +130,11 @@ prediction intervals.
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
+
+.. parsed-literal::
+
+
+
 Let’s now compare the confidence intervals with the predicted intervals
 with obtained by the Jackknife+, Jackknife-minmax, CV+, CV-minmax,
 Jackknife+-after-Boostrap, and Jackknife-minmax-after-Bootstrap
@@ -212,8 +217,8 @@ slightly too narrow. The Jackknife, Jackknife+, CV, CV+, JaB, and J+aB
 give similar widths that are very close to the true width. On the other
 hand, the widths estimated by Jackknife-minmax and CV-minmax are
 slightly too wide. Note that the widths given by the Naive, Jackknife,
-and CV strategies are constant there is a single model used for prediction,
-perturbed models are ignored at prediction time.
+and CV strategies are constant because there is a single model used for
+prediction, perturbed models are ignored at prediction time.
 
 Let’s now compare the *effective* coverage, namely the fraction of test
 points whose true values lie within the prediction intervals, given by
@@ -387,6 +392,11 @@ strategies.
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
+
+.. parsed-literal::
+
+
+
 .. code:: ipython3
 
     strategies = ["jackknife_plus", "jackknife_minmax" , "cv_plus", "cv_minmax", "jackknife_plus_ab", "jackknife_minmax_ab"]
@@ -532,12 +542,13 @@ remain roughly constant until :math:`|x| \sim 5` before increasing.
 
 
 
-In conclusion, the Jackknife-minmax, CV+, and CV-minmax strategies are
-more conservative than the Jackknife+ strategy, and tend to result in
-more reliable coverages for *out-of-distribution* data. It is therefore
-advised to use the three former strategies for predictions with new
-out-of-distribution data. Note however that there are no theoretical
-guarantees on the coverage level for out-of-distribution data.
+In conclusion, the Jackknife-minmax, CV+, CV-minmax, or
+Jackknife-minmax-ab strategies are more conservative than the Jackknife+
+strategy, and tend to result in more reliable coverages for
+*out-of-distribution* data. It is therefore advised to use the three
+former strategies for predictions with new out-of-distribution data.
+Note however that there are no theoretical guarantees on the coverage
+level for out-of-distribution data.
 
 3. Estimating the uncertainty with different sklearn-compatible regressors
 --------------------------------------------------------------------------
@@ -633,6 +644,8 @@ method and compare their prediction interval.
         mapie = MapieRegressor(model, method="plus", cv=5)
         mapie.fit(X_train, y_train)
         y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
+
+
 
 .. code:: ipython3
 
