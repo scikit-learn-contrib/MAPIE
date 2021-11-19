@@ -43,16 +43,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         Method to choose for prediction interval estimates.
         Choose among:
 
+        - "naive", sum of the probabilities until the 1-alpha thresold.
         - "score", based on the the scores
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set.
         - "cumulated_score", based on the sum of the softmax outputs of the
           labels until the true label is reached, on the calibration set.
-        - "naive", sum of the probabilities until the 1-alpha thresold.
         - "top_k", based on the sorted index of the probability of the true
         label in the softmax outputs, on the calibration set. In case two
         probabilities are equal, both are taken, thus, the size of some p
-        redicition sets may be different from the others.
+        prediction sets may be different from the others.
 
           By default "score".
 
@@ -153,7 +153,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
      [False False  True]]
     """
 
-    valid_methods_ = ["score", "cumulated_score", "naive", "top_k"]
+    valid_methods_ = ["naive", "score", "cumulated_score", "top_k"]
 
     def __init__(
         self,
@@ -459,7 +459,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 (
                     y_proba_last_cumsumed[:, iq]
                     - quantile
-                ) / y_pred_proba_last[:, iq]
+                ) / np.squeeze(y_pred_proba_last[:, :, iq])
                 for iq, quantile in enumerate(self.quantiles_)
             ], axis=1,
         )
@@ -524,7 +524,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         y_pred_proba = self.single_estimator_.predict_proba(X)
         y_pred_proba = self._check_proba_normalized(y_pred_proba)
         self.n_samples_val_ = X.shape[0]
-        if self.method == "score":
+
+        if self.method == "naive":
+            self.conformity_scores_ = None
+        elif self.method == "score":
             self.conformity_scores_ = np.take_along_axis(
                 1 - y_pred_proba, y.reshape(-1, 1), axis=1
             )
@@ -547,10 +550,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             random_state = check_random_state(self.random_state)
             u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
             self.conformity_scores_ -= u*y_proba_true
-        elif self.method == "naive":
-            self.conformity_scores_ = None
         elif self.method == "top_k":
-            index = np.fliplr(np.argsort(y_pred_proba, axis=1))
+            index = np.argsort(
+                np.fliplr(np.argsort(y_pred_proba, axis=1))
+            )
             self.conformity_scores_ = np.take_along_axis(
                 index,
                 y.reshape(-1, 1),
@@ -657,8 +660,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     ],
                     axis=2,
                 )
-            elif (self.method == "cumulated_score" or
-                    self.method == "naive"):
+            elif self.method in ["cumulated_score", "naive"]:
                 # sort labels by decreasing probability
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                 # sort probabilities by decreasing order
@@ -683,24 +685,19 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 # get the probability of the last included label
                 y_pred_proba_last = np.stack(
                     [
-                        np.squeeze(
-                            np.take_along_axis(
-                                y_pred_proba,
-                                y_pred_index_last[:, iq].reshape(-1, 1),
-                                axis=1
-                            )
+                        np.take_along_axis(
+                            y_pred_proba,
+                            y_pred_index_last[:, iq].reshape(-1, 1),
+                            axis=1
                         )
                         for iq, _ in enumerate(self.quantiles_)
-                    ], axis=1
+                    ], axis=2
                 )
                 # get the prediction set by taking all probabilities above the
                 # last one
                 prediction_sets = np.stack(
                     [
-                        np.ma.masked_greater_equal(
-                            y_pred_proba,
-                            y_pred_proba_last[:, iq].reshape(-1, 1) - EPSILON
-                        ).mask
+                        y_pred_proba >= y_pred_proba_last[:, :, iq] - EPSILON
                         for iq, _ in enumerate(self.quantiles_)
                     ], axis=2
                 )
@@ -722,24 +719,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 )
                 y_pred_proba_last = np.stack(
                     [
-                        np.squeeze(
-                            np.take_along_axis(
-                                y_pred_proba,
-                                y_pred_index_last[:, iq].reshape(-1, 1),
-                                axis=1
-                            )
+                        np.take_along_axis(
+                            y_pred_proba,
+                            y_pred_index_last[:, iq].reshape(-1, 1),
+                            axis=1
                         )
                         for iq, _ in enumerate(self.quantiles_)
-                    ], axis=1
+                    ], axis=2
                 )
                 prediction_sets = np.stack(
                     [
-                        np.ma.masked_where(
-                            (y_pred_proba >=
-                                y_pred_proba_last[:, iq].reshape(-1, 1) -
-                                EPSILON),
-                            y_pred_proba
-                        ).mask
+                        y_pred_proba >= y_pred_proba_last[:, :, iq] - EPSILON
                         for iq, _ in enumerate(self.quantiles_)
                     ], axis=2
                 )
