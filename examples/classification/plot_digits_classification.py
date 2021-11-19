@@ -9,6 +9,7 @@ to assess how MAPIE captures the addition of some noise in training
 images on the estimate of prediction sets.
 """
 
+from typing import Any, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -29,8 +30,6 @@ from mapie.metrics import classification_coverage_score
 # visualize the first 4 images. The ``target`` attribute of the dataset stores
 # the digit each image represents and this is included in the title of the 4
 # plots below.
-#
-#
 
 digits = datasets.load_digits()
 
@@ -45,7 +44,11 @@ for ax, image, label in zip(axes, digits.images, digits.target):
 # Now let's create a corrupted dataset with `n_splatters` splatters of
 # `size_splatters` pixels on each image.
 
-def generate_mnist_corrupted(n_splatters, size_splatters, datasets):
+def generate_mnist_corrupted(
+    n_splatters: int,
+    size_splatters: int,
+    datasets: Any
+) -> Any:
     digits_corrupted = datasets.load_digits()
     n_samples = digits_corrupted["data"].shape[0]
     digits_corrupted["data"] = (
@@ -89,10 +92,8 @@ for ax, image, label in zip_imgs:
 #   fit a support vector classifier on the train samples. The fitted classifier
 #   can subsequently be used to predict the value of the digit for the samples
 #   in the calibration and test subsets.
-#
-#
 
-def fit_base_clf(dataset):
+def fit_base_clf(dataset: Any) -> Tuple:
     n_samples = len(digits.images)
     data = dataset.images.reshape((n_samples, -1))
     clf = svm.SVC(gamma=0.001, probability=True)
@@ -176,8 +177,13 @@ disp1.figure_.suptitle("Confusion matrix - Original vs Corrupted datasets")
 alpha = np.arange(0.01, 1, 0.01)
 
 
-def estimate_prediction_sets(clf, X_calib, y_calib, X_test, alpha):
-    alpha = np.arange(0.01, 1, 0.01)
+def estimate_prediction_sets(
+    clf: Any,
+    X_calib: np.array,
+    y_calib: np.array,
+    X_test: np.array,
+    alpha: np.array
+) -> Tuple:
     mapie_clf = MapieClassifier(clf, method="cumulated_score", cv="prefit")
     mapie_clf.fit(X_calib, y_calib)
     y_pred, y_ps = mapie_clf.predict(
