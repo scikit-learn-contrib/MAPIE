@@ -54,17 +54,17 @@ STRATEGIES = {
         agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=1),
     ),
-    "resampling_plus": Params(
+    "jackknife_plus_ab": Params(
         method="plus",
         agg_function="mean",
         cv=Subsample(n_resamplings=30, random_state=1),
     ),
-    "resampling_minmax": Params(
+    "jackknife_minmax_ab": Params(
         method="minmax",
         agg_function="mean",
         cv=Subsample(n_resamplings=30, random_state=1),
     ),
-    "resampling_plus_median": Params(
+    "jackknife_plus_median_ab": Params(
         method="plus",
         agg_function="median",
         cv=Subsample(
@@ -84,9 +84,9 @@ WIDTHS = {
     "cv_minmax": 4.04,
     "prefit": 4.81,
     "cv_plus_median": 3.90,
-    "resampling_plus": 3.90,
-    "resampling_minmax": 4.13,
-    "resampling_plus_median": 3.87,
+    "jackknife_plus_ab": 3.90,
+    "jackknife_minmax_ab": 4.13,
+    "jackknife_plus_median_ab": 3.87,
 }
 
 COVERAGES = {
@@ -99,9 +99,9 @@ COVERAGES = {
     "cv_minmax": 0.966,
     "prefit": 0.980,
     "cv_plus_median": 0.954,
-    "resampling_plus": 0.952,
-    "resampling_minmax": 0.970,
-    "resampling_plus_median": 0.960,
+    "jackknife_plus_ab": 0.952,
+    "jackknife_minmax_ab": 0.970,
+    "jackknife_plus_median_ab": 0.960,
 }
 
 
