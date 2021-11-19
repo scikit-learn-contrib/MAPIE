@@ -641,14 +641,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             check_alpha_and_n_samples(alpha_, n)
             if self.method == "naive":
                 self.quantiles_ = 1 - alpha_
-            elif self.method == "top_k":
-                self.quantiles_ = np.stack([
-                        np.quantile(
-                            self.conformity_scores_,
-                            ((n + 1) * (1 - _alpha)) / n,
-                            interpolation="higher"
-                            ) for _alpha in alpha_
-                    ])
             else:
                 self.quantiles_ = np.stack([
                     np.quantile(
