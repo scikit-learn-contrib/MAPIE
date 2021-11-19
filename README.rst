@@ -168,7 +168,7 @@ The full documentation can be found `on this link <https://mapie.readthedocs.io/
     :width: 300
     :align: center
 
-**How does MAPIE work on classification ?** It is based on the construction of calibrated conformity scores to estimate prediction sets.
+**How does MAPIE work on classification ?** It is based on the construction of calibrated conformity scores to estimate prediction sets and relies on:
 
 - Construction of a conformity score
 - Calibration of the conformity score on a calibration set not seen by the model during training

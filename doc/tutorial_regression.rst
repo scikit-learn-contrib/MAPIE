@@ -79,7 +79,7 @@ Let’s visualize our noisy function.
 
 
 
-.. image:: tutorial_regression_nb_files/tutorial_regression_nb_9_0.png
+.. image:: tutorial_regression_files/tutorial_regression_nb_9_0.png
 
 
 As mentioned previously, we fit our training data with a simple
@@ -184,7 +184,7 @@ models.
 
 
 
-.. image:: tutorial_regression_nb_files/tutorial_regression_nb_16_0.png
+.. image:: tutorial_regression_files/tutorial_regression_nb_16_0.png
 
 
 At first glance, the four strategies give similar results and the
@@ -204,7 +204,7 @@ Let’s confirm this by comparing the prediction interval widths over
 
 
 
-.. image:: tutorial_regression_nb_files/tutorial_regression_nb_18_0.png
+.. image:: tutorial_regression_files/tutorial_regression_nb_18_0.png
 
 
 As expected, the prediction intervals estimated by the Naive method are
@@ -360,7 +360,7 @@ Lets" start by generating and showing the data.
 
 
 
-.. image:: tutorial_regression_nb_files/tutorial_regression_nb_28_0.png
+.. image:: tutorial_regression_files/tutorial_regression_nb_28_0.png
 
 
 As before, we estimate the prediction intervals using a polynomial
@@ -409,7 +409,7 @@ strategies.
 
 
 
-.. image:: tutorial_regression_nb_files/tutorial_regression_nb_31_0.png
+.. image:: tutorial_regression_files/tutorial_regression_nb_31_0.png
 
 
 At first glance, our polynomial function does not give accurate
@@ -432,7 +432,7 @@ Let’s now compare the prediction interval widths between all strategies.
 
 
 
-.. image:: tutorial_regression_nb_files/tutorial_regression_nb_34_0.png
+.. image:: tutorial_regression_files/tutorial_regression_nb_34_0.png
 
 
 The prediction interval widths start to increase exponentially for
@@ -571,7 +571,7 @@ uniform distribution.
 
 
 
-.. image:: tutorial_regression_nb_files/tutorial_regression_nb_41_0.png
+.. image:: tutorial_regression_files/tutorial_regression_nb_41_0.png
 
 
 Let’s then define the models. The boosing model considers 100 shallow
@@ -653,7 +653,7 @@ method and compare their prediction interval.
 
 
 
-.. image:: tutorial_regression_nb_files/tutorial_regression_nb_48_0.png
+.. image:: tutorial_regression_files/tutorial_regression_nb_48_0.png
 
 
 .. code:: ipython3
@@ -668,7 +668,7 @@ method and compare their prediction interval.
 
 
 
-.. image:: tutorial_regression_nb_files/tutorial_regression_nb_49_0.png
+.. image:: tutorial_regression_files/tutorial_regression_nb_49_0.png
 
 
 As expected with the CV+ method, the prediction intervals are a bit
