@@ -4,8 +4,7 @@ Capturing the aleatoric uncertainties on corrupted images with MAPIE
 ====================================================================
 
 In this tutorial, we use the famous hand-written digits dataset from
-scikit-learn available
-`here <https://scikit-learn.org/stable/auto_examples/classification/plot_digits_classification.html)>`_
+scikit-learn
 to assess how MAPIE captures the addition of some noise in training
 images on the estimate of prediction sets.
 """
