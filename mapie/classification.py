@@ -551,6 +551,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
             self.conformity_scores_ -= u*y_proba_true
         elif self.method == "top_k":
+            # Here we reorder the labels by decreasing probability
+            # and get the position of each label from decreasing probability
             index = np.argsort(
                 np.fliplr(np.argsort(y_pred_proba, axis=1))
             )
