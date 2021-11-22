@@ -2,7 +2,15 @@
 History
 =======
 
-0.3.1 (XXXX-XX-XX)
+0.3.2 (XXXX-XX-XX)
+------------------
+
+* Add "naive" and "top-k" methods in MapieClassifier
+* Include J+aB method in regression tutorial
+* Add MNIST example for classification
+
+
+0.3.1 (2021-11-19)
 ------------------
 
 * Add Jackknife+-after-Bootstrap method and add mean and median as aggregation functions
