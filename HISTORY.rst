@@ -9,13 +9,11 @@ History
 * Include J+aB method in regression tutorial
 * Add MNIST example for classification
 
-
 0.3.1 (2021-11-19)
 ------------------
 
 * Add Jackknife+-after-Bootstrap method and add mean and median as aggregation functions
 * Add "cumulative_score" method in MapieClassifier
-
 
 0.3.0 (2021-09-10)
 ------------------

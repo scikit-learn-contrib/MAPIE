@@ -41,7 +41,7 @@ MAPIE - Model Agnostic Prediction Interval Estimator
 **MAPIE** allows you to easily estimate prediction intervals (or prediction sets) using your favourite scikit-learn-compatible model for
 single-output regression or multi-class classification settings.
 
-Prediction intervals output by **MAPIE** encompass both aleatoric and epistemic uncertainties and are backed by strong theoretical guarantees [1-4].
+Prediction intervals output by **MAPIE** encompass both aleatoric and epistemic uncertainties and are backed by strong theoretical guarantees [1-5].
 
 🔗 Requirements
 ===============
@@ -157,14 +157,25 @@ The effective coverage is the actual fraction of true labels lying in the predic
 
 The full documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
 
-How does **MAPIE** work on regression ? It is basically based on cross-validation and relies on:
+**How does MAPIE work on regression ?** It is basically based on cross-validation and relies on:
 
-- Residuals on the whole trainig set obtained by cross-validation,
+- Residuals on the whole training set obtained by cross-validation,
 - Perturbed models generated during the cross-validation.
 
-**MAPIE** then combines all these elements in a way that provides prediction intervals on new data with strong theoretical guarantees [1].
+**MAPIE** then combines all these elements in a way that provides prediction intervals on new data with strong theoretical guarantees [1-2].
 
 .. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_internals_regression.png
+    :width: 300
+    :align: center
+
+**How does MAPIE work on classification ?** It is based on the construction of calibrated conformity scores to estimate prediction sets and relies on:
+
+- Construction of a conformity score
+- Calibration of the conformity score on a calibration set not seen by the model during training
+
+**MAPIE** then uses the calibrated conformity scores to estimate sets of labels associated with the desired coverage on new data with strong theoretical guarantees [3-4-5].
+
+.. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_internals_classification.png
     :width: 300
     :align: center
 
@@ -211,13 +222,17 @@ MAPIE methods belong to the field of conformal inference.
 [1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
 "Predictive inference with the jackknife+." Ann. Statist., 49(1):486–507, February 2021.
 
-[2] Mauricio Sadinle, Jing Lei, and Larry Wasserman.
+[2] Byol Kim, Chen Xu, and Rina Foygel Barber.
+"Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
+34th Conference on Neural Information Processing Systems (NeurIPS 2020).
+
+[3] Mauricio Sadinle, Jing Lei, and Larry Wasserman.
 "Least Ambiguous Set-Valued Classifiers With Bounded Error Levels." Journal of the American Statistical Association, 114:525, 223-234, 2019.
 
-[3] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
+[4] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
 "Classification with Valid and Adaptive Coverage." NeurIPS 202 (spotlight).
 
-[4] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan and Jitendra Malik.
+[5] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan and Jitendra Malik.
 "Uncertainty Sets for Image Classifiers using Conformal Prediction."
 International Conference on Learning Representations 2021.
 
