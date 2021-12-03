@@ -366,8 +366,7 @@ def test_wrong_image_shape_predict(X_wrong_image) -> None:
 
 def test_undifined_model() -> None:
     """
-    Test that VaueError is raised if image has not
-    3 or 4 dimensions in predict.
+    Test ValueError is raised if no model is specified with image input.
     """
     mapie = MapieClassifier()
     with pytest.raises(ValueError, match=r"LogisticRegression's input.*"):
