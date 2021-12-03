@@ -364,7 +364,7 @@ def test_wrong_image_shape_predict(X_wrong_image: np.ndarray) -> None:
         mapie.predict(X_wrong_image)
 
 
-def test_undifined_model() -> None:
+def test_undefined_model() -> None:
     """
     Test ValueError is raised if no model is specified with image input.
     """
