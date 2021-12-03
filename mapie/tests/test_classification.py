@@ -742,7 +742,7 @@ def test_cumulated_scores() -> None:
 
 
 @pytest.mark.parametrize("X", IMAGE_INPUT)
-def test_image_cumulated_scores(X: np.ndarray) -> None:
+def test_image_cumulated_scores(X: dict) -> None:
     """Test image as input for cumulated_score method."""
     alpha = [0.65]
     quantile = [0.750183952461055]
