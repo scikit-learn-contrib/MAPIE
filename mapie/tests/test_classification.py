@@ -226,7 +226,7 @@ class CumulatedScoreClassifier:
 
 
 class ImageClassifier:
-    def __init__(self, X_calib, X_test) -> None:
+    def __init__(self, X_calib: np.ndarray, X_test: np.ndarray) -> None:
         self.X_calib = X_calib
         self.y_calib = np.array([0, 1, 2])
         self.y_calib_scores = np.array(
@@ -329,7 +329,7 @@ def test_no_fit_predict() -> None:
 
 
 @pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
-def test_wrong_image_shape_fit(X_wrong_image) -> None:
+def test_wrong_image_shape_fit(X_wrong_image: np.ndarray) -> None:
     """
     Test that VaueError is raised if image has not 3 or 4 dimensions in fit.
     """
@@ -346,7 +346,7 @@ def test_wrong_image_shape_fit(X_wrong_image) -> None:
 
 
 @pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
-def test_wrong_image_shape_predict(X_wrong_image) -> None:
+def test_wrong_image_shape_predict(X_wrong_image: np.ndarray) -> None:
     """
     Test that VaueError is raised if image has not
     3 or 4 dimensions in predict.
@@ -742,7 +742,7 @@ def test_cumulated_scores() -> None:
 
 
 @pytest.mark.parametrize("X", IMAGE_INPUT)
-def test_image_cumulated_scores(X) -> None:
+def test_image_cumulated_scores(X: np.ndarray) -> None:
     """Test image as input for cumulated_score method."""
     alpha = [0.65]
     quantile = [0.750183952461055]
