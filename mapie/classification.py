@@ -20,7 +20,7 @@ from .utils import (
     check_alpha_and_n_samples,
     check_n_jobs,
     check_verbose,
-    input_is_image
+    check_input_is_image
 )
 
 
@@ -524,7 +524,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         estimator = self._check_estimator(X, y, self.estimator)
 
         if self.image_input:
-            input_is_image(X)
+            check_input_is_image(X)
         X, y = check_X_y(
             X, y, force_all_finite=False, ensure_2d=self.image_input,
             allow_nd=self.image_input, dtype=["float64", "int", "object"]
@@ -634,7 +634,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             ],
         )
         if self.image_input:
-            input_is_image(X)
+            check_input_is_image(X)
         X = check_array(
             X, force_all_finite=False, ensure_2d=self.image_input,
             allow_nd=self.image_input, dtype=["float64", "object"]

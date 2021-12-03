@@ -350,7 +350,7 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
         )
 
 
-def input_is_image(X: ArrayLike) -> None:
+def check_input_is_image(X: ArrayLike) -> None:
     """
     Check if the image has 3 or 4 dimensions
 
