@@ -348,3 +348,27 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
             + "belongs to every resamplings.\n"
             "Increase the number of resamplings"
         )
+
+
+def check_input_is_image(X: ArrayLike) -> None:
+    """
+    Check if the image has 3 or 4 dimensions
+
+    Parameters
+    ----------
+    X: Union[
+        ArrayLike[n_samples, width, height],
+        ArrayLike[n_samples, width, height, n_channels]
+    ]
+        Image input
+
+    Raises
+    ------
+    ValueError
+    """
+    if len(X.shape) not in [3, 4]:
+        raise ValueError(
+            "Invalid X."
+            "When X is an image, the number of dimensions"
+            "must be equal to 3 or 4."
+        )

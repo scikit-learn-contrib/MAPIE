@@ -203,8 +203,31 @@ y_toy_mapie = {
         [False, True, True],
     ],
 }
+
+IMAGE_INPUT = [
+    {
+        'X_calib': np.zeros((3, 1024, 1024, 1)),
+        'X_test': np.ones((3, 1024, 1024, 1)),
+    },
+    {
+        'X_calib': np.zeros((3, 512, 512, 3)),
+        'X_test': np.ones((3, 512, 512, 3)),
+    },
+    {
+        'X_calib': np.zeros((3, 256, 512)),
+        'X_test': np.ones((3, 256, 512)),
+    }
+]
+
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2])
+
+X_WRONG_IMAGE = [
+    np.zeros((3, 1024, 1024, 3, 1)),
+    np.zeros((3, 512))
+]
+X_good_image = np.zeros((3, 1024, 1024, 3))
+y_toy_image = np.array([0, 0, 1])
 
 n_classes = 4
 X, y = make_classification(
@@ -237,6 +260,36 @@ class CumulatedScoreClassifier:
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         if np.max(X) <= 2:
+            return np.array(
+                [[0.4, 0.5, 0.1], [0.2, 0.6, 0.2], [0.6, 0.3, 0.1]]
+            )
+        else:
+            return np.array(
+                [[0.2, 0.7, 0.1], [0.1, 0.2, 0.7], [0.3, 0.5, 0.2]]
+            )
+
+
+class ImageClassifier:
+    def __init__(self, X_calib: np.ndarray, X_test: np.ndarray) -> None:
+        self.X_calib = X_calib
+        self.y_calib = np.array([0, 1, 2])
+        self.y_calib_scores = np.array(
+            [[0.750183952461055], [0.029571416154050345], [0.9268006058188594]]
+        )
+        self.X_test = X_test
+        self.y_pred_sets = np.array(
+            [[True, True, False], [False, True, True], [True, True, False]]
+        )
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> ImageClassifier:
+        self.fitted_ = True
+        return self
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        return np.array([1, 2, 1])
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        if np.max(X) == 0:
             return np.array(
                 [[0.4, 0.5, 0.1], [0.2, 0.6, 0.2], [0.6, 0.3, 0.1]]
             )
@@ -317,6 +370,51 @@ def test_no_fit_predict() -> None:
     mapie = MapieClassifier(estimator=DummyClassifier())
     with pytest.raises(NotFittedError, match=r".*not fitted.*"):
         mapie.predict(X_toy)
+
+
+@pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
+def test_wrong_image_shape_fit(X_wrong_image: np.ndarray) -> None:
+    """
+    Test that VaueError is raised if image has not 3 or 4 dimensions in fit.
+    """
+    cumclf = ImageClassifier(X_wrong_image, y_toy_image)
+    cumclf.fit(cumclf.X_calib, cumclf.y_calib)
+    mapie = MapieClassifier(
+        cumclf,
+        method="cumulated_score",
+        cv="prefit",
+        random_state=42
+    )
+    with pytest.raises(ValueError, match=r"Invalid X.*"):
+        mapie.fit(cumclf.X_calib, cumclf.y_calib, image_input=True)
+
+
+@pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
+def test_wrong_image_shape_predict(X_wrong_image: np.ndarray) -> None:
+    """
+    Test that VaueError is raised if image has not
+    3 or 4 dimensions in predict.
+    """
+    cumclf = ImageClassifier(X_good_image, y_toy_image)
+    cumclf.fit(cumclf.X_calib, cumclf.y_calib)
+    mapie = MapieClassifier(
+        cumclf,
+        method="cumulated_score",
+        cv="prefit",
+        random_state=42
+    )
+    mapie.fit(cumclf.X_calib, cumclf.y_calib, image_input=True,)
+    with pytest.raises(ValueError, match=r"Invalid X.*"):
+        mapie.predict(X_wrong_image)
+
+
+def test_undefined_model() -> None:
+    """
+    Test ValueError is raised if no model is specified with image input.
+    """
+    mapie = MapieClassifier()
+    with pytest.raises(ValueError, match=r"LogisticRegression's input.*"):
+        mapie.fit(X_good_image, y_toy_image, image_input=True,)
 
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
@@ -676,6 +774,34 @@ def test_cumulated_scores() -> None:
         random_state=42
     )
     mapie.fit(cumclf.X_calib, cumclf.y_calib)
+    np.testing.assert_allclose(mapie.conformity_scores_, cumclf.y_calib_scores)
+    # predict
+    _, y_ps = mapie.predict(
+        cumclf.X_test,
+        include_last_label=True,
+        alpha=alpha
+    )
+    np.testing.assert_allclose(mapie.quantiles_, quantile)
+    np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
+
+
+@pytest.mark.parametrize("X", IMAGE_INPUT)
+def test_image_cumulated_scores(X: dict[str, np.ndarray]) -> None:
+    """Test image as input for cumulated_score method."""
+    alpha = [0.65]
+    quantile = [0.750183952461055]
+    # fit
+    X_calib = X['X_calib']
+    X_test = X['X_test']
+    cumclf = ImageClassifier(X_calib, X_test)
+    cumclf.fit(cumclf.X_calib, cumclf.y_calib)
+    mapie = MapieClassifier(
+        cumclf,
+        method="cumulated_score",
+        cv="prefit",
+        random_state=42
+    )
+    mapie.fit(cumclf.X_calib, cumclf.y_calib, image_input=True)
     np.testing.assert_allclose(mapie.conformity_scores_, cumclf.y_calib_scores)
     # predict
     _, y_ps = mapie.predict(
