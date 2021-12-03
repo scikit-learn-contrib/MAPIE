@@ -227,7 +227,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 return LogisticRegression(multi_class="multinomial").fit(X, y)
             else:
                 raise ValueError(
-                    "LogisticRegression's input can't be an image."
+                    "Default LogisticRegression's input can't be an image."
                     "Please provide a proper model."
                 )
         if (
