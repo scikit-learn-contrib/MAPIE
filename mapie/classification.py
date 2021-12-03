@@ -19,7 +19,8 @@ from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
     check_n_jobs,
-    check_verbose
+    check_verbose,
+    input_is_image
 )
 
 
@@ -222,7 +223,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             If the estimator is not fitted and ``cv`` attribute is "prefit".
         """
         if estimator is None:
-            return LogisticRegression(multi_class="multinomial").fit(X, y)
+            if not self.image_input:
+                return LogisticRegression(multi_class="multinomial").fit(X, y)
+            else:
+                raise ValueError(
+                    "LogisticRegression's input can't be an image."
+                    "Please provide a proper model."
+                )
         if (
             not hasattr(estimator, "fit")
             and not hasattr(estimator, "predict")
@@ -475,6 +482,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         X: ArrayLike,
         y: ArrayLike,
+        image_input: Optional[bool] = False,
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieClassifier:
         """
@@ -487,6 +495,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         y : ArrayLike of shape (n_samples,)
             Training labels.
+
+        image_input: Optional[bool] = False
+            Whether or not the X input is an image. If True, you must provide
+            a model that accepts image as input (e.g., a Neural Network). All
+            Scikit-learn classifiers only accept two-dimensional inputs.
+
+            By default False.
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
@@ -503,12 +518,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             The model itself.
         """
         # Checks
+        self.image_input = image_input
         self._check_parameters()
         cv = self._check_cv(self.cv)
         estimator = self._check_estimator(X, y, self.estimator)
 
+        if self.image_input:
+            input_is_image(X)
         X, y = check_X_y(
-            X, y, force_all_finite=False, dtype=["float64", "int", "object"]
+            X, y, force_all_finite=False, ensure_2d=self.image_input,
+            allow_nd=self.image_input, dtype=["float64", "int", "object"]
         )
         assert type_of_target(y) == "multiclass"
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
@@ -614,7 +633,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 "n_samples_val_",
             ],
         )
-        X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
+        if self.image_input:
+            input_is_image(X)
+        X = check_array(
+            X, force_all_finite=False, ensure_2d=self.image_input,
+            allow_nd=self.image_input, dtype=["float64", "object"]
+        )
         y_pred = self.single_estimator_.predict(X)
         y_pred_proba = self.single_estimator_.predict_proba(X)
         y_pred_proba = self._check_proba_normalized(y_pred_proba)
