@@ -75,13 +75,13 @@ def get_X_y() -> Tuple[ArrayLike, ArrayLike]:
     return (X, y)
 
 
-class Ridge2(RegressorMixin, BaseEstimator):
+class Ridge2(RegressorMixin, BaseEstimator):  # type:ignore
     """
     Little variation of Ridge proposed by Kim and al.
     Rectify alpha on the training set svd max value.
     """
 
-    def __init__(self, ridge_mult: Optional[float] = 0.001) -> None:
+    def __init__(self, ridge_mult: float = 0.001) -> None:
         self.ridge_mult = ridge_mult
         self.__name__ = "Ridge2"
 
@@ -131,7 +131,7 @@ def compute_PIs(
     method: str,
     cv: Any,
     alpha: float,
-    agg_function: str = None,
+    agg_function: Optional[str] = None,
 ) -> pd.DataFrame:
     """
     Trains and tests a model with a MAPIE method,
@@ -210,15 +210,15 @@ def B_random_from_B_fixed(
 
 
 def comparison_JAB(
-    model: Optional[BaseEstimator] = Ridge2(),
-    agg_function: Optional[str] = "mean",
-    alpha: Optional[float] = 0.1,
-    trials: Optional[int] = 10,
-    train_size: Optional[int] = 200,
-    boostrap_size: Optional[int] = 10,
-    B_fixed: Optional[int] = 50,
-    random_state: Optional[int] = 98765,
-):
+    model: BaseEstimator = Ridge2(),
+    agg_function: str = "mean",
+    alpha: float = 0.1,
+    trials: int = 10,
+    train_size: int = 200,
+    boostrap_size: int = 10,
+    B_fixed: int = 50,
+    random_state: int = 98765,
+) -> pd.DataFrame:
     """
     Launch trials of jackknife-plus and jackknife-plus_after_boostrap,
     with B fixed and random, for a given number of resample size and a given
@@ -371,7 +371,7 @@ def comparison_JAB(
     return results
 
 
-def plot_results(results: pd.DataFrame, score: str):
+def plot_results(results: pd.DataFrame, score: str) -> None:
     """
     Compares the desired score (i.e. coverage or width) between the Jackknife+
     and Jackknife+-after-Bootstrap and between fixed and random B parameter
