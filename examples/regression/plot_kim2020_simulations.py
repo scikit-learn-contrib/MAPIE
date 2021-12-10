@@ -4,25 +4,25 @@ Reproducing the simulations from Kim et al. (2020)
 ==================================================
 
 :class:`mapie.regression.MapieRegressor` is used to reproduce the simulations
-by Kim et al. (2020) [1] in their article which introduces the 
+by Kim et al. (2020) [1] in their article which introduces the
 jackknife+-after-bootstrap method.
 
 For a given model, the simulation fits MAPIE regressors with
-jackknife+ and jackknife+-after-bootstrap methods, on different resamplings of 
-a data set loaded from 'https://archive.ics.uci.edu/', and compares the 
+jackknife+ and jackknife+-after-bootstrap methods, on different resamplings of
+a data set loaded from 'https://archive.ics.uci.edu/', and compares the
 coverage levels and the width means of the PIs.
 
-In order to reproduce results from the tutorial notebook of Kim and al, we 
-implemented their regression model ``Ridge2``, a variant of `sklearn.Ridge` 
+In order to reproduce results from the tutorial notebook of Kim and al, we
+implemented their regression model ``Ridge2``, a variant of `sklearn.Ridge`
 with an adaptive regularization parameter.
 
 We compare jackknife+ and jackknife+-after-bootstrap, with fixed and random
-numbers of bootstraps, for a given training set of size ``n``, and different 
-resampling sets of size ``m``, following the discussion in the paper of Kim 
-and al. 
+numbers of bootstraps, for a given training set of size ``n``, and different
+resampling sets of size ``m``, following the discussion in the paper of Kim
+and al.
 
-This simulation is carried out to assert that the jackknife+ and 
-jackknife+-after-bootsrap methods implemented in MAPIE give the same 
+This simulation is carried out to assert that the jackknife+ and
+jackknife+-after-bootsrap methods implemented in MAPIE give the same
 results than Kim and al, and that the targeted coverage level is obtained.
 
 [1] Byol Kim, Chen Xu, and Rina Foygel Barber.
@@ -386,7 +386,7 @@ def plot_results(results: pd.DataFrame, score: str):
     """
 
     res = results.copy()
-    res["fixed_random"] = res["method"].str.split("[' '=\(\)]").str.get(1)
+    res["fixed_random"] = res["method"].str.split("[' ']").str.get(1)
     res["method"] = res["method"].str.split().str.get(0)
     m_vals = res["m"].values
     res["ratio"] = m_vals / m_vals.max()
@@ -452,5 +452,6 @@ if __name__ == "__main__":
         boostrap_size=5,
         B_fixed=20,
     )
+    print(results_coverages_widths.info())
     plot_results(results_coverages_widths, "coverage")
     plot_results(results_coverages_widths, "width")
