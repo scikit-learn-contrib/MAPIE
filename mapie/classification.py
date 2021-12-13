@@ -355,7 +355,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             ValueError
             If the sum of the scores is not equal to one.
         """
-        print((1-np.sum(y_pred_proba, axis=1)).max())
         np.testing.assert_allclose(
             np.sum(y_pred_proba, axis=1),
             1,
