@@ -24,6 +24,8 @@ Throughout this tutorial, we will answer the following questions:
 
 - Is the chosen conformal method well calibrated ? 
 
+- What are the pros and cons of the conformal methods included in :class:`mapie.regression.MapieClassifier` ?
+
 
 ## 1. Conformal Prediction method using the softmax score of the true label
 
@@ -226,7 +228,6 @@ We saw in the previous section that the "score" method is well calibrated by pro
 Let's visualize the prediction sets obtained with the APS method on the test set after fitting MAPIE on the calibration set.
 
 ```python
-y_pred_proba_max = np.max(y_pred_proba, axis=1)
 mapie_aps = MapieClassifier(estimator=clf, cv="prefit", method="cumulated_score")
 mapie_aps.fit(X_cal, y_cal)
 alpha = [0.2, 0.1, 0.05]
@@ -237,7 +238,7 @@ y_pred_aps, y_ps_aps = mapie_aps.predict(X_test_mesh, alpha=alpha, include_last_
 plot_results(alpha, X_test_mesh, y_pred_aps, y_ps_aps)
 ```
 
-One can notice that the uncertain regions are emphasized by wider boundaries, but without null prediction sets. 
+One can notice that the uncertain regions are emphasized by wider boundaries, but without null prediction sets with respect to the first "score" method. 
 
 ```python
 _, y_ps_aps2 = mapie_aps.predict(X_test, alpha=alpha2, include_last_label="randomized")
@@ -255,6 +256,4 @@ widths_aps = [
 plot_coverages_widths(alpha2, coverages_aps, widths_aps, "Score")
 ```
 
-```python
-
-```
+This method also gives accurate calibration plots, meaning that the effective coverage level is always very close to the target coverage, sometimes at the expense of slightly bigger prediction sets. 
