@@ -558,8 +558,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 1 - y_pred_proba, y.reshape(-1, 1), axis=1
             )
         elif self.method == "cumulated_score":
-            # encoder = LabelBinarizer().fit(y)
-            # y_true = encoder.transform(y)
             y_true = label_binarize(y=y, classes=estimator.classes_)
             index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
             y_pred_proba_sorted = np.take_along_axis(
@@ -567,7 +565,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             )
             y_true_sorted = np.take_along_axis(y_true, index_sorted, axis=1)
             y_pred_proba_sorted_cumsum = np.cumsum(y_pred_proba_sorted, axis=1)
-            # cutoff = encoder.inverse_transform(y_true_sorted)
             cutoff = np.argmax(y_true_sorted, axis=1)
             self.conformity_scores_ = np.take_along_axis(
                 y_pred_proba_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
