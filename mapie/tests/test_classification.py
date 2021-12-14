@@ -822,7 +822,6 @@ def test_sum_proba_to_one_fit(y_pred_proba: ArrayLike) -> None:
     Test if when the output probabilities of the model do not
     sum to one, return an error in the fit method.
     """
-    print(y_pred_proba)
     wrong_model = WrongOutputModel(y_pred_proba)
     wrong_model.fit(X_toy, y_toy)
     mapie = MapieClassifier(wrong_model)
