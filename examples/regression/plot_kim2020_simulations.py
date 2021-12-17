@@ -183,6 +183,30 @@ def compute_PIs(
     return pd.DataFrame(PI, columns=["lower", "upper"])
 
 
+def get_coverage_width(PIs: pd.DataFrame, y: ArrayLike) -> Tuple[float, float]:
+    """
+    Computes the mean coverage and width of the predictions intervals of a
+    DataFrame given by the ``compute_PIs`` function
+
+    Parameters
+    ----------
+    PIs : pd.DataFrame
+        DataFrame returned by `compute_PIs``, with lower and upper bounds of
+        the PIs.
+
+    y : ArrayLike
+        Targets supposedly covered by the PIs.
+
+    Returns
+    -------
+    (coverage, width) : Tuple[float, float]
+        The mean coverage and width of the PIs.
+    """
+    coverage = ((PIs["lower"] <= y) & (PIs["upper"] >= y)).mean()
+    width = (PIs["upper"] - PIs["lower"]).mean()
+    return (coverage, width)
+
+
 def B_random_from_B_fixed(
     B: int, train_size: int, m: int, itrial: int = 0, random_state: int = 98765
 ) -> int:
@@ -288,8 +312,7 @@ def comparison_JAB(
             X, y, train_size=train_size, random_state=random_state + itrial
         )
         PIs = compute_PIs(model, X_train, y_train, X_test, "plus", -1, alpha)
-        coverage = ((PIs["lower"] <= y_test) & (PIs["upper"] >= y_test)).mean()
-        width = (PIs["upper"] - PIs["lower"]).mean()
+        (coverage, width) = get_coverage_width(PIs, y_test)
         results.iloc[result_index, :] = [
             itrial,
             type(model).__name__,
@@ -321,10 +344,7 @@ def comparison_JAB(
                 alpha,
                 agg_function,
             )
-            coverage = (
-                (PIs["lower"] <= y_test) & (PIs["upper"] >= y_test)
-            ).mean()
-            width = (PIs["upper"] - PIs["lower"]).mean()
+            (coverage, width) = get_coverage_width(PIs, y_test)
             results.iloc[result_index, :] = [
                 itrial,
                 type(model).__name__,
@@ -352,11 +372,7 @@ def comparison_JAB(
                 alpha,
                 agg_function,
             )
-            coverage = (
-                (PIs["lower"] <= y_test) & (PIs["upper"] >= y_test)
-            ).mean()
-            width = (PIs["upper"] - PIs["lower"]).mean()
-
+            (coverage, width) = get_coverage_width(PIs, y_test)
             results.iloc[result_index, :] = [
                 itrial,
                 type(model).__name__,
