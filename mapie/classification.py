@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import check_X_y, check_array, check_random_state
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import label_binarize
 
 from ._typing import ArrayLike
 from ._machine_precision import EPSILON
@@ -235,10 +235,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     "Default LogisticRegression's input can't be an image."
                     "Please provide a proper model."
                 )
+        if isinstance(estimator, Pipeline):
+            est = estimator[-1]
+        else:
+            est = estimator
         if (
-            not hasattr(estimator, "fit")
-            and not hasattr(estimator, "predict")
-            and not hasattr(estimator, "predict_proba")
+            not hasattr(est, "fit")
+            and not hasattr(est, "predict")
+            and not hasattr(est, "predict_proba")
         ):
             raise ValueError(
                 "Invalid estimator. "
@@ -246,10 +250,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 "predict, and predict_proba methods."
             )
         if self.cv == "prefit":
-            if isinstance(self.estimator, Pipeline):
-                check_is_fitted(self.estimator[-1])
-            else:
-                check_is_fitted(self.estimator)
+            check_is_fitted(est)
+            if not hasattr(est, "classes_"):
+                raise AttributeError(
+                    "Invalid classifier. "
+                    "Fitted classifier does not contain "
+                    "'classes_' attribute."
+                )
         return estimator
 
     def _check_cv(
@@ -351,7 +358,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         np.testing.assert_allclose(
             np.sum(y_pred_proba, axis=1),
             1,
-            err_msg="The sum of the scores is not equal to one."
+            err_msg="The sum of the scores is not equal to one.",
+            rtol=1e-5
         )
         return y_pred_proba
 
@@ -551,15 +559,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 1 - y_pred_proba, y.reshape(-1, 1), axis=1
             )
         elif self.method == "cumulated_score":
-            encoder = LabelBinarizer().fit(y)
-            y_true = encoder.transform(y)
+            y_true = label_binarize(y=y, classes=estimator.classes_)
             index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
             y_pred_proba_sorted = np.take_along_axis(
                 y_pred_proba, index_sorted, axis=1
             )
             y_true_sorted = np.take_along_axis(y_true, index_sorted, axis=1)
             y_pred_proba_sorted_cumsum = np.cumsum(y_pred_proba_sorted, axis=1)
-            cutoff = encoder.inverse_transform(y_true_sorted)
+            cutoff = np.argmax(y_true_sorted, axis=1)
             self.conformity_scores_ = np.take_along_axis(
                 y_pred_proba_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
             )

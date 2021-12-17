@@ -250,6 +250,7 @@ class CumulatedScoreClassifier:
         self.y_pred_sets = np.array(
             [[True, True, False], [False, True, True], [True, True, False]]
         )
+        self.classes_ = self.y_calib
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> CumulatedScoreClassifier:
         self.fitted_ = True
@@ -280,6 +281,7 @@ class ImageClassifier:
         self.y_pred_sets = np.array(
             [[True, True, False], [False, True, True], [True, True, False]]
         )
+        self.classes_ = self.y_calib
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> ImageClassifier:
         self.fitted_ = True
@@ -304,6 +306,7 @@ class WrongOutputModel():
     def __init__(self, proba_out: ArrayLike):
         self.trained_ = True
         self.proba_out = proba_out
+        self.classes_ = proba_out.shape[1]
 
     def fit(self, *args: Any) -> None:
         pass
@@ -847,3 +850,24 @@ def test_sum_proba_to_one_predict(
         AssertionError, match=r".*The sum of the.*"
     ):
         mapie.predict(X_toy, alpha=alpha)
+
+
+@pytest.mark.parametrize(
+    "estimator", [LogisticRegression(), make_pipeline(LogisticRegression())]
+)
+def test_classifier_without_classes_attribute(
+    estimator: ClassifierMixin
+) -> None:
+    """
+    Test that prefitted classifier without 'classes_ 'attribute raises error.
+    """
+    estimator.fit(X_toy, y_toy)
+    if isinstance(estimator, Pipeline):
+        delattr(estimator[-1], "classes_")
+    else:
+        delattr(estimator, "classes_")
+    mapie = MapieClassifier(estimator=estimator, cv="prefit")
+    with pytest.raises(
+        AttributeError, match=r".*does not contain 'classes_'.*"
+    ):
+        mapie.fit(X_toy, y_toy)
