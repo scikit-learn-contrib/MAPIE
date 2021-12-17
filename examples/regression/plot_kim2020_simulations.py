@@ -12,18 +12,17 @@ jackknife+ and jackknife+-after-bootstrap methods, on different resamplings of
 a data set loaded from 'https://archive.ics.uci.edu/', and compares the
 coverage levels and the width means of the PIs.
 
-In order to reproduce results from the tutorial notebook of Kim and al, we
+In order to reproduce results from the tutorial notebook of [1], we
 implemented their regression model ``Ridge2``, a variant of `sklearn.Ridge`
-with an adaptive regularization parameter.
+with an adaptive regularization parameter (other models can also be tested).
 
 We compare jackknife+ and jackknife+-after-bootstrap, with fixed and random
 numbers of bootstraps, for a given training set of size ``n``, and different
-resampling sets of size ``m``, following the discussion in the paper of Kim
-and al.
+resampling sets of size ``m``, following the discussion in [1].
 
 This simulation is carried out to assert that the jackknife+ and
 jackknife+-after-bootsrap methods implemented in MAPIE give the same
-results than Kim and al, and that the targeted coverage level is obtained.
+results than [1], and that the targeted coverage level is obtained.
 
 [1] Byol Kim, Chen Xu, and Rina Foygel Barber.
 "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
@@ -77,8 +76,15 @@ def get_X_y() -> Tuple[ArrayLike, ArrayLike]:
 
 class Ridge2(RegressorMixin, BaseEstimator):
     """
-    Little variation of Ridge proposed by Kim and al.
+    Little variation of Ridge proposed in [1].
     Rectify alpha on the training set svd max value.
+
+    Parameters
+    ----------
+    ridge_mult : float
+        Multiplicative factor such that the alpha factor of the ``Ridge`` model
+        fitted by ``Ridge2`` is the squared maximum eigenvalue of the training
+        set times ``ridge_mult``.
     """
 
     def __init__(self, ridge_mult: Optional[float] = 0.001) -> None:
@@ -194,10 +200,14 @@ def B_random_from_B_fixed(
     itrial : int
         Number of the trial
     random_state
-        Base random state (fixed according to Kim and al.)
+        Base random state (fixed according to [1].)
 
     Returns
     -------
+    int
+        Integer drawn according to
+        Binomial(B/(1-1/(train_size+1))^m),(1-1/(train_size+1))^m),
+        where B, train_size and m are parameters.
     """
     np.random.seed(random_state + itrial)
     return int(
@@ -223,6 +233,7 @@ def comparison_JAB(
     Launch trials of jackknife-plus and jackknife-plus_after_boostrap,
     with B fixed and random, for a given number of resample size and a given
     number of trials, and returns the results as a DataFrame,
+
     Parameters
     ----------
     model : BaseEstimator
@@ -244,7 +255,7 @@ def comparison_JAB(
         B ~ Binomial(int(B_fixed/(1-1/(n+1))^m),(1-1/(n+1))^m),
         where n is the training set size, and m the resampling set size.
     random_state : int
-        Random state. By default, 98765 (from Kim and al).
+        Random state. By default, 98765 (from [1]).
 
     Returns
     -------
@@ -375,7 +386,7 @@ def plot_results(results: pd.DataFrame, score: str):
     """
     Compares the desired score (i.e. coverage or width) between the Jackknife+
     and Jackknife+-after-Bootstrap and between fixed and random B parameter
-    as in the Kim+2020 simulations.
+    as in [1] simulations.
 
     Parameters
     ----------

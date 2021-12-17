@@ -95,7 +95,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
 
         Returns
         -------
-        n_splits : int
+        int
             Returns the number of splitting iterations in the cross-validator.
         """
         return self.n_resamplings
