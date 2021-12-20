@@ -8,7 +8,6 @@ import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.datasets import make_classification
 from sklearn.pipeline import make_pipeline, Pipeline
-from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
 from sklearn.utils.validation import check_is_fitted
 from sklearn.dummy import DummyClassifier
@@ -426,13 +425,6 @@ def test_include_label_error_in_predict(
         )
 
 
-def test_none_estimator() -> None:
-    """Test that None estimator defaults to LogisticRegression."""
-    mapie_clf = MapieClassifier(estimator=None)
-    mapie_clf.fit(X_toy, y_toy)
-    assert isinstance(mapie_clf.single_estimator_, LogisticRegression)
-
-
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
@@ -440,28 +432,6 @@ def test_valid_estimator(strategy: str) -> None:
     mapie_clf = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
     mapie_clf.fit(X_toy, y_toy)
     assert isinstance(mapie_clf.single_estimator_, LogisticRegression)
-
-
-@pytest.mark.parametrize(
-    "estimator", [LogisticRegression(), make_pipeline(LogisticRegression())]
-)
-def test_invalid_prefit_estimator(estimator: ClassifierMixin) -> None:
-    """Test that non-fitted estimator with prefit cv raise errors."""
-    mapie_clf = MapieClassifier(estimator=estimator, cv="prefit")
-    with pytest.raises(NotFittedError):
-        mapie_clf.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize(
-    "estimator", [LogisticRegression(), make_pipeline(LogisticRegression())]
-)
-def test_valid_prefit_estimator(estimator: ClassifierMixin) -> None:
-    """Test that fitted estimators with prefit cv raise no errors."""
-    estimator.fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(estimator=estimator, cv="prefit")
-    mapie_clf.fit(X_toy, y_toy)
-    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
-    assert mapie_clf.n_features_in_ == 1
 
 
 @pytest.mark.parametrize(

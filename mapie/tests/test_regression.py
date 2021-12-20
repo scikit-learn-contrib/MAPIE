@@ -6,13 +6,10 @@ from typing_extensions import TypedDict
 
 import pytest
 import numpy as np
-from sklearn.base import RegressorMixin
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
-from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
-from sklearn.pipeline import make_pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from mapie.aggregation_functions import aggregate_all
@@ -113,13 +110,6 @@ def test_default_parameters() -> None:
     assert mapie_reg.cv is None
 
 
-def test_none_estimator() -> None:
-    """Test that None estimator defaults to LinearRegression."""
-    mapie_reg = MapieRegressor(estimator=None)
-    mapie_reg.fit(X_toy, y_toy)
-    assert isinstance(mapie_reg.single_estimator_, LinearRegression)
-
-
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
@@ -130,28 +120,6 @@ def test_valid_estimator(strategy: str) -> None:
     assert isinstance(mapie_reg.single_estimator_, DummyRegressor)
     for estimator in mapie_reg.estimators_:
         assert isinstance(estimator, DummyRegressor)
-
-
-@pytest.mark.parametrize(
-    "estimator", [LinearRegression(), make_pipeline(LinearRegression())]
-)
-def test_invalid_prefit_estimator(estimator: RegressorMixin) -> None:
-    """Test that non-fitted estimator with prefit cv raise errors."""
-    mapie_reg = MapieRegressor(estimator=estimator, cv="prefit")
-    with pytest.raises(NotFittedError):
-        mapie_reg.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize(
-    "estimator", [LinearRegression(), make_pipeline(LinearRegression())]
-)
-def test_valid_prefit_estimator(estimator: RegressorMixin) -> None:
-    """Test that fitted estimators with prefit cv raise no errors."""
-    estimator.fit(X_toy, y_toy)
-    mapie_reg = MapieRegressor(estimator=estimator, cv="prefit")
-    mapie_reg.fit(X_toy, y_toy)
-    check_is_fitted(mapie_reg, mapie_reg.fit_attributes)
-    assert mapie_reg.n_features_in_ == 1
 
 
 @pytest.mark.parametrize("method", [0, 1, "jackknife", "cv", ["base", "plus"]])

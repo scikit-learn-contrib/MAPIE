@@ -1,11 +1,14 @@
 from inspect import signature
-from typing import Any, List
+from typing import Any, List, Tuple
 
 import pytest
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.exceptions import NotFittedError
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import KFold
+from sklearn.utils.validation import check_is_fitted
+from sklearn.exceptions import NotFittedError
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
 from mapie.regression import MapieRegressor
@@ -20,6 +23,22 @@ def MapieEstimators() -> List[BaseEstimator]:
     return [MapieRegressor, MapieClassifier]
 
 
+def MapieDefaultEstimators() -> List[BaseEstimator]:
+    return [
+        (MapieRegressor, LinearRegression),
+        (MapieClassifier, LogisticRegression),
+    ]
+
+
+def MapieTestEstimators() -> List[BaseEstimator]:
+    return [
+        (MapieRegressor, LinearRegression()),
+        (MapieRegressor, make_pipeline(LinearRegression())),
+        (MapieClassifier, LogisticRegression()),
+        (MapieClassifier, make_pipeline(LogisticRegression()))
+    ]
+
+
 @pytest.mark.parametrize("MapieEstimator", MapieEstimators())
 def test_initialized(MapieEstimator: BaseEstimator) -> None:
     """Test that initialization does not crash."""
@@ -29,47 +48,63 @@ def test_initialized(MapieEstimator: BaseEstimator) -> None:
 @pytest.mark.parametrize("MapieEstimator", MapieEstimators())
 def test_default_parameters(MapieEstimator: BaseEstimator) -> None:
     """Test default values of input parameters."""
-    estimator = MapieEstimator()
-    assert estimator.estimator is None
-    assert estimator.verbose == 0
-    assert estimator.n_jobs is None
+    mapie_estimator = MapieEstimator()
+    assert mapie_estimator.estimator is None
+    assert mapie_estimator.verbose == 0
+    assert mapie_estimator.n_jobs is None
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieEstimators())
 def test_fit(MapieEstimator: BaseEstimator) -> None:
     """Test that fit raises no errors."""
-    estimator = MapieEstimator()
-    estimator.fit(X_toy, y_toy)
+    mapie_estimator = MapieEstimator()
+    mapie_estimator.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieEstimators())
 def test_fit_predict(MapieEstimator: BaseEstimator) -> None:
     """Test that fit-predict raises no errors."""
-    estimator = MapieEstimator()
-    estimator.fit(X_toy, y_toy)
-    estimator.predict(X_toy)
+    mapie_estimator = MapieEstimator()
+    mapie_estimator.fit(X_toy, y_toy)
+    mapie_estimator.predict(X_toy)
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieEstimators())
 def test_no_fit_predict(MapieEstimator: BaseEstimator) -> None:
     """Test that predict before fit raises errors."""
-    estimator = MapieEstimator()
+    mapie_estimator = MapieEstimator()
     with pytest.raises(NotFittedError):
-        estimator.predict(X_toy)
+        mapie_estimator.predict(X_toy)
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieEstimators())
 def test_default_sample_weight(MapieEstimator: BaseEstimator) -> None:
     """Test default sample weights."""
-    estimator = MapieEstimator()
-    assert signature(estimator.fit).parameters["sample_weight"].default is None
+    mapie_estimator = MapieEstimator()
+    assert signature(
+        mapie_estimator.fit
+    ).parameters["sample_weight"].default is None
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieEstimators())
 def test_default_alpha(MapieEstimator: BaseEstimator) -> None:
     """Test default alpha."""
-    estimator = MapieEstimator()
-    assert signature(estimator.predict).parameters["alpha"].default is None
+    mapie_estimator = MapieEstimator()
+    assert signature(
+        mapie_estimator.predict
+    ).parameters["alpha"].default is None
+
+
+@pytest.mark.parametrize("pack", MapieDefaultEstimators())
+def test_none_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
+    """Test that None estimator defaults to expected value."""
+    MapieEstimator, expected_default_estimator = pack
+    mapie_estimator = MapieEstimator(estimator=None)
+    mapie_estimator.fit(X_toy, y_toy)
+    assert isinstance(
+        mapie_estimator.single_estimator_,
+        expected_default_estimator
+    )
 
 
 @pytest.mark.parametrize("estimator", [0, "a", KFold(), ["a", "b"]])
@@ -79,9 +114,33 @@ def test_invalid_estimator(
     estimator: Any
 ) -> None:
     """Test that invalid estimators raise errors."""
-    mapie = MapieEstimator(estimator=estimator)
+    mapie_estimator = MapieEstimator(estimator=estimator)
     with pytest.raises(ValueError, match=r".*Invalid estimator.*"):
-        mapie.fit(X_toy, y_toy)
+        mapie_estimator.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("pack", MapieTestEstimators())
+def test_invalid_prefit_estimator(
+    pack: Tuple[BaseEstimator, BaseEstimator]
+) -> None:
+    """Test that non-fitted estimator with prefit cv raise errors."""
+    MapieEstimator, estimator = pack
+    mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
+    with pytest.raises(NotFittedError):
+        mapie_estimator.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("pack", MapieTestEstimators())
+def test_valid_prefit_estimator(
+    pack: Tuple[BaseEstimator, BaseEstimator]
+) -> None:
+    """Test that fitted estimators with prefit cv raise no errors."""
+    MapieEstimator, estimator = pack
+    estimator.fit(X_toy, y_toy)
+    mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
+    mapie_estimator.fit(X_toy, y_toy)
+    check_is_fitted(mapie_estimator, mapie_estimator.fit_attributes)
+    assert mapie_estimator.n_features_in_ == 1
 
 
 @parametrize_with_checks([MapieRegressor()])  # type: ignore
