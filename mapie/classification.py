@@ -637,16 +637,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             Whether or not to include last label in
             prediction sets for the "cumulated_score" method. Choose among:
 
-            - False, does not include label whose cumulated score is just over 
+            - False, does not include label whose cumulated score is just over
               the quantile.
-
             - True, includes label whose cumulated score is just over the
               quantile, unless there is only one label in the prediction set.
-
             - "randomized", randomly includes label whose cumulated score is
-              just over the quantile based on the comparison of a uniform number
-              and the difference between the cumulated score of the last label
-              and the quantile.
+              just over the quantile based on the comparison of a uniform
+              number and the difference between the cumulated score of
+              the last label and the quantile.
 
             By default ``True``.
 
