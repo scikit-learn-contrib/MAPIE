@@ -197,20 +197,6 @@ def test_predict_output_shape(
     assert y_pis.shape == (X.shape[0], 2, n_alpha)
 
 
-def test_none_alpha_results() -> None:
-    """
-    Test that alpha set to None in MAPIE gives same predictions
-        as base regressor.
-    """
-    estimator = LinearRegression()
-    estimator.fit(X, y)
-    y_pred_est = estimator.predict(X)
-    mapie_reg = MapieRegressor(estimator=estimator, cv="prefit")
-    mapie_reg.fit(X, y)
-    y_pred_mapie_reg = mapie_reg.predict(X)
-    np.testing.assert_allclose(y_pred_est, y_pred_mapie_reg)
-
-
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_for_same_alpha(strategy: str) -> None:
     """

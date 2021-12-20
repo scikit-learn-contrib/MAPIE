@@ -98,12 +98,12 @@ def test_default_alpha(MapieEstimator: BaseEstimator) -> None:
 @pytest.mark.parametrize("pack", MapieDefaultEstimators())
 def test_none_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     """Test that None estimator defaults to expected value."""
-    MapieEstimator, expected_default_estimator = pack
+    MapieEstimator, DefaultEstimator = pack
     mapie_estimator = MapieEstimator(estimator=None)
     mapie_estimator.fit(X_toy, y_toy)
     assert isinstance(
         mapie_estimator.single_estimator_,
-        expected_default_estimator
+        DefaultEstimator
     )
 
 
@@ -141,6 +141,22 @@ def test_valid_prefit_estimator(
     mapie_estimator.fit(X_toy, y_toy)
     check_is_fitted(mapie_estimator, mapie_estimator.fit_attributes)
     assert mapie_estimator.n_features_in_ == 1
+
+
+@pytest.mark.parametrize("pack", MapieDefaultEstimators())
+def test_none_alpha_results(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
+    """
+    Test that alpha set to ``None`` in MapieEstimator gives same predictions
+    as base estimator.
+    """
+    MapieEstimator, DefaultEstimator = pack
+    estimator = DefaultEstimator()
+    estimator.fit(X_toy, y_toy)
+    y_pred_expected = estimator.predict(X_toy)
+    mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
+    mapie_estimator.fit(X_toy, y_toy)
+    y_pred = mapie_estimator.predict(X_toy)
+    np.testing.assert_allclose(y_pred_expected, y_pred)
 
 
 @parametrize_with_checks([MapieRegressor()])  # type: ignore

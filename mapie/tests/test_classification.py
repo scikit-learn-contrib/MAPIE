@@ -511,20 +511,6 @@ def test_predict_output_shape(
     assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
 
 
-def test_none_alpha_results() -> None:
-    """
-    Test that alpha set to None in MapieClassifier gives same predictions
-    as base Classifier.
-    """
-    estimator = LogisticRegression()
-    estimator.fit(X, y)
-    y_pred_est = estimator.predict(X)
-    mapie_clf = MapieClassifier(estimator=estimator, cv="prefit")
-    mapie_clf.fit(X, y)
-    y_pred = mapie_clf.predict(X)
-    np.testing.assert_allclose(y_pred_est, y_pred)
-
-
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_for_same_alpha(strategy: str) -> None:
     """
