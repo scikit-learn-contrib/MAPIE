@@ -41,10 +41,10 @@ jobs:
     - name: Install dependencies
       run: conda install codecov flake8 mypy numpy=${{ matrix.numpy-version }} scikit-learn pandas pytest-cov typed-ast
     - name: Check linting
-      run: flake8 . --exclude=doc
+      run: make lint
     - name: Check static typing
-      run: mypy mapie examples --strict
+      run: make type-check
     - name: Test with pytest
-      run: pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs mapie
+      run: make coverage
     - name: Code coverage
       run: codecov
