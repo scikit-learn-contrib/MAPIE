@@ -1,4 +1,4 @@
-.. _general_examples:
+.. _classification_examples:
 
 Classification examples
 =======================

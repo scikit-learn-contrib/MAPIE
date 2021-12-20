@@ -68,9 +68,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           ``sklearn.model_selection.LeaveOneOut()``.
         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
           Main variants are:
-            - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
-            - ``sklearn.model_selection.KFold`` (cross-validation),
-            - ``subsample.Subsample`` object (bootstrap).
+          - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
+          - ``sklearn.model_selection.KFold`` (cross-validation),
+          - ``subsample.Subsample`` object (bootstrap).
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
@@ -89,7 +89,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         If ``1`` is given, no parallel computing code is used at all,
         which is useful for debugging.
         For n_jobs below ``-1``, ``(n_cpus + 1 - n_jobs)`` are used.
-        None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1``
+        None is a marker for `unset` that will be interpreted as ``n_jobs=1``
         (sequential execution).
 
         By default ``None``.
@@ -138,9 +138,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     k_ : np.ndarray
         - Id of the fold containing each training sample,
-        if cv is not Resample. Of shape(n_samples_train,).
+          if cv is not Resample. Of shape(n_samples_train,).
         - Dummy array of folds containing each training sample, otherwise.
-        Of shape (n_samples_train, n_resamplings).
+          Of shape (n_samples_train, n_resamplings).
+
 
     n_features_in_: int
         Number of features passed to the fit method.

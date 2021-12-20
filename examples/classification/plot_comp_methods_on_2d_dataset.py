@@ -129,7 +129,7 @@ for method in methods:
 # - y_pred_mapie: the prediction in the test set given by the base estimator.
 #
 # - y_ps_mapie: the prediction sets estimated by MAPIE using the selected
-# method.
+#   method.
 #
 # Let's now visualize the distribution of the conformity scores with the two
 # methods with the calculated quantiles for the three alpha values.

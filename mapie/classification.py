@@ -45,17 +45,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         Choose among:
 
         - "naive", sum of the probabilities until the 1-alpha thresold.
+
         - "score", based on the the scores
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set.
+
         - "cumulated_score", based on the sum of the softmax outputs of the
           labels until the true label is reached, on the calibration set.
-        - "top_k", based on the sorted index of the probability of the true
-        label in the softmax outputs, on the calibration set. In case two
-        probabilities are equal, both are taken, thus, the size of some p
-        prediction sets may be different from the others.
 
-          By default "score".
+        - "top_k", based on the sorted index of the probability of the true
+          label in the softmax outputs, on the calibration set. In case two
+          probabilities are equal, both are taken, thus, the size of some
+          prediction sets may be different from the others.
+
+        By default "score".
 
     cv: Optional[str]
         The cross-validation strategy for computing scores :
@@ -634,14 +637,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             Whether or not to include last label in
             prediction sets for the "cumulated_score" method. Choose among:
 
-            - False, does not include label whose cumulated score is just over
-             the quantile.
+            - False, does not include label whose cumulated score is just over 
+              the quantile.
+
             - True, includes label whose cumulated score is just over the
-            quantile, unless there is only one label in the prediction set.
+              quantile, unless there is only one label in the prediction set.
+
             - "randomized", randomly includes label whose cumulated score is
-            just over the quantile based on the comparison of a uniform number
-            and the difference between the cumulated score of the last label
-            and the quantile.
+              just over the quantile based on the comparison of a uniform number
+              and the difference between the cumulated score of the last label
+              and the quantile.
+
             By default ``True``.
 
         Returns
