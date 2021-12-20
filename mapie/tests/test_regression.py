@@ -109,11 +109,8 @@ def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_reg = MapieRegressor()
     assert mapie_reg.agg_function is None
-    assert mapie_reg.estimator is None
     assert mapie_reg.method == "plus"
     assert mapie_reg.cv is None
-    assert mapie_reg.verbose == 0
-    assert mapie_reg.n_jobs is None
 
 
 def test_none_estimator() -> None:

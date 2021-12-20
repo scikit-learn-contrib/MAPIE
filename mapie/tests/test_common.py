@@ -27,6 +27,15 @@ def test_initialized(MapieEstimator: BaseEstimator) -> None:
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+def test_default_parameters(MapieEstimator: BaseEstimator) -> None:
+    """Test default values of input parameters."""
+    estimator = MapieEstimator()
+    assert estimator.estimator is None
+    assert estimator.verbose == 0
+    assert estimator.n_jobs is None
+
+
+@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
 def test_fit(MapieEstimator: BaseEstimator) -> None:
     """Test that fit raises no errors."""
     estimator = MapieEstimator()

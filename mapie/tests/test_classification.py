@@ -334,12 +334,9 @@ def test_initialized() -> None:
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_clf = MapieClassifier()
-    assert mapie_clf.estimator is None
     assert mapie_clf.method == "score"
     assert mapie_clf.cv == "prefit"
     assert mapie_clf.verbose == 0
-    assert mapie_clf.random_state is None
-    assert mapie_clf.n_jobs is None
 
 
 @pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
