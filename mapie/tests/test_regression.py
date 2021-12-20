@@ -122,14 +122,6 @@ def test_valid_estimator(strategy: str) -> None:
         assert isinstance(estimator, DummyRegressor)
 
 
-@pytest.mark.parametrize("method", [0, 1, "jackknife", "cv", ["base", "plus"]])
-def test_invalid_method(method: str) -> None:
-    """Test that invalid methods raise errors."""
-    mapie_reg = MapieRegressor(method=method)
-    with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie_reg.fit(X_toy, y_toy)
-
-
 @pytest.mark.parametrize("method", METHODS)
 def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
@@ -151,16 +143,6 @@ def test_valid_agg_function(agg_function: str) -> None:
     """Test that valid agg_functions raise no errors."""
     mapie_reg = MapieRegressor(agg_function=agg_function)
     mapie_reg.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize(
-    "cv", [-3.14, -2, 0, 1, "cv", DummyRegressor(), [1, 2]]
-)
-def test_invalid_cv(cv: Any) -> None:
-    """Test that invalid cv raise errors."""
-    mapie_reg = MapieRegressor(cv=cv)
-    with pytest.raises(ValueError, match=r".*Invalid cv.*"):
-        mapie_reg.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])

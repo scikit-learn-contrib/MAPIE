@@ -143,6 +143,26 @@ def test_valid_prefit_estimator(
     assert mapie_estimator.n_features_in_ == 1
 
 
+@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+@pytest.mark.parametrize("method", [0.5, 1, "cv", ["base", "plus"]])
+def test_invalid_method(MapieEstimator: BaseEstimator, method: str) -> None:
+    """Test that invalid methods raise errors."""
+    mapie_estimator = MapieEstimator(method=method)
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
+        mapie_estimator.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+@pytest.mark.parametrize(
+    "cv", [-3.14, -2, 0, 1, "cv", LinearRegression(), [1, 2]]
+)
+def test_invalid_cv(MapieEstimator: BaseEstimator, cv: Any) -> None:
+    """Test that invalid cv raise errors."""
+    mapie_estimator = MapieEstimator(cv=cv)
+    with pytest.raises(ValueError, match=r".*Invalid cv.*"):
+        mapie_estimator.fit(X_toy, y_toy)
+
+
 @pytest.mark.parametrize("pack", MapieDefaultEstimators())
 def test_none_alpha_results(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     """

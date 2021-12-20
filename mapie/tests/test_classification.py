@@ -338,93 +338,6 @@ def test_default_parameters() -> None:
     assert mapie_clf.verbose == 0
 
 
-@pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
-def test_wrong_image_shape_fit(X_wrong_image: np.ndarray) -> None:
-    """
-    Test that VaueError is raised if image has not 3 or 4 dimensions in fit.
-    """
-    cumclf = ImageClassifier(X_wrong_image, y_toy_image)
-    cumclf.fit(cumclf.X_calib, cumclf.y_calib)
-    mapie = MapieClassifier(
-        cumclf,
-        method="cumulated_score",
-        cv="prefit",
-        random_state=42
-    )
-    with pytest.raises(ValueError, match=r"Invalid X.*"):
-        mapie.fit(cumclf.X_calib, cumclf.y_calib, image_input=True)
-
-
-@pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
-def test_wrong_image_shape_predict(X_wrong_image: np.ndarray) -> None:
-    """
-    Test that VaueError is raised if image has not
-    3 or 4 dimensions in predict.
-    """
-    cumclf = ImageClassifier(X_good_image, y_toy_image)
-    cumclf.fit(cumclf.X_calib, cumclf.y_calib)
-    mapie = MapieClassifier(
-        cumclf,
-        method="cumulated_score",
-        cv="prefit",
-        random_state=42
-    )
-    mapie.fit(cumclf.X_calib, cumclf.y_calib, image_input=True,)
-    with pytest.raises(ValueError, match=r"Invalid X.*"):
-        mapie.predict(X_wrong_image)
-
-
-def test_undefined_model() -> None:
-    """
-    Test ValueError is raised if no model is specified with image input.
-    """
-    mapie = MapieClassifier()
-    with pytest.raises(ValueError, match=r"LogisticRegression's input.*"):
-        mapie.fit(X_good_image, y_toy_image, image_input=True,)
-
-
-@pytest.mark.parametrize("method", WRONG_METHODS)
-def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
-    """Test else condition for the method in .fit"""
-    monkeypatch.setattr(
-        MapieClassifier, "_check_parameters", do_nothing
-    )
-    mapie_clf = MapieClassifier(method=method)
-    with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie_clf.fit(X_toy, y_toy)
-
-
-@pytest.mark.parametrize("method", WRONG_METHODS)
-@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
-def test_method_error_in_predict(method: Any, alpha: float) -> None:
-    """Test else condition for the method in .predict"""
-    mapie_clf = MapieClassifier(method='score')
-    mapie_clf.fit(X_toy, y_toy)
-    mapie_clf.method = method
-    with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie_clf.predict(X_toy, alpha=alpha)
-
-
-@pytest.mark.parametrize("include_labels", WRONG_INCLUDE_LABELS)
-@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
-def test_include_label_error_in_predict(
-    monkeypatch: Any, include_labels: Union[bool, str], alpha: float
-) -> None:
-    """Test else condition for include_label parameter in .predict"""
-    monkeypatch.setattr(
-        MapieClassifier,
-        "_check_include_last_label",
-        do_nothing
-    )
-    mapie_clf = MapieClassifier(method='cumulated_score')
-    mapie_clf.fit(X_toy, y_toy)
-    with pytest.raises(ValueError, match=r".*Invalid include.*"):
-        mapie_clf.predict(
-            X_toy, alpha=alpha,
-            include_last_label=include_labels
-        )
-
-
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
@@ -434,32 +347,12 @@ def test_valid_estimator(strategy: str) -> None:
     assert isinstance(mapie_clf.single_estimator_, LogisticRegression)
 
 
-@pytest.mark.parametrize(
-    "method", [0.5, 1, "jackknife", "cv", ["base", "plus"]]
-)
-def test_invalid_method(method: str) -> None:
-    """Test that invalid methods raise errors."""
-    mapie_clf = MapieClassifier(method=method)
-    with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie_clf.fit(X_toy, y_toy)
-
-
 @pytest.mark.parametrize("method", METHODS)
 def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
     mapie_clf = MapieClassifier(method=method)
     mapie_clf.fit(X_toy, y_toy)
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
-
-
-@pytest.mark.parametrize(
-    "cv", [-3.14, 1.5, -2, 0, 1, "cv", DummyClassifier(), [1, 2]]
-)
-def test_invalid_cv(cv: Any) -> None:
-    """Test that invalid cv raise errors."""
-    mapie_clf = MapieClassifier(cv=cv)
-    with pytest.raises(ValueError, match=r".*Invalid cv argument.*"):
-        mapie_clf.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("cv", [None, "prefit"])
@@ -767,3 +660,90 @@ def test_classifier_without_classes_attribute(
         AttributeError, match=r".*does not contain 'classes_'.*"
     ):
         mapie.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
+def test_wrong_image_shape_fit(X_wrong_image: np.ndarray) -> None:
+    """
+    Test that VaueError is raised if image has not 3 or 4 dimensions in fit.
+    """
+    cumclf = ImageClassifier(X_wrong_image, y_toy_image)
+    cumclf.fit(cumclf.X_calib, cumclf.y_calib)
+    mapie = MapieClassifier(
+        cumclf,
+        method="cumulated_score",
+        cv="prefit",
+        random_state=42
+    )
+    with pytest.raises(ValueError, match=r"Invalid X.*"):
+        mapie.fit(cumclf.X_calib, cumclf.y_calib, image_input=True)
+
+
+@pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
+def test_wrong_image_shape_predict(X_wrong_image: np.ndarray) -> None:
+    """
+    Test that VaueError is raised if image has not
+    3 or 4 dimensions in predict.
+    """
+    cumclf = ImageClassifier(X_good_image, y_toy_image)
+    cumclf.fit(cumclf.X_calib, cumclf.y_calib)
+    mapie = MapieClassifier(
+        cumclf,
+        method="cumulated_score",
+        cv="prefit",
+        random_state=42
+    )
+    mapie.fit(cumclf.X_calib, cumclf.y_calib, image_input=True,)
+    with pytest.raises(ValueError, match=r"Invalid X.*"):
+        mapie.predict(X_wrong_image)
+
+
+def test_undefined_model() -> None:
+    """
+    Test ValueError is raised if no model is specified with image input.
+    """
+    mapie = MapieClassifier()
+    with pytest.raises(ValueError, match=r"LogisticRegression's input.*"):
+        mapie.fit(X_good_image, y_toy_image, image_input=True,)
+
+
+@pytest.mark.parametrize("method", WRONG_METHODS)
+def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
+    """Test else condition for the method in .fit"""
+    monkeypatch.setattr(
+        MapieClassifier, "_check_parameters", do_nothing
+    )
+    mapie_clf = MapieClassifier(method=method)
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
+        mapie_clf.fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("method", WRONG_METHODS)
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_method_error_in_predict(method: Any, alpha: float) -> None:
+    """Test else condition for the method in .predict"""
+    mapie_clf = MapieClassifier(method='score')
+    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.method = method
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
+        mapie_clf.predict(X_toy, alpha=alpha)
+
+
+@pytest.mark.parametrize("include_labels", WRONG_INCLUDE_LABELS)
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_include_label_error_in_predict(
+    monkeypatch: Any, include_labels: Union[bool, str], alpha: float
+) -> None:
+    """Test else condition for include_label parameter in .predict"""
+    monkeypatch.setattr(
+        MapieClassifier,
+        "_check_include_last_label",
+        do_nothing
+    )
+    mapie_clf = MapieClassifier(method='cumulated_score')
+    mapie_clf.fit(X_toy, y_toy)
+    with pytest.raises(ValueError, match=r".*Invalid include.*"):
+        mapie_clf.predict(
+            X_toy, alpha=alpha,
+            include_last_label=include_labels
+        )
