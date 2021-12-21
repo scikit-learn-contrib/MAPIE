@@ -8,3 +8,4 @@ dependencies:
     - pandas
     - pytest-cov
     - scikit-learn
+    - typed-ast
