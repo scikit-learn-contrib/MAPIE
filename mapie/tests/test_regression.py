@@ -16,6 +16,7 @@ from mapie.aggregation_functions import aggregate_all
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
+from mapie._typing import ArrayLike
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -167,7 +168,7 @@ def test_too_large_cv(cv: Any) -> None:
 @pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.4], (0.2, 0.4)])
 def test_predict_output_shape(
-    strategy: str, alpha: Any, dataset: Tuple[np.ndarray, np.ndarray]
+    strategy: str, alpha: Any, dataset: Tuple[ArrayLike, ArrayLike]
 ) -> None:
     """Test predict output shape."""
     mapie_reg = MapieRegressor(**STRATEGIES[strategy])
@@ -326,7 +327,7 @@ def test_linear_regression_results(strategy: str) -> None:
 def test_results_prefit_ignore_method() -> None:
     """Test that method is ignored when ``cv="prefit"``."""
     estimator = LinearRegression().fit(X, y)
-    all_y_pis: List[np.ndarray] = []
+    all_y_pis: List[ArrayLike] = []
     for method in METHODS:
         mapie_reg = MapieRegressor(
             estimator=estimator, cv="prefit", method=method

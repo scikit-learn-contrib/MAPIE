@@ -3,7 +3,7 @@ lint:
 	flake8 . --exclude=doc
 
 type-check:
-	mypy mapie examples --strict
+	mypy mapie examples --strict --allow-untyped-calls
 
 tests:
 	pytest -vs --doctest-modules mapie

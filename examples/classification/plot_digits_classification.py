@@ -10,14 +10,16 @@ images on the estimate of prediction sets.
 """
 
 from typing import Any, Tuple
+
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
+from mapie._typing import ArrayLike
 
 
 ##############################################################################
@@ -94,7 +96,7 @@ for ax, image, label in zip_imgs:
 #   in the calibration and test subsets.
 
 def get_datasets(dataset: Any) -> Tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+    ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike
 ]:
     n_samples = len(digits.images)
     data = dataset.images.reshape((n_samples, -1))

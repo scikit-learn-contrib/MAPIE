@@ -251,14 +251,14 @@ class CumulatedScoreClassifier:
         )
         self.classes_ = self.y_calib
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> CumulatedScoreClassifier:
+    def fit(self, X: ArrayLike, y: ArrayLike) -> CumulatedScoreClassifier:
         self.fitted_ = True
         return self
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: ArrayLike) -> ArrayLike:
         return np.array([1, 2, 1])
 
-    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+    def predict_proba(self, X: ArrayLike) -> ArrayLike:
         if np.max(X) <= 2:
             return np.array(
                 [[0.4, 0.5, 0.1], [0.2, 0.6, 0.2], [0.6, 0.3, 0.1]]
@@ -270,7 +270,7 @@ class CumulatedScoreClassifier:
 
 
 class ImageClassifier:
-    def __init__(self, X_calib: np.ndarray, X_test: np.ndarray) -> None:
+    def __init__(self, X_calib: ArrayLike, X_test: ArrayLike) -> None:
         self.X_calib = X_calib
         self.y_calib = np.array([0, 1, 2])
         self.y_calib_scores = np.array(
@@ -282,14 +282,14 @@ class ImageClassifier:
         )
         self.classes_ = self.y_calib
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> ImageClassifier:
+    def fit(self, X: ArrayLike, y: ArrayLike) -> ImageClassifier:
         self.fitted_ = True
         return self
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: ArrayLike) -> ArrayLike:
         return np.array([1, 2, 1])
 
-    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+    def predict_proba(self, X: ArrayLike) -> ArrayLike:
         if np.max(X) == 0:
             return np.array(
                 [[0.4, 0.5, 0.1], [0.2, 0.6, 0.2], [0.6, 0.3, 0.1]]
@@ -386,7 +386,7 @@ def test_invalid_include_last_label(include_last_label: Any) -> None:
 @pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_predict_output_shape(
-    strategy: str, alpha: Any, dataset: Tuple[np.ndarray, np.ndarray]
+    strategy: str, alpha: Any, dataset: Tuple[ArrayLike, ArrayLike]
 ) -> None:
     """Test predict output shape."""
     args_init, args_predict = STRATEGIES[strategy]
@@ -580,7 +580,7 @@ def test_cumulated_scores() -> None:
 
 
 @pytest.mark.parametrize("X", IMAGE_INPUT)
-def test_image_cumulated_scores(X: Dict[str, np.ndarray]) -> None:
+def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
     """Test image as input for cumulated_score method."""
     alpha = [0.65]
     quantile = [0.750183952461055]
@@ -663,7 +663,7 @@ def test_classifier_without_classes_attribute(
 
 
 @pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
-def test_wrong_image_shape_fit(X_wrong_image: np.ndarray) -> None:
+def test_wrong_image_shape_fit(X_wrong_image: ArrayLike) -> None:
     """
     Test that VaueError is raised if image has not 3 or 4 dimensions in fit.
     """
@@ -680,7 +680,7 @@ def test_wrong_image_shape_fit(X_wrong_image: np.ndarray) -> None:
 
 
 @pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
-def test_wrong_image_shape_predict(X_wrong_image: np.ndarray) -> None:
+def test_wrong_image_shape_predict(X_wrong_image: ArrayLike) -> None:
     """
     Test that VaueError is raised if image has not
     3 or 4 dimensions in predict.

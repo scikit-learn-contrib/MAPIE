@@ -114,10 +114,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     n_samples_val_: Union[int, List[int]]
         Number of samples passed to the fit method.
 
-    conformity_scores_ : np.ndarray of shape (n_samples_train)
+    conformity_scores_ : ArrayLike of shape (n_samples_train)
         The conformity scores used to calibrate the prediction sets.
 
-    quantiles_ : np.ndarray of shape (n_alpha)
+    quantiles_ : ArrayLike of shape (n_alpha)
         The quantiles estimated from ``conformity_scores_`` and alpha values.
 
     References
@@ -610,7 +610,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         include_last_label: Optional[Union[bool, str]] = True,
-    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    ) -> Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]:
         """
         Prediction prediction sets on new samples based on target confidence
         interval.
@@ -625,7 +625,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             Test data.
 
         alpha: Optional[Union[float, Iterable[float]]]
-            Can be a float, a list of floats, or a ``np.ndarray`` of floats.
+            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
             Between 0 and 1, represent the uncertainty of the confidence
             interval.
             Lower ``alpha`` produce larger (more conservative) prediction
@@ -650,11 +650,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Returns
         -------
-        Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]
+        Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]
 
-        - np.ndarray of shape (n_samples,) if alpha is None.
+        - ArrayLike of shape (n_samples,) if alpha is None.
 
-        - Tuple[np.ndarray, np.ndarray] of shapes
+        - Tuple[ArrayLike, ArrayLike] of shapes
         (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
         # Checks

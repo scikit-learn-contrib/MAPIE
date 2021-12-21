@@ -49,9 +49,12 @@ by Sadinle et al. (2019).
 import numpy as np
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+
 from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
-import matplotlib.pyplot as plt
+from mapie._typing import ArrayLike
+
 
 centers = [(0, 3.5), (-2, 0), (2, 0)]
 covs = [np.eye(2), np.eye(2) * 2, np.diag([5, 1])]
@@ -137,8 +140,8 @@ for method in methods:
 
 def plot_scores(
     alphas: list[float],
-    scores: np.ndarray,
-    quantiles: np.ndarray,
+    scores: ArrayLike,
+    quantiles: ArrayLike,
     method: str,
     ax: plt.Axes,
 ) -> None:
@@ -176,7 +179,7 @@ plt.show()
 
 
 def plot_results(
-    alphas: list[float], y_pred_mapie: np.ndarray, y_ps_mapie: np.ndarray
+    alphas: list[float], y_pred_mapie: ArrayLike, y_ps_mapie: ArrayLike
 ) -> None:
     tab10 = plt.cm.get_cmap("Purples", 4)
     colors = {
