@@ -43,9 +43,10 @@ jobs:
       uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: ${{ matrix.python-version }}
+        environment-file: environment.ci.yml
         channels: defaults, conda-forge
-    - name: Install dependencies
-      run: conda install codecov flake8 mypy numpy=${{ matrix.numpy-version }} scikit-learn pandas pytest-cov typed-ast
+    - name: Install numpy
+      run: conda install numpy=${{ matrix.numpy-version }}
     - name: Check linting
       run: make lint
     - name: Check static typing
