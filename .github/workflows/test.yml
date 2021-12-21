@@ -9,28 +9,28 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python-version: 3.7
+            python-version: "3.7"
             numpy-version: 1.18.5
           - os: ubuntu-latest
-            python-version: 3.8
+            python-version: "3.8"
             numpy-version: 1.19.5
           - os: ubuntu-latest
-            python-version: 3.9
+            python-version: "3.9"
             numpy-version: 1.20.3
           - os: ubuntu-latest
-            python-version: 3.10
+            python-version: "3.10"
             numpy-version: 1.21.4
           - os: windows-latest
-            python-version: 3.7
+            python-version: "3.7"
             numpy-version: 1.18.5
           - os: windows-latest
-            python-version: 3.8
+            python-version: "3.8"
             numpy-version: 1.19.5
           - os: windows-latest
-            python-version: 3.9
+            python-version: "3.9"
             numpy-version: 1.20.3
           - os: windows-latest
-            python-version: 3.10
+            python-version: "3.10"
             numpy-version: 1.21.4
     defaults:
       run:
