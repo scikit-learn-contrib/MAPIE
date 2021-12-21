@@ -22,5 +22,7 @@ clean-build:
 	rm -rf build dist MAPIE.egg-info
 
 clean:
-	rm -rf build dist MAPIE.egg-info .mypy_cache .pytest_cache .coverage*
+	rm -rf .mypy_cache .pytest_cache .coverage*
+	rm -rf **/__pycache__
+	$(MAKE) clean-build
 	$(MAKE) clean -C doc
