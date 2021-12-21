@@ -19,8 +19,12 @@ PROJECT_URLS = {
     "Source Code": "https://github.com/scikit-learn-contrib/MAPIE"
 }
 LICENSE = "new BSD"
-MAINTAINER = "V. Taquet, G. Martinon"
-MAINTAINER_EMAIL = "vtaquet@quantmetry.com, gmartinon@quantmetry.com"
+MAINTAINER = "V. Taquet, V. Blot, G. Martinon"
+MAINTAINER_EMAIL = """
+vtaquet@quantmetry.com,
+vblot@quantmetry.com,
+gmartinon@quantmetry.com
+"""
 PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
 INSTALL_REQUIRES = ["scikit-learn"]
@@ -54,7 +58,8 @@ CLASSIFIERS = [
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9"
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 
 setup(
