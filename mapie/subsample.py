@@ -19,7 +19,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
     Parameters
     ----------
     n_resamplings : int
-        Number of resamplings.
+        Number of resamplings. By default ``30``.
     n_samples: int
         Number of samples in each resampling. By default ``None``,
         the size of the training set.

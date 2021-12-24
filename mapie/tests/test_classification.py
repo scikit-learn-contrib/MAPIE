@@ -335,7 +335,6 @@ def test_default_parameters() -> None:
     mapie_clf = MapieClassifier()
     assert mapie_clf.method == "score"
     assert mapie_clf.cv == "prefit"
-    assert mapie_clf.verbose == 0
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -665,7 +664,7 @@ def test_classifier_without_classes_attribute(
 @pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
 def test_wrong_image_shape_fit(X_wrong_image: ArrayLike) -> None:
     """
-    Test that VaueError is raised if image has not 3 or 4 dimensions in fit.
+    Test that ValueError is raised if image has not 3 or 4 dimensions in fit.
     """
     cumclf = ImageClassifier(X_wrong_image, y_toy_image)
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
@@ -682,7 +681,7 @@ def test_wrong_image_shape_fit(X_wrong_image: ArrayLike) -> None:
 @pytest.mark.parametrize("X_wrong_image", X_WRONG_IMAGE)
 def test_wrong_image_shape_predict(X_wrong_image: ArrayLike) -> None:
     """
-    Test that VaueError is raised if image has not
+    Test that ValueError is raised if image has not
     3 or 4 dimensions in predict.
     """
     cumclf = ImageClassifier(X_good_image, y_toy_image)
