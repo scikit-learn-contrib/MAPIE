@@ -23,6 +23,6 @@ clean-build:
 
 clean:
 	rm -rf .mypy_cache .pytest_cache .coverage*
-	rm -rf **/__pycache__
+	rm -rf **__pycache__
 	$(MAKE) clean-build
 	$(MAKE) clean -C doc
