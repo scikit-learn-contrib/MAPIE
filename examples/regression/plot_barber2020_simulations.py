@@ -23,7 +23,7 @@ This simulation is carried out to emphasize the instability of the prediction
 intervals estimated by the jackknife strategy when the dataset dimension is
 equal to the number of training samples (here 100).
 
-[1] Rina Foygel Barber, Emmanuel J. Candès,
+[1] Rina Foygel Barber, Emmanuel J. Candès,
 Aaditya Ramdas, and Ryan J. Tibshirani.
 "Predictive inference with the jackknife+."
 Ann. Statist., 49(1):486–507, February 2021.
@@ -31,10 +31,12 @@ Ann. Statist., 49(1):486–507, February 2021.
 from typing import Any, Dict, List
 
 import numpy as np
+from sklearn.linear_model import LinearRegression
+from matplotlib import pyplot as plt
+
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
-from matplotlib import pyplot as plt
-from sklearn.linear_model import LinearRegression
+from mapie._typing import ArrayLike
 
 
 def PIs_vs_dimensions(
@@ -42,7 +44,7 @@ def PIs_vs_dimensions(
     alpha: float,
     n_trial: int,
     dimensions: List[int],
-) -> Dict[str, Dict[int, Dict[str, np.ndarray]]]:
+) -> Dict[str, Dict[int, Dict[str, ArrayLike]]]:
     """
     Compute the prediction intervals for a linear regression problem.
     Function adapted from Foygel-Barber et al. (2020).
@@ -77,14 +79,14 @@ def PIs_vs_dimensions(
 
     Returns
     -------
-    Dict[str, Dict[int, Dict[str, np.ndarray]]]
+    Dict[str, Dict[int, Dict[str, ArrayLike]]]
         Prediction interval widths and coverages for each strategy, trial,
         and dimension value.
     """
     n_train = 100
     n_test = 100
     SNR = 10
-    results: Dict[str, Dict[int, Dict[str, np.ndarray]]] = {
+    results: Dict[str, Dict[int, Dict[str, ArrayLike]]] = {
         strategy: {
             dimension: {
                 "coverage": np.empty(n_trial),
@@ -97,7 +99,7 @@ def PIs_vs_dimensions(
     for dimension in dimensions:
         for trial in range(n_trial):
             beta = np.random.normal(size=dimension)
-            beta_norm = np.sqrt((beta ** 2).sum())
+            beta_norm = np.sqrt(np.square(beta).sum())
             beta = beta / beta_norm * np.sqrt(SNR)
             X_train = np.random.normal(size=(n_train, dimension))
             noise_train = np.random.normal(size=n_train)
@@ -125,7 +127,7 @@ def PIs_vs_dimensions(
 
 
 def plot_simulation_results(
-    results: Dict[str, Dict[int, Dict[str, np.ndarray]]], title: str
+    results: Dict[str, Dict[int, Dict[str, ArrayLike]]], title: str
 ) -> None:
     """
     Show the prediction interval coverages and widths as a function
@@ -134,7 +136,7 @@ def plot_simulation_results(
 
     Parameters
     ----------
-    results : Dict[str, Dict[int, Dict[str, np.ndarray]]]
+    results : Dict[str, Dict[int, Dict[str, ArrayLike]]]
         Prediction interval widths and coverages for each strategy, trial,
         and dimension value.
     title : str

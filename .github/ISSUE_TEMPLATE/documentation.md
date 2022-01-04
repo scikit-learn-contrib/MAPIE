@@ -1,9 +1,9 @@
 ---
 name: Documentation
 about: Add or improve MAPIE documentation
-title: "[DOCUMENTATION]"
+title: ""
 labels: documentation
-assignees: ''
+assignees: ""
 
 ---
 

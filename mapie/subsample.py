@@ -19,7 +19,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
     Parameters
     ----------
     n_resamplings : int
-        Number of resamplings.
+        Number of resamplings. By default ``30``.
     n_samples: int
         Number of samples in each resampling. By default ``None``,
         the size of the training set.
@@ -43,7 +43,7 @@ class Subsample(BaseCrossValidator):  # type: ignore
 
     def __init__(
         self,
-        n_resamplings: int,
+        n_resamplings: int = 30,
         n_samples: Optional[int] = None,
         replace: bool = True,
         random_state: Optional[Union[int, RandomState]] = None,

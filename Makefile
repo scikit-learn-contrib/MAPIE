@@ -3,13 +3,13 @@ lint:
 	flake8 . --exclude=doc
 
 type-check:
-	mypy mapie examples --strict
+	mypy mapie examples --strict --allow-untyped-calls
 
 tests:
 	pytest -vs --doctest-modules mapie
 
 coverage:
-	pytest -vs --doctest-modules --cov-branch --cov=mapie --pyargs --cov-report term-missing mapie
+	pytest -vs --doctest-modules --cov-branch --cov=mapie --cov-report term-missing --pyargs mapie
 
 doc:
 	$(MAKE) clean -C doc
@@ -22,5 +22,7 @@ clean-build:
 	rm -rf build dist MAPIE.egg-info
 
 clean:
-	rm -rf build dist MAPIE.egg-info .mypy_cache .pytest_cache .coverage*
+	rm -rf .mypy_cache .pytest_cache .coverage*
+	rm -rf **__pycache__
+	$(MAKE) clean-build
 	$(MAKE) clean -C doc
