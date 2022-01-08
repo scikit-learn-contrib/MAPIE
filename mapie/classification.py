@@ -1075,7 +1075,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     print(f"y_pred_proba_sorted_cumsum({iax}): {y_pred_proba_sorted_cumsum[0, iax, :]}")
                     print(f"y_pred_proba_cumsum({iax}): {y_pred_proba_cumsum[0, iax, :]}")
 
-                    y_comp = (y_pred_proba_cumsum > self.conformity_scores_[:, None]).sum(axis=0)
+                    # y_comp = (y_pred_proba_cumsum > self.conformity_scores_[:, None]).sum(axis=0)
                     # prediction_sets = np.stack(
                     #     [
                     #         y_comp < quantile_
@@ -1117,12 +1117,41 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                                 self.conformity_scores_[i]
                             )
                         prediction_sets_list.append(prediction_sets_)
-                    y_comp = np.stack(prediction_sets_list).sum(axis=0)
-                    print(y_comp[0, :])
+                    prediction_sets_comp = np.stack(prediction_sets_list).sum(axis=0)
+                    # sort labels by increasing number
+                    index_sorted_comp = np.argsort(prediction_sets_comp, axis=1)
+                    # sort numbers by decreasing order
+                    prediction_sets_comp_sorted = np.take_along_axis(prediction_sets_comp, index_sorted_comp, axis=1)
+                    # get index of the last included label
+                    y_pred_comp_index_last = self._get_last_index_included(
+                        prediction_sets_comp_sorted,
+                        include_last_label
+                    )
+                    # get the probability of the last included label
+                    y_pred_comp_last = np.stack(
+                        [
+                            np.take_along_axis(
+                                prediction_sets_comp_sorted,
+                                y_pred_comp_index_last[:, iq].reshape(-1, 1),
+                                axis=1
+                            )
+                            for iq, _ in enumerate(self.quantiles_)
+                        ], axis=2
+                    )
+
+                    print(prediction_sets_comp[0, :])
                     prediction_sets = np.stack(
-                        [y_comp < quantile for quantile in self.quantiles_],
+                        [prediction_sets_comp < quantile for quantile in self.quantiles_],
                         axis=2
                     )
+                    # remove last label randomly
+                    # if include_last_label == 'randomized':
+                    #     prediction_sets = self._add_random_tie_breaking(
+                    #         prediction_sets,
+                    #         y_pred_comp_index_last,
+                    #         prediction_sets_comp_sorted,
+                    #         y_pred_comp_last
+                    #     )
             elif self.method == "top_k":
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                 y_pred_index_last = np.stack(

@@ -111,7 +111,7 @@ for method in methods:
         mapie.fit(X_train[calib_index], y_train[calib_index])
         mapies2[i] = mapie
         y_pred_mapie, y_ps_mapie = mapie.predict(
-            X_test_distrib, alpha=alpha, include_last_label=True
+            X_test_distrib, alpha=alpha, include_last_label="randomized"
         )
         y_preds2[i], y_ps_mapies2[i] = y_pred_mapie, y_ps_mapie
     clfs[method], mapies[method], y_preds[method], y_ps_mapies[method] = (
@@ -154,7 +154,7 @@ def plot_results(mapies, X_test, X_test2, y_test2, alpha, method):
     tab10 = plt.cm.get_cmap('Purples', 4)
     fig, axs = plt.subplots(1, len(mapies), figsize=(20, 4))
     for i, (key, mapie) in enumerate(mapies.items()):
-        y_pi_sums = mapie.predict(X_test, alpha=alpha, include_last_label=False)[1][:, :, 0].sum(axis=1)
+        y_pi_sums = mapie.predict(X_test, alpha=alpha, include_last_label=True)[1][:, :, 0].sum(axis=1)
         num_labels = axs[i].scatter(
             X_test[:, 0],
             X_test[:, 1],
@@ -567,8 +567,8 @@ _, y_ps_distrib_cum_score3 = mapie_clf.predict(X_test_distrib, alpha=alpha, incl
 ```
 
 ```python
-coverages_cv_cum_score = np.array([classification_coverage_score(y_test_distrib, y_ps_distrib_cum_score[:, :, ia]) for ia, _ in enumerate(alpha)])
-widths_cv_cum_score = np.array([y_ps_distrib_cum_score[:, :, ia].sum(axis=1).mean() for ia, _ in enumerate(alpha)])
+coverages_cv_cum_score = np.array([classification_coverage_score(y_test_distrib, y_ps_distrib_cum_score1[:, :, ia]) for ia, _ in enumerate(alpha)])
+widths_cv_cum_score = np.array([y_ps_distrib_cum_score1[:, :, ia].sum(axis=1).mean() for ia, _ in enumerate(alpha)])
 ```
 
 ```python
@@ -591,7 +591,7 @@ axes[1].legend(["randomized", False, True], loc=[1, 0])
 ```python
 tab10 = plt.cm.get_cmap('Purples', 4)
 fig, axs = plt.subplots(1, 1, figsize=(7, 5))
-y_pi_sums = y_ps_distrib_cum_score_2[:, :, 9].sum(axis=1)
+y_pi_sums = y_ps_distrib_cum_score2[:, :, 9].sum(axis=1)
 num_labels = axs.scatter(
     X_test_distrib[:, 0],
     X_test_distrib[:, 1],
@@ -607,6 +607,14 @@ cbar = plt.colorbar(num_labels, ax=axs)
 ```
 
 #### `agg_probas="crossval"`
+
+```python
+mapie_clf = MapieClassifier(estimator=clf, cv=kf, method="cumulated_score")
+```
+
+```python
+mapie_clf.fit(X_train, y_train)
+```
 
 ```python tags=[]
 _, y_ps_cum_score = mapie_clf.predict(X_test, alpha=alpha, include_last_label=True, agg_probas="crossval")
@@ -632,8 +640,38 @@ cbar = plt.colorbar(num_labels, ax=axs)
 
 ```python tags=[]
 _, y_ps_distrib_cum_score1 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label="randomized", agg_probas="crossval")
-_, y_ps_distrib_cum_score2 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label=False, agg_probas="crossval")
-_, y_ps_distrib_cum_score3 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label=True, agg_probas="crossval")
+# _, y_ps_distrib_cum_score2 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label=False, agg_probas="crossval")
+# _, y_ps_distrib_cum_score3 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label=True, agg_probas="crossval")
+```
+
+```python
+prediction_sets_comp = mapie_clf.prediction_sets_comp
+index_sorted_comp = np.argsort(prediction_sets_comp, axis=1)
+prediction_sets_comp_sorted = np.take_along_axis(prediction_sets_comp, index_sorted_comp, axis=1)
+```
+
+```python
+quantiles_n = (n + 1) * (1 - alpha)
+y_pred_index_last = np.stack(
+    [
+        np.argmin(
+            np.ma.masked_less(
+                prediction_sets_comp_sorted,
+                quantile
+            ),
+            axis=1
+        )
+        for quantile in quantiles_n
+    ], axis=1
+)
+# mapie_clf._get_last_index_included(
+#     prediction_sets_comp_sorted,
+#     "randomized"
+# )
+```
+
+```python
+prediction_sets_comp_sorted = np.take_along_axis(prediction_sets_comp, index_sorted_comp, axis=1+1)
 ```
 
 ```python
@@ -649,7 +687,7 @@ axes[1].set_ylabel("Average of prediction set sizes")
 for i, y_ps in enumerate([y_ps_distrib_cum_score1, y_ps_distrib_cum_score2, y_ps_distrib_cum_score3]):
     widths_ = np.array([y_ps[:, :, ia].sum(axis=1).mean() for ia, _ in enumerate(alpha)])
     axes[1].plot(1-alpha, widths_)
-axes[1].legend([False, True], loc=[1, 0]) # "randomized", 
+axes[1].legend(["randomized", False, True], loc=[1, 0]) # 
 
 ```
 
@@ -672,3 +710,7 @@ cbar = plt.colorbar(num_labels, ax=axs)
 ```
 
 ### 
+
+```python
+
+```
