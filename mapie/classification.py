@@ -47,17 +47,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         Choose among:
 
         - "naive", sum of the probabilities until the 1-alpha thresold.
+
         - "score", based on the the scores
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set.
+
         - "cumulated_score", based on the sum of the softmax outputs of the
           labels until the true label is reached, on the calibration set.
-        - "top_k", based on the sorted index of the probability of the true
-        label in the softmax outputs, on the calibration set. In case two
-        probabilities are equal, both are taken, thus, the size of some p
-        prediction sets may be different from the others.
 
-          By default "score".
+        - "top_k", based on the sorted index of the probability of the true
+          label in the softmax outputs, on the calibration set. In case two
+          probabilities are equal, both are taken, thus, the size of some
+          prediction sets may be different from the others.
+
+        By default "score".
 
     cv: Optional[str]
         The cross-validation strategy for computing scores :
@@ -87,7 +90,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         If ``1`` is given, no parallel computing code is used at all,
         which is useful for debugging.
         For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
-        None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1``
+        None is a marker for `unset` that will be interpreted as ``n_jobs=1``
         (sequential execution).
 
         By default ``None``.
@@ -122,10 +125,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     n_samples_val_: Union[int, List[int]]
         Number of samples passed to the fit method.
 
-    conformity_scores_ : np.ndarray of shape (n_samples_train)
+    conformity_scores_ : ArrayLike of shape (n_samples_train)
         The conformity scores used to calibrate the prediction sets.
 
-    quantiles_ : np.ndarray of shape (n_alpha)
+    quantiles_ : ArrayLike of shape (n_alpha)
         The quantiles estimated from ``conformity_scores_`` and alpha values.
 
     References
@@ -166,6 +169,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     """
 
     valid_methods_ = ["naive", "score", "cumulated_score", "top_k"]
+    fit_attributes = [
+        "single_estimator_",
+        "estimators_",
+        "n_features_in_",
+        "n_samples_val_",
+        "conformity_scores_"
+    ]
 
     def __init__(
         self,
@@ -481,7 +491,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             Updated version of prediction_sets with randomly removed
             labels.
         """
-        # filter sorting probabilities with kept labels
+        # get cumsumed probabilities up to last retained label
         y_proba_last_cumsumed = np.stack(
             [
                 np.squeeze(
@@ -726,7 +736,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         alpha: Optional[Union[float, Iterable[float]]] = None,
         include_last_label: Optional[Union[bool, str]] = True,
         agg_scores: Optional[str] = "mean"
-    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    ) -> Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]:
         """
         Prediction prediction sets on new samples based on target confidence
         interval.
@@ -741,7 +751,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             Test data.
 
         alpha: Optional[Union[float, Iterable[float]]]
-            Can be a float, a list of floats, or a ``np.ndarray`` of floats.
+            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
             Between 0 and 1, represent the uncertainty of the confidence
             interval.
             Lower ``alpha`` produce larger (more conservative) prediction
@@ -759,8 +769,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
               quantile, unless there is only one label in the prediction set.
             - "randomized", randomly includes label whose cumulated score is
               just over the quantile based on the comparison of a uniform
-              number and the difference between the cumulated score of the
-              last label and the quantile.
+              number and the difference between the cumulated score of
+              the last label and the quantile.
 
             By default ``True``.
 
@@ -780,27 +790,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Returns
         -------
-        Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]
+        Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]
 
-        - np.ndarray of shape (n_samples,) if alpha is None.
+        - ArrayLike of shape (n_samples,) if alpha is None.
 
-        - Tuple[np.ndarray, np.ndarray] of shapes
+        - Tuple[ArrayLike, ArrayLike] of shapes
         (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
         # Checks
         include_last_label = self._check_include_last_label(include_last_label)
         alpha_ = check_alpha(alpha)
-        check_is_fitted(
-            self,
-            [
-                "single_estimator_",
-                "estimators_",
-                "k_",
-                "conformity_scores_",
-                "n_features_in_",
-                "n_samples_val_",
-            ],
-        )
+        check_is_fitted(self, self.fit_attributes)
         if self.image_input:
             check_input_is_image(X)
         X = check_array(

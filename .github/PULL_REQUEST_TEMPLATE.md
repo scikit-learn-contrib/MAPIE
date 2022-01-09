@@ -23,9 +23,9 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 # Checklist:
 
 - [ ] I have read the [contributing guidelines](https://github.com/simai-ml/MAPIE/blob/master/CONTRIBUTING.rst)
-- [ ] I have updated the [HISTORY.rst](https://github.com/simai-ml/MAPIE/blob/master/HISTORY.rst) and [AUTHORS.rst](https://github.com/simai-ml/MAPIE/blob/master/AUTHORS.rst) files
-- [ ] Linting passes successfully : `make lint`
-- [ ] Typing passes successfully : `make type-check`
-- [ ] Unit tests pass successfully : `make tests`
-- [ ] Coverage is 100% : `make coverage`
+- [ ] I have updated the [HISTORY.rst](https://github.com/simai-ml/MAPIE/blob/master/HISTORY.rst) and [AUTHORS.rst](https://github.com/simai-ml/MAPIE/blob/master/AUTHORS.rst) files
+- [ ] Linting passes successfully : `make lint`
+- [ ] Typing passes successfully : `make type-check`
+- [ ] Unit tests pass successfully : `make tests`
+- [ ] Coverage is 100% : `make coverage`
 - [ ] Documentation builds successfully : `make doc`

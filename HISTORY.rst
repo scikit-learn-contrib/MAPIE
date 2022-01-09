@@ -2,9 +2,9 @@
 History
 =======
 
-0.3.2 (XXXX-XX-XX)
+0.3.2 (2021-XX-XX)
 ------------------
-
+* Refactorize unit tests
 * Add "naive" and "top-k" methods in MapieClassifier
 * Include J+aB method in regression tutorial
 * Add MNIST example for classification

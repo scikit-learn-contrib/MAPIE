@@ -117,14 +117,14 @@ def fit_estimator(
 
 def check_alpha(
     alpha: Optional[Union[float, Iterable[float]]] = None
-) -> Optional[np.ndarray]:
+) -> Optional[ArrayLike]:
     """
-    Check alpha and prepare it as a np.ndarray.
+    Check alpha and prepare it as a ArrayLike.
 
     Parameters
     ----------
     alpha : Union[float, Iterable[float]]
-        Can be a float, a list of floats, or a np.ndarray of floats.
+        Can be a float, a list of floats, or a ArrayLike of floats.
         Between 0 and 1, represent the uncertainty of the confidence interval.
         Lower alpha produce larger (more conservative) prediction intervals.
         alpha is the complement of the target coverage level.
@@ -132,7 +132,7 @@ def check_alpha(
 
     Returns
     -------
-    np.ndarray
+    ArrayLike
         Prepared alpha.
 
     Raises
@@ -165,7 +165,7 @@ def check_alpha(
         raise ValueError(
             "Invalid alpha. Allowed values are Iterable of floats."
         )
-    if np.any((alpha_np <= 0) | (alpha_np >= 1)):
+    if np.any(np.logical_or(alpha_np <= 0, alpha_np >= 1)):
         raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
     return alpha_np
 
@@ -341,7 +341,6 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
     WARNING: at least one point of training set belongs to every resamplings.
     Increase the number of resamplings
     """
-
     if np.any(np.all(np.isnan(X), axis=1), axis=0):
         warnings.warn(
             "WARNING: at least one point of training set "
