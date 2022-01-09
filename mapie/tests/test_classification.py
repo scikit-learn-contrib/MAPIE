@@ -334,7 +334,7 @@ def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_clf = MapieClassifier()
     assert mapie_clf.method == "score"
-    assert mapie_clf.cv == "prefit"
+    assert mapie_clf.cv is None
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
