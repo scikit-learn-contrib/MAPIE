@@ -131,12 +131,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     References
     ----------
     Mauricio Sadinle, Jing Lei, and Larry Wasserman.
-    "Least Ambiguous Set-Valued Classifiers with Bounded Error Levels",
+    "Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.",
     Journal of the American Statistical Association, 114, 2019.
 
     Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
     "Classification with Valid and Adaptive Coverage."
-    NeurIPS 202 (spotlight).
+    NeurIPS 202 (spotlight) 2020.
 
     Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
     and Jitendra Malik.
@@ -458,64 +458,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             )
         return y_pred_index_last
 
-    def _get_last_index_included_cv(
-        self,
-        y_pred_proba_cumsum: ArrayLike,
-        conformity_score: float,
-        include_last_label: Optional[Union[bool, str]]
-    ) -> ArrayLike:
-        """
-        Return the index of the last included sorted probability
-        depending if we included the first label over the quantile
-        or not.
-
-        Parameters
-        ----------
-        y_pred_proba_cumsum : ArrayLike of shape (n_samples, n_classes)
-            Cumsumed probabilities in the original order.
-
-        include_last_label : Union[bool, str]
-            Whether or not include the last label. If 'randomized',
-            the last label is included.
-
-        Returns
-        -------
-        Optional[ArrayLike] of shape (n_samples, n_classes)
-            Index of the last included sorted probability.
-        """
-        if (
-            (include_last_label is True) or
-            (include_last_label == 'randomized')
-        ):
-            print("false")
-            #print(conformity_score)
-            #print(y_pred_proba_cumsum)
-            y_pred_index_last = np.argmin(
-                np.ma.masked_less(
-                    y_pred_proba_cumsum,
-                    conformity_score
-                ),
-                axis=1
-            )
-        elif (include_last_label is False):
-            print("true")
-            y_pred_index_last = np.argmax(
-                np.ma.masked_where(
-                    y_pred_proba_cumsum > np.maximum(
-                        conformity_score,
-                        np.min(y_pred_proba_cumsum, axis=1) + EPSILON
-                    ).reshape(-1, 1),
-                    y_pred_proba_cumsum
-                ),
-                axis=1
-            )
-        else:
-            raise ValueError(
-                "Invalid include_last_label argument. "
-                "Should be a boolean or 'randomized'."
-            )
-        return y_pred_index_last
-
     def _add_random_tie_breaking(
         self,
         prediction_sets: ArrayLike,
@@ -579,68 +521,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             vs_less_than_us[:, np.newaxis, :],
             axis=1
         )
-        return prediction_sets
-
-    def _add_random_tie_breaking_cv(
-        self,
-        prediction_sets: ArrayLike,
-        y_pred_index_last: ArrayLike,
-        y_pred_proba_cumsum: ArrayLike,
-        y_pred_proba_last: ArrayLike,
-        conformity_score
-    ) -> ArrayLike:
-        """
-        Randomly remove last label from prediction set based on the
-        comparison between a random number and the difference between
-        cumulated score of the last included label and the quantile.
-
-        Parameters
-        ----------
-        prediction_sets : ArrayLike of shape (n_samples, n_classes, n_alpha)
-            Prediction set for each observation and each alpha.
-        y_pred_index_last : ArrayLike of shape (n_samples, n_alpha)
-            Index of the last included label.
-        y_pred_proba_cumsum : ArrayLike of shape (n_samples, n_classes)
-            Cumsumed probability of the model in the original order.
-        y_pred_proba_last : ArrayLike of shape (n_samples, n_alpha)
-            Last included probability.
-
-        Returns
-        -------
-        ArrayLike of shape (n_samples, n_classes, n_alpha)
-            Updated version of prediction_sets with randomly removed
-            labels.
-        """
-        # filter sorting probabilities with kept labels
-        print(y_pred_proba_cumsum.shape, y_pred_index_last.shape)
-        y_proba_last_cumsumed = np.squeeze(
-            np.take_along_axis(
-                y_pred_proba_cumsum,
-                y_pred_index_last.reshape(-1, 1),
-                axis=1
-            )
-        )
-        print("y_proba_last_cumsumed: ", y_proba_last_cumsumed[0])
-        # compute V parameter from Romano+(2020)
-        vs = (
-            y_proba_last_cumsumed - conformity_score
-        ) / np.squeeze(y_pred_proba_last[:, :])
-        # get random numbers for each observation and alpha value
-        random_state = check_random_state(self.random_state)
-        us = random_state.uniform(size=prediction_sets.shape[0])
-        # remove last label from comparison between uniform number and V
-        print("vs: ", vs[0], us[0])
-        vs_less_than_us = vs < us  # [:, np.newaxis]
-        print(prediction_sets.shape, y_pred_index_last.shape, vs_less_than_us.shape)
-        print(prediction_sets[0])
-        np.put_along_axis(
-            prediction_sets,
-            y_pred_index_last[:, np.newaxis],
-            vs_less_than_us[:, np.newaxis],
-            axis=1
-        )
-        print(prediction_sets[0])
-        print("-----")
         return prediction_sets
 
     def _fit_and_predict_oof_model(
@@ -753,7 +633,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self.image_input = image_input
         self._check_parameters()
         self.cv = self._check_cv(self.cv)
-        print(self.cv)
         estimator = self._check_estimator(X, y, self.estimator)
 
         if self.image_input:
@@ -852,7 +731,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         include_last_label: Optional[Union[bool, str]] = True,
-        agg_probas: str = "crossval"
+        agg_scores: Optional[str] = "mean"
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Prediction prediction sets on new samples based on target confidence
@@ -881,14 +760,29 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             prediction sets for the "cumulated_score" method. Choose among:
 
             - False, does not include label whose cumulated score is just over
-             the quantile.
+              the quantile.
             - True, includes label whose cumulated score is just over the
-            quantile, unless there is only one label in the prediction set.
+              quantile, unless there is only one label in the prediction set.
             - "randomized", randomly includes label whose cumulated score is
-            just over the quantile based on the comparison of a uniform number
-            and the difference between the cumulated score of the last label
-            and the quantile.
+              just over the quantile based on the comparison of a uniform
+              number and the difference between the cumulated score of the
+              last label and the quantile.
+
             By default ``True``.
+
+        agg_scores: Optional[str]
+
+            How to aggregate the scores output by the estimators on test data
+            if a cross-validation strategy is used. Choose among:
+
+            - "mean", take the mean of scores.
+            - "median", take the median of scores.
+            - "crossval", compare the scores between al training data and each
+              test point for each label to estimate if the label must be
+              included in the prediction set. Follows algorithm 2 of
+              Romano+2020.
+
+            By default "mean".
 
         Returns
         -------
@@ -934,14 +828,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 delayed(lambda est, X: est.predict_proba(X))(est, X)
                 for est in self.estimators_
             )
-            if agg_probas == "crossval":
+            if agg_scores == "crossval":
                 y_pred_proba = np.stack(
                     [y_pred_proba_k[k] for k in self.k_], axis=0
                 )
-            elif agg_probas == "mean":
+            elif agg_scores == "mean":
                 y_pred_proba = np.array(y_pred_proba_k).mean(axis=0)
+            elif agg_scores == "median":
+                y_pred_proba = np.array(y_pred_proba_k).median(axis=0)
             else:
-                raise ValueError("Invalid 'agg_probas' argument.")
+                raise ValueError("Invalid 'agg_scores' argument.")
 
         # Estimate prediction sets
         y_pred_proba = self._check_proba_normalized(y_pred_proba)
@@ -955,7 +851,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             if self.method == "naive":
                 self.quantiles_ = 1 - alpha_
             else:
-                if (self.cv == "prefit") or (agg_probas == "mean"):
+                if (self.cv == "prefit") or (agg_scores in ["mean", "median"]):
                     self.quantiles_ = np.stack([
                         np.quantile(
                             self.conformity_scores_,
@@ -968,7 +864,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
             # Build prediction sets
             if self.method == "score":
-                if (self.cv == "prefit") or (agg_probas == "mean"):
+                if (self.cv == "prefit") or (agg_scores == "mean"):
                     prediction_sets = np.stack(
                         [
                             y_pred_proba > 1 - quantile
@@ -982,13 +878,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     ).sum(axis=0)
                     prediction_sets = np.stack(
                         [
-                            y_comp > (n + 1 - quantile_ )
+                            y_comp > (n + 1 - quantile_)
                             for quantile_ in self.quantiles_
                         ], axis=2
                     )
 
             elif self.method in ["cumulated_score", "naive"]:
-                if (self.cv == "prefit") or (agg_probas == "mean"):
+                if (self.cv == "prefit") or (agg_scores in ["mean", "median"]):
                     # sort labels by decreasing probability
                     index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                     # sort probabilities by decreasing order
@@ -1025,7 +921,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     # above the last one
                     prediction_sets = np.stack(
                         [
-                            y_pred_proba >= y_pred_proba_last[:, :, iq] - EPSILON
+                            y_pred_proba >= (
+                                y_pred_proba_last[:, :, iq] - EPSILON
+                            )
                             for iq, _ in enumerate(self.quantiles_)
                         ], axis=2
                     )
@@ -1039,119 +937,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         )
 
                 else:
-                    axis = 0 if len(y_pred_proba.shape) == 2 else 1
-                    # sort labels by decreasing probability
-                    index_sorted = np.flip(
-                        np.argsort(y_pred_proba, axis=2), axis=2
+                    raise ValueError(
+                        '"cumulated_score" method with '
+                        '"agg_scores" = "crossval" is not implemented yet.'
                     )
-                    # sort probabilities by decreasing order
-                    y_pred_proba_sorted = np.take_along_axis(
-                        y_pred_proba, index_sorted, axis=1+1
-                    )
-                    # get sorted cumulated score
-                    y_pred_proba_sorted_cumsum = np.cumsum(
-                        y_pred_proba_sorted, axis=1+1
-                    )
-                    # get cumulated score at their original position
-                    y_pred_proba_cumsum = np.take_along_axis(
-                        y_pred_proba_sorted_cumsum,
-                        np.argsort(index_sorted),
-                        axis=2
-                    )
-                    # get index of the last included label
-                    # y_pred_index_last = self._get_last_index_included(
-                    #     y_pred_proba_cumsum,
-                    #     include_last_label
-                    # )
-                    self.y_pred_proba_ = y_pred_proba
-                    self.index_sorted_ = index_sorted
-                    self.y_pred_proba_sorted_ = y_pred_proba_sorted
-                    self.y_pred_proba_sorted_cumsum_ = y_pred_proba_sorted_cumsum
-                    self.y_pred_proba_cumsum_ = y_pred_proba_cumsum
-                    iax = 0
-                    print(f"y_pred_proba({iax}): {y_pred_proba[0, iax, :]}")
-                    print(f"index_sorted({iax}): {index_sorted[0, iax, :]}")
-                    print(f"y_pred_proba_sorted({iax}): {y_pred_proba_sorted[0, iax, :]}")
-                    print(f"y_pred_proba_sorted_cumsum({iax}): {y_pred_proba_sorted_cumsum[0, iax, :]}")
-                    print(f"y_pred_proba_cumsum({iax}): {y_pred_proba_cumsum[0, iax, :]}")
-
-                    # y_comp = (y_pred_proba_cumsum > self.conformity_scores_[:, None]).sum(axis=0)
-                    # prediction_sets = np.stack(
-                    #     [
-                    #         y_comp < quantile_
-                    #         for quantile_ in self.quantiles_
-                    #     ], axis=2
-                    # )
-                    y_pred_index_last = []
-                    prediction_sets_list = []
-                    for i in range(n):
-                        print(i)
-                        print("y_pred_proba: ", y_pred_proba[i, 0])
-                        print("conformity_scores_: ", self.conformity_scores_[i])
-                        # get index of the last included label
-                        y_pred_index_last_ = self._get_last_index_included_cv(
-                            y_pred_proba_cumsum[i, :, :],
-                            self.conformity_scores_[i],
-                            include_last_label
-                        )
-                        print("y_pred_index_last_: ", y_pred_index_last_[0])
-                        # get the probability of the last included label
-                        y_pred_proba_last_ = np.take_along_axis(
-                            y_pred_proba[i, :, :],
-                            y_pred_index_last_.reshape(-1, 1),
-                            axis=1
-                        )
-                        print("y_pred_proba_last_: ", y_pred_proba_last_[0])
-                        # get the prediction set by taking all probabilities above the
-                        # last one
-                        prediction_sets_ = ~(y_pred_proba[i, :, :] >= y_pred_proba_last_ - EPSILON)
-                        # prediction_sets_ = y_pred_proba[i, :, :] <= y_pred_proba_last_ + EPSILON
-                        print("prediction_sets_: ", prediction_sets_[0])
-                        # remove last label randomly
-                        if include_last_label == 'randomized':
-                            prediction_sets_ = self._add_random_tie_breaking_cv(
-                                prediction_sets_,
-                                y_pred_index_last_,
-                                y_pred_proba_cumsum[i, :, :],
-                                y_pred_proba_last_,
-                                self.conformity_scores_[i]
-                            )
-                        prediction_sets_list.append(prediction_sets_)
-                    prediction_sets_comp = np.stack(prediction_sets_list).sum(axis=0)
-                    # sort labels by increasing number
-                    index_sorted_comp = np.argsort(prediction_sets_comp, axis=1)
-                    # sort numbers by decreasing order
-                    prediction_sets_comp_sorted = np.take_along_axis(prediction_sets_comp, index_sorted_comp, axis=1)
-                    # get index of the last included label
-                    y_pred_comp_index_last = self._get_last_index_included(
-                        prediction_sets_comp_sorted,
-                        include_last_label
-                    )
-                    # get the probability of the last included label
-                    y_pred_comp_last = np.stack(
-                        [
-                            np.take_along_axis(
-                                prediction_sets_comp_sorted,
-                                y_pred_comp_index_last[:, iq].reshape(-1, 1),
-                                axis=1
-                            )
-                            for iq, _ in enumerate(self.quantiles_)
-                        ], axis=2
-                    )
-
-                    print(prediction_sets_comp[0, :])
-                    prediction_sets = np.stack(
-                        [prediction_sets_comp < quantile for quantile in self.quantiles_],
-                        axis=2
-                    )
-                    # remove last label randomly
-                    # if include_last_label == 'randomized':
-                    #     prediction_sets = self._add_random_tie_breaking(
-                    #         prediction_sets,
-                    #         y_pred_comp_index_last,
-                    #         prediction_sets_comp_sorted,
-                    #         y_pred_comp_last
-                    #     )
             elif self.method == "top_k":
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                 y_pred_index_last = np.stack(
