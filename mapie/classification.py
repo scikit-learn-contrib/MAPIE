@@ -413,12 +413,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         Optional[ArrayLike] of shape (n_samples, n_classes)
             Index of the last included sorted probability.
         """
-        # if self.cv == "prefit":
-        #     y_comp = y_pred_proba_cumsum.copy()
-        # else:
-        #     y_comp = (
-        #         y_pred_proba_cumsum < self.conformity_scores_[:, None]
-        #     ).sum(axis=0)
         if (
             (include_last_label is True) or
             (include_last_label == 'randomized')

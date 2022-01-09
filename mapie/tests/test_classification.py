@@ -337,7 +337,7 @@ def test_default_parameters() -> None:
     mapie = MapieClassifier()
     assert mapie.estimator is None
     assert mapie.method == "score"
-    assert mapie.cv == "prefit"
+    assert mapie.cv is None
     assert mapie.verbose == 0
     assert mapie.random_state is None
     assert mapie.n_jobs is None
