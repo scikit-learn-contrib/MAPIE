@@ -2,21 +2,20 @@ from __future__ import annotations
 
 from itertools import combinations
 from typing import Any, List, Optional, Tuple, Union
-from typing_extensions import TypedDict
 
-import pytest
 import numpy as np
+import pytest
+from mapie._typing import ArrayLike
+from mapie.aggregation_functions import aggregate_all
+from mapie.metrics import regression_coverage_score
+from mapie.regression import MapieRegressor
+from mapie.subsample import Subsample
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
 from sklearn.utils.validation import check_is_fitted
-
-from mapie.aggregation_functions import aggregate_all
-from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieRegressor
-from mapie.subsample import Subsample
-from mapie._typing import ArrayLike
+from typing_extensions import TypedDict
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
