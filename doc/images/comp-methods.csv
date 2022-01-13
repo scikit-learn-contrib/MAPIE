@@ -8,3 +8,5 @@
 ,, or :math:`< 1-\alpha` if :math:`\hat{\mu}` unstable,,
 **CV+**,:math:`\geq 1-2\alpha`,:math:`\gtrsim 1-\alpha`,:math:`K`,:math:`K \times n_{test}`
 **CV-minmax**,:math:`\geq 1-\alpha`,:math:`> 1-\alpha`,:math:`K`,:math:`K \times n_{test}`
+**J-aB+**,:math:`\geq 1-2\alpha`,:math:`\gtrsim 1-\alpha`,:math:`K`,:math:`K \times n_{test}`
+**J-aB-minmax**,:math:`\geq 1-\alpha`,:math:`> 1-\alpha`,:math:`K`,:math:`K \times n_{test}`

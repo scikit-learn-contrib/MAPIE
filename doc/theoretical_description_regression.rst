@@ -188,9 +188,8 @@ By analogy with the CV+ method, estimating the prediction intervals with
 jackknife+-after-bootstrap is performed in four main steps:
 
 - We resample the training set with replacement (boostrap) :math:`K` times, 
-where :math:`K` is supposed to be drawn randomly from a fixed integer 
-:math:`K\_`, according to a binomial law (see [2]), and thus we get the 
-(non disjoint) bootstraps :math:`B_{1},..., B_{K}` of equal size.
+and thus we get the (non disjoint) bootstraps :math:`B_{1},..., B_{K}` 
+of equal size.
 
 - :math:`K` regressions functions :math:`\hat{\mu}_{B_{k}}` are then fitted on 
 the bootstraps :math:`(B_{k})`, and the predictions on the complementary sets
@@ -201,14 +200,14 @@ the bootstraps :math:`(B_{k})`, and the predictions on the complementary sets
 :math:`|Y_j - agg(\hat{\mu}(B_{K(j)}(X_j)))|` are computed for each :math:`X_j`
  (with :math:`K(j)` the boostraps not containing :math:`X_j`).
 
-- The sets :math:`\{agg(\hat{\mu}_{K(j)}(X_i) + r_j\}` (where :math:`j` indices
+- The sets :math:`\{agg(\hat{\mu}_{K(j)}(X_i) + r_j\}` (where :math:`j` indexes
  the training set) are used to estimate the prediction intervals.
 
 As for jackknife+, this method guarantees a covergae level higher than 
 :math:`1 - 2\alpha` for a target coverage level of :math:`1 - \alpha`, without 
 any a priori assumption on the distribution of the data. 
 In practice, this method results in wider prediction intervals, when the 
-incertitude is higher, than :math:`CV+` because the models' prediction spread 
+uncertainty is higher, than :math:`CV+` because the models' prediction spread 
 is then higher.
 
 Key takeaways
@@ -222,12 +221,15 @@ Key takeaways
 
 - For practical applications where :math:`n` is large and/or the computational time of each 
   *leave-one-out* simulation is high, it is advised to adopt the CV+ method, based on *out-of-fold* 
-  simulations, instead. 
+  simulations, or the jackknife+-after-bootstrap method, instead. 
   Indeed, the methods based on the jackknife resampling approach are very cumbersome because they 
   require to run a high number of simulations, equal to the number of training samples :math:`n`.
 
 - Although the CV+ method results in prediction intervals that are slightly larger than for the 
-  jackknife+ method, it offers a good compromise between computational time and accurate predictions. 
+  jackknife+ method, it offers a good compromise between computational time and accurate predictions.
+
+- The jackknife+-after-bootstrap method results in the same computational efficiency, and
+  offers a higher sensitivity to epistemic uncertainty.
 
 - The jackknife-minmax and CV-minmax methods are more conservative since they result in higher
   theoretical and practical coverages due to the larger widths of the prediction intervals.
