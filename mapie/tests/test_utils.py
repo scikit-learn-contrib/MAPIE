@@ -18,6 +18,9 @@ from mapie.utils import (
     fit_estimator,
 )
 
+from mapie._typing import ArrayLike
+
+
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 
@@ -30,7 +33,7 @@ X, y = make_regression(
 
 class DumbEstimator:
     def fit(
-        self, X: np.ndarray, y: Optional[np.ndarray] = None
+        self, X: ArrayLike, y: Optional[ArrayLike] = None
     ) -> DumbEstimator:
         self.fitted_ = True
         return self
@@ -66,7 +69,7 @@ def test_check_null_weight_with_zeros() -> None:
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
 def test_fit_estimator(
-    estimator: Any, sample_weight: Optional[np.ndarray]
+    estimator: Any, sample_weight: Optional[ArrayLike]
 ) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = fit_estimator(estimator, X_toy, y_toy, sample_weight)

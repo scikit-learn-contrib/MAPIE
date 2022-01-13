@@ -1,0 +1,12 @@
+name: mapie-ci
+channels:
+    - defaults
+    - conda-forge
+dependencies:
+    - codecov
+    - flake8
+    - mypy
+    - pandas
+    - pytest-cov
+    - scikit-learn
+    - typed-ast
