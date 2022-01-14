@@ -240,7 +240,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
 
-    def _check_agg_function(self, agg_function: Optional[str] = None) -> str:
+    def _check_agg_function(
+        self, agg_function: Optional[str] = None
+    ) -> Optional[str]:
         """
         Check if agg_function is correct, and coherent with other arguments.
 
@@ -531,13 +533,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             self.k_ = [[np.nan]]
         else:
             self.k_ = np.full(
-                shape=(len(y), cv.get_n_splits(X, y)),
+                shape=(len(y), cv.get_n_splits(X, y)),  # type: ignore
                 fill_value=np.nan,
                 dtype=float,
             )
 
             pred_matrix = np.full(
-                shape=(len(y), cv.get_n_splits(X, y)),
+                shape=(len(y), cv.get_n_splits(X, y)),  # type: ignore
                 fill_value=np.nan,
                 dtype=float,
             )
@@ -561,7 +563,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     )
                     for k, (train_index, val_index) in enumerate(cv.split(X))
                 )
-                self.estimators_, predictions, _, val_indices = map(
+                self.estimators_, predictions, val_ids, val_indices = map(
                     list, zip(*outputs)
                 )
 
