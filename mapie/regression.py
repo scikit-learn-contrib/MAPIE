@@ -152,7 +152,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Residuals between ``y_train`` and ``y_pred``.
 
     k_ : ArrayLike
-        - [[nan]] if cv is ``"prefit"`` (defined but not used)
+        - [[nan, nan], [nan,nan ] if cv is ``"prefit"`` (defined but not used)
         - Dummy array of folds containing each training sample, otherwise.
           Of shape (n_samples_train, cv.cv.get_n_splits(X, y)).
 
@@ -530,7 +530,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
             self.n_samples_val_ = [X.shape[0]]
-            self.k_ = [[np.nan]]
+            self.k_ = np.full(shape=(2, 2), fill_value=np.nan, dtype=float)
         else:
             self.k_ = np.full(
                 shape=(len(y), cv.get_n_splits(X, y)),  # type: ignore
