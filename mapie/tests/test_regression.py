@@ -105,7 +105,7 @@ COVERAGES = {
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_reg = MapieRegressor()
-    assert mapie_reg.agg_function is None
+    assert mapie_reg.agg_function == "mean"
     assert mapie_reg.method == "plus"
     assert mapie_reg.cv is None
 
@@ -135,6 +135,10 @@ def test_invalid_agg_function(agg_function: Any) -> None:
     """Test that invalid agg_functions raise errors."""
     mapie_reg = MapieRegressor(agg_function=agg_function)
     with pytest.raises(ValueError, match=r".*Invalid aggregation function.*"):
+        mapie_reg.fit(X_toy, y_toy)
+
+    mapie_reg = MapieRegressor(ensemble=True, agg_function=None)
+    with pytest.raises(ValueError, match=r".*If ensemble is True*"):
         mapie_reg.fit(X_toy, y_toy)
 
 
@@ -274,18 +278,21 @@ def test_prediction_between_low_up(strategy: str) -> None:
 
 @pytest.mark.parametrize("method", ["plus", "minmax"])
 @pytest.mark.parametrize("cv", [-1, 2, 3, 5])
+@pytest.mark.parametrize("agg_function", ["mean", "median"])
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2])
 def test_prediction_agg_function(
-    method: str, cv: Union[LeaveOneOut, KFold], alpha: int
+    method: str, cv: Union[LeaveOneOut, KFold], agg_function: str, alpha: int
 ) -> None:
     """
-    Test that predictions differ when agg_function is None/"mean",
+    Test that predictions differ when ensemble is True/False,
     but not prediction intervals.
     """
-    mapie = MapieRegressor(method=method, cv=cv, agg_function="median")
+    mapie = MapieRegressor(
+        method=method, cv=cv, ensemble=True, agg_function=agg_function
+    )
     mapie.fit(X, y)
     y_pred_1, y_pis_1 = mapie.predict(X, alpha=alpha)
-    mapie.agg_function = None
+    mapie.ensemble = False
     y_pred_2, y_pis_2 = mapie.predict(X, alpha=alpha)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
@@ -384,7 +391,9 @@ def test_not_enough_resamplings() -> None:
 
 def test_no_agg_fx_specified_with_subsample() -> None:
     """Test that a warning is raised if at least one residual is nan."""
-    with pytest.warns(Warning, match=r"WARNING: you need to specify*"):
+    with pytest.raises(
+        ValueError, match=r"You need to specify an aggregation*"
+    ):
         mapie_reg = MapieRegressor(
             cv=Subsample(n_resamplings=1), agg_function=None
         )
@@ -402,16 +411,17 @@ def test_invalid_aggregate_all() -> None:
         aggregate_all(None, X)
 
 
-def test_invalid_aggregate_mask() -> None:
+def test_aggregate_with_mask_with_prefit() -> None:
     """
-    Test that wrong aggregation in MAPIE raise errors.
+    Test ``aggregate_with_mask`` in case ``cv`` is "prefit".
     """
+
+    mapie_reg = MapieRegressor(cv="prefit")
     with pytest.raises(
         ValueError,
-        match=r".*Aggregation function called but not defined.*",
+        match=r".*There should not have aggragtion of prediction if cv is*",
     ):
-        mapie_reg = MapieRegressor()
-        mapie_reg.aggregate_with_mask(X, k)
+        mapie_reg.aggregate_with_mask(k, k)
 
 
 def test_pred_loof_isnan() -> None:
