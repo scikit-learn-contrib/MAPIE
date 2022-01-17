@@ -12,6 +12,6 @@ To run and convert the notebooks contained in this folder, one needs first to cr
 
 # Create notebooks
 
-In order to make your notebook readable by the sphinx documentation, you need to convert your `.ipynb` file to a `.rst` format (along with the generated figures) and then copy the file in the `doc` directory. All these steps can be carried out at once with the following command:
+In order to make your notebook readable by the sphinx documentation, you need to convert your `.ipynb` file to a `.rst` format (along with the generated figures) and then copy the files in the `doc` directory. All these steps can be carried out at once with the following command:
 
 * `make convert2rst dir="directory_name" file="file_name"`
