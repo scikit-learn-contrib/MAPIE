@@ -198,16 +198,16 @@ jackknife+-after-bootstrap is performed in four main steps:
 
 
 - These predictions are aggregated according to a given aggregation function 
-  :math:`agg`, typically :math:`mean` or :math:`median`, and the residuals 
-  :math:`|Y_j - agg(\hat{\mu}(B_{K(j)}(X_j)))|` are computed for each :math:`X_j`
+  :math:`{\rm agg}`, typically :math:`{\rm mean}` or :math:`{\rm median}`, and the residuals 
+  :math:`|Y_j - {\rm agg}(\hat{\mu}(B_{K(j)}(X_j)))|` are computed for each :math:`X_j`
   (with :math:`K(j)` the boostraps not containing :math:`X_j`).
 
  
-- The sets :math:`\{agg(\hat{\mu}_{K(j)}(X_i) + r_j\}` (where :math:`j` indexes  
+- The sets :math:`\{{\rm agg}(\hat{\mu}_{K(j)}(X_i) + r_j\}` (where :math:`j` indexes  
   the training set) are used to estimate the prediction intervals.
 
 
-As for jackknife+, this method guarantees a coveage level higher than 
+As for jackknife+, this method guarantees a coverage level higher than 
 :math:`1 - 2\alpha` for a target coverage level of :math:`1 - \alpha`, without 
 any a priori assumption on the distribution of the data. 
 In practice, this method results in wider prediction intervals, when the 
