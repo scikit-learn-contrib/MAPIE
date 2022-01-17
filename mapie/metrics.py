@@ -87,3 +87,39 @@ def classification_coverage_score(
         y_pred_set, y_true.reshape(-1, 1), axis=1
     ).mean()
     return float(coverage)
+
+
+def classification_mean_width_score(
+    y_pred_set: ArrayLike
+) -> float:
+    """
+    Mean width of prediction set output by
+    :class:`mapie.classification.MapieClassifier`.
+
+    Parameters
+    ----------
+    y_pred_set : ArrayLike of shape (n_samples, n_class)
+        Prediction sets given by booleans of labels.
+
+    Returns
+    -------
+    float
+        Mean width of the prediction set.
+
+    Examples
+    --------
+    >>> from mapie.metrics import classification_mean_width_score
+    >>> import numpy as np
+    >>> y_pred_set = np.array([
+    ...     [False, False,  True,  True],
+    ...     [False,  True, False,  True],
+    ...     [False,  True,  True, False],
+    ...     [False, False,  True,  True],
+    ...     [False,  True, False,  True]
+    ... ])
+    >>> print(classification_mean_width_score(y_pred_set))
+    2.0
+    """
+    y_pred_set = check_array(y_pred_set, force_all_finite=True, dtype=["bool"])
+    mean_width = y_pred_set.sum(axis=1).mean()
+    return float(mean_width)

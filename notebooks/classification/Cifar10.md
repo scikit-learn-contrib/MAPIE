@@ -397,8 +397,6 @@ def get_histogram(y_methods):
         plt.hist(sizes)
         plt.title(method)
         plt.show()
-        
-        
 ```
 
 ```python

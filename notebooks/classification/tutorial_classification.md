@@ -95,7 +95,7 @@ We then estimate the prediction sets with differents alpha values with a
 ```python
 from sklearn.naive_bayes import GaussianNB
 from mapie.classification import MapieClassifier
-from mapie.metrics import classification_coverage_score
+from mapie.metrics import classification_coverage_score, classification_mean_width_score
 clf = GaussianNB().fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
@@ -152,12 +152,12 @@ def plot_results(alphas, X, y_pred, y_ps):
     fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
     axs = {0: ax1, 1: ax2, 2:  ax3, 3: ax4}
     axs[0].scatter(
-    X[:, 0],
-    X[:, 1],
-    color=y_pred_col,
-    marker='.',
-    s=10,
-    alpha=0.4
+        X[:, 0],
+        X[:, 1],
+        color=y_pred_col,
+        marker='.',
+        s=10,
+        alpha=0.4
     )
     axs[0].set_title("Predicted labels")
     for i, alpha in enumerate(alphas):
@@ -195,7 +195,7 @@ coverages_score = [
     for i, _ in enumerate(alpha2)
 ]
 widths_score = [
-    y_ps_score2[:, :, i].sum(axis=1).mean()
+    classification_mean_width_score(y_ps_score2[:, :, i])
     for i, _ in enumerate(alpha2)
 ]
 ```
@@ -247,7 +247,7 @@ coverages_aps = [
     for i, _ in enumerate(alpha2)
 ]
 widths_aps = [
-    y_ps_aps2[:, :, i].sum(axis=1).mean()
+    classification_mean_width_score(y_ps_aps2[:, :, i])
     for i, _ in enumerate(alpha2)
 ]
 ```

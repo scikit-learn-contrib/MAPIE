@@ -48,6 +48,8 @@ Let's start by defining the $x \times \sin(x)$ function and another simple funct
 that generates one-dimensional data with normal noise uniformely in a given interval.
 
 ```python
+import warnings
+warnings.filterwarnings("ignore")
 import numpy as np
 def x_sinx(x):
     """One-dimensional x*sin(x) function."""
@@ -399,6 +401,8 @@ the Multilayer Perceptron has two hidden dense layers with 20 neurons each follo
 
 
 ```python
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from scikeras.wrappers import KerasRegressor
@@ -446,8 +450,6 @@ Let's now use MAPIE to estimate the prediction intervals using the CV+ method
 and compare their prediction interval.
 
 ```python
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 models = [polyn_model, xgb_model, mlp_model]
 model_names = ["polyn", "xgb", "mlp"]
 prediction_interval = {}
