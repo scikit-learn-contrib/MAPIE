@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import Iterable, List, Optional, Tuple, Union, cast
 from xmlrpc.client import Boolean
 
+from joblib import Parallel, delayed
 import numpy as np
 import numpy.ma as ma
-from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
@@ -98,7 +98,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Determines how to aggregate predictions from perturbed models, both at
         training and prediction time.
 
-        If ``None``, it is ignored except if cv is of type ``Subsample``,
+        If ``None``, it is ignored except if cv class is ``Subsample``,
         in which case an error is raised.
         If "mean" or "median", returns the mean or median of the predictions
         computed from the out-of-folds models.
@@ -362,7 +362,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ensemble: Boolean,
     ) -> None:
         """
-        Check if ``self.agg_function`` is not ``None`` if ensemble is True.
+        Check if ``ensemble`` is False if ``self.agg_function`` is ``None``.
         Else raise error.
 
         Parameters

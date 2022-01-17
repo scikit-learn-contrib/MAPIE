@@ -1,5 +1,5 @@
-from sklearn.utils.validation import column_or_1d, check_array
 import numpy as np
+from sklearn.utils.validation import column_or_1d, check_array
 from ._typing import ArrayLike
 
 
