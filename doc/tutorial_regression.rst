@@ -1,5 +1,5 @@
-Tutorial for regression
-=======================
+Tutorial
+========
 
 In this tutorial, we compare the prediction intervals estimated by MAPIE
 on a simple, one-dimensional, ground truth function
@@ -34,17 +34,25 @@ Let’s start by defining the :math:`x \times \sin(x)` function and
 another simple function that generates one-dimensional data with normal
 noise uniformely in a given interval.
 
+<<<<<<< HEAD
 .. code-block:: python
 
 
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     import numpy as np
     def x_sinx(x):
         """One-dimensional x*sin(x) function."""
         return x*np.sin(x)
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, noise):
         """
@@ -64,7 +72,11 @@ We first generate noisy one-dimensional data uniformely on an interval.
 Here, the noise is considered as *homoscedastic*, since it remains
 constant over :math:`x`.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     min_x, max_x, n_samples, noise = -5, 5, 100, 0.5
     X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
@@ -73,7 +85,11 @@ constant over :math:`x`.
 
 Let’s visualize our noisy function.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     import matplotlib.pyplot as plt
     plt.xlabel("x") ; plt.ylabel("y")
@@ -89,7 +105,11 @@ As mentioned previously, we fit our training data with a simple
 polynomial function. Here, we choose a degree equal to 10 so the
 function is able to perfectly fit :math:`x \times \sin(x)`.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     from sklearn.preprocessing import PolynomialFeatures
     from sklearn.linear_model import LinearRegression
@@ -109,7 +129,11 @@ lower and upper bounds are then saved in a DataFrame. Here, we set an
 alpha value of 0.05 in order to obtain a 95% confidence for our
 prediction intervals.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     from typing import Union
     from typing_extensions import TypedDict
@@ -140,7 +164,11 @@ strategies. Note that for the Jackknife-after-Bootstrap method, we call
 the :class:``mapie.subsample.Subsample`` object that allows us to train
 bootstrapped models.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     def plot_1d_data(
         X_train,
@@ -165,7 +193,11 @@ bootstrapped models.
             ax.set_title(title)
         ax.legend()
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     strategies = ["jackknife_plus", "jackknife_minmax" , "cv_plus", "cv_minmax", "jackknife_plus_ab", "jackknife_minmax_ab"]
     n_figs = len(strategies)
@@ -195,7 +227,11 @@ prediction intervals are very close to the true confidence intervals.
 Let’s confirm this by comparing the prediction interval widths over
 :math:`x` between all strategies.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     ax.axhline(1.96*2*noise, ls="--", color="k", label="True width")
@@ -222,7 +258,11 @@ Let’s now compare the *effective* coverage, namely the fraction of test
 points whose true values lie within the prediction intervals, given by
 the different strategies.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     import pandas as pd
     from mapie.metrics import regression_coverage_score
@@ -333,7 +373,11 @@ have a look at this
 
 Lets" start by generating and showing the data.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     def get_1d_data_with_normal_distrib(funct, mu, sigma, n_samples, noise):
         """
@@ -348,14 +392,22 @@ Lets" start by generating and showing the data.
         y_test += np.random.normal(0, noise, y_test.shape[0])
         return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     mu = 0 ; sigma = 2 ; n_samples = 300 ; noise = 0.
     X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_normal_distrib(
         x_sinx, mu, sigma, n_samples, noise
     )
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     plt.xlabel("x") ; plt.ylabel("y")
     plt.scatter(X_train, y_train, color="C0")
@@ -370,7 +422,11 @@ As before, we estimate the prediction intervals using a polynomial
 function of degree 10 and show the results for the Jackknife+ and CV+
 strategies.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     Params = TypedDict("Params", {"method": str, "cv": Union[int, Subsample]})
     STRATEGIES = {
@@ -390,7 +446,13 @@ strategies.
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+
+
+.. code:: python
+>>>>>>> master
 
     strategies = ["jackknife_plus", "jackknife_minmax" , "cv_plus", "cv_minmax", "jackknife_plus_ab", "jackknife_minmax_ab"]
     n_figs = len(strategies)
@@ -423,7 +485,11 @@ capture a high uncertainty when :math:`x > 6`.
 
 Let’s now compare the prediction interval widths between all strategies.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     ax.set_yscale("log")
@@ -443,7 +509,11 @@ The prediction interval widths start to increase exponentially for
 On the other hand, the prediction intervals estimated by Jackknife+
 remain roughly constant until :math:`|x| \sim 5` before increasing.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     pd.DataFrame([
         [
@@ -560,14 +630,22 @@ the CV+ method using different models:
 Once again, let’s use our noisy one-dimensional data obtained from a
 uniform distribution.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     min_x, max_x, n_samples, noise = -5, 5, 100, 0.5
     X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
         x_sinx, min_x, max_x, n_samples, noise
     )
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     plt.xlabel("x") ; plt.ylabel("y")
     plt.plot(X_test, y_mesh, color="C1")
@@ -582,7 +660,11 @@ Let’s then define the models. The boosing model considers 100 shallow
 trees with a max depth of 2 while the Multilayer Perceptron has two
 hidden dense layers with 20 neurons each followed by a relu activation.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     from tensorflow.keras import Sequential
     from tensorflow.keras.layers import Dense
@@ -598,7 +680,11 @@ hidden dense layers with 20 neurons each followed by a relu activation.
         ])
         return model
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     polyn_model = Pipeline(
         [
@@ -607,7 +693,11 @@ hidden dense layers with 20 neurons each followed by a relu activation.
         ]
     )
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     from xgboost import XGBRegressor
     xgb_model = XGBRegressor(
@@ -628,7 +718,11 @@ hidden dense layers with 20 neurons each followed by a relu activation.
 Let’s now use MAPIE to estimate the prediction intervals using the CV+
 method and compare their prediction interval.
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     models = [polyn_model, xgb_model, mlp_model]
     model_names = ["polyn", "xgb", "mlp"]
@@ -638,7 +732,13 @@ method and compare their prediction interval.
         mapie.fit(X_train, y_train)
         y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+
+
+.. code:: python
+>>>>>>> master
 
     fig, axs = plt.subplots(1, 3, figsize=(20, 6))
     for name, ax in zip(model_names, axs):
@@ -660,7 +760,11 @@ method and compare their prediction interval.
 .. image:: tutorial_regression_files/tutorial_regression_49_0.png
 
 
+<<<<<<< HEAD
 .. code-block:: python
+=======
+.. code:: python
+>>>>>>> master
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     for name in model_names:

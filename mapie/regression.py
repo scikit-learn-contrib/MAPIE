@@ -68,9 +68,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           ``sklearn.model_selection.LeaveOneOut()``.
         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
           Main variants are:
-            - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
-            - ``sklearn.model_selection.KFold`` (cross-validation),
-            - ``subsample.Subsample`` object (bootstrap).
+          - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
+          - ``sklearn.model_selection.KFold`` (cross-validation),
+          - ``subsample.Subsample`` object (bootstrap).
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
@@ -89,7 +89,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         If ``1`` is given, no parallel computing code is used at all,
         which is useful for debugging.
         For n_jobs below ``-1``, ``(n_cpus + 1 - n_jobs)`` are used.
-        None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1``
+        None is a marker for `unset` that will be interpreted as ``n_jobs=1``
         (sequential execution).
 
         By default ``None``.
@@ -133,14 +133,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     estimators_ : list
         List of out-of-folds estimators.
 
-    residuals_ : np.ndarray of shape (n_samples_train,)
+    residuals_ : ArrayLike of shape (n_samples_train,)
         Residuals between ``y_train`` and ``y_pred``.
 
-    k_ : np.ndarray
+    k_ : ArrayLike
         - Id of the fold containing each training sample,
-        if cv is not Resample. Of shape(n_samples_train,).
+          if cv is not Resample. Of shape(n_samples_train,).
         - Dummy array of folds containing each training sample, otherwise.
-        Of shape (n_samples_train, n_resamplings).
+          Of shape (n_samples_train, n_resamplings).
+
 
     n_features_in_: int
         Number of features passed to the fit method.
@@ -181,6 +182,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     valid_methods_ = ["naive", "base", "plus", "minmax"]
     valid_agg_functions_ = [None, "median", "mean"]
+    fit_attributes = [
+        "single_estimator_",
+        "estimators_",
+        "k_",
+        "residuals_",
+        "n_features_in_",
+        "n_samples_val_",
+    ]
 
     def __init__(
         self,
@@ -339,10 +348,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y : ArrayLike of shape (n_samples,)
             Input labels.
 
-        train_index : np.ndarray of shape (n_samples_train)
+        train_index : ArrayLike of shape (n_samples_train)
             Training data indices.
 
-        val_index : np.ndarray of shape (n_samples_val)
+        val_index : ArrayLike of shape (n_samples_val)
             Validation data indices.
 
         k : int
@@ -538,7 +547,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self,
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
-    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    ) -> Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]:
         """
         Predict target on new samples with confidence intervals.
         Residuals from the training set and predictions from the model clones
@@ -555,7 +564,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             Test data.
 
         alpha: Optional[Union[float, Iterable[float]]]
-            Can be a float, a list of floats, or a ``np.ndarray`` of floats.
+            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
             Between 0 and 1, represents the uncertainty of the confidence
             interval.
             Lower ``alpha`` produce larger (more conservative) prediction
@@ -565,28 +574,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]
+        Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]
 
-        - np.ndarray of shape (n_samples,) if alpha is None.
+        - ArrayLike of shape (n_samples,) if alpha is None.
 
-        - Tuple[np.ndarray, np.ndarray] of shapes
+        - Tuple[ArrayLike, ArrayLike] of shapes
         (n_samples,) and (n_samples, 2, n_alpha) if alpha is not None.
 
             - [:, 0, :]: Lower bound of the prediction interval.
             - [:, 1, :]: Upper bound of the prediction interval.
         """
         # Checks
-        check_is_fitted(
-            self,
-            [
-                "single_estimator_",
-                "estimators_",
-                "k_",
-                "residuals_",
-                "n_features_in_",
-                "n_samples_val_",
-            ],
-        )
+        check_is_fitted(self, self.fit_attributes)
         alpha_ = check_alpha(alpha)
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
@@ -594,7 +593,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if alpha is None:
             return np.array(y_pred)
         else:
-            alpha_ = cast(np.ndarray, alpha_)
+            alpha_ = cast(ArrayLike, alpha_)
             check_alpha_and_n_samples(alpha_, self.residuals_.shape[0])
             if self.method in ["naive", "base"] or self.cv == "prefit":
                 quantile = np.quantile(

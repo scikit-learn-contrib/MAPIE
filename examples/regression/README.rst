@@ -1,4 +1,4 @@
-.. _general_examples:
+.. _regression_examples:
 
 Regression examples
 ===================

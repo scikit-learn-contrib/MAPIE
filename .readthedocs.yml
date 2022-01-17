@@ -10,7 +10,7 @@ python:
       path: .
 
 conda:
-  environment: doc/environment.yml
+  environment: environment.doc.yml
   
 sphinx:
   builder: html
