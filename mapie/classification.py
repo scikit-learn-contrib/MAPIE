@@ -575,17 +575,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
           of shape (n_samples_val,).
 
         """
+        print(train_index)
         X_train, y_train, X_val, y_val = (
             X[train_index], y[train_index], X[val_index], y[val_index]
         )
         if sample_weight is None:
             estimator = fit_estimator(estimator, X_train, y_train)
         else:
+            # print(sample_weight[train_index])
             estimator = fit_estimator(
                 estimator, X_train, y_train, sample_weight[train_index]
             )
         if X_val.shape[0] > 0:
             y_pred_proba = estimator.predict_proba(X_val)
+            print(y_pred_proba)
             # we enforce y_pred_proba to contain all labels included y
             if len(np.unique(y_train)) != len(np.unique(y)):
                 y_index = np.tile(np.unique(y_train), (len(y_val), 1))
@@ -646,7 +649,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         # Checks
         self.image_input = image_input
         self._check_parameters()
-        self.cv = self._check_cv(self.cv)
+        cv = self._check_cv(self.cv)
         estimator = self._check_estimator(X, y, self.estimator)
 
         if self.image_input:
@@ -656,7 +659,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             allow_nd=self.image_input, dtype=["float64", "int", "object"]
         )
         assert type_of_target(y) == "multiclass"
-        self.n_features_in_ = check_n_features_in(X, self.cv, estimator)
+        self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
         # Initialization
@@ -665,7 +668,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self.n_samples_val_ = X.shape[0]
 
         # Work
-        if self.cv == "prefit":
+        if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba = self._check_proba_normalized(y_pred_proba)
@@ -685,7 +688,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     k,
                     sample_weight,
                 )
-                for k, (train_index, val_index) in enumerate(self.cv.split(X))
+                for k, (train_index, val_index) in enumerate(cv.split(X))
             )
             self.estimators_, predictions, val_ids, val_indices = map(
                 list, zip(*outputs)
@@ -809,6 +812,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
         # Checks
+        cv = self._check_cv(self.cv)
         include_last_label = self._check_include_last_label(include_last_label)
         alpha_ = check_alpha(alpha)
         check_is_fitted(self, self.fit_attributes)
@@ -824,7 +828,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         # Estimate probabilities from estimator(s)
         y_pred = self.single_estimator_.predict(X)
-        if self.cv == "prefit":
+        if cv == "prefit":
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba = self._check_proba_normalized(y_pred_proba)
         else:
@@ -862,7 +866,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             if self.method == "naive":
                 self.quantiles_ = 1 - alpha_
             else:
-                if (self.cv == "prefit") or (agg_scores in ["mean"]):
+                if (cv == "prefit") or (agg_scores in ["mean"]):
                     self.quantiles_ = np.stack([
                         np.quantile(
                             self.conformity_scores_,
@@ -875,7 +879,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
             # Build prediction sets
             if self.method == "score":
-                if (self.cv == "prefit") or (agg_scores == "mean"):
+                if (cv == "prefit") or (agg_scores == "mean"):
                     prediction_sets = np.stack(
                         [
                             y_pred_proba > 1 - quantile
@@ -895,7 +899,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     )
 
             elif self.method in ["cumulated_score", "naive"]:
-                if (self.cv == "prefit") or (agg_scores in ["mean"]):
+                if (cv == "prefit") or (agg_scores in ["mean"]):
                     # sort labels by decreasing probability
                     index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                     # sort probabilities by decreasing order

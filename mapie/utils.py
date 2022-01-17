@@ -64,11 +64,11 @@ def check_null_weight(
 
 
 def fit_estimator(
-    estimator: RegressorMixin,
+    estimator: Union[RegressorMixin, ClassifierMixin],
     X: ArrayLike,
     y: ArrayLike,
     sample_weight: Optional[ArrayLike] = None,
-) -> RegressorMixin:
+) -> Union[RegressorMixin, ClassifierMixin]:
     """
     Fit an estimator on training data by distinguishing two cases:
     - the estimator supports sample weights and sample weights are provided.
@@ -77,7 +77,7 @@ def fit_estimator(
 
     Parameters
     ----------
-    estimator : RegressorMixin
+    estimator : Union[RegressorMixin, ClassifierMixin]
         Estimator to train.
 
     X : ArrayLike of shape (n_samples, n_features)
@@ -109,6 +109,7 @@ def fit_estimator(
     fit_parameters = signature(estimator.fit).parameters
     supports_sw = "sample_weight" in fit_parameters
     if supports_sw and sample_weight is not None:
+        print(len(y), sample_weight)
         estimator.fit(X, y, sample_weight=sample_weight)
     else:
         estimator.fit(X, y)

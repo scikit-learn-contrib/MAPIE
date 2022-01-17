@@ -25,12 +25,14 @@ the ``cv="prefit"`` option of
 """
 
 
+from typing import Dict, Any
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import KFold
 from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
+from mapie._typing import ArrayLike
 
 
 ##############################################################################
@@ -148,7 +150,14 @@ plt.show()
 # prediction set induced by the different calibration sets.
 
 
-def plot_results(mapies, X_test, X_test2, y_test2, alpha, method):
+def plot_results(
+    mapies: Dict[Any],
+    X_test: ArrayLike,
+    X_test2: ArrayLike,
+    y_test2: ArrayLike,
+    alpha: float,
+    method: str
+) -> None:
     tab10 = plt.cm.get_cmap('Purples', 4)
     fig, axs = plt.subplots(1, len(mapies), figsize=(20, 4))
     for i, (key, mapie) in enumerate(mapies.items()):
@@ -208,7 +217,12 @@ plot_results(
 # different folds used as calibration sets.
 
 
-def plot_coverage_width(alpha, coverages, widths, method):
+def plot_coverage_width(
+    alpha: float,
+    coverages: ArrayLike,
+    widths: ArrayLike,
+    method: str
+):
     _, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     axes[0].set_xlabel("1 - alpha")
     axes[0].set_ylabel("Effective coverage")

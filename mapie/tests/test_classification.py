@@ -51,7 +51,7 @@ Params = TypedDict(
     "Params",
     {
         "method": str,
-        "cv": Optional[str],
+        "cv": Optional[Union[int, str]],
         "random_state": Optional[int]
     }
 )
