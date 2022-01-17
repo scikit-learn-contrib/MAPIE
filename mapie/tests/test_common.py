@@ -3,8 +3,6 @@ from typing import Any, List, Tuple
 
 import numpy as np
 import pytest
-from mapie.classification import MapieClassifier
-from mapie.regression import MapieRegressor
 from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression, LogisticRegression
@@ -12,6 +10,10 @@ from sklearn.model_selection import KFold
 from sklearn.pipeline import make_pipeline
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.validation import check_is_fitted
+
+from mapie.classification import MapieClassifier
+from mapie.regression import MapieRegressor
+
 
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2])

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Iterable, List, Optional, Tuple, Union, cast
+from xmlrpc.client import Boolean
 
 import numpy as np
 import numpy.ma as ma
@@ -81,16 +82,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         By default ``None``.
 
-    ensemble: bool
-        Boolean determining whether the predictions, which are the first
-        item returned by the predict method, are the predictions made by
-        single_estimator_, which is trained on the whole training set, or the
-        aggregation of the predictions made by the refitted estimators, by
-        the aggregation function.
-        If cv is ``"prefit"``, ``ensemble`` is ignored.
-
-        By default ``False``.
-
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
@@ -104,13 +95,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         By default ``None``.
 
     agg_function : str
-        Determines how the final prediction is aggregated from the fold
-        predictions.
+        Determines how to aggregate predictions from perturbed models, both at
+        training and prediction time.
 
-        If ``None``, it is ignored except if needed, in which case an error is
-        raised.
+        If ``None``, it is ignored except if cv is of type ``Subsample``,
+        in which case an error is raised.
         If "mean" or "median", returns the mean or median of the predictions
         computed from the out-of-folds models.
+        Note: if you plan to set the ``ensemble`` argument to ``True`` in the
+        ``predict`` method, you have to specify an aggregation function.
+        Otherwise an error would be raised.
 
         The Jackknife+ interval can be interpreted as an interval around the
         median prediction, and is guaranteed to lie inside the interval,
@@ -152,7 +146,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Residuals between ``y_train`` and ``y_pred``.
 
     k_ : ArrayLike
-        - [[nan, nan], [nan,nan ] if cv is ``"prefit"`` (defined but not used)
+        - Array of nans, of shape (len(y), 1) if cv is ``"prefit"``
+        (defined but not used)
         - Dummy array of folds containing each training sample, otherwise.
           Of shape (n_samples_train, cv.cv.get_n_splits(X, y)).
 
@@ -209,7 +204,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         estimator: Optional[RegressorMixin] = None,
         method: str = "plus",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
-        ensemble: bool = False,
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
@@ -217,7 +211,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self.estimator = estimator
         self.method = method
         self.cv = cv
-        self.ensemble = ensemble
         self.n_jobs = n_jobs
         self.agg_function = agg_function
         self.verbose = verbose
@@ -268,12 +261,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             raise ValueError(
                 "Invalid aggregation function "
                 "Allowed values are None, 'mean', 'median'."
-            )
-
-        if self.ensemble and (agg_function is None):
-            raise ValueError(
-                "If ensemble is True, the aggregation function has to be "
-                "'mean' or 'median'."
             )
 
         if isinstance(self.cv, Subsample) and (agg_function is None):
@@ -369,6 +356,31 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             "Allowed values are None, -1, int >= 2, 'prefit', "
             "KFold, LeaveOneOut, or Subsample."
         )
+
+    def _check_ensemble(
+        self,
+        ensemble: Boolean,
+    ) -> None:
+        """
+        Check if ``self.agg_function`` is not ``None`` if ensemble is True.
+        Else raise error.
+
+        Parameters
+        ----------
+        ensemble : Boolean
+            ``ensemble`` argument to check the coherennce with
+            ``self.agg_function``.
+
+        Raises
+        ------
+        ValueError
+            If ``ensemble`` is True and ``self.agg_function`` is None.
+        """
+        if ensemble and (self.agg_function is None):
+            raise ValueError(
+                "If ensemble is True, the aggregation function has to be "
+                "'mean' or 'median'."
+            )
 
     def _fit_and_predict_oof_model(
         self,
@@ -530,7 +542,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
             self.n_samples_val_ = [X.shape[0]]
-            self.k_ = np.full(shape=(2, 2), fill_value=np.nan, dtype=float)
+            self.k_ = np.full(
+                shape=(len(y), 1), fill_value=np.nan, dtype=float
+            )
         else:
             self.k_ = np.full(
                 shape=(len(y), cv.get_n_splits(X, y)),  # type: ignore
@@ -584,6 +598,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     def predict(
         self,
         X: ArrayLike,
+        ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
     ) -> Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]:
         """
@@ -600,6 +615,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ----------
         X : ArrayLike of shape (n_samples, n_features)
             Test data.
+
+        ensemble: bool
+            Boolean determining whether the predictions are ensembled or not.
+            If False, predictions are those of the model trained on the whole
+            training set.
+            If True, predictions from perturbed models are aggregated by
+            the aggregation function specified in the ``agg_function``
+            attribute.
+            If cv is ``"prefit"``, ``ensemble`` is ignored.
+            By default ``False``.
 
         alpha: Optional[Union[float, Iterable[float]]]
             Can be a float, a list of floats, or a ``ArrayLike`` of floats.
@@ -624,6 +649,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         # Checks
         check_is_fitted(self, self.fit_attributes)
+        self._check_ensemble(ensemble)
         alpha_ = check_alpha(alpha)
         X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
@@ -690,6 +716,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         for _alpha in alpha_
                     ]
                 )
-                if self.ensemble:
+                if ensemble:
                     y_pred = aggregate_all(self.agg_function, y_pred_multi)
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)

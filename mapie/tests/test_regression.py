@@ -5,17 +5,19 @@ from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 import pytest
-from mapie._typing import ArrayLike
-from mapie.aggregation_functions import aggregate_all
-from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieRegressor
-from mapie.subsample import Subsample
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
+
+from mapie._typing import ArrayLike
+from mapie.aggregation_functions import aggregate_all
+from mapie.metrics import regression_coverage_score
+from mapie.regression import MapieRegressor
+from mapie.subsample import Subsample
+
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -137,9 +139,10 @@ def test_invalid_agg_function(agg_function: Any) -> None:
     with pytest.raises(ValueError, match=r".*Invalid aggregation function.*"):
         mapie_reg.fit(X_toy, y_toy)
 
-    mapie_reg = MapieRegressor(ensemble=True, agg_function=None)
+    mapie_reg = MapieRegressor(agg_function=None)
     with pytest.raises(ValueError, match=r".*If ensemble is True*"):
         mapie_reg.fit(X_toy, y_toy)
+        mapie_reg.predict(X_toy, ensemble=True)
 
 
 @pytest.mark.parametrize("agg_function", [None, "mean", "median"])
@@ -287,13 +290,10 @@ def test_prediction_agg_function(
     Test that predictions differ when ensemble is True/False,
     but not prediction intervals.
     """
-    mapie = MapieRegressor(
-        method=method, cv=cv, ensemble=True, agg_function=agg_function
-    )
+    mapie = MapieRegressor(method=method, cv=cv, agg_function=agg_function)
     mapie.fit(X, y)
-    y_pred_1, y_pis_1 = mapie.predict(X, alpha=alpha)
-    mapie.ensemble = False
-    y_pred_2, y_pis_2 = mapie.predict(X, alpha=alpha)
+    y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True, alpha=alpha)
+    y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False, alpha=alpha)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     with pytest.raises(AssertionError):
@@ -413,9 +413,8 @@ def test_invalid_aggregate_all() -> None:
 
 def test_aggregate_with_mask_with_prefit() -> None:
     """
-    Test ``aggregate_with_mask`` in case ``cv`` is "prefit".
+    Test ``aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
     """
-
     mapie_reg = MapieRegressor(cv="prefit")
     with pytest.raises(
         ValueError,
