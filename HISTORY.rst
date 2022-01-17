@@ -8,6 +8,8 @@ History
 * Add "naive" and "top-k" methods in MapieClassifier
 * Include J+aB method in regression tutorial
 * Add MNIST example for classification
+* Add Jackknife+-after-Bootstrap documentation
+* Refactorize regression code
 
 0.3.1 (2021-11-19)
 ------------------
