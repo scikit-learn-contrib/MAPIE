@@ -8,6 +8,7 @@ History
 * Add "naive" and "top-k" methods in MapieClassifier
 * Include J+aB method in regression tutorial
 * Add MNIST example for classification
+* Add `notebooks` folder containing notebooks used for generating documentation tutorials
 
 0.3.1 (2021-11-19)
 ------------------
