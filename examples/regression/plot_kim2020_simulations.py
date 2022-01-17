@@ -30,7 +30,6 @@ results than [1], and that the targeted coverage level is obtained.
 """
 from __future__ import annotations
 
-import gc
 from io import BytesIO
 from typing import Any, Optional, Tuple
 from urllib.request import urlopen
@@ -40,12 +39,17 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
 import pandas as pd
-from mapie._typing import ArrayLike
-from mapie.regression import MapieRegressor
-from mapie.subsample import Subsample
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
+
+from mapie._typing import ArrayLike
+from mapie.metrics import (
+    regression_mean_width_score,
+    regression_coverage_score,
+)
+from mapie.regression import MapieRegressor
+from mapie.subsample import Subsample
 
 
 def get_X_y() -> Tuple[ArrayLike, ArrayLike]:
@@ -140,8 +144,8 @@ def compute_PIs(
     agg_function: Optional[str] = None,
 ) -> pd.DataFrame:
     """
-    Trains and tests a model with a MAPIE method,
-    and returns a DataFrame of upper and lower bounds of the predictions
+    Train and test a model with a MAPIE method,
+    and return a DataFrame of upper and lower bounds of the predictions
     on the test set.
 
     Parameters
@@ -202,8 +206,12 @@ def get_coverage_width(PIs: pd.DataFrame, y: ArrayLike) -> Tuple[float, float]:
     (coverage, width) : Tuple[float, float]
         The mean coverage and width of the PIs.
     """
-    coverage = ((PIs["lower"] <= y) & (PIs["upper"] >= y)).mean()
-    width = (PIs["upper"] - PIs["lower"]).mean()
+    coverage = regression_coverage_score(
+        y_true=y, y_pred_low=PIs["lower"], y_pred_up=PIs["upper"]
+    )
+    width = regression_mean_width_score(
+        y_pred_low=PIs["lower"], y_pred_up=PIs["upper"]
+    )
     return (coverage, width)
 
 
@@ -303,15 +311,22 @@ def comparison_JAB(
     m_vals = np.round(
         train_size * np.linspace(0.1, 1, num=boostrap_size)
     ).astype(int)
-    result_index = 0
-    gc.collect()
 
     result_index = 0
     for itrial in range(trials):
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, train_size=train_size, random_state=random_state + itrial
         )
-        PIs = compute_PIs(model, X_train, y_train, X_test, "plus", -1, alpha)
+        PIs = PIs = compute_PIs(
+            estimator=model,
+            X_train=X_train,
+            y_train=y_train,
+            X_test=X_test,
+            method="plus",
+            cv=-1,
+            alpha=alpha,
+            agg_function=agg_function,
+        )
         (coverage, width) = get_coverage_width(PIs, y_test)
         results.iloc[result_index, :] = [
             itrial,
@@ -335,14 +350,14 @@ def comparison_JAB(
                 random_state=random_state,
             )
             PIs = compute_PIs(
-                model,
-                X_train,
-                y_train,
-                X_test,
-                "plus",
-                subsample_B_random,
-                alpha,
-                agg_function,
+                estimator=model,
+                X_train=X_train,
+                y_train=y_train,
+                X_test=X_test,
+                method="plus",
+                cv=subsample_B_random,
+                alpha=alpha,
+                agg_function=agg_function,
             )
             (coverage, width) = get_coverage_width(PIs, y_test)
             results.iloc[result_index, :] = [
@@ -362,15 +377,15 @@ def comparison_JAB(
                 replace=True,
                 random_state=random_state,
             )
-            PIs = compute_PIs(
-                model,
-                X_train,
-                y_train,
-                X_test,
-                "plus",
-                subsample_B_fixed,
-                alpha,
-                agg_function,
+            PIs = PIs = compute_PIs(
+                estimator=model,
+                X_train=X_train,
+                y_train=y_train,
+                X_test=X_test,
+                method="plus",
+                cv=subsample_B_fixed,
+                alpha=alpha,
+                agg_function=agg_function,
             )
             (coverage, width) = get_coverage_width(PIs, y_test)
             results.iloc[result_index, :] = [

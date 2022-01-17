@@ -4,8 +4,9 @@ Testing for metrics module.
 import pytest
 import numpy as np
 from mapie.metrics import (
-    regression_coverage_score,
     classification_coverage_score,
+    regression_coverage_score,
+    regression_mean_width_score,
 )
 
 
@@ -36,39 +37,45 @@ def test_regression_ypredlow_shape() -> None:
     "Test shape of y_pred_low."
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_coverage_score(y_toy, y_preds[:, :2], y_preds[:, 2])
+    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
+        regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
 
 
 def test_regression_ypredup_shape() -> None:
     "Test shape of y_pred_up."
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_coverage_score(y_toy, y_preds[:, 1], y_preds[:, 1:])
+    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
+        regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
 
 
 def test_regression_same_length() -> None:
     "Test when y_true and y_preds have different lengths."
     with pytest.raises(ValueError, match=r".*could not be broadcast*"):
         regression_coverage_score(y_toy, y_preds[:-1, 1], y_preds[:-1, 2])
+    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
+        regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
 
 
-def test_regression_toydata() -> None:
+def test_regression_toydata_coverage_score() -> None:
     "Test coverage_score for toy data."
     scr = regression_coverage_score(y_toy, y_preds[:, 1], y_preds[:, 2])
     assert scr == 0.8
 
 
-def test_regression_ytrue_type() -> None:
+def test_regression_ytrue_type_coverage_score() -> None:
     "Test that list(y_true) gives right coverage."
     scr = regression_coverage_score(list(y_toy), y_preds[:, 1], y_preds[:, 2])
     assert scr == 0.8
 
 
-def test_regression_ypredlow_type() -> None:
+def test_regression_ypredlow_type_coverage_score() -> None:
     "Test that list(y_pred_low) gives right coverage."
     scr = regression_coverage_score(y_toy, list(y_preds[:, 1]), y_preds[:, 2])
     assert scr == 0.8
 
 
-def test_regression_ypredup_type() -> None:
+def test_regression_ypredup_type_coverage_score() -> None:
     "Test that list(y_pred_up) gives right coverage."
     scr = regression_coverage_score(y_toy, y_preds[:, 1], list(y_preds[:, 2]))
     assert scr == 0.8
@@ -109,3 +116,21 @@ def test_classification_y_pred_set_type() -> None:
     "Test that list(y_pred_set) gives right coverage."
     scr = classification_coverage_score(y_true_class, list(y_pred_set))
     assert scr == 0.8
+
+
+def test_regression_toydata_mean_width_score() -> None:
+    "Test mean_width_score for toy data."
+    scr = regression_mean_width_score(y_preds[:, 1], y_preds[:, 2])
+    assert scr == 2.3
+
+
+def test_regression_ypredlow_type_mean_width_score() -> None:
+    "Test that list(y_pred_low) gives right coverage."
+    scr = regression_mean_width_score(list(y_preds[:, 1]), y_preds[:, 2])
+    assert scr == 2.3
+
+
+def test_regression_ypredup_type_mean_width_score() -> None:
+    "Test that list(y_pred_up) gives right coverage."
+    scr = regression_mean_width_score(y_preds[:, 1], list(y_preds[:, 2]))
+    assert scr == 2.3
