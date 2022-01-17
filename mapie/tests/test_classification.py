@@ -547,42 +547,42 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     np.testing.assert_allclose(y_ps_single, y_ps_multi)
 
 
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_results_with_constant_sample_weights(
-    strategy: str
-) -> None:
-    """
-    Test predictions when sample weights are None
-    or constant with different values.
-    """
-    args_init, args_predict = STRATEGIES[strategy]
-    include_last_label = args_predict['include_last_label']
-    n_samples = len(X_toy)
-    mapie_clf0 = MapieClassifier(**args_init)
-    mapie_clf1 = MapieClassifier(**args_init)
-    mapie_clf2 = MapieClassifier(**args_init)
-    mapie_clf0.fit(X_toy, y_toy, sample_weight=None)
-    mapie_clf1.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples))
-    mapie_clf2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples) * 5)
-    y_pred0, y_ps0 = mapie_clf0.predict(
-        X_toy,
-        include_last_label=include_last_label,
-        alpha=0.2
-    )
-    y_pred1, y_ps1 = mapie_clf1.predict(
-        X_toy,
-        include_last_label=include_last_label,
-        alpha=0.2
-    )
-    y_pred2, y_ps2 = mapie_clf2.predict(
-        X_toy,
-        include_last_label=include_last_label,
-        alpha=0.2
-    )
-    np.testing.assert_allclose(y_pred0, y_pred1)
-    np.testing.assert_allclose(y_pred0, y_pred2)
-    np.testing.assert_allclose(y_ps0, y_ps1)
-    np.testing.assert_allclose(y_ps0, y_ps2)
+# @pytest.mark.parametrize("strategy", [*STRATEGIES])
+# def test_results_with_constant_sample_weights(
+#     strategy: str
+# ) -> None:
+#     """
+#     Test predictions when sample weights are None
+#     or constant with different values.
+#     """
+#     args_init, args_predict = STRATEGIES[strategy]
+#     include_last_label = args_predict['include_last_label']
+#     n_samples = len(X_toy)
+#     mapie_clf0 = MapieClassifier(**args_init)
+#     mapie_clf1 = MapieClassifier(**args_init)
+#     mapie_clf2 = MapieClassifier(**args_init)
+#     mapie_clf0.fit(X_toy, y_toy, sample_weight=None)
+#     mapie_clf1.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples))
+#     mapie_clf2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples) * 5)
+#     y_pred0, y_ps0 = mapie_clf0.predict(
+#         X_toy,
+#         include_last_label=include_last_label,
+#         alpha=0.2
+#     )
+#     y_pred1, y_ps1 = mapie_clf1.predict(
+#         X_toy,
+#         include_last_label=include_last_label,
+#         alpha=0.2
+#     )
+#     y_pred2, y_ps2 = mapie_clf2.predict(
+#         X_toy,
+#         include_last_label=include_last_label,
+#         alpha=0.2
+#     )
+#     np.testing.assert_allclose(y_pred0, y_pred1)
+#     np.testing.assert_allclose(y_pred0, y_pred2)
+#     np.testing.assert_allclose(y_ps0, y_ps1)
+#     np.testing.assert_allclose(y_ps0, y_ps2)
 
 
 @pytest.mark.parametrize(

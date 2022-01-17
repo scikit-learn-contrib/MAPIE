@@ -575,20 +575,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
           of shape (n_samples_val,).
 
         """
-        print(train_index)
         X_train, y_train, X_val, y_val = (
             X[train_index], y[train_index], X[val_index], y[val_index]
         )
         if sample_weight is None:
             estimator = fit_estimator(estimator, X_train, y_train)
         else:
-            # print(sample_weight[train_index])
             estimator = fit_estimator(
                 estimator, X_train, y_train, sample_weight[train_index]
             )
         if X_val.shape[0] > 0:
             y_pred_proba = estimator.predict_proba(X_val)
-            print(y_pred_proba)
             # we enforce y_pred_proba to contain all labels included y
             if len(np.unique(y_train)) != len(np.unique(y)):
                 y_index = np.tile(np.unique(y_train), (len(y_val), 1))
