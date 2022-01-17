@@ -8,6 +8,7 @@ from mapie.metrics import (
     regression_coverage_score,
     classification_coverage_score,
 )
+from mapie._typing import ArrayLike
 
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
@@ -113,7 +114,7 @@ def test_classification_y_pred_set_type() -> None:
 
 
 @pytest.mark.parametrize("pred_set", [y_pred_set, list(y_pred_set)])
-def test_classification_toydata_width(pred_set) -> None:
+def test_classification_toydata_width(pred_set: ArrayLike) -> None:
     "Test width mean for toy data."
     assert classification_mean_width_score(pred_set) == 2.0
 
