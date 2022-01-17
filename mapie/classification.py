@@ -363,7 +363,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
     def _check_proba_normalized(
         self,
-        y_pred_proba: ArrayLike
+        y_pred_proba: ArrayLike,
+        axis: Optional[int] = 1
     ) -> Optional[ArrayLike]:
         """
         Check if, for all the observations, the sum of
@@ -387,10 +388,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             ValueError
             If the sum of the scores is not equal to one.
         """
-        if len(y_pred_proba.shape) == 2:
-            axis = 1
-        elif len(y_pred_proba.shape) == 3:
-            axis = 2
         np.testing.assert_allclose(
             np.sum(y_pred_proba, axis=axis),
             1,
@@ -543,7 +540,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
-        estimator : RegressorMixin
+        estimator : ClassifierMixin
             Estimator to train.
 
         X : ArrayLike of shape (n_samples, n_features)
@@ -567,7 +564,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Returns
         -------
-        Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]
+        Tuple[ClassifierMixin, ArrayLike, ArrayLike, ArrayLike]
 
         - [0]: Fitted estimator
         - [1]: Estimator predictions on the validation fold,
@@ -589,6 +586,19 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             )
         if X_val.shape[0] > 0:
             y_pred_proba = estimator.predict_proba(X_val)
+            # we enforce y_pred_proba to contain all labels included y
+            if len(np.unique(y_train)) != len(np.unique(y)):
+                y_index = np.tile(np.unique(y_train), (len(y_val), 1))
+                y_pred_proba_tot = np.empty(
+                    shape=(len(y_val), len(np.unique(y)))
+                )
+                np.put_along_axis(
+                    y_pred_proba_tot,
+                    y_index,
+                    y_pred_proba,
+                    axis=1
+                )
+                y_pred_proba = y_pred_proba_tot.copy()
         else:
             y_pred_proba = np.array([])
         val_id = np.full_like(y_val, k, dtype=int)
@@ -680,10 +690,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             self.estimators_, predictions, val_ids, val_indices = map(
                 list, zip(*outputs)
             )
+            # print(predictions)
             predictions, val_ids, val_indices = map(
                 np.concatenate, (predictions, val_ids, val_indices)
             )
             self.k_[val_indices] = val_ids
+            # print(predictions)
             y_pred_proba[val_indices] = predictions
 
         if self.method == "naive":
@@ -780,7 +792,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             if a cross-validation strategy is used. Choose among:
 
             - "mean", take the mean of scores.
-            - "median", take the median of scores.
             - "crossval", compare the scores between al training data and each
               test point for each label to estimate if the label must be
               included in the prediction set. Follows algorithm 2 of
@@ -815,6 +826,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         y_pred = self.single_estimator_.predict(X)
         if self.cv == "prefit":
             y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba = self._check_proba_normalized(y_pred_proba)
         else:
             y_pred_proba_k = Parallel(
                 n_jobs=self.n_jobs, verbose=self.verbose
@@ -826,15 +838,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_pred_proba = np.stack(
                     [y_pred_proba_k[k] for k in self.k_], axis=0
                 )
+                y_pred_proba = self._check_proba_normalized(
+                    y_pred_proba, axis=2
+                )
             elif agg_scores == "mean":
-                y_pred_proba = np.array(y_pred_proba_k).mean(axis=0)
-            elif agg_scores == "median":
-                y_pred_proba = np.array(y_pred_proba_k).median(axis=0)
+                y_pred_proba = np.mean(y_pred_proba_k, axis=0)
+                y_pred_proba = self._check_proba_normalized(
+                    y_pred_proba, axis=1
+                )
+            # elif agg_scores == "median":
+            #     y_pred_proba = np.median(y_pred_proba_k, axis=0)
             else:
                 raise ValueError("Invalid 'agg_scores' argument.")
 
         # Estimate prediction sets
-        y_pred_proba = self._check_proba_normalized(y_pred_proba)
         n = self.n_samples_val_
         if alpha_ is None:
             return np.array(y_pred)
@@ -845,7 +862,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             if self.method == "naive":
                 self.quantiles_ = 1 - alpha_
             else:
-                if (self.cv == "prefit") or (agg_scores in ["mean", "median"]):
+                if (self.cv == "prefit") or (agg_scores in ["mean"]):
                     self.quantiles_ = np.stack([
                         np.quantile(
                             self.conformity_scores_,
@@ -878,7 +895,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     )
 
             elif self.method in ["cumulated_score", "naive"]:
-                if (self.cv == "prefit") or (agg_scores in ["mean", "median"]):
+                if (self.cv == "prefit") or (agg_scores in ["mean"]):
                     # sort labels by decreasing probability
                     index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                     # sort probabilities by decreasing order
@@ -933,7 +950,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 else:
                     raise ValueError(
                         '"cumulated_score" method with '
-                        '"agg_scores" = "crossval" is not implemented yet.'
+                        'agg_scores = "crossval" is not implemented yet.'
                     )
             elif self.method == "top_k":
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))

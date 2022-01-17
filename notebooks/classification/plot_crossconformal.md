@@ -58,7 +58,6 @@ X_train = np.vstack([
     for center, cov in zip(centers, covs)
 ])
 y_train = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
-
 ```
 
 ```python
@@ -470,11 +469,7 @@ plt.legend(loc=[1, 0])
 ## III. The CV+ method in MAPIE
 
 
-#### The "score" method
-
-```python
-mapie_clf = MapieClassifier(estimator=clf, cv=kf, method="score")
-```
+### The "score" method
 
 ```python
 mapie_clf.fit(X_train, y_train)
@@ -522,7 +517,39 @@ num_labels = axs.scatter(
 cbar = plt.colorbar(num_labels, ax=axs)
 ```
 
-#### The "cumulated_score" method
+```python tags=[]
+_, y_ps_score_mean = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label=True, agg_scores="mean")
+_, y_ps_score_crossval = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label=True, agg_scores="crossval")
+```
+
+```python
+coverages_score_mean = np.array([classification_coverage_score(y_test_distrib, y_ps_score_mean[:, :, ia]) for ia, _ in enumerate(alpha)])
+widths_score_mean = np.array([y_ps_score_mean[:, :, ia].sum(axis=1).mean() for ia, _ in enumerate(alpha)])
+```
+
+```python
+coverages_score_crossval = np.array([classification_coverage_score(y_test_distrib, y_ps_score_crossval[:, :, ia]) for ia, _ in enumerate(alpha)])
+widths_score_crossval = np.array([y_ps_score_crossval[:, :, ia].sum(axis=1).mean() for ia, _ in enumerate(alpha)])
+```
+
+```python
+_, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
+axes[0].set_xlabel("1 - alpha")
+axes[0].set_ylabel("Effective coverage")
+for i, y_ps in enumerate([y_ps_score_mean, y_ps_score_crossval]):
+    coverages_ = np.array([classification_coverage_score(y_test_distrib, y_ps[:, :, ia]) for ia, _ in enumerate(alpha)])
+    axes[0].plot(1-alpha, coverages_)
+axes[0].plot([0, 1], [0, 1], ls="--", color="k")
+axes[1].set_xlabel("1 - alpha")
+axes[1].set_ylabel("Average of prediction set sizes")
+for i, y_ps in enumerate([y_ps_score_mean, y_ps_score_crossval]):
+    widths_ = np.array([y_ps[:, :, ia].sum(axis=1).mean() for ia, _ in enumerate(alpha)])
+    axes[1].plot(1-alpha, widths_)
+axes[1].legend(["mean", "crossval"], loc=[1, 0])
+
+```
+
+### The "cumulated_score" method
 
 ```python
 mapie_clf = MapieClassifier(estimator=clf, cv=kf, method="cumulated_score")
@@ -539,7 +566,7 @@ plt.hist(mapie_clf.conformity_scores_)
 #### `agg_probas="mean"`
 
 ```python tags=[]
-_, y_ps_cum_score = mapie_clf.predict(X_test, alpha=alpha, include_last_label=True, agg_probas="mean")
+_, y_ps_cum_score = mapie_clf.predict(X_test, alpha=alpha, include_last_label=True, agg_scores="mean")
 ```
 
 ```python
@@ -561,9 +588,9 @@ cbar = plt.colorbar(num_labels, ax=axs)
 ```
 
 ```python tags=[]
-_, y_ps_distrib_cum_score1 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label="randomized", agg_probas="mean")
-_, y_ps_distrib_cum_score2 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label=False, agg_probas="mean")
-_, y_ps_distrib_cum_score3 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label=True, agg_probas="mean")
+_, y_ps_distrib_cum_score1 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label="randomized", agg_scores="mean")
+_, y_ps_distrib_cum_score2 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label=False, agg_scores="mean")
+_, y_ps_distrib_cum_score3 = mapie_clf.predict(X_test_distrib, alpha=alpha, include_last_label=True, agg_scores="mean")
 ```
 
 ```python
@@ -617,7 +644,7 @@ mapie_clf.fit(X_train, y_train)
 ```
 
 ```python tags=[]
-_, y_ps_cum_score = mapie_clf.predict(X_test, alpha=alpha, include_last_label=True, agg_probas="crossval")
+_, y_ps_cum_score = mapie_clf.predict(X_test, alpha=alpha, include_last_label=True, agg_scores="crossval")
 ```
 
 ```python

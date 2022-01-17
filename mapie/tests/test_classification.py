@@ -7,11 +7,12 @@ import pytest
 import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.datasets import make_classification
-from sklearn.pipeline import make_pipeline, Pipeline
-from sklearn.linear_model import LogisticRegression
-from sklearn.utils.validation import check_is_fitted
 from sklearn.dummy import DummyClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import KFold, LeaveOneOut
 from sklearn.naive_bayes import GaussianNB
+from sklearn.pipeline import make_pipeline, Pipeline
+from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
@@ -72,6 +73,16 @@ STRATEGIES = {
             include_last_label=False
         )
     ),
+    "score_cv": (
+        Params(
+            method="score",
+            cv=3,
+            random_state=None
+        ),
+        ParamsPredict(
+            include_last_label=False
+        )
+    ),
     "cumulated_score_include": (
         Params(
             method="cumulated_score",
@@ -126,6 +137,7 @@ STRATEGIES = {
 
 COVERAGES = {
     "score": 7 / 9,
+    "score_cv": 1,
     "cumulated_score_include": 1,
     "cumulated_score_not_include": 5/9,
     "cumulated_score_randomized": 8/9,
@@ -144,6 +156,17 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True],
         [False, False, True],
+    ],
+    "score_cv": [
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
     ],
     "cumulated_score_include": [
         [True, True, False],
@@ -334,7 +357,6 @@ def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_clf = MapieClassifier()
     assert mapie_clf.method == "score"
-    assert mapie_clf.cv is None
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -354,13 +376,57 @@ def test_valid_method(method: str) -> None:
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
 
-@pytest.mark.parametrize("cv", [None, "prefit"])
+@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])
 def test_valid_cv(cv: Any) -> None:
-    """Test that valid cv raise no errors."""
+    """Test that valid cv raises no errors."""
     model = LogisticRegression(multi_class="multinomial")
     model.fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(estimator=model, cv=cv)
     mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.predict(X_toy, alpha=0.5)
+
+
+@pytest.mark.parametrize("agg_scores", ["mean", "crossval"])
+def test_agg_scores_argument(agg_scores: str) -> None:
+    """Test that predict passes with all valid 'agg_scores' arguments."""
+    mapie_clf = MapieClassifier(cv=3, method="score")
+    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
+
+
+@pytest.mark.parametrize("agg_scores", ["median", 1, None])
+def test_invalid_agg_scores_argument(agg_scores: str) -> None:
+    """Test that invalid 'agg_scores' raise errors."""
+    mapie_clf = MapieClassifier(cv=3, method="score")
+    mapie_clf.fit(X_toy, y_toy)
+    with pytest.raises(
+        ValueError, match=r".*Invalid 'agg_scores' argument.*"
+    ):
+        mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
+
+
+def test_agg_scores_crossval_cumulated_score() -> None:
+    """
+    Test that predict raises a temporary error when agg_scores is
+    'crossval' and with the 'cumulated_score' method.
+    """
+    mapie_clf = MapieClassifier(cv=3, method="cumulated_score")
+    mapie_clf.fit(X_toy, y_toy)
+    with pytest.raises(
+        ValueError, match=r".*is not implemented yet.*"
+    ):
+        mapie_clf.predict(X_toy, alpha=0.5, agg_scores="crossval")
+
+
+@pytest.mark.parametrize("cv", [100, 200, 300])
+def test_too_large_cv(cv: Any) -> None:
+    """Test that too large cv raise sklearn errors."""
+    mapie_clf = MapieClassifier(cv=cv)
+    with pytest.raises(
+        ValueError,
+        match=rf".*Cannot have number of splits n_splits={cv} greater.*",
+    ):
+        mapie_clf.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize(
