@@ -180,6 +180,7 @@ methods and emphasizes their main differences.
 
 7. The jackknife+-after-bootstrap method
 ========================================
+
 In order to reduce the computational time, and get more robust predictions, 
 one can adopt a bootstrap approach instead of a leave-one-out approach, called 
 the jackknife+-after-bootstrap method, offered by Kim and al. [2].
@@ -187,27 +188,30 @@ the jackknife+-after-bootstrap method, offered by Kim and al. [2].
 By analogy with the CV+ method, estimating the prediction intervals with 
 jackknife+-after-bootstrap is performed in four main steps:
 
-- We resample the training set with replacement (boostrap) :math:`K` times, 
-and thus we get the (non disjoint) bootstraps :math:`B_{1},..., B_{K}` 
-of equal size.
+- We resample the training set with replacement (boostrap) :math:`K` times,
+  and thus we get the (non disjoint) bootstraps :math:`B_{1},..., B_{K}` of equal size.
+
 
 - :math:`K` regressions functions :math:`\hat{\mu}_{B_{k}}` are then fitted on 
-the bootstraps :math:`(B_{k})`, and the predictions on the complementary sets
-:math:`(B_k^c)` are computed.
+  the bootstraps :math:`(B_{k})`, and the predictions on the complementary sets 
+  :math:`(B_k^c)` are computed.
 
-- These predictions are aggregated according to a given aggregating function 
-:math:`agg`, typically :math:`mean` or :math:`median`, and the residuals 
-:math:`|Y_j - agg(\hat{\mu}(B_{K(j)}(X_j)))|` are computed for each :math:`X_j`
- (with :math:`K(j)` the boostraps not containing :math:`X_j`).
 
-- The sets :math:`\{agg(\hat{\mu}_{K(j)}(X_i) + r_j\}` (where :math:`j` indexes
- the training set) are used to estimate the prediction intervals.
+- These predictions are aggregated according to a given aggregation function 
+  :math:`agg`, typically :math:`mean` or :math:`median`, and the residuals 
+  :math:`|Y_j - agg(\hat{\mu}(B_{K(j)}(X_j)))|` are computed for each :math:`X_j`
+  (with :math:`K(j)` the boostraps not containing :math:`X_j`).
 
-As for jackknife+, this method guarantees a covergae level higher than 
+ 
+- The sets :math:`\{agg(\hat{\mu}_{K(j)}(X_i) + r_j\}` (where :math:`j` indexes  
+  the training set) are used to estimate the prediction intervals.
+
+
+As for jackknife+, this method guarantees a coveage level higher than 
 :math:`1 - 2\alpha` for a target coverage level of :math:`1 - \alpha`, without 
 any a priori assumption on the distribution of the data. 
 In practice, this method results in wider prediction intervals, when the 
-uncertainty is higher, than :math:`CV+` because the models' prediction spread 
+uncertainty is higher, than :math:`CV+`, because the models' prediction spread 
 is then higher.
 
 Key takeaways
