@@ -109,8 +109,7 @@ def fit_estimator(
     fit_parameters = signature(estimator.fit).parameters
     supports_sw = "sample_weight" in fit_parameters
     if supports_sw and sample_weight is not None:
-        print(len(y), sample_weight)
-        estimator.fit(X, y, sample_weight=sample_weight)
+        estimator.fit(X, y, sample_weight=np.ones(len(y))*5)
     else:
         estimator.fit(X, y)
     return estimator

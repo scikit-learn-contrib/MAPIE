@@ -151,7 +151,7 @@ plt.show()
 
 
 def plot_results(
-    mapies: Dict[str, Any],
+    mapies: Dict[int, Any],
     X_test: ArrayLike,
     X_test2: ArrayLike,
     y_test2: ArrayLike,
