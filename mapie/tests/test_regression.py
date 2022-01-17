@@ -418,7 +418,7 @@ def test_aggregate_with_mask_with_prefit() -> None:
     mapie_reg = MapieRegressor(cv="prefit")
     with pytest.raises(
         ValueError,
-        match=r".*There should not have aggragtion of prediction if cv is*",
+        match=r".*There should not be aggregation of predictions if cv is*",
     ):
         mapie_reg.aggregate_with_mask(k, k)
 

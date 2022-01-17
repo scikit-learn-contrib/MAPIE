@@ -42,7 +42,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     ----------
     estimator : Optional[RegressorMixin]
         Any regressor with scikit-learn API
-        (i.e. with fit and predict methods), by default None.
+        (i.e. with fit and predict methods), by default ``None``.
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
     method: str, optional
@@ -112,14 +112,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         When the cross-validation strategy is Subsample (i.e. for the
         Jackknife+-after-Bootstrap method), this function is also used to
-        aggregate the training set insample predictions.
+        aggregate the training set in-sample predictions.
 
         If cv is ``"prefit"``, ``agg_function`` is ignored.
-
-        Note: previously, when ``agg_function`` was not ``None``, the
-        prediction given by the predict method was the aggregation of the
-        predictions made by the reffited estimators. There is now an argument
-        ``ensemble`` that should be set to ``True`` for this purpose.
 
         By default "mean".
 
@@ -149,7 +144,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - Array of nans, of shape (len(y), 1) if cv is ``"prefit"``
         (defined but not used)
         - Dummy array of folds containing each training sample, otherwise.
-          Of shape (n_samples_train, cv.cv.get_n_splits(X, y)).
+          Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
 
     n_features_in_: int
         Number of features passed to the fit method.
@@ -237,7 +232,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self, agg_function: Optional[str] = None
     ) -> Optional[str]:
         """
-        Check if agg_function is correct, and coherent with other arguments.
+        Check if ``agg_function`` is correct, and consistent with other
+        arguments.
 
         Parameters
         ----------
@@ -247,14 +243,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Returns
         -------
         str
-            ``agg_functtion`` itself or ``"mean"``.
-
+            ``agg_function`` itself or ``"mean"``.
         Raises
         ------
         ValueError
-            If ``agg_function`` is not in [``None``, "mean", "median"], or is
-            ``None`` while needed.
-
+            If ``agg_function`` is not in [``None``, ``"mean"``, ``"median"``],
+            or is ``None`` while cv class is ``Subsample``.
         """
 
         if agg_function not in self.valid_agg_functions_:
@@ -418,7 +412,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
-            By default None.
+            By default ``None``.
 
         Returns
         -------
@@ -476,7 +470,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
         if self.cv == "prefit":
             raise ValueError(
-                "There should not have aggragtion of prediction if cv is "
+                "There should not be aggregation of predictions if cv is "
                 "'prefit'"
             )
         # To aggregate with mean() the aggregation coud be done
@@ -516,7 +510,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             before the fitting process and hence have no residuals.
             If weights are non-uniform, residuals are still uniformly weighted.
 
-            By default None.
+            By default ``None``.
 
         Returns
         -------
@@ -623,7 +617,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             If True, predictions from perturbed models are aggregated by
             the aggregation function specified in the ``agg_function``
             attribute.
+
             If cv is ``"prefit"``, ``ensemble`` is ignored.
+
             By default ``False``.
 
         alpha: Optional[Union[float, Iterable[float]]]
@@ -633,6 +629,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             Lower ``alpha`` produce larger (more conservative) prediction
             intervals.
             ``alpha`` is the complement of the target coverage level.
+
             By default ``None``.
 
         Returns
