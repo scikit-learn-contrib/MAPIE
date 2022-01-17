@@ -6,7 +6,7 @@ To run and convert the notebooks contained in this folder, one needs first to cr
 `environment.notebooks.yml`:
 
 * `cd ../`
-* `conda env create -f mapie_notebooks.yaml`
+* `conda env create -f environment.notebooks.yml`
 * `conda activate mapie_notebooks`
 * `python -m ipykernel install --user --name=mapie_notebooks`
 
