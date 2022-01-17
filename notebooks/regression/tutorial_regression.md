@@ -490,7 +490,3 @@ As expected with the CV+ method, the prediction intervals are a bit
 conservative since they are slightly wider than the true intervals.
 However, the CV+ method on the three models gives very promising results 
 since the prediction intervals closely follow the true intervals with $x$. 
-
-```python
-
-```
