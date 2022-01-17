@@ -282,7 +282,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
     def _check_cv(
         self, cv: Optional[Union[int, str, BaseCrossValidator]] = None
-    ) -> Optional[Union[str, BaseCrossValidator]]:
+    ) -> Union[str, BaseCrossValidator]:
         """
         Check if cross-validator is ``None`` or ``"prefit"``.
         Else raise error.

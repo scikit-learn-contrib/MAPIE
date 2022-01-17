@@ -151,7 +151,7 @@ plt.show()
 
 
 def plot_results(
-    mapies: Dict[Any],
+    mapies: Dict[str, Any],
     X_test: ArrayLike,
     X_test2: ArrayLike,
     y_test2: ArrayLike,
@@ -222,7 +222,7 @@ def plot_coverage_width(
     coverages: ArrayLike,
     widths: ArrayLike,
     method: str
-):
+) -> None:
     _, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     axes[0].set_xlabel("1 - alpha")
     axes[0].set_ylabel("Effective coverage")
