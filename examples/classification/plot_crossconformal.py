@@ -18,7 +18,7 @@ by Sadinle et al. (2019)
 
 We start the tutorial by splitting our training dataset
 in $K$ folds and sequentially use each fold as a
-calibration set, the $K-1$ folds remaining folds are
+calibration set, the :math:`K-1` folds remaining folds are
 used for training the base model using
 the ``cv="prefit"`` option of
 :class:`mapie.classification.MapieClassifier`.
@@ -104,25 +104,25 @@ clfs, mapies, y_preds, y_ps_mapies = {}, {}, {}, {}
 methods = ["score", "cumulated_score"]
 alpha = np.arange(0.01, 1, 0.01)
 for method in methods:
-    clfs2, mapies2, y_preds2, y_ps_mapies2 = {}, {}, {}, {}
+    clfs_, mapies_, y_preds_, y_ps_mapies_ = {}, {}, {}, {}
     for i, (train_index, calib_index) in enumerate(kf.split(X_train)):
         clf = GaussianNB().fit(X_train[train_index], y_train[train_index])
-        clfs2[i] = clf
+        clfs_[i] = clf
         mapie = MapieClassifier(estimator=clf, cv="prefit", method=method)
         mapie.fit(X_train[calib_index], y_train[calib_index])
-        mapies2[i] = mapie
+        mapies_[i] = mapie
         y_pred_mapie, y_ps_mapie = mapie.predict(
             X_test_distrib, alpha=alpha, include_last_label="randomized"
         )
-        y_preds2[i], y_ps_mapies2[i] = y_pred_mapie, y_ps_mapie
+        y_preds_[i], y_ps_mapies_[i] = y_pred_mapie, y_ps_mapie
     clfs[method], mapies[method], y_preds[method], y_ps_mapies[method] = (
-        clfs2, mapies2, y_preds2, y_ps_mapies2
+        clfs_, mapies_, y_preds_, y_ps_mapies_
     )
 
 
 ##############################################################################
 # Let's now plot the distribution of conformity scores for each calibration
-# set and the estimated quantile for `alpha` = 0.1.
+# set and the estimated quantile for ``alpha`` = 0.1.
 
 
 fig, axs = plt.subplots(1, len(mapies["score"]), figsize=(20, 4))
@@ -143,7 +143,7 @@ plt.show()
 # We notice that the estimated quantile slightly varies among the calibration
 # sets for the two methods explored here, suggesting that the
 # train/calibration splitting can slightly impact our results.
-# 
+#
 # Let's now visualize this impact on the number of labels included in each
 # prediction set induced by the different calibration sets.
 
@@ -171,17 +171,17 @@ def plot_results(mapies, X_test, X_test2, y_test2, alpha, method):
         coverage = classification_coverage_score(
             y_test2, mapie.predict(X_test2, alpha=alpha)[1][:, :, 0]
         )
-        plt.suptitle(
-            "Number of labels in prediction sets "
-            f"for the {method} method", y=1.04
-        )
         axs[i].set_title(f"coverage = {coverage:.3f}")
+    plt.suptitle(
+        "Number of labels in prediction sets "
+        f"for the {method} method", y=1.04
+    )
 
 
 ##############################################################################
 # The prediction sets and the resulting coverages slightly vary among
 # calibration sets. Let's now visualize the coverage score and the
-# prediction set size as function of the `alpha` parameter.
+# prediction set size as function of the ``alpha`` parameter.
 
 
 plot_results(
@@ -205,10 +205,10 @@ plot_results(
 
 ##############################################################################
 # Let's now compare the coverages and prediction set sizes obtained with the
-# different folds as calibration sets.
+# different folds used as calibration sets.
 
 
-def plot_coverage_width(alpha, coverages, widths):
+def plot_coverage_width(alpha, coverages, widths, method):
     _, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     axes[0].set_xlabel("1 - alpha")
     axes[0].set_ylabel("Effective coverage")
@@ -221,6 +221,10 @@ def plot_coverage_width(alpha, coverages, widths):
     for i, width in enumerate(widths):
         axes[1].plot(1-alpha, width, label=f"Split {i+1}")
     axes[1].legend()
+    plt.suptitle(
+        "Effective coverage and prediction set size "
+        f"for the {method} method", y=1.04
+    )
 
 
 coverages = np.array(
@@ -244,9 +248,9 @@ widths = np.array(
     ]
 )
 
-plot_coverage_width(alpha, coverages[0], widths[0])
+plot_coverage_width(alpha, coverages[0], widths[0], "score")
 
-plot_coverage_width(alpha, coverages[1], widths[1])
+plot_coverage_width(alpha, coverages[1], widths[1], "cumulated_score")
 
 
 ##############################################################################
@@ -265,7 +269,8 @@ plot_coverage_width(alpha, coverages[1], widths[1])
 # mainly via two methods:
 #
 # 1. Aggregating the conformity scores for all training points and then simply
-#    averaging the score for a new test point
+#    averaging the scores output by the different perturbed models
+#    for a new test point
 #
 # 2. Comparing individually the conformity scores of the training points with
 #    the conformity scores from the associated model for a new test point
@@ -277,7 +282,7 @@ plot_coverage_width(alpha, coverages[1], widths[1])
 # All we need to do is to provide with the `cv` argument a cross-validation
 # object or an integer giving the number of folds.
 # When estimating the prediction sets, we define how the scores are aggregated
-# with the ``agg_scores``` attribute.
+# with the ``agg_scores`` attribute.
 
 
 kf = KFold(n_splits=5, shuffle=True)
@@ -339,7 +344,7 @@ widths_score_crossval = np.array(
 # the `alpha` parameter.
 
 
-_, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
 axes[0].set_xlabel("1 - alpha")
 axes[0].set_ylabel("Effective coverage")
 for i, cov in enumerate([coverages_score_mean, coverages_score_crossval]):
@@ -350,6 +355,10 @@ axes[1].set_ylabel("Average of prediction set sizes")
 for i, widths in enumerate([widths_score_mean, widths_score_crossval]):
     axes[1].plot(1-alpha, widths)
 axes[1].legend(["mean", "crossval"], loc=[1, 0])
+plt.suptitle(
+    "Effective coverage and prediction set sizes for ``mean`` "
+    "aggregation method"
+)
 plt.show()
 
 
@@ -364,7 +373,7 @@ plt.show()
 # function of the `alpha` parameter.
 
 
-plt.figure(figsize=(7, 5))
+plt.figure(figsize=(10, 5))
 label = f"Cross-conf: {np.abs(coverages_score_mean - (1 - alpha)).mean(): .3f}"
 plt.plot(
     1 - alpha,
@@ -377,6 +386,6 @@ for i, cov in enumerate(coverages[0]):
     plt.plot(1-alpha, cov - (1-alpha), label=label)
 plt.axhline(0, color="k", ls=":")
 plt.xlabel("1 - alpha")
-plt.xlabel("Deviation from perfect calibration")
+plt.ylabel("Deviation from perfect calibration")
 plt.legend(loc=[1, 0])
 plt.show()
