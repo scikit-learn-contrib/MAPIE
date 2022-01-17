@@ -13,6 +13,9 @@ Throughout this tutorial, we will answer the following questions:
 
 -  Is the chosen conformal method well calibrated ?
 
+-  What are the pros and cons of the conformal methods included in
+   :class:``mapie.regression.MapieClassifier`` ?
+
 1. Conformal Prediction method using the softmax score of the true label
 ------------------------------------------------------------------------
 
@@ -100,7 +103,7 @@ the prediction sets with differents alpha values with a ``fit`` and
 
     from sklearn.naive_bayes import GaussianNB
     from mapie.classification import MapieClassifier
-    from mapie.metrics import classification_coverage_score
+    from mapie.metrics import classification_coverage_score, classification_mean_width_score
     clf = GaussianNB().fit(X_train, y_train)
     y_pred = clf.predict(X_test)
     y_pred_proba = clf.predict_proba(X_test)
@@ -167,12 +170,12 @@ different values of alpha.
         fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
         axs = {0: ax1, 1: ax2, 2:  ax3, 3: ax4}
         axs[0].scatter(
-        X[:, 0],
-        X[:, 1],
-        color=y_pred_col,
-        marker='.',
-        s=10,
-        alpha=0.4
+            X[:, 0],
+            X[:, 1],
+            color=y_pred_col,
+            marker='.',
+            s=10,
+            alpha=0.4
         )
         axs[0].set_title("Predicted labels")
         for i, alpha in enumerate(alphas):
@@ -223,7 +226,7 @@ on a large number of :math:``\alpha`` values.
         for i, _ in enumerate(alpha2)
     ]
     widths_score = [
-        y_ps_score2[:, :, i].sum(axis=1).mean()
+        classification_mean_width_score(y_ps_score2[:, :, i])
         for i, _ in enumerate(alpha2)
     ]
 
@@ -270,7 +273,6 @@ test set after fitting MAPIE on the calibration set.
 
 .. code-block:: python
 
-    y_pred_proba_max = np.max(y_pred_proba, axis=1)
     mapie_aps = MapieClassifier(estimator=clf, cv="prefit", method="cumulated_score")
     mapie_aps.fit(X_cal, y_cal)
     alpha = [0.2, 0.1, 0.05]
@@ -286,7 +288,8 @@ test set after fitting MAPIE on the calibration set.
 
 
 One can notice that the uncertain regions are emphasized by wider
-boundaries, but without null prediction sets.
+boundaries, but without null prediction sets with respect to the first
+“score” method.
 
 .. code-block:: python
 
@@ -296,7 +299,7 @@ boundaries, but without null prediction sets.
         for i, _ in enumerate(alpha2)
     ]
     widths_aps = [
-        y_ps_aps2[:, :, i].sum(axis=1).mean()
+        classification_mean_width_score(y_ps_aps2[:, :, i])
         for i, _ in enumerate(alpha2)
     ]
 
@@ -309,3 +312,6 @@ boundaries, but without null prediction sets.
 .. image:: tutorial_classification_files/tutorial_classification_28_0.png
 
 
+This method also gives accurate calibration plots, meaning that the
+effective coverage level is always very close to the target coverage,
+sometimes at the expense of slightly bigger prediction sets.
