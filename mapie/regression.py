@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Iterable, List, Optional, Tuple, Union, cast
-from xmlrpc.client import Boolean
 
 from joblib import Parallel, delayed
 import numpy as np
@@ -250,7 +249,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             If ``agg_function`` is not in [``None``, ``"mean"``, ``"median"``],
             or is ``None`` while cv class is ``Subsample``.
         """
-
         if agg_function not in self.valid_agg_functions_:
             raise ValueError(
                 "Invalid aggregation function "
@@ -353,7 +351,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     def _check_ensemble(
         self,
-        ensemble: Boolean,
+        ensemble: bool,
     ) -> None:
         """
         Check if ``ensemble`` is False if ``self.agg_function`` is ``None``.
@@ -361,7 +359,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Parameters
         ----------
-        ensemble : Boolean
+        ensemble : bool
             ``ensemble`` argument to check the coherennce with
             ``self.agg_function``.
 
@@ -478,8 +476,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         # However, phi2D contains a np.apply_along_axis loop which
         # is much slower than the matrices multiplication that can
         # be used to compute the means.
-        K = np.nan_to_num(k, nan=0.0)
-        return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
+        if self.agg_function in ["mean", None]:
+            K = np.nan_to_num(k, nan=0.0)
+            return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
+        raise ValueError("The value of self.agg_function is not correct")
 
     def fit(
         self,

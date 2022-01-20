@@ -422,6 +422,13 @@ def test_aggregate_with_mask_with_prefit() -> None:
     ):
         mapie_reg.aggregate_with_mask(k, k)
 
+    mapie_reg = MapieRegressor(agg_function="nonsense")
+    with pytest.raises(
+        ValueError,
+        match=r".*The value of self.agg_function is not correct*",
+    ):
+        mapie_reg.aggregate_with_mask(k, k)
+
 
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
