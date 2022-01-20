@@ -119,5 +119,5 @@ def regression_mean_width_score(
     """
     y_pred_low = column_or_1d(y_pred_low)
     y_pred_up = column_or_1d(y_pred_up)
-    mean_width = (y_pred_up - y_pred_low).mean()
+    mean_width = np.abs(y_pred_up - y_pred_low).mean()
     return float(mean_width)
