@@ -242,7 +242,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         -------
         str
             ``agg_function`` itself or ``"mean"``.
- 
+
         Raises
         ------
         ValueError
