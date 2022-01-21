@@ -9,24 +9,26 @@ different strategies.
 """
 from typing import Tuple
 
-import numpy as np
+from typing_extensions import TypedDict
 import scipy
-from mapie.regression import MapieRegressor
-from matplotlib import pyplot as plt
+import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-from typing_extensions import TypedDict
+from matplotlib import pyplot as plt
+
+from mapie.regression import MapieRegressor
+from mapie._typing import ArrayLike
 
 
-def f(x: np.ndarray) -> np.ndarray:
+def f(x: ArrayLike) -> ArrayLike:
     """Polynomial function used to generate one-dimensional data"""
     return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
 
 
 def get_homoscedastic_data(
     n_train: int = 200, n_true: int = 200, sigma: float = 0.1
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]:
+) -> Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, float]:
     """
     Generate one-dimensional data from a given function,
     number of training and test samples and a given standard
@@ -44,7 +46,7 @@ def get_homoscedastic_data(
 
     Returns
     -------
-    Tuple[Any, Any, np.ndarray, Any, float]
+    Tuple[Any, Any, ArrayLike, Any, float]
         Generated training and test data.
         [0]: X_train
         [1]: y_train
@@ -63,14 +65,14 @@ def get_homoscedastic_data(
 
 
 def plot_1d_data(
-    X_train: np.ndarray,
-    y_train: np.ndarray,
-    X_test: np.ndarray,
-    y_test: np.ndarray,
+    X_train: ArrayLike,
+    y_train: ArrayLike,
+    X_test: ArrayLike,
+    y_test: ArrayLike,
     y_test_sigma: float,
-    y_pred: np.ndarray,
-    y_pred_low: np.ndarray,
-    y_pred_up: np.ndarray,
+    y_pred: ArrayLike,
+    y_pred_low: ArrayLike,
+    y_pred_up: ArrayLike,
     ax: plt.Axes,
     title: str,
 ) -> None:
@@ -80,21 +82,21 @@ def plot_1d_data(
 
     Parameters
     ----------
-    X_train : np.ndarray
+    X_train : ArrayLike
         Training data.
-    y_train : np.ndarray
+    y_train : ArrayLike
         Training labels.
-    X_test : np.ndarray
+    X_test : ArrayLike
         Test data.
-    y_test : np.ndarray
+    y_test : ArrayLike
         True function values on test data.
     y_test_sigma : float
         True standard deviation.
-    y_pred : np.ndarray
+    y_pred : ArrayLike
         Predictions on test data.
-    y_pred_low : np.ndarray
+    y_pred_low : ArrayLike
         Predicted lower bounds on test data.
-    y_pred_up : np.ndarray
+    y_pred_up : ArrayLike
         Predicted upper bounds on test data.
     ax : plt.Axes
         Axis to plot.

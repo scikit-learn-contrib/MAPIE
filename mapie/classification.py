@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import check_X_y, check_array, check_random_state
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import label_binarize
 
 from ._typing import ArrayLike
 from ._machine_precision import EPSILON
@@ -19,7 +19,8 @@ from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
     check_n_jobs,
-    check_verbose
+    check_verbose,
+    check_input_is_image
 )
 
 
@@ -44,17 +45,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         Choose among:
 
         - "naive", sum of the probabilities until the 1-alpha thresold.
+
         - "score", based on the the scores
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set.
+
         - "cumulated_score", based on the sum of the softmax outputs of the
           labels until the true label is reached, on the calibration set.
-        - "top_k", based on the sorted index of the probability of the true
-        label in the softmax outputs, on the calibration set. In case two
-        probabilities are equal, both are taken, thus, the size of some p
-        prediction sets may be different from the others.
 
-          By default "score".
+        - "top_k", based on the sorted index of the probability of the true
+          label in the softmax outputs, on the calibration set. In case two
+          probabilities are equal, both are taken, thus, the size of some
+          prediction sets may be different from the others.
+
+        By default "score".
 
     cv: Optional[str]
         The cross-validation strategy for computing scores :
@@ -75,7 +79,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         If ``1`` is given, no parallel computing code is used at all,
         which is useful for debugging.
         For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
-        None is a marker for ‘unset’ that will be interpreted as ``n_jobs=1``
+        None is a marker for `unset` that will be interpreted as ``n_jobs=1``
         (sequential execution).
 
         By default ``None``.
@@ -110,10 +114,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     n_samples_val_: Union[int, List[int]]
         Number of samples passed to the fit method.
 
-    conformity_scores_ : np.ndarray of shape (n_samples_train)
+    conformity_scores_ : ArrayLike of shape (n_samples_train)
         The conformity scores used to calibrate the prediction sets.
 
-    quantiles_ : np.ndarray of shape (n_alpha)
+    quantiles_ : ArrayLike of shape (n_alpha)
         The quantiles estimated from ``conformity_scores_`` and alpha values.
 
     References
@@ -154,6 +158,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     """
 
     valid_methods_ = ["naive", "score", "cumulated_score", "top_k"]
+    fit_attributes = [
+        "single_estimator_",
+        "n_features_in_",
+        "n_samples_val_",
+        "conformity_scores_"
+    ]
 
     def __init__(
         self,
@@ -227,11 +237,21 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             If the estimator is not fitted and ``cv`` attribute is "prefit".
         """
         if estimator is None:
-            return LogisticRegression(multi_class="multinomial").fit(X, y)
+            if not self.image_input:
+                return LogisticRegression(multi_class="multinomial").fit(X, y)
+            else:
+                raise ValueError(
+                    "Default LogisticRegression's input can't be an image."
+                    "Please provide a proper model."
+                )
+        if isinstance(estimator, Pipeline):
+            est = estimator[-1]
+        else:
+            est = estimator
         if (
-            not hasattr(estimator, "fit")
-            and not hasattr(estimator, "predict")
-            and not hasattr(estimator, "predict_proba")
+            not hasattr(est, "fit")
+            and not hasattr(est, "predict")
+            and not hasattr(est, "predict_proba")
         ):
             raise ValueError(
                 "Invalid estimator. "
@@ -239,10 +259,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 "predict, and predict_proba methods."
             )
         if self.cv == "prefit":
-            if isinstance(self.estimator, Pipeline):
-                check_is_fitted(self.estimator[-1])
-            else:
-                check_is_fitted(self.estimator)
+            check_is_fitted(est)
+            if not hasattr(est, "classes_"):
+                raise AttributeError(
+                    "Invalid classifier. "
+                    "Fitted classifier does not contain "
+                    "'classes_' attribute."
+                )
         return estimator
 
     def _check_cv(
@@ -344,7 +367,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         np.testing.assert_allclose(
             np.sum(y_pred_proba, axis=1),
             1,
-            err_msg="The sum of the scores is not equal to one."
+            err_msg="The sum of the scores is not equal to one.",
+            rtol=1e-5
         )
         return y_pred_proba
 
@@ -440,7 +464,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             Updated version of prediction_sets with randomly removed
             labels.
         """
-        # filter sorting probabilities with kept labels
+        # get cumsumed probabilities up to last retained label
         y_proba_last_cumsumed = np.stack(
             [
                 np.squeeze(
@@ -480,6 +504,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         X: ArrayLike,
         y: ArrayLike,
+        image_input: Optional[bool] = False,
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieClassifier:
         """
@@ -492,6 +517,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         y : ArrayLike of shape (n_samples,)
             Training labels.
+
+        image_input: Optional[bool] = False
+            Whether or not the X input is an image. If True, you must provide
+            a model that accepts image as input (e.g., a Neural Network). All
+            Scikit-learn classifiers only accept two-dimensional inputs.
+
+            By default False.
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
@@ -508,12 +540,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             The model itself.
         """
         # Checks
+        self.image_input = image_input
         self._check_parameters()
         cv = self._check_cv(self.cv)
         estimator = self._check_estimator(X, y, self.estimator)
 
+        if self.image_input:
+            check_input_is_image(X)
         X, y = check_X_y(
-            X, y, force_all_finite=False, dtype=["float64", "int", "object"]
+            X, y, force_all_finite=False, ensure_2d=self.image_input,
+            allow_nd=self.image_input, dtype=["float64", "int", "object"]
         )
         assert type_of_target(y) == "multiclass"
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
@@ -532,15 +568,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 1 - y_pred_proba, y.reshape(-1, 1), axis=1
             )
         elif self.method == "cumulated_score":
-            encoder = LabelBinarizer().fit(y)
-            y_true = encoder.transform(y)
+            y_true = label_binarize(y=y, classes=estimator.classes_)
             index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
             y_pred_proba_sorted = np.take_along_axis(
                 y_pred_proba, index_sorted, axis=1
             )
             y_true_sorted = np.take_along_axis(y_true, index_sorted, axis=1)
             y_pred_proba_sorted_cumsum = np.cumsum(y_pred_proba_sorted, axis=1)
-            cutoff = encoder.inverse_transform(y_true_sorted)
+            cutoff = np.argmax(y_true_sorted, axis=1)
             self.conformity_scores_ = np.take_along_axis(
                 y_pred_proba_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
             )
@@ -575,7 +610,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         include_last_label: Optional[Union[bool, str]] = True,
-    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    ) -> Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]:
         """
         Prediction prediction sets on new samples based on target confidence
         interval.
@@ -590,7 +625,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             Test data.
 
         alpha: Optional[Union[float, Iterable[float]]]
-            Can be a float, a list of floats, or a ``np.ndarray`` of floats.
+            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
             Between 0 and 1, represent the uncertainty of the confidence
             interval.
             Lower ``alpha`` produce larger (more conservative) prediction
@@ -603,37 +638,35 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             prediction sets for the "cumulated_score" method. Choose among:
 
             - False, does not include label whose cumulated score is just over
-             the quantile.
+              the quantile.
             - True, includes label whose cumulated score is just over the
-            quantile, unless there is only one label in the prediction set.
+              quantile, unless there is only one label in the prediction set.
             - "randomized", randomly includes label whose cumulated score is
-            just over the quantile based on the comparison of a uniform number
-            and the difference between the cumulated score of the last label
-            and the quantile.
+              just over the quantile based on the comparison of a uniform
+              number and the difference between the cumulated score of
+              the last label and the quantile.
+
             By default ``True``.
 
         Returns
         -------
-        Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]
+        Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]
 
-        - np.ndarray of shape (n_samples,) if alpha is None.
+        - ArrayLike of shape (n_samples,) if alpha is None.
 
-        - Tuple[np.ndarray, np.ndarray] of shapes
+        - Tuple[ArrayLike, ArrayLike] of shapes
         (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
         # Checks
         include_last_label = self._check_include_last_label(include_last_label)
         alpha_ = check_alpha(alpha)
-        check_is_fitted(
-            self,
-            [
-                "single_estimator_",
-                "conformity_scores_",
-                "n_features_in_",
-                "n_samples_val_",
-            ],
+        check_is_fitted(self, self.fit_attributes)
+        if self.image_input:
+            check_input_is_image(X)
+        X = check_array(
+            X, force_all_finite=False, ensure_2d=self.image_input,
+            allow_nd=self.image_input, dtype=["float64", "object"]
         )
-        X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
         y_pred_proba = self.single_estimator_.predict_proba(X)
         y_pred_proba = self._check_proba_normalized(y_pred_proba)
@@ -665,14 +698,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             elif self.method in ["cumulated_score", "naive"]:
                 # sort labels by decreasing probability
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
+
                 # sort probabilities by decreasing order
                 y_pred_proba_sorted = np.take_along_axis(
                     y_pred_proba, index_sorted, axis=1
                 )
+
                 # get sorted cumulated score
                 y_pred_proba_sorted_cumsum = np.cumsum(
                     y_pred_proba_sorted, axis=1
                 )
+
                 # get cumulated score at their original position
                 y_pred_proba_cumsum = np.take_along_axis(
                     y_pred_proba_sorted_cumsum,
@@ -703,6 +739,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         for iq, _ in enumerate(self.quantiles_)
                     ], axis=2
                 )
+
                 # remove last label randomly
                 if include_last_label == 'randomized':
                     prediction_sets = self._add_random_tie_breaking(

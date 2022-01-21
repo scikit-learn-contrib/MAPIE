@@ -23,9 +23,9 @@ We estimate the prediction sets as follows :
 * First we generate a dataset with train, calibration and test, the model is fitted on the training set.
 * We set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}` the softmax output of the true class for each sample in the calibration set.
 * Then we define :math:`\hat{q}` as being the :math:`(n + 1) (\alpha) / n` previous quantile of :math:`S_{1}, ..., S_{n}`
-(this is essentially the quantile :math:`\alpha`, but with a small sample correction). 
+  (this is essentially the quantile :math:`\alpha`, but with a small sample correction). 
 * Finally, for a new test data point (where :math:`X_{n + 1}` is known but :math:`Y_{n + 1}` is not), create a prediction set
-:math:`C(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}` which includes all the classes with a sufficiently high softmax output.
+  :math:`C(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}` which includes all the classes with a sufficiently high softmax output.
 
 We use a two-dimensional dataset with three labels. The distribution of the data is a bivariate normal with diagonal covariance matrices for each label. 
 
