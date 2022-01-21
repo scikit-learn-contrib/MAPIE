@@ -524,6 +524,69 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         )
         return prediction_sets
 
+    def _fix_number_of_classes(
+        self,
+        est_classes: ArrayLike,
+        y_proba: ArrayLike
+    ) -> ArrayLike:
+        """
+        Fix shape of y_proba of validation set if number of classes
+        of the training set used for cross-validation is different than
+        number of classes of the original dataset y.
+
+        Parameters
+        ----------
+        est_classes : ArrayLike
+            Classes of the training set.
+        y_val_proba : ArrayLike
+            Probabilities of the validation set.
+
+        Returns
+        -------
+        ArrayLike
+            Probabilities with the right number of classes.
+        """
+        y_proba_tot = np.zeros(
+            shape=(len(y_proba), self.n_classes_)
+        )
+        y_index = np.tile(est_classes, (len(y_proba), 1))
+        np.put_along_axis(
+            y_proba_tot,
+            y_index,
+            y_proba,
+            axis=1
+        )
+        return y_proba_tot
+
+    def _predict_oof_model(
+        self,
+        estimator: ClassifierMixin,
+        X: ArrayLike,
+    ) -> ArrayLike:
+        """
+        Predict probabilities of a test set from a fitted estimator.
+
+        Parameters
+        ----------
+        estimator : ClassifierMixin
+            Fitted estimator.
+        X : ArrayLike
+            Test set.
+
+        Returns
+        -------
+        ArrayLike
+            Predicted probabilities.
+        """
+        y_pred_proba = estimator.predict_proba(X)
+        # we enforce y_pred_proba to contain all labels included y
+        if len(estimator.classes_) != self.n_classes_:
+            y_pred_proba = self._fix_number_of_classes(
+                estimator.classes_,
+                y_pred_proba
+            )
+        return y_pred_proba
+
     def _fit_and_predict_oof_model(
         self,
         estimator: ClassifierMixin,
@@ -585,20 +648,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 estimator, X_train, y_train, sample_weight[train_index]
             )
         if X_val.shape[0] > 0:
-            y_pred_proba = estimator.predict_proba(X_val)
-            # we enforce y_pred_proba to contain all labels included y
-            if len(np.unique(y_train)) != len(np.unique(y)):
-                y_index = np.tile(np.unique(y_train), (len(y_val), 1))
-                y_pred_proba_tot = np.empty(
-                    shape=(len(y_val), len(np.unique(y)))
-                )
-                np.put_along_axis(
-                    y_pred_proba_tot,
-                    y_index,
-                    y_pred_proba,
-                    axis=1
-                )
-                y_pred_proba = y_pred_proba_tot.copy()
+            # y_pred_proba = estimator.predict_proba(X_val)
+            # # we enforce y_pred_proba to contain all labels included y
+            # if len(set(y_train)) != self.n_classes_:
+            #     y_pred_proba = self._fix_number_of_classes(
+            #         estimator.classes_,
+            #         y_pred_proba
+            #     )
+            y_pred_proba = self._predict_oof_model(
+                estimator,
+                X_val,
+            )
         else:
             y_pred_proba = np.array([])
         val_id = np.full_like(y_val, k, dtype=int)
@@ -656,6 +716,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             allow_nd=self.image_input, dtype=["float64", "int", "object"]
         )
         assert type_of_target(y) == "multiclass"
+        self.n_classes_ = len(set(y))
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
@@ -690,12 +751,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             self.estimators_, predictions, val_ids, val_indices = map(
                 list, zip(*outputs)
             )
-            # print(predictions)
             predictions, val_ids, val_indices = map(
                 np.concatenate, (predictions, val_ids, val_indices)
             )
             self.k_[val_indices] = val_ids
-            # print(predictions)
             y_pred_proba[val_indices] = predictions
 
         if self.method == "naive":
@@ -832,7 +891,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             y_pred_proba_k = Parallel(
                 n_jobs=self.n_jobs, verbose=self.verbose
             )(
-                delayed(lambda est, X: est.predict_proba(X))(est, X)
+                delayed(self._predict_oof_model)(est, X)
                 for est in self.estimators_
             )
             if agg_scores == "crossval":
@@ -847,8 +906,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_pred_proba = self._check_proba_normalized(
                     y_pred_proba, axis=1
                 )
-            # elif agg_scores == "median":
-            #     y_pred_proba = np.median(y_pred_proba_k, axis=0)
             else:
                 raise ValueError("Invalid 'agg_scores' argument.")
 

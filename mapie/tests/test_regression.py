@@ -108,7 +108,6 @@ def test_default_parameters() -> None:
     mapie_reg = MapieRegressor()
     assert mapie_reg.agg_function is None
     assert mapie_reg.method == "plus"
-    assert mapie_reg.cv is None
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
