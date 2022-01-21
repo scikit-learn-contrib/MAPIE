@@ -10,6 +10,7 @@ History
 * Add MNIST example for classification
 * Uniformize the use of matrix k_ and add an argument "ensemble" to method 
 "predict" in regression.py
+* Add replication of the Chen Xu's tutorial testing Jackknife+aB vs Jackknife+
 * Add Jackknife+-after-Bootstrap documentation
 
 0.3.1 (2021-11-19)
