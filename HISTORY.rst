@@ -8,8 +8,7 @@ History
 * Add "naive" and "top-k" methods in MapieClassifier
 * Include J+aB method in regression tutorial
 * Add MNIST example for classification
-* Add replication of the Chen Xu's tutorial testing J-aB and Jackknife+ on a 
-dataset loaden online.
+* Add replication of the Chen Xu's tutorial testing Jackknife+aB vs Jackknife+.
 
 0.3.1 (2021-11-19)
 ------------------
