@@ -72,8 +72,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
           Main variants are:
             - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
-            - ``sklearn.model_selection.KFold`` (cross-validation),
-            - ``subsample.Subsample`` object (bootstrap).
+            - ``sklearn.model_selection.KFold`` (cross-validation)
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used
           to calibrate the predictions through the score computation.
@@ -648,16 +647,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 estimator, X_train, y_train, sample_weight[train_index]
             )
         if X_val.shape[0] > 0:
-            # y_pred_proba = estimator.predict_proba(X_val)
-            # # we enforce y_pred_proba to contain all labels included y
-            # if len(set(y_train)) != self.n_classes_:
-            #     y_pred_proba = self._fix_number_of_classes(
-            #         estimator.classes_,
-            #         y_pred_proba
-            #     )
             y_pred_proba = self._predict_oof_model(
-                estimator,
-                X_val,
+                estimator, X_val,
             )
         else:
             y_pred_proba = np.array([])
