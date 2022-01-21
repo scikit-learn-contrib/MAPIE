@@ -2,21 +2,22 @@ from __future__ import annotations
 
 from itertools import combinations
 from typing import Any, List, Optional, Tuple, Union
-from typing_extensions import TypedDict
 
-import pytest
 import numpy as np
+import pytest
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
 from sklearn.utils.validation import check_is_fitted
+from typing_extensions import TypedDict
 
+from mapie._typing import ArrayLike
 from mapie.aggregation_functions import aggregate_all
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
-from mapie._typing import ArrayLike
+
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -106,7 +107,7 @@ COVERAGES = {
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_reg = MapieRegressor()
-    assert mapie_reg.agg_function is None
+    assert mapie_reg.agg_function == "mean"
     assert mapie_reg.method == "plus"
     assert mapie_reg.cv is None
 
@@ -137,6 +138,11 @@ def test_invalid_agg_function(agg_function: Any) -> None:
     mapie_reg = MapieRegressor(agg_function=agg_function)
     with pytest.raises(ValueError, match=r".*Invalid aggregation function.*"):
         mapie_reg.fit(X_toy, y_toy)
+
+    mapie_reg = MapieRegressor(agg_function=None)
+    with pytest.raises(ValueError, match=r".*If ensemble is True*"):
+        mapie_reg.fit(X_toy, y_toy)
+        mapie_reg.predict(X_toy, ensemble=True)
 
 
 @pytest.mark.parametrize("agg_function", [None, "mean", "median"])
@@ -275,19 +281,19 @@ def test_prediction_between_low_up(strategy: str) -> None:
 
 @pytest.mark.parametrize("method", ["plus", "minmax"])
 @pytest.mark.parametrize("cv", [-1, 2, 3, 5])
+@pytest.mark.parametrize("agg_function", ["mean", "median"])
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2])
 def test_prediction_agg_function(
-    method: str, cv: Union[LeaveOneOut, KFold], alpha: int
+    method: str, cv: Union[LeaveOneOut, KFold], agg_function: str, alpha: int
 ) -> None:
     """
-    Test that predictions differ when agg_function is None/"mean",
+    Test that predictions differ when ensemble is True/False,
     but not prediction intervals.
     """
-    mapie = MapieRegressor(method=method, cv=cv, agg_function="median")
+    mapie = MapieRegressor(method=method, cv=cv, agg_function=agg_function)
     mapie.fit(X, y)
-    y_pred_1, y_pis_1 = mapie.predict(X, alpha=alpha)
-    mapie.agg_function = None
-    y_pred_2, y_pis_2 = mapie.predict(X, alpha=alpha)
+    y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True, alpha=alpha)
+    y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False, alpha=alpha)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     with pytest.raises(AssertionError):
@@ -385,7 +391,9 @@ def test_not_enough_resamplings() -> None:
 
 def test_no_agg_fx_specified_with_subsample() -> None:
     """Test that a warning is raised if at least one residual is nan."""
-    with pytest.warns(Warning, match=r"WARNING: you need to specify*"):
+    with pytest.raises(
+        ValueError, match=r"You need to specify an aggregation*"
+    ):
         mapie_reg = MapieRegressor(
             cv=Subsample(n_resamplings=1), agg_function=None
         )
@@ -403,16 +411,23 @@ def test_invalid_aggregate_all() -> None:
         aggregate_all(None, X)
 
 
-def test_invalid_aggregate_mask() -> None:
+def test_aggregate_with_mask_with_prefit() -> None:
     """
-    Test that wrong aggregation in MAPIE raise errors.
+    Test ``aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
     """
+    mapie_reg = MapieRegressor(cv="prefit")
     with pytest.raises(
         ValueError,
-        match=r".*Aggregation function called but not defined.*",
+        match=r".*There should not be aggregation of predictions if cv is*",
     ):
-        mapie_reg = MapieRegressor()
-        mapie_reg.aggregate_with_mask(X, k)
+        mapie_reg.aggregate_with_mask(k, k)
+
+    mapie_reg = MapieRegressor(agg_function="nonsense")
+    with pytest.raises(
+        ValueError,
+        match=r".*The value of self.agg_function is not correct*",
+    ):
+        mapie_reg.aggregate_with_mask(k, k)
 
 
 def test_pred_loof_isnan() -> None:
