@@ -141,7 +141,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     k_ : ArrayLike
         - Array of nans, of shape (len(y), 1) if cv is ``"prefit"``
-        (defined but not used)
+          (defined but not used)
         - Dummy array of folds containing each training sample, otherwise.
           Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
 
@@ -181,7 +181,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> print(y_pred)
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
-
     valid_methods_ = ["naive", "base", "plus", "minmax"]
     valid_agg_functions_ = [None, "median", "mean"]
     fit_attributes = [
@@ -243,6 +242,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         -------
         str
             ``agg_function`` itself or ``"mean"``.
+ 
         Raises
         ------
         ValueError
@@ -449,20 +449,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Parameters:
         -----------
-            x : ArrayLike of shape (n_samples_test, n_estimators)
-                Array of predictions, made by the refitted estimators,
-                for each sample of the testing set.
-            k : ArrayLike of shape (n_samples_training, n_estimators)
-                1-or-nan array: indicates whether to integrate the prediction
-                of a given estimator into the aggregation, for each training
-                sample.
+        x : ArrayLike of shape (n_samples_test, n_estimators)
+            Array of predictions, made by the refitted estimators,
+            for each sample of the testing set.
+
+        k : ArrayLike of shape (n_samples_training, n_estimators)
+            1-or-nan array: indicates whether to integrate the prediction
+            of a given estimator into the aggregation, for each training
+            sample.
 
         Returns:
         --------
         ArrayLike of shape (n_samples_test,)
             Array of aggregated predictions for each testing  sample.
-
-
         """
         if self.agg_function == "median":
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
