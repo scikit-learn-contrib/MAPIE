@@ -7,10 +7,10 @@ Reproducing the simulations from Kim et al. (2020)
 by Kim et al. (2020) [1] in their article which introduces the
 jackknife+-after-bootstrap method.
 
-For a given model, the simulation fits MAPIE regressors with
-jackknife+ and jackknife+-after-bootstrap methods, on different resamplings of
-a data set loaded from 'https://archive.ics.uci.edu/', and compares the 
-coverage levels and the width means of the PIs.
+For a given model, the simulation fits MAPIE regressors with jackknife+ and
+jackknife+-after-bootstrap methods, on different resamplings of a data set
+loaded from 'https://archive.ics.uci.edu/', and compares the coverage levels
+and the width means of the PIs.
 
 In order to reproduce results from the tutorial notebook of [1], we
 implemented their regression model ``Ridge2``, a variant of `sklearn.Ridge`
