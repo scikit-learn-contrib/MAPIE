@@ -14,10 +14,11 @@ estimate the quantile. We demonstrate that this second
 sets with accurate calibration plots.
 
 The two-dimensional dataset used here is the one presented
-by Sadinle et al. (2019)
+by Sadinle et al. (2019) also introduced by other examples
+of this documentation.
 
 We start the tutorial by splitting our training dataset
-in $K$ folds and sequentially use each fold as a
+in :math:`K` folds and sequentially use each fold as a
 calibration set, the :math:`K-1` folds remaining folds are
 used for training the base model using
 the ``cv="prefit"`` option of
@@ -272,7 +273,9 @@ plot_coverage_width(alpha, coverages[1], widths[1], "cumulated_score")
 # prediction set.
 #
 # In conclusion, the split-conformal method has two main limitations:
+#
 # - It prevents us to use the whole training set for training our base model
+#
 # - The prediction sets are impacted by the way we extract the calibration set
 
 ##############################################################################
