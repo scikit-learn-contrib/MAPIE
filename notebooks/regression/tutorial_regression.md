@@ -402,7 +402,7 @@ the Multilayer Perceptron has two hidden dense layers with 20 neurons each follo
 
 ```python
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # disable debugging logs from Tensorflow
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from scikeras.wrappers import KerasRegressor
