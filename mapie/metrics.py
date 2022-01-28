@@ -95,16 +95,19 @@ def regression_mean_width_score(
 ) -> float:
     """
     Effective mean width score obtained by the prediction intervals.
+
     Parameters
     ----------
     y_pred_low : ArrayLike of shape (n_samples,)
         Lower bound of prediction intervals.
     y_pred_up : ArrayLike of shape (n_samples,)
         Upper bound of prediction intervals.
+
     Returns
     -------
     float
         Effective mean width of the prediction intervals.
+
     Examples
     --------
     >>> from mapie.metrics import regression_mean_width_score
