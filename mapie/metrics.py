@@ -1,5 +1,5 @@
-from sklearn.utils.validation import column_or_1d, check_array
 import numpy as np
+from sklearn.utils.validation import column_or_1d, check_array
 from ._typing import ArrayLike
 
 
@@ -87,6 +87,37 @@ def classification_coverage_score(
         y_pred_set, y_true.reshape(-1, 1), axis=1
     ).mean()
     return float(coverage)
+
+
+def regression_mean_width_score(
+    y_pred_low: ArrayLike,
+    y_pred_up: ArrayLike,
+) -> float:
+    """
+    Effective mean width score obtained by the prediction intervals.
+    Parameters
+    ----------
+    y_pred_low : ArrayLike of shape (n_samples,)
+        Lower bound of prediction intervals.
+    y_pred_up : ArrayLike of shape (n_samples,)
+        Upper bound of prediction intervals.
+    Returns
+    -------
+    float
+        Effective mean width of the prediction intervals.
+    Examples
+    --------
+    >>> from mapie.metrics import regression_mean_width_score
+    >>> import numpy as np
+    >>> y_pred_low = np.array([4, 6, 9, 8.5, 10.5])
+    >>> y_pred_up = np.array([6, 9, 10, 12.5, 12])
+    >>> print(regression_mean_width_score(y_pred_low, y_pred_up))
+    2.3
+    """
+    y_pred_low = column_or_1d(y_pred_low)
+    y_pred_up = column_or_1d(y_pred_up)
+    mean_width = np.abs(y_pred_up - y_pred_low).mean()
+    return float(mean_width)
 
 
 def classification_mean_width_score(

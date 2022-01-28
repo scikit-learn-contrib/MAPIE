@@ -1,4 +1,4 @@
-﻿**Method**,**Theoretical coverage**,**Typical coverage**,**Training cost**,**Evaluation cost**
+**Method**,**Theoretical coverage**,**Typical coverage**,**Training cost**,**Evaluation cost**
 **Naïve**,No guarantee,:math:`< 1-\alpha`,1,:math:`n_{test}`
 **Jackknife**,No guarantee,:math:`\simeq 1-\alpha`,:math:`n`,:math:`n_{test}`
 ,, or :math:`< 1-\alpha` if :math:`\hat{\mu}` unstable,,
@@ -8,3 +8,5 @@
 ,, or :math:`< 1-\alpha` if :math:`\hat{\mu}` unstable,,
 **CV+**,:math:`\geq 1-2\alpha`,:math:`\gtrsim 1-\alpha`,:math:`K`,:math:`K \times n_{test}`
 **CV-minmax**,:math:`\geq 1-\alpha`,:math:`> 1-\alpha`,:math:`K`,:math:`K \times n_{test}`
+**Jackknife-aB+**,:math:`\geq 1-2\alpha`,:math:`\gtrsim 1-\alpha`,:math:`K`,:math:`K \times n_{test}`
+**Jackknife-aB-minmax**,:math:`\geq 1-\alpha`,:math:`> 1-\alpha`,:math:`K`,:math:`K \times n_{test}`
