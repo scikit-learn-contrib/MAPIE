@@ -108,16 +108,16 @@ methods = ["score", "cumulated_score"]
 alpha = np.arange(0.01, 1, 0.01)
 for method in methods:
     clfs_, mapies_, y_preds_, y_ps_mapies_ = {}, {}, {}, {}
-    for i, (train_index, calib_index) in enumerate(kf.split(X_train)):
+    for fold, (train_index, calib_index) in enumerate(kf.split(X_train)):
         clf = GaussianNB().fit(X_train[train_index], y_train[train_index])
-        clfs_[i] = clf
+        clfs_[fold] = clf
         mapie = MapieClassifier(estimator=clf, cv="prefit", method=method)
         mapie.fit(X_train[calib_index], y_train[calib_index])
-        mapies_[i] = mapie
+        mapies_[fold] = mapie
         y_pred_mapie, y_ps_mapie = mapie.predict(
             X_test_distrib, alpha=alpha, include_last_label="randomized"
         )
-        y_preds_[i], y_ps_mapies_[i] = y_pred_mapie, y_ps_mapie
+        y_preds_[fold], y_ps_mapies_[fold] = y_pred_mapie, y_ps_mapie
     clfs[method], mapies[method], y_preds[method], y_ps_mapies[method] = (
         clfs_, mapies_, y_preds_, y_ps_mapies_
     )
@@ -161,7 +161,7 @@ def plot_results(
 ) -> None:
     tab10 = plt.cm.get_cmap('Purples', 4)
     fig, axs = plt.subplots(1, len(mapies), figsize=(20, 4))
-    for i, (key, mapie) in enumerate(mapies.items()):
+    for i, (_, mapie) in enumerate(mapies.items()):
         y_pi_sums = mapie.predict(
             X_test,
             alpha=alpha,
@@ -227,14 +227,14 @@ def plot_coverage_width(
     _, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     axes[0].set_xlabel("1 - alpha")
     axes[0].set_ylabel("Effective coverage")
-    for i, cov in enumerate(coverages):
-        axes[0].plot(1-alpha, cov, label=f"Split {i+1}")
+    for i, coverage in enumerate(coverages):
+        axes[0].plot(1 - alpha, coverage, label=f"Split {i + 1}")
     axes[0].plot([0, 1], [0, 1], ls="--", color="k")
     axes[0].legend()
     axes[1].set_xlabel("1 - alpha")
     axes[1].set_ylabel("Average of prediction set sizes")
     for i, width in enumerate(widths):
-        axes[1].plot(1-alpha, width, label=f"Split {i+1}")
+        axes[1].plot(1 - alpha, width, label=f"Split {i+1}")
     axes[1].legend()
     plt.suptitle(
         "Effective coverage and prediction set size "
@@ -364,13 +364,13 @@ widths_score_crossval = np.array(
 fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
 axes[0].set_xlabel("1 - alpha")
 axes[0].set_ylabel("Effective coverage")
-for i, cov in enumerate([coverages_score_mean, coverages_score_crossval]):
-    axes[0].plot(1 - alpha, cov)
+for i, coverage in enumerate([coverages_score_mean, coverages_score_crossval]):
+    axes[0].plot(1 - alpha, coverage)
 axes[0].plot([0, 1], [0, 1], ls="--", color="k")
 axes[1].set_xlabel("1 - alpha")
 axes[1].set_ylabel("Average of prediction set sizes")
 for i, widths in enumerate([widths_score_mean, widths_score_crossval]):
-    axes[1].plot(1-alpha, widths)
+    axes[1].plot(1 - alpha, widths)
 axes[1].legend(["mean", "crossval"], loc=[1, 0])
 plt.suptitle(
     "Effective coverage and prediction set sizes for ``mean`` "
@@ -398,9 +398,9 @@ plt.plot(
     color="k",
     label=label
 )
-for i, cov in enumerate(coverages[0]):
-    label = f"Split {i+1}: {np.abs(cov - (1 - alpha)).mean(): .3f}"
-    plt.plot(1-alpha, cov - (1-alpha), label=label)
+for i, coverage in enumerate(coverages[0]):
+    label = f"Split {i + 1}: {np.abs(coverage - (1 - alpha)).mean(): .3f}"
+    plt.plot(1 - alpha, coverage - (1 - alpha), label=label)
 plt.axhline(0, color="k", ls=":")
 plt.xlabel("1 - alpha")
 plt.ylabel("Deviation from perfect calibration")

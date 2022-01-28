@@ -525,7 +525,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
     def _fix_number_of_classes(
         self,
-        est_classes: ArrayLike,
+        n_classes_training: ArrayLike,
         y_proba: ArrayLike
     ) -> ArrayLike:
         """
@@ -535,9 +535,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
-        est_classes : ArrayLike
+        n_classes_training : ArrayLike
             Classes of the training set.
-        y_val_proba : ArrayLike
+        y   _proba : ArrayLike
             Probabilities of the validation set.
 
         Returns
@@ -545,17 +545,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         ArrayLike
             Probabilities with the right number of classes.
         """
-        y_proba_tot = np.zeros(
+        y_pred_full = np.zeros(
             shape=(len(y_proba), self.n_classes_)
         )
-        y_index = np.tile(est_classes, (len(y_proba), 1))
+        y_index = np.tile(n_classes_training, (len(y_proba), 1))
         np.put_along_axis(
-            y_proba_tot,
+            y_pred_full,
             y_index,
             y_proba,
             axis=1
         )
-        return y_proba_tot
+        return y_pred_full
 
     def _predict_oof_model(
         self,
@@ -882,13 +882,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             y_pred_proba_k = Parallel(
                 n_jobs=self.n_jobs, verbose=self.verbose
             )(
-                delayed(self._predict_oof_model)(est, X)
-                for est in self.estimators_
+                delayed(self._predict_oof_model)(estimator, X)
+                for estimator in self.estimators_
             )
             if agg_scores == "crossval":
                 y_pred_proba = np.stack(
                     [y_pred_proba_k[k] for k in self.k_], axis=0
                 )
+                print(y_pred_proba.shape)
                 y_pred_proba = self._check_proba_normalized(
                     y_pred_proba, axis=2
                 )
