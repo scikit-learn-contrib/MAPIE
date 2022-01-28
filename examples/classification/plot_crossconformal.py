@@ -32,7 +32,9 @@ import matplotlib.pyplot as plt
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import KFold
 from mapie.classification import MapieClassifier
-from mapie.metrics import classification_coverage_score
+from mapie.metrics import (
+    classification_coverage_score, classification_mean_width_score
+)
 from mapie._typing import ArrayLike
 
 
@@ -257,7 +259,10 @@ coverages = np.array(
 widths = np.array(
     [
         [
-            [y_ps[:, :, ia].sum(axis=1).mean() for ia, _ in enumerate(alpha)]
+            [
+                classification_mean_width_score(y_ps[:, :, ia])
+                for ia, _ in enumerate(alpha)
+            ]
             for _, y_ps in y_ps2.items()
         ] for _, y_ps2 in y_ps_mapies.items()
     ]
@@ -334,7 +339,7 @@ coverages_score_mean = np.array(
 
 widths_score_mean = np.array(
     [
-        y_ps_score_mean[:, :, ia].sum(axis=1).mean()
+        classification_mean_width_score(y_ps_score_mean[:, :, ia])
         for ia, _ in enumerate(alpha)
     ]
 )
@@ -350,7 +355,7 @@ coverages_score_crossval = np.array(
 
 widths_score_crossval = np.array(
     [
-        y_ps_score_crossval[:, :, ia].sum(axis=1).mean()
+        classification_mean_width_score(y_ps_score_crossval[:, :, ia])
         for ia, _ in enumerate(alpha)
     ]
 )

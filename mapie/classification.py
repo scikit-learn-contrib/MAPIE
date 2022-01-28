@@ -889,7 +889,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_pred_proba = np.stack(
                     [y_pred_proba_k[k] for k in self.k_], axis=0
                 )
-                print(y_pred_proba.shape)
                 y_pred_proba = self._check_proba_normalized(
                     y_pred_proba, axis=2
                 )
