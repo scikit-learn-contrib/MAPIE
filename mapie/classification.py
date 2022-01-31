@@ -937,9 +937,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         1 - y_pred_proba < self.conformity_scores_[:, None]
                     ).sum(axis=0)
                     prediction_sets = np.stack(
+                        # [
+                        #     y_comp > (n + 1 - quantile_)
+                        #     for quantile_ in self.quantiles_
+                        # ], axis=2
                         [
-                            y_comp > (n + 1 - quantile_)
-                            for quantile_ in self.quantiles_
+                            y_comp > alpha2 * (n - 1)
+                            for alpha2 in alpha_
                         ], axis=2
                     )
 
