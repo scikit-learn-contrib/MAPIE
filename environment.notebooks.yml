@@ -7,6 +7,7 @@ dependencies:
     - jupyter=1.0.0
     - jupyterlab=3.0.16
     - jupytext=1.11.2
+    - matplotlib=3.5.1
     - nbconvert=6.4.0
     - pandas=1.2.4
     - pip=21.0.1
