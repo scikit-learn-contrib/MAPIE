@@ -4,7 +4,7 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
-from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.utils.validation import _check_sample_weight
 
 from ._typing import ArrayLike
@@ -64,11 +64,11 @@ def check_null_weight(
 
 
 def fit_estimator(
-    estimator: RegressorMixin,
+    estimator: Union[RegressorMixin, ClassifierMixin],
     X: ArrayLike,
     y: ArrayLike,
     sample_weight: Optional[ArrayLike] = None,
-) -> RegressorMixin:
+) -> Union[RegressorMixin, ClassifierMixin]:
     """
     Fit an estimator on training data by distinguishing two cases:
     - the estimator supports sample weights and sample weights are provided.
@@ -77,7 +77,7 @@ def fit_estimator(
 
     Parameters
     ----------
-    estimator : RegressorMixin
+    estimator : Union[RegressorMixin, ClassifierMixin]
         Estimator to train.
 
     X : ArrayLike of shape (n_samples, n_features)
@@ -113,6 +113,48 @@ def fit_estimator(
     else:
         estimator.fit(X, y)
     return estimator
+
+
+def check_cv(
+    cv: Optional[Union[int, str, BaseCrossValidator]] = None
+) -> Union[str, BaseCrossValidator]:
+    """
+    Check if cross-validator is
+    ``None``, ``int``, ``"prefit"`` or ``BaseCrossValidator``.
+    Return a ``LeaveOneOut`` instance if integer equal to -1.
+    Return a ``KFold`` instance if integer superior or equal to 2.
+    Return a ``KFold`` instance if ``None``.
+    Else raise error.
+
+    Parameters
+    ----------
+    cv : Optional[Union[int, str, BaseCrossValidator]], optional
+        Cross-validator to check, by default ``None``.
+
+    Returns
+    -------
+    Optional[Union[float, str]]
+        'prefit' or None.
+
+    Raises
+    ------
+    ValueError
+        If the cross-validator is not valid.
+    """
+    if cv is None:
+        return KFold(n_splits=5)
+    if isinstance(cv, int):
+        if cv == -1:
+            return LeaveOneOut()
+        if cv >= 2:
+            return KFold(n_splits=cv)
+    if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
+        return cv
+    raise ValueError(
+        "Invalid cv argument. "
+        "Allowed values are None, -1, int >= 2, 'prefit', "
+        "or a BaseCrossValidator object (Kfold, LeaveOneOut)."
+    )
 
 
 def check_alpha(

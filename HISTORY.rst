@@ -8,6 +8,7 @@ History
 * Add "naive" and "top-k" methods in MapieClassifier
 * Include J+aB method in regression tutorial
 * Add MNIST example for classification
+* Add cross-conformal for classification
 * Add `notebooks` folder containing notebooks used for generating documentation tutorials
 * Uniformize the use of matrix k_ and add an argument "ensemble" to method 
 "predict" in regression.py
