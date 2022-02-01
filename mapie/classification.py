@@ -902,8 +902,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     ).sum(axis=0)
                     prediction_sets = np.stack(
                         [
-                            y_comp > alpha2 * (n - 1)
-                            for alpha2 in alpha_
+                            y_comp > _alpha * (n - 1)
+                            for _alpha in alpha_
                         ], axis=2
                     )
 

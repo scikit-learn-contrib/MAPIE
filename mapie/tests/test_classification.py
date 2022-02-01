@@ -323,12 +323,12 @@ class ImageClassifier:
             )
 
 
-class WrongOutputModel():
+class WrongOutputModel(ClassifierMixin):
 
     def __init__(self, proba_out: ArrayLike):
         self.trained_ = True
         self.proba_out = proba_out
-        self.classes_ = proba_out.shape[1]
+        self.classes_ = np.arange(len(np.unique(proba_out[0])))
 
     def fit(self, *args: Any) -> None:
         """Dummy fit."""
@@ -341,6 +341,11 @@ class WrongOutputModel():
             self.proba_out == self.proba_out.max(axis=1)[:, None]
         ).astype(int)
         return pred
+
+    def get_params(self, deep: bool = False):
+        return {
+            "proba_out": self.proba_out
+        }
 
 
 def do_nothing(*args: Any) -> None:

@@ -119,7 +119,11 @@ def check_cv(
     cv: Optional[Union[int, str, BaseCrossValidator]] = None
 ) -> Union[str, BaseCrossValidator]:
     """
-    Check if cross-validator is ``None`` or ``"prefit"``.
+    Check if cross-validator is
+    ``None``, ``int``, ``"prefit"`` or ``BaseCrossValidator``.
+    Return a ``LeaveOneOut`` instance if integer equal to -1.
+    Return a ``KFold`` instance if integer superior or equal to 2.
+    Return a ``KFold`` instance if ``None``.
     Else raise error.
 
     Parameters

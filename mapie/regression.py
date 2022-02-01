@@ -307,48 +307,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 check_is_fitted(self.estimator)
         return estimator
 
-    # def _check_cv(
-    #     self,
-    #     cv: Optional[Union[int, str, BaseCrossValidator]] = None,
-    # ) -> Union[str, BaseCrossValidator]:
-    #     """
-    #     Check if cross-validator is
-    #     ``None``, ``int``, ``"prefit"`` or ``BaseCrossValidator``.
-    #     Return a ``LeaveOneOut`` instance if integer equal to -1.
-    #     Return a ``KFold`` instance if integer superior or equal to 2.
-    #     Return a ``KFold`` instance if ``None``.
-    #     Else raise error.
-
-    #     Parameters
-    #     ----------
-    #     cv : Optional[Union[int, str, BaseCrossValidator]], optional
-    #         Cross-validator to check, by default ``None``.
-
-    #     Returns
-    #     -------
-    #     Union[str, BaseCrossValidator]
-    #         The cross-validator itself or a default ``KFold`` instance.
-
-    #     Raises
-    #     ------
-    #     ValueError
-    #         If the cross-validator is not valid.
-    #     """
-    #     if cv is None:
-    #         return KFold(n_splits=5)
-    #     if isinstance(cv, int):
-    #         if cv == -1:
-    #             return LeaveOneOut()
-    #         if cv >= 2:
-    #             return KFold(n_splits=cv)
-    #     if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
-    #         return cv
-    #     raise ValueError(
-    #         "Invalid cv argument. "
-    #         "Allowed values are None, -1, int >= 2, 'prefit', "
-    #         "or a BaseCrossValidator object (Kfold, LeaveOneOut, Subsample)."
-    #     )
-
     def _check_ensemble(
         self,
         ensemble: bool,
