@@ -681,7 +681,7 @@ def test_sum_proba_to_one_fit(y_pred_proba: ArrayLike) -> None:
     sum to one, return an error in the fit method.
     """
     wrong_model = WrongOutputModel(y_pred_proba)
-    mapie_clf = MapieClassifier(wrong_model)
+    mapie_clf = MapieClassifier(wrong_model, cv="prefit")
     with pytest.raises(
         AssertionError, match=r".*The sum of the scores is not equal to one.*"
     ):
@@ -699,7 +699,7 @@ def test_sum_proba_to_one_predict(
     sum to one, return an error in the predict method.
     """
     wrong_model = WrongOutputModel(y_pred_proba)
-    mapie_clf = MapieClassifier()
+    mapie_clf = MapieClassifier(cv="prefit")
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.single_estimator_ = wrong_model
     with pytest.raises(

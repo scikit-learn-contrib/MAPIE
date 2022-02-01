@@ -7,7 +7,7 @@ import numpy as np
 import numpy.ma as ma
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
@@ -16,6 +16,7 @@ from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D
 from .subsample import Subsample
 from .utils import (
+    check_cv,
     check_alpha,
     check_alpha_and_n_samples,
     check_n_features_in,
@@ -306,48 +307,47 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 check_is_fitted(self.estimator)
         return estimator
 
-    def _check_cv(
-        self,
-        cv: Optional[Union[int, str, BaseCrossValidator]] = None,
-    ) -> Union[str, BaseCrossValidator]:
-        """
-        Check if cross-validator is
-        ``None``, ``int``, ``"prefit"`` or ``BaseCrossValidator``.
-        Return a ``LeaveOneOut`` instance if integer equal to -1.
-        Return a ``KFold`` instance if integer superior or equal to 2.
-        Return a ``KFold`` instance if ``None``.
-        Else raise error.
+    # def _check_cv(
+    #     self,
+    #     cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+    # ) -> Union[str, BaseCrossValidator]:
+    #     """
+    #     Check if cross-validator is
+    #     ``None``, ``int``, ``"prefit"`` or ``BaseCrossValidator``.
+    #     Return a ``LeaveOneOut`` instance if integer equal to -1.
+    #     Return a ``KFold`` instance if integer superior or equal to 2.
+    #     Return a ``KFold`` instance if ``None``.
+    #     Else raise error.
 
-        Parameters
-        ----------
-        cv : Optional[Union[int, str, BaseCrossValidator]], optional
-            Cross-validator to check, by default ``None``.
+    #     Parameters
+    #     ----------
+    #     cv : Optional[Union[int, str, BaseCrossValidator]], optional
+    #         Cross-validator to check, by default ``None``.
 
-        Returns
-        -------
-        Union[str, BaseCrossValidator]
-            The cross-validator itself or a default ``KFold`` instance.
+    #     Returns
+    #     -------
+    #     Union[str, BaseCrossValidator]
+    #         The cross-validator itself or a default ``KFold`` instance.
 
-        Raises
-        ------
-        ValueError
-            If the cross-validator is not valid.
-        """
-
-        if cv is None:
-            return KFold(n_splits=5)
-        if isinstance(cv, int):
-            if cv == -1:
-                return LeaveOneOut()
-            if cv >= 2:
-                return KFold(n_splits=cv)
-        if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
-            return cv
-        raise ValueError(
-            "Invalid cv argument. "
-            "Allowed values are None, -1, int >= 2, 'prefit', "
-            "KFold, LeaveOneOut, or Subsample."
-        )
+    #     Raises
+    #     ------
+    #     ValueError
+    #         If the cross-validator is not valid.
+    #     """
+    #     if cv is None:
+    #         return KFold(n_splits=5)
+    #     if isinstance(cv, int):
+    #         if cv == -1:
+    #             return LeaveOneOut()
+    #         if cv >= 2:
+    #             return KFold(n_splits=cv)
+    #     if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
+    #         return cv
+    #     raise ValueError(
+    #         "Invalid cv argument. "
+    #         "Allowed values are None, -1, int >= 2, 'prefit', "
+    #         "or a BaseCrossValidator object (Kfold, LeaveOneOut, Subsample)."
+    #     )
 
     def _check_ensemble(
         self,
@@ -518,7 +518,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         # Checks
         self._check_parameters()
-        cv = self._check_cv(self.cv)
+        cv = check_cv(self.cv)
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
         X, y = check_X_y(

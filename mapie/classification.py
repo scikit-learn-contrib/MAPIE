@@ -5,7 +5,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_X_y, check_array, check_random_state
 from sklearn.utils.multiclass import type_of_target
@@ -15,6 +15,7 @@ from sklearn.preprocessing import label_binarize
 from ._typing import ArrayLike
 from ._machine_precision import EPSILON
 from .utils import (
+    check_cv,
     check_null_weight,
     check_n_features_in,
     check_alpha,
@@ -65,7 +66,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     cv: Optional[str]
         The cross-validation strategy for computing scores :
 
-        - ``None``, to use the "prefit"
+        - ``None``, to use the default 5-fold cross-validation
         - integer, to specify the number of folds.
           If equal to -1, equivalent to
           ``sklearn.model_selection.LeaveOneOut()``.
@@ -278,43 +279,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     "'classes_' attribute."
                 )
         return estimator
-
-    def _check_cv(
-        self, cv: Optional[Union[int, str, BaseCrossValidator]] = None
-    ) -> Union[str, BaseCrossValidator]:
-        """
-        Check if cross-validator is ``None`` or ``"prefit"``.
-        Else raise error.
-
-        Parameters
-        ----------
-        cv : Optional[Union[int, str, BaseCrossValidator]], optional
-            Cross-validator to check, by default ``None``.
-
-        Returns
-        -------
-        Optional[Union[float, str]]
-            'prefit' or None.
-
-        Raises
-        ------
-        ValueError
-            If the cross-validator is not valid.
-        """
-        if cv is None:
-            return "prefit"
-        if isinstance(cv, int):
-            if cv == -1:
-                return LeaveOneOut()
-            if cv >= 2:
-                return KFold(n_splits=cv)
-        if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
-            return cv
-        raise ValueError(
-            "Invalid cv argument. "
-            "Allowed values are None, -1, int >= 2, 'prefit', "
-            "or a BaseCrossValidator object (Kfold, LeaveOneOut)."
-        )
 
     def _check_include_last_label(
         self,
@@ -537,7 +501,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         ----------
         n_classes_training : ArrayLike
             Classes of the training set.
-        y   _proba : ArrayLike
+        y_proba : ArrayLike
             Probabilities of the validation set.
 
         Returns
@@ -697,7 +661,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         # Checks
         self.image_input = image_input
         self._check_parameters()
-        cv = self._check_cv(self.cv)
+        cv = check_cv(self.cv)
         estimator = self._check_estimator(X, y, self.estimator)
 
         if self.image_input:
@@ -859,7 +823,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
         # Checks
-        cv = self._check_cv(self.cv)
+        cv = check_cv(self.cv)
         include_last_label = self._check_include_last_label(include_last_label)
         alpha_ = check_alpha(alpha)
         check_is_fitted(self, self.fit_attributes)
@@ -879,16 +843,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba = self._check_proba_normalized(y_pred_proba)
         else:
-            y_pred_proba_k = Parallel(
-                n_jobs=self.n_jobs, verbose=self.verbose
-            )(
-                delayed(self._predict_oof_model)(estimator, X)
-                for estimator in self.estimators_
+            y_pred_proba_k = np.asarray(
+                Parallel(
+                    n_jobs=self.n_jobs, verbose=self.verbose
+                )(
+                    delayed(self._predict_oof_model)(estimator, X)
+                    for estimator in self.estimators_
+                )
             )
             if agg_scores == "crossval":
-                y_pred_proba = np.stack(
-                    [y_pred_proba_k[k] for k in self.k_], axis=0
-                )
+                y_pred_proba = y_pred_proba_k[self.k_]
                 y_pred_proba = self._check_proba_normalized(
                     y_pred_proba, axis=2
                 )
