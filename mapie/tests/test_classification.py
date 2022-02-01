@@ -342,7 +342,7 @@ class WrongOutputModel:
         ).astype(int)
         return pred
 
-    def get_params(self, deep: bool = False):
+    def get_params(self, deep: bool = False) -> Dict:
         return {
             "proba_out": self.proba_out
         }
