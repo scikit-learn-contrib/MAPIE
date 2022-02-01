@@ -80,7 +80,7 @@ master_doc = "index"
 
 # General information about the project.
 project = u"MAPIE"
-copyright = u"2021, Quantmetry"
+copyright = u"2022, Quantmetry"
 
 # The version info for the project you"re documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

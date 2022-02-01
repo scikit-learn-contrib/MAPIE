@@ -46,6 +46,7 @@ by Sadinle et al. (2019).
 # "Least Ambiguous Set-Valued Classifiers With Bounded Error Levels."
 # Journal of the American Statistical Association, 114:525, 223-234, 2019.
 
+from typing import List
 import numpy as np
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
@@ -139,7 +140,7 @@ for method in methods:
 
 
 def plot_scores(
-    alphas: list[float],
+    alphas: List[float],
     scores: ArrayLike,
     quantiles: ArrayLike,
     method: str,
@@ -179,7 +180,7 @@ plt.show()
 
 
 def plot_results(
-    alphas: list[float], y_pred_mapie: ArrayLike, y_ps_mapie: ArrayLike
+    alphas: List[float], y_pred_mapie: ArrayLike, y_ps_mapie: ArrayLike
 ) -> None:
     tab10 = plt.cm.get_cmap("Purples", 4)
     colors = {
