@@ -323,7 +323,7 @@ class ImageClassifier:
             )
 
 
-class WrongOutputModel(ClassifierMixin):
+class WrongOutputModel:
 
     def __init__(self, proba_out: ArrayLike):
         self.trained_ = True
