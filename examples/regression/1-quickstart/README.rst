@@ -3,4 +3,4 @@
 1. Quickstart examples
 ----------------------
 
-The following examples present the main functionalities of MAPIE on basic regression problems.
+The following examples present the main functionalities of MAPIE through basic quickstart regression problems.
