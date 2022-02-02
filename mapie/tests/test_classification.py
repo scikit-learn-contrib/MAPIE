@@ -7,11 +7,12 @@ import pytest
 import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.datasets import make_classification
-from sklearn.pipeline import make_pipeline, Pipeline
-from sklearn.linear_model import LogisticRegression
-from sklearn.utils.validation import check_is_fitted
 from sklearn.dummy import DummyClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import KFold, LeaveOneOut
 from sklearn.naive_bayes import GaussianNB
+from sklearn.pipeline import make_pipeline, Pipeline
+from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
@@ -50,7 +51,7 @@ Params = TypedDict(
     "Params",
     {
         "method": str,
-        "cv": Optional[str],
+        "cv": Optional[Union[int, str]],
         "random_state": Optional[int]
     }
 )
@@ -66,6 +67,16 @@ STRATEGIES = {
         Params(
             method="score",
             cv="prefit",
+            random_state=None
+        ),
+        ParamsPredict(
+            include_last_label=False
+        )
+    ),
+    "score_cv": (
+        Params(
+            method="score",
+            cv=3,
             random_state=None
         ),
         ParamsPredict(
@@ -125,10 +136,11 @@ STRATEGIES = {
 }
 
 COVERAGES = {
-    "score": 7 / 9,
+    "score": 8 / 9,
+    "score_cv": 1,
     "cumulated_score_include": 1,
     "cumulated_score_not_include": 5/9,
-    "cumulated_score_randomized": 8/9,
+    "cumulated_score_randomized": 1,
     "naive": 1,
     "top_k": 1
 }
@@ -140,17 +152,28 @@ y_toy_mapie = {
         [True, False, False],
         [True, True, False],
         [False, True, False],
+        [False, True, False],
+        [False, True, True],
         [False, True, True],
         [False, False, True],
-        [False, False, True],
-        [False, False, True],
+    ],
+    "score_cv": [
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
     ],
     "cumulated_score_include": [
         [True, True, False],
         [True, True, False],
         [True, True, False],
         [True, True, False],
-        [True, True, True],
+        [True, True, False],
         [False, True, True],
         [False, True, True],
         [False, True, True],
@@ -161,20 +184,20 @@ y_toy_mapie = {
         [True, False, False],
         [True, False, False],
         [False, True, False],
-        [True, True, True],
         [False, True, False],
-        [False, False, True],
+        [False, True, False],
+        [False, True, False],
         [False, False, True],
         [False, False, True],
     ],
     "cumulated_score_randomized": [
+        [True, False, False],
         [True, True, False],
         [True, True, False],
         [True, True, False],
-        [True, True, False],
-        [True, True, False],
+        [False, True, False],
         [False, True, True],
-        [False, False, True],
+        [False, True, True],
         [False, True, True],
         [False, True, True],
     ],
@@ -183,18 +206,18 @@ y_toy_mapie = {
         [True, False, False],
         [True, True, False],
         [True, True, False],
-        [True, True, True],
+        [False, True, False],
+        [False, True, False],
         [False, True, True],
         [False, True, True],
-        [False, False, True],
-        [False, False, True],
+        [False, True, True],
     ],
     "top_k": [
         [True, True, False],
         [True, True, False],
         [True, True, False],
         [True, True, False],
-        [True, True, True],
+        [True, True, False],
         [False, True, True],
         [False, True, True],
         [False, True, True],
@@ -218,7 +241,7 @@ IMAGE_INPUT = [
 ]
 
 X_toy = np.arange(9).reshape(-1, 1)
-y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2])
+y_toy = np.array([0, 0, 1, 0, 1, 1, 2, 1, 2])
 
 X_WRONG_IMAGE = [
     np.zeros((3, 1024, 1024, 3, 1)),
@@ -300,12 +323,12 @@ class ImageClassifier:
             )
 
 
-class WrongOutputModel():
+class WrongOutputModel:
 
     def __init__(self, proba_out: ArrayLike):
         self.trained_ = True
         self.proba_out = proba_out
-        self.classes_ = proba_out.shape[1]
+        self.classes_ = np.arange(len(np.unique(proba_out[0])))
 
     def fit(self, *args: Any) -> None:
         """Dummy fit."""
@@ -318,6 +341,11 @@ class WrongOutputModel():
             self.proba_out == self.proba_out.max(axis=1)[:, None]
         ).astype(int)
         return pred
+
+    def get_params(self, deep: bool = False) -> Dict[str, ArrayLike]:
+        return {
+            "proba_out": self.proba_out
+        }
 
 
 def do_nothing(*args: Any) -> None:
@@ -334,7 +362,6 @@ def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_clf = MapieClassifier()
     assert mapie_clf.method == "score"
-    assert mapie_clf.cv == "prefit"
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -354,13 +381,57 @@ def test_valid_method(method: str) -> None:
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
 
-@pytest.mark.parametrize("cv", [None, "prefit"])
+@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])
 def test_valid_cv(cv: Any) -> None:
-    """Test that valid cv raise no errors."""
+    """Test that valid cv raises no errors."""
     model = LogisticRegression(multi_class="multinomial")
     model.fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(estimator=model, cv=cv)
     mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.predict(X_toy, alpha=0.5)
+
+
+@pytest.mark.parametrize("agg_scores", ["mean", "crossval"])
+def test_agg_scores_argument(agg_scores: str) -> None:
+    """Test that predict passes with all valid 'agg_scores' arguments."""
+    mapie_clf = MapieClassifier(cv=3, method="score")
+    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
+
+
+@pytest.mark.parametrize("agg_scores", ["median", 1, None])
+def test_invalid_agg_scores_argument(agg_scores: str) -> None:
+    """Test that invalid 'agg_scores' raise errors."""
+    mapie_clf = MapieClassifier(cv=3, method="score")
+    mapie_clf.fit(X_toy, y_toy)
+    with pytest.raises(
+        ValueError, match=r".*Invalid 'agg_scores' argument.*"
+    ):
+        mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
+
+
+def test_agg_scores_crossval_cumulated_score() -> None:
+    """
+    Test that predict raises a temporary error when agg_scores is
+    'crossval' and with the 'cumulated_score' method.
+    """
+    mapie_clf = MapieClassifier(cv=3, method="cumulated_score")
+    mapie_clf.fit(X_toy, y_toy)
+    with pytest.raises(
+        ValueError, match=r".*is not implemented yet.*"
+    ):
+        mapie_clf.predict(X_toy, alpha=0.5, agg_scores="crossval")
+
+
+@pytest.mark.parametrize("cv", [100, 200, 300])
+def test_too_large_cv(cv: Any) -> None:
+    """Test that too large cv raise sklearn errors."""
+    mapie_clf = MapieClassifier(cv=cv)
+    with pytest.raises(
+        ValueError,
+        match=rf".*Cannot have number of splits n_splits={cv} greater.*",
+    ):
+        mapie_clf.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize(
@@ -491,10 +562,12 @@ def test_results_with_constant_sample_weights(
     """
     args_init, args_predict = STRATEGIES[strategy]
     include_last_label = args_predict['include_last_label']
+    lr = LogisticRegression(penalty="none")
+    lr.fit(X_toy, y_toy)
     n_samples = len(X_toy)
-    mapie_clf0 = MapieClassifier(**args_init)
-    mapie_clf1 = MapieClassifier(**args_init)
-    mapie_clf2 = MapieClassifier(**args_init)
+    mapie_clf0 = MapieClassifier(lr, **args_init)
+    mapie_clf1 = MapieClassifier(lr, **args_init)
+    mapie_clf2 = MapieClassifier(lr, **args_init)
     mapie_clf0.fit(X_toy, y_toy, sample_weight=None)
     mapie_clf1.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples))
     mapie_clf2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples) * 5)
@@ -613,7 +686,7 @@ def test_sum_proba_to_one_fit(y_pred_proba: ArrayLike) -> None:
     sum to one, return an error in the fit method.
     """
     wrong_model = WrongOutputModel(y_pred_proba)
-    mapie_clf = MapieClassifier(wrong_model)
+    mapie_clf = MapieClassifier(wrong_model, cv="prefit")
     with pytest.raises(
         AssertionError, match=r".*The sum of the scores is not equal to one.*"
     ):
@@ -631,7 +704,7 @@ def test_sum_proba_to_one_predict(
     sum to one, return an error in the predict method.
     """
     wrong_model = WrongOutputModel(y_pred_proba)
-    mapie_clf = MapieClassifier()
+    mapie_clf = MapieClassifier(cv="prefit")
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.single_estimator_ = wrong_model
     with pytest.raises(
@@ -746,3 +819,17 @@ def test_include_label_error_in_predict(
             X_toy, alpha=alpha,
             include_last_label=include_labels
         )
+
+
+def test_pred_loof_isnan() -> None:
+    """Test that if validation set is empty then prediction is empty."""
+    mapie_clf = MapieClassifier()
+    _, y_pred, _, _ = mapie_clf._fit_and_predict_oof_model(
+        estimator=LogisticRegression(),
+        X=X_toy,
+        y=y_toy,
+        train_index=[0, 1, 2, 3, 4],
+        val_index=[],
+        k=0,
+    )
+    assert len(y_pred) == 0

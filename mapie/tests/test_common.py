@@ -50,6 +50,7 @@ def test_default_parameters(MapieEstimator: BaseEstimator) -> None:
     """Test default values of input parameters."""
     mapie_estimator = MapieEstimator()
     assert mapie_estimator.estimator is None
+    assert mapie_estimator.cv is None
     assert mapie_estimator.verbose == 0
     assert mapie_estimator.n_jobs is None
 
