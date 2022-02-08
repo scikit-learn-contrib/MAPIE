@@ -182,6 +182,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> print(y_pred)
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
+
     valid_methods_ = ["naive", "base", "plus", "minmax"]
     valid_agg_functions_ = [None, "median", "mean"]
     fit_attributes = [
