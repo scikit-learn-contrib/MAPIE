@@ -39,7 +39,7 @@ from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 # Load input data and feature engineering
 demand_df = pd.read_csv(
-    "../data/demand_temperature.csv", parse_dates=True, index_col=0
+    "../../data/demand_temperature.csv", parse_dates=True, index_col=0
 )
 demand_df["Date"] = pd.to_datetime(demand_df.index)
 demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype("int64")
