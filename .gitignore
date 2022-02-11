@@ -67,6 +67,9 @@ coverage.xml
 doc/_build/
 doc/generated/
 
+# Notebooks checkpoints
+**.ipynb_checkpoints
+
 # PyBuilder
 target/
 
