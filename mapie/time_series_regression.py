@@ -153,12 +153,12 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     ) -> None:
         super().__init__(estimator, method, cv, n_jobs, agg_function, verbose)
 
-    def partial_fit(
+    def partial_update(
         self, X: ArrayLike, y: ArrayLike, ensemble: bool = True
     ) -> MapieTimeSeriesRegressor:
         """
         Update the ``residuals_`` attribute when data with known labels are
-        available
+        available.
 
         Parameters
         ----------
@@ -180,7 +180,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         MapieTimeSeriesRegressor
             The model itself.
         """
-        y_pred, y_pis = self.predict(X, alpha=0.5, ensemble=ensemble)
+        y_pred, _ = self.predict(X, alpha=0.5, ensemble=ensemble)
         new_residuals = np.abs(y - y_pred)
 
         cut_index = min(len(new_residuals), len(self.residuals_))
