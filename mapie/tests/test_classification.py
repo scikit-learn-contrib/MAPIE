@@ -410,17 +410,17 @@ def test_invalid_agg_scores_argument(agg_scores: str) -> None:
         mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
 
 
-def test_agg_scores_crossval_cumulated_score() -> None:
-    """
-    Test that predict raises a temporary error when agg_scores is
-    'crossval' and with the 'cumulated_score' method.
-    """
-    mapie_clf = MapieClassifier(cv=3, method="cumulated_score")
-    mapie_clf.fit(X_toy, y_toy)
-    with pytest.raises(
-        ValueError, match=r".*is not implemented yet.*"
-    ):
-        mapie_clf.predict(X_toy, alpha=0.5, agg_scores="crossval")
+# def test_agg_scores_crossval_cumulated_score() -> None:
+#     """
+#     Test that predict raises a temporary error when agg_scores is
+#     'crossval' and with the 'cumulated_score' method.
+#     """
+#     mapie_clf = MapieClassifier(cv=3, method="cumulated_score")
+#     mapie_clf.fit(X_toy, y_toy)
+#     with pytest.raises(
+#         ValueError, match=r".*is not implemented yet.*"
+#     ):
+#         mapie_clf.predict(X_toy, alpha=0.5, agg_scores="crossval")
 
 
 @pytest.mark.parametrize("cv", [100, 200, 300])
