@@ -604,7 +604,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
         alpha_ = check_alpha(alpha)
-        X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
 
         if alpha is None:
@@ -657,7 +656,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         )
                         for _alpha in alpha_
                     ]
-                )
+                ).data
                 y_pred_up = np.column_stack(
                     [
                         np.quantile(
@@ -668,7 +667,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         )
                         for _alpha in alpha_
                     ]
-                )
+                ).data
                 if ensemble:
                     y_pred = aggregate_all(self.agg_function, y_pred_multi)
+                np.stack([y_pred_low, y_pred_up], axis=1)
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)

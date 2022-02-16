@@ -398,8 +398,8 @@ def check_input_is_image(X: ArrayLike) -> None:
     Parameters
     ----------
     X: Union[
-        ArrayLike[n_samples, width, height],
-        ArrayLike[n_samples, width, height, n_channels]
+        ArrayLike[n_samples, width, height],
+        ArrayLike[n_samples, width, height, n_channels]
     ]
         Image input
 
