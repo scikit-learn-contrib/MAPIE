@@ -460,7 +460,7 @@ def test_pipeline_compatibility() -> None:
         ]
     )
     categorical_preprocessor = Pipeline(
-        steps = [
+        steps=[
             ("encoding", OneHotEncoder(handle_unknown="ignore"))
         ]
     )
