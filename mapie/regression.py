@@ -9,7 +9,7 @@ from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
-from sklearn.utils import check_array, check_X_y
+from sklearn.utils import check_array, _safe_indexing
 from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
@@ -383,19 +383,21 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           of shape (n_samples_val,).
 
         """
-        X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
+        X_train = _safe_indexing(X, train_index)
+        y_train = _safe_indexing(y, train_index)
+        X_val = _safe_indexing(X, val_index)
         if sample_weight is None:
             estimator = fit_estimator(estimator, X_train, y_train)
         else:
+            sample_weight_train = _safe_indexing(sample_weight, train_index)
             estimator = fit_estimator(
-                estimator, X_train, y_train, sample_weight[train_index]
+                estimator, X_train, y_train, sample_weight_train
             )
         if X_val.shape[0] > 0:
             y_pred = estimator.predict(X_val)
         else:
             y_pred = np.array([])
-        val_id = np.full_like(y_pred, k, dtype=int)
-        return estimator, y_pred, val_id, val_index
+        return estimator, y_pred, val_index
 
     def aggregate_with_mask(self, x: ArrayLike, k: ArrayLike) -> ArrayLike:
         """
@@ -479,9 +481,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         cv = check_cv(self.cv)
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
-        X, y = check_X_y(
-            X, y, force_all_finite=False, dtype=["float64", "int", "object"]
-        )
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
@@ -528,7 +527,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     )
                     for k, (train_index, val_index) in enumerate(cv.split(X))
                 )
-                self.estimators_, predictions, val_ids, val_indices = map(
+                self.estimators_, predictions, val_indices = map(
                     list, zip(*outputs)
                 )
 
@@ -537,13 +536,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 ]
 
                 for i, val_ind in enumerate(val_indices):
-                    pred_matrix[val_ind, i] = predictions[i]
+                    pred_matrix[val_ind, i] = np.ravel(predictions[i])
                     self.k_[val_ind, i] = 1
                 check_nan_in_aposteriori_prediction(pred_matrix)
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        self.residuals_ = np.abs(y - y_pred)
+        self.residuals_ = np.abs(np.ravel(y) - y_pred)
         return self
 
     def predict(
