@@ -9,7 +9,7 @@ from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
-from sklearn.utils import check_array, _safe_indexing
+from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import check_is_fitted
 
 from ._typing import ArrayLike
