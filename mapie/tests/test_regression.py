@@ -3,13 +3,18 @@ from __future__ import annotations
 from itertools import combinations
 from typing import Any, List, Optional, Tuple, Union
 
-import numpy as np
 import pytest
+import numpy as np
+import pandas as pd
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
 from sklearn.utils.validation import check_is_fitted
+from sklearn.pipeline import make_pipeline, Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
 from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike
@@ -279,20 +284,16 @@ def test_prediction_between_low_up(strategy: str) -> None:
 
 
 @pytest.mark.parametrize("method", ["plus", "minmax"])
-@pytest.mark.parametrize("cv", [-1, 2, 3, 5])
 @pytest.mark.parametrize("agg_function", ["mean", "median"])
-@pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2])
-def test_prediction_agg_function(
-    method: str, cv: Union[LeaveOneOut, KFold], agg_function: str, alpha: int
-) -> None:
+def test_prediction_agg_function(method: str, agg_function: str) -> None:
     """
     Test that predictions differ when ensemble is True/False,
     but not prediction intervals.
     """
-    mapie = MapieRegressor(method=method, cv=cv, agg_function=agg_function)
+    mapie = MapieRegressor(method=method, cv=2, agg_function=agg_function)
     mapie.fit(X, y)
-    y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True, alpha=alpha)
-    y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False, alpha=alpha)
+    y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True, alpha=0.1)
+    y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False, alpha=0.1)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     with pytest.raises(AssertionError):
@@ -432,7 +433,7 @@ def test_aggregate_with_mask_with_prefit() -> None:
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
     mapie_reg = MapieRegressor()
-    _, y_pred, _, _ = mapie_reg._fit_and_predict_oof_model(
+    _, y_pred, _ = mapie_reg._fit_and_predict_oof_model(
         estimator=LinearRegression(),
         X=X_toy,
         y=y_toy,
@@ -441,3 +442,35 @@ def test_pred_loof_isnan() -> None:
         k=0,
     )
     assert len(y_pred) == 0
+
+
+def test_pipeline_compatibility() -> None:
+    """Check that MAPIE works on pipeline based on pandas dataframes"""
+    X = pd.DataFrame(
+        {
+            "x_cat": ["A", "A", "B", "A", "A", "B"],
+            "x_num": [0, 1, 1, 4, np.nan, 5],
+            "y": [5, 7, 3, 9, 10, 8]
+        }
+    )
+    y = pd.Series([5, 7, 3, 9, 10, 8])
+    numeric_preprocessor = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="mean")),
+        ]
+    )
+    categorical_preprocessor = Pipeline(
+        steps = [
+            ("encoding", OneHotEncoder(handle_unknown="ignore"))
+        ]
+    )
+    preprocessor = ColumnTransformer(
+        [
+            ("cat", categorical_preprocessor, ["x_cat"]),
+            ("num", numeric_preprocessor, ["x_num"])
+        ]
+    )
+    pipe = make_pipeline(preprocessor, LinearRegression())
+    mapie = MapieRegressor(pipe)
+    mapie.fit(X, y)
+    mapie.predict(X)
