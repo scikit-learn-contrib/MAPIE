@@ -70,17 +70,30 @@ STRATEGIES = {
             random_state=None
         ),
         ParamsPredict(
-            include_last_label=False
+            include_last_label=False,
+            agg_scores="mean"
         )
     ),
-    "score_cv": (
+    "score_cv_mean": (
         Params(
             method="score",
             cv=3,
             random_state=None
         ),
         ParamsPredict(
-            include_last_label=False
+            include_last_label=False,
+            agg_scores="mean"
+        )
+    ),
+    "score_cv_crossval": (
+        Params(
+            method="score",
+            cv=3,
+            random_state=None
+        ),
+        ParamsPredict(
+            include_last_label=False,
+            agg_scores="crossval"
         )
     ),
     "cumulated_score_include": (
@@ -90,7 +103,8 @@ STRATEGIES = {
             random_state=42
         ),
         ParamsPredict(
-            include_last_label=True
+            include_last_label=True,
+            agg_scores="mean"
         )
     ),
     "cumulated_score_not_include": (
@@ -100,7 +114,8 @@ STRATEGIES = {
             random_state=42
         ),
         ParamsPredict(
-            include_last_label=False
+            include_last_label=False,
+            agg_scores="mean"
         )
     ),
     "cumulated_score_randomized": (
@@ -110,7 +125,74 @@ STRATEGIES = {
             random_state=42
         ),
         ParamsPredict(
-            include_last_label='randomized'
+            include_last_label='randomized',
+            agg_scores="mean"
+        )
+    ),
+    "cumulated_score_include_cv_mean": (
+        Params(
+            method="cumulated_score",
+            cv=3,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="mean"
+        )
+    ),
+    "cumulated_score_not_include_cv_mean": (
+        Params(
+            method="cumulated_score",
+            cv=3,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=False,
+            agg_scores="mean"
+        )
+    ),
+    "cumulated_score_randomized_cv_mean": (
+        Params(
+            method="cumulated_score",
+            cv=3,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label='randomized',
+            agg_scores="mean"
+        )
+    ),
+    "cumulated_score_include_cv_crossval": (
+        Params(
+            method="cumulated_score",
+            cv=3,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="crossval"
+        )
+    ),
+    "cumulated_score_not_include_cv_crossval": (
+        Params(
+            method="cumulated_score",
+            cv=3,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=False,
+            agg_scores="crossval"
+        )
+    ),
+    "cumulated_score_randomized_cv_crossval": (
+        Params(
+            method="cumulated_score",
+            cv=3,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label='randomized',
+            agg_scores="crossval"
         )
     ),
     "naive": (
@@ -120,7 +202,8 @@ STRATEGIES = {
             random_state=42
         ),
         ParamsPredict(
-            include_last_label=True
+            include_last_label=True,
+            agg_scores="mean"
         )
     ),
     "top_k": (
@@ -130,17 +213,25 @@ STRATEGIES = {
             random_state=42
         ),
         ParamsPredict(
-            include_last_label=True
+            include_last_label=True,
+            agg_scores="mean"
         )
     ),
 }
 
 COVERAGES = {
     "score": 8 / 9,
-    "score_cv": 1,
+    "score_cv_mean": 1,
+    "score_cv_crossval": 1,
     "cumulated_score_include": 1,
     "cumulated_score_not_include": 5/9,
     "cumulated_score_randomized": 1,
+    "cumulated_score_include_cv_mean": 1,
+    "cumulated_score_not_include_cv_mean": 1,
+    "cumulated_score_randomized_cv_mean": 1,
+    "cumulated_score_include_cv_crossval": 1,
+    "cumulated_score_not_include_cv_crossval": 1,
+    "cumulated_score_randomized_cv_crossval": 1,
     "naive": 1,
     "top_k": 1
 }
@@ -157,7 +248,18 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True],
     ],
-    "score_cv": [
+    "score_cv_mean": [
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+    ],
+    "score_cv_crossval": [
         [True, True, True],
         [True, True, True],
         [True, True, True],
@@ -200,6 +302,72 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True],
         [False, True, True],
+    ],
+    "cumulated_score_include_cv_mean": [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+    ],
+    "cumulated_score_not_include_cv_mean": [
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+    ],
+    "cumulated_score_randomized_cv_mean": [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+    ],
+    "cumulated_score_include_cv_crossval": [
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+    ],
+    "cumulated_score_not_include_cv_crossval": [
+        [True, True, False],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+    ],
+    "cumulated_score_randomized_cv_crossval": [
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, False],
+        [False, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
     ],
     "naive": [
         [True, False, False],
@@ -410,19 +578,6 @@ def test_invalid_agg_scores_argument(agg_scores: str) -> None:
         mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
 
 
-# def test_agg_scores_crossval_cumulated_score() -> None:
-#     """
-#     Test that predict raises a temporary error when agg_scores is
-#     'crossval' and with the 'cumulated_score' method.
-#     """
-#     mapie_clf = MapieClassifier(cv=3, method="cumulated_score")
-#     mapie_clf.fit(X_toy, y_toy)
-#     with pytest.raises(
-#         ValueError, match=r".*is not implemented yet.*"
-#     ):
-#         mapie_clf.predict(X_toy, alpha=0.5, agg_scores="crossval")
-
-
 @pytest.mark.parametrize("cv", [100, 200, 300])
 def test_too_large_cv(cv: Any) -> None:
     """Test that too large cv raise sklearn errors."""
@@ -460,14 +615,14 @@ def test_predict_output_shape(
 ) -> None:
     """Test predict output shape."""
     args_init, args_predict = STRATEGIES[strategy]
-    include_last_label = args_predict['include_last_label']
     mapie_clf = MapieClassifier(**args_init)
     X, y = dataset
     mapie_clf.fit(X, y)
     y_pred, y_ps = mapie_clf.predict(
         X,
-        include_last_label=include_last_label,
-        alpha=alpha
+        alpha=alpha,
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
@@ -481,13 +636,13 @@ def test_results_for_same_alpha(strategy: str) -> None:
     are similar with two equal values of alpha.
     """
     args_init, args_predict = STRATEGIES[strategy]
-    include_last_label = args_predict['include_last_label']
     mapie_clf = MapieClassifier(**args_init)
     mapie_clf.fit(X, y)
     _, y_ps = mapie_clf.predict(
         X,
-        include_last_label=include_last_label,
-        alpha=[0.1, 0.1]
+        alpha=[0.1, 0.1],
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     np.testing.assert_allclose(y_ps[:, 0, 0], y_ps[:, 0, 1])
     np.testing.assert_allclose(y_ps[:, 1, 0], y_ps[:, 1, 1])
@@ -502,23 +657,25 @@ def test_results_for_alpha_as_float_and_arraylike(
 ) -> None:
     """Test that output values do not depend on type of alpha."""
     args_init, args_predict = STRATEGIES[strategy]
-    include_last_label = args_predict['include_last_label']
     mapie_clf = MapieClassifier(**args_init)
     mapie_clf.fit(X, y)
     y_pred_float1, y_ps_float1 = mapie_clf.predict(
         X,
-        include_last_label=include_last_label,
-        alpha=alpha[0]
+        alpha=alpha[0],
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     y_pred_float2, y_ps_float2 = mapie_clf.predict(
         X,
-        include_last_label=include_last_label,
-        alpha=alpha[1]
+        alpha=alpha[1],
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     y_pred_array, y_ps_array = mapie_clf.predict(
         X,
-        include_last_label=include_last_label,
-        alpha=alpha
+        alpha=alpha,
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     np.testing.assert_allclose(y_pred_float1, y_pred_array)
     np.testing.assert_allclose(y_pred_float2, y_pred_array)
@@ -533,20 +690,21 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     regardless of number of parallel jobs.
     """
     args_init, args_predict = STRATEGIES[strategy]
-    include_last_label = args_predict['include_last_label']
     mapie_clf_single = MapieClassifier(n_jobs=1, **args_init)
     mapie_clf_multi = MapieClassifier(n_jobs=-1, **args_init)
     mapie_clf_single.fit(X_toy, y_toy)
     mapie_clf_multi.fit(X_toy, y_toy)
     y_pred_single, y_ps_single = mapie_clf_single.predict(
         X_toy,
-        include_last_label=include_last_label,
-        alpha=0.2
+        alpha=0.2,
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     y_pred_multi, y_ps_multi = mapie_clf_multi.predict(
         X_toy,
-        include_last_label=include_last_label,
-        alpha=0.2
+        alpha=0.2,
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     np.testing.assert_allclose(y_pred_single, y_pred_multi)
     np.testing.assert_allclose(y_ps_single, y_ps_multi)
@@ -561,7 +719,6 @@ def test_results_with_constant_sample_weights(
     or constant with different values.
     """
     args_init, args_predict = STRATEGIES[strategy]
-    include_last_label = args_predict['include_last_label']
     lr = LogisticRegression(penalty="none")
     lr.fit(X_toy, y_toy)
     n_samples = len(X_toy)
@@ -573,18 +730,21 @@ def test_results_with_constant_sample_weights(
     mapie_clf2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples) * 5)
     y_pred0, y_ps0 = mapie_clf0.predict(
         X_toy,
-        include_last_label=include_last_label,
-        alpha=0.2
+        alpha=0.2,
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     y_pred1, y_ps1 = mapie_clf1.predict(
         X_toy,
-        include_last_label=include_last_label,
-        alpha=0.2
+        alpha=0.2,
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     y_pred2, y_ps2 = mapie_clf2.predict(
         X_toy,
-        include_last_label=include_last_label,
-        alpha=0.2
+        alpha=0.2,
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred0, y_pred2)
@@ -608,14 +768,14 @@ def test_valid_prediction(alpha: Any) -> None:
 def test_toy_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     args_init, args_predict = STRATEGIES[strategy]
-    include_last_label = args_predict['include_last_label']
     clf = GaussianNB().fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(estimator=clf, **args_init)
     mapie_clf.fit(X_toy, y_toy)
     _, y_ps = mapie_clf.predict(
         X_toy,
-        include_last_label=include_last_label,
-        alpha=0.2
+        alpha=0.2,
+        include_last_label=args_predict['include_last_label'],
+        agg_scores=args_predict['agg_scores']
     )
     np.testing.assert_allclose(
         classification_coverage_score(y_toy, y_ps[:, :, 0]),
