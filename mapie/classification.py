@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
-from sklearn.utils import check_X_y, check_array, check_random_state
+from sklearn.utils import check_random_state, _safe_indexing
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 from sklearn.preprocessing import label_binarize
@@ -601,9 +601,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
           of shape (n_samples_val,).
 
         """
-        X_train, y_train, X_val, y_val = (
-            X[train_index], y[train_index], X[val_index], y[val_index]
-        )
+        X_train = _safe_indexing(X, train_index)
+        y_train = _safe_indexing(y, train_index)
+        X_val = _safe_indexing(X, val_index)
+        y_val = _safe_indexing(y, val_index)
+
         if sample_weight is None:
             estimator = fit_estimator(estimator, X_train, y_train)
         else:
@@ -666,10 +668,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         if self.image_input:
             check_input_is_image(X)
-        X, y = check_X_y(
-            X, y, force_all_finite=False, ensure_2d=self.image_input,
-            allow_nd=self.image_input, dtype=["float64", "int", "object"]
-        )
+        # X, y = check_X_y(
+        #     X, y, force_all_finite=False, ensure_2d=self.image_input,
+        #     allow_nd=self.image_input, dtype=["float64", "int", "object"]
+        # )
         assert type_of_target(y) == "multiclass"
         self.n_classes_ = len(set(y))
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
@@ -681,6 +683,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self.n_samples_val_ = X.shape[0]
 
         # Work
+
         if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred_proba = self.single_estimator_.predict_proba(X)
@@ -716,7 +719,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             self.conformity_scores_ = np.empty(y_pred_proba.shape)
         elif self.method == "score":
             self.conformity_scores_ = np.take_along_axis(
-                1 - y_pred_proba, y.reshape(-1, 1), axis=1
+                1 - y_pred_proba, np.ravel(y).reshape(-1, 1), axis=1
             )
         elif self.method == "cumulated_score":
             y_true = label_binarize(y=y, classes=estimator.classes_)
@@ -731,7 +734,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_pred_proba_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
             )
             y_proba_true = np.take_along_axis(
-                y_pred_proba, y.reshape(-1, 1), axis=1
+                y_pred_proba, np.ravel(y).reshape(-1, 1), axis=1
             )
             random_state = check_random_state(self.random_state)
             u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
@@ -744,7 +747,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             )
             self.conformity_scores_ = np.take_along_axis(
                 index,
-                y.reshape(-1, 1),
+                np.ravel(y).reshape(-1, 1),
                 axis=1
             )
 
@@ -829,13 +832,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         check_is_fitted(self, self.fit_attributes)
         if self.image_input:
             check_input_is_image(X)
-        X = check_array(
-            X,
-            force_all_finite=False,
-            ensure_2d=self.image_input,
-            allow_nd=self.image_input,
-            dtype=["float64", "object"]
-        )
+        # X = check_array(
+        #     X,
+        #     force_all_finite=False,
+        #     ensure_2d=self.image_input,
+        #     allow_nd=self.image_input,
+        #     dtype=["float64", "object"]
+        # )
 
         # Estimate probabilities from estimator(s)
         y_pred = self.single_estimator_.predict(X)
