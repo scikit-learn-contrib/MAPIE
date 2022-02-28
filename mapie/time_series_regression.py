@@ -16,11 +16,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     This class implements the EnbPI strategy and some variations
     for estimating prediction intervals on single-output time series.
-    It is ``MapieReegressor`` with one more method ``partial_fit``.
+    It is ``MapieRegressor`` with one more method ``partial_fit``.
     Actually, EnbPI only corresponds to MapieRegressor if the ``cv`` argument
     if of type ``Subsample`` (Jackknife+-after-Bootstrap method). Moreover, for
     the moment we consider the absolute values of the residuals of the model,
-    and consequently the prediction intervals are symetryc.
+    and consequently the prediction intervals are symmetryc. Moreover we did
+    not implement the PI's optimization to the oracle interval yet. It is still
+    a first step before implementing the actual EnbPI.
 
     Parameters
     ----------
@@ -153,7 +155,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     ) -> None:
         super().__init__(estimator, method, cv, n_jobs, agg_function, verbose)
 
-    def partial_update(
+    def partial_fit(
         self, X: ArrayLike, y: ArrayLike, ensemble: bool = True
     ) -> MapieTimeSeriesRegressor:
         """
@@ -169,7 +171,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             Input labels.
 
         ensemble : bool
-            Boolean corresponing to the ``ensemble`` argument of ``predict``
+            Boolean corresponding to the ``ensemble`` argument of ``predict``
             method, determining whether the predictions computed to determine
             the new ``residuals_``  are ensembled or not.
             If False, predictions are those of the model trained on the whole
