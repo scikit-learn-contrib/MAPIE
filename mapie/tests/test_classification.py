@@ -59,6 +59,7 @@ ParamsPredict = TypedDict(
     "ParamsPredict",
     {
         "include_last_label": Union[bool, str],
+        "agg_scores": str
     }
 )
 
@@ -719,7 +720,7 @@ def test_results_with_constant_sample_weights(
     or constant with different values.
     """
     args_init, args_predict = STRATEGIES[strategy]
-    lr = LogisticRegression(penalty="none")
+    lr = LogisticRegression(C=1e-99)
     lr.fit(X_toy, y_toy)
     n_samples = len(X_toy)
     mapie_clf0 = MapieClassifier(lr, **args_init)
@@ -746,6 +747,8 @@ def test_results_with_constant_sample_weights(
         include_last_label=args_predict['include_last_label'],
         agg_scores=args_predict['agg_scores']
     )
+    print(y_ps0[:, :])
+    print(y_ps2[:, :])
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred0, y_pred2)
     np.testing.assert_allclose(y_ps0, y_ps1)
