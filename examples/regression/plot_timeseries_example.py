@@ -25,7 +25,7 @@ We use a standard cross-validation in Mapie to estimate the prediction
 intervals, through the `sklearn.model_selection.KFold()` object.
 Residuals are therefore estimated using models trained on data with higher
 indices than the validation data, which is inappropriate for time-series data.
-Howerver, using a `sklearn.model_selection.TimeSeriesSplit` cross validation
+However, using a `sklearn.model_selection.TimeSeriesSplit` cross validation
 object for estimating the residuals breaks the theoretical guarantees of the
 Jackknife+ and CV+ methods.
 """

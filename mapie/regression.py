@@ -660,6 +660,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         for _alpha in alpha_
                     ]
                 )
+
                 y_pred_up = np.column_stack(
                     [
                         np.quantile(
