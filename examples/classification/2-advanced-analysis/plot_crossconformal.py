@@ -376,18 +376,18 @@ for strategy, params in STRATEGIES.items():
 
 coverages, widths, violations = {}, {}, {}
 
-for strategy, y_ps in y_ps.items():
+for strategy, y_ps_ in y_ps.items():
     coverages[strategy] = np.array(
         [
             classification_coverage_score(
                 y_test_distrib,
-                y_ps[:, :, ia]
+                y_ps_[:, :, ia]
             ) for ia, _ in enumerate(alpha)
         ]
     )
     widths[strategy] = np.array(
         [
-            classification_mean_width_score(y_ps[:, :, ia])
+            classification_mean_width_score(y_ps_[:, :, ia])
             for ia, _ in enumerate(alpha)
         ]
     )
