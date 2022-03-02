@@ -9,7 +9,7 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state, _safe_indexing
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import indexable, check_is_fitted, _num_samples
 from sklearn.preprocessing import label_binarize
 
 from ._typing import ArrayLike
@@ -122,7 +122,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     n_features_in_: int
         Number of features passed to the fit method.
 
-    n_samples_val_: Union[int, List[int]]
+    n_samples_: Union[int, List[int]]
         Number of samples passed to the fit method.
 
     conformity_scores_ : ArrayLike of shape (n_samples_train)
@@ -173,7 +173,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         "single_estimator_",
         "estimators_",
         "n_features_in_",
-        "n_samples_val_",
+        "n_samples_",
         "conformity_scores_"
     ]
 
@@ -612,7 +612,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             estimator = fit_estimator(
                 estimator, X_train, y_train, sample_weight[train_index]
             )
-        if X_val.shape[0] > 0:
+        if _num_samples(X_val) > 0:
             y_pred_proba = self._predict_oof_model(
                 estimator, X_val,
             )
@@ -665,13 +665,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self._check_parameters()
         cv = check_cv(self.cv)
         estimator = self._check_estimator(X, y, self.estimator)
-
         if self.image_input:
             check_input_is_image(X)
-        # X, y = check_X_y(
-        #     X, y, force_all_finite=False, ensure_2d=self.image_input,
-        #     allow_nd=self.image_input, dtype=["float64", "int", "object"]
-        # )
+        X, y = indexable(X, y)
         assert type_of_target(y) == "multiclass"
         self.n_classes_ = len(set(y))
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
@@ -680,10 +676,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         # Initialization
         self.estimators_: List[ClassifierMixin] = []
         self.k_ = np.empty_like(y, dtype=int)
-        self.n_samples_val_ = X.shape[0]
+        self.n_samples_ = _num_samples(X)
 
         # Work
-
         if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred_proba = self.single_estimator_.predict_proba(X)
@@ -832,13 +827,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         check_is_fitted(self, self.fit_attributes)
         if self.image_input:
             check_input_is_image(X)
-        # X = check_array(
-        #     X,
-        #     force_all_finite=False,
-        #     ensure_2d=self.image_input,
-        #     allow_nd=self.image_input,
-        #     dtype=["float64", "object"]
-        # )
 
         # Estimate probabilities from estimator(s)
         y_pred = self.single_estimator_.predict(X)
@@ -868,7 +856,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 raise ValueError("Invalid 'agg_scores' argument.")
 
         # Estimate prediction sets
-        n = self.n_samples_val_
+        n = self.n_samples_
         if alpha_ is None:
             return np.array(y_pred)
 

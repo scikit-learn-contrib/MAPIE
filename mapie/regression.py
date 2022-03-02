@@ -10,7 +10,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import indexable, check_is_fitted, _num_samples
 
 from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D
@@ -149,7 +149,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     n_features_in_: int
         Number of features passed to the fit method.
 
-    n_samples_val_: List[int]
+    n_samples_: List[int]
         Number of samples passed to the fit method.
 
     References
@@ -190,7 +190,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "k_",
         "residuals_",
         "n_features_in_",
-        "n_samples_val_",
+        "n_samples_",
     ]
 
     def __init__(
@@ -393,7 +393,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             estimator = fit_estimator(
                 estimator, X_train, y_train, sample_weight_train
             )
-        if X_val.shape[0] > 0:
+        if _num_samples(X_val) > 0:
             y_pred = estimator.predict(X_val)
         else:
             y_pred = np.array([])
@@ -481,6 +481,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         cv = check_cv(self.cv)
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
+        X, y = indexable(X, y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
@@ -491,7 +492,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
-            self.n_samples_val_ = [X.shape[0]]
+            self.n_samples_ = [_num_samples(X)]
             self.k_ = np.full(
                 shape=(len(y), 1), fill_value=np.nan, dtype=float
             )
@@ -513,7 +514,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             )
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
-                self.n_samples_val_ = [X.shape[0]]
+                self.n_samples_ = [_num_samples(X)]
             else:
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
@@ -531,7 +532,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     list, zip(*outputs)
                 )
 
-                self.n_samples_val_ = [
+                self.n_samples_ = [
                     np.array(pred).shape[0] for pred in predictions
                 ]
 
