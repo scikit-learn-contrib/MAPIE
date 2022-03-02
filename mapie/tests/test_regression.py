@@ -433,6 +433,7 @@ def test_aggregate_with_mask_with_prefit() -> None:
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
     mapie_reg = MapieRegressor()
+    y_pred: ArrayLike
     _, y_pred, _ = mapie_reg._fit_and_predict_oof_model(
         estimator=LinearRegression(),
         X=X_toy,
