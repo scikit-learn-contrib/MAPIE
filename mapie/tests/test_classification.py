@@ -347,11 +347,6 @@ class WrongOutputModel:
         ).astype(int)
         return pred
 
-    def get_params(self, deep: bool = False) -> Dict[str, ArrayLike]:
-        return {
-            "proba_out": self.proba_out
-        }
-
 
 def do_nothing(*args: Any) -> None:
     "Mock function that does nothing."
