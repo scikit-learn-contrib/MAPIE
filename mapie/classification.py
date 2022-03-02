@@ -9,7 +9,7 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state, _safe_indexing
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import indexable, check_is_fitted, _num_samples
+from sklearn.utils.validation import indexable, check_is_fitted, _num_samples, _check_y
 from sklearn.preprocessing import label_binarize
 
 from ._typing import ArrayLike
@@ -668,6 +668,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         if self.image_input:
             check_input_is_image(X)
         X, y = indexable(X, y)
+        y = _check_y(y)
         assert type_of_target(y) == "multiclass"
         self.n_classes_ = len(set(y))
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
