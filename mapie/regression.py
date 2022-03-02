@@ -10,7 +10,12 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import indexable, check_is_fitted, _num_samples, _check_y
+from sklearn.utils.validation import (
+    indexable,
+    check_is_fitted,
+    _num_samples,
+    _check_y,
+)
 
 from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D

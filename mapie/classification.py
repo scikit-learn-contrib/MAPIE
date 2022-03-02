@@ -7,10 +7,15 @@ from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import label_binarize
 from sklearn.utils import check_random_state, _safe_indexing
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import indexable, check_is_fitted, _num_samples, _check_y
-from sklearn.preprocessing import label_binarize
+from sklearn.utils.validation import (
+    indexable,
+    check_is_fitted,
+    _num_samples,
+    _check_y,
+)
 
 from ._typing import ArrayLike
 from ._machine_precision import EPSILON
