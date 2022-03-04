@@ -27,9 +27,7 @@ import warnings
 import numpy as np
 import pandas as pd
 from matplotlib import pylab as plt
-from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie.metrics import regression_coverage_score
 from mapie.subsample import Subsample
@@ -62,31 +60,14 @@ y_train = demand_train.loc[X_train.index, "Demand"]
 X_test = demand_test.loc[:, features]
 y_test = demand_test["Demand"]
 
-# CV parameter search
-n_iter = 10
-n_splits = 5
-tscv = TimeSeriesSplit(n_splits=n_splits)
-random_state = 59
-rf_model = RandomForestRegressor(random_state=random_state)
-rf_params = {"max_depth": randint(2, 30), "n_estimators": randint(10, 1e3)}
-cv_obj = RandomizedSearchCV(
-    rf_model,
-    param_distributions=rf_params,
-    n_iter=n_iter,
-    cv=tscv,
-    scoring="neg_root_mean_squared_error",
-    random_state=random_state,
-    verbose=0,
-    n_jobs=-1,
-)
-cv_obj.fit(X_train, y_train)
-best_est = cv_obj.best_estimator_
+# Model
+model = RandomForestRegressor(max_depth=15, n_estimators=673, random_state=59)
 
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.1
-cv_Mapie = Subsample(30, random_state=random_state)
+cv_Mapie = Subsample(30, random_state=59)
 mapie = MapieTimeSeriesRegressor(
-    best_est, method="plus", cv=cv_Mapie, agg_function="median", n_jobs=-1
+    model, method="plus", cv=cv_Mapie, agg_function="median", n_jobs=-1
 )
 mapie.fit(X_train, y_train)
 
@@ -100,10 +81,10 @@ y_pred_5_steps, y_pis_5_steps = mapie.predict(X_test.iloc[:5, :], alpha=alpha)
 
 for step in range(5, len(X_test), 5):
     mapie.partial_fit(
-        X_test.iloc[(step - 5):step, :], y_test.iloc[(step - 5):step]
+        X_test.iloc[(step - 5) : step, :], y_test.iloc[(step - 5) : step]
     )
     y_pred_step, y_pis_step = mapie.predict(
-        X_test.iloc[step:(step + 5), :], alpha=alpha
+        X_test.iloc[step : (step + 5), :], alpha=alpha
     )
     y_pred_5_steps = np.concatenate((y_pred_5_steps, y_pred_step), axis=0)
     y_pis_5_steps = np.concatenate((y_pis_5_steps, y_pis_step), axis=0)

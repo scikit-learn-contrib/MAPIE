@@ -182,7 +182,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> print(y_pred)
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
-
+    cv_need_agg_function = [Subsample]
     valid_methods_ = ["naive", "base", "plus", "minmax"]
     valid_agg_functions_ = [None, "median", "mean"]
     fit_attributes = [
@@ -249,7 +249,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ------
         ValueError
             If ``agg_function`` is not in [``None``, ``"mean"``, ``"median"``],
-            or is ``None`` while cv class is ``Subsample``.
+            or is ``None`` while cv class is in ``cv_need_agg_function``.
         """
         if agg_function not in self.valid_agg_functions_:
             raise ValueError(
@@ -257,10 +257,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 "Allowed values are None, 'mean', 'median'."
             )
 
-        if isinstance(self.cv, Subsample) and (agg_function is None):
+        if ((agg_function is None) and
+            (type(self.cv) in self.cv_need_agg_function)):
             raise ValueError(
-                "You need to specify an aggregation function when "
-                "cv is a Subsample. "
+                f"You need to specify an aggregation function when "
+                "cv's type is in {self.cv_need_agg_function}. "
             )
         if (agg_function is not None) or (self.cv == "prefit"):
             return agg_function
@@ -543,7 +544,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 check_nan_in_aposteriori_prediction(pred_matrix)
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
-
         self.residuals_ = np.abs(y - y_pred)
         return self
 
@@ -626,15 +626,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 )
 
                 # At this point, y_pred_multi is of shape
-                # (n_samples_test, n_estimators_).
-                # If ``method`` is "plus":
-                #   - if ``cv`` is not a ``Subsample``,
-                #       we enforce y_pred_multi to be of shape
-                #       (n_samples_test, n_samples_train),
-                #       thanks to the folds identifier.
-                #   - if ``cv``is a ``Subsample``, the methode
-                #       ``aggregate_with_mask`` fits it to the right size
-                #       thanks to the shape of k_.
+                # (n_samples_test, n_estimators_). The method
+                # ``aggregate_with_mask`` fits it to the right size thanks to
+                # the shape of k_.
 
                 y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
 
