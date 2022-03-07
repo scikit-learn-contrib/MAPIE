@@ -781,6 +781,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     #     classification_coverage_score(y_toy, y_ps[:, :, 0]),
     #     COVERAGES[strategy],
     # )
+    print(y_ps[:, :, 0])
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
 
 
