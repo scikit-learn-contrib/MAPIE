@@ -14,7 +14,7 @@ from sklearn.pipeline import make_pipeline, Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
-from mapie.metrics import classification_coverage_score
+# from mapie.metrics import classification_coverage_score
 from mapie._typing import ArrayLike
 
 
