@@ -126,7 +126,7 @@ STRATEGIES = {
             random_state=42
         ),
         ParamsPredict(
-            include_last_label='randomized',
+            include_last_label="randomized",
             agg_scores="mean"
         )
     ),
@@ -159,7 +159,7 @@ STRATEGIES = {
             random_state=42
         ),
         ParamsPredict(
-            include_last_label='randomized',
+            include_last_label="randomized",
             agg_scores="mean"
         )
     ),
@@ -192,7 +192,7 @@ STRATEGIES = {
             random_state=42
         ),
         ParamsPredict(
-            include_last_label='randomized',
+            include_last_label="randomized",
             agg_scores="crossval"
         )
     ),
@@ -221,32 +221,35 @@ STRATEGIES = {
 }
 
 COVERAGES = {
-    "score": 8 / 9,
+    "score": 5 / 9,
     "score_cv_mean": 1,
-    "score_cv_crossval": 1,
+    "score_cv_crossval": 5 / 9,
     "cumulated_score_include": 1,
-    "cumulated_score_not_include": 5/9,
-    "cumulated_score_randomized": 1,
+    "cumulated_score_not_include": 5 / 9,
+    "cumulated_score_randomized": 5 / 9,
     "cumulated_score_include_cv_mean": 1,
     "cumulated_score_not_include_cv_mean": 1,
     "cumulated_score_randomized_cv_mean": 1,
     "cumulated_score_include_cv_crossval": 1,
     "cumulated_score_not_include_cv_crossval": 1,
-    "cumulated_score_randomized_cv_crossval": 1,
-    "naive": 1,
+    "cumulated_score_randomized_cv_crossval": 4 / 9,
+    "naive": 5 / 9,
     "top_k": 1
 }
+
+X_toy = np.arange(9).reshape(-1, 1)
+y_toy = np.array([0, 0, 1, 0, 1, 1, 2, 1, 2])
 
 y_toy_mapie = {
     "score": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
-        [True, True, False],
         [False, True, False],
         [False, True, False],
-        [False, True, True],
-        [False, True, True],
+        [False, True, False],
+        [False, True, False],
+        [False, False, True],
         [False, False, True],
     ],
     "score_cv_mean": [
@@ -261,26 +264,26 @@ y_toy_mapie = {
         [True, True, True],
     ],
     "score_cv_crossval": [
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [True, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
     ],
     "cumulated_score_include": [
+        [True, False, False],
+        [True, False, False],
         [True, True, False],
         [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
+        [False, True, False],
+        [False, True, False],
         [False, True, True],
         [False, True, True],
-        [False, True, True],
-        [False, True, True],
+        [False, False, True],
     ],
     "cumulated_score_not_include": [
         [True, False, False],
@@ -295,21 +298,21 @@ y_toy_mapie = {
     ],
     "cumulated_score_randomized": [
         [True, False, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
+        [True, False, False],
+        [True, False, False],
+        [False, True, False],
+        [False, False, False],
+        [False, True, False],
         [False, True, False],
         [False, True, True],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
+        [False, False, True],
     ],
     "cumulated_score_include_cv_mean": [
-        [True, False, False],
-        [True, False, False],
+        [True, True, True],
+        [True, True, True],
         [True, True, False],
-        [True, True, False],
-        [True, True, False],
+        [True, True, True],
+        [True, True, True],
         [True, True, True],
         [True, True, True],
         [True, True, True],
@@ -317,69 +320,69 @@ y_toy_mapie = {
     ],
     "cumulated_score_not_include_cv_mean": [
         [True, True, True],
+        [True, True, False],
+        [True, True, True],
+        [True, True, False],
         [True, True, True],
         [True, True, True],
         [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
+        [False, True, True],
+        [False, True, True],
     ],
     "cumulated_score_randomized_cv_mean": [
-        [True, False, False],
-        [True, False, False],
+        [True, True, True],
+        [True, True, True],
         [True, True, False],
-        [True, True, False],
-        [True, True, False],
+        [True, True, True],
+        [True, True, True],
         [True, True, True],
         [True, True, True],
         [True, True, True],
         [True, True, True],
     ],
     "cumulated_score_include_cv_crossval": [
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, False],
+        [True, True, False],
         [True, True, True],
         [True, True, True],
         [True, True, True],
     ],
     "cumulated_score_not_include_cv_crossval": [
         [True, True, False],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
     ],
     "cumulated_score_randomized_cv_crossval": [
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, False],
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
         [False, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
     ],
     "naive": [
         [True, False, False],
         [True, False, False],
-        [True, True, False],
-        [True, True, False],
+        [True, False, False],
         [False, True, False],
         [False, True, False],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
+        [False, True, False],
+        [False, True, False],
+        [False, False, True],
+        [False, False, True],
     ],
     "top_k": [
         [True, True, False],
@@ -396,21 +399,18 @@ y_toy_mapie = {
 
 IMAGE_INPUT = [
     {
-        'X_calib': np.zeros((3, 1024, 1024, 1)),
-        'X_test': np.ones((3, 1024, 1024, 1)),
+        "X_calib": np.zeros((3, 1024, 1024, 1)),
+        "X_test": np.ones((3, 1024, 1024, 1)),
     },
     {
-        'X_calib': np.zeros((3, 512, 512, 3)),
-        'X_test': np.ones((3, 512, 512, 3)),
+        "X_calib": np.zeros((3, 512, 512, 3)),
+        "X_test": np.ones((3, 512, 512, 3)),
     },
     {
-        'X_calib': np.zeros((3, 256, 512)),
-        'X_test': np.ones((3, 256, 512)),
+        "X_calib": np.zeros((3, 256, 512)),
+        "X_test": np.ones((3, 256, 512)),
     }
 ]
-
-X_toy = np.arange(9).reshape(-1, 1)
-y_toy = np.array([0, 0, 1, 0, 1, 1, 2, 1, 2])
 
 X_WRONG_IMAGE = [
     np.zeros((3, 1024, 1024, 3, 1)),
@@ -622,8 +622,8 @@ def test_predict_output_shape(
     y_pred, y_ps = mapie_clf.predict(
         X,
         alpha=alpha,
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
@@ -642,8 +642,8 @@ def test_results_for_same_alpha(strategy: str) -> None:
     _, y_ps = mapie_clf.predict(
         X,
         alpha=[0.1, 0.1],
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
     np.testing.assert_allclose(y_ps[:, 0, 0], y_ps[:, 0, 1])
     np.testing.assert_allclose(y_ps[:, 1, 0], y_ps[:, 1, 1])
@@ -663,20 +663,20 @@ def test_results_for_alpha_as_float_and_arraylike(
     y_pred_float1, y_ps_float1 = mapie_clf.predict(
         X,
         alpha=alpha[0],
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
     y_pred_float2, y_ps_float2 = mapie_clf.predict(
         X,
         alpha=alpha[1],
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
     y_pred_array, y_ps_array = mapie_clf.predict(
         X,
         alpha=alpha,
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
     np.testing.assert_allclose(y_pred_float1, y_pred_array)
     np.testing.assert_allclose(y_pred_float2, y_pred_array)
@@ -698,14 +698,14 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     y_pred_single, y_ps_single = mapie_clf_single.predict(
         X_toy,
         alpha=0.2,
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
     y_pred_multi, y_ps_multi = mapie_clf_multi.predict(
         X_toy,
         alpha=0.2,
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
     np.testing.assert_allclose(y_pred_single, y_pred_multi)
     np.testing.assert_allclose(y_ps_single, y_ps_multi)
@@ -732,23 +732,21 @@ def test_results_with_constant_sample_weights(
     y_pred0, y_ps0 = mapie_clf0.predict(
         X_toy,
         alpha=0.2,
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
     y_pred1, y_ps1 = mapie_clf1.predict(
         X_toy,
         alpha=0.2,
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
     y_pred2, y_ps2 = mapie_clf2.predict(
         X_toy,
         alpha=0.2,
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
-    print(y_ps0[:, :])
-    print(y_ps2[:, :])
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred0, y_pred2)
     np.testing.assert_allclose(y_ps0, y_ps1)
@@ -776,9 +774,9 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     mapie_clf.fit(X_toy, y_toy)
     _, y_ps = mapie_clf.predict(
         X_toy,
-        alpha=0.2,
-        include_last_label=args_predict['include_last_label'],
-        agg_scores=args_predict['agg_scores']
+        alpha=0.5,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
     )
     np.testing.assert_allclose(
         classification_coverage_score(y_toy, y_ps[:, :, 0]),
@@ -820,8 +818,8 @@ def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
     alpha = [0.65]
     quantile = [0.750183952461055]
     # fit
-    X_calib = X['X_calib']
-    X_test = X['X_test']
+    X_calib = X["X_calib"]
+    X_test = X["X_test"]
     cumclf = ImageClassifier(X_calib, X_test)
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
     mapie = MapieClassifier(
@@ -957,7 +955,7 @@ def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_method_error_in_predict(method: Any, alpha: float) -> None:
     """Test else condition for the method in .predict"""
-    mapie_clf = MapieClassifier(method='score')
+    mapie_clf = MapieClassifier(method="score")
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.method = method
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
@@ -975,7 +973,7 @@ def test_include_label_error_in_predict(
         "_check_include_last_label",
         do_nothing
     )
-    mapie_clf = MapieClassifier(method='cumulated_score')
+    mapie_clf = MapieClassifier(method="cumulated_score")
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid include.*"):
         mapie_clf.predict(

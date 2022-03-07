@@ -183,7 +183,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         method: str = "score",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
         n_jobs: Optional[int] = None,
-        random_state: Optional[Union[int, np.random.RandomState]] = 1,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
@@ -375,9 +375,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         y_pred_proba_cumsum : ArrayLike of shape (n_samples, n_classes)
             Cumsumed probabilities in the original order.
 
-        threshold : ArrayLike
-            Threshold to compare with y_proba_last_cumsum, can be either
-            the quantiles or the conformity score from training samples.
+        threshold : ArrayLike of shape (n_alpha,) or shape (n_samples_train,)
+            Threshold to compare with y_proba_last_cumsum, can be either:
+
+            - the quantiles associated with alpha values when
+              ``cv`` == "prefit" or ``agg_scores`` is "mean"
+            - the conformity score from training samples otherwise
+              (i.e., when ``cv`` is a CV splitter and
+              ``agg_scores`` is "crossval)
 
         include_last_label : Union[bool, str]
             Whether or not include the last label. If 'randomized',
@@ -437,15 +442,25 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         prediction_sets : ArrayLike of shape
             (n_samples, n_classes, n_threshold)
             Prediction set for each observation and each alpha.
+
         y_pred_index_last : ArrayLike of shape (n_samples, threshold)
             Index of the last included label.
+
         y_pred_proba_cumsum : ArrayLike of shape (n_samples, n_classes)
             Cumsumed probability of the model in the original order.
+
         y_pred_proba_last : ArrayLike of shape (n_samples, 1, threshold)
             Last included probability.
-        threshold : ArrayLike of shape (n_threshold, )
-            Threshold to compare with y_proba_last_cumsumed, can be either
-            the quantiles or the conformity score from training samples.
+
+        threshold : ArrayLike of shape (n_alpha,) or shape (n_samples_train,)
+            Threshold to compare with y_proba_last_cumsum, can be either:
+
+            - the quantiles associated with alpha values when
+              ``cv`` == "prefit" or ``agg_scores`` is "mean"
+            - the conformity score from training samples otherwise
+              (i.e., when ``cv`` is a CV splitter and
+              ``agg_scores`` is "crossval)
+
         Returns
         -------
         ArrayLike of shape (n_samples, n_classes, n_alpha)
@@ -841,7 +856,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         else:
             # Estimate of probabilities from estimator(s)
             # In all cases : len(y_pred_proba.shape) == 3
-            # with  (n_test, n_classes, n_alpha/n_conf_scores)
+            # with  (n_test, n_classes, n_alpha or n_train_samples)
             if cv == "prefit":
                 y_pred_proba = self.single_estimator_.predict_proba(X)
                 y_pred_proba = np.repeat(
@@ -900,6 +915,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     )
 
             elif self.method in ["cumulated_score", "naive"]:
+                # specify which thresholds will be used
                 if (cv == "prefit") or (agg_scores in ["mean"]):
                     thresholds = self.quantiles_
                 else:
@@ -942,10 +958,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     )
                 else:
                     y_pred_included = (
-                        ~(y_pred_proba >= y_pred_proba_last - EPSILON)
+                        # ~(y_pred_proba >= y_pred_proba_last - EPSILON)
+                        (y_pred_proba <= y_pred_proba_last - EPSILON)
                     )
                 # remove last label randomly
-                if include_last_label == 'randomized':
+                if include_last_label == "randomized":
                     y_pred_included = self._add_random_tie_breaking(
                         y_pred_included,
                         y_pred_index_last,
