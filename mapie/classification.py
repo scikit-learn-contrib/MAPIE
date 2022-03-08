@@ -159,11 +159,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False False]
      [ True False False]
-     [ True False False]
+     [ True  True False]
      [ True  True False]
      [False  True False]
      [False  True  True]
-     [False False  True]
+     [False  True  True]
      [False False  True]
      [False False  True]]
     """
