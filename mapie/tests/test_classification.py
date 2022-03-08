@@ -16,7 +16,6 @@ from sklearn.pipeline import make_pipeline, Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
@@ -861,7 +860,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
             ("num", numeric_preprocessor, ["x_num"])
         ]
     )
-    pipe = make_pipeline(preprocessor, DecisionTreeClassifier())
+    pipe = make_pipeline(preprocessor, LogisticRegression())
     pipe.fit(X, y)
     mapie = MapieClassifier(estimator=pipe, **STRATEGIES[strategy][0])
     mapie.fit(X, y)
