@@ -910,7 +910,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     ).sum(axis=2)
                     prediction_sets = np.stack(
                         [
-                            y_pred_included > _alpha * (n - 1)
+                            y_pred_included > _alpha * (n - 1) - EPSILON
                             for _alpha in alpha_
                         ], axis=2
                     )
@@ -960,7 +960,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 else:
                     y_pred_included = (
                         # ~(y_pred_proba >= y_pred_proba_last - EPSILON)
-                        (y_pred_proba <= y_pred_proba_last - EPSILON)
+                        (y_pred_proba < y_pred_proba_last + EPSILON)
                     )
                 # remove last label randomly
                 if include_last_label == "randomized":
@@ -979,7 +979,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     # compare the summed prediction sets with (n+1)*(1-alpha)
                     prediction_sets = np.stack(
                         [
-                            prediction_sets_summed < quantile
+                            prediction_sets_summed < quantile + EPSILON
                             for quantile in self.quantiles_
                         ], axis=2
                     )
