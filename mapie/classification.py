@@ -903,8 +903,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                         1 - (self.quantiles_ + EPSILON)
                     )
                 else:
-                    y_pred_included = 1 - y_pred_proba < (
-                        self.conformity_scores_.ravel() + EPSILON
+                    y_pred_included = (
+                        1 - y_pred_proba < (
+                            self.conformity_scores_.ravel() + EPSILON
+                        )
                     ).sum(axis=2)
                     prediction_sets = np.stack(
                         [
