@@ -14,7 +14,7 @@ from sklearn.pipeline import make_pipeline, Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
-# from mapie.metrics import classification_coverage_score
+from mapie.metrics import classification_coverage_score
 from mapie._typing import ArrayLike
 
 
@@ -776,6 +776,10 @@ def test_toy_dataset_predictions(strategy: str) -> None:
         alpha=0.5,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(
+        classification_coverage_score(y_toy, y_ps[:, :, 0]),
+        COVERAGES[strategy],
     )
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
 
