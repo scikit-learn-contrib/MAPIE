@@ -79,3 +79,6 @@ target/
 # Images
 *.png
 *.jpeg
+
+# ZIP files
+*.zip
