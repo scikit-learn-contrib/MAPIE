@@ -226,7 +226,7 @@ STRATEGIES = {
 COVERAGES = {
     "score": 6 / 9,
     "score_cv_mean": 1,
-    "score_cv_crossval": 3 / 9,
+    "score_cv_crossval": 6 / 9,
     "cumulated_score_include": 1,
     "cumulated_score_not_include": 5 / 9,
     "cumulated_score_randomized": 5 / 9,
@@ -272,10 +272,10 @@ y_toy_mapie = {
         [False, False, False],
         [False, True, False],
         [False, True, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
         [False, True, False],
+        [False, False, False],
+        [False, True, True],
+        [False, True, True],
     ],
     "cumulated_score_include": [
         [True, False, False],
