@@ -902,7 +902,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             # Build prediction sets
             if self.method == "score":
                 if (cv == "prefit") or (agg_scores == "mean"):
-                    prediction_sets = y_pred_proba > (1 - self.quantiles_)
+                    prediction_sets = y_pred_proba > (1 - (self.quantiles_ + EPSILON) )
                 else:
                     y_pred_included = (
                         1 - y_pred_proba < self.conformity_scores_.ravel()
