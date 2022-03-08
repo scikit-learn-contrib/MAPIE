@@ -7,10 +7,15 @@ from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
-from sklearn.utils import check_X_y, check_array, check_random_state
-from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import check_is_fitted
 from sklearn.preprocessing import label_binarize
+from sklearn.utils import check_random_state, _safe_indexing
+from sklearn.utils.multiclass import type_of_target
+from sklearn.utils.validation import (
+    indexable,
+    check_is_fitted,
+    _num_samples,
+    _check_y,
+)
 
 from ._typing import ArrayLike
 from ._machine_precision import EPSILON
@@ -122,7 +127,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     n_features_in_: int
         Number of features passed to the fit method.
 
-    n_samples_val_: Union[int, List[int]]
+    n_samples_: Union[int, List[int]]
         Number of samples passed to the fit method.
 
     conformity_scores_ : ArrayLike of shape (n_samples_train)
@@ -173,7 +178,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         "single_estimator_",
         "estimators_",
         "n_features_in_",
-        "n_samples_val_",
+        "n_samples_",
         "conformity_scores_"
     ]
 
@@ -607,16 +612,18 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
           of shape (n_samples_val,).
 
         """
-        X_train, y_train, X_val, y_val = (
-            X[train_index], y[train_index], X[val_index], y[val_index]
-        )
+        X_train = _safe_indexing(X, train_index)
+        y_train = _safe_indexing(y, train_index)
+        X_val = _safe_indexing(X, val_index)
+        y_val = _safe_indexing(y, val_index)
+
         if sample_weight is None:
             estimator = fit_estimator(estimator, X_train, y_train)
         else:
             estimator = fit_estimator(
                 estimator, X_train, y_train, sample_weight[train_index]
             )
-        if X_val.shape[0] > 0:
+        if _num_samples(X_val) > 0:
             y_pred_proba = self._predict_oof_model(
                 estimator, X_val,
             )
@@ -669,13 +676,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self._check_parameters()
         cv = check_cv(self.cv)
         estimator = self._check_estimator(X, y, self.estimator)
-
         if self.image_input:
             check_input_is_image(X)
-        X, y = check_X_y(
-            X, y, force_all_finite=False, ensure_2d=self.image_input,
-            allow_nd=self.image_input, dtype=["float64", "int", "object"]
-        )
+        X, y = indexable(X, y)
+        y = _check_y(y)
         assert type_of_target(y) == "multiclass"
         self.n_classes_ = len(set(y))
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
@@ -684,7 +688,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         # Initialization
         self.estimators_: List[ClassifierMixin] = []
         self.k_ = np.empty_like(y, dtype=int)
-        self.n_samples_val_ = X.shape[0]
+        self.n_samples_ = _num_samples(X)
 
         # Work
         if cv == "prefit":
@@ -722,7 +726,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             self.conformity_scores_ = np.empty(y_pred_proba.shape)
         elif self.method == "score":
             self.conformity_scores_ = np.take_along_axis(
-                1 - y_pred_proba, y.reshape(-1, 1), axis=1
+                1 - y_pred_proba, np.ravel(y).reshape(-1, 1), axis=1
             )
         elif self.method == "cumulated_score":
             y_true = label_binarize(
@@ -739,7 +743,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 y_pred_proba_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
             )
             y_proba_true = np.take_along_axis(
-                y_pred_proba, y.reshape(-1, 1), axis=1
+                y_pred_proba, np.ravel(y).reshape(-1, 1), axis=1
             )
             random_state = check_random_state(self.random_state)
             u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
@@ -752,7 +756,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             )
             self.conformity_scores_ = np.take_along_axis(
                 index,
-                y.reshape(-1, 1),
+                np.ravel(y).reshape(-1, 1),
                 axis=1
             )
 
@@ -839,17 +843,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         check_is_fitted(self, self.fit_attributes)
         if self.image_input:
             check_input_is_image(X)
-        X = check_array(
-            X,
-            force_all_finite=False,
-            ensure_2d=self.image_input,
-            allow_nd=self.image_input,
-            dtype=["float64", "object"]
-        )
 
         # Estimate prediction sets
         y_pred = self.single_estimator_.predict(X)
-        n = self.n_samples_val_
+        n = self.n_samples_
         if alpha_ is None:
             return np.array(y_pred)
 

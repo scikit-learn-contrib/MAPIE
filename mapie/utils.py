@@ -5,7 +5,8 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
-from sklearn.utils.validation import _check_sample_weight
+from sklearn.utils.validation import _check_sample_weight, _num_features
+from sklearn.utils import _safe_indexing
 
 from ._typing import ArrayLike
 
@@ -58,7 +59,8 @@ def check_null_weight(
     if sample_weight is not None:
         sample_weight = _check_sample_weight(sample_weight, X)
         non_null_weight = sample_weight != 0
-        X, y = X[non_null_weight, :], y[non_null_weight]
+        X = _safe_indexing(X, non_null_weight)
+        y = _safe_indexing(y, non_null_weight)
         sample_weight = sample_weight[non_null_weight]
     return sample_weight, X, y
 
@@ -255,7 +257,13 @@ def check_n_features_in(
     >>> print(check_n_features_in(X))
     5
     """
-    n_features_in: int = X.shape[1]
+    if hasattr(X, "shape"):
+        if len(X.shape) <= 1:
+            n_features_in = 1
+        else:
+            n_features_in = X.shape[1]
+    else:
+        n_features_in = _num_features(X)
     if cv == "prefit" and hasattr(estimator, "n_features_in_"):
         if cast(Any, estimator).n_features_in_ != n_features_in:
             raise ValueError(
@@ -398,8 +406,8 @@ def check_input_is_image(X: ArrayLike) -> None:
     Parameters
     ----------
     X: Union[
-        ArrayLike[n_samples, width, height],
-        ArrayLike[n_samples, width, height, n_channels]
+        ArrayLike[n_samples, width, height],
+        ArrayLike[n_samples, width, height, n_channels]
     ]
         Image input
 

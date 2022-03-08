@@ -9,8 +9,13 @@ from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
-from sklearn.utils import check_array, check_X_y
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils import _safe_indexing
+from sklearn.utils.validation import (
+    indexable,
+    check_is_fitted,
+    _num_samples,
+    _check_y,
+)
 
 from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D
@@ -149,7 +154,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     n_features_in_: int
         Number of features passed to the fit method.
 
-    n_samples_val_: List[int]
+    n_samples_: List[int]
         Number of samples passed to the fit method.
 
     References
@@ -190,7 +195,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "k_",
         "residuals_",
         "n_features_in_",
-        "n_samples_val_",
+        "n_samples_",
     ]
 
     def __init__(
@@ -341,7 +346,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         val_index: ArrayLike,
         k: int,
         sample_weight: Optional[ArrayLike] = None,
-    ) -> Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]:
+    ) -> Tuple[RegressorMixin, ArrayLike, ArrayLike]:
         """
         Fit a single out-of-fold model on a given training set and
         perform predictions on a test set.
@@ -372,30 +377,30 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        Tuple[RegressorMixin, ArrayLike, ArrayLike, ArrayLike]
+        Tuple[RegressorMixin, ArrayLike, ArrayLike]
 
         - [0]: Fitted estimator
         - [1]: Estimator predictions on the validation fold,
-          of shape (n_samples_val,)
-        - [2]: Identification number of the validation fold,
           of shape (n_samples_val,)
         - [3]: Validation data indices,
           of shape (n_samples_val,).
 
         """
-        X_train, y_train, X_val = X[train_index], y[train_index], X[val_index]
+        X_train = _safe_indexing(X, train_index)
+        y_train = _safe_indexing(y, train_index)
+        X_val = _safe_indexing(X, val_index)
         if sample_weight is None:
             estimator = fit_estimator(estimator, X_train, y_train)
         else:
+            sample_weight_train = _safe_indexing(sample_weight, train_index)
             estimator = fit_estimator(
-                estimator, X_train, y_train, sample_weight[train_index]
+                estimator, X_train, y_train, sample_weight_train
             )
-        if X_val.shape[0] > 0:
+        if _num_samples(X_val) > 0:
             y_pred = estimator.predict(X_val)
         else:
             y_pred = np.array([])
-        val_id = np.full_like(y_pred, k, dtype=int)
-        return estimator, y_pred, val_id, val_index
+        return estimator, y_pred, val_index
 
     def aggregate_with_mask(self, x: ArrayLike, k: ArrayLike) -> ArrayLike:
         """
@@ -479,9 +484,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         cv = check_cv(self.cv)
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
-        X, y = check_X_y(
-            X, y, force_all_finite=False, dtype=["float64", "int", "object"]
-        )
+        X, y = indexable(X, y)
+        y = _check_y(y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
@@ -492,7 +496,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
-            self.n_samples_val_ = [X.shape[0]]
+            self.n_samples_ = [_num_samples(X)]
             self.k_ = np.full(
                 shape=(len(y), 1), fill_value=np.nan, dtype=float
             )
@@ -514,7 +518,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             )
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
-                self.n_samples_val_ = [X.shape[0]]
+                self.n_samples_ = [_num_samples(X)]
             else:
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
@@ -528,22 +532,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     )
                     for k, (train_index, val_index) in enumerate(cv.split(X))
                 )
-                self.estimators_, predictions, val_ids, val_indices = map(
+                self.estimators_, predictions, val_indices = map(
                     list, zip(*outputs)
                 )
 
-                self.n_samples_val_ = [
+                self.n_samples_ = [
                     np.array(pred).shape[0] for pred in predictions
                 ]
 
                 for i, val_ind in enumerate(val_indices):
-                    pred_matrix[val_ind, i] = predictions[i]
+                    pred_matrix[val_ind, i] = np.array(predictions[i]).ravel()
                     self.k_[val_ind, i] = 1
                 check_nan_in_aposteriori_prediction(pred_matrix)
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        self.residuals_ = np.abs(y - y_pred)
+        self.residuals_ = np.abs(np.ravel(y) - y_pred)
         return self
 
     def predict(
@@ -605,7 +609,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
         alpha_ = check_alpha(alpha)
-        X = check_array(X, force_all_finite=False, dtype=["float64", "object"])
         y_pred = self.single_estimator_.predict(X)
 
         if alpha is None:
@@ -658,7 +661,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         )
                         for _alpha in alpha_
                     ]
-                )
+                ).data
                 y_pred_up = np.column_stack(
                     [
                         np.quantile(
@@ -669,7 +672,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         )
                         for _alpha in alpha_
                     ]
-                )
+                ).data
                 if ensemble:
                     y_pred = aggregate_all(self.agg_function, y_pred_multi)
+                np.stack([y_pred_low, y_pred_up], axis=1)
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)

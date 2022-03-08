@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Optional, Tuple, Union, Iterable, Dict
 from typing_extensions import TypedDict
 
+import pandas as pd
 import pytest
 import numpy as np
 from sklearn.base import ClassifierMixin
@@ -11,6 +12,9 @@ from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import KFold, LeaveOneOut
 from sklearn.pipeline import make_pipeline, Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
 from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
@@ -510,11 +514,6 @@ class WrongOutputModel:
         ).astype(int)
         return pred
 
-    def get_params(self, deep: bool = False) -> Dict[str, ArrayLike]:
-        return {
-            "proba_out": self.proba_out
-        }
-
 
 def do_nothing(*args: Any) -> None:
     "Mock function that does nothing."
@@ -993,3 +992,36 @@ def test_pred_loof_isnan() -> None:
         k=0,
     )
     assert len(y_pred) == 0
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_pipeline_compatibility(strategy: str) -> None:
+    """Check that MAPIE works on pipeline based on pandas dataframes"""
+    X = pd.DataFrame(
+        {
+            "x_cat": ["A", "A", "B", "A", "A", "B"],
+            "x_num": [0, 1, 1, 4, np.nan, 5],
+        }
+    )
+    y = pd.Series([0, 1, 2, 0, 1, 0])
+    numeric_preprocessor = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="mean")),
+        ]
+    )
+    categorical_preprocessor = Pipeline(
+        steps=[
+            ("encoding", OneHotEncoder(handle_unknown="ignore"))
+        ]
+    )
+    preprocessor = ColumnTransformer(
+        [
+            ("cat", categorical_preprocessor, ["x_cat"]),
+            ("num", numeric_preprocessor, ["x_num"])
+        ]
+    )
+    pipe = make_pipeline(preprocessor, LogisticRegression())
+    pipe.fit(X, y)
+    mapie = MapieClassifier(estimator=pipe, **STRATEGIES[strategy][0])
+    mapie.fit(X, y)
+    mapie.predict(X)

@@ -14,6 +14,7 @@ History
 "predict" in regression.py
 * Add replication of the Chen Xu's tutorial testing Jackknife+aB vs Jackknife+
 * Add Jackknife+-after-Bootstrap documentation
+* Improve scikit-learn pipelines compatibility
 
 0.3.1 (2021-11-19)
 ------------------
