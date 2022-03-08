@@ -168,7 +168,7 @@ def plot_scores(
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 for i, method in enumerate(methods):
     conformity_scores = mapie[method].conformity_scores_
-    n = mapie[method].n_samples_val_
+    n = mapie[method].n_samples_
     quantiles = mapie[method].quantiles_
     plot_scores(alpha, conformity_scores, quantiles, method, axs[i])
 plt.show()
