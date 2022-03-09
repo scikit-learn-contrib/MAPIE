@@ -11,7 +11,7 @@ History
 * Add cross-conformal for classification
 * Add `notebooks` folder containing notebooks used for generating documentation tutorials
 * Uniformize the use of matrix k_ and add an argument "ensemble" to method 
-"predict" in regression.py
+  "predict" in regression.py
 * Add replication of the Chen Xu's tutorial testing Jackknife+aB vs Jackknife+
 * Add Jackknife+-after-Bootstrap documentation
 * Improve scikit-learn pipelines compatibility
