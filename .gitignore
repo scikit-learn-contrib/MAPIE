@@ -79,3 +79,6 @@ target/
 
 # Zip files
 *.zip
+
+# Imagenet Labels
+LOC_synset_mapping.txt
