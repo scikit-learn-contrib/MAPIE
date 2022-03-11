@@ -209,20 +209,20 @@ y_pred2, y_ps2 = mapie_clf2.predict(
 # the "real" coverage obtained on the test set.
 
 coverages1 = [
-    classification_coverage_score(y_test1, y_ps1[:, :, alpha_])
-    for alpha_, _ in enumerate(alpha)
+    classification_coverage_score(y_test1, y_ps1[:, :, i])
+    for i, _ in enumerate(alpha)
 ]
 coverages2 = [
-    classification_coverage_score(y_test2, y_ps2[:, :, alpha_])
-    for alpha_, _ in enumerate(alpha)
+    classification_coverage_score(y_test2, y_ps2[:, :, i])
+    for i, _ in enumerate(alpha)
 ]
 widths1 = [
-    classification_mean_width_score(y_ps1[:, :, alpha_])
-    for alpha_, _ in enumerate(alpha)
+    classification_mean_width_score(y_ps1[:, :, i])
+    for i, _ in enumerate(alpha)
 ]
 widths2 = [
-    classification_mean_width_score(y_ps2[:, :, alpha_])
-    for alpha_, _ in enumerate(alpha)
+    classification_mean_width_score(y_ps2[:, :, i])
+    for i, _ in enumerate(alpha)
 ]
 
 _, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
