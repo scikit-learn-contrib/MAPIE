@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 
 DISTNAME = "MAPIE"
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 DESCRIPTION = (
     "A scikit-learn-compatible module "
     "for estimating prediction intervals."
