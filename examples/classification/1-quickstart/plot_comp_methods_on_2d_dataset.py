@@ -53,7 +53,10 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 from mapie.classification import MapieClassifier
-from mapie.metrics import classification_coverage_score
+from mapie.metrics import (
+    classification_coverage_score,
+    classification_mean_width_score
+)
 from mapie._typing import ArrayLike
 
 
@@ -261,7 +264,7 @@ for method in methods:
         for i, _ in enumerate(alpha_)
     ]
     mean_width[method] = [
-        y_ps_mapie[method][:, :, i].sum(axis=1).mean()
+        classification_mean_width_score(y_ps_mapie[method][:, :, i])
         for i, _ in enumerate(alpha_)
     ]
 
