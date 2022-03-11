@@ -105,7 +105,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         for evaluation quantiles and prediction sets in cumulated_score.
         Pass an int for reproducible output across multiple function calls.
 
-        By default ```0``.
+        By default ```1``.
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
@@ -164,11 +164,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False False]
      [ True False False]
-     [ True False False]
+     [ True  True False]
      [ True  True False]
      [False  True False]
      [False  True  True]
-     [False False  True]
+     [False  True  True]
      [False False  True]
      [False False  True]]
     """
@@ -367,6 +367,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
     def _get_last_index_included(
         self,
         y_pred_proba_cumsum: ArrayLike,
+        threshold: ArrayLike,
         include_last_label: Optional[Union[bool, str]]
     ) -> ArrayLike:
         """
@@ -378,6 +379,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         ----------
         y_pred_proba_cumsum : ArrayLike of shape (n_samples, n_classes)
             Cumsumed probabilities in the original order.
+
+        threshold : ArrayLike of shape (n_alpha,) or shape (n_samples_train,)
+            Threshold to compare with y_proba_last_cumsum, can be either:
+
+            - the quantiles associated with alpha values when
+              ``cv`` == "prefit" or ``agg_scores`` is "mean"
+            - the conformity score from training samples otherwise
+              (i.e., when ``cv`` is a CV splitter and
+              ``agg_scores`` is "crossval)
 
         include_last_label : Union[bool, str]
             Whether or not include the last label. If 'randomized',
@@ -392,47 +402,43 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             (include_last_label is True) or
             (include_last_label == 'randomized')
         ):
-            y_pred_index_last = np.stack(
-                [
-                    np.argmin(
-                        np.ma.masked_less(
-                            y_pred_proba_cumsum,
-                            quantile
-                        ),
-                        axis=1
-                    )
-                    for quantile in self.quantiles_
-                ], axis=1
+            y_pred_index_last = (
+                np.argmin(
+                    np.ma.masked_less(
+                        y_pred_proba_cumsum,
+                        threshold[np.newaxis, np.newaxis, :] - EPSILON
+                    ),
+                    axis=1
+                )
             )
         elif (include_last_label is False):
-            y_pred_index_last = np.stack(
-                [
-                    np.argmax(
-                        np.ma.masked_where(
-                            y_pred_proba_cumsum > np.maximum(
-                                quantile,
-                                np.min(y_pred_proba_cumsum, axis=1) + EPSILON
-                            ).reshape(-1, 1),
-                            y_pred_proba_cumsum
-                        ),
-                        axis=1
-                    )
-                    for quantile in self.quantiles_
-                ], axis=1
+            max_threshold = np.maximum(
+                threshold[np.newaxis, :],
+                np.min(y_pred_proba_cumsum, axis=1) + EPSILON
+            )
+            y_pred_index_last = np.argmax(
+                np.ma.masked_where(
+                    (
+                        y_pred_proba_cumsum >
+                        max_threshold[:, np.newaxis, :] - EPSILON
+                    ),
+                    y_pred_proba_cumsum,
+                ), axis=1
             )
         else:
             raise ValueError(
                 "Invalid include_last_label argument. "
                 "Should be a boolean or 'randomized'."
             )
-        return y_pred_index_last
+        return y_pred_index_last[:, np.newaxis, :]
 
     def _add_random_tie_breaking(
         self,
         prediction_sets: ArrayLike,
         y_pred_index_last: ArrayLike,
         y_pred_proba_cumsum: ArrayLike,
-        y_pred_proba_last: ArrayLike
+        y_pred_proba_last: ArrayLike,
+        threshold: ArrayLike
     ) -> ArrayLike:
         """
         Randomly remove last label from prediction set based on the
@@ -441,14 +447,27 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Parameters
         ----------
-        prediction_sets : ArrayLike of shape (n_samples, n_classes, n_alpha)
+        prediction_sets : ArrayLike of shape
+            (n_samples, n_classes, n_threshold)
             Prediction set for each observation and each alpha.
-        y_pred_index_last : ArrayLike of shape (n_samples, n_alpha)
+
+        y_pred_index_last : ArrayLike of shape (n_samples, threshold)
             Index of the last included label.
+
         y_pred_proba_cumsum : ArrayLike of shape (n_samples, n_classes)
             Cumsumed probability of the model in the original order.
-        y_pred_proba_last : ArrayLike of shape (n_samples, n_alpha)
+
+        y_pred_proba_last : ArrayLike of shape (n_samples, 1, threshold)
             Last included probability.
+
+        threshold : ArrayLike of shape (n_alpha,) or shape (n_samples_train,)
+            Threshold to compare with y_proba_last_cumsum, can be either:
+
+            - the quantiles associated with alpha values when
+              ``cv`` == "prefit" or ``agg_scores`` is "mean"
+            - the conformity score from training samples otherwise
+              (i.e., when ``cv`` is a CV splitter and
+              ``agg_scores`` is "crossval)
 
         Returns
         -------
@@ -457,36 +476,26 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             labels.
         """
         # get cumsumed probabilities up to last retained label
-        y_proba_last_cumsumed = np.stack(
-            [
-                np.squeeze(
-                    np.take_along_axis(
-                        y_pred_proba_cumsum,
-                        y_pred_index_last[:, iq].reshape(-1, 1),
-                        axis=1
-                    )
-                )
-                for iq, _ in enumerate(self.quantiles_)
-            ], axis=1
+        y_proba_last_cumsumed = np.squeeze(
+            np.take_along_axis(
+                y_pred_proba_cumsum,
+                y_pred_index_last,
+                axis=1
+            ), axis=1
         )
         # compute V parameter from Romano+(2020)
-        vs = np.stack(
-            [
-                (
-                    y_proba_last_cumsumed[:, iq]
-                    - quantile
-                ) / np.squeeze(y_pred_proba_last[:, :, iq])
-                for iq, quantile in enumerate(self.quantiles_)
-            ], axis=1,
+        vs = (
+            (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
+            y_pred_proba_last[:, 0, :]
         )
         # get random numbers for each observation and alpha value
         random_state = check_random_state(self.random_state)
-        us = random_state.uniform(size=prediction_sets.shape[0])
+        us = random_state.uniform(size=(prediction_sets.shape[0], 1))
         # remove last label from comparison between uniform number and V
-        vs_less_than_us = vs < us[:, np.newaxis]
+        vs_less_than_us = vs < us
         np.put_along_axis(
             prediction_sets,
-            y_pred_index_last[:, np.newaxis, :],
+            y_pred_index_last,
             vs_less_than_us[:, np.newaxis, :],
             axis=1
         )
@@ -723,7 +732,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 1 - y_pred_proba, np.ravel(y).reshape(-1, 1), axis=1
             )
         elif self.method == "cumulated_score":
-            y_true = label_binarize(y=y, classes=estimator.classes_)
+            y_true = label_binarize(
+                y=y, classes=self.single_estimator_.classes_
+            )
             index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
             y_pred_proba_sorted = np.take_along_axis(
                 y_pred_proba, index_sorted, axis=1
@@ -826,6 +837,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         - Tuple[ArrayLike, ArrayLike] of shapes
         (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
+        if self.method == "top_k":
+            agg_scores = "mean"
         # Checks
         cv = check_cv(self.cv)
         include_last_label = self._check_include_last_label(include_last_label)
@@ -834,39 +847,42 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         if self.image_input:
             check_input_is_image(X)
 
-        # Estimate probabilities from estimator(s)
-        y_pred = self.single_estimator_.predict(X)
-        if cv == "prefit":
-            y_pred_proba = self.single_estimator_.predict_proba(X)
-            y_pred_proba = self._check_proba_normalized(y_pred_proba)
-        else:
-            y_pred_proba_k = np.asarray(
-                Parallel(
-                    n_jobs=self.n_jobs, verbose=self.verbose
-                )(
-                    delayed(self._predict_oof_model)(estimator, X)
-                    for estimator in self.estimators_
-                )
-            )
-            if agg_scores == "crossval":
-                y_pred_proba = y_pred_proba_k[self.k_]
-                y_pred_proba = self._check_proba_normalized(
-                    y_pred_proba, axis=2
-                )
-            elif agg_scores == "mean":
-                y_pred_proba = np.mean(y_pred_proba_k, axis=0)
-                y_pred_proba = self._check_proba_normalized(
-                    y_pred_proba, axis=1
-                )
-            else:
-                raise ValueError("Invalid 'agg_scores' argument.")
-
         # Estimate prediction sets
+        y_pred = self.single_estimator_.predict(X)
         n = self.n_samples_
         if alpha_ is None:
             return np.array(y_pred)
 
         else:
+            # Estimate of probabilities from estimator(s)
+            # In all cases : len(y_pred_proba.shape) == 3
+            # with  (n_test, n_classes, n_alpha or n_train_samples)
+            if cv == "prefit":
+                y_pred_proba = self.single_estimator_.predict_proba(X)
+                y_pred_proba = np.repeat(
+                    y_pred_proba[:, :, np.newaxis], len(alpha_), axis=2
+                )
+            else:
+                y_pred_proba_k = np.asarray(
+                    Parallel(
+                        n_jobs=self.n_jobs, verbose=self.verbose
+                    )(
+                        delayed(self._predict_oof_model)(estimator, X)
+                        for estimator in self.estimators_
+                    )
+                )
+                if agg_scores == "crossval":
+                    y_pred_proba = np.moveaxis(y_pred_proba_k[self.k_], 0, 2)
+                elif agg_scores == "mean":
+                    y_pred_proba = np.mean(y_pred_proba_k, axis=0)
+                    y_pred_proba = np.repeat(
+                        y_pred_proba[:, :, np.newaxis], len(alpha_), axis=2
+                    )
+                else:
+                    raise ValueError("Invalid 'agg_scores' argument.")
+            # Check that sum of probas is equal to 1
+            y_pred_proba = self._check_proba_normalized(y_pred_proba, axis=1)
+
             # Choice of the quantile
             check_alpha_and_n_samples(alpha_, n)
             if self.method == "naive":
@@ -886,83 +902,92 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             # Build prediction sets
             if self.method == "score":
                 if (cv == "prefit") or (agg_scores == "mean"):
-                    prediction_sets = np.stack(
-                        [
-                            y_pred_proba > 1 - quantile
-                            for quantile in self.quantiles_
-                        ],
-                        axis=2,
+                    prediction_sets = y_pred_proba > (
+                        1 - (self.quantiles_ + EPSILON)
                     )
                 else:
-                    y_comp = (
-                        1 - y_pred_proba < self.conformity_scores_[:, None]
-                    ).sum(axis=0)
+                    y_pred_included = (
+                        1 - y_pred_proba < (
+                            self.conformity_scores_.ravel() + EPSILON
+                        )
+                    ).sum(axis=2)
                     prediction_sets = np.stack(
                         [
-                            y_comp > _alpha * (n - 1)
+                            y_pred_included > _alpha * (n - 1) - EPSILON
                             for _alpha in alpha_
                         ], axis=2
                     )
 
             elif self.method in ["cumulated_score", "naive"]:
+                # specify which thresholds will be used
                 if (cv == "prefit") or (agg_scores in ["mean"]):
-                    # sort labels by decreasing probability
-                    index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
-                    # sort probabilities by decreasing order
-                    y_pred_proba_sorted = np.take_along_axis(
-                        y_pred_proba, index_sorted, axis=1
+                    thresholds = self.quantiles_
+                else:
+                    thresholds = self.conformity_scores_.ravel()
+                # sort labels by decreasing probability
+                index_sorted = np.flip(
+                    np.argsort(y_pred_proba, axis=1), axis=1
+                )
+                # sort probabilities by decreasing order
+                y_pred_proba_sorted = np.take_along_axis(
+                    y_pred_proba, index_sorted, axis=1
+                )
+                # get sorted cumulated score
+                y_pred_proba_sorted_cumsum = np.cumsum(
+                    y_pred_proba_sorted, axis=1
+                )
+                # get cumulated score at their original position
+                y_pred_proba_cumsum = np.take_along_axis(
+                    y_pred_proba_sorted_cumsum,
+                    np.argsort(index_sorted, axis=1),
+                    axis=1
+                )
+                # get index of the last included label
+                y_pred_index_last = self._get_last_index_included(
+                    y_pred_proba_cumsum,
+                    thresholds,
+                    include_last_label
+                )
+                # get the probability of the last included label
+                y_pred_proba_last = np.take_along_axis(
+                    y_pred_proba,
+                    y_pred_index_last,
+                    axis=1
+                )
+                # get the prediction set by taking all probabilities
+                # above the last one
+                if (cv == "prefit") or (agg_scores in ["mean"]):
+                    y_pred_included = (
+                        (y_pred_proba > y_pred_proba_last - EPSILON)
                     )
-                    # get sorted cumulated score
-                    y_pred_proba_sorted_cumsum = np.cumsum(
-                        y_pred_proba_sorted, axis=1
+                else:
+                    y_pred_included = (
+                        # ~(y_pred_proba >= y_pred_proba_last - EPSILON)
+                        (y_pred_proba < y_pred_proba_last + EPSILON)
                     )
-                    # get cumulated score at their original position
-                    y_pred_proba_cumsum = np.take_along_axis(
-                        y_pred_proba_sorted_cumsum,
-                        np.argsort(index_sorted),
-                        axis=1
-                    )
-                    # get index of the last included label
-                    y_pred_index_last = self._get_last_index_included(
+                # remove last label randomly
+                if include_last_label == "randomized":
+                    y_pred_included = self._add_random_tie_breaking(
+                        y_pred_included,
+                        y_pred_index_last,
                         y_pred_proba_cumsum,
-                        include_last_label
+                        y_pred_proba_last,
+                        thresholds,
                     )
-                    # get the probability of the last included label
-                    y_pred_proba_last = np.stack(
-                        [
-                            np.take_along_axis(
-                                y_pred_proba,
-                                y_pred_index_last[:, iq].reshape(-1, 1),
-                                axis=1
-                            )
-                            for iq, _ in enumerate(self.quantiles_)
-                        ], axis=2
-                    )
-                    # get the prediction set by taking all probabilities
-                    # above the last one
+                if (cv == "prefit") or (agg_scores in ["mean"]):
+                    prediction_sets = y_pred_included
+                else:
+                    # compute the number of times the inequality is verified
+                    prediction_sets_summed = y_pred_included.sum(axis=2)
+                    # compare the summed prediction sets with (n+1)*(1-alpha)
                     prediction_sets = np.stack(
                         [
-                            y_pred_proba >= (
-                                y_pred_proba_last[:, :, iq] - EPSILON
-                            )
-                            for iq, _ in enumerate(self.quantiles_)
+                            prediction_sets_summed < quantile + EPSILON
+                            for quantile in self.quantiles_
                         ], axis=2
                     )
-                    # remove last label randomly
-                    if include_last_label == 'randomized':
-                        prediction_sets = self._add_random_tie_breaking(
-                            prediction_sets,
-                            y_pred_index_last,
-                            y_pred_proba_cumsum,
-                            y_pred_proba_last
-                        )
-
-                else:
-                    raise ValueError(
-                        '"cumulated_score" method with '
-                        'agg_scores = "crossval" is not implemented yet.'
-                    )
             elif self.method == "top_k":
+                y_pred_proba = y_pred_proba[:, :, 0]
                 index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
                 y_pred_index_last = np.stack(
                     [
@@ -991,5 +1016,4 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                     "Invalid method. "
                     "Allowed values are 'score' or 'cumulated_score'."
                 )
-
             return y_pred, prediction_sets
