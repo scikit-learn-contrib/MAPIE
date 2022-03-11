@@ -675,5 +675,4 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 ).data
                 if ensemble:
                     y_pred = aggregate_all(self.agg_function, y_pred_multi)
-                np.stack([y_pred_low, y_pred_up], axis=1)
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
