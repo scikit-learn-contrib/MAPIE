@@ -2,28 +2,23 @@ from __future__ import annotations
 
 from typing import Iterable, List, Optional, Tuple, Union, cast
 
-from joblib import Parallel, delayed
 import numpy as np
 import numpy.ma as ma
+from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import (
-    indexable,
-    check_is_fitted,
-    _num_samples,
-    _check_y,
-)
+from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
 
 from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D
 from .subsample import Subsample
 from .utils import (
-    check_cv,
     check_alpha,
     check_alpha_and_n_samples,
+    check_cv,
     check_n_features_in,
     check_n_jobs,
     check_nan_in_aposteriori_prediction,
@@ -31,6 +26,7 @@ from .utils import (
     check_verbose,
     fit_estimator,
 )
+from .residual_scores import ResidualScore
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
@@ -187,13 +183,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> print(y_pred)
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
+
     valid_methods_ = ["naive", "base", "plus", "minmax"]
     valid_agg_functions_ = [None, "median", "mean"]
     fit_attributes = [
         "single_estimator_",
         "estimators_",
         "k_",
-        "residuals_",
+        "residual_score",
         "n_features_in_",
         "n_samples_",
     ]
@@ -232,9 +229,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
 
-    def _check_agg_function(
-        self, agg_function: Optional[str] = None
-    ) -> Optional[str]:
+    def _check_agg_function(self, agg_function: Optional[str] = None) -> Optional[str]:
         """
         Check if ``agg_function`` is correct, and consistent with other
         arguments.
@@ -393,9 +388,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             estimator = fit_estimator(estimator, X_train, y_train)
         else:
             sample_weight_train = _safe_indexing(sample_weight, train_index)
-            estimator = fit_estimator(
-                estimator, X_train, y_train, sample_weight_train
-            )
+            estimator = fit_estimator(estimator, X_train, y_train, sample_weight_train)
         if _num_samples(X_val) > 0:
             y_pred = estimator.predict(X_val)
         else:
@@ -430,8 +423,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
         if self.cv == "prefit":
             raise ValueError(
-                "There should not be aggregation of predictions if cv is "
-                "'prefit'"
+                "There should not be aggregation of predictions if cv is " "'prefit'"
             )
         # To aggregate with mean() the aggregation coud be done
         # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
@@ -447,6 +439,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self,
         X: ArrayLike,
         y: ArrayLike,
+        residual_score: ResidualScore,
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieRegressor:
         """
@@ -497,9 +490,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
             self.n_samples_ = [_num_samples(X)]
-            self.k_ = np.full(
-                shape=(len(y), 1), fill_value=np.nan, dtype=float
-            )
+            self.k_ = np.full(shape=(len(y), 1), fill_value=np.nan, dtype=float)
         else:
             self.k_ = np.full(
                 shape=(len(y), cv.get_n_splits(X, y)),  # type: ignore
@@ -532,13 +523,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     )
                     for k, (train_index, val_index) in enumerate(cv.split(X))
                 )
-                self.estimators_, predictions, val_indices = map(
-                    list, zip(*outputs)
-                )
+                self.estimators_, predictions, val_indices = map(list, zip(*outputs))
 
-                self.n_samples_ = [
-                    np.array(pred).shape[0] for pred in predictions
-                ]
+                self.n_samples_ = [np.array(pred).shape[0] for pred in predictions]
 
                 for i, val_ind in enumerate(val_indices):
                     pred_matrix[val_ind, i] = np.array(predictions[i]).ravel()
@@ -547,7 +534,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        self.residuals_ = np.abs(np.ravel(y) - y_pred)
+        residual_score.check_consistency(y, y_pred)
+        self.residual_scores = residual_score.get_residual_scores(y, y_pred)
+        self.residual_score = residual_score
+
         return self
 
     def predict(
@@ -615,17 +605,30 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return np.array(y_pred)
         else:
             alpha_ = cast(ArrayLike, alpha_)
-            check_alpha_and_n_samples(alpha_, self.residuals_.shape[0])
+            check_alpha_and_n_samples(alpha_, self.residual_scores.shape[0])
             if self.method in ["naive", "base"] or self.cv == "prefit":
-                quantile = np.quantile(
-                    self.residuals_, 1 - alpha_, interpolation="higher"
+                if self.residual_score.sym:
+                    residual_scores_q_low_bound = -np.quantile(
+                        self.residual_scores, 1 - alpha_, interpolation="higher"
+                    )
+                    residual_scores_q_up_bound = -residual_scores_q_low_bound
+                else:
+                    alpha_lower_bound = alpha_ / 2
+                    alpha_upper_bound = 1 - alpha_ / 2
+                    residual_scores_q_low_bound = np.quantile(
+                        self.residual_scores, alpha_lower_bound, interpolation="higher"
+                    )
+                    residual_scores_q_up_bound = np.quantile(
+                        self.residual_scores, alpha_upper_bound, interpolation="higher"
+                    )
+                y_pred_low = self.residual_score.get_observed_value(
+                    y_pred[:, np.newaxis], residual_scores_q_low_bound
                 )
-                y_pred_low = y_pred[:, np.newaxis] - quantile
-                y_pred_up = y_pred[:, np.newaxis] + quantile
+                y_pred_up = self.residual_score.get_observed_value(
+                    y_pred[:, np.newaxis], residual_scores_q_up_bound
+                )
             else:
-                y_pred_multi = np.column_stack(
-                    [e.predict(X) for e in self.estimators_]
-                )
+                y_pred_multi = np.column_stack([e.predict(X) for e in self.estimators_])
 
                 # At this point, y_pred_multi is of shape
                 # (n_samples_test, n_estimators_).
@@ -641,20 +644,57 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
 
                 if self.method == "plus":
-
-                    lower_bounds = y_pred_multi - self.residuals_
-                    upper_bounds = y_pred_multi + self.residuals_
+                    if self.residual_score.sym:
+                        y_pred_multi_with_residuals_lower_bound = (
+                            self.residual_score.get_observed_value(
+                                y_pred_multi, -self.residual_scores
+                            )
+                        )
+                        y_pred_multi_with_residuals_upper_bound = (
+                            self.residual_score.get_observed_value(
+                                y_pred_multi, self.residual_scores
+                            )
+                        )
+                    else:
+                        y_pred_multi_with_residuals_lower_bound = (
+                            self.residual_score.get_observed_value(
+                                y_pred_multi, self.residual_scores
+                            )
+                        )
+                        y_pred_multi_with_residuals_upper_bound = (
+                            y_pred_multi_with_residuals_lower_bound
+                        )
 
                 if self.method == "minmax":
                     lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
                     upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
-                    lower_bounds = lower_bounds - self.residuals_
-                    upper_bounds = upper_bounds + self.residuals_
+                    if self.residual_score.sym:
+                        y_pred_multi_with_residuals_lower_bound = (
+                            self.residual_score.get_observed_value(
+                                lower_bounds, -self.residual_scores
+                            )
+                        )
+                        y_pred_multi_with_residuals_upper_bound = (
+                            self.residual_score.get_observed_value(
+                                upper_bounds, self.residual_scores
+                            )
+                        )
+                    else:
+                        y_pred_multi_with_residuals_lower_bound = (
+                            self.residual_score.get_observed_value(
+                                lower_bounds, self.residual_scores
+                            )
+                        )
+                        y_pred_multi_with_residuals_upper_bound = (
+                            self.residual_score.get_observed_value(
+                                upper_bounds, self.residual_scores
+                            )
+                        )
 
                 y_pred_low = np.column_stack(
                     [
                         np.quantile(
-                            ma.masked_invalid(lower_bounds),
+                            ma.masked_invalid(y_pred_multi_with_residuals_lower_bound),
                             _alpha,
                             axis=1,
                             interpolation="lower",
@@ -665,7 +705,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_up = np.column_stack(
                     [
                         np.quantile(
-                            ma.masked_invalid(upper_bounds),
+                            ma.masked_invalid(y_pred_multi_with_residuals_upper_bound),
                             1 - _alpha,
                             axis=1,
                             interpolation="higher",
