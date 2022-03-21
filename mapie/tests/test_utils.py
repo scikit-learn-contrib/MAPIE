@@ -89,7 +89,7 @@ def test_fit_estimator_sample_weight() -> None:
         np.testing.assert_almost_equal(y_pred_1, y_pred_2)
 
 
-@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
+@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", ["a", "b"]])
 def test_invalid_alpha(alpha: Any) -> None:
     """Test that invalid alphas raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
@@ -99,6 +99,7 @@ def test_invalid_alpha(alpha: Any) -> None:
 @pytest.mark.parametrize(
     "alpha",
     [
+        0.95,
         np.linspace(0.05, 0.95, 5),
         [0.05, 0.95],
         (0.05, 0.95),

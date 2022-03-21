@@ -440,7 +440,6 @@ def test_pred_loof_isnan() -> None:
         y=y_toy,
         train_index=[0, 1, 2, 3, 4],
         val_index=[],
-        k=0,
     )
     assert len(y_pred) == 0
 

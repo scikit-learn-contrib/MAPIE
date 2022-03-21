@@ -5,21 +5,27 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
-from sklearn.utils.validation import _check_sample_weight, _num_features
+from sklearn.utils.validation import (
+    _check_sample_weight,
+    _num_features,
+    column_or_1d
+)
 from sklearn.utils import _safe_indexing
 
-from ._typing import ArrayLike
+from ._typing import ArrayLike, NDArray
 
 
 def check_null_weight(
-    sample_weight: ArrayLike, X: ArrayLike, y: ArrayLike
-) -> Tuple[ArrayLike, ArrayLike, ArrayLike]:
+    sample_weight: Optional[ArrayLike],
+    X: ArrayLike,
+    y: ArrayLike
+) -> Tuple[Optional[NDArray], ArrayLike, ArrayLike]:
     """
     Check sample weights and remove samples with null sample weights.
 
     Parameters
     ----------
-    sample_weight : ArrayLike of shape (n_samples,)
+    sample_weight : Optional[ArrayLike] of shape (n_samples,)
         Sample weights.
     X : ArrayLike of shape (n_samples, n_features)
         Training samples.
@@ -28,7 +34,7 @@ def check_null_weight(
 
     Returns
     -------
-    sample_weight : ArrayLike of shape (n_samples,)
+    sample_weight : Optional[NDArray] of shape (n_samples,)
         Non-null sample weights.
 
     X : ArrayLike of shape (n_samples, n_features)
@@ -57,7 +63,7 @@ def check_null_weight(
     [ 7  9 11 13 15]
     """
     if sample_weight is not None:
-        sample_weight = _check_sample_weight(sample_weight, X)
+        sample_weight = cast(NDArray, _check_sample_weight(sample_weight, X))
         non_null_weight = sample_weight != 0
         X = _safe_indexing(X, non_null_weight)
         y = _safe_indexing(y, non_null_weight)
@@ -193,25 +199,26 @@ def check_alpha(
     if alpha is None:
         return alpha
     if isinstance(alpha, float):
-        alpha_np = np.array([alpha])
+        alpha = np.array([alpha])
     elif isinstance(alpha, Iterable):
-        alpha_np = np.array(alpha)
+        alpha = np.array(alpha)
     else:
         raise ValueError(
             "Invalid alpha. Allowed values are float or Iterable."
         )
-    if len(alpha_np.shape) != 1:
+    alpha = cast(NDArray, alpha)
+    if len(alpha.shape) != 1:
         raise ValueError(
             "Invalid alpha. "
             "Please provide a one-dimensional list of values."
         )
-    if alpha_np.dtype.type not in [np.float64, np.float32]:
+    if alpha.dtype.type not in [np.float64, np.float32]:
         raise ValueError(
             "Invalid alpha. Allowed values are Iterable of floats."
         )
-    if np.any(np.logical_or(alpha_np <= 0, alpha_np >= 1)):
+    if np.any(np.logical_or(alpha <= 0, alpha >= 1)):
         raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
-    return alpha_np
+    return alpha
 
 
 def check_n_features_in(
@@ -258,6 +265,7 @@ def check_n_features_in(
     5
     """
     if hasattr(X, "shape"):
+        X = cast(NDArray, X)
         if len(X.shape) <= 1:
             n_features_in = 1
         else:
@@ -415,7 +423,7 @@ def check_input_is_image(X: ArrayLike) -> None:
     ------
     ValueError
     """
-    if len(X.shape) not in [3, 4]:
+    if len(np.array(X).shape) not in [3, 4]:
         raise ValueError(
             "Invalid X."
             "When X is an image, the number of dimensions"
