@@ -187,6 +187,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> print(y_pred)
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
+
     cv_need_agg_function = [Subsample]
     valid_methods_ = ["naive", "base", "plus", "minmax"]
     valid_agg_functions_ = [None, "median", "mean"]
@@ -262,8 +263,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 "Allowed values are None, 'mean', 'median'."
             )
 
-        if ((agg_function is None) and
-                (type(self.cv) in self.cv_need_agg_function)):
+        if (agg_function is None) and (
+            type(self.cv) in self.cv_need_agg_function
+        ):
             raise ValueError(
                 "You need to specify an aggregation function when "
                 f"cv's type is in {self.cv_need_agg_function}."

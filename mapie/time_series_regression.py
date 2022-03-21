@@ -1,5 +1,4 @@
 from __future__ import annotations
-from configparser import Interpolation
 
 from typing import Iterable, Optional, Tuple, Union, cast
 
@@ -42,14 +41,6 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     cv_need_agg_function = [BlockBootstrap, Subsample]
     valid_methods_ = ["naive", "base", "plus", "minmax"]
     valid_agg_functions_ = [None, "median", "mean"]
-    fit_attributes = [
-        "single_estimator_",
-        "estimators_",
-        "k_",
-        "residuals_",
-        "n_features_in_",
-        "n_samples_val_",
-    ]
 
     def __init__(
         self,
@@ -75,7 +66,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             The model itself.
         """
         self = super().fit(X=X, y=y, sample_weight=sample_weight)
-        y_pred = super().predict(X=X)
+        y_pred = super().predict(X)
         self.residuals_ = y - y_pred
         return self
 
@@ -143,7 +134,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             betas_0 = np.full_like(alpha_, np.nan, dtype=float)
 
             for ind, _alpha in enumerate(alpha_):
-                betas = np.linspace(0.0, _alpha, num=len(self.residuals_)+2)
+                betas = np.linspace(0.0, _alpha, num=len(self.residuals_) + 2)
 
                 one_alpha_beta = np.quantile(
                     self.residuals_,

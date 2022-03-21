@@ -136,8 +136,8 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
     >>> X = np.array([1,2,3,4,5,6,7,8,9,10])
     >>> for train_index, test_index in cv.split(X):
     ...    print(f"train index is {train_index}, test index is {test_index}")
-    train index is [5 0 3 3 7 9 3 5 2 4], test index is [8 1 6]
-    train index is [7 6 8 8 1 6 7 7 8 1], test index is [0 2 3 4 5 9]
+    train index is [1 2 3 4 5 6 1 2 3 4 5 6], test index is [8 9 7]
+    train index is [4 5 6 7 8 9 1 2 3 7 8 9], test index is []
     """
 
     def __init__(
@@ -148,11 +148,6 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         overlapping: bool = False,
         random_state: Optional[Union[int, RandomState]] = None,
     ) -> None:
-        if length is None and n_blocks is None:
-            raise ValueError(
-                "At least one argument in ['length', 'n_blocks]"
-                "has to be not None."
-            )
         self.n_resamplings = n_resamplings
         self.length = length
         self.n_blocks = n_blocks
@@ -181,6 +176,12 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         ValueError
             If ``length`` is greater than the train set size.
         """
+        if (self.length is None) and (self.n_blocks is None):
+            raise ValueError(
+                "At least one argument in ['length', 'n_blocks]"
+                "has to be not None."
+            )
+
         length = (
             self.length if self.length is not None else len(X) // self.n_blocks
         )
@@ -190,9 +191,9 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
             else (len(X) // length) + 1
         )
         indices = np.arange(len(X))
-        if length > len(indices):
+        if (length <= 0) or (length > len(indices)):
             raise ValueError(
-                "The length of blocks is greater than the lenght"
+                "The length of blocks is <= 0 or greater than the lenght"
                 "of training set."
             )
 
@@ -202,7 +203,6 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
             indices = indices[len(indices) % length:]
             blocks_number = len(indices) // length
             blocks = np.array_split(indices, indices_or_sections=blocks_number)
-
         random_state = check_random_state(self.random_state)
 
         for k in range(self.n_resamplings):

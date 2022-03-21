@@ -16,8 +16,8 @@ from mapie.metrics import regression_coverage_score
 from mapie.time_series_regression import MapieTimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
 
-X_toy = np.array(range(50)).reshape(-1, 1)
-y_toy = (5.0 + 2.0*X_toy).flatten()
+X_toy = np.array(range(5)).reshape(-1, 1)
+y_toy = (5.0 + 2.0 * X_toy ** 1.1).flatten()
 X, y = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
 k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
@@ -79,7 +79,7 @@ WIDTHS = {
     "cv": 3.76,
     "cv_plus": 3.76,
     "cv_minmax": 3.95,
-    "prefit": 4.81,
+    "prefit": 3.89,
     "cv_plus_median": 3.90,
     "jackknife_plus_ab": 3.76,
     "jackknife_minmax_ab": 3.96,
@@ -93,12 +93,12 @@ COVERAGES = {
     "jackknife_minmax": 0.952,
     "cv": 0.958,
     "cv_plus": 0.956,
-    "cv_minmax": 0.966,
-    "prefit": 0.980,
+    "cv_minmax": 0.956,
+    "prefit": 0.90,
     "cv_plus_median": 0.954,
     "jackknife_plus_ab": 0.952,
-    "jackknife_minmax_ab": 0.970,
-    "jackknife_plus_median_ab": 0.960,
+    "jackknife_minmax_ab": 0.960,
+    "jackknife_plus_median_ab": 0.946,
 }
 
 
@@ -365,8 +365,8 @@ def test_aggregate_with_mask_with_prefit() -> None:
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
     mapie_ts_reg = MapieTimeSeriesRegressor()
-    _, y_pred, _, _ = mapie_ts_reg._fit_and_predict_oof_model(
-        estimator=mapie_ts_reg(),
+    _, y_pred, _ = mapie_ts_reg._fit_and_predict_oof_model(
+        estimator=mapie_ts_reg,
         X=X_toy,
         y=y_toy,
         train_index=[0, 1, 2, 3, 4],
@@ -376,25 +376,32 @@ def test_pred_loof_isnan() -> None:
     assert len(y_pred) == 0
 
 
+def test_MapieTimeSeriesRegressor_alpha_is_None() -> None:
+    """Test ``predict`` when ``alpha`` is None."""
+    mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
+    pred = mapie_ts_reg.predict(X_toy, alpha=None)
+    assert pred.shape == (len(pred), )
+
+
 def test_MapieTimeSeriesRegressor_partial_fit_ensemble_T() -> None:
     """Test ``partial_update`` when ``ensemble`` is True."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
-    assert round(mapie_ts_reg.residuals_[-1], 2) == round(np.abs(15 - 14.4), 2)
+    assert round(mapie_ts_reg.residuals_[-1], 2) == round(
+        np.abs(14.189 - 14.049), 2
+    )
     mapie_ts_reg = mapie_ts_reg.partial_fit(
         X=np.array([[6]]), y=np.array([17.5]), ensemble=True
     )
-    assert round(mapie_ts_reg.residuals_[-1], 2) == round(
-        np.abs(17.5 - 16.56), 2
-    )
+    assert round(mapie_ts_reg.residuals_[-1], 2) == round(17.5 - 18.665, 2)
 
 
 def test_MapieTimeSeriesRegressor_partial_fit_ensemble_F() -> None:
     """Test ``partial_update`` when ``ensemble`` is False."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
-    assert round(mapie_ts_reg.residuals_[-1], 2) == round(np.abs(15 - 14.4), 2)
+    assert round(mapie_ts_reg.residuals_[-1], 2) == round(
+        np.abs(14.189 - 14.049), 2
+    )
     mapie_ts_reg = mapie_ts_reg.partial_fit(
         X=np.array([[6]]), y=np.array([17.5]), ensemble=False
     )
-    assert round(mapie_ts_reg.residuals_[-1], 2) == round(
-        np.abs(17.5 - 16.6), 2
-    )
+    assert round(mapie_ts_reg.residuals_[-1], 2) == round(17.5 - 18.66504, 2)
