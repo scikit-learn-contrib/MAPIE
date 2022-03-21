@@ -113,7 +113,8 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
     n_resamplings : int
         Number of resamplings. By default ``30``.
     length: int
-        Length of the blocks.
+        Length of the blocks. By default ``None``,
+        the length of the training set divided by ``n_blocks``.
     overlapping: bool
                 Whether the blocks can overlapp or not. By default ``False``.
     n_blocsk: int
@@ -122,6 +123,10 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
     random_state: Optional
         int or RandomState instance.
 
+    Raises
+    ------
+    ValueError
+        If both ``length`` and ``n_blocks`` are ``None``.
 
     Examples
     --------
@@ -138,11 +143,16 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
     def __init__(
         self,
         n_resamplings: int = 30,
-        length: int = 1,
+        length: Optional[int] = None,
         n_blocks: Optional[int] = None,
         overlapping: bool = False,
         random_state: Optional[Union[int, RandomState]] = None,
     ) -> None:
+        if length is None and n_blocks is None:
+            raise ValueError(
+                "At least one argument in ['length', 'n_blocks]"
+                "has to be not None."
+            )
         self.n_resamplings = n_resamplings
         self.length = length
         self.n_blocks = n_blocks
@@ -166,29 +176,43 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
             The training set indices for that split.
         test : ArrayLike of shape (n_indices_test,)
             The testing set indices for that split.
+        Raises
+        ------
+        ValueError
+            If ``length`` is greater than the train set size.
         """
+        length = (
+            self.length if self.length is not None else len(X) // self.n_blocks
+        )
+        n_blocks = (
+            self.n_blocks
+            if self.n_blocks is not None
+            else (len(X) // length) + 1
+        )
         indices = np.arange(len(X))
-        if self.length > len(indices):
+        if length > len(indices):
             raise ValueError(
                 "The length of blocks is greater than the lenght"
                 "of training set."
             )
 
         if self.overlapping:
-            blocks = sliding_window_view(indices, window_shape=self.length)
+            blocks = sliding_window_view(indices, window_shape=length)
         else:
-            indices = indices[len(indices) % self.length :]
-            blocks_number = len(indices) // self.length
+            indices = indices[len(indices) % length:]
+            blocks_number = len(indices) // length
             blocks = np.array_split(indices, indices_or_sections=blocks_number)
 
         random_state = check_random_state(self.random_state)
-        n_blocks = (
-            self.n_blocks
-            if self.n_blocks is not None
-            else (len(indices) // self.length) + 1
-        )
+
         for k in range(self.n_resamplings):
-            block_indices = np.random.randint(len(blocks), size=n_blocks)
+            block_indices = resample(
+                range(len(blocks)),
+                replace=True,
+                n_samples=n_blocks,
+                random_state=random_state,
+                stratify=None,
+            )
             train_index = np.concatenate(
                 [blocks[k] for k in block_indices], axis=0
             )

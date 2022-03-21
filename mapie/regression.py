@@ -258,10 +258,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             )
 
         if ((agg_function is None) and
-            (type(self.cv) in self.cv_need_agg_function)):
+                (type(self.cv) in self.cv_need_agg_function)):
             raise ValueError(
-                f"You need to specify an aggregation function when "
-                "cv's type is in {self.cv_need_agg_function}. "
+                "You need to specify an aggregation function when "
+                f"cv's type is in {self.cv_need_agg_function}."
             )
         if (agg_function is not None) or (self.cv == "prefit"):
             return agg_function
