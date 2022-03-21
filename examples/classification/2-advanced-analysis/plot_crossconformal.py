@@ -26,8 +26,10 @@ the ``cv="prefit"`` option of
 """
 
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Union
+from typing_extensions import TypedDict
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import KFold
@@ -138,8 +140,7 @@ for i, (key, mapie) in enumerate(mapies["score"].items()):
     axs[i].set_title(f"split={key}\nquantile={mapie.quantiles_[9]:.3f}")
 plt.suptitle(
     "Distribution of scores on each calibration fold for the "
-    f"{methods[0]} method",
-    y=1.04
+    f"{methods[0]} method"
 )
 plt.show()
 
@@ -186,8 +187,9 @@ def plot_results(
         axs[i].set_title(f"coverage = {coverage:.3f}")
     plt.suptitle(
         "Number of labels in prediction sets "
-        f"for the {method} method", y=1.04
+        f"for the {method} method"
     )
+    plt.show()
 
 
 ##############################################################################
@@ -224,27 +226,33 @@ def plot_coverage_width(
     alpha: float,
     coverages: ArrayLike,
     widths: ArrayLike,
-    method: str
+    method: str,
+    comp: str = "split"
 ) -> None:
+    if comp == "split":
+        legends = [f"Split {i + 1}" for i, _ in enumerate(coverages)]
+    else:
+        legends = ["Mean", "Crossval"]
     _, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     axes[0].set_xlabel("1 - alpha")
     axes[0].set_ylabel("Effective coverage")
     for i, coverage in enumerate(coverages):
-        axes[0].plot(1 - alpha, coverage, label=f"Split {i + 1}")
+        axes[0].plot(1 - alpha, coverage, label=legends[i])
     axes[0].plot([0, 1], [0, 1], ls="--", color="k")
     axes[0].legend()
     axes[1].set_xlabel("1 - alpha")
     axes[1].set_ylabel("Average of prediction set sizes")
     for i, width in enumerate(widths):
-        axes[1].plot(1 - alpha, width, label=f"Split {i+1}")
+        axes[1].plot(1 - alpha, width, label=legends[i])
     axes[1].legend()
     plt.suptitle(
         "Effective coverage and prediction set size "
-        f"for the {method} method", y=1.04
+        f"for the {method} method"
     )
+    plt.show()
 
 
-coverages = np.array(
+split_coverages = np.array(
     [
         [
             [
@@ -256,7 +264,7 @@ coverages = np.array(
     ]
 )
 
-widths = np.array(
+split_widths = np.array(
     [
         [
             [
@@ -268,9 +276,13 @@ widths = np.array(
     ]
 )
 
-plot_coverage_width(alpha, coverages[0], widths[0], "score")
+plot_coverage_width(
+    alpha, split_coverages[0], split_widths[0], "score"
+)
 
-plot_coverage_width(alpha, coverages[1], widths[1], "cumulated_score")
+plot_coverage_width(
+    alpha, split_coverages[1], split_widths[1], "cumulated_score"
+)
 
 
 ##############################################################################
@@ -306,82 +318,101 @@ plot_coverage_width(alpha, coverages[1], widths[1], "cumulated_score")
 # When estimating the prediction sets, we define how the scores are aggregated
 # with the ``agg_scores`` attribute.
 
+Params = TypedDict(
+    "Params",
+    {
+        "method": str,
+        "cv": Optional[Union[int, str]],
+        "random_state": Optional[int]
+    }
+)
+ParamsPredict = TypedDict(
+    "ParamsPredict",
+    {
+        "include_last_label": Union[bool, str],
+        "agg_scores": str
+    }
+)
 
 kf = KFold(n_splits=5, shuffle=True)
-mapie_clf = MapieClassifier(estimator=clf, cv=kf, method="score")
-mapie_clf.fit(X_train, y_train)
 
-_, y_ps_score_mean = mapie_clf.predict(
-    X_test_distrib,
-    alpha=alpha,
-    agg_scores="mean"
-)
-_, y_ps_score_crossval = mapie_clf.predict(
-    X_test_distrib,
-    alpha=alpha,
-    agg_scores="crossval"
-)
+STRATEGIES = {
+    "score_cv_mean": (
+        Params(method="score", cv=kf, random_state=42),
+        ParamsPredict(include_last_label=False, agg_scores="mean")
+    ),
+    "score_cv_crossval": (
+        Params(method="score", cv=kf, random_state=42),
+        ParamsPredict(include_last_label=False, agg_scores="crossval")
+    ),
+    "cum_score_cv_mean": (
+        Params(method="cumulated_score", cv=kf, random_state=42),
+        ParamsPredict(include_last_label="randomized", agg_scores="mean")
+    ),
+    "cum_score_cv_crossval": (
+        Params(method="cumulated_score", cv=kf, random_state=42),
+        ParamsPredict(include_last_label='randomized', agg_scores="crossval")
+    )
+}
+
+y_preds, y_ps = {}, {}
+for strategy, params in STRATEGIES.items():
+    args_init, args_predict = STRATEGIES[strategy]
+    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf.fit(X_train, y_train)
+    y_preds[strategy], y_ps[strategy] = mapie_clf.predict(
+        X_test_distrib,
+        alpha=alpha,
+        **args_predict
+    )
 
 
 ##############################################################################
 # Next, we estimate the coverages and widths of prediction sets for both
-# aggregation methods.
+# aggregation strategies and both methods.
+# We also estimate the "violation" score defined as the absolute difference
+# between the effective coverage and the target coverage averaged over all
+# alpha values.
 
+coverages, widths, violations = {}, {}, {}
 
-coverages_score_mean = np.array(
-    [
-        classification_coverage_score(
-            y_test_distrib,
-            y_ps_score_mean[:, :, ia]
-        ) for ia, _ in enumerate(alpha)
-    ]
-)
-
-widths_score_mean = np.array(
-    [
-        classification_mean_width_score(y_ps_score_mean[:, :, ia])
-        for ia, _ in enumerate(alpha)
-    ]
-)
-
-coverages_score_crossval = np.array(
-    [
-        classification_coverage_score(
-            y_test_distrib,
-            y_ps_score_crossval[:, :, ia]
-        ) for ia, _ in enumerate(alpha)
-    ]
-)
-
-widths_score_crossval = np.array(
-    [
-        classification_mean_width_score(y_ps_score_crossval[:, :, ia])
-        for ia, _ in enumerate(alpha)
-    ]
-)
+for strategy, y_ps_ in y_ps.items():
+    coverages[strategy] = np.array(
+        [
+            classification_coverage_score(
+                y_test_distrib,
+                y_ps_[:, :, ia]
+            ) for ia, _ in enumerate(alpha)
+        ]
+    )
+    widths[strategy] = np.array(
+        [
+            classification_mean_width_score(y_ps_[:, :, ia])
+            for ia, _ in enumerate(alpha)
+        ]
+    )
+    violations[strategy] = np.abs(coverages[strategy] - (1 - alpha)).mean()
 
 
 ##############################################################################
 # Next, we visualize their coverages and prediction set sizes as function of
 # the `alpha` parameter.
 
-
-fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
-axes[0].set_xlabel("1 - alpha")
-axes[0].set_ylabel("Effective coverage")
-for i, coverage in enumerate([coverages_score_mean, coverages_score_crossval]):
-    axes[0].plot(1 - alpha, coverage)
-axes[0].plot([0, 1], [0, 1], ls="--", color="k")
-axes[1].set_xlabel("1 - alpha")
-axes[1].set_ylabel("Average of prediction set sizes")
-for i, widths in enumerate([widths_score_mean, widths_score_crossval]):
-    axes[1].plot(1 - alpha, widths)
-axes[1].legend(["mean", "crossval"], loc=[1, 0])
-plt.suptitle(
-    "Effective coverage and prediction set sizes for ``mean`` "
-    "aggregation method"
+plot_coverage_width(
+    alpha,
+    [coverages["score_cv_mean"], coverages["score_cv_crossval"]],
+    [widths["score_cv_mean"], widths["score_cv_crossval"]],
+    "score",
+    comp="mean"
 )
-plt.show()
+
+plot_coverage_width(
+    alpha,
+    [coverages["cum_score_cv_mean"], coverages["cum_score_cv_mean"]],
+    [widths["cum_score_cv_crossval"], widths["cum_score_cv_crossval"]],
+    "cumulated_score",
+    comp="mean"
+)
 
 
 ##############################################################################
@@ -391,23 +422,32 @@ plt.show()
 #
 # The calibration plots obtained with the cross-conformal methods seem to be
 # more robust than with the split-conformal used above. Let's check this first
-# impression by estimating the deviation from the "perfect" coverage as
-# function of the `alpha` parameter.
+# impression by comparing the violation of the effective coverage from the
+# target coverage between the cross-conformal and split-conformal methods.
 
-
-plt.figure(figsize=(10, 5))
-label = f"Cross-conf: {np.abs(coverages_score_mean - (1 - alpha)).mean(): .3f}"
-plt.plot(
-    1 - alpha,
-    coverages_score_mean - (1 - alpha),
-    color="k",
-    label=label
+violations_df = pd.DataFrame(
+    index=["score", "cumulated_score"],
+    columns=["cv_mean", "cv_crossval", "splits"]
 )
-for i, coverage in enumerate(coverages[0]):
-    label = f"Split {i + 1}: {np.abs(coverage - (1 - alpha)).mean(): .3f}"
-    plt.plot(1 - alpha, coverage - (1 - alpha), label=label)
-plt.axhline(0, color="k", ls=":")
-plt.xlabel("1 - alpha")
-plt.ylabel("Deviation from perfect calibration")
-plt.legend(loc=[1, 0])
-plt.show()
+violations_df.loc["score", "cv_mean"] = violations["score_cv_mean"]
+violations_df.loc["score", "cv_crossval"] = violations["score_cv_crossval"]
+violations_df.loc["score", "splits"] = np.stack(
+    [
+        np.abs(cov - (1 - alpha)).mean()
+        for cov in split_coverages[0]
+    ]
+).mean()
+violations_df.loc["cumulated_score", "cv_mean"] = (
+    violations["cum_score_cv_mean"]
+)
+violations_df.loc["cumulated_score", "cv_crossval"] = (
+    violations["cum_score_cv_crossval"]
+)
+violations_df.loc["cumulated_score", "splits"] = np.stack(
+    [
+        np.abs(cov - (1 - alpha)).mean()
+        for cov in split_coverages[1]
+    ]
+).mean()
+
+print(violations_df)

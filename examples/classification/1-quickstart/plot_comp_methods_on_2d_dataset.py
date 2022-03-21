@@ -53,7 +53,10 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 from mapie.classification import MapieClassifier
-from mapie.metrics import classification_coverage_score
+from mapie.metrics import (
+    classification_coverage_score,
+    classification_mean_width_score
+)
 from mapie._typing import ArrayLike
 
 
@@ -168,7 +171,7 @@ def plot_scores(
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 for i, method in enumerate(methods):
     conformity_scores = mapie[method].conformity_scores_
-    n = mapie[method].n_samples_val_
+    n = mapie[method].n_samples_
     quantiles = mapie[method].quantiles_
     plot_scores(alpha, conformity_scores, quantiles, method, axs[i])
 plt.show()
@@ -261,7 +264,7 @@ for method in methods:
         for i, _ in enumerate(alpha_)
     ]
     mean_width[method] = [
-        y_ps_mapie[method][:, :, i].sum(axis=1).mean()
+        classification_mean_width_score(y_ps_mapie[method][:, :, i])
         for i, _ in enumerate(alpha_)
     ]
 
