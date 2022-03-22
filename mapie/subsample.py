@@ -174,22 +174,23 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         Raises
         ------
         ValueError
-            If ``length`` is greater than the train set size.
+            If ``length`` is not positive or greater than the train set size.
         """
-        if (self.length is None) and (self.n_blocks is None):
-            raise ValueError(
-                "At least one argument in ['length', 'n_blocks]"
-                "has to be not None."
+        if self.n_blocks is not None:
+            length = (
+                self.length
+                if self.length is not None
+                else len(X) // self.n_blocks
             )
-
-        length = (
-            self.length if self.length is not None else len(X) // self.n_blocks
-        )
-        n_blocks = (
-            self.n_blocks
-            if self.n_blocks is not None
-            else (len(X) // length) + 1
-        )
+            n_blocks = self.n_blocks
+        elif self.length is not None:
+            length = self.length
+            n_blocks = (len(X) // self.length) + 1
+        else:
+            raise ValueError(
+                "At least one argument between ``length`` and "
+                "``n_blocks`` has to be not None"
+            )
         indices = np.arange(len(X))
         if (length <= 0) or (length > len(indices)):
             raise ValueError(
@@ -200,7 +201,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         if self.overlapping:
             blocks = sliding_window_view(indices, window_shape=length)
         else:
-            indices = indices[len(indices) % length:]
+            indices = indices[(len(indices) % length):]
             blocks_number = len(indices) // length
             blocks = np.array_split(indices, indices_or_sections=blocks_number)
         random_state = check_random_state(self.random_state)

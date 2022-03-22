@@ -40,7 +40,6 @@ demand_df = pd.read_csv(
     "../data/demand_temperature.csv", parse_dates=True, index_col=0
 )
 
-print(demand_df.shape)
 demand_df["Date"] = pd.to_datetime(demand_df.index)
 demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype("int64")
 demand_df["Weekday"] = demand_df.Date.dt.isocalendar().day.astype("int64")
@@ -52,7 +51,9 @@ for hour in range(1, 3):
 num_test_steps = 24 * 7
 demand_train = demand_df.iloc[:-num_test_steps, :].copy()
 demand_test = demand_df.iloc[-num_test_steps:, :].copy()
-features = ["Weekofyear", "Weekday", "Hour", "Temperature"]
+features = ["Weekofyear", "Weekday", "Hour", "Temperature"] + [
+    f"Lag_{hour}" for hour in range(1, 2)
+]
 
 X_train = demand_train.loc[
     ~np.any(demand_train[features].isnull(), axis=1), features
@@ -62,17 +63,13 @@ X_test = demand_test.loc[:, features]
 y_test = demand_test["Demand"]
 
 # Model: Random Forest previously optimized with a cross-validation
-model = RandomForestRegressor(max_depth=10, n_estimators=50, random_state=59)
+model = RandomForestRegressor(max_depth=17, n_estimators=150, random_state=59)
 
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.1
-cv_MapieTimeSeries = BlockBootstrap(200, length=24, random_state=59)
+cv_MapieTimeSeries = BlockBootstrap(100, length=48, random_state=59)
 mapie = MapieTimeSeriesRegressor(
-    model,
-    method="plus",
-    cv=cv_MapieTimeSeries,
-    agg_function="mean",
-    n_jobs=-1
+    model, method="plus", cv=cv_MapieTimeSeries, agg_function="mean", n_jobs=-1
 )
 mapie.fit(X_train, y_train)
 
@@ -81,7 +78,7 @@ y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
 coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
 width = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
 
-# With partial_fit every 2 hours
+# With partial_fit every hour
 gap = 1
 
 y_pred_steps, y_pis_steps = mapie.predict(X_test.iloc[:gap, :], alpha=alpha)
@@ -91,7 +88,7 @@ for step in range(gap, len(X_test), gap):
         X_test.iloc[(step - gap):step, :], y_test.iloc[(step - gap):step]
     )
     y_pred_gap_step, y_pis_gap_step = mapie.predict(
-        X_test.iloc[step:(step+gap), :],
+        X_test.iloc[step:(step + gap), :],
         alpha=alpha,
     )
     y_pred_steps = np.concatenate((y_pred_steps, y_pred_gap_step), axis=0)
