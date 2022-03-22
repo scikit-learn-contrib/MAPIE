@@ -10,7 +10,6 @@ from sklearn.utils.validation import check_is_fitted
 
 from .aggregation_functions import aggregate_all
 from .regression import MapieRegressor
-from .subsample import BlockBootstrap
 from ._typing import ArrayLike
 from .utils import (
     check_alpha,
@@ -48,7 +47,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         verbose: int = 0,
     ) -> None:
         super().__init__(estimator, method, cv, n_jobs, agg_function, verbose)
-        self.cv_need_agg_function.append(BlockBootstrap)
+        self.cv_need_agg_function.append("BlockBootstrap")
 
     def fit(
         self,

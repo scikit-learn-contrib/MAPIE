@@ -19,7 +19,6 @@ from sklearn.utils.validation import (
 
 from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D
-from .subsample import Subsample
 from .utils import (
     check_cv,
     check_alpha,
@@ -188,7 +187,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
 
-    cv_need_agg_function = [Subsample]
+    cv_need_agg_function = ["Subsample"]
     valid_methods_ = ["naive", "base", "plus", "minmax"]
     valid_agg_functions_ = [None, "median", "mean"]
     fit_attributes = [
@@ -264,7 +263,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             )
 
         if (agg_function is None) and (
-            type(self.cv) in self.cv_need_agg_function
+            type(self.cv).__name__ in self.cv_need_agg_function
         ):
             raise ValueError(
                 "You need to specify an aggregation function when "
