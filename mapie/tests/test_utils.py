@@ -43,17 +43,17 @@ def test_check_null_weight_with_none() -> None:
     """Test that the function has no effect if sample weight is None."""
     sw_out, X_out, y_out = check_null_weight(None, X_toy, y_toy)
     assert sw_out is None
-    np.testing.assert_almost_equal(X_out, X_toy)
-    np.testing.assert_almost_equal(y_out, y_toy)
+    np.testing.assert_almost_equal(np.array(X_out), X_toy)
+    np.testing.assert_almost_equal(np.array(y_out), y_toy)
 
 
 def test_check_null_weight_with_nonzeros() -> None:
     """Test that the function has no effect if sample weight is never zero."""
     sample_weight = np.ones_like(y_toy)
     sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
-    np.testing.assert_almost_equal(sw_out, sample_weight)
-    np.testing.assert_almost_equal(X_out, X_toy)
-    np.testing.assert_almost_equal(y_out, y_toy)
+    np.testing.assert_almost_equal(np.array(sw_out), sample_weight)
+    np.testing.assert_almost_equal(np.array(X_out), X_toy)
+    np.testing.assert_almost_equal(np.array(y_out), y_toy)
 
 
 def test_check_null_weight_with_zeros() -> None:
@@ -61,9 +61,9 @@ def test_check_null_weight_with_zeros() -> None:
     sample_weight = np.ones_like(y_toy)
     sample_weight[:1] = 0.0
     sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
-    np.testing.assert_almost_equal(sw_out, np.array([1, 1, 1, 1, 1]))
-    np.testing.assert_almost_equal(X_out, np.array([[1], [2], [3], [4], [5]]))
-    np.testing.assert_almost_equal(y_out, np.array([7, 9, 11, 13, 15]))
+    np.testing.assert_almost_equal(np.array(sw_out), np.array([1, 1, 1, 1, 1]))
+    np.testing.assert_almost_equal(np.array(X_out), np.array([[1], [2], [3], [4], [5]]))
+    np.testing.assert_almost_equal(np.array(y_out), np.array([7, 9, 11, 13, 15]))
 
 
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
