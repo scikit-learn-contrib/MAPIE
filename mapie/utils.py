@@ -19,7 +19,7 @@ def check_null_weight(
     sample_weight: Optional[ArrayLike],
     X: ArrayLike,
     y: ArrayLike
-) -> Tuple[Optional[NDArray], ArrayLike, ArrayLike]:
+) -> Tuple[Optional[ArrayLike], ArrayLike, ArrayLike]:
     """
     Check sample weights and remove samples with null sample weights.
 
@@ -34,7 +34,7 @@ def check_null_weight(
 
     Returns
     -------
-    sample_weight : Optional[NDArray] of shape (n_samples,)
+    sample_weight : Optional[ArrayLike] of shape (n_samples,)
         Non-null sample weights.
 
     X : ArrayLike of shape (n_samples, n_features)
