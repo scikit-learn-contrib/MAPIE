@@ -1,4 +1,3 @@
-from random import sample
 import warnings
 from inspect import signature
 from typing import Any, Iterable, Optional, Tuple, Union, cast
@@ -19,7 +18,7 @@ def check_null_weight(
     sample_weight: Optional[ArrayLike],
     X: ArrayLike,
     y: ArrayLike
-) -> Tuple[Optional[ArrayLike], ArrayLike, ArrayLike]:
+) -> Tuple[Optional[NDArray], ArrayLike, ArrayLike]:
     """
     Check sample weights and remove samples with null sample weights.
 
@@ -34,7 +33,7 @@ def check_null_weight(
 
     Returns
     -------
-    sample_weight : Optional[ArrayLike] of shape (n_samples,)
+    sample_weight : Optional[NDArray] of shape (n_samples,)
         Non-null sample weights.
 
     X : ArrayLike of shape (n_samples, n_features)
@@ -64,11 +63,11 @@ def check_null_weight(
     """
     if sample_weight is not None:
         sample_weight = _check_sample_weight(sample_weight, X)
-        sample_weight = sample_weight[:len(y)]
         non_null_weight = sample_weight != 0
         X = _safe_indexing(X, non_null_weight)
         y = _safe_indexing(y, non_null_weight)
-        sample_weight = sample_weight[non_null_weight]
+        sample_weight = _safe_indexing(sample_weight, non_null_weight)
+    sample_weight = cast(Optional[NDArray], sample_weight)
     return sample_weight, X, y
 
 
