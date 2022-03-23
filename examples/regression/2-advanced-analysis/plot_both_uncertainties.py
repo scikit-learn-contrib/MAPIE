@@ -16,20 +16,20 @@ from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 
 from mapie.regression import MapieRegressor
-from mapie._typing import ArrayLike
+from mapie._typing import ArrayLike, NDArray
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
 # Functions for generating our dataset
-def x_sinx(x: ArrayLike) -> Any:
+def x_sinx(x: NDArray) -> NDArray:
     """One-dimensional x*sin(x) function."""
     return x * np.sin(x)
 
 
 def get_1d_data_with_normal_distrib(
     funct: F, mu: float, sigma: float, n_samples: int, noise: float
-) -> Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]:
+) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
     """
     Generate noisy 1D data with normal distribution from given function
     and noise standard deviation.
@@ -49,7 +49,7 @@ def get_1d_data_with_normal_distrib(
 
     Returns
     -------
-    Tuple[Any, Any, ArrayLike, Any, float]
+    Tuple[NDArray, AnNDArrayy, NDArray, NDArray, NDArray]
         Generated training and test data.
         [0]: X_train
         [1]: y_train
@@ -104,14 +104,14 @@ for strategy, params in STRATEGIES.items():
 
 # Visualization
 def plot_1d_data(
-    X_train: ArrayLike,
-    y_train: ArrayLike,
-    X_test: ArrayLike,
-    y_test: ArrayLike,
+    X_train: NDArray,
+    y_train: NDArray,
+    X_test: NDArray,
+    y_test: NDArray,
     y_sigma: float,
-    y_pred: ArrayLike,
-    y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike,
+    y_pred: NDArray,
+    y_pred_low: NDArray,
+    y_pred_up: NDArray,
     ax: plt.Axes,
     title: str,
 ) -> None:
