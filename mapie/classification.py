@@ -77,8 +77,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
           ``sklearn.model_selection.LeaveOneOut()``.
         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
           Main variants are:
-            - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
-            - ``sklearn.model_selection.KFold`` (cross-validation)
+          - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
+          - ``sklearn.model_selection.KFold`` (cross-validation)
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used
           to calibrate the predictions through the score computation.
