@@ -345,7 +345,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         train_index: ArrayLike,
         val_index: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-    ) -> Tuple[RegressorMixin, ArrayLike, ArrayLike]:
+    ) -> Tuple[RegressorMixin, NDArray, ArrayLike]:
         """
         Fit a single out-of-fold model on a given training set and
         perform predictions on a test set.
@@ -373,14 +373,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        Tuple[RegressorMixin, ArrayLike, ArrayLike]
+        Tuple[RegressorMixin, NDArray, ArrayLike]
 
         - [0]: Fitted estimator
         - [1]: Estimator predictions on the validation fold,
           of shape (n_samples_val,)
         - [3]: Validation data indices,
           of shape (n_samples_val,).
-
         """
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)

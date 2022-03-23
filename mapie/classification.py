@@ -369,7 +369,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         y_pred_proba_cumsum: NDArray,
         threshold: NDArray,
         include_last_label: Optional[Union[bool, str]]
-    ) -> ArrayLike:
+    ) -> NDArray:
         """
         Return the index of the last included sorted probability
         depending if we included the first label over the quantile
@@ -395,7 +395,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Returns
         -------
-        ArrayLike of shape (n_samples, n_classes)
+        NDArray of shape (n_samples, n_classes)
             Index of the last included sorted probability.
         """
         if (
@@ -539,7 +539,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         estimator: ClassifierMixin,
         X: ArrayLike,
-    ) -> ArrayLike:
+    ) -> NDArray:
         """
         Predict probabilities of a test set from a fitted estimator.
 
@@ -573,7 +573,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         val_index: ArrayLike,
         k: int,
         sample_weight: Optional[ArrayLike] = None,
-    ) -> Tuple[ClassifierMixin, ArrayLike, ArrayLike, ArrayLike]:
+    ) -> Tuple[ClassifierMixin, NDArray, NDArray, ArrayLike]:
         """
         Fit a single out-of-fold model on a given training set and
         perform predictions on a test set.
@@ -604,7 +604,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Returns
         -------
-        Tuple[ClassifierMixin, ArrayLike, ArrayLike, ArrayLike]
+        Tuple[ClassifierMixin, NDArray, NDArray, ArrayLike]
 
         - [0]: Fitted estimator
         - [1]: Estimator predictions on the validation fold,
@@ -613,7 +613,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
           of shape (n_samples_val,)
         - [3]: Validation data indices,
           of shape (n_samples_val,).
-
         """
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)
@@ -723,9 +722,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 val_ids_list,
                 val_indices_list
             ) = map(list, zip(*outputs))
-            predictions: NDArray = np.concatenate(predictions_list)
-            val_ids: NDArray = np.concatenate(val_ids_list)
-            val_indices: NDArray = np.concatenate(val_indices_list)
+            predictions = np.concatenate(cast(List[NDArray], predictions_list))
+            val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
+            val_indices = np.concatenate(cast(List[NDArray], val_indices_list))
             self.k_[val_indices] = val_ids
             y_pred_proba[val_indices] = predictions
 
@@ -866,7 +865,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         if cv == "prefit":
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba = np.repeat(
-                y_pred_proba[:, :, np.newaxis], len(alpha_), axis=2
+                y_pred_proba[:, :, np.newaxis], len(alpha), axis=2
             )
         else:
             y_pred_proba_k = np.asarray(
@@ -882,7 +881,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             elif agg_scores == "mean":
                 y_pred_proba = np.mean(y_pred_proba_k, axis=0)
                 y_pred_proba = np.repeat(
-                    y_pred_proba[:, :, np.newaxis], len(alpha_), axis=2
+                    y_pred_proba[:, :, np.newaxis], len(alpha), axis=2
                 )
             else:
                 raise ValueError("Invalid 'agg_scores' argument.")
@@ -890,20 +889,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         y_pred_proba = self._check_proba_normalized(y_pred_proba, axis=1)
 
         # Choice of the quantile
-        check_alpha_and_n_samples(alpha_, n)
+        check_alpha_and_n_samples(alpha, n)
         if self.method == "naive":
-            self.quantiles_ = 1 - alpha_
+            self.quantiles_ = 1 - alpha
         else:
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 self.quantiles_ = np.stack([
                     np.quantile(
                         self.conformity_scores_,
                         ((n + 1) * (1 - _alpha)) / n,
-                        interpolation="higher"
-                    ) for _alpha in alpha_
+                        method="higher"
+                    ) for _alpha in alpha
                 ])
             else:
-                self.quantiles_ = (n + 1) * (1 - alpha_)
+                self.quantiles_ = (n + 1) * (1 - alpha)
 
         # Build prediction sets
         if self.method == "score":
@@ -920,7 +919,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
                 prediction_sets = np.stack(
                     [
                         y_pred_included > _alpha * (n - 1) - EPSILON
-                        for _alpha in alpha_
+                        for _alpha in alpha
                     ], axis=2
                 )
 
@@ -929,7 +928,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 thresholds = self.quantiles_
             else:
-                thresholds = self.conformity_scores_.ravel()
+                thresholds = np.ravel(self.conformity_scores_)
             # sort labels by decreasing probability
             index_sorted = np.flip(
                 np.argsort(y_pred_proba, axis=1), axis=1
