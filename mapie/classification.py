@@ -606,13 +606,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         -------
         Tuple[ClassifierMixin, NDArray, NDArray, ArrayLike]
 
-        - [0]: Fitted estimator
-        - [1]: Estimator predictions on the validation fold,
-          of shape (n_samples_val,)
-        - [2]: Identification number of the validation fold,
-          of shape (n_samples_val,)
-        - [3]: Validation data indices,
-          of shape (n_samples_val,).
+        - [0]: ClassifierMixin, fitted estimator
+        - [1]: NDArray of shape (n_samples_val,),
+          Estimator predictions on the validation fold,
+        - [2]: NDArray of shape (n_samples_val,)
+          Identification number of the validation fold,
+        - [3]: ArrayLike of shape (n_samples_val,)
+          Validation data indices
         """
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)
@@ -780,7 +780,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         alpha: Optional[Union[float, Iterable[float]]] = None,
         include_last_label: Optional[Union[bool, str]] = True,
         agg_scores: Optional[str] = "mean"
-    ) -> Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]:
+    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Prediction prediction sets on new samples based on target confidence
         interval.
@@ -833,11 +833,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         Returns
         -------
-        Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]
+        Union[NDArray, Tuple[NDArray, NDArray]]
 
-        - ArrayLike of shape (n_samples,) if alpha is None.
+        - NDArray of shape (n_samples,) if alpha is None.
 
-        - Tuple[ArrayLike, ArrayLike] of shapes
+        - Tuple[NDArray, NDArray] of shapes
         (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
         if self.method == "top_k":

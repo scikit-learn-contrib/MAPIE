@@ -375,11 +375,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         -------
         Tuple[RegressorMixin, NDArray, ArrayLike]
 
-        - [0]: Fitted estimator
-        - [1]: Estimator predictions on the validation fold,
-          of shape (n_samples_val,)
-        - [3]: Validation data indices,
-          of shape (n_samples_val,).
+        - [0]: RegressorMixin, fitted estimator
+        - [1]: NDArrayof shape (n_samples_val,),
+          estimator predictions on the validation fold.
+        - [3]: NDArray of shape (n_samples_val,),
+          validation data indices.
         """
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)
@@ -551,7 +551,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         X: ArrayLike,
         ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
-    ) -> Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]:
+    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
         Residuals from the training set and predictions from the model clones
@@ -591,11 +591,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]
+        Union[NDArray, Tuple[NDArray, NDArray]]
 
-        - ArrayLike of shape (n_samples,) if alpha is None.
+        - NDArray of shape (n_samples,) if alpha is None.
 
-        - Tuple[ArrayLike, ArrayLike] of shapes
+        - Tuple[NDArray, NDArray] of shapes
         (n_samples,) and (n_samples, 2, n_alpha) if alpha is not None.
 
             - [:, 0, :]: Lower bound of the prediction interval.
