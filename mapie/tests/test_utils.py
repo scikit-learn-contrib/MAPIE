@@ -62,8 +62,27 @@ def test_check_null_weight_with_zeros() -> None:
     sample_weight[:1] = 0.0
     sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
     np.testing.assert_almost_equal(np.array(sw_out), np.array([1, 1, 1, 1, 1]))
-    np.testing.assert_almost_equal(np.array(X_out), np.array([[1], [2], [3], [4], [5]]))
-    np.testing.assert_almost_equal(np.array(y_out), np.array([7, 9, 11, 13, 15]))
+    np.testing.assert_almost_equal(
+        np.array(X_out),
+        np.array([[1], [2], [3], [4], [5]])
+    )
+    np.testing.assert_almost_equal(
+        np.array(y_out),
+        np.array([7, 9, 11, 13, 15])
+    )
+
+
+def test_check_null_weight_with_more_zeros() -> None:
+    """
+    Test that the function reduces the shape if there are
+    more zeros than expected in sample weights.
+    """
+    sample_weight = np.ones(shape=len(y_toy) * 2)
+    sample_weight[len(y_toy):] = 0.0
+    sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
+    np.testing.assert_almost_equal(np.array(sw_out), np.ones(shape=len(y_toy)))
+    np.testing.assert_almost_equal(X_out, X_toy)
+    np.testing.assert_almost_equal(y_out, y_toy)
 
 
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
@@ -89,7 +108,7 @@ def test_fit_estimator_sample_weight() -> None:
         np.testing.assert_almost_equal(y_pred_1, y_pred_2)
 
 
-@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, [0.4, 0.6], "a", ["a", "b"]])
+@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", ["a", "b"]])
 def test_invalid_alpha(alpha: Any) -> None:
     """Test that invalid alphas raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid alpha.*"):

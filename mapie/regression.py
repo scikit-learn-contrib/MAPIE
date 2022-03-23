@@ -481,9 +481,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         agg_function = self._check_agg_function(self.agg_function)
         X, y = indexable(X, y)
         y = _check_y(y)
-        n_samples = _num_samples(y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
+        n_samples = _num_samples(y)
 
         # Initialization
         self.estimators_: List[RegressorMixin] = []
