@@ -16,7 +16,7 @@ from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 
 from mapie.regression import MapieRegressor
-from mapie._typing import ArrayLike, NDArray
+from mapie._typing import NDArray
 
 F = TypeVar("F", bound=Callable[..., Any])
 

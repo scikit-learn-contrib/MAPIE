@@ -216,7 +216,7 @@ def get_coverage_width(PIs: pd.DataFrame, y: NDArray) -> Tuple[float, float]:
 
 
 def B_random_from_B_fixed(
-    B: int, 
+    B: int,
     train_size: int,
     m: int,
     itrial: int = 0,

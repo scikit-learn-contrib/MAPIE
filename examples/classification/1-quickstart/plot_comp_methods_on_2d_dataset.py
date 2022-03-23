@@ -57,7 +57,7 @@ from mapie.metrics import (
     classification_coverage_score,
     classification_mean_width_score
 )
-from mapie._typing import ArrayLike, NDArray
+from mapie._typing import NDArray
 
 
 centers = [(0, 3.5), (-2, 0), (2, 0)]
