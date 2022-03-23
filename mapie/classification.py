@@ -32,7 +32,7 @@ from .utils import (
 )
 
 
-class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
+class MapieClassifier(BaseEstimator, ClassifierMixin):
     """
     Prediction sets for classification.
 

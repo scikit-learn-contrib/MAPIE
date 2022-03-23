@@ -33,7 +33,7 @@ from .utils import (
 )
 
 
-class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
+class MapieRegressor(BaseEstimator, RegressorMixin):
     """
     Prediction interval with out-of-fold residuals.
 
@@ -499,13 +499,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         else:
             cv = cast(BaseCrossValidator, cv)
             self.k_ = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y)),  # type: ignore
+                shape=(n_samples, cv.get_n_splits(X, y)),
                 fill_value=np.nan,
                 dtype=float,
             )
 
             pred_matrix = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y)),  # type: ignore
+                shape=(n_samples, cv.get_n_splits(X, y)),
                 fill_value=np.nan,
                 dtype=float,
             )

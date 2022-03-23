@@ -11,7 +11,7 @@ from sklearn.utils.validation import _num_samples
 from ._typing import ArrayLike, NDArray
 
 
-class Subsample(BaseCrossValidator):  # type: ignore
+class Subsample(BaseCrossValidator):
     """
     Generate a sampling method, that resamples the training set with
     possible bootstraps. It can replace KFold or  LeaveOneOut as cv argument

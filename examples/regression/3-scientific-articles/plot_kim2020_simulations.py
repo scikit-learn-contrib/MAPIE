@@ -78,7 +78,7 @@ def get_X_y() -> Tuple[NDArray, NDArray]:
     return (X, y)
 
 
-class Ridge2(RegressorMixin, BaseEstimator):  # type:ignore
+class Ridge2(RegressorMixin, BaseEstimator):
     """
     Little variation of Ridge proposed in [1].
     Rectify alpha on the training set svd max value.
