@@ -682,10 +682,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         X, y = indexable(X, y)
         y = _check_y(y)
         assert type_of_target(y) == "multiclass"
+        sample_weight, X, y = check_null_weight(sample_weight, X, y)
         n_samples = _num_samples(y)
         self.n_classes_ = len(np.unique(y))
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
-        sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
         # Initialization
         self.estimators_: List[ClassifierMixin] = []

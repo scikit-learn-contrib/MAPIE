@@ -7,10 +7,10 @@ import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.utils.validation import (
-    check_array,
+    _check_sample_weight,
     _num_features
 )
-from sklearn.utils import _safe_indexing, column_or_1d
+from sklearn.utils import _safe_indexing
 
 from ._typing import ArrayLike, NDArray
 
@@ -52,7 +52,7 @@ def check_null_weight(
     >>> sample_weight = np.array([0, 1, 1, 1, 1, 1])
     >>> sample_weight, X, y = check_null_weight(sample_weight, X, y)
     >>> print(sample_weight)
-    [1 1 1 1 1]
+    [1. 1. 1. 1. 1.]
     >>> print(X)
     [[1]
      [2]
@@ -63,7 +63,7 @@ def check_null_weight(
     [ 7  9 11 13 15]
     """
     if sample_weight is not None:
-        sample_weight = column_or_1d(sample_weight)
+        sample_weight = _check_sample_weight(sample_weight, X)
         sample_weight = sample_weight[:len(y)]
         non_null_weight = sample_weight != 0
         X = _safe_indexing(X, non_null_weight)

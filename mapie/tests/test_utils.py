@@ -72,19 +72,6 @@ def test_check_null_weight_with_zeros() -> None:
     )
 
 
-def test_check_null_weight_with_more_zeros() -> None:
-    """
-    Test that the function reduces the shape if there are
-    more zeros than expected in sample weights.
-    """
-    sample_weight = np.ones(shape=len(y_toy) * 2)
-    sample_weight[len(y_toy):] = 0.0
-    sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
-    np.testing.assert_almost_equal(np.array(sw_out), np.ones(shape=len(y_toy)))
-    np.testing.assert_almost_equal(X_out, X_toy)
-    np.testing.assert_almost_equal(y_out, y_toy)
-
-
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
 def test_fit_estimator(
