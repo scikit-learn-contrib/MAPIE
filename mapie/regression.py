@@ -537,13 +537,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 ]
 
                 for i, val_ind in enumerate(val_indices):
-                    pred_matrix[val_ind, i] = np.array(predictions[i]).ravel()
+                    pred_matrix[val_ind, i] = np.array(predictions[i])
                     self.k_[val_ind, i] = 1
                 check_nan_in_aposteriori_prediction(pred_matrix)
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        self.residuals_ = np.abs(np.ravel(y) - y_pred)
+        self.residuals_ = np.abs(y - y_pred)
         return self
 
     def predict(
