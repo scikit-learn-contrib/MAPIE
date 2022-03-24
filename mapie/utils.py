@@ -264,11 +264,11 @@ def check_n_features_in(
     5
     """
     if hasattr(X, "shape"):
-        X = cast(NDArray, X)
-        if len(X.shape) <= 1:
+        shape = np.shape(X)
+        if len(shape) <= 1:
             n_features_in = 1
         else:
-            n_features_in = X.shape[1]
+            n_features_in = shape[1]
     else:
         n_features_in = _num_features(X)
     if cv == "prefit" and hasattr(estimator, "n_features_in_"):
