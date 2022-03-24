@@ -603,11 +603,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         if alpha is None:
             return np.array(y_pred)
 
-        alpha = cast(NDArray, alpha)
-        check_alpha_and_n_samples(alpha, n)
+        alpha_np = cast(NDArray, alpha)
+        check_alpha_and_n_samples(alpha_np, n)
         if self.method in ["naive", "base"] or self.cv == "prefit":
             quantile = np.quantile(
-                self.conformity_scores_, 1 - alpha, method="higher"
+                self.conformity_scores_, 1 - alpha_np, method="higher"
             )
             y_pred_low = y_pred[:, np.newaxis] - quantile
             y_pred_up = y_pred[:, np.newaxis] + quantile
@@ -647,7 +647,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                         axis=1,
                         method="lower",
                     )
-                    for _alpha in alpha
+                    for _alpha in alpha_np
                 ]
             ).data
 
@@ -659,7 +659,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                         axis=1,
                         method="higher",
                     )
-                    for _alpha in alpha
+                    for _alpha in alpha_np
                 ]
             ).data
 

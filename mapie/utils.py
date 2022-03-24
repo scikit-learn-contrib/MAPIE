@@ -199,26 +199,25 @@ def check_alpha(
     if alpha is None:
         return alpha
     if isinstance(alpha, float):
-        alpha = np.array([alpha])
+        alpha_np = np.array([alpha])
     elif isinstance(alpha, Iterable):
-        alpha = np.array(alpha)
+        alpha_np = np.array(alpha)
     else:
         raise ValueError(
             "Invalid alpha. Allowed values are float or Iterable."
         )
-    alpha = cast(NDArray, alpha)
-    if len(alpha.shape) != 1:
+    if len(alpha_np.shape) != 1:
         raise ValueError(
             "Invalid alpha. "
             "Please provide a one-dimensional list of values."
         )
-    if alpha.dtype.type not in [np.float64, np.float32]:
+    if alpha_np.dtype.type not in [np.float64, np.float32]:
         raise ValueError(
             "Invalid alpha. Allowed values are Iterable of floats."
         )
-    if np.any(np.logical_or(alpha <= 0, alpha >= 1)):
+    if np.any(np.logical_or(alpha_np <= 0, alpha_np >= 1)):
         raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
-    return alpha
+    return alpha_np
 
 
 def check_n_features_in(

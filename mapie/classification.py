@@ -861,12 +861,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # Estimate of probabilities from estimator(s)
         # In all cases : len(y_pred_proba.shape) == 3
         # with  (n_test, n_classes, n_alpha or n_train_samples)
-        alpha = cast(NDArray, alpha)
-        check_alpha_and_n_samples(alpha, n)
+        alpha_np = cast(NDArray, alpha)
+        check_alpha_and_n_samples(alpha_np, n)
         if cv == "prefit":
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba = np.repeat(
-                y_pred_proba[:, :, np.newaxis], len(alpha), axis=2
+                y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
             )
         else:
             y_pred_proba_k = np.asarray(
@@ -882,7 +882,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             elif agg_scores == "mean":
                 y_pred_proba = np.mean(y_pred_proba_k, axis=0)
                 y_pred_proba = np.repeat(
-                    y_pred_proba[:, :, np.newaxis], len(alpha), axis=2
+                    y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
                 )
             else:
                 raise ValueError("Invalid 'agg_scores' argument.")
@@ -890,9 +890,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred_proba = self._check_proba_normalized(y_pred_proba, axis=1)
 
         # Choice of the quantile
-        check_alpha_and_n_samples(alpha, n)
+        check_alpha_and_n_samples(alpha_np, n)
         if self.method == "naive":
-            self.quantiles_ = 1 - alpha
+            self.quantiles_ = 1 - alpha_np
         else:
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 self.quantiles_ = np.stack([
@@ -900,10 +900,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                         self.conformity_scores_,
                         ((n + 1) * (1 - _alpha)) / n,
                         method="higher"
-                    ) for _alpha in alpha
+                    ) for _alpha in alpha_np
                 ])
             else:
-                self.quantiles_ = (n + 1) * (1 - alpha)
+                self.quantiles_ = (n + 1) * (1 - alpha_np)
 
         # Build prediction sets
         if self.method == "score":
@@ -920,7 +920,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 prediction_sets = np.stack(
                     [
                         y_pred_included > _alpha * (n - 1) - EPSILON
-                        for _alpha in alpha
+                        for _alpha in alpha_np
                     ], axis=2
                 )
 
