@@ -483,6 +483,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y = _check_y(y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
+        y = cast(NDArray, y)
         n_samples = _num_samples(y)
 
         # Initialization
