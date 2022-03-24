@@ -683,6 +683,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y = _check_y(y)
         assert type_of_target(y) == "multiclass"
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
+        y = cast(NDArray, y)
         n_samples = _num_samples(y)
         self.n_classes_ = len(np.unique(y))
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
@@ -729,10 +730,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba[val_indices] = predictions
 
         if self.method == "naive":
-            self.conformity_scores_ = np.empty(y_pred_proba.shape)
+            self.conformity_scores_ = np.empty(
+                y_pred_proba.shape,
+                dtype="float"
+            )
         elif self.method == "score":
             self.conformity_scores_ = np.take_along_axis(
-                1 - y_pred_proba, np.ravel(y).reshape(-1, 1), axis=1
+                1 - y_pred_proba, y.reshape(-1, 1), axis=1
             )
         elif self.method == "cumulated_score":
             y_true = label_binarize(
@@ -749,7 +753,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 y_pred_proba_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
             )
             y_proba_true = np.take_along_axis(
-                y_pred_proba, np.ravel(y).reshape(-1, 1), axis=1
+                y_pred_proba, y.reshape(-1, 1), axis=1
             )
             random_state = check_random_state(self.random_state)
             u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
@@ -762,7 +766,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
             self.conformity_scores_ = np.take_along_axis(
                 index,
-                np.ravel(y).reshape(-1, 1),
+                y.reshape(-1, 1),
                 axis=1
             )
 
@@ -928,7 +932,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 thresholds = self.quantiles_
             else:
-                thresholds = np.ravel(self.conformity_scores_)
+                thresholds = self.conformity_scores_.ravel()
             # sort labels by decreasing probability
             index_sorted = np.flip(
                 np.argsort(y_pred_proba, axis=1), axis=1
