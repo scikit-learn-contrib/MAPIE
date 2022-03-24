@@ -142,8 +142,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     estimators_ : list
         List of out-of-folds estimators.
 
-    residuals_ : ArrayLike of shape (n_samples_train,)
-        Residuals between ``y_train`` and ``y_pred``.
+    conformity_scores_ : ArrayLike of shape (n_samples_train,)
+        Conformity scores between ``y_train`` and ``y_pred``.
 
     k_ : ArrayLike
         - Array of nans, of shape (len(y), 1) if cv is ``"prefit"``
@@ -153,9 +153,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
     n_features_in_: int
         Number of features passed to the fit method.
-
-    n_samples_: List[int]
-        Number of samples passed to the fit method.
 
     References
     ----------
@@ -193,9 +190,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         "single_estimator_",
         "estimators_",
         "k_",
-        "residuals_",
-        "n_features_in_",
-        "n_samples_",
+        "conformity_scores_",
+        "n_features_in_"
     ]
 
     def __init__(
@@ -449,7 +445,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Fit the base estimator under the ``single_estimator_`` attribute.
         Fit all cross-validated estimator clones
         and rearrange them into a list, the ``estimators_`` attribute.
-        Out-of-fold residuals are stored under the ``residuals_`` attribute.
+        Out-of-fold residuals are stored under the ``conformity_scores_`` attribute.
 
         Parameters
         ----------
@@ -493,7 +489,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
-            self.n_samples_ = [_num_samples(X)]
             self.k_ = np.full(
                 shape=(n_samples, 1), fill_value=np.nan, dtype="float"
             )
@@ -516,7 +511,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             )
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
-                self.n_samples_ = [_num_samples(X)]
             else:
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
@@ -533,10 +527,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     list, zip(*outputs)
                 )
 
-                self.n_samples_ = [
-                    np.array(pred).shape[0] for pred in predictions
-                ]
-
                 for i, val_ind in enumerate(val_indices):
                     pred_matrix[val_ind, i] = np.array(predictions[i])
                     self.k_[val_ind, i] = 1
@@ -544,7 +534,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        self.residuals_ = np.abs(y - y_pred)
+        self.conformity_scores_ = np.abs(y - y_pred)
         return self
 
     def predict(
@@ -607,15 +597,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self._check_ensemble(ensemble)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         y_pred = self.single_estimator_.predict(X)
+        n = len(self.conformity_scores_)
 
         if alpha is None:
             return np.array(y_pred)
 
         alpha = cast(NDArray, alpha)
-        check_alpha_and_n_samples(alpha, self.residuals_.shape[0])
+        check_alpha_and_n_samples(alpha, n)
         if self.method in ["naive", "base"] or self.cv == "prefit":
             quantile = np.quantile(
-                self.residuals_, 1 - alpha, method="higher"
+                self.conformity_scores_, 1 - alpha, method="higher"
             )
             y_pred_low = y_pred[:, np.newaxis] - quantile
             y_pred_up = y_pred[:, np.newaxis] + quantile
@@ -638,14 +629,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
 
             if self.method == "plus":
-                lower_bounds = y_pred_multi - self.residuals_
-                upper_bounds = y_pred_multi + self.residuals_
+                lower_bounds = y_pred_multi - self.conformity_scores_
+                upper_bounds = y_pred_multi + self.conformity_scores_
 
             if self.method == "minmax":
                 lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
                 upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
-                lower_bounds = lower_bounds - self.residuals_
-                upper_bounds = upper_bounds + self.residuals_
+                lower_bounds = lower_bounds - self.conformity_scores_
+                upper_bounds = upper_bounds + self.conformity_scores_
 
             y_pred_low = np.column_stack(
                 [

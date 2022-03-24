@@ -127,9 +127,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     n_features_in_: int
         Number of features passed to the fit method.
 
-    n_samples_: Union[int, List[int]]
-        Number of samples passed to the fit method.
-
     conformity_scores_ : ArrayLike of shape (n_samples_train)
         The conformity scores used to calibrate the prediction sets.
 
@@ -177,8 +174,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     fit_attributes = [
         "single_estimator_",
         "estimators_",
+        "k_",
         "n_features_in_",
-        "n_samples_",
         "conformity_scores_"
     ]
 
@@ -856,7 +853,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         # Estimate prediction sets
         y_pred = self.single_estimator_.predict(X)
-        n = self.n_samples_
+        n = len(self.conformity_scores_)
 
         if alpha is None:
             return np.array(y_pred)
@@ -865,7 +862,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # In all cases : len(y_pred_proba.shape) == 3
         # with  (n_test, n_classes, n_alpha or n_train_samples)
         alpha = cast(NDArray, alpha)
-        check_alpha_and_n_samples(alpha, self.conformity_scores_.shape[0])
+        check_alpha_and_n_samples(alpha, n)
         if cv == "prefit":
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba = np.repeat(
