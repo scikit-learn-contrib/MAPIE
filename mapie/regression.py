@@ -445,7 +445,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Fit the base estimator under the ``single_estimator_`` attribute.
         Fit all cross-validated estimator clones
         and rearrange them into a list, the ``estimators_`` attribute.
-        Out-of-fold residuals are stored under the ``conformity_scores_`` attribute.
+        Out-of-fold residuals are stored under
+        the ``conformity_scores_`` attribute.
 
         Parameters
         ----------
