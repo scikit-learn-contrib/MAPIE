@@ -13,7 +13,7 @@ dependencies:
     - pip=22.0.3
     - pip:
         - scikeras==0.4.1
-    - python=3.10.1
+    - python=3.9
     - scikit-learn=1.0.1
     - tensorflow=2.7.0
     - xgboost=1.5.1
