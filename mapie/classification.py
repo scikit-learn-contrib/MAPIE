@@ -899,7 +899,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     np.quantile(
                         self.conformity_scores_,
                         ((n + 1) * (1 - _alpha)) / n,
-                        interpolation="higher"
+                        method="higher"
                     ) for _alpha in alpha_np
                 ])
             else:

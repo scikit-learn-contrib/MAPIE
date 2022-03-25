@@ -26,9 +26,9 @@ vblot@quantmetry.com,
 tmorzadec@quantmetry.com,
 gmartinon@quantmetry.com
 """
-PYTHON_REQUIRES = ">=3.7"
+PYTHON_REQUIRES = ">=3.8"
 PACKAGES = find_packages()
-INSTALL_REQUIRES = ["scikit-learn", "numpy>=1.21"]
+INSTALL_REQUIRES = ["scikit-learn", "numpy>=1.22"]
 EXTRAS_REQUIRE = {
     "tests": [
         "flake8",
@@ -58,9 +58,9 @@ CLASSIFIERS = [
     "Operating System :: POSIX",
     "Operating System :: Unix",
     "Operating System :: MacOS",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9"
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 
 setup(
