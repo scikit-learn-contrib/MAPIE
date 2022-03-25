@@ -26,9 +26,9 @@ vblot@quantmetry.com,
 tmorzadec@quantmetry.com,
 gmartinon@quantmetry.com
 """
-PYTHON_REQUIRES = ">=3.8"
+PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
-INSTALL_REQUIRES = ["scikit-learn", "numpy>=1.22"]
+INSTALL_REQUIRES = ["scikit-learn", "numpy>=1.21"]
 EXTRAS_REQUIRE = {
     "tests": [
         "flake8",
