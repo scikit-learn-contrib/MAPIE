@@ -67,6 +67,9 @@ coverage.xml
 doc/_build/
 doc/generated/
 
+# Notebooks checkpoints
+**.ipynb_checkpoints
+
 # PyBuilder
 target/
 
@@ -77,8 +80,5 @@ target/
 *.png
 *.jpeg
 
-# Zip files
+# ZIP files
 *.zip
-
-# Imagenet Labels
-LOC_synset_mapping.txt

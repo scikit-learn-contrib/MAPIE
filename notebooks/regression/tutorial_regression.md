@@ -402,7 +402,7 @@ the Multilayer Perceptron has two hidden dense layers with 20 neurons each follo
 
 ```python
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # disable debugging logs from Tensorflow
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from scikeras.wrappers import KerasRegressor
@@ -490,7 +490,3 @@ As expected with the CV+ method, the prediction intervals are a bit
 conservative since they are slightly wider than the true intervals.
 However, the CV+ method on the three models gives very promising results 
 since the prediction intervals closely follow the true intervals with $x$. 
-
-```python
-
-```

@@ -31,4 +31,6 @@ Metrics
    
    metrics.regression_coverage_score
    metrics.classification_coverage_score
+   metrics.regression_mean_width_score
+   metrics.classification_mean_width_score
 

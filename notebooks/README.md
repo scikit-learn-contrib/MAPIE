@@ -1,4 +1,4 @@
-This folder contains a series of notebooks used for generating the tutorials for regression and classification as well as some heavier notebooks which cannot be saved in the MAPIE documentation.
+This folder contains a series of notebooks used for generating the tutorials for regression and classification as well as some other notebooks not represented in MAPIE examples.
 
 # Create virtual environment
 
