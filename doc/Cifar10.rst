@@ -26,7 +26,6 @@ Tutorial preparation
 .. code-block:: python
 
     import random
-    import warnings
     from typing import Dict, List, Tuple, Union
     
     import cv2
@@ -49,7 +48,6 @@ Tutorial preparation
     from mapie.metrics import classification_coverage_score
     from mapie.classification import MapieClassifier
     
-    warnings.filterwarnings('ignore')
     %load_ext autoreload
     %autoreload 2
     %matplotlib inline
@@ -243,14 +241,12 @@ to calibrate the conformal scores in
 
 .. parsed-literal::
 
-    WARNING:tensorflow:From /Users/vblot/miniforge3/envs/mapie_test/lib/python3.9/site-packages/tensorflow_datasets/core/dataset_builder.py:643: get_single_element (from tensorflow.python.data.experimental.ops.get_single_element) is deprecated and will be removed in a future version.
     Instructions for updating:
     Use `tf.data.Dataset.get_single_element()`.
 
 
 .. parsed-literal::
 
-    WARNING:tensorflow:From /Users/vblot/miniforge3/envs/mapie_test/lib/python3.9/site-packages/tensorflow_datasets/core/dataset_builder.py:643: get_single_element (from tensorflow.python.data.experimental.ops.get_single_element) is deprecated and will be removed in a future version.
     Instructions for updating:
     Use `tf.data.Dataset.get_single_element()`.
     2022-03-25 10:55:08.789680: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
