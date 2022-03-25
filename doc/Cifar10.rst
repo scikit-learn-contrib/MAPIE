@@ -9,7 +9,7 @@ What is done in this tutorial ?
 
 ..
 
-   -  Use **``mapie.classification.MapieClassifier``** to compare the
+   -  Use ``mapie.classification.MapieClassifier`` to compare the
       prediction sets estimated by several conformal methods on the
       Cifar10 dataset.
 
@@ -17,13 +17,13 @@ What is done in this tutorial ?
 
 ..
 
-   -  Create a custom classe **``TensorflowToMapie``** to resolve
-      adherence problems between Tensorflow and Mapie
+   -  Create a custom classe ``TensorflowToMapie`` to resolve adherence
+      problems between Tensorflow and Mapie
 
 Tutorial preparation
 --------------------
 
-.. code:: ipython3
+.. code-block:: python
 
     import random
     import warnings
@@ -55,7 +55,7 @@ Tutorial preparation
     %matplotlib inline
     %load_ext pycodestyle_magic
 
-.. code:: ipython3
+.. code-block:: python
 
     SPACE_BETWEEN_LABELS = 2.5
     SPACE_IN_SUBPLOTS = 4.0
@@ -73,7 +73,7 @@ check that our model is not overfitting. > - **Calibration set**: used
 to calibrate the conformal scores in
 ``mapie.classification.MapieClassifier``
 
-.. code:: ipython3
+.. code-block:: python
 
     def train_valid_calib_split(
         X: np.ndarray,
@@ -131,7 +131,7 @@ to calibrate the conformal scores in
         return X_train, X_calib, X_val, y_train, y_calib, y_val
 
 
-.. code:: ipython3
+.. code-block:: python
 
     def load_data() -> Tuple[
         Tuple[np.ndarray, np.ndarray, np.ndarray],
@@ -188,7 +188,7 @@ to calibrate the conformal scores in
         return train_set, val_set, calib_set, test_set, label_names
 
 
-.. code:: ipython3
+.. code-block:: python
 
     def inspect_images(
         X: np.ndarray,
@@ -231,7 +231,7 @@ to calibrate the conformal scores in
         plt.show()
 
 
-.. code:: ipython3
+.. code-block:: python
 
     train_set, val_set, calib_set, test_set, label_names = load_data()
     (X_train, y_train, y_train_cat) = train_set 
@@ -277,7 +277,7 @@ succession of convolutions and maxpooling aims at achieve a reasonable
 accuracy score and a fast training. The objective here is not to obtain
 a perfect classifier.
 
-.. code:: ipython3
+.. code-block:: python
 
     def get_model(
         input_shape: Tuple, loss: tfk.losses,
@@ -321,13 +321,13 @@ a perfect classifier.
         return model
 
 Training the algorithm with a custom class called ``TensorflowToMapie``
-=======================================================================
+-----------------------------------------------------------------------
 
 As MAPIE asked that the model has a ``fit``, ``predict_proab``,
 ``predict`` class attributes and that the information about if whether
 or not the model is fitted.
 
-.. code:: ipython3
+.. code-block:: python
 
     class TensorflowToMapie():
         """
@@ -427,7 +427,7 @@ or not the model is fitted.
             else:
                 return False
 
-.. code:: ipython3
+.. code-block:: python
 
     model = get_model(
                     input_shape=(32, 32, 3), 
@@ -436,7 +436,7 @@ or not the model is fitted.
                     metrics=['accuracy']
                         )
 
-.. code:: ipython3
+.. code-block:: python
 
     cirfar10_model = TensorflowToMapie()
     cirfar10_model.fit(model, X_train, y_train_cat, X_val, y_val_cat)
@@ -486,7 +486,7 @@ or not the model is fitted.
     472/472 [==============================] - 8s 16ms/step - loss: 0.2919 - accuracy: 0.8975 - val_loss: 1.2481 - val_accuracy: 0.6815
 
 
-.. code:: ipython3
+.. code-block:: python
 
     y_true = label_binarize(y=y_test, classes=np.arange(max(y_test)+1))
     y_pred_proba = cirfar10_model.predict_proba(X_test)
@@ -500,7 +500,7 @@ We will now estimate the prediction sets with the five conformal methods
 implemented in :class:``MapieClassifier`` for a range of confidence
 levels between 0 and 1.
 
-.. code:: ipython3
+.. code-block:: python
 
     method_params = {
         "naive": ("naive", False),
@@ -511,7 +511,7 @@ levels between 0 and 1.
     }
 
 
-.. code:: ipython3
+.. code-block:: python
 
     y_preds, y_pss = {}, {}
     alphas = np.arange(0.01, 1, 0.01)
@@ -525,7 +525,7 @@ Let’s now estimate the number of null prediction sets, marginal
 coverages, and averaged prediction set sizes obtained with the different
 methods for all confidence levels and for a confidence level of 90 %.
 
-.. code:: ipython3
+.. code-block:: python
 
     def count_null_set(y: np.ndarray) -> int:
         """
@@ -546,7 +546,7 @@ methods for all confidence levels and for a confidence level of 90 %.
         return count
 
 
-.. code:: ipython3
+.. code-block:: python
 
     nulls, coverages, accuracies, sizes = {}, {}, {}, {}
     for name, (method, include_last_label) in method_params.items():
@@ -564,7 +564,7 @@ methods for all confidence levels and for a confidence level of 90 %.
         ]
 
 
-.. code:: ipython3
+.. code-block:: python
 
     coverage_90 = {method: coverage[9] for method, coverage in coverages.items()}
     null_90 = {method: null[9] for method, null in nulls.items()}
@@ -575,7 +575,7 @@ Let’s now look at the marginal coverages, number of null prediction
 sets, and the averaged size of prediction sets for a confidence level of
 90 %.
 
-.. code:: ipython3
+.. code-block:: python
 
     summary_df = pd.concat(
         [
@@ -587,7 +587,7 @@ sets, and the averaged size of prediction sets for a confidence level of
         keys=["Coverages", "Number of null sets", "Average prediction set sizes"]
     ).round(3)
 
-.. code:: ipython3
+.. code-block:: python
 
     summary_df
 
@@ -671,7 +671,7 @@ slightly too big.
 Thanks to this really awesome function, you can generate an amazing
 summary of prediction sets obtained on a selection of images. Wow !
 
-.. code:: ipython3
+.. code-block:: python
 
     def prepare_plot(y_methods: Dict[str, Tuple], n_images: int) -> np.ndarray:
         """
@@ -703,7 +703,7 @@ summary of prediction sets obtained on a selection of images. Wow !
         return ax
 
 
-.. code:: ipython3
+.. code-block:: python
 
     def get_position(y_set: List, label: str, count: int, count_true: int) -> float:
         """
@@ -787,7 +787,7 @@ summary of prediction sets obtained on a selection of images. Wow !
     
 
 
-.. code:: ipython3
+.. code-block:: python
 
     def plot_prediction_sets(
         X: np.ndarray, y: np.ndarray,
@@ -857,7 +857,7 @@ summary of prediction sets obtained on a selection of images. Wow !
                     add_text(ax, (i, j), -3, label_name, proba, color= 'orange', missing=True)
 
 
-.. code:: ipython3
+.. code-block:: python
 
     plot_prediction_sets(X_test, y_test, y_pred_proba, y_ps_90, 5, label_names)
 
@@ -873,7 +873,7 @@ In this section, we plot the number of null sets, the marginal
 coverages, and the prediction set sizes as function of the target
 coverage level for all conformal methods.
 
-.. code:: ipython3
+.. code-block:: python
 
     vars_y = [nulls, coverages, sizes]
     labels_y = ["Empty prediction sets", "Marginal coverage", "Set sizes"]
@@ -903,7 +903,7 @@ sets but with larger marginal coverages is entirely up to the user.
 6. Prediction set sizes
 -----------------------
 
-.. code:: ipython3
+.. code-block:: python
 
     s=5
     fig, axs = plt.subplots(1, len(y_preds), figsize=(s*len(y_preds), s))
@@ -928,7 +928,7 @@ the *conditional* coverages, i.e. the coverage obtained for a specific
 class of images. Let’s see what conditional coverages we obtain with the
 different conformal methods.
 
-.. code:: ipython3
+.. code-block:: python
 
     def get_class_coverage(
         y_test: np.ndarray,
@@ -965,11 +965,11 @@ different conformal methods.
         return recap_df
                 
 
-.. code:: ipython3
+.. code-block:: python
 
     class_coverage = get_class_coverage(y_test, y_ps_90, label_names)
 
-.. code:: ipython3
+.. code-block:: python
 
     fig = plt.figure()
     class_coverage.plot.bar(figsize=(12, 4), alpha=0.7)
@@ -1001,7 +1001,7 @@ classes. The only method whose conditional coverages remain valid for
 all classes is the “top_k” one. However, those variations are much
 smaller than that of the naive method.
 
-.. code:: ipython3
+.. code-block:: python
 
     def create_confusion_matrix(y_ps: np.ndarray, y_true: np.ndarray) -> np.ndarray:
         """
@@ -1029,7 +1029,7 @@ smaller than that of the naive method.
         return confusion_matrix
         
 
-.. code:: ipython3
+.. code-block:: python
 
     def reorder_labels(ordered_labels: List, labels: List, cm: np.ndarray) -> np.ndarray:
         """
@@ -1058,7 +1058,7 @@ smaller than that of the naive method.
             cm_ordered[i] = cm[old_index, index_order]
         return cm_ordered
 
-.. code:: ipython3
+.. code-block:: python
 
     def plot_confusion_matix(method: str, y_ps: Dict[str, np.ndarray], label_names: List) -> None:
         """
@@ -1093,7 +1093,7 @@ smaller than that of the naive method.
     
         ax.set_title(f'Confusion matrix for {method} method')
 
-.. code:: ipython3
+.. code-block:: python
 
     plot_confusion_matix("cumulated_score", y_ps_90, label_names)
 
@@ -1109,7 +1109,7 @@ many predictions sets with the true label than with the “cat” label. In
 this case, the reverse is also true. However, for the deer, the cat
 label is quite often within the prediction set while the deer is not
 
-.. code:: ipython3
+.. code-block:: python
 
     plot_confusion_matix("naive", y_ps_90, label_names)
 
@@ -1118,7 +1118,7 @@ label is quite often within the prediction set while the deer is not
 .. image:: Cifar10_files/Cifar10_54_0.png
 
 
-.. code:: ipython3
+.. code-block:: python
 
     plot_confusion_matix("score", y_ps_90, label_names)
 

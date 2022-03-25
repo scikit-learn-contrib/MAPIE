@@ -77,7 +77,6 @@ target/
 .vscode
 
 # Images
-*.png
 *.jpeg
 
 # ZIP files
