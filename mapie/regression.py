@@ -423,7 +423,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
         if self.cv == "prefit":
             raise ValueError(
-                "There should not be aggregation of predictions if cv is " "'prefit'"
+                "There should not be aggregation of predictions if cv is 'prefit'"
             )
         # To aggregate with mean() the aggregation coud be done
         # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
