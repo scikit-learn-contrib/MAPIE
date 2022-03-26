@@ -14,6 +14,7 @@ from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, in
 
 from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D
+from .residual_scores import ResidualScore
 from .subsample import Subsample
 from .utils import (
     check_alpha,
@@ -26,7 +27,6 @@ from .utils import (
     check_verbose,
     fit_estimator,
 )
-from .residual_scores import ResidualScore
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
@@ -169,9 +169,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> import numpy as np
     >>> from mapie.regression import MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
+    >>> from mapie.residual_scores import AbsoluteResidualScore
     >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> mapie_reg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
+    >>> mapie_reg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy, AbsoluteResidualScore())
     >>> y_pred, y_pis = mapie_reg.predict(X_toy, alpha=0.5)
     >>> print(y_pis[:, :, 0])
     [[ 4.7972973   5.8       ]
