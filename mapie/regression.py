@@ -14,7 +14,7 @@ from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, in
 
 from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D
-from .residual_scores import ResidualScore
+from .residual_scores import AbsoluteResidualScore, ResidualScore
 from .subsample import Subsample
 from .utils import (
     check_alpha,
@@ -440,7 +440,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self,
         X: ArrayLike,
         y: ArrayLike,
-        residual_score: ResidualScore,
+        residual_score: Optional[ResidualScore] = AbsoluteResidualScore(),
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieRegressor:
         """
@@ -458,7 +458,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y : ArrayLike of shape (n_samples,)
             Training labels.
 
-        residual_score : ResidualScore
+        residual_score : Optional[ResidualScore]
             ResidualScore instance.
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
