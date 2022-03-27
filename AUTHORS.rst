@@ -21,4 +21,5 @@ Contributors
 * Thomas Morzadec <tmorzadec@quantmetry.com>
 * Julien Roussel <jroussel@quantmetry.com>
 * Vincent Blot <vblot@quantmetry.com>
+* Arnaud Capitaine <arnaud.gc.capitaine@gmail.com>
 To be continued ...
