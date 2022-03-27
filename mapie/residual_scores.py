@@ -3,6 +3,8 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
+from ._typing import ArrayLike
+
 
 class ResidualScore(metaclass=ABCMeta):
     """Base class for residual scores.
@@ -43,8 +45,8 @@ class ResidualScore(metaclass=ABCMeta):
 
     @abstractmethod
     def get_signed_residual_scores(
-        self, y: np.ndarray, y_pred: np.ndarray,
-    ) -> np.ndarray:
+        self, y: ArrayLike, y_pred: ArrayLike,
+    ) -> ArrayLike:
         """Placeholder for get_signed_residual_scores.
         Subclasses should implement this method!
 
@@ -53,30 +55,30 @@ class ResidualScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        y : np.ndarray
+        y : ArrayLike
             Observed values.
-        y_pred : np.ndarray
+        y_pred : ArrayLike
             Predicted values.
 
         Returns
         -------
-        np.ndarray
+        ArrayLike
             Unsigned residual scores.
         """
 
-    def get_residual_scores(self, y: np.ndarray, y_pred: np.ndarray,) -> np.ndarray:
+    def get_residual_scores(self, y: ArrayLike, y_pred: ArrayLike,) -> ArrayLike:
         """Get the residual score considering the symmetrical property if so.
 
         Parameters
         ----------
-        y : np.ndarray
+        y : ArrayLike
             Observed values.
-        y_pred : np.ndarray
+        y_pred : ArrayLike
             Predicted values.
 
         Returns
         -------
-        np.ndarray
+        ArrayLike
             Residual scores.
         """
         residuals = self.get_signed_residual_scores(y, y_pred)
@@ -86,8 +88,8 @@ class ResidualScore(metaclass=ABCMeta):
 
     @abstractmethod
     def get_observed_value(
-        self, y_pred: np.ndarray, residual_scores: np.ndarray
-    ) -> np.ndarray:
+        self, y_pred: ArrayLike, residual_scores: ArrayLike
+    ) -> ArrayLike:
         """Placeholder for get_observed_value.
         Subclasses should implement this method!
 
@@ -96,18 +98,18 @@ class ResidualScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        y_pred : np.ndarray
+        y_pred : ArrayLike
             Predicted values.
-        residual_scores : np.ndarray
+        residual_scores : ArrayLike
             Residual scores.
 
         Returns
         -------
-        np.ndarray
+        ArrayLike
             Observed values.
         """
 
-    def check_consistency(self, y: np.ndarray, y_pred: np.ndarray):
+    def check_consistency(self, y: ArrayLike, y_pred: ArrayLike) -> None:
         """Check consistency between the following methods:
         get_observed_value and get_signed_residual_scores
 
@@ -116,9 +118,9 @@ class ResidualScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        y : np.ndarray
+        y : ArrayLike
             Observed values.
-        y_pred : np.ndarray
+        y_pred : ArrayLike
             Predicted values.
 
         Raises
@@ -152,17 +154,17 @@ class AbsoluteResidualScore(ResidualScore):
     is approximatively the same over the range of predicted values.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         ResidualScore.__init__(self, True, consistency_check=False)
 
     def get_signed_residual_scores(
-        self, y: np.ndarray, y_pred: np.ndarray,
-    ) -> np.ndarray:
+        self, y: ArrayLike, y_pred: ArrayLike,
+    ) -> ArrayLike:
         return y - y_pred
 
     def get_observed_value(
-        self, y_pred: np.ndarray, residual_scores: np.ndarray
-    ) -> np.ndarray:
+        self, y_pred: ArrayLike, residual_scores: ArrayLike
+    ) -> ArrayLike:
         return y_pred + residual_scores
 
 
@@ -176,15 +178,15 @@ class GammaResidualScore(ResidualScore):
     depends on the predicted values.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         ResidualScore.__init__(self, False, consistency_check=False)
 
     def get_signed_residual_scores(
-        self, y: np.ndarray, y_pred: np.ndarray,
-    ) -> np.ndarray:
+        self, y: ArrayLike, y_pred: ArrayLike,
+    ) -> ArrayLike:
         return (y - y_pred) / y_pred
 
     def get_observed_value(
-        self, y_pred: np.ndarray, residual_scores: np.ndarray
-    ) -> np.ndarray:
+        self, y_pred: ArrayLike, residual_scores: ArrayLike
+    ) -> ArrayLike:
         return y_pred * (1 + residual_scores)

@@ -440,7 +440,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self,
         X: ArrayLike,
         y: ArrayLike,
-        residual_score: Optional[ResidualScore] = AbsoluteResidualScore(),
+        residual_score: ResidualScore = AbsoluteResidualScore(),
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieRegressor:
         """
