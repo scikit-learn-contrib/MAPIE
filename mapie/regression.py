@@ -191,7 +191,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "single_estimator_",
         "estimators_",
         "k_",
-        "residual_score",
+        "residual_score_",
+        "residual_scores_",
         "n_features_in_",
         "n_samples_",
     ]
@@ -539,8 +540,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
         residual_score.check_consistency(y, y_pred)
-        self.residual_scores = residual_score.get_residual_scores(y, y_pred)
-        self.residual_score = residual_score
+        self.residual_scores_ = residual_score.get_residual_scores(y, y_pred)
+        self.residual_score_ = residual_score
 
         return self
 
@@ -609,26 +610,26 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return np.array(y_pred)
         else:
             alpha_ = cast(ArrayLike, alpha_)
-            check_alpha_and_n_samples(alpha_, self.residual_scores.shape[0])
+            check_alpha_and_n_samples(alpha_, self.residual_scores_.shape[0])
             if self.method in ["naive", "base"] or self.cv == "prefit":
-                if self.residual_score.sym:
+                if self.residual_score_.sym:
                     residual_scores_q_low_bound = -np.quantile(
-                        self.residual_scores, 1 - alpha_, interpolation="higher"
+                        self.residual_scores_, 1 - alpha_, interpolation="higher"
                     )
                     residual_scores_q_up_bound = -residual_scores_q_low_bound
                 else:
                     alpha_lower_bound = alpha_ / 2
                     alpha_upper_bound = 1 - alpha_ / 2
                     residual_scores_q_low_bound = np.quantile(
-                        self.residual_scores, alpha_lower_bound, interpolation="higher"
+                        self.residual_scores_, alpha_lower_bound, interpolation="higher"
                     )
                     residual_scores_q_up_bound = np.quantile(
-                        self.residual_scores, alpha_upper_bound, interpolation="higher"
+                        self.residual_scores_, alpha_upper_bound, interpolation="higher"
                     )
-                y_pred_low = self.residual_score.get_observed_value(
+                y_pred_low = self.residual_score_.get_observed_value(
                     y_pred[:, np.newaxis], residual_scores_q_low_bound
                 )
-                y_pred_up = self.residual_score.get_observed_value(
+                y_pred_up = self.residual_score_.get_observed_value(
                     y_pred[:, np.newaxis], residual_scores_q_up_bound
                 )
             else:
@@ -648,21 +649,21 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
 
                 if self.method == "plus":
-                    if self.residual_score.sym:
+                    if self.residual_score_.sym:
                         y_pred_multi_with_residuals_lower_bound = (
-                            self.residual_score.get_observed_value(
-                                y_pred_multi, -self.residual_scores
+                            self.residual_score_.get_observed_value(
+                                y_pred_multi, -self.residual_scores_
                             )
                         )
                         y_pred_multi_with_residuals_upper_bound = (
-                            self.residual_score.get_observed_value(
-                                y_pred_multi, self.residual_scores
+                            self.residual_score_.get_observed_value(
+                                y_pred_multi, self.residual_scores_
                             )
                         )
                     else:
                         y_pred_multi_with_residuals_lower_bound = (
-                            self.residual_score.get_observed_value(
-                                y_pred_multi, self.residual_scores
+                            self.residual_score_.get_observed_value(
+                                y_pred_multi, self.residual_scores_
                             )
                         )
                         y_pred_multi_with_residuals_upper_bound = (
@@ -672,26 +673,26 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 if self.method == "minmax":
                     lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
                     upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
-                    if self.residual_score.sym:
+                    if self.residual_score_.sym:
                         y_pred_multi_with_residuals_lower_bound = (
-                            self.residual_score.get_observed_value(
-                                lower_bounds, -self.residual_scores
+                            self.residual_score_.get_observed_value(
+                                lower_bounds, -self.residual_scores_
                             )
                         )
                         y_pred_multi_with_residuals_upper_bound = (
-                            self.residual_score.get_observed_value(
-                                upper_bounds, self.residual_scores
+                            self.residual_score_.get_observed_value(
+                                upper_bounds, self.residual_scores_
                             )
                         )
                     else:
                         y_pred_multi_with_residuals_lower_bound = (
-                            self.residual_score.get_observed_value(
-                                lower_bounds, self.residual_scores
+                            self.residual_score_.get_observed_value(
+                                lower_bounds, self.residual_scores_
                             )
                         )
                         y_pred_multi_with_residuals_upper_bound = (
-                            self.residual_score.get_observed_value(
-                                upper_bounds, self.residual_scores
+                            self.residual_score_.get_observed_value(
+                                upper_bounds, self.residual_scores_
                             )
                         )
 
