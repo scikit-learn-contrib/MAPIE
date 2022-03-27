@@ -14,14 +14,19 @@ class ResidualScore(metaclass=ABCMeta):
     def __init__(
         self,
         sym: bool,
-        eps: float = sys.float_info.epsilon,
         consistency_check: bool = True,
+        eps: float = sys.float_info.epsilon,
     ):
         """
         Parameters
         ----------
         sym : bool
             Whether to consider the residual score as symmetrical or not.
+        consistency_check : bool, optional
+            Whether to check the consistency between the following methods:
+            - get_observed_value and 
+            - get_signed_residual_scores
+            by default True.
         eps : float, optional
             Threshold to consider when checking the consistency between the 
             following methods:
@@ -31,11 +36,6 @@ class ResidualScore(metaclass=ABCMeta):
             self.get_observed_value(y_pred, self.get_residual_score(y, y_pred)) == y
             It should be specified if consistency_check==True.
             by default sys.float_info.epsilon. 
-        consistency_check : bool, optional
-            Whether to check the consistency between the following methods:
-            - get_observed_value and 
-            - get_signed_residual_scores
-            by default True.
         """
         self.sym = sym
         self.eps = eps
@@ -126,7 +126,7 @@ class ResidualScore(metaclass=ABCMeta):
         ValueError
             If the two methods are not consistent.
         """
-        if self.check_consistency:
+        if self.consistency_check:
             residual_scores = self.get_signed_residual_scores(y, y_pred)
             abs_residuals = np.abs(self.get_observed_value(y_pred, residual_scores) - y)
             max_res = np.max(abs_residuals)
