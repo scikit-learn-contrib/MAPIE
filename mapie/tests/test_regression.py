@@ -450,7 +450,7 @@ def test_pipeline_compatibility() -> None:
         {
             "x_cat": ["A", "A", "B", "A", "A", "B"],
             "x_num": [0, 1, 1, 4, np.nan, 5],
-            "y": [5, 7, 3, 9, 10, 8]
+            "y": [5, 7, 3, 9, 10, 8],
         }
     )
     y = pd.Series([5, 7, 3, 9, 10, 8])
@@ -460,14 +460,12 @@ def test_pipeline_compatibility() -> None:
         ]
     )
     categorical_preprocessor = Pipeline(
-        steps=[
-            ("encoding", OneHotEncoder(handle_unknown="ignore"))
-        ]
+        steps=[("encoding", OneHotEncoder(handle_unknown="ignore"))]
     )
     preprocessor = ColumnTransformer(
         [
             ("cat", categorical_preprocessor, ["x_cat"]),
-            ("num", numeric_preprocessor, ["x_num"])
+            ("num", numeric_preprocessor, ["x_num"]),
         ]
     )
     pipe = make_pipeline(preprocessor, LinearRegression())

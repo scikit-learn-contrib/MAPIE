@@ -5,19 +5,14 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
-from sklearn.utils.validation import (
-    _check_sample_weight,
-    _num_features
-)
+from sklearn.utils.validation import _check_sample_weight, _num_features
 from sklearn.utils import _safe_indexing
 
 from ._typing import ArrayLike, NDArray
 
 
 def check_null_weight(
-    sample_weight: Optional[ArrayLike],
-    X: ArrayLike,
-    y: ArrayLike
+    sample_weight: Optional[ArrayLike], X: ArrayLike, y: ArrayLike
 ) -> Tuple[Optional[NDArray], ArrayLike, ArrayLike]:
     """
     Check sample weights and remove samples with null sample weights.

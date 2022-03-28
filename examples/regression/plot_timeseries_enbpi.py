@@ -67,7 +67,7 @@ model = RandomForestRegressor(max_depth=17, n_estimators=150, random_state=59)
 
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.1
-cv_MapieTimeSeries = BlockBootstrap(100, length=48, random_state=59)
+cv_MapieTimeSeries = BlockBootstrap(50, length=48, random_state=59)
 mapie = MapieTimeSeriesRegressor(
     model, method="plus", cv=cv_MapieTimeSeries, agg_function="mean", n_jobs=-1
 )
@@ -85,10 +85,10 @@ y_pred_steps, y_pis_steps = mapie.predict(X_test.iloc[:gap, :], alpha=alpha)
 
 for step in range(gap, len(X_test), gap):
     mapie.partial_fit(
-        X_test.iloc[(step - gap):step, :], y_test.iloc[(step - gap):step]
+        X_test.iloc[(step - gap) : step, :], y_test.iloc[(step - gap) : step]
     )
     y_pred_gap_step, y_pis_gap_step = mapie.predict(
-        X_test.iloc[step:(step + gap), :],
+        X_test.iloc[step : (step + gap), :],
         alpha=alpha,
     )
     y_pred_steps = np.concatenate((y_pred_steps, y_pred_gap_step), axis=0)

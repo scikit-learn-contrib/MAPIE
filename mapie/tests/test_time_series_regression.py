@@ -5,12 +5,13 @@ from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 import pytest
+from sklearn import ensemble
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
 from typing_extensions import TypedDict
 
-from mapie._typing import ArrayLike
+from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.metrics import regression_coverage_score
 from mapie.time_series_regression import MapieTimeSeriesRegressor
@@ -109,14 +110,13 @@ def test_invalid_agg_function(agg_function: Any) -> None:
     mapie_ts_reg = MapieTimeSeriesRegressor(agg_function=None)
     with pytest.raises(ValueError, match=r".*If ensemble is True*"):
         mapie_ts_reg.fit(X_toy, y_toy)
-        mapie_ts_reg.predict(X_toy, ensemble=True)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.4], (0.2, 0.4)])
 def test_predict_output_shape(
-    strategy: str, alpha: Any, dataset: Tuple[ArrayLike, ArrayLike]
+    strategy: str, alpha: Any, dataset: Tuple[NDArray, NDArray]
 ) -> None:
     """Test predict output shape."""
     mapie_ts_reg = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
@@ -169,8 +169,10 @@ def test_results_for_ordered_alpha(strategy: str) -> None:
     mapie = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
     mapie.fit(X, y)
     y_pred, y_pis = mapie.predict(X, alpha=[0.05, 0.1])
-    assert (y_pis[:, 0, 0] <= y_pis[:, 0, 1]).all()
-    assert (y_pis[:, 1, 0] >= y_pis[:, 1, 1]).all()
+    assert np.all(
+        np.abs(y_pis[:, 1, 0] - y_pis[:, 0, 0])
+        >= np.abs(y_pis[:, 1, 1] - y_pis[:, 0, 1])
+    )
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -264,7 +266,7 @@ def test_linear_regression_results(strategy: str) -> None:
 def test_results_prefit_ignore_method() -> None:
     """Test that method is ignored when ``cv="prefit"``."""
     estimator = LinearRegression().fit(X, y)
-    all_y_pis: List[ArrayLike] = []
+    all_y_pis: List[NDArray] = []
     for method in METHODS:
         mapie_ts_reg = MapieTimeSeriesRegressor(
             estimator=estimator, cv="prefit", method=method
@@ -371,7 +373,6 @@ def test_pred_loof_isnan() -> None:
         y=y_toy,
         train_index=[0, 1, 2, 3, 4],
         val_index=[],
-        k=0,
     )
     assert len(y_pred) == 0
 
@@ -379,29 +380,20 @@ def test_pred_loof_isnan() -> None:
 def test_MapieTimeSeriesRegressor_alpha_is_None() -> None:
     """Test ``predict`` when ``alpha`` is None."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
-    pred = mapie_ts_reg.predict(X_toy, alpha=None)
-    assert pred.shape == (len(pred), )
+
+    with pytest.raises(ValueError, match=r".*too many values to unpackt*"):
+        y_pred, y_pis = mapie_ts_reg.predict(X_toy, alpha=None)
 
 
-def test_MapieTimeSeriesRegressor_partial_fit_ensemble_T() -> None:
-    """Test ``partial_update`` when ``ensemble`` is True."""
+def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
+    """Test ``partial_fit``."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
-    assert round(mapie_ts_reg.residuals_[-1], 2) == round(
-        np.abs(14.189 - 14.049), 2
+    assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
+        np.abs(14.189 - 14.038), 2
     )
     mapie_ts_reg = mapie_ts_reg.partial_fit(
-        X=np.array([[6]]), y=np.array([17.5]), ensemble=True
+        X=np.array([[6]]), y=np.array([17.5])
     )
-    assert round(mapie_ts_reg.residuals_[-1], 2) == round(17.5 - 18.665, 2)
-
-
-def test_MapieTimeSeriesRegressor_partial_fit_ensemble_F() -> None:
-    """Test ``partial_update`` when ``ensemble`` is False."""
-    mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
-    assert round(mapie_ts_reg.residuals_[-1], 2) == round(
-        np.abs(14.189 - 14.049), 2
+    assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
+        17.5 - 18.665, 2
     )
-    mapie_ts_reg = mapie_ts_reg.partial_fit(
-        X=np.array([[6]]), y=np.array([17.5]), ensemble=False
-    )
-    assert round(mapie_ts_reg.residuals_[-1], 2) == round(17.5 - 18.66504, 2)

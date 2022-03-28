@@ -9,7 +9,7 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state, resample
 from sklearn.utils.validation import _num_samples
 
-from ._typing import ArrayLike, NDArray
+from ._typing import NDArray
 
 
 class Subsample(BaseCrossValidator):
@@ -56,15 +56,14 @@ class Subsample(BaseCrossValidator):
         self.random_state = random_state
 
     def split(
-        self,
-        X: ArrayLike
+        self, X: NDArray
     ) -> Generator[Tuple[NDArray, NDArray], None, None]:
         """
         Generate indices to split data into training and test sets.
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
+        X : NDArray of shape (n_samples, n_features)
             Training data.
 
         Yields
@@ -157,21 +156,21 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         self.random_state = random_state
 
     def split(
-        self, X: ArrayLike
-    ) -> Generator[Tuple[Any, ArrayLike], None, None]:
+        self, X: NDArray
+    ) -> Generator[Tuple[NDArray, NDArray], None, None]:
         """
         Generate indices to split data into training and test sets.
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
+        X : NDArray of shape (n_samples, n_features)
             Training data.
 
         Yields
         ------
-        train : ArrayLike of shape (n_indices_training,)
+        train : NDArray of shape (n_indices_training,)
             The training set indices for that split.
-        test : ArrayLike of shape (n_indices_test,)
+        test : NDArray of shape (n_indices_test,)
             The testing set indices for that split.
         Raises
         ------
@@ -190,7 +189,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
             n_blocks = (len(X) // self.length) + 1
         else:
             raise ValueError(
-                "At least one argument between ``length`` and "
+                "At least one argument between ``length`` or "
                 "``n_blocks`` has to be not None"
             )
         indices = np.arange(len(X))
@@ -203,9 +202,12 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         if self.overlapping:
             blocks = sliding_window_view(indices, window_shape=length)
         else:
-            indices = indices[(len(indices) % length):]
+            indices = indices[(len(indices) % length) :]
             blocks_number = len(indices) // length
-            blocks = np.array_split(indices, indices_or_sections=blocks_number)
+            blocks = np.asarray(
+                np.array_split(indices, indices_or_sections=blocks_number)
+            )
+
         random_state = check_random_state(self.random_state)
 
         for k in range(self.n_resamplings):
