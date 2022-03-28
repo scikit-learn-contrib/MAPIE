@@ -5,7 +5,6 @@ from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 import pytest
-from sklearn import ensemble
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split

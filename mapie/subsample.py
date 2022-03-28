@@ -202,7 +202,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         if self.overlapping:
             blocks = sliding_window_view(indices, window_shape=length)
         else:
-            indices = indices[(len(indices) % length) :]
+            indices = indices[(len(indices) % length):]
             blocks_number = len(indices) // length
             blocks = np.asarray(
                 np.array_split(indices, indices_or_sections=blocks_number)

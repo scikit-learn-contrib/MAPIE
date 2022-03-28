@@ -85,10 +85,10 @@ y_pred_steps, y_pis_steps = mapie.predict(X_test.iloc[:gap, :], alpha=alpha)
 
 for step in range(gap, len(X_test), gap):
     mapie.partial_fit(
-        X_test.iloc[(step - gap) : step, :], y_test.iloc[(step - gap) : step]
+        X_test.iloc[(step - gap):step, :], y_test.iloc[(step - gap):step]
     )
     y_pred_gap_step, y_pis_gap_step = mapie.predict(
-        X_test.iloc[step : (step + gap), :],
+        X_test.iloc[step:(step + gap), :],
         alpha=alpha,
     )
     y_pred_steps = np.concatenate((y_pred_steps, y_pred_gap_step), axis=0)
