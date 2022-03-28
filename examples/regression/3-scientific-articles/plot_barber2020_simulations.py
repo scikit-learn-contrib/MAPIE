@@ -34,7 +34,10 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from matplotlib import pyplot as plt
 
-from mapie.metrics import regression_coverage_score
+from mapie.metrics import (
+    regression_coverage_score,
+    regression_mean_width_score
+)
 from mapie.regression import MapieRegressor
 from mapie._typing import ArrayLike
 
@@ -116,12 +119,14 @@ def PIs_vs_dimensions(
                     **params
                 )
                 mapie.fit(X_train, y_train)
-                y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
+                _, y_pis = mapie.predict(X_test, alpha=alpha)
                 coverage = regression_coverage_score(
                     y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
                 )
                 results[strategy][dimension]["coverage"][trial] = coverage
-                width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
+                width_mean = regression_mean_width_score(
+                    y_pis[:, 0, 0], y_pis[:, 1, 0]
+                )
                 results[strategy][dimension]["width_mean"][trial] = width_mean
     return results
 

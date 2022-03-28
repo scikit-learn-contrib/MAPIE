@@ -20,7 +20,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] Test A
 - [ ] Test B
 
-# Checklist:
+# Checklist
 
 - [ ] I have read the [contributing guidelines](https://github.com/simai-ml/MAPIE/blob/master/CONTRIBUTING.rst)
 - [ ] I have updated the [HISTORY.rst](https://github.com/simai-ml/MAPIE/blob/master/HISTORY.rst) and [AUTHORS.rst](https://github.com/simai-ml/MAPIE/blob/master/AUTHORS.rst) files

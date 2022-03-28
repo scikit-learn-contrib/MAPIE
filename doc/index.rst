@@ -24,6 +24,7 @@
    theoretical_description_classification
    tutorial_classification
    examples_classification/index
+   notebooks_classification
 
 .. toctree::
    :maxdepth: 2

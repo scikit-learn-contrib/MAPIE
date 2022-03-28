@@ -30,16 +30,20 @@ object for estimating the residuals breaks the theoretical guarantees of the
 Jackknife+ and CV+ methods.
 """
 import pandas as pd
-from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieRegressor
 from matplotlib import pylab as plt
 from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
+from mapie.metrics import (
+    regression_coverage_score,
+    regression_mean_width_score
+)
+from mapie.regression import MapieRegressor
+
 # Load input data and feature engineering
 demand_df = pd.read_csv(
-    "../data/demand_temperature.csv", parse_dates=True, index_col=0
+    "../../data/demand_temperature.csv", parse_dates=True, index_col=0
 )
 demand_df["Date"] = pd.to_datetime(demand_df.index)
 demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype("int64")
@@ -86,7 +90,7 @@ mapie = MapieRegressor(
 mapie.fit(X_train, y_train)
 y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
 coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
-width = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
+width = regression_mean_width_score(y_pis[:, 0, 0], y_pis[:, 1, 0])
 
 # Print results
 print(

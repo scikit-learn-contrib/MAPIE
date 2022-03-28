@@ -18,7 +18,10 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 from mapie.classification import MapieClassifier
-from mapie.metrics import classification_coverage_score
+from mapie.metrics import (
+    classification_coverage_score,
+    classification_mean_width_score
+)
 from mapie._typing import ArrayLike
 
 
@@ -206,15 +209,21 @@ y_pred2, y_ps2 = mapie_clf2.predict(
 # the "real" coverage obtained on the test set.
 
 coverages1 = [
-    classification_coverage_score(y_test1, y_ps1[:, :, ia])
-    for ia, _ in enumerate(alpha)
+    classification_coverage_score(y_test1, y_ps1[:, :, i])
+    for i, _ in enumerate(alpha)
 ]
 coverages2 = [
-    classification_coverage_score(y_test2, y_ps2[:, :, ia])
-    for ia, _ in enumerate(alpha)
+    classification_coverage_score(y_test2, y_ps2[:, :, i])
+    for i, _ in enumerate(alpha)
 ]
-widths1 = [y_ps1[:, :, ia].sum(axis=1).mean() for ia, _ in enumerate(alpha)]
-widths2 = [y_ps2[:, :, ia].sum(axis=1).mean() for ia, _ in enumerate(alpha)]
+widths1 = [
+    classification_mean_width_score(y_ps1[:, :, i])
+    for i, _ in enumerate(alpha)
+]
+widths2 = [
+    classification_mean_width_score(y_ps2[:, :, i])
+    for i, _ in enumerate(alpha)
+]
 
 _, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
 axes[0].set_xlabel("1 - alpha")

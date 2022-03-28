@@ -2,12 +2,18 @@
 History
 =======
 
-0.3.2 (2021-XX-XX)
+0.3.2 (2022-03-11)
 ------------------
 * Refactorize unit tests
 * Add "naive" and "top-k" methods in MapieClassifier
 * Include J+aB method in regression tutorial
 * Add MNIST example for classification
+* Add cross-conformal for classification
+* Add `notebooks` folder containing notebooks used for generating documentation tutorials
+* Uniformize the use of matrix k_ and add an argument "ensemble" to method "predict" in regression.py
+* Add replication of the Chen Xu's tutorial testing Jackknife+aB vs Jackknife+
+* Add Jackknife+-after-Bootstrap documentation
+* Improve scikit-learn pipelines compatibility
 
 0.3.1 (2021-11-19)
 ------------------

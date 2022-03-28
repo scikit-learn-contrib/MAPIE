@@ -67,6 +67,9 @@ coverage.xml
 doc/_build/
 doc/generated/
 
+# Notebooks checkpoints
+**.ipynb_checkpoints
+
 # PyBuilder
 target/
 
@@ -76,3 +79,6 @@ target/
 # Images
 *.png
 *.jpeg
+
+# ZIP files
+*.zip
