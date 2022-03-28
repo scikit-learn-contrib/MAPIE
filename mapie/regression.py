@@ -17,7 +17,7 @@ from sklearn.utils.validation import (
     _check_y,
 )
 
-from ._typing import ArrayLike
+from ._typing import ArrayLike, NDArray
 from .aggregation_functions import aggregate_all, phi2D
 from .utils import (
     check_cv,
@@ -32,7 +32,7 @@ from .utils import (
 )
 
 
-class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
+class MapieRegressor(BaseEstimator, RegressorMixin):
     """
     Prediction interval with out-of-fold residuals.
 
@@ -141,8 +141,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     estimators_ : list
         List of out-of-folds estimators.
 
-    residuals_ : ArrayLike of shape (n_samples_train,)
-        Residuals between ``y_train`` and ``y_pred``.
+    conformity_scores_ : ArrayLike of shape (n_samples_train,)
+        Conformity scores between ``y_train`` and ``y_pred``.
 
     k_ : ArrayLike
         - Array of nans, of shape (len(y), 1) if cv is ``"prefit"``
@@ -152,9 +152,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     n_features_in_: int
         Number of features passed to the fit method.
-
-    n_samples_: List[int]
-        Number of samples passed to the fit method.
 
     References
     ----------
@@ -194,9 +191,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "single_estimator_",
         "estimators_",
         "k_",
-        "residuals_",
-        "n_features_in_",
-        "n_samples_",
+        "conformity_scores_",
+        "n_features_in_"
     ]
 
     def __init__(
@@ -347,9 +343,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y: ArrayLike,
         train_index: ArrayLike,
         val_index: ArrayLike,
-        k: int,
         sample_weight: Optional[ArrayLike] = None,
-    ) -> Tuple[RegressorMixin, ArrayLike, ArrayLike]:
+    ) -> Tuple[RegressorMixin, NDArray, ArrayLike]:
         """
         Fit a single out-of-fold model on a given training set and
         perform predictions on a test set.
@@ -371,23 +366,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         val_index : ArrayLike of shape (n_samples_val)
             Validation data indices.
 
-        k : int
-            Split identification number.
-
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
             By default ``None``.
 
         Returns
         -------
-        Tuple[RegressorMixin, ArrayLike, ArrayLike]
+        Tuple[RegressorMixin, NDArray, ArrayLike]
 
-        - [0]: Fitted estimator
-        - [1]: Estimator predictions on the validation fold,
-          of shape (n_samples_val,)
-        - [3]: Validation data indices,
-          of shape (n_samples_val,).
-
+        - [0]: RegressorMixin, fitted estimator
+        - [1]: NDArrayof shape (n_samples_val,),
+          estimator predictions on the validation fold.
+        - [3]: NDArray of shape (n_samples_val,),
+          validation data indices.
         """
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)
@@ -405,7 +396,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             y_pred = np.array([])
         return estimator, y_pred, val_index
 
-    def aggregate_with_mask(self, x: ArrayLike, k: ArrayLike) -> ArrayLike:
+    def aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
         """
         Take the array of predictions, made by the refitted estimators,
         on the testing set, and the 1-nan array indicating for each training
@@ -457,7 +448,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Fit the base estimator under the ``single_estimator_`` attribute.
         Fit all cross-validated estimator clones
         and rearrange them into a list, the ``estimators_`` attribute.
-        Out-of-fold residuals are stored under the ``residuals_`` attribute.
+        Out-of-fold residuals are stored under
+        the ``conformity_scores_`` attribute.
 
         Parameters
         ----------
@@ -491,6 +483,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y = _check_y(y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
+        y = cast(NDArray, y)
+        n_samples = _num_samples(y)
 
         # Initialization
         self.estimators_: List[RegressorMixin] = []
@@ -499,19 +493,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
-            self.n_samples_ = [_num_samples(X)]
             self.k_ = np.full(
-                shape=(len(y), 1), fill_value=np.nan, dtype=float
+                shape=(n_samples, 1), fill_value=np.nan, dtype="float"
             )
         else:
+            cv = cast(BaseCrossValidator, cv)
             self.k_ = np.full(
-                shape=(len(y), cv.get_n_splits(X, y)),  # type: ignore
+                shape=(n_samples, cv.get_n_splits(X, y)),
                 fill_value=np.nan,
                 dtype=float,
             )
 
             pred_matrix = np.full(
-                shape=(len(y), cv.get_n_splits(X, y)),  # type: ignore
+                shape=(n_samples, cv.get_n_splits(X, y)),
                 fill_value=np.nan,
                 dtype=float,
             )
@@ -521,7 +515,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             )
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
-                self.n_samples_ = [_num_samples(X)]
             else:
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
@@ -530,27 +523,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         y,
                         train_index,
                         val_index,
-                        k,
                         sample_weight,
                     )
-                    for k, (train_index, val_index) in enumerate(cv.split(X))
+                    for train_index, val_index in cv.split(X)
                 )
                 self.estimators_, predictions, val_indices = map(
                     list, zip(*outputs)
                 )
 
-                self.n_samples_ = [
-                    np.array(pred).shape[0] for pred in predictions
-                ]
-
                 for i, val_ind in enumerate(val_indices):
-                    pred_matrix[val_ind, i] = np.array(predictions[i]).ravel()
+                    pred_matrix[val_ind, i] = np.array(predictions[i])
                     self.k_[val_ind, i] = 1
                 check_nan_in_aposteriori_prediction(pred_matrix)
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        self.residuals_ = np.abs(np.ravel(y) - y_pred)
+        self.conformity_scores_ = np.abs(y - y_pred)
         return self
 
     def predict(
@@ -558,7 +546,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         X: ArrayLike,
         ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
-    ) -> Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]:
+    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
         Residuals from the training set and predictions from the model clones
@@ -598,11 +586,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]
+        Union[NDArray, Tuple[NDArray, NDArray]]
 
-        - ArrayLike of shape (n_samples,) if alpha is None.
+        - NDArray of shape (n_samples,) if alpha is None.
 
-        - Tuple[ArrayLike, ArrayLike] of shapes
+        - Tuple[NDArray, NDArray] of shapes
         (n_samples,) and (n_samples, 2, n_alpha) if alpha is not None.
 
             - [:, 0, :]: Lower bound of the prediction interval.
@@ -611,65 +599,74 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         # Checks
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
-        alpha_ = check_alpha(alpha)
+        alpha = cast(Optional[NDArray], check_alpha(alpha))
         y_pred = self.single_estimator_.predict(X)
+        n = len(self.conformity_scores_)
 
         if alpha is None:
             return np.array(y_pred)
+
+        alpha_np = cast(NDArray, alpha)
+        check_alpha_and_n_samples(alpha_np, n)
+        if self.method in ["naive", "base"] or self.cv == "prefit":
+            quantile = np.quantile(
+                self.conformity_scores_, 1 - alpha_np, method="higher"
+            )
+            y_pred_low = y_pred[:, np.newaxis] - quantile
+            y_pred_up = y_pred[:, np.newaxis] + quantile
         else:
-            alpha_ = cast(ArrayLike, alpha_)
-            check_alpha_and_n_samples(alpha_, self.residuals_.shape[0])
-            if self.method in ["naive", "base"] or self.cv == "prefit":
-                quantile = np.quantile(
-                    self.residuals_, 1 - alpha_, interpolation="higher"
-                )
-                y_pred_low = y_pred[:, np.newaxis] - quantile
-                y_pred_up = y_pred[:, np.newaxis] + quantile
-            else:
-                y_pred_multi = np.column_stack(
-                    [e.predict(X) for e in self.estimators_]
-                )
+            y_pred_multi = np.column_stack(
+                [e.predict(X) for e in self.estimators_]
+            )
 
-                # At this point, y_pred_multi is of shape
-                # (n_samples_test, n_estimators_). The method
-                # ``aggregate_with_mask`` fits it to the right size thanks to
-                # the shape of k_.
+            # At this point, y_pred_multi is of shape
+            # (n_samples_test, n_estimators_).
+            # If ``method`` is "plus":
+            #   - if ``cv`` is not a ``Subsample``,
+            #       we enforce y_pred_multi to be of shape
+            #       (n_samples_test, n_samples_train),
+            #       thanks to the folds identifier.
+            #   - if ``cv``is a ``Subsample``, the methode
+            #       ``aggregate_with_mask`` fits it to the right size
+            #       thanks to the shape of k_.
 
-                y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
+            y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
 
-                if self.method == "plus":
+            if self.method == "plus":
+                lower_bounds = y_pred_multi - self.conformity_scores_
+                upper_bounds = y_pred_multi + self.conformity_scores_
 
-                    lower_bounds = y_pred_multi - self.residuals_
-                    upper_bounds = y_pred_multi + self.residuals_
+            if self.method == "minmax":
+                lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
+                upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
+                lower_bounds = lower_bounds - self.conformity_scores_
+                upper_bounds = upper_bounds + self.conformity_scores_
 
-                if self.method == "minmax":
-                    lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
-                    upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
-                    lower_bounds = lower_bounds - self.residuals_
-                    upper_bounds = upper_bounds + self.residuals_
+            y_pred_low = np.column_stack(
+                [
+                    np.quantile(
+                        ma.masked_invalid(lower_bounds),
+                        _alpha,
+                        axis=1,
+                        method="lower",
+                    )
+                    for _alpha in alpha_np
+                ]
+            ).data
 
-                y_pred_low = np.column_stack(
-                    [
-                        np.quantile(
-                            ma.masked_invalid(lower_bounds),
-                            _alpha,
-                            axis=1,
-                            interpolation="lower",
-                        )
-                        for _alpha in alpha_
-                    ]
-                ).data
-                y_pred_up = np.column_stack(
-                    [
-                        np.quantile(
-                            ma.masked_invalid(upper_bounds),
-                            1 - _alpha,
-                            axis=1,
-                            interpolation="higher",
-                        )
-                        for _alpha in alpha_
-                    ]
-                ).data
-                if ensemble:
-                    y_pred = aggregate_all(self.agg_function, y_pred_multi)
-            return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
+            y_pred_up = np.column_stack(
+                [
+                    np.quantile(
+                        ma.masked_invalid(upper_bounds),
+                        1 - _alpha,
+                        axis=1,
+                        method="higher",
+                    )
+                    for _alpha in alpha_np
+                ]
+            ).data
+
+            if ensemble:
+                y_pred = aggregate_all(self.agg_function, y_pred_multi)
+
+        return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
