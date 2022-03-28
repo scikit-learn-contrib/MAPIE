@@ -27,7 +27,6 @@ from .utils import (
     check_alpha_and_n_samples,
     check_n_jobs,
     check_verbose,
-    check_input_is_image,
     fit_estimator
 )
 
@@ -254,13 +253,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             If the estimator is not fitted and ``cv`` attribute is "prefit".
         """
         if estimator is None:
-            if not self.image_input:
-                return LogisticRegression(multi_class="multinomial").fit(X, y)
-            else:
-                raise ValueError(
-                    "Default LogisticRegression's input can't be an image."
-                    "Please provide a proper model."
-                )
+            return LogisticRegression(multi_class="multinomial").fit(X, y)
+
         if isinstance(estimator, Pipeline):
             est = estimator[-1]
         else:
@@ -639,7 +633,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         self,
         X: ArrayLike,
         y: ArrayLike,
-        image_input: Optional[bool] = False,
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieClassifier:
         """
@@ -652,13 +645,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
 
         y : ArrayLike of shape (n_samples,)
             Training labels.
-
-        image_input: Optional[bool] = False
-            Whether or not the X input is an image. If True, you must provide
-            a model that accepts image as input (e.g., a Neural Network). All
-            Scikit-learn classifiers only accept two-dimensional inputs.
-
-            By default False.
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
@@ -675,12 +661,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
             The model itself.
         """
         # Checks
-        self.image_input = image_input
         self._check_parameters()
         cv = check_cv(self.cv)
         estimator = self._check_estimator(X, y, self.estimator)
-        if self.image_input:
-            check_input_is_image(X)
+
         X, y = indexable(X, y)
         y = _check_y(y)
         assert type_of_target(y) == "multiclass"
@@ -844,8 +828,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):  # type: ignore
         include_last_label = self._check_include_last_label(include_last_label)
         alpha_ = check_alpha(alpha)
         check_is_fitted(self, self.fit_attributes)
-        if self.image_input:
-            check_input_is_image(X)
 
         # Estimate prediction sets
         y_pred = self.single_estimator_.predict(X)
