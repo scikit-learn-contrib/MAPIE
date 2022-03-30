@@ -15,27 +15,25 @@ from ._typing import ArrayLike, NDArray
 from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
+    masked_quantile,
 )
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
     """
-        Prediction interval with out-of-fold residuals for time series.
+    Prediction interval with out-of-fold residuals for time series.
 
     This class implements the EnbPI strategy and some variations
     for estimating prediction intervals on single-output time series.
-    It is ``MapieRegressor`` with one more method ``partial_fit``.
-    Actually, EnbPI only corresponds to MapieRegressor if the ``cv`` argument
-    if of type ``Subsample`` (Jackknife+-after-Bootstrap method). Moreover, for
-    the moment we consider the absolute values of the residuals of the model,
-    and consequently the prediction intervals are symmetryc. Moreover we did
-    not implement the PI's optimization to the oracle interval yet. It is still
-    a first step before implementing the actual EnbPI.
+
+    Actually, EnbPI only corresponds to ``MapieTimeSeriesRegressor`` if the
+    ``cv`` argument if of type ``BlockBootstrap``.
 
     References
     ----------
     Chen Xu, and Yao Xie.
-    "Conformal prediction for dynamic time-series."
+    [6] "Conformal prediction for dynamic time-series."
+    https://arxiv.org/abs/2010.09107
     """
 
     def __init__(
@@ -112,6 +110,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         X: ArrayLike,
         ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
+        JAB_Like=False,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
 
         # Checks
@@ -127,93 +126,185 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         else:
             alpha_np = cast(NDArray, alpha)
             check_alpha_and_n_samples(alpha_np, n)
-            betas_0 = np.full_like(alpha_np, np.nan, dtype=float)
-            for ind, _alpha in enumerate(alpha_np):
-                betas = np.linspace(0.0, _alpha, num=n + 1)
 
-                one_alpha_beta = np.quantile(
+            if (
+                (not JAB_Like)
+                or (self.method in ["naive", "base"])
+                or (self.cv == "prefit")
+            ):
+                # This version of predict is the implementation of the paper
+                # [6]. Its PIs are closed to the oracle's ones.
+                betas_0 = np.full_like(alpha_np, np.nan, dtype=float)
+                for ind, _alpha in enumerate(alpha_np):
+                    betas = np.linspace(
+                        _alpha / (n + 1), _alpha, num=n + 1, endpoint=False
+                    )
+
+                    one_alpha_beta = masked_quantile(
+                        ma.masked_invalid(self.conformity_scores_),
+                        1 - _alpha + betas,
+                        axis=0,
+                        method="higher",
+                    )  # type: ignore
+
+                    beta = masked_quantile(
+                        ma.masked_invalid(self.conformity_scores_),
+                        betas,
+                        axis=0,
+                        method="lower",
+                    )  # type: ignore
+                    betas_0[ind] = betas[
+                        np.argmin(one_alpha_beta - beta, axis=0)
+                    ]
+
+                lower_quantiles = masked_quantile(
                     ma.masked_invalid(self.conformity_scores_),
-                    1 - _alpha + betas,
+                    betas_0,
                     axis=0,
-                    interpolation="higher",
+                    method="lower",
+                )  # type: ignore
+                higher_quantiles = masked_quantile(
+                    ma.masked_invalid(self.conformity_scores_),
+                    1 - alpha_np + betas_0,
+                    axis=0,
+                    method="higher",
                 )  # type: ignore
 
-                beta = np.quantile(
-                    ma.masked_invalid(self.conformity_scores_),
-                    betas,
-                    axis=0,
-                    interpolation="lower",
-                )  # type: ignore
-                betas_0[ind] = betas[np.argmin(one_alpha_beta - beta, axis=0)]
+                if (self.method in ["naive", "base"]) or (self.cv == "prefit"):
+                    y_pred_low = np.column_stack(
+                        [
+                            y_pred[:, np.newaxis] + lower_quantiles[k]
+                            for k in range(len(alpha_np))
+                        ]
+                    )
+                    y_pred_up = np.column_stack(
+                        [
+                            y_pred[:, np.newaxis] + higher_quantiles[k]
+                            for k in range(len(alpha_np))
+                        ]
+                    )
+                else:
+                    y_pred_multi = np.column_stack(
+                        [e.predict(X) for e in self.estimators_]
+                    )
 
-            lower_quantiles = np.quantile(
-                ma.masked_invalid(self.conformity_scores_),
-                betas_0,
-                axis=0,
-                interpolation="lower",
-            )  # type: ignore
-            higher_quantiles = np.quantile(
-                ma.masked_invalid(self.conformity_scores_),
-                1 - alpha_np + betas_0,
-                axis=0,
-                interpolation="higher",
-            )  # type: ignore
+                    # At this point, y_pred_multi is of shape
+                    # (n_samples_test, n_estimators_). The method
+                    # ``aggregate_with_mask`` fits it to the right size thanks
+                    # to the shape of k_.
 
-            if self.method in ["naive", "base"] or self.cv == "prefit":
-                y_pred_low = np.column_stack(
-                    [
-                        y_pred[:, np.newaxis] + lower_quantiles[k]
-                        for k in range(len(alpha_np))
-                    ]
-                )
-                y_pred_up = np.column_stack(
-                    [
-                        y_pred[:, np.newaxis] + higher_quantiles[k]
-                        for k in range(len(alpha_np))
-                    ]
-                )
+                    y_pred_multi = self.aggregate_with_mask(
+                        y_pred_multi, self.k_
+                    )
+
+                    if self.method == "plus":
+                        pred = aggregate_all(self.agg_function, y_pred_multi)
+                        y_pred_low = np.column_stack(
+                            [
+                                pred + lower_quantiles[k]
+                                for k in range(len(alpha_np))
+                            ]
+                        )
+                        y_pred_up = np.column_stack(
+                            [
+                                pred + higher_quantiles[k]
+                                for k in range(len(alpha_np))
+                            ]
+                        )
+
+                    if self.method == "minmax":
+                        lower_bounds = np.min(
+                            y_pred_multi, axis=1, keepdims=True
+                        )
+                        upper_bounds = np.max(
+                            y_pred_multi, axis=1, keepdims=True
+                        )
+                        y_pred_low = np.column_stack(
+                            [
+                                lower_bounds + lower_quantiles[k]
+                                for k in range(len(alpha_np))
+                            ]
+                        )
+                        y_pred_up = np.column_stack(
+                            [
+                                upper_bounds + higher_quantiles[k]
+                                for k in range(len(alpha_np))
+                            ]
+                        )
             else:
-                y_pred_multi = np.column_stack(
-                    [e.predict(X) for e in self.estimators_]
-                )
+                # This version of predict is the implementation of the paper
+                # [2]. Its PIs are wider. It does not coorespond to [6]. It is
+                # a try. It is a bit slower because the betas
+                # (width optimization parameters of the PIs) are optimized for
+                # every points.
+                y_pred_low = np.empty((len(y_pred), len(alpha)), dtype=float)
+                y_pred_up = np.empty((len(y_pred), len(alpha)), dtype=float)
 
-                # At this point, y_pred_multi is of shape
-                # (n_samples_test, n_estimators_). The method
-                # ``aggregate_with_mask`` fits it to the right size thanks to
-                # the shape of k_.
+                for ind_alpha, _alpha in enumerate(alpha_np):
+                    betas = np.linspace(
+                        _alpha / (n + 1), _alpha, num=n + 1, endpoint=False
+                    )
+                    y_pred_multi = np.column_stack(
+                        [e.predict(X) for e in self.estimators_]
+                    )
+                    # At this point, y_pred_multi is of shape
+                    # (n_samples_test, n_estimators_). The method
+                    # ``aggregate_with_mask`` fits it to the right size
+                    # thanks to the shape of k_.
 
-                y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
+                    y_pred_multi = self.aggregate_with_mask(
+                        y_pred_multi, self.k_
+                    )
+                    if self.method == "plus":
+                        lower_bounds = y_pred_multi + self.conformity_scores_
+                        upper_bounds = y_pred_multi + self.conformity_scores_
 
-                if self.method == "plus":
-                    pred = aggregate_all(self.agg_function, y_pred_multi)
-                    y_pred_low = np.column_stack(
-                        [
-                            pred + lower_quantiles[k]
-                            for k in range(len(alpha_np))
-                        ]
-                    )
-                    y_pred_up = np.column_stack(
-                        [
-                            pred + higher_quantiles[k]
-                            for k in range(len(alpha_np))
-                        ]
-                    )
+                    if self.method == "minmax":
+                        lower_bounds = np.min(
+                            y_pred_multi, axis=1, keepdims=True
+                        )
+                        upper_bounds = np.max(
+                            y_pred_multi, axis=1, keepdims=True
+                        )
+                        lower_bounds = lower_bounds + self.conformity_scores_
+                        upper_bounds = upper_bounds + self.conformity_scores_
 
-                if self.method == "minmax":
-                    lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
-                    upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
-                    y_pred_low = np.column_stack(
-                        [
-                            lower_bounds + lower_quantiles[k]
-                            for k in range(len(alpha_np))
-                        ]
-                    )
-                    y_pred_up = np.column_stack(
-                        [
-                            upper_bounds + higher_quantiles[k]
-                            for k in range(len(alpha_np))
-                        ]
-                    )
-                if ensemble:
-                    y_pred = aggregate_all(self.agg_function, y_pred_multi)
+                    one_alpha_beta = masked_quantile(
+                        ma.masked_invalid(upper_bounds),
+                        1 - _alpha + betas,
+                        axis=1,
+                        method="higher",
+                    )  # type: ignore
+
+                    beta = masked_quantile(
+                        ma.masked_invalid(lower_bounds),
+                        betas,
+                        axis=1,
+                        method="lower",
+                    )  # type: ignore
+
+                    betas_0 = betas[np.argmin(one_alpha_beta - beta, axis=0)]
+
+                    lower_quantiles = np.empty((len(betas_0),))
+                    upper_quantiles = np.empty((len(betas_0),))
+
+                    for ind, beta_0 in enumerate(betas_0):
+                        lower_quantiles[ind] = masked_quantile(
+                            ma.masked_invalid(lower_bounds[ind, :]),
+                            beta_0,
+                            axis=0,
+                            method="lower",
+                        )  # type: ignore
+
+                        upper_quantiles[ind] = masked_quantile(
+                            ma.masked_invalid(upper_bounds[ind, :]),
+                            1 - _alpha + beta_0,
+                            axis=0,
+                            method="higher",
+                        )  # type: ignore
+                    y_pred_low[:, ind_alpha] = lower_quantiles
+                    y_pred_up[:, ind_alpha] = upper_quantiles
+
+            if ensemble:
+                y_pred = aggregate_all(self.agg_function, y_pred_multi)
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)

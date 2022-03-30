@@ -423,3 +423,106 @@ def check_input_is_image(X: ArrayLike) -> None:
             "When X is an image, the number of dimensions"
             "must be equal to 3 or 4."
         )
+
+
+def masked_quantile(
+    a: NDArray,
+    q: Union[float, NDArray],
+    axis: Optional[int] = None,
+    method: str = "linear",
+) -> NDArray:
+    """
+    Compute quantile for masked arrays
+
+    Parameters
+    ----------
+    a: NDArray
+        Array of data.
+
+    q: Union[float, NDArray]
+        Quantiles.
+
+    axis:int
+        ``axis`` is ``0`` or ``1``
+
+    method: str
+        "linear", "higher" or "lower"
+    """
+    return_float = False
+    flatten = False
+    if isinstance(q, float):
+        flatten = True
+
+        if (len(a.shape)) == 1 or (len(a) == 1):
+            return_float = True
+
+    q = cast(NDArray, check_alpha(q))
+    if (len(a.shape) == 1) or (a.shape[1] == 1):
+        if axis == 1:
+            raise ValueError(
+                "axis 1 is out of bounds for array of dimension 1"
+            )
+        a = a.reshape(-1, 1)
+        flatten = True
+
+    if axis is None:
+        a = a.flatten()
+        axis = 0
+
+    if axis == 0:
+        if hasattr(a, "mask"):
+            a_np = np.where(a.mask, np.inf, a.data)
+            masked_sum = np.sum(a.mask, axis=0).astype(int)
+        else:
+            a_np = a.copy()
+            masked_sum = np.zeros((a.shape[1],))
+        a_np = np.sort(a_np, axis=0)
+        grid = np.indices(a_np.shape)[0]
+        a_tile = np.tile(a_np, (len(q), 1, 1))
+        grid_tile = np.tile(grid, (len(q), 1, 1))
+
+        nb_valid_values = (len(a_np) - masked_sum).astype(int)
+        q_out = np.outer(nb_valid_values - 1, q)
+        q_out_inf = np.floor(q_out).astype(int)
+        q_out_sup = np.ceil(q_out)
+        q_out_sup = np.minimum(
+            q_out_sup, np.outer(nb_valid_values - 1, np.ones(len(q)))
+        ).astype(int)
+
+        inf_bool = np.equal(
+            grid_tile,
+            np.tile(q_out_inf.T, (1, 1, a_np.shape[0]))
+            .reshape(len(q), *a_np.shape)
+            .astype(int),
+        )
+        sup_bool = np.equal(
+            grid_tile,
+            np.tile(q_out_sup.T, (1, 1, a_np.shape[0])).reshape(
+                (len(q), *a_np.shape)
+            ),
+        )
+
+        lower_values = a_tile[inf_bool].reshape(len(q), -1)
+        upper_values = a_tile[sup_bool].reshape(len(q), -1)
+
+        if method == "lower":
+            values = lower_values
+        elif method == "higher":
+            values = upper_values
+        elif method == "linear":
+
+            interpolated_values = lower_values + (q_out - q_out_inf).T * (
+                upper_values - lower_values
+            )
+            values = interpolated_values
+        if flatten:
+            if len(q) == 1:
+                values = values.flatten()
+
+        if return_float:
+            values = values[0]
+        return values
+    elif axis == 1:
+        return masked_quantile(a.T, q, axis=0, method=method)
+    else:
+        raise ValueError("axis should be None, 0 or 1")

@@ -4,24 +4,24 @@ Estimating prediction intervals of time series forecast with EnbPI
 ==================================================================
 This example uses
 :class:`mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate
-prediction intervals associated with time series forecast. The implementation
-is still at its first step, based on Jackknife+-after-bootsrtap, to estimate
-residuals and associated prediction intervals.
+prediction intervals associated with time series forecast. It follows [6] and
+an alternative expermimental implemetation inspired from [2]
 
 We use here the Victoria electricity demand dataset used in the book
 "Forecasting: Principles and Practice" by R. J. Hyndman and G. Athanasopoulos.
 The electricity demand features daily and weekly seasonalities and is impacted
 by the temperature, considered here as a exogeneous variable.
 
-A Random Forest model is fitted on data. The hyper-parameters are optimized
-with a :class:`sklearn.model_selection.RandomizedSearchCV` using a sequential
-:class:`sklearn.model_selection.TimeSeriesSplit` cross validation, in which the
-training set is prior to the validation set.
+A Random Forest model is aloready fitted on data. The hyper-parameters are
+optimized with a :class:`sklearn.model_selection.RandomizedSearchCV` using a
+sequential :class:`sklearn.model_selection.TimeSeriesSplit` cross validation,
+in which the training set is prior to the validation set.
 The best model is then feeded into
 :class:`mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate the
 associated prediction intervals. We compare two approaches: one with no
 `partial_fit` call and one with `partial_fit` every step.
 """
+import copy
 import warnings
 
 import numpy as np
@@ -63,87 +63,202 @@ X_test = demand_test.loc[:, features]
 y_test = demand_test["Demand"]
 
 # Model: Random Forest previously optimized with a cross-validation
-model = RandomForestRegressor(max_depth=17, n_estimators=150, random_state=59)
+model = RandomForestRegressor(max_depth=15, n_estimators=1, random_state=59)
 
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.1
-cv_MapieTimeSeries = BlockBootstrap(50, length=48, random_state=59)
-mapie = MapieTimeSeriesRegressor(
+cv_MapieTimeSeries = BlockBootstrap(20, length=48, random_state=59)
+
+mapie_model = MapieTimeSeriesRegressor(
     model, method="plus", cv=cv_MapieTimeSeries, agg_function="mean", n_jobs=-1
 )
-mapie.fit(X_train, y_train)
+mapie_model = mapie_model.fit(X_train, y_train)
+mapie_no_pfit = mapie_model.fit(X_train, y_train)
+mapie_pfit_JAB_F = mapie_model.fit(X_train, y_train)
+mapie_pfit_JAB_T = mapie_model.fit(X_train, y_train)
 
-# With no partial_fit
-y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
-coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
-width = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
+gap_pfit = 1
 
-# With partial_fit every hour
-gap = 1
-
-y_pred_steps, y_pis_steps = mapie.predict(X_test.iloc[:gap, :], alpha=alpha)
-
-for step in range(gap, len(X_test), gap):
-    mapie.partial_fit(
-        X_test.iloc[(step - gap):step, :], y_test.iloc[(step - gap):step]
-    )
-    y_pred_gap_step, y_pis_gap_step = mapie.predict(
-        X_test.iloc[step:(step + gap), :],
-        alpha=alpha,
-    )
-    y_pred_steps = np.concatenate((y_pred_steps, y_pred_gap_step), axis=0)
-    y_pis_steps = np.concatenate((y_pis_steps, y_pis_gap_step), axis=0)
-
-coverage_steps = regression_coverage_score(
-    y_test, y_pis_steps[:, 0, 0], y_pis_steps[:, 1, 0]
+# With no partial_fit, JAB_like is False
+y_pred_npfit_JAB_F, y_pis_npfit_JAB_F = mapie_no_pfit.predict(
+    X_test, alpha=alpha, ensemble=True
 )
-width_steps = (y_pis_steps[:, 1, 0] - y_pis_steps[:, 0, 0]).mean()
+coverage_npfit_JAB_F = regression_coverage_score(
+    y_test, y_pis_npfit_JAB_F[:, 0, 0], y_pis_npfit_JAB_F[:, 1, 0]
+)
+width_npfit_JAB_F = (
+    y_pis_npfit_JAB_F[:, 1, 0] - y_pis_npfit_JAB_F[:, 0, 0]
+).mean()
+
+# With partial_fit every hour, JAB_like is False
+
+y_pred_pfit_JAB_F, y_pis_pfit_JAB_F = mapie_pfit_JAB_F.predict(
+    X_test.iloc[:gap_pfit, :], alpha=alpha, ensemble=True
+)
+
+for step in range(gap_pfit, len(X_test), gap_pfit):
+    mapie_pfit_JAB_F.partial_fit(
+        X_test.iloc[(step - gap_pfit) : step, :],
+        y_test.iloc[(step - gap_pfit) : step],
+    )
+    y_pred_gap_step, y_pis_gap_step = mapie_pfit_JAB_F.predict(
+        X_test.iloc[step : (step + gap_pfit), :], alpha=alpha, ensemble=True
+    )
+    y_pred_pfit_JAB_F = np.concatenate(
+        (y_pred_pfit_JAB_F, y_pred_gap_step), axis=0
+    )
+    y_pis_pfit_JAB_F = np.concatenate(
+        (y_pis_pfit_JAB_F, y_pis_gap_step), axis=0
+    )
+
+coverage_pfit_JAB_F = regression_coverage_score(
+    y_test, y_pis_pfit_JAB_F[:, 0, 0], y_pis_pfit_JAB_F[:, 1, 0]
+)
+width_pfit_JAB_F = (
+    y_pis_pfit_JAB_F[:, 1, 0] - y_pis_pfit_JAB_F[:, 0, 0]
+).mean()
+
+
+# With no partial_fit, JAB_like is True
+y_pred_npfit_JAB_T, y_pis_npfit_JAB_T = mapie_no_pfit.predict(
+    X_test, alpha=alpha, JAB_Like=True
+)
+coverage_npfit_JAB_T = regression_coverage_score(
+    y_test, y_pis_npfit_JAB_T[:, 0, 0], y_pis_npfit_JAB_T[:, 1, 0]
+)
+width_npfit_JAB_T = (
+    y_pis_npfit_JAB_T[:, 1, 0] - y_pis_npfit_JAB_T[:, 0, 0]
+).mean()
+
+# With partial_fit every hour, JAB_like is True
+y_pred_pfit_JAB_T, y_pis_pfit_JAB_T = mapie_no_pfit.predict(
+    X_test.iloc[:gap_pfit, :], alpha=alpha, JAB_Like=True
+)
+for step in range(gap_pfit, len(X_test), gap_pfit):
+    mapie_pfit_JAB_T.partial_fit(
+        X_test.iloc[(step - gap_pfit) : step, :],
+        y_test.iloc[(step - gap_pfit) : step],
+    )
+    y_pred_gap_step, y_pis_gap_step = mapie_pfit_JAB_T.predict(
+        X_test.iloc[step : (step + gap_pfit), :],
+        alpha=alpha,
+        JAB_Like=True,
+        ensemble=True,
+    )
+    y_pred_pfit_JAB_T = np.concatenate(
+        (y_pred_pfit_JAB_T, y_pred_gap_step), axis=0
+    )
+    y_pis_pfit_JAB_T = np.concatenate(
+        (y_pis_pfit_JAB_T, y_pis_gap_step), axis=0
+    )
+
+coverage_pfit_JAB_T = regression_coverage_score(
+    y_test, y_pis_pfit_JAB_T[:, 0, 0], y_pis_pfit_JAB_T[:, 1, 0]
+)
+width_pfit_JAB_T = (
+    y_pis_pfit_JAB_T[:, 1, 0] - y_pis_pfit_JAB_T[:, 0, 0]
+).mean()
 
 # Print results
 print(
     "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
-    "\nWithout any partial_fit:"
-    f"{coverage:.3f}, {width:.3f}"
+    "\nWithout any partial_fit. JAB_like is False:"
+    f"{coverage_npfit_JAB_F:.3f}, {width_npfit_JAB_F:.3f}"
 )
-
-# Plot estimated prediction intervals on test set
-fig = plt.figure(figsize=(15, 5))
-ax = fig.add_subplot(1, 1, 1)
-ax.set_ylabel("Hourly demand (GW)")
-ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
-ax.plot(demand_test.index, y_pred, lw=2, c="C2", label="Predictions")
-ax.fill_between(
-    demand_test.index,
-    y_pis[:, 0, 0],
-    y_pis[:, 1, 0],
-    color="C2",
-    alpha=0.2,
-    label="MapieTimeSeriesRegressor PIs",
-)
-ax.legend()
-plt.title("Without partial_fit")
-plt.show()
-
 print(
-    "Coverage / prediction interval width mean for MapieTimeSeriesRegressor "
-    "\nWith partial_fit every step: "
-    f"{coverage_steps:.3f}, {width_steps:.3f}"
+    "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
+    "\nWithout any partial_fit. JAB_like is True:"
+    f"{coverage_npfit_JAB_T:.3f}, {width_npfit_JAB_T:.3f}"
+)
+print(
+    "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
+    "\nWith partial_fit. JAB_like is False:"
+    f"{coverage_pfit_JAB_F:.3f}, {width_pfit_JAB_F:.3f}"
+)
+print(
+    "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
+    "\nWith partial_fit. JAB_like is True:"
+    f"{coverage_pfit_JAB_T:.3f}, {width_pfit_JAB_T:.3f}"
 )
 
 # Plot estimated prediction intervals on test set
-fig = plt.figure(figsize=(15, 5))
-ax = fig.add_subplot(1, 1, 1)
-ax.set_ylabel("Hourly demand (GW)")
-ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
-ax.plot(demand_test.index, y_pred_steps, lw=2, c="C2", label="Predictions")
-ax.fill_between(
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
+    nrows=2, ncols=2, figsize=(30, 10), sharey="row", sharex="col"
+)
+
+ax1.set_ylabel("Hourly demand (GW)")
+ax1.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
+ax1.plot(
+    demand_test.index, y_pred_npfit_JAB_F, lw=2, c="C2", label="Predictions"
+)
+ax1.fill_between(
     demand_test.index,
-    y_pis_steps[:, 0, 0],
-    y_pis_steps[:, 1, 0],
+    y_pis_npfit_JAB_F[:, 0, 0],
+    y_pis_npfit_JAB_F[:, 1, 0],
     color="C2",
     alpha=0.2,
     label="MapieTimeSeriesRegressor PIs",
 )
-ax.legend()
-plt.title("With partial_fit")
+ax1.legend()
+ax1.set_title(
+    "Without partial_fit, JAB False."
+    f"Coverage:{coverage_npfit_JAB_F:.3f}  Width:{width_npfit_JAB_F:.3f}"
+)
+
+ax2.set_ylabel("Hourly demand (GW)")
+ax2.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
+ax2.plot(
+    demand_test.index, y_pred_npfit_JAB_T, lw=2, c="C2", label="Predictions"
+)
+ax2.fill_between(
+    demand_test.index,
+    y_pis_npfit_JAB_T[:, 0, 0],
+    y_pis_npfit_JAB_T[:, 1, 0],
+    color="C2",
+    alpha=0.2,
+    label="MapieTimeSeriesRegressor PIs",
+)
+ax2.legend()
+ax2.set_title(
+    "Without partial_fit, JAB True."
+    f"Coverage:{coverage_npfit_JAB_T:.3f}  Width:{width_npfit_JAB_T:.3f}"
+)
+
+ax3.set_ylabel("Hourly demand (GW)")
+ax3.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
+ax3.plot(
+    demand_test.index, y_pred_npfit_JAB_F, lw=2, c="C2", label="Predictions"
+)
+ax3.fill_between(
+    demand_test.index,
+    y_pis_npfit_JAB_F[:, 0, 0],
+    y_pis_npfit_JAB_F[:, 1, 0],
+    color="C2",
+    alpha=0.2,
+    label="MapieTimeSeriesRegressor PIs",
+)
+ax3.legend()
+ax3.set_title(
+    "With partial_fit, JAB False."
+    f"Coverage:{coverage_npfit_JAB_F:.3f}  Width:{width_npfit_JAB_F:.3f}"
+)
+
+ax4.set_ylabel("Hourly demand (GW)")
+ax4.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
+ax4.plot(
+    demand_test.index, y_pred_pfit_JAB_T, lw=2, c="C2", label="Predictions"
+)
+ax4.fill_between(
+    demand_test.index,
+    y_pis_pfit_JAB_T[:, 0, 0],
+    y_pis_pfit_JAB_T[:, 1, 0],
+    color="C2",
+    alpha=0.2,
+    label="MapieTimeSeriesRegressor PIs",
+)
+ax4.legend()
+ax4.set_title(
+    "With partial_fit, JAB True."
+    f"Coverage:{coverage_npfit_JAB_T:.3f}  Width:{width_npfit_JAB_T:.3f}"
+)
 plt.show()
