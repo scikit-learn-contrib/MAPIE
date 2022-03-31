@@ -46,14 +46,14 @@ def np_quantile(
         to the quantiles. The other axes are the axes that remain after
         the reduction of a.
     """
-    if numpy_version <= parse_version("1.21"):
+    if numpy_version < parse_version("1.22"):
         return np.quantile(
-            a, q, interpolation=method, **kwargs
-        )  # type: ignore
+            a, q, interpolation=method, **kwargs  # type: ignore
+        )
     else:
         return np.quantile(
-            a, q, method=method, **kwargs
-        )  # type: ignore
+            a, q, method=method, **kwargs  # type: ignore
+        )
 
 
 def check_null_weight(
