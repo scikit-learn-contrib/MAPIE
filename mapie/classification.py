@@ -29,8 +29,8 @@ from .utils import (
     check_verbose,
     check_input_is_image,
     fit_estimator,
-    np_quantile,
 )
+from ._compatibility import np_quantile
 
 
 class MapieClassifier(BaseEstimator, ClassifierMixin):

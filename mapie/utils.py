@@ -10,50 +10,8 @@ from sklearn.utils.validation import (
     _num_features
 )
 from sklearn.utils import _safe_indexing
-from packaging.version import parse as parse_version
 
 from ._typing import ArrayLike, NDArray
-
-
-numpy_version = parse_version(np.__version__)
-
-
-def np_quantile(
-    a: ArrayLike,
-    q: ArrayLike,
-    method: str = "linear",
-    **kwargs: Any
-) -> NDArray:
-    """
-    Wrapper of np.quantile function, agnostic of numpy version.
-
-    Parameters
-    ----------
-    a : ArrayLike
-        Input array or object that can be converted to an array.
-    q : ArrayLike
-        Quantile or sequence of quantiles to compute,
-        which must be between 0 and 1 inclusive.
-    method : str, optional
-        This parameter specifies the method to use for estimating the quantile.
-        By default "linear".
-
-    Returns
-    -------
-    NDArray
-        If q is a single quantile and axis=None, then the result is a scalar.
-        If multiple quantiles are given, first axis of the result corresponds
-        to the quantiles. The other axes are the axes that remain after
-        the reduction of a.
-    """
-    if numpy_version < parse_version("1.22"):
-        return np.quantile(
-            a, q, interpolation=method, **kwargs  # type: ignore
-        )
-    else:
-        return np.quantile(
-            a, q, method=method, **kwargs  # type: ignore
-        )
 
 
 def check_null_weight(

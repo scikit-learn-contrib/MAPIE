@@ -30,8 +30,8 @@ from .utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
-    np_quantile,
 )
+from ._compatibility import np_quantile
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
