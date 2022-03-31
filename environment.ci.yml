@@ -8,6 +8,5 @@ dependencies:
     - mypy
     - pandas
     - pytest-cov
-    - python
     - scikit-learn
     - typed-ast
