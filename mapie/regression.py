@@ -30,6 +30,7 @@ from .utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
+    np_quantile,
 )
 
 
@@ -606,7 +607,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
         if self.method in ["naive", "base"] or self.cv == "prefit":
-            quantile = np.quantile(
+            quantile = np_quantile(
                 self.conformity_scores_, 1 - alpha_np, method="higher"
             )
             y_pred_low = y_pred[:, np.newaxis] - quantile
@@ -641,7 +642,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             y_pred_low = np.column_stack(
                 [
-                    np.quantile(
+                    np_quantile(
                         ma.masked_invalid(lower_bounds),
                         _alpha,
                         axis=1,
@@ -653,7 +654,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             y_pred_up = np.column_stack(
                 [
-                    np.quantile(
+                    np_quantile(
                         ma.masked_invalid(upper_bounds),
                         1 - _alpha,
                         axis=1,
