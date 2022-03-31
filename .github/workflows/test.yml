@@ -10,10 +10,10 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: "3.7"
-            numpy-version: 1.19.5
+            numpy-version: 1.21.4
           - os: ubuntu-latest
             python-version: "3.8"
-            numpy-version: 1.20.3
+            numpy-version: 1.21.4
           - os: ubuntu-latest
             python-version: "3.9"
             numpy-version: 1.21.4
