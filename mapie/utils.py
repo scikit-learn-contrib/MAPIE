@@ -22,7 +22,7 @@ def np_quantile(
     a: ArrayLike,
     q: ArrayLike,
     method: str = "linear",
-    **kwargs
+    **kwargs: Any
 ) -> NDArray:
     """
     Wrapper of np.quantile function, agnostic of numpy version.
@@ -47,9 +47,13 @@ def np_quantile(
         the reduction of a.
     """
     if numpy_version <= parse_version("1.21"):
-        return np.quantile(a, q, interpolation=method, **kwargs)
+        return np.quantile(
+            a, q, interpolation=method, **kwargs
+        )  # type: ignore
     else:
-        return np.quantile(a, q, method=method, **kwargs)
+        return np.quantile(
+            a, q, method=method, **kwargs
+        )  # type: ignore
 
 
 def check_null_weight(
