@@ -28,7 +28,7 @@ from .utils import (
     check_n_jobs,
     check_verbose,
     check_input_is_image,
-    fit_estimatorn,
+    fit_estimator,
     np_quantile,
 )
 
