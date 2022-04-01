@@ -9,15 +9,15 @@ What is done in this tutorial ?
 
 ..
 
-   -  Use ``mapie.classification.MapieClassifier`` to compare the
+   -  Use :class:``mapie.classification.MapieClassifier`` to compare the
       prediction sets estimated by several conformal methods on the
       Cifar10 dataset.
 
-   -  Train a small CNN to predict the image classe
+   -  Train a small CNN to predict the image class
 
 ..
 
-   -  Create a custom classe ``TensorflowToMapie`` to resolve adherence
+   -  Create a custom class ``TensorflowToMapie`` to resolve adherence
       problems between Tensorflow and Mapie
 
 Tutorial preparation
@@ -65,11 +65,13 @@ Tutorial preparation
 
 The Cifar10 dataset is downloaded from the ``Tensorflow Datasets``
 library. The training set is then splitted into a training, validation
-and a calibration set which will be used as follow: > - **Training
-set**: used to train our neural network. > - **Validation set**: used to
-check that our model is not overfitting. > - **Calibration set**: used
-to calibrate the conformal scores in
-``mapie.classification.MapieClassifier``
+and a calibration set which will be used as follow:
+
+   -  **Training set**: used to train our neural network.
+   -  **Validation set**: used to check that our model is not
+      overfitting.
+   -  **Calibration set**: used to calibrate the conformal scores in
+      :class:``mapie.classification.MapieClassifier``
 
 .. code-block:: python
 
@@ -82,7 +84,7 @@ to calibrate the conformal scores in
     
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
-        Create calib and valiv dataset from the train dataset.
+        Create calib and valid datasets from the train dataset.
         
         Parameters
         ----------
@@ -319,7 +321,7 @@ a perfect classifier.
 Training the algorithm with a custom class called ``TensorflowToMapie``
 -----------------------------------------------------------------------
 
-As MAPIE asked that the model has a ``fit``, ``predict_proab``,
+As MAPIE asked that the model has a ``fit``, ``predict_proba``,
 ``predict`` class attributes and that the information about if whether
 or not the model is fitted.
 
@@ -426,11 +428,11 @@ or not the model is fitted.
 .. code-block:: python
 
     model = get_model(
-                    input_shape=(32, 32, 3), 
-                    loss=CategoricalCrossentropy(), 
-                    optimizer=Adam(), 
-                    metrics=['accuracy']
-                        )
+        input_shape=(32, 32, 3), 
+        loss=CategoricalCrossentropy(), 
+        optimizer=Adam(), 
+        metrics=['accuracy']
+    )
 
 .. code-block:: python
 
@@ -493,8 +495,8 @@ or not the model is fitted.
 ------------------------------------
 
 We will now estimate the prediction sets with the five conformal methods
-implemented in :class:``MapieClassifier`` for a range of confidence
-levels between 0 and 1.
+implemented in :class:``mapie.classification.MapieClassifier`` for a
+range of confidence levels between 0 and 1.
 
 .. code-block:: python
 
@@ -664,9 +666,6 @@ slightly too big.
 4. Visualization of the prediction sets
 ---------------------------------------
 
-Thanks to this really awesome function, you can generate an amazing
-summary of prediction sets obtained on a selection of images. Wow !
-
 .. code-block:: python
 
     def prepare_plot(y_methods: Dict[str, Tuple], n_images: int) -> np.ndarray:
@@ -754,7 +753,7 @@ summary of prediction sets obtained on a selection of images. Wow !
         label_name: str
             Name of the label to plot.
         
-        proab: float
+        proba: float
             Proba associated to this label.
         
         color: str
@@ -859,7 +858,7 @@ summary of prediction sets obtained on a selection of images. Wow !
 
 
 
-.. image:: Cifar10_files/Cifar10_36_0.png
+.. image:: Cifar10_files/Cifar10_35_0.png
 
 
 5. Calibration of the methods
@@ -886,7 +885,7 @@ coverage level for all conformal methods.
 
 
 
-.. image:: Cifar10_files/Cifar10_39_0.png
+.. image:: Cifar10_files/Cifar10_38_0.png
 
 
 The two only methods which are perfectly calibrated for the entire range
@@ -911,7 +910,7 @@ sets but with larger marginal coverages is entirely up to the user.
 
 
 
-.. image:: Cifar10_files/Cifar10_42_0.png
+.. image:: Cifar10_files/Cifar10_41_0.png
 
 
 7. Conditional coverages
@@ -974,22 +973,7 @@ different conformal methods.
     plt.legend(loc=[1, 0])
 
 
-
-
-.. parsed-literal::
-
-    <matplotlib.legend.Legend at 0x16a0602b0>
-
-
-
-
-.. parsed-literal::
-
-    <Figure size 432x288 with 0 Axes>
-
-
-
-.. image:: Cifar10_files/Cifar10_47_2.png
+.. image:: Cifar10_files/Cifar10_46_2.png
 
 
 We can notice that the conditional coverages slightly vary between
@@ -1095,7 +1079,7 @@ smaller than that of the naive method.
 
 
 
-.. image:: Cifar10_files/Cifar10_52_0.png
+.. image:: Cifar10_files/Cifar10_51_0.png
 
 
 Thanks to this confusion matrix we can see that, for some labels (as
@@ -1111,7 +1095,7 @@ label is quite often within the prediction set while the deer is not
 
 
 
-.. image:: Cifar10_files/Cifar10_54_0.png
+.. image:: Cifar10_files/Cifar10_53_0.png
 
 
 .. code-block:: python
@@ -1120,5 +1104,5 @@ label is quite often within the prediction set while the deer is not
 
 
 
-.. image:: Cifar10_files/Cifar10_55_0.png
+.. image:: Cifar10_files/Cifar10_54_0.png
 
