@@ -9,3 +9,6 @@ convert2rst:
 	gsed -i -e's/.. code:: ipython3/.. code-block:: python/g' $(dir)/$(file).rst
 	cp $(dir)/$(file).rst ../doc/$(file).rst
 	cp -r $(dir)/$(file)_files ../doc/
+	rm -rf $(dir)/.ipynb_checkpoints
+	rm -rf $(dir)/${file}_files
+	rm -rf $(dir)/${file}.rst
