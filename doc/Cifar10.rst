@@ -1,3 +1,4 @@
+
 Estimating prediction sets on the Cifar10 dataset
 =================================================
 
@@ -9,7 +10,7 @@ What is done in this tutorial ?
 
 ..
 
-   -  Use :class:``mapie.classification.MapieClassifier`` to compare the
+   -  Use :class:`mapie.classification.MapieClassifier` to compare the
       prediction sets estimated by several conformal methods on the
       Cifar10 dataset.
 
@@ -17,7 +18,7 @@ What is done in this tutorial ?
 
 ..
 
-   -  Create a custom class ``TensorflowToMapie`` to resolve adherence
+   -  Create a custom class `TensorflowToMapie` to resolve adherence
       problems between Tensorflow and Mapie
 
 Tutorial preparation
@@ -63,7 +64,7 @@ Tutorial preparation
 1. Data loading
 ---------------
 
-The Cifar10 dataset is downloaded from the ``Tensorflow Datasets``
+The Cifar10 dataset is downloaded from the `Tensorflow Datasets`
 library. The training set is then splitted into a training, validation
 and a calibration set which will be used as follow:
 
@@ -71,7 +72,7 @@ and a calibration set which will be used as follow:
    -  **Validation set**: used to check that our model is not
       overfitting.
    -  **Calibration set**: used to calibrate the conformal scores in
-      :class:``mapie.classification.MapieClassifier``
+      :class:`mapie.classification.MapieClassifier`
 
 .. code-block:: python
 
@@ -318,11 +319,11 @@ a perfect classifier.
         model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
         return model
 
-Training the algorithm with a custom class called ``TensorflowToMapie``
+Training the algorithm with a custom class called `TensorflowToMapie`
 -----------------------------------------------------------------------
 
-As MAPIE asked that the model has a ``fit``, ``predict_proba``,
-``predict`` class attributes and that the information about if whether
+As MAPIE asked that the model has a `fit`, `predict_proba`,
+`predict` class attributes and that the information about if whether
 or not the model is fitted.
 
 .. code-block:: python
@@ -495,7 +496,7 @@ or not the model is fitted.
 ------------------------------------
 
 We will now estimate the prediction sets with the five conformal methods
-implemented in :class:``mapie.classification.MapieClassifier`` for a
+implemented in :class:`mapie.classification.MapieClassifier` for a
 range of confidence levels between 0 and 1.
 
 .. code-block:: python
@@ -1040,7 +1041,7 @@ smaller than that of the naive method.
 
 .. code-block:: python
 
-    def plot_confusion_matix(method: str, y_ps: Dict[str, np.ndarray], label_names: List) -> None:
+    def plot_confusion_matrix(method: str, y_ps: Dict[str, np.ndarray], label_names: List) -> None:
         """
         Plot the confusion matrix for a specific method.
         
@@ -1075,7 +1076,7 @@ smaller than that of the naive method.
 
 .. code-block:: python
 
-    plot_confusion_matix("cumulated_score", y_ps_90, label_names)
+    plot_confusion_matrix("cumulated_score", y_ps_90, label_names)
 
 
 
@@ -1091,7 +1092,7 @@ label is quite often within the prediction set while the deer is not
 
 .. code-block:: python
 
-    plot_confusion_matix("naive", y_ps_90, label_names)
+    plot_confusion_matrix("naive", y_ps_90, label_names)
 
 
 
@@ -1100,7 +1101,7 @@ label is quite often within the prediction set while the deer is not
 
 .. code-block:: python
 
-    plot_confusion_matix("score", y_ps_90, label_names)
+    plot_confusion_matrix("score", y_ps_90, label_names)
 
 
 

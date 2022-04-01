@@ -7,6 +7,7 @@ convert2rst:
 	gsed -i -e'/UserWarning/d' $(dir)/$(file).rst
 	gsed -i -e'/WARNING:tensorflow/d' $(dir)/$(file).rst
 	gsed -i -e's/.. code:: ipython3/.. code-block:: python/g' $(dir)/$(file).rst
+	gsed -i -e's/``/`/g' $(dir)/$(file).rst
 	cp $(dir)/$(file).rst ../doc/$(file).rst
 	cp -r $(dir)/$(file)_files ../doc/
 	rm -rf $(dir)/.ipynb_checkpoints
