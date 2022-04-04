@@ -9,6 +9,8 @@ convert2rst:
 	gsed -i -e's/.. code:: ipython3/.. code-block:: python/g' $(dir)/$(file).rst
 	gsed -i -e's/``/`/g' $(dir)/$(file).rst
 	gsed -i -e's/`TensorflowToMapie`/``TensorflowToMapie``/g' $(dir)/$(file).rst
+	gsed -i -e'/<matplotlib/d' $(dir)/$(file).rst
+	gsed -i -e'/<Figure/d' $(dir)/$(file).rst
 	cp $(dir)/$(file).rst ../doc/$(file).rst
 	cp -r $(dir)/$(file)_files ../doc/
 	rm -rf $(dir)/.ipynb_checkpoints

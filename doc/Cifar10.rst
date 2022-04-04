@@ -18,7 +18,7 @@ What is done in this tutorial ?
 
 ..
 
-   -  Create a custom class `TensorflowToMapie` to resolve adherence
+   -  Create a custom class ``TensorflowToMapie`` to resolve adherence
       problems between Tensorflow and Mapie
 
 Tutorial preparation
@@ -319,8 +319,8 @@ a perfect classifier.
         model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
         return model
 
-Training the algorithm with a custom class called `TensorflowToMapie`
------------------------------------------------------------------------
+3. Training the algorithm with a custom class called ``TensorflowToMapie``
+--------------------------------------------------------------------------
 
 As MAPIE asked that the model has a `fit`, `predict_proba`,
 `predict` class attributes and that the information about if whether
@@ -492,7 +492,7 @@ or not the model is fitted.
     y_pred = cirfar10_model.predict(X_test)
 
 
-3. Prediction of the prediction sets
+4. Prediction of the prediction sets
 ------------------------------------
 
 We will now estimate the prediction sets with the five conformal methods
@@ -664,7 +664,7 @@ label whose cumulated score is above the given quantile, tends to give
 slightly higher marginal coverages since the prediction sets are
 slightly too big.
 
-4. Visualization of the prediction sets
+6. Visualization of the prediction sets
 ---------------------------------------
 
 .. code-block:: python
@@ -896,7 +896,7 @@ generation of null prediction sets. The compromise between estimating
 null prediction sets with calibrated coverages or non-empty prediction
 sets but with larger marginal coverages is entirely up to the user.
 
-6. Prediction set sizes
+7. Prediction set sizes
 -----------------------
 
 .. code-block:: python
@@ -914,7 +914,7 @@ sets but with larger marginal coverages is entirely up to the user.
 .. image:: Cifar10_files/Cifar10_41_0.png
 
 
-7. Conditional coverages
+8. Conditional coverages
 ------------------------
 
 We just saw that all our methods (except the “naive” one) give marginal
@@ -972,6 +972,19 @@ different conformal methods.
     plt.axhline(0.9, ls="--", color="k")
     plt.ylabel("Conditional coverage")
     plt.legend(loc=[1, 0])
+
+
+
+
+.. parsed-literal::
+
+
+
+
+
+.. parsed-literal::
+
+
 
 
 .. image:: Cifar10_files/Cifar10_46_2.png
