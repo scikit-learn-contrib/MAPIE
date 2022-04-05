@@ -112,6 +112,19 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         JAB_Like=False,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
+        """
+        ``predict`` method correspond to the ``MapieRegressor``'s one with the
+        argument ``JAB_Like`` in more. In case  ``JAB_Like`` is ``False``,
+        predictions correspond to [6]. In case it is True, is is another
+        implementation inspired of [2] with wider PIs. The second method is
+        much slower because of PIwise optimization.
+
+        Parameters
+        ----------
+        JAB_Like : boolean, default False
+            Whether to use the implementation of [6] or an implementation
+            closer to [2].
+        """
 
         # Checks
         check_is_fitted(self, self.fit_attributes)
@@ -132,8 +145,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 or (self.method in ["naive", "base"])
                 or (self.cv == "prefit")
             ):
-                # This version of predict is the implementation of the paper
-                # [6]. Its PIs are closed to the oracle's ones.
+                # This version of predict corresponds to [6].
+                # Its PIs are closed to the oracle's ones.
                 betas_0 = np.full_like(alpha_np, np.nan, dtype=float)
                 for ind, _alpha in enumerate(alpha_np):
                     betas = np.linspace(
@@ -153,8 +166,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                         axis=0,
                         method="lower",
                     )  # type: ignore
+
                     betas_0[ind] = betas[
-                        np.argmin(one_alpha_beta - beta, axis=0)
+                        np.argmin(one_alpha_beta - beta, axis=1)
                     ]
 
                 lower_quantiles = masked_quantile(
@@ -162,13 +176,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                     betas_0,
                     axis=0,
                     method="lower",
-                )  # type: ignore
+                ).T  # type: ignore
                 higher_quantiles = masked_quantile(
                     ma.masked_invalid(self.conformity_scores_),
                     1 - alpha_np + betas_0,
                     axis=0,
                     method="higher",
-                )  # type: ignore
+                ).T  # type: ignore
 
                 if (self.method in ["naive", "base"]) or (self.cv == "prefit"):
                     y_pred_low = np.column_stack(
@@ -232,11 +246,22 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                             ]
                         )
             else:
-                # This version of predict is the implementation of the paper
-                # [2]. Its PIs are wider. It does not coorespond to [6]. It is
-                # a try. It is a bit slower because the betas
-                # (width optimization parameters of the PIs) are optimized for
+                # This version of predict corresponds to [2].
+                # Its PIs are wider. It does not coorespond to [6]. It is
+                # a try. It is slower because the betas
+                # (width optimization parameters of the PIs) are optimized at
                 # every points.
+
+                y_pred_multi = np.column_stack(
+                    [e.predict(X) for e in self.estimators_]
+                )
+                # At this point, y_pred_multi is of shape
+                # (n_samples_test, n_estimators_). The method
+                # ``aggregate_with_mask`` fits it to the right size
+                # thanks to the shape of k_.
+
+                y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
+
                 y_pred_low = np.empty((len(y_pred), len(alpha)), dtype=float)
                 y_pred_up = np.empty((len(y_pred), len(alpha)), dtype=float)
 
@@ -244,17 +269,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                     betas = np.linspace(
                         _alpha / (n + 1), _alpha, num=n + 1, endpoint=False
                     )
-                    y_pred_multi = np.column_stack(
-                        [e.predict(X) for e in self.estimators_]
-                    )
-                    # At this point, y_pred_multi is of shape
-                    # (n_samples_test, n_estimators_). The method
-                    # ``aggregate_with_mask`` fits it to the right size
-                    # thanks to the shape of k_.
 
-                    y_pred_multi = self.aggregate_with_mask(
-                        y_pred_multi, self.k_
-                    )
                     if self.method == "plus":
                         lower_bounds = y_pred_multi + self.conformity_scores_
                         upper_bounds = y_pred_multi + self.conformity_scores_
@@ -274,14 +289,14 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                         1 - _alpha + betas,
                         axis=1,
                         method="higher",
-                    )  # type: ignore
+                    ).T  # type: ignore
 
                     beta = masked_quantile(
                         ma.masked_invalid(lower_bounds),
                         betas,
                         axis=1,
                         method="lower",
-                    )  # type: ignore
+                    ).T  # type: ignore
 
                     betas_0 = betas[np.argmin(one_alpha_beta - beta, axis=0)]
 
@@ -294,14 +309,14 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                             beta_0,
                             axis=0,
                             method="lower",
-                        )  # type: ignore
+                        ).T  # type: ignore
 
                         upper_quantiles[ind] = masked_quantile(
                             ma.masked_invalid(upper_bounds[ind, :]),
                             1 - _alpha + beta_0,
                             axis=0,
                             method="higher",
-                        )  # type: ignore
+                        ).T  # type: ignore
                     y_pred_low[:, ind_alpha] = lower_quantiles
                     y_pred_up[:, ind_alpha] = upper_quantiles
 

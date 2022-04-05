@@ -1,5 +1,4 @@
 from __future__ import annotations
-from configparser import Interpolation
 
 from typing import Iterable, List, Optional, Tuple, Union, cast
 

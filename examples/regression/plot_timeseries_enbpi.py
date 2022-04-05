@@ -18,10 +18,11 @@ sequential :class:`sklearn.model_selection.TimeSeriesSplit` cross validation,
 in which the training set is prior to the validation set.
 The best model is then feeded into
 :class:`mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate the
-associated prediction intervals. We compare two approaches: one with no
-`partial_fit` call and one with `partial_fit` every step.
+associated prediction intervals. We compare four approaches: with or without
+``partial_fit`` called at every step, and following [6] or a approach inspired
+from [2]. It appears that the approach inspired from [2] and ``partial_fit``
+offer higher coverage, but with higher width of PIs and are much slower.
 """
-import copy
 import warnings
 
 import numpy as np
@@ -98,11 +99,11 @@ y_pred_pfit_JAB_F, y_pis_pfit_JAB_F = mapie_pfit_JAB_F.predict(
 
 for step in range(gap_pfit, len(X_test), gap_pfit):
     mapie_pfit_JAB_F.partial_fit(
-        X_test.iloc[(step - gap_pfit) : step, :],
-        y_test.iloc[(step - gap_pfit) : step],
+        X_test.iloc[(step - gap_pfit):step, :],
+        y_test.iloc[(step - gap_pfit):step],
     )
     y_pred_gap_step, y_pis_gap_step = mapie_pfit_JAB_F.predict(
-        X_test.iloc[step : (step + gap_pfit), :], alpha=alpha, ensemble=True
+        X_test.iloc[step:(step + gap_pfit), :], alpha=alpha, ensemble=True
     )
     y_pred_pfit_JAB_F = np.concatenate(
         (y_pred_pfit_JAB_F, y_pred_gap_step), axis=0
@@ -136,11 +137,11 @@ y_pred_pfit_JAB_T, y_pis_pfit_JAB_T = mapie_no_pfit.predict(
 )
 for step in range(gap_pfit, len(X_test), gap_pfit):
     mapie_pfit_JAB_T.partial_fit(
-        X_test.iloc[(step - gap_pfit) : step, :],
-        y_test.iloc[(step - gap_pfit) : step],
+        X_test.iloc[(step - gap_pfit):step, :],
+        y_test.iloc[(step - gap_pfit):step],
     )
     y_pred_gap_step, y_pis_gap_step = mapie_pfit_JAB_T.predict(
-        X_test.iloc[step : (step + gap_pfit), :],
+        X_test.iloc[step:(step + gap_pfit), :],
         alpha=alpha,
         JAB_Like=True,
         ensemble=True,

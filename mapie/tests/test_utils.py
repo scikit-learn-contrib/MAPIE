@@ -16,6 +16,7 @@ from mapie.utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
+    masked_quantile,
 )
 
 from mapie._typing import ArrayLike
@@ -63,12 +64,10 @@ def test_check_null_weight_with_zeros() -> None:
     sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
     np.testing.assert_almost_equal(np.array(sw_out), np.array([1, 1, 1, 1, 1]))
     np.testing.assert_almost_equal(
-        np.array(X_out),
-        np.array([[1], [2], [3], [4], [5]])
+        np.array(X_out), np.array([[1], [2], [3], [4], [5]])
     )
     np.testing.assert_almost_equal(
-        np.array(y_out),
-        np.array([7, 9, 11, 13, 15])
+        np.array(y_out), np.array([7, 9, 11, 13, 15])
     )
 
 
@@ -194,3 +193,20 @@ def test_invalid_verbose(verbose: Any) -> None:
 def test_valid_verbose(verbose: Any) -> None:
     """Test that valid verboses raise no errors."""
     check_verbose(verbose)
+
+
+def test_masked_quantile_invalid_minus_one():
+    with pytest.raises(ValueError, match=r".*axis should be None, 0 or 1.*"):
+        masked_quantile(a=X_toy, q=0.1, axis=-1)
+
+
+def test_masked_quantile_invalid_one():
+    with pytest.raises(ValueError, match=r".*axis 1 is out of bounds.*"):
+        masked_quantile(a=X_toy.flatten(), q=0.1, axis=1)
+
+
+def test_masked_quantile_linear_interpolation():
+    quantiles = masked_quantile(
+        a=X_toy, q=[0.1, 0.2, 0.5], axis=0, method="linear"
+    )
+    np.testing.assert_allclose(quantiles, np.array([[0.5, 1.0, 2.5]]))

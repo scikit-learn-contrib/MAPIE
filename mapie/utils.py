@@ -3,6 +3,7 @@ from inspect import signature
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+import numpy.ma as ma
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.utils.validation import _check_sample_weight, _num_features
@@ -432,7 +433,8 @@ def masked_quantile(
     method: str = "linear",
 ) -> NDArray:
     """
-    Compute quantile for masked arrays
+    Compute quantile for masked arrays. It avoids using ``np.nanquantile`` that
+    is quite slow because of an ``apply_along_axis`` loop.
 
     Parameters
     ----------
@@ -442,17 +444,18 @@ def masked_quantile(
     q: Union[float, NDArray]
         Quantiles.
 
-    axis:int
-        ``axis`` is ``0`` or ``1``
+    axis:Optional[int]
+        ``axis`` is ``None``, ``0`` or ``1``, default ``None``.
+        If ``axis`` is ``None``, compute the quantiles of the flatten array.
 
     method: str
         "linear", "higher" or "lower"
     """
     return_float = False
     flatten = False
+
     if isinstance(q, float):
         flatten = True
-
         if (len(a.shape)) == 1 or (len(a) == 1):
             return_float = True
 
@@ -462,19 +465,22 @@ def masked_quantile(
             raise ValueError(
                 "axis 1 is out of bounds for array of dimension 1"
             )
-        a = a.reshape(-1, 1)
-        flatten = True
+        if len(q) == 1:
+            flatten = True
 
     if axis is None:
         a = a.flatten()
         axis = 0
 
     if axis == 0:
+        if (len(a.shape) == 1) or (a.shape[1] == 1):
+            a = a.reshape(-1, 1)
         if hasattr(a, "mask"):
-            a_np = np.where(a.mask, np.inf, a.data)
-            masked_sum = np.sum(a.mask, axis=0).astype(int)
+            a_m = cast(ma.MaskedArray, a)
+            a_np = np.where(a_m.mask, np.inf, a_m.data)
+            masked_sum = np.sum(a_m.mask, axis=0).astype(int)
         else:
-            a_np = a.copy()
+            a_np = a
             masked_sum = np.zeros((a.shape[1],))
         a_np = np.sort(a_np, axis=0)
         grid = np.indices(a_np.shape)[0]
@@ -515,9 +521,11 @@ def masked_quantile(
                 upper_values - lower_values
             )
             values = interpolated_values
+
         if flatten:
-            if len(q) == 1:
-                values = values.flatten()
+            values = values.flatten()
+        else:
+            values = values.T
 
         if return_float:
             values = values[0]

@@ -29,10 +29,6 @@ from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
-
-from mapie.metrics import regression_coverage_score
-from mapie.time_series_regression import MapieTimeSeriesRegressor
-
 warnings.simplefilter("ignore")
 
 # Load input data and feature engineering

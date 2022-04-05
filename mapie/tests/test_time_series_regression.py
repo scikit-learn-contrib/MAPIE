@@ -69,6 +69,25 @@ STRATEGIES = {
             random_state=1,
         ),
     ),
+    "jackknife_plus_ab_JAB": Params(
+        method="plus",
+        agg_function="mean",
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
+    ),
+    "jackknife_minmax_ab_JAB": Params(
+        method="minmax",
+        agg_function="mean",
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
+    ),
+    "jackknife_plus_median_ab_JAB": Params(
+        method="plus",
+        agg_function="median",
+        cv=BlockBootstrap(
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=1,
+        ),
+    ),
 }
 
 WIDTHS = {
@@ -84,6 +103,9 @@ WIDTHS = {
     "jackknife_plus_ab": 3.76,
     "jackknife_minmax_ab": 3.96,
     "jackknife_plus_median_ab": 3.76,
+    "jackknife_plus_ab_JAB": 3.76,
+    "jackknife_minmax_ab_JAB": 3.96,
+    "jackknife_plus_median_ab_JAB": 3.76,
 }
 
 COVERAGES = {
@@ -99,6 +121,9 @@ COVERAGES = {
     "jackknife_plus_ab": 0.952,
     "jackknife_minmax_ab": 0.960,
     "jackknife_plus_median_ab": 0.946,
+    "jackknife_plus_ab_JAB": 0.952,
+    "jackknife_minmax_ab_JAB": 0.960,
+    "jackknife_plus_median_ab_JAB": 0.965,
 }
 
 
@@ -189,6 +214,15 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     np.testing.assert_allclose(y_pred_single, y_pred_multi)
     np.testing.assert_allclose(y_pis_single, y_pis_multi)
 
+    y_pred_single_JAB, y_pis_single_JAB = mapie_single.predict(
+        X_toy, alpha=0.2, JAB_Like=True
+    )
+    y_pred_multi_JAB, y_pis_multi_JAB = mapie_multi.predict(
+        X_toy, alpha=0.2, JAB_Like=True
+    )
+    np.testing.assert_allclose(y_pred_single_JAB, y_pred_multi_JAB)
+    np.testing.assert_allclose(y_pis_single_JAB, y_pis_multi_JAB)
+
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_with_constant_sample_weights(strategy: str) -> None:
@@ -211,15 +245,19 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     np.testing.assert_allclose(y_pis0, y_pis1)
     np.testing.assert_allclose(y_pis1, y_pis2)
 
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_prediction_between_low_up(strategy: str) -> None:
-    """Test that prediction lies between low and up prediction intervals."""
-    mapie = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
-    mapie.fit(X, y)
-    y_pred, y_pis = mapie.predict(X, alpha=0.1)
-    assert (y_pred >= y_pis[:, 0, 0]).all()
-    assert (y_pred <= y_pis[:, 1, 0]).all()
+    y_pred0_JAB, y_pis0_JAB = mapie0.predict(
+        X[:200, :], alpha=0.05, JAB_Like=True
+    )
+    y_pred1_JAB, y_pis1_JAB = mapie1.predict(
+        X[:200, :], alpha=0.05, JAB_Like=True
+    )
+    y_pred2_JAB, y_pis2_JAB = mapie2.predict(
+        X[:200, :], alpha=0.05, JAB_Like=True
+    )
+    np.testing.assert_allclose(y_pred0_JAB, y_pred1_JAB)
+    np.testing.assert_allclose(y_pred1_JAB, y_pred2_JAB)
+    np.testing.assert_allclose(y_pis0_JAB, y_pis1_JAB)
+    np.testing.assert_allclose(y_pis1_JAB, y_pis2_JAB)
 
 
 @pytest.mark.parametrize("method", ["plus", "minmax"])
@@ -237,12 +275,23 @@ def test_prediction_agg_function(
         method=method, cv=cv, agg_function=agg_function
     )
     mapie.fit(X, y)
-    y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True, alpha=alpha)
-    y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False, alpha=alpha)
+    y_pred_1, y_pis_1 = mapie.predict(X[:200, :], ensemble=True, alpha=alpha)
+    y_pred_2, y_pis_2 = mapie.predict(X[:200, :], ensemble=False, alpha=alpha)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     with pytest.raises(AssertionError):
         np.testing.assert_allclose(y_pred_1, y_pred_2)
+
+    y_pred_1_JAB, y_pis_1_JAB = mapie.predict(
+        X[:200, :], ensemble=True, alpha=alpha, JAB_Like=True
+    )
+    y_pred_2_JAB, y_pis_2_JAB = mapie.predict(
+        X[:200, :], ensemble=False, alpha=alpha, JAB_Like=True
+    )
+    np.testing.assert_allclose(y_pis_1_JAB[:, 0, 0], y_pis_2_JAB[:, 0, 0])
+    np.testing.assert_allclose(y_pis_1_JAB[:, 1, 0], y_pis_2_JAB[:, 1, 0])
+    with pytest.raises(AssertionError):
+        np.testing.assert_allclose(y_pred_1_JAB, y_pred_2_JAB)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -254,10 +303,16 @@ def test_linear_regression_results(strategy: str) -> None:
     """
     mapie_ts = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts.fit(X, y)
-    _, y_pis = mapie_ts.predict(X, alpha=0.05)
+    if "JAB" in strategy:
+        _, y_pis = mapie_ts.predict(X[:200, :], alpha=0.05, JAB_Like=True)
+    else:
+        _, y_pis = mapie_ts.predict(X, alpha=0.05, JAB_Like=False)
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
-    coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
+    if "JAB" in strategy:
+        coverage = regression_coverage_score(y[:200], y_pred_low, y_pred_up)
+    else:
+        coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
     np.testing.assert_allclose(width_mean, WIDTHS[strategy], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
