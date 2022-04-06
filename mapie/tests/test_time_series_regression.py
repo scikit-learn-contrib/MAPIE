@@ -19,6 +19,7 @@ from mapie.subsample import BlockBootstrap
 X_toy = np.array(range(5)).reshape(-1, 1)
 y_toy = (5.0 + 2.0 * X_toy ** 1.1).flatten()
 X, y = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
+X_short, y_short = X[:50, :], y[:50]
 k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
 
@@ -121,9 +122,9 @@ COVERAGES = {
     "jackknife_plus_ab": 0.952,
     "jackknife_minmax_ab": 0.960,
     "jackknife_plus_median_ab": 0.946,
-    "jackknife_plus_ab_JAB": 0.952,
-    "jackknife_minmax_ab_JAB": 0.960,
-    "jackknife_plus_median_ab_JAB": 0.965,
+    "jackknife_plus_ab_JAB": 0.92,
+    "jackknife_minmax_ab_JAB": 0.940,
+    "jackknife_plus_median_ab_JAB": 0.94,
 }
 
 
@@ -246,14 +247,15 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     np.testing.assert_allclose(y_pis1, y_pis2)
 
     y_pred0_JAB, y_pis0_JAB = mapie0.predict(
-        X[:200, :], alpha=0.05, JAB_Like=True
+        X_short, alpha=0.05, JAB_Like=True
     )
     y_pred1_JAB, y_pis1_JAB = mapie1.predict(
-        X[:200, :], alpha=0.05, JAB_Like=True
+        X_short, alpha=0.05, JAB_Like=True
     )
     y_pred2_JAB, y_pis2_JAB = mapie2.predict(
-        X[:200, :], alpha=0.05, JAB_Like=True
+        X_short, alpha=0.05, JAB_Like=True
     )
+
     np.testing.assert_allclose(y_pred0_JAB, y_pred1_JAB)
     np.testing.assert_allclose(y_pred1_JAB, y_pred2_JAB)
     np.testing.assert_allclose(y_pis0_JAB, y_pis1_JAB)
@@ -275,18 +277,18 @@ def test_prediction_agg_function(
         method=method, cv=cv, agg_function=agg_function
     )
     mapie.fit(X, y)
-    y_pred_1, y_pis_1 = mapie.predict(X[:200, :], ensemble=True, alpha=alpha)
-    y_pred_2, y_pis_2 = mapie.predict(X[:200, :], ensemble=False, alpha=alpha)
+    y_pred_1, y_pis_1 = mapie.predict(X_short, ensemble=True, alpha=alpha)
+    y_pred_2, y_pis_2 = mapie.predict(X_short, ensemble=False, alpha=alpha)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     with pytest.raises(AssertionError):
         np.testing.assert_allclose(y_pred_1, y_pred_2)
 
     y_pred_1_JAB, y_pis_1_JAB = mapie.predict(
-        X[:200, :], ensemble=True, alpha=alpha, JAB_Like=True
+        X_short, ensemble=True, alpha=alpha, JAB_Like=True
     )
     y_pred_2_JAB, y_pis_2_JAB = mapie.predict(
-        X[:200, :], ensemble=False, alpha=alpha, JAB_Like=True
+        X_short, ensemble=False, alpha=alpha, JAB_Like=True
     )
     np.testing.assert_allclose(y_pis_1_JAB[:, 0, 0], y_pis_2_JAB[:, 0, 0])
     np.testing.assert_allclose(y_pis_1_JAB[:, 1, 0], y_pis_2_JAB[:, 1, 0])
@@ -304,13 +306,13 @@ def test_linear_regression_results(strategy: str) -> None:
     mapie_ts = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts.fit(X, y)
     if "JAB" in strategy:
-        _, y_pis = mapie_ts.predict(X[:200, :], alpha=0.05, JAB_Like=True)
+        _, y_pis = mapie_ts.predict(X_short, alpha=0.05, JAB_Like=True)
     else:
         _, y_pis = mapie_ts.predict(X, alpha=0.05, JAB_Like=False)
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
     if "JAB" in strategy:
-        coverage = regression_coverage_score(y[:200], y_pred_low, y_pred_up)
+        coverage = regression_coverage_score(y_short, y_pred_low, y_pred_up)
     else:
         coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
     np.testing.assert_allclose(width_mean, WIDTHS[strategy], rtol=1e-2)

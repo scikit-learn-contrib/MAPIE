@@ -210,3 +210,15 @@ def test_masked_quantile_linear_interpolation():
         a=X_toy, q=[0.1, 0.2, 0.5], axis=0, method="linear"
     )
     np.testing.assert_allclose(quantiles, np.array([[0.5, 1.0, 2.5]]))
+
+
+def test_masked_quantile_linear_interpolation_scalar():
+    quantile = masked_quantile(
+        a=X_toy.flatten(), q=0.1, axis=0, method="linear"
+    )
+    assert quantile == 0.5
+
+
+def test_masked_quantile_invalid_method():
+    with pytest.raises(ValueError, match=r".*'method' has to be 'higher'.*"):
+        masked_quantile(a=X_toy.flatten(), q=0.1, axis=0, method="lineaar")

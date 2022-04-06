@@ -516,12 +516,11 @@ def masked_quantile(
         elif method == "higher":
             values = upper_values
         elif method == "linear":
-
-            interpolated_values = lower_values + (q_out - q_out_inf).T * (
+            values = lower_values + (q_out - q_out_inf).T * (
                 upper_values - lower_values
             )
-            values = interpolated_values
-
+        else:
+            raise ValueError("'method' has to be 'higher','lower', or'linear'")
         if flatten:
             values = values.flatten()
         else:
