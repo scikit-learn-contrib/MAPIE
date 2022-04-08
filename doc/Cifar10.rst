@@ -1,6 +1,10 @@
-
 Estimating prediction sets on the Cifar10 dataset
 =================================================
+
+The goal of this notebook is to present how to use
+:class:`mapie.classification.MapieClassifier` on an object
+classification task. We will build prediction sets for images and study
+the marginal and conditional coverages.
 
 What is done in this tutorial ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -972,17 +976,6 @@ different conformal methods.
     plt.axhline(0.9, ls="--", color="k")
     plt.ylabel("Conditional coverage")
     plt.legend(loc=[1, 0])
-
-
-
-
-.. parsed-literal::
-
-
-
-
-
-.. parsed-literal::
 
 
 
