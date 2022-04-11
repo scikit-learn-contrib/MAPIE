@@ -54,7 +54,7 @@ Python 3.7+
 
 **MAPIE** stands on the shoulders of giants.
 
-Its only internal dependency is `scikit-learn <https://scikit-learn.org/stable/>`_.
+Its only internal dependencies are `scikit-learn <https://scikit-learn.org/stable/>`_ and `numpy=>1.21 <https://numpy.org/>`_.
 
 
 🛠 Installation

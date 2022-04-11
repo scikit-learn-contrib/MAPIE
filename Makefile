@@ -1,9 +1,10 @@
 .PHONY: tests doc build
+
 lint:	
 	flake8 . --exclude=doc
 
 type-check:
-	mypy mapie examples --strict --allow-untyped-calls
+	mypy mapie examples
 
 tests:
 	pytest -vs --doctest-modules mapie
