@@ -398,7 +398,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 np.argmin(
                     np.ma.masked_less(
                         y_pred_proba_cumsum,
-                        threshold[np.newaxis, np.newaxis, :] - EPSILON
+                        threshold[np.newaxis, np.newaxis, :] - 2*EPSILON
                     ),
                     axis=1
                 )
@@ -406,13 +406,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         elif (include_last_label is False):
             max_threshold = np.maximum(
                 threshold[np.newaxis, :],
-                np.min(y_pred_proba_cumsum, axis=1) + EPSILON
+                np.min(y_pred_proba_cumsum, axis=1) + 2*EPSILON
             )
             y_pred_index_last = np.argmax(
                 np.ma.masked_where(
                     (
                         y_pred_proba_cumsum >
-                        max_threshold[:, np.newaxis, :] - EPSILON
+                        max_threshold[:, np.newaxis, :] - 2*EPSILON
                     ),
                     y_pred_proba_cumsum,
                 ), axis=1
@@ -548,7 +548,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Predicted probabilities.
         """
         y_pred_proba = estimator.predict_proba(X)
-        # we enforce y_pred_proba to contain all labels included y
+        # we enforce y_pred_proba to contain all labels included in y
         if len(estimator.classes_) != self.n_classes_:
             y_pred_proba = self._fix_number_of_classes(
                 estimator.classes_,
@@ -891,21 +891,26 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # Build prediction sets
         if self.method == "score":
             if (cv == "prefit") or (agg_scores == "mean"):
-                prediction_sets = y_pred_proba > (
+                prediction_sets = y_pred_proba >= (
                     1 - (self.quantiles_ + EPSILON)
                 )
             else:
+                print("score_cv_crossval")
                 y_pred_included = (
-                    1 - y_pred_proba < (
+                    1 - y_pred_proba <= (
                         self.conformity_scores_.ravel() + EPSILON
                     )
                 ).sum(axis=2)
+                # print(y_pred_included)
                 prediction_sets = np.stack(
                     [
-                        y_pred_included > _alpha * (n - 1) - EPSILON
+                        y_pred_included >= _alpha * (n - 1) - EPSILON
                         for _alpha in alpha_np
                     ], axis=2
                 )
+                # print(4 > alpha_np[0] * (n - 1) - EPSILON, 4 > alpha_np[0] * (n - 1) - 0.5*EPSILON)
+                # print(alpha_np[0] * (n - 1) - EPSILON, alpha_np[0] * (n - 1) - 2*EPSILON)
+                # print(prediction_sets[:, :, 0])
 
         elif self.method in ["cumulated_score", "naive"]:
             # specify which thresholds will be used
@@ -947,12 +952,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             # above the last one
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 y_pred_included = (
-                    (y_pred_proba > y_pred_proba_last - EPSILON)
+                    (y_pred_proba >= y_pred_proba_last - EPSILON)
                 )
             else:
                 y_pred_included = (
                     # ~(y_pred_proba >= y_pred_proba_last - EPSILON)
-                    (y_pred_proba < y_pred_proba_last + EPSILON)
+                    (y_pred_proba <= y_pred_proba_last + EPSILON)
                 )
             # remove last label randomly
             if include_last_label == "randomized":
@@ -971,7 +976,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 # compare the summed prediction sets with (n+1)*(1-alpha)
                 prediction_sets = np.stack(
                     [
-                        prediction_sets_summed < quantile + EPSILON
+                        prediction_sets_summed <= quantile + EPSILON
                         for quantile in self.quantiles_
                     ], axis=2
                 )
