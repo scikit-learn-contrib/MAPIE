@@ -398,7 +398,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 np.argmin(
                     np.ma.masked_less(
                         y_pred_proba_cumsum,
-                        threshold[np.newaxis, np.newaxis, :] - 2*EPSILON
+                        threshold[np.newaxis, np.newaxis, :] - EPSILON
                     ),
                     axis=1
                 )
@@ -406,13 +406,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         elif (include_last_label is False):
             max_threshold = np.maximum(
                 threshold[np.newaxis, :],
-                np.min(y_pred_proba_cumsum, axis=1) + 2*EPSILON
+                np.min(y_pred_proba_cumsum, axis=1) + EPSILON
             )
             y_pred_index_last = np.argmax(
                 np.ma.masked_where(
                     (
                         y_pred_proba_cumsum >
-                        max_threshold[:, np.newaxis, :] - 2*EPSILON
+                        max_threshold[:, np.newaxis, :] - EPSILON
                     ),
                     y_pred_proba_cumsum,
                 ), axis=1
