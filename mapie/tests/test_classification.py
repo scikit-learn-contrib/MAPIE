@@ -773,11 +773,12 @@ def test_toy_dataset_predictions(strategy: str) -> None:
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
     )
+    print(y_ps[:, :, 0])
+    np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
     np.testing.assert_allclose(
         classification_coverage_score(y_toy, y_ps[:, :, 0]),
         COVERAGES[strategy],
     )
-    np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
 
 
 def test_cumulated_scores() -> None:
