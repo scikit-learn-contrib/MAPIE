@@ -18,7 +18,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
-# from mapie.metrics import classification_coverage_score
+from mapie.metrics import classification_coverage_score
 from mapie._typing import ArrayLike, NDArray
 
 
@@ -226,16 +226,16 @@ STRATEGIES = {
 COVERAGES = {
     "score": 6 / 9,
     "score_cv_mean": 1,
-    "score_cv_crossval": 6 / 9,
+    "score_cv_crossval": 1,
     "cumulated_score_include": 1,
     "cumulated_score_not_include": 5 / 9,
     "cumulated_score_randomized": 5 / 9,
     "cumulated_score_include_cv_mean": 1,
     "cumulated_score_not_include_cv_mean": 5 / 9,
     "cumulated_score_randomized_cv_mean": 5 / 9,
-    "cumulated_score_include_cv_crossval": 0,
+    "cumulated_score_include_cv_crossval": 2 / 9,
     "cumulated_score_not_include_cv_crossval": 0,
-    "cumulated_score_randomized_cv_crossval": 3 / 9,
+    "cumulated_score_randomized_cv_crossval": 6 / 9,
     "naive": 5 / 9,
     "top_k": 1
 }
@@ -773,12 +773,10 @@ def test_toy_dataset_predictions(strategy: str) -> None:
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
     )
-    # np.testing.assert_allclose(
-    #     classification_coverage_score(y_toy, y_ps[:, :, 0]),
-    #     COVERAGES[strategy],
-    # )
-    # print(y_ps[:, :, 0])
-    # print(y_toy_mapie[strategy])
+    np.testing.assert_allclose(
+        classification_coverage_score(y_toy, y_ps[:, :, 0]),
+        COVERAGES[strategy],
+    )
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
 
 
