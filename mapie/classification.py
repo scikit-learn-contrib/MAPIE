@@ -398,7 +398,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 np.argmin(
                     np.ma.masked_less(
                         y_pred_proba_cumsum,
-                        threshold[np.newaxis, np.newaxis, :] - EPSILON
+                        threshold[np.newaxis, np.newaxis, :] * (1 - EPSILON)
                     ),
                     axis=1
                 )
@@ -406,13 +406,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         elif (include_last_label is False):
             max_threshold = np.maximum(
                 threshold[np.newaxis, :],
-                np.min(y_pred_proba_cumsum, axis=1) + EPSILON
+                np.min(y_pred_proba_cumsum, axis=1) * (1 + EPSILON)
             )
             y_pred_index_last = np.argmax(
                 np.ma.masked_where(
                     (
                         y_pred_proba_cumsum >
-                        max_threshold[:, np.newaxis, :] - EPSILON
+                        max_threshold[:, np.newaxis, :] * (1 - EPSILON)
                     ),
                     y_pred_proba_cumsum,
                 ), axis=1
@@ -892,19 +892,19 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.method == "score":
             if (cv == "prefit") or (agg_scores == "mean"):
                 prediction_sets = y_pred_proba >= (
-                    1 - (self.quantiles_ + EPSILON)
+                    1 - (self.quantiles_ * (1 + EPSILON))
                 )
             else:
                 print("score_cv_crossval")
                 y_pred_included = (
                     1 - y_pred_proba <= (
-                        self.conformity_scores_.ravel() + EPSILON
+                        self.conformity_scores_.ravel() * (1 + EPSILON)
                     )
                 ).sum(axis=2)
                 # print(y_pred_included)
                 prediction_sets = np.stack(
                     [
-                        y_pred_included >= _alpha * (n - 1) - EPSILON
+                        y_pred_included >= _alpha * (n - 1) * (1 - EPSILON)
                         for _alpha in alpha_np
                     ], axis=2
                 )
@@ -954,7 +954,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             else:
                 y_pred_included = (
                     # ~(y_pred_proba >= y_pred_proba_last - EPSILON)
-                    (y_pred_proba <= y_pred_proba_last + EPSILON)
+                    (y_pred_proba <= y_pred_proba_last * (1 + EPSILON))
                 )
             # remove last label randomly
             if include_last_label == "randomized":
@@ -973,7 +973,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 # compare the summed prediction sets with (n+1)*(1-alpha)
                 prediction_sets = np.stack(
                     [
-                        prediction_sets_summed <= quantile + EPSILON
+                        prediction_sets_summed <= quantile * (1 + EPSILON)
                         for quantile in self.quantiles_
                     ], axis=2
                 )
@@ -998,7 +998,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
             prediction_sets = np.stack(
                 [
-                    y_pred_proba >= y_pred_proba_last[:, :, iq] - EPSILON
+                    y_pred_proba >= y_pred_proba_last[:, :, iq] * (1 - EPSILON)
                     for iq, _ in enumerate(self.quantiles_)
                 ], axis=2
             )
