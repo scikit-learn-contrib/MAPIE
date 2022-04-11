@@ -2,14 +2,14 @@ from typing import Callable, Optional
 
 import numpy as np
 
-from ._typing import ArrayLike
+from ._typing import NDArray
 
 
 def phi1D(
-    x: ArrayLike,
-    B: ArrayLike,
-    fun: Callable[[ArrayLike], ArrayLike],
-) -> ArrayLike:
+    x: NDArray,
+    B: NDArray,
+    fun: Callable[[NDArray], NDArray],
+) -> NDArray:
     """
     The function phi1D is called by phi2D.
     It aims at applying a function ``fun`` after multiplying each row
@@ -17,16 +17,16 @@ def phi1D(
 
     Parameters
     ----------
-    x : ArrayLike of shape (n, )
+    x : NDArray of shape (n, )
         1D vector.
-    B : ArrayLike of shape (k, n)
+    B : NDArray of shape (k, n)
         2D vector whose number of columns is the number of rows of x.
     fun : function
-        Vectorized function applying to Arraylike.
+        Vectorized function applying to NDArray.
 
     Returns
     -------
-    ArrayLike
+    NDArray
         The function fun is applied to the product of ``x`` and ``B``.
         Typically, ``fun`` is a numpy function, ignoring nan,
         with argument ``axis=1``.
@@ -46,25 +46,25 @@ def phi1D(
 
 
 def phi2D(
-    A: ArrayLike,
-    B: ArrayLike,
-    fun: Callable[[ArrayLike], ArrayLike],
-) -> ArrayLike:
+    A: NDArray,
+    B: NDArray,
+    fun: Callable[[NDArray], NDArray],
+) -> NDArray:
     """
     The function phi2D is a loop applying phi1D on each row of A.
 
     Parameters
     ----------
-    A : ArrayLike of shape (n_rowsA, n_columns)
-    B : ArrayLike of shape (n_rowsB, n_columns)
+    A : NDArray of shape (n_rowsA, n_columns)
+    B : NDArray of shape (n_rowsB, n_columns)
         A and B must have the same number of columns.
 
     fun : function
-        Vectorized function applying to Arraylike, and that should ignore nan.
+        Vectorized function applying to NDArray, and that should ignore nan.
 
     Returns
     -------
-    ArrayLike of shape (n_rowsA, n_rowsB)
+    NDArray of shape (n_rowsA, n_rowsB)
         Applies phi1D(x, B, fun) to each row x of A.
 
     Examples
@@ -81,19 +81,19 @@ def phi2D(
     return np.apply_along_axis(phi1D, axis=1, arr=A, B=B, fun=fun)
 
 
-def aggregate_all(agg_function: Optional[str], X: ArrayLike) -> ArrayLike:
+def aggregate_all(agg_function: Optional[str], X: NDArray) -> NDArray:
     """
     Applies np.nanmean(, axis=1) or np.nanmedian(, axis=1) according
     to the string ``agg_function``.
 
     Parameters
     -----------
-    X : ArrayLike of shape (n, p)
+    X : NDArray of shape (n, p)
         Array of floats and nans
 
     Returns
     --------
-    ArrayLike of shape (n, 1):
+    NDArray of shape (n, 1):
         Array of the means or medians of each row of X
 
     Raises

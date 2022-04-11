@@ -5,21 +5,26 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
-from sklearn.utils.validation import _check_sample_weight, _num_features
+from sklearn.utils.validation import (
+    _check_sample_weight,
+    _num_features
+)
 from sklearn.utils import _safe_indexing
 
-from ._typing import ArrayLike
+from ._typing import ArrayLike, NDArray
 
 
 def check_null_weight(
-    sample_weight: ArrayLike, X: ArrayLike, y: ArrayLike
-) -> Tuple[ArrayLike, ArrayLike, ArrayLike]:
+    sample_weight: Optional[ArrayLike],
+    X: ArrayLike,
+    y: ArrayLike
+) -> Tuple[Optional[NDArray], ArrayLike, ArrayLike]:
     """
     Check sample weights and remove samples with null sample weights.
 
     Parameters
     ----------
-    sample_weight : ArrayLike of shape (n_samples,)
+    sample_weight : Optional[ArrayLike] of shape (n_samples,)
         Sample weights.
     X : ArrayLike of shape (n_samples, n_features)
         Training samples.
@@ -28,7 +33,7 @@ def check_null_weight(
 
     Returns
     -------
-    sample_weight : ArrayLike of shape (n_samples,)
+    sample_weight : Optional[NDArray] of shape (n_samples,)
         Non-null sample weights.
 
     X : ArrayLike of shape (n_samples, n_features)
@@ -61,7 +66,8 @@ def check_null_weight(
         non_null_weight = sample_weight != 0
         X = _safe_indexing(X, non_null_weight)
         y = _safe_indexing(y, non_null_weight)
-        sample_weight = sample_weight[non_null_weight]
+        sample_weight = _safe_indexing(sample_weight, non_null_weight)
+    sample_weight = cast(Optional[NDArray], sample_weight)
     return sample_weight, X, y
 
 
@@ -258,10 +264,11 @@ def check_n_features_in(
     5
     """
     if hasattr(X, "shape"):
-        if len(X.shape) <= 1:
+        shape = np.shape(X)
+        if len(shape) <= 1:
             n_features_in = 1
         else:
-            n_features_in = X.shape[1]
+            n_features_in = shape[1]
     else:
         n_features_in = _num_features(X)
     if cv == "prefit" and hasattr(estimator, "n_features_in_"):

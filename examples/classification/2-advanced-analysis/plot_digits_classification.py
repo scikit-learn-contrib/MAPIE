@@ -22,7 +22,7 @@ from mapie.metrics import (
     classification_coverage_score,
     classification_mean_width_score
 )
-from mapie._typing import ArrayLike
+from mapie._typing import NDArray
 
 
 ##############################################################################
@@ -99,7 +99,7 @@ for ax, image, label in zip_imgs:
 #   in the calibration and test subsets.
 
 def get_datasets(dataset: Any) -> Tuple[
-    ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike
+    NDArray, NDArray, NDArray, NDArray, NDArray, NDArray
 ]:
     n_samples = len(digits.images)
     data = dataset.images.reshape((n_samples, -1))
