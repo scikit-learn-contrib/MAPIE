@@ -761,7 +761,6 @@ def test_valid_prediction(alpha: Any) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-# @pytest.mark.parametrize("strategy", [*{"score_cv_crossval": STRATEGIES["score_cv_crossval"]}])
 def test_toy_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     args_init, args_predict = STRATEGIES[strategy]

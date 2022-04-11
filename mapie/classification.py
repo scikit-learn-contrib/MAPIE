@@ -908,9 +908,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                         for _alpha in alpha_np
                     ], axis=2
                 )
-                # print(4 > alpha_np[0] * (n - 1) - EPSILON, 4 > alpha_np[0] * (n - 1) - 0.5*EPSILON)
-                # print(alpha_np[0] * (n - 1) - EPSILON, alpha_np[0] * (n - 1) - 2*EPSILON)
-                # print(prediction_sets[:, :, 0])
 
         elif self.method in ["cumulated_score", "naive"]:
             # specify which thresholds will be used
