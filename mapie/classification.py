@@ -949,7 +949,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             # above the last one
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 y_pred_included = (
-                    (y_pred_proba >= y_pred_proba_last - EPSILON)
+                    (y_pred_proba >= y_pred_proba_last * (1 - EPSILON))
                 )
             else:
                 y_pred_included = (
