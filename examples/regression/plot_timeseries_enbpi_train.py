@@ -40,7 +40,9 @@ demand_df["Date"] = pd.to_datetime(demand_df.index)
 demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype("int64")
 demand_df["Weekday"] = demand_df.Date.dt.isocalendar().day.astype("int64")
 demand_df["Hour"] = demand_df.index.hour
-for hour in range(1, 3):
+
+n_lags = 5
+for hour in range(1, n_lags):
     demand_df[f"Lag_{hour}"] = demand_df["Demand"].shift(hour)
 
 # Train/validation/test split
@@ -48,7 +50,7 @@ num_test_steps = 24 * 7
 demand_train = demand_df.iloc[:-num_test_steps, :].copy()
 demand_test = demand_df.iloc[-num_test_steps:, :].copy()
 features = ["Weekofyear", "Weekday", "Hour", "Temperature"] + [
-    f"Lag_{hour}" for hour in range(1, 2)
+    f"Lag_{hour}" for hour in range(1, n_lags)
 ]
 
 X_train = demand_train.loc[

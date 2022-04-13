@@ -51,18 +51,18 @@ STRATEGIES = {
         agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=1),
     ),
-    "jackknife_plus_ab": Params(
-        method="plus",
+    "jackknife_plus_ab_enbpi": Params(
+        method="enbpi",
         agg_function="mean",
         cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
     ),
-    "jackknife_minmax_ab": Params(
+    "jackknife_minmax_ab_enbpi": Params(
         method="minmax",
         agg_function="mean",
         cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
     ),
-    "jackknife_plus_median_ab": Params(
-        method="plus",
+    "jackknife_plus_median_ab_enbpi": Params(
+        method="enbpi",
         agg_function="median",
         cv=BlockBootstrap(
             n_resamplings=30,
@@ -70,7 +70,26 @@ STRATEGIES = {
             random_state=1,
         ),
     ),
-    "jackknife_plus_ab_JAB": Params(
+    "jackknife_plus_ab_enbpi_no_opt": Params(
+        method="enbpi",
+        agg_function="mean",
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
+    ),
+    "jackknife_minmax_ab_enbpi_no_opt": Params(
+        method="minmax",
+        agg_function="mean",
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
+    ),
+    "jackknife_plus_median_ab_enbpi_no_opt": Params(
+        method="enbpi",
+        agg_function="median",
+        cv=BlockBootstrap(
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=1,
+        ),
+    ),
+    "jackknife_plus_ab_plus": Params(
         method="plus",
         agg_function="mean",
         cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
@@ -101,12 +120,18 @@ WIDTHS = {
     "cv_minmax": 3.95,
     "prefit": 3.89,
     "cv_plus_median": 3.90,
-    "jackknife_plus_ab": 3.76,
-    "jackknife_minmax_ab": 3.96,
-    "jackknife_plus_median_ab": 3.76,
-    "jackknife_plus_ab_JAB": 3.76,
-    "jackknife_minmax_ab_JAB": 3.96,
-    "jackknife_plus_median_ab_JAB": 3.76,
+    "jackknife_plus_ab_enbpi": 3.76,
+    "jackknife_minmax_ab_enbpi": 3.96,
+    "jackknife_plus_median_ab_enbpi": 3.76,
+    "jackknife_plus_ab_enbpi_no_opt": 3.76,
+    "jackknife_minmax_ab_enbpi_no_opt": 3.96,
+    "jackknife_plus_median_ab_enbpi_no_opt": 3.76,
+    "jackknife_plus_ab_plus": 3.76,
+    "jackknife_minmax_ab_plus": 3.96,
+    "jackknife_plus_median_ab_plus": 3.76,
+    "jackknife_plus_ab_MR": 3.76,
+    "jackknife_minmax_ab_MR": 3.96,
+    "jackknife_plus_median_MR": 3.76,
 }
 
 COVERAGES = {
@@ -119,12 +144,18 @@ COVERAGES = {
     "cv_minmax": 0.956,
     "prefit": 0.90,
     "cv_plus_median": 0.954,
-    "jackknife_plus_ab": 0.952,
-    "jackknife_minmax_ab": 0.960,
-    "jackknife_plus_median_ab": 0.946,
-    "jackknife_plus_ab_JAB": 0.92,
-    "jackknife_minmax_ab_JAB": 0.940,
-    "jackknife_plus_median_ab_JAB": 0.94,
+    "jackknife_plus_ab_enbpi": 0.952,
+    "jackknife_minmax_ab_enbpi": 0.960,
+    "jackknife_plus_median_ab_enbpi": 0.946,
+    "jackknife_plus_ab_enbpi_no_opt": 0.952,
+    "jackknife_minmax_ab_enbpi_no_opt": 0.960,
+    "jackknife_plus_median_ab_enbpi_no_opt": 0.946,
+    "jackknife_plus_ab_plus": 0.92,
+    "jackknife_minmax_ab_plus": 0.940,
+    "jackknife_plus_median_ab_plus": 0.94,
+    "jackknife_plus_ab_MR": 0.92,
+    "jackknife_minmax_ab_MR": 0.940,
+    "jackknife_plus_median_MR": 0.94,
 }
 
 

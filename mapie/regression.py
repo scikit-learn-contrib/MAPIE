@@ -421,13 +421,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         ArrayLike of shape (n_samples_test,)
             Array of aggregated predictions for each testing  sample.
         """
-        if self.agg_function == "median":
-            return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
         if self.cv == "prefit":
             raise ValueError(
                 "There should not be aggregation of predictions if cv is "
                 "'prefit'"
             )
+        if self.agg_function == "median":
+            return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
+
         # To aggregate with mean() the aggregation coud be done
         # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
         # However, phi2D contains a np.apply_along_axis loop which
@@ -610,7 +611,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
         if self.method in ["naive", "base"] or self.cv == "prefit":
-            quantile = masked_quantile(
+            quantile = np.nanquantile(
                 self.conformity_scores_, 1 - alpha_np, method="higher"
             )
             y_pred_low = y_pred[:, np.newaxis] - quantile
@@ -645,8 +646,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             y_pred_low = np.column_stack(
                 [
-                    masked_quantile(
-                        ma.masked_invalid(lower_bounds),
+                    np.nanquantile(
+                        lower_bounds,
                         _alpha,
                         axis=1,
                         method="lower",
@@ -657,8 +658,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             y_pred_up = np.column_stack(
                 [
-                    masked_quantile(
-                        ma.masked_invalid(upper_bounds),
+                    np.nanquantile(
+                        upper_bounds,
                         1 - _alpha,
                         axis=1,
                         method="higher",

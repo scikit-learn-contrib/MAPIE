@@ -16,7 +16,6 @@ from mapie.utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
-    masked_quantile,
 )
 
 from mapie._typing import ArrayLike
@@ -193,32 +192,3 @@ def test_invalid_verbose(verbose: Any) -> None:
 def test_valid_verbose(verbose: Any) -> None:
     """Test that valid verboses raise no errors."""
     check_verbose(verbose)
-
-
-def test_masked_quantile_invalid_minus_one():
-    with pytest.raises(ValueError, match=r".*axis should be None, 0 or 1.*"):
-        masked_quantile(a=X_toy, q=0.1, axis=-1)
-
-
-def test_masked_quantile_invalid_one():
-    with pytest.raises(ValueError, match=r".*axis 1 is out of bounds.*"):
-        masked_quantile(a=X_toy.flatten(), q=0.1, axis=1)
-
-
-def test_masked_quantile_linear_interpolation():
-    quantiles = masked_quantile(
-        a=X_toy, q=[0.1, 0.2, 0.5], axis=0, method="linear"
-    )
-    np.testing.assert_allclose(quantiles, np.array([[0.5, 1.0, 2.5]]))
-
-
-def test_masked_quantile_linear_interpolation_scalar():
-    quantile = masked_quantile(
-        a=X_toy.flatten(), q=0.1, axis=0, method="linear"
-    )
-    assert quantile == 0.5
-
-
-def test_masked_quantile_invalid_method():
-    with pytest.raises(ValueError, match=r".*'method' has to be 'higher'.*"):
-        masked_quantile(a=X_toy.flatten(), q=0.1, axis=0, method="lineaar")
