@@ -9,11 +9,14 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            python-version: "3.7"
+            numpy-version: 1.21.4
+          - os: ubuntu-latest
             python-version: "3.8"
-            numpy-version: 1.22.1
+            numpy-version: 1.21.4
           - os: ubuntu-latest
             python-version: "3.9"
-            numpy-version: 1.22.2
+            numpy-version: 1.21.4
           - os: ubuntu-latest
             python-version: "3.10"
             numpy-version: 1.22.3
@@ -25,21 +28,21 @@ jobs:
         shell: bash -l {0}
 
     steps:
-    - name: Git clone
-      uses: actions/checkout@v2
-    - name: Set up virtual environment
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-        environment-file: environment.ci.yml
-        channels: defaults, conda-forge
-    - name: Install numpy
-      run: conda install numpy=${{ matrix.numpy-version }}
-    - name: Check linting
-      run: make lint
-    - name: Check static typing
-      run: make type-check
-    - name: Test with pytest
-      run: make coverage
-    - name: Code coverage
-      run: codecov
+      - name: Git clone
+        uses: actions/checkout@v2
+      - name: Set up virtual environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          environment-file: environment.ci.yml
+          channels: defaults, conda-forge
+      - name: Install numpy
+        run: conda install numpy=${{ matrix.numpy-version }}
+      - name: Check linting
+        run: make lint
+      - name: Check static typing
+        run: make type-check
+      - name: Test with pytest
+        run: make coverage
+      - name: Code coverage
+        run: codecov

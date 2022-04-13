@@ -31,6 +31,7 @@ from .utils import (
     fit_estimator,
     masked_quantile,
 )
+from ._compatibility import np_quantile
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
@@ -376,9 +377,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Tuple[RegressorMixin, NDArray, ArrayLike]
 
         - [0]: RegressorMixin, fitted estimator
-        - [1]: NDArrayof shape (n_samples_val,),
+        - [1]: NDArray of shape (n_samples_val,),
           estimator predictions on the validation fold.
-        - [3]: NDArray of shape (n_samples_val,),
+        - [3]: ArrayLike of shape (n_samples_val,),
           validation data indices.
         """
         X_train = _safe_indexing(X, train_index)
