@@ -124,39 +124,6 @@ width_pfit_enbpi = (
     y_pis_pfit_enbpi[:, 1, 0] - y_pis_pfit_enbpi[:, 0, 0]
 ).mean()
 
-print("EnbPI with partial_fit, NO width optimization")
-mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
-y_pred_pfit_enbpi_no_opt = np.zeros(y_pred_npfit_enbpi.shape)
-y_pis_pfit_enbpi_no_opt = np.zeros(y_pis_npfit_enbpi.shape)
-(
-    y_pred_pfit_enbpi_no_opt[:gap],
-    y_pis_pfit_enbpi_no_opt[:gap, :, :],
-) = mapie_enpbi.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, beta_optimize=False
-)
-
-for step in range(gap, len(X_test), gap):
-    mapie_enpbi.partial_fit(
-        X_test.iloc[(step - gap):step, :],
-        y_test.iloc[(step - gap):step],
-    )
-    (
-        y_pred_pfit_enbpi_no_opt[step:step + gap],
-        y_pis_pfit_enbpi_no_opt[step:step + gap, :, :],
-    ) = mapie_enpbi.predict(
-        X_test.iloc[step:step + gap, :],
-        alpha=alpha,
-        ensemble=True,
-        beta_optimize=False,
-    )
-coverage_pfit_enbpi_no_opt = regression_coverage_score(
-    y_test, y_pis_pfit_enbpi_no_opt[:, 0, 0], y_pis_pfit_enbpi_no_opt[:, 1, 0]
-)
-width_pfit_enbpi_no_opt = (
-    y_pis_pfit_enbpi_no_opt[:, 1, 0] - y_pis_pfit_enbpi_no_opt[:, 0, 0]
-).mean()
-
-
 print("Plus, with partial_fit, width optimization")
 mapie_plus = mapie_plus.fit(X_train, y_train)
 y_pred_pfit_plus = np.zeros(y_pred_npfit_enbpi.shape)
@@ -186,61 +153,11 @@ coverage_pfit_plus = regression_coverage_score(
 )
 width_pfit_plus = (y_pis_pfit_plus[:, 1, 0] - y_pis_pfit_plus[:, 0, 0]).mean()
 
-print("Plus, with partial_fit, NO width optimization")
+print("Plus, with NO partial_fit, MapieRegressor_Like no")
 mapie_plus = mapie_plus.fit(X_train, y_train)
-y_pred_pfit_plus_no_opt = np.zeros(y_pred_npfit_enbpi.shape)
-y_pis_pfit_plus_no_opt = np.zeros(y_pis_npfit_enbpi.shape)
-(
-    y_pred_pfit_plus_no_opt[:gap],
-    y_pis_pfit_plus_no_opt[:gap, :, :],
-) = mapie_plus.predict(
-    X_test.iloc[:gap, :],
-    alpha=alpha,
-    beta_optimize=False,
+y_pred_pfit_MR, y_pis_pfit_MR = mapie_enpbi.predict(
+    X_test, alpha=alpha, ensemble=True
 )
-for step in range(gap, len(X_test), gap):
-    mapie_plus.partial_fit(
-        X_test.iloc[step - gap:step, :],
-        y_test.iloc[step - gap: step],
-    )
-    (
-        y_pred_pfit_plus_no_opt[step:step + gap],
-        y_pis_pfit_plus_no_opt[step:step + gap, :, :],
-    ) = mapie_plus.predict(
-        X_test.iloc[step:step + gap, :],
-        alpha=alpha,
-        ensemble=True,
-        beta_optimize=False,
-    )
-
-coverage_pfit_plus_no_opt = regression_coverage_score(
-    y_test, y_pis_pfit_plus_no_opt[:, 0, 0], y_pis_pfit_plus_no_opt[:, 1, 0]
-)
-width_pfit_plus_no_opt = (
-    y_pis_pfit_plus_no_opt[:, 1, 0] - y_pis_pfit_plus_no_opt[:, 0, 0]
-).mean()
-
-print("Plus, with partial_fit, MapieRegressor_Like")
-mapie_plus = mapie_plus.fit(X_train, y_train)
-y_pred_pfit_MR = np.zeros(y_pred_npfit_enbpi.shape)
-y_pis_pfit_MR = np.zeros(y_pis_npfit_enbpi.shape)
-y_pred_pfit_MR[:gap], y_pis_pfit_MR[:gap, :, :] = mapie_plus.root_predict(
-    X_test.iloc[:gap, :], alpha=alpha
-)
-for step in range(gap, len(X_test), gap):
-    mapie_plus.partial_fit(
-        X_test.iloc[step - gap:step, :],
-        y_test.iloc[step - gap:step],
-    )
-    (
-        y_pred_pfit_MR[step:step + gap],
-        y_pis_pfit_MR[step:step + gap, :, :],
-    ) = mapie_plus.root_predict(
-        X_test.iloc[step:step + gap, :],
-        alpha=alpha,
-        ensemble=True,
-    )
-
 coverage_pfit_MR = regression_coverage_score(
     y_test, y_pis_pfit_MR[:, 0, 0], y_pis_pfit_MR[:, 1, 0]
 )
@@ -259,18 +176,8 @@ print(
 )
 print(
     "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
-    "\nEnbPI with partial_fit, no with optimization:"
-    f"{coverage_pfit_enbpi_no_opt:.3f}, {width_pfit_enbpi_no_opt:.3f}"
-)
-print(
-    "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
     "\nPlus, with partial_fit:"
     f"{coverage_pfit_plus:.3f}, {width_pfit_plus:.3f}"
-)
-print(
-    "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
-    "\nPlus, with partial_fit. no width optimization:"
-    f"{coverage_pfit_plus_no_opt:.3f}, {width_pfit_plus_no_opt:.3f}"
 )
 print(
     "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
@@ -279,11 +186,11 @@ print(
 )
 
 # Plot estimated prediction intervals on test set
-fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(
-    nrows=2, ncols=3, figsize=(30, 25), sharey="row", sharex="col"
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
+    nrows=2, ncols=2, figsize=(30, 25), sharey="row", sharex="col"
 )
 
-for ax in [ax1, ax2, ax3, ax4, ax5, ax6]:
+for ax in [ax1, ax2, ax3, ax4]:
     ax.set_ylabel("Hourly demand (GW)")
     ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
 
@@ -320,35 +227,15 @@ ax2.set_title(
     f"Coverage:{coverage_pfit_enbpi:.3f}  Width:{width_pfit_enbpi:.3f}"
 )
 
-ax3.plot(
-    demand_test.index,
-    y_pred_pfit_enbpi_no_opt,
-    lw=2,
-    c="C2",
-    label="Predictions",
-)
-ax3.fill_between(
-    demand_test.index,
-    y_pis_pfit_enbpi_no_opt[:, 0, 0],
-    y_pis_pfit_enbpi_no_opt[:, 1, 0],
-    color="C2",
-    alpha=0.2,
-    label="MapieTimeSeriesRegressor PIs",
-)
-ax3.set_title(
-    "EnbPI with partial_fit. No width optimization\n"
-    f"Coverage:{coverage_pfit_enbpi_no_opt:.3f}"
-    f"Width:{width_pfit_enbpi_no_opt:.3f}"
-)
 
-ax4.plot(
+ax3.plot(
     demand_test.index,
     y_pred_pfit_plus,
     lw=2,
     c="C2",
     label="Predictions",
 )
-ax4.fill_between(
+ax3.fill_between(
     demand_test.index,
     y_pis_pfit_plus[:, 0, 0],
     y_pis_pfit_plus[:, 1, 0],
@@ -356,36 +243,13 @@ ax4.fill_between(
     alpha=0.2,
     label="MapieTimeSeriesRegressor PIs",
 )
-ax4.set_title(
+ax3.set_title(
     "Plus, with partial_fit.\n"
     f"Coverage:{coverage_pfit_plus:.3f}"
     f"Width:{width_pfit_plus:.3f}"
 )
-
-ax5.plot(
-    demand_test.index,
-    y_pred_pfit_plus_no_opt,
-    lw=2,
-    c="C2",
-    label="Predictions",
-)
-ax5.fill_between(
-    demand_test.index,
-    y_pis_pfit_plus_no_opt[:, 0, 0],
-    y_pis_pfit_plus_no_opt[:, 1, 0],
-    color="C2",
-    alpha=0.2,
-    label="MapieTimeSeriesRegressor PIs",
-)
-ax5.set_title(
-    "Plus, with partial_fit no width optimization\n"
-    f"Coverage:{coverage_pfit_plus_no_opt:.3f}"
-    f"Width:{width_pfit_plus_no_opt:.3f}"
-)
-
-
-ax6.plot(demand_test.index, y_pred_pfit_MR, lw=2, c="C2", label="Predictions")
-ax6.fill_between(
+ax4.plot(demand_test.index, y_pred_pfit_MR, lw=2, c="C2", label="Predictions")
+ax4.fill_between(
     demand_test.index,
     y_pis_pfit_MR[:, 0, 0],
     y_pis_pfit_MR[:, 1, 0],
@@ -393,7 +257,7 @@ ax6.fill_between(
     alpha=0.2,
     label="MapieTimeSeriesRegressor PIs",
 )
-ax6.set_title(
+ax4.set_title(
     "MapieRegressor Like, with partial_fit\n"
     f"Coverage:{coverage_pfit_MR:.3f}  Width:{width_pfit_MR:.3f}"
 )

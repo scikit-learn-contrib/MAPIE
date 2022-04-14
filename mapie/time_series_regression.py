@@ -120,11 +120,11 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         if len(X) > len(self.conformity_scores_):
             raise ValueError("You try to update more residuals than tere are!")
         new_conformity_scores_ = self._relative_conformity_scores(X, y)
-        self.conformity_scores_ = np.concatenate(
-            [
-                self.conformity_scores_[-len(new_conformity_scores_):],
-                new_conformity_scores_,
-            ]
+        self.conformity_scores_ = np.roll(
+            self.conformity_scores_, -len(new_conformity_scores_)
+        )
+        self.conformity_scores_[-len(new_conformity_scores_):] = (
+            new_conformity_scores_
         )
         self.k_[:, -len(new_conformity_scores_)] = 1.0
         return self
