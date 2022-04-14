@@ -17,6 +17,7 @@ from sklearn.utils.validation import (
 )
 
 from ._typing import ArrayLike, NDArray
+from ._compatibility import np_nanquantile
 from .aggregation_functions import aggregate_all, phi2D
 from .utils import (
     check_cv,
@@ -610,7 +611,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
         if self.method in ["naive", "base"] or self.cv == "prefit":
-            quantile = np.nanquantile(
+            quantile = np_nanquantile(
                 self.conformity_scores_, 1 - alpha_np, method="higher"
             )
             y_pred_low = y_pred[:, np.newaxis] - quantile
@@ -645,7 +646,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             y_pred_low = np.column_stack(
                 [
-                    np.nanquantile(
+                    np_nanquantile(
                         lower_bounds,
                         _alpha,
                         axis=1,
@@ -657,7 +658,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             y_pred_up = np.column_stack(
                 [
-                    np.nanquantile(
+                    np_nanquantile(
                         upper_bounds,
                         1 - _alpha,
                         axis=1,

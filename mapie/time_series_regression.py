@@ -8,9 +8,10 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
+from ._compatibility import np_nanquantile
+from ._typing import ArrayLike, NDArray
 from .aggregation_functions import aggregate_all
 from .regression import MapieRegressor
-from ._typing import ArrayLike, NDArray
 from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
@@ -179,13 +180,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 num=len(lower_bounds),
                 endpoint=True,
             )
-            one_alpha_beta = np.nanquantile(
+            one_alpha_beta = np_nanquantile(
                 upper_bounds,
                 1 - _alpha + betas,
                 axis=1,
                 method="higher",
             )  # type: ignore
-            beta = np.nanquantile(
+            beta = np_nanquantile(
                 lower_bounds,
                 betas,
                 axis=1,
@@ -266,13 +267,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                     upper_bounds=self.conformity_scores_.reshape(1, -1),
                     beta_optimize=beta_optimize,
                 )
-                lower_quantiles = np.nanquantile(
+                lower_quantiles = np_nanquantile(
                     self.conformity_scores_,
                     betas_0[:, 0],
                     axis=0,
                     method="lower",
                 ).T  # type: ignore
-                higher_quantiles = np.nanquantile(
+                higher_quantiles = np_nanquantile(
                     self.conformity_scores_,
                     1 - alpha_np + betas_0[:, 0],
                     axis=0,
@@ -341,14 +342,14 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                     upper_quantiles = np.empty((betas_0.shape[1],))
 
                     for ind_beta_0, beta_0 in enumerate(betas_0[ind_alpha, :]):
-                        lower_quantiles[ind_beta_0] = np.nanquantile(
+                        lower_quantiles[ind_beta_0] = np_nanquantile(
                             lower_bounds[ind_beta_0, :],
                             beta_0,
                             axis=0,
                             method="lower",
                         )  # type: ignore
 
-                        upper_quantiles[ind_beta_0] = np.nanquantile(
+                        upper_quantiles[ind_beta_0] = np_nanquantile(
                             upper_bounds[ind_beta_0, :],
                             1 - _alpha + beta_0,
                             axis=0,
