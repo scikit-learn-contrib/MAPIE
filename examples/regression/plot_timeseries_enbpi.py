@@ -105,14 +105,14 @@ y_pred_pfit_enbpi[:gap], y_pis_pfit_enbpi[:gap, :, :] = mapie_enpbi.predict(
 
 for step in range(gap, len(X_test), gap):
     mapie_enpbi.partial_fit(
-        X_test.iloc[(step - gap) : step, :],
-        y_test.iloc[(step - gap) : step],
+        X_test.iloc[(step - gap):step, :],
+        y_test.iloc[(step - gap):step],
     )
     (
-        y_pred_pfit_enbpi[step : step + gap],
-        y_pis_pfit_enbpi[step : step + gap, :, :],
+        y_pred_pfit_enbpi[step:step + gap],
+        y_pis_pfit_enbpi[step:step + gap, :, :],
     ) = mapie_enpbi.predict(
-        X_test.iloc[step : (step + gap), :],
+        X_test.iloc[step:(step + gap), :],
         alpha=alpha,
         ensemble=True,
         beta_optimize=True,
@@ -137,14 +137,14 @@ y_pis_pfit_enbpi_no_opt = np.zeros(y_pis_npfit_enbpi.shape)
 
 for step in range(gap, len(X_test), gap):
     mapie_enpbi.partial_fit(
-        X_test.iloc[(step - gap) : step, :],
-        y_test.iloc[(step - gap) : step],
+        X_test.iloc[(step - gap):step, :],
+        y_test.iloc[(step - gap):step],
     )
     (
-        y_pred_pfit_enbpi_no_opt[step : step + gap],
-        y_pis_pfit_enbpi_no_opt[step : step + gap, :, :],
+        y_pred_pfit_enbpi_no_opt[step:step + gap],
+        y_pis_pfit_enbpi_no_opt[step:step + gap, :, :],
     ) = mapie_enpbi.predict(
-        X_test.iloc[step : (step + gap), :],
+        X_test.iloc[step:step + gap, :],
         alpha=alpha,
         ensemble=True,
         beta_optimize=False,
@@ -168,14 +168,14 @@ y_pis_pfit_plus = np.zeros(y_pis_npfit_enbpi.shape)
 )
 for step in range(gap, len(X_test), gap):
     mapie_plus.partial_fit(
-        X_test.iloc[(step - gap) : step, :],
-        y_test.iloc[(step - gap) : step],
+        X_test.iloc[step - gap:step, :],
+        y_test.iloc[step - gap:step],
     )
     (
-        y_pred_pfit_plus[step : step + gap],
-        y_pis_pfit_plus[step : step + gap, :, :],
+        y_pred_pfit_plus[step:step + gap],
+        y_pis_pfit_plus[step:step + gap, :, :],
     ) = mapie_plus.predict(
-        X_test.iloc[step : (step + gap), :],
+        X_test.iloc[step:step + gap, :],
         alpha=alpha,
         ensemble=True,
         beta_optimize=True,
@@ -200,14 +200,14 @@ y_pis_pfit_plus_no_opt = np.zeros(y_pis_npfit_enbpi.shape)
 )
 for step in range(gap, len(X_test), gap):
     mapie_plus.partial_fit(
-        X_test.iloc[(step - gap) : step, :],
-        y_test.iloc[(step - gap) : step],
+        X_test.iloc[step - gap:step, :],
+        y_test.iloc[step - gap: step],
     )
     (
-        y_pred_pfit_plus_no_opt[step : step + gap],
-        y_pis_pfit_plus_no_opt[step : step + gap, :, :],
+        y_pred_pfit_plus_no_opt[step:step + gap],
+        y_pis_pfit_plus_no_opt[step:step + gap, :, :],
     ) = mapie_plus.predict(
-        X_test.iloc[step : (step + gap), :],
+        X_test.iloc[step:step + gap, :],
         alpha=alpha,
         ensemble=True,
         beta_optimize=False,
@@ -229,14 +229,14 @@ y_pred_pfit_MR[:gap], y_pis_pfit_MR[:gap, :, :] = mapie_plus.root_predict(
 )
 for step in range(gap, len(X_test), gap):
     mapie_plus.partial_fit(
-        X_test.iloc[(step - gap) : step, :],
-        y_test.iloc[(step - gap) : step],
+        X_test.iloc[step - gap:step, :],
+        y_test.iloc[step - gap:step],
     )
     (
-        y_pred_pfit_MR[step : step + gap],
-        y_pis_pfit_MR[step : step + gap, :, :],
+        y_pred_pfit_MR[step:step + gap],
+        y_pis_pfit_MR[step:step + gap, :, :],
     ) = mapie_plus.root_predict(
-        X_test.iloc[step : (step + gap), :],
+        X_test.iloc[step:step + gap, :],
         alpha=alpha,
         ensemble=True,
     )

@@ -46,12 +46,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         super().__init__(estimator, method, cv, n_jobs, agg_function, verbose)
         self.cv_need_agg_function.append("BlockBootstrap")
         self.valid_methods_.append("enbpi")
+        self.plus_like_method.append("enbpi")
 
     def _relative_conformity_scores(
         self,
-        X: ArrayLike,
-        y: ArrayLike,
-    ) -> ArrayLike:
+        X: NDArray,
+        y: NDArray,
+    ) -> NDArray:
         """
         Compute the conformity scores on a data set.
 
@@ -67,7 +68,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         -------
             The conformity scores corresponding to the input data set.
         """
-        y_pred, _ = super().predict(X, alpha=0.5, ensemble=True)
+        y_pred, _ = self.root_predict(X, alpha=0.5, ensemble=True)
         return np.asarray(y) - np.asarray(y_pred)
 
     def fit(
@@ -113,12 +114,14 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         MapieTimeSeriesRegressor
             The model itself.
         """
+        X = cast(NDArray, X)
+        y = cast(NDArray, y)
         if len(X) > len(self.conformity_scores_):
             raise ValueError("You try to update more residuals than tere are!")
         new_conformity_scores_ = self._relative_conformity_scores(X, y)
         self.conformity_scores_ = np.concatenate(
             [
-                self.conformity_scores_[-len(new_conformity_scores_) :],
+                self.conformity_scores_[-len(new_conformity_scores_):],
                 new_conformity_scores_,
             ]
         )
@@ -127,10 +130,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     def _beta_optimize(
         self,
-        alpha: NDArray,
+        alpha: Union[float, NDArray],
         upper_bounds: NDArray,
         lower_bounds: NDArray,
-        beta_optimize: bool = True,
+        beta_optimize: bool = False,
     ) -> NDArray:
         """
         ``_beta_optimize`` offers to minimize the width of the PIs, for a given
@@ -158,6 +161,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             raise ValueError(
                 "Lower and upper bounds arrays should have the same shape."
             )
+        alpha = cast(NDArray, alpha)
         betas_0 = np.full(
             shape=(len(alpha), len(lower_bounds)),
             fill_value=np.nan,
@@ -173,7 +177,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 _alpha / (len(lower_bounds) + 1),
                 _alpha,
                 num=len(lower_bounds),
-                endpoint=False,
+                endpoint=True,
             )
             one_alpha_beta = np.nanquantile(
                 upper_bounds,
@@ -187,17 +191,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 axis=1,
                 method="lower",
             )  # type: ignore
-            if len(betas_0.shape) == 2:
-                betas_0[ind_alpha, :] = betas[
-                    np.argmin(one_alpha_beta - beta, axis=0)
-                ]
-            else:
-                betas_0[ind_alpha] = betas[
-                    np.argmin(one_alpha_beta - beta, axis=0)[0]
-                ]
+            betas_0[ind_alpha, :] = betas[
+                np.argmin(one_alpha_beta - beta, axis=0)
+            ]
+
         return betas_0
 
-    def _pred_multi(self, X: NDArray) -> NDArray:
+    def _pred_multi(self, X: ArrayLike) -> NDArray:
         """
         Return a prediction per train sample for each test sample, by
         aggregation with matrix  ``k_``.
@@ -257,13 +257,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             alpha_np = cast(NDArray, alpha)
             check_alpha_and_n_samples(alpha_np, len(self.conformity_scores_))
 
-            if (self.method in ["enbpi", "naive", "base"]) or (
+            if (self.method in ["base", "enbpi", "minmax", "naive"]) or (
                 self.cv == "prefit"
             ):
                 betas_0 = self._beta_optimize(
                     alpha=alpha_np,
-                    lower_bounds=self.conformity_scores_,
-                    upper_bounds=self.conformity_scores_,
+                    lower_bounds=self.conformity_scores_.reshape(1, -1),
+                    upper_bounds=self.conformity_scores_.reshape(1, -1),
                     beta_optimize=beta_optimize,
                 )
                 lower_quantiles = np.nanquantile(
@@ -282,29 +282,23 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 if (self.method in ["naive", "base"]) or (self.cv == "prefit"):
                     y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
                     y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
-                else:  # method == "enbpi"
-                    # Correspond to "Conformal prediction for dynamic time
-                    # series".
-                    # Its PIs are closed to the oracle's ones if beta_optimized
-                    #  is True.
+                else:
                     y_pred_multi = self._pred_multi(X)
-                    pred = aggregate_all(self.agg_function, y_pred_multi)
-                    y_pred_low = np.column_stack(
-                        [
-                            pred + lower_quantiles[k]
-                            for k, _ in enumerate(alpha_np)
-                        ]
-                    )
-                    y_pred_up = np.column_stack(
-                        [
-                            pred + higher_quantiles[k]
-                            for k, _ in enumerate(alpha_np)
-                        ]
-                    )
 
-                if self.method == "minmax":
-                    lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
-                    upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
+                    if self.method == "enbpi":
+                        # Correspond to "Conformal prediction for dynamic time
+                        # series". Its PIs are closed to the oracle's ones if
+                        # beta_optimized is True.
+                        pred = aggregate_all(self.agg_function, y_pred_multi)
+                        lower_bounds, upper_bounds = pred, pred
+                    else:  # self.method == "minmax":
+                        lower_bounds = np.min(
+                            y_pred_multi, axis=1, keepdims=True
+                        )
+                        upper_bounds = np.max(
+                            y_pred_multi, axis=1, keepdims=True
+                        )
+
                     y_pred_low = np.column_stack(
                         [
                             lower_bounds + lower_quantiles[k]
@@ -317,14 +311,17 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                             for k, _ in enumerate(alpha_np)
                         ]
                     )
-            elif self.method == "plus":
-                # This version of predict corresponds to "Predictive Inference
-                # Is Free with the Jackknife+-after-Bootstrap.".
+
+                    if ensemble:
+                        y_pred = aggregate_all(self.agg_function, y_pred_multi)
+
+            else:  # self.method == "plus":
+                # This version of predict corresponds to "Predictive
+                # Inference is Free with the Jackknife+-after-Bootstrap.".
                 # Its PIs are wider. It does not coorespond to "Conformal
                 # prediction for dynamic time series". It is a try. It is
-                # slower because the betas (width optimization parameters of
-                # the PIs) are optimized for every point.
-
+                # slower because the betas (width optimization parameters
+                # of the PIs) are optimized for every point
                 y_pred_multi = self._pred_multi(X)
                 y_pred_low = np.empty((len(y_pred), len(alpha)), dtype=float)
                 y_pred_up = np.empty((len(y_pred), len(alpha)), dtype=float)
@@ -357,11 +354,12 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                             axis=0,
                             method="higher",
                         )  # type: ignore
-                y_pred_low[:, ind_alpha] = lower_quantiles
-                y_pred_up[:, ind_alpha] = upper_quantiles
+                    y_pred_low[:, ind_alpha] = lower_quantiles
+                    y_pred_up[:, ind_alpha] = upper_quantiles
 
-            if ensemble:
-                y_pred = aggregate_all(self.agg_function, y_pred_multi)
+                if ensemble:
+                    y_pred = aggregate_all(self.agg_function, y_pred_multi)
+
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
 
     def root_predict(

@@ -4,7 +4,6 @@ from typing import Iterable, List, Optional, Tuple, Union, cast
 
 from joblib import Parallel, delayed
 import numpy as np
-import numpy.ma as ma
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
@@ -29,9 +28,7 @@ from .utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
-    masked_quantile,
 )
-from ._compatibility import np_quantile
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
@@ -188,6 +185,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
     cv_need_agg_function = ["Subsample"]
     valid_methods_ = ["naive", "base", "plus", "minmax"]
+    plus_like_method = ["plus"]
     valid_agg_functions_ = [None, "median", "mean"]
     fit_attributes = [
         "single_estimator_",
@@ -635,7 +633,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
 
-            if self.method == "plus":
+            if self.method in self.plus_like_method:
                 lower_bounds = y_pred_multi - self.conformity_scores_
                 upper_bounds = y_pred_multi + self.conformity_scores_
 

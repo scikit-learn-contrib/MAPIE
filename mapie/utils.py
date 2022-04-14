@@ -3,7 +3,6 @@ from inspect import signature
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
-import numpy.ma as ma
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.utils.validation import _check_sample_weight, _num_features
