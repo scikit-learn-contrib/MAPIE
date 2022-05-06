@@ -20,7 +20,7 @@ X_toy = np.array(range(5)).reshape(-1, 1)
 y_toy = (5.0 + 2.0 * X_toy ** 1.1).flatten()
 X, y = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
 k = np.ones(shape=(5, X.shape[1]))
-METHODS = ["base", "enbpi", "minmax", "naive", "plus"]
+METHODS = ["enbpi"]
 
 Params = TypedDict(
     "Params",
@@ -31,32 +31,8 @@ Params = TypedDict(
     },
 )
 STRATEGIES = {
-    "naive": Params(method="naive", agg_function="median", cv=None),
-    "jackknife": Params(method="base", agg_function="mean", cv=-1),
-    "jackknife_plus": Params(method="plus", agg_function="mean", cv=-1),
-    "jackknife_minmax": Params(method="minmax", agg_function="mean", cv=-1),
-    "cv": Params(
-        method="base",
-        agg_function="mean",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
-    ),
-    "cv_plus": Params(
-        method="plus",
-        agg_function="mean",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
-    ),
-    "cv_minmax": Params(
-        method="minmax",
-        agg_function="mean",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
-    ),
-    "jackknife_enbpi_ab_wopt": Params(
+    "jackknife_enbpi_mean_ab_wopt": Params(
         method="enbpi",
-        agg_function="mean",
-        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
-    ),
-    "jackknife_minmax_ab": Params(
-        method="minmax",
         agg_function="mean",
         cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
     ),
@@ -69,7 +45,7 @@ STRATEGIES = {
             random_state=1,
         ),
     ),
-    "jackknife_enbpi_ab": Params(
+    "jackknife_enbpi_mean_ab": Params(
         method="enbpi",
         agg_function="mean",
         cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
@@ -83,72 +59,20 @@ STRATEGIES = {
             random_state=1,
         ),
     ),
-    "jackknife_plus_ab_MR": Params(
-        method="plus",
-        agg_function="mean",
-        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
-    ),
-    "jackknife_minmax_ab_MR": Params(
-        method="minmax",
-        agg_function="mean",
-        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=1),
-    ),
-    "jackknife_plus_ab_median_MR": Params(
-        method="plus",
-        agg_function="median",
-        cv=BlockBootstrap(
-            n_resamplings=30,
-            n_blocks=5,
-            random_state=1,
-        ),
-    ),
 }
 
 WIDTHS = {
-    "naive": 3.83,
-    "jackknife": 3.83,
-    "jackknife_plus": 3.82,
-    "jackknife_minmax": 3.90,
-    "cv": 3.83,
-    "cv_plus": 3.87,
-    "cv_minmax": 4.03,
-    "prefit": 4.79,
-    "cv_plus_median": 3.90,
-    "jackknife_enbpi_ab_wopt": 3.76,
-    "jackknife_minmax_ab": 3.96,
+    "jackknife_enbpi_mean_ab_wopt": 3.76,
     "jackknife_enbpi_median_ab_wopt": 3.76,
-    "jackknife_enbpi_ab": 3.76,
-    "jackknife_minmax_ab": 3.96,
+    "jackknife_enbpi_mean_ab": 3.76,
     "jackknife_enbpi_median_ab": 3.76,
-    "jackknife_plus_ab": 3.76,
-    "jackknife_plus_median_ab": 3.83,
-    "jackknife_plus_ab_MR": 3.82,
-    "jackknife_minmax_ab_MR": 3.96,
-    "jackknife_plus_ab_median_MR": 3.83,
 }
 
 COVERAGES = {
-    "naive": 0.952,
-    "jackknife": 0.952,
-    "jackknife_plus": 0.94,
-    "jackknife_minmax": 0.952,
-    "cv": 0.958,
-    "cv_plus": 0.956,
-    "cv_minmax": 0.966,
-    "prefit": 0.98,
-    "cv_plus_median": 0.954,
-    "jackknife_enbpi_ab_wopt": 0.952,
-    "jackknife_minmax_ab": 0.960,
+    "jackknife_enbpi_mean_ab_wopt": 0.952,
     "jackknife_enbpi_median_ab_wopt": 0.946,
-    "jackknife_enbpi_ab": 0.952,
-    "jackknife_minmax_ab": 0.960,
+    "jackknife_enbpi_mean_ab": 0.952,
     "jackknife_enbpi_median_ab": 0.946,
-    "jackknife_plus_ab_plus": 0.92,
-    "jackknife_minmax_ab_plus": 0.940,
-    "jackknife_plus_median_ab_plus": 0.94,
-    "jackknife_plus_ab_MR": 0.954,
-    "jackknife_minmax_ab_MR": 0.958,
-    "jackknife_plus_ab_median_MR": 0.954,
 }
 
 
@@ -262,7 +186,7 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     np.testing.assert_allclose(y_pis1, y_pis2)
 
 
-@pytest.mark.parametrize("method", ["plus", "minmax", "enbpi"])
+@pytest.mark.parametrize("method", ["enbpi"])
 @pytest.mark.parametrize("cv", [-1, 2, 3, 5])
 @pytest.mark.parametrize("agg_function", ["mean", "median"])
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2])
@@ -292,6 +216,7 @@ def test_linear_regression_results(strategy: str) -> None:
     a multivariate linear regression problem
     with fixed random state.
     """
+
     mapie_ts = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts.fit(X, y)
     if "opt" in strategy:
@@ -302,27 +227,9 @@ def test_linear_regression_results(strategy: str) -> None:
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
 
-    if mapie_ts.method == "plus":
-        coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
-    else:
-        coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
+    coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
     np.testing.assert_allclose(width_mean, WIDTHS[strategy], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
-
-
-def test_results_prefit_ignore_method() -> None:
-    """Test that method is ignored when ``cv="prefit"``."""
-    estimator = LinearRegression().fit(X, y)
-    all_y_pis: List[NDArray] = []
-    for method in METHODS:
-        mapie_ts_reg = MapieTimeSeriesRegressor(
-            estimator=estimator, cv="prefit", method=method
-        )
-        mapie_ts_reg.fit(X, y)
-        _, y_pis = mapie_ts_reg.predict(X, alpha=0.1)
-        all_y_pis.append(y_pis)
-    for y_pis1, y_pis2 in combinations(all_y_pis, 2):
-        np.testing.assert_allclose(y_pis1, y_pis2)
 
 
 def test_results_prefit_naive() -> None:
@@ -456,9 +363,9 @@ def test_MapieTimeSeriesRegressor_partial_fit_two_big() -> None:
 
 
 def test_MapieTimeSeriesRegressor_beta_optimize_eeror() -> None:
-    """Test ``partial_fit`` raised error."""
+    """Test ``beta_optimize`` raised error."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1)
     with pytest.raises(ValueError, match=r".*Lower and upper bounds arrays*"):
         mapie_ts_reg._beta_optimize(
-            alpha=0.1, upper_bounds=X, lower_bounds=X_toy, beta_optimize=True
+            alpha=0.1, upper_bounds=X, lower_bounds=X_toy
         )

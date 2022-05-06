@@ -28,7 +28,9 @@ import warnings
 import numpy as np
 import pandas as pd
 from matplotlib import pylab as plt
+from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie.metrics import regression_coverage_score
 from mapie.subsample import BlockBootstrap
@@ -64,8 +66,31 @@ y_train = demand_train.loc[X_train.index, "Demand"]
 X_test = demand_test.loc[:, features]
 y_test = demand_test["Demand"]
 
-# Model: Random Forest previously optimized with a cross-validation
-model = RandomForestRegressor(max_depth=10, n_estimators=50, random_state=59)
+model_params_fit_not_done = False
+if model_params_fit_not_done:
+    # CV parameter search
+    n_iter = 100
+    n_splits = 5
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+    random_state = 59
+    rf_model = RandomForestRegressor(random_state=random_state)
+    rf_params = {"max_depth": randint(2, 30), "n_estimators": randint(10, 100)}
+    cv_obj = RandomizedSearchCV(
+        rf_model,
+        param_distributions=rf_params,
+        n_iter=n_iter,
+        cv=tscv,
+        scoring="neg_root_mean_squared_error",
+        random_state=random_state,
+        verbose=0,
+        n_jobs=-1,
+    )
+    cv_obj.fit(X_train, y_train)
+    model = cv_obj.best_estimator_
+else:
+    # Model: Random Forest previously optimized with a cross-validation
+    model = RandomForestRegressor(
+        max_depth=10, n_estimators=50, random_state=59)
 
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.05
@@ -98,6 +123,7 @@ print("EnbPI with partial_fit, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
 y_pred_pfit_enbpi = np.zeros(y_pred_npfit_enbpi.shape)
 y_pis_pfit_enbpi = np.zeros(y_pis_npfit_enbpi.shape)
+
 
 y_pred_pfit_enbpi[:gap], y_pis_pfit_enbpi[:gap, :, :] = mapie_enpbi.predict(
     X_test.iloc[:gap, :], alpha=alpha, ensemble=True, beta_optimize=True
@@ -155,7 +181,7 @@ width_pfit_plus = (y_pis_pfit_plus[:, 1, 0] - y_pis_pfit_plus[:, 0, 0]).mean()
 
 print("Plus, with NO partial_fit, MapieRegressor_Like no")
 mapie_plus = mapie_plus.fit(X_train, y_train)
-y_pred_pfit_MR, y_pis_pfit_MR = mapie_enpbi.predict(
+y_pred_pfit_MR, y_pis_pfit_MR = mapie_plus.predict(
     X_test, alpha=alpha, ensemble=True
 )
 coverage_pfit_MR = regression_coverage_score(

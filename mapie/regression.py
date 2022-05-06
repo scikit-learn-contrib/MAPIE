@@ -224,7 +224,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         if self.method not in self.valid_methods_:
             raise ValueError(
                 "Invalid method. "
-                "Allowed values are 'naive', 'base', 'plus' and 'minmax'."
+                f"Allowed values are {self.valid_methods_}."
             )
 
         check_n_jobs(self.n_jobs)

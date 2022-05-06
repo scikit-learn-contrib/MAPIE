@@ -26,9 +26,9 @@ class Subsample(BaseCrossValidator):
         Number of samples in each resampling. By default ``None``,
         the size of the training set.
     replace: bool
-        Whether to replace samples in resamplings or not.
+        Whether to replace samples in resamplings or not. By default ``True``.
     random_state: Optional
-        int or RandomState instance.
+        int or RandomState instance. . By default ``None``
 
 
     Examples
