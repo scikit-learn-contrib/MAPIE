@@ -158,6 +158,8 @@ def check_cv(
             return KFold(n_splits=cv)
     if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
         return cv
+    if cv == "simple":
+        return cv
     raise ValueError(
         "Invalid cv argument. "
         "Allowed values are None, -1, int >= 2, 'prefit', "
