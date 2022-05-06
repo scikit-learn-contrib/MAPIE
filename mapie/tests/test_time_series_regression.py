@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from itertools import combinations
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union
 
 import numpy as np
 import pytest
@@ -66,6 +65,8 @@ WIDTHS = {
     "jackknife_enbpi_median_ab_wopt": 3.76,
     "jackknife_enbpi_mean_ab": 3.76,
     "jackknife_enbpi_median_ab": 3.76,
+    "prefit": 4.79,
+
 }
 
 COVERAGES = {
@@ -73,6 +74,8 @@ COVERAGES = {
     "jackknife_enbpi_median_ab_wopt": 0.946,
     "jackknife_enbpi_mean_ab": 0.952,
     "jackknife_enbpi_median_ab": 0.946,
+    "prefit": 0.98,
+
 }
 
 
@@ -232,21 +235,6 @@ def test_linear_regression_results(strategy: str) -> None:
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
 
-def test_results_prefit_naive() -> None:
-    """
-    Test that prefit, fit and predict on the same dataset
-    is equivalent to the "naive" method.
-    """
-    estimator = LinearRegression().fit(X, y)
-    mapie_ts_reg = MapieTimeSeriesRegressor(estimator=estimator, cv="prefit")
-    mapie_ts_reg.fit(X, y)
-    _, y_pis = mapie_ts_reg.predict(X, alpha=0.05)
-    width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = regression_coverage_score(y, y_pis[:, 0, 0], y_pis[:, 1, 0])
-    np.testing.assert_allclose(width_mean, WIDTHS["naive"], rtol=1e-2)
-    np.testing.assert_allclose(coverage, COVERAGES["naive"], rtol=1e-2)
-
-
 def test_results_prefit() -> None:
     """Test prefit results on a standard train/validation/test split."""
     X_train_val, X_test, y_train_val, y_test = train_test_split(
@@ -337,8 +325,6 @@ def test_MapieTimeSeriesRegressor_alpha_is_None() -> None:
 
     with pytest.raises(ValueError, match=r".*too many values to unpackt*"):
         y_pred, y_pis = mapie_ts_reg.predict(X_toy, alpha=None)
-    with pytest.raises(ValueError, match=r".*too many values to unpackt*"):
-        y_pred, y_pis = mapie_ts_reg.root_predict(X_toy, alpha=None)
 
 
 def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
