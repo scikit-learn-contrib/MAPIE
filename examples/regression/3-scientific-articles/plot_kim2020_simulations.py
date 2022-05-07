@@ -43,7 +43,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
 
-from mapie._typing import ArrayLike
+from mapie._typing import ArrayLike, NDArray
 from mapie.metrics import (
     regression_mean_width_score,
     regression_coverage_score,
@@ -52,7 +52,7 @@ from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
 
 
-def get_X_y() -> Tuple[ArrayLike, ArrayLike]:
+def get_X_y() -> Tuple[NDArray, NDArray]:
     """
     Downloads the ``blog`` dataset from a zip file on the UCI Machine Learning
     website, and returns X and y, which are respectively the explicative
@@ -60,7 +60,7 @@ def get_X_y() -> Tuple[ArrayLike, ArrayLike]:
 
     Returns
     -------
-    Tuple[ArrayLike, ArrayLike] of shapes
+    Tuple[NDArray, NDArray] of shapes
     (n_samples, n_features) and (n_samples,)
         Explicative data and labels
     """
@@ -78,7 +78,7 @@ def get_X_y() -> Tuple[ArrayLike, ArrayLike]:
     return (X, y)
 
 
-class Ridge2(RegressorMixin, BaseEstimator):  # type:ignore
+class Ridge2(RegressorMixin, BaseEstimator):
     """
     Little variation of Ridge proposed in [1].
     Rectify alpha on the training set svd max value.
@@ -95,16 +95,16 @@ class Ridge2(RegressorMixin, BaseEstimator):  # type:ignore
         self.ridge_mult = ridge_mult
         self.__name__ = "Ridge2"
 
-    def fit(self, X: ArrayLike, y: Optional[ArrayLike] = None) -> Ridge2:
+    def fit(self, X: NDArray, y: Optional[NDArray] = None) -> Ridge2:
         """
         Fit Ridge2.
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
+        X : NDArray of shape (n_samples, n_features)
             Training data.
 
-        y : ArrayLike of shape (n_samples,)
+        y : NDArray of shape (n_samples,)
             Training labels.
 
         Returns
@@ -116,7 +116,7 @@ class Ridge2(RegressorMixin, BaseEstimator):  # type:ignore
         self.ridge2 = Ridge(alpha=alpha).fit(X=X, y=y)
         return self
 
-    def predict(self, X: ArrayLike) -> ArrayLike:
+    def predict(self, X: ArrayLike) -> NDArray:
         """
         Predict target on new samples.
 
@@ -127,7 +127,7 @@ class Ridge2(RegressorMixin, BaseEstimator):  # type:ignore
 
         Returns
         -------
-        np.ndarray of shape (n_samples, )
+        NDArray of shape (n_samples, )
             Predictions on test data
         """
         return self.ridge2.predict(X)
@@ -135,9 +135,9 @@ class Ridge2(RegressorMixin, BaseEstimator):  # type:ignore
 
 def compute_PIs(
     estimator: BaseEstimator,
-    X_train: ArrayLike,
-    y_train: ArrayLike,
-    X_test: ArrayLike,
+    X_train: NDArray,
+    y_train: NDArray,
+    X_test: NDArray,
     method: str,
     cv: Any,
     alpha: float,
@@ -152,11 +152,11 @@ def compute_PIs(
     ----------
     estimator : BaseEstimator
         Base model to fit.
-    X_train : np.ndarray
+    X_train : NDArray
         Features of training set.
-    y_train : np.ndarray
+    y_train : NDArray
         Target of training set.
-    X_test : np.ndarray
+    X_test : NDArray
         Features of testing set.
     method : str
         Method for estimating prediction intervals.
@@ -187,7 +187,7 @@ def compute_PIs(
     return pd.DataFrame(PI, columns=["lower", "upper"])
 
 
-def get_coverage_width(PIs: pd.DataFrame, y: ArrayLike) -> Tuple[float, float]:
+def get_coverage_width(PIs: pd.DataFrame, y: NDArray) -> Tuple[float, float]:
     """
     Computes the mean coverage and width of the predictions intervals of a
     DataFrame given by the ``compute_PIs`` function
@@ -198,7 +198,7 @@ def get_coverage_width(PIs: pd.DataFrame, y: ArrayLike) -> Tuple[float, float]:
         DataFrame returned by `compute_PIs``, with lower and upper bounds of
         the PIs.
 
-    y : ArrayLike
+    y : NDArray
         Targets supposedly covered by the PIs.
 
     Returns
@@ -216,7 +216,11 @@ def get_coverage_width(PIs: pd.DataFrame, y: ArrayLike) -> Tuple[float, float]:
 
 
 def B_random_from_B_fixed(
-    B: int, train_size: int, m: int, itrial: int = 0, random_state: int = 98765
+    B: int,
+    train_size: int,
+    m: int,
+    itrial: int = 0,
+    random_state: int = 98765
 ) -> int:
     """
     Generates a random number from a binomial distribution.

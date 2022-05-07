@@ -18,17 +18,17 @@ from sklearn.preprocessing import PolynomialFeatures
 from matplotlib import pyplot as plt
 
 from mapie.regression import MapieRegressor
-from mapie._typing import ArrayLike
+from mapie._typing import NDArray
 
 
-def f(x: ArrayLike) -> ArrayLike:
+def f(x: NDArray) -> NDArray:
     """Polynomial function used to generate one-dimensional data"""
     return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
 
 
 def get_homoscedastic_data(
     n_train: int = 200, n_true: int = 200, sigma: float = 0.1
-) -> Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, float]:
+) -> Tuple[NDArray, NDArray, NDArray, NDArray, float]:
     """
     Generate one-dimensional data from a given function,
     number of training and test samples and a given standard
@@ -46,7 +46,7 @@ def get_homoscedastic_data(
 
     Returns
     -------
-    Tuple[Any, Any, ArrayLike, Any, float]
+    Tuple[NDArray, NDArray, NDArray, NDArray, float]
         Generated training and test data.
         [0]: X_train
         [1]: y_train
@@ -65,14 +65,14 @@ def get_homoscedastic_data(
 
 
 def plot_1d_data(
-    X_train: ArrayLike,
-    y_train: ArrayLike,
-    X_test: ArrayLike,
-    y_test: ArrayLike,
+    X_train: NDArray,
+    y_train: NDArray,
+    X_test: NDArray,
+    y_test: NDArray,
     y_test_sigma: float,
-    y_pred: ArrayLike,
-    y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike,
+    y_pred: NDArray,
+    y_pred_low: NDArray,
+    y_pred_up: NDArray,
     ax: plt.Axes,
     title: str,
 ) -> None:
@@ -82,21 +82,21 @@ def plot_1d_data(
 
     Parameters
     ----------
-    X_train : ArrayLike
+    X_train : NDArray
         Training data.
-    y_train : ArrayLike
+    y_train : NDArray
         Training labels.
-    X_test : ArrayLike
+    X_test : NDArray
         Test data.
-    y_test : ArrayLike
+    y_test : NDArray
         True function values on test data.
     y_test_sigma : float
         True standard deviation.
-    y_pred : ArrayLike
+    y_pred : NDArray
         Predictions on test data.
-    y_pred_low : ArrayLike
+    y_pred_low : NDArray
         Predicted lower bounds on test data.
-    y_pred_up : ArrayLike
+    y_pred_up : NDArray
         Predicted upper bounds on test data.
     ax : plt.Axes
         Axis to plot.

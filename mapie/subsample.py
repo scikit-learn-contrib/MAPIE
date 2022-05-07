@@ -6,11 +6,12 @@ import numpy as np
 from numpy.random import RandomState
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state, resample
+from sklearn.utils.validation import _num_samples
 
-from ._typing import ArrayLike
+from ._typing import ArrayLike, NDArray
 
 
-class Subsample(BaseCrossValidator):  # type: ignore
+class Subsample(BaseCrossValidator):
     """
     Generate a sampling method, that resamples the training set with
     possible bootstraps. It can replace KFold or  LeaveOneOut as cv argument
@@ -54,8 +55,9 @@ class Subsample(BaseCrossValidator):  # type: ignore
         self.random_state = random_state
 
     def split(
-        self, X: ArrayLike
-    ) -> Generator[Tuple[Any, ArrayLike], None, None]:
+        self,
+        X: ArrayLike
+    ) -> Generator[Tuple[NDArray, NDArray], None, None]:
         """
         Generate indices to split data into training and test sets.
 
@@ -66,12 +68,12 @@ class Subsample(BaseCrossValidator):  # type: ignore
 
         Yields
         ------
-        train : ArrayLike of shape (n_indices_training,)
+        train : NDArray of shape (n_indices_training,)
             The training set indices for that split.
-        test : ArrayLike of shape (n_indices_test,)
+        test : NDArray of shape (n_indices_test,)
             The testing set indices for that split.
         """
-        indices = np.arange(len(X))
+        indices = np.arange(_num_samples(X))
         n_samples = (
             self.n_samples if self.n_samples is not None else len(indices)
         )

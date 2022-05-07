@@ -1,6 +1,9 @@
+from typing import cast
+
 import numpy as np
 from sklearn.utils.validation import column_or_1d, check_array
-from ._typing import ArrayLike
+
+from ._typing import ArrayLike, NDArray
 
 
 def regression_coverage_score(
@@ -38,15 +41,18 @@ def regression_coverage_score(
     >>> print(regression_coverage_score(y_true, y_pred_low, y_pred_up))
     0.8
     """
-    y_true = column_or_1d(y_true)
-    y_pred_low = column_or_1d(y_pred_low)
-    y_pred_up = column_or_1d(y_pred_up)
-    coverage = ((y_pred_low <= y_true) & (y_pred_up >= y_true)).mean()
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
+    y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
+    coverage = np.mean(
+        ((y_pred_low <= y_true) & (y_pred_up >= y_true))
+    )
     return float(coverage)
 
 
 def classification_coverage_score(
-    y_true: ArrayLike, y_pred_set: ArrayLike
+    y_true: ArrayLike,
+    y_pred_set: ArrayLike
 ) -> float:
     """
     Effective coverage score obtained by the prediction sets.
@@ -81,8 +87,13 @@ def classification_coverage_score(
     >>> print(classification_coverage_score(y_true, y_pred_set))
     0.8
     """
-    y_true = column_or_1d(y_true)
-    y_pred_set = check_array(y_pred_set, force_all_finite=True, dtype=["bool"])
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_pred_set = cast(
+        NDArray,
+        check_array(
+            y_pred_set, force_all_finite=True, dtype=["bool"]
+        )
+    )
     coverage = np.take_along_axis(
         y_pred_set, y_true.reshape(-1, 1), axis=1
     ).mean()
@@ -91,7 +102,7 @@ def classification_coverage_score(
 
 def regression_mean_width_score(
     y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike,
+    y_pred_up: ArrayLike
 ) -> float:
     """
     Effective mean width score obtained by the prediction intervals.
@@ -117,15 +128,13 @@ def regression_mean_width_score(
     >>> print(regression_mean_width_score(y_pred_low, y_pred_up))
     2.3
     """
-    y_pred_low = column_or_1d(y_pred_low)
-    y_pred_up = column_or_1d(y_pred_up)
+    y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
+    y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
     mean_width = np.abs(y_pred_up - y_pred_low).mean()
     return float(mean_width)
 
 
-def classification_mean_width_score(
-    y_pred_set: ArrayLike
-) -> float:
+def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     """
     Mean width of prediction set output by
     :class:`mapie.classification.MapieClassifier`.
@@ -154,6 +163,11 @@ def classification_mean_width_score(
     >>> print(classification_mean_width_score(y_pred_set))
     2.0
     """
-    y_pred_set = check_array(y_pred_set, force_all_finite=True, dtype=["bool"])
+    y_pred_set = cast(
+        NDArray,
+        check_array(
+            y_pred_set, force_all_finite=True, dtype=["bool"]
+        )
+    )
     mean_width = y_pred_set.sum(axis=1).mean()
     return float(mean_width)

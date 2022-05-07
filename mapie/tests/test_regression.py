@@ -17,7 +17,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from typing_extensions import TypedDict
 
-from mapie._typing import ArrayLike
+from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
@@ -178,7 +178,7 @@ def test_too_large_cv(cv: Any) -> None:
 @pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.4], (0.2, 0.4)])
 def test_predict_output_shape(
-    strategy: str, alpha: Any, dataset: Tuple[ArrayLike, ArrayLike]
+    strategy: str, alpha: Any, dataset: Tuple[NDArray, NDArray]
 ) -> None:
     """Test predict output shape."""
     mapie_reg = MapieRegressor(**STRATEGIES[strategy])
@@ -333,7 +333,7 @@ def test_linear_regression_results(strategy: str) -> None:
 def test_results_prefit_ignore_method() -> None:
     """Test that method is ignored when ``cv="prefit"``."""
     estimator = LinearRegression().fit(X, y)
-    all_y_pis: List[ArrayLike] = []
+    all_y_pis: List[NDArray] = []
     for method in METHODS:
         mapie_reg = MapieRegressor(
             estimator=estimator, cv="prefit", method=method
@@ -440,7 +440,6 @@ def test_pred_loof_isnan() -> None:
         y=y_toy,
         train_index=[0, 1, 2, 3, 4],
         val_index=[],
-        k=0,
     )
     assert len(y_pred) == 0
 

@@ -28,7 +28,7 @@ Aaditya Ramdas, and Ryan J. Tibshirani.
 "Predictive inference with the jackknife+."
 Ann. Statist., 49(1):486–507, February 2021.
 """
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -39,15 +39,15 @@ from mapie.metrics import (
     regression_mean_width_score
 )
 from mapie.regression import MapieRegressor
-from mapie._typing import ArrayLike
+from mapie._typing import NDArray
 
 
 def PIs_vs_dimensions(
     strategies: Dict[str, Any],
     alpha: float,
     n_trial: int,
-    dimensions: List[int],
-) -> Dict[str, Dict[int, Dict[str, ArrayLike]]]:
+    dimensions: NDArray,
+) -> Dict[str, Dict[int, Dict[str, NDArray]]]:
     """
     Compute the prediction intervals for a linear regression problem.
     Function adapted from Foygel-Barber et al. (2020).
@@ -82,14 +82,14 @@ def PIs_vs_dimensions(
 
     Returns
     -------
-    Dict[str, Dict[int, Dict[str, ArrayLike]]]
+    Dict[str, Dict[int, Dict[str, NDArray]]]
         Prediction interval widths and coverages for each strategy, trial,
         and dimension value.
     """
     n_train = 100
     n_test = 100
     SNR = 10
-    results: Dict[str, Dict[int, Dict[str, ArrayLike]]] = {
+    results: Dict[str, Dict[int, Dict[str, NDArray]]] = {
         strategy: {
             dimension: {
                 "coverage": np.empty(n_trial),
@@ -132,7 +132,7 @@ def PIs_vs_dimensions(
 
 
 def plot_simulation_results(
-    results: Dict[str, Dict[int, Dict[str, ArrayLike]]], title: str
+    results: Dict[str, Dict[int, Dict[str, NDArray]]], title: str
 ) -> None:
     """
     Show the prediction interval coverages and widths as a function
@@ -141,7 +141,7 @@ def plot_simulation_results(
 
     Parameters
     ----------
-    results : Dict[str, Dict[int, Dict[str, ArrayLike]]]
+    results : Dict[str, Dict[int, Dict[str, NDArray]]]
         Prediction interval widths and coverages for each strategy, trial,
         and dimension value.
     title : str

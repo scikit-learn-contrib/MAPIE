@@ -43,17 +43,17 @@ def test_check_null_weight_with_none() -> None:
     """Test that the function has no effect if sample weight is None."""
     sw_out, X_out, y_out = check_null_weight(None, X_toy, y_toy)
     assert sw_out is None
-    np.testing.assert_almost_equal(X_out, X_toy)
-    np.testing.assert_almost_equal(y_out, y_toy)
+    np.testing.assert_almost_equal(np.array(X_out), X_toy)
+    np.testing.assert_almost_equal(np.array(y_out), y_toy)
 
 
 def test_check_null_weight_with_nonzeros() -> None:
     """Test that the function has no effect if sample weight is never zero."""
     sample_weight = np.ones_like(y_toy)
     sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
-    np.testing.assert_almost_equal(sw_out, sample_weight)
-    np.testing.assert_almost_equal(X_out, X_toy)
-    np.testing.assert_almost_equal(y_out, y_toy)
+    np.testing.assert_almost_equal(np.array(sw_out), sample_weight)
+    np.testing.assert_almost_equal(np.array(X_out), X_toy)
+    np.testing.assert_almost_equal(np.array(y_out), y_toy)
 
 
 def test_check_null_weight_with_zeros() -> None:
@@ -61,9 +61,15 @@ def test_check_null_weight_with_zeros() -> None:
     sample_weight = np.ones_like(y_toy)
     sample_weight[:1] = 0.0
     sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
-    np.testing.assert_almost_equal(sw_out, np.array([1, 1, 1, 1, 1]))
-    np.testing.assert_almost_equal(X_out, np.array([[1], [2], [3], [4], [5]]))
-    np.testing.assert_almost_equal(y_out, np.array([7, 9, 11, 13, 15]))
+    np.testing.assert_almost_equal(np.array(sw_out), np.array([1, 1, 1, 1, 1]))
+    np.testing.assert_almost_equal(
+        np.array(X_out),
+        np.array([[1], [2], [3], [4], [5]])
+    )
+    np.testing.assert_almost_equal(
+        np.array(y_out),
+        np.array([7, 9, 11, 13, 15])
+    )
 
 
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
@@ -89,7 +95,7 @@ def test_fit_estimator_sample_weight() -> None:
         np.testing.assert_almost_equal(y_pred_1, y_pred_2)
 
 
-@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", [[0.5]], ["a", "b"]])
+@pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", ["a", "b"]])
 def test_invalid_alpha(alpha: Any) -> None:
     """Test that invalid alphas raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid alpha.*"):
@@ -99,7 +105,7 @@ def test_invalid_alpha(alpha: Any) -> None:
 @pytest.mark.parametrize(
     "alpha",
     [
-        np.linspace(0.05, 0.95, 5),
+        0.95,
         [0.05, 0.95],
         (0.05, 0.95),
         np.array([0.05, 0.95]),

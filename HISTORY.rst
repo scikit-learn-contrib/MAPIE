@@ -2,6 +2,10 @@
 History
 =======
 
+0.3.3 (2022-XX-XX)
+------------------
+* Relax and fix typing
+
 0.3.2 (2022-03-11)
 ------------------
 * Refactorize unit tests

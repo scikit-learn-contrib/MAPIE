@@ -57,7 +57,7 @@ from mapie.metrics import (
     classification_coverage_score,
     classification_mean_width_score
 )
-from mapie._typing import ArrayLike
+from mapie._typing import NDArray
 
 
 centers = [(0, 3.5), (-2, 0), (2, 0)]
@@ -144,8 +144,8 @@ for method in methods:
 
 def plot_scores(
     alphas: List[float],
-    scores: ArrayLike,
-    quantiles: ArrayLike,
+    scores: NDArray,
+    quantiles: NDArray,
     method: str,
     ax: plt.Axes,
 ) -> None:
@@ -183,7 +183,7 @@ plt.show()
 
 
 def plot_results(
-    alphas: List[float], y_pred_mapie: ArrayLike, y_ps_mapie: ArrayLike
+    alphas: List[float], y_pred_mapie: NDArray, y_ps_mapie: NDArray
 ) -> None:
     tab10 = plt.cm.get_cmap("Purples", 4)
     colors = {

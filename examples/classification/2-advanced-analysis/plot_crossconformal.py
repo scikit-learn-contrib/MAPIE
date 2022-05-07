@@ -26,7 +26,7 @@ the ``cv="prefit"`` option of
 """
 
 
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Union, List
 from typing_extensions import TypedDict
 import numpy as np
 import pandas as pd
@@ -35,9 +35,10 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import KFold
 from mapie.classification import MapieClassifier
 from mapie.metrics import (
-    classification_coverage_score, classification_mean_width_score
+    classification_coverage_score,
+    classification_mean_width_score
 )
-from mapie._typing import ArrayLike
+from mapie._typing import NDArray
 
 
 ##############################################################################
@@ -156,9 +157,9 @@ plt.show()
 
 def plot_results(
     mapies: Dict[int, Any],
-    X_test: ArrayLike,
-    X_test2: ArrayLike,
-    y_test2: ArrayLike,
+    X_test: NDArray,
+    X_test2: NDArray,
+    y_test2: NDArray,
     alpha: float,
     method: str
 ) -> None:
@@ -223,9 +224,9 @@ plot_results(
 
 
 def plot_coverage_width(
-    alpha: float,
-    coverages: ArrayLike,
-    widths: ArrayLike,
+    alpha: NDArray,
+    coverages: List[NDArray],
+    widths: List[NDArray],
     method: str,
     comp: str = "split"
 ) -> None:
@@ -355,12 +356,12 @@ STRATEGIES = {
     )
 }
 
-y_preds, y_ps = {}, {}
+y_ps = {}
 for strategy, params in STRATEGIES.items():
     args_init, args_predict = STRATEGIES[strategy]
     mapie_clf = MapieClassifier(**args_init)
     mapie_clf.fit(X_train, y_train)
-    y_preds[strategy], y_ps[strategy] = mapie_clf.predict(
+    _, y_ps[strategy] = mapie_clf.predict(
         X_test_distrib,
         alpha=alpha,
         **args_predict

@@ -1,9 +1,3 @@
-import numpy as np
-from typing import Union, List
+from numpy.typing import ArrayLike, NDArray
 
-try:
-    from np.typing import ArrayLike
-except (AttributeError, ModuleNotFoundError):
-    ArrayLike = Union[np.ndarray, List[List[float]]]
-
-__all__ = ["ArrayLike"]
+__all__ = ["ArrayLike", "NDArray"]

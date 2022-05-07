@@ -177,7 +177,7 @@ def test_none_alpha_results(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     np.testing.assert_allclose(y_pred_expected, y_pred)
 
 
-@parametrize_with_checks([MapieRegressor()])  # type: ignore
+@parametrize_with_checks([MapieRegressor()])
 def test_sklearn_compatible_estimator(
     estimator: BaseEstimator, check: Any
 ) -> None:
