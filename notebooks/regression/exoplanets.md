@@ -12,7 +12,7 @@ jupyter:
     name: mapie_local
 ---
 
-# Predicting the mass of exoplanets from their properties
+# Estimating the uncertainties of the masses of exoplanets
 
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/scikit-learn-contrib/MAPIE/blob/exoplanet-notebook/notebooks/regression/exoplanets.ipynb)
