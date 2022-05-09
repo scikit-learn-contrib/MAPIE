@@ -1,4 +1,4 @@
-Classification Notebooks
+Classification notebooks
 ========================
 
 The following examples present you advanced analyses on multi-class classification
