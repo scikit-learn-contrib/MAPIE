@@ -394,39 +394,39 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             (include_last_label is True) or
             (include_last_label == 'randomized')
         ):
-            y_pred_index_last = (
-                np.argmin(
-                    np.ma.masked_less(
-                        y_pred_proba_cumsum,
-                        threshold[np.newaxis, np.newaxis, :] * (1 - EPSILON)
-                    ),
-                    axis=1
-                )
-            )
             # y_pred_index_last = (
             #     np.argmin(
             #         np.ma.masked_less(
-            #             y_pred_proba_cumsum
-            #             - threshold[np.newaxis, np.newaxis, :],
-            #             -EPSILON
+            #             y_pred_proba_cumsum,
+            #             threshold[np.newaxis, np.newaxis, :] * (1 - EPSILON)
             #         ),
             #         axis=1
             #     )
             # )
+            y_pred_index_last = (
+                np.argmin(
+                    np.ma.masked_less(
+                        y_pred_proba_cumsum
+                        - threshold[np.newaxis, np.newaxis, :],
+                        -EPSILON
+                    ),
+                    axis=1
+                )
+            )
         elif (include_last_label is False):
             max_threshold = np.maximum(
                 threshold[np.newaxis, :],
-                np.min(y_pred_proba_cumsum, axis=1) # * (1 + EPSILON)
+                np.min(y_pred_proba_cumsum, axis=1)  # * (1 + EPSILON)
             )
-            y_pred_index_last = np.argmax(
-                np.ma.masked_where(
-                    (
-                        y_pred_proba_cumsum >
-                        max_threshold[:, np.newaxis, :] * (1 - EPSILON)
-                    ),
-                    y_pred_proba_cumsum,
-                ), axis=1
-            )
+            # y_pred_index_last = np.argmax(
+            #     np.ma.masked_where(
+            #         (
+            #             y_pred_proba_cumsum >
+            #             max_threshold[:, np.newaxis, :] * (1 - EPSILON)
+            #         ),
+            #         y_pred_proba_cumsum,
+            #     ), axis=1
+            # )
             y_pred_index_last = np.argmax(
                 np.ma.masked_greater(
                     y_pred_proba_cumsum - max_threshold[:, np.newaxis, :],
@@ -1007,7 +1007,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 # compare the summed prediction sets with (n+1)*(1-alpha)
                 # prediction_sets = np.stack(
                 #     [
-                #         np.less_equal(prediction_sets_summed - quantile, EPSILON)
                 #         prediction_sets_summed <= quantile * (1 + EPSILON)
                 #         for quantile in self.quantiles_
                 #     ], axis=2
@@ -1041,7 +1040,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
             # prediction_sets = np.stack(
             #     [
-            #         y_pred_proba >= y_pred_proba_last[:, :, iq] * (1 - EPSILON)
+            #         y_pred_proba
+            #         >= y_pred_proba_last[:, :, iq] * (1 - EPSILON)
             #         for iq, _ in enumerate(self.quantiles_)
             #     ], axis=2
             # )
