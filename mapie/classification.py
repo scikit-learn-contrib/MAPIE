@@ -403,10 +403,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     axis=1
                 )
             )
+            # y_pred_index_last = (
+            #     np.argmin(
+            #         np.ma.masked_less(
+            #             y_pred_proba_cumsum
+            #             - threshold[np.newaxis, np.newaxis, :],
+            #             -EPSILON
+            #         ),
+            #         axis=1
+            #     )
+            # )
         elif (include_last_label is False):
             max_threshold = np.maximum(
                 threshold[np.newaxis, :],
-                np.min(y_pred_proba_cumsum, axis=1) * (1 + EPSILON)
+                np.min(y_pred_proba_cumsum, axis=1) # * (1 + EPSILON)
             )
             y_pred_index_last = np.argmax(
                 np.ma.masked_where(
@@ -415,6 +425,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                         max_threshold[:, np.newaxis, :] * (1 - EPSILON)
                     ),
                     y_pred_proba_cumsum,
+                ), axis=1
+            )
+            y_pred_index_last = np.argmax(
+                np.ma.masked_greater(
+                    y_pred_proba_cumsum - max_threshold[:, np.newaxis, :],
+                    EPSILON
                 ), axis=1
             )
         else:
@@ -891,20 +907,32 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # Build prediction sets
         if self.method == "score":
             if (cv == "prefit") or (agg_scores == "mean"):
-                prediction_sets = y_pred_proba >= (
-                    1 - (self.quantiles_ * (1 + EPSILON))
+                # prediction_sets = y_pred_proba >= (
+                #     1 - (self.quantiles_ * (1 + EPSILON))
+                # )
+                prediction_sets = np.greater_equal(
+                    y_pred_proba - (1 - self.quantiles_), -EPSILON
                 )
             else:
-                print("score_cv_crossval")
-                y_pred_included = (
-                    1 - y_pred_proba <= (
-                        self.conformity_scores_.ravel() * (1 + EPSILON)
-                    )
+                # y_pred_included = (
+                #     1 - y_pred_proba <= (
+                #         self.conformity_scores_.ravel() * (1 + EPSILON)
+                #     )
+                # ).sum(axis=2)
+                y_pred_included = np.less_equal(
+                    1 - y_pred_proba - self.conformity_scores_.ravel(), EPSILON
                 ).sum(axis=2)
-                # print(y_pred_included)
+                # prediction_sets = np.stack(
+                #     [
+                #         y_pred_included >= _alpha * (n - 1) * (1 - EPSILON)
+                #         for _alpha in alpha_np
+                #     ], axis=2
+                # )
                 prediction_sets = np.stack(
                     [
-                        y_pred_included >= _alpha * (n - 1) * (1 - EPSILON)
+                        np.greater_equal(
+                            y_pred_included - _alpha * (n - 1), -EPSILON
+                        )
                         for _alpha in alpha_np
                     ], axis=2
                 )
@@ -948,13 +976,19 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             # get the prediction set by taking all probabilities
             # above the last one
             if (cv == "prefit") or (agg_scores in ["mean"]):
-                y_pred_included = (
-                    (y_pred_proba >= y_pred_proba_last * (1 - EPSILON))
+                # y_pred_included = (
+                #     (y_pred_proba >= y_pred_proba_last * (1 - EPSILON))
+                # )
+                y_pred_included = np.greater_equal(
+                    y_pred_proba - y_pred_proba_last, - EPSILON
                 )
             else:
-                y_pred_included = (
-                    # ~(y_pred_proba >= y_pred_proba_last - EPSILON)
-                    (y_pred_proba <= y_pred_proba_last * (1 + EPSILON))
+                # y_pred_included = (
+                #     # ~(y_pred_proba >= y_pred_proba_last - EPSILON)
+                #     (y_pred_proba <= y_pred_proba_last * (1 + EPSILON))
+                # )
+                y_pred_included = np.less_equal(
+                    y_pred_proba - y_pred_proba_last, EPSILON
                 )
             # remove last label randomly
             if include_last_label == "randomized":
@@ -971,9 +1005,18 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 # compute the number of times the inequality is verified
                 prediction_sets_summed = y_pred_included.sum(axis=2)
                 # compare the summed prediction sets with (n+1)*(1-alpha)
+                # prediction_sets = np.stack(
+                #     [
+                #         np.less_equal(prediction_sets_summed - quantile, EPSILON)
+                #         prediction_sets_summed <= quantile * (1 + EPSILON)
+                #         for quantile in self.quantiles_
+                #     ], axis=2
+                # )
                 prediction_sets = np.stack(
                     [
-                        prediction_sets_summed <= quantile * (1 + EPSILON)
+                        np.less_equal(
+                            prediction_sets_summed - quantile, EPSILON
+                        )
                         for quantile in self.quantiles_
                     ], axis=2
                 )
@@ -996,9 +1039,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     for iq, _ in enumerate(self.quantiles_)
                 ], axis=2
             )
+            # prediction_sets = np.stack(
+            #     [
+            #         y_pred_proba >= y_pred_proba_last[:, :, iq] * (1 - EPSILON)
+            #         for iq, _ in enumerate(self.quantiles_)
+            #     ], axis=2
+            # )
             prediction_sets = np.stack(
                 [
-                    y_pred_proba >= y_pred_proba_last[:, :, iq] * (1 - EPSILON)
+                    np.greater_equal(
+                        y_pred_proba - y_pred_proba_last[:, :, iq], -EPSILON
+                    )
                     for iq, _ in enumerate(self.quantiles_)
                 ], axis=2
             )
