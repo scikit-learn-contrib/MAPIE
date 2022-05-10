@@ -13,14 +13,21 @@ from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
 from mapie.regression import MapieRegressor
+from mapie.quantile_regression import MapieQuantileRegressor
 
 
-X_toy = np.arange(9).reshape(-1, 1)
-y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2])
+X_toy = np.arange(18).reshape(-1, 1)
+y_toy = np.array(
+    [0, 0, 1, 0, 1, 2, 1, 2, 2, 0, 0, 1, 0, 1, 2, 1, 2, 2]
+    )
+
+
+def MapieSimpleEstimators() -> List[BaseEstimator]:
+    return [MapieRegressor, MapieClassifier]
 
 
 def MapieEstimators() -> List[BaseEstimator]:
-    return [MapieRegressor, MapieClassifier]
+    return [MapieRegressor, MapieClassifier, MapieQuantileRegressor]
 
 
 def MapieDefaultEstimators() -> List[BaseEstimator]:
@@ -88,7 +95,7 @@ def test_default_sample_weight(MapieEstimator: BaseEstimator) -> None:
     )
 
 
-@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+@pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 def test_default_alpha(MapieEstimator: BaseEstimator) -> None:
     """Test default alpha."""
     mapie_estimator = MapieEstimator()
