@@ -90,7 +90,7 @@ class MapieQuantileRegressor(MapieRegressor):
         self, estimator: Optional[RegressorMixin] = None
     ) -> RegressorMixin:
         if estimator is None:
-            return QuantileRegressor()
+            return QuantileRegressor(solver="highs")
         if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
             raise ValueError(
                 "Invalid estimator. "
@@ -187,58 +187,6 @@ class MapieQuantileRegressor(MapieRegressor):
                 "WARNING: Not correct."
             )
 
-    # def _fit_and_predict_oof_model(
-    #     self,
-    #     estimator: RegressorMixin,
-    #     X: ArrayLike,
-    #     y: ArrayLike,
-    #     train_index: ArrayLike,
-    #     val_index: ArrayLike,
-    #     sample_weight: Optional[ArrayLike] = None,
-    #     alpha: Optional[Union[float, ArrayLike]] = None,
-    # ) -> Tuple[Union[RegressorMixin, Tuple[RegressorMixin]],
-    #            Union[NDArray, Tuple[NDArray]], ArrayLike]:
-    #     X_train = _safe_indexing(X, train_index)
-    #     y_train = _safe_indexing(y, train_index)
-    #     X_val = _safe_indexing(X, val_index)
-    #     return_val_index = val_index
-    #     sample_weight_train = None
-    #     return_estimator = fit_estimator(estimator, X_train, y_train,
-    #                                      sample_weight_train)
-    #     return_y_pred = np.array([])
-    #     if _num_samples(X_val) > 0:
-    #         if sample_weight is not None:
-    #             sample_weight_train = _safe_indexing(sample_weight,
-    #                                                  train_index)
-    #         if (isinstance(alpha, list)):
-    #             estimators = []
-    #             y_preds = []
-    #             alpha_copy = alpha.copy()
-    #             alpha_copy.append(0.5)
-    #             for item in alpha_copy:
-    #                 estimator_cloned = clone(estimator)
-    #                 estimator_cloned.alpha = item
-    #                 estimator_cloned_ = fit_estimator(
-    #                         estimator_cloned,
-    #                         X_train,
-    #                         y_train,
-    #                         sample_weight_train)
-    #                 estimators.append(estimator_cloned_)
-    #                 y_pred = estimator_cloned_.predict(X_val)
-    #                 y_preds.append(y_pred)
-    #             return_estimator = tuple(estimators)
-    #             return_y_pred = tuple(y_preds)
-    #             return_val_index = tuple([val_index, val_index, val_index])
-    #         else:
-    #             return_estimator = fit_estimator(
-    #                             estimator,
-    #                             X_train,
-    #                             y_train,
-    #                             sample_weight_train
-    #                         )
-    #             return_y_pred = return_estimator.predict(X_val)
-    #     return return_estimator, return_y_pred, return_val_index
-
     def _check_cv(
         self,
         cv: Optional[Union[int, str, BaseCrossValidator]] = None
@@ -315,53 +263,6 @@ class MapieQuantileRegressor(MapieRegressor):
             # check_nan_in_aposteriori_prediction(y_pred_calib)
             list_y_preds_calib.append(y_pred_calib)
             self.y_calib = y_calib
-        # else:
-        #     cv = cast(BaseCrossValidator, cv)
-        #     num_splits = cv.get_n_splits(X, y)
-        #     self.k_ = np.full(
-        #         shape=(n_samples, num_splits),
-        #         fill_value=np.nan,
-        #         dtype=float,
-        #     )
-        #     pred_matrix = np.full(
-        #         shape=(n_samples, num_splits),
-        #         fill_value=np.nan,
-        #         dtype=float,
-        #     )
-        #     outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-        #         delayed(self._fit_and_predict_oof_model)(
-        #             clone(estimator),
-        #             X,
-        #             y,
-        #             train_index,
-        #             val_index,
-        #             sample_weight,
-        #             alpha_copy
-        #         )
-        #         for train_index, val_index in cv.split(X)
-        #     )
-        #     estimators_, predictions, val_indices = map(
-        #         list, zip(*outputs)
-        #     )
-        #     list_estimators = []
-        #     list_y_preds_calib = []
-        #     self.list_k = []
-        #     for x in np.arange(len(alpha_copy)):
-        #         est = []
-        #         for j, _ in enumerate(estimators_):
-        #             est.append(estimators_[j][x])
-        #         list_estimators.append(est)
-        #         pred_matrix_copy = pred_matrix.copy()
-        #         self.k_copy_ = self.k_.copy()
-        #         for i, val_ind in enumerate(val_indices):
-        #             pred_matrix_copy[val_ind, i] = np.array(
-        #                           predictions[i][x]
-        #                           )
-        #             self.k_copy_[val_ind, i] = 1
-        #         check_nan_in_aposteriori_prediction(pred_matrix_copy)
-        #         y_pred = aggregate_all(agg_function, pred_matrix_copy)
-        #         list_y_preds_calib.append(y_pred)
-        #         self.list_k.append(self.k_copy_)
 
         self.list_y_preds_calib = list_y_preds_calib
         self.list_estimators = list_estimators
