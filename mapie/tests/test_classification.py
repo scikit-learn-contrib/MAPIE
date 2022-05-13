@@ -18,7 +18,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
-# from mapie.metrics import classification_coverage_score
 from mapie._typing import ArrayLike, NDArray
 
 
@@ -512,6 +511,31 @@ class WrongOutputModel:
         return pred
 
 
+class Float32OuputModel:
+
+    def __init__(self, prefit: bool = True):
+        self.trained_ = prefit
+        self.classes_ = [0, 1, 2]
+
+    def fit(self, *args: Any) -> None:
+        """Dummy fit."""
+        self.trained_ = True
+
+    def predict_proba(self, X: NDArray, *args: Any) -> NDArray:
+        probas = np.array([[.9, .05, .05]])
+        proba_out = np.repeat(probas, len(X), axis=0).astype(np.float32)
+        return proba_out
+
+    def predict(self, X: NDArray, *args: Any) -> NDArray:
+        return np.repeat(1, len(X))
+
+    def _get_param_names(self):
+        return ["prefit"]
+
+    def get_params(self, deep=True):
+        return {"prefit": False}
+
+
 def do_nothing(*args: Any) -> None:
     "Mock function that does nothing."
     pass
@@ -977,3 +1001,61 @@ def test_pipeline_compatibility(strategy: str) -> None:
     mapie = MapieClassifier(estimator=pipe, **STRATEGIES[strategy][0])
     mapie.fit(X, y)
     mapie.predict(X)
+
+
+def test_pred_proba_float64():
+    y_pred_proba = np.random.random((1000, 10)).astype(np.float32)
+    sum_of_rows = y_pred_proba.sum(axis=1)
+    normalized_array = y_pred_proba / sum_of_rows[:, np.newaxis]
+    mapie = MapieClassifier()
+    checked_normalized_array = mapie._check_proba_normalized(normalized_array)
+
+    assert checked_normalized_array.dtype == 'float64'
+
+
+def test_classif_float32_prefit():
+    X_cal, y_cal = make_classification(
+        n_samples=20, n_features=20, n_redundant=0,
+        n_informative=20, n_classes=3
+    )
+    X_test, _ = make_classification(
+        n_samples=20, n_features=20, n_redundant=0,
+        n_informative=20, n_classes=3
+    )
+    alpha = .9
+    dummy_classif = Float32OuputModel()
+
+    mapie = MapieClassifier(
+        estimator=dummy_classif, method="naive",
+        cv="prefit", random_state=42
+    )
+    mapie.fit(X_cal, y_cal)
+    _, yps = mapie.predict(X_test, alpha=alpha, include_last_label=True)
+
+    assert (
+        np.repeat([[True, False, False]], 20, axis=0)[:, :, np.newaxis] == yps
+    ).all()
+
+
+def test_classif_float32_cv():
+    X_cal, y_cal = make_classification(
+        n_samples=20, n_features=20, n_redundant=0,
+        n_informative=20, n_classes=3
+    )
+    X_test, _ = make_classification(
+        n_samples=20, n_features=20, n_redundant=0,
+        n_informative=20, n_classes=3
+    )
+    alpha = .9
+    dummy_classif = Float32OuputModel(prefit=False)
+
+    mapie = MapieClassifier(
+        estimator=dummy_classif, method="naive",
+        random_state=42
+    )
+    mapie.fit(X_cal, y_cal)
+    _, yps = mapie.predict(X_test, alpha=alpha, include_last_label=True)
+
+    assert (
+        np.repeat([[True, False, False]], 20, axis=0)[:, :, np.newaxis] == yps
+    ).all()
