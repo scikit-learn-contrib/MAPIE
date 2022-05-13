@@ -398,7 +398,14 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
     WARNING: at least one point of training set belongs to every resamplings.
     Increase the number of resamplings
     """
-    if np.any(np.all(np.isnan(X), axis=1), axis=0):
+    if len(X.shape) == 1:
+        if np.any(np.all(np.isnan(X)), axis=0):
+            warnings.warn(
+                "WARNING: at least one point of training set "
+                + "belongs to every resamplings.\n"
+                "Increase the number of resamplings"
+            )
+    elif np.any(np.all(np.isnan(X), axis=1), axis=0):
         warnings.warn(
             "WARNING: at least one point of training set "
             + "belongs to every resamplings.\n"
