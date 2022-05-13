@@ -6,8 +6,8 @@ import numpy as np
 from ._typing import ArrayLike
 
 
-class ResidualScore(metaclass=ABCMeta):
-    """Base class for residual scores.
+class ConformityScore(metaclass=ABCMeta):
+    """Base class for conformity scores.
 
     Warning: This class should not be used directly.
     Use derived classes instead.
@@ -23,20 +23,20 @@ class ResidualScore(metaclass=ABCMeta):
         Parameters
         ----------
         sym : bool
-            Whether to consider the residual score as symmetrical or not.
+            Whether to consider the conformity score as symmetrical or not.
         consistency_check : bool, optional
             Whether to check the consistency between the following methods:
             - get_observed_value and
-            - get_signed_residual_scores
+            - get_signed_conformity_scores
             by default True.
         eps : float, optional
             Threshold to consider when checking the consistency between the
             following methods:
             - get_observed_value and
-            - get_signed_residual_scores
+            - get_signed_conformity_scores
             The following equality must be verified:
             self.get_observed_value(
-                y_pred, self.get_residual_score(y, y_pred)
+                y_pred, self.get_conformity_scores(y, y_pred)
             ) == y
             It should be specified if consistency_check==True.
             by default sys.float_info.epsilon.
@@ -46,16 +46,16 @@ class ResidualScore(metaclass=ABCMeta):
         self.consistency_check = consistency_check
 
     @abstractmethod
-    def get_signed_residual_scores(
+    def get_signed_conformity_scores(
         self,
         y: ArrayLike,
         y_pred: ArrayLike,
     ) -> ArrayLike:
-        """Placeholder for get_signed_residual_scores.
+        """Placeholder for get_signed_conformity_scores.
         Subclasses should implement this method!
 
-        Compute the unsigned residual scores from the predicted values and the
-        observed ones.
+        Compute the unsigned conformity scores from the predicted values
+        and the observed ones.
 
         Parameters
         ----------
@@ -67,15 +67,15 @@ class ResidualScore(metaclass=ABCMeta):
         Returns
         -------
         ArrayLike
-            Unsigned residual scores.
+            Unsigned conformity scores.
         """
 
-    def get_residual_scores(
+    def get_conformity_scores(
         self,
         y: ArrayLike,
         y_pred: ArrayLike,
     ) -> ArrayLike:
-        """Get the residual score considering the symmetrical property if so.
+        """Get the conformity score considering the symmetrical property if so.
 
         Parameters
         ----------
@@ -87,29 +87,29 @@ class ResidualScore(metaclass=ABCMeta):
         Returns
         -------
         ArrayLike
-            Residual scores.
+            Conformity scores.
         """
-        residuals = self.get_signed_residual_scores(y, y_pred)
+        conformity_scores = self.get_signed_conformity_scores(y, y_pred)
         if self.sym:
-            residuals = np.abs(residuals)
-        return residuals
+            conformity_scores = np.abs(conformity_scores)
+        return conformity_scores
 
     @abstractmethod
     def get_observed_value(
-        self, y_pred: ArrayLike, residual_scores: ArrayLike
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> ArrayLike:
         """Placeholder for get_observed_value.
         Subclasses should implement this method!
 
         Compute the observed values from the predicted values and the
-        residual scores.
+        conformity scores.
 
         Parameters
         ----------
         y_pred : ArrayLike
             Predicted values.
-        residual_scores : ArrayLike
-            Residual scores.
+        conformity_scores : ArrayLike
+            Conformity scores.
 
         Returns
         -------
@@ -119,11 +119,11 @@ class ResidualScore(metaclass=ABCMeta):
 
     def check_consistency(self, y: ArrayLike, y_pred: ArrayLike) -> None:
         """Check consistency between the following methods:
-        get_observed_value and get_signed_residual_scores
+        get_observed_value and get_signed_conformity_scores
 
         The following equality should be verified:
         self.get_observed_value(
-            y_pred, self.get_residual_score(y, y_pred)
+            y_pred, self.get_conformity_scores(y, y_pred)
         ) == y
 
         Parameters
@@ -139,38 +139,38 @@ class ResidualScore(metaclass=ABCMeta):
             If the two methods are not consistent.
         """
         if self.consistency_check:
-            residual_scores = self.get_signed_residual_scores(y, y_pred)
-            abs_residuals = np.abs(
-                self.get_observed_value(y_pred, residual_scores) - y
+            conformity_scores = self.get_signed_conformity_scores(y, y_pred)
+            abs_conformity_scores = np.abs(
+                self.get_observed_value(y_pred, conformity_scores) - y
             )
-            max_res = np.max(abs_residuals)
-            if (abs_residuals > self.eps).any():
+            max_conf_score = np.max(abs_conformity_scores)
+            if (abs_conformity_scores > self.eps).any():
                 raise ValueError(
-                    "The two functions get_residual_score and "
-                    "get_observed_value of the ResidualScore class "
+                    "The two functions get_conformity_scores and "
+                    "get_observed_value of the ConformityScore class "
                     "are not consistent. "
                     "The following equation must be verified: "
-                    "self.get_observed_value(y_pred, self.get_residual_score(y, y_pred)) == y. "  # noqa: E501
-                    f"The maximum residual is {max_res}."
+                    "self.get_observed_value(y_pred, self.get_conformity_scores(y, y_pred)) == y. "  # noqa: E501
+                    f"The maximum conformity score is {max_conf_score}."
                     "The eps attribute may need to be increased if you are "
                     "sure that the two methods are consistent."
                 )
 
 
-class AbsoluteResidualScore(ResidualScore):
-    """Absolute residual.
+class AbsoluteConformityScore(ConformityScore):
+    """Absolute conformity score.
 
-    The unsigned residual score = y - y_pred.
-    The residual score is symmetrical.
+    The unsigned conformity score = y - y_pred.
+    The conformity score is symmetrical.
 
     This is appropriate when the confidence interval is symmetrical and
     its range is approximatively the same over the range of predicted values.
     """
 
     def __init__(self) -> None:
-        ResidualScore.__init__(self, True, consistency_check=False)
+        ConformityScore.__init__(self, True, consistency_check=False)
 
-    def get_signed_residual_scores(
+    def get_signed_conformity_scores(
         self,
         y: ArrayLike,
         y_pred: ArrayLike,
@@ -178,25 +178,25 @@ class AbsoluteResidualScore(ResidualScore):
         return y - y_pred
 
     def get_observed_value(
-        self, y_pred: ArrayLike, residual_scores: ArrayLike
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> ArrayLike:
-        return y_pred + residual_scores
+        return y_pred + conformity_scores
 
 
-class GammaResidualScore(ResidualScore):
-    """Gamma residual.
+class GammaConformityScore(ConformityScore):
+    """Gamma conformity score.
 
-    The unsigned residual score = (y - y_pred) / y_pred.
-    The residual score is not symmetrical.
+    The unsigned conformity score = (y - y_pred) / y_pred.
+    The conformity score is not symmetrical.
 
     This is appropriate when the confidence interval is not symmetrical and
     its range depends on the predicted values.
     """
 
     def __init__(self) -> None:
-        ResidualScore.__init__(self, False, consistency_check=False)
+        ConformityScore.__init__(self, False, consistency_check=False)
 
-    def get_signed_residual_scores(
+    def get_signed_conformity_scores(
         self,
         y: ArrayLike,
         y_pred: ArrayLike,
@@ -204,6 +204,6 @@ class GammaResidualScore(ResidualScore):
         return (y - y_pred) / y_pred
 
     def get_observed_value(
-        self, y_pred: ArrayLike, residual_scores: ArrayLike
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> ArrayLike:
-        return y_pred * (1 + residual_scores)
+        return y_pred * (1 + conformity_scores)

@@ -19,7 +19,7 @@ from sklearn.utils.validation import (
 
 from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D
-from .residual_scores import AbsoluteResidualScore, ResidualScore
+from .conformity_scores import AbsoluteConformityScore, ConformityScore
 from .subsample import Subsample
 from .utils import (
     check_alpha,
@@ -36,11 +36,11 @@ from .utils import (
 
 class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     """
-    Prediction interval with out-of-fold residuals.
+    Prediction interval with out-of-fold conformity scores.
 
     This class implements the jackknife+ strategy and its variations
     for estimating prediction intervals on single-output data. The
-    idea is to evaluate out-of-fold residuals on hold-out validation
+    idea is to evaluate out-of-fold conformity scores on hold-out validation
     sets and to deduce valid confidence intervals with strong theoretical
     guarantees.
 
@@ -55,16 +55,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         Method to choose for prediction interval estimates.
         Choose among:
 
-        - "naive", based on training set residuals,
-        - "base", based on validation sets residuals,
-        - "plus", based on validation residuals and testing predictions,
-        - "minmax", based on validation residuals and testing predictions
-          (min/max among cross-validation clones).
+        - "naive", based on training set conformity scores,
+        - "base", based on validation sets conformity scores,
+        - "plus", based on validation conformity scores and
+          testing predictions,
+        - "minmax", based on validation conformity scores and
+          testing predictions (min/max among cross-validation clones).
 
         By default "plus".
 
     cv: Optional[Union[int, str, BaseCrossValidator]]
-        The cross-validation strategy for computing residuals.
+        The cross-validation strategy for computing conformity scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
 
@@ -80,11 +81,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
-          for computing residuals only.
-          At prediction time, quantiles of these residuals are used to provide
-          a prediction interval with fixed width.
+          for computing conformity scores only.
+          At prediction time, quantiles of these conformity scores are used
+          to provide a prediction interval with fixed width.
           The user has to take care manually that data for model fitting and
-          residual estimate are disjoint.
+          conformity scores estimate are disjoint.
 
         By default ``None``.
 
@@ -143,8 +144,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     estimators_ : list
         List of out-of-folds estimators.
 
-    residuals_ : ArrayLike of shape (n_samples_train,)
-        Residuals between ``y_train`` and ``y_pred``.
+    conformity_scores_ : ArrayLike of shape (n_samples_train,)
+        Conformity scores between ``y_train`` and ``y_pred``.
 
     k_ : ArrayLike
         - Array of nans, of shape (len(y), 1) if cv is ``"prefit"``
@@ -174,7 +175,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> import numpy as np
     >>> from mapie.regression import MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
-    >>> from mapie.residual_scores import AbsoluteResidualScore
+    >>> from mapie.conformity_scores import AbsoluteConformityScore
     >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> mapie_reg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
@@ -196,8 +197,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "single_estimator_",
         "estimators_",
         "k_",
-        "residual_score_",
-        "residual_scores_",
+        "conformity_score_",
+        "conformity_scores_",
         "n_features_in_",
         "n_samples_",
     ]
@@ -451,15 +452,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self,
         X: ArrayLike,
         y: ArrayLike,
-        residual_score: ResidualScore = AbsoluteResidualScore(),
+        conformity_score: ConformityScore = AbsoluteConformityScore(),
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieRegressor:
         """
-        Fit estimator and compute residuals used for prediction intervals.
+        Fit estimator and compute conformity scores used for
+        prediction intervals.
         Fit the base estimator under the ``single_estimator_`` attribute.
         Fit all cross-validated estimator clones
         and rearrange them into a list, the ``estimators_`` attribute.
-        Out-of-fold residuals are stored under the ``residuals_`` attribute.
+        Out-of-fold conformity scores are stored under
+        the ``conformity_scores_`` attribute.
 
         Parameters
         ----------
@@ -469,16 +472,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y : ArrayLike of shape (n_samples,)
             Training labels.
 
-        residual_score : Optional[ResidualScore]
-            ResidualScore instance.
+        conformity_score : Optional[ConformityScore]
+            ConformityScore instance.
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
             If None, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
+            before the fitting process and hence have no conformity scores.
+            If weights are non-uniform,
+            conformity scores are still uniformly weighted.
 
             By default ``None``.
 
@@ -555,9 +559,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        residual_score.check_consistency(y, y_pred)
-        self.residual_scores_ = residual_score.get_residual_scores(y, y_pred)
-        self.residual_score_ = residual_score
+        conformity_score.check_consistency(y, y_pred)
+        self.conformity_scores_ = conformity_score.get_conformity_scores(
+            y, y_pred
+        )
+        self.conformity_score_ = conformity_score
 
         return self
 
@@ -569,13 +575,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     ) -> Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]:
         """
         Predict target on new samples with confidence intervals.
-        Residuals from the training set and predictions from the model clones
-        are central to the computation.
+        Conformity scores from the training set and predictions
+        from the model clones are central to the computation.
         Prediction Intervals for a given ``alpha`` are deduced from either
 
-        - quantiles of residuals (naive and base methods),
-        - quantiles of (predictions +/- residuals) (plus method),
-        - quantiles of (max/min(predictions) +/- residuals) (minmax method).
+        - quantiles of conformity scores (naive and base methods),
+        - quantiles of (predictions +/- conformity scores) (plus method),
+        - quantiles of (max/min(predictions) +/- conformity scores)
+        (minmax method).
 
         Parameters
         ----------
@@ -626,33 +633,35 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return np.array(y_pred)
         else:
             alpha_ = cast(ArrayLike, alpha_)
-            check_alpha_and_n_samples(alpha_, self.residual_scores_.shape[0])
+            check_alpha_and_n_samples(alpha_, self.conformity_scores_.shape[0])
             if self.method in ["naive", "base"] or self.cv == "prefit":
-                if self.residual_score_.sym:
-                    residual_scores_q_low_bound = -np.quantile(
-                        self.residual_scores_,
+                if self.conformity_score_.sym:
+                    conformity_scores_q_low_bound = -np.quantile(
+                        self.conformity_scores_,
                         1 - alpha_,
                         interpolation="higher",
                     )
-                    residual_scores_q_up_bound = -residual_scores_q_low_bound
+                    conformity_scores_q_up_bound = (
+                        -conformity_scores_q_low_bound
+                    )
                 else:
                     alpha_lower_bound = alpha_ / 2
                     alpha_upper_bound = 1 - alpha_ / 2
-                    residual_scores_q_low_bound = np.quantile(
-                        self.residual_scores_,
+                    conformity_scores_q_low_bound = np.quantile(
+                        self.conformity_scores_,
                         alpha_lower_bound,
                         interpolation="higher",
                     )
-                    residual_scores_q_up_bound = np.quantile(
-                        self.residual_scores_,
+                    conformity_scores_q_up_bound = np.quantile(
+                        self.conformity_scores_,
                         alpha_upper_bound,
                         interpolation="higher",
                     )
-                y_pred_low = self.residual_score_.get_observed_value(
-                    y_pred[:, np.newaxis], residual_scores_q_low_bound
+                y_pred_low = self.conformity_score_.get_observed_value(
+                    y_pred[:, np.newaxis], conformity_scores_q_low_bound
                 )
-                y_pred_up = self.residual_score_.get_observed_value(
-                    y_pred[:, np.newaxis], residual_scores_q_up_bound
+                y_pred_up = self.conformity_score_.get_observed_value(
+                    y_pred[:, np.newaxis], conformity_scores_q_up_bound
                 )
             else:
                 y_pred_multi = np.column_stack(
@@ -673,50 +682,50 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
 
                 if self.method == "plus":
-                    if self.residual_score_.sym:
-                        y_pred_multi_with_residuals_lower_bound = (
-                            self.residual_score_.get_observed_value(
-                                y_pred_multi, -self.residual_scores_
+                    if self.conformity_score_.sym:
+                        y_pred_multi_with_conformity_scores_lower_bound = (
+                            self.conformity_score_.get_observed_value(
+                                y_pred_multi, -self.conformity_scores_
                             )
                         )
-                        y_pred_multi_with_residuals_upper_bound = (
-                            self.residual_score_.get_observed_value(
-                                y_pred_multi, self.residual_scores_
+                        y_pred_multi_with_conformity_scores_upper_bound = (
+                            self.conformity_score_.get_observed_value(
+                                y_pred_multi, self.conformity_scores_
                             )
                         )
                     else:
-                        y_pred_multi_with_residuals_lower_bound = (
-                            self.residual_score_.get_observed_value(
-                                y_pred_multi, self.residual_scores_
+                        y_pred_multi_with_conformity_scores_lower_bound = (
+                            self.conformity_score_.get_observed_value(
+                                y_pred_multi, self.conformity_scores_
                             )
                         )
-                        y_pred_multi_with_residuals_upper_bound = (
-                            y_pred_multi_with_residuals_lower_bound
+                        y_pred_multi_with_conformity_scores_upper_bound = (
+                            y_pred_multi_with_conformity_scores_lower_bound
                         )
 
                 if self.method == "minmax":
                     lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
                     upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
-                    if self.residual_score_.sym:
-                        y_pred_multi_with_residuals_lower_bound = (
-                            self.residual_score_.get_observed_value(
-                                lower_bounds, -self.residual_scores_
+                    if self.conformity_score_.sym:
+                        y_pred_multi_with_conformity_scores_lower_bound = (
+                            self.conformity_score_.get_observed_value(
+                                lower_bounds, -self.conformity_scores_
                             )
                         )
-                        y_pred_multi_with_residuals_upper_bound = (
-                            self.residual_score_.get_observed_value(
-                                upper_bounds, self.residual_scores_
+                        y_pred_multi_with_conformity_scores_upper_bound = (
+                            self.conformity_score_.get_observed_value(
+                                upper_bounds, self.conformity_scores_
                             )
                         )
                     else:
-                        y_pred_multi_with_residuals_lower_bound = (
-                            self.residual_score_.get_observed_value(
-                                lower_bounds, self.residual_scores_
+                        y_pred_multi_with_conformity_scores_lower_bound = (
+                            self.conformity_score_.get_observed_value(
+                                lower_bounds, self.conformity_scores_
                             )
                         )
-                        y_pred_multi_with_residuals_upper_bound = (
-                            self.residual_score_.get_observed_value(
-                                upper_bounds, self.residual_scores_
+                        y_pred_multi_with_conformity_scores_upper_bound = (
+                            self.conformity_score_.get_observed_value(
+                                upper_bounds, self.conformity_scores_
                             )
                         )
 
@@ -724,7 +733,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     [
                         np.quantile(
                             ma.masked_invalid(
-                                y_pred_multi_with_residuals_lower_bound
+                                y_pred_multi_with_conformity_scores_lower_bound
                             ),
                             _alpha,
                             axis=1,
@@ -737,7 +746,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     [
                         np.quantile(
                             ma.masked_invalid(
-                                y_pred_multi_with_residuals_upper_bound
+                                y_pred_multi_with_conformity_scores_upper_bound
                             ),
                             1 - _alpha,
                             axis=1,
