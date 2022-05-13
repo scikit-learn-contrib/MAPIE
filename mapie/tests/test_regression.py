@@ -381,7 +381,7 @@ def test_results_prefit() -> None:
 
 
 def test_not_enough_resamplings() -> None:
-    """Test that a warning is raised if at least one residual is nan."""
+    """Test that a warning is raised if at least one conformity score is nan."""
     with pytest.warns(UserWarning, match=r"WARNING: at least one point of*"):
         mapie_reg = MapieRegressor(
             cv=Subsample(n_resamplings=1), agg_function="mean"
@@ -390,7 +390,7 @@ def test_not_enough_resamplings() -> None:
 
 
 def test_no_agg_fx_specified_with_subsample() -> None:
-    """Test that a warning is raised if at least one residual is nan."""
+    """Test that a warning is raised if at least one conformity score is nan."""
     with pytest.raises(
         ValueError, match=r"You need to specify an aggregation*"
     ):

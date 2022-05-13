@@ -4,7 +4,7 @@ Estimating prediction intervals of time series forecast
 =======================================================
 This example uses :class:`mapie.regression.MapieRegressor` to estimate
 prediction intervals associated with time series forecast. We use the
-standard cross-validation approach to estimate residuals and associated
+standard cross-validation approach to estimate conformity scores and associated
 prediction intervals.
 
 We use here the Victoria electricity demand dataset used in the book
@@ -23,10 +23,10 @@ We consider the standard CV+ resampling method.
 We wish to emphasize one main limitation with this example.
 We use a standard cross-validation in Mapie to estimate the prediction
 intervals, through the `sklearn.model_selection.KFold()` object.
-Residuals are therefore estimated using models trained on data with higher
+Conformity scores are therefore estimated using models trained on data with higher
 indices than the validation data, which is inappropriate for time-series data.
 Howerver, using a `sklearn.model_selection.TimeSeriesSplit` cross validation
-object for estimating the residuals breaks the theoretical guarantees of the
+object for estimating the conformity scores breaks the theoretical guarantees of the
 Jackknife+ and CV+ methods.
 """
 import pandas as pd
