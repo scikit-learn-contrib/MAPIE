@@ -354,7 +354,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             err_msg="The sum of the scores is not equal to one.",
             rtol=1e-5
         )
-        return y_pred_proba
+        return y_pred_proba.astype(np.float64)
 
     def _get_last_index_included(
         self,
@@ -554,6 +554,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 estimator.classes_,
                 y_pred_proba
             )
+        y_pred_proba = self._check_proba_normalized(y_pred_proba)
         return y_pred_proba
 
     def _fit_and_predict_oof_model(
@@ -620,6 +621,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
         if _num_samples(X_val) > 0:
             y_pred_proba = self._predict_oof_model(estimator, X_val)
+            y_pred_proba = self._check_proba_normalized(y_pred_proba)
         else:
             y_pred_proba = np.array([])
         val_id = np.full_like(y_val, k, dtype=int)
