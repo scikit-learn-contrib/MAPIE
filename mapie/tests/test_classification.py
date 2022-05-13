@@ -473,11 +473,11 @@ class ImageClassifier:
         )
         self.classes_ = self.y_calib
 
-    def fit(self, X: ArrayLike, y: ArrayLike) -> ImageClassifier:
+    def fit(self, *args: Any) -> ImageClassifier:
         self.fitted_ = True
         return self
 
-    def predict(self, X: ArrayLike) -> NDArray:
+    def predict(self, *args: Any) -> NDArray:
         return np.array([1, 2, 1])
 
     def predict_proba(self, X: ArrayLike) -> NDArray:
@@ -532,7 +532,7 @@ class Float32OuputModel:
     def _get_param_names(self):
         return ["prefit"]
 
-    def get_params(self, deep=True):
+    def get_params(self, *args: Any, **kwargs: Any):
         return {"prefit": False}
 
 
@@ -1004,6 +1004,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
 
 
 def test_pred_proba_float64():
+    """Check that the funtion _check_proba_normalized returns float64."""
     y_pred_proba = np.random.random((1000, 10)).astype(np.float32)
     sum_of_rows = y_pred_proba.sum(axis=1)
     normalized_array = y_pred_proba / sum_of_rows[:, np.newaxis]
@@ -1014,6 +1015,8 @@ def test_pred_proba_float64():
 
 
 def test_classif_float32_prefit():
+    """Check that by returning float64 arrays there are not
+    empty predictions sets with naive method using prefit"""
     X_cal, y_cal = make_classification(
         n_samples=20, n_features=20, n_redundant=0,
         n_informative=20, n_classes=3
@@ -1038,6 +1041,8 @@ def test_classif_float32_prefit():
 
 
 def test_classif_float32_cv():
+    """Check that by returning float64 arrays there are not
+    empty predictions sets with naive method using CrossVal"""
     X_cal, y_cal = make_classification(
         n_samples=20, n_features=20, n_redundant=0,
         n_informative=20, n_classes=3
