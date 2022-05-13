@@ -10,7 +10,12 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
+from sklearn.utils.validation import (
+    _check_y,
+    _num_samples,
+    check_is_fitted,
+    indexable,
+)
 
 from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D
@@ -231,7 +236,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
 
-    def _check_agg_function(self, agg_function: Optional[str] = None) -> Optional[str]:
+    def _check_agg_function(
+        self, agg_function: Optional[str] = None
+    ) -> Optional[str]:
         """
         Check if ``agg_function`` is correct, and consistent with other
         arguments.
@@ -390,7 +397,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             estimator = fit_estimator(estimator, X_train, y_train)
         else:
             sample_weight_train = _safe_indexing(sample_weight, train_index)
-            estimator = fit_estimator(estimator, X_train, y_train, sample_weight_train)
+            estimator = fit_estimator(
+                estimator, X_train, y_train, sample_weight_train
+            )
         if _num_samples(X_val) > 0:
             y_pred = estimator.predict(X_val)
         else:
@@ -425,7 +434,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
         if self.cv == "prefit":
             raise ValueError(
-                "There should not be aggregation of predictions if cv is 'prefit'"
+                "There should not be aggregation of predictions if cv is "
+                "'prefit'"
             )
         # To aggregate with mean() the aggregation coud be done
         # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
@@ -495,7 +505,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
             self.n_samples_ = [_num_samples(X)]
-            self.k_ = np.full(shape=(len(y), 1), fill_value=np.nan, dtype=float)
+            self.k_ = np.full(
+                shape=(len(y), 1), fill_value=np.nan, dtype=float
+            )
         else:
             self.k_ = np.full(
                 shape=(len(y), cv.get_n_splits(X, y)),  # type: ignore
@@ -528,9 +540,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     )
                     for k, (train_index, val_index) in enumerate(cv.split(X))
                 )
-                self.estimators_, predictions, val_indices = map(list, zip(*outputs))
+                self.estimators_, predictions, val_indices = map(
+                    list, zip(*outputs)
+                )
 
-                self.n_samples_ = [np.array(pred).shape[0] for pred in predictions]
+                self.n_samples_ = [
+                    np.array(pred).shape[0] for pred in predictions
+                ]
 
                 for i, val_ind in enumerate(val_indices):
                     pred_matrix[val_ind, i] = np.array(predictions[i]).ravel()
@@ -614,17 +630,23 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             if self.method in ["naive", "base"] or self.cv == "prefit":
                 if self.residual_score_.sym:
                     residual_scores_q_low_bound = -np.quantile(
-                        self.residual_scores_, 1 - alpha_, interpolation="higher"
+                        self.residual_scores_,
+                        1 - alpha_,
+                        interpolation="higher",
                     )
                     residual_scores_q_up_bound = -residual_scores_q_low_bound
                 else:
                     alpha_lower_bound = alpha_ / 2
                     alpha_upper_bound = 1 - alpha_ / 2
                     residual_scores_q_low_bound = np.quantile(
-                        self.residual_scores_, alpha_lower_bound, interpolation="higher"
+                        self.residual_scores_,
+                        alpha_lower_bound,
+                        interpolation="higher",
                     )
                     residual_scores_q_up_bound = np.quantile(
-                        self.residual_scores_, alpha_upper_bound, interpolation="higher"
+                        self.residual_scores_,
+                        alpha_upper_bound,
+                        interpolation="higher",
                     )
                 y_pred_low = self.residual_score_.get_observed_value(
                     y_pred[:, np.newaxis], residual_scores_q_low_bound
@@ -633,7 +655,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                     y_pred[:, np.newaxis], residual_scores_q_up_bound
                 )
             else:
-                y_pred_multi = np.column_stack([e.predict(X) for e in self.estimators_])
+                y_pred_multi = np.column_stack(
+                    [e.predict(X) for e in self.estimators_]
+                )
 
                 # At this point, y_pred_multi is of shape
                 # (n_samples_test, n_estimators_).
@@ -699,7 +723,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_low = np.column_stack(
                     [
                         np.quantile(
-                            ma.masked_invalid(y_pred_multi_with_residuals_lower_bound),
+                            ma.masked_invalid(
+                                y_pred_multi_with_residuals_lower_bound
+                            ),
                             _alpha,
                             axis=1,
                             interpolation="lower",
@@ -710,7 +736,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_up = np.column_stack(
                     [
                         np.quantile(
-                            ma.masked_invalid(y_pred_multi_with_residuals_upper_bound),
+                            ma.masked_invalid(
+                                y_pred_multi_with_residuals_upper_bound
+                            ),
                             1 - _alpha,
                             axis=1,
                             interpolation="higher",

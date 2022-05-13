@@ -26,18 +26,20 @@ class ResidualScore(metaclass=ABCMeta):
             Whether to consider the residual score as symmetrical or not.
         consistency_check : bool, optional
             Whether to check the consistency between the following methods:
-            - get_observed_value and 
+            - get_observed_value and
             - get_signed_residual_scores
             by default True.
         eps : float, optional
-            Threshold to consider when checking the consistency between the 
+            Threshold to consider when checking the consistency between the
             following methods:
-            - get_observed_value and 
+            - get_observed_value and
             - get_signed_residual_scores
             The following equality must be verified:
-            self.get_observed_value(y_pred, self.get_residual_score(y, y_pred)) == y
+            self.get_observed_value(
+                y_pred, self.get_residual_score(y, y_pred)
+            ) == y
             It should be specified if consistency_check==True.
-            by default sys.float_info.epsilon. 
+            by default sys.float_info.epsilon.
         """
         self.sym = sym
         self.eps = eps
@@ -45,7 +47,9 @@ class ResidualScore(metaclass=ABCMeta):
 
     @abstractmethod
     def get_signed_residual_scores(
-        self, y: ArrayLike, y_pred: ArrayLike,
+        self,
+        y: ArrayLike,
+        y_pred: ArrayLike,
     ) -> ArrayLike:
         """Placeholder for get_signed_residual_scores.
         Subclasses should implement this method!
@@ -66,7 +70,11 @@ class ResidualScore(metaclass=ABCMeta):
             Unsigned residual scores.
         """
 
-    def get_residual_scores(self, y: ArrayLike, y_pred: ArrayLike,) -> ArrayLike:
+    def get_residual_scores(
+        self,
+        y: ArrayLike,
+        y_pred: ArrayLike,
+    ) -> ArrayLike:
         """Get the residual score considering the symmetrical property if so.
 
         Parameters
@@ -114,7 +122,9 @@ class ResidualScore(metaclass=ABCMeta):
         get_observed_value and get_signed_residual_scores
 
         The following equality should be verified:
-        self.get_observed_value(y_pred, self.get_residual_score(y, y_pred)) == y
+        self.get_observed_value(
+            y_pred, self.get_residual_score(y, y_pred)
+        ) == y
 
         Parameters
         ----------
@@ -130,17 +140,20 @@ class ResidualScore(metaclass=ABCMeta):
         """
         if self.consistency_check:
             residual_scores = self.get_signed_residual_scores(y, y_pred)
-            abs_residuals = np.abs(self.get_observed_value(y_pred, residual_scores) - y)
+            abs_residuals = np.abs(
+                self.get_observed_value(y_pred, residual_scores) - y
+            )
             max_res = np.max(abs_residuals)
             if (abs_residuals > self.eps).any():
                 raise ValueError(
-                    "The two functions get_residual_score and get_observed_value "
-                    "of the ResidualScore class are not consistent. "
+                    "The two functions get_residual_score and "
+                    "get_observed_value of the ResidualScore class "
+                    "are not consistent. "
                     "The following equation must be verified: "
                     "self.get_observed_value(y_pred, self.get_residual_score(y, y_pred)) == y. "  # noqa: E501
                     f"The maximum residual is {max_res}."
-                    "The eps attribute may need to be increased if you are sure "
-                    "that the two methods are consistent."
+                    "The eps attribute may need to be increased if you are "
+                    "sure that the two methods are consistent."
                 )
 
 
@@ -150,15 +163,17 @@ class AbsoluteResidualScore(ResidualScore):
     The unsigned residual score = y - y_pred.
     The residual score is symmetrical.
 
-    This is appropriate when the confidence interval is symmetrical and its range
-    is approximatively the same over the range of predicted values.
+    This is appropriate when the confidence interval is symmetrical and
+    its range is approximatively the same over the range of predicted values.
     """
 
     def __init__(self) -> None:
         ResidualScore.__init__(self, True, consistency_check=False)
 
     def get_signed_residual_scores(
-        self, y: ArrayLike, y_pred: ArrayLike,
+        self,
+        y: ArrayLike,
+        y_pred: ArrayLike,
     ) -> ArrayLike:
         return y - y_pred
 
@@ -174,15 +189,17 @@ class GammaResidualScore(ResidualScore):
     The unsigned residual score = (y - y_pred) / y_pred.
     The residual score is not symmetrical.
 
-    This is appropriate when the confidence interval is not symmetrical and its range
-    depends on the predicted values.
+    This is appropriate when the confidence interval is not symmetrical and
+    its range depends on the predicted values.
     """
 
     def __init__(self) -> None:
         ResidualScore.__init__(self, False, consistency_check=False)
 
     def get_signed_residual_scores(
-        self, y: ArrayLike, y_pred: ArrayLike,
+        self,
+        y: ArrayLike,
+        y_pred: ArrayLike,
     ) -> ArrayLike:
         return (y - y_pred) / y_pred
 
