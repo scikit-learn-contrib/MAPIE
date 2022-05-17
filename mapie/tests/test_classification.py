@@ -1004,59 +1004,40 @@ def test_pipeline_compatibility(strategy: str) -> None:
 
 
 def test_pred_proba_float64():
-    """Check that the funtion _check_proba_normalized returns float64."""
+    """Check that the method _check_proba_normalized returns float64."""
     y_pred_proba = np.random.random((1000, 10)).astype(np.float32)
     sum_of_rows = y_pred_proba.sum(axis=1)
     normalized_array = y_pred_proba / sum_of_rows[:, np.newaxis]
     mapie = MapieClassifier()
     checked_normalized_array = mapie._check_proba_normalized(normalized_array)
 
-    assert checked_normalized_array.dtype == 'float64'
+    assert checked_normalized_array.dtype == "float64"
 
 
-def test_classif_float32_prefit():
+@pytest.mark.parametrize("cv", ["prefit", None])
+def test_classif_float32(cv):
     """Check that by returning float64 arrays there are not
     empty predictions sets with naive method using prefit"""
     X_cal, y_cal = make_classification(
-        n_samples=20, n_features=20, n_redundant=0,
-        n_informative=20, n_classes=3
+        n_samples=20,
+        n_features=20,
+        n_redundant=0,
+        n_informative=20,
+        n_classes=3
     )
     X_test, _ = make_classification(
-        n_samples=20, n_features=20, n_redundant=0,
-        n_informative=20, n_classes=3
+        n_samples=20,
+        n_features=20,
+        n_redundant=0,
+        n_informative=20,
+        n_classes=3
     )
     alpha = .9
     dummy_classif = Float32OuputModel()
 
     mapie = MapieClassifier(
         estimator=dummy_classif, method="naive",
-        cv="prefit", random_state=42
-    )
-    mapie.fit(X_cal, y_cal)
-    _, yps = mapie.predict(X_test, alpha=alpha, include_last_label=True)
-
-    assert (
-        np.repeat([[True, False, False]], 20, axis=0)[:, :, np.newaxis] == yps
-    ).all()
-
-
-def test_classif_float32_cv():
-    """Check that by returning float64 arrays there are not
-    empty predictions sets with naive method using CrossVal"""
-    X_cal, y_cal = make_classification(
-        n_samples=20, n_features=20, n_redundant=0,
-        n_informative=20, n_classes=3
-    )
-    X_test, _ = make_classification(
-        n_samples=20, n_features=20, n_redundant=0,
-        n_informative=20, n_classes=3
-    )
-    alpha = .9
-    dummy_classif = Float32OuputModel(prefit=False)
-
-    mapie = MapieClassifier(
-        estimator=dummy_classif, method="naive",
-        random_state=42
+        cv=cv, random_state=42
     )
     mapie.fit(X_cal, y_cal)
     _, yps = mapie.predict(X_test, alpha=alpha, include_last_label=True)

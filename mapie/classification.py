@@ -622,7 +622,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
         if _num_samples(X_val) > 0:
             y_pred_proba = self._predict_oof_model(estimator, X_val)
-            y_pred_proba = self._check_proba_normalized(y_pred_proba)
         else:
             y_pred_proba = np.array([])
         val_id = np.full_like(y_val, k, dtype=int)
