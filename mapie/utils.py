@@ -311,13 +311,21 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
     Number of samples of the score is too low,
     1/alpha (or 1/(1 - alpha)) must be lower than the number of samples.
     """
-    for alpha in alphas:
-        if n < 1 / alpha or n < 1 / (1 - alpha):
+    if isinstance(alphas, float):
+        if n < 1 / alphas or n < 1 / (1 - alphas):
             raise ValueError(
                 "Number of samples of the score is too low,\n"
                 "1/alpha (or 1/(1 - alpha)) must be lower "
                 "than the number of samples."
             )
+    else:
+        for alpha in alphas:
+            if n < 1 / alpha or n < 1 / (1 - alpha):
+                raise ValueError(
+                    "Number of samples of the score is too low,\n"
+                    "1/alpha (or 1/(1 - alpha)) must be lower "
+                    "than the number of samples."
+                )
 
 
 def check_n_jobs(n_jobs: Optional[int] = None) -> None:
@@ -399,9 +407,9 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
     Increase the number of resamplings
     """
     if len(X.shape) == 1:
-        if np.any(np.all(np.isnan(X)), axis=0):
+        if np.any(np.isnan(X)):
             warnings.warn(
-                "WARNING: at least one point of training set "
+                "WARNING: At least one point of training set "
                 + "belongs to every resamplings.\n"
                 "Increase the number of resamplings"
             )
@@ -410,4 +418,58 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
             "WARNING: at least one point of training set "
             + "belongs to every resamplings.\n"
             "Increase the number of resamplings"
+        )
+
+
+def check_lower_upper_bounds(
+    y_preds: NDArray,
+    y_pred_low: ArrayLike,
+    y_pred_up: ArrayLike
+) -> None:
+    """
+    Perform a check on the final results to check if the
+    lower bound values or upper bound values provide a disagreement
+    with the idea that upper bounds should always be strickly greater
+    than lower bound values (but also compared to predictions at
+    quantile: 0.5)
+
+    Parameters
+    ----------
+    y_pred : _type_
+        All the predictions at quantile:
+        alpha/2, (1 - alpha/2), 0.5.
+    y_pred_low : _type_
+        Final lower bound prediction with additional quantile
+        value added
+    y_pred_up : _type_
+        Final upper bound prediction with additional quantile
+        value added
+    """
+    if np.any(np.logical_or(
+        y_preds[0] >= y_preds[1],
+        y_preds[2] <= y_preds[0],
+        y_preds[2] >= y_preds[1]
+        )
+    ):
+        warnings.warn(
+            "WARNING: The initial prediction values obtained are now not "
+            "all lower for quantile: alpha/2 compared to (1 - alpha/2) \n "
+            "or some predictions from quantile: alpha/2 are greater "
+            "than those of 0.5 or some predictions from quantile: \n"
+            "(1 - alpha/2) are lower than those of 0.5."
+
+        )
+    elif np.any(np.logical_or(
+        y_pred_low >= y_pred_up,
+        y_preds[2] <= y_pred_low,
+        y_preds[2] >= y_pred_up
+        )
+    ):
+        warnings.warn(
+            "WARNING: The addition of the extra value has made it that: \n"
+            "The final prediction values obtained are now not "
+            "all lower for quantile: alpha/2 compared to (1 - alpha/2) \n"
+            "or some predictions from quantile: alpha/2 are greater "
+            "than those of 0.5 or some predictions from quantile: \n"
+            "(1 - alpha/2) are lower than those of 0.5."
         )

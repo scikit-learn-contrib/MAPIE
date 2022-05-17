@@ -62,14 +62,14 @@ def test_default_parameters(MapieEstimator: BaseEstimator) -> None:
     assert mapie_estimator.n_jobs is None
 
 
-@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+@pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 def test_fit(MapieEstimator: BaseEstimator) -> None:
     """Test that fit raises no errors."""
     mapie_estimator = MapieEstimator()
     mapie_estimator.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+@pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 def test_fit_predict(MapieEstimator: BaseEstimator) -> None:
     """Test that fit-predict raises no errors."""
     mapie_estimator = MapieEstimator()
@@ -77,7 +77,7 @@ def test_fit_predict(MapieEstimator: BaseEstimator) -> None:
     mapie_estimator.predict(X_toy)
 
 
-@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+@pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 def test_no_fit_predict(MapieEstimator: BaseEstimator) -> None:
     """Test that predict before fit raises errors."""
     mapie_estimator = MapieEstimator()
@@ -114,7 +114,7 @@ def test_none_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
 
 
 @pytest.mark.parametrize("estimator", [0, "a", KFold(), ["a", "b"]])
-@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+@pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 def test_invalid_estimator(
     MapieEstimator: BaseEstimator, estimator: Any
 ) -> None:
@@ -148,7 +148,7 @@ def test_valid_prefit_estimator(
     assert mapie_estimator.n_features_in_ == 1
 
 
-@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+@pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 @pytest.mark.parametrize("method", [0.5, 1, "cv", ["base", "plus"]])
 def test_invalid_method(MapieEstimator: BaseEstimator, method: str) -> None:
     """Test that invalid methods raise errors."""
@@ -157,7 +157,7 @@ def test_invalid_method(MapieEstimator: BaseEstimator, method: str) -> None:
         mapie_estimator.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+@pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 @pytest.mark.parametrize(
     "cv", [-3.14, -2, 0, 1, "cv", LinearRegression(), [1, 2]]
 )
