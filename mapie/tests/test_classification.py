@@ -1017,7 +1017,11 @@ def test_pred_proba_float64():
 @pytest.mark.parametrize("cv", ["prefit", None])
 def test_classif_float32(cv):
     """Check that by returning float64 arrays there are not
-    empty predictions sets with naive method using prefit"""
+    empty predictions sets with naive method using both
+    prefit and cv=5. If the y_pred_proba was still in
+    float32, as the quantile=0.90 would have been equal
+    to the highest probability, MAPIE would have return
+    empty prediction sets"""
     X_cal, y_cal = make_classification(
         n_samples=20,
         n_features=20,
