@@ -325,7 +325,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self,
         y_pred_proba: ArrayLike,
         axis: int = 1
-    ) -> ArrayLike:
+    ) -> NDArray:
         """
         Check if, for all the observations, the sum of
         the probabilities is equal to one.
@@ -354,6 +354,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             err_msg="The sum of the scores is not equal to one.",
             rtol=1e-5
         )
+        y_pred_proba = cast(NDArray, y_pred_proba).astype(np.float64)
         return y_pred_proba
 
     def _get_last_index_included(
@@ -552,6 +553,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 estimator.classes_,
                 y_pred_proba
             )
+        y_pred_proba = self._check_proba_normalized(y_pred_proba)
         return y_pred_proba
 
     def _fit_and_predict_oof_model(
