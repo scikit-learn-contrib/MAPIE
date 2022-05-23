@@ -11,8 +11,8 @@ from typing import Tuple, Union
 
 from typing_extensions import TypedDict
 import scipy
-import numpy as np
 import pandas as pd
+import numpy as np
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
@@ -32,6 +32,7 @@ data_n = 1.5
 
 def f(x: NDArray) -> NDArray:
     """Polynomial function used to generate one-dimensional data"""
+    # return np.array(5 + (3 * x))
     return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
 
 
@@ -69,7 +70,11 @@ def get_homoscedastic_data(
     q95 = scipy.stats.norm.ppf(0.95)
     X_train = np.linspace(0, 1, n_train)
     X_true = np.linspace(0, 1, n_true)
-    y_train = f(X_train) + np.random.normal(0, sigma, n_train)
+    y_train = np.array(
+        [
+            (f(x) + (np.random.normal(0, sigma))*x) for x in X_train
+        ]
+    )
     y_true = f(X_true)
     y_true_sigma = q95 * sigma
     return X_train, y_train, X_true, y_true, y_true_sigma
@@ -116,8 +121,8 @@ def plot_1d_data(
     """
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.set_xlim([0, 1])
-    ax.set_ylim([0, 1])
+    ax.set_xlim([np.min(X_test), np.max(X_test)])
+    ax.set_ylim([np.min(y_test), np.max(y_test)])
     ax.scatter(X_train, y_train, color="red", alpha=0.3, label="training")
     ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
     ax.plot(X_test, y_test - y_test_sigma, color="gray", ls="--")
@@ -169,8 +174,8 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         )
         mapie.fit(
             X_train.reshape(-1, 1),
-            X_calib.reshape(-1, 1),
             y_train,
+            X_calib.reshape(-1, 1),
             y_calib
         )
         y_pred, y_pis = mapie.predict(
@@ -178,13 +183,14 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         )
     else:
         mapie = MapieRegressor(
-            polyn_model, agg_function="median", n_jobs=-1, **params
+            GradientBoostingRegressor(), n_jobs=-1, **params
         )
         mapie.fit(X_train.reshape(-1, 1), y_train)
         y_pred, y_pis = mapie.predict(
             X_test.reshape(-1, 1),
             alpha=0.05,
         )
+
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     strategies.append(strategy)
     width.append((y_pred_up - y_pred_low).mean())
@@ -202,10 +208,11 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         strategy,
     )
 
-data = pd.DataFrame(
-    list(zip(strategies, coverage, width)),
-    columns=['strategy', 'coverage', 'width']
-)
-print(data)
+
+# data = pd.DataFrame(
+#     list(zip(strategies, coverage, width)),
+#     columns=['strategy', 'coverage', 'width']
+# )
+# print(data)
 
 plt.show()

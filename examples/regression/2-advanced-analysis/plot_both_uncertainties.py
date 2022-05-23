@@ -6,16 +6,19 @@ This example uses :class:`mapie.regression.MapieRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
-from typing import Any, Callable, Tuple, TypeVar
+from typing import Any, Callable, Tuple, TypeVar, Union
 
 from typing_extensions import TypedDict
 import numpy as np
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 from mapie.regression import MapieRegressor
+from mapie.quantile_regression import MapieQuantileRegressor
 from mapie._typing import NDArray
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -88,18 +91,42 @@ polyn_model = Pipeline(
 )
 
 # Estimating prediction intervals
-Params = TypedDict("Params", {"method": str, "cv": int})
+Params = TypedDict("Params", {"method": str, "cv": Union[int, str]})
 STRATEGIES = {
     "jackknife_plus": Params(method="plus", cv=-1),
     "jackknife_minmax": Params(method="minmax", cv=-1),
-    "cv_plus": Params(method="plus", cv=10),
+    # "cv_plus": Params(method="plus", cv=10),
     "cv_minmax": Params(method="minmax", cv=10),
+    "quantile": Params(method="quantile", cv="split"),
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
-    mapie = MapieRegressor(polyn_model, **params)
-    mapie.fit(X_train, y_train)
-    y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
+    if strategy == "quantile":
+        mapie = MapieQuantileRegressor(
+            estimator=GradientBoostingRegressor(loss="quantile"),
+            alpha=0.1,
+            **params
+            )
+        X_train, X_calib, y_train, y_calib = train_test_split(
+            X_train,
+            y_train,
+            test_size=0.5,
+            random_state=1
+        )
+        mapie.fit(
+            X_train.reshape(-1, 1),
+            X_calib.reshape(-1, 1),
+            y_train,
+            y_calib
+        )
+        y_pred[strategy], y_pis[strategy] = mapie.predict(
+            X_test.reshape(-1, 1)
+        )
+
+    else:
+        mapie = MapieRegressor(polyn_model, **params)
+        mapie.fit(X_train, y_train)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
 
 # Visualization
