@@ -280,7 +280,10 @@ def check_n_features_in(
     return n_features_in
 
 
-def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
+def check_alpha_and_n_samples(
+    alphas: Union[Iterable[float], float],
+    n: int
+) -> None:
     """
     Check if the quantile can be computed based
     on the number of samples and the alpha value.
@@ -312,20 +315,14 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
     1/alpha (or 1/(1 - alpha)) must be lower than the number of samples.
     """
     if isinstance(alphas, float):
-        if n < 1 / alphas or n < 1 / (1 - alphas):
+        alphas = np.array([alphas])
+    for alpha in alphas:
+        if n < 1 / alpha or n < 1 / (1 - alpha):
             raise ValueError(
                 "Number of samples of the score is too low,\n"
                 "1/alpha (or 1/(1 - alpha)) must be lower "
                 "than the number of samples."
             )
-    else:
-        for alpha in alphas:
-            if n < 1 / alpha or n < 1 / (1 - alpha):
-                raise ValueError(
-                    "Number of samples of the score is too low,\n"
-                    "1/alpha (or 1/(1 - alpha)) must be lower "
-                    "than the number of samples."
-                )
 
 
 def check_n_jobs(n_jobs: Optional[int] = None) -> None:
@@ -382,6 +379,9 @@ def check_verbose(verbose: int) -> None:
 
 def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
     """
+    Check that all the points are used at least once, otherwise this means
+    you have set the number of subsamples too low.
+
     Parameters
     ----------
     X : Array of shape (size of training set, number of estimators) whose rows
@@ -406,14 +406,7 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
     WARNING: at least one point of training set belongs to every resamplings.
     Increase the number of resamplings
     """
-    if len(X.shape) == 1:
-        if np.any(np.isnan(X)):
-            warnings.warn(
-                "WARNING: At least one point of training set "
-                + "belongs to every resamplings.\n"
-                "Increase the number of resamplings"
-            )
-    elif np.any(np.all(np.isnan(X), axis=1), axis=0):
+    if np.any(np.all(np.isnan(X), axis=1), axis=0):
         warnings.warn(
             "WARNING: at least one point of training set "
             + "belongs to every resamplings.\n"
@@ -423,53 +416,64 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
 
 def check_lower_upper_bounds(
     y_preds: NDArray,
-    y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike
+    y_pred_low: NDArray,
+    y_pred_up: NDArray
 ) -> None:
     """
-    Perform a check on the final results to check if the
-    lower bound values or upper bound values provide a disagreement
-    with the idea that upper bounds should always be strickly greater
-    than lower bound values (but also compared to predictions at
-    quantile: 0.5)
+    Check if the lower or upper bounds are inconsistent.
+    If checking for MapieQuantileRegressor, then also checking
+    initial quantile values.
 
     Parameters
     ----------
-    y_pred : _type_
+    y_pred : NDArray of shape (n_samples, 3) or (n_samples,)
         All the predictions at quantile:
-        alpha/2, (1 - alpha/2), 0.5.
-    y_pred_low : _type_
+        alpha/2, (1 - alpha/2), 0.5 or only the predictions
+    y_pred_low : NDArray of shape (n_samples,)
         Final lower bound prediction with additional quantile
         value added
-    y_pred_up : _type_
+    y_pred_up : NDArray of shape (n_samples,)
         Final upper bound prediction with additional quantile
         value added
+    Raises
+    ------
+    Warning
+        If the aggregated predictions of any training sample would be nan.
+    Examples
+    --------
+    >>> import warnings
+    >>> warnings.filterwarnings("error")
+    >>> import numpy as np
+    >>> from mapie.utils import check_lower_upper_bounds
+    >>> y_preds = np.array([[4, 2, 3], [3, 4, 5], [2, 3, 4]])
+    >>> y_pred_low = np.array([4, 3, 2])
+    >>> y_pred_up = np.array([4, 4, 4])
+    >>> try:
+    ...     check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    WARNING: The initial prediction value
     """
+    if len(y_preds.shape) != 1:
+        init_pred, init_lower_bound, init_upper_bound = y_preds
+        if np.any(np.logical_or(
+            init_lower_bound >= init_upper_bound,
+            init_pred <= init_lower_bound,
+            init_pred >= init_upper_bound
+            )
+        ):
+            warnings.warn(
+                "WARNING: The initial prediction value"
+            )
+    else:
+        init_pred = y_preds
     if np.any(np.logical_or(
-        y_preds[0] >= y_preds[1],
-        y_preds[2] <= y_preds[0],
-        y_preds[2] >= y_preds[1]
-        )
-    ):
-        warnings.warn(
-            "WARNING: The initial prediction values obtained are now not "
-            "all lower for quantile: alpha/2 compared to (1 - alpha/2) \n "
-            "or some predictions from quantile: alpha/2 are greater "
-            "than those of 0.5 or some predictions from quantile: \n"
-            "(1 - alpha/2) are lower than those of 0.5."
-
-        )
-    elif np.any(np.logical_or(
         y_pred_low >= y_pred_up,
-        y_preds[2] <= y_pred_low,
-        y_preds[2] >= y_pred_up
+        init_pred <= y_pred_low,
+        init_pred >= y_pred_up
         )
     ):
         warnings.warn(
-            "WARNING: The addition of the extra value has made it that: \n"
-            "The final prediction values obtained are now not "
-            "all lower for quantile: alpha/2 compared to (1 - alpha/2) \n"
-            "or some predictions from quantile: alpha/2 are greater "
-            "than those of 0.5 or some predictions from quantile: \n"
-            "(1 - alpha/2) are lower than those of 0.5."
+            "WARNING: CQR"
         )

@@ -85,7 +85,7 @@ def test_no_fit_predict(MapieEstimator: BaseEstimator) -> None:
         mapie_estimator.predict(X_toy)
 
 
-@pytest.mark.parametrize("MapieEstimator", MapieEstimators())
+@pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 def test_default_sample_weight(MapieEstimator: BaseEstimator) -> None:
     """Test default sample weights."""
     mapie_estimator = MapieEstimator()

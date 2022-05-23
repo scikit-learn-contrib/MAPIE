@@ -17,7 +17,6 @@ from mapie.utils import (
     check_verbose,
     fit_estimator,
     check_lower_upper_bounds,
-    check_nan_in_aposteriori_prediction,
 )
 
 from mapie._typing import ArrayLike
@@ -203,7 +202,7 @@ def test_initial_low_high_pred() -> None:
     y_preds = np.array([[4, 2, 3], [3, 4, 5], [2, 3, 4]])
     y_pred_low = np.array([4, 3, 2])
     y_pred_up = np.array([4, 4, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: The initial*"):
+    with pytest.warns(UserWarning, match=r"WARNING: The initial prediction*"):
         check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
 
 
@@ -212,12 +211,5 @@ def test_final_low_high_pred() -> None:
     y_preds = np.array([[1, 2, 3], [3, 4, 5], [2, 3, 4]])
     y_pred_low = np.array([4, 3, 2])
     y_pred_up = np.array([4, 4, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: The addition of*"):
+    with pytest.warns(UserWarning, match=r"WARNING: CQR*"):
         check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
-
-
-def test_nan_aposteriori_1D() -> None:
-    """Test that a warning is raised if at least one residual is nan."""
-    X = np.array([4, np.nan, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: At least one point*"):
-        check_nan_in_aposteriori_prediction(X)

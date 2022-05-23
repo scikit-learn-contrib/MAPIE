@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Tuple, Union, cast
+from typing import Optional, Tuple, Union, cast, Iterable, List
 
 import numpy as np
 from sklearn.base import RegressorMixin, clone
@@ -16,7 +16,6 @@ from ._typing import ArrayLike, NDArray
 from .utils import (
     check_alpha_and_n_samples,
     check_n_features_in,
-    check_nan_in_aposteriori_prediction,
     check_null_weight,
     fit_estimator,
     check_lower_upper_bounds,
@@ -62,22 +61,22 @@ class MapieQuantileRegressor(MapieRegressor):
 
     def __init__(
         self,
-        estimator: RegressorMixin = None,
+        estimator: Optional[RegressorMixin] = None,
         method: str = "quantile",
-        cv: Optional[str] = None,
-        alpha: float = 0.1
+        alpha: float = 0.1,
+        cv: Union[int, str] = None,
     ) -> None:
-        self.alpha = alpha
         super().__init__(
             estimator=estimator,
             method=method,
             cv=cv
         )
+        self.alpha = alpha
 
     def _check_alpha(
         self,
         alpha: float,
-    ) -> ArrayLike:
+    ) -> NDArray:
         """
         Perform several checks on the alpha value and changes it from
         a float to an ArrayLike
@@ -168,24 +167,16 @@ class MapieQuantileRegressor(MapieRegressor):
         else:
             if name_estimator in self.quantile_estimator_params:
                 param_estimator = estimator.get_params()
-                if (
-                    self.quantile_estimator_params[name_estimator]["loss_name"]
-                    in param_estimator
-                ):
-                    if param_estimator[
-                        self.quantile_estimator_params[
-                            name_estimator]["loss_name"]] != "quantile":
+                loss_name, alpha_name = self.quantile_estimator_params[
+                    name_estimator].values()
+                if loss_name in param_estimator:
+                    if param_estimator[loss_name] != "quantile":
                         raise ValueError(
-                            "You need to set the loss/metric of your base"
-                            + " model to quantile."
+                            "You need to set the loss/objective argument of"
+                            + " your base model ``quantile``."
                         )
                     else:
-                        if (
-                            self.quantile_estimator_params[
-                                name_estimator
-                                ]["alpha_name"]
-                            in param_estimator
-                        ):
+                        if alpha_name in param_estimator:
                             return estimator
                         else:
                             raise ValueError(
@@ -205,14 +196,14 @@ class MapieQuantileRegressor(MapieRegressor):
 
     def _check_cv(
         self,
-        cv: Optional[str] = None
-    ) -> str:
+        cv: Union[int, str] = None
+    ) -> Union[int, str]:
         """
-        Performs a check on the cv.
+        Check if cv argument is None or "split".
 
         Parameters
         ----------
-        cv : Optional[str], optional
+        cv : Union[int, str], optional
            cv to check, by default ``None``.
 
         Returns
@@ -237,9 +228,9 @@ class MapieQuantileRegressor(MapieRegressor):
 
     def fit(
         self,
-        X_train: ArrayLike,
+        X: ArrayLike,
+        y: ArrayLike,
         X_calib: ArrayLike,
-        y_train: ArrayLike,
         y_calib: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieQuantileRegressor:
@@ -253,12 +244,12 @@ class MapieQuantileRegressor(MapieRegressor):
 
         Parameters
         ----------
-        X_train : ArrayLike of shape (n_samples, n_features)
+        X : ArrayLike of shape (n_samples, n_features)
             Training data.
+        y : ArrayLike of shape (n_samples,)
+            Training labels.
         X_calib : ArrayLike of shape (n_samples, n_features)
             Calibration data.
-        y_train : ArrayLike of shape (n_samples,)
-            Training labels.
         y_calib : ArrayLike of shape (n_samples,)
             Calibration labels.
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
@@ -281,66 +272,65 @@ class MapieQuantileRegressor(MapieRegressor):
         estimator = self._check_estimator(self.estimator)
         alpha = self._check_alpha(self.alpha)
         self.cv = self._check_cv(self.cv)
-        X_train, y_train = indexable(X_train, y_train)
+        X, y = indexable(X, y)
         X_calib, y_calib = indexable(X_calib, y_calib)
-        y_train = _check_y(y_train)
+        y = _check_y(y)
         y_calib = _check_y(y_calib)
         self.n_samples_calib = _num_samples(y_calib)
         check_alpha_and_n_samples(self.alpha, self.n_samples_calib)
         self.n_features_in_ = check_n_features_in(
-            X_train,
+            X,
             estimator=estimator
             )
-        sample_weight, X_train, y_train = check_null_weight(
+        sample_weight, X, y = check_null_weight(
             sample_weight,
-            X_train,
-            y_train
+            X,
+            y
         )
-        y_train = cast(NDArray, y_train)
+        y = cast(NDArray, y)
 
         # Initialization
-        self.estimators_ = {}
+        self.estimators_: List[RegressorMixin] = []
 
         # Work
         y_calib_preds = np.full(
-            shape=(3, len(y_calib)),
+            shape=(3, self.n_samples_calib),
             fill_value=np.nan
         )
 
         name_estimator = estimator.__class__.__name__
         for i, alpha_ in enumerate(alpha):
+            alpha_name = self.quantile_estimator_params[
+                name_estimator
+                ]["alpha_name"]
             estimator_cloned = clone(estimator)
-            params = {
-                self.quantile_estimator_params[
-                    name_estimator
-                    ]["alpha_name"]: alpha_
-            }
+            params = {alpha_name: alpha_}
             estimator_cloned.set_params(**params)
             estimator_cloned_ = fit_estimator(
-                estimator_cloned, X_train, y_train, sample_weight
+                estimator_cloned, X, y, sample_weight
             )
-            self.estimators_[alpha_] = estimator_cloned_
-            y_calib_pred = estimator_cloned_.predict(X_calib)
-            check_nan_in_aposteriori_prediction(y_calib_pred)
-            y_calib_preds[i] = y_calib_pred
+            self.estimators_.append(estimator_cloned_)
+            y_calib_preds[i] = estimator_cloned_.predict(X_calib)
 
         self.conformity_scores_ = np.full(
-                shape=(3, len(y_calib)),
+                shape=(3, self.n_samples_calib),
                 fill_value=np.nan
             )
         self.conformity_scores_[0] = y_calib_preds[0]-y_calib
         self.conformity_scores_[1] = y_calib-y_calib_preds[1]
         self.conformity_scores_[2] = np.max(
-                [
-                    self.conformity_scores_[0],
-                    self.conformity_scores_[1]
-                ], axis=0
-            )
+            [
+                self.conformity_scores_[0],
+                self.conformity_scores_[1]
+            ], axis=0
+        )
         return self
 
     def predict(
         self,
         X: ArrayLike,
+        ensemble: Optional[bool] = False,
+        alpha: Optional[Union[float, Iterable[float]]] = None,
         symmetry: Optional[bool] = True,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
@@ -373,21 +363,19 @@ class MapieQuantileRegressor(MapieRegressor):
             - [:, 0, :]: Lower bound of the prediction interval.
             - [:, 1, :]: Upper bound of the prediction interval.
         """
-        n = self.n_samples_calib
-
         # Checks
         check_is_fitted(self, self.fit_attributes)
-        check_alpha_and_n_samples(self.alpha, n)
+        check_alpha_and_n_samples(self.alpha, self.n_samples_calib)
 
-        q = (1-(self.alpha))*(1+(1/n))
+        n = self.n_samples_calib
+        q = (1 - (self.alpha)) * (1 + (1 / n))
 
         y_preds = np.full(
-            shape=(3, X.shape[0]),
+            shape=(3, _num_samples(X)),
             fill_value=np.nan
         )
-        for i, alpha_ in enumerate(self.estimators_.keys()):
-            y_preds[i] = self.estimators_[alpha_].predict(X)
-        check_nan_in_aposteriori_prediction(y_preds)
+        for i in range(len(self.estimators_)):
+            y_preds[i] = self.estimators_[i].predict(X)
         if symmetry:
             quantile = np.full(
                 2,
@@ -397,7 +385,7 @@ class MapieQuantileRegressor(MapieRegressor):
             )
         else:
             check_alpha_and_n_samples(self.alpha/2, n)
-            q = (1-(self.alpha/2))*(1+(1/n))
+            q = (1 - (self.alpha / 2)) * (1 + (1 / n))
             quantile = np.array(
                 [
                     np_quantile(
