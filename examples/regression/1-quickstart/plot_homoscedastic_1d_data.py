@@ -13,21 +13,16 @@ from typing_extensions import TypedDict
 import scipy
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
-from mapie.metrics import regression_coverage_score
-
 
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
-
+from mapie.metrics import regression_coverage_score
 from mapie._typing import NDArray
-
-data_n = 1.5
 
 
 def f(x: NDArray) -> NDArray:
@@ -36,9 +31,7 @@ def f(x: NDArray) -> NDArray:
 
 
 def get_homoscedastic_data(
-    n_train: int = int(200*data_n),
-    n_true: int = int(200*data_n),
-    sigma: float = 0.1
+    n_train: int = 200, n_true: int = 200, sigma: float = 0.1
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, float]:
     """
     Generate one-dimensional data from a given function,
@@ -136,6 +129,12 @@ polyn_model = Pipeline(
         ("linear", LinearRegression(fit_intercept=False)),
     ]
 )
+polyn_model_quant = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=4)),
+        ("linear", QuantileRegressor(fit_intercept=False, solver="highs")),
+    ]
+)
 
 strategies = []
 width = []
@@ -157,10 +156,7 @@ fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
 for i, (strategy, params) in enumerate(STRATEGIES.items()):
     if strategy == "quantile":
-        mapie = MapieQuantileRegressor(
-            estimator=GradientBoostingRegressor(loss="quantile"),
-            alpha=0.1,
-            **params)
+        mapie = MapieQuantileRegressor(polyn_model_quant, **params)
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
@@ -169,13 +165,14 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         )
         mapie.fit(
             X_train.reshape(-1, 1),
-            X_calib.reshape(-1, 1),
             y_train,
+            X_calib.reshape(-1, 1),
             y_calib
         )
         y_pred, y_pis = mapie.predict(
             X_test.reshape(-1, 1)
         )
+        print(mapie.estimators_)
     else:
         mapie = MapieRegressor(
             polyn_model, agg_function="median", n_jobs=-1, **params
@@ -185,7 +182,7 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
             X_test.reshape(-1, 1),
             alpha=0.05,
         )
-    y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
+    y_pred_low, y_pred_up = y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
     strategies.append(strategy)
     width.append((y_pred_up - y_pred_low).mean())
     coverage.append(regression_coverage_score(y_test, y_pred_low, y_pred_up))

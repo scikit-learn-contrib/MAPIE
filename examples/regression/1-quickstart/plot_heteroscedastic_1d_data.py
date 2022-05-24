@@ -11,35 +11,27 @@ from typing import Tuple, Union
 
 from typing_extensions import TypedDict
 import scipy
-import pandas as pd
 import numpy as np
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.linear_model import LinearRegression
+import pandas as pd
+from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
-from mapie.metrics import regression_coverage_score
-
 
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
-
+from mapie.metrics import regression_coverage_score
 from mapie._typing import NDArray
-
-data_n = 1.5
 
 
 def f(x: NDArray) -> NDArray:
     """Polynomial function used to generate one-dimensional data"""
-    # return np.array(5 + (3 * x))
     return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
 
 
-def get_homoscedastic_data(
-    n_train: int = int(200*data_n),
-    n_true: int = int(200*data_n),
-    sigma: float = 0.1
+def get_heteroskedastic_data(
+    n_train: int = 200, n_true: int = 200, sigma: float = 0.1
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, float]:
     """
     Generate one-dimensional data from a given function,
@@ -121,8 +113,8 @@ def plot_1d_data(
     """
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.set_xlim([np.min(X_test), np.max(X_test)])
-    ax.set_ylim([np.min(y_test), np.max(y_test)])
+    ax.set_xlim([0, 1])
+    ax.set_ylim([0, 1])
     ax.scatter(X_train, y_train, color="red", alpha=0.3, label="training")
     ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
     ax.plot(X_test, y_test - y_test_sigma, color="gray", ls="--")
@@ -133,12 +125,18 @@ def plot_1d_data(
     ax.legend()
 
 
-X_train, y_train, X_test, y_test, y_test_sigma = get_homoscedastic_data()
+X_train, y_train, X_test, y_test, y_test_sigma = get_heteroskedastic_data()
 
 polyn_model = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
         ("linear", LinearRegression(fit_intercept=False)),
+    ]
+)
+polyn_model_quant = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=4)),
+        ("linear", QuantileRegressor(fit_intercept=False, solver="highs")),
     ]
 )
 
@@ -162,10 +160,7 @@ fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
 for i, (strategy, params) in enumerate(STRATEGIES.items()):
     if strategy == "quantile":
-        mapie = MapieQuantileRegressor(
-            estimator=GradientBoostingRegressor(loss="quantile"),
-            alpha=0.1,
-            **params)
+        mapie = MapieQuantileRegressor(polyn_model_quant, **params)
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
@@ -181,16 +176,16 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         y_pred, y_pis = mapie.predict(
             X_test.reshape(-1, 1)
         )
+        print(mapie.estimators_)
     else:
         mapie = MapieRegressor(
-            GradientBoostingRegressor(), n_jobs=-1, **params
+            polyn_model, agg_function="median", n_jobs=-1, **params
         )
         mapie.fit(X_train.reshape(-1, 1), y_train)
         y_pred, y_pis = mapie.predict(
             X_test.reshape(-1, 1),
             alpha=0.05,
         )
-
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     strategies.append(strategy)
     width.append((y_pred_up - y_pred_low).mean())
@@ -208,11 +203,10 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         strategy,
     )
 
-
-# data = pd.DataFrame(
-#     list(zip(strategies, coverage, width)),
-#     columns=['strategy', 'coverage', 'width']
-# )
-# print(data)
+data = pd.DataFrame(
+    list(zip(strategies, coverage, width)),
+    columns=['strategy', 'coverage', 'width']
+)
+print(data)
 
 plt.show()
