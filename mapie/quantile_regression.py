@@ -4,6 +4,7 @@ from typing import Optional, Tuple, Union, cast, Iterable, List
 import numpy as np
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import QuantileRegressor
+from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import (
     indexable,
     check_is_fitted,
@@ -61,7 +62,7 @@ class MapieQuantileRegressor(MapieRegressor):
 
     def __init__(
         self,
-        estimator: Optional[RegressorMixin] = None,
+        estimator: Optional[Union[RegressorMixin, Pipeline]] = None,
         method: str = "quantile",
         alpha: float = 0.1,
         cv: Union[int, str] = None,
@@ -118,8 +119,9 @@ class MapieQuantileRegressor(MapieRegressor):
         return alpha_np
 
     def _check_estimator(
-        self, estimator: Optional[RegressorMixin] = None
-    ) -> RegressorMixin:
+        self,
+        estimator: Optional[Union[RegressorMixin, Pipeline]] = None
+    ) -> Union[RegressorMixin, Pipeline]:
         """
         Perform several checks on the estimator to check if it has
         all the required specifications to be used with this methodology.
@@ -161,38 +163,42 @@ class MapieQuantileRegressor(MapieRegressor):
                 "Invalid estimator. "
                 "Please provide a regressor with fit and predict methods."
             )
-        name_estimator = estimator.__class__.__name__
-        if name_estimator == "QuantileRegressor":
+        if isinstance(estimator, Pipeline):
+            self._check_estimator(estimator[-1])
             return estimator
         else:
-            if name_estimator in self.quantile_estimator_params:
-                param_estimator = estimator.get_params()
-                loss_name, alpha_name = self.quantile_estimator_params[
-                    name_estimator].values()
-                if loss_name in param_estimator:
-                    if param_estimator[loss_name] != "quantile":
-                        raise ValueError(
-                            "You need to set the loss/objective argument of"
-                            + " your base model ``quantile``."
-                        )
-                    else:
-                        if alpha_name in param_estimator:
-                            return estimator
-                        else:
+            name_estimator = estimator.__class__.__name__
+            if name_estimator == "QuantileRegressor":
+                return estimator
+            else:
+                if name_estimator in self.quantile_estimator_params:
+                    param_estimator = estimator.get_params()
+                    loss_name, alpha_name = self.quantile_estimator_params[
+                        name_estimator].values()
+                    if loss_name in param_estimator:
+                        if param_estimator[loss_name] != "quantile":
                             raise ValueError(
-                                "The matching parameter alpha_name for"
-                                + " estimator does not exist."
+                                "You need to set the loss/objective argument"
+                                + " of your base model ``quantile``."
                             )
+                        else:
+                            if alpha_name in param_estimator:
+                                return estimator
+                            else:
+                                raise ValueError(
+                                    "The matching parameter alpha_name for"
+                                    + " estimator does not exist."
+                                )
+                    else:
+                        raise ValueError(
+                            "The matching parameter loss_name for"
+                            + " estimator does not exist."
+                        )
                 else:
                     raise ValueError(
-                        "The matching parameter loss_name for"
-                        + " estimator does not exist."
+                        "The base model does not seem to be accepted"
+                        + " by MapieQuantileRegressor."
                     )
-            else:
-                raise ValueError(
-                    "The base model does not seem to be accepted"
-                    + " by MapieQuantileRegressor."
-                )
 
     def _check_cv(
         self,
@@ -226,7 +232,7 @@ class MapieQuantileRegressor(MapieRegressor):
                 "Invalid cv method."
             )
 
-    def fit(
+    def fit(  # type: ignore
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -269,7 +275,7 @@ class MapieQuantileRegressor(MapieRegressor):
         """
         # Checks
         self._check_parameters()
-        estimator = self._check_estimator(self.estimator)
+        checked_estimator = self._check_estimator(self.estimator)
         alpha = self._check_alpha(self.alpha)
         self.cv = self._check_cv(self.cv)
         X, y = indexable(X, y)
@@ -280,7 +286,7 @@ class MapieQuantileRegressor(MapieRegressor):
         check_alpha_and_n_samples(self.alpha, self.n_samples_calib)
         self.n_features_in_ = check_n_features_in(
             X,
-            estimator=estimator
+            estimator=checked_estimator
             )
         sample_weight, X, y = check_null_weight(
             sample_weight,
@@ -298,19 +304,25 @@ class MapieQuantileRegressor(MapieRegressor):
             fill_value=np.nan
         )
 
+        if isinstance(checked_estimator, Pipeline):
+            estimator = checked_estimator[-1]
+        else:
+            estimator = checked_estimator
         name_estimator = estimator.__class__.__name__
         for i, alpha_ in enumerate(alpha):
             alpha_name = self.quantile_estimator_params[
                 name_estimator
                 ]["alpha_name"]
-            estimator_cloned = clone(estimator)
+            cloned_estimator_ = clone(checked_estimator)
             params = {alpha_name: alpha_}
-            estimator_cloned.set_params(**params)
-            estimator_cloned_ = fit_estimator(
-                estimator_cloned, X, y, sample_weight
-            )
-            self.estimators_.append(estimator_cloned_)
-            y_calib_preds[i] = estimator_cloned_.predict(X_calib)
+            if isinstance(checked_estimator, Pipeline):
+                cloned_estimator_[-1].set_params(**params)
+            else:
+                cloned_estimator_.set_params(**params)
+            self.estimators_.append(fit_estimator(
+                cloned_estimator_, X, y, sample_weight
+            ))
+            y_calib_preds[i] = self.estimators_[-1].predict(X_calib)
 
         self.conformity_scores_ = np.full(
                 shape=(3, self.n_samples_calib),
@@ -363,7 +375,6 @@ class MapieQuantileRegressor(MapieRegressor):
             - [:, 0, :]: Lower bound of the prediction interval.
             - [:, 1, :]: Upper bound of the prediction interval.
         """
-        # Checks
         check_is_fitted(self, self.fit_attributes)
         check_alpha_and_n_samples(self.alpha, self.n_samples_calib)
 
@@ -374,8 +385,8 @@ class MapieQuantileRegressor(MapieRegressor):
             shape=(3, _num_samples(X)),
             fill_value=np.nan
         )
-        for i in range(len(self.estimators_)):
-            y_preds[i] = self.estimators_[i].predict(X)
+        for i, est in enumerate(self.estimators_):
+            y_preds[i] = est.predict(X)
         if symmetry:
             quantile = np.full(
                 2,
@@ -384,7 +395,7 @@ class MapieQuantileRegressor(MapieRegressor):
                 )
             )
         else:
-            check_alpha_and_n_samples(self.alpha/2, n)
+            check_alpha_and_n_samples(self.alpha / 2, n)
             q = (1 - (self.alpha / 2)) * (1 + (1 / n))
             quantile = np.array(
                 [

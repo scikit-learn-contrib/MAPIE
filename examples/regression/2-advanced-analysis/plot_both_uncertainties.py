@@ -91,7 +91,7 @@ polyn_model = Pipeline(
 )
 
 # Estimating prediction intervals
-Params = TypedDict("Params", {"method": str, "cv": Union[int, str]})
+Params = TypedDict("Params", {"method": str, "cv": int})
 STRATEGIES = {
     "jackknife_plus": Params(method="plus", cv=-1),
     "jackknife_minmax": Params(method="minmax", cv=-1),

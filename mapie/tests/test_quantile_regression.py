@@ -4,11 +4,16 @@ from typing import Any, Tuple
 
 import pytest
 import numpy as np
+import pandas as pd
 from sklearn.datasets import make_regression
 from sklearn.linear_model import QuantileRegressor
 from sklearn.model_selection import KFold, LeaveOneOut
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
+from sklearn.pipeline import make_pipeline, Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestClassifier
 from sklearn.base import RegressorMixin, clone, BaseEstimator
@@ -457,28 +462,40 @@ def test_linear_regression_results(strategy: str) -> None:
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
 
-# # Dosen't work just yet, need to set it as a warning
-# @pytest.mark.parametrize("strategy", [*STRATEGIES])
-# @pytest.mark.parametrize("estimator", ESTIMATOR)
-# @pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
-# @pytest.mark.parametrize("symmetry", SYMMETRY)
-# def test_prediction_between_low_up(
-#     strategy: str,
-#     estimator: RegressorMixin,
-#     dataset: Tuple[NDArray, NDArray],
-#     symmetry: bool
-# ) -> None:
-#     """
-#     Test that MapieRegressor applied on a linear regression model
-#     fitted on a linear curve results in null uncertainty.
-#     """
-#     mapie = MapieQuantileRegressor(
-#         estimator=estimator,
-#         **STRATEGIES[strategy]
-#         )
-#     (X, y) = dataset
-#     mapie.fit(X, y)
-#     y_pred, y_pis = mapie.predict(X, symmetry=symmetry)
-#     assert (y_pis[:, 1, 0] >= y_pis[:, 0, 0]).all()
-#     assert (y_pred >= y_pis[:, 0, 0]).all()
-#     assert (y_pred <= y_pis[:, 1, 0]).all()
+@pytest.mark.parametrize("estimator", ESTIMATOR)
+def test_pipeline_compatibility(estimator: RegressorMixin) -> None:
+    """Check that MAPIE works on pipeline based on pandas dataframes"""
+    X = pd.DataFrame(
+        {
+            "x_cat": ["A", "A", "B", "A", "A", "B", "A", "B", "B", "B"],
+            "x_num": [0, 1, 1, 4, np.nan, 5, 4, 3, np.nan, 3],
+            "y": [5, 7, 3, 9, 10, 8, 9, 7, 9, 8]
+        }
+    )
+    y = pd.Series([5, 7, 3, 9, 10, 8, 9, 7, 10, 5])
+    X_train_toy, X_calib_toy, y_train_toy, y_calib_toy = train_test_split(
+        X,
+        y,
+        test_size=0.5,
+        random_state=random_state
+    )
+    numeric_preprocessor = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="mean")),
+        ]
+    )
+    categorical_preprocessor = Pipeline(
+        steps=[
+            ("encoding", OneHotEncoder(handle_unknown="ignore"))
+        ]
+    )
+    preprocessor = ColumnTransformer(
+        [
+            ("cat", categorical_preprocessor, ["x_cat"]),
+            ("num", numeric_preprocessor, ["x_num"])
+        ]
+    )
+    pipe = make_pipeline(preprocessor, estimator)
+    mapie = MapieQuantileRegressor(pipe, alpha=0.4)
+    mapie.fit(X_train_toy, y_train_toy, X_calib_toy, y_calib_toy)
+    mapie.predict(X)

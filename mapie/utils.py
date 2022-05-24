@@ -453,9 +453,13 @@ def check_lower_upper_bounds(
     ... except Exception as exception:
     ...     print(exception)
     ...
-    WARNING: The initial prediction value
+    WARNING: The initial prediction values from the quantile method
+    present issues as the upper quantile values might be higher than the
+    lower quantile values.
     """
-    if len(y_preds.shape) != 1:
+    if y_preds.ndim == 1:
+        init_pred = y_preds
+    else:
         init_pred, init_lower_bound, init_upper_bound = y_preds
         if np.any(np.logical_or(
             init_lower_bound >= init_upper_bound,
@@ -464,10 +468,13 @@ def check_lower_upper_bounds(
             )
         ):
             warnings.warn(
-                "WARNING: The initial prediction value"
+                "WARNING: The initial prediction values from the "
+                + "quantile method\npresent issues as the upper "
+                "quantile values might be higher than the\nlower "
+                + "quantile values."
             )
-    else:
-        init_pred = y_preds
+        else:
+            pass
     if np.any(np.logical_or(
         y_pred_low >= y_pred_up,
         init_pred <= y_pred_low,
@@ -475,5 +482,9 @@ def check_lower_upper_bounds(
         )
     ):
         warnings.warn(
-            "WARNING: CQR"
+            "WARNING: Following the additional value added to have conformal "
+            "predictions, the upper and lower bound present issues as one "
+            "might be higher or lower than the other."
         )
+    else:
+        pass
