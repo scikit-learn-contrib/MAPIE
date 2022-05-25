@@ -18,7 +18,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
-# from mapie.metrics import classification_coverage_score
+from mapie.metrics import classification_coverage_score
 from mapie._typing import ArrayLike, NDArray
 
 
@@ -226,16 +226,16 @@ STRATEGIES = {
 COVERAGES = {
     "score": 6 / 9,
     "score_cv_mean": 1,
-    "score_cv_crossval": 6 / 9,
+    "score_cv_crossval": 1,
     "cumulated_score_include": 1,
     "cumulated_score_not_include": 5 / 9,
     "cumulated_score_randomized": 5 / 9,
     "cumulated_score_include_cv_mean": 1,
     "cumulated_score_not_include_cv_mean": 5 / 9,
     "cumulated_score_randomized_cv_mean": 5 / 9,
-    "cumulated_score_include_cv_crossval": 0,
+    "cumulated_score_include_cv_crossval": 2 / 9,
     "cumulated_score_not_include_cv_crossval": 0,
-    "cumulated_score_randomized_cv_crossval": 3 / 9,
+    "cumulated_score_randomized_cv_crossval": 6 / 9,
     "naive": 5 / 9,
     "top_k": 1
 }
@@ -269,11 +269,11 @@ y_toy_mapie = {
     "score_cv_crossval": [
         [True, False, False],
         [True, False, False],
-        [False, False, False],
+        [True, True, False],
+        [True, True, False],
         [False, True, False],
         [False, True, False],
-        [False, True, False],
-        [False, False, False],
+        [False, True, True],
         [False, True, True],
         [False, True, True],
     ],
@@ -348,9 +348,9 @@ y_toy_mapie = {
         [False, False, False],
         [True, False, False],
         [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
         [False, False, False],
         [False, False, False],
     ],
@@ -369,12 +369,12 @@ y_toy_mapie = {
         [True, False, False],
         [False, False, False],
         [True, False, False],
+        [True, True, False],
         [False, True, False],
         [False, True, False],
+        [False, True, True],
+        [False, True, True],
         [False, True, False],
-        [False, True, False],
-        [False, False, False],
-        [False, False, False],
     ],
     "naive": [
         [True, False, False],
@@ -474,11 +474,11 @@ class ImageClassifier:
         )
         self.classes_ = self.y_calib
 
-    def fit(self, X: ArrayLike, y: ArrayLike) -> ImageClassifier:
+    def fit(self, *args: Any) -> ImageClassifier:
         self.fitted_ = True
         return self
 
-    def predict(self, X: ArrayLike) -> NDArray:
+    def predict(self, *args: Any) -> NDArray:
         return np.array([1, 2, 1])
 
     def predict_proba(self, X: ArrayLike) -> NDArray:
@@ -510,6 +510,31 @@ class WrongOutputModel:
             self.proba_out == self.proba_out.max(axis=1)[:, None]
         ).astype(int)
         return pred
+
+
+class Float32OuputModel:
+
+    def __init__(self, prefit: bool = True):
+        self.trained_ = prefit
+        self.classes_ = [0, 1, 2]
+
+    def fit(self, *args: Any) -> None:
+        """Dummy fit."""
+        self.trained_ = True
+
+    def predict_proba(self, X: NDArray, *args: Any) -> NDArray:
+        probas = np.array([[.9, .05, .05]])
+        proba_out = np.repeat(probas, len(X), axis=0).astype(np.float32)
+        return proba_out
+
+    def predict(self, X: NDArray, *args: Any) -> NDArray:
+        return np.repeat(1, len(X))
+
+    def _get_param_names(self):
+        return ["prefit"]
+
+    def get_params(self, *args: Any, **kwargs: Any):
+        return {"prefit": False}
 
 
 def do_nothing(*args: Any) -> None:
@@ -760,24 +785,24 @@ def test_valid_prediction(alpha: Any) -> None:
     mapie_clf.predict(X_toy, alpha=alpha)
 
 
-# @pytest.mark.parametrize("strategy", [*STRATEGIES])
-# def test_toy_dataset_predictions(strategy: str) -> None:
-#     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
-#     args_init, args_predict = STRATEGIES[strategy]
-#     clf = LogisticRegression().fit(X_toy, y_toy)
-#     mapie_clf = MapieClassifier(estimator=clf, **args_init)
-#     mapie_clf.fit(X_toy, y_toy)
-#     _, y_ps = mapie_clf.predict(
-#         X_toy,
-#         alpha=0.5,
-#         include_last_label=args_predict["include_last_label"],
-#         agg_scores=args_predict["agg_scores"]
-#     )
-#     np.testing.assert_allclose(
-#         classification_coverage_score(y_toy, y_ps[:, :, 0]),
-#         COVERAGES[strategy],
-#     )
-#     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_toy_dataset_predictions(strategy: str) -> None:
+    """Test prediction sets estimated by MapieClassifier on a toy dataset"""
+    args_init, args_predict = STRATEGIES[strategy]
+    clf = LogisticRegression().fit(X_toy, y_toy)
+    mapie_clf = MapieClassifier(estimator=clf, **args_init)
+    mapie_clf.fit(X_toy, y_toy)
+    _, y_ps = mapie_clf.predict(
+        X_toy,
+        alpha=0.5,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
+    np.testing.assert_allclose(
+        classification_coverage_score(y_toy, y_ps[:, :, 0]),
+        COVERAGES[strategy],
+    )
 
 
 def test_cumulated_scores() -> None:
@@ -977,3 +1002,51 @@ def test_pipeline_compatibility(strategy: str) -> None:
     mapie = MapieClassifier(estimator=pipe, **STRATEGIES[strategy][0])
     mapie.fit(X, y)
     mapie.predict(X)
+
+
+def test_pred_proba_float64():
+    """Check that the method _check_proba_normalized returns float64."""
+    y_pred_proba = np.random.random((1000, 10)).astype(np.float32)
+    sum_of_rows = y_pred_proba.sum(axis=1)
+    normalized_array = y_pred_proba / sum_of_rows[:, np.newaxis]
+    mapie = MapieClassifier()
+    checked_normalized_array = mapie._check_proba_normalized(normalized_array)
+
+    assert checked_normalized_array.dtype == "float64"
+
+
+@pytest.mark.parametrize("cv", ["prefit", None])
+def test_classif_float32(cv):
+    """Check that by returning float64 arrays there are not
+    empty predictions sets with naive method using both
+    prefit and cv=5. If the y_pred_proba was still in
+    float32, as the quantile=0.90 would have been equal
+    to the highest probability, MAPIE would have return
+    empty prediction sets"""
+    X_cal, y_cal = make_classification(
+        n_samples=20,
+        n_features=20,
+        n_redundant=0,
+        n_informative=20,
+        n_classes=3
+    )
+    X_test, _ = make_classification(
+        n_samples=20,
+        n_features=20,
+        n_redundant=0,
+        n_informative=20,
+        n_classes=3
+    )
+    alpha = .9
+    dummy_classif = Float32OuputModel()
+
+    mapie = MapieClassifier(
+        estimator=dummy_classif, method="naive",
+        cv=cv, random_state=42
+    )
+    mapie.fit(X_cal, y_cal)
+    _, yps = mapie.predict(X_test, alpha=alpha, include_last_label=True)
+
+    assert (
+        np.repeat([[True, False, False]], 20, axis=0)[:, :, np.newaxis] == yps
+    ).all()
