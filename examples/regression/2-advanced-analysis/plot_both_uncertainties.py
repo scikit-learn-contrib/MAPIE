@@ -10,7 +10,6 @@ from typing import Any, Callable, Tuple, TypeVar, Union
 
 from typing_extensions import TypedDict
 import numpy as np
-import pandas as pd
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -19,7 +18,6 @@ import matplotlib.pyplot as plt
 
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
-from mapie.metrics import regression_coverage_score
 from mapie._typing import NDArray
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -101,9 +99,6 @@ polyn_model_quant = Pipeline(
     ]
 )
 
-strategies = []
-width = []
-coverage = []
 
 # Estimating prediction intervals
 Params = TypedDict("Params", {"method": str, "cv": Union[int, str]})
@@ -138,10 +133,6 @@ for strategy, params in STRATEGIES.items():
         mapie = MapieRegressor(polyn_model, **params)
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
-    y_pred_low, y_pred_up = y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
-    strategies.append(strategy)
-    width.append((y_pred_up - y_pred_low).mean())
-    coverage.append(regression_coverage_score(y_test, y_pred_low, y_pred_up))
 
 
 # Visualization
@@ -199,11 +190,4 @@ ax.axhline(1.96 * 2 * noise, ls="--", color="k")
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 ax.legend(list(STRATEGIES.keys()) + ["True width"], fontsize=8)
-
-data = pd.DataFrame(
-    list(zip(strategies, coverage, width)),
-    columns=['strategy', 'coverage', 'width']
-)
-print(data)
-
 plt.show()

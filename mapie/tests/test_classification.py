@@ -235,7 +235,7 @@ COVERAGES = {
     "cumulated_score_randomized_cv_mean": 5 / 9,
     "cumulated_score_include_cv_crossval": 2 / 9,
     "cumulated_score_not_include_cv_crossval": 0,
-    "cumulated_score_randomized_cv_crossval": 6 / 9,
+    "cumulated_score_randomized_cv_crossval": 5 / 9,
     "naive": 5 / 9,
     "top_k": 1
 }
@@ -369,7 +369,7 @@ y_toy_mapie = {
         [True, False, False],
         [False, False, False],
         [True, False, False],
-        [True, True, False],
+        [False, True, False],
         [False, True, False],
         [False, True, False],
         [False, True, True],

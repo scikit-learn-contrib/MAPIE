@@ -138,10 +138,6 @@ polyn_model_quant = Pipeline(
     ]
 )
 
-strategies = []
-width = []
-coverage = []
-
 Params = TypedDict("Params", {"method": str, "cv": Union[int, str]})
 STRATEGIES = {
     "jackknife": Params(method="base", cv=-1),
