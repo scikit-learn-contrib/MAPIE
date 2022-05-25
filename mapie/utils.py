@@ -461,20 +461,18 @@ def check_lower_upper_bounds(
         init_pred = y_preds
     else:
         init_pred, init_lower_bound, init_upper_bound = y_preds
-        if np.any(np.logical_or(
+    if y_preds.ndim != 1 and np.any(np.logical_or(
             init_lower_bound >= init_upper_bound,
             init_pred <= init_lower_bound,
             init_pred >= init_upper_bound
             )
-        ):
-            warnings.warn(
-                "WARNING: The initial prediction values from the "
-                + "quantile method\npresent issues as the upper "
-                "quantile values might be higher than the\nlower "
-                + "quantile values."
-            )
-        else:
-            pass
+    ):
+        warnings.warn(
+            "WARNING: The initial prediction values from the "
+            + "quantile method\npresent issues as the upper "
+            "quantile values might be higher than the\nlower "
+            + "quantile values."
+        )
     if np.any(np.logical_or(
         y_pred_low >= y_pred_up,
         init_pred <= y_pred_low,
@@ -486,5 +484,3 @@ def check_lower_upper_bounds(
             "predictions, the upper and lower bound present issues as one "
             "might be higher or lower than the other."
         )
-    else:
-        pass

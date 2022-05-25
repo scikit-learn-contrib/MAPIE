@@ -93,7 +93,11 @@ polyn_model = Pipeline(
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", QuantileRegressor(fit_intercept=False, solver="highs")),
+        ("linear", QuantileRegressor(
+            alpha=1e-9,
+            fit_intercept=False,
+            solver="highs",
+            )),
     ]
 )
 

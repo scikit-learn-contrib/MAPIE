@@ -80,15 +80,15 @@ STRATEGIES = {
     }
 
 WIDTHS = {
-    "quantile_alpha2": 368.4755759683198,
-    "quantile_alpha3": 319.487008615549,
-    "quantile_alpha4": 284.56158261736726,
+    "quantile_alpha2": 2.7360884795455576,
+    "quantile_alpha3": 2.185652142101473,
+    "quantile_alpha4": 1.731718678152845,
 }
 
 COVERAGES = {
-    "quantile_alpha2": 0.786,
-    "quantile_alpha3": 0.71,
-    "quantile_alpha4": 0.628,
+    "quantile_alpha2": 0.834,
+    "quantile_alpha3": 0.738,
+    "quantile_alpha4": 0.646,
 }
 
 
@@ -144,7 +144,7 @@ def test_default_parameters_estimator() -> None:
     mapie_reg.fit(X_train, y_train, X_calib, y_calib)
     for estimator in mapie_reg.estimators_:
         assert isinstance(estimator, QuantileRegressor)
-        assert estimator.__dict__["solver"] == "highs"
+        assert estimator.__dict__["solver"] == "highs-ds"
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])

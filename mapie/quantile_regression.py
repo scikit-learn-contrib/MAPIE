@@ -26,6 +26,16 @@ from .regression import MapieRegressor
 
 
 class MapieQuantileRegressor(MapieRegressor):
+    """
+    This class implements the conformalized quantile regression strategy
+    to make conformal predictions. The only valid ``method`` is "quantile"
+    and the only valid default ``cv`` is "split".
+    References
+    ----------
+    Yaniv Romano, Evan Patterson and Emmanuel J. Candès.
+    "Conformalized Quantile Regression"
+    https://proceedings.neurips.cc/paper/2019/hash/5103c3584b063c431bd1268e9b5e76fb-Abstract.html
+    """
     valid_methods_ = ["quantile"]
     fit_attributes = [
         "estimators_",
@@ -65,7 +75,7 @@ class MapieQuantileRegressor(MapieRegressor):
         estimator: Optional[Union[RegressorMixin, Pipeline]] = None,
         method: str = "quantile",
         alpha: float = 0.1,
-        cv: Union[int, str] = None,
+        cv: Optional[Union[int, str]] = None,
     ) -> None:
         super().__init__(
             estimator=estimator,
@@ -157,7 +167,10 @@ class MapieQuantileRegressor(MapieRegressor):
             estimator and therefore we cannot use it.
         """
         if estimator is None:
-            return QuantileRegressor(solver="highs")
+            return QuantileRegressor(
+                solver="highs-ds",
+                alpha=1e-9,
+            )
         if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
             raise ValueError(
                 "Invalid estimator. "
@@ -229,7 +242,7 @@ class MapieQuantileRegressor(MapieRegressor):
             return cv
         else:
             raise ValueError(
-                "Invalid cv method."
+                "Invalid cv method, only valid method is ``split``."
             )
 
     def fit(  # type: ignore
@@ -309,10 +322,9 @@ class MapieQuantileRegressor(MapieRegressor):
         else:
             estimator = checked_estimator
         name_estimator = estimator.__class__.__name__
+        alpha_name = self.quantile_estimator_params[
+            name_estimator]["alpha_name"]
         for i, alpha_ in enumerate(alpha):
-            alpha_name = self.quantile_estimator_params[
-                name_estimator
-                ]["alpha_name"]
             cloned_estimator_ = clone(checked_estimator)
             params = {alpha_name: alpha_}
             if isinstance(checked_estimator, Pipeline):

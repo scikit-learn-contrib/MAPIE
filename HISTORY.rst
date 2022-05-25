@@ -5,6 +5,7 @@ History
 0.3.3 (2022-XX-XX)
 ------------------
 * Relax and fix typing
+* Add Split Conformal Quantile Regression
 
 0.3.2 (2022-03-11)
 ------------------

@@ -12,7 +12,6 @@ from typing import Tuple, Union
 from typing_extensions import TypedDict
 import scipy
 import numpy as np
-import pandas as pd
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -21,7 +20,6 @@ from matplotlib import pyplot as plt
 
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
-from mapie.metrics import regression_coverage_score
 from mapie._typing import NDArray
 
 
@@ -132,7 +130,11 @@ polyn_model = Pipeline(
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
-        ("linear", QuantileRegressor(fit_intercept=False, solver="highs")),
+        ("linear", QuantileRegressor(
+            alpha=1e-9,
+            fit_intercept=False,
+            solver="highs",
+        )),
     ]
 )
 
@@ -172,7 +174,6 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         y_pred, y_pis = mapie.predict(
             X_test.reshape(-1, 1)
         )
-        print(mapie.estimators_)
     else:
         mapie = MapieRegressor(
             polyn_model, agg_function="median", n_jobs=-1, **params
@@ -182,10 +183,6 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
             X_test.reshape(-1, 1),
             alpha=0.05,
         )
-    y_pred_low, y_pred_up = y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
-    strategies.append(strategy)
-    width.append((y_pred_up - y_pred_low).mean())
-    coverage.append(regression_coverage_score(y_test, y_pred_low, y_pred_up))
     plot_1d_data(
         X_train,
         y_train,
@@ -198,11 +195,4 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         axs[i],
         strategy,
     )
-
-data = pd.DataFrame(
-    list(zip(strategies, coverage, width)),
-    columns=['strategy', 'coverage', 'width']
-)
-print(data)
-
 plt.show()

@@ -12,7 +12,6 @@ from typing import Tuple, Union
 from typing_extensions import TypedDict
 import scipy
 import numpy as np
-import pandas as pd
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -21,7 +20,6 @@ from matplotlib import pyplot as plt
 
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
-from mapie.metrics import regression_coverage_score
 from mapie._typing import NDArray
 
 
@@ -30,7 +28,7 @@ def f(x: NDArray) -> NDArray:
     return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
 
 
-def get_heteroskedastic_data(
+def get_heteroscedastic_data(
     n_train: int = 200, n_true: int = 200, sigma: float = 0.1
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, float]:
     """
@@ -125,7 +123,7 @@ def plot_1d_data(
     ax.legend()
 
 
-X_train, y_train, X_test, y_test, y_test_sigma = get_heteroskedastic_data()
+X_train, y_train, X_test, y_test, y_test_sigma = get_heteroscedastic_data()
 
 polyn_model = Pipeline(
     [
@@ -136,13 +134,12 @@ polyn_model = Pipeline(
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
-        ("linear", QuantileRegressor(fit_intercept=False, solver="highs")),
+        ("linear", QuantileRegressor(
+            alpha=1e-9,
+            fit_intercept=False,
+        )),
     ]
 )
-
-strategies = []
-width = []
-coverage = []
 
 Params = TypedDict("Params", {"method": str, "cv": Union[int, str]})
 STRATEGIES = {
@@ -176,7 +173,6 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         y_pred, y_pis = mapie.predict(
             X_test.reshape(-1, 1)
         )
-        print(mapie.estimators_)
     else:
         mapie = MapieRegressor(
             polyn_model, agg_function="median", n_jobs=-1, **params
@@ -186,10 +182,6 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
             X_test.reshape(-1, 1),
             alpha=0.05,
         )
-    y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
-    strategies.append(strategy)
-    width.append((y_pred_up - y_pred_low).mean())
-    coverage.append(regression_coverage_score(y_test, y_pred_low, y_pred_up))
     plot_1d_data(
         X_train,
         y_train,
@@ -202,11 +194,4 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         axs[i],
         strategy,
     )
-
-data = pd.DataFrame(
-    list(zip(strategies, coverage, width)),
-    columns=['strategy', 'coverage', 'width']
-)
-print(data)
-
 plt.show()
