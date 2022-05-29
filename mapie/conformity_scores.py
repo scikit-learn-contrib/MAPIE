@@ -175,11 +175,22 @@ class AbsoluteConformityScore(ConformityScore):
         y: ArrayLike,
         y_pred: ArrayLike,
     ) -> ArrayLike:
+        """
+        Compute the signed conformity scores from the predicted values
+        and the observed ones, from the following formula:
+        signed conformity score = y - y_pred
+        """
         return y - y_pred
 
     def get_observed_value(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> ArrayLike:
+        """
+        Compute the observed values from the predicted values and the
+        conformity scores, from the following formula:
+        signed conformity score = y - y_pred
+        <=> y = y_pred + signed conformity score
+        """
         return y_pred + conformity_scores
 
 
@@ -201,9 +212,20 @@ class GammaConformityScore(ConformityScore):
         y: ArrayLike,
         y_pred: ArrayLike,
     ) -> ArrayLike:
+        """
+        Compute the signed conformity scores from the predicted values
+        and the observed ones, from the following formula:
+        signed conformity score = (y - y_pred) / y_pred
+        """
         return (y - y_pred) / y_pred
 
     def get_observed_value(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> ArrayLike:
+        """
+        Compute the observed values from the predicted values and the
+        conformity scores, from the following formula:
+        signed conformity score = (y - y_pred) / y_pred
+        <=> y = y_pred * (1 + signed conformity score)
+        """
         return y_pred * (1 + conformity_scores)
