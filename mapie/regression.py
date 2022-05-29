@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Iterable, List, Optional, Tuple, Union, cast
 
+from joblib import Parallel, delayed
 import numpy as np
 import numpy.ma as ma
-from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
