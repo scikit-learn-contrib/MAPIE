@@ -197,7 +197,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "single_estimator_",
         "estimators_",
         "k_",
-        "conformity_score_",
+        "conformity_score_function_",
         "conformity_scores_",
         "n_features_in_",
         "n_samples_",
@@ -563,7 +563,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self.conformity_scores_ = conformity_score.get_conformity_scores(
             y, y_pred
         )
-        self.conformity_score_ = conformity_score
+        self.conformity_score_function_ = conformity_score
 
         return self
 
@@ -635,7 +635,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             alpha_ = cast(ArrayLike, alpha_)
             check_alpha_and_n_samples(alpha_, self.conformity_scores_.shape[0])
             if self.method in ["naive", "base"] or self.cv == "prefit":
-                if self.conformity_score_.sym:
+                if self.conformity_score_function_.sym:
                     conformity_scores_q_low_bound = -np.quantile(
                         self.conformity_scores_,
                         1 - alpha_,
@@ -657,10 +657,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         alpha_upper_bound,
                         interpolation="higher",
                     )
-                y_pred_low = self.conformity_score_.get_observed_value(
+                y_pred_low = (
+                    self.conformity_score_function_.get_observed_value(
                     y_pred[:, np.newaxis], conformity_scores_q_low_bound
                 )
-                y_pred_up = self.conformity_score_.get_observed_value(
+                )
+                y_pred_up = self.conformity_score_function_.get_observed_value(
                     y_pred[:, np.newaxis], conformity_scores_q_up_bound
                 )
             else:
@@ -682,20 +684,20 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
 
                 if self.method == "plus":
-                    if self.conformity_score_.sym:
+                    if self.conformity_score_function_.sym:
                         y_pred_multi_with_conformity_scores_lower_bound = (
-                            self.conformity_score_.get_observed_value(
+                            self.conformity_score_function_.get_observed_value(
                                 y_pred_multi, -self.conformity_scores_
                             )
                         )
                         y_pred_multi_with_conformity_scores_upper_bound = (
-                            self.conformity_score_.get_observed_value(
+                            self.conformity_score_function_.get_observed_value(
                                 y_pred_multi, self.conformity_scores_
                             )
                         )
                     else:
                         y_pred_multi_with_conformity_scores_lower_bound = (
-                            self.conformity_score_.get_observed_value(
+                            self.conformity_score_function_.get_observed_value(
                                 y_pred_multi, self.conformity_scores_
                             )
                         )
@@ -706,25 +708,25 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 if self.method == "minmax":
                     lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
                     upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
-                    if self.conformity_score_.sym:
+                    if self.conformity_score_function_.sym:
                         y_pred_multi_with_conformity_scores_lower_bound = (
-                            self.conformity_score_.get_observed_value(
+                            self.conformity_score_function_.get_observed_value(
                                 lower_bounds, -self.conformity_scores_
                             )
                         )
                         y_pred_multi_with_conformity_scores_upper_bound = (
-                            self.conformity_score_.get_observed_value(
+                            self.conformity_score_function_.get_observed_value(
                                 upper_bounds, self.conformity_scores_
                             )
                         )
                     else:
                         y_pred_multi_with_conformity_scores_lower_bound = (
-                            self.conformity_score_.get_observed_value(
+                            self.conformity_score_function_.get_observed_value(
                                 lower_bounds, self.conformity_scores_
                             )
                         )
                         y_pred_multi_with_conformity_scores_upper_bound = (
-                            self.conformity_score_.get_observed_value(
+                            self.conformity_score_function_.get_observed_value(
                                 upper_bounds, self.conformity_scores_
                             )
                         )
