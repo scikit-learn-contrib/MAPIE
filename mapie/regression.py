@@ -634,129 +634,66 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         else:
             alpha_ = cast(ArrayLike, alpha_)
             check_alpha_and_n_samples(alpha_, self.conformity_scores_.shape[0])
+
+            # compute perturbed model predictions on test set
             if self.method in ["naive", "base"] or self.cv == "prefit":
-                if self.conformity_score_function_.sym:
-                    conformity_scores_q_low_bound = -np.quantile(
-                        self.conformity_scores_,
-                        1 - alpha_,
-                        interpolation="higher",
-                    )
-                    conformity_scores_q_up_bound = (
-                        -conformity_scores_q_low_bound
-                    )
-                else:
-                    alpha_lower_bound = alpha_ / 2
-                    alpha_upper_bound = 1 - alpha_ / 2
-                    conformity_scores_q_low_bound = np.quantile(
-                        self.conformity_scores_,
-                        alpha_lower_bound,
-                        interpolation="higher",
-                    )
-                    conformity_scores_q_up_bound = np.quantile(
-                        self.conformity_scores_,
-                        alpha_upper_bound,
-                        interpolation="higher",
-                    )
-                y_pred_low = (
-                    self.conformity_score_function_.get_observed_value(
-                    y_pred[:, np.newaxis], conformity_scores_q_low_bound
-                )
-                )
-                y_pred_up = self.conformity_score_function_.get_observed_value(
-                    y_pred[:, np.newaxis], conformity_scores_q_up_bound
-                )
+                y_pred_multi_low = y_pred[:, np.newaxis]
+                y_pred_multi_up = y_pred[:, np.newaxis]
             else:
                 y_pred_multi = np.column_stack(
                     [e.predict(X) for e in self.estimators_]
                 )
-
-                # At this point, y_pred_multi is of shape
-                # (n_samples_test, n_estimators_).
-                # If ``method`` is "plus":
-                #   - if ``cv`` is not a ``Subsample``,
-                #       we enforce y_pred_multi to be of shape
-                #       (n_samples_test, n_samples_train),
-                #       thanks to the folds identifier.
-                #   - if ``cv``is a ``Subsample``, the methode
-                #       ``aggregate_with_mask`` fits it to the right size
-                #       thanks to the shape of k_.
-
                 y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
-
                 if self.method == "plus":
-                    if self.conformity_score_function_.sym:
-                        y_pred_multi_with_conformity_scores_lower_bound = (
-                            self.conformity_score_function_.get_observed_value(
-                                y_pred_multi, -self.conformity_scores_
-                            )
-                        )
-                        y_pred_multi_with_conformity_scores_upper_bound = (
-                            self.conformity_score_function_.get_observed_value(
-                                y_pred_multi, self.conformity_scores_
-                            )
-                        )
-                    else:
-                        y_pred_multi_with_conformity_scores_lower_bound = (
-                            self.conformity_score_function_.get_observed_value(
-                                y_pred_multi, self.conformity_scores_
-                            )
-                        )
-                        y_pred_multi_with_conformity_scores_upper_bound = (
-                            y_pred_multi_with_conformity_scores_lower_bound
-                        )
-
-                if self.method == "minmax":
-                    lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
-                    upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
-                    if self.conformity_score_function_.sym:
-                        y_pred_multi_with_conformity_scores_lower_bound = (
-                            self.conformity_score_function_.get_observed_value(
-                                lower_bounds, -self.conformity_scores_
-                            )
-                        )
-                        y_pred_multi_with_conformity_scores_upper_bound = (
-                            self.conformity_score_function_.get_observed_value(
-                                upper_bounds, self.conformity_scores_
-                            )
-                        )
-                    else:
-                        y_pred_multi_with_conformity_scores_lower_bound = (
-                            self.conformity_score_function_.get_observed_value(
-                                lower_bounds, self.conformity_scores_
-                            )
-                        )
-                        y_pred_multi_with_conformity_scores_upper_bound = (
-                            self.conformity_score_function_.get_observed_value(
-                                upper_bounds, self.conformity_scores_
-                            )
-                        )
-
-                y_pred_low = np.column_stack(
-                    [
-                        np.quantile(
-                            ma.masked_invalid(
-                                y_pred_multi_with_conformity_scores_lower_bound
-                            ),
-                            _alpha,
-                            axis=1,
-                            interpolation="lower",
-                        )
-                        for _alpha in alpha_
-                    ]
-                ).data
-                y_pred_up = np.column_stack(
-                    [
-                        np.quantile(
-                            ma.masked_invalid(
-                                y_pred_multi_with_conformity_scores_upper_bound
-                            ),
-                            1 - _alpha,
-                            axis=1,
-                            interpolation="higher",
-                        )
-                        for _alpha in alpha_
-                    ]
-                ).data
+                    y_pred_multi_low = y_pred_multi
+                    y_pred_multi_up = y_pred_multi
+                elif self.method == "minmax":
+                    y_pred_multi_low = np.min(
+                        y_pred_multi, axis=1, keepdims=True
+                    )
+                    y_pred_multi_up = np.max(
+                        y_pred_multi, axis=1, keepdims=True
+                    )
                 if ensemble:
                     y_pred = aggregate_all(self.agg_function, y_pred_multi)
+
+            # compute distributions of lower and upper bounds
+            if self.conformity_score_function_.sym:
+                conformity_scores_low = -self.conformity_scores_
+                conformity_scores_up = self.conformity_scores_
+            else:
+                conformity_scores_low = self.conformity_scores_
+                conformity_scores_up = self.conformity_scores_
+                alpha_ = alpha_ / 2
+            lower_bounds = self.conformity_score_function_.get_observed_value(
+                y_pred_multi_low, conformity_scores_low
+            )
+            upper_bounds = self.conformity_score_function_.get_observed_value(
+                y_pred_multi_up, conformity_scores_up
+            )
+
+            # get desired confidence intervals according to alpha
+            y_pred_low = np.column_stack(
+                [
+                    np.quantile(
+                        ma.masked_invalid(lower_bounds),
+                        _alpha,
+                        axis=1,
+                        interpolation="lower",
+                    )
+                    for _alpha in alpha_
+                ]
+            ).data
+            y_pred_up = np.column_stack(
+                [
+                    np.quantile(
+                        ma.masked_invalid(upper_bounds),
+                        1 - _alpha,
+                        axis=1,
+                        interpolation="higher",
+                    )
+                    for _alpha in alpha_
+                ]
+            ).data
+
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
