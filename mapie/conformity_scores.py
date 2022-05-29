@@ -54,7 +54,7 @@ class ConformityScore(metaclass=ABCMeta):
         """Placeholder for get_signed_conformity_scores.
         Subclasses should implement this method!
 
-        Compute the unsigned conformity scores from the predicted values
+        Compute the signed conformity scores from the predicted values
         and the observed ones.
 
         Parameters
@@ -160,7 +160,7 @@ class ConformityScore(metaclass=ABCMeta):
 class AbsoluteConformityScore(ConformityScore):
     """Absolute conformity score.
 
-    The unsigned conformity score = y - y_pred.
+    The signed conformity score = y - y_pred.
     The conformity score is symmetrical.
 
     This is appropriate when the confidence interval is symmetrical and
@@ -186,7 +186,7 @@ class AbsoluteConformityScore(ConformityScore):
 class GammaConformityScore(ConformityScore):
     """Gamma conformity score.
 
-    The unsigned conformity score = (y - y_pred) / y_pred.
+    The signed conformity score = (y - y_pred) / y_pred.
     The conformity score is not symmetrical.
 
     This is appropriate when the confidence interval is not symmetrical and
