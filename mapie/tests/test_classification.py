@@ -530,9 +530,6 @@ class Float32OuputModel:
     def predict(self, X: NDArray, *args: Any) -> NDArray:
         return np.repeat(1, len(X))
 
-    def _get_param_names(self):
-        return ["prefit"]
-
     def get_params(self, *args: Any, **kwargs: Any):
         return {"prefit": False}
 
