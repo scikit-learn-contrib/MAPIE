@@ -483,7 +483,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         random_state = check_random_state(self.random_state)
         us = random_state.uniform(size=(prediction_sets.shape[0], 1))
         # remove last label from comparison between uniform number and V
-        vs_less_than_us = vs < us
+        vs_less_than_us = np.less_equal(vs - us, EPSILON)
         np.put_along_axis(
             prediction_sets,
             y_pred_index_last,

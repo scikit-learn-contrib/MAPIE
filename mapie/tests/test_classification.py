@@ -229,13 +229,13 @@ COVERAGES = {
     "score_cv_crossval": 1,
     "cumulated_score_include": 1,
     "cumulated_score_not_include": 5 / 9,
-    "cumulated_score_randomized": 5 / 9,
+    "cumulated_score_randomized": 6 / 9,
     "cumulated_score_include_cv_mean": 1,
     "cumulated_score_not_include_cv_mean": 5 / 9,
     "cumulated_score_randomized_cv_mean": 5 / 9,
     "cumulated_score_include_cv_crossval": 2 / 9,
     "cumulated_score_not_include_cv_crossval": 0,
-    "cumulated_score_randomized_cv_crossval": 6 / 9,
+    "cumulated_score_randomized_cv_crossval": 4 / 9,
     "naive": 5 / 9,
     "top_k": 1
 }
@@ -307,7 +307,7 @@ y_toy_mapie = {
         [False, True, False],
         [False, True, False],
         [False, True, False],
-        [False, False, True],
+        [False, True, True],
         [False, False, True],
     ],
     "cumulated_score_include_cv_mean": [
@@ -369,11 +369,11 @@ y_toy_mapie = {
         [True, False, False],
         [False, False, False],
         [True, False, False],
-        [True, True, False],
+        [False, True, False],
         [False, True, False],
         [False, True, False],
         [False, True, True],
-        [False, True, True],
+        [False, False, True],
         [False, True, False],
     ],
     "naive": [
@@ -529,9 +529,6 @@ class Float32OuputModel:
 
     def predict(self, X: NDArray, *args: Any) -> NDArray:
         return np.repeat(1, len(X))
-
-    def _get_param_names(self):
-        return ["prefit"]
 
     def get_params(self, *args: Any, **kwargs: Any):
         return {"prefit": False}
