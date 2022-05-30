@@ -217,6 +217,8 @@ class GammaConformityScore(ConformityScore):
         and the observed ones, from the following formula:
         signed conformity score = (y - y_pred) / y_pred
         """
+        self._check_observed_data(y)
+        self._check_predicted_data(y_pred)
         return np.divide(np.subtract(y, y_pred), y_pred)
 
     def get_observed_value(
@@ -228,4 +230,30 @@ class GammaConformityScore(ConformityScore):
         signed conformity score = (y - y_pred) / y_pred
         <=> y = y_pred * (1 + signed conformity score)
         """
+        self._check_predicted_data(y_pred)
         return np.multiply(y_pred, np.add(1, conformity_scores))
+
+    def _check_observed_data(self, y: ArrayLike) -> None:
+        if not self._all_strictly_positive(y):
+            raise ValueError(
+                f"At least one of the observed target is negative "
+                f"which is incompatible with {self.__class__.__name__}. "
+                "All values must be strictly positive, "
+                "in conformity with the Gamma distribution support."
+            )
+
+    def _check_predicted_data(self, y_pred: ArrayLike) -> None:
+        if not self._all_strictly_positive(y_pred):
+            raise ValueError(
+                f"At least one of the predicted target is negative "
+                f"which is incompatible with {self.__class__.__name__}. "
+                "All values must be strictly positive, "
+                "in conformity with the Gamma distribution support."
+            )
+
+    def _all_strictly_positive(self, y: ArrayLike) -> bool:
+        if isinstance(y, list):
+            y = np.array(y)
+        if np.any(y <= 0):
+            return False
+        return True
