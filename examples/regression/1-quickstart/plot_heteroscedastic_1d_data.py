@@ -141,21 +141,21 @@ polyn_model_quant = Pipeline(
     ]
 )
 
-Params = TypedDict("Params", {"method": str, "cv": Union[int, str]})
 STRATEGIES = {
-    "jackknife": Params(method="base", cv=-1),
-    "jackknife_plus": Params(method="plus", cv=-1),
-    "jackknife_minmax": Params(method="minmax", cv=-1),
-    # "cv": Params(method="base", cv=10),
-    "cv_plus": Params(method="plus", cv=10),
-    "cv_minmax": Params(method="minmax", cv=10),
-    "quantile": Params(method="quantile", cv="split"),
+    "jackknife": {"method": "base", "cv": -1},
+    "jackknife_plus": {"method": "plus", "cv": -1},
+    "jackknife_minmax": {"method": "minmax", "cv": -1},
+    # "cv": {"method": "base", "cv": 10},
+    "cv_plus": {"method": "plus", "cv": 10},
+    "cv_minmax": {"method": "minmax", "cv": 10},
+    "quantile": {"method": "quantile", "cv": "split"},
 }
 fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(
     2, 3, figsize=(3 * 6, 12)
 )
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
 for i, (strategy, params) in enumerate(STRATEGIES.items()):
+    print(params)
     if strategy == "quantile":
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
         X_train, X_calib, y_train, y_calib = train_test_split(

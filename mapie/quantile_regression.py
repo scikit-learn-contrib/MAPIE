@@ -28,13 +28,64 @@ from .regression import MapieRegressor
 class MapieQuantileRegressor(MapieRegressor):
     """
     This class implements the conformalized quantile regression strategy
-    to make conformal predictions. The only valid ``method`` is "quantile"
-    and the only valid default ``cv`` is "split".
+    as proposed by Romano et al. (2019) to make conformal predictions.
+    The only valid ``method`` is "quantile" and the only valid default
+    ``cv`` is "split".
+
+    Parameters
+    ----------
+    estimator : Optional[RegressorMixin]
+        Any regressor with scikit-learn API
+        (i.e. with fit and predict methods), by default ``None``.
+        If ``None``, estimator defaults to a ``QuantileRegressor`` instance.
+
+    method: str
+        Method to choose for prediction, in this case, the only valid method
+        is the "quantile" method.
+
+    cv: Optional[str]
+        The cross-validation strategy for computing residuals. The "split" cv
+        is the method used by default. It splits the dataset into a training
+        and calibration set.
+
+    alpha: float
+        Between 0 and 0.5, represents the risk level of the confidence
+        interval.
+        Lower ``alpha`` produce larger (more conservative) prediction
+        intervals.
+        ``alpha`` is the complement of the target coverage level.
+
+        By default 0.1.
+
+    Attributes
+    ----------
+    valid_methods: List[str]
+        List of all valid methods.
+
+    estimators_ : List[RegressorMixin]
+        - [0]: Estimator with quantile value of alpha/2
+        - [1]: Estimator with quantile value of 1 - alpha/2
+        - [2]: Estimator with quantile value of 0.5
+
+    conformity_scores_ : NDArray of shape (n_samples_train, 3)
+        Conformity scores between ``y_calib`` and ``y_pred``:
+            - [:, 0]: for y_calib coming from prediction estimator with
+            quantile of alpha/2
+            - [:, 0]: for y_calib coming from prediction estimator with
+            quantile of 1 - alpha/2
+            - [:, 2]: maximum of those first two scores
+
+    n_features_in_: int
+        Number of features passed to the fit method.
+
+    n_samples_calib: int
+        Number of samples in the calibration dataset.
+
     References
     ----------
     Yaniv Romano, Evan Patterson and Emmanuel J. Candès.
     "Conformalized Quantile Regression"
-    https://proceedings.neurips.cc/paper/2019/hash/5103c3584b063c431bd1268e9b5e76fb-Abstract.html
+    Advances in neural information processing systems 32 (2019).
     """
     valid_methods_ = ["quantile"]
     fit_attributes = [
@@ -74,14 +125,14 @@ class MapieQuantileRegressor(MapieRegressor):
         self,
         estimator: Optional[Union[RegressorMixin, Pipeline]] = None,
         method: str = "quantile",
+        cv: Optional[str] = None,
         alpha: float = 0.1,
-        cv: Optional[Union[int, str]] = None,
     ) -> None:
         super().__init__(
             estimator=estimator,
             method=method,
-            cv=cv
         )
+        self.cv = cv
         self.alpha = alpha
 
     def _check_alpha(
@@ -96,17 +147,19 @@ class MapieQuantileRegressor(MapieRegressor):
         ----------
         alpha : float
             Can only be a float value between 0 and 0.5.
-            Represent the uncertainty of the confidence interval.
+            Represent the risk level of the confidence interval.
             Lower alpha produce larger (more conservative) prediction
             intervals. Alpha is the complement of the target coverage level.
-            Only used at prediction time. By default 0.1
+            By default 0.1
 
         Returns
         -------
         ArrayLike
-            An ArrayLike of three values, first one being the lower quantile
-            value, second the upper quantile value and final being the quantile
-            at which the prediction will be made.
+            An ArrayLike of three values:
+
+            - [0]: alpha value of alpha/2
+            - [1]: alpha value of of 1 - alpha/2
+            - [2]: alpha value of 0.5
 
         Raises
         ------
@@ -135,6 +188,11 @@ class MapieQuantileRegressor(MapieRegressor):
         """
         Perform several checks on the estimator to check if it has
         all the required specifications to be used with this methodology.
+        The estimators that can be used in MapieQuantileRegressor need to
+        have a ``fit`` and ``predict``attribute, but also need to allow
+        a quantile loss and therefore also setting an quantile value.
+        Note that there is a TypedDict to check which methods allow for
+        quantile regression.
 
         Parameters
         ----------
@@ -187,12 +245,13 @@ class MapieQuantileRegressor(MapieRegressor):
                 if name_estimator in self.quantile_estimator_params:
                     param_estimator = estimator.get_params()
                     loss_name, alpha_name = self.quantile_estimator_params[
-                        name_estimator].values()
+                        name_estimator
+                        ].values()
                     if loss_name in param_estimator:
                         if param_estimator[loss_name] != "quantile":
                             raise ValueError(
                                 "You need to set the loss/objective argument"
-                                + " of your base model ``quantile``."
+                                + " of your base model to ``quantile``."
                             )
                         else:
                             if alpha_name in param_estimator:
@@ -210,19 +269,23 @@ class MapieQuantileRegressor(MapieRegressor):
                 else:
                     raise ValueError(
                         "The base model does not seem to be accepted"
-                        + " by MapieQuantileRegressor."
+                        + " by MapieQuantileRegressor. \n"
+                        "Give a base model among: \n"
+                        "``quantile_estimator_params.keys()``"
+                        "Or, add your base model to"
+                        + " ``quantile_estimator_params``"
                     )
 
     def _check_cv(
         self,
-        cv: Union[int, str] = None
-    ) -> Union[int, str]:
+        cv: Optional[str] = None
+    ) -> str:
         """
         Check if cv argument is None or "split".
 
         Parameters
         ----------
-        cv : Union[int, str], optional
+        cv : Optional[str], optional
            cv to check, by default ``None``.
 
         Returns

@@ -101,13 +101,12 @@ polyn_model_quant = Pipeline(
 
 
 # Estimating prediction intervals
-Params = TypedDict("Params", {"method": str, "cv": Union[int, str]})
 STRATEGIES = {
-    "jackknife_plus": Params(method="plus", cv=-1),
-    "jackknife_minmax": Params(method="minmax", cv=-1),
-    # "cv_plus": Params(method="plus", cv=10),
-    "cv_minmax": Params(method="minmax", cv=10),
-    "quantile": Params(method="quantile", cv="split")
+    "jackknife_plus": {"method": "plus", "cv": -1},
+    "jackknife_minmax": {"method": "minmax", "cv": -1},
+    # "cv_plus": {"method": "plus", "cv": 10},
+    "cv_minmax": {"method": "minmax", "cv": 10},
+    "quantile": {"method": "quantile", "cv": "split"},
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
