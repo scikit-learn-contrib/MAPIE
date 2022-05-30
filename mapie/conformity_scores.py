@@ -180,7 +180,7 @@ class AbsoluteConformityScore(ConformityScore):
         and the observed ones, from the following formula:
         signed conformity score = y - y_pred
         """
-        return y - y_pred
+        return np.subtract(y, y_pred)
 
     def get_observed_value(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
@@ -191,7 +191,7 @@ class AbsoluteConformityScore(ConformityScore):
         signed conformity score = y - y_pred
         <=> y = y_pred + signed conformity score
         """
-        return y_pred + conformity_scores
+        return np.add(y_pred, conformity_scores)
 
 
 class GammaConformityScore(ConformityScore):
@@ -217,7 +217,7 @@ class GammaConformityScore(ConformityScore):
         and the observed ones, from the following formula:
         signed conformity score = (y - y_pred) / y_pred
         """
-        return (y - y_pred) / y_pred
+        return np.divide(np.subtract(y, y_pred), y_pred)
 
     def get_observed_value(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
@@ -228,4 +228,4 @@ class GammaConformityScore(ConformityScore):
         signed conformity score = (y - y_pred) / y_pred
         <=> y = y_pred * (1 + signed conformity score)
         """
-        return y_pred * (1 + conformity_scores)
+        return np.multiply(y_pred, np.add(1, conformity_scores))
