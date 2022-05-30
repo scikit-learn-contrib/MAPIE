@@ -284,6 +284,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 axis=0,
                 method="higher",
             ).T  # type: ignore
+            self.lower_quantiles_ = lower_quantiles
+            self.higher_quantiles_ = higher_quantiles
 
             if self.cv == "prefit":
                 y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
