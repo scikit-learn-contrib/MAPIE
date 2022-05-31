@@ -6,9 +6,8 @@ This example uses :class:`mapie.regression.MapieRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
-from typing import Any, Callable, Tuple, TypeVar, Union
+from typing import Any, Callable, Tuple, TypeVar
 
-from typing_extensions import TypedDict
 import numpy as np
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.model_selection import train_test_split
@@ -111,7 +110,9 @@ STRATEGIES = {
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "quantile":
-        mapie = MapieQuantileRegressor(polyn_model_quant, **params)
+        mapie = MapieQuantileRegressor(
+            polyn_model_quant, **params
+        )  # type: ignore
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
@@ -129,7 +130,7 @@ for strategy, params in STRATEGIES.items():
             X_test
         )
     else:
-        mapie = MapieRegressor(polyn_model, **params)
+        mapie = MapieRegressor(polyn_model, **params)  # type: ignore
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 

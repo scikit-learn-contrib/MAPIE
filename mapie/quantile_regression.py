@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Tuple, Union, cast, Iterable, List
+from typing import Optional, Tuple, Union, cast, List
 
 import numpy as np
 from sklearn.base import RegressorMixin, clone
@@ -353,7 +353,7 @@ class MapieQuantileRegressor(MapieRegressor):
         self._check_parameters()
         checked_estimator = self._check_estimator(self.estimator)
         alpha = self._check_alpha(self.alpha)
-        self.cv = self._check_cv(self.cv)
+        self.cv = self._check_cv(cast(str, self.cv))
         X, y = indexable(X, y)
         X_calib, y_calib = indexable(X_calib, y_calib)
         y = _check_y(y)
@@ -413,11 +413,9 @@ class MapieQuantileRegressor(MapieRegressor):
         )
         return self
 
-    def predict(
+    def predict(  # type: ignore
         self,
         X: ArrayLike,
-        ensemble: Optional[bool] = False,
-        alpha: Optional[Union[float, Iterable[float]]] = None,
         symmetry: Optional[bool] = True,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """

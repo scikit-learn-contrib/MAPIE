@@ -7,9 +7,8 @@ Estimate the prediction intervals of 1D homoscedastic data
 the prediction intervals of 1D homoscedastic data using
 different strategies.
 """
-from typing import Tuple, Union
+from typing import Tuple
 
-from typing_extensions import TypedDict
 import scipy
 import numpy as np
 from sklearn.linear_model import LinearRegression, QuantileRegressor
@@ -133,7 +132,6 @@ polyn_model_quant = Pipeline(
         ("linear", QuantileRegressor(
             alpha=1e-9,
             fit_intercept=False,
-            solver="highs",
         )),
     ]
 )
@@ -153,7 +151,9 @@ fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
 for i, (strategy, params) in enumerate(STRATEGIES.items()):
     if strategy == "quantile":
-        mapie = MapieQuantileRegressor(polyn_model_quant, **params)
+        mapie = MapieQuantileRegressor(
+            polyn_model_quant, **params
+        )  # type: ignore
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
@@ -172,7 +172,7 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
     else:
         mapie = MapieRegressor(
             polyn_model, agg_function="median", n_jobs=-1, **params
-        )
+        )  # type: ignore
         mapie.fit(X_train.reshape(-1, 1), y_train)
         y_pred, y_pis = mapie.predict(
             X_test.reshape(-1, 1),
