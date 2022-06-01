@@ -79,7 +79,7 @@ def test_split_BlockBootstrap_error() -> None:
     cv = BlockBootstrap()
     print(cv.length)
     print(cv.n_blocks)
-    with pytest.raises(ValueError, match=r".*At least one argument*"):
+    with pytest.raises(ValueError, match=r".*Exactly one argument*"):
         next(cv.split(X))
     cv = BlockBootstrap(length=20)
     with pytest.raises(ValueError, match=r".*The length of blocks is <= 0 *"):

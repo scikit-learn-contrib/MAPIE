@@ -464,7 +464,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
         return y_pred_multi
 
-
     def fit(
         self,
         X: ArrayLike,

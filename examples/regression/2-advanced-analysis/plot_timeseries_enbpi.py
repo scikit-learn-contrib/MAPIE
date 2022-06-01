@@ -135,14 +135,14 @@ step_size = 1
 
 for step in range(step_size, len(X_test), step_size):
     mapie_enpbi.partial_fit(
-        X_test.iloc[(step - step_size) : step, :],
-        y_test.iloc[(step - step_size) : step],
+        X_test.iloc[(step - step_size):step, :],
+        y_test.iloc[(step - step_size):step],
     )
     (
-        y_pred_pfit_enbpi[step : step + step_size],
-        y_pis_pfit_enbpi[step : step + step_size, :, :],
+        y_pred_pfit_enbpi[step:step + step_size],
+        y_pis_pfit_enbpi[step:step + step_size, :, :],
     ) = mapie_enpbi.predict(
-        X_test.iloc[step : (step + step_size), :],
+        X_test.iloc[step:(step + step_size), :],
         alpha=alpha,
         ensemble=True,
         optimize_beta=True,

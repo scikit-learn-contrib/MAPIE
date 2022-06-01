@@ -5,7 +5,6 @@ from typing import Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from ._compatibility import np_nanquantile
@@ -198,7 +197,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             self.conformity_scores_, -len(new_conformity_scores_)
         )
         self.conformity_scores_[
-            -len(new_conformity_scores_) :
+            -len(new_conformity_scores_):
         ] = new_conformity_scores_
         return self
 
@@ -264,8 +263,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 pred = aggregate_all(self.agg_function, y_pred_multi)
                 lower_bounds, upper_bounds = pred, pred
 
-                y_pred_low = lower_bounds + lower_quantiles.reshape(-1, 1)
-                y_pred_up = upper_bounds + higher_quantiles.reshape(-1, 1)
+                y_pred_low = lower_bounds.reshape(-1, 1) + lower_quantiles
+                y_pred_up = upper_bounds.reshape(-1, 1) + higher_quantiles
 
                 if ensemble:
                     y_pred = aggregate_all(self.agg_function, y_pred_multi)
