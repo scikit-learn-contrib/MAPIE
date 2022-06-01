@@ -223,10 +223,10 @@ def test_linear_regression_results(strategy: str) -> None:
     mapie_ts = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts.fit(X, y)
     if "opt" in strategy:
-        beta_optimize = True
+        optimize_beta = True
     else:
-        beta_optimize = False
-    _, y_pis = mapie_ts.predict(X, alpha=0.05, beta_optimize=beta_optimize)
+        optimize_beta = False
+    _, y_pis = mapie_ts.predict(X, alpha=0.05, optimize_beta=optimize_beta)
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
 

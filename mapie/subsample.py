@@ -27,8 +27,8 @@ class Subsample(BaseCrossValidator):
         the size of the training set.
     replace: bool
         Whether to replace samples in resamplings or not. By default ``True``.
-    random_state: Optional
-        int or RandomState instance. . By default ``None``
+    random_state: Optional[Union[int, RandomState]]
+        int or RandomState instance. By default ``None``
 
 
     Examples
@@ -106,8 +106,8 @@ class Subsample(BaseCrossValidator):
 class BlockBootstrap(BaseCrossValidator):  # type: ignore
     """
     Generate a sampling method, that block bootstraps the training set.
-    It can replace KFold, LeaveOneOut or SubSample as cv argument in the MAPIE
-    class.
+    It can replace KFold, LeaveOneOut or SubSample as cv argument in the
+    MapieRegressor class.
 
     Parameters
     ----------
@@ -117,8 +117,8 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         Length of the blocks. By default ``None``,
         the length of the training set divided by ``n_blocks``.
     overlapping: bool
-                Whether the blocks can overlapp or not. By default ``False``.
-    n_blocsk: int
+        Whether the blocks can overlap or not. By default ``False``.
+    n_blocks: int
         Number of blocks in each resampling. By default ``None``,
         the size of the training set divided by ``length``.
     random_state: Optional
@@ -133,8 +133,8 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
     --------
     >>> import numpy as np
     >>> from mapie.subsample import BlockBootstrap
-    >>> cv = BlockBootstrap(n_resamplings=2, length = 3, random_state=0)
-    >>> X = np.array([1,2,3,4,5,6,7,8,9,10])
+    >>> cv = BlockBootstrap(n_resamplings=2, length=3, random_state=0)
+    >>> X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     >>> for train_index, test_index in cv.split(X):
     ...    print(f"train index is {train_index}, test index is {test_index}")
     train index is [1 2 3 4 5 6 1 2 3 4 5 6], test index is [8 9 7]
@@ -177,33 +177,35 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         ValueError
             If ``length`` is not positive or greater than the train set size.
         """
+        if (self.n_blocks is not None) + (self.length is not None) != 1:
+            raise ValueError(
+                "Exactly one argument between ``length`` or "
+                "``n_blocks`` has to be not None"
+            )
+
+        n = len(X)
+
         if self.n_blocks is not None:
             length = (
-                self.length
-                if self.length is not None
-                else len(X) // self.n_blocks
+                self.length if self.length is not None else n // self.n_blocks
             )
             n_blocks = self.n_blocks
         elif self.length is not None:
             length = self.length
-            n_blocks = (len(X) // self.length) + 1
-        else:
+            n_blocks = (n // self.length) + 1
+
+        indices = np.arange(n)
+        if (length <= 0) or (length > n):
             raise ValueError(
-                "At least one argument between ``length`` or "
-                "``n_blocks`` has to be not None"
-            )
-        indices = np.arange(len(X))
-        if (length <= 0) or (length > len(indices)):
-            raise ValueError(
-                "The length of blocks is <= 0 or greater than the lenght"
+                "The length of blocks is <= 0 or greater than the length"
                 "of training set."
             )
 
         if self.overlapping:
             blocks = sliding_window_view(indices, window_shape=length)
         else:
-            indices = indices[(len(indices) % length):]
-            blocks_number = len(indices) // length
+            indices = indices[(n % length) :]
+            blocks_number = n // length
             blocks = np.asarray(
                 np.array_split(indices, indices_or_sections=blocks_number)
             )

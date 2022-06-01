@@ -439,6 +439,32 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
         raise ValueError("The value of self.agg_function is not correct")
 
+    def _pred_multi(self, X: ArrayLike) -> NDArray:
+        """
+        Return a prediction per train sample for each test sample, by
+        aggregation with matrix  ``k_``.
+
+        Parameters
+        ----------
+            X: NDArray of shape (n_samples_test, n_features)
+                Input data
+
+        Returns
+        -------
+            NDArray of shape (n_samples_test, n_samples_train)
+        """
+        y_pred_multi = np.column_stack(
+            [e.predict(X) for e in self.estimators_]
+        )
+        # At this point, y_pred_multi is of shape
+        # (n_samples_test, n_estimators_). The method
+        # ``aggregate_with_mask`` fits it to the right size
+        # thanks to the shape of k_.
+
+        y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
+        return y_pred_multi
+
+
     def fit(
         self,
         X: ArrayLike,
@@ -617,22 +643,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             y_pred_low = y_pred[:, np.newaxis] - quantile
             y_pred_up = y_pred[:, np.newaxis] + quantile
         else:
-            y_pred_multi = np.column_stack(
-                [e.predict(X) for e in self.estimators_]
-            )
-
-            # At this point, y_pred_multi is of shape
-            # (n_samples_test, n_estimators_).
-            # If ``method`` is "plus":
-            #   - if ``cv`` is not a ``Subsample``,
-            #       we enforce y_pred_multi to be of shape
-            #       (n_samples_test, n_samples_train),
-            #       thanks to the folds identifier.
-            #   - if ``cv``is a ``Subsample``, the methode
-            #       ``aggregate_with_mask`` fits it to the right size
-            #       thanks to the shape of k_.
-
-            y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
+            y_pred_multi = self._pred_multi(X)
 
             if self.method in self.plus_like_method:
                 lower_bounds = y_pred_multi - self.conformity_scores_
