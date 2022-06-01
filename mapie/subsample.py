@@ -190,7 +190,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
                 self.length if self.length is not None else n // self.n_blocks
             )
             n_blocks = self.n_blocks
-        elif self.length is not None:
+        else:
             length = self.length
             n_blocks = (n // self.length) + 1
 
