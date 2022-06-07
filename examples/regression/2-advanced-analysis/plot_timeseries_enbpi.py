@@ -39,9 +39,10 @@ from mapie.subsample import BlockBootstrap
 from mapie.time_series_regression import MapieTimeSeriesRegressor
 
 # Load input data and feature engineering
-demand_df = pd.read_csv(
-    "../data/demand_temperature.csv", parse_dates=True, index_col=0
-)
+url_file = ("https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/" +
+            "master/examples/data/demand_temperature.csv"
+            )
+demand_df = pd.read_csv(url_file, parse_dates=True, index_col=0)
 
 demand_df["Date"] = pd.to_datetime(demand_df.index)
 demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype("int64")
