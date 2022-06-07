@@ -36,10 +36,7 @@ from sklearn.datasets import fetch_openml
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
-from mapie.conformity_scores import (
-    AbsoluteConformityScore,
-    GammaConformityScore,
-)
+from mapie.conformity_scores import GammaConformityScore
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 
@@ -64,9 +61,9 @@ X_train, X_test, y_train, y_test = train_test_split(
     X[features], y, test_size=0.2
 )
 
-# Train model with AbsoluteConformityScore
+# Train model with AbsoluteConformityScore (default conformity score)
 mapie = MapieRegressor(RandomForestRegressor(**rf_kwargs))
-mapie.fit(X_train, y_train, AbsoluteConformityScore())
+mapie.fit(X_train, y_train)
 y_pred_absconfscore, y_pis_absconfscore = mapie.predict(X_test, alpha=[alpha])
 yerr_absconfscore = np.concatenate(
     [

@@ -175,7 +175,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     >>> import numpy as np
     >>> from mapie.regression import MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
-    >>> from mapie.conformity_scores import AbsoluteConformityScore
     >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> mapie_reg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
