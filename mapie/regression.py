@@ -40,8 +40,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     This class implements the jackknife+ strategy and its variations
     for estimating prediction intervals on single-output data. The
-    idea is to evaluate out-of-fold conformity scores on hold-out validation
-    sets and to deduce valid confidence intervals with strong theoretical
+    idea is to evaluate out-of-fold conformity scores (signed residuals,
+    absolute residuals, residuals normalized by the predicted mean...)
+    on hold-out validation sets and to deduce valid confidence intervals
+    with strong theoretical
     guarantees.
 
     Parameters
