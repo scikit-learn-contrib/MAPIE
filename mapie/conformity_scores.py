@@ -144,7 +144,7 @@ class ConformityScore(metaclass=ABCMeta):
                 self.get_observed_value(y_pred, conformity_scores) - y
             )
             max_conf_score = np.max(abs_conformity_scores)
-            if (abs_conformity_scores > self.eps).any():
+            if max_conf_score > self.eps:
                 raise ValueError(
                     "The two functions get_conformity_scores and "
                     "get_observed_value of the ConformityScore class "
