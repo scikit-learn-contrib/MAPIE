@@ -18,15 +18,16 @@ sequential :class:`sklearn.model_selection.TimeSeriesSplit` cross validation,
 in which the training set is prior to the validation set.
 The best model is then feeded into
 :class:`mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate the
-associated prediction intervals. We compare four approaches: with or without
-``partial_fit`` called at every step, and following [6]. It appears that
+associated prediction intervals. We compare two approaches: with or without
+``partial_fit`` called at every step following [6]. It appears that
 ``partial_fit`` offer higher coverage, but with higher width of PIs and is much
 slower.
 """
 
+import matplotlib
+from matplotlib import pylab as plt
 import numpy as np
 import pandas as pd
-from matplotlib import pylab as plt
 from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
@@ -39,9 +40,10 @@ from mapie.subsample import BlockBootstrap
 from mapie.time_series_regression import MapieTimeSeriesRegressor
 
 # Load input data and feature engineering
-url_file = ("https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/" +
-            "master/examples/data/demand_temperature.csv"
-            )
+url_file = (
+    "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/"
+    + "master/examples/data/demand_temperature.csv"
+)
 demand_df = pd.read_csv(url_file, parse_dates=True, index_col=0)
 
 demand_df["Date"] = pd.to_datetime(demand_df.index)
@@ -168,45 +170,37 @@ print(
 )
 
 # Plot estimated prediction intervals on test set
-fig, (ax1, ax2) = plt.subplots(
+fig, axs = plt.subplots(
     nrows=2, ncols=1, figsize=(30, 25), sharey="row", sharex="col"
 )
+font = {"family": "normal", "weight": "bold", "size": 22}
+matplotlib.rc("font", **font)
 
-for ax in [ax1, ax2]:
+
+for i, (ax, w) in enumerate(
+    zip(axs, ["EnbPI, without partial_fit", "EnbPI with partial_fit"])
+):
     ax.set_ylabel("Hourly demand (GW)")
     ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
 
-ax1.plot(
-    demand_test.index, y_pred_npfit_enbpi, lw=2, c="C2", label="Predictions"
-)
-ax1.fill_between(
-    demand_test.index,
-    y_pis_npfit_enbpi[:, 0, 0],
-    y_pis_npfit_enbpi[:, 1, 0],
-    color="C2",
-    alpha=0.2,
-    label="MapieTimeSeriesRegressor PIs",
-)
-ax1.set_title(
-    "EnbPI, without partial_fit.\n"
-    f"Coverage:{coverage_npfit_enbpi:.3f}  Width:{width_npfit_enbpi:.3f}"
-)
-
-ax2.plot(
-    demand_test.index, y_pred_pfit_enbpi, lw=2, c="C2", label="Predictions"
-)
-ax2.fill_between(
-    demand_test.index,
-    y_pis_pfit_enbpi[:, 0, 0],
-    y_pis_pfit_enbpi[:, 1, 0],
-    color="C2",
-    alpha=0.2,
-    label="MapieTimeSeriesRegressor PIs",
-)
-ax2.set_title(
-    "EnbPI with partial_fit.\n"
-    f"Coverage:{coverage_pfit_enbpi:.3f}  Width:{width_pfit_enbpi:.3f}"
-)
-
-ax1.legend()
+    ax.plot(
+        demand_test.index,
+        y_pred_npfit_enbpi,
+        lw=2,
+        c="C2",
+        label="Predictions",
+    )
+    ax.fill_between(
+        demand_test.index,
+        y_pis_npfit_enbpi[:, 0, 0],
+        y_pis_npfit_enbpi[:, 1, 0],
+        color="C2",
+        alpha=0.2,
+        label="MapieTimeSeriesRegressor PIs",
+    )
+    ax.set_title(
+        w + "\n"
+        f"Coverage:{coverage_npfit_enbpi:.3f}  Width:{width_npfit_enbpi:.3f}"
+    )
+axs[0].legend()
 plt.show()

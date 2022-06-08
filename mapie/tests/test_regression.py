@@ -413,21 +413,21 @@ def test_invalid_aggregate_all() -> None:
 
 def test_aggregate_with_mask_with_prefit() -> None:
     """
-    Test ``aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
+    Test ``_aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
     """
     mapie_reg = MapieRegressor(cv="prefit")
     with pytest.raises(
         ValueError,
         match=r".*There should not be aggregation of predictions if cv is*",
     ):
-        mapie_reg.aggregate_with_mask(k, k)
+        mapie_reg._aggregate_with_mask(k, k)
 
     mapie_reg = MapieRegressor(agg_function="nonsense")
     with pytest.raises(
         ValueError,
         match=r".*The value of self.agg_function is not correct*",
     ):
-        mapie_reg.aggregate_with_mask(k, k)
+        mapie_reg._aggregate_with_mask(k, k)
 
 
 def test_pred_loof_isnan() -> None:

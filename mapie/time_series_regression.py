@@ -190,7 +190,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         n = len(self.conformity_scores_)
         if len(X) > n:
             raise ValueError(
-                "You try to update more residuals than there are!"
+                "The number of observations to update is higher than the"
+                "number of training instances."
             )
         new_conformity_scores_ = self._relative_conformity_scores(X, y)
         self.conformity_scores_ = np.roll(
@@ -227,46 +228,46 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         if alpha is None:
             return np.array(y_pred)
+
+        alpha_np = cast(NDArray, alpha)
+        check_alpha_and_n_samples(alpha_np, n)
+
+        if optimize_beta:
+            betas_0 = self._beta_optimize(
+                alpha_np,
+                self.conformity_scores_.reshape(1, -1),
+                self.conformity_scores_.reshape(1, -1),
+            )
         else:
-            alpha_np = cast(NDArray, alpha)
-            check_alpha_and_n_samples(alpha_np, n)
+            betas_0 = np.repeat(alpha[:, np.newaxis] / 2, n, axis=0)
 
-            if optimize_beta:
-                betas_0 = self._beta_optimize(
-                    alpha_np,
-                    self.conformity_scores_.reshape(1, -1),
-                    self.conformity_scores_.reshape(1, -1),
-                )
-            else:
-                betas_0 = np.repeat(alpha[:, np.newaxis] / 2, n, axis=0)
+        lower_quantiles = np_nanquantile(
+            self.conformity_scores_,
+            betas_0[0, :],
+            axis=0,
+            method="lower",
+        ).T
+        higher_quantiles = np_nanquantile(
+            self.conformity_scores_,
+            1 - alpha_np + betas_0[0, :],
+            axis=0,
+            method="higher",
+        ).T
+        self.lower_quantiles_ = lower_quantiles
+        self.higher_quantiles_ = higher_quantiles
 
-            lower_quantiles = np_nanquantile(
-                self.conformity_scores_,
-                betas_0[0, :],
-                axis=0,
-                method="lower",
-            ).T
-            higher_quantiles = np_nanquantile(
-                self.conformity_scores_,
-                1 - alpha_np + betas_0[0, :],
-                axis=0,
-                method="higher",
-            ).T
-            self.lower_quantiles_ = lower_quantiles
-            self.higher_quantiles_ = higher_quantiles
+        if self.cv == "prefit":
+            y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
+            y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
+        else:
+            y_pred_multi = self._pred_multi(X)
+            pred = aggregate_all(self.agg_function, y_pred_multi)
+            lower_bounds, upper_bounds = pred, pred
 
-            if self.cv == "prefit":
-                y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
-                y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
-            else:
-                y_pred_multi = self._pred_multi(X)
-                pred = aggregate_all(self.agg_function, y_pred_multi)
-                lower_bounds, upper_bounds = pred, pred
+            y_pred_low = lower_bounds.reshape(-1, 1) + lower_quantiles
+            y_pred_up = upper_bounds.reshape(-1, 1) + higher_quantiles
 
-                y_pred_low = lower_bounds.reshape(-1, 1) + lower_quantiles
-                y_pred_up = upper_bounds.reshape(-1, 1) + higher_quantiles
+            if ensemble:
+                y_pred = aggregate_all(self.agg_function, y_pred_multi)
 
-                if ensemble:
-                    y_pred = aggregate_all(self.agg_function, y_pred_multi)
-
-            return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
+        return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)

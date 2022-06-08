@@ -397,7 +397,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             y_pred = np.array([])
         return estimator, y_pred, val_index
 
-    def aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
+    def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
         """
         Take the array of predictions, made by the refitted estimators,
         on the testing set, and the 1-nan array indicating for each training
@@ -458,10 +458,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         )
         # At this point, y_pred_multi is of shape
         # (n_samples_test, n_estimators_). The method
-        # ``aggregate_with_mask`` fits it to the right size
+        # ``_aggregate_with_mask`` fits it to the right size
         # thanks to the shape of k_.
 
-        y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
+        y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
         return y_pred_multi
 
     def fit(

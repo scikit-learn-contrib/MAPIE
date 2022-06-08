@@ -197,8 +197,8 @@ def test_prediction_agg_function(
     method: str, cv: Union[LeaveOneOut, KFold], agg_function: str, alpha: int
 ) -> None:
     """
-    Test that predictions differ when ensemble is True/False,
-    but not prediction intervals.
+    Test that PIs are the same but predictions differ when ensemble is
+    True or False.
     """
     mapie = MapieTimeSeriesRegressor(
         method=method, cv=cv, agg_function=agg_function
@@ -265,7 +265,10 @@ def test_not_enough_resamplings() -> None:
 
 
 def test_no_agg_fx_specified_with_subsample() -> None:
-    """Test that a warning is raised if at least one residual is nan."""
+    """
+    Test that an error is raised if ``cv`` is ``BlockBootstrap`` but
+    ``agg_function`` is ``None``.
+    """
     with pytest.raises(
         ValueError, match=r"You need to specify an aggregation*"
     ):
@@ -285,25 +288,6 @@ def test_invalid_aggregate_all() -> None:
         match=r".*Aggregation function called but not defined.*",
     ):
         aggregate_all(None, X)
-
-
-def test_aggregate_with_mask_with_prefit() -> None:
-    """
-    Test ``aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
-    """
-    mapie_ts_reg = MapieTimeSeriesRegressor(cv="prefit")
-    with pytest.raises(
-        ValueError,
-        match=r".*There should not be aggregation of predictions if cv is*",
-    ):
-        mapie_ts_reg.aggregate_with_mask(k, k)
-
-    mapie_ts_reg = MapieTimeSeriesRegressor(agg_function="nonsense")
-    with pytest.raises(
-        ValueError,
-        match=r".*The value of self.agg_function is not correct*",
-    ):
-        mapie_ts_reg.aggregate_with_mask(k, k)
 
 
 def test_pred_loof_isnan() -> None:
@@ -341,10 +325,10 @@ def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
     )
 
 
-def test_MapieTimeSeriesRegressor_partial_fit_two_big() -> None:
+def test_MapieTimeSeriesRegressor_partial_fit_too_big() -> None:
     """Test ``partial_fit`` raised error."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
-    with pytest.raises(ValueError, match=r".*You try to update more*"):
+    with pytest.raises(ValueError, match=r".*The number of observations*"):
         mapie_ts_reg = mapie_ts_reg.partial_fit(X=X, y=y)
 
 
