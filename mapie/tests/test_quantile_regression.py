@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 from typing import Any, Tuple
+from typing_extensions import TypedDict
 
 import pytest
 import numpy as np
 import pandas as pd
 from sklearn.datasets import make_regression
-from sklearn.linear_model import QuantileRegressor
+from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.model_selection import KFold, LeaveOneOut
 from sklearn.utils.validation import check_is_fitted
-from typing_extensions import TypedDict
 from sklearn.pipeline import make_pipeline, Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
@@ -64,7 +64,6 @@ X_train, X_calib, y_train, y_calib = train_test_split(
 SYMMETRY = [True, False]
 ESTIMATOR = [qt, gb]
 
-
 Params = TypedDict(
     "Params",
     {
@@ -93,12 +92,11 @@ COVERAGES = {
 
 
 class NotFitPredictEstimator:
-
     def __init__(self, alpha):
         self.alpha = alpha
 
 
-class NoLossPamametroEstimator(BaseEstimator):
+class NoLossPamameterEstimator(BaseEstimator):
     def __init__(self, alpha):
         self.alpha = alpha
 
@@ -109,7 +107,7 @@ class NoLossPamametroEstimator(BaseEstimator):
         """Dummy predict."""
 
 
-class NoAlphaPamametroEstimator(BaseEstimator):
+class NoAlphaPamameterEstimator(BaseEstimator):
     def __init__(self, alpha, loss):
         self.alpha = alpha
         self.loss = loss
@@ -147,20 +145,8 @@ def test_default_parameters_estimator() -> None:
         assert estimator.__dict__["solver"] == "highs-ds"
 
 
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_valid_estimator(strategy: str) -> None:
-    """Test that valid estimators are not corrupted, for all strategies."""
-    mapie_reg = MapieQuantileRegressor(
-        estimator=qt,
-        **STRATEGIES[strategy]
-        )
-    mapie_reg.fit(X_train_toy, y_train_toy, X_calib_toy, y_calib_toy)
-    for estimator in mapie_reg.estimators_:
-        assert isinstance(estimator, QuantileRegressor)
-
-
 def test_no_predict_fit_estimator() -> None:
-    """Test that valid estimators are not corrupted, for all strategies."""
+    """Test that estimators with not fit or predict methods raise an error."""
     with pytest.raises(
         ValueError,
         match=r".*Invalid estimator.*",
@@ -172,7 +158,7 @@ def test_no_predict_fit_estimator() -> None:
 
 
 def test_no_para_loss_estimator() -> None:
-    """Test to check when it does not have a valid alpha parameter name"""
+    """Test to check when it does not have a valid loss_name."""
     Params = TypedDict(
         "Params",
         {
@@ -182,16 +168,16 @@ def test_no_para_loss_estimator() -> None:
     )
     with pytest.raises(
         ValueError,
-        match=r".*The matching parameter loss_name*",
+        match=r".*The matching parameter `loss_name`*",
     ):
         mapie_reg = MapieQuantileRegressor()
         mapie_reg.quantile_estimator_params[
-            "NoLossPamametroEstimator"
+            "NoLossPamameterEstimator"
         ] = Params(
             loss_name="noloss",
-            alpha_name="notalpha"
+            alpha_name="alpha"
         )
-        mapie_reg.estimator = NoLossPamametroEstimator(
+        mapie_reg.estimator = NoLossPamameterEstimator(
             alpha=0.2
             )
         mapie_reg.fit(X_train_toy, y_train_toy, X_calib_toy, y_calib_toy)
@@ -208,16 +194,16 @@ def test_no_para_alpha_estimator() -> None:
     )
     with pytest.raises(
         ValueError,
-        match=r".*The matching parameter alpha_name*",
+        match=r".*The matching parameter `alpha_name`*",
     ):
         mapie_reg = MapieQuantileRegressor()
         mapie_reg.quantile_estimator_params[
-            "NoAlphaPamametroEstimator"
+            "NoAlphaPamameterEstimator"
         ] = Params(
             loss_name="loss",
             alpha_name="notalpha"
         )
-        mapie_reg.estimator = NoAlphaPamametroEstimator(
+        mapie_reg.estimator = NoAlphaPamameterEstimator(
             alpha=0.2,
             loss="quantile"
             )
@@ -330,11 +316,11 @@ def test_results_for_same_alpha(
         estimator=estimator,
         alpha=0.2
     )
-    mapie_red_clone = clone(mapie_reg)
+    mapie_reg_clone = clone(mapie_reg)
     mapie_reg.fit(X_train, y_train, X_calib, y_calib)
-    mapie_red_clone.fit(X_train, y_train, X_calib, y_calib)
+    mapie_reg_clone.fit(X_train, y_train, X_calib, y_calib)
     y_pred, y_pis = mapie_reg.predict(X, symmetry=symmetry)
-    y_pred_clone, y_pis_clone = mapie_reg.predict(X, symmetry=symmetry)
+    y_pred_clone, y_pis_clone = mapie_reg_clone.predict(X, symmetry=symmetry)
     np.testing.assert_allclose(y_pred, y_pred_clone)
     np.testing.assert_allclose(y_pis[:, 0, 0], y_pis_clone[:, 0, 0])
     np.testing.assert_allclose(y_pis[:, 1, 0], y_pis_clone[:, 1, 0])
@@ -392,7 +378,8 @@ def test_valid_cv(cv: Any) -> None:
     mapie.fit(X_train_toy, y_train_toy, X_calib_toy, y_calib_toy)
 
 
-def test_estimators_not_in_list() -> None:
+@pytest.mark.parametrize("est", [RandomForestClassifier(), LinearRegression()])
+def test_estimators_not_in_list(est: RegressorMixin) -> None:
     """
     Test for estimators that are not in the list, hence not accepted
     estimators
@@ -401,7 +388,7 @@ def test_estimators_not_in_list() -> None:
         ValueError,
         match=r".*The base model does not seem to be accepted by.*",
     ):
-        mapie_reg = MapieQuantileRegressor(estimator=RandomForestClassifier())
+        mapie_reg = MapieQuantileRegressor(estimator=est)
         mapie_reg.fit(X_train_toy, y_train_toy, X_calib_toy, y_calib_toy)
 
 

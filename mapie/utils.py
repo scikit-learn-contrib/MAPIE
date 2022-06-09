@@ -435,10 +435,12 @@ def check_lower_upper_bounds(
     y_pred_up : NDArray of shape (n_samples,)
         Final upper bound prediction with additional quantile
         value added
+
     Raises
     ------
     Warning
         If the aggregated predictions of any training sample would be nan.
+
     Examples
     --------
     >>> import warnings

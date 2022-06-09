@@ -3,7 +3,8 @@
 Estimate the prediction intervals of 1D homoscedastic data
 ==========================================================
 
-:class:`mapie.regression.MapieRegressor` is used to estimate
+:class:`mapie.regression.MapieRegressor` and
+`mapie.quantile_regression.MapieQuantileRegressor` is used to estimate
 the prediction intervals of 1D homoscedastic data using
 different strategies.
 """
@@ -19,6 +20,7 @@ from matplotlib import pyplot as plt
 
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
+from mapie.subsample import Subsample
 from mapie._typing import NDArray
 
 
@@ -29,7 +31,7 @@ def f(x: NDArray) -> NDArray:
 
 def get_homoscedastic_data(
     n_train: int = 200, n_true: int = 200, sigma: float = 0.1
-) -> Tuple[NDArray, NDArray, NDArray, NDArray, float]:
+) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
     """
     Generate one-dimensional data from a given function,
     number of training and test samples and a given standard
@@ -47,7 +49,7 @@ def get_homoscedastic_data(
 
     Returns
     -------
-    Tuple[NDArray, NDArray, NDArray, NDArray, float]
+    Tuple[NDArray, NDArray, NDArray, NDArray, NDArray]
         Generated training and test data.
         [0]: X_train
         [1]: y_train
@@ -61,7 +63,7 @@ def get_homoscedastic_data(
     X_true = np.linspace(0, 1, n_true)
     y_train = f(X_train) + np.random.normal(0, sigma, n_train)
     y_true = f(X_true)
-    y_true_sigma = q95 * sigma
+    y_true_sigma = np.full(X_true.shape[0], q95 * sigma)
     return X_train, y_train, X_true, y_true, y_true_sigma
 
 
@@ -70,7 +72,7 @@ def plot_1d_data(
     y_train: NDArray,
     X_test: NDArray,
     y_test: NDArray,
-    y_test_sigma: float,
+    y_test_sigma: NDArray,
     y_pred: NDArray,
     y_pred_low: NDArray,
     y_pred_up: NDArray,
@@ -140,20 +142,20 @@ STRATEGIES = {
     "jackknife": {"method": "base", "cv": -1},
     "jackknife_plus": {"method": "plus", "cv": -1},
     "jackknife_minmax": {"method": "minmax", "cv": -1},
-    # "cv": {"method": "base", "cv": 10},
     "cv_plus": {"method": "plus", "cv": 10},
-    "cv_minmax": {"method": "minmax", "cv": 10},
-    "quantile": {"method": "quantile", "cv": "split"},
+    "jackknife_plus_ab": {"method": "plus", "cv": Subsample(n_resamplings=50)},
+    "conformalized_quantile_regression": {"method": "quantile", "cv": "split"},
 }
 fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(
     2, 3, figsize=(3 * 6, 12)
 )
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
 for i, (strategy, params) in enumerate(STRATEGIES.items()):
-    if strategy == "quantile":
-        mapie = MapieQuantileRegressor(
-            polyn_model_quant, **params
-        )  # type: ignore
+    if strategy == "conformalized_quantile_regression":
+        mapie = MapieQuantileRegressor(  # type: ignore
+            polyn_model_quant,
+            **params
+        )
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
@@ -170,9 +172,12 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
             X_test.reshape(-1, 1)
         )
     else:
-        mapie = MapieRegressor(
-            polyn_model, agg_function="median", n_jobs=-1, **params
-        )  # type: ignore
+        mapie = MapieRegressor(  # type: ignore
+            polyn_model,
+            agg_function="median",
+            n_jobs=-1,
+            **params
+        )
         mapie.fit(X_train.reshape(-1, 1), y_train)
         y_pred, y_pis = mapie.predict(
             X_test.reshape(-1, 1),

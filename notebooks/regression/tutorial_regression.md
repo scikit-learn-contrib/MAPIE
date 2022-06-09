@@ -6,11 +6,11 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.11.2
+      jupytext_version: 1.13.6
   kernelspec:
-    display_name: mapie_local
+    display_name: Python 3.10.4 ('mapie-notebooks')
     language: python
-    name: mapie_local
+    name: python3
 ---
 
 # Tutorial for regression
@@ -77,7 +77,7 @@ Here, the noise is considered as *homoscedastic*, since it remains constant
 over $x$.
 
 ```python
-min_x, max_x, n_samples, noise = -5, 5, 100, 0.5
+min_x, max_x, n_samples, noise = -5, 5, 300, 0.5
 X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
     x_sinx, min_x, max_x, n_samples, noise
 )
@@ -98,7 +98,7 @@ is able to perfectly fit $x \times \sin(x)$.
 
 ```python
 from sklearn.preprocessing import PolynomialFeatures
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 
 degree_polyn = 10
@@ -106,6 +106,16 @@ polyn_model = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
         ("linear", LinearRegression())
+    ]
+)
+polyn_model_quant = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=degree_polyn)),
+        ("linear", QuantileRegressor(
+                solver="highs-ds",
+                alpha=0.01,
+                fit_intercept=False
+        ))
     ]
 )
 ```
@@ -116,11 +126,13 @@ are then saved in a DataFrame. Here, we set an alpha value of 0.05
 in order to obtain a 95% confidence for our prediction intervals.
 
 ```python
-from typing import Union
+from typing import Union, Optional
 from typing_extensions import TypedDict
 from mapie.regression import MapieRegressor
+from mapie.quantile_regression import MapieQuantileRegressor
 from mapie.subsample import Subsample 
-Params = TypedDict("Params", {"method": str, "cv": Union[int, Subsample]})
+from sklearn.model_selection import train_test_split
+Params = TypedDict("Params", {"method": str, "cv": Union[int, str, Subsample], "alpha": Optional[float]})
 STRATEGIES = {
     "naive": Params(method="naive"),
     "jackknife": Params(method="base", cv=-1),
@@ -131,16 +143,28 @@ STRATEGIES = {
     "cv_minmax": Params(method="minmax", cv=10),
     "jackknife_plus_ab": Params(method="plus", cv=Subsample(n_resamplings=50)),
     "jackknife_minmax_ab": Params(method="minmax", cv=Subsample(n_resamplings=50)),
+    "conformalized_quantile_regression": Params(method="quantile", cv="split", alpha=0.05)
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
-    mapie = MapieRegressor(polyn_model, **params)
-    mapie.fit(X_train, y_train)
-    y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
+    if strategy == "conformalized_quantile_regression":
+        mapie = MapieQuantileRegressor(polyn_model_quant, **params)
+        X_train, X_calib, y_train, y_calib = train_test_split(
+            X_train,
+            y_train,
+            test_size=0.5,
+            random_state=1
+        )
+        mapie.fit(X_train, y_train, X_calib, y_calib)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
+    else:  
+        mapie = MapieRegressor(polyn_model, **params)
+        mapie.fit(X_train, y_train)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 ```
 
 Let’s now compare the confidence intervals with the predicted intervals with obtained 
-by the Jackknife+, Jackknife-minmax, CV+, CV-minmax, Jackknife+-after-Boostrap, and Jackknife-minmax-after-Bootstrap strategies. Note that for the Jackknife-after-Bootstrap method, we call the :class:`mapie.subsample.Subsample` object that allows us to train bootstrapped models.
+by the Jackknife+, Jackknife-minmax, CV+, CV-minmax, Jackknife+-after-Boostrap, and quantile strategies. Note that for the Jackknife-after-Bootstrap method, we call the :class:`mapie.subsample.Subsample` object that allows us to train bootstrapped models.
 
 ```python
 def plot_1d_data(
@@ -168,7 +192,7 @@ def plot_1d_data(
 ```
 
 ```python
-strategies = ["jackknife_plus", "jackknife_minmax" , "cv_plus", "cv_minmax", "jackknife_plus_ab", "jackknife_minmax_ab"]
+strategies = ["jackknife_plus", "jackknife_minmax", "cv_plus", "cv_minmax", "jackknife_plus_ab", "conformalized_quantile_regression"]
 n_figs = len(strategies)
 fig, axs = plt.subplots(3, 2, figsize=(9, 13))
 coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1], axs[2, 0], axs[2, 1]]
@@ -178,7 +202,7 @@ for strategy, coord in zip(strategies, coords):
         y_train.ravel(),
         X_test.ravel(),
         y_mesh.ravel(),
-        1.96*noise,
+        np.full((X_test.shape[0]), 1.96*noise).ravel(),
         y_pred[strategy].ravel(),
         y_pis[strategy][:, 0, 0].ravel(),
         y_pis[strategy][:, 1, 0].ravel(),
@@ -205,10 +229,13 @@ _ = ax.legend(fontsize=10, loc=[1, 0.4])
 As expected, the prediction intervals estimated by the Naive method
 are slightly too narrow. The Jackknife, Jackknife+, CV, CV+, JaB, and J+aB give
 similar widths that are very close to the true width. On the other hand,
-the widths estimated by Jackknife-minmax and CV-minmax are slightly too
+the width estimated by Jackknife-minmax and CV-minmax are slightly too
 wide. Note that the widths given by the Naive, Jackknife, and CV strategies
 are constant because there is a single model used for prediction,
 perturbed models are ignored at prediction time.
+
+It's interesting to observe that quantile strategy offers more varying width,
+often giving much higher but also lower interval width than other methods.
 
 
 Let’s now compare the *effective* coverage, namely the fraction of test
@@ -234,7 +261,230 @@ All strategies except the Naive one give effective coverage close to the expecte
 0.95 value (recall that alpha = 0.05), confirming the theoretical garantees.
 
 
-## 2. Estimating the epistemic uncertainty of out-of-distribution data
+## 2. Estimating the aleatoric uncertainty of heteroscedastic noisy data
+
+```python
+import warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+def x_sinx(x):
+    """One-dimensional x*sin(x) function."""
+    return x*np.sin(x)
+```
+
+```python
+def get_1d_data_with_heteroscedastic_noise(funct, min_x, max_x, n_samples, noise):
+    """
+    Generate 1D noisy data uniformely from the given function 
+    and standard deviation for the noise.
+    """
+    np.random.seed(59)
+    X_train = np.linspace(min_x, max_x, n_samples)
+    np.random.shuffle(X_train)
+    X_test = np.linspace(min_x, max_x, n_samples*5)
+    y_train = np.array(
+        [
+            (funct(x) + (np.random.normal(0, noise))*x) for x in X_train
+        ]
+    )
+    y_test = np.array(
+        [
+            (funct(x) + (np.random.normal(0, noise))*x) for x in X_test
+        ]
+    )
+    y_mesh = funct(X_test)
+    return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
+```
+
+We first generate noisy one-dimensional data uniformely on an interval. 
+Here, the noise is considered as *heteroscedastic*, since it will change with $x$.
+
+```python
+min_x, max_x, n_samples, noise = 0, 5, 300, 0.5
+X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_heteroscedastic_noise(
+    x_sinx, min_x, max_x, n_samples, noise
+)
+```
+
+Let's visualize our noisy function. As x increases, we the data becomes more noisy.
+
+```python
+import matplotlib.pyplot as plt
+plt.xlabel("x") ; plt.ylabel("y")
+plt.scatter(X_train, y_train, color="C0")
+_ = plt.plot(X_test, y_mesh, color="C1")
+```
+
+As mentioned previously, we fit our training data with a simple
+polynomial function. Here, we choose a degree equal to 10 so the function 
+is able to perfectly fit $x \times \sin(x)$.
+
+```python
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.pipeline import Pipeline
+
+degree_polyn = 10
+polyn_model = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=degree_polyn)),
+        ("linear", LinearRegression())
+    ]
+)
+polyn_model_quant = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=degree_polyn)),
+        ("linear", QuantileRegressor(
+                solver="highs-ds",
+                alpha=0.01,
+                fit_intercept=False
+        ))
+    ]
+)
+```
+
+We then estimate the prediction intervals for all the strategies very easily with a
+`fit` and `predict` process. The prediction interval's lower and upper bounds
+are then saved in a DataFrame. Here, we set an alpha value of 0.05
+in order to obtain a 95% confidence for our prediction intervals.
+
+```python
+from typing import Union
+from typing_extensions import TypedDict
+from mapie.regression import MapieRegressor
+from mapie.quantile_regression import MapieQuantileRegressor
+from mapie.subsample import Subsample 
+from sklearn.model_selection import train_test_split
+Params = TypedDict("Params", {"method": str, "cv": Union[int, str, Subsample], "alpha": Optional[float]})
+STRATEGIES = {
+    "naive": Params(method="naive"),
+    "jackknife": Params(method="base", cv=-1),
+    "jackknife_plus": Params(method="plus", cv=-1),
+    "jackknife_minmax": Params(method="minmax", cv=-1),
+    "cv": Params(method="base", cv=10),
+    "cv_plus": Params(method="plus", cv=10),
+    "cv_minmax": Params(method="minmax", cv=10),
+    "jackknife_plus_ab": Params(method="plus", cv=Subsample(n_resamplings=50)),
+    "conformalized_quantile_regression": Params(method="quantile", cv="split", alpha=0.05)
+}
+y_pred, y_pis = {}, {}
+for strategy, params in STRATEGIES.items():
+    if strategy == "conformalized_quantile_regression":
+        mapie = MapieQuantileRegressor(polyn_model_quant, **params)
+        X_train, X_calib, y_train, y_calib = train_test_split(
+            X_train,
+            y_train,
+            test_size=0.5,
+            random_state=1
+        )
+        mapie.fit(X_train, y_train, X_calib, y_calib)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
+    else:  
+        mapie = MapieRegressor(polyn_model, **params)
+        mapie.fit(X_train, y_train)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
+```
+
+Let’s now compare the confidence intervals with the predicted intervals with obtained 
+by the Jackknife+, Jackknife-minmax, CV+, CV-minmax, Jackknife+-after-Boostrap, and quantile strategies. Note that for the Jackknife-after-Bootstrap method, we call the :class:`mapie.subsample.Subsample` object that allows us to train bootstrapped models.
+
+```python
+def plot_1d_data(
+    X_train,
+    y_train, 
+    X_test,
+    y_test,
+    y_sigma,
+    y_pred, 
+    y_pred_low, 
+    y_pred_up,
+    ax=None,
+    title=None
+):
+    ax.set_xlabel("x") ; ax.set_ylabel("y")
+    ax.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3)
+    ax.scatter(X_train, y_train, color="red", alpha=0.3, label="Training data")
+    ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
+    ax.plot(X_test, y_test - y_sigma, color="gray", ls="--")
+    ax.plot(X_test, y_test + y_sigma, color="gray", ls="--")
+    ax.plot(X_test, y_pred, color="blue", alpha=0.5, label="Prediction intervals")
+    if title is not None:
+        ax.set_title(title)
+    ax.legend()
+```
+
+```python
+strategies = ["jackknife_plus", "jackknife_minmax", "cv_plus", "cv_minmax", "jackknife_plus_ab", "conformalized_quantile_regression"]
+n_figs = len(strategies)
+fig, axs = plt.subplots(3, 2, figsize=(9, 13))
+coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1], axs[2, 0], axs[2, 1]]
+for strategy, coord in zip(strategies, coords):
+    plot_1d_data(
+        X_train.ravel(),
+        y_train.ravel(),
+        X_test.ravel(),
+        y_mesh.ravel(),
+        (1.96*noise*X_test).ravel(),
+        y_pred[strategy].ravel(),
+        y_pis[strategy][:, 0, 0].ravel(),
+        y_pis[strategy][:, 1, 0].ravel(),
+        ax=coord,
+        title=strategy
+    )
+```
+
+We can observe that all of the strategies seem to have similar constant prediction intervals. 
+On the other hand, the quantile strategy offers a solution with prediction intervals
+that are smaller when x is small and that become larger as the noise in the data grows
+with heteroscedasticity.
+
+```python
+fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+ax.plot(X_test, 1.96*2*noise*X_test, ls="--", color="k", label="True width")
+for strategy in STRATEGIES:
+    ax.plot(X_test, y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0], label=strategy)
+ax.set_xlabel("x")
+ax.set_ylabel("Prediction Interval Width")
+_ = ax.legend(fontsize=10, loc=[1, 0.4])
+```
+
+```python
+fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+ax.axhline(1.96*2*noise, ls="--", color="k", label="True width")
+for strategy in STRATEGIES:
+    ax.plot(X_test, y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0], label=strategy)
+ax.set_xlabel("x")
+ax.set_ylabel("Prediction Interval Width")
+ax.set_ylim(6, 8)
+_ = ax.legend(fontsize=10, loc=[1, 0.4])
+```
+
+As we can observe all the strategies behave in a similar way as in the first example shown previously expect the quantile method which takes into account the heteroscedasticity of the data. In that method we observe very low interval widths at low values of $x$. As $x$ grows, so does the width interval and for $x > 2.75$ the interval width becomes larger for the quantile method compared to the other strategies.
+
+
+Let’s now compare the *effective* coverage, namely the fraction of test
+points whose true values lie within the prediction intervals, given by
+the different strategies. 
+
+```python
+import pandas as pd
+from mapie.metrics import regression_coverage_score
+pd.DataFrame([
+    [
+        regression_coverage_score(
+            y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
+        ),
+        (
+            y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]
+        ).mean()
+    ] for strategy in STRATEGIES
+], index=STRATEGIES, columns=["Coverage", "Width average"]).round(2)
+```
+
+All strategies have the wanted coverage, however, we notice that the quantile strategy has much lower coverage than all other methods.
+
+
+## 3. Estimating the epistemic uncertainty of out-of-distribution data
 
 
 Let’s now consider one-dimensional data without noise, but normally distributed.
@@ -263,7 +513,7 @@ def get_1d_data_with_normal_distrib(funct, mu, sigma, n_samples, noise):
 ```
 
 ```python
-mu = 0 ; sigma = 2 ; n_samples = 300 ; noise = 0.
+mu = 0 ; sigma = 2 ; n_samples = 600 ; noise = 0.
 X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_normal_distrib(
     x_sinx, mu, sigma, n_samples, noise
 )
@@ -280,7 +530,17 @@ function of degree 10 and show the results for the Jackknife+ and CV+
 strategies.
 
 ```python
-Params = TypedDict("Params", {"method": str, "cv": Union[int, Subsample]})
+polyn_model_quant = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=degree_polyn)),
+        ("linear", QuantileRegressor(
+                solver="highs-ipm",
+                alpha=0.09,
+                fit_intercept=True
+        ))
+    ]
+)
+Params = TypedDict("Params", {"method": str, "cv": Union[int, str, Subsample], "alpha": Optional[float]})
 STRATEGIES = {
     "naive": Params(method="naive"),
     "jackknife": Params(method="base", cv=-1),
@@ -291,16 +551,28 @@ STRATEGIES = {
     "cv_minmax": Params(method="minmax", cv=10),
     "jackknife_plus_ab": Params(method="plus", cv=Subsample(n_resamplings=50)),
     "jackknife_minmax_ab": Params(method="minmax", cv=Subsample(n_resamplings=50)),
+    "conformalized_quantile_regression": Params(method="quantile", cv="split", alpha=0.05)
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
-    mapie = MapieRegressor(polyn_model, **params)
-    mapie.fit(X_train, y_train)
-    y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
+    if strategy == "conformalized_quantile_regression":
+        mapie = MapieQuantileRegressor(polyn_model_quant, **params)
+        X_train, X_calib, y_train, y_calib = train_test_split(
+            X_train,
+            y_train,
+            test_size=0.5,
+            random_state=1
+        )
+        mapie.fit(X_train, y_train, X_calib, y_calib)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
+    else:  
+        mapie = MapieRegressor(polyn_model, **params)
+        mapie.fit(X_train, y_train)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 ```
 
 ```python
-strategies = ["jackknife_plus", "jackknife_minmax" , "cv_plus", "cv_minmax", "jackknife_plus_ab", "jackknife_minmax_ab"]
+strategies = ["jackknife_plus", "jackknife_minmax", "cv_plus", "cv_minmax", "jackknife_plus_ab", "conformalized_quantile_regression"]
 n_figs = len(strategies)
 fig, axs = plt.subplots(3, 2, figsize=(9, 13))
 coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1], axs[2, 0], axs[2, 1]]
@@ -340,10 +612,12 @@ ax.legend(fontsize=10, loc=[1, 0.4]);
 ```
 
 The prediction interval widths start to increase exponentially
-for $|x| > 4$ for the Jackknife-minmax, CV+, and CV-minmax
+for $|x| > 4$ for the CV+, CV-minmax, Jackknife-minmax, and quantile
 strategies. On the other hand, the prediction intervals estimated by
 Jackknife+ remain roughly constant until $|x| \sim 5$ before
 increasing.
+Note that the quantile strategy has notably higher interval width throughout
+the values of x, except for a sudden drop at $x = -6.5$.
 
 ```python
 pd.DataFrame([
@@ -365,9 +639,10 @@ advised to use the three former strategies for predictions with new
 out-of-distribution data.
 Note however that there are no theoretical guarantees on the coverage level 
 for out-of-distribution data.
+Here it's important to note that the quantile method most likely has negative values (at $x = -6.5$) of width thereby giving a low average width. This can be due to its inherit structure, it is possible that the prediction values for quantile 0.025 can be greater than that of 0.975 points where a lot of uncertainty lies.
 
 
-## 3. Estimating the uncertainty with different sklearn-compatible regressors
+## 4. Estimating the uncertainty with different sklearn-compatible regressors
 
 
 MAPIE can be used with any kind of sklearn-compatible regressor. Here, we

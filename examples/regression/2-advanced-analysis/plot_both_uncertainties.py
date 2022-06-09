@@ -2,7 +2,8 @@
 ================================================
 Estimating aleatoric and epistemic uncertainties
 ================================================
-This example uses :class:`mapie.regression.MapieRegressor` to estimate
+This example uses :class:`mapie.regression.MapieRegressor` and
+`mapie.quantile_regression.MapieQuantileRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
@@ -17,6 +18,7 @@ import matplotlib.pyplot as plt
 
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
+from mapie.subsample import Subsample
 from mapie._typing import NDArray
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -101,18 +103,18 @@ polyn_model_quant = Pipeline(
 
 # Estimating prediction intervals
 STRATEGIES = {
-    "jackknife_plus": {"method": "plus", "cv": -1},
     "jackknife_minmax": {"method": "minmax", "cv": -1},
-    # "cv_plus": {"method": "plus", "cv": 10},
     "cv_minmax": {"method": "minmax", "cv": 10},
-    "quantile": {"method": "quantile", "cv": "split"},
+    "jackknife_plus_ab": {"method": "plus", "cv": Subsample(n_resamplings=50)},
+    "conformalized_quantile_regression": {"method": "quantile", "cv": "split"},
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
-    if strategy == "quantile":
-        mapie = MapieQuantileRegressor(
-            polyn_model_quant, **params
-        )  # type: ignore
+    if strategy == "conformalized_quantile_regression":
+        mapie = MapieQuantileRegressor(  # type: ignore
+            polyn_model_quant,
+            **params
+        )
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
