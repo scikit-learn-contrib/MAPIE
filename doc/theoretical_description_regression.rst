@@ -216,7 +216,7 @@ is then higher.
 
 
 8. The conformalized quantile method
-==============================
+====================================
 
 The conformalized quantile method allows for a better interval width in cases
 of heteroscedasticity data. It uses quantile regressors wiht different quantile
