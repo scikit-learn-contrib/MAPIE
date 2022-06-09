@@ -303,7 +303,7 @@ def test_pred_loof_isnan() -> None:
     assert len(y_pred) == 0
 
 
-def test_MapieTimeSeriesRegressor_alpha_is_None() -> None:
+def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
     """Test ``predict`` when ``alpha`` is None."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
 

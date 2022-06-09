@@ -24,6 +24,8 @@ associated prediction intervals. We compare two approaches: with or without
 slower.
 """
 
+from typing import cast
+
 import matplotlib
 from matplotlib import pylab as plt
 import numpy as np
@@ -36,6 +38,7 @@ from mapie.metrics import (
     regression_coverage_score,
     regression_mean_width_score,
 )
+from mapie._typing import NDArray
 from mapie.subsample import BlockBootstrap
 from mapie.time_series_regression import MapieTimeSeriesRegressor
 
@@ -169,6 +172,22 @@ print(
     f"{coverage_pfit_enbpi:.3f}, {width_pfit_enbpi:.3f}"
 )
 
+enbpi_no_pfit = {
+    "y_pred": y_pred_npfit_enbpi,
+    "y_pis": y_pis_npfit_enbpi,
+    "coverage": coverage_npfit_enbpi,
+    "width": width_npfit_enbpi,
+}
+
+enbpi_pfit = {
+    "y_pred": y_pred_pfit_enbpi,
+    "y_pis": y_pis_pfit_enbpi,
+    "coverage": coverage_pfit_enbpi,
+    "width": width_pfit_enbpi,
+}
+
+results = [enbpi_no_pfit, enbpi_pfit]
+
 # Plot estimated prediction intervals on test set
 fig, axs = plt.subplots(
     nrows=2, ncols=1, figsize=(30, 25), sharey="row", sharex="col"
@@ -177,30 +196,34 @@ font = {"family": "normal", "weight": "bold", "size": 22}
 matplotlib.rc("font", **font)
 
 
-for i, (ax, w) in enumerate(
-    zip(axs, ["EnbPI, without partial_fit", "EnbPI with partial_fit"])
+for i, (ax, w, result) in enumerate(
+    zip(axs, ["EnbPI, without partial_fit", "EnbPI with partial_fit"], results)
 ):
     ax.set_ylabel("Hourly demand (GW)")
     ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
 
     ax.plot(
         demand_test.index,
-        y_pred_npfit_enbpi,
+        result["y_pred"],
         lw=2,
         c="C2",
         label="Predictions",
     )
+
+    y_pis = cast(NDArray, result["y_pis"])
+
     ax.fill_between(
         demand_test.index,
-        y_pis_npfit_enbpi[:, 0, 0],
-        y_pis_npfit_enbpi[:, 1, 0],
+        y_pis[:, 0, 0],
+        y_pis[:, 1, 0],
         color="C2",
         alpha=0.2,
         label="MapieTimeSeriesRegressor PIs",
     )
+
     ax.set_title(
         w + "\n"
-        f"Coverage:{coverage_npfit_enbpi:.3f}  Width:{width_npfit_enbpi:.3f}"
+        f"Coverage:{result['coverage']:.3f}  Width:{result['width']:.3f}"
     )
 axs[0].legend()
 plt.show()
