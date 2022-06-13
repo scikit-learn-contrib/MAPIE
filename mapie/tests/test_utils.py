@@ -63,12 +63,10 @@ def test_check_null_weight_with_zeros() -> None:
     sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
     np.testing.assert_almost_equal(np.array(sw_out), np.array([1, 1, 1, 1, 1]))
     np.testing.assert_almost_equal(
-        np.array(X_out),
-        np.array([[1], [2], [3], [4], [5]])
+        np.array(X_out), np.array([[1], [2], [3], [4], [5]])
     )
     np.testing.assert_almost_equal(
-        np.array(y_out),
-        np.array([7, 9, 11, 13, 15])
+        np.array(y_out), np.array([7, 9, 11, 13, 15])
     )
 
 
