@@ -42,7 +42,7 @@ X_train_toy, X_calib_toy, y_train_toy, y_calib_toy = train_test_split(
     random_state=random_state
 )
 
-qt = QuantileRegressor(solver='highs')
+qt = QuantileRegressor(solver="highs-ds")
 gb = GradientBoostingRegressor(
             loss="quantile",
             random_state=random_state

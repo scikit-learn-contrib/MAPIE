@@ -215,23 +215,24 @@ uncertainty is higher, than :math:`CV+`, because the models' prediction spread
 is then higher.
 
 
-8. The conformalized quantile method
-====================================
+8. The conformalized quantile regression (CQR) method
+=====================================================
 
 The conformalized quantile method allows for a better interval width in cases
-of heteroscedasticity data. It uses quantile regressors wiht different quantile
+of heteroscedasticity data. It uses quantile regressors with different quantile
 values to estimate the prediction bounds and the residuals of these methods is
 used to create the guaranteed coevrage value.
 
 .. math:: 
 
-    \hat{C}_{n, \alpha}^{\rm conformalized quantile}(X_{n+1}) = 
-    [\hat{q}_{\alpha_{lo}}(X_{n+1}) - Q_{1-\alpha}(E, \mathcal{I}_2),
-    \hat{q}_{\alpha_{hi}}(X_{n+1}) + Q_{1-\alpha}(E, \mathcal{I}_2)]
+    \hat{C}_{n, \alpha}^{\rm CQR}(X_{n+1}) = 
+    [\hat{q}_{\alpha_{lo}}(X_{n+1}) - Q_{1-\alpha}(E_{low}, \mathcal{I}_2),
+    \hat{q}_{\alpha_{hi}}(X_{n+1}) + Q_{1-\alpha}(E_{high}, \mathcal{I}_2)]
 
-Where :math:`Q_{1-\alpha}(E, \mathcal{I}_2) := (1-\alpha)(1+1/\abs(\mathcal{I}_2))`-th
+Where :math:`Q_{1-\alpha}(E, \mathcal{I}_2) := (1-\alpha)(1+1/ |\mathcal{I}_2|)`-th
 empirical quantile of :math:`{E_i : i \in \mathcal{I}_2}` and :math:`\mathcal{I}_2` is the
-residuals of the estimator fitted on the calibration set.
+residuals of the estimator fitted on the calibration set. Note that in the symmetric method, 
+:math:`E_{low}` and :math:`E_{high}` are the same :math:`E`.
 
 As justified by [3], this method garantees a coverage level of 
 :math:`1-\alpha` for a target coverage level of :math:`1-\alpha`.

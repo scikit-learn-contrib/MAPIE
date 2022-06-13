@@ -3,7 +3,7 @@
 Estimating aleatoric and epistemic uncertainties
 ================================================
 This example uses :class:`mapie.regression.MapieRegressor` and
-`mapie.quantile_regression.MapieQuantileRegressor` to estimate
+:class:`mapie.quantile_regression.MapieQuantileRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
@@ -93,9 +93,8 @@ polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
         ("linear", QuantileRegressor(
-            alpha=1e-9,
-            fit_intercept=False,
-            solver="highs",
+            alpha=0,
+            solver="highs",  # highs-ds does not give good results
             )),
     ]
 )
@@ -103,8 +102,8 @@ polyn_model_quant = Pipeline(
 
 # Estimating prediction intervals
 STRATEGIES = {
-    "jackknife_minmax": {"method": "minmax", "cv": -1},
-    "cv_minmax": {"method": "minmax", "cv": 10},
+    "jackknife_plus": {"method": "plus", "cv": -1},
+    "cv_plus": {"method": "plus", "cv": 10},
     "jackknife_plus_ab": {"method": "plus", "cv": Subsample(n_resamplings=50)},
     "conformalized_quantile_regression": {"method": "quantile", "cv": "split"},
 }
@@ -118,7 +117,7 @@ for strategy, params in STRATEGIES.items():
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
-            test_size=0.5,
+            test_size=0.3,
             random_state=1
         )
         mapie.fit(
@@ -127,7 +126,6 @@ for strategy, params in STRATEGIES.items():
             X_calib,
             y_calib
         )
-        print(mapie.estimators_)
         y_pred[strategy], y_pis[strategy] = mapie.predict(
             X_test
         )

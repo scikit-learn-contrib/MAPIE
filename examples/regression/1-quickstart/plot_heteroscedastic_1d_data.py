@@ -1,13 +1,14 @@
 """
-==========================================================
+============================================================
 Estimate the prediction intervals of 1D heteroscedastic data
-==========================================================
+============================================================
 
 :class:`mapie.regression.MapieRegressor` and
-`mapie.quantile_regression.MapieQuantileRegressor` is used to estimate
-the prediction intervals of 1D heteroscedastic data using
+:class: `mapie.quantile_regression.MapieQuantileRegressor` is used
+to estimate the prediction intervals of 1D heteroscedastic data using
 different strategies. The latter class should provide the same
-coverage for a lower width of intervals.
+coverage for a lower width of intervals because it adapts the prediction
+intervals to the local heteroscedastic noise.
 """
 from typing import Tuple
 
@@ -36,7 +37,7 @@ def get_heteroscedastic_data(
     """
     Generate one-dimensional data from a given function,
     number of training and test samples and a given standard
-    deviation for the noise.
+    deviation increases linearly with x.
     The training data data is generated from an exponential distribution.
 
     Parameters
@@ -62,11 +63,7 @@ def get_heteroscedastic_data(
     q95 = scipy.stats.norm.ppf(0.95)
     X_train = np.linspace(0, 1, n_train)
     X_true = np.linspace(0, 1, n_true)
-    y_train = np.array(
-        [
-            (f(x) + (np.random.normal(0, sigma))*x) for x in X_train
-        ]
-    )
+    y_train = f(X_train) + np.random.normal(0, sigma, n_train) * X_train
     y_true = f(X_true)
     y_true_sigma = q95 * sigma * X_true
     return X_train, y_train, X_true, y_true, y_true_sigma
@@ -130,15 +127,14 @@ X_train, y_train, X_test, y_test, y_test_sigma = get_heteroscedastic_data()
 polyn_model = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
-        ("linear", LinearRegression(fit_intercept=False)),
+        ("linear", LinearRegression()),
     ]
 )
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
         ("linear", QuantileRegressor(
-            alpha=1e-9,
-            fit_intercept=False,
+            alpha=0,
         )),
     ]
 )
@@ -164,7 +160,7 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         X_train_split, X_calib, y_train_spit, y_calib = train_test_split(
             X_train,
             y_train,
-            test_size=0.5,
+            test_size=0.3,
             random_state=1
         )
         mapie.fit(

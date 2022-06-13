@@ -4,9 +4,9 @@ Estimate the prediction intervals of 1D homoscedastic data
 ==========================================================
 
 :class:`mapie.regression.MapieRegressor` and
-`mapie.quantile_regression.MapieQuantileRegressor` is used to estimate
-the prediction intervals of 1D homoscedastic data using
-different strategies.
+:class: `mapie.quantile_regression.MapieQuantileRegressor`
+is used to estimate the prediction intervals of 1D homoscedastic
+data using different strategies.
 """
 from typing import Tuple
 
@@ -63,7 +63,7 @@ def get_homoscedastic_data(
     X_true = np.linspace(0, 1, n_true)
     y_train = f(X_train) + np.random.normal(0, sigma, n_train)
     y_true = f(X_true)
-    y_true_sigma = np.full(X_true.shape[0], q95 * sigma)
+    y_true_sigma = np.full(len(y_true), q95 * sigma)
     return X_train, y_train, X_true, y_true, y_true_sigma
 
 
@@ -125,15 +125,14 @@ X_train, y_train, X_test, y_test, y_test_sigma = get_homoscedastic_data()
 polyn_model = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
-        ("linear", LinearRegression(fit_intercept=False)),
+        ("linear", LinearRegression()),
     ]
 )
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
         ("linear", QuantileRegressor(
-            alpha=1e-9,
-            fit_intercept=False,
+            alpha=0,
         )),
     ]
 )
@@ -159,7 +158,7 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
-            test_size=0.5,
+            test_size=0.3,
             random_state=1
         )
         mapie.fit(
@@ -168,9 +167,7 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
             X_calib.reshape(-1, 1),
             y_calib
         )
-        y_pred, y_pis = mapie.predict(
-            X_test.reshape(-1, 1)
-        )
+        y_pred, y_pis = mapie.predict(X_test.reshape(-1, 1))
     else:
         mapie = MapieRegressor(  # type: ignore
             polyn_model,

@@ -48,6 +48,10 @@ Let's start by defining the $x \times \sin(x)$ function and another simple funct
 that generates one-dimensional data with normal noise uniformely in a given interval.
 
 ```python
+from typing import List, Dict, Union
+```
+
+```python
 import warnings
 warnings.filterwarnings("ignore")
 import numpy as np
@@ -77,7 +81,7 @@ Here, the noise is considered as *homoscedastic*, since it remains constant
 over $x$.
 
 ```python
-min_x, max_x, n_samples, noise = -5, 5, 300, 0.5
+min_x, max_x, n_samples, noise = -5, 5, 600, 0.5
 X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
     x_sinx, min_x, max_x, n_samples, noise
 )
@@ -112,9 +116,8 @@ polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
         ("linear", QuantileRegressor(
-                solver="highs-ds",
-                alpha=0.01,
-                fit_intercept=False
+                solver="highs",
+                alpha=0,
         ))
     ]
 )
@@ -152,7 +155,7 @@ for strategy, params in STRATEGIES.items():
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
-            test_size=0.5,
+            test_size=0.3,
             random_state=1
         )
         mapie.fit(X_train, y_train, X_calib, y_calib)
@@ -163,8 +166,8 @@ for strategy, params in STRATEGIES.items():
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 ```
 
-Let’s now compare the confidence intervals with the predicted intervals with obtained 
-by the Jackknife+, Jackknife-minmax, CV+, CV-minmax, Jackknife+-after-Boostrap, and quantile strategies. Note that for the Jackknife-after-Bootstrap method, we call the :class:`mapie.subsample.Subsample` object that allows us to train bootstrapped models.
+Let’s now compare the confidence intervals with the predicted intervals obtained 
+by the Jackknife+, Jackknife-minmax, CV+, CV-minmax, Jackknife+-after-Boostrap, and conformalized quantile regression strategies. Note that for the Jackknife-after-Bootstrap method, we call the :class:`mapie.subsample.Subsample` object that allows us to train bootstrapped models. Note also that the CQR method is called with `MapieQuantileRegressor` with a "split" strategy.
 
 ```python
 def plot_1d_data(
@@ -234,8 +237,9 @@ wide. Note that the widths given by the Naive, Jackknife, and CV strategies
 are constant because there is a single model used for prediction,
 perturbed models are ignored at prediction time.
 
-It's interesting to observe that quantile strategy offers more varying width,
-often giving much higher but also lower interval width than other methods.
+It's interesting to observe that CQR strategy offers more varying width,
+often giving much higher but also lower interval width than other methods, therefore,
+with homoscedastic noise, CQR would not be the preferred method.
 
 
 Let’s now compare the *effective* coverage, namely the fraction of test
@@ -282,16 +286,8 @@ def get_1d_data_with_heteroscedastic_noise(funct, min_x, max_x, n_samples, noise
     X_train = np.linspace(min_x, max_x, n_samples)
     np.random.shuffle(X_train)
     X_test = np.linspace(min_x, max_x, n_samples*5)
-    y_train = np.array(
-        [
-            (funct(x) + (np.random.normal(0, noise))*x) for x in X_train
-        ]
-    )
-    y_test = np.array(
-        [
-            (funct(x) + (np.random.normal(0, noise))*x) for x in X_test
-        ]
-    )
+    y_train = funct(X_train) + (np.random.normal(0, noise, len(X_train)) * X_train)
+    y_test = funct(X_test) + (np.random.normal(0, noise, len(X_test)) * X_test)
     y_mesh = funct(X_test)
     return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
 ```
@@ -306,7 +302,7 @@ X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_heteroscedastic_nois
 )
 ```
 
-Let's visualize our noisy function. As x increases, we the data becomes more noisy.
+Let's visualize our noisy function. As x increases, the data becomes more noisy.
 
 ```python
 import matplotlib.pyplot as plt
@@ -336,8 +332,7 @@ polyn_model_quant = Pipeline(
         ("poly", PolynomialFeatures(degree=degree_polyn)),
         ("linear", QuantileRegressor(
                 solver="highs-ds",
-                alpha=0.01,
-                fit_intercept=False
+                alpha=0,
         ))
     ]
 )
@@ -374,7 +369,7 @@ for strategy, params in STRATEGIES.items():
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
-            test_size=0.5,
+            test_size=0.3,
             random_state=1
         )
         mapie.fit(X_train, y_train, X_calib, y_calib)
@@ -434,9 +429,8 @@ for strategy, coord in zip(strategies, coords):
 ```
 
 We can observe that all of the strategies seem to have similar constant prediction intervals. 
-On the other hand, the quantile strategy offers a solution with prediction intervals
-that are smaller when x is small and that become larger as the noise in the data grows
-with heteroscedasticity.
+On the other hand, the quantile strategy offers a solution with that adapts the prediction
+intervals to the local noise.
 
 ```python
 fig, ax = plt.subplots(1, 1, figsize=(7, 5))
@@ -449,14 +443,39 @@ _ = ax.legend(fontsize=10, loc=[1, 0.4])
 ```
 
 ```python
-fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-ax.axhline(1.96*2*noise, ls="--", color="k", label="True width")
-for strategy in STRATEGIES:
-    ax.plot(X_test, y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0], label=strategy)
-ax.set_xlabel("x")
-ax.set_ylabel("Prediction Interval Width")
-ax.set_ylim(6, 8)
-_ = ax.legend(fontsize=10, loc=[1, 0.4])
+def get_heteroscedastic_coverage(
+    y_test: np.ndarray,
+    y_pis: np.ndarray,
+    STRATEGIES: List[str],
+    bins: List[Union[float, int]]
+) -> None:
+    recap ={}
+    for i in range(len(bins)-1):
+        bin1, bin2 = bins[i], bins[i+1]
+        name = f"{bin1} to {bin2}"
+        recap[name] = []
+        for strategy in STRATEGIES:
+            indices = np.where((X_test>=bins[i])*(X_test<=bins[i+1]))
+            y_test_trunc = np.take(y_test, indices)
+            y_low_ = np.take(y_pis[strategy][:, 0, 0], indices)
+            y_high_ = np.take(y_pis[strategy][:, 1, 0], indices)
+            score_coverage = regression_coverage_score(y_test_trunc[0], y_low_[0], y_high_[0])
+            recap[name].append(score_coverage)
+    recap_df = pd.DataFrame(recap, index=STRATEGIES)
+    return recap_df
+```
+
+```python
+bins = [0, 1, 2, 3, 4, 5]
+hete_coverage = get_heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins)
+```
+
+```python
+fig = plt.figure()
+hete_coverage.T.plot.bar(figsize=(12, 4), alpha=0.7)
+plt.axhline(0.95, ls="--", color="k")
+plt.ylabel("Conditional coverage")
+plt.legend(loc=[1, 0])
 ```
 
 As we can observe all the strategies behave in a similar way as in the first example shown previously expect the quantile method which takes into account the heteroscedasticity of the data. In that method we observe very low interval widths at low values of $x$. As $x$ grows, so does the width interval and for $x > 2.75$ the interval width becomes larger for the quantile method compared to the other strategies.
@@ -481,7 +500,7 @@ pd.DataFrame([
 ], index=STRATEGIES, columns=["Coverage", "Width average"]).round(2)
 ```
 
-All strategies have the wanted coverage, however, we notice that the quantile strategy has much lower coverage than all other methods.
+All the strategies have the wanted coverage, however, we notice that the quantile strategy has much lower interval width than all other methods, therefore, with heteroscedastic noise, quantile would be the preferred method.
 
 
 ## 3. Estimating the epistemic uncertainty of out-of-distribution data
@@ -513,7 +532,7 @@ def get_1d_data_with_normal_distrib(funct, mu, sigma, n_samples, noise):
 ```
 
 ```python
-mu = 0 ; sigma = 2 ; n_samples = 600 ; noise = 0.
+mu = 0 ; sigma = 2 ; n_samples = 1000 ; noise = 0.
 X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_normal_distrib(
     x_sinx, mu, sigma, n_samples, noise
 )
@@ -534,9 +553,8 @@ polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
         ("linear", QuantileRegressor(
-                solver="highs-ipm",
-                alpha=0.09,
-                fit_intercept=True
+                solver="highs-ds",
+                alpha=0,
         ))
     ]
 )
@@ -560,7 +578,7 @@ for strategy, params in STRATEGIES.items():
         X_train, X_calib, y_train, y_calib = train_test_split(
             X_train,
             y_train,
-            test_size=0.5,
+            test_size=0.3,
             random_state=1
         )
         mapie.fit(X_train, y_train, X_calib, y_calib)
@@ -698,7 +716,7 @@ def mlp():
 polyn_model = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", LinearRegression(fit_intercept=False))
+        ("linear", LinearRegression())
     ]
 )
 ```
