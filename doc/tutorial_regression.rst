@@ -210,6 +210,11 @@ bootstrapped models. Note also that the CQR method is called with
             title=strategy
         )
 
+
+
+.. image:: tutorial_regression_files/tutorial_regression_17_0.png
+
+
 At first glance, the four strategies give similar results and the
 prediction intervals are very close to the true confidence intervals.
 Let’s confirm this by comparing the prediction interval widths over
@@ -224,6 +229,11 @@ Let’s confirm this by comparing the prediction interval widths over
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")
     _ = ax.legend(fontsize=10, loc=[1, 0.4])
+
+
+
+.. image:: tutorial_regression_files/tutorial_regression_19_0.png
+
 
 As expected, the prediction intervals estimated by the Naive method are
 slightly too narrow. The Jackknife, Jackknife+, CV, CV+, JaB, and J+aB
@@ -256,6 +266,90 @@ the different strategies.
             ).mean()
         ] for strategy in STRATEGIES
     ], index=STRATEGIES, columns=["Coverage", "Width average"]).round(2)
+
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>Coverage</th>
+          <th>Width average</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>naive</th>
+          <td>0.93</td>
+          <td>1.93</td>
+        </tr>
+        <tr>
+          <th>jackknife</th>
+          <td>0.94</td>
+          <td>1.98</td>
+        </tr>
+        <tr>
+          <th>jackknife_plus</th>
+          <td>0.94</td>
+          <td>1.98</td>
+        </tr>
+        <tr>
+          <th>jackknife_minmax</th>
+          <td>0.94</td>
+          <td>2.02</td>
+        </tr>
+        <tr>
+          <th>cv</th>
+          <td>0.93</td>
+          <td>1.94</td>
+        </tr>
+        <tr>
+          <th>cv_plus</th>
+          <td>0.94</td>
+          <td>1.95</td>
+        </tr>
+        <tr>
+          <th>cv_minmax</th>
+          <td>0.94</td>
+          <td>2.01</td>
+        </tr>
+        <tr>
+          <th>jackknife_plus_ab</th>
+          <td>0.94</td>
+          <td>1.99</td>
+        </tr>
+        <tr>
+          <th>jackknife_minmax_ab</th>
+          <td>0.95</td>
+          <td>2.09</td>
+        </tr>
+        <tr>
+          <th>conformalized_quantile_regression</th>
+          <td>0.96</td>
+          <td>2.22</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+
 
 All strategies except the Naive one give effective coverage close to the
 expected 0.95 value (recall that alpha = 0.05), confirming the
@@ -307,6 +401,11 @@ more noisy.
     plt.xlabel("x") ; plt.ylabel("y")
     plt.scatter(X_train, y_train, color="C0")
     _ = plt.plot(X_test, y_mesh, color="C1")
+
+
+
+.. image:: tutorial_regression_files/tutorial_regression_30_0.png
+
 
 As mentioned previously, we fit our training data with a simple
 polynomial function. Here, we choose a degree equal to 10 so the
@@ -430,6 +529,11 @@ bootstrapped models.
             title=strategy
         )
 
+
+
+.. image:: tutorial_regression_files/tutorial_regression_37_0.png
+
+
 We can observe that all of the strategies seem to have similar constant
 prediction intervals. On the other hand, the quantile strategy offers a
 solution with that adapts the prediction intervals to the local noise.
@@ -443,6 +547,11 @@ solution with that adapts the prediction intervals to the local noise.
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")
     _ = ax.legend(fontsize=10, loc=[1, 0.4])
+
+
+
+.. image:: tutorial_regression_files/tutorial_regression_39_0.png
+
 
 .. code-block:: python
 
@@ -475,6 +584,23 @@ solution with that adapts the prediction intervals to the local noise.
     plt.ylabel("Conditional coverage")
     plt.legend(loc=[1, 0])
 
+
+
+
+.. parsed-literal::
+
+
+
+
+
+.. parsed-literal::
+
+
+
+
+.. image:: tutorial_regression_files/tutorial_regression_42_2.png
+
+
 As we can observe all the strategies behave in a similar way as in the
 first example shown previously expect the quantile method which takes
 into account the heteroscedasticity of the data. In that method we
@@ -501,6 +627,85 @@ the different strategies.
             ).mean()
         ] for strategy in STRATEGIES
     ], index=STRATEGIES, columns=["Coverage", "Width average"]).round(2)
+
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>Coverage</th>
+          <th>Width average</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>naive</th>
+          <td>0.94</td>
+          <td>6.52</td>
+        </tr>
+        <tr>
+          <th>jackknife</th>
+          <td>0.95</td>
+          <td>6.84</td>
+        </tr>
+        <tr>
+          <th>jackknife_plus</th>
+          <td>0.95</td>
+          <td>6.84</td>
+        </tr>
+        <tr>
+          <th>jackknife_minmax</th>
+          <td>0.96</td>
+          <td>7.02</td>
+        </tr>
+        <tr>
+          <th>cv</th>
+          <td>0.95</td>
+          <td>6.65</td>
+        </tr>
+        <tr>
+          <th>cv_plus</th>
+          <td>0.95</td>
+          <td>6.68</td>
+        </tr>
+        <tr>
+          <th>cv_minmax</th>
+          <td>0.96</td>
+          <td>6.91</td>
+        </tr>
+        <tr>
+          <th>jackknife_plus_ab</th>
+          <td>0.95</td>
+          <td>6.85</td>
+        </tr>
+        <tr>
+          <th>conformalized_quantile_regression</th>
+          <td>0.97</td>
+          <td>5.54</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+
 
 All the strategies have the wanted coverage, however, we notice that the
 quantile strategy has much lower interval width than all other methods,
@@ -547,6 +752,11 @@ Lets” start by generating and showing the data.
     plt.xlabel("x") ; plt.ylabel("y")
     plt.scatter(X_train, y_train, color="C0")
     _ = plt.plot(X_test, y_test, color="C1")
+
+
+
+.. image:: tutorial_regression_files/tutorial_regression_52_0.png
+
 
 As before, we estimate the prediction intervals using a polynomial
 function of degree 10 and show the results for the Jackknife+ and CV+
@@ -613,6 +823,11 @@ strategies.
             title=strategy
         )
 
+
+
+.. image:: tutorial_regression_files/tutorial_regression_55_0.png
+
+
 At first glance, our polynomial function does not give accurate
 predictions with respect to the true function when :math:`|x > 6|`. The
 prediction intervals estimated with the Jackknife+ do not seem to
@@ -630,6 +845,11 @@ Let’s now compare the prediction interval widths between all strategies.
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")
     ax.legend(fontsize=10, loc=[1, 0.4]);
+
+
+
+.. image:: tutorial_regression_files/tutorial_regression_58_0.png
+
 
 The prediction interval widths start to increase exponentially for
 :math:`|x| > 4` for the CV+, CV-minmax, Jackknife-minmax, and quantile
@@ -651,6 +871,90 @@ width throughout the values of x, except for a sudden drop at
             ).mean()
         ] for strategy in STRATEGIES
     ], index=STRATEGIES, columns=["Coverage", "Width average"]).round(3)
+
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>Coverage</th>
+          <th>Width average</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>naive</th>
+          <td>0.556</td>
+          <td>0.019</td>
+        </tr>
+        <tr>
+          <th>jackknife</th>
+          <td>0.562</td>
+          <td>0.019</td>
+        </tr>
+        <tr>
+          <th>jackknife_plus</th>
+          <td>0.562</td>
+          <td>0.021</td>
+        </tr>
+        <tr>
+          <th>jackknife_minmax</th>
+          <td>0.656</td>
+          <td>1.529</td>
+        </tr>
+        <tr>
+          <th>cv</th>
+          <td>0.562</td>
+          <td>0.019</td>
+        </tr>
+        <tr>
+          <th>cv_plus</th>
+          <td>0.638</td>
+          <td>1.627</td>
+        </tr>
+        <tr>
+          <th>cv_minmax</th>
+          <td>0.681</td>
+          <td>1.633</td>
+        </tr>
+        <tr>
+          <th>jackknife_plus_ab</th>
+          <td>0.625</td>
+          <td>1.101</td>
+        </tr>
+        <tr>
+          <th>jackknife_minmax_ab</th>
+          <td>0.731</td>
+          <td>2.586</td>
+        </tr>
+        <tr>
+          <th>conformalized_quantile_regression</th>
+          <td>0.688</td>
+          <td>-1.006</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+
 
 In conclusion, the Jackknife-minmax, CV+, CV-minmax, or
 Jackknife-minmax-ab strategies are more conservative than the Jackknife+
@@ -694,6 +998,11 @@ uniform distribution.
     plt.xlabel("x") ; plt.ylabel("y")
     plt.plot(X_test, y_mesh, color="C1")
     _ = plt.scatter(X_train, y_train)
+
+
+
+.. image:: tutorial_regression_files/tutorial_regression_65_0.png
+
 
 Let’s then define the models. The boosing model considers 100 shallow
 trees with a max depth of 2 while the Multilayer Perceptron has two
@@ -755,6 +1064,11 @@ method and compare their prediction interval.
         mapie.fit(X_train, y_train)
         y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
 
+
+.. parsed-literal::
+
+
+
 .. code-block:: python
 
     fig, axs = plt.subplots(1, 3, figsize=(20, 6))
@@ -772,6 +1086,11 @@ method and compare their prediction interval.
             title=name
         )
 
+
+
+.. image:: tutorial_regression_files/tutorial_regression_72_0.png
+
+
 .. code-block:: python
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
@@ -781,6 +1100,11 @@ method and compare their prediction interval.
     ax.set_xlabel("x")
     ax.set_ylabel("Prediction Interval Width")
     ax.legend(model_names + ["True width"], fontsize=8);
+
+
+
+.. image:: tutorial_regression_files/tutorial_regression_73_0.png
+
 
 As expected with the CV+ method, the prediction intervals are a bit
 conservative since they are slightly wider than the true intervals.
