@@ -26,7 +26,6 @@ narrower PIs.
 
 from typing import cast
 
-import matplotlib
 from matplotlib import pylab as plt
 import numpy as np
 import pandas as pd
@@ -190,16 +189,13 @@ results = [enbpi_no_pfit, enbpi_pfit]
 
 # Plot estimated prediction intervals on test set
 fig, axs = plt.subplots(
-    nrows=2, ncols=1, figsize=(30, 25), sharex="col"
+    nrows=2, ncols=1, figsize=(15, 12), sharex="col"
 )
-font = {"weight": "bold", "size": 22}
-matplotlib.rc("font", **font)
-
 
 for i, (ax, w, result) in enumerate(
     zip(axs, ["EnbPI, without partial_fit", "EnbPI with partial_fit"], results)
 ):
-    ax.set_ylabel("Hourly demand (GW)")
+    ax.set_ylabel("Hourly demand (GW)", fontsize=20)
     ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
 
     ax.plot(
@@ -223,7 +219,12 @@ for i, (ax, w, result) in enumerate(
 
     ax.set_title(
         w + "\n"
-        f"Coverage:{result['coverage']:.3f}  Width:{result['width']:.3f}"
+        f"Coverage:{result['coverage']:.3f}  Width:{result['width']:.3f}",
+        fontweight="bold",
+        size=20
     )
-axs[0].legend()
+    plt.xticks(size=15, rotation=45)
+    plt.yticks(size=15)
+
+axs[0].legend(prop={'size': 22})
 plt.show()
