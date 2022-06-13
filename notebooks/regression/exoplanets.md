@@ -1,6 +1,7 @@
 ---
 jupyter:
   jupytext:
+    formats: ipynb,md
     text_representation:
       extension: .md
       format_name: markdown
@@ -12,14 +13,14 @@ jupyter:
     name: mapie_local
 ---
 
-# Estimating the uncertainties of the masses of exoplanets
+# Estimating the uncertainties of exoplanet masses
 
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/scikit-learn-contrib/MAPIE/blob/exoplanet-notebook/notebooks/regression/exoplanets.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/scikit-learn-contrib/MAPIE/blob/master/notebooks/regression/exoplanets.ipynb)
 
 
 
-In this notebook, we will quantify the uncertainty of the mass of exoplanets associated with the predictions of several machine learning models based on the exoplanet properties. To this aim, we will use the exoplanet dataset downloaded from the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu/) and estimate the prediction intervals using the methods implemented in MAPIE.
+In this notebook, we will quantify the uncertainty of exoplanet masses predicted by several machine learning models based on the exoplanet properties. To this aim, we will use the exoplanet dataset downloaded from the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu/) and estimate the prediction intervals using the methods implemented in MAPIE.
 
 ```python
 install_mapie = False
