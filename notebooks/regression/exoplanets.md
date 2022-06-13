@@ -23,7 +23,7 @@ jupyter:
 In this notebook, we will quantify the uncertainty of exoplanet masses predicted by several machine learning models based on the exoplanet properties. To this aim, we will use the exoplanet dataset downloaded from the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu/) and estimate the prediction intervals using the methods implemented in MAPIE.
 
 ```python
-install_mapie = False
+install_mapie = True
 if install_mapie:
     !pip install mapie
 ```
