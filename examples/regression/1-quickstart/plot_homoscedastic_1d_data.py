@@ -132,6 +132,7 @@ polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
         ("linear", QuantileRegressor(
+            solver="highs-ds",
             alpha=0,
         )),
     ]

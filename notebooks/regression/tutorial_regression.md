@@ -331,7 +331,7 @@ polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
         ("linear", QuantileRegressor(
-                solver="highs-ds",
+                solver="highs",
                 alpha=0,
         ))
     ]
@@ -443,12 +443,7 @@ _ = ax.legend(fontsize=10, loc=[1, 0.4])
 ```
 
 ```python
-def get_heteroscedastic_coverage(
-    y_test: np.ndarray,
-    y_pis: np.ndarray,
-    STRATEGIES: List[str],
-    bins: List[Union[float, int]]
-) -> None:
+def heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins):
     recap ={}
     for i in range(len(bins)-1):
         bin1, bin2 = bins[i], bins[i+1]
@@ -467,7 +462,7 @@ def get_heteroscedastic_coverage(
 
 ```python
 bins = [0, 1, 2, 3, 4, 5]
-hete_coverage = get_heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins)
+hete_coverage = heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins)
 ```
 
 ```python
