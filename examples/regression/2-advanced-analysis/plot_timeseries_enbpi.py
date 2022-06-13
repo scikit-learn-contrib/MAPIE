@@ -192,7 +192,7 @@ results = [enbpi_no_pfit, enbpi_pfit]
 fig, axs = plt.subplots(
     nrows=2, ncols=1, figsize=(30, 25), sharex="col"
 )
-font = {"family": "normal", "weight": "bold", "size": 22}
+font = {"weight": "bold", "size": 22}
 matplotlib.rc("font", **font)
 
 
