@@ -20,8 +20,8 @@ The best model is then feeded into
 :class:`mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate the
 associated prediction intervals. We compare two approaches: with or without
 ``partial_fit`` called at every step following [6]. It appears that
-``partial_fit`` offer higher coverage, but with higher width of PIs and is much
-slower.
+``partial_fit`` offer a coverage closer to the targeted coverage, and with
+narrower PIs.
 """
 
 from typing import cast
@@ -190,7 +190,7 @@ results = [enbpi_no_pfit, enbpi_pfit]
 
 # Plot estimated prediction intervals on test set
 fig, axs = plt.subplots(
-    nrows=2, ncols=1, figsize=(30, 25), sharey="row", sharex="col"
+    nrows=2, ncols=1, figsize=(30, 25), sharex="col"
 )
 font = {"family": "normal", "weight": "bold", "size": 22}
 matplotlib.rc("font", **font)

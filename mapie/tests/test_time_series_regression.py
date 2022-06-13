@@ -20,6 +20,8 @@ y_toy = (5.0 + 2.0 * X_toy ** 1.1).flatten()
 X, y = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
 k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["enbpi"]
+UPDATE_DATA = ([6], 17.5)
+CONFORMITY_SCORES = [14.189 - 14.038, 17.5 - 18.665]
 
 Params = TypedDict(
     "Params",
@@ -315,13 +317,13 @@ def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
     """Test ``partial_fit``."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
-        np.abs(14.189 - 14.038), 2
+        np.abs(CONFORMITY_SCORES[0]), 2
     )
     mapie_ts_reg = mapie_ts_reg.partial_fit(
-        X=np.array([[6]]), y=np.array([17.5])
+        X=np.array([UPDATE_DATA[0]]), y=np.array([UPDATE_DATA[1]])
     )
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
-        17.5 - 18.665, 2
+        CONFORMITY_SCORES[1], 2
     )
 
 

@@ -400,7 +400,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
         """
         Take the array of predictions, made by the refitted estimators,
-        on the testing set, and the 1-nan array indicating for each training
+        on the testing set, and the 1-or-nan array indicating for each training
         sample which one to integrate, and aggregate to produce phi-{t}(x_t)
         for each training sample x_t.
 
