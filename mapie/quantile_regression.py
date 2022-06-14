@@ -1,0 +1,497 @@
+from __future__ import annotations
+from typing import Optional, Tuple, Union, cast, List
+
+import numpy as np
+from sklearn.base import RegressorMixin, clone
+from sklearn.linear_model import QuantileRegressor
+from sklearn.pipeline import Pipeline
+from sklearn.utils.validation import (
+    indexable,
+    check_is_fitted,
+    _num_samples,
+    _check_y,
+)
+from typing_extensions import TypedDict
+
+from ._typing import ArrayLike, NDArray
+from .utils import (
+    check_alpha_and_n_samples,
+    check_null_weight,
+    fit_estimator,
+    check_lower_upper_bounds,
+)
+from ._compatibility import np_quantile
+from .regression import MapieRegressor
+
+
+class MapieQuantileRegressor(MapieRegressor):
+    """
+    This class implements the conformalized quantile regression strategy
+    as proposed by Romano et al. (2019) to make conformal predictions.
+    The only valid ``method`` is "quantile" and the only valid default
+    ``cv`` is "split".
+
+    Parameters
+    ----------
+    estimator : Optional[RegressorMixin]
+        Any regressor with scikit-learn API
+        (i.e. with fit and predict methods), by default ``None``.
+        If ``None``, estimator defaults to a ``QuantileRegressor`` instance.
+
+    method: str
+        Method to choose for prediction, in this case, the only valid method
+        is the "quantile" method.
+
+    cv: Optional[str]
+        By default the value is set to None. In theory a split method is
+        implemented as it is needed to provided both a training and calibration
+        set.
+
+    alpha: float
+        Between 0 and 0.5, represents the risk level of the confidence
+        interval.
+        Lower ``alpha`` produce larger (more conservative) prediction
+        intervals.
+        ``alpha`` is the complement of the target coverage level.
+
+        By default 0.1.
+
+    Attributes
+    ----------
+    valid_methods: List[str]
+        List of all valid methods.
+
+    estimators_ : List[RegressorMixin]
+        - [0]: Estimator with quantile value of alpha/2
+        - [1]: Estimator with quantile value of 1 - alpha/2
+        - [2]: Estimator with quantile value of 0.5
+
+    conformity_scores_ : NDArray of shape (n_samples_train, 3)
+        Conformity scores between ``y_calib`` and ``y_pred``:
+            - [:, 0]: for y_calib coming from prediction estimator with
+            quantile of alpha/2
+            - [:, 0]: for y_calib coming from prediction estimator with
+            quantile of 1 - alpha/2
+            - [:, 2]: maximum of those first two scores
+
+    n_calib_samples: int
+        Number of samples in the calibration dataset.
+
+    References
+    ----------
+    Yaniv Romano, Evan Patterson and Emmanuel J. Candès.
+    "Conformalized Quantile Regression"
+    Advances in neural information processing systems 32 (2019).
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.regression import MapieRegressor
+    >>> from sklearn.linear_model import LinearRegression
+    >>> X = np.array([[0], [1], [2], [3], [4], [5]])
+    >>> y = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
+    >>> X_calib = np.array([[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]])
+    >>> y_calib = np.array([5, 7, 9, 4, 8, 1, 5, 7.5, 9.5, 12])
+    >>> mapie_reg = MapieQuantileRegressor().fit(X, y, X_calib, y_calib)
+    >>> y_pred, y_pis = mapie_reg.predict(X)
+    >>> print(y_pis[:, :, 0])
+    [[-8.16666667 19.        ]
+     [-6.33333333 20.83333333]
+     [-4.5        22.66666667]
+     [-2.66666667 24.5       ]
+     [-0.83333333 26.33333333]
+     [ 1.         28.16666667]]
+    >>> print(y_pred)
+    [ 5.  7.  9. 11. 13. 15.]
+    """
+    valid_methods_ = ["quantile"]
+    fit_attributes = [
+        "estimators_",
+        "conformity_scores_",
+        "n_calib_samples",
+    ]
+
+    Params = TypedDict(
+        "Params",
+        {
+            "loss_name": str,
+            "alpha_name": str
+        },
+    )
+    quantile_estimator_params = {
+        "GradientBoostingRegressor": Params(
+            loss_name="loss",
+            alpha_name="alpha"
+        ),
+        "QuantileRegressor": Params(
+            loss_name="quantile",
+            alpha_name="quantile"
+        ),
+        "HistGradientBoostingRegressor": Params(
+            loss_name="loss",
+            alpha_name="alpha"
+        ),
+        "LGBMRegressor": Params(
+            loss_name="objective",
+            alpha_name="alpha"
+        )
+    }
+
+    def __init__(
+        self,
+        estimator: Optional[Union[RegressorMixin, Pipeline]] = None,
+        method: str = "quantile",
+        cv: Optional[str] = None,
+        alpha: float = 0.1,
+    ) -> None:
+        super().__init__(
+            estimator=estimator,
+            method=method,
+        )
+        self.cv = cv
+        self.alpha = alpha
+
+    def _check_alpha(
+        self,
+        alpha: float = 0.1,
+    ) -> NDArray:
+        """
+        Perform several checks on the alpha value and changes it from
+        a float to an ArrayLike.
+
+        Parameters
+        ----------
+        alpha : float
+            Can only be a float value between 0 and 0.5.
+            Represent the risk level of the confidence interval.
+            Lower alpha produce larger (more conservative) prediction
+            intervals. Alpha is the complement of the target coverage level.
+            By default 0.1
+
+        Returns
+        -------
+        ArrayLike
+            An ArrayLike of three values:
+
+            - [0]: alpha value of alpha/2
+            - [1]: alpha value of of 1 - alpha/2
+            - [2]: alpha value of 0.5
+
+        Raises
+        ------
+        ValueError
+            If alpha is not a float.
+        ValueError
+            If the value of alpha is not between 0 and 0.5.
+        """
+        if isinstance(alpha, float):
+            if np.any(np.logical_or(alpha <= 0, alpha >= 0.5)):
+                raise ValueError(
+                    "Invalid alpha. Allowed values are between 0 and 0.5."
+                )
+            else:
+                alpha_np = np.array([alpha / 2, 1 - alpha / 2, 0.5])
+        else:
+            raise ValueError(
+                "Invalid alpha. Allowed values are float."
+            )
+        return alpha_np
+
+    def _check_estimator(
+        self,
+        estimator: Optional[Union[RegressorMixin, Pipeline]] = None
+    ) -> Union[RegressorMixin, Pipeline]:
+        """
+        Perform several checks on the estimator to check if it has
+        all the required specifications to be used with this methodology.
+        The estimators that can be used in MapieQuantileRegressor need to
+        have a ``fit`` and ``predict``attribute, but also need to allow
+        a quantile loss and therefore also setting a quantile value.
+        Note that there is a TypedDict to check which methods allow for
+        quantile regression.
+
+        Parameters
+        ----------
+        estimator : Optional[RegressorMixin], optional
+            Estimator to check, by default ``None``.
+
+        Returns
+        -------
+        RegressorMixin
+            The estimator itself or a default ``QuantileRegressor`` instance
+            with ``solver`` set to "highs".
+
+        Raises
+        ------
+        ValueError
+            If the estimator fit or predict methods.
+        ValueError
+            We check if it's a known estimator that does quantile regression
+            according to the dictionnary set quantile_estimator_params.
+            This dictionnary will need to be updated with the latest new
+            available estimators.
+        ValueError
+            The estimator does not have the "loss_name" in its parameters and
+            therefore can not be used as an estimator.
+        ValueError
+            There is no quantile "loss_name" and therefore this estimator
+            can not be used as a ``MapieQuantileRegressor``.
+        ValueError
+            The parameter to set the alpha value does not exist in this
+            estimator and therefore we cannot use it.
+        """
+        if estimator is None:
+            return QuantileRegressor(
+                solver="highs-ds",
+                alpha=0.0,
+            )
+        if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
+            raise ValueError(
+                "Invalid estimator. "
+                "Please provide a regressor with fit and predict methods."
+            )
+        if isinstance(estimator, Pipeline):
+            self._check_estimator(estimator[-1])
+            return estimator
+        else:
+            name_estimator = estimator.__class__.__name__
+            if name_estimator == "QuantileRegressor":
+                return estimator
+            else:
+                if name_estimator in self.quantile_estimator_params:
+                    param_estimator = estimator.get_params()
+                    loss_name, alpha_name = self.quantile_estimator_params[
+                        name_estimator
+                    ].values()
+                    if loss_name in param_estimator:
+                        if param_estimator[loss_name] != "quantile":
+                            raise ValueError(
+                                "You need to set the loss/objective argument"
+                                + " of your base model to ``quantile``."
+                            )
+                        else:
+                            if alpha_name in param_estimator:
+                                return estimator
+                            else:
+                                raise ValueError(
+                                    "The matching parameter `alpha_name` for"
+                                    + " estimator does not exist."
+                                )
+                    else:
+                        raise ValueError(
+                            "The matching parameter `loss_name` for"
+                            + " estimator does not exist."
+                        )
+                else:
+                    raise ValueError(
+                        "The base model does not seem to be accepted"
+                        + " by MapieQuantileRegressor. \n"
+                        "Give a base model among: \n"
+                        "``quantile_estimator_params.keys()``"
+                        "Or, add your base model to"
+                        + " ``quantile_estimator_params``."
+                    )
+
+    def _check_cv(
+        self,
+        cv: Optional[str] = None
+    ) -> str:
+        """
+        Check if cv argument is None or "split".
+
+        Parameters
+        ----------
+        cv : Optional[str], optional
+           cv to check, by default ``None``.
+
+        Returns
+        -------
+        str
+            cv itself or a default "split".
+
+        Raises
+        ------
+        ValueError
+            Raises an error if the cv is anything else but the method "split".
+            Only the split method has been implemented.
+        """
+        if cv is None:
+            return "split"
+        if cv == "split":
+            return cv
+        else:
+            raise ValueError(
+                "Invalid cv method, only valid method is ``split``."
+            )
+
+    def fit(  # type: ignore
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        X_calib: ArrayLike,
+        y_calib: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+    ) -> MapieQuantileRegressor:
+        """
+        Fit estimator and compute residuals used for prediction intervals.
+        All the clones of the estimators for different quantile values are
+        stored in order alpha/2, 1 - alpha/2, 0.5 in the ``estimators_``
+        attribute. Residuals for the first two estimators and the maximum
+        of residuals among these residuals are stored in the
+        ``conformity_scores_`` attribute.
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Training data.
+        y : ArrayLike of shape (n_samples,)
+            Training labels.
+        X_calib : ArrayLike of shape (n_calib_samples, n_features)
+            Calibration data.
+        y_calib : ArrayLike of shape (n_calib_samples,)
+            Calibration labels.
+        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for fitting the out-of-fold models.
+            If None, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no residuals.
+            If weights are non-uniform, residuals are still uniformly weighted.
+
+            By default ``None``.
+
+        Returns
+        -------
+        MapieQuantileRegressor
+             The model itself.
+        """
+        # Checks
+        self._check_parameters()
+        checked_estimator = self._check_estimator(self.estimator)
+        alpha = self._check_alpha(self.alpha)
+        self.cv = self._check_cv(cast(str, self.cv))
+        X, y = indexable(X, y)
+        X_calib, y_calib = indexable(X_calib, y_calib)
+        y, y_calib = _check_y(y), _check_y(y_calib)
+        self.n_calib_samples = _num_samples(y_calib)
+        check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
+        sample_weight, X, y = check_null_weight(
+            sample_weight,
+            X,
+            y
+        )
+        y = cast(NDArray, y)
+
+        # Initialization
+        self.estimators_: List[RegressorMixin] = []
+
+        # Work
+        y_calib_preds = np.full(
+            shape=(3, self.n_calib_samples),
+            fill_value=np.nan
+        )
+
+        if isinstance(checked_estimator, Pipeline):
+            estimator = checked_estimator[-1]
+        else:
+            estimator = checked_estimator
+        name_estimator = estimator.__class__.__name__
+        alpha_name = self.quantile_estimator_params[
+            name_estimator
+        ]["alpha_name"]
+        for i, alpha_ in enumerate(alpha):
+            cloned_estimator_ = clone(checked_estimator)
+            params = {alpha_name: alpha_}
+            if isinstance(checked_estimator, Pipeline):
+                cloned_estimator_[-1].set_params(**params)
+            else:
+                cloned_estimator_.set_params(**params)
+            self.estimators_.append(fit_estimator(
+                cloned_estimator_, X, y, sample_weight
+            ))
+            y_calib_preds[i] = self.estimators_[-1].predict(X_calib)
+
+        self.conformity_scores_ = np.full(
+                shape=(3, self.n_calib_samples),
+                fill_value=np.nan
+            )
+        self.conformity_scores_[0] = y_calib_preds[0] - y_calib
+        self.conformity_scores_[1] = y_calib - y_calib_preds[1]
+        self.conformity_scores_[2] = np.max(
+            [
+                self.conformity_scores_[0],
+                self.conformity_scores_[1]
+            ], axis=0
+        )
+        return self
+
+    def predict(  # type: ignore
+        self,
+        X: ArrayLike,
+        symmetry: Optional[bool] = True,
+    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
+        """
+        Predict target on new samples with confidence intervals.
+        Residuals from the training set and predictions from the model clones
+        are central to the computation.
+        Prediction Intervals for a given ``alpha`` are deduced from the
+        quantile regression at the alpha values: alpha/2, 1 - (alpha/2)
+        while adding a constant based uppon their residuals.
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Test data.
+        symmetry : Optional[bool], optional
+            Deciding factor to whether to find the quantile value for
+            each residuals separatly or to use the maximum of the two
+            combined. This results in having either symmetric constants
+            added for both upper and lower bounds or not.
+
+        Returns
+        -------
+        Union[NDArray, Tuple[NDArray, NDArray]]
+
+        - NDArray of shape (n_samples,) if alpha is None.
+
+        - Tuple[NDArray, NDArray] of shapes
+        (n_samples,) and (n_samples, 2, n_alpha) if alpha is not None.
+
+            - [:, 0, :]: Lower bound of the prediction interval.
+            - [:, 1, :]: Upper bound of the prediction interval.
+        """
+        check_is_fitted(self, self.fit_attributes)
+        alpha = self.alpha if symmetry else self.alpha/2
+        check_alpha_and_n_samples(alpha, self.n_calib_samples)
+
+        n = self.n_calib_samples
+        q = (1 - (alpha)) * (1 + (1 / n))
+
+        y_preds = np.full(
+            shape=(3, _num_samples(X)),
+            fill_value=np.nan
+        )
+        for i, est in enumerate(self.estimators_):
+            y_preds[i] = est.predict(X)
+        if symmetry:
+            quantile = np.full(
+                2,
+                np_quantile(
+                    self.conformity_scores_[2], q, method="higher"
+                )
+            )
+        else:
+            quantile = np.array(
+                [
+                    np_quantile(
+                        self.conformity_scores_[0], q, method="higher"
+                    ),
+                    np_quantile(
+                        self.conformity_scores_[1], q, method="higher"
+                    )
+                ]
+            )
+        y_pred_low = y_preds[0][:, np.newaxis] - quantile[0]
+        y_pred_up = y_preds[1][:, np.newaxis] + quantile[1]
+        check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
+        return y_preds[2], np.stack([y_pred_low, y_pred_up], axis=1)
