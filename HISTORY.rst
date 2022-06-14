@@ -6,6 +6,7 @@ History
 ------------------
 * Relax and fix typing
 * Add Split Conformal Quantile Regression
+* Add EnbPI method for Time Series Regression
 
 0.3.2 (2022-03-11)
 ------------------

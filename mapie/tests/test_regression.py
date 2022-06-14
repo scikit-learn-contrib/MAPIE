@@ -413,21 +413,21 @@ def test_invalid_aggregate_all() -> None:
 
 def test_aggregate_with_mask_with_prefit() -> None:
     """
-    Test ``aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
+    Test ``_aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
     """
     mapie_reg = MapieRegressor(cv="prefit")
     with pytest.raises(
         ValueError,
         match=r".*There should not be aggregation of predictions if cv is*",
     ):
-        mapie_reg.aggregate_with_mask(k, k)
+        mapie_reg._aggregate_with_mask(k, k)
 
     mapie_reg = MapieRegressor(agg_function="nonsense")
     with pytest.raises(
         ValueError,
         match=r".*The value of self.agg_function is not correct*",
     ):
-        mapie_reg.aggregate_with_mask(k, k)
+        mapie_reg._aggregate_with_mask(k, k)
 
 
 def test_pred_loof_isnan() -> None:
@@ -450,7 +450,7 @@ def test_pipeline_compatibility() -> None:
         {
             "x_cat": ["A", "A", "B", "A", "A", "B"],
             "x_num": [0, 1, 1, 4, np.nan, 5],
-            "y": [5, 7, 3, 9, 10, 8]
+            "y": [5, 7, 3, 9, 10, 8],
         }
     )
     y = pd.Series([5, 7, 3, 9, 10, 8])
@@ -460,14 +460,12 @@ def test_pipeline_compatibility() -> None:
         ]
     )
     categorical_preprocessor = Pipeline(
-        steps=[
-            ("encoding", OneHotEncoder(handle_unknown="ignore"))
-        ]
+        steps=[("encoding", OneHotEncoder(handle_unknown="ignore"))]
     )
     preprocessor = ColumnTransformer(
         [
             ("cat", categorical_preprocessor, ["x_cat"]),
-            ("num", numeric_preprocessor, ["x_num"])
+            ("num", numeric_preprocessor, ["x_num"]),
         ]
     )
     pipe = make_pipeline(preprocessor, LinearRegression())
