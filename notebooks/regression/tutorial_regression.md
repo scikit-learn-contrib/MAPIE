@@ -267,6 +267,10 @@ All strategies except the Naive one give effective coverage close to the expecte
 
 ## 2. Estimating the aleatoric uncertainty of heteroscedastic noisy data
 
+
+Let's define again the $x \times \sin(x)$ function and another simple function
+that generates one-dimensional data with normal noise uniformely in a given interval.
+
 ```python
 import warnings
 warnings.filterwarnings("ignore")
@@ -429,7 +433,7 @@ for strategy, coord in zip(strategies, coords):
 ```
 
 We can observe that all of the strategies seem to have similar constant prediction intervals. 
-On the other hand, the quantile strategy offers a solution with that adapts the prediction
+On the other hand, the quantile strategy offers a solution that adapts the prediction
 intervals to the local noise.
 
 ```python
@@ -441,6 +445,8 @@ ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 _ = ax.legend(fontsize=10, loc=[1, 0.4])
 ```
+
+As we can observe all the strategies behave in a similar way as in the first example shown previously expect the quantile method which takes into account the heteroscedasticity of the data. In that method we observe very low interval widths at low values of $x$. This is the only method that even slightly follows the true width, and therefore is the preferred method for heteroscedastic data. Notice also that the true width is greater than the predicted width from the other methods at $x \gtrapprox 3$. This means that while the marginal coverage correct for these methods, the conditional coverage is probably not below expectation as we will observe in the next figure.
 
 ```python
 def heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins):
@@ -473,9 +479,6 @@ plt.ylabel("Conditional coverage")
 plt.legend(loc=[1, 0])
 ```
 
-As we can observe all the strategies behave in a similar way as in the first example shown previously expect the quantile method which takes into account the heteroscedasticity of the data. In that method we observe very low interval widths at low values of $x$. As $x$ grows, so does the width interval and for $x > 2.75$ the interval width becomes larger for the quantile method compared to the other strategies.
-
-
 Let’s now compare the *effective* coverage, namely the fraction of test
 points whose true values lie within the prediction intervals, given by
 the different strategies. 
@@ -495,7 +498,7 @@ pd.DataFrame([
 ], index=STRATEGIES, columns=["Coverage", "Width average"]).round(2)
 ```
 
-All the strategies have the wanted coverage, however, we notice that the quantile strategy has much lower interval width than all other methods, therefore, with heteroscedastic noise, quantile would be the preferred method.
+All the strategies have the wanted coverage, however, we notice that the quantile strategy has much lower interval width than all the other methods, therefore, with heteroscedastic noise, CQR would be the preferred method.
 
 
 ## 3. Estimating the epistemic uncertainty of out-of-distribution data
@@ -629,8 +632,12 @@ for $|x| > 4$ for the CV+, CV-minmax, Jackknife-minmax, and quantile
 strategies. On the other hand, the prediction intervals estimated by
 Jackknife+ remain roughly constant until $|x| \sim 5$ before
 increasing.
-Note that the quantile strategy has notably higher interval width throughout
-the values of x, except for a sudden drop at $x = -6.5$.
+The CQR strategy seems to perform well, however, on the extreme values
+of the data the quantile regression fails to give reliable results as it outputs
+negative value for the prediction intervals. This occurs because the quantile 
+regressor with quantile $1 - \alpha/2$ gives higher values than the quantile 
+regressor with quantile $\alpha/2$. Note that a warning will be issued when
+this occurs.
 
 ```python
 pd.DataFrame([
@@ -652,7 +659,9 @@ advised to use the three former strategies for predictions with new
 out-of-distribution data.
 Note however that there are no theoretical guarantees on the coverage level 
 for out-of-distribution data.
-Here it's important to note that the quantile method most likely has negative values (at $x = -6.5$) of width thereby giving a low average width. This can be due to its inherit structure, it is possible that the prediction values for quantile 0.025 can be greater than that of 0.975 points where a lot of uncertainty lies.
+Here it's important to note that the CQR strategy should not be taken into account for
+width prediction, and it is abundantly clear from the negative width coverage that
+is observed in these results.
 
 
 ## 4. Estimating the uncertainty with different sklearn-compatible regressors

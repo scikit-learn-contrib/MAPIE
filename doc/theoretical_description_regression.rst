@@ -218,10 +218,10 @@ is then higher.
 8. The conformalized quantile regression (CQR) method
 =====================================================
 
-The conformalized quantile method allows for a better interval width in cases
-of heteroscedasticity data. It uses quantile regressors with different quantile
+The conformalized quantile method allows for better interval widths with
+heteroscedastic data. It uses quantile regressors with different quantile
 values to estimate the prediction bounds and the residuals of these methods is
-used to create the guaranteed coevrage value.
+used to create the guaranteed coverage value.
 
 .. math:: 
 
@@ -232,10 +232,10 @@ used to create the guaranteed coevrage value.
 Where :math:`Q_{1-\alpha}(E, \mathcal{I}_2) := (1-\alpha)(1+1/ |\mathcal{I}_2|)`-th
 empirical quantile of :math:`{E_i : i \in \mathcal{I}_2}` and :math:`\mathcal{I}_2` is the
 residuals of the estimator fitted on the calibration set. Note that in the symmetric method, 
-:math:`E_{low}` and :math:`E_{high}` are the same :math:`E`.
+:math:`E_{low}` and :math:`E_{high}` are equal.
 
-As justified by [3], this method garantees a coverage level of 
-:math:`1-\alpha` for a target coverage level of :math:`1-\alpha`.
+As justified by [3], this method offers a theoretical guarantee of the target coverage 
+level :math:`1-\alpha`.
 
 Note that this means that using the split method will require to run three separate regressions
 to estimate the prediction intervals.

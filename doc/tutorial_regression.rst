@@ -358,6 +358,10 @@ theoretical garantees.
 2. Estimating the aleatoric uncertainty of heteroscedastic noisy data
 ---------------------------------------------------------------------
 
+Let’s define again the :math:`x \times \sin(x)` function and another
+simple function that generates one-dimensional data with normal noise
+uniformely in a given interval.
+
 .. code-block:: python
 
     import numpy as np
@@ -404,7 +408,7 @@ more noisy.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_30_0.png
+.. image:: tutorial_regression_files/tutorial_regression_31_0.png
 
 
 As mentioned previously, we fit our training data with a simple
@@ -531,12 +535,12 @@ bootstrapped models.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_37_0.png
+.. image:: tutorial_regression_files/tutorial_regression_38_0.png
 
 
 We can observe that all of the strategies seem to have similar constant
 prediction intervals. On the other hand, the quantile strategy offers a
-solution with that adapts the prediction intervals to the local noise.
+solution that adapts the prediction intervals to the local noise.
 
 .. code-block:: python
 
@@ -550,8 +554,19 @@ solution with that adapts the prediction intervals to the local noise.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_39_0.png
+.. image:: tutorial_regression_files/tutorial_regression_40_0.png
 
+
+As we can observe all the strategies behave in a similar way as in the
+first example shown previously expect the quantile method which takes
+into account the heteroscedasticity of the data. In that method we
+observe very low interval widths at low values of :math:`x`. This is the
+only method that even slightly follows the true width, and therefore is
+the preferred method for heteroscedastic data. Notice also that the true
+width is greater than the predicted width from the other methods at
+:math:`x \gtrapprox 3`. This means that while the marginal coverage
+correct for these methods, the conditional coverage is probably not
+below expectation as we will observe in the next figure.
 
 .. code-block:: python
 
@@ -598,16 +613,8 @@ solution with that adapts the prediction intervals to the local noise.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_42_2.png
+.. image:: tutorial_regression_files/tutorial_regression_44_2.png
 
-
-As we can observe all the strategies behave in a similar way as in the
-first example shown previously expect the quantile method which takes
-into account the heteroscedasticity of the data. In that method we
-observe very low interval widths at low values of :math:`x`. As
-:math:`x` grows, so does the width interval and for :math:`x > 2.75` the
-interval width becomes larger for the quantile method compared to the
-other strategies.
 
 Let’s now compare the *effective* coverage, namely the fraction of test
 points whose true values lie within the prediction intervals, given by
@@ -708,9 +715,9 @@ the different strategies.
 
 
 All the strategies have the wanted coverage, however, we notice that the
-quantile strategy has much lower interval width than all other methods,
-therefore, with heteroscedastic noise, quantile would be the preferred
-method.
+quantile strategy has much lower interval width than all the other
+methods, therefore, with heteroscedastic noise, CQR would be the
+preferred method.
 
 3. Estimating the epistemic uncertainty of out-of-distribution data
 -------------------------------------------------------------------
@@ -755,7 +762,7 @@ Lets” start by generating and showing the data.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_52_0.png
+.. image:: tutorial_regression_files/tutorial_regression_53_0.png
 
 
 As before, we estimate the prediction intervals using a polynomial
@@ -825,7 +832,7 @@ strategies.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_55_0.png
+.. image:: tutorial_regression_files/tutorial_regression_56_0.png
 
 
 At first glance, our polynomial function does not give accurate
@@ -848,16 +855,19 @@ Let’s now compare the prediction interval widths between all strategies.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_58_0.png
+.. image:: tutorial_regression_files/tutorial_regression_59_0.png
 
 
 The prediction interval widths start to increase exponentially for
 :math:`|x| > 4` for the CV+, CV-minmax, Jackknife-minmax, and quantile
 strategies. On the other hand, the prediction intervals estimated by
 Jackknife+ remain roughly constant until :math:`|x| \sim 5` before
-increasing. Note that the quantile strategy has notably higher interval
-width throughout the values of x, except for a sudden drop at
-:math:`x = -6.5`.
+increasing. The CQR strategy seems to perform well, however, on the
+extreme values of the data the quantile regression fails to give
+reliable results as it outputs negative value for the prediction
+intervals. This occurs because the quantile regressor with quantile
+:math:`1 - \alpha/2` gives higher values than the quantile regressor
+this occurs.
 
 .. code-block:: python
 
@@ -963,11 +973,9 @@ strategy, and tend to result in more reliable coverages for
 former strategies for predictions with new out-of-distribution data.
 Note however that there are no theoretical guarantees on the coverage
 level for out-of-distribution data. Here it’s important to note that the
-quantile method most likely has negative values (at :math:`x = -6.5`) of
-width thereby giving a low average width. This can be due to its inherit
-structure, it is possible that the prediction values for quantile 0.025
-can be greater than that of 0.975 points where a lot of uncertainty
-lies.
+CQR strategy should not be taken into account for width prediction, and
+it is abundantly clear from the negative width coverage that is observed
+in these results.
 
 4. Estimating the uncertainty with different sklearn-compatible regressors
 --------------------------------------------------------------------------
@@ -1001,7 +1009,7 @@ uniform distribution.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_65_0.png
+.. image:: tutorial_regression_files/tutorial_regression_66_0.png
 
 
 Let’s then define the models. The boosing model considers 100 shallow
@@ -1088,7 +1096,7 @@ method and compare their prediction interval.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_72_0.png
+.. image:: tutorial_regression_files/tutorial_regression_73_0.png
 
 
 .. code-block:: python
@@ -1103,7 +1111,7 @@ method and compare their prediction interval.
 
 
 
-.. image:: tutorial_regression_files/tutorial_regression_73_0.png
+.. image:: tutorial_regression_files/tutorial_regression_74_0.png
 
 
 As expected with the CV+ method, the prediction intervals are a bit
