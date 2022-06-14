@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.11.2
+      jupytext_version: 1.13.6
   kernelspec:
     display_name: mapie_local
     language: python
@@ -16,7 +16,7 @@ jupyter:
 # Tutorial for classification
 
 
-In this tutorial, we compare the prediction sets estimated by the conformal methods implemented in :class:`mapie.regression.MapieClassifier` on a toy two-dimensional dataset.
+In this tutorial, we compare the prediction sets estimated by the conformal methods implemented in MAPIE on a toy two-dimensional dataset.
 
 Throughout this tutorial, we will answer the following questions:
 
@@ -24,7 +24,7 @@ Throughout this tutorial, we will answer the following questions:
 
 - Is the chosen conformal method well calibrated ? 
 
-- What are the pros and cons of the conformal methods included in :class:`mapie.regression.MapieClassifier` ?
+- What are the pros and cons of the conformal methods included in MAPIE ?
 
 
 ## 1. Conformal Prediction method using the softmax score of the true label
@@ -32,16 +32,16 @@ Throughout this tutorial, we will answer the following questions:
 
 We will use MAPIE to estimate a prediction set of several classes such that the probability that the true label
 of a new test point is included in the prediction set is always higher than the target confidence level :
-:math:` P(Y \in C) \geq 1 - \alpha`.
+$P(Y \in C) \geq 1 - \alpha$.
 We start by using the softmax score output by the base classifier as the conformity score on a toy two-dimensional dataset.
 We estimate the prediction sets as follows :
 
 * First we generate a dataset with train, calibration and test, the model is fitted on the training set.
-* We set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}` the softmax output of the true class for each sample in the calibration set.
-* Then we define :math:`\hat{q}` as being the :math:`(n + 1) (\alpha) / n` previous quantile of :math:`S_{1}, ..., S_{n}`
-(this is essentially the quantile :math:`\alpha`, but with a small sample correction). 
-* Finally, for a new test data point (where :math:`X_{n + 1}` is known but :math:`Y_{n + 1}` is not), create a prediction set
-:math:`C(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}` which includes all the classes with a sufficiently high softmax output.
+* We set the conformal score $S_i = \hat{f}(X_{i})_{y_i}$ the softmax output of the true class for each sample in the calibration set.
+* Then we define $\hat{q}$ as being the $(n + 1) (\alpha) / n$ previous quantile of $S_{1}, ..., S_{n}$
+(this is essentially the quantile $\alpha$, but with a small sample correction). 
+* Finally, for a new test data point (where $X_{n + 1}$ is known but $Y_{n + 1}$ is not), create a prediction set
+$C(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}$ which includes all the classes with a sufficiently high softmax output.
 
 We use a two-dimensional toy dataset with three labels. The distribution of the data is a bivariate normal with diagonal covariance matrices for each label. 
 
@@ -88,7 +88,7 @@ plt.ylabel("Y")
 plt.show()
 ```
 
-We fit our training data with a Gaussian Naive Base estimator. And then we apply :class:`mapie.classification.MapieClassifier` in the calibration data with the method ``score`` to the estimator indicating that it has already been fitted with `cv="prefit"`.
+We fit our training data with a Gaussian Naive Base estimator. And then we apply MAPIE in the calibration data with the method ``score`` to the estimator indicating that it has already been fitted with `cv="prefit"`.
 We then estimate the prediction sets with differents alpha values with a
 ``fit`` and ``predict`` process. 
 
@@ -185,7 +185,7 @@ plot_results(alpha, X_test_mesh, y_pred_score, y_ps_score)
 When the class coverage is not large enough, the prediction sets can be empty when the model is uncertain at the border between two classes. The null region disappears for larger class coverages but ambiguous classification regions arise with several labels included in the prediction sets highlighting the uncertain behaviour of the base classifier.
 
 
-Let’s now study the effective coverage and the mean prediction set widths as function of the :math:`1-\alpha` target coverage. To this aim, we use once again the `.predict()` method of :class:`mapie.regression.MapieClassifier` to estimate predictions sets on a large number of :math:`\alpha` values.
+Let’s now study the effective coverage and the mean prediction set widths as function of the $1-\alpha$ target coverage. To this aim, we use once again the `.predict()` method of MAPIE to estimate predictions sets on a large number of $\alpha$ values.
 
 ```python
 alpha2 = np.arange(0.02, 0.98, 0.02)
@@ -222,7 +222,7 @@ plot_coverages_widths(alpha2, coverages_score, widths_score, "Score")
 ## 2. Conformal Prediction method using the cumulative softmax score
 
 
-We saw in the previous section that the "score" method is well calibrated by providing accurate coverage levels. However, it tends to give null prediction sets for uncertain regions, especially when the :math:`\alpha` value is high. :class:`mapie.classification.MapieClassifier` includes another method, called Adaptive Prediction Set (APS), whose conformity score is the cumulated score of the softmax output until the true label is reached (see the theoretical description for more details). We will see in this Section that this method no longer estimates null prediction sets but by giving slightly bigger prediction sets. 
+We saw in the previous section that the "score" method is well calibrated by providing accurate coverage levels. However, it tends to give null prediction sets for uncertain regions, especially when the $\alpha$ value is high. MAPIE includes another method, called Adaptive Prediction Set (APS), whose conformity score is the cumulated score of the softmax output until the true label is reached (see the theoretical description for more details). We will see in this Section that this method no longer estimates null prediction sets but by giving slightly bigger prediction sets. 
 
 
 Let's visualize the prediction sets obtained with the APS method on the test set after fitting MAPIE on the calibration set.
