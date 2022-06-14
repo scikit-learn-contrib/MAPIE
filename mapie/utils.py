@@ -399,3 +399,46 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
             + "belongs to every resamplings.\n"
             "Increase the number of resamplings"
         )
+
+
+def argsort_ties(array: ArrayLike, seed: Optional[int] = None,
+                 axis: Optional[int] = None) -> ArrayLike:
+    """
+    Returns the indices that would sort the array.
+    In case of ties, breaks them randomly.
+    """
+
+    rng = np.random.default_rng(seed)
+    pseudo_array = rng.random(array.shape)
+    return np.lexsort((pseudo_array, array), axis=axis)
+
+
+def empirical_quantile(values: ArrayLike, alphas: Iterable[float],
+                       weights: Optional[ArrayLike] = None,
+                       sorted: bool = False) -> ArrayLike:
+    """
+    Calculates the weighted empirical quantile of `values`.
+    Converted to Python from https://github.com/ryantibs/conformal/
+    """
+
+    if values.shape != weights.shape:
+        raise ValueError(
+            "Expected `values` and `weights` to have the same shape.")
+
+    if weights is None:
+        weights = np.ones_like(values, dtype=np.float64)
+    if not sorted:
+        sorted_ind = argsort_ties(values, axis=-1)
+        values = values[sorted_ind]
+        weights = weights[sorted_ind]
+
+    # TODO: Vectorize
+    quantiles = np.empty_like(alphas)
+    for i, alpha in enumerate(alphas):
+        idx = np.where(np.cumsum(weights)/np.sum(weights) >= alpha)[0]
+        if idx.shape[0] == 0:
+            quantiles[i] = values[-1]
+        else:
+            quantiles[i] = values[idx.min()]
+
+    return quantiles

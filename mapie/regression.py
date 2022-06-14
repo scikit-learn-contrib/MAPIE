@@ -28,7 +28,7 @@ from .utils import (
     check_nan_in_aposteriori_prediction,
     check_null_weight,
     check_verbose,
-    fit_estimator,
+    fit_estimator
 )
 
 
