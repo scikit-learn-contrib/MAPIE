@@ -19,11 +19,12 @@ from sklearn.utils.validation import (
 
 from ._typing import ArrayLike
 from .aggregation_functions import aggregate_all, phi2D
-from .conformity_scores import AbsoluteConformityScore, ConformityScore
+from .conformity_scores import ConformityScore
 from .subsample import Subsample
 from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
+    check_conformity_score,
     check_cv,
     check_n_features_in,
     check_n_jobs,
@@ -88,6 +89,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
           to provide a prediction interval with fixed width.
           The user has to take care manually that data for model fitting and
           conformity scores estimate are disjoint.
+
+        By default ``None``.
+
+    conformity_score : Optional[ConformityScore]
+        ConformityScore instance.
+        It defines the link between the oberved values, the predicted ones
+        and the conformity scores. For instance, the default None value
+        correspondonds to a conformity score which assumes
+        y_obs = y_pred + conformity_score.
+
+        - ``None``, to use the default AbsoluteConformityScore conformity score
+        - ConformityScore, to use any other conformity score
 
         By default ``None``.
 
@@ -198,7 +211,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "single_estimator_",
         "estimators_",
         "k_",
-        "conformity_score_function_",
         "conformity_scores_",
         "n_features_in_",
         "n_samples_",
@@ -209,6 +221,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         estimator: Optional[RegressorMixin] = None,
         method: str = "plus",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        conformity_score: Optional[ConformityScore] = None,
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
@@ -219,6 +232,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self.n_jobs = n_jobs
         self.agg_function = agg_function
         self.verbose = verbose
+        self.conformity_score = conformity_score
 
     def _check_parameters(self) -> None:
         """
@@ -453,7 +467,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self,
         X: ArrayLike,
         y: ArrayLike,
-        conformity_score: ConformityScore = AbsoluteConformityScore(),
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieRegressor:
         """
@@ -472,9 +485,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         y : ArrayLike of shape (n_samples,)
             Training labels.
-
-        conformity_score : Optional[ConformityScore]
-            ConformityScore instance.
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
@@ -501,6 +511,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y = _check_y(y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
+        self.conformity_score_function_ = check_conformity_score(
+            self.conformity_score
+        )
 
         # Initialization
         self.estimators_: List[RegressorMixin] = []
@@ -560,11 +573,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        conformity_score.check_consistency(y, y_pred)
-        self.conformity_scores_ = conformity_score.get_conformity_scores(
-            y, y_pred
+        self.conformity_score_function_.check_consistency(y, y_pred)
+        self.conformity_scores_ = (
+            self.conformity_score_function_.get_conformity_scores(y, y_pred)
         )
-        self.conformity_score_function_ = conformity_score
 
         return self
 

@@ -9,6 +9,7 @@ from sklearn.utils.validation import _check_sample_weight, _num_features
 from sklearn.utils import _safe_indexing
 
 from ._typing import ArrayLike
+from .conformity_scores import AbsoluteConformityScore, ConformityScore
 
 
 def check_null_weight(
@@ -420,4 +421,37 @@ def check_input_is_image(X: ArrayLike) -> None:
             "Invalid X."
             "When X is an image, the number of dimensions"
             "must be equal to 3 or 4."
+        )
+
+
+def check_conformity_score(
+    conformity_score: Optional[ConformityScore],
+) -> ConformityScore:
+    """
+    Check parameter ``conformity_score``.
+
+    Raises
+    ------
+    ValueError
+        If parameter is not valid.
+
+    Examples
+    --------
+    >>> from mapie.utils import check_conformity_score
+    >>> try:
+    ...     check_conformity_score(1)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    Invalid conformity_score argument.
+    Must be None or a ConformityScore instance.
+    """
+    if conformity_score is None:
+        return AbsoluteConformityScore()
+    elif isinstance(conformity_score, ConformityScore):
+        return conformity_score
+    else:
+        raise ValueError(
+            "Invalid conformity_score argument.\n"
+            "Must be None or a ConformityScore instance."
         )
