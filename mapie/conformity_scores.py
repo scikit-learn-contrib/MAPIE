@@ -201,7 +201,8 @@ class GammaConformityScore(ConformityScore):
     The conformity score is not symmetrical.
 
     This is appropriate when the confidence interval is not symmetrical and
-    its range depends on the predicted values.
+    its range depends on the predicted values. Like the Gamma distribution,
+    its support is limited to strictly positive reals.
     """
 
     def __init__(self) -> None:
