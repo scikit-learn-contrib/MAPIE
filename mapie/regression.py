@@ -666,11 +666,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 conformity_scores_low = self.conformity_scores_
                 conformity_scores_up = self.conformity_scores_
                 alpha_ = alpha_ / 2
-            lower_bounds = self.conformity_score_function_.get_observed_value(
-                y_pred_multi_low, conformity_scores_low
+            lower_bounds = (
+                self.conformity_score_function_.get_estimation_distribution(
+                    y_pred_multi_low, conformity_scores_low
+                )
             )
-            upper_bounds = self.conformity_score_function_.get_observed_value(
-                y_pred_multi_up, conformity_scores_up
+            upper_bounds = (
+                self.conformity_score_function_.get_estimation_distribution(
+                    y_pred_multi_up, conformity_scores_up
+                )
             )
 
             # get desired confidence intervals according to alpha

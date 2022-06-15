@@ -42,12 +42,12 @@ def test_absolute_conformity_score_get_conformity_scores(
 @pytest.mark.parametrize(
     "conf_scores", [np.array([1, 0, -1, -1, 0, 3]), [1, 0, -1, -1, 0, 3]]
 )
-def test_absolute_conformity_score_get_observed_value(
+def test_absolute_conformity_score_get_estimation_distribution(
     y_pred: ArrayLike, conf_scores: ArrayLike
 ) -> None:
     """Test conformity observed value computation for AbsoluteConformityScore."""  # noqa: E501
     abs_conf_score = AbsoluteConformityScore()
-    y_obs = abs_conf_score.get_observed_value(y_pred, conf_scores)
+    y_obs = abs_conf_score.get_estimation_distribution(y_pred, conf_scores)
     np.testing.assert_allclose(y_obs, y_toy)
 
 
@@ -60,7 +60,9 @@ def test_absolute_conformity_score_consistency(y_pred: ArrayLike) -> None:
     signed_conf_scores = abs_conf_score.get_signed_conformity_scores(
         y_toy, y_pred
     )
-    y_obs = abs_conf_score.get_observed_value(y_pred, signed_conf_scores)
+    y_obs = abs_conf_score.get_estimation_distribution(
+        y_pred, signed_conf_scores
+    )
     np.testing.assert_allclose(y_obs, y_toy)
 
 
@@ -89,12 +91,12 @@ def test_gamma_conformity_score_get_conformity_scores(
         [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12],
     ],
 )
-def test_gamma_conformity_score_get_observed_value(
+def test_gamma_conformity_score_get_estimation_distribution(
     y_pred: ArrayLike, conf_scores: ArrayLike
 ) -> None:
     """Test conformity observed value computation for GammaConformityScore."""  # noqa: E501
     gamma_conf_score = GammaConformityScore()
-    y_obs = gamma_conf_score.get_observed_value(y_pred, conf_scores)
+    y_obs = gamma_conf_score.get_estimation_distribution(y_pred, conf_scores)
     np.testing.assert_allclose(y_obs, y_toy)
 
 
@@ -107,7 +109,9 @@ def test_gamma_conformity_score_consistency(y_pred: ArrayLike) -> None:
     signed_conf_scores = gamma_conf_score.get_signed_conformity_scores(
         y_toy, y_pred
     )
-    y_obs = gamma_conf_score.get_observed_value(y_pred, signed_conf_scores)
+    y_obs = gamma_conf_score.get_estimation_distribution(
+        y_pred, signed_conf_scores
+    )
     np.testing.assert_allclose(y_obs, y_toy)
 
 
@@ -154,4 +158,4 @@ def test_gamma_conformity_score_check_predicted_value(
     with pytest.raises(ValueError):
         gamma_conf_score.get_signed_conformity_scores(y_toy, y_pred)
     with pytest.raises(ValueError):
-        gamma_conf_score.get_observed_value(y_pred, conf_scores)
+        gamma_conf_score.get_estimation_distribution(y_pred, conf_scores)

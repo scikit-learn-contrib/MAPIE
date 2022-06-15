@@ -26,16 +26,16 @@ class ConformityScore(metaclass=ABCMeta):
             Whether to consider the conformity score as symmetrical or not.
         consistency_check : bool, optional
             Whether to check the consistency between the following methods:
-            - get_observed_value and
+            - get_estimation_distribution and
             - get_signed_conformity_scores
             by default True.
         eps : float, optional
             Threshold to consider when checking the consistency between the
             following methods:
-            - get_observed_value and
+            - get_estimation_distribution and
             - get_signed_conformity_scores
             The following equality must be verified:
-            self.get_observed_value(
+            self.get_estimation_distribution(
                 y_pred, self.get_conformity_scores(y, y_pred)
             ) == y
             It should be specified if consistency_check==True.
@@ -95,14 +95,14 @@ class ConformityScore(metaclass=ABCMeta):
         return conformity_scores
 
     @abstractmethod
-    def get_observed_value(
+    def get_estimation_distribution(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> ArrayLike:
-        """Placeholder for get_observed_value.
+        """Placeholder for get_estimation_distribution.
         Subclasses should implement this method!
 
-        Compute the observed values from the predicted values and the
-        conformity scores.
+        Compute samples of the estimation distribution from the predicted
+        values and the conformity scores.
 
         Parameters
         ----------
@@ -119,10 +119,10 @@ class ConformityScore(metaclass=ABCMeta):
 
     def check_consistency(self, y: ArrayLike, y_pred: ArrayLike) -> None:
         """Check consistency between the following methods:
-        get_observed_value and get_signed_conformity_scores
+        get_estimation_distribution and get_signed_conformity_scores
 
         The following equality should be verified:
-        self.get_observed_value(
+        self.get_estimation_distribution(
             y_pred, self.get_conformity_scores(y, y_pred)
         ) == y
 
@@ -141,16 +141,16 @@ class ConformityScore(metaclass=ABCMeta):
         if self.consistency_check:
             conformity_scores = self.get_signed_conformity_scores(y, y_pred)
             abs_conformity_scores = np.abs(
-                self.get_observed_value(y_pred, conformity_scores) - y
+                self.get_estimation_distribution(y_pred, conformity_scores) - y
             )
             max_conf_score = np.max(abs_conformity_scores)
             if max_conf_score > self.eps:
                 raise ValueError(
                     "The two functions get_conformity_scores and "
-                    "get_observed_value of the ConformityScore class "
+                    "get_estimation_distribution of the ConformityScore class "
                     "are not consistent. "
                     "The following equation must be verified: "
-                    "self.get_observed_value(y_pred, self.get_conformity_scores(y, y_pred)) == y. "  # noqa: E501
+                    "self.get_estimation_distribution(y_pred, self.get_conformity_scores(y, y_pred)) == y. "  # noqa: E501
                     f"The maximum conformity score is {max_conf_score}."
                     "The eps attribute may need to be increased if you are "
                     "sure that the two methods are consistent."
@@ -182,7 +182,7 @@ class AbsoluteConformityScore(ConformityScore):
         """
         return np.subtract(y, y_pred)
 
-    def get_observed_value(
+    def get_estimation_distribution(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> ArrayLike:
         """
@@ -221,12 +221,12 @@ class GammaConformityScore(ConformityScore):
         self._check_predicted_data(y_pred)
         return np.divide(np.subtract(y, y_pred), y_pred)
 
-    def get_observed_value(
+    def get_estimation_distribution(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> ArrayLike:
         """
-        Compute the observed values from the predicted values and the
-        conformity scores, from the following formula:
+        Compute samples of the estimation distribution from the predicted
+        values and the conformity scores, from the following formula:
         signed conformity score = (y - y_pred) / y_pred
         <=> y = y_pred * (1 + signed conformity score)
         """
