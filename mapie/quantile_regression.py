@@ -125,7 +125,7 @@ class MapieQuantileRegressor(MapieRegressor):
         },
         "LGBMRegressor": {
             "loss_name": "objective",
-            "alpha_name": "alpha"
+            "alpha_name": "reg_alpha"
         },
     }
 
