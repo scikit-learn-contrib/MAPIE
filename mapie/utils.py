@@ -5,19 +5,14 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
-from sklearn.utils.validation import (
-    _check_sample_weight,
-    _num_features
-)
+from sklearn.utils.validation import _check_sample_weight, _num_features
 from sklearn.utils import _safe_indexing
 
 from ._typing import ArrayLike, NDArray
 
 
 def check_null_weight(
-    sample_weight: Optional[ArrayLike],
-    X: ArrayLike,
-    y: ArrayLike
+    sample_weight: Optional[ArrayLike], X: ArrayLike, y: ArrayLike
 ) -> Tuple[Optional[NDArray], ArrayLike, ArrayLike]:
     """
     Check sample weights and remove samples with null sample weights.
@@ -280,7 +275,10 @@ def check_n_features_in(
     return n_features_in
 
 
-def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
+def check_alpha_and_n_samples(
+    alphas: Union[Iterable[float], float],
+    n: int
+) -> None:
     """
     Check if the quantile can be computed based
     on the number of samples and the alpha value.
@@ -311,6 +309,8 @@ def check_alpha_and_n_samples(alphas: Iterable[float], n: int) -> None:
     Number of samples of the score is too low,
     1/alpha (or 1/(1 - alpha)) must be lower than the number of samples.
     """
+    if isinstance(alphas, float):
+        alphas = np.array([alphas])
     for alpha in alphas:
         if n < 1 / alpha or n < 1 / (1 - alpha):
             raise ValueError(
@@ -374,6 +374,9 @@ def check_verbose(verbose: int) -> None:
 
 def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
     """
+    Check that all the points are used at least once, otherwise this means
+    you have set the number of subsamples too low.
+
     Parameters
     ----------
     X : Array of shape (size of training set, number of estimators) whose rows
@@ -403,4 +406,78 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
             "WARNING: at least one point of training set "
             + "belongs to every resamplings.\n"
             "Increase the number of resamplings"
+        )
+
+
+def check_lower_upper_bounds(
+    y_preds: NDArray,
+    y_pred_low: NDArray,
+    y_pred_up: NDArray
+) -> None:
+    """
+    Check if the lower or upper bounds are inconsistent.
+    If checking for MapieQuantileRegressor, then also checking
+    initial quantile values.
+
+    Parameters
+    ----------
+    y_pred : NDArray of shape (n_samples, 3) or (n_samples,)
+        All the predictions at quantile:
+        alpha/2, (1 - alpha/2), 0.5 or only the predictions
+    y_pred_low : NDArray of shape (n_samples,)
+        Final lower bound prediction with additional quantile
+        value added
+    y_pred_up : NDArray of shape (n_samples,)
+        Final upper bound prediction with additional quantile
+        value added
+
+    Raises
+    ------
+    Warning
+        If the aggregated predictions of any training sample would be nan.
+
+    Examples
+    --------
+    >>> import warnings
+    >>> warnings.filterwarnings("error")
+    >>> import numpy as np
+    >>> from mapie.utils import check_lower_upper_bounds
+    >>> y_preds = np.array([[4, 2, 3], [3, 4, 5], [2, 3, 4]])
+    >>> y_pred_low = np.array([4, 3, 2])
+    >>> y_pred_up = np.array([4, 4, 4])
+    >>> try:
+    ...     check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    WARNING: The initial prediction values from the quantile method
+    present issues as the upper quantile values might be higher than the
+    lower quantile values.
+    """
+    if y_preds.ndim == 1:
+        init_pred = y_preds
+    else:
+        init_pred, init_lower_bound, init_upper_bound = y_preds
+    if y_preds.ndim != 1 and np.any(np.logical_or(
+            init_lower_bound >= init_upper_bound,
+            init_pred <= init_lower_bound,
+            init_pred >= init_upper_bound
+            )
+    ):
+        warnings.warn(
+            "WARNING: The initial prediction values from the "
+            + "quantile method\npresent issues as the upper "
+            "quantile values might be higher than the\nlower "
+            + "quantile values."
+        )
+    if np.any(np.logical_or(
+        y_pred_low >= y_pred_up,
+        init_pred <= y_pred_low,
+        init_pred >= y_pred_up
+        )
+    ):
+        warnings.warn(
+            "WARNING: Following the additional value added to have conformal "
+            "predictions, the upper and lower bound present issues as one "
+            "might be higher or lower than the other."
         )

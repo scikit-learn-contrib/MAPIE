@@ -2,20 +2,23 @@
 ================================================
 Estimating aleatoric and epistemic uncertainties
 ================================================
-This example uses :class:`mapie.regression.MapieRegressor` to estimate
+This example uses :class:`mapie.regression.MapieRegressor` and
+:class:`mapie.quantile_regression.MapieQuantileRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
 from typing import Any, Callable, Tuple, TypeVar
 
-from typing_extensions import TypedDict
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 
 from mapie.regression import MapieRegressor
+from mapie.quantile_regression import MapieQuantileRegressor
+from mapie.subsample import Subsample
 from mapie._typing import NDArray
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -86,20 +89,50 @@ polyn_model = Pipeline(
         ("linear", LinearRegression()),
     ]
 )
+polyn_model_quant = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=degree_polyn)),
+        ("linear", QuantileRegressor(
+            alpha=0,
+            solver="highs",  # highs-ds does not give good results
+            )),
+    ]
+)
+
 
 # Estimating prediction intervals
-Params = TypedDict("Params", {"method": str, "cv": int})
 STRATEGIES = {
-    "jackknife_plus": Params(method="plus", cv=-1),
-    "jackknife_minmax": Params(method="minmax", cv=-1),
-    "cv_plus": Params(method="plus", cv=10),
-    "cv_minmax": Params(method="minmax", cv=10),
+    "jackknife_plus": {"method": "plus", "cv": -1},
+    "cv_plus": {"method": "plus", "cv": 10},
+    "jackknife_plus_ab": {"method": "plus", "cv": Subsample(n_resamplings=50)},
+    "conformalized_quantile_regression": {"method": "quantile", "cv": "split"},
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
-    mapie = MapieRegressor(polyn_model, **params)
-    mapie.fit(X_train, y_train)
-    y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
+    if strategy == "conformalized_quantile_regression":
+        mapie = MapieQuantileRegressor(  # type: ignore
+            polyn_model_quant,
+            **params
+        )
+        X_train, X_calib, y_train, y_calib = train_test_split(
+            X_train,
+            y_train,
+            test_size=0.3,
+            random_state=1
+        )
+        mapie.fit(
+            X_train,
+            y_train,
+            X_calib,
+            y_calib
+        )
+        y_pred[strategy], y_pis[strategy] = mapie.predict(
+            X_test
+        )
+    else:
+        mapie = MapieRegressor(polyn_model, **params)  # type: ignore
+        mapie.fit(X_train, y_train)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
 
 # Visualization

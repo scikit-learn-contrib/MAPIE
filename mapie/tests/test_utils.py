@@ -16,6 +16,7 @@ from mapie.utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
+    check_lower_upper_bounds,
 )
 
 from mapie._typing import ArrayLike
@@ -63,12 +64,10 @@ def test_check_null_weight_with_zeros() -> None:
     sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
     np.testing.assert_almost_equal(np.array(sw_out), np.array([1, 1, 1, 1, 1]))
     np.testing.assert_almost_equal(
-        np.array(X_out),
-        np.array([[1], [2], [3], [4], [5]])
+        np.array(X_out), np.array([[1], [2], [3], [4], [5]])
     )
     np.testing.assert_almost_equal(
-        np.array(y_out),
-        np.array([7, 9, 11, 13, 15])
+        np.array(y_out), np.array([7, 9, 11, 13, 15])
     )
 
 
@@ -194,3 +193,30 @@ def test_invalid_verbose(verbose: Any) -> None:
 def test_valid_verbose(verbose: Any) -> None:
     """Test that valid verboses raise no errors."""
     check_verbose(verbose)
+
+
+def test_initial_low_high_pred() -> None:
+    """Test initial values upper bound lower bound above/below one another"""
+    y_preds = np.array([[4, 2, 3], [3, 4, 5], [2, 3, 4]])
+    y_pred_low = np.array([4, 3, 2])
+    y_pred_up = np.array([4, 4, 4])
+    with pytest.warns(UserWarning, match=r"WARNING: The initial prediction*"):
+        check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
+
+
+def test_final_low_high_pred() -> None:
+    """Test final values upper bound lower bound above/below one another"""
+    y_preds = np.array([[1, 2, 3], [3, 4, 5], [2, 3, 4]])
+    y_pred_low = np.array([4, 3, 2])
+    y_pred_up = np.array([4, 4, 4])
+    with pytest.warns(UserWarning, match=r"WARNING: Following the addition*"):
+        check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
+
+
+def test_final1D_low_high_pred() -> None:
+    """Test final values upper bound lower bound above/below one another"""
+    y_preds = np.array([4, 3, 4])
+    y_pred_low = np.array([7, 3, 2])
+    y_pred_up = np.array([3, 4, 4])
+    with pytest.warns(UserWarning, match=r"WARNING: Following the addition*"):
+        check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
