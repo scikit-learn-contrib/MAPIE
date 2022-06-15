@@ -244,6 +244,14 @@ MAPIE methods belong to the field of conformal inference.
 "Uncertainty Sets for Image Classifiers using Conformal Prediction."
 International Conference on Learning Representations 2021.
 
+[6] Yaniv Romano, Evan Patterson, Emmanuel J. Candès.
+"Conformalized Quantile Regression." Advances in neural information processing systems 32 (2019).
+
+[7] Chen Xu, Yao Xie.
+"Conformal prediction for dynamic time-series"
+https://arxiv.org/abs/2010.09107
+
+
 📝 License
 ==========
 

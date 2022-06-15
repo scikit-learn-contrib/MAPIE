@@ -1,12 +1,14 @@
 """
-==========================================================
-Estimate the prediction intervals of 1D homoscedastic data
-==========================================================
+============================================================
+Estimate the prediction intervals of 1D heteroscedastic data
+============================================================
 
 :class:`mapie.regression.MapieRegressor` and
-:class: `mapie.quantile_regression.MapieQuantileRegressor`
-is used to estimate the prediction intervals of 1D homoscedastic
-data using different strategies.
+:class: `mapie.quantile_regression.MapieQuantileRegressor` is used
+to estimate the prediction intervals of 1D heteroscedastic data using
+different strategies. The latter class should provide the same
+coverage for a lower width of intervals because it adapts the prediction
+intervals to the local heteroscedastic noise.
 """
 from typing import Tuple
 
@@ -29,13 +31,13 @@ def f(x: NDArray) -> NDArray:
     return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
 
 
-def get_homoscedastic_data(
+def get_heteroscedastic_data(
     n_train: int = 200, n_true: int = 200, sigma: float = 0.1
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
     """
     Generate one-dimensional data from a given function,
     number of training and test samples and a given standard
-    deviation for the noise.
+    deviation increases linearly with x.
     The training data data is generated from an exponential distribution.
 
     Parameters
@@ -61,9 +63,9 @@ def get_homoscedastic_data(
     q95 = scipy.stats.norm.ppf(0.95)
     X_train = np.linspace(0, 1, n_train)
     X_true = np.linspace(0, 1, n_true)
-    y_train = f(X_train) + np.random.normal(0, sigma, n_train)
+    y_train = f(X_train) + np.random.normal(0, sigma, n_train) * X_train
     y_true = f(X_true)
-    y_true_sigma = np.full(len(y_true), q95 * sigma)
+    y_true_sigma = q95 * sigma * X_true
     return X_train, y_train, X_true, y_true, y_true_sigma
 
 
@@ -120,7 +122,7 @@ def plot_1d_data(
     ax.legend()
 
 
-X_train, y_train, X_test, y_test, y_test_sigma = get_homoscedastic_data()
+X_train, y_train, X_test, y_test, y_test_sigma = get_heteroscedastic_data()
 
 polyn_model = Pipeline(
     [
@@ -156,19 +158,22 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
             polyn_model_quant,
             **params
         )
-        X_train, X_calib, y_train, y_calib = train_test_split(
+        X_train_split, X_calib, y_train_spit, y_calib = train_test_split(
             X_train,
             y_train,
             test_size=0.3,
             random_state=1
         )
         mapie.fit(
-            X_train.reshape(-1, 1),
-            y_train,
+            X_train_split.reshape(-1, 1),
+            y_train_spit,
             X_calib.reshape(-1, 1),
             y_calib
         )
-        y_pred, y_pis = mapie.predict(X_test.reshape(-1, 1))
+        y_pred, y_pis = mapie.predict(
+            X_test.reshape(-1, 1)
+        )
+        X_train, y_train = X_train_split, y_train_spit
     else:
         mapie = MapieRegressor(  # type: ignore
             polyn_model,

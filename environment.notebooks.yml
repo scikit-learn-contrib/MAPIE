@@ -18,3 +18,4 @@ dependencies:
     - seaborn=0.11.2
     - tensorflow=2.7.0
     - xgboost=1.5.1
+    - numpy=1.22.3
