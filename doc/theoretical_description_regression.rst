@@ -241,6 +241,54 @@ Note that this means that using the split method will require to run three separ
 to estimate the prediction intervals.
 
 
+9. The ensemble batch prediction intervals (EnbPI) method
+=========================================================
+
+The coverage guarantee offered by the various resampling methods based on the
+jackknife strategy, implemented in MAPIE, are only valid under the "exchangeability
+hypothesis". It means that the probability law of data should not change up
+reordering.
+This hypothesis is not revelant in many cases, notably for dynamical times series.
+That is why a specific class is needed, namely
+:class:`mapie.time_series_regression.MapieTimeSeriesRegressor`.
+
+Its implementation looks like the jackknife+-after-bootstrap method. The 
+LOO estimators are approximated thanks to a few boostraps. However the
+confidence intervals are like those of the jackknife method.
+
+.. math::
+  \hat{C}_{n, \alpha}^{\rm EnbPI}(X_{n+1}) = [ \hat{q}_{n, \beta}^-\{\hat{\mu}_{agg}(X_{n+1}) - R_i^{\rm LOO} \}, \hat{q}_{n, 1 - \alpha + \beta}^+\{\hat{\mu}_{agg}(X_{n+1}) + R_i^{\rm LOO} \}]
+where :math:`\hat{\mu}_{agg}(X_{n+1})` is the aggregation of the predictions of
+the LOO estimators (mean or median).
+
+The residuals are no longer considered in absolute values but in relative
+values and the width of the confidence intervals are minimized, up to a given gap
+between the quantiles' level.
+
+Moreover, the residuals are updated during the prediction, each time new observations 
+are available. So that the deterioration of predictions, or the increase of
+noise level, can be dynamically taken into account.
+
+Finally, the coverage guarantee is no longer absolute but asymptotic up to two
+hypotheses:
+
+1. Errors are short-term i.i.d.
+
+2. Estimation quality: there exists a real sequence :math:`(\delta_T)_{T > 0}`
+that converges to zero such that
+
+.. math::
+    \frac{1}{T}\sum_1^T(\hat{\mu}_{-t}(x_t) - \mu(x_t))^2 < \delta_T^2
+
+The coverage level depends on the size of the training set and on 
+:math:`(\delta_T)_{T > 0}`.
+
+Becareful: the bigger the training set is, the better the covering guarantee
+is for the point following the training set. However, if the residuals are
+updated gradually, but the model is not refitted, the bigger the training set
+is, the slower the update of the residuals is effective.
+
+
 Key takeaways
 =============
 
@@ -289,3 +337,7 @@ References
 
 [3] Yaniv Romano, Evan Patterson, Emmanuel J. Candès.
 "Conformalized Quantile Regression." Advances in neural information processing systems 32 (2019).
+
+[7] Chen Xu, Yao Xie.
+"Conformal prediction for dynamic time-series"
+https://arxiv.org/abs/2010.09107
