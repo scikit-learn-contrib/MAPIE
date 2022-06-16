@@ -186,8 +186,8 @@ class AbsoluteConformityScore(ConformityScore):
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> ArrayLike:
         """
-        Compute the observed values from the predicted values and the
-        conformity scores, from the following formula:
+        Compute samples of the estimation distribution from the predicted
+        values and the conformity scores, from the following formula:
         signed conformity score = y - y_pred
         <=> y = y_pred + signed conformity score
         """
@@ -214,8 +214,8 @@ class GammaConformityScore(ConformityScore):
         y_pred: ArrayLike,
     ) -> ArrayLike:
         """
-        Compute the signed conformity scores from the predicted values
-        and the observed ones, from the following formula:
+        Compute samples of the estimation distribution from the predicted
+        values and the conformity scores, from the following formula:
         signed conformity score = (y - y_pred) / y_pred
         """
         self._check_observed_data(y)
