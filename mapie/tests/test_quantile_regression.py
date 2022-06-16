@@ -159,13 +159,6 @@ def test_no_predict_fit_estimator() -> None:
 
 def test_no_para_loss_estimator() -> None:
     """Test to check when it does not have a valid loss_name."""
-    Params = TypedDict(
-        "Params",
-        {
-            "loss_name": str,
-            "alpha_name": str
-        },
-    )
     with pytest.raises(
         ValueError,
         match=r".*The matching parameter `loss_name`*",
@@ -173,10 +166,10 @@ def test_no_para_loss_estimator() -> None:
         mapie_reg = MapieQuantileRegressor()
         mapie_reg.quantile_estimator_params[
             "NoLossPamameterEstimator"
-        ] = Params(
-            loss_name="noloss",
-            alpha_name="alpha"
-        )
+        ] = {
+            "loss_name": "noloss",
+            "alpha_name": "alpha"
+        }
         mapie_reg.estimator = NoLossPamameterEstimator(
             alpha=0.2
             )
@@ -185,13 +178,6 @@ def test_no_para_loss_estimator() -> None:
 
 def test_no_para_alpha_estimator() -> None:
     """Test to check when it does not have a valid alpha parameter name"""
-    Params = TypedDict(
-        "Params",
-        {
-            "loss_name": str,
-            "alpha_name": str
-        },
-    )
     with pytest.raises(
         ValueError,
         match=r".*The matching parameter `alpha_name`*",
@@ -199,10 +185,10 @@ def test_no_para_alpha_estimator() -> None:
         mapie_reg = MapieQuantileRegressor()
         mapie_reg.quantile_estimator_params[
             "NoAlphaPamameterEstimator"
-        ] = Params(
-            loss_name="loss",
-            alpha_name="notalpha"
-        )
+        ] = {
+            "loss_name": "loss",
+            "alpha_name": "noalpha"
+        }
         mapie_reg.estimator = NoAlphaPamameterEstimator(
             alpha=0.2,
             loss="quantile"

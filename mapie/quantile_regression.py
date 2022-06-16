@@ -11,7 +11,6 @@ from sklearn.utils.validation import (
     _num_samples,
     _check_y,
 )
-from typing_extensions import TypedDict
 
 from ._typing import ArrayLike, NDArray
 from .utils import (
@@ -111,30 +110,23 @@ class MapieQuantileRegressor(MapieRegressor):
         "n_calib_samples",
     ]
 
-    Params = TypedDict(
-        "Params",
-        {
-            "loss_name": str,
-            "alpha_name": str
-        },
-    )
     quantile_estimator_params = {
-        "GradientBoostingRegressor": Params(
-            loss_name="loss",
-            alpha_name="alpha"
-        ),
-        "QuantileRegressor": Params(
-            loss_name="quantile",
-            alpha_name="quantile"
-        ),
-        "HistGradientBoostingRegressor": Params(
-            loss_name="loss",
-            alpha_name="alpha"
-        ),
-        "LGBMRegressor": Params(
-            loss_name="objective",
-            alpha_name="alpha"
-        )
+        "GradientBoostingRegressor": {
+            "loss_name": "loss",
+            "alpha_name": "alpha"
+        },
+        "QuantileRegressor": {
+            "loss_name": "quantile",
+            "alpha_name": "quantile"
+        },
+        "HistGradientBoostingRegressor": {
+            "loss_name": "loss",
+            "alpha_name": "alpha"
+        },
+        "LGBMRegressor": {
+            "loss_name": "objective",
+            "alpha_name": "alpha"
+        },
     }
 
     def __init__(
