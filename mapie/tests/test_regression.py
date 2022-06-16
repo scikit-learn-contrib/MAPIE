@@ -17,7 +17,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from typing_extensions import TypedDict
 
-from mapie._typing import ArrayLike
+from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
@@ -178,7 +178,7 @@ def test_too_large_cv(cv: Any) -> None:
 @pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.4], (0.2, 0.4)])
 def test_predict_output_shape(
-    strategy: str, alpha: Any, dataset: Tuple[ArrayLike, ArrayLike]
+    strategy: str, alpha: Any, dataset: Tuple[NDArray, NDArray]
 ) -> None:
     """Test predict output shape."""
     mapie_reg = MapieRegressor(**STRATEGIES[strategy])
@@ -333,7 +333,7 @@ def test_linear_regression_results(strategy: str) -> None:
 def test_results_prefit_ignore_method() -> None:
     """Test that method is ignored when ``cv="prefit"``."""
     estimator = LinearRegression().fit(X, y)
-    all_y_pis: List[ArrayLike] = []
+    all_y_pis: List[NDArray] = []
     for method in METHODS:
         mapie_reg = MapieRegressor(
             estimator=estimator, cv="prefit", method=method
@@ -413,21 +413,21 @@ def test_invalid_aggregate_all() -> None:
 
 def test_aggregate_with_mask_with_prefit() -> None:
     """
-    Test ``aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
+    Test ``_aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
     """
     mapie_reg = MapieRegressor(cv="prefit")
     with pytest.raises(
         ValueError,
         match=r".*There should not be aggregation of predictions if cv is*",
     ):
-        mapie_reg.aggregate_with_mask(k, k)
+        mapie_reg._aggregate_with_mask(k, k)
 
     mapie_reg = MapieRegressor(agg_function="nonsense")
     with pytest.raises(
         ValueError,
         match=r".*The value of self.agg_function is not correct*",
     ):
-        mapie_reg.aggregate_with_mask(k, k)
+        mapie_reg._aggregate_with_mask(k, k)
 
 
 def test_pred_loof_isnan() -> None:
@@ -440,7 +440,6 @@ def test_pred_loof_isnan() -> None:
         y=y_toy,
         train_index=[0, 1, 2, 3, 4],
         val_index=[],
-        k=0,
     )
     assert len(y_pred) == 0
 
@@ -451,7 +450,7 @@ def test_pipeline_compatibility() -> None:
         {
             "x_cat": ["A", "A", "B", "A", "A", "B"],
             "x_num": [0, 1, 1, 4, np.nan, 5],
-            "y": [5, 7, 3, 9, 10, 8]
+            "y": [5, 7, 3, 9, 10, 8],
         }
     )
     y = pd.Series([5, 7, 3, 9, 10, 8])
@@ -461,14 +460,12 @@ def test_pipeline_compatibility() -> None:
         ]
     )
     categorical_preprocessor = Pipeline(
-        steps=[
-            ("encoding", OneHotEncoder(handle_unknown="ignore"))
-        ]
+        steps=[("encoding", OneHotEncoder(handle_unknown="ignore"))]
     )
     preprocessor = ColumnTransformer(
         [
             ("cat", categorical_preprocessor, ["x_cat"]),
-            ("num", numeric_preprocessor, ["x_num"])
+            ("num", numeric_preprocessor, ["x_num"]),
         ]
     )
     pipe = make_pipeline(preprocessor, LinearRegression())

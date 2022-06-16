@@ -2,34 +2,37 @@
 ================================================
 Estimating aleatoric and epistemic uncertainties
 ================================================
-This example uses :class:`mapie.regression.MapieRegressor` to estimate
+This example uses :class:`mapie.regression.MapieRegressor` and
+:class:`mapie.quantile_regression.MapieQuantileRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
 from typing import Any, Callable, Tuple, TypeVar
 
-from typing_extensions import TypedDict
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 
 from mapie.regression import MapieRegressor
-from mapie._typing import ArrayLike
+from mapie.quantile_regression import MapieQuantileRegressor
+from mapie.subsample import Subsample
+from mapie._typing import NDArray
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
 # Functions for generating our dataset
-def x_sinx(x: ArrayLike) -> Any:
+def x_sinx(x: NDArray) -> NDArray:
     """One-dimensional x*sin(x) function."""
     return x * np.sin(x)
 
 
 def get_1d_data_with_normal_distrib(
     funct: F, mu: float, sigma: float, n_samples: int, noise: float
-) -> Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]:
+) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
     """
     Generate noisy 1D data with normal distribution from given function
     and noise standard deviation.
@@ -49,7 +52,7 @@ def get_1d_data_with_normal_distrib(
 
     Returns
     -------
-    Tuple[Any, Any, ArrayLike, Any, float]
+    Tuple[NDArray, AnNDArrayy, NDArray, NDArray, NDArray]
         Generated training and test data.
         [0]: X_train
         [1]: y_train
@@ -86,32 +89,62 @@ polyn_model = Pipeline(
         ("linear", LinearRegression()),
     ]
 )
+polyn_model_quant = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=degree_polyn)),
+        ("linear", QuantileRegressor(
+            alpha=0,
+            solver="highs",  # highs-ds does not give good results
+            )),
+    ]
+)
+
 
 # Estimating prediction intervals
-Params = TypedDict("Params", {"method": str, "cv": int})
 STRATEGIES = {
-    "jackknife_plus": Params(method="plus", cv=-1),
-    "jackknife_minmax": Params(method="minmax", cv=-1),
-    "cv_plus": Params(method="plus", cv=10),
-    "cv_minmax": Params(method="minmax", cv=10),
+    "jackknife_plus": {"method": "plus", "cv": -1},
+    "cv_plus": {"method": "plus", "cv": 10},
+    "jackknife_plus_ab": {"method": "plus", "cv": Subsample(n_resamplings=50)},
+    "conformalized_quantile_regression": {"method": "quantile", "cv": "split"},
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
-    mapie = MapieRegressor(polyn_model, **params)
-    mapie.fit(X_train, y_train)
-    y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
+    if strategy == "conformalized_quantile_regression":
+        mapie = MapieQuantileRegressor(  # type: ignore
+            polyn_model_quant,
+            **params
+        )
+        X_train, X_calib, y_train, y_calib = train_test_split(
+            X_train,
+            y_train,
+            test_size=0.3,
+            random_state=1
+        )
+        mapie.fit(
+            X_train,
+            y_train,
+            X_calib,
+            y_calib
+        )
+        y_pred[strategy], y_pis[strategy] = mapie.predict(
+            X_test
+        )
+    else:
+        mapie = MapieRegressor(polyn_model, **params)  # type: ignore
+        mapie.fit(X_train, y_train)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
 
 # Visualization
 def plot_1d_data(
-    X_train: ArrayLike,
-    y_train: ArrayLike,
-    X_test: ArrayLike,
-    y_test: ArrayLike,
+    X_train: NDArray,
+    y_train: NDArray,
+    X_test: NDArray,
+    y_test: NDArray,
     y_sigma: float,
-    y_pred: ArrayLike,
-    y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike,
+    y_pred: NDArray,
+    y_pred_low: NDArray,
+    y_pred_up: NDArray,
     ax: plt.Axes,
     title: str,
 ) -> None:

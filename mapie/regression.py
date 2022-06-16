@@ -4,7 +4,6 @@ from typing import Iterable, List, Optional, Tuple, Union, cast
 
 from joblib import Parallel, delayed
 import numpy as np
-import numpy.ma as ma
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
@@ -17,7 +16,8 @@ from sklearn.utils.validation import (
     indexable,
 )
 
-from ._typing import ArrayLike
+from ._typing import ArrayLike, NDArray
+from ._compatibility import np_nanquantile
 from .aggregation_functions import aggregate_all, phi2D
 from .conformity_scores import ConformityScore
 from .subsample import Subsample
@@ -35,7 +35,7 @@ from .utils import (
 )
 
 
-class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
+class MapieRegressor(BaseEstimator, RegressorMixin):
     """
     Prediction interval with out-of-fold conformity scores.
 
@@ -92,18 +92,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         By default ``None``.
 
-    conformity_score : Optional[ConformityScore]
-        ConformityScore instance.
-        It defines the link between the oberved values, the predicted ones
-        and the conformity scores. For instance, the default None value
-        correspondonds to a conformity score which assumes
-        y_obs = y_pred + conformity_score.
-
-        - ``None``, to use the default AbsoluteConformityScore conformity score
-        - ConformityScore, to use any other conformity score
-
-        By default ``None``.
-
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
@@ -148,6 +136,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         By default ``0``.
 
+    conformity_score : Optional[ConformityScore]
+        ConformityScore instance.
+        It defines the link between the oberved values, the predicted ones
+        and the conformity scores. For instance, the default None value
+        correspondonds to a conformity score which assumes
+        y_obs = y_pred + conformity_score.
+
+        - ``None``, to use the default AbsoluteConformityScore conformity score
+        - ConformityScore, to use any other conformity score
+
+        By default ``None``.
+
     Attributes
     ----------
     valid_methods: List[str]
@@ -170,9 +170,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
     n_features_in_: int
         Number of features passed to the fit method.
-
-    n_samples_: List[int]
-        Number of samples passed to the fit method.
 
     References
     ----------
@@ -205,7 +202,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
 
+    cv_need_agg_function = ["Subsample"]
     valid_methods_ = ["naive", "base", "plus", "minmax"]
+    plus_like_method = ["plus"]
     valid_agg_functions_ = [None, "median", "mean"]
     fit_attributes = [
         "single_estimator_",
@@ -214,7 +213,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "conformity_scores_",
         "conformity_score_function_",
         "n_features_in_",
-        "n_samples_",
     ]
 
     def __init__(
@@ -222,10 +220,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         estimator: Optional[RegressorMixin] = None,
         method: str = "plus",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
-        conformity_score: Optional[ConformityScore] = None,
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
+        conformity_score: Optional[ConformityScore] = None,
     ) -> None:
         self.estimator = estimator
         self.method = method
@@ -246,8 +244,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         """
         if self.method not in self.valid_methods_:
             raise ValueError(
-                "Invalid method. "
-                "Allowed values are 'naive', 'base', 'plus' and 'minmax'."
+                "Invalid method. " f"Allowed values are {self.valid_methods_}."
             )
 
         check_n_jobs(self.n_jobs)
@@ -274,7 +271,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ------
         ValueError
             If ``agg_function`` is not in [``None``, ``"mean"``, ``"median"``],
-            or is ``None`` while cv class is ``Subsample``.
+            or is ``None`` while cv class is in ``cv_need_agg_function``.
         """
         if agg_function not in self.valid_agg_functions_:
             raise ValueError(
@@ -282,10 +279,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                 "Allowed values are None, 'mean', 'median'."
             )
 
-        if isinstance(self.cv, Subsample) and (agg_function is None):
+        if (agg_function is None) and (
+            type(self.cv).__name__ in self.cv_need_agg_function
+        ):
             raise ValueError(
                 "You need to specify an aggregation function when "
-                "cv is a Subsample. "
+                f"cv's type is in {self.cv_need_agg_function}."
             )
         if (agg_function is not None) or (self.cv == "prefit"):
             return agg_function
@@ -365,9 +364,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         y: ArrayLike,
         train_index: ArrayLike,
         val_index: ArrayLike,
-        k: int,
         sample_weight: Optional[ArrayLike] = None,
-    ) -> Tuple[RegressorMixin, ArrayLike, ArrayLike]:
+    ) -> Tuple[RegressorMixin, NDArray, ArrayLike]:
         """
         Fit a single out-of-fold model on a given training set and
         perform predictions on a test set.
@@ -389,23 +387,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         val_index : ArrayLike of shape (n_samples_val)
             Validation data indices.
 
-        k : int
-            Split identification number.
-
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
             By default ``None``.
 
         Returns
         -------
-        Tuple[RegressorMixin, ArrayLike, ArrayLike]
+        Tuple[RegressorMixin, NDArray, ArrayLike]
 
-        - [0]: Fitted estimator
-        - [1]: Estimator predictions on the validation fold,
-          of shape (n_samples_val,)
-        - [3]: Validation data indices,
-          of shape (n_samples_val,).
-
+        - [0]: RegressorMixin, fitted estimator
+        - [1]: NDArray of shape (n_samples_val,),
+          estimator predictions on the validation fold.
+        - [3]: ArrayLike of shape (n_samples_val,),
+          validation data indices.
         """
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)
@@ -423,10 +417,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             y_pred = np.array([])
         return estimator, y_pred, val_index
 
-    def aggregate_with_mask(self, x: ArrayLike, k: ArrayLike) -> ArrayLike:
+    def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
         """
         Take the array of predictions, made by the refitted estimators,
-        on the testing set, and the 1-nan array indicating for each training
+        on the testing set, and the 1-or-nan array indicating for each training
         sample which one to integrate, and aggregate to produce phi-{t}(x_t)
         for each training sample x_t.
 
@@ -447,13 +441,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         ArrayLike of shape (n_samples_test,)
             Array of aggregated predictions for each testing  sample.
         """
-        if self.agg_function == "median":
-            return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
         if self.cv == "prefit":
             raise ValueError(
                 "There should not be aggregation of predictions if cv is "
                 "'prefit'"
             )
+        if self.agg_function == "median":
+            return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
+
         # To aggregate with mean() the aggregation coud be done
         # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
         # However, phi2D contains a np.apply_along_axis loop which
@@ -463,6 +458,31 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             K = np.nan_to_num(k, nan=0.0)
             return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
         raise ValueError("The value of self.agg_function is not correct")
+
+    def _pred_multi(self, X: ArrayLike) -> NDArray:
+        """
+        Return a prediction per train sample for each test sample, by
+        aggregation with matrix  ``k_``.
+
+        Parameters
+        ----------
+            X: NDArray of shape (n_samples_test, n_features)
+                Input data
+
+        Returns
+        -------
+            NDArray of shape (n_samples_test, n_samples_train)
+        """
+        y_pred_multi = np.column_stack(
+            [e.predict(X) for e in self.estimators_]
+        )
+        # At this point, y_pred_multi is of shape
+        # (n_samples_test, n_estimators_). The method
+        # ``_aggregate_with_mask`` fits it to the right size
+        # thanks to the shape of k_.
+
+        y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
+        return y_pred_multi
 
     def fit(
         self,
@@ -515,6 +535,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         self.conformity_score_function_ = check_conformity_score(
             self.conformity_score
         )
+        y = cast(NDArray, y)
+        n_samples = _num_samples(y)
 
         # Initialization
         self.estimators_: List[RegressorMixin] = []
@@ -523,19 +545,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
-            self.n_samples_ = [_num_samples(X)]
             self.k_ = np.full(
-                shape=(len(y), 1), fill_value=np.nan, dtype=float
+                shape=(n_samples, 1), fill_value=np.nan, dtype="float"
             )
         else:
+            cv = cast(BaseCrossValidator, cv)
             self.k_ = np.full(
-                shape=(len(y), cv.get_n_splits(X, y)),  # type: ignore
+                shape=(n_samples, cv.get_n_splits(X, y)),
                 fill_value=np.nan,
                 dtype=float,
             )
 
             pred_matrix = np.full(
-                shape=(len(y), cv.get_n_splits(X, y)),  # type: ignore
+                shape=(n_samples, cv.get_n_splits(X, y)),
                 fill_value=np.nan,
                 dtype=float,
             )
@@ -545,7 +567,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
             )
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
-                self.n_samples_ = [_num_samples(X)]
             else:
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
@@ -554,21 +575,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
                         y,
                         train_index,
                         val_index,
-                        k,
                         sample_weight,
                     )
-                    for k, (train_index, val_index) in enumerate(cv.split(X))
+                    for train_index, val_index in cv.split(X)
                 )
                 self.estimators_, predictions, val_indices = map(
                     list, zip(*outputs)
                 )
 
-                self.n_samples_ = [
-                    np.array(pred).shape[0] for pred in predictions
-                ]
-
                 for i, val_ind in enumerate(val_indices):
-                    pred_matrix[val_ind, i] = np.array(predictions[i]).ravel()
+                    pred_matrix[val_ind, i] = np.array(predictions[i])
                     self.k_[val_ind, i] = 1
                 check_nan_in_aposteriori_prediction(pred_matrix)
 
@@ -586,7 +602,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         X: ArrayLike,
         ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
-    ) -> Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]:
+    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
         Conformity scores from the training set and predictions
@@ -627,11 +643,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
 
         Returns
         -------
-        Union[ArrayLike, Tuple[ArrayLike, ArrayLike]]
+        Union[NDArray, Tuple[NDArray, NDArray]]
 
-        - ArrayLike of shape (n_samples,) if alpha is None.
+        - NDArray of shape (n_samples,) if alpha is None.
 
-        - Tuple[ArrayLike, ArrayLike] of shapes
+        - Tuple[NDArray, NDArray] of shapes
         (n_samples,) and (n_samples, 2, n_alpha) if alpha is not None.
 
             - [:, 0, :]: Lower bound of the prediction interval.
@@ -640,78 +656,71 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         # Checks
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
-        alpha_ = check_alpha(alpha)
+        alpha = cast(Optional[NDArray], check_alpha(alpha))
         y_pred = self.single_estimator_.predict(X)
+        n = len(self.conformity_scores_)
 
         if alpha is None:
             return np.array(y_pred)
+
+        alpha_np = cast(NDArray, alpha)
+        check_alpha_and_n_samples(alpha_np, n)
+        if self.method in ["naive", "base"] or self.cv == "prefit":
+            y_pred_multi_low = y_pred[:, np.newaxis]
+            y_pred_multi_up = y_pred[:, np.newaxis]
         else:
-            alpha_ = cast(ArrayLike, alpha_)
-            check_alpha_and_n_samples(alpha_, self.conformity_scores_.shape[0])
+            y_pred_multi = self._pred_multi(X)
 
-            # compute perturbed model predictions on test set
-            if self.method in ["naive", "base"] or self.cv == "prefit":
-                y_pred_multi_low = y_pred[:, np.newaxis]
-                y_pred_multi_up = y_pred[:, np.newaxis]
-            else:
-                y_pred_multi = np.column_stack(
-                    [e.predict(X) for e in self.estimators_]
-                )
-                y_pred_multi = self.aggregate_with_mask(y_pred_multi, self.k_)
-                if self.method == "plus":
-                    y_pred_multi_low = y_pred_multi
-                    y_pred_multi_up = y_pred_multi
-                elif self.method == "minmax":
-                    y_pred_multi_low = np.min(
-                        y_pred_multi, axis=1, keepdims=True
-                    )
-                    y_pred_multi_up = np.max(
-                        y_pred_multi, axis=1, keepdims=True
-                    )
-                if ensemble:
-                    y_pred = aggregate_all(self.agg_function, y_pred_multi)
+            if self.method in self.plus_like_method:
+                y_pred_multi_low = y_pred_multi
+                y_pred_multi_up = y_pred_multi
+            elif self.method == "minmax":
+                y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
+                y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
+            if ensemble:
+                y_pred = aggregate_all(self.agg_function, y_pred_multi)
 
-            # compute distributions of lower and upper bounds
-            if self.conformity_score_function_.sym:
-                conformity_scores_low = -self.conformity_scores_
-                conformity_scores_up = self.conformity_scores_
-            else:
-                conformity_scores_low = self.conformity_scores_
-                conformity_scores_up = self.conformity_scores_
-                alpha_ = alpha_ / 2
-            lower_bounds = (
-                self.conformity_score_function_.get_estimation_distribution(
-                    y_pred_multi_low, conformity_scores_low
-                )
+        # compute distributions of lower and upper bounds
+        if self.conformity_score_function_.sym:
+            conformity_scores_low = -self.conformity_scores_
+            conformity_scores_up = self.conformity_scores_
+        else:
+            conformity_scores_low = self.conformity_scores_
+            conformity_scores_up = self.conformity_scores_
+            alpha_np = alpha_np / 2
+        lower_bounds = (
+            self.conformity_score_function_.get_estimation_distribution(
+                y_pred_multi_low, conformity_scores_low
             )
-            upper_bounds = (
-                self.conformity_score_function_.get_estimation_distribution(
-                    y_pred_multi_up, conformity_scores_up
-                )
+        )
+        upper_bounds = (
+            self.conformity_score_function_.get_estimation_distribution(
+                y_pred_multi_up, conformity_scores_up
             )
+        )
 
-            # get desired confidence intervals according to alpha
-            y_pred_low = np.column_stack(
-                [
-                    np.quantile(
-                        ma.masked_invalid(lower_bounds),
-                        _alpha,
-                        axis=1,
-                        interpolation="lower",
-                    )
-                    for _alpha in alpha_
-                ]
-            ).data
-            y_pred_up = np.column_stack(
-                [
-                    np.quantile(
-                        ma.masked_invalid(upper_bounds),
-                        1 - _alpha,
-                        axis=1,
-                        interpolation="higher",
-                    )
-                    for _alpha in alpha_
-                ]
-            ).data
+        # get desired confidence intervals according to alpha
+        y_pred_low = np.column_stack(
+            [
+                np_nanquantile(
+                    lower_bounds,
+                    _alpha,
+                    axis=1,
+                    method="lower",
+                )
+                for _alpha in alpha_np
+            ]
+        ).data
+        y_pred_up = np.column_stack(
+            [
+                np_nanquantile(
+                    upper_bounds,
+                    1 - _alpha,
+                    axis=1,
+                    method="higher",
+                )
+                for _alpha in alpha_np
+            ]
+        ).data
 
-            return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
+        return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)

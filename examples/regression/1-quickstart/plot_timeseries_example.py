@@ -37,7 +37,7 @@ from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie.metrics import (
     regression_coverage_score,
-    regression_mean_width_score
+    regression_mean_width_score,
 )
 from mapie.regression import MapieRegressor
 

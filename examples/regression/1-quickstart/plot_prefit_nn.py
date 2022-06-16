@@ -19,10 +19,10 @@ from matplotlib import pyplot as plt
 
 from mapie.regression import MapieRegressor
 from mapie.metrics import regression_coverage_score
-from mapie._typing import ArrayLike
+from mapie._typing import NDArray
 
 
-def f(x: ArrayLike) -> ArrayLike:
+def f(x: NDArray) -> NDArray:
     """Polynomial function used to generate one-dimensional data."""
     return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
 

@@ -214,6 +214,33 @@ In practice, this method results in wider prediction intervals, when the
 uncertainty is higher, than :math:`CV+`, because the models' prediction spread 
 is then higher.
 
+
+8. The conformalized quantile regression (CQR) method
+=====================================================
+
+The conformalized quantile method allows for better interval widths with
+heteroscedastic data. It uses quantile regressors with different quantile
+values to estimate the prediction bounds and the residuals of these methods is
+used to create the guaranteed coverage value.
+
+.. math:: 
+
+    \hat{C}_{n, \alpha}^{\rm CQR}(X_{n+1}) = 
+    [\hat{q}_{\alpha_{lo}}(X_{n+1}) - Q_{1-\alpha}(E_{low}, \mathcal{I}_2),
+    \hat{q}_{\alpha_{hi}}(X_{n+1}) + Q_{1-\alpha}(E_{high}, \mathcal{I}_2)]
+
+Where :math:`Q_{1-\alpha}(E, \mathcal{I}_2) := (1-\alpha)(1+1/ |\mathcal{I}_2|)`-th
+empirical quantile of :math:`{E_i : i \in \mathcal{I}_2}` and :math:`\mathcal{I}_2` is the
+residuals of the estimator fitted on the calibration set. Note that in the symmetric method, 
+:math:`E_{low}` and :math:`E_{high}` are equal.
+
+As justified by [3], this method offers a theoretical guarantee of the target coverage 
+level :math:`1-\alpha`.
+
+Note that this means that using the split method will require to run three separate regressions
+to estimate the prediction intervals.
+
+
 Key takeaways
 =============
 
@@ -259,3 +286,6 @@ References
 [2] Byol Kim, Chen Xu, and Rina Foygel Barber.
 "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
 34th Conference on Neural Information Processing Systems (NeurIPS 2020).
+
+[3] Yaniv Romano, Evan Patterson, Emmanuel J. Candès.
+"Conformalized Quantile Regression." Advances in neural information processing systems 32 (2019).

@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .DS_Store
+.mypy*
 
 # C extensions
 *.so
@@ -77,7 +78,6 @@ target/
 .vscode
 
 # Images
-*.png
 *.jpeg
 
 # ZIP files
