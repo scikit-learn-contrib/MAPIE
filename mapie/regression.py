@@ -212,6 +212,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):  # type: ignore
         "estimators_",
         "k_",
         "conformity_scores_",
+        "conformity_score_function_",
         "n_features_in_",
         "n_samples_",
     ]
