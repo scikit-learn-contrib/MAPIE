@@ -246,7 +246,7 @@ to estimate the prediction intervals.
 
 The coverage guarantee offered by the various resampling methods based on the
 jackknife strategy, implemented in MAPIE, are only valid under the "exchangeability
-hypothesis". It means that the probability law of data should not change up
+hypothesis". It means that the probability law of data should not change up to
 reordering.
 This hypothesis is not revelant in many cases, notably for dynamical times series.
 That is why a specific class is needed, namely
@@ -257,7 +257,7 @@ LOO estimators are approximated thanks to a few boostraps. However the
 confidence intervals are like those of the jackknife method.
 
 .. math::
-  \hat{C}_{n, \alpha}^{\rm EnbPI}(X_{n+1}) = [ \hat{q}_{n, \beta}^-\{\hat{\mu}_{agg}(X_{n+1}) - R_i^{\rm LOO} \}, \hat{q}_{n, 1 - \alpha + \beta}^+\{\hat{\mu}_{agg}(X_{n+1}) + R_i^{\rm LOO} \}]
+  \hat{C}_{n, \alpha}^{\rm EnbPI}(X_{n+1}) = [\hat{\mu}_{agg}(X_{n+1}) + \hat{q}_{n, \beta}\{ R_i^{\rm LOO} \}, \hat{\mu}_{agg}(X_{n+1}) + \hat{q}_{n, (1 - \alpha + \beta)}\{ R_i^{\rm LOO} \}]
 where :math:`\hat{\mu}_{agg}(X_{n+1})` is the aggregation of the predictions of
 the LOO estimators (mean or median).
 
@@ -313,6 +313,10 @@ Key takeaways
 - The jackknife-minmax and CV-minmax methods are more conservative since they result in higher
   theoretical and practical coverages due to the larger widths of the prediction intervals.
   It is therefore advised to use them when conservative estimates are needed.
+
+- If the "exchangeability hypothesis" is not valid, typically for time series,
+  use EnbPI, and update the residuals (using :class:`partial_fit` method) each
+  time new observations are available.
 
 The table below summarizes the key features of each method by focusing on the obtained coverages and the
 computational cost. :math:`n`, :math:`n_{\rm test}`, and :math:`K` are the number of training samples,
