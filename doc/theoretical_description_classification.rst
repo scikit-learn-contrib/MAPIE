@@ -37,8 +37,8 @@ However, although this method generally results in small prediction sets, it ten
 for example at the border between two classes.
 
 
-2. Adaptive prediction sets
----------------------------
+2. Adaptive Prediction Sets (APS)
+---------------------------------
 
 The so-called Adaptive Prediction Set (APS) method overcomes the problem encountered by the LABEL method through the construction of
 prediction sets which are by definition non-empty.
@@ -80,6 +80,13 @@ The prediction sets are build by taking the :math:`\hat{q}^{th}` higher scores. 
 
 .. math:: 
    \hat{C}(X_{test}) = \{\pi_1, ..., \pi_{\hat{q}}\} 
+
+
+The figure below illustrates the three above methods. 
+
+.. image:: images/classification_methods.png
+   :width: 600
+   :align: center
 
 
 4. Split- and cross-conformal methods
