@@ -52,6 +52,7 @@ features = [
 ]
 alpha = 0.05
 rf_kwargs = {"n_estimators": 10, "random_state": 0}
+model = RandomForestRegressor(**rf_kwargs)
 
 ##############################################################################
 # 1. Load dataset with a target following approximativeley a Gamma distribution
@@ -85,7 +86,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 ##############################################################################
 # First, train model with
 # :class:mapie.conformity_scores.AbsoluteConformityScore.
-mapie = MapieRegressor(RandomForestRegressor(**rf_kwargs))
+mapie = MapieRegressor(model)
 mapie.fit(X_train, y_train)
 y_pred_absconfscore, y_pis_absconfscore = mapie.predict(X_test, alpha=alpha)
 
@@ -114,9 +115,7 @@ pred_int_width_absconfscore = (
 ##############################################################################
 # Then, train the model with
 # :class:mapie.conformity_scores.GammaConformityScore.
-mapie = MapieRegressor(
-    RandomForestRegressor(**rf_kwargs), conformity_score=GammaConformityScore()
-)
+mapie = MapieRegressor(model, conformity_score=GammaConformityScore())
 mapie.fit(X_train, y_train)
 y_pred_gammaconfscore, y_pis_gammaconfscore = mapie.predict(
     X_test, alpha=[alpha]
