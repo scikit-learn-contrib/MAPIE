@@ -11,6 +11,9 @@ from mapie._typing import ArrayLike
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
+y_pred_list = [4, 7, 10, 12, 13, 12]
+conf_scores_list = [1, 0, -1, -1, 0, 3]
+conf_scores_gamma_list = [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]
 
 
 def test_error_mother_class_initialization() -> None:
@@ -18,9 +21,7 @@ def test_error_mother_class_initialization() -> None:
         ConformityScore()
 
 
-@pytest.mark.parametrize(
-    "y_pred", [np.array([4, 7, 10, 12, 13, 12]), [4, 7, 10, 12, 13, 12]]
-)
+@pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
 def test_absolute_conformity_score_get_conformity_scores(
     y_pred: ArrayLike,
 ) -> None:
@@ -36,11 +37,9 @@ def test_absolute_conformity_score_get_conformity_scores(
     np.testing.assert_allclose(conf_scores, expected_conf_scores)
 
 
+@pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
 @pytest.mark.parametrize(
-    "y_pred", [np.array([4, 7, 10, 12, 13, 12]), [4, 7, 10, 12, 13, 12]]
-)
-@pytest.mark.parametrize(
-    "conf_scores", [np.array([1, 0, -1, -1, 0, 3]), [1, 0, -1, -1, 0, 3]]
+    "conf_scores", [np.array(conf_scores_list), conf_scores_list]
 )
 def test_absolute_conformity_score_get_estimation_distribution(
     y_pred: ArrayLike, conf_scores: ArrayLike
@@ -51,9 +50,7 @@ def test_absolute_conformity_score_get_estimation_distribution(
     np.testing.assert_allclose(y_obs, y_toy)
 
 
-@pytest.mark.parametrize(
-    "y_pred", [np.array([4, 7, 10, 12, 13, 12]), [4, 7, 10, 12, 13, 12]]
-)
+@pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
 def test_absolute_conformity_score_consistency(y_pred: ArrayLike) -> None:
     """Test methods consistency for AbsoluteConformityScore."""
     abs_conf_score = AbsoluteConformityScore()
@@ -66,29 +63,23 @@ def test_absolute_conformity_score_consistency(y_pred: ArrayLike) -> None:
     np.testing.assert_allclose(y_obs, y_toy)
 
 
-@pytest.mark.parametrize(
-    "y_pred", [np.array([4, 7, 10, 12, 13, 12]), [4, 7, 10, 12, 13, 12]]
-)
+@pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
 def test_gamma_conformity_score_get_conformity_scores(
     y_pred: ArrayLike,
 ) -> None:
     """Test conformity score computation for GammaConformityScore."""
     gamma_conf_score = GammaConformityScore()
     conf_scores = gamma_conf_score.get_conformity_scores(y_toy, y_pred)
-    expected_signed_conf_scores = np.array(
-        [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]
-    )
+    expected_signed_conf_scores = np.array(conf_scores_gamma_list)
     np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
 
 
-@pytest.mark.parametrize(
-    "y_pred", [np.array([4, 7, 10, 12, 13, 12]), [4, 7, 10, 12, 13, 12]]
-)
+@pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
 @pytest.mark.parametrize(
     "conf_scores",
     [
-        np.array([1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]),
-        [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12],
+        np.array(conf_scores_gamma_list),
+        conf_scores_gamma_list,
     ],
 )
 def test_gamma_conformity_score_get_estimation_distribution(
@@ -100,9 +91,7 @@ def test_gamma_conformity_score_get_estimation_distribution(
     np.testing.assert_allclose(y_obs, y_toy)
 
 
-@pytest.mark.parametrize(
-    "y_pred", [np.array([4, 7, 10, 12, 13, 12]), [4, 7, 10, 12, 13, 12]]
-)
+@pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
 def test_gamma_conformity_score_consistency(y_pred: ArrayLike) -> None:
     """Test methods consistency for GammaConformityScore."""
     gamma_conf_score = GammaConformityScore()
@@ -115,9 +104,7 @@ def test_gamma_conformity_score_consistency(y_pred: ArrayLike) -> None:
     np.testing.assert_allclose(y_obs, y_toy)
 
 
-@pytest.mark.parametrize(
-    "y_pred", [np.array([4, 7, 10, 12, 13, 12]), [4, 7, 10, 12, 13, 12]]
-)
+@pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
 @pytest.mark.parametrize(
     "y_toy",
     [
@@ -146,8 +133,8 @@ def test_gamma_conformity_score_check_oberved_value(
 @pytest.mark.parametrize(
     "conf_scores",
     [
-        np.array([1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]),
-        [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12],
+        np.array(conf_scores_gamma_list),
+        conf_scores_gamma_list,
     ],
 )
 def test_gamma_conformity_score_check_predicted_value(
