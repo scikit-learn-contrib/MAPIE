@@ -20,7 +20,6 @@ from ._typing import ArrayLike, NDArray
 from ._compatibility import np_nanquantile
 from .aggregation_functions import aggregate_all, phi2D
 from .conformity_scores import ConformityScore
-from .subsample import Subsample
 from .utils import (
     check_alpha,
     check_alpha_and_n_samples,
@@ -143,7 +142,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         correspondonds to a conformity score which assumes
         y_obs = y_pred + conformity_score.
 
-        - ``None``, to use the default ``AbsoluteConformityScore`` conformity score
+        - ``None``, to use the default ``AbsoluteConformityScore`` conformity
+          score
         - ConformityScore: any ``ConformityScore`` class
 
         By default ``None``.

@@ -97,6 +97,8 @@ coverage_absconfscore = regression_coverage_score(
 ##############################################################################
 # Prepare the results for matplotlib. Get the prediction intervals and their
 # corresponding widths.
+
+
 def get_yerr(y_pred, y_pis):
     return np.concatenate(
         [

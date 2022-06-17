@@ -23,11 +23,11 @@ We consider the standard CV+ resampling method.
 We wish to emphasize one main limitation with this example.
 We use a standard cross-validation in Mapie to estimate the prediction
 intervals, through the `sklearn.model_selection.KFold()` object.
-Conformity scores are therefore estimated using models trained on data with higher
-indices than the validation data, which is inappropriate for time-series data.
-Howerver, using a `sklearn.model_selection.TimeSeriesSplit` cross validation
-object for estimating the conformity scores breaks the theoretical guarantees of the
-Jackknife+ and CV+ methods.
+Residual scores are therefore estimated using models trained on data with
+higher indices than the validation data, which is inappropriate for time-series
+data. Howerver, using a `sklearn.model_selection.TimeSeriesSplit` cross
+validation object for estimating the conformity scores breaks the theoretical
+guarantees of the Jackknife+ and CV+ methods.
 """
 import pandas as pd
 from matplotlib import pylab as plt
