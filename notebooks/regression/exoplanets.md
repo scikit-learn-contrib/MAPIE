@@ -30,12 +30,12 @@ if install_mapie:
 
 ```python
 import warnings
-from typing_extensions import TypedDict
-from typing import Union
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
+from typing_extensions import TypedDict
+from typing import Union
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
@@ -51,8 +51,8 @@ from sklearn.preprocessing import (
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
-warnings.filterwarnings("ignore")
 
+warnings.filterwarnings("ignore")
 ```
 
 ## 1. Data Loading
@@ -61,7 +61,7 @@ warnings.filterwarnings("ignore")
 Let's start by loading the exoplanet dataset and show the main information.
 
 ```python
-url_file = "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/exoplanet-notebook/notebooks/regression/exoplanets_mass.csv"
+url_file = "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/notebooks/regression/exoplanets_mass.csv"
 exo_df = pd.read_csv(url_file, index_col=0)
 ```
 
@@ -173,13 +173,14 @@ preprocessor = ColumnTransformer(
 ```
 
 ```python
-X_preprocessed = preprocessor.fit_transform(X)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, shuffle=True
+)
 ```
 
 ```python
-X_train, X_test, y_train, y_test = train_test_split(
-    X_preprocessed, y, test_size=0.2, random_state=42, shuffle=True
-)
+X_train = preprocessor.fit_transform(X_train)
+X_test = preprocessor.transform(X_test)
 ```
 
 ## 4. First estimation of the uncertainties with MAPIE
