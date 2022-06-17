@@ -9,7 +9,12 @@ Theoretical Description
 
 Three methods for multi-class uncertainty-quantification have been implemented in MAPIE so far :
 LABEL [1], Adaptive Prediction Sets [2, 3] and Top-K [3].
-The difference between these methods is the way the conformity scores are computed.
+The difference between these methods is the way the conformity scores are computed. 
+The figure below illustrates the three methods implmented in MAPIE:
+
+.. image:: images/classification_methods.png
+   :width: 600
+   :align: center
 
 1. LABEL
 --------
@@ -81,12 +86,6 @@ The prediction sets are build by taking the :math:`\hat{q}^{th}` higher scores. 
 .. math:: 
    \hat{C}(X_{test}) = \{\pi_1, ..., \pi_{\hat{q}}\} 
 
-
-The figure below illustrates the three above methods. 
-
-.. image:: images/classification_methods.png
-   :width: 600
-   :align: center
 
 
 4. Split- and cross-conformal methods
