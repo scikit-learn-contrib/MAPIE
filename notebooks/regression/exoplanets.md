@@ -13,14 +13,14 @@ jupyter:
     name: mapie_local
 ---
 
-# Estimating the uncertainties of exoplanet masses
+# Estimating the uncertainties in the exoplanet masses
 
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/scikit-learn-contrib/MAPIE/blob/master/notebooks/regression/exoplanets.ipynb)
 
 
 
-In this notebook, we will quantify the uncertainty of exoplanet masses predicted by several machine learning models based on the exoplanet properties. To this aim, we will use the exoplanet dataset downloaded from the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu/) and estimate the prediction intervals using the methods implemented in MAPIE.
+In this notebook, we quantify the uncertainty in exoplanet masses predicted by several machine learning models, based on the exoplanet properties. To this aim, we use the exoplanet dataset downloaded from the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu/) and estimate the prediction intervals using the methods implemented in MAPIE.
 
 ```python
 install_mapie = True
@@ -29,11 +29,6 @@ if install_mapie:
 ```
 
 ```python
-import warnings
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sns
 from typing_extensions import TypedDict
 from typing import Union
 from sklearn.compose import ColumnTransformer
@@ -43,11 +38,17 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
-    RobustScaler,
     OneHotEncoder,
     OrdinalEncoder,
-    PolynomialFeatures
+    PolynomialFeatures,
+    RobustScaler
 )
+import warnings
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
@@ -58,7 +59,7 @@ warnings.filterwarnings("ignore")
 ## 1. Data Loading
 
 
-Let's start by loading the exoplanet dataset and show the main information.
+Let's start by loading the `exoplanets` dataset and seeing the main information.
 
 ```python
 url_file = "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/notebooks/regression/exoplanets_mass.csv"
@@ -69,10 +70,10 @@ exo_df = pd.read_csv(url_file, index_col=0)
 exo_df.info()
 ```
 
-The dataset contains 21 variables giving complementary information about the properties of the discovered planet, the star around which the planet revolves, together with the type of discovery method. 7 variables are categorical, and 14 are continuous.
+The dataset contains 21 variables giving complementary information about the properties of the discovered planet, the star around which the planet revolves, together with the type of discovery method. 7 features are categorical, and 14 are continuous.
 
 
-Some properties show high dispersions among exoplanets and stars due to the astronomical nature of such systems. We therefore decide to use a log transformation for the following variables to approach normal distributions.
+Some properties show high variance among exoplanets and stars due to the astronomical nature of such systems. We therefore decide to use a log transformation for the following features to approach a normal distribution.
 
 ```python
 exo_df["Stellar_Mass_[Solar_mass]"].loc[exo_df["Stellar_Mass_[Solar_mass]"] == 0] = np.nan
@@ -224,14 +225,14 @@ We build prediction intervals for a range of alpha values between 0 and 1.
 
 ```python
 alpha = np.arange(0.05, 1, 0.05)
-y_train_pred, y_train_ps = mapie.predict(X_train, alpha=alpha)
-y_test_pred, y_test_ps = mapie.predict(X_test, alpha=alpha)
+y_train_pred, y_train_pis = mapie.predict(X_train, alpha=alpha)
+y_test_pred, y_test_pis = mapie.predict(X_test, alpha=alpha)
 ```
 
 ### Visualization
 
 
-The following function allows you to visualize the error bars estimated by MAPIE for the selected method and the given confidence level.
+The following function offers to visualize the error bars estimated by MAPIE for the selected method and the given confidence level.
 
 ```python
 def plot_predictionintervals(
@@ -272,6 +273,7 @@ def plot_predictionintervals(
     ax1.set_xlabel("True values", fontsize=12)
     ax1.set_ylabel("Predicted values", fontsize=12)
     ax1.legend()
+    
     ax2.scatter(
         x=y_train, y=y_train_pred_high - y_train_pred_low, alpha=0.8, label="train", marker="."
     )
@@ -284,11 +286,8 @@ def plot_predictionintervals(
     std_all = np.concatenate([
         y_train_pred_high - y_train_pred_low, y_test_pred_high - y_test_pred_low
     ])
-    type_all = np.array(
-        ["train" for _ in range(y_train.shape[0])]
-        + ["test" for _ in range(y_test.shape[0])]
-    )
-    x_all = np.arange(std_all.shape[0])
+    type_all = np.array(["train"] * len(y_train) + ["test"] * len(y_test))
+    x_all = np.arange(len(std_all))
     order_all = np.argsort(std_all)
     std_order = std_all[order_all]
     type_order = type_all[order_all]
@@ -309,9 +308,9 @@ def plot_predictionintervals(
     ax3.set_xlabel("Order", fontsize=12)
     ax3.set_ylabel("Interval width", fontsize=12)
     ax3.legend()
-    ax1.set_title("True vs Predicted values")
-    ax2.set_title("Prediction Interval width vs True values")
-    ax3.set_title("Ordered Prediction Interval width")
+    ax1.set_title("True vs predicted values")
+    ax2.set_title("Prediction interval width vs true values")
+    ax3.set_title("Ordered prediction interval width")
     plt.suptitle(suptitle, size=20)
     plt.show()
 
@@ -322,12 +321,12 @@ alpha_plot = int(np.where(alpha == 0.1)[0])
 plot_predictionintervals(
     y_train,
     y_train_pred,
-    y_train_ps[:, 0, alpha_plot],
-    y_train_ps[:, 1, alpha_plot],
+    y_train_pis[:, 0, alpha_plot],
+    y_train_pis[:, 1, alpha_plot],
     y_test,
     y_test_pred,
-    y_test_ps[:, 0, alpha_plot],
-    y_test_ps[:, 1, alpha_plot],
+    y_test_pis[:, 0, alpha_plot],
+    y_test_pis[:, 1, alpha_plot],
     "Prediction intervals for alpha=0.1",
 )
 ```
