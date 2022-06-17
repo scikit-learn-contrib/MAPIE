@@ -29,7 +29,7 @@ feature vector :math:`X_{n+1}` such that
 1. The "Naive" method
 =====================
 
-The so-called naive method computes the conformity scores of the training data to estimate the 
+The so-called naive method computes the residuals of the training data to estimate the 
 typical error obtained on a new test data point. 
 The prediction interval is therefore given by the prediction obtained by the 
 model trained on the entire training set :math:`\pm` the quantiles of the 
