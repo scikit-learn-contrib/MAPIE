@@ -157,13 +157,13 @@ prediction intervals.
             mapie.fit(X_train, y_train)
             y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
-Let’s now compare the confidence intervals with the predicted intervals
-obtained by the Jackknife+, Jackknife-minmax, CV+, CV-minmax,
-Jackknife+-after-Boostrap, and conformalized quantile regression
-strategies. Note that for the Jackknife-after-Bootstrap method, we call
-the :class:`mapie.subsample.Subsample` object that allows us to train
-bootstrapped models. Note also that the CQR method is called with
-`MapieQuantileRegressor` with a “split” strategy.
+Let’s now compare the target confidence intervals with the predicted
+intervals obtained with the Jackknife+, Jackknife-minmax, CV+,
+CV-minmax, Jackknife+-after-Boostrap, and conformalized quantile
+regression (CQR) strategies. Note that for the Jackknife-after-Bootstrap
+method, we call the :class:`mapie.subsample.Subsample` object that
+allows us to train bootstrapped models. Note also that the CQR method is
+called with `MapieQuantileRegressor` with a “split” strategy.
 
 .. code-block:: python
 
@@ -386,8 +386,8 @@ uniformely in a given interval.
         return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
 
 We first generate noisy one-dimensional data uniformely on an interval.
-Here, the noise is considered as *heteroscedastic*, since it will change
-with :math:`x`.
+Here, the noise is considered as *heteroscedastic*, since it will
+increase linearly with :math:`x`.
 
 .. code-block:: python
 
@@ -446,12 +446,6 @@ prediction intervals.
 
 .. code-block:: python
 
-    from typing import Union
-    from typing_extensions import TypedDict
-    from mapie.regression import MapieRegressor
-    from mapie.quantile_regression import MapieQuantileRegressor
-    from mapie.subsample import Subsample 
-    from sklearn.model_selection import train_test_split
     Params = TypedDict("Params", {"method": str, "cv": Union[int, str, Subsample], "alpha": Optional[float]})
     STRATEGIES = {
         "naive": Params(method="naive"),
@@ -481,12 +475,9 @@ prediction intervals.
             mapie.fit(X_train, y_train)
             y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
-Let’s now compare the confidence intervals with the predicted intervals
-with obtained by the Jackknife+, Jackknife-minmax, CV+, CV-minmax,
-Jackknife+-after-Boostrap, and quantile strategies. Note that for the
-Jackknife-after-Bootstrap method, we call the
-:class:`mapie.subsample.Subsample` object that allows us to train
-bootstrapped models.
+Once again, let’s compare the target confidence intervals with
+prediction intervals obtained with the Jackknife+, Jackknife-minmax,
+CV+, CV-minmax, Jackknife+-after-Boostrap, and CQR strategies.
 
 .. code-block:: python
 
@@ -538,9 +529,10 @@ bootstrapped models.
 .. image:: tutorial_regression_files/tutorial_regression_38_0.png
 
 
-We can observe that all of the strategies seem to have similar constant
-prediction intervals. On the other hand, the quantile strategy offers a
-solution that adapts the prediction intervals to the local noise.
+We can observe that all of the strategies except CQR seem to have
+similar constant prediction intervals. On the other hand, the CQR
+strategy offers a solution that adapts the prediction intervals to the
+local noise.
 
 .. code-block:: python
 
@@ -557,20 +549,21 @@ solution that adapts the prediction intervals to the local noise.
 .. image:: tutorial_regression_files/tutorial_regression_40_0.png
 
 
-As we can observe all the strategies behave in a similar way as in the
-first example shown previously expect the quantile method which takes
-into account the heteroscedasticity of the data. In that method we
-observe very low interval widths at low values of :math:`x`. This is the
-only method that even slightly follows the true width, and therefore is
-the preferred method for heteroscedastic data. Notice also that the true
-width is greater than the predicted width from the other methods at
-:math:`x \gtrapprox 3`. This means that while the marginal coverage
-correct for these methods, the conditional coverage is probably not
-below expectation as we will observe in the next figure.
+One can observe that all the strategies behave in a similar way as in
+the first example shown previously. One exception is the CQR method
+which takes into account the heteroscedasticity of the data. In this
+method we observe very low interval widths at low values of :math:`x`.
+This is the only method that even slightly follows the true width, and
+therefore is the preferred method for heteroscedastic data. Notice also
+that the true width is greater (lower) than the predicted width from the
+other methods at :math:`x \gtrapprox 3` (:math:`x \lt 3`). This means
+that while the marginal coverage correct for these methods, the
+conditional coverage is likely not guaranteed as we will observe in the
+next figure.
 
 .. code-block:: python
 
-    def heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins):
+    def get_heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins):
         recap ={}
         for i in range(len(bins)-1):
             bin1, bin2 = bins[i], bins[i+1]
@@ -589,12 +582,12 @@ below expectation as we will observe in the next figure.
 .. code-block:: python
 
     bins = [0, 1, 2, 3, 4, 5]
-    hete_coverage = heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins)
+    heteroscedastic_coverage = get_heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins)
 
 .. code-block:: python
 
     fig = plt.figure()
-    hete_coverage.T.plot.bar(figsize=(12, 4), alpha=0.7)
+    heteroscedastic_coverage.T.plot.bar(figsize=(12, 4), alpha=0.7)
     plt.axhline(0.95, ls="--", color="k")
     plt.ylabel("Conditional coverage")
     plt.legend(loc=[1, 0])
@@ -616,9 +609,9 @@ below expectation as we will observe in the next figure.
 .. image:: tutorial_regression_files/tutorial_regression_44_2.png
 
 
-Let’s now compare the *effective* coverage, namely the fraction of test
-points whose true values lie within the prediction intervals, given by
-the different strategies.
+Let’s now conclude by summarizing the *effective* coverage, namely the
+fraction of test points whose true values lie within the prediction
+intervals, given by the different strategies.
 
 .. code-block:: python
 
@@ -715,9 +708,9 @@ the different strategies.
 
 
 All the strategies have the wanted coverage, however, we notice that the
-quantile strategy has much lower interval width than all the other
-methods, therefore, with heteroscedastic noise, CQR would be the
-preferred method.
+CQR strategy has much lower interval width than all the other methods,
+therefore, with heteroscedastic noise, CQR would be the preferred
+method.
 
 3. Estimating the epistemic uncertainty of out-of-distribution data
 -------------------------------------------------------------------
@@ -1075,6 +1068,7 @@ method and compare their prediction interval.
 
 .. parsed-literal::
 
+    Metal device set to: Apple M1
 
 
 .. code-block:: python
