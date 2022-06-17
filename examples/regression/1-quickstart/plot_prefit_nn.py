@@ -8,9 +8,8 @@ uncertainties for large models for which the cost of cross-validation
 is too high. Typically, neural networks rely on a single validation set.
 
 In this example, we first fit a neural network on the training set. We
-then compute conformity scores on a validation set with the `cv="prefit"`
-parameter. Finally, we evaluate the model with prediction intervals on a
-testing set.
+then compute residuals on a validation set with the `cv="prefit"` parameter.
+Finally, we evaluate the model with prediction intervals on a testing set.
 """
 import scipy
 import numpy as np

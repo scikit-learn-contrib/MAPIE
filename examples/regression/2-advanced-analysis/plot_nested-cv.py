@@ -10,19 +10,19 @@ In the regular sequential method, a cross-validation parameter search is
 carried out over the entire training set.
 The model with the set of parameters that gives the best score is then used in
 MAPIE to estimate the prediction intervals associated with the predictions.
-A limitation of this method is that conformity scores used by MAPIE are
-computed on the validation dataset, which can be subject to overfitting as far
-as hyperparameter tuning is concerned.
-This fools MAPIE into being slightly too optimistic with confidence intervals.
+A limitation of this method is that residuals used by MAPIE are computed on
+the validation dataset, which can be subject to overfitting as far as
+hyperparameter tuning is concerned.
 
+This fools MAPIE into being slightly too optimistic with confidence intervals.
 To solve this problem, an alternative option is to perform a nested
 cross-validation parameter search directly within the MAPIE estimator on each
 *out-of-fold* dataset.
-For each testing fold used by MAPIE to store conformity scores, an internal
+For each testing fold used by MAPIE to store residuals, an internal
 cross-validation occurs on the training fold, optimizing hyperparameters.
-This ensures that conformity scores seen by MAPIE are never seen by the
-algorithm beforehand. However, this method is much heavier computationally
-since it results in :math:`N * P` calculations, where *N* is the number of
+This ensures that residuals seen by MAPIE are never seen by the algorithm
+beforehand. However, this method is much heavier computationally since
+it results in :math:`N * P` calculations, where *N* is the number of
 *out-of-fold* models and *P* the number of parameter search cross-validations,
 versus :math:`N + P` for the non-nested approach.
 
