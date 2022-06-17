@@ -208,6 +208,31 @@ class GammaConformityScore(ConformityScore):
     def __init__(self) -> None:
         ConformityScore.__init__(self, False, consistency_check=False)
 
+    def _check_observed_data(self, y: ArrayLike) -> None:
+        if not self._all_strictly_positive(y):
+            raise ValueError(
+                f"At least one of the observed target is negative "
+                f"which is incompatible with {self.__class__.__name__}. "
+                "All values must be strictly positive, "
+                "in conformity with the Gamma distribution support."
+            )
+
+    def _check_predicted_data(self, y_pred: ArrayLike) -> None:
+        if not self._all_strictly_positive(y_pred):
+            raise ValueError(
+                f"At least one of the predicted target is negative "
+                f"which is incompatible with {self.__class__.__name__}. "
+                "All values must be strictly positive, "
+                "in conformity with the Gamma distribution support."
+            )
+
+    def _all_strictly_positive(self, y: ArrayLike) -> bool:
+        if isinstance(y, list):
+            y = np.array(y)
+        if np.any(y <= 0):
+            return False
+        return True
+
     def get_signed_conformity_scores(
         self,
         y: ArrayLike,
@@ -233,28 +258,3 @@ class GammaConformityScore(ConformityScore):
         """
         self._check_predicted_data(y_pred)
         return np.multiply(y_pred, np.add(1, conformity_scores))
-
-    def _check_observed_data(self, y: ArrayLike) -> None:
-        if not self._all_strictly_positive(y):
-            raise ValueError(
-                f"At least one of the observed target is negative "
-                f"which is incompatible with {self.__class__.__name__}. "
-                "All values must be strictly positive, "
-                "in conformity with the Gamma distribution support."
-            )
-
-    def _check_predicted_data(self, y_pred: ArrayLike) -> None:
-        if not self._all_strictly_positive(y_pred):
-            raise ValueError(
-                f"At least one of the predicted target is negative "
-                f"which is incompatible with {self.__class__.__name__}. "
-                "All values must be strictly positive, "
-                "in conformity with the Gamma distribution support."
-            )
-
-    def _all_strictly_positive(self, y: ArrayLike) -> bool:
-        if isinstance(y, list):
-            y = np.array(y)
-        if np.any(y <= 0):
-            return False
-        return True
