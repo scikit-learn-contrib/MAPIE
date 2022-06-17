@@ -138,7 +138,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
     conformity_score : Optional[ConformityScore]
         ConformityScore instance.
-        It defines the link between the oberved values, the predicted ones
+        It defines the link between the observed values, the predicted ones
         and the conformity scores. For instance, the default None value
         correspondonds to a conformity score which assumes
         y_obs = y_pred + conformity_score.
