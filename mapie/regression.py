@@ -143,8 +143,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         correspondonds to a conformity score which assumes
         y_obs = y_pred + conformity_score.
 
-        - ``None``, to use the default AbsoluteConformityScore conformity score
-        - ConformityScore, to use any other conformity score
+        - ``None``, to use the default ``AbsoluteConformityScore`` conformity score
+        - ConformityScore: any ``ConformityScore`` class
 
         By default ``None``.
 
