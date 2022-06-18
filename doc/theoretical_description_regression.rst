@@ -33,7 +33,7 @@ The so-called naive method computes the residuals of the training data to estima
 typical error obtained on a new test data point. 
 The prediction interval is therefore given by the prediction obtained by the 
 model trained on the entire training set :math:`\pm` the quantiles of the 
-residuals of the same training set:
+conformity scores of the same training set:
     
 .. math:: \hat{\mu}(X_{n+1}) \pm ((1-\alpha) \textrm{quantile of} |Y_1-\hat{\mu}(X_1)|, ..., |Y_n-\hat{\mu}(X_n)|)
 
@@ -43,7 +43,7 @@ or
 
 where :math:`\hat{q}_{n, \alpha}^+` is the :math:`(1-\alpha)` quantile of the distribution.
 
-Since this method estimates the residuals only on the training set, it tends to be too 
+Since this method estimates the conformity scores only on the training set, it tends to be too 
 optimistic and under-estimates the width of prediction intervals because of a potential overfit. 
 As a result, the probability that a new point lies in the interval given by the 
 naive method would be lower than the target level :math:`(1-\alpha)`.
@@ -65,11 +65,11 @@ Estimating the prediction intervals is carried out in three main steps:
   :math:`\hat{\mu}_{-i}` on the entire training set with the :math:`i^{th}` point removed,
   resulting in *n* leave-one-out models.
 
-- The corresponding leave-one-out residual is computed for each :math:`i^{th}` point
+- The corresponding leave-one-out conformity score is computed for each :math:`i^{th}` point
   :math:`|Y_i - \hat{\mu}_{-i}(X_i)|`.
 
 - We fit the regression function :math:`\hat{\mu}` on the entire training set and we compute
-  the prediction interval using the computed leave-one-out residuals:
+  the prediction interval using the computed leave-one-out conformity scores:
   
 .. math:: \hat{\mu}(X_{n+1}) \pm ((1-\alpha) \textrm{ quantile of } |Y_1-\hat{\mu}_{-1}(X_1)|, ..., |Y_n-\hat{\mu}_{-n}(X_n)|)
 
@@ -81,7 +81,7 @@ where
 
 .. math:: R_i^{\rm LOO} = |Y_i - \hat{\mu}_{-i}(X_i)|
 
-is the *leave-one-out* residual.
+is the *leave-one-out* conformity score.
 
 This method avoids the overfitting problem but can lose its predictive 
 cover when :math:`\hat{\mu}` becomes unstable, for example when the 
@@ -146,7 +146,7 @@ is performed in four main steps:
 - *K* regression functions :math:`\hat{\mu}_{-S_k}` are fitted on the training set with the 
   corresponding :math:`k^{th}` fold removed.
 
-- The corresponding *out-of-fold* residual is computed for each :math:`i^{th}` point 
+- The corresponding *out-of-fold* conformity score is computed for each :math:`i^{th}` point 
   :math:`|Y_i - \hat{\mu}_{-S_{k(i)}}(X_i)|` where *k(i)* is the fold containing *i*.
 
 - Similar to the jackknife+, the regression functions :math:`\hat{\mu}_{-S_{k(i)}}(X_i)` 
@@ -198,7 +198,7 @@ jackknife+-after-bootstrap is performed in four main steps:
 
 
 - These predictions are aggregated according to a given aggregation function 
-  :math:`{\rm agg}`, typically :math:`{\rm mean}` or :math:`{\rm median}`, and the residuals 
+  :math:`{\rm agg}`, typically :math:`{\rm mean}` or :math:`{\rm median}`, and the conformity scores 
   :math:`|Y_j - {\rm agg}(\hat{\mu}(B_{K(j)}(X_j)))|` are computed for each :math:`X_j`
   (with :math:`K(j)` the boostraps not containing :math:`X_j`).
 

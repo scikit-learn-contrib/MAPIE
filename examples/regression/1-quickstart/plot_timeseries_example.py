@@ -4,7 +4,7 @@ Estimating prediction intervals of time series forecast
 =======================================================
 This example uses :class:`mapie.regression.MapieRegressor` to estimate
 prediction intervals associated with time series forecast. We use the
-standard cross-validation approach to estimate residuals and associated
+standard cross-validation approach to estimate conformity scores and associated
 prediction intervals.
 
 We use here the Victoria electricity demand dataset used in the book
@@ -37,7 +37,7 @@ from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie.metrics import (
     regression_coverage_score,
-    regression_mean_width_score
+    regression_mean_width_score,
 )
 from mapie.regression import MapieRegressor
 

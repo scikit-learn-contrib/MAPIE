@@ -24,7 +24,7 @@ from mapie._typing import NDArray
 
 def f(x: NDArray) -> NDArray:
     """Polynomial function used to generate one-dimensional data."""
-    return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
+    return np.array(5 * x + 5 * x**4 - 9 * x**2)
 
 
 # Generate data

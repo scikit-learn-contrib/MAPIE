@@ -13,8 +13,8 @@ MAPIE to estimate the prediction intervals associated with the predictions.
 A limitation of this method is that residuals used by MAPIE are computed on
 the validation dataset, which can be subject to overfitting as far as
 hyperparameter tuning is concerned.
-This fools MAPIE into being slightly too optimistic with confidence intervals.
 
+This fools MAPIE into being slightly too optimistic with confidence intervals.
 To solve this problem, an alternative option is to perform a nested
 cross-validation parameter search directly within the MAPIE estimator on each
 *out-of-fold* dataset.
@@ -39,7 +39,7 @@ For this example, the two approaches result in identical scores and identical
 effective coverages.
 
 In the general case, the recommended approach is to use nested
-cross-validation, since it does not underestimate residuals and hence
+cross-validation, since it does not underestimate conformity scores and hence
 prediction intervals. However, in this particular example, effective
 coverages of both nested and non-nested methods are the same.
 """

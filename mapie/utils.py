@@ -8,6 +8,7 @@ from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.utils.validation import _check_sample_weight, _num_features
 from sklearn.utils import _safe_indexing
 
+from .conformity_scores import AbsoluteConformityScore, ConformityScore
 from ._typing import ArrayLike, NDArray
 
 
@@ -276,8 +277,7 @@ def check_n_features_in(
 
 
 def check_alpha_and_n_samples(
-    alphas: Union[Iterable[float], float],
-    n: int
+    alphas: Union[Iterable[float], float], n: int
 ) -> None:
     """
     Check if the quantile can be computed based
@@ -410,9 +410,7 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
 
 
 def check_lower_upper_bounds(
-    y_preds: NDArray,
-    y_pred_low: NDArray,
-    y_pred_up: NDArray
+    y_preds: NDArray, y_pred_low: NDArray, y_pred_up: NDArray
 ) -> None:
     """
     Check if the lower or upper bounds are inconsistent.
@@ -458,11 +456,12 @@ def check_lower_upper_bounds(
         init_pred = y_preds
     else:
         init_pred, init_lower_bound, init_upper_bound = y_preds
-    if y_preds.ndim != 1 and np.any(np.logical_or(
+    if y_preds.ndim != 1 and np.any(
+        np.logical_or(
             init_lower_bound >= init_upper_bound,
             init_pred <= init_lower_bound,
-            init_pred >= init_upper_bound
-            )
+            init_pred >= init_upper_bound,
+        )
     ):
         warnings.warn(
             "WARNING: The initial prediction values from the "
@@ -470,14 +469,48 @@ def check_lower_upper_bounds(
             "quantile values might be higher than the\nlower "
             + "quantile values."
         )
-    if np.any(np.logical_or(
-        y_pred_low >= y_pred_up,
-        init_pred <= y_pred_low,
-        init_pred >= y_pred_up
+    if np.any(
+        np.logical_or(
+            y_pred_low >= y_pred_up,
+            init_pred <= y_pred_low,
+            init_pred >= y_pred_up,
         )
     ):
         warnings.warn(
             "WARNING: Following the additional value added to have conformal "
             "predictions, the upper and lower bound present issues as one "
             "might be higher or lower than the other."
+        )
+
+
+def check_conformity_score(
+    conformity_score: Optional[ConformityScore],
+) -> ConformityScore:
+    """
+    Check parameter ``conformity_score``.
+
+    Raises
+    ------
+    ValueError
+        If parameter is not valid.
+
+    Examples
+    --------
+    >>> from mapie.utils import check_conformity_score
+    >>> try:
+    ...     check_conformity_score(1)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    Invalid conformity_score argument.
+    Must be None or a ConformityScore instance.
+    """
+    if conformity_score is None:
+        return AbsoluteConformityScore()
+    elif isinstance(conformity_score, ConformityScore):
+        return conformity_score
+    else:
+        raise ValueError(
+            "Invalid conformity_score argument.\n"
+            "Must be None or a ConformityScore instance."
         )

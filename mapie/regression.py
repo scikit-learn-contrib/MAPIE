@@ -10,19 +10,21 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import (
-    indexable,
-    check_is_fitted,
-    _num_samples,
     _check_y,
+    _num_samples,
+    check_is_fitted,
+    indexable,
 )
 
 from ._typing import ArrayLike, NDArray
 from ._compatibility import np_nanquantile
 from .aggregation_functions import aggregate_all, phi2D
+from .conformity_scores import ConformityScore
 from .utils import (
-    check_cv,
     check_alpha,
     check_alpha_and_n_samples,
+    check_conformity_score,
+    check_cv,
     check_n_features_in,
     check_n_jobs,
     check_nan_in_aposteriori_prediction,
@@ -34,12 +36,14 @@ from .utils import (
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
     """
-    Prediction interval with out-of-fold residuals.
+    Prediction interval with out-of-fold conformity scores.
 
     This class implements the jackknife+ strategy and its variations
     for estimating prediction intervals on single-output data. The
-    idea is to evaluate out-of-fold residuals on hold-out validation
-    sets and to deduce valid confidence intervals with strong theoretical
+    idea is to evaluate out-of-fold conformity scores (signed residuals,
+    absolute residuals, residuals normalized by the predicted mean...)
+    on hold-out validation sets and to deduce valid confidence intervals
+    with strong theoretical
     guarantees.
 
     Parameters
@@ -53,16 +57,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Method to choose for prediction interval estimates.
         Choose among:
 
-        - "naive", based on training set residuals,
-        - "base", based on validation sets residuals,
-        - "plus", based on validation residuals and testing predictions,
-        - "minmax", based on validation residuals and testing predictions
-          (min/max among cross-validation clones).
+        - "naive", based on training set conformity scores,
+        - "base", based on validation sets conformity scores,
+        - "plus", based on validation conformity scores and
+          testing predictions,
+        - "minmax", based on validation conformity scores and
+          testing predictions (min/max among cross-validation clones).
 
         By default "plus".
 
     cv: Optional[Union[int, str, BaseCrossValidator]]
-        The cross-validation strategy for computing residuals.
+        The cross-validation strategy for computing conformity scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
 
@@ -78,11 +83,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
-          for computing residuals only.
-          At prediction time, quantiles of these residuals are used to provide
-          a prediction interval with fixed width.
+          for computing conformity scores only.
+          At prediction time, quantiles of these conformity scores are used
+          to provide a prediction interval with fixed width.
           The user has to take care manually that data for model fitting and
-          residual estimate are disjoint.
+          conformity scores estimate are disjoint.
 
         By default ``None``.
 
@@ -129,6 +134,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Above ``50``, the output is sent to stdout.
 
         By default ``0``.
+
+    conformity_score : Optional[ConformityScore]
+        ConformityScore instance.
+        It defines the link between the observed values, the predicted ones
+        and the conformity scores. For instance, the default None value
+        correspondonds to a conformity score which assumes
+        y_obs = y_pred + conformity_score.
+
+        - ``None``, to use the default ``AbsoluteConformityScore`` conformity
+          score
+        - ConformityScore: any ``ConformityScore`` class
+
+        By default ``None``.
 
     Attributes
     ----------
@@ -193,6 +211,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         "estimators_",
         "k_",
         "conformity_scores_",
+        "conformity_score_function_",
         "n_features_in_",
     ]
 
@@ -204,6 +223,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
+        conformity_score: Optional[ConformityScore] = None,
     ) -> None:
         self.estimator = estimator
         self.method = method
@@ -211,6 +231,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self.n_jobs = n_jobs
         self.agg_function = agg_function
         self.verbose = verbose
+        self.conformity_score = conformity_score
 
     def _check_parameters(self) -> None:
         """
@@ -223,8 +244,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         if self.method not in self.valid_methods_:
             raise ValueError(
-                "Invalid method. "
-                f"Allowed values are {self.valid_methods_}."
+                f"Invalid method. Allowed values are {self.valid_methods_}."
             )
 
         check_n_jobs(self.n_jobs)
@@ -471,11 +491,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieRegressor:
         """
-        Fit estimator and compute residuals used for prediction intervals.
+        Fit estimator and compute conformity scores used for
+        prediction intervals.
         Fit the base estimator under the ``single_estimator_`` attribute.
         Fit all cross-validated estimator clones
         and rearrange them into a list, the ``estimators_`` attribute.
-        Out-of-fold residuals are stored under
+        Out-of-fold conformity scores are stored under
         the ``conformity_scores_`` attribute.
 
         Parameters
@@ -491,8 +512,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             If None, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
+            before the fitting process and hence have no conformity scores.
+            If weights are non-uniform,
+            conformity scores are still uniformly weighted.
 
             By default ``None``.
 
@@ -510,6 +532,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y = _check_y(y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
+        self.conformity_score_function_ = check_conformity_score(
+            self.conformity_score
+        )
         y = cast(NDArray, y)
         n_samples = _num_samples(y)
 
@@ -565,7 +590,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        self.conformity_scores_ = np.abs(y - y_pred)
+        self.conformity_score_function_.check_consistency(y, y_pred)
+        self.conformity_scores_ = (
+            self.conformity_score_function_.get_conformity_scores(y, y_pred)
+        )
+
         return self
 
     def predict(
@@ -576,13 +605,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
-        Residuals from the training set and predictions from the model clones
-        are central to the computation.
+        Conformity scores from the training set and predictions
+        from the model clones are central to the computation.
         Prediction Intervals for a given ``alpha`` are deduced from either
 
-        - quantiles of residuals (naive and base methods),
-        - quantiles of (predictions +/- residuals) (plus method),
-        - quantiles of (max/min(predictions) +/- residuals) (minmax method).
+        - quantiles of conformity scores (naive and base methods),
+        - quantiles of (predictions +/- conformity scores) (plus method),
+        - quantiles of (max/min(predictions) +/- conformity scores)
+        (minmax method).
 
         Parameters
         ----------
@@ -636,49 +666,61 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
         if self.method in ["naive", "base"] or self.cv == "prefit":
-            quantile = np_nanquantile(
-                self.conformity_scores_, 1 - alpha_np, method="higher"
-            )
-            y_pred_low = y_pred[:, np.newaxis] - quantile
-            y_pred_up = y_pred[:, np.newaxis] + quantile
+            y_pred_multi_low = y_pred[:, np.newaxis]
+            y_pred_multi_up = y_pred[:, np.newaxis]
         else:
             y_pred_multi = self._pred_multi(X)
 
             if self.method in self.plus_like_method:
-                lower_bounds = y_pred_multi - self.conformity_scores_
-                upper_bounds = y_pred_multi + self.conformity_scores_
-
-            if self.method == "minmax":
-                lower_bounds = np.min(y_pred_multi, axis=1, keepdims=True)
-                upper_bounds = np.max(y_pred_multi, axis=1, keepdims=True)
-                lower_bounds = lower_bounds - self.conformity_scores_
-                upper_bounds = upper_bounds + self.conformity_scores_
-
-            y_pred_low = np.column_stack(
-                [
-                    np_nanquantile(
-                        lower_bounds,
-                        _alpha,
-                        axis=1,
-                        method="lower",
-                    )
-                    for _alpha in alpha_np
-                ]
-            ).data
-
-            y_pred_up = np.column_stack(
-                [
-                    np_nanquantile(
-                        upper_bounds,
-                        1 - _alpha,
-                        axis=1,
-                        method="higher",
-                    )
-                    for _alpha in alpha_np
-                ]
-            ).data
-
+                y_pred_multi_low = y_pred_multi
+                y_pred_multi_up = y_pred_multi
+            elif self.method == "minmax":
+                y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
+                y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
+
+        # compute distributions of lower and upper bounds
+        if self.conformity_score_function_.sym:
+            conformity_scores_low = -self.conformity_scores_
+            conformity_scores_up = self.conformity_scores_
+        else:
+            conformity_scores_low = self.conformity_scores_
+            conformity_scores_up = self.conformity_scores_
+            alpha_np = alpha_np / 2
+        lower_bounds = (
+            self.conformity_score_function_.get_estimation_distribution(
+                y_pred_multi_low, conformity_scores_low
+            )
+        )
+        upper_bounds = (
+            self.conformity_score_function_.get_estimation_distribution(
+                y_pred_multi_up, conformity_scores_up
+            )
+        )
+
+        # get desired confidence intervals according to alpha
+        y_pred_low = np.column_stack(
+            [
+                np_nanquantile(
+                    lower_bounds,
+                    _alpha,
+                    axis=1,
+                    method="lower",
+                )
+                for _alpha in alpha_np
+            ]
+        ).data
+        y_pred_up = np.column_stack(
+            [
+                np_nanquantile(
+                    upper_bounds,
+                    1 - _alpha,
+                    axis=1,
+                    method="higher",
+                )
+                for _alpha in alpha_np
+            ]
+        ).data
 
         return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)

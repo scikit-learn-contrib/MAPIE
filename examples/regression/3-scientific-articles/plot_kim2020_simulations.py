@@ -161,7 +161,7 @@ def compute_PIs(
     method : str
         Method for estimating prediction intervals.
     cv : Any
-        Strategy for computing residuals.
+        Strategy for computing conformity scores.
     alpha : float
         1 - (target coverage level).
     agg_function: str

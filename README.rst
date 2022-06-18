@@ -167,7 +167,7 @@ The full documentation can be found `on this link <https://mapie.readthedocs.io/
 
 **How does MAPIE work on regression ?** It is basically based on cross-validation and relies on:
 
-- Residuals on the whole training set obtained by cross-validation,
+- Conformity scores on the whole training set obtained by cross-validation,
 - Perturbed models generated during the cross-validation.
 
 **MAPIE** then combines all these elements in a way that provides prediction intervals on new data with strong theoretical guarantees [1-2].
