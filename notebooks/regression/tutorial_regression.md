@@ -439,7 +439,7 @@ ax.set_ylabel("Prediction Interval Width")
 _ = ax.legend(fontsize=10, loc=[1, 0.4])
 ```
 
-One can observe that all the strategies behave in a similar way as in the first example shown previously. One exception is the CQR method which takes into account the heteroscedasticity of the data. In this method we observe very low interval widths at low values of $x$. This is the only method that even slightly follows the true width, and therefore is the preferred method for heteroscedastic data. Notice also that the true width is greater (lower) than the predicted width from the other methods at $x \gtrapprox 3$ ($x \lt 3$). This means that while the marginal coverage correct for these methods, the conditional coverage is likely not guaranteed as we will observe in the next figure.
+One can observe that all the strategies behave in a similar way as in the first example shown previously. One exception is the CQR method which takes into account the heteroscedasticity of the data. In this method we observe very low interval widths at low values of $x$. This is the only method that even slightly follows the true width, and therefore is the preferred method for heteroscedastic data. Notice also that the true width is greater (lower) than the predicted width from the other methods at $x \gtrapprox 3$ ($x \leq 3$). This means that while the marginal coverage correct for these methods, the conditional coverage is likely not guaranteed as we will observe in the next figure.
 
 ```python
 def get_heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins):
@@ -468,6 +468,7 @@ heteroscedastic_coverage = get_heteroscedastic_coverage(y_test, y_pis, STRATEGIE
 fig = plt.figure()
 heteroscedastic_coverage.T.plot.bar(figsize=(12, 4), alpha=0.7)
 plt.axhline(0.95, ls="--", color="k")
+plt.ylim([0.8, 1])
 plt.ylabel("Conditional coverage")
 plt.legend(loc=[1, 0])
 ```

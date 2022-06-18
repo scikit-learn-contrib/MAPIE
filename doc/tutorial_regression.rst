@@ -556,7 +556,7 @@ method we observe very low interval widths at low values of :math:`x`.
 This is the only method that even slightly follows the true width, and
 therefore is the preferred method for heteroscedastic data. Notice also
 that the true width is greater (lower) than the predicted width from the
-other methods at :math:`x \gtrapprox 3` (:math:`x \lt 3`). This means
+other methods at :math:`x \gtrapprox 3` (:math:`x \leq 3`). This means
 that while the marginal coverage correct for these methods, the
 conditional coverage is likely not guaranteed as we will observe in the
 next figure.

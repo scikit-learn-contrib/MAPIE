@@ -13,7 +13,7 @@ Regression
 
    regression.MapieRegressor
    quantile_regression.MapieQuantileRegressor
-   time_series.MapieTimeSeriesRegressor
+   time_series_regression.MapieTimeSeriesRegressor
 
 Classification
 ==============
