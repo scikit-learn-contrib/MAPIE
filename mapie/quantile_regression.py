@@ -47,7 +47,7 @@ class MapieQuantileRegressor(MapieRegressor):
         set.
 
     alpha: float
-        Between 0 and 0.5, represents the risk level of the confidence
+        Between 0 and 1.0, represents the risk level of the confidence
         interval.
         Lower ``alpha`` produce larger (more conservative) prediction
         intervals.
@@ -154,7 +154,7 @@ class MapieQuantileRegressor(MapieRegressor):
         Parameters
         ----------
         alpha : float
-            Can only be a float value between 0 and 0.5.
+            Can only be a float value between 0 and 1.0.
             Represent the risk level of the confidence interval.
             Lower alpha produce larger (more conservative) prediction
             intervals. Alpha is the complement of the target coverage level.
@@ -174,12 +174,12 @@ class MapieQuantileRegressor(MapieRegressor):
         ValueError
             If alpha is not a float.
         ValueError
-            If the value of alpha is not between 0 and 0.5.
+            If the value of alpha is not between 0 and 1.0.
         """
         if isinstance(alpha, float):
-            if np.any(np.logical_or(alpha <= 0, alpha >= 0.5)):
+            if np.any(np.logical_or(alpha <= 0, alpha >= 1.0)):
                 raise ValueError(
-                    "Invalid alpha. Allowed values are between 0 and 0.5."
+                    "Invalid alpha. Allowed values are between 0 and 1.0."
                 )
             else:
                 alpha_np = np.array([alpha / 2, 1 - alpha / 2, 0.5])
