@@ -11,3 +11,4 @@
 **Jackknife-aB+**,:math:`\geq 1-2\alpha`,:math:`\gtrsim 1-\alpha`,:math:`K`,:math:`K \times n_{test}`
 **Jackknife-aB-minmax**,:math:`\geq 1-\alpha`,:math:`> 1-\alpha`,:math:`K`,:math:`K \times n_{test}`
 **Conformalized quantile regressor**,:math:`\geq 1-\alpha`,:math:`\gtrsim 1-\alpha`,:math:`3`,:math:`3 \times n_{test}`
+**EnbPI**,:math:`\geq 1-\alpha` (asymptotic),:math:`\gtrsim 1-\alpha`,:math:`K`,:math:`K \times n_{test}`
