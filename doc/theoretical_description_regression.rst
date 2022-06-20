@@ -260,8 +260,8 @@ However the confidence intervals are like those of the jackknife method.
   \hat{C}_{n, \alpha}^{\rm EnbPI}(X_{n+1}) = [\hat{\mu}_{agg}(X_{n+1}) + \hat{q}_{n, \beta}\{ R_i^{\rm LOO} \}, \hat{\mu}_{agg}(X_{n+1}) + \hat{q}_{n, (1 - \alpha + \beta)}\{ R_i^{\rm LOO} \}]
 where :math:`\hat{\mu}_{agg}(X_{n+1})` is the aggregation of the predictions of
 the LOO estimators (mean or median), and
-:math:`R_i^{\rm LOO} = |Y_i - \hat{\mu}_{-i}(X_{i}|)` 
-is the residual of the LOO :math:`\hat{\mu}_{-i}` at :math:`X_{i}`.
+:math:`R_i^{\rm LOO} = |Y_i - \hat{\mu}_{-i}(X_{i})|` 
+is the residual of the LOO estimator :math:`\hat{\mu}_{-i}` at :math:`X_{i}`.
 
 The residuals are no longer considered in absolute values but in relative
 values and the width of the confidence intervals are minimized, up to a given gap
