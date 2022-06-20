@@ -167,8 +167,8 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
         mapie.fit(
             X_train_split.reshape(-1, 1),
             y_train_spit,
-            X_calib.reshape(-1, 1),
-            y_calib
+            X_calib=X_calib.reshape(-1, 1),
+            y_calib=y_calib
         )
         y_pred, y_pis = mapie.predict(
             X_test.reshape(-1, 1)

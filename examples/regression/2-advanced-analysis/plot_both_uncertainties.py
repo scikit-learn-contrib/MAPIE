@@ -123,8 +123,8 @@ for strategy, params in STRATEGIES.items():
         mapie.fit(
             X_train,
             y_train,
-            X_calib,
-            y_calib
+            X_calib=X_calib,
+            y_calib=y_calib
         )
         y_pred[strategy], y_pis[strategy] = mapie.predict(
             X_test

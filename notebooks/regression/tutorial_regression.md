@@ -158,7 +158,7 @@ for strategy, params in STRATEGIES.items():
             test_size=0.3,
             random_state=1
         )
-        mapie.fit(X_train, y_train, X_calib, y_calib)
+        mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:  
         mapie = MapieRegressor(polyn_model, **params)
@@ -376,7 +376,7 @@ for strategy, params in STRATEGIES.items():
             test_size=0.3,
             random_state=1
         )
-        mapie.fit(X_train, y_train, X_calib, y_calib)
+        mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:  
         mapie = MapieRegressor(polyn_model, **params)
@@ -579,7 +579,7 @@ for strategy, params in STRATEGIES.items():
             test_size=0.3,
             random_state=1
         )
-        mapie.fit(X_train, y_train, X_calib, y_calib)
+        mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:  
         mapie = MapieRegressor(polyn_model, **params)

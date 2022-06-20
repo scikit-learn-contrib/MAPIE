@@ -1,9 +1,10 @@
 from __future__ import annotations
-from typing import Optional, Tuple, Union, cast, List
+from typing import Optional, Tuple, Union, cast, List, Iterable
 
 import numpy as np
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import QuantileRegressor
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import (
     indexable,
@@ -85,14 +86,14 @@ class MapieQuantileRegressor(MapieRegressor):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.regression import MapieRegressor
-    >>> from sklearn.linear_model import LinearRegression
-    >>> X = np.array([[0], [1], [2], [3], [4], [5]])
-    >>> y = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
+    >>> from mapie.quantile_regression import MapieQuantileRegressor
+    >>> X_train = np.array([[0], [1], [2], [3], [4], [5]])
+    >>> y_train = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> X_calib = np.array([[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]])
     >>> y_calib = np.array([5, 7, 9, 4, 8, 1, 5, 7.5, 9.5, 12])
-    >>> mapie_reg = MapieQuantileRegressor().fit(X, y, X_calib, y_calib)
-    >>> y_pred, y_pis = mapie_reg.predict(X)
+    >>> mapie_reg = MapieQuantileRegressor()
+    >>> mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+    >>> y_pred, y_pis = mapie_reg.predict(X_train)
     >>> print(y_pis[:, :, 0])
     [[-8.16666667 19.        ]
      [-6.33333333 20.83333333]
@@ -316,13 +317,14 @@ class MapieQuantileRegressor(MapieRegressor):
                 "Invalid cv method, only valid method is ``split``."
             )
 
-    def fit(  # type: ignore
+    def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        X_calib: ArrayLike,
-        y_calib: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        X_calib: Optional[ArrayLike] = None,
+        y_calib: Optional[ArrayLike] = None,
+        calib_size: Optional[float] = 0.3,
     ) -> MapieQuantileRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
@@ -363,16 +365,42 @@ class MapieQuantileRegressor(MapieRegressor):
         alpha = self._check_alpha(self.alpha)
         self.cv = self._check_cv(cast(str, self.cv))
         X, y = indexable(X, y)
+        if X_calib is None or y_calib is None:
+            if sample_weight is not None:
+                (
+                    X_train,
+                    X_calib,
+                    y_train,
+                    y_calib,
+                    sample_weight_train,
+                    _,
+                ) = train_test_split(
+                    X,
+                    y,
+                    sample_weight,
+                    test_size=calib_size
+                )
+            else:
+
+                X_train, X_calib, y_train, y_calib = train_test_split(
+                    X,
+                    y,
+                    test_size=calib_size
+                )
+                sample_weight_train = sample_weight
+        else:
+            X_train, y_train, sample_weight_train = X, y, sample_weight
+        X_train, y_train = indexable(X_train, y_train)
         X_calib, y_calib = indexable(X_calib, y_calib)
         y, y_calib = _check_y(y), _check_y(y_calib)
         self.n_calib_samples = _num_samples(y_calib)
         check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
-        sample_weight, X, y = check_null_weight(
-            sample_weight,
-            X,
-            y
+        sample_weight_train, X_train, y_train = check_null_weight(
+            sample_weight_train,
+            X_train,
+            y_train
         )
-        y = cast(NDArray, y)
+        y_train = cast(NDArray, y_train)
 
         # Initialization
         self.estimators_: List[RegressorMixin] = []
@@ -399,7 +427,7 @@ class MapieQuantileRegressor(MapieRegressor):
             else:
                 cloned_estimator_.set_params(**params)
             self.estimators_.append(fit_estimator(
-                cloned_estimator_, X, y, sample_weight
+                cloned_estimator_, X_train, y_train, sample_weight_train
             ))
             y_calib_preds[i] = self.estimators_[-1].predict(X_calib)
 
@@ -415,11 +443,12 @@ class MapieQuantileRegressor(MapieRegressor):
                 self.conformity_scores_[1]
             ], axis=0
         )
-        return self
 
-    def predict(  # type: ignore
+    def predict(
         self,
         X: ArrayLike,
+        ensemble: bool = False,
+        alpha: Optional[Union[float, Iterable[float]]] = None,
         symmetry: Optional[bool] = True,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
@@ -453,6 +482,11 @@ class MapieQuantileRegressor(MapieRegressor):
             - [:, 1, :]: Upper bound of the prediction interval.
         """
         check_is_fitted(self, self.fit_attributes)
+        if alpha is not None:
+            raise ValueError(
+                "Alpha should not be specified in the prediction method"
+                + "with CQR"
+            )
         alpha = self.alpha if symmetry else self.alpha/2
         check_alpha_and_n_samples(alpha, self.n_calib_samples)
 
