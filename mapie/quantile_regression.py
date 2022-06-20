@@ -443,6 +443,7 @@ class MapieQuantileRegressor(MapieRegressor):
                 self.conformity_scores_[1]
             ], axis=0
         )
+        return self
 
     def predict(
         self,

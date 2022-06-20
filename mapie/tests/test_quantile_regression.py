@@ -428,7 +428,7 @@ def test_X_calib_isNone() -> None:
 
 def test_X_calib_isNone_with_sample_weight() -> None:
     """
-    Test that the fit method works with calib dataset defined is None 
+    Test that the fit method works with calib dataset defined is None
     with sample weights.
     """
     mapie = MapieQuantileRegressor()
