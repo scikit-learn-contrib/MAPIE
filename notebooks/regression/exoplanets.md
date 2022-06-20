@@ -59,7 +59,7 @@ warnings.filterwarnings("ignore")
 ## 1. Data Loading
 
 
-Let's start by loading the `exoplanets` dataset and seeing the main information.
+Let's start by loading the `exoplanets` dataset and looking at the main information.
 
 ```python
 url_file = "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/notebooks/regression/exoplanets_mass.csv"
@@ -70,7 +70,7 @@ exo_df = pd.read_csv(url_file, index_col=0)
 exo_df.info()
 ```
 
-The dataset contains 21 variables giving complementary information about the properties of the discovered planet, the star around which the planet revolves, together with the type of discovery method. 7 features are categorical, and 14 are continuous.
+The dataset contains 21 features giving complementary information about the properties of the discovered planet, the star around which the planet revolves, together with the type of discovery method. 7 features are categorical, and 14 are continuous.
 
 
 Some properties show high variance among exoplanets and stars due to the astronomical nature of such systems. We therefore decide to use a log transformation for the following features to approach a normal distribution.
@@ -130,7 +130,7 @@ sns.pairplot(exo_df[star_cols])
 ## 3. Data preprocessing
 
 
-In this section, we perform a simple preprocessing of the dataset in order to impute the missing values and encode the categorical variables.
+In this section, we perform a simple preprocessing of the dataset in order to impute the missing values and encode the categorical features.
 
 ```python
 endos = list(set(exo_df.columns) - set([target]))
