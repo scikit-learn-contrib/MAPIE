@@ -62,7 +62,7 @@ warnings.filterwarnings("ignore")
 Let's start by loading the `exoplanets` dataset and looking at the main information.
 
 ```python
-url_file = "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/exoplanet-notebook/notebooks/regression/exoplanets_mass.csv"
+url_file = "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/notebooks/regression/exoplanets_mass.csv"
 exo_df = pd.read_csv(url_file, index_col=0)
 ```
 
