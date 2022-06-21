@@ -135,7 +135,7 @@ Let’s see the distribution of the scores with the calculated quantiles.
 
 ```python
 scores = mapie_score.conformity_scores_
-n = mapie_score.n_samples_val_
+n = len(mapie_score.conformity_scores_)
 quantiles = mapie_score.quantiles_
 plot_scores(n, alpha, scores, quantiles)
 ```
