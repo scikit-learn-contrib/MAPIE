@@ -62,7 +62,7 @@ warnings.filterwarnings("ignore")
 Let's start by loading the `exoplanets` dataset and looking at the main information.
 
 ```python
-url_file = "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/notebooks/regression/exoplanets_mass.csv"
+url_file = "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/exoplanet-notebook/notebooks/regression/exoplanets_mass.csv"
 exo_df = pd.read_csv(url_file, index_col=0)
 ```
 
@@ -76,7 +76,7 @@ The dataset contains 21 features giving complementary information about the prop
 Some properties show high variance among exoplanets and stars due to the astronomical nature of such systems. We therefore decide to use a log transformation for the following features to approach a normal distribution.
 
 ```python
-exo_df["Stellar_Mass_[Solar_mass]"].loc[exo_df["Stellar_Mass_[Solar_mass]"] == 0] = np.nan
+exo_df["Stellar_Mass_[Solar_mass]"] = exo_df["Stellar_Mass_[Solar_mass]"].replace(0, np.nan)
 vars2log = [
     "Planet_Orbital_Period_[day]",
     "Planet_Orbital_SemiMajorAxis_[day]",
