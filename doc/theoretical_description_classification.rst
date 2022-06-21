@@ -10,11 +10,27 @@ Theoretical Description
 Three methods for multi-class uncertainty-quantification have been implemented in MAPIE so far :
 LABEL [1], Adaptive Prediction Sets [2, 3] and Top-K [3].
 The difference between these methods is the way the conformity scores are computed. 
-The figure below illustrates the three methods implmented in MAPIE:
+The figure below illustrates the three methods implemented in MAPIE:
 
 .. image:: images/classification_methods.png
    :width: 600
    :align: center
+
+For a classification problem in a standard independent and identically distributed (i.i.d) case,
+our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`` has an unknown distribution :math:`P_{X, Y}`. 
+
+For any risk level :math:`\alpha` between 0 and 1, the methods implemented in MAPIE allow the user construct a prediction
+set :math:`\hat{C}_{n, \alpha}(X_{n+1})` for a new observation :math:`\left( X_{n+1},Y_{n+1} \right)` with a guarantee
+on the marginal coverage such that : 
+
+.. math::
+    P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \} \geq 1 - \alpha
+
+
+In words, for a typical risk level $\alpha$ of $10 \%$, we want to construct prediction sets that contain the true observations
+for at least $90 \%$ of the new test data points.
+Note that the guarantee is possible only on the marginal coverage, and not on the conditional coverage
+:math:`P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) | X_{n+1} = x_{n+1} \}` which depends on the location of the new test point in the distribution. 
 
 1. LABEL
 --------
@@ -37,7 +53,7 @@ Finally, we construct a prediction set by including all labels with a score high
     \hat{C}(X_{test}) = \{y : \hat{\mu}(X_{test})_y \geq 1 - \hat{q}\}
 
 
-This simple approach allows us to construct prediction sets coming with a theoretical guarantee on the marginal coverage.
+This simple approach allows us to construct prediction sets which have a theoretical guarantee on the marginal coverage.
 However, although this method generally results in small prediction sets, it tends to produce empty ones when the model is uncertain,
 for example at the border between two classes.
 
@@ -54,7 +70,7 @@ label of the observation :
    s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)_{\pi_j} \quad \text{where} \quad Y_i = \pi_j 
 
 
-The quantile :math:`\hat{q}` is then computed the same way as the score method.
+The quantile :math:`\hat{q}` is then computed the same way as the LABEL method.
 For the construction of the prediction sets for a new test point, the same procedure of ranked summing is applied until reaching the quantile,
 as described in the following equation : 
 
@@ -86,6 +102,7 @@ The prediction sets are build by taking the :math:`\hat{q}^{th}` higher scores. 
 .. math:: 
    \hat{C}(X_{test}) = \{\pi_1, ..., \pi_{\hat{q}}\} 
 
+As with other methods, this procedure allows the user to build prediction sets with guarantees on the marginal coverage. 
 
 
 4. Split- and cross-conformal methods
@@ -168,8 +185,8 @@ where :
 
 .. TO BE CONTINUED
 
-References
-==========
+5. References
+-------------
 
 [1] Mauricio Sadinle, Jing Lei, & Larry Wasserman.
 "Least Ambiguous Set-Valued Classifiers With Bounded Error Levels."
