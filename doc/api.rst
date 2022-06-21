@@ -12,6 +12,8 @@ Regression
    :template: class.rst
 
    regression.MapieRegressor
+   quantile_regression.MapieQuantileRegressor
+   time_series_regression.MapieTimeSeriesRegressor
 
 Classification
 ==============
