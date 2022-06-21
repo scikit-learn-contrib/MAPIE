@@ -453,7 +453,7 @@ def heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins):
     recap ={}
     for i in range(len(bins)-1):
         bin1, bin2 = bins[i], bins[i+1]
-        name = f"{bin1} to {bin2}"
+        name = f"[{bin1}, {bin2}]"
         recap[name] = []
         for strategy in STRATEGIES:
             indices = np.where((X_test>=bins[i])*(X_test<=bins[i+1]))
@@ -476,6 +476,9 @@ fig = plt.figure()
 hete_coverage.T.plot.bar(figsize=(12, 4), alpha=0.7)
 plt.axhline(0.95, ls="--", color="k")
 plt.ylabel("Conditional coverage")
+plt.xlabel("x bins")
+plt.xticks(rotation=0)
+plt.ylim(0.8, 1.0)
 plt.legend(loc=[1, 0])
 ```
 

@@ -91,8 +91,12 @@ class MapieQuantileRegressor(MapieRegressor):
     >>> y_train = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> X_calib = np.array([[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]])
     >>> y_calib = np.array([5, 7, 9, 4, 8, 1, 5, 7.5, 9.5, 12])
-    >>> mapie_reg = MapieQuantileRegressor()
-    >>> mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+    >>> mapie_reg = MapieQuantileRegressor().fit(
+    ...     X_train,
+    ...     y_train,
+    ...     X_calib=X_calib,
+    ...     y_calib=y_calib
+    ... )
     >>> y_pred, y_pis = mapie_reg.predict(X_train)
     >>> print(y_pis[:, :, 0])
     [[-8.16666667 19.        ]
@@ -381,7 +385,6 @@ class MapieQuantileRegressor(MapieRegressor):
                     test_size=calib_size
                 )
             else:
-
                 X_train, X_calib, y_train, y_calib = train_test_split(
                     X,
                     y,
