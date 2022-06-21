@@ -76,18 +76,21 @@ STRATEGIES = {
     "quantile_alpha2": Params(method="quantile", alpha=0.2),
     "quantile_alpha3": Params(method="quantile", alpha=0.3),
     "quantile_alpha4": Params(method="quantile", alpha=0.4),
+    "quantile_alpha8": Params(method="quantile", alpha=0.8),
     }
 
 WIDTHS = {
     "quantile_alpha2": 2.7360884795455576,
     "quantile_alpha3": 2.185652142101473,
     "quantile_alpha4": 1.731718678152845,
+    "quantile_alpha8": 0.66909752420949,
 }
 
 COVERAGES = {
     "quantile_alpha2": 0.834,
     "quantile_alpha3": 0.738,
     "quantile_alpha4": 0.646,
+    "quantile_alpha8": 0.264,
 }
 
 
