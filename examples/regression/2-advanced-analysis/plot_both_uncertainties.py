@@ -11,7 +11,6 @@ from typing import Any, Callable, Tuple, TypeVar
 
 import numpy as np
 from sklearn.linear_model import LinearRegression, QuantileRegressor
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
@@ -22,6 +21,7 @@ from mapie.subsample import Subsample
 from mapie._typing import NDArray
 
 F = TypeVar("F", bound=Callable[..., Any])
+random_state = 42
 
 
 # Functions for generating our dataset
@@ -60,7 +60,7 @@ def get_1d_data_with_normal_distrib(
         [3]: y_test
         [4]: y_mesh
     """
-    np.random.seed(42)
+    np.random.seed(random_state)
     X_train = np.random.normal(mu, sigma, n_samples)
     X_test = np.arange(mu - 4 * sigma, mu + 4 * sigma, sigma / 20.0)
     y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
@@ -114,21 +114,8 @@ for strategy, params in STRATEGIES.items():
             polyn_model_quant,
             **params
         )
-        X_train, X_calib, y_train, y_calib = train_test_split(
-            X_train,
-            y_train,
-            test_size=0.3,
-            random_state=1
-        )
-        mapie.fit(
-            X_train,
-            y_train,
-            X_calib=X_calib,
-            y_calib=y_calib
-        )
-        y_pred[strategy], y_pis[strategy] = mapie.predict(
-            X_test
-        )
+        mapie.fit(X_train, y_train, random_state=random_state)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:
         mapie = MapieRegressor(polyn_model, **params)  # type: ignore
         mapie.fit(X_train, y_train)

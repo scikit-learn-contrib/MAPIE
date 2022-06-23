@@ -456,7 +456,6 @@ heteroscedastic_coverage = get_heteroscedastic_coverage(y_test, y_pis, STRATEGIE
 fig = plt.figure()
 heteroscedastic_coverage.T.plot.bar(figsize=(12, 4), alpha=0.7)
 plt.axhline(0.95, ls="--", color="k")
-plt.ylim([0.8, 1])
 plt.ylabel("Conditional coverage")
 plt.xlabel("x bins")
 plt.xticks(rotation=0)

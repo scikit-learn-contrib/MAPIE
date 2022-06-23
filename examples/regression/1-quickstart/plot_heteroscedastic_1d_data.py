@@ -15,7 +15,6 @@ from typing import Tuple
 import scipy
 import numpy as np
 from sklearn.linear_model import LinearRegression, QuantileRegressor
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from matplotlib import pyplot as plt
@@ -24,6 +23,8 @@ from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
 from mapie.subsample import Subsample
 from mapie._typing import NDArray
+
+random_state = 42
 
 
 def f(x: NDArray) -> NDArray:
@@ -59,7 +60,7 @@ def get_heteroscedastic_data(
         [3]: y_true
         [4]: y_true_sigma
     """
-    np.random.seed(59)
+    np.random.seed(random_state)
     q95 = scipy.stats.norm.ppf(0.95)
     X_train = np.linspace(0, 1, n_train)
     X_true = np.linspace(0, 1, n_true)
@@ -158,22 +159,8 @@ for i, (strategy, params) in enumerate(STRATEGIES.items()):
             polyn_model_quant,
             **params
         )
-        X_train_split, X_calib, y_train_spit, y_calib = train_test_split(
-            X_train,
-            y_train,
-            test_size=0.3,
-            random_state=1
-        )
-        mapie.fit(
-            X_train_split.reshape(-1, 1),
-            y_train_spit,
-            X_calib=X_calib.reshape(-1, 1),
-            y_calib=y_calib
-        )
-        y_pred, y_pis = mapie.predict(
-            X_test.reshape(-1, 1)
-        )
-        X_train, y_train = X_train_split, y_train_spit
+        mapie.fit(X_train.reshape(-1, 1), y_train, random_state=random_state)
+        y_pred, y_pis = mapie.predict(X_test.reshape(-1, 1))
     else:
         mapie = MapieRegressor(  # type: ignore
             polyn_model,

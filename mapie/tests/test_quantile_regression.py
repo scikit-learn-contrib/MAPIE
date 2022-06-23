@@ -429,7 +429,10 @@ def test_calib_dataset_is_none_with_sample_weight() -> None:
 
 
 def test_calib_dataset_is_none_vs_defined() -> None:
-    """Test that the fit method works when X_calib or y_calib is None."""
+    """
+    Test that for the same results whether you split before
+    or in the fit method.
+    """
     mapie = MapieQuantileRegressor()
     mapie_defined = clone(mapie)
     mapie.fit(X, y, calib_size=0.5, random_state=random_state)
