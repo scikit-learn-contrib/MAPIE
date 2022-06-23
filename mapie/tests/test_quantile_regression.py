@@ -360,17 +360,6 @@ def test_wrong_alphas_types(alphas: float) -> None:
         mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
 
 
-def test_alpha_in_predict() -> None:
-    """Checking for alpha in predict"""
-    with pytest.raises(
-        ValueError,
-        match=r".*Alpha should not be specified in the prediction*",
-    ):
-        mapie_reg = MapieQuantileRegressor()
-        mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
-        mapie_reg.predict(X, alpha=0.2)
-
-
 @pytest.mark.parametrize("alphas", [1.0, 1.6, 1.95, 5.0, -0.1, -0.001, -10.0])
 def test_wrong_alphas(alphas: float) -> None:
     """Checking for alphas values that are too big according to all value."""
@@ -422,14 +411,14 @@ def test_valid_cv(cv: Any) -> None:
     )
 
 
-def test_X_calib_isNone() -> None:
+def test_calib_dataset_is_none() -> None:
     """Test that the fit method works when X_calib or y_calib is None."""
     mapie = MapieQuantileRegressor()
     mapie.fit(X, y, calib_size=0.5)
     mapie.predict(X)
 
 
-def test_X_calib_isNone_with_sample_weight() -> None:
+def test_calib_dataset_is_none_with_sample_weight() -> None:
     """
     Test that the fit method works with calib dataset defined is None
     with sample weights.
@@ -437,6 +426,18 @@ def test_X_calib_isNone_with_sample_weight() -> None:
     mapie = MapieQuantileRegressor()
     mapie.fit(X, y, calib_size=0.5, sample_weight=np.ones(X.shape[0]))
     mapie.predict(X)
+
+
+def test_calib_dataset_is_none_vs_defined() -> None:
+    """Test that the fit method works when X_calib or y_calib is None."""
+    mapie = MapieQuantileRegressor()
+    mapie_defined = clone(mapie)
+    mapie.fit(X, y, calib_size=0.5, random_state=random_state)
+    mapie_defined.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+    y_pred, y_pis = mapie.predict(X)
+    y_pred_defined, y_pis_defined = mapie_defined.predict(X)
+    np.testing.assert_allclose(y_pred, y_pred_defined, rtol=1e-2)
+    np.testing.assert_allclose(y_pis, y_pis_defined, rtol=1e-2)
 
 
 @pytest.mark.parametrize("est", [RandomForestClassifier(), LinearRegression()])

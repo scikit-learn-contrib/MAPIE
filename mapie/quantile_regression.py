@@ -19,6 +19,7 @@ from .utils import (
     check_null_weight,
     fit_estimator,
     check_lower_upper_bounds,
+    check_defined_variables_predict_cqr,
 )
 from ._compatibility import np_quantile
 from .regression import MapieRegressor
@@ -321,6 +322,106 @@ class MapieQuantileRegressor(MapieRegressor):
                 "Invalid cv method, only valid method is ``split``."
             )
 
+    def _check_calib_set(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        X_calib: Optional[ArrayLike] = None,
+        y_calib: Optional[ArrayLike] = None,
+        calib_size: Optional[float] = 0.3,
+        random_state: Optional[Union[int, None]] = None,
+        shuffle: Optional[bool] = True,
+        stratify: Optional[ArrayLike] = None,
+    ) -> Tuple[
+        ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]
+    ]:
+        """_summary_
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Training data.
+        y : ArrayLike of shape (n_samples,)
+            Training labels.
+        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for fitting the out-of-fold models.
+            If None, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no residuals.
+            If weights are non-uniform, residuals are still uniformly weighted.
+            Note that the sample weight defined are only for the training, not
+            for the calibration procedure.
+            By default ``None``.
+        X_calib : Optional[ArrayLike] of shape (n_calib_samples, n_features)
+            Calibration data.
+        y_calib : Optional[ArrayLike] of shape (n_calib_samples,)
+            Calibration labels.
+        calib_size : Optional[float]
+            If X_calib and y_calib are not defined, then the calibration
+            dataset is created with the split defined by calib_size.
+        random_state : int, RandomState instance or None, default=None
+            For the ``sklearn.model_selection.train_test_split`` documentation.
+            Controls the shuffling applied to the data before applying the
+            split.
+            Pass an int for reproducible output across multiple function calls.
+            See :term:`Glossary <random_state>`.
+        shuffle : bool, default=True
+            For the ``sklearn.model_selection.train_test_split`` documentation.
+            Whether or not to shuffle the data before splitting.
+            If shuffle=False
+            then stratify must be None.
+        stratify : array-like, default=None
+            For the ``sklearn.model_selection.train_test_split`` documentation.
+            If not None, data is split in a stratified fashion, using this as
+            the class labels.
+            Read more in the :ref:`User Guide <stratification>`.
+
+        Returns
+        -------
+        Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]
+            - [0]: ArrayLike, X_train
+            - [1]: ArrayLike, X_calib
+            - [2]: ArrayLike, y_train
+            - [3]: ArrayLike, y_calib
+            - [4]: ArrayLike, sample_weight_train
+        """
+        if X_calib is None or y_calib is None:
+            if sample_weight is None:
+                X_train, X_calib, y_train, y_calib = train_test_split(
+                        X,
+                        y,
+                        test_size=calib_size,
+                        random_state=random_state,
+                        shuffle=shuffle,
+                        stratify=stratify
+                )
+                sample_weight_train = sample_weight
+            else:
+                (
+                        X_train,
+                        X_calib,
+                        y_train,
+                        y_calib,
+                        sample_weight_train,
+                        _,
+                ) = train_test_split(
+                        X,
+                        y,
+                        sample_weight,
+                        test_size=calib_size,
+                        random_state=random_state,
+                        shuffle=shuffle,
+                        stratify=stratify
+                )
+        else:
+            X_train, y_train, sample_weight_train = X, y, sample_weight
+        X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
+        y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
+        sample_weight_train = cast(ArrayLike, sample_weight_train)
+        return X_train, y_train, X_calib, y_calib, sample_weight_train
+
     def fit(
         self,
         X: ArrayLike,
@@ -329,6 +430,9 @@ class MapieQuantileRegressor(MapieRegressor):
         X_calib: Optional[ArrayLike] = None,
         y_calib: Optional[ArrayLike] = None,
         calib_size: Optional[float] = 0.3,
+        random_state: Optional[Union[int, None]] = None,
+        shuffle: Optional[bool] = True,
+        stratify: Optional[ArrayLike] = None,
     ) -> MapieQuantileRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
@@ -344,10 +448,6 @@ class MapieQuantileRegressor(MapieRegressor):
             Training data.
         y : ArrayLike of shape (n_samples,)
             Training labels.
-        X_calib : ArrayLike of shape (n_calib_samples, n_features)
-            Calibration data.
-        y_calib : ArrayLike of shape (n_calib_samples,)
-            Calibration labels.
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
             If None, then samples are equally weighted.
@@ -355,8 +455,32 @@ class MapieQuantileRegressor(MapieRegressor):
             their corresponding observations are removed
             before the fitting process and hence have no residuals.
             If weights are non-uniform, residuals are still uniformly weighted.
-
+            Note that the sample weight defined are only for the training, not
+            for the calibration procedure.
             By default ``None``.
+        X_calib : Optional[ArrayLike] of shape (n_calib_samples, n_features)
+            Calibration data.
+        y_calib : Optional[ArrayLike] of shape (n_calib_samples,)
+            Calibration labels.
+        calib_size : Optional[float]
+            If X_calib and y_calib are not defined, then the calibration
+            dataset is created with the split defined by calib_size.
+        random_state : int, RandomState instance or None, default=None
+            For the ``sklearn.model_selection.train_test_split`` documentation.
+            Controls the shuffling applied to the data before applying the
+            split.
+            Pass an int for reproducible output across multiple function calls.
+            See :term:`Glossary <random_state>`.
+        shuffle : bool, default=True
+            For the ``sklearn.model_selection.train_test_split`` documentation.
+            Whether or not to shuffle the data before splitting.
+            If shuffle=False
+            then stratify must be None.
+        stratify : array-like, default=None
+            For the ``sklearn.model_selection.train_test_split`` documentation.
+            If not None, data is split in a stratified fashion, using this as
+            the class labels.
+            Read more in the :ref:`User Guide <stratification>`.
 
         Returns
         -------
@@ -369,33 +493,20 @@ class MapieQuantileRegressor(MapieRegressor):
         alpha = self._check_alpha(self.alpha)
         self.cv = self._check_cv(cast(str, self.cv))
         X, y = indexable(X, y)
-        if X_calib is None or y_calib is None:
-            if sample_weight is not None:
-                (
-                    X_train,
-                    X_calib,
-                    y_train,
-                    y_calib,
-                    sample_weight_train,
-                    _,
-                ) = train_test_split(
-                    X,
-                    y,
-                    sample_weight,
-                    test_size=calib_size
-                )
-            else:
-                X_train, X_calib, y_train, y_calib = train_test_split(
-                    X,
-                    y,
-                    test_size=calib_size
-                )
-                sample_weight_train = sample_weight
-        else:
-            X_train, y_train, sample_weight_train = X, y, sample_weight
+        X_train, y_train, X_calib, y_calib, sample_weight_train = self._check_calib_set(
+            X,
+            y,
+            sample_weight,
+            X_calib,
+            y_calib,
+            calib_size,
+            random_state,
+            shuffle,
+            stratify,
+        )
         X_train, y_train = indexable(X_train, y_train)
         X_calib, y_calib = indexable(X_calib, y_calib)
-        y, y_calib = _check_y(y), _check_y(y_calib)
+        y_train, y_calib = _check_y(y_train), _check_y(y_calib)
         self.n_calib_samples = _num_samples(y_calib)
         check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
         sample_weight_train, X_train, y_train = check_null_weight(
@@ -467,6 +578,12 @@ class MapieQuantileRegressor(MapieRegressor):
         ----------
         X : ArrayLike of shape (n_samples, n_features)
             Test data.
+        ensemble : bool
+            Ensemble has not been defined in predict and therefore should
+            will not have any effects in this method.
+        alpha : Optional[Union[float, Iterable[float]]]
+            For ``MapieQuantileRegresor`` the alpha has to be defined
+            directly in initial arguments of the class.
         symmetry : Optional[bool], optional
             Deciding factor to whether to find the quantile value for
             each residuals separatly or to use the maximum of the two
@@ -486,11 +603,7 @@ class MapieQuantileRegressor(MapieRegressor):
             - [:, 1, :]: Upper bound of the prediction interval.
         """
         check_is_fitted(self, self.fit_attributes)
-        if alpha is not None:
-            raise ValueError(
-                "Alpha should not be specified in the prediction method"
-                + "with CQR"
-            )
+        check_defined_variables_predict_cqr(ensemble, alpha)
         alpha = self.alpha if symmetry else self.alpha/2
         check_alpha_and_n_samples(alpha, self.n_calib_samples)
 
