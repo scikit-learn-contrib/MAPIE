@@ -241,6 +241,58 @@ Note that this means that using the split method will require to run three separ
 to estimate the prediction intervals.
 
 
+9. The ensemble batch prediction intervals (EnbPI) method
+=========================================================
+
+The coverage guarantee offered by the various resampling methods based on the
+jackknife strategy, and implemented in MAPIE, are only valid under the "exchangeability
+hypothesis". It means that the probability law of data should not change up to
+reordering.
+This hypothesis is not revelant in many cases, notably for dynamical times series.
+That is why a specific class is needed, namely
+:class:`mapie.time_series_regression.MapieTimeSeriesRegressor`.
+
+Its implementation looks like the jackknife+-after-bootstrap method. The
+leave-one-out (LOO) estimators are approximated thanks to a few boostraps.
+However the confidence intervals are like those of the jackknife method.
+
+.. math::
+  \hat{C}_{n, \alpha}^{\rm EnbPI}(X_{n+1}) = [\hat{\mu}_{agg}(X_{n+1}) + \hat{q}_{n, \beta}\{ R_i^{\rm LOO} \}, \hat{\mu}_{agg}(X_{n+1}) + \hat{q}_{n, (1 - \alpha + \beta)}\{ R_i^{\rm LOO} \}]
+where :math:`\hat{\mu}_{agg}(X_{n+1})` is the aggregation of the predictions of
+the LOO estimators (mean or median), and
+:math:`R_i^{\rm LOO} = |Y_i - \hat{\mu}_{-i}(X_{i})|` 
+is the residual of the LOO estimator :math:`\hat{\mu}_{-i}` at :math:`X_{i}`.
+
+The residuals are no longer considered in absolute values but in relative
+values and the width of the confidence intervals are minimized, up to a given gap
+between the quantiles' level, optimizing the parameter :math:`\beta`.
+
+Moreover, the residuals are updated during the prediction, each time new observations 
+are available. So that the deterioration of predictions, or the increase of
+noise level, can be dynamically taken into account.
+
+Finally, the coverage guarantee is no longer absolute but asymptotic up to two
+hypotheses:
+
+1. Errors are short-term independent and identically distributed (i.i.d)
+
+2. Estimation quality: there exists a real sequence :math:`(\delta_T)_{T > 0}`
+that converges to zero such that
+
+.. math::
+    \frac{1}{T}\sum_1^T(\hat{\mu}_{-t}(x_t) - \mu(x_t))^2 < \delta_T^2
+
+The coverage level depends on the size of the training set and on 
+:math:`(\delta_T)_{T > 0}`.
+
+Be careful: the bigger the training set, the better the covering guarantee
+for the point following the training set. However, if the residuals are
+updated gradually, but the model is not refitted, the bigger the training set
+is, the slower the update of the residuals is effective. Therefore there is  a
+compromise to take on the number of training samples to fit the model and
+update the prediction intervals.
+
+
 Key takeaways
 =============
 
@@ -266,6 +318,9 @@ Key takeaways
   theoretical and practical coverages due to the larger widths of the prediction intervals.
   It is therefore advised to use them when conservative estimates are needed.
 
+- If the "exchangeability hypothesis" is not valid, typically for time series,
+  use EnbPI, and update the residuals each time new observations are available.
+
 The table below summarizes the key features of each method by focusing on the obtained coverages and the
 computational cost. :math:`n`, :math:`n_{\rm test}`, and :math:`K` are the number of training samples,
 test samples, and cross-validated folds, respectively.
@@ -289,3 +344,7 @@ References
 
 [3] Yaniv Romano, Evan Patterson, Emmanuel J. Candès.
 "Conformalized Quantile Regression." Advances in neural information processing systems 32 (2019).
+
+[7] Chen Xu and Yao Xie. 
+"Conformal Prediction Interval for Dynamic Time-Series."
+International Conference on Machine Learning (ICML, 2021).

@@ -15,6 +15,7 @@
    theoretical_description_regression
    tutorial_regression
    examples_regression/index
+   notebooks_regression
 
 .. toctree::
    :maxdepth: 2
