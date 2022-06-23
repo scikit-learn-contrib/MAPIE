@@ -144,13 +144,7 @@ prediction intervals.
     for strategy, params in STRATEGIES.items():
         if strategy == "conformalized_quantile_regression":
             mapie = MapieQuantileRegressor(polyn_model_quant, **params)
-            X_train, X_calib, y_train, y_calib = train_test_split(
-                X_train,
-                y_train,
-                test_size=0.3,
-                random_state=1
-            )
-            mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+            mapie.fit(X_train, y_train, random_state=1)
             y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
         else:  
             mapie = MapieRegressor(polyn_model, **params)
@@ -462,13 +456,7 @@ prediction intervals.
     for strategy, params in STRATEGIES.items():
         if strategy == "conformalized_quantile_regression":
             mapie = MapieQuantileRegressor(polyn_model_quant, **params)
-            X_train, X_calib, y_train, y_calib = train_test_split(
-                X_train,
-                y_train,
-                test_size=0.3,
-                random_state=1
-            )
-            mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+            mapie.fit(X_train, y_train, random_state=1)
             y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
         else:  
             mapie = MapieRegressor(polyn_model, **params)
@@ -589,6 +577,7 @@ next figure.
     fig = plt.figure()
     heteroscedastic_coverage.T.plot.bar(figsize=(12, 4), alpha=0.7)
     plt.axhline(0.95, ls="--", color="k")
+    plt.ylim([0.8, 1])
     plt.ylabel("Conditional coverage")
     plt.xlabel("x bins")
     plt.xticks(rotation=0)
@@ -793,13 +782,7 @@ strategies.
     for strategy, params in STRATEGIES.items():
         if strategy == "conformalized_quantile_regression":
             mapie = MapieQuantileRegressor(polyn_model_quant, **params)
-            X_train, X_calib, y_train, y_calib = train_test_split(
-                X_train,
-                y_train,
-                test_size=0.3,
-                random_state=1
-            )
-            mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+            mapie.fit(X_train, y_train, random_state=1)
             y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
         else:  
             mapie = MapieRegressor(polyn_model, **params)
@@ -1071,7 +1054,6 @@ method and compare their prediction interval.
 
 .. parsed-literal::
 
-    Metal device set to: Apple M1
 
 
 .. code-block:: python

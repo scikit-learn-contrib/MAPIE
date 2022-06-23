@@ -6,6 +6,7 @@ from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import QuantileRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
+from sklearn.utils import check_random_state
 from sklearn.utils.validation import (
     indexable,
     check_is_fitted,
@@ -330,53 +331,18 @@ class MapieQuantileRegressor(MapieRegressor):
         X_calib: Optional[ArrayLike] = None,
         y_calib: Optional[ArrayLike] = None,
         calib_size: Optional[float] = 0.3,
-        random_state: Optional[Union[int, None]] = None,
+        random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
     ) -> Tuple[
         ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]
     ]:
-        """_summary_
+        """
+        HPUT SOMETHING
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
-            Training data.
-        y : ArrayLike of shape (n_samples,)
-            Training labels.
-        sample_weight : Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If None, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
-            Note that the sample weight defined are only for the training, not
-            for the calibration procedure.
-            By default ``None``.
-        X_calib : Optional[ArrayLike] of shape (n_calib_samples, n_features)
-            Calibration data.
-        y_calib : Optional[ArrayLike] of shape (n_calib_samples,)
-            Calibration labels.
-        calib_size : Optional[float]
-            If X_calib and y_calib are not defined, then the calibration
-            dataset is created with the split defined by calib_size.
-        random_state : int, RandomState instance or None, default=None
-            For the ``sklearn.model_selection.train_test_split`` documentation.
-            Controls the shuffling applied to the data before applying the
-            split.
-            Pass an int for reproducible output across multiple function calls.
-            See :term:`Glossary <random_state>`.
-        shuffle : bool, default=True
-            For the ``sklearn.model_selection.train_test_split`` documentation.
-            Whether or not to shuffle the data before splitting.
-            If shuffle=False
-            then stratify must be None.
-        stratify : array-like, default=None
-            For the ``sklearn.model_selection.train_test_split`` documentation.
-            If not None, data is split in a stratified fashion, using this as
-            the class labels.
-            Read more in the :ref:`User Guide <stratification>`.
+        Same definition of parameters as for the ``fit`` method.
 
         Returns
         -------
@@ -430,7 +396,7 @@ class MapieQuantileRegressor(MapieRegressor):
         X_calib: Optional[ArrayLike] = None,
         y_calib: Optional[ArrayLike] = None,
         calib_size: Optional[float] = 0.3,
-        random_state: Optional[Union[int, None]] = None,
+        random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
     ) -> MapieQuantileRegressor:
@@ -493,7 +459,8 @@ class MapieQuantileRegressor(MapieRegressor):
         alpha = self._check_alpha(self.alpha)
         self.cv = self._check_cv(cast(str, self.cv))
         X, y = indexable(X, y)
-        X_train, y_train, X_calib, y_calib, sample_weight_train = self._check_calib_set(
+        random_state = check_random_state(random_state)
+        results = self._check_calib_set(
             X,
             y,
             sample_weight,
@@ -504,6 +471,7 @@ class MapieQuantileRegressor(MapieRegressor):
             shuffle,
             stratify,
         )
+        X_train, y_train, X_calib, y_calib, sample_weight_train = results
         X_train, y_train = indexable(X_train, y_train)
         X_calib, y_calib = indexable(X_calib, y_calib)
         y_train, y_calib = _check_y(y_train), _check_y(y_calib)

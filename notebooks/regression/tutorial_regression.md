@@ -152,13 +152,7 @@ y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "conformalized_quantile_regression":
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
-        X_train, X_calib, y_train, y_calib = train_test_split(
-            X_train,
-            y_train,
-            test_size=0.3,
-            random_state=1
-        )
-        mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+        mapie.fit(X_train, y_train, random_state=1)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:  
         mapie = MapieRegressor(polyn_model, **params)
@@ -364,13 +358,7 @@ y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "conformalized_quantile_regression":
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
-        X_train, X_calib, y_train, y_calib = train_test_split(
-            X_train,
-            y_train,
-            test_size=0.3,
-            random_state=1
-        )
-        mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+        mapie.fit(X_train, y_train, random_state=1)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:  
         mapie = MapieRegressor(polyn_model, **params)
@@ -570,13 +558,7 @@ y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "conformalized_quantile_regression":
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
-        X_train, X_calib, y_train, y_calib = train_test_split(
-            X_train,
-            y_train,
-            test_size=0.3,
-            random_state=1
-        )
-        mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+        mapie.fit(X_train, y_train, random_state=1)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:  
         mapie = MapieRegressor(polyn_model, **params)

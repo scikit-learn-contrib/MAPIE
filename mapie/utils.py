@@ -544,6 +544,8 @@ def check_defined_variables_predict_cqr(
 
     Examples
     --------
+    >>> import warnings
+    >>> warnings.filterwarnings("error")
     >>> from mapie.utils import check_defined_variables_predict_cqr
     >>> try:
     ...     check_defined_variables_predict_cqr(True, None)
