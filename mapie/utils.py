@@ -522,7 +522,7 @@ def check_defined_variables_predict_cqr(
 ) -> None:
     """
     Check that the parameters defined for the predict method
-    of the conformalized quantile regression are correct.
+    of ``MapieQuantileRegressor`` are correct.
 
     Parameters
     ----------

@@ -338,7 +338,8 @@ class MapieQuantileRegressor(MapieRegressor):
         ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]
     ]:
         """
-        HPUT SOMETHING
+        Check if a calibration set has already been defined, if not, then
+        we define one using the `train_test_split` method.
 
         Parameters
         ----------
@@ -347,11 +348,17 @@ class MapieQuantileRegressor(MapieRegressor):
         Returns
         -------
         Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]
-            - [0]: ArrayLike, X_train
-            - [1]: ArrayLike, X_calib
-            - [2]: ArrayLike, y_train
-            - [3]: ArrayLike, y_calib
-            - [4]: ArrayLike, sample_weight_train
+            - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)
+                X_train
+            - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)
+                y_train
+            - [2]: ArrayLike of shape (n_samples_*calib_size, n_features)
+                X_calib
+            - [3]: ArrayLike of shape (n_samples_*calib_size,)
+                y_calib
+            - [4]: ArrayLike of shape (n_samples_,)
+                sample_weight_train
+
         """
         if X_calib is None or y_calib is None:
             if sample_weight is None:
