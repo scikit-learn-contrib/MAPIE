@@ -44,7 +44,7 @@ single-output regression or multi-class classification settings.
 
 Prediction intervals output by **MAPIE** encompass both aleatoric and epistemic
 uncertainties and are backed by strong theoretical guarantees thanks to conformal
-prediction methods [1-5].
+prediction methods [1-7].
 
 
 🔗 Requirements
