@@ -398,7 +398,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         - [0]: RegressorMixin, fitted estimator
         - [1]: NDArray of shape (n_samples_val,),
           estimator predictions on the validation fold.
-        - [3]: ArrayLike of shape (n_samples_val,),
+        - [2]: ArrayLike of shape (n_samples_val,),
           validation data indices.
         """
         X_train = _safe_indexing(X, train_index)

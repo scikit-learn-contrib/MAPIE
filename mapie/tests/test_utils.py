@@ -18,6 +18,7 @@ from mapie.utils import (
     fit_estimator,
     check_lower_upper_bounds,
 )
+from mapie.quantile_regression import MapieQuantileRegressor
 
 from mapie._typing import ArrayLike
 
@@ -220,3 +221,22 @@ def test_final1D_low_high_pred() -> None:
     y_pred_up = np.array([3, 4, 4])
     with pytest.warns(UserWarning, match=r"WARNING: Following the addition*"):
         check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
+
+
+def test_ensemble_in_predict() -> None:
+    """Checking for ensemble defined in predict of CQR"""
+    mapie_reg = MapieQuantileRegressor()
+    mapie_reg.fit(X, y)
+    with pytest.warns(
+        UserWarning,
+        match=r"WARNING: Alpha should not be specified in the prediction*"
+    ):
+        mapie_reg.predict(X, alpha=0.2)
+
+
+def test_alpha_in_predict() -> None:
+    """Checking for alpha defined in predict of CQR"""
+    mapie_reg = MapieQuantileRegressor()
+    mapie_reg.fit(X, y)
+    with pytest.warns(UserWarning, match=r"WARNING: ensemble is not util*"):
+        mapie_reg.predict(X, ensemble=True)

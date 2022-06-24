@@ -514,3 +514,52 @@ def check_conformity_score(
             "Invalid conformity_score argument.\n"
             "Must be None or a ConformityScore instance."
         )
+
+
+def check_defined_variables_predict_cqr(
+    ensemble: bool,
+    alpha: Union[float, Iterable[float], None],
+) -> None:
+    """
+    Check that the parameters defined for the predict method
+    of ``MapieQuantileRegressor`` are correct.
+
+    Parameters
+    ----------
+    ensemble : bool
+        Ensemble has not been defined in predict and therefore should
+        will not have any effects in this method.
+    alpha : Optional[Union[float, Iterable[float]]]
+        For ``MapieQuantileRegresor`` the alpha has to be defined
+        directly in initial arguments of the class.
+
+    Raises
+    ------
+    Warning
+        If the ensemble value is defined in the predict function
+        of ``MapieQuantileRegressor``.
+    Warning
+        If the alpha value is defined in the predict function
+        of ``MapieQuantileRegressor``.
+
+    Examples
+    --------
+    >>> import warnings
+    >>> warnings.filterwarnings("error")
+    >>> from mapie.utils import check_defined_variables_predict_cqr
+    >>> try:
+    ...     check_defined_variables_predict_cqr(True, None)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    WARNING: ensemble is not utilized in ``MapieQuantileRegressor``.
+    """
+    if ensemble is True:
+        warnings.warn(
+            "WARNING: ensemble is not utilized in ``MapieQuantileRegressor``."
+        )
+    if alpha is not None:
+        warnings.warn(
+            "WARNING: Alpha should not be specified in the prediction method\n"
+            + "with conformalized quantile regression."
+        )

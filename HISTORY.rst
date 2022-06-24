@@ -2,7 +2,7 @@
 History
 =======
 
-0.3.3 (2022-XX-XX)
+0.4.0 (2022-06-24)
 ------------------
 * Relax and fix typing
 * Add Split Conformal Quantile Regression
