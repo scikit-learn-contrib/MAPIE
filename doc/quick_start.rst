@@ -29,7 +29,7 @@ To install directly from the github repository :
 
 .. code:: python
 
-    pip install git+https://github.com/simai-ml/MAPIE
+    pip install git+https://github.com/scikit-learn-contrib/MAPIE
 
 
 2. Run MapieRegressor
