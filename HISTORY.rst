@@ -4,6 +4,7 @@ History
 
 0.4.0 (2022-06-24)
 ------------------
+
 * Relax and fix typing
 * Add Split Conformal Quantile Regression
 * Add EnbPI method for Time Series Regression
@@ -11,6 +12,7 @@ History
 
 0.3.2 (2022-03-11)
 ------------------
+
 * Refactorize unit tests
 * Add "naive" and "top-k" methods in MapieClassifier
 * Include J+aB method in regression tutorial
