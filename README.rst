@@ -76,7 +76,7 @@ To install directly from the github repository :
 
 .. code:: sh
 
-    $ pip install git+https://github.com/simai-ml/MAPIE
+    $ pip install git+https://github.com/scikit-learn-contrib/MAPIE
 
 
 ⚡️ Quickstart
