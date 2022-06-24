@@ -48,7 +48,7 @@ optimistic and under-estimates the width of prediction intervals because of a po
 As a result, the probability that a new point lies in the interval given by the 
 naive method would be lower than the target level :math:`(1-\alpha)`.
 
-The figure below illustrates the Naive method. 
+The figure below illustrates the naive method. 
 
 .. image:: images/jackknife_naive.png
    :width: 200
@@ -237,8 +237,8 @@ residuals of the estimator fitted on the calibration set. Note that in the symme
 As justified by [3], this method offers a theoretical guarantee of the target coverage 
 level :math:`1-\alpha`.
 
-Note that this means that using the split method will require to run three separate regressions
-to estimate the prediction intervals.
+Note that only the split method has been implemented and that it will run three separate 
+regressions when using :class:`mapie.quantile_regression.MapieQuantileRegressor`.
 
 
 9. The ensemble batch prediction intervals (EnbPI) method
@@ -261,7 +261,7 @@ However the confidence intervals are like those of the jackknife method.
 where :math:`\hat{\mu}_{agg}(X_{n+1})` is the aggregation of the predictions of
 the LOO estimators (mean or median), and
 :math:`R_i^{\rm LOO} = |Y_i - \hat{\mu}_{-i}(X_{i})|` 
-is the residual of the LOO estimator :math:`\hat{\mu}_{-i}` at :math:`X_{i}`.
+is the residual of the LOO estimator :math:`\hat{\mu}_{-i}` at :math:`X_{i}` [4].
 
 The residuals are no longer considered in absolute values but in relative
 values and the width of the confidence intervals are minimized, up to a given gap
@@ -277,7 +277,7 @@ hypotheses:
 1. Errors are short-term independent and identically distributed (i.i.d)
 
 2. Estimation quality: there exists a real sequence :math:`(\delta_T)_{T > 0}`
-that converges to zero such that
+  that converges to zero such that
 
 .. math::
     \frac{1}{T}\sum_1^T(\hat{\mu}_{-t}(x_t) - \mu(x_t))^2 < \delta_T^2
@@ -288,8 +288,8 @@ The coverage level depends on the size of the training set and on
 Be careful: the bigger the training set, the better the covering guarantee
 for the point following the training set. However, if the residuals are
 updated gradually, but the model is not refitted, the bigger the training set
-is, the slower the update of the residuals is effective. Therefore there is  a
-compromise to take on the number of training samples to fit the model and
+is, the slower the update of the residuals is effective. Therefore there is a
+compromise to make on the number of training samples to fit the model and
 update the prediction intervals.
 
 
@@ -318,6 +318,9 @@ Key takeaways
   theoretical and practical coverages due to the larger widths of the prediction intervals.
   It is therefore advised to use them when conservative estimates are needed.
 
+- The conformalized quantile regression method allows for more adaptiveness on the prediction 
+  intervals which becomes key when faced with heteroscedastic data.
+
 - If the "exchangeability hypothesis" is not valid, typically for time series,
   use EnbPI, and update the residuals each time new observations are available.
 
@@ -345,6 +348,6 @@ References
 [3] Yaniv Romano, Evan Patterson, Emmanuel J. Candès.
 "Conformalized Quantile Regression." Advances in neural information processing systems 32 (2019).
 
-[7] Chen Xu and Yao Xie. 
+[4] Chen Xu and Yao Xie. 
 "Conformal Prediction Interval for Dynamic Time-Series."
 International Conference on Machine Learning (ICML, 2021).

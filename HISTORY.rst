@@ -4,13 +4,17 @@ History
 
 0.4.0 (2022-06-24)
 ------------------
+
 * Relax and fix typing
 * Add Split Conformal Quantile Regression
 * Add EnbPI method for Time Series Regression
 * Add EnbPI Documentation
+* Add example with heteroscedastic data
+* Add `ConformityScore` class that allows the user to define custom conformity scores
 
 0.3.2 (2022-03-11)
 ------------------
+
 * Refactorize unit tests
 * Add "naive" and "top-k" methods in MapieClassifier
 * Include J+aB method in regression tutorial

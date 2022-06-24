@@ -19,7 +19,7 @@ The figure below illustrates the three methods implemented in MAPIE:
 For a classification problem in a standard independent and identically distributed (i.i.d) case,
 our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`` has an unknown distribution :math:`P_{X, Y}`. 
 
-For any risk level :math:`\alpha` between 0 and 1, the methods implemented in MAPIE allow the user construct a prediction
+For any risk level :math:`\alpha` between 0 and 1, the methods implemented in MAPIE allow the user to construct a prediction
 set :math:`\hat{C}_{n, \alpha}(X_{n+1})` for a new observation :math:`\left( X_{n+1},Y_{n+1} \right)` with a guarantee
 on the marginal coverage such that : 
 
@@ -27,8 +27,8 @@ on the marginal coverage such that :
     P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \} \geq 1 - \alpha
 
 
-In words, for a typical risk level $\alpha$ of $10 \%$, we want to construct prediction sets that contain the true observations
-for at least $90 \%$ of the new test data points.
+In words, for a typical risk level :math:`\alpha` of :math:`10 \%`, we want to construct prediction sets that contain the true observations
+for at least :math:`90 \%` of the new test data points.
 Note that the guarantee is possible only on the marginal coverage, and not on the conditional coverage
 :math:`P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) | X_{n+1} = x_{n+1} \}` which depends on the location of the new test point in the distribution. 
 
