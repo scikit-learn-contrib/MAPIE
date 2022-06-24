@@ -27,8 +27,8 @@ on the marginal coverage such that :
     P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \} \geq 1 - \alpha
 
 
-In words, for a typical risk level :math:`\alpha`` of :math:`10 \%`, we want to construct prediction sets that contain the true observations
-for at least :math:`90 \%`` of the new test data points.
+In words, for a typical risk level :math:`\alpha` of :math:`10 \%`, we want to construct prediction sets that contain the true observations
+for at least :math:`90 \%` of the new test data points.
 Note that the guarantee is possible only on the marginal coverage, and not on the conditional coverage
 :math:`P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) | X_{n+1} = x_{n+1} \}` which depends on the location of the new test point in the distribution. 
 
