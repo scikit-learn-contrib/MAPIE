@@ -6,6 +6,7 @@ History
 ------------------
 
 * Add `packaging` library in requirements
+* Fix displaying problem in pypi
 
 0.4.0 (2022-06-24)
 ------------------
