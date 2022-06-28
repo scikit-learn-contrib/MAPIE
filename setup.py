@@ -5,7 +5,8 @@ from setuptools import find_packages, setup
 DISTNAME = "MAPIE"
 VERSION = "0.4.1"
 DESCRIPTION = (
-    "A scikit-learn-compatible module for estimating prediction intervals."
+    "A scikit-learn-compatible module "
+    "for estimating prediction intervals."
 )
 with codecs.open("README.rst", encoding="utf-8-sig") as f:
     LONG_DESCRIPTION = f.read()
@@ -19,7 +20,12 @@ PROJECT_URLS = {
 }
 LICENSE = "new BSD"
 MAINTAINER = "V. Taquet, V. Blot, T. Morzadec, G. Martinon"
-MAINTAINER_EMAIL = "vtaquet@quantmetry.com, vblot@quantmetry.com, tmorzadec@quantmetry.com, gmartinon@quantmetry.com"
+MAINTAINER_EMAIL = (
+    "vtaquet@quantmetry.com, "
+    "vblot@quantmetry.com, "
+    "tmorzadec@quantmetry.com, "
+    "gmartinon@quantmetry.com"
+)
 PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
 INSTALL_REQUIRES = ["scikit-learn", "numpy>=1.21", "packaging"]
