@@ -15,6 +15,7 @@ y_pred_list = [4, 7, 10, 12, 13, 12]
 conf_scores_list = [1, 0, -1, -1, 0, 3]
 conf_scores_gamma_list = [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]
 
+
 class DummyConformityScore(ConformityScore):
     def __init__(self) -> None:
         ConformityScore.__init__(self, True, consistency_check=True)
@@ -35,7 +36,6 @@ class DummyConformityScore(ConformityScore):
         with the conformity score.
         """
         return np.add(y_pred, conformity_scores) + 1
-
 
 
 @pytest.mark.parametrize("sym", [False, True])
@@ -167,19 +167,24 @@ def test_gamma_conformity_score_check_predicted_value(
     gamma_conf_score = GammaConformityScore()
     with pytest.raises(
         ValueError,
-        match=rf"/*At least one of the observed target is negative.*"
+        match=r"/*At least one of the observed target is negative.*"
     ):
         gamma_conf_score.get_signed_conformity_scores(y_toy, y_pred)
     with pytest.raises(
         ValueError,
-        match=rf"/*At least one of the observed target is negative.*"
+        match=r"/*At least one of the observed target is negative.*"
     ):
         gamma_conf_score.get_estimation_distribution(y_pred, conf_scores)
 
+
 def test_check_consistency() -> None:
+    """
+    Test that a dummy ConformityScore class that gives inconsistent conformity
+    scores and distributions raises an error.
+    """
     dummy_conf_score = DummyConformityScore()
     with pytest.raises(
         ValueError,
-        match=rf".*The two functions get_conformity_scores.*"
+        match=r".*The two functions get_conformity_scores.*"
     ):
         dummy_conf_score.check_consistency(y_toy, y_pred_list)
