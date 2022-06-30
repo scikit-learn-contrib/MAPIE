@@ -585,13 +585,11 @@ next figure.
 
 
 
-.. parsed-literal::
 
 
 
 
 
-.. parsed-literal::
 
 
 
@@ -1050,9 +1048,7 @@ method and compare their prediction interval.
         y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
 
 
-.. parsed-literal::
 
-    Metal device set to: Apple M1
 
 
 .. code-block:: python
