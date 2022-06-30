@@ -6,7 +6,7 @@ from mapie.conformity_scores import (
     ConformityScore,
     GammaConformityScore,
 )
-from mapie._typing import NDArray
+from mapie._typing import NDArray, ArrayLike
 
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -22,13 +22,13 @@ class DummyConformityScore(ConformityScore):
 
     def get_signed_conformity_scores(
         self,
-        y: NDArray,
-        y_pred: NDArray,
+        y: ArrayLike,
+        y_pred: ArrayLike,
     ) -> NDArray:
         return np.subtract(y, y_pred)
 
     def get_estimation_distribution(
-        self, y_pred: NDArray, conformity_scores: NDArray
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> NDArray:
         """
         A dummy constant is added to the sum between predictions and
