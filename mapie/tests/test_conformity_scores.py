@@ -167,12 +167,12 @@ def test_gamma_conformity_score_check_predicted_value(
     gamma_conf_score = GammaConformityScore()
     with pytest.raises(
         ValueError,
-        match=r"/*At least one of the observed target is negative.*"
+        match=r".*At least one of the predicted target is negative.*"
     ):
         gamma_conf_score.get_signed_conformity_scores(y_toy, y_pred)
     with pytest.raises(
         ValueError,
-        match=r"/*At least one of the observed target is negative.*"
+        match=r".*At least one of the predicted target is negative.*"
     ):
         gamma_conf_score.get_estimation_distribution(y_pred, conf_scores)
 
