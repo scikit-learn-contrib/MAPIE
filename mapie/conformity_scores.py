@@ -2,7 +2,6 @@ import sys
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
-from sklearn.utils.validation import _check_y
 
 from ._typing import NDArray, ArrayLike
 
@@ -142,16 +141,18 @@ class ConformityScore(metaclass=ABCMeta):
         if self.consistency_check:
             conformity_scores = self.get_signed_conformity_scores(y, y_pred)
             abs_conformity_scores = np.abs(
-                self.get_estimation_distribution(y_pred, conformity_scores) - y
+                self.get_estimation_distribution(y_pred, conformity_scores)
+                - y
             )
             max_conf_score = np.max(abs_conformity_scores)
             if max_conf_score > self.eps:
                 raise ValueError(
                     "The two functions get_conformity_scores and "
-                    "get_estimation_distribution of the ConformityScore class "
-                    "are not consistent. "
+                    "get_estimation_distribution of the ConformityScore class"
+                    " are not consistent. "
                     "The following equation must be verified: "
-                    "self.get_estimation_distribution(y_pred, self.get_conformity_scores(y, y_pred)) == y. "  # noqa: E501
+                    "self.get_estimation_distribution(y_pred, "
+                    "self.get_conformity_scores(y, y_pred)) == y. "  # noqa: E501
                     f"The maximum conformity score is {max_conf_score}."
                     "The eps attribute may need to be increased if you are "
                     "sure that the two methods are consistent."
