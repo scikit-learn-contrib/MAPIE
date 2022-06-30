@@ -36,3 +36,12 @@ Metrics
    metrics.regression_mean_width_score
    metrics.classification_mean_width_score
 
+Conformity scores
+=================
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   conformity_scores.AbsoluteConformityScore
+   conformity_scores.GammaConformityScore
