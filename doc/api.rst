@@ -45,3 +45,14 @@ Conformity scores
 
    conformity_scores.AbsoluteConformityScore
    conformity_scores.GammaConformityScore
+
+
+Resampling
+==========
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   subsample.BlockBootstrap
+   subsample.Subsample
