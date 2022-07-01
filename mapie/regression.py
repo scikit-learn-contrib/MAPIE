@@ -590,7 +590,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        self.conformity_score_function_.check_consistency(y, y_pred)
+        if self.conformity_score_function_.consistency_check:
+            self.conformity_score_function_.check_consistency(y, y_pred)
         self.conformity_scores_ = (
             self.conformity_score_function_.get_conformity_scores(y, y_pred)
         )
@@ -677,6 +678,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             elif self.method == "minmax":
                 y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
                 y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
+            else:
+                raise ValueError(
+                    f"Invalid method. Allowed values are {self.valid_methods_}."
+                )
+            
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
 

@@ -47,9 +47,7 @@ class ConformityScore(metaclass=ABCMeta):
 
     @abstractmethod
     def get_signed_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
+        self, y: ArrayLike, y_pred: ArrayLike,
     ) -> NDArray:
         """Placeholder for get_signed_conformity_scores.
         Subclasses should implement this method!
@@ -71,10 +69,7 @@ class ConformityScore(metaclass=ABCMeta):
         """
 
     def get_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
-    ) -> NDArray:
+        self, y: ArrayLike, y_pred: ArrayLike) -> NDArray:
         """Get the conformity score considering the symmetrical property if so.
 
         Parameters
@@ -138,24 +133,24 @@ class ConformityScore(metaclass=ABCMeta):
         ValueError
             If the two methods are not consistent.
         """
-        if self.consistency_check:
-            conformity_scores = self.get_signed_conformity_scores(y, y_pred)
-            abs_conformity_scores = np.abs(
-                self.get_estimation_distribution(y_pred, conformity_scores) - y
+        # if self.consistency_check:
+        conformity_scores = self.get_signed_conformity_scores(y, y_pred)
+        abs_conformity_scores = np.abs(
+            self.get_estimation_distribution(y_pred, conformity_scores) - y
+        )
+        max_conf_score = np.max(abs_conformity_scores)
+        if max_conf_score > self.eps:
+            raise ValueError(
+                "The two functions get_conformity_scores and "
+                "get_estimation_distribution of the ConformityScore class"
+                " are not consistent. "
+                "The following equation must be verified: "
+                "self.get_estimation_distribution(y_pred, "
+                "self.get_conformity_scores(y, y_pred)) == y. "  # noqa: E501
+                f"The maximum conformity score is {max_conf_score}."
+                "The eps attribute may need to be increased if you are "
+                "sure that the two methods are consistent."
             )
-            max_conf_score = np.max(abs_conformity_scores)
-            if max_conf_score > self.eps:
-                raise ValueError(
-                    "The two functions get_conformity_scores and "
-                    "get_estimation_distribution of the ConformityScore class"
-                    " are not consistent. "
-                    "The following equation must be verified: "
-                    "self.get_estimation_distribution(y_pred, "
-                    "self.get_conformity_scores(y, y_pred)) == y. "  # noqa: E501
-                    f"The maximum conformity score is {max_conf_score}."
-                    "The eps attribute may need to be increased if you are "
-                    "sure that the two methods are consistent."
-                )
 
 
 class AbsoluteConformityScore(ConformityScore):
@@ -172,9 +167,7 @@ class AbsoluteConformityScore(ConformityScore):
         ConformityScore.__init__(self, True, consistency_check=False)
 
     def get_signed_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
+        self, y: ArrayLike, y_pred: ArrayLike,
     ) -> NDArray:
         """
         Compute the signed conformity scores from the predicted values
@@ -233,9 +226,7 @@ class GammaConformityScore(ConformityScore):
         return True
 
     def get_signed_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
+        self, y: ArrayLike, y_pred: ArrayLike,
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
