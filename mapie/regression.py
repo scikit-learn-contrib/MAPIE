@@ -672,17 +672,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         else:
             y_pred_multi = self._pred_multi(X)
 
-            if self.method in self.plus_like_method:
-                y_pred_multi_low = y_pred_multi
-                y_pred_multi_up = y_pred_multi
-            elif self.method == "minmax":
+            if self.method == "minmax":
                 y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
                 y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
             else:
-                raise ValueError(
-                    "Invalid method. Allowed values are "
-                    f"{self.valid_methods_}."
-                )
+                y_pred_multi_low = y_pred_multi
+                y_pred_multi_up = y_pred_multi
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
 

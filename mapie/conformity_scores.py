@@ -170,7 +170,7 @@ class AbsoluteConformityScore(ConformityScore):
     """
 
     def __init__(self) -> None:
-        ConformityScore.__init__(self, True, consistency_check=False)
+        ConformityScore.__init__(self, True, consistency_check=True)
 
     def get_signed_conformity_scores(
         self, y: ArrayLike, y_pred: ArrayLike,
