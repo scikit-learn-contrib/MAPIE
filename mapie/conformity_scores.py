@@ -49,7 +49,8 @@ class ConformityScore(metaclass=ABCMeta):
     def get_signed_conformity_scores(
         self, y: ArrayLike, y_pred: ArrayLike,
     ) -> NDArray:
-        """Placeholder for get_signed_conformity_scores.
+        """
+        Placeholder for get_signed_conformity_scores.
         Subclasses should implement this method!
 
         Compute the signed conformity scores from the predicted values
@@ -69,7 +70,8 @@ class ConformityScore(metaclass=ABCMeta):
         """
 
     def get_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike) -> NDArray:
+        self, y: ArrayLike, y_pred: ArrayLike
+    ) -> NDArray:
         """Get the conformity score considering the symmetrical property if so.
 
         Parameters

@@ -680,9 +680,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
             else:
                 raise ValueError(
-                    f"Invalid method. Allowed values are {self.valid_methods_}."
+                    "Invalid method. Allowed values are "
+                    f"{self.valid_methods_}."
                 )
-            
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
 
