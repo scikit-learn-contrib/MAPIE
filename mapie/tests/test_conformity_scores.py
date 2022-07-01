@@ -18,7 +18,7 @@ conf_scores_gamma_list = [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]
 
 class DummyConformityScore(ConformityScore):
     def __init__(self) -> None:
-        ConformityScore.__init__(self, True, consistency_check=True)
+        super().__init__(self, sym=True, consistency_check=True)
 
     def get_signed_conformity_scores(
         self,
@@ -31,7 +31,7 @@ class DummyConformityScore(ConformityScore):
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> NDArray:
         """
-        A dummy constant is added to the sum between predictions and
+        A positive constant is added to the sum between predictions and
         conformity scores to make the estimated distribution inconsistent
         with the conformity score.
         """

@@ -141,8 +141,7 @@ class ConformityScore(metaclass=ABCMeta):
         if self.consistency_check:
             conformity_scores = self.get_signed_conformity_scores(y, y_pred)
             abs_conformity_scores = np.abs(
-                self.get_estimation_distribution(y_pred, conformity_scores)
-                - y
+                self.get_estimation_distribution(y_pred, conformity_scores) - y
             )
             max_conf_score = np.max(abs_conformity_scores)
             if max_conf_score > self.eps:
