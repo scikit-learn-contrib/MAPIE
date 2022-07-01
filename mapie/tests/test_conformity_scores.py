@@ -21,9 +21,7 @@ class DummyConformityScore(ConformityScore):
         super().__init__(sym=True, consistency_check=True)
 
     def get_signed_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
+        self, y: ArrayLike, y_pred: ArrayLike,
     ) -> NDArray:
         return np.subtract(y, y_pred)
 

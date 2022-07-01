@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
+from ._machine_precision import EPSILON
 from ._typing import NDArray, ArrayLike
 
 
@@ -18,7 +19,7 @@ class ConformityScore(metaclass=ABCMeta):
         self,
         sym: bool,
         consistency_check: bool = True,
-        eps: float = sys.float_info.epsilon,
+        eps: float = EPSILON,
     ):
         """
         Parameters
