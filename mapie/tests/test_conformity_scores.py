@@ -18,7 +18,7 @@ conf_scores_gamma_list = [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]
 
 class DummyConformityScore(ConformityScore):
     def __init__(self) -> None:
-        super().__init__(self, sym=True, consistency_check=True)
+        super().__init__(sym=True, consistency_check=True)
 
     def get_signed_conformity_scores(
         self,
