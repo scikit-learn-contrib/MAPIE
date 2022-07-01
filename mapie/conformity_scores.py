@@ -7,7 +7,8 @@ from ._typing import NDArray, ArrayLike
 
 
 class ConformityScore(metaclass=ABCMeta):
-    """Base class for conformity scores.
+    """
+    Base class for conformity scores.
 
     Warning: This class should not be used directly.
     Use derived classes instead.
@@ -72,7 +73,8 @@ class ConformityScore(metaclass=ABCMeta):
     def get_conformity_scores(
         self, y: ArrayLike, y_pred: ArrayLike
     ) -> NDArray:
-        """Get the conformity score considering the symmetrical property if so.
+        """
+        Get the conformity score considering the symmetrical property if so.
 
         Parameters
         ----------
@@ -95,7 +97,8 @@ class ConformityScore(metaclass=ABCMeta):
     def get_estimation_distribution(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> NDArray:
-        """Placeholder for get_estimation_distribution.
+        """
+        Placeholder for get_estimation_distribution.
         Subclasses should implement this method!
 
         Compute samples of the estimation distribution from the predicted
@@ -115,7 +118,8 @@ class ConformityScore(metaclass=ABCMeta):
         """
 
     def check_consistency(self, y: ArrayLike, y_pred: ArrayLike) -> None:
-        """Check consistency between the following methods:
+        """
+        Check consistency between the following methods:
         get_estimation_distribution and get_signed_conformity_scores
 
         The following equality should be verified:
@@ -135,7 +139,6 @@ class ConformityScore(metaclass=ABCMeta):
         ValueError
             If the two methods are not consistent.
         """
-        # if self.consistency_check:
         conformity_scores = self.get_signed_conformity_scores(y, y_pred)
         abs_conformity_scores = np.abs(
             self.get_estimation_distribution(y_pred, conformity_scores) - y
@@ -156,7 +159,8 @@ class ConformityScore(metaclass=ABCMeta):
 
 
 class AbsoluteConformityScore(ConformityScore):
-    """Absolute conformity score.
+    """
+    Absolute conformity score.
 
     The signed conformity score = y - y_pred.
     The conformity score is symmetrical.
@@ -191,7 +195,8 @@ class AbsoluteConformityScore(ConformityScore):
 
 
 class GammaConformityScore(ConformityScore):
-    """Gamma conformity score.
+    """
+    Gamma conformity score.
 
     The signed conformity score = (y - y_pred) / y_pred.
     The conformity score is not symmetrical.
