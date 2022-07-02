@@ -590,8 +590,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        if self.conformity_score_function_.consistency_check:
-            self.conformity_score_function_.check_consistency(y, y_pred)
         self.conformity_scores_ = (
             self.conformity_score_function_.get_conformity_scores(y, y_pred)
         )

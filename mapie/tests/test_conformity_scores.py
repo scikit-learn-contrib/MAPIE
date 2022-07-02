@@ -181,8 +181,13 @@ def test_check_consistency() -> None:
     scores and distributions raises an error.
     """
     dummy_conf_score = DummyConformityScore()
+    conformity_scores = dummy_conf_score.get_signed_conformity_scores(
+        y_toy, y_pred_list
+    )
     with pytest.raises(
         ValueError,
         match=r".*The two functions get_conformity_scores.*"
     ):
-        dummy_conf_score.check_consistency(y_toy, y_pred_list)
+        dummy_conf_score.check_consistency(
+            y_toy, y_pred_list, conformity_scores
+        )

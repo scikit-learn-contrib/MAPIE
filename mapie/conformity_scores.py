@@ -18,7 +18,7 @@ class ConformityScore(metaclass=ABCMeta):
         self,
         sym: bool,
         consistency_check: bool = True,
-        eps: float = EPSILON,
+        eps: np.float64 = EPSILON,
     ):
         """
         Parameters
@@ -70,29 +70,6 @@ class ConformityScore(metaclass=ABCMeta):
             Unsigned conformity scores.
         """
 
-    def get_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike
-    ) -> NDArray:
-        """
-        Get the conformity score considering the symmetrical property if so.
-
-        Parameters
-        ----------
-        y : NDArray
-            Observed values.
-        y_pred : NDArray
-            Predicted values.
-
-        Returns
-        -------
-        np.ndarray
-            Conformity scores.
-        """
-        conformity_scores = self.get_signed_conformity_scores(y, y_pred)
-        if self.sym:
-            conformity_scores = np.abs(conformity_scores)
-        return conformity_scores
-
     @abstractmethod
     def get_estimation_distribution(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike
@@ -117,7 +94,9 @@ class ConformityScore(metaclass=ABCMeta):
             Observed values.
         """
 
-    def check_consistency(self, y: ArrayLike, y_pred: ArrayLike) -> None:
+    def check_consistency(
+        self, y: ArrayLike, y_pred: ArrayLike, conformity_scores: ArrayLike
+    ) -> None:
         """
         Check consistency between the following methods:
         get_estimation_distribution and get_signed_conformity_scores
@@ -139,10 +118,10 @@ class ConformityScore(metaclass=ABCMeta):
         ValueError
             If the two methods are not consistent.
         """
-        conformity_scores = self.get_signed_conformity_scores(y, y_pred)
+        # conformity_scores = self.get_signed_conformity_scores(y, y_pred)
         abs_conformity_scores = np.abs(
             self.get_estimation_distribution(y_pred, conformity_scores) - y
-        ) / np.abs(y)
+        )  # / np.abs(y)
         max_conf_score = np.max(abs_conformity_scores)
         if max_conf_score > self.eps:
             raise ValueError(
@@ -157,6 +136,31 @@ class ConformityScore(metaclass=ABCMeta):
                 "sure that the two methods are consistent."
             )
 
+    def get_conformity_scores(
+        self, y: ArrayLike, y_pred: ArrayLike
+    ) -> NDArray:
+        """
+        Get the conformity score considering the symmetrical property if so.
+
+        Parameters
+        ----------
+        y : NDArray
+            Observed values.
+        y_pred : NDArray
+            Predicted values.
+
+        Returns
+        -------
+        np.ndarray
+            Conformity scores.
+        """
+        conformity_scores = self.get_signed_conformity_scores(y, y_pred)
+        if self.consistency_check:
+            self.check_consistency(y, y_pred, conformity_scores)
+        if self.sym:
+            conformity_scores = np.abs(conformity_scores)
+        return conformity_scores
+
 
 class AbsoluteConformityScore(ConformityScore):
     """
@@ -170,7 +174,7 @@ class AbsoluteConformityScore(ConformityScore):
     """
 
     def __init__(self) -> None:
-        ConformityScore.__init__(self, True, consistency_check=True)
+        super().__init__(sym=True, consistency_check=True)
 
     def get_signed_conformity_scores(
         self, y: ArrayLike, y_pred: ArrayLike,
@@ -207,7 +211,7 @@ class GammaConformityScore(ConformityScore):
     """
 
     def __init__(self) -> None:
-        ConformityScore.__init__(self, False, consistency_check=False)
+        super().__init__(sym=False, consistency_check=False, eps=EPSILON)
 
     def _check_observed_data(self, y: ArrayLike) -> None:
         if not self._all_strictly_positive(y):

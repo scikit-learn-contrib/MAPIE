@@ -9,7 +9,6 @@ from sklearn.utils.validation import _check_sample_weight, _num_features
 from sklearn.utils import _safe_indexing
 
 from .conformity_scores import AbsoluteConformityScore, ConformityScore
-from ._machine_precision import EPSILON
 from ._typing import ArrayLike, NDArray
 
 
@@ -507,13 +506,13 @@ def check_conformity_score(
     Must be None or a ConformityScore instance.
     """
     if conformity_score is None:
-        return AbsoluteConformityScore(eps=EPSILON)
+        return AbsoluteConformityScore()
     elif isinstance(conformity_score, ConformityScore):
         return conformity_score
     else:
         raise ValueError(
             "Invalid conformity_score argument.\n"
-            "Must be None or a ConformityScore instance."
+            "Must be ``None`` or a ConformityScore instance."
         )
 
 
