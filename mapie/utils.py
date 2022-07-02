@@ -507,7 +507,7 @@ def check_conformity_score(
     Must be None or a ConformityScore instance.
     """
     if conformity_score is None:
-        return AbsoluteConformityScore(eps=EPSILON * 100)
+        return AbsoluteConformityScore(eps=EPSILON)
     elif isinstance(conformity_score, ConformityScore):
         return conformity_score
     else:
