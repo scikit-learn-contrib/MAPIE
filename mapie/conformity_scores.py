@@ -118,10 +118,9 @@ class ConformityScore(metaclass=ABCMeta):
         ValueError
             If the two methods are not consistent.
         """
-        # conformity_scores = self.get_signed_conformity_scores(y, y_pred)
         abs_conformity_scores = np.abs(
             self.get_estimation_distribution(y_pred, conformity_scores) - y
-        )  # / np.abs(y)
+        ) / np.abs(y)
         max_conf_score = np.max(abs_conformity_scores)
         if max_conf_score > self.eps:
             raise ValueError(
