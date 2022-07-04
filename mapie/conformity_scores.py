@@ -18,7 +18,7 @@ class ConformityScore(metaclass=ABCMeta):
         self,
         sym: bool,
         consistency_check: bool = True,
-        eps: np.float64 = EPSILON,
+        eps: np.float64 = 16 * EPSILON,
     ):
         """
         Parameters
@@ -118,9 +118,10 @@ class ConformityScore(metaclass=ABCMeta):
         ValueError
             If the two methods are not consistent.
         """
-        abs_conformity_scores = np.abs(
-            self.get_estimation_distribution(y_pred, conformity_scores) - y
-        ) / np.abs(y)
+        score_distribution = self.get_estimation_distribution(
+            y_pred, conformity_scores
+        )
+        abs_conformity_scores = np.abs(np.subtract(score_distribution, y))
         max_conf_score = np.max(abs_conformity_scores)
         if max_conf_score > self.eps:
             raise ValueError(
