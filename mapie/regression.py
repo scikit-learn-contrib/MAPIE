@@ -546,7 +546,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
             self.k_ = np.full(
-                shape=(n_samples, 1), fill_value=np.nan, dtype="float"
+                shape=(n_samples, 1), fill_value=np.nan, dtype=float
             )
         else:
             cv = cast(BaseCrossValidator, cv)
@@ -584,14 +584,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 )
 
                 for i, val_ind in enumerate(val_indices):
-                    pred_matrix[val_ind, i] = np.array(predictions[i])
+                    pred_matrix[val_ind, i] = np.array(
+                        predictions[i], dtype=float
+                    )
                     self.k_[val_ind, i] = 1
                 check_nan_in_aposteriori_prediction(pred_matrix)
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        # if self.conformity_score_function_.consistency_check:
-        #     self.conformity_score_function_.check_consistency(y, y_pred)
         self.conformity_scores_ = (
             self.conformity_score_function_.get_conformity_scores(y, y_pred)
         )
