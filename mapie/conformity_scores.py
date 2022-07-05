@@ -18,7 +18,7 @@ class ConformityScore(metaclass=ABCMeta):
         self,
         sym: bool,
         consistency_check: bool = True,
-        eps: np.float64 = 1e-8,
+        eps: np.float64 = np.float64(1e-8),
     ):
         """
         Parameters
