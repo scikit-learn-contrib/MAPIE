@@ -30,7 +30,7 @@ from mapie.subsample import Subsample
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 X, y = make_regression(
-    n_samples=500, n_features=10, noise=1.0, random_state=1, bias=1e3
+    n_samples=500, n_features=10, noise=1.0, random_state=1
 )
 k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
@@ -495,5 +495,5 @@ def test_gammaconformityscore(
         conformity_score=conformity_score,
         **STRATEGIES[strategy]
     )
-    mapie_reg.fit(X, y)
+    mapie_reg.fit(X, y + 1e3)
     _, y_pis = mapie_reg.predict(X, alpha=0.05)
