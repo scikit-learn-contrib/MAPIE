@@ -8,6 +8,7 @@ from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.utils.validation import _check_sample_weight, _num_features
 from sklearn.utils import _safe_indexing
 
+from ._compatibility import np_quantile
 from .conformity_scores import AbsoluteConformityScore, ConformityScore
 from ._typing import ArrayLike, NDArray
 
@@ -563,3 +564,72 @@ def check_defined_variables_predict_cqr(
             "WARNING: Alpha should not be specified in the prediction method\n"
             + "with conformalized quantile regression."
         )
+
+
+def compute_quantiles(vector, alpha_np):
+    n = len(vector)
+    if len(vector.shape) <= 2:
+        quantiles_ = np.stack([
+                    np_quantile(
+                        vector,
+                        ((n + 1) * (1 - _alpha)) / n,
+                        method="higher",
+                    ) for _alpha in alpha_np
+        ])
+
+    else:
+        quantiles_ = np.stack(
+                [
+                    compute_quantiles(
+                        vector[:, :, i],
+                        [alpha_]
+                    ) for i, alpha_ in enumerate(alpha_np)
+                ]
+            )[:, 0]
+    return quantiles_
+
+
+def get_true_label_position(y_pred_proba, y):
+    """_summary_
+
+    Parameters
+    ----------
+    y_pred_proba : _type_
+        _description_
+    y : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    index = np.argsort(
+            np.fliplr(np.argsort(y_pred_proba, axis=1))
+        )
+    position = np.take_along_axis(
+        index,
+        y.reshape(-1, 1),
+        axis=1
+    )
+
+    return position
+
+
+def regularize_conformity_score(
+        k_star, lambda_, conf_score, cutoff
+):
+    conf_score = np.repeat(
+        conf_score[:, :, np.newaxis], len(k_star), axis=2
+    )
+    cutoff = np.repeat(
+        cutoff[:, np.newaxis], len(k_star), axis=1
+    )
+    conf_score += np.maximum(
+        np.expand_dims(
+            lambda_ * (cutoff - k_star + 1),
+            axis=1
+        ),
+        0
+    )
+    return conf_score
