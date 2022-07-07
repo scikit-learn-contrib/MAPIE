@@ -274,7 +274,9 @@ class MapieQuantileRegressor(MapieRegressor):
                             else:
                                 raise ValueError(
                                     "The matching parameter `alpha_name` for"
-                                    + " estimator does not exist."
+                                    " estimator does not exist. "
+                                    "Make sure you set it when initializing "
+                                    "your estimator."
                                 )
                     else:
                         raise ValueError(

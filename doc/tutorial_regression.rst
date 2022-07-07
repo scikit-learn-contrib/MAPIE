@@ -157,7 +157,7 @@ CV-minmax, Jackknife+-after-Boostrap, and conformalized quantile
 regression (CQR) strategies. Note that for the Jackknife-after-Bootstrap
 method, we call the :class:`mapie.subsample.Subsample` object that
 allows us to train bootstrapped models. Note also that the CQR method is
-called with `MapieQuantileRegressor` with a “split” strategy.
+called with :class:`MapieQuantileRegressor` with a “split” strategy.
 
 .. code-block:: python
 
@@ -358,7 +358,6 @@ uniformely in a given interval.
 
 .. code-block:: python
 
-    import numpy as np
     def x_sinx(x):
         """One-dimensional x*sin(x) function."""
         return x*np.sin(x)
@@ -586,13 +585,11 @@ next figure.
 
 
 
-.. parsed-literal::
 
 
 
 
 
-.. parsed-literal::
 
 
 
@@ -1051,7 +1048,6 @@ method and compare their prediction interval.
         y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
 
 
-.. parsed-literal::
 
 
 

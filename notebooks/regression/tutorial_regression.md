@@ -161,7 +161,7 @@ for strategy, params in STRATEGIES.items():
 ```
 
 Let’s now compare the target confidence intervals with the predicted intervals obtained 
-with the Jackknife+, Jackknife-minmax, CV+, CV-minmax, Jackknife+-after-Boostrap, and conformalized quantile regression (CQR) strategies. Note that for the Jackknife-after-Bootstrap method, we call the :class:`mapie.subsample.Subsample` object that allows us to train bootstrapped models. Note also that the CQR method is called with `MapieQuantileRegressor` with a "split" strategy.
+with the Jackknife+, Jackknife-minmax, CV+, CV-minmax, Jackknife+-after-Boostrap, and conformalized quantile regression (CQR) strategies. Note that for the Jackknife-after-Bootstrap method, we call the :class:`mapie.subsample.Subsample` object that allows us to train bootstrapped models. Note also that the CQR method is called with :class:`MapieQuantileRegressor` with a "split" strategy.
 
 ```python
 def plot_1d_data(
@@ -266,9 +266,6 @@ Let's define again the $x \times \sin(x)$ function and another simple function
 that generates one-dimensional data with normal noise uniformely in a given interval.
 
 ```python
-import warnings
-warnings.filterwarnings("ignore")
-import numpy as np
 def x_sinx(x):
     """One-dimensional x*sin(x) function."""
     return x*np.sin(x)

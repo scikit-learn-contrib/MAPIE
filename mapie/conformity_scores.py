@@ -1,13 +1,14 @@
-import sys
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from ._typing import NDArray
+from ._machine_precision import EPSILON
+from ._typing import NDArray, ArrayLike
 
 
 class ConformityScore(metaclass=ABCMeta):
-    """Base class for conformity scores.
+    """
+    Base class for conformity scores.
 
     Warning: This class should not be used directly.
     Use derived classes instead.
@@ -17,7 +18,7 @@ class ConformityScore(metaclass=ABCMeta):
         self,
         sym: bool,
         consistency_check: bool = True,
-        eps: float = sys.float_info.epsilon,
+        eps: np.float64 = np.float64(1e-8),
     ):
         """
         Parameters
@@ -47,11 +48,10 @@ class ConformityScore(metaclass=ABCMeta):
 
     @abstractmethod
     def get_signed_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
+        self, y: ArrayLike, y_pred: ArrayLike,
     ) -> NDArray:
-        """Placeholder for get_signed_conformity_scores.
+        """
+        Placeholder for get_signed_conformity_scores.
         Subclasses should implement this method!
 
         Compute the signed conformity scores from the predicted values
@@ -70,35 +70,12 @@ class ConformityScore(metaclass=ABCMeta):
             Unsigned conformity scores.
         """
 
-    def get_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-    ) -> NDArray:
-        """Get the conformity score considering the symmetrical property if so.
-
-        Parameters
-        ----------
-        y : NDArray
-            Observed values.
-        y_pred : NDArray
-            Predicted values.
-
-        Returns
-        -------
-        np.ndarray
-            Conformity scores.
-        """
-        conformity_scores = self.get_signed_conformity_scores(y, y_pred)
-        if self.sym:
-            conformity_scores = np.abs(conformity_scores)
-        return conformity_scores
-
     @abstractmethod
     def get_estimation_distribution(
-        self, y_pred: NDArray, conformity_scores: NDArray
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> NDArray:
-        """Placeholder for get_estimation_distribution.
+        """
+        Placeholder for get_estimation_distribution.
         Subclasses should implement this method!
 
         Compute samples of the estimation distribution from the predicted
@@ -117,8 +94,11 @@ class ConformityScore(metaclass=ABCMeta):
             Observed values.
         """
 
-    def check_consistency(self, y: NDArray, y_pred: NDArray) -> None:
-        """Check consistency between the following methods:
+    def check_consistency(
+        self, y: ArrayLike, y_pred: ArrayLike, conformity_scores: ArrayLike
+    ) -> None:
+        """
+        Check consistency between the following methods:
         get_estimation_distribution and get_signed_conformity_scores
 
         The following equality should be verified:
@@ -138,27 +118,53 @@ class ConformityScore(metaclass=ABCMeta):
         ValueError
             If the two methods are not consistent.
         """
-        if self.consistency_check:
-            conformity_scores = self.get_signed_conformity_scores(y, y_pred)
-            abs_conformity_scores = np.abs(
-                self.get_estimation_distribution(y_pred, conformity_scores) - y
+        score_distribution = self.get_estimation_distribution(
+            y_pred, conformity_scores
+        )
+        abs_conformity_scores = np.abs(np.subtract(score_distribution, y))
+        max_conf_score = np.max(abs_conformity_scores)
+        if max_conf_score > self.eps:
+            raise ValueError(
+                "The two functions get_conformity_scores and "
+                "get_estimation_distribution of the ConformityScore class"
+                " are not consistent. "
+                "The following equation must be verified: "
+                "self.get_estimation_distribution(y_pred, "
+                "self.get_conformity_scores(y, y_pred)) == y. "  # noqa: E501
+                f"The maximum conformity score is {max_conf_score}."
+                "The eps attribute may need to be increased if you are "
+                "sure that the two methods are consistent."
             )
-            max_conf_score = np.max(abs_conformity_scores)
-            if max_conf_score > self.eps:
-                raise ValueError(
-                    "The two functions get_conformity_scores and "
-                    "get_estimation_distribution of the ConformityScore class "
-                    "are not consistent. "
-                    "The following equation must be verified: "
-                    "self.get_estimation_distribution(y_pred, self.get_conformity_scores(y, y_pred)) == y. "  # noqa: E501
-                    f"The maximum conformity score is {max_conf_score}."
-                    "The eps attribute may need to be increased if you are "
-                    "sure that the two methods are consistent."
-                )
+
+    def get_conformity_scores(
+        self, y: ArrayLike, y_pred: ArrayLike
+    ) -> NDArray:
+        """
+        Get the conformity score considering the symmetrical property if so.
+
+        Parameters
+        ----------
+        y : NDArray
+            Observed values.
+        y_pred : NDArray
+            Predicted values.
+
+        Returns
+        -------
+        NDArray
+            Conformity scores.
+        """
+        conformity_scores = self.get_signed_conformity_scores(y, y_pred)
+        if self.consistency_check:
+            self.check_consistency(y, y_pred, conformity_scores)
+        if self.sym:
+            conformity_scores = np.abs(conformity_scores)
+        return conformity_scores
 
 
 class AbsoluteConformityScore(ConformityScore):
-    """Absolute conformity score.
+    """
+    Absolute conformity score.
 
     The signed conformity score = y - y_pred.
     The conformity score is symmetrical.
@@ -168,12 +174,10 @@ class AbsoluteConformityScore(ConformityScore):
     """
 
     def __init__(self) -> None:
-        ConformityScore.__init__(self, True, consistency_check=False)
+        super().__init__(sym=True, consistency_check=True)
 
     def get_signed_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
+        self, y: ArrayLike, y_pred: ArrayLike,
     ) -> NDArray:
         """
         Compute the signed conformity scores from the predicted values
@@ -183,7 +187,7 @@ class AbsoluteConformityScore(ConformityScore):
         return np.subtract(y, y_pred)
 
     def get_estimation_distribution(
-        self, y_pred: NDArray, conformity_scores: NDArray
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
@@ -195,7 +199,8 @@ class AbsoluteConformityScore(ConformityScore):
 
 
 class GammaConformityScore(ConformityScore):
-    """Gamma conformity score.
+    """
+    Gamma conformity score.
 
     The signed conformity score = (y - y_pred) / y_pred.
     The conformity score is not symmetrical.
@@ -206,9 +211,9 @@ class GammaConformityScore(ConformityScore):
     """
 
     def __init__(self) -> None:
-        ConformityScore.__init__(self, False, consistency_check=False)
+        super().__init__(sym=False, consistency_check=False, eps=EPSILON)
 
-    def _check_observed_data(self, y: NDArray) -> None:
+    def _check_observed_data(self, y: ArrayLike) -> None:
         if not self._all_strictly_positive(y):
             raise ValueError(
                 f"At least one of the observed target is negative "
@@ -217,7 +222,7 @@ class GammaConformityScore(ConformityScore):
                 "in conformity with the Gamma distribution support."
             )
 
-    def _check_predicted_data(self, y_pred: NDArray) -> None:
+    def _check_predicted_data(self, y_pred: ArrayLike) -> None:
         if not self._all_strictly_positive(y_pred):
             raise ValueError(
                 f"At least one of the predicted target is negative "
@@ -226,17 +231,13 @@ class GammaConformityScore(ConformityScore):
                 "in conformity with the Gamma distribution support."
             )
 
-    def _all_strictly_positive(self, y: NDArray) -> bool:
-        if isinstance(y, list):
-            y = np.array(y)
-        if np.any(y <= 0):
+    def _all_strictly_positive(self, y: ArrayLike) -> bool:
+        if np.any(np.less_equal(y, 0)):
             return False
         return True
 
     def get_signed_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
+        self, y: ArrayLike, y_pred: ArrayLike,
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
@@ -248,7 +249,7 @@ class GammaConformityScore(ConformityScore):
         return np.divide(np.subtract(y, y_pred), y_pred)
 
     def get_estimation_distribution(
-        self, y_pred: NDArray, conformity_scores: NDArray
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
