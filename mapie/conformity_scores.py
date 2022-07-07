@@ -151,7 +151,7 @@ class ConformityScore(metaclass=ABCMeta):
 
         Returns
         -------
-        np.ndarray
+        NDArray
             Conformity scores.
         """
         conformity_scores = self.get_signed_conformity_scores(y, y_pred)
