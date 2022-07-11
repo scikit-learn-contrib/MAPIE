@@ -14,8 +14,8 @@ from ._typing import ArrayLike, NDArray
 
 
 def check_null_weight(
-    sample_weight: Optional[ArrayLike], X: ArrayLike, y: ArrayLike
-) -> Tuple[Optional[NDArray], ArrayLike, ArrayLike]:
+    sample_weight: Optional[ArrayLike], X: ArrayLike, y: NDArray
+) -> Tuple[Optional[NDArray], ArrayLike, NDArray]:
     """
     Check sample weights and remove samples with null sample weights.
 
@@ -566,7 +566,23 @@ def check_defined_variables_predict_cqr(
         )
 
 
-def compute_quantiles(vector, alpha_np):
+def compute_quantiles(vector: NDArray, alpha_np: NDArray) -> NDArray:
+    """Compute the desired quantile of a vecor.
+
+    Parameters
+    ----------
+    vector : ArrayLike of shape Union[(n_samples, 1), (n_samples, 1, n_alphas)]
+        Vector on which compute the quantile. If the vector has 3 dimensions,
+        then each 1-alpha quantile will be computed on its corresping matrix
+        selected on the last axis of the matrix.
+    alpha_np : ArrayLike
+        Confidence levels.
+
+    Returns
+    -------
+    ArrayLike of shape (n_alphas, )
+        Quantiles of the vector.
+    """
     n = len(vector)
     if len(vector.shape) <= 2:
         quantiles_ = np.stack([
@@ -582,27 +598,31 @@ def compute_quantiles(vector, alpha_np):
                 [
                     compute_quantiles(
                         vector[:, :, i],
-                        [alpha_]
+                        np.array([alpha_])
                     ) for i, alpha_ in enumerate(alpha_np)
                 ]
             )[:, 0]
     return quantiles_
 
 
-def get_true_label_position(y_pred_proba, y):
-    """_summary_
+def get_true_label_position(
+    y_pred_proba: NDArray,
+    y: NDArray
+) -> NDArray:
+    """Return the sorted position of the true label in the
+    prediction
 
     Parameters
     ----------
-    y_pred_proba : _type_
-        _description_
-    y : _type_
-        _description_
+    y_pred_proba : ArrayLike of shape (n_samples, n_calsses)
+        Model prediction.
+    y : ArrayLike of shape (n_samples)
+        Labels.
 
     Returns
     -------
-    _type_
-        _description_
+    ArrayLike of shape (n_samples, 1)
+        Position of the true label in the prediction.
     """
     index = np.argsort(
             np.fliplr(np.argsort(y_pred_proba, axis=1))
@@ -614,22 +634,3 @@ def get_true_label_position(y_pred_proba, y):
     )
 
     return position
-
-
-def regularize_conformity_score(
-        k_star, lambda_, conf_score, cutoff
-):
-    conf_score = np.repeat(
-        conf_score[:, :, np.newaxis], len(k_star), axis=2
-    )
-    cutoff = np.repeat(
-        cutoff[:, np.newaxis], len(k_star), axis=1
-    )
-    conf_score += np.maximum(
-        np.expand_dims(
-            lambda_ * (cutoff - k_star + 1),
-            axis=1
-        ),
-        0
-    )
-    return conf_score

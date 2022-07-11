@@ -631,7 +631,27 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         val_id = np.full_like(y_val, k, dtype=int)
         return estimator, y_pred_proba, val_id, val_index
 
-    def _get_true_label_cumsum_proba(self, y, y_pred_proba):
+    def _get_true_label_cumsum_proba(
+        self,
+        y: NDArray,
+        y_pred_proba: NDArray
+    ) -> Tuple[NDArray, NDArray]:
+        """Compute the cumsumed probability of the true laebl
+
+        Parameters
+        ----------
+        y : ArrayLike of shape (n_samples, )
+            Array with the labels.
+        y_pred_proba : ArrayLike of shape (n_samples, n_classes)
+            Predictions of the model.
+
+        Returns
+        -------
+         Tuple[ArrayLike, ArrayLike] of shapes
+         (n_samples, 1) and (n_samples, ). The first element
+         is the cumsum probability of the true label. The second
+        is the sorted position of the true label.
+        """
         y_true = label_binarize(
             y=y, classes=self.single_estimator_.classes_
         )
@@ -649,8 +669,33 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         return true_label_cumsum_proba, cutoff
 
     def _regularize_conformity_score(
-        self, k_star, lambda_, conf_score, cutoff
-    ):
+        self,
+        k_star: NDArray,
+        lambda_: Union[NDArray, float],
+        conf_score: NDArray,
+        cutoff: NDArray
+    ) -> NDArray:
+        """Regularize the conformity scores with the RAPS
+        method.
+
+        Parameters
+        ----------
+        k_star : ArrayLike of shape (n_alphas, )
+            Optimal value of k (called k_reg in the paper). There
+            is one value per alpha.
+        lambda_ : Union[NDArray, float] of shape (n_alphas, )
+            One value of lambda for each alpha.
+        conf_score : ArrayLike of shape (n_samples, 1)
+            Conformity scores.
+        cutoff : ArrayLike of shape (n_samples, 1)
+            Position of the true label.
+
+        Returns
+        -------
+        ArrayLike of shape (n_samples, 1, n_alphas)
+            Regularized conformity scores. The regularization
+            depends on the value of alpha.
+        """
         conf_score = np.repeat(
             conf_score[:, :, np.newaxis], len(k_star), axis=2
         )
@@ -668,11 +713,36 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     def _get_last_included_proba(
         self,
-        y_pred_proba,
-        thresholds,
-        lambda_,
-        include_last_label
-    ):
+        y_pred_proba: NDArray,
+        thresholds: NDArray,
+        include_last_label: Union[bool, str, None],
+        lambda_: Union[NDArray, float, None],
+        k_star: Union[NDArray, None]
+    ) -> Tuple[NDArray, NDArray, NDArray]:
+        """_summary_
+
+        Parameters
+        ----------
+        y_pred_proba : ArrayLike of shape (n_samples, n_classes)
+            Predictions of the model.
+        thresholds : ArrayLike of shape (n_alphas, )
+            Quantiles that have been computed.
+        lambda_ : Union[NDArray, float] of shape (n_alphas)
+            Values of lambda for the regularization.
+        include_last_label : Union[bool, str, None]
+            Whether or not to include the label whose score
+            exceeds the threshold.
+
+        Returns
+        -------
+        Tuple[ArrayLike, ArrayLike, ArrayLike]
+            Arrays of shape (n_samples, n_classes, n_alphas),
+            (n_samples, 1, n_alphas) and (n_samples, 1, n_alphas).
+            They are respectively the cumsumed scores in the original
+            order which can be different according to the value of alpha
+            with the RAPS method, the index of the last included score
+            and the value of the last included score.
+        """
         index_sorted = np.flip(
             np.argsort(y_pred_proba, axis=1), axis=1
         )
@@ -691,7 +761,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 np.cumsum(
                     np.ones(y_pred_proba_sorted_cumsum.shape),
                     axis=1
-                ) - self.k_star
+                ) - k_star
             )
         # get cumulated score at their original position
         y_pred_proba_cumsum = np.take_along_axis(
@@ -714,14 +784,40 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         return y_pred_proba_cumsum, y_pred_index_last, y_pred_proba_last
 
-    def update_size_and_lambda(
+    def _update_size_and_lambda(
         self,
-        best_size,
-        alpha_np,
-        y_ps,
-        lambda_,
-        lambda_star
-    ):
+        best_size: NDArray,
+        alpha_np: NDArray,
+        y_ps: NDArray,
+        lambda_: Union[NDArray, float],
+        lambda_star: NDArray
+    ) -> Tuple[NDArray, NDArray]:
+        """Update the values of the optimal lambda if the
+        average size of the prediction sets decreases with
+        this new value of lambda.
+
+        Parameters
+        ----------
+        best_size : ArrayLike of shape (n_alphas, )
+            Smallest average prediciton set size before testing
+            for the new value of lambda_
+        alpha_np : ArrayLike of shape (n_alphas)
+            Level of confidences.
+        y_ps : ArrayLike of shape (n_samples, n_classes, n_alphas)
+            Prediction sets computed with the RAPS method and the
+            new value of lambda_
+        lambda_ : ArrayLike of shape (n_alphas, )
+            New value of lambda_star to test
+        lambda_star : ArrayLike of shape (n_alpahs)
+            Actual optimal lambda values for each alpha.
+
+        Returns
+        -------
+        Tuple[ArrayLike, ArrayLike]
+            Arrays of shape (n_alphas, ) and (n_alphas) which
+            respectively represents the update values of lambda_star
+            and the new best sizes.
+        """
 
         sizes = [np.mean(
             np.sum(y_ps[:, :, i], axis=1)
@@ -740,8 +836,25 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         return lambda_star, best_size
 
-    def _find_lambda_star(self, alpha_np, include_last_label):
+    def _find_lambda_star(
+        self, alpha_np: NDArray, include_last_label: Union[bool, str, None],
+        k_star: NDArray
+    ) -> Union[NDArray, float]:
+        """Find the optimal value of lambda for each alpha.
 
+        Parameters
+        ----------
+        alpha_np : ArrayLike of shape (n_alphas, )
+            Level of confidences.
+        include_last_label : bool
+            Whether or not to include last label in
+            prediction sets
+
+        Returns
+        -------
+        ArrayLike of shape (n_alphas)
+            Optimal values of lambda.
+        """
         lambda_star = np.zeros(len(alpha_np))
         best_size = np.ones(len(alpha_np)) * 1e10
 
@@ -755,7 +868,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
 
             true_label_cumsum_proba_reg = self._regularize_conformity_score(
-                self.k_star,
+                k_star,
                 lambda_,
                 true_label_cumsum_proba,
                 cutoff
@@ -769,23 +882,25 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             _, _, y_pred_proba_last = self._get_last_included_proba(
                 self.y_pred_proba_raps,
                 quantiles_,
+                include_last_label,
                 lambda_,
-                include_last_label
+                k_star
             )
 
             y_ps = np.greater_equal(
                     self.y_pred_proba_raps - y_pred_proba_last, -EPSILON
             )
-            best_size, lambda_star = self.update_size_and_lambda(
+            lambda_star, best_size = self._update_size_and_lambda(
                 best_size, alpha_np, y_ps, lambda_, lambda_star
             )
-
+        if len(lambda_star) == 1:
+            lambda_star = lambda_star[0]
         return lambda_star
 
     def fit(
         self,
         X: ArrayLike,
-        y: ArrayLike,
+        y: NDArray,
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieClassifier:
         """
@@ -995,7 +1110,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         include_last_label = self._check_include_last_label(include_last_label)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         check_is_fitted(self, self.fit_attributes)
-
+        self.lambda_star, self.k_star = None, None
         # Estimate prediction sets
         y_pred = self.single_estimator_.predict(X)
         n = len(self.conformity_scores_)
@@ -1036,7 +1151,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         # Choice of the quantile
         check_alpha_and_n_samples(alpha_np, n)
-        self.k_star, self.lambda_star = None, None
 
         if self.method == "naive":
             self.quantiles_ = 1 - alpha_np
@@ -1055,7 +1169,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     )
                     self.lambda_star = self._find_lambda_star(
                         alpha_np,
-                        include_last_label
+                        include_last_label,
+                        self.k_star
                     )
                     self.conformity_scores_ = (
                         self._regularize_conformity_score(
@@ -1104,8 +1219,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 self._get_last_included_proba(
                     y_pred_proba,
                     thresholds,
+                    include_last_label,
                     self.lambda_star,
-                    include_last_label
+                    self.k_star,
                 )
             )
             # get the prediction set by taking all probabilities

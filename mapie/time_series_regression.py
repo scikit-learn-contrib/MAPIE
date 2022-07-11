@@ -140,7 +140,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     def fit(
         self,
         X: ArrayLike,
-        y: ArrayLike,
+        y: NDArray,
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieTimeSeriesRegressor:
         """
