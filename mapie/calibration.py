@@ -8,34 +8,38 @@
 # License: BSD 3 clause
 
 import warnings
-from inspect import signature
 from functools import partial
+from inspect import signature
+from typing import Optional
 
-from math import log
 import numpy as np
 from joblib import Parallel
+from math import log
 
-from scipy.special import expit
-from scipy.special import xlogy
 from scipy.optimize import fmin_bfgs
-
+from scipy.special import expit, xlogy
 from sklearn.base import (
     BaseEstimator,
     ClassifierMixin,
     RegressorMixin,
-    clone,
     MetaEstimatorMixin,
+    clone,
     is_classifier,
 )
-from sklearn.preprocessing import label_binarize, LabelEncoder
-from .utils import (
+from sklearn.isotonic import IsotonicRegression
+from sklearn.metrics._base import _check_pos_label_consistency
+from sklearn.metrics._plot.base import _get_response
+from sklearn.model_selection import check_cv, cross_val_predict
+from sklearn.preprocessing import LabelEncoder, label_binarize
+from sklearn.svm import LinearSVC
+from sklearn.utils import (
+    _safe_indexing,
+    check_matplotlib_support,
     column_or_1d,
     indexable,
-    check_matplotlib_support,
 )
-
-from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.fixes import delayed
+from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import (
     _check_fit_params,
     _check_sample_weight,
@@ -43,12 +47,6 @@ from sklearn.utils.validation import (
     check_consistent_length,
     check_is_fitted,
 )
-from sklearn.utils import _safe_indexing
-from sklearn.isotonic import IsotonicRegression
-from sklearn.svm import LinearSVC
-from sklearn.model_selection import check_cv, cross_val_predict
-from sklearn.metrics._base import _check_pos_label_consistency
-from sklearn.metrics._plot.base import _get_response
 
 
 class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator):
@@ -634,7 +632,7 @@ def _fit_calibrator(clf, predictions, y, classes, method, sample_weight=None):
     classes : ndarray, shape (n_classes,)
         All the prediction classes.
 
-    method : {'sigmoid', 'isotonic'}
+    method : {'sigmoid', 'isotonic', 'binning'}
         The method to use for calibration.
 
     sample_weight : ndarray, shape (n_samples,), default=None
@@ -653,9 +651,11 @@ def _fit_calibrator(clf, predictions, y, classes, method, sample_weight=None):
             calibrator = IsotonicRegression(out_of_bounds="clip")
         elif method == "sigmoid":
             calibrator = _SigmoidCalibration()
+        elif method == "binning":
+            calibrator = HistogramBinning()
         else:
             raise ValueError(
-                f"'method' should be one of: 'sigmoid' or 'isotonic'. Got {method}."
+                f"'method' should be one of: 'sigmoid', 'isotonic' or 'binning'. Got {method}."
             )
         calibrator.fit(this_pred, Y[:, class_idx], sample_weight)
         calibrators.append(calibrator)
@@ -868,6 +868,62 @@ class _SigmoidCalibration(RegressorMixin, BaseEstimator):
         """
         T = column_or_1d(T)
         return expit(-(self.a_ * T + self.b_))
+
+
+class HistogramBinning(RegressorMixin, BaseEstimator):
+    """Histogram Binning model.
+
+    Attributes
+    ----------
+    n_bins : int
+        Amount of bins used for calibration fitting.
+
+    delta : float
+        Perturbation of the data.
+    """
+    def __init__(self, n_bins: Optional[int] = 10, delta: Optional[float] = 1e-10) -> None:
+        self.n_bins = n_bins
+        self.delta = delta
+
+    def _nudge(self, z: np.array) ->np.array:
+        return (z + np.random.uniform(low=0, high=self.delta, size=z.shape)) / (1 + self.delta)
+
+    def fit(self, y_score: np.array, y: np.array, sample_weight: np.array) -> None:
+        y = column_or_1d(y)
+        y_score = column_or_1d(y_score)
+        y, y_score = indexable(y, y_score)
+
+        y_score = self._nudge(y_score)
+        y_score_sorted = np.sort(y_score)
+
+        bin_groups = np.array_split(y_score_sorted, self.n_bins)
+        self.bin_edges = np.array(
+            [bin_group.max() for bin_group in bin_groups[:-1]]
+            +
+            [np.inf]
+        )
+        bin_assignments = np.digitize(y_score, self.bin_edges, right=True)
+
+        bin_counts = {
+            _bin: (bin_assignments == _bin).sum() for _bin in range(self.n_bins)
+        }
+
+        self.binning_calibrator = {
+            _bin: self._nudge(y[bin_assignments == _bin].mean())
+            for _bin in bin_counts.keys() if bin_counts[_bin] > 0
+        }
+
+        return self
+
+    def predict(self, y: np.array) -> np.array:
+        y = column_or_1d(y)
+        y_bins = np.digitize(y, self.bin_edges, right=True)
+        y_calibrated = np.array(
+            [
+                self.binning_calibrator[y_bin] for y_bin in y_bins.squeeze()
+            ]
+        )
+        return y_calibrated
 
 
 def calibration_curve(
