@@ -31,6 +31,7 @@ from .utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
+    weighted_quantile
 )
 
 
@@ -484,6 +485,29 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
         return y_pred_multi
 
+    def _quantile(
+        self,
+        a: ArrayLike,
+        q: ArrayLike,
+        axis: int = 1,
+        method: str = "lower",
+        weights: Optional[ArrayLike] = None
+    ) -> ArrayLike:
+
+        if weights is None:
+            return np_nanquantile(
+                a,
+                q,
+                axis=axis,
+                method=method,
+            )
+        else:
+            return weighted_quantile(
+                a,
+                q,
+                weights=weights
+            )
+
     def fit(
         self,
         X: ArrayLike,
@@ -699,25 +723,41 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             )
         )
 
+        if self.conformity_score_function_.compute_score_weights:
+            self.score_weights_ = (
+                self.conformity_score_function_.get_weights(X)
+            )
+            lower_bounds = np.hstack(
+                [lower_bounds, np.full((len(X), 1), -np.inf)]
+            )
+            upper_bounds = np.hstack(
+                [upper_bounds, np.full((len(X), 1), np.inf)]
+            )
+
+        else:
+            self.score_weights_ = None
+
         # get desired confidence intervals according to alpha
         y_pred_low = np.column_stack(
             [
-                np_nanquantile(
+                self._quantile(
                     lower_bounds,
                     _alpha,
                     axis=1,
                     method="lower",
+                    weights=self.score_weights_
                 )
                 for _alpha in alpha_np
             ]
         ).data
         y_pred_up = np.column_stack(
             [
-                np_nanquantile(
+                self._quantile(
                     upper_bounds,
                     1 - _alpha,
                     axis=1,
                     method="higher",
+                    weights=self.score_weights_
                 )
                 for _alpha in alpha_np
             ]
