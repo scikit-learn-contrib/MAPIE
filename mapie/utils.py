@@ -503,7 +503,7 @@ def check_conformity_score(
     ...     print(exception)
     ...
     Invalid conformity_score argument.
-    Must be None or a ConformityScore instance.
+    Must be ``None`` or a ConformityScore instance.
     """
     if conformity_score is None:
         return AbsoluteConformityScore()
@@ -512,7 +512,7 @@ def check_conformity_score(
     else:
         raise ValueError(
             "Invalid conformity_score argument.\n"
-            "Must be None or a ConformityScore instance."
+            "Must be ``None`` or a ConformityScore instance."
         )
 
 

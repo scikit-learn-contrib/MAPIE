@@ -4,7 +4,7 @@ Estimate the prediction intervals of 1D homoscedastic data
 ==========================================================
 
 :class:`mapie.regression.MapieRegressor` and
-:class: `mapie.quantile_regression.MapieQuantileRegressor`
+:class:`mapie.quantile_regression.MapieQuantileRegressor`
 is used to estimate the prediction intervals of 1D homoscedastic
 data using different strategies.
 """

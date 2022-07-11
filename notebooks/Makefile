@@ -11,6 +11,8 @@ convert2rst:
 	gsed -i -e's/`TensorflowToMapie`/``TensorflowToMapie``/g' $(dir)/$(file).rst
 	gsed -i -e'/<matplotlib/d' $(dir)/$(file).rst
 	gsed -i -e'/<Figure/d' $(dir)/$(file).rst
+	gsed -i -e'/Apple M1/d' $(dir)/$(file).rst
+	gsed -i -e'/.. parsed-literal::/d' $(dir)/$(file).rst
 	cp $(dir)/$(file).rst ../doc/$(file).rst
 	cp -r $(dir)/$(file)_files ../doc/
 	rm -rf $(dir)/.ipynb_checkpoints

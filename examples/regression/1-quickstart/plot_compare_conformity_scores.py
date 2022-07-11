@@ -59,7 +59,9 @@ model = RandomForestRegressor(**rf_kwargs)
 # -----------------------------------------------------------------------------
 #
 # We start by loading a dataset with a target following approximately
-# a Gamma distribution. The GammaConformityScore is relevant in such cases.
+# a Gamma distribution.
+# The :class:`mapie.conformity_scores.GammaConformityScore`` is relevant
+# in such cases.
 # Two sub datasets are extracted: the training and test ones.
 
 X, y = fetch_openml(name="house_prices", return_X_y=True)
@@ -74,18 +76,18 @@ X_train, X_test, y_train, y_test = train_test_split(
 #
 # Two models are trained with two different conformity score:
 #
-# - :class:mapie.conformity_scores.AbsoluteConformityScore (default conformity
-#   score) relevant for target positive as well as negative.
+# - :class:`mapie.conformity_scores.AbsoluteConformityScore` (default
+#   conformity score) relevant for target positive as well as negative.
 #   The prediction interval widths are, in this case, approximately the same
 #   over the range of prediction.
 #
-# - :class:mapie.conformity_scores.GammaConformityScore relevant for target
+# - :class:`mapie.conformity_scores.GammaConformityScore` relevant for target
 #   following roughly a Gamma distribution. The prediction interval widths
 #   scale with the predicted value.
 
 ##############################################################################
 # First, train model with
-# :class:mapie.conformity_scores.AbsoluteConformityScore.
+# :class:`mapie.conformity_scores.AbsoluteConformityScore`.
 mapie = MapieRegressor(model)
 mapie.fit(X_train, y_train)
 y_pred_absconfscore, y_pis_absconfscore = mapie.predict(X_test, alpha=alpha)
@@ -116,7 +118,7 @@ pred_int_width_absconfscore = (
 
 ##############################################################################
 # Then, train the model with
-# :class:mapie.conformity_scores.GammaConformityScore.
+# :class:`mapie.conformity_scores.GammaConformityScore`.
 mapie = MapieRegressor(model, conformity_score=GammaConformityScore())
 mapie.fit(X_train, y_train)
 y_pred_gammaconfscore, y_pis_gammaconfscore = mapie.predict(
@@ -139,8 +141,9 @@ pred_int_width_gammaconfscore = (
 #
 # Once the models have been trained, we now compare the prediction intervals
 # obtained from the two conformity scores. We can see that the
-# :class:AbsoluteConformityScore generates prediction interval with almost the
-# same width for all the predicted values. Converly, the GammaConformityScore
+# :class:`mapie.conformity_scores.AbsoluteConformityScore` generates
+# prediction interval with almost the same width for all the predicted values.
+# Conversely, the `mapie.conformity_scores.GammaConformityScore`
 # yields prediction interval with width scaling with the predicted values.
 #
 # The choice of the conformity score depends on the problem we face.
