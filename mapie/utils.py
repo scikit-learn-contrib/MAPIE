@@ -566,21 +566,48 @@ def check_defined_variables_predict_cqr(
         )
 
 
+def check_alpha_and_last_axis(vector: NDArray, alpha_np: NDArray):
+    """Check when the dimension of vector is 3 that its last axis
+    size is the same than the number of alphas.
+
+    Parameters
+    ----------
+    vector : NDArray of shape (n_samples, 1, n_alphas)
+        Vector on which compute the quantile.
+    alpha_np : NDArray of shape (n_alphas, )
+        Confidence levels.
+
+
+    Raises
+    ------
+    ValueError
+        Error is the last axis dimension is different from the
+        number of alphas.
+    """
+    if len(alpha_np) != vector.shape[2]:
+        raise ValueError(
+            "In case of the vector has 3 dimensions, the dimension\n"
+            + "of his last axis must be equal to the number of alphas"
+        )
+    else:
+        return vector, alpha_np
+
+
 def compute_quantiles(vector: NDArray, alpha_np: NDArray) -> NDArray:
     """Compute the desired quantile of a vecor.
 
     Parameters
     ----------
-    vector : ArrayLike of shape Union[(n_samples, 1), (n_samples, 1, n_alphas)]
+    vector : NDArray of shape Union[(n_samples, 1), (n_samples, 1, n_alphas)]
         Vector on which compute the quantile. If the vector has 3 dimensions,
         then each 1-alpha quantile will be computed on its corresping matrix
         selected on the last axis of the matrix.
-    alpha_np : ArrayLike
+    alpha_np : NDArray for shape (n_alphas, )
         Confidence levels.
 
     Returns
     -------
-    ArrayLike of shape (n_alphas, )
+    NDArray of shape (n_alphas, )
         Quantiles of the vector.
     """
     n = len(vector)
@@ -594,6 +621,7 @@ def compute_quantiles(vector: NDArray, alpha_np: NDArray) -> NDArray:
         ])
 
     else:
+        check_alpha_and_last_axis(vector, alpha_np)
         quantiles_ = np.stack(
                 [
                     compute_quantiles(
@@ -614,14 +642,14 @@ def get_true_label_position(
 
     Parameters
     ----------
-    y_pred_proba : ArrayLike of shape (n_samples, n_calsses)
+    y_pred_proba : NDArray of shape (n_samples, n_calsses)
         Model prediction.
-    y : ArrayLike of shape (n_samples)
+    y : NDArray of shape (n_samples)
         Labels.
 
     Returns
     -------
-    ArrayLike of shape (n_samples, 1)
+    NDArray of shape (n_samples, 1)
         Position of the true label in the prediction.
     """
     index = np.argsort(

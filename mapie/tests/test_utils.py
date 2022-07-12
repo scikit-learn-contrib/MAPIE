@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import numpy as np
 import pytest
@@ -15,12 +15,14 @@ from mapie.utils import (
     check_n_jobs,
     check_null_weight,
     check_verbose,
+    compute_quantiles,
     fit_estimator,
     check_lower_upper_bounds,
+    get_true_label_position
 )
 from mapie.quantile_regression import MapieQuantileRegressor
 
-from mapie._typing import ArrayLike
+from mapie._typing import ArrayLike, NDArray
 
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -31,6 +33,29 @@ n_features = 10
 X, y = make_regression(
     n_samples=500, n_features=n_features, noise=1.0, random_state=1
 )
+ALPHAS = [
+    np.array([.1]),
+    np.array([.05, .1, .2]),
+]
+
+Y_TRUE_PROBA_PLACE = [
+    [
+        np.array([2, 0]),
+        np.array([
+            [.1, .3, .6],
+            [.2, .7, .1]
+        ]),
+        np.array([[0], [1]])
+    ],
+    [
+        np.array([1, 0]),
+        np.array([
+            [.7, .12, .18],
+            [.5, .24, .26]
+        ]),
+        np.array([[2], [0]])
+    ]
+]
 
 
 class DumbEstimator:
@@ -240,3 +265,84 @@ def test_alpha_in_predict() -> None:
     mapie_reg.fit(X, y)
     with pytest.warns(UserWarning, match=r"WARNING: ensemble is not util*"):
         mapie_reg.predict(X, ensemble=True)
+
+
+def test_compute_quantiles_value_error():
+    """Test that if the size of the last axis of vector
+    is different from the number of aphas an error is raised.
+    """
+    vector = np.random.rand(1000, 1, 1)
+    alphas = [.1, .2, .3]
+
+    with pytest.raises(ValueError, match=r".*In case of the vector .*"):
+        compute_quantiles(vector, alphas)
+
+
+@pytest.mark.parametrize("alphas", ALPHAS)
+def test_compute_quantiles_2D_shape(alphas: NDArray):
+    """Test that the number of quantiles is equal to
+    the number of alphas for a 2D input vector
+
+    Parameters
+    ----------
+    alphas : NDArray
+        Levels of confidence.
+    """
+    vector = np.random.rand(1000, 1)
+    quantiles = compute_quantiles(vector, alphas)
+
+    assert len(quantiles) == len(alphas)
+
+
+@pytest.mark.parametrize("alphas", ALPHAS)
+def test_compute_quantiles_3D_shape(alphas: NDArray):
+    """Test that the number of quantiles is equal to
+    the number of alphas for a 3D input vector
+
+    Parameters
+    ----------
+    alphas : NDArray
+        Levels of confidence.
+    """
+    vector = np.random.rand(1000, 1)
+    vector = np.repeat(vector, len(alphas), axis=1)
+    quantiles = compute_quantiles(vector, alphas)
+
+    assert len(quantiles) == len(alphas)
+
+
+@pytest.mark.parametrize("alphas", ALPHAS)
+def test_compute_quantiles_2D_and_3D(alphas: NDArray):
+    """Test that if to matrices are equal (modulo one dimension)
+    then there quantiles are the same.
+
+    Parameters
+    ----------
+    alphas : NDArray
+        Levels of confidence.
+    """
+    vector1 = np.random.rand(1000, 1)
+    vector2 = np.repeat(vector1, len(alphas), axis=1)
+
+    quantiles1 = compute_quantiles(vector1, alphas)
+    quantiles2 = compute_quantiles(vector2, alphas)
+
+    assert (quantiles1 == quantiles2).all()
+
+
+@pytest.mark.parametrize("y_true_proba_place", Y_TRUE_PROBA_PLACE)
+def test_get_true_label_position(y_true_proba_place: List[NDArray]):
+    """Check that the returned true label position the good.
+
+    Parameters
+    ----------
+    y_true_proba_place : List[NDArray]
+        List with y_true, y_pred_proba and the true position.
+    """
+    y_true = y_true_proba_place[0]
+    y_pred_proba = y_true_proba_place[1]
+    place = y_true_proba_place[2]
+
+    found_place = get_true_label_position(y_pred_proba, y_true)
+
+    assert (found_place == place).all()
