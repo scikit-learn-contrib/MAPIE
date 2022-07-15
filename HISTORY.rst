@@ -2,6 +2,12 @@
 History
 =======
 
+0.4.1 (2002-06-27)
+------------------
+
+* Add `packaging` library in requirements
+* Fix displaying problem in pypi
+
 0.4.0 (2022-06-24)
 ------------------
 
@@ -9,6 +15,8 @@ History
 * Add Split Conformal Quantile Regression
 * Add EnbPI method for Time Series Regression
 * Add EnbPI Documentation
+* Add example with heteroscedastic data
+* Add `ConformityScore` class that allows the user to define custom conformity scores
 
 0.3.2 (2022-03-11)
 ------------------

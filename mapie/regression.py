@@ -546,7 +546,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
             self.k_ = np.full(
-                shape=(n_samples, 1), fill_value=np.nan, dtype="float"
+                shape=(n_samples, 1), fill_value=np.nan, dtype=float
             )
         else:
             cv = cast(BaseCrossValidator, cv)
@@ -584,13 +584,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 )
 
                 for i, val_ind in enumerate(val_indices):
-                    pred_matrix[val_ind, i] = np.array(predictions[i])
+                    pred_matrix[val_ind, i] = np.array(
+                        predictions[i], dtype=float
+                    )
                     self.k_[val_ind, i] = 1
                 check_nan_in_aposteriori_prediction(pred_matrix)
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        self.conformity_score_function_.check_consistency(y, y_pred)
         self.conformity_scores_ = (
             self.conformity_score_function_.get_conformity_scores(y, y_pred)
         )
@@ -671,12 +672,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         else:
             y_pred_multi = self._pred_multi(X)
 
-            if self.method in self.plus_like_method:
-                y_pred_multi_low = y_pred_multi
-                y_pred_multi_up = y_pred_multi
-            elif self.method == "minmax":
+            if self.method == "minmax":
                 y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
                 y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
+            else:
+                y_pred_multi_low = y_pred_multi
+                y_pred_multi_up = y_pred_multi
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
 
