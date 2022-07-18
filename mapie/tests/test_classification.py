@@ -22,7 +22,7 @@ from mapie.metrics import classification_coverage_score
 from mapie._typing import ArrayLike, NDArray
 
 
-METHODS = ["score", "cumulated_score"]
+METHODS = ["score", "cumulated_score", "raps"]
 WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "other", 1, 2.5, (1, 2)]
 Y_PRED_PROBA_WRONG = [
@@ -213,6 +213,17 @@ STRATEGIES = {
     "top_k": (
         Params(
             method="top_k",
+            cv="prefit",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="mean"
+        )
+    ),
+    "raps": (
+        Params(
+            method="raps",
             cv="prefit",
             random_state=42
         ),

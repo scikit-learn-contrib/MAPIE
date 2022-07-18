@@ -946,9 +946,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             X, self.X_raps, y, self.y_raps = train_test_split(
                 X,
                 y,
-                test_size=.1,
+                test_size=.2,
                 random_state=self.random_state
             )
+            n_samples = _num_samples(y)
             self.y_pred_proba_raps = estimator.predict_proba(
                 self.X_raps
             )
