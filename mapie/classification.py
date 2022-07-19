@@ -761,7 +761,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 np.cumsum(
                     np.ones(y_pred_proba_sorted_cumsum.shape),
                     axis=1
-                ) - k_star
+                ) - 1 - k_star
             )
         # get cumulated score at their original position
         y_pred_proba_cumsum = np.take_along_axis(
@@ -837,13 +837,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         return lambda_star, best_size
 
     def _find_lambda_star(
-        self, alpha_np: NDArray, include_last_label: Union[bool, str, None],
+        self, y_pred_proba_raps: NDArray,
+        alpha_np: NDArray, include_last_label: Union[bool, str, None],
         k_star: NDArray
     ) -> Union[NDArray, float]:
         """Find the optimal value of lambda for each alpha.
 
         Parameters
         ----------
+        y_pred_proba_raps: NDArray of shape (n_samples, n_labels, n_alphas)
+            Predictions of the model repeated on the last axis as many times
+            as the number of alphas
         alpha_np : ArrayLike of shape (n_alphas, )
             Level of confidences.
         include_last_label : bool
@@ -859,11 +863,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         best_size = np.ones(len(alpha_np)) * 1e10
 
         for lambda_ in [.001, .01, .1, .2, .5]:
-
             true_label_cumsum_proba, cutoff = (
                 self._get_true_label_cumsum_proba(
                     self.y_raps,
-                    self.y_pred_proba_raps[:, :, 0]
+                    y_pred_proba_raps[:, :, 0],
                 )
             )
 
@@ -880,7 +883,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
 
             _, _, y_pred_proba_last = self._get_last_included_proba(
-                self.y_pred_proba_raps,
+                y_pred_proba_raps,
                 quantiles_,
                 include_last_label,
                 lambda_,
@@ -888,7 +891,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
 
             y_ps = np.greater_equal(
-                    self.y_pred_proba_raps - y_pred_proba_last, -EPSILON
+                    y_pred_proba_raps - y_pred_proba_last, -EPSILON
             )
             lambda_star, best_size = self._update_size_and_lambda(
                 best_size, alpha_np, y_ps, lambda_, lambda_star
@@ -902,6 +905,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: NDArray,
         sample_weight: Optional[ArrayLike] = None,
+        size_raps: Optional[float] = .2
     ) -> MapieClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -922,6 +926,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             before the fitting process and hence have no prediction sets.
 
             By default None.
+
+        size_raps: Optional[float]
+            Percentage of the data to be used for choosing lambda_star and
+            k_star for the RAPS method.
+
+            By default .2.
+
 
         Returns
         -------
@@ -946,7 +957,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             X, self.X_raps, y, self.y_raps = train_test_split(
                 X,
                 y,
-                test_size=.2,
+                test_size=size_raps,
                 random_state=self.random_state
             )
             n_samples = _num_samples(y)
@@ -1158,22 +1169,23 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         else:
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 if self.method == "raps":
-
+                    check_alpha_and_n_samples(alpha_np, len(self.X_raps))
                     self.k_star = compute_quantiles(
                         self.position_raps,
                         alpha_np
                     )
-                    self.y_pred_proba_raps = np.repeat(
+                    y_pred_proba_raps = np.repeat(
                         self.y_pred_proba_raps[:, :, np.newaxis],
                         len(alpha_np),
                         axis=2
                     )
                     self.lambda_star = self._find_lambda_star(
+                        y_pred_proba_raps,
                         alpha_np,
                         include_last_label,
                         self.k_star
                     )
-                    self.conformity_scores_ = (
+                    self.conformity_scores_regularized = (
                         self._regularize_conformity_score(
                                     self.k_star,
                                     self.lambda_star,
@@ -1181,11 +1193,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                                     self.cutoff
                         )
                     )
-
-                self.quantiles_ = compute_quantiles(
-                    self.conformity_scores_,
-                    alpha_np
-                )
+                    self.quantiles_ = compute_quantiles(
+                        self.conformity_scores_regularized,
+                        alpha_np
+                    )
+                else:
+                    self.quantiles_ = compute_quantiles(
+                        self.conformity_scores_,
+                        alpha_np
+                    )
             else:
                 self.quantiles_ = (n + 1) * (1 - alpha_np)
 

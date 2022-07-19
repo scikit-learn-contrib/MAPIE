@@ -248,7 +248,8 @@ COVERAGES = {
     "cumulated_score_not_include_cv_crossval": 0,
     "cumulated_score_randomized_cv_crossval": 4 / 9,
     "naive": 5 / 9,
-    "top_k": 1
+    "top_k": 1,
+    "raps": 1
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -401,6 +402,17 @@ y_toy_mapie = {
     "top_k": [
         [True, True, False],
         [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+    ],
+    "raps": [
+        [True, False, False],
+        [True, False, False],
         [True, True, False],
         [True, True, False],
         [True, True, False],
@@ -637,15 +649,13 @@ def test_invalid_include_last_label(include_last_label: Any) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_predict_output_shape(
-    strategy: str, alpha: Any, dataset: Tuple[NDArray, NDArray]
+    strategy: str, alpha: Any,
 ) -> None:
     """Test predict output shape."""
     args_init, args_predict = STRATEGIES[strategy]
     mapie_clf = MapieClassifier(**args_init)
-    X, y = dataset
     mapie_clf.fit(X, y)
     y_pred, y_ps = mapie_clf.predict(
         X,
@@ -721,16 +731,16 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     args_init, args_predict = STRATEGIES[strategy]
     mapie_clf_single = MapieClassifier(n_jobs=1, **args_init)
     mapie_clf_multi = MapieClassifier(n_jobs=-1, **args_init)
-    mapie_clf_single.fit(X_toy, y_toy)
-    mapie_clf_multi.fit(X_toy, y_toy)
+    mapie_clf_single.fit(X, y)
+    mapie_clf_multi.fit(X, y)
     y_pred_single, y_ps_single = mapie_clf_single.predict(
-        X_toy,
+        X,
         alpha=0.2,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
     )
     y_pred_multi, y_ps_multi = mapie_clf_multi.predict(
-        X_toy,
+        X,
         alpha=0.2,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
@@ -749,28 +759,28 @@ def test_results_with_constant_sample_weights(
     """
     args_init, args_predict = STRATEGIES[strategy]
     lr = LogisticRegression(C=1e-99)
-    lr.fit(X_toy, y_toy)
-    n_samples = len(X_toy)
+    lr.fit(X, y)
+    n_samples = len(X)
     mapie_clf0 = MapieClassifier(lr, **args_init)
     mapie_clf1 = MapieClassifier(lr, **args_init)
     mapie_clf2 = MapieClassifier(lr, **args_init)
-    mapie_clf0.fit(X_toy, y_toy, sample_weight=None)
-    mapie_clf1.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples))
-    mapie_clf2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples) * 5)
+    mapie_clf0.fit(X, y, sample_weight=None)
+    mapie_clf1.fit(X, y, sample_weight=np.ones(shape=n_samples))
+    mapie_clf2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
     y_pred0, y_ps0 = mapie_clf0.predict(
-        X_toy,
+        X,
         alpha=0.2,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
     )
     y_pred1, y_ps1 = mapie_clf1.predict(
-        X_toy,
+        X,
         alpha=0.2,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
     )
     y_pred2, y_ps2 = mapie_clf2.predict(
-        X_toy,
+        X,
         alpha=0.2,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
@@ -799,7 +809,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     args_init, args_predict = STRATEGIES[strategy]
     clf = LogisticRegression().fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(estimator=clf, **args_init)
-    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.fit(X_toy, y_toy, size_raps=.5)
     _, y_ps = mapie_clf.predict(
         X_toy,
         alpha=0.5,
