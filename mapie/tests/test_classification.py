@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Tuple, Union, Iterable, Dict
+from typing import Any, Optional, Union, Iterable, Dict
 from typing_extensions import TypedDict
 
 import pytest

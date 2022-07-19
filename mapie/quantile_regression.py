@@ -1,5 +1,4 @@
 from __future__ import annotations
-from tkinter import N
 from typing import Optional, Tuple, Union, cast, List, Iterable
 
 import numpy as np
