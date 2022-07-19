@@ -1068,3 +1068,21 @@ def test_classif_float32(cv):
     assert (
         np.repeat([[True, False, False]], 20, axis=0)[:, :, np.newaxis] == yps
     ).all()
+
+
+def test_raps_regularization_parameters():
+    """Check that the regularization parameters for the
+    raps method are the expected ones.
+    """
+    args_init, args_predict = STRATEGIES["raps"]
+    clf = LogisticRegression().fit(X_toy, y_toy)
+    mapie_clf = MapieClassifier(estimator=clf, **args_init)
+    mapie_clf.fit(X_toy, y_toy, size_raps=.5)
+    _, _ = mapie_clf.predict(
+        X_toy,
+        alpha=0.5,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(mapie_clf.lambda_star, 0.001)
+    np.testing.assert_allclose(mapie_clf.k_star, 0)
