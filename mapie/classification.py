@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union, Tuple, Iterable, List, cast
+from typing import Any, Optional, Union, Tuple, Iterable, List, cast
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -717,7 +717,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         thresholds: NDArray,
         include_last_label: Union[bool, str, None],
         lambda_: Union[NDArray, float, None],
-        k_star: Union[NDArray, None]
+        k_star: Union[NDArray, Any]
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """_summary_
 
