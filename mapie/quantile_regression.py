@@ -335,7 +335,7 @@ class MapieQuantileRegressor(MapieRegressor):
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
     ) -> Tuple[
-        ArrayLike, NDArray, ArrayLike, NDArray, Optional[ArrayLike]
+        ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]
     ]:
         """
         Check if a calibration set has already been defined, if not, then
@@ -391,14 +391,14 @@ class MapieQuantileRegressor(MapieRegressor):
         else:
             X_train, y_train, sample_weight_train = X, y, sample_weight
         X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
-        y_train, y_calib = cast(NDArray, y_train), cast(NDArray, y_calib)
+        y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
         sample_weight_train = cast(ArrayLike, sample_weight_train)
         return X_train, y_train, X_calib, y_calib, sample_weight_train
 
     def fit(
         self,
         X: ArrayLike,
-        y: NDArray,
+        y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         X_calib: Optional[ArrayLike] = None,
         y_calib: Optional[ArrayLike] = None,

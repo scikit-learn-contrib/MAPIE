@@ -907,7 +907,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     def fit(
         self,
         X: ArrayLike,
-        y: NDArray,
+        y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         size_raps: Optional[float] = .2
     ) -> MapieClassifier:
@@ -964,6 +964,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 test_size=size_raps,
                 random_state=self.random_state
             )
+            y = cast(NDArray, y)
             n_samples = _num_samples(y)
             self.y_pred_proba_raps = estimator.predict_proba(
                 self.X_raps
