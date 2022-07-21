@@ -298,11 +298,6 @@ def test_compute_quantiles_2D_shape(alphas: NDArray):
 def test_compute_quantiles_3D_shape(alphas: NDArray):
     """Test that the number of quantiles is equal to
     the number of alphas for a 3D input vector
-
-    Parameters
-    ----------
-    alphas : NDArray
-        Levels of confidence.
     """
     vector = np.random.rand(1000, 1)
     vector = np.repeat(vector, len(alphas), axis=1)
@@ -315,11 +310,6 @@ def test_compute_quantiles_3D_shape(alphas: NDArray):
 def test_compute_quantiles_2D_and_3D(alphas: NDArray):
     """Test that if to matrices are equal (modulo one dimension)
     then there quantiles are the same.
-
-    Parameters
-    ----------
-    alphas : NDArray
-        Levels of confidence.
     """
     vector1 = np.random.rand(1000, 1)
     vector2 = np.repeat(vector1, len(alphas), axis=1)
@@ -333,11 +323,6 @@ def test_compute_quantiles_2D_and_3D(alphas: NDArray):
 @pytest.mark.parametrize("y_true_proba_place", Y_TRUE_PROBA_PLACE)
 def test_get_true_label_position(y_true_proba_place: List[NDArray]):
     """Check that the returned true label position the good.
-
-    Parameters
-    ----------
-    y_true_proba_place : List[NDArray]
-        List with y_true, y_pred_proba and the true position.
     """
     y_true = y_true_proba_place[0]
     y_pred_proba = y_true_proba_place[1]

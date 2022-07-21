@@ -640,14 +640,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        y : ArrayLike of shape (n_samples, )
+        y : NDArray of shape (n_samples, )
             Array with the labels.
-        y_pred_proba : ArrayLike of shape (n_samples, n_classes)
+        y_pred_proba : NDArray of shape (n_samples, n_classes)
             Predictions of the model.
 
         Returns
         -------
-         Tuple[ArrayLike, ArrayLike] of shapes
+         Tuple[NDArray, NDArray] of shapes
          (n_samples, 1) and (n_samples, ). The first element
          is the cumsum probability of the true label. The second
         is the sorted position of the true label.
@@ -680,19 +680,19 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        k_star : ArrayLike of shape (n_alphas, )
+        k_star : NDArray of shape (n_alphas, )
             Optimal value of k (called k_reg in the paper). There
             is one value per alpha.
         lambda_ : Union[NDArray, float] of shape (n_alphas, )
             One value of lambda for each alpha.
-        conf_score : ArrayLike of shape (n_samples, 1)
+        conf_score : NDArray of shape (n_samples, 1)
             Conformity scores.
-        cutoff : ArrayLike of shape (n_samples, 1)
+        cutoff : NDArray of shape (n_samples, 1)
             Position of the true label.
 
         Returns
         -------
-        ArrayLike of shape (n_samples, 1, n_alphas)
+        NDArray of shape (n_samples, 1, n_alphas)
             Regularized conformity scores. The regularization
             depends on the value of alpha.
         """
@@ -723,15 +723,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        y_pred_proba : ArrayLike of shape (n_samples, n_classes)
+        y_pred_proba : NDArray of shape (n_samples, n_classes)
             Predictions of the model.
-        thresholds : ArrayLike of shape (n_alphas, )
+        thresholds : NDArray of shape (n_alphas, )
             Quantiles that have been computed.
-        lambda_ : Union[NDArray, float] of shape (n_alphas)
-            Values of lambda for the regularization.
         include_last_label : Union[bool, str, None]
             Whether or not to include the label whose score
             exceeds the threshold.
+        lambda_ : Union[NDArray, float, None] of shape (n_alphas)
+            Values of lambda for the regularization.
+        k_star: Union[NDArray, Any]
+            Values of k for the regularization.
 
         Returns
         -------
@@ -798,22 +800,22 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        best_size : ArrayLike of shape (n_alphas, )
+        best_size : NDArray of shape (n_alphas, )
             Smallest average prediciton set size before testing
             for the new value of lambda_
-        alpha_np : ArrayLike of shape (n_alphas)
+        alpha_np : NDArray of shape (n_alphas)
             Level of confidences.
-        y_ps : ArrayLike of shape (n_samples, n_classes, n_alphas)
+        y_ps : NDArray of shape (n_samples, n_classes, n_alphas)
             Prediction sets computed with the RAPS method and the
             new value of lambda_
-        lambda_ : ArrayLike of shape (n_alphas, )
+        lambda_ : NDArray of shape (n_alphas, )
             New value of lambda_star to test
-        lambda_star : ArrayLike of shape (n_alpahs)
+        lambda_star : NDArray of shape (n_alpahs)
             Actual optimal lambda values for each alpha.
 
         Returns
         -------
-        Tuple[ArrayLike, ArrayLike]
+        Tuple[NDArray, NDArray]
             Arrays of shape (n_alphas, ) and (n_alphas) which
             respectively represents the update values of lambda_star
             and the new best sizes.
@@ -848,11 +850,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred_proba_raps: NDArray of shape (n_samples, n_labels, n_alphas)
             Predictions of the model repeated on the last axis as many times
             as the number of alphas
-        alpha_np : ArrayLike of shape (n_alphas, )
+        alpha_np : NDArray of shape (n_alphas, )
             Level of confidences.
         include_last_label : bool
             Whether or not to include last label in
             prediction sets
+        k_star: NDArray of shape (n_alphas, )
+            Values of k for the regularization.
 
         Returns
         -------
@@ -915,7 +919,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         X : ArrayLike of shape (n_samples, n_features)
             Training data.
 
-        y : ArrayLike of shape (n_samples,)
+        y : NDArray of shape (n_samples,)
             Training labels.
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)

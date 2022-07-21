@@ -1113,7 +1113,8 @@ def test_regularize_conf_scores_shape(k_lambda):
 
 
 def test_get_true_label_cumsum_proba_shape():
-    """Test that the conformity scores have the correct shape.
+    """Test that the true label cumsumed probabilities
+    have the correct shape.
     """
     clf = LogisticRegression()
     clf.fit(X, y)
@@ -1128,7 +1129,8 @@ def test_get_true_label_cumsum_proba_shape():
 
 
 def test_get_true_label_cumsum_proba_result():
-    """Test that the conformity scores have the correct shape.
+    """Test that the true label cumsumed probabilities
+    are the expected ones.
     """
     clf = LogisticRegression()
     clf.fit(X_toy, y_toy)
@@ -1158,6 +1160,9 @@ def test_get_true_label_cumsum_proba_result():
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_get_last_included_proba_shape(k_lambda, strategy):
+    """Test that the outputs of _get_last_included_proba method
+    have the correct shape.
+    """
     lambda_, k = k_lambda[0], k_lambda[1]
     if len(k) == 1:
         thresholds = .2
