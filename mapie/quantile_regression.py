@@ -22,6 +22,7 @@ from .utils import (
     check_lower_upper_bounds,
     check_defined_variables_predict_cqr,
 )
+
 from ._compatibility import np_quantile
 from .regression import MapieRegressor
 
