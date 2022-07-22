@@ -612,7 +612,7 @@ def test_valid_estimator(strategy: str) -> None:
 @pytest.mark.parametrize("method", METHODS)
 def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
-    mapie_clf = MapieClassifier(method=method)
+    mapie_clf = MapieClassifier(method=method, cv="prefit")
     mapie_clf.fit(X_toy, y_toy)
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
@@ -1221,3 +1221,13 @@ def test_get_true_label_position(y_true_proba_place: List[NDArray]):
     found_place = mapie._get_true_label_position(y_pred_proba, y_true)
 
     assert (found_place == place).all()
+
+
+@pytest.mark.parametrize("cv", [5, None])
+def test_error_raps_cv_not_prefit(cv: Union[int, None]):
+    """Test that an error is raised if the method is RAPS
+    and cv is different from prefit.
+    """
+    mapie = MapieClassifier(method="raps", cv=5)
+    with pytest.raises(ValueError, match=r".*RAPS method can only.*"):
+        mapie.fit(X_toy, y_toy)

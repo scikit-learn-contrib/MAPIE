@@ -56,19 +56,22 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         - "score", based on the the scores
           (i.e. 1 minus the softmax score of the true label)
-          on the calibration set.
+          on the calibration set. See [1] for more details.
 
         - "cumulated_score", based on the sum of the softmax outputs of the
           labels until the true label is reached, on the calibration set.
+          See [2] for more details.
 
         - "raps", regularized Adaptive Prediction Set method. It uses the
           same technique as for cumulated_score method but add a penalty
-          term to reduce the prediction sets size.
+          term to reduce the prediction sets size. See [3] for more
+          details. For now, this method only works with "prefit" strategy.
 
         - "top_k", based on the sorted index of the probability of the true
           label in the softmax outputs, on the calibration set. In case two
           probabilities are equal, both are taken, thus, the size of some
-          prediction sets may be different from the others.
+          prediction sets may be different from the others. See [3] for
+          more details.
 
         By default "score".
 
@@ -139,15 +142,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     References
     ----------
-    Mauricio Sadinle, Jing Lei, and Larry Wasserman.
+    [1] Mauricio Sadinle, Jing Lei, and Larry Wasserman.
     "Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.",
     Journal of the American Statistical Association, 114, 2019.
 
-    Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
+    [2] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
     "Classification with Valid and Adaptive Coverage."
     NeurIPS 202 (spotlight) 2020.
 
-    Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
+    [3] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
     and Jitendra Malik.
     "Uncertainty Sets for Image Classifiers using Conformal Prediction."
     International Conference on Learning Representations 2021.
@@ -216,6 +219,19 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
         check_random_state(self.random_state)
+        self._check_raps()
+
+    def _check_raps(self):
+        """Check that is the method used is RAPS, then
+        the cross validation strategy is "prefit".
+
+        Raises
+        ------
+        ValueError
+            If method is "raps" and cv not "prefit".
+        """
+        if self.method == "raps" and self.cv != "prefit":
+            raise ValueError("RAPS method can only be used with cv='prefit'")
 
     def _check_estimator(
         self,
