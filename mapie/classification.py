@@ -690,7 +690,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         cutoff: NDArray
     ) -> NDArray:
         """Regularize the conformity scores with the RAPS
-        method.
+        method. See algo. 2 in [3].
 
         Parameters
         ----------
