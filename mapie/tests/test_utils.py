@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 import pytest
@@ -18,7 +18,6 @@ from mapie.utils import (
     compute_quantiles,
     fit_estimator,
     check_lower_upper_bounds,
-    get_true_label_position
 )
 from mapie.quantile_regression import MapieQuantileRegressor
 
@@ -36,25 +35,6 @@ X, y = make_regression(
 ALPHAS = [
     np.array([.1]),
     np.array([.05, .1, .2]),
-]
-
-Y_TRUE_PROBA_PLACE = [
-    [
-        np.array([2, 0]),
-        np.array([
-            [.1, .3, .6],
-            [.2, .7, .1]
-        ]),
-        np.array([[0], [1]])
-    ],
-    [
-        np.array([1, 0]),
-        np.array([
-            [.7, .12, .18],
-            [.5, .24, .26]
-        ]),
-        np.array([[2], [0]])
-    ]
 ]
 
 
@@ -318,16 +298,3 @@ def test_compute_quantiles_2D_and_3D(alphas: NDArray):
     quantiles2 = compute_quantiles(vector2, alphas)
 
     assert (quantiles1 == quantiles2).all()
-
-
-@pytest.mark.parametrize("y_true_proba_place", Y_TRUE_PROBA_PLACE)
-def test_get_true_label_position(y_true_proba_place: List[NDArray]):
-    """Check that the returned true label position the good.
-    """
-    y_true = y_true_proba_place[0]
-    y_pred_proba = y_true_proba_place[1]
-    place = y_true_proba_place[2]
-
-    found_place = get_true_label_position(y_pred_proba, y_true)
-
-    assert (found_place == place).all()

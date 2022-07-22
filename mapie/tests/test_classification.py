@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Union, Iterable, Dict, cast
+from typing import Any, Optional, Union, Iterable, List, Dict, cast
 from typing_extensions import TypedDict
 
 import pytest
@@ -51,6 +51,26 @@ Y_PRED_PROBA_WRONG = [
         ]
     )
 ]
+
+Y_TRUE_PROBA_PLACE = [
+    [
+        np.array([2, 0]),
+        np.array([
+            [.1, .3, .6],
+            [.2, .7, .1]
+        ]),
+        np.array([[0], [1]])
+    ],
+    [
+        np.array([1, 0]),
+        np.array([
+            [.7, .12, .18],
+            [.5, .24, .26]
+        ]),
+        np.array([[2], [0]])
+    ]
+]
+
 Params = TypedDict(
     "Params",
     {
@@ -1187,3 +1207,17 @@ def test_get_last_included_proba_shape(k_lambda, strategy):
     assert y_p_p_c.shape == (len(X), len(np.unique(y)), len(thresholds))
     assert y_p_i_l.shape == (len(X), 1, len(thresholds))
     assert y_p_p_i_l.shape == (len(X), 1, len(thresholds))
+
+
+@pytest.mark.parametrize("y_true_proba_place", Y_TRUE_PROBA_PLACE)
+def test_get_true_label_position(y_true_proba_place: List[NDArray]):
+    """Check that the returned true label position the good.
+    """
+    y_true = y_true_proba_place[0]
+    y_pred_proba = y_true_proba_place[1]
+    place = y_true_proba_place[2]
+
+    mapie = MapieClassifier()
+    found_place = mapie._get_true_label_position(y_pred_proba, y_true)
+
+    assert (found_place == place).all()
