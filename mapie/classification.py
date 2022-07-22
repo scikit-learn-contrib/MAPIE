@@ -836,7 +836,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     def _update_size_and_lambda(
         self,
-        best_size: NDArray,
+        best_sizes: NDArray,
         alpha_np: NDArray,
         y_ps: NDArray,
         lambda_: Union[NDArray, float],
@@ -848,7 +848,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        best_size : NDArray of shape (n_alphas, )
+        best_sizes : NDArray of shape (n_alphas, )
             Smallest average prediciton set size before testing
             for the new value of lambda_
         alpha_np : NDArray of shape (n_alphas)
@@ -875,13 +875,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             ) for i in range(len(alpha_np))
         ]
 
-        sizes_improve = (sizes < best_size)
+        sizes_improve = (sizes < best_sizes)
         lambda_star = (
             sizes_improve * lambda_ + (1 - sizes_improve) * lambda_star
         )
-        best_size = sizes_improve * sizes + (1 - sizes_improve) * best_size
+        best_sizes = sizes_improve * sizes + (1 - sizes_improve) * best_sizes
 
-        return lambda_star, best_size
+        return lambda_star, best_sizes
 
     def _find_lambda_star(
         self, y_pred_proba_raps: NDArray,
@@ -909,7 +909,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Optimal values of lambda.
         """
         lambda_star = np.zeros(len(alpha_np))
-        best_size = np.ones(len(alpha_np)) * 1e10
+        best_sizes = np.ones(len(alpha_np)) * 1e10
 
         for lambda_ in [.001, .01, .1, .2, .5]:
             true_label_cumsum_proba, cutoff = (
@@ -942,8 +942,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             y_ps = np.greater_equal(
                     y_pred_proba_raps - y_pred_proba_last, -EPSILON
             )
-            lambda_star, best_size = self._update_size_and_lambda(
-                best_size, alpha_np, y_ps, lambda_, lambda_star
+            lambda_star, best_sizes = self._update_size_and_lambda(
+                best_sizes, alpha_np, y_ps, lambda_, lambda_star
             )
         if len(lambda_star) == 1:
             lambda_star = lambda_star[0]
