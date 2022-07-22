@@ -42,10 +42,9 @@ the ``partial_fit`` method called at every step.
 International Conference on Machine Learning (ICML, 2021).
 """
 
-import warnings
-
 import numpy as np
 import pandas as pd
+import warnings
 from mapie.metrics import (
     regression_coverage_score,
     regression_mean_width_score

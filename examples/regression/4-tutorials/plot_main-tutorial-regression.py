@@ -41,7 +41,6 @@ from mapie.subsample import Subsample
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-from typing import Dict
 # from xgboost import XGBRegressor
 # from scikeras.wrappers import KerasRegressor
 # from tensorflow.keras import Sequential
@@ -133,18 +132,18 @@ polyn_model_quant = Pipeline(
 # in order to obtain a 95% confidence for our prediction intervals.
 
 STRATEGIES = {
-    "naive": Dict(method="naive"),
-    "jackknife": Dict(method="base", cv=-1),
-    "jackknife_plus": Dict(method="plus", cv=-1),
-    "jackknife_minmax": Dict(method="minmax", cv=-1),
-    "cv": Dict(method="base", cv=10),
-    "cv_plus": Dict(method="plus", cv=10),
-    "cv_minmax": Dict(method="minmax", cv=10),
-    "jackknife_plus_ab": Dict(method="plus", cv=Subsample(n_resamplings=50)),
-    "jackknife_minmax_ab": Dict(
+    "naive": dict(method="naive"),
+    "jackknife": dict(method="base", cv=-1),
+    "jackknife_plus": dict(method="plus", cv=-1),
+    "jackknife_minmax": dict(method="minmax", cv=-1),
+    "cv": dict(method="base", cv=10),
+    "cv_plus": dict(method="plus", cv=10),
+    "cv_minmax": dict(method="minmax", cv=10),
+    "jackknife_plus_ab": dict(method="plus", cv=Subsample(n_resamplings=50)),
+    "jackknife_minmax_ab": dict(
         method="minmax", cv=Subsample(n_resamplings=50)
     ),
-    "conformalized_quantile_regression": Dict(
+    "conformalized_quantile_regression": dict(
         method="quantile", cv="split", alpha=0.05
     )
 }
@@ -367,15 +366,15 @@ polyn_model_quant = Pipeline(
 # in order to obtain a 95% confidence for our prediction intervals.
 
 STRATEGIES = {
-    "naive": Dict(method="naive"),
-    "jackknife": Dict(method="base", cv=-1),
-    "jackknife_plus": Dict(method="plus", cv=-1),
-    "jackknife_minmax": Dict(method="minmax", cv=-1),
-    "cv": Dict(method="base", cv=10),
-    "cv_plus": Dict(method="plus", cv=10),
-    "cv_minmax": Dict(method="minmax", cv=10),
-    "jackknife_plus_ab": Dict(method="plus", cv=Subsample(n_resamplings=50)),
-    "conformalized_quantile_regression": Dict(
+    "naive": dict(method="naive"),
+    "jackknife": dict(method="base", cv=-1),
+    "jackknife_plus": dict(method="plus", cv=-1),
+    "jackknife_minmax": dict(method="minmax", cv=-1),
+    "cv": dict(method="base", cv=10),
+    "cv_plus": dict(method="plus", cv=10),
+    "cv_minmax": dict(method="minmax", cv=10),
+    "jackknife_plus_ab": dict(method="plus", cv=Subsample(n_resamplings=50)),
+    "conformalized_quantile_regression": dict(
         method="quantile", cv="split", alpha=0.05
     )
 }
@@ -567,18 +566,18 @@ polyn_model_quant = Pipeline(
     ]
 )
 STRATEGIES = {
-    "naive": Dict(method="naive"),
-    "jackknife": Dict(method="base", cv=-1),
-    "jackknife_plus": Dict(method="plus", cv=-1),
-    "jackknife_minmax": Dict(method="minmax", cv=-1),
-    "cv": Dict(method="base", cv=10),
-    "cv_plus": Dict(method="plus", cv=10),
-    "cv_minmax": Dict(method="minmax", cv=10),
-    "jackknife_plus_ab": Dict(method="plus", cv=Subsample(n_resamplings=50)),
-    "jackknife_minmax_ab": Dict(
+    "naive": dict(method="naive"),
+    "jackknife": dict(method="base", cv=-1),
+    "jackknife_plus": dict(method="plus", cv=-1),
+    "jackknife_minmax": dict(method="minmax", cv=-1),
+    "cv": dict(method="base", cv=10),
+    "cv_plus": dict(method="plus", cv=10),
+    "cv_minmax": dict(method="minmax", cv=10),
+    "jackknife_plus_ab": dict(method="plus", cv=Subsample(n_resamplings=50)),
+    "jackknife_minmax_ab": dict(
         method="minmax", cv=Subsample(n_resamplings=50)
     ),
-    "conformalized_quantile_regression": Dict(
+    "conformalized_quantile_regression": dict(
         method="quantile", cv="split", alpha=0.05
     )
 }
