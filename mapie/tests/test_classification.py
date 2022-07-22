@@ -1092,7 +1092,7 @@ def test_raps_regularization_parameters():
         agg_scores=args_predict["agg_scores"]
     )
     np.testing.assert_allclose(mapie_clf.lambda_star, 0.001)
-    np.testing.assert_allclose(mapie_clf.k_star, 0)
+    np.testing.assert_allclose(mapie_clf.k_star, 1)
 
 
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)

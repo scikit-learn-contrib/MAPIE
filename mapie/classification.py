@@ -31,7 +31,6 @@ from .utils import (
     fit_estimator,
     get_true_label_position
 )
-from .metrics import classification_coverage_score
 
 
 class MapieClassifier(BaseEstimator, ClassifierMixin):
@@ -763,7 +762,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 np.cumsum(
                     np.ones(y_pred_proba_sorted_cumsum.shape),
                     axis=1
-                ) - 1 - k_star
+                ) - k_star
             )
         # get cumulated score at their original position
         y_pred_proba_cumsum = np.take_along_axis(
@@ -825,16 +824,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             np.sum(y_ps[:, :, i], axis=1)
         ) for i in range(len(alpha_np))]
 
-        coverages = [classification_coverage_score(
-            self.y_raps, y_ps[:, :, i]
-        )for i in range(len(alpha_np))]
-
-        coverages_ok = coverages >= alpha_np
-        sizes_improve = (sizes < best_size) * coverages_ok
+        sizes_improve = (sizes < best_size)
         lambda_star = (
             sizes_improve * lambda_ + (1 - sizes_improve) * lambda_star
         )
-        best_size = np.minimum(sizes, best_size)
+        best_size = sizes_improve * sizes + (1 - sizes_improve) * best_size
 
         return lambda_star, best_size
 
@@ -1178,7 +1172,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     self.k_star = compute_quantiles(
                         self.position_raps,
                         alpha_np
-                    )
+                    ) + 1
                     y_pred_proba_raps = np.repeat(
                         self.y_pred_proba_raps[:, :, np.newaxis],
                         len(alpha_np),
