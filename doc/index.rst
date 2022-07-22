@@ -24,8 +24,8 @@
    :caption: CLASSIFICATION
 
    theoretical_description_classification
-   tutorial_classification
    examples_classification/4-tutorials/plot_main-tutorial-classification
+   examples_classification/4-tutorials/plot_crossconformal
    examples_classification/index
    notebooks_classification
 
