@@ -41,12 +41,11 @@ from mapie.subsample import Subsample
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-from typing import Union, Optional
-from typing_extensions import TypedDict
-# from xgboost import XGBRegressor
-# from scikeras.wrappers import KerasRegressor
-# from tensorflow.keras import Sequential
-# from tensorflow.keras.layers import Dense
+from typing import Dict
+from xgboost import XGBRegressor
+from scikeras.wrappers import KerasRegressor
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense
 
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 # # disable debugging logs from Tensorflow
@@ -133,24 +132,19 @@ polyn_model_quant = Pipeline(
 # are then saved in a DataFrame. Here, we set an alpha value of 0.05
 # in order to obtain a 95% confidence for our prediction intervals.
 
-
-Params = TypedDict(
-    "Params",
-    {"method": str, "cv": Union[int, str, Subsample], "alpha": Optional[float]}
-)
 STRATEGIES = {
-    "naive": Params(method="naive"),
-    "jackknife": Params(method="base", cv=-1),
-    "jackknife_plus": Params(method="plus", cv=-1),
-    "jackknife_minmax": Params(method="minmax", cv=-1),
-    "cv": Params(method="base", cv=10),
-    "cv_plus": Params(method="plus", cv=10),
-    "cv_minmax": Params(method="minmax", cv=10),
-    "jackknife_plus_ab": Params(method="plus", cv=Subsample(n_resamplings=50)),
-    "jackknife_minmax_ab": Params(
+    "naive": Dict(method="naive"),
+    "jackknife": Dict(method="base", cv=-1),
+    "jackknife_plus": Dict(method="plus", cv=-1),
+    "jackknife_minmax": Dict(method="minmax", cv=-1),
+    "cv": Dict(method="base", cv=10),
+    "cv_plus": Dict(method="plus", cv=10),
+    "cv_minmax": Dict(method="minmax", cv=10),
+    "jackknife_plus_ab": Dict(method="plus", cv=Subsample(n_resamplings=50)),
+    "jackknife_minmax_ab": Dict(
         method="minmax", cv=Subsample(n_resamplings=50)
     ),
-    "conformalized_quantile_regression": Params(
+    "conformalized_quantile_regression": Dict(
         method="quantile", cv="split", alpha=0.05
     )
 }
@@ -295,11 +289,6 @@ pd.DataFrame([
 # function that generates one-dimensional data with normal noise uniformely
 # in a given interval.
 
-def x_sinx(x):
-    """One-dimensional x*sin(x) function."""
-    return x*np.sin(x)
-
-
 def get_1d_data_with_heteroscedastic_noise(
     funct, min_x, max_x, n_samples, noise
 ):
@@ -377,20 +366,16 @@ polyn_model_quant = Pipeline(
 # are then saved in a DataFrame. Here, we set an alpha value of 0.05
 # in order to obtain a 95% confidence for our prediction intervals.
 
-Params = TypedDict(
-    "Params",
-    {"method": str, "cv": Union[int, str, Subsample], "alpha": Optional[float]}
-)
 STRATEGIES = {
-    "naive": Params(method="naive"),
-    "jackknife": Params(method="base", cv=-1),
-    "jackknife_plus": Params(method="plus", cv=-1),
-    "jackknife_minmax": Params(method="minmax", cv=-1),
-    "cv": Params(method="base", cv=10),
-    "cv_plus": Params(method="plus", cv=10),
-    "cv_minmax": Params(method="minmax", cv=10),
-    "jackknife_plus_ab": Params(method="plus", cv=Subsample(n_resamplings=50)),
-    "conformalized_quantile_regression": Params(
+    "naive": Dict(method="naive"),
+    "jackknife": Dict(method="base", cv=-1),
+    "jackknife_plus": Dict(method="plus", cv=-1),
+    "jackknife_minmax": Dict(method="minmax", cv=-1),
+    "cv": Dict(method="base", cv=10),
+    "cv_plus": Dict(method="plus", cv=10),
+    "cv_minmax": Dict(method="minmax", cv=10),
+    "jackknife_plus_ab": Dict(method="plus", cv=Subsample(n_resamplings=50)),
+    "conformalized_quantile_regression": Dict(
         method="quantile", cv="split", alpha=0.05
     )
 }
@@ -410,34 +395,6 @@ for strategy, params in STRATEGIES.items():
 # Once again, let’s compare the target confidence intervals with prediction
 # intervals obtained with the Jackknife+, Jackknife-minmax, CV+, CV-minmax,
 # Jackknife+-after-Boostrap, and CQR strategies.
-
-
-def plot_1d_data(
-    X_train,
-    y_train,
-    X_test,
-    y_test,
-    y_sigma,
-    y_pred,
-    y_pred_low,
-    y_pred_up,
-    ax=None,
-    title=None
-):
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3)
-    ax.scatter(X_train, y_train, color="red", alpha=0.3, label="Training data")
-    ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
-    ax.plot(X_test, y_test - y_sigma, color="gray", ls="--")
-    ax.plot(X_test, y_test + y_sigma, color="gray", ls="--")
-    ax.plot(
-        X_test, y_pred, color="blue", alpha=0.5, label="Prediction intervals"
-    )
-    if title is not None:
-        ax.set_title(title)
-    ax.legend()
-
 
 strategies = [
     "jackknife_plus",
@@ -609,23 +566,19 @@ polyn_model_quant = Pipeline(
         ))
     ]
 )
-Params = TypedDict(
-    "Params",
-    {"method": str, "cv": Union[int, str, Subsample], "alpha": Optional[float]}
-)
 STRATEGIES = {
-    "naive": Params(method="naive"),
-    "jackknife": Params(method="base", cv=-1),
-    "jackknife_plus": Params(method="plus", cv=-1),
-    "jackknife_minmax": Params(method="minmax", cv=-1),
-    "cv": Params(method="base", cv=10),
-    "cv_plus": Params(method="plus", cv=10),
-    "cv_minmax": Params(method="minmax", cv=10),
-    "jackknife_plus_ab": Params(method="plus", cv=Subsample(n_resamplings=50)),
-    "jackknife_minmax_ab": Params(
+    "naive": Dict(method="naive"),
+    "jackknife": Dict(method="base", cv=-1),
+    "jackknife_plus": Dict(method="plus", cv=-1),
+    "jackknife_minmax": Dict(method="minmax", cv=-1),
+    "cv": Dict(method="base", cv=10),
+    "cv_plus": Dict(method="plus", cv=10),
+    "cv_minmax": Dict(method="minmax", cv=10),
+    "jackknife_plus_ab": Dict(method="plus", cv=Subsample(n_resamplings=50)),
+    "jackknife_minmax_ab": Dict(
         method="minmax", cv=Subsample(n_resamplings=50)
     ),
-    "conformalized_quantile_regression": Params(
+    "conformalized_quantile_regression": Dict(
         method="quantile", cv="split", alpha=0.05
     )
 }
@@ -733,14 +686,14 @@ pd.DataFrame([
 # MAPIE can be used with any kind of sklearn-compatible regressor. Here, we
 # illustrate this by comparing the prediction intervals estimated by the CV+
 # method using different models:
-
+#
 # - the same polynomial function as before.
 #
 # - a XGBoost model using the Scikit-learn API.
 #
 # - a simple neural network, a Multilayer Perceptron with three dense layers,
 #   using the KerasRegressor wrapper.
-
+#
 # Once again, let’s use our noisy one-dimensional data obtained from a
 # uniform distribution.
 
@@ -760,17 +713,17 @@ _ = plt.scatter(X_train, y_train)
 # dense layers with 20 neurons each followed by a relu activation.
 
 
-# def mlp():
-#     """
-#     Two-layer MLP model
-#     """
-#     model = Sequential([
-#         Dense(units=20, input_shape=(1,), activation="relu"),
-#         Dense(units=20, activation="relu"),
-#         Dense(units=1)
-#     ])
-#     model.compile(loss="mean_squared_error", optimizer="adam")
-#     return model
+def mlp():
+    """
+    Two-layer MLP model
+    """
+    model = Sequential([
+        Dense(units=20, input_shape=(1,), activation="relu"),
+        Dense(units=20, activation="relu"),
+        Dense(units=1)
+    ])
+    model.compile(loss="mean_squared_error", optimizer="adam")
+    return model
 
 
 polyn_model = Pipeline(
@@ -780,58 +733,57 @@ polyn_model = Pipeline(
     ]
 )
 
-# xgb_model = XGBRegressor(
-#     max_depth=2,
-#     n_estimators=100,
-#     tree_method="hist",
-#     random_state=59,
-#     learning_rate=0.1,
-#     verbosity=0,
-#     nthread=-1
-# )
-# mlp_model = KerasRegressor(
-#     build_fn=mlp,
-#     epochs=500,
-#     verbose=0
-# )
+xgb_model = XGBRegressor(
+    max_depth=2,
+    n_estimators=100,
+    tree_method="hist",
+    random_state=59,
+    learning_rate=0.1,
+    verbosity=0,
+    nthread=-1
+)
+mlp_model = KerasRegressor(
+    build_fn=mlp,
+    epochs=500,
+    verbose=0
+)
 
 ##############################################################################
 # Let's now use MAPIE to estimate the prediction intervals using the CV+
 # method and compare their prediction interval.
 
-# models = [polyn_model, xgb_model, mlp_model]
-# model_names = ["polyn", "xgb", "mlp"]
-# prediction_interval = {}
-# for name, model in zip(model_names, models):
-#     mapie = MapieRegressor(model, method="plus", cv=5)
-#     mapie.fit(X_train, y_train)
-#     y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
+models = [polyn_model, xgb_model, mlp_model]
+model_names = ["polyn", "xgb", "mlp"]
+for name, model in zip(model_names, models):
+    mapie = MapieRegressor(model, method="plus", cv=5)
+    mapie.fit(X_train, y_train)
+    y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
 
-# fig, axs = plt.subplots(1, 3, figsize=(20, 6))
-# for name, ax in zip(model_names, axs):
-#     plot_1d_data(
-#         X_train.ravel(),
-#         y_train.ravel(),
-#         X_test.ravel(),
-#         y_mesh.ravel(),
-#         1.96*noise,
-#         y_pred[name].ravel(),
-#         y_pis[name][:, 0, 0].ravel(),
-#         y_pis[name][:, 1, 0].ravel(),
-#         ax=ax,
-#         title=name
-#     )
+fig, axs = plt.subplots(1, 3, figsize=(20, 6))
+for name, ax in zip(model_names, axs):
+    plot_1d_data(
+        X_train.ravel(),
+        y_train.ravel(),
+        X_test.ravel(),
+        y_mesh.ravel(),
+        1.96*noise,
+        y_pred[name].ravel(),
+        y_pis[name][:, 0, 0].ravel(),
+        y_pis[name][:, 1, 0].ravel(),
+        ax=ax,
+        title=name
+    )
 
 
-# fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-# for name in model_names:
-#     ax.plot(X_test, y_pis[name][:, 1, 0] - y_pis[name][:, 0, 0])
-# ax.axhline(1.96*2*noise, ls="--", color="k")
-# ax.set_xlabel("x")
-# ax.set_ylabel("Prediction Interval Width")
-# ax.legend(model_names + ["True width"], fontsize=8)
+fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+for name in model_names:
+    ax.plot(X_test, y_pis[name][:, 1, 0] - y_pis[name][:, 0, 0])
+ax.axhline(1.96*2*noise, ls="--", color="k")
+ax.set_xlabel("x")
+ax.set_ylabel("Prediction Interval Width")
+ax.legend(model_names + ["True width"], fontsize=8)
 
-##############################################################################
+#############################################################################
 # As expected with the CV+ method, the prediction intervals are a bit
 # conservative since they are slightly wider than the true intervals.
 # However, the CV+ method on the three models gives very promising results
