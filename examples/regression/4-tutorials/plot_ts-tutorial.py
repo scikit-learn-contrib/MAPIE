@@ -3,7 +3,7 @@
 Tutorial for time series
 ========================
 
-In this tutorial we explain you how to use
+In this tutorial we describe how to use
 :class:`mapie.time_series_regression.MapieTimeSeriesRegressor`
 to estimate prediction intervals associated with time series forecast.
 
