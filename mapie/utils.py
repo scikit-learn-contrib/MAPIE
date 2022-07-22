@@ -593,8 +593,8 @@ def check_alpha_and_last_axis(vector: NDArray, alpha_np: NDArray):
         return vector, alpha_np
 
 
-def compute_quantiles(vector: NDArray, alpha_np: NDArray) -> NDArray:
-    """Compute the desired quantile of a vecor.
+def compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
+    """Compute the desired quantiles of a vector.
 
     Parameters
     ----------
@@ -602,8 +602,8 @@ def compute_quantiles(vector: NDArray, alpha_np: NDArray) -> NDArray:
         Vector on which compute the quantile. If the vector has 3 dimensions,
         then each 1-alpha quantile will be computed on its corresping matrix
         selected on the last axis of the matrix.
-    alpha_np : NDArray for shape (n_alphas, )
-        Confidence levels.
+    alpha : NDArray for shape (n_alphas, )
+        Risk levels.
 
     Returns
     -------
@@ -617,17 +617,17 @@ def compute_quantiles(vector: NDArray, alpha_np: NDArray) -> NDArray:
                         vector,
                         ((n + 1) * (1 - _alpha)) / n,
                         method="higher",
-                    ) for _alpha in alpha_np
+                    ) for _alpha in alpha
         ])
 
     else:
-        check_alpha_and_last_axis(vector, alpha_np)
+        check_alpha_and_last_axis(vector, alpha)
         quantiles_ = np.stack(
                 [
                     compute_quantiles(
                         vector[:, :, i],
                         np.array([alpha_])
-                    ) for i, alpha_ in enumerate(alpha_np)
+                    ) for i, alpha_ in enumerate(alpha)
                 ]
             )[:, 0]
     return quantiles_

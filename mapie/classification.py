@@ -635,7 +635,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y: NDArray,
         y_pred_proba: NDArray
     ) -> Tuple[NDArray, NDArray]:
-        """Compute the cumsumed probability of the true laebl
+        """Compute the cumsumed probability of the true label.
 
         Parameters
         ----------
@@ -718,14 +718,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         lambda_: Union[NDArray, float, None],
         k_star: Union[NDArray, Any]
     ) -> Tuple[NDArray, NDArray, NDArray]:
-        """_summary_
+        """Function that returns the smallest score
+        among those which are included in the prediciton set.
 
         Parameters
         ----------
         y_pred_proba : NDArray of shape (n_samples, n_classes)
             Predictions of the model.
         thresholds : NDArray of shape (n_alphas, )
-            Quantiles that have been computed.
+            Quantiles that have been computed from the conformity
+            scores.
         include_last_label : Union[bool, str, None]
             Whether or not to include the label whose score
             exceeds the threshold.
@@ -809,7 +811,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             new value of lambda_
         lambda_ : NDArray of shape (n_alphas, )
             New value of lambda_star to test
-        lambda_star : NDArray of shape (n_alpahs)
+        lambda_star : NDArray of shape (n_alphas, )
             Actual optimal lambda values for each alpha.
 
         Returns
@@ -820,9 +822,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             and the new best sizes.
         """
 
-        sizes = [np.mean(
-            np.sum(y_ps[:, :, i], axis=1)
-        ) for i in range(len(alpha_np))]
+        sizes = [
+            np.mean(
+                np.sum(y_ps[:, :, i], axis=1)
+            ) for i in range(len(alpha_np))
+        ]
 
         sizes_improve = (sizes < best_size)
         lambda_star = (
