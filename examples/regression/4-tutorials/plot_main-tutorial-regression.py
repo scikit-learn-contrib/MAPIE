@@ -31,8 +31,8 @@ use the CV-minmax strategies.**
 
 import matplotlib.pyplot as plt
 import numpy as np
-# import os
 import pandas as pd
+import subprocess
 import warnings
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
@@ -41,10 +41,6 @@ from mapie.subsample import Subsample
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-# from xgboost import XGBRegressor
-# from scikeras.wrappers import KerasRegressor
-# from tensorflow.keras import Sequential
-# from tensorflow.keras.layers import Dense
 
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 # # disable debugging logs from Tensorflow
@@ -696,6 +692,16 @@ pd.DataFrame([
 # Once again, let’s use our noisy one-dimensional data obtained from a
 # uniform distribution.
 
+subprocess.run("pip install scikeras", shell=True)
+subprocess.run("pip install tensorflow", shell=True)
+subprocess.run("pip install xgboost", shell=True)
+
+from scikeras.wrappers import KerasRegressor  # noqa: E402
+from tensorflow.keras import Sequential  # noqa: E402
+from tensorflow.keras.layers import Dense  # noqa: E402
+from xgboost import XGBRegressor  # noqa: E402
+
+
 min_x, max_x, n_samples, noise = -5, 5, 100, 0.5
 X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
     x_sinx, min_x, max_x, n_samples, noise
@@ -712,75 +718,75 @@ _ = plt.scatter(X_train, y_train)
 # dense layers with 20 neurons each followed by a relu activation.
 
 
-# def mlp():
-#     """
-#     Two-layer MLP model
-#     """
-#     model = Sequential([
-#         Dense(units=20, input_shape=(1,), activation="relu"),
-#         Dense(units=20, activation="relu"),
-#         Dense(units=1)
-#     ])
-#     model.compile(loss="mean_squared_error", optimizer="adam")
-#     return model
+def mlp():
+    """
+    Two-layer MLP model
+    """
+    model = Sequential([
+        Dense(units=20, input_shape=(1,), activation="relu"),
+        Dense(units=20, activation="relu"),
+        Dense(units=1)
+    ])
+    model.compile(loss="mean_squared_error", optimizer="adam")
+    return model
 
 
-# polyn_model = Pipeline(
-#     [
-#         ("poly", PolynomialFeatures(degree=degree_polyn)),
-#         ("linear", LinearRegression())
-#     ]
-# )
+polyn_model = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=degree_polyn)),
+        ("linear", LinearRegression())
+    ]
+)
 
-# xgb_model = XGBRegressor(
-#     max_depth=2,
-#     n_estimators=100,
-#     tree_method="hist",
-#     random_state=59,
-#     learning_rate=0.1,
-#     verbosity=0,
-#     nthread=-1
-# )
-# mlp_model = KerasRegressor(
-#     build_fn=mlp,
-#     epochs=500,
-#     verbose=0
-# )
+xgb_model = XGBRegressor(
+    max_depth=2,
+    n_estimators=100,
+    tree_method="hist",
+    random_state=59,
+    learning_rate=0.1,
+    verbosity=0,
+    nthread=-1
+)
+mlp_model = KerasRegressor(
+    build_fn=mlp,
+    epochs=500,
+    verbose=0
+)
 
 ##############################################################################
 # Let's now use MAPIE to estimate the prediction intervals using the CV+
 # method and compare their prediction interval.
 
-# models = [polyn_model, xgb_model, mlp_model]
-# model_names = ["polyn", "xgb", "mlp"]
-# for name, model in zip(model_names, models):
-#     mapie = MapieRegressor(model, method="plus", cv=5)
-#     mapie.fit(X_train, y_train)
-#     y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
+models = [polyn_model, xgb_model, mlp_model]
+model_names = ["polyn", "xgb", "mlp"]
+for name, model in zip(model_names, models):
+    mapie = MapieRegressor(model, method="plus", cv=5)
+    mapie.fit(X_train, y_train)
+    y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
 
-# fig, axs = plt.subplots(1, 3, figsize=(20, 6))
-# for name, ax in zip(model_names, axs):
-#     plot_1d_data(
-#         X_train.ravel(),
-#         y_train.ravel(),
-#         X_test.ravel(),
-#         y_mesh.ravel(),
-#         1.96*noise,
-#         y_pred[name].ravel(),
-#         y_pis[name][:, 0, 0].ravel(),
-#         y_pis[name][:, 1, 0].ravel(),
-#         ax=ax,
-#         title=name
-#     )
+fig, axs = plt.subplots(1, 3, figsize=(20, 6))
+for name, ax in zip(model_names, axs):
+    plot_1d_data(
+        X_train.ravel(),
+        y_train.ravel(),
+        X_test.ravel(),
+        y_mesh.ravel(),
+        1.96*noise,
+        y_pred[name].ravel(),
+        y_pis[name][:, 0, 0].ravel(),
+        y_pis[name][:, 1, 0].ravel(),
+        ax=ax,
+        title=name
+    )
 
 
-# fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-# for name in model_names:
-#     ax.plot(X_test, y_pis[name][:, 1, 0] - y_pis[name][:, 0, 0])
-# ax.axhline(1.96*2*noise, ls="--", color="k")
-# ax.set_xlabel("x")
-# ax.set_ylabel("Prediction Interval Width")
-# ax.legend(model_names + ["True width"], fontsize=8)
+fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+for name in model_names:
+    ax.plot(X_test, y_pis[name][:, 1, 0] - y_pis[name][:, 0, 0])
+ax.axhline(1.96*2*noise, ls="--", color="k")
+ax.set_xlabel("x")
+ax.set_ylabel("Prediction Interval Width")
+ax.legend(model_names + ["True width"], fontsize=8)
 
 #############################################################################
 # As expected with the CV+ method, the prediction intervals are a bit
