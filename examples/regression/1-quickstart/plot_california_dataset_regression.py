@@ -8,39 +8,52 @@ base for the comparaison of the different methods available
 on MAPIE. Two classes will be used:
 :class:`mapie.regression.MapieRegressor` and
 :class:`mapie.quantile_regression.MapieQuantileRegressor`.
+
+The methods are chosen with the parameter `method` of
+:class:`mapie.regression.MapieRegressor` and the parameter
+`cv` is the strategy for cross-validation. In this method,
+to use a "leave-one out" strategy, one would have to use
+`cv=-1` and a positive value would indicate the number of
+folds for a more classic cross-validation strategy. Note
+that for the jackknife+ after boostrap, we need to use the
+class :class:`mapie.subsample.Subsample`.
 """
 
 import warnings
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-from typing import Tuple, Dict
-from matplotlib.offsetbox import (TextArea, AnnotationBbox)
 
 from lightgbm import LGBMRegressor
+import matplotlib.pyplot as plt
+from matplotlib.offsetbox import (TextArea, AnnotationBbox)
 from matplotlib.ticker import FormatStrFormatter
+import numpy as np
+import pandas as pd
 from sklearn.model_selection import RandomizedSearchCV, train_test_split, KFold
+from sklearn.datasets import fetch_california_housing
+from scipy.stats import randint, uniform
+from typing import Tuple, Dict
+
+from mapie._typing import ArrayLike, NDArray
 from mapie.metrics import (
     regression_coverage_score,
     regression_mean_width_score
     )
-from sklearn.datasets import fetch_california_housing
-from scipy.stats import randint, uniform
-
 from mapie.regression import MapieRegressor
-from mapie.quantile_regression import MapieQuantileRegressor
 from mapie.subsample import Subsample
-from mapie._typing import ArrayLike, NDArray
+from mapie.quantile_regression import MapieQuantileRegressor
 
-round_to = 3
+
 random_state = 23
 rng = np.random.default_rng(random_state)
+round_to = 3
 
 warnings.filterwarnings("ignore")
 
 ##############################################################################
 # 1. Data
 # --------------------------------------------------------------------------
+# The target variable is the median house value for California districts. As
+# the value is expressed in thousands of dollars we will times it by 100 to
+# view the dataset in thousands.
 
 
 data = fetch_california_housing(as_frame=True)
@@ -49,17 +62,22 @@ y = pd.DataFrame(data=data.target)*100
 
 ##############################################################################
 # Let's visualize the two-dimensional dataset, the correlations between the
-# independent variables and a histogram of the price of the houses.
+# independent variables.
 
 
 df = pd.concat([X, y], axis=1)
 pear_corr = df.corr(method='pearson')
-print(pear_corr.style.background_gradient(cmap='Greens', axis=0))
+pear_corr.style.background_gradient(cmap='Greens', axis=0)
+
+
+##############################################################################
+# Now let's visualize a histogram of the price of the houses.
+
 
 fig, axs = plt.subplots(1, 1, figsize=(5, 5))
 axs.hist(y, bins=50)
-axs.set_xlabel("Prix median des maisons")
-axs.set_title("Histogram des prix de maisons")
+axs.set_xlabel("Median price of houses")
+axs.set_title("Histogram of house prices")
 axs.xaxis.set_major_formatter(FormatStrFormatter('%.0f'+"k"))
 plt.show()
 
@@ -212,10 +230,10 @@ def plot(
         y_test_sorted_[warnings],
         marker="*", color="green"
     )
-    axs.set_xlabel("Prix des maisons en $")
-    axs.set_ylabel("Prédiction de prix des maisons en $")
+    axs.set_xlabel("True house prices in $")
+    axs.set_ylabel("Prediction of house prices in $")
     ab = AnnotationBbox(
-        TextArea(f"Couverture: {coverage}\nLongeur d'intervalles: {width}"),
+        TextArea(f"Coverage: {coverage}\nInterval width: {width}"),
         xy=(np.min(y_test_sorted_)*3, np.max(y_pred_sorted_+error)*0.95),
         )
     axs.add_artist(ab)
@@ -367,15 +385,13 @@ binned_data = get_bins(
 # the conditional coverage and interval width on these intervals.
 
 
-fig = plt.figure()
 binned_data.T.plot.bar(figsize=(12, 4))
 plt.axhline(0.80, ls="--", color="k")
 plt.ylabel("Conditional coverage")
-plt.xlabel("House binned prices")
+plt.xlabel("Binned house prices")
 plt.xticks(rotation=345)
 plt.ylim(0.3, 1.0)
 plt.legend(loc=[1, 0])
-plt.show()
 
 
 ##############################################################################
@@ -395,13 +411,11 @@ binned_data = get_bins(
     )
 
 
-fig = plt.figure()
 binned_data.T.plot.bar(figsize=(12, 4))
 plt.ylabel("Interval width")
-plt.xlabel("House binned prices")
+plt.xlabel("Binned house prices")
 plt.xticks(rotation=350)
 plt.legend(loc=[1, 0])
-plt.show()
 
 
 ##############################################################################
