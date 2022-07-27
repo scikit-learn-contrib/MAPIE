@@ -10,6 +10,27 @@ class ConformityScore(metaclass=ABCMeta):
     """
     Base class for conformity scores.
 
+    Parameters
+    ----------
+    sym : bool
+        Whether to consider the conformity score as symmetrical or not.
+    consistency_check : bool, optional
+        Whether to check the consistency between the following methods:
+        - get_estimation_distribution and
+        - get_signed_conformity_scores
+        by default True.
+    eps : float, optional
+        Threshold to consider when checking the consistency between the
+        following methods:
+        - get_estimation_distribution and
+        - get_signed_conformity_scores
+        The following equality must be verified:
+        self.get_estimation_distribution(
+            y_pred, self.get_conformity_scores(y, y_pred)
+        ) == y
+        It should be specified if consistency_check==True.
+        by default sys.float_info.epsilon.
+
     Warning: This class should not be used directly.
     Use derived classes instead.
     """
@@ -20,28 +41,6 @@ class ConformityScore(metaclass=ABCMeta):
         consistency_check: bool = True,
         eps: np.float64 = np.float64(1e-8),
     ):
-        """
-        Parameters
-        ----------
-        sym : bool
-            Whether to consider the conformity score as symmetrical or not.
-        consistency_check : bool, optional
-            Whether to check the consistency between the following methods:
-            - get_estimation_distribution and
-            - get_signed_conformity_scores
-            by default True.
-        eps : float, optional
-            Threshold to consider when checking the consistency between the
-            following methods:
-            - get_estimation_distribution and
-            - get_signed_conformity_scores
-            The following equality must be verified:
-            self.get_estimation_distribution(
-                y_pred, self.get_conformity_scores(y, y_pred)
-            ) == y
-            It should be specified if consistency_check==True.
-            by default sys.float_info.epsilon.
-        """
         self.sym = sym
         self.eps = eps
         self.consistency_check = consistency_check

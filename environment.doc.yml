@@ -11,3 +11,4 @@ dependencies:
     - sphinx-gallery=0.10.1
     - sphinx_rtd_theme=1.0.0
     - typing_extensions=4.0.1
+    - lightgbm=3.2.1
