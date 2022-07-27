@@ -1,4 +1,4 @@
-.. _classification_examples:
+.. _classification_examples_1:
 
 1. Quickstart examples
 ----------------------

@@ -1,4 +1,4 @@
-.. _regression_examples:
+.. _regression_examples_1:
 
 1. Quickstart examples
 ----------------------

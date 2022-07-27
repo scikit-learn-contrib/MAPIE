@@ -1,4 +1,4 @@
-.. _classification_examples:
+.. _classification_examples_2:
 
 2. Advanced analysis
 --------------------

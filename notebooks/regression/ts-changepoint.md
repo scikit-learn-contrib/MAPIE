@@ -251,7 +251,7 @@ plot_forecast(y_train, y_test, y_preds, y_pis, coverages, widths)
 ```
 
 
-    
+
 ![png](output_21_0.png)
     
 
@@ -382,7 +382,7 @@ plot_forecast(y_train, y_test, y_preds, y_pis, coverages, widths, plot_coverage=
 ```
 
 
-    
+
 ![png](output_34_0.png)
     
 

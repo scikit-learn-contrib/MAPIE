@@ -1,4 +1,4 @@
-.. _classification_examples:
+.. _classification_examples_3:
 
 3. Simulations from scientific articles
 ---------------------------------------
