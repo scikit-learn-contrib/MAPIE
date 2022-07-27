@@ -160,9 +160,9 @@ else:
 #
 # We now use :class:`MapieTimeSeriesRegressor` to build prediction intervals
 # associated with one-step ahead forecasts. As explained in the introduction,
-# we use the EnbPI method [1]. We therefore use the :class:
+# we use the EnbPI method [1].
 #
-# It can be possible in two ways:
+# Estimating prediction intervals can be possible in two ways:
 #
 # - with a regular ``.fit`` and ``.predict`` process, limiting the use of
 #   trainining set residuals to build prediction intervals

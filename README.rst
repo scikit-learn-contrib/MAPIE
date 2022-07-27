@@ -29,6 +29,9 @@
 .. |Commits| image:: https://img.shields.io/github/commits-since/scikit-learn-contrib/mapie/latest/master
 .. _Commits: https://github.com/scikit-learn-contrib/MAPIE/commits/master
 
+.. |DOI| image:: https://img.shields.io/badge/10.48550/arXiv.2207.12274-B31B1B.svg
+.. _DOI: https://arxiv.org/abs/2207.12274
+
 .. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
     :align: center
