@@ -7,7 +7,7 @@ In this tutorial we describe how to use
 :class:`mapie.time_series_regression.MapieTimeSeriesRegressor`
 to estimate prediction intervals associated with time series forecast.
 
-We use here the Victoria electricity demand dataset used in the book
+Here, we use the Victoria electricity demand dataset used in the book
 "Forecasting: Principles and Practice" by R. J. Hyndman and G. Athanasopoulos.
 The electricity demand features daily and weekly seasonalities and is impacted
 by the temperature, considered here as a exogeneous variable.
@@ -35,7 +35,7 @@ The EnbPI method allows you update the residuals during the prediction,
 each time new observations are available o that the deterioration of
 predictions, or the increase of noise level, can be dynamically taken into
 account. It can be done with :class:`MapieTimeSeriesRegressor` through
-the ``partial_fit`` method called at every step.
+the ``partial_fit`` class method called at every step.
 
 [1] Chen Xu and Yao Xie.
 “Conformal Prediction Interval for Dynamic Time-Series.”
