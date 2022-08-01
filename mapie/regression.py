@@ -322,7 +322,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             return LinearRegression()
         if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
             raise ValueError(
-                "Invalid estimator. "
+                "Invalid estimator."
                 "Please provide a regressor with fit and predict methods."
             )
         if self.cv == "prefit":
