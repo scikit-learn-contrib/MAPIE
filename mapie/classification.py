@@ -215,7 +215,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.method not in self.valid_methods_:
             raise ValueError(
                 "Invalid method. "
-                "Allowed values are 'score' or 'cumulated_score'."
+                "Allowed values are 'score', 'cumulated_score' or 'raps'."
             )
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
@@ -496,10 +496,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             ), axis=1
         )
         # compute V parameter from Romano+(2020)
-        vs = (
-            (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
-            y_pred_proba_last[:, 0, :]
-        )
+        if self.method == "cumulated_score":
+            vs = (
+                (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
+                y_pred_proba_last[:, 0, :]
+            )
+        else:
+            vs = (
+                (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
+                y_pred_proba_last[:, 0, :]
+            ) + 1
+
         # get random numbers for each observation and alpha value
         random_state = check_random_state(self.random_state)
         us = random_state.uniform(size=(prediction_sets.shape[0], 1))
