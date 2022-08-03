@@ -67,7 +67,7 @@ The conformity scores are computed by summing the ranked scores of each label, f
 label of the observation :
 
 .. math:: 
-   s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)_{\pi_j} \quad \text{where} \quad Y_i = \pi_j 
+   s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)_{\pi_j} \quad \text{where} \quad Y_i = \pi_k 
 
 
 The quantile :math:`\hat{q}` is then computed the same way as the LABEL method.
