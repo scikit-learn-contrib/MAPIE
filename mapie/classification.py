@@ -505,7 +505,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             vs = (
                 (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
                 y_pred_proba_last[:, 0, :]
-            ) + 1
+            ) + 1  # TODO: remove + 1 and take into account Angelopoulos answer
 
         # get random numbers for each observation and alpha value
         random_state = check_random_state(self.random_state)
@@ -688,7 +688,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
         )
 
-        return true_label_cumsum_proba, cutoff
+        return true_label_cumsum_proba, cutoff + 1
 
     def _regularize_conformity_score(
         self,
@@ -726,7 +726,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         )
         conf_score += np.maximum(
             np.expand_dims(
-                lambda_ * (cutoff - k_star + 1),
+                lambda_ * (cutoff - k_star),
                 axis=1
             ),
             0
