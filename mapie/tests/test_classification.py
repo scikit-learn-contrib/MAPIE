@@ -1174,7 +1174,7 @@ def test_get_true_label_cumsum_proba_result():
             ]
         )[:, np.newaxis]
     )
-    np.testing.assert_allclose(cutoff, np.array([0, 0, 1, 1, 0, 0, 1, 1, 0]))
+    np.testing.assert_allclose(cutoff, np.array([1, 1, 2, 2, 1, 1, 2, 2, 1]))
 
 
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
