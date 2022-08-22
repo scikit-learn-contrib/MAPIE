@@ -6,7 +6,7 @@ Tutorial for tabular regression
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a
 simple, one-dimensional, ground truth function
 
-.. math:: f(x) = x sin(x)
+.. math:: f(x) = x \times sin(x)
 
 Throughout this tutorial, we will answer the following questions:
 
