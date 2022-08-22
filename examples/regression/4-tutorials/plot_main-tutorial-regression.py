@@ -28,6 +28,7 @@ For conservative prediction interval estimates, you can alternatively
 use the CV-minmax strategies.**
 """
 
+import os
 import subprocess
 import warnings
 
@@ -43,9 +44,7 @@ from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-# os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-# # disable debugging logs from Tensorflow
-
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 warnings.filterwarnings("ignore")
 
 
@@ -228,7 +227,7 @@ plt.show()
 # :math:`x` between all strategies.
 
 
-fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+fig, ax = plt.subplots(1, 1, figsize=(9, 5))
 ax.axhline(1.96*2*noise, ls="--", color="k", label="True width")
 for strategy in STRATEGIES:
     ax.plot(
@@ -238,7 +237,7 @@ for strategy in STRATEGIES:
     )
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
-_ = ax.legend(fontsize=10, loc=[1, 0.4])
+ax.legend(fontsize=8)
 plt.show()
 
 
@@ -334,7 +333,7 @@ min_x, max_x, n_samples, noise = 0, 5, 300, 0.5
 plt.xlabel("x")
 plt.ylabel("y")
 plt.scatter(X_train, y_train, color="C0")
-_ = plt.plot(X_test, y_mesh, color="C1")
+plt.plot(X_test, y_mesh, color="C1")
 plt.show()
 
 ##############################################################################
@@ -438,7 +437,7 @@ for strategy in STRATEGIES:
     )
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
-_ = ax.legend(fontsize=10, loc=[1, 0.4])
+ax.legend(fontsize=8)
 plt.show()
 
 
@@ -479,16 +478,15 @@ heteroscedastic_coverage = get_heteroscedastic_coverage(
     y_test, y_pis, STRATEGIES, bins
 )
 
-fig = plt.figure()
+# fig = plt.figure()
 heteroscedastic_coverage.T.plot.bar(figsize=(12, 4), alpha=0.7)
 plt.axhline(0.95, ls="--", color="k")
 plt.ylabel("Conditional coverage")
 plt.xlabel("x bins")
 plt.xticks(rotation=0)
 plt.ylim(0.8, 1.0)
-plt.legend(loc=[1, 0])
+plt.legend(fontsize=8, loc=[0, 0])
 plt.show()
-
 
 ##############################################################################
 # Let’s now conclude by summarizing the *effective* coverage, namely the
@@ -642,7 +640,7 @@ for strategy in STRATEGIES:
     )
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
-ax.legend(fontsize=10, loc=[1, 0.4])
+ax.legend(fontsize=8)
 plt.show()
 
 ##############################################################################
