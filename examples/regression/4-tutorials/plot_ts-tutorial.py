@@ -42,19 +42,21 @@ the ``partial_fit`` class method called at every step.
 International Conference on Machine Learning (ICML, 2021).
 """
 
+import warnings
+
+from matplotlib import pylab as plt
 import numpy as np
 import pandas as pd
-import warnings
+from scipy.stats import randint
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
+
 from mapie.metrics import (
     regression_coverage_score,
     regression_mean_width_score
 )
 from mapie.subsample import BlockBootstrap
 from mapie.time_series_regression import MapieTimeSeriesRegressor
-from matplotlib import pylab as plt
-from scipy.stats import randint
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 warnings.simplefilter("ignore")
 

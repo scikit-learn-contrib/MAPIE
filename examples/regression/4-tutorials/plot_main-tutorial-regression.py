@@ -28,11 +28,13 @@ For conservative prediction interval estimates, you can alternatively
 use the CV-minmax strategies.**
 """
 
+import subprocess
+import warnings
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import subprocess
-import warnings
+
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
