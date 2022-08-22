@@ -117,8 +117,8 @@ y_pred_score, y_ps_score = mapie_score.predict(X_test_mesh, alpha=alpha)
 ##############################################################################
 # * ``y_pred_score``: represents the prediction in the test set by the base
 #   estimator.
-# * ``y_ps_score``: the prediction sets estimated by MAPIE with the "score"
-#   method.
+# * ``y_ps_score``: reprensents the prediction sets estimated by MAPIE with
+#   the "score" method.
 
 
 def plot_scores(n, alphas, scores, quantiles):
