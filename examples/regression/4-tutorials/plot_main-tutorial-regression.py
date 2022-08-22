@@ -51,9 +51,9 @@ warnings.filterwarnings("ignore")
 # 1. Estimating the aleatoric uncertainty of homoscedastic noisy data
 # -------------------------------------------------------------------
 #
-# Let's start by defining the :math:`x \times \sin(x)` function and another simple
-# function that generates one-dimensional data with normal noise uniformely
-# in a given interval.
+# Let's start by defining the :math:`x \times \sin(x)` function and another
+# simple function that generates one-dimensional data with normal noise
+# uniformely in a given interval.
 
 
 def x_sinx(x):

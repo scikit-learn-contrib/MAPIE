@@ -241,8 +241,9 @@ plot_coverages_widths(alpha2, coverages_score, widths_score, "Score")
 #
 # We saw in the previous section that the "score" method is well calibrated by
 # providing accurate coverage levels. However, it tends to give null
-# prediction sets for uncertain regions, especially when the :math:`\alpha` value is
-# high. MAPIE includes another method, called Adaptive Prediction Set (APS),
+# prediction sets for uncertain regions, especially when the :math:`\alpha`
+# value is high.
+# MAPIE includes another method, called Adaptive Prediction Set (APS),
 # whose conformity score is the cumulated score of the softmax output until
 # the true label is reached (see the theoretical description for more details).
 # We will see in this Section that this method no longer estimates null
