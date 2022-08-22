@@ -6,8 +6,7 @@ Tutorial for tabular regression
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a
 simple, one-dimensional, ground truth function
 
-.. math::
-   f(x) = x {\rm sin}(x)
+.. math:: f(x) = x {\rm sin}(x)
 
 Throughout this tutorial, we will answer the following questions:
 
@@ -52,7 +51,7 @@ warnings.filterwarnings("ignore")
 # 1. Estimating the aleatoric uncertainty of homoscedastic noisy data
 # -------------------------------------------------------------------
 #
-# Let's start by defining the x \times \sin(x)$ function and another simple
+# Let's start by defining the :math:`x \times \sin(x)` function and another simple
 # function that generates one-dimensional data with normal noise uniformely
 # in a given interval.
 
@@ -97,6 +96,7 @@ plt.xlabel("x")
 plt.ylabel("y")
 plt.scatter(X_train, y_train, color="C0")
 _ = plt.plot(X_test, y_mesh, color="C1")
+plt.show()
 
 ##############################################################################
 # As mentioned previously, we fit our training data with a simple
@@ -217,6 +217,7 @@ for strategy, coord in zip(strategies, coords):
         ax=coord,
         title=strategy
     )
+plt.show()
 
 ##############################################################################
 # At first glance, the four strategies give similar results and the
@@ -236,6 +237,7 @@ for strategy in STRATEGIES:
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 _ = ax.legend(fontsize=10, loc=[1, 0.4])
+plt.show()
 
 
 ##############################################################################
@@ -331,6 +333,7 @@ plt.xlabel("x")
 plt.ylabel("y")
 plt.scatter(X_train, y_train, color="C0")
 _ = plt.plot(X_test, y_mesh, color="C1")
+plt.show()
 
 ##############################################################################
 # As mentioned previously, we fit our training data with a simple
@@ -415,7 +418,7 @@ for strategy, coord in zip(strategies, coords):
         ax=coord,
         title=strategy
     )
-
+plt.show()
 
 ##############################################################################
 # We can observe that all of the strategies except CQR seem to have similar
@@ -434,6 +437,7 @@ for strategy in STRATEGIES:
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 _ = ax.legend(fontsize=10, loc=[1, 0.4])
+plt.show()
 
 
 ##############################################################################
@@ -481,6 +485,7 @@ plt.xlabel("x bins")
 plt.xticks(rotation=0)
 plt.ylim(0.8, 1.0)
 plt.legend(loc=[1, 0])
+plt.show()
 
 
 ##############################################################################
@@ -517,8 +522,8 @@ pd.DataFrame([
 # that lie outside the distribution of the training data in order to see how
 # the strategies can capture the *epistemic* uncertainty.
 # For a comparison of the epistemic and aleatoric uncertainties, please have
-# a look at this
-# [source](https://en.wikipedia.org/wiki/Uncertainty_quantification).
+# a look at this source:
+# https://en.wikipedia.org/wiki/Uncertainty_quantification.
 #
 # Let's start by generating and showing the data.
 
@@ -546,6 +551,7 @@ plt.xlabel("x")
 plt.ylabel("y")
 plt.scatter(X_train, y_train, color="C0")
 _ = plt.plot(X_test, y_test, color="C1")
+plt.show()
 
 ##############################################################################
 # As before, we estimate the prediction intervals using a polynomial
@@ -612,14 +618,15 @@ for strategy, coord in zip(strategies, coords):
         ax=coord,
         title=strategy
     )
+plt.show()
 
 
 ##############################################################################
 # At first glance, our polynomial function does not give accurate
-# predictions with respect to the true function when :math:`|x > 6|`.
+# predictions with respect to the true function when :math:`|x| > 6`.
 # The prediction intervals estimated with the Jackknife+ do not seem to
-# increase significantly, unlike the CV+ method whose prediction intervals
-# capture a high uncertainty when :math:`x > 6`.
+# increase. On the other hand, the CV and other related methods seem to capture
+# some uncertainty when :math:`x > 6`.
 #
 # Let's now compare the prediction interval widths between all strategies.
 
@@ -634,12 +641,13 @@ for strategy in STRATEGIES:
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 ax.legend(fontsize=10, loc=[1, 0.4])
+plt.show()
 
 ##############################################################################
 # The prediction interval widths start to increase exponentially
 # for :math:`|x| > 4` for the CV+, CV-minmax, Jackknife-minmax, and quantile
 # strategies. On the other hand, the prediction intervals estimated by
-# Jackknife+ remain roughly constant until :math:`|x| \sim 5` before
+# Jackknife+ remain roughly constant until :math:`|x| \approx 5` before
 # increasing.
 # The CQR strategy seems to perform well, however, on the extreme values
 # of the data the quantile regression fails to give reliable results as it
@@ -682,11 +690,11 @@ pd.DataFrame([
 # illustrate this by comparing the prediction intervals estimated by the CV+
 # method using different models:
 #
-# - the same polynomial function as before.
+# * the same polynomial function as before.
 #
-# - a XGBoost model using the Scikit-learn API.
+# * a XGBoost model using the Scikit-learn API.
 #
-# - a simple neural network, a Multilayer Perceptron with three dense layers,
+# * a simple neural network, a Multilayer Perceptron with three dense layers,
 #   using the KerasRegressor wrapper.
 #
 # Once again, let’s use our noisy one-dimensional data obtained from a
@@ -711,6 +719,7 @@ plt.xlabel("x")
 plt.ylabel("y")
 plt.plot(X_test, y_mesh, color="C1")
 _ = plt.scatter(X_train, y_train)
+plt.show()
 
 ##############################################################################
 # Let's then define the models. The boosing model considers 100 shallow
@@ -760,7 +769,7 @@ mlp_model = KerasRegressor(
 models = [polyn_model, xgb_model, mlp_model]
 model_names = ["polyn", "xgb", "mlp"]
 for name, model in zip(model_names, models):
-    mapie = MapieRegressor(model, method="plus", cv=5)
+    mapie = MapieRegressor(model, method="plus", cv=10)
     mapie.fit(X_train, y_train)
     y_pred[name], y_pis[name] = mapie.predict(X_test, alpha=0.05)
 
@@ -787,9 +796,11 @@ ax.axhline(1.96*2*noise, ls="--", color="k")
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 ax.legend(model_names + ["True width"], fontsize=8)
+plt.show()
 
 #############################################################################
 # As expected with the CV+ method, the prediction intervals are a bit
 # conservative since they are slightly wider than the true intervals.
 # However, the CV+ method on the three models gives very promising results
-# since the prediction intervals closely follow the true intervals with $x$.
+# since the prediction intervals closely follow the true intervals with
+# :math:`x`.

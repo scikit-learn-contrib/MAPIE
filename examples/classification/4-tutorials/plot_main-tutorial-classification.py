@@ -34,7 +34,7 @@ from mapie.metrics import (
 # We will use MAPIE to estimate a prediction set of several classes such
 # that the probability that the true label of a new test point is included
 # in the prediction set is always higher than the target confidence level :
-# :math:`P(Y \in C) \geq 1 - \alpha`.
+# :math:`P(Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \geq 1 - \alpha`.
 # We start by using the softmax score output by the base classifier as the
 # conformity score on a toy two-dimensional dataset.
 #
@@ -43,11 +43,10 @@ from mapie.metrics import (
 # * First we generate a dataset with train, calibration and test, the model is
 #   fitted on the training set.
 # * We set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}` the softmax
-# output
-#   of the true class for each sample in the calibration set.
-# * Then we define $\hat{q}$ as being the :math:`(n + 1) (\alpha) / n` previous
-#   quantile of :math:`S_{1}, ..., S_{n}`
-#   (this is essentially the quantile $\alpha$, but with a small sample
+#   output of the true class for each sample in the calibration set.
+# * Then we define :math:`\hat{q}` as being the :math:`(n + 1) (\alpha) / n`
+#   previous quantile of :math:`S_{1}, ..., S_{n}`
+#   (this is essentially the quantile :math:`alpha`, but with a small sample
 #   correction).
 # * Finally, for a new test data point (where :math:`X_{n + 1}` is known but
 #   :math:`Y_{n + 1}` is not), create a prediction set
@@ -204,9 +203,9 @@ plot_results(alpha, X_test_mesh, y_pred_score, y_ps_score)
 # classifier.
 #
 # Let’s now study the effective coverage and the mean prediction set widths
-# as function of the $1-\alpha$ target coverage. To this aim, we use once
+# as function of the :math:`1-\alpha` target coverage. To this aim, we use once
 # again the `.predict()` method of MAPIE to estimate predictions sets on a
-# large number of $\alpha$ values.
+# large number of :math:`\alpha` values.
 
 alpha2 = np.arange(0.02, 0.98, 0.02)
 _, y_ps_score2 = mapie_score.predict(X_test, alpha=alpha2)
@@ -242,7 +241,7 @@ plot_coverages_widths(alpha2, coverages_score, widths_score, "Score")
 #
 # We saw in the previous section that the "score" method is well calibrated by
 # providing accurate coverage levels. However, it tends to give null
-# prediction sets for uncertain regions, especially when the $\alpha$ value is
+# prediction sets for uncertain regions, especially when the :math:`\alpha` value is
 # high. MAPIE includes another method, called Adaptive Prediction Set (APS),
 # whose conformity score is the cumulated score of the softmax output until
 # the true label is reached (see the theoretical description for more details).

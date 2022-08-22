@@ -23,16 +23,16 @@ Once the base model is optimized, we can use
 the prediction intervals associated with one-step ahead forecasts through
 the EnbPI method [1].
 
-As its mother class :class:`MapieRegressor`, :class:`MapieTimeSeriesRegressor`
+As its parent class :class:`MapieRegressor`, :class:`MapieTimeSeriesRegressor`
 has two main arguments : "cv", and "method".
 In order to implement EnbPI, "method" must be set to "enbpi" (the default
 value) while "cv" must be set to the :class:`mapie.subsample.BlockBootstrap`
 class that block bootstraps the training set.
 This sampling method is used in [1] instead of the traditional bootstrap
-strategy as it is more suited for ime series data.
+strategy as it is more suited for time series data.
 
 The EnbPI method allows you update the residuals during the prediction,
-each time new observations are available o that the deterioration of
+each time new observations are available so that the deterioration of
 predictions, or the increase of noise level, can be dynamically taken into
 account. It can be done with :class:`MapieTimeSeriesRegressor` through
 the ``partial_fit`` class method called at every step.
@@ -116,6 +116,7 @@ plt.figure(figsize=(16, 5))
 plt.plot(y_train)
 plt.plot(y_test)
 plt.ylabel("Hourly demand (GW)")
+plt.legend(["Training data", "Test data"])
 plt.show()
 
 
