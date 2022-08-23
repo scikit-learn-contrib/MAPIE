@@ -140,10 +140,12 @@ class MapieQuantileRegressor(MapieRegressor):
     def __init__(
         self,
         estimator: Optional[
-            Union[RegressorMixin, Pipeline, List[
-                    Union[RegressorMixin, Pipeline]
-                ]]
-            ] = None,
+            Union[
+                RegressorMixin,
+                Pipeline,
+                List[Union[RegressorMixin, Pipeline]]
+            ]
+        ] = None,
         method: str = "quantile",
         cv: Optional[str] = None,
         alpha: float = 0.1,
@@ -303,7 +305,7 @@ class MapieQuantileRegressor(MapieRegressor):
         cv: Optional[str] = None
     ) -> str:
         """
-        Check if cv argument is None or "split".
+        Check if cv argument is None, "split" or "prefit".
 
         Parameters
         ----------
@@ -318,12 +320,13 @@ class MapieQuantileRegressor(MapieRegressor):
         Raises
         ------
         ValueError
-            Raises an error if the cv is anything else but the method "split".
+            Raises an error if the cv is anything else but the method "split" 
+            or "prefit.
             Only the split method has been implemented.
         """
         if cv is None:
             return "split"
-        if (cv == "split") or (cv == "prefit"):
+        if cv == "split" or "prefit":
             return cv
         else:
             raise ValueError(
@@ -402,7 +405,7 @@ class MapieQuantileRegressor(MapieRegressor):
         sample_weight_train = cast(ArrayLike, sample_weight_train)
         return X_train, y_train, X_calib, y_calib, sample_weight_train
 
-    def _prefit_params(
+    def _check_prefit_params(
         self,
         estimator: List[Union[RegressorMixin, Pipeline]],
         X: ArrayLike,
@@ -431,6 +434,8 @@ class MapieQuantileRegressor(MapieRegressor):
         Raises
         ------
         ValueError
+            If a non-iterable variable is provided for estimator.
+        ValueError
             If less or more than three models are defined.
         Warning
             If X and y are defined, then warning that they are not used.
@@ -440,6 +445,10 @@ class MapieQuantileRegressor(MapieRegressor):
             If the alpha is defined, warns the user that it must be set
             accordingly with the prefit estimators.
         """
+        if hasattr(estimator, '__iter__') is False:
+            raise ValueError(
+                "Estimator for prefit must be an iterable object."
+            )
         if len(estimator) == 3:
             for est in estimator:
                 self._check_estimator(est)
@@ -449,19 +458,11 @@ class MapieQuantileRegressor(MapieRegressor):
                     " need to be preset with alpha values in the following"
                     " order [alpha/2, 1 - alpha/2, 0.5]."
                     )
-        if X is not None and y is not None:
-            warnings.warn(
-                "WARNING: X and y will not be used as model is already"
-                + " trained."
-            )
-        if X_calib is None or y_calib is None:
-            raise ValueError(
-                "You need to set the calibration dataset."
-            )
         if self.alpha is not None:
             warnings.warn(
                 "WARNING: The alpha that is set needs to be the same"
-                + " as the alpha of your prefitted model."
+                + " as the alpha of your prefitted model in the following"
+                " order [alpha/2, 1 - alpha/2, 0.5]"
             )
 
     def fit(
@@ -529,12 +530,14 @@ class MapieQuantileRegressor(MapieRegressor):
         MapieQuantileRegressor
              The model itself.
         """
+        self.cv = self._check_cv(cast(str, self.cv))
+
         # Initialization
         self.estimators_: List[RegressorMixin] = []
         if self.cv == "prefit":
             estimator = cast(List, self.estimator)
-            self._prefit_params(estimator, X, y, X_calib, y_calib)
-            X_calib, y_calib = indexable(X_calib, y_calib)
+            self._check_prefit_params(estimator, X, y)
+            X_calib, y_calib = indexable(X, y)
 
             self.n_calib_samples = _num_samples(y_calib)
             check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
@@ -545,13 +548,12 @@ class MapieQuantileRegressor(MapieRegressor):
             )
             for i, est in enumerate(estimator):
                 self.estimators_.append(est)
-                y_calib_preds[i] = est.predict(X_calib)
+                y_calib_preds[i] = est.predict(X_calib).ravel()
         else:
             # Checks
             self._check_parameters()
             checked_estimator = self._check_estimator(self.estimator)
             alpha = self._check_alpha(self.alpha)
-            self.cv = self._check_cv(cast(str, self.cv))
             X, y = indexable(X, y)
             random_state = check_random_state(random_state)
             results = self._check_calib_set(
@@ -608,8 +610,8 @@ class MapieQuantileRegressor(MapieRegressor):
                 shape=(3, self.n_calib_samples),
                 fill_value=np.nan
             )
-        self.conformity_scores_[0] = y_calib_preds[0] - y_calib
-        self.conformity_scores_[1] = y_calib - y_calib_preds[1]
+        self.conformity_scores_[0] = np.subtract(y_calib_preds[0], y_calib)
+        self.conformity_scores_[1] = np.subtract(y_calib, y_calib_preds[1])
         self.conformity_scores_[2] = np.max(
             [
                 self.conformity_scores_[0],
