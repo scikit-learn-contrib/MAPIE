@@ -2,29 +2,31 @@
 ===============================
 Tutorial for tabular regression
 ===============================
-
-In this tutorial, we compare the prediction intervals estimated by MAPIE on a
-simple, one-dimensional, ground truth function :math:`f(x) = x \times sin(x)`.
-
-Throughout this tutorial, we will answer the following questions:
-
-- How well do the MAPIE strategies capture the aleatoric uncertainty
-  existing in the data?
-
-- How do the prediction intervals estimated by the resampling strategies
-  evolve for new *out-of-distribution* data ?
-
-- How do the prediction intervals vary between regressor models ?
-
-Throughout this tutorial, we estimate the prediction intervals first using
-a polynomial function, and then using a boosting model, and a simple neural
-network.
-
-**For practical problems, we advise using the faster CV+ or
-Jackknife+-after-Bootstrap strategies.
-For conservative prediction interval estimates, you can alternatively
-use the CV-minmax strategies.**
 """
+
+##############################################################################
+# In this tutorial, we compare the prediction intervals estimated by MAPIE on a
+# simple, one-dimensional, ground truth function
+# :math:`f(x) = x \times \sin(x)`.
+
+# Throughout this tutorial, we will answer the following questions:
+
+# - How well do the MAPIE strategies capture the aleatoric uncertainty
+#   existing in the data?
+
+# - How do the prediction intervals estimated by the resampling strategies
+#   evolve for new *out-of-distribution* data ?
+
+# - How do the prediction intervals vary between regressor models ?
+
+# Throughout this tutorial, we estimate the prediction intervals first using
+# a polynomial function, and then using a boosting model, and a simple neural
+# network.
+
+# **For practical problems, we advise using the faster CV+ or
+# Jackknife+-after-Bootstrap strategies.
+# For conservative prediction interval estimates, you can alternatively
+# use the CV-minmax strategies.**
 
 import os
 import subprocess
@@ -477,7 +479,7 @@ heteroscedastic_coverage = get_heteroscedastic_coverage(
 )
 
 # fig = plt.figure()
-heteroscedastic_coverage.T.plot.bar(figsize=(12, 4), alpha=0.7)
+heteroscedastic_coverage.T.plot.bar(figsize=(12, 5), alpha=0.7)
 plt.axhline(0.95, ls="--", color="k")
 plt.ylabel("Conditional coverage")
 plt.xlabel("x bins")
@@ -785,6 +787,7 @@ for name, ax in zip(model_names, axs):
         ax=ax,
         title=name
     )
+plt.show()
 
 
 fig, ax = plt.subplots(1, 1, figsize=(7, 5))
