@@ -320,13 +320,13 @@ class MapieQuantileRegressor(MapieRegressor):
         Raises
         ------
         ValueError
-            Raises an error if the cv is anything else but the method "split" 
+            Raises an error if the cv is anything else but the method "split"
             or "prefit.
             Only the split method has been implemented.
         """
         if cv is None:
             return "split"
-        if cv == "split" or "prefit":
+        if cv in ("split", "prefit"):
             return cv
         else:
             raise ValueError(
@@ -610,8 +610,8 @@ class MapieQuantileRegressor(MapieRegressor):
                 shape=(3, self.n_calib_samples),
                 fill_value=np.nan
             )
-        self.conformity_scores_[0] = np.subtract(y_calib_preds[0], y_calib)
-        self.conformity_scores_[1] = np.subtract(y_calib, y_calib_preds[1])
+        self.conformity_scores_[0] = y_calib_preds[0] - y_calib
+        self.conformity_scores_[1] = y_calib - y_calib_preds[1]
         self.conformity_scores_[2] = np.max(
             [
                 self.conformity_scores_[0],
