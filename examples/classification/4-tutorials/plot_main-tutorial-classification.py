@@ -40,13 +40,13 @@ from mapie.metrics import (
 #
 # We estimate the prediction sets as follows :
 #
-# * First we generate a dataset with train, calibration and test, the model is
+# * Generate a dataset with train, calibration and test, the model is
 #   fitted on the training set.
 #
-# * We set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}` the softmax
+# * Set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}` the softmax
 #   output of the true class for each sample in the calibration set.
 #
-# * Then we define :math:`\hat{q}` as being the :math:`(n + 1) (\alpha) / n`
+# * Define :math:`\hat{q}` as being the :math:`(n + 1) (\alpha) / n`
 #   previous quantile of :math:`S_{1}, ..., S_{n}`
 #   (this is essentially the quantile :math:`\alpha`, but with a small sample
 #   correction).
@@ -207,7 +207,7 @@ plot_results(alpha, X_test_mesh, y_pred_score, y_ps_score)
 #
 # Let’s now study the effective coverage and the mean prediction set widths
 # as function of the :math:`1-\alpha` target coverage. To this aim, we use once
-# again the `.predict()` method of MAPIE to estimate predictions sets on a
+# again the ``predict`` method of MAPIE to estimate predictions sets on a
 # large number of :math:`\alpha` values.
 
 alpha2 = np.arange(0.02, 0.98, 0.02)
