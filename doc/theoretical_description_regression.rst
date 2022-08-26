@@ -23,7 +23,7 @@ Given some target quantile :math:`\alpha` or associated target coverage level :m
 we aim at constructing a prediction interval :math:`\hat{C}_{n, \alpha}` for a new
 feature vector :math:`X_{n+1}` such that 
 
-.. math:: 
+.. math::
     P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \} \geq 1 - \alpha
 
 1. The "Naive" method

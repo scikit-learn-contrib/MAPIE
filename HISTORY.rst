@@ -2,6 +2,12 @@
 History
 =======
 
+0.4.2 (XXXX-XX-XX)
+------------------
+
+* Add tutorial for time series
+* Convert existing tutorials in .py
+
 0.4.1 (2002-06-27)
 ------------------
 

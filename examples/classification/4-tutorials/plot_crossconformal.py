@@ -1,7 +1,7 @@
 """
-======================================================
-Introducing cross-conformal methods for classification
-======================================================
+==================================
+Cross-conformal for classification
+==================================
 
 In this tutorial, we estimate the impact of the
 training/calibration split on the prediction sets and
