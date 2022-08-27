@@ -32,6 +32,7 @@ class ConformityScore(metaclass=ABCMeta):
             - get_estimation_distribution and
             - get_signed_conformity_scores
             by default True.
+        compute_score_weights : TODO
         eps : float, optional
             Threshold to consider when checking the consistency between the
             following methods:
@@ -51,7 +52,7 @@ class ConformityScore(metaclass=ABCMeta):
 
     @abstractmethod
     def get_signed_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike,
+        self, y: ArrayLike, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> NDArray:
         """
         Placeholder for get_signed_conformity_scores.
@@ -97,23 +98,12 @@ class ConformityScore(metaclass=ABCMeta):
             Observed values.
         """
 
-    def get_weights(self, X: NDArray) -> NDArray:
-        """
-        Compute weights for conformity scores on calibration samples.
-
-        Parameters
-        ----------
-        X : NDArray
-            Dataset used for computing the weights
-
-        Returns
-        -------
-        NDArray
-            Estimated weights
-        """
-        return np.ones(shape=(len(X)+1))
-
-    def check_consistency(self, y: NDArray, y_pred: NDArray) -> None:
+    def check_consistency(
+        self,
+        y: NDArray,
+        y_pred: NDArray,
+        conformity_scores: NDArray,
+    ) -> None:
         """
         Check consistency between the following methods:
         get_estimation_distribution and get_signed_conformity_scores
@@ -129,15 +119,15 @@ class ConformityScore(metaclass=ABCMeta):
             Observed values.
         y_pred : NDArray
             Predicted values.
+        conformity_scores: NDArray
+            Conformity scores.
 
         Raises
         ------
         ValueError
             If the two methods are not consistent.
         """
-        score_distribution = self.get_estimation_distribution(
-            y_pred, conformity_scores
-        )
+        score_distribution = self.get_estimation_distribution(y_pred, conformity_scores)
         abs_conformity_scores = np.abs(np.subtract(score_distribution, y))
         max_conf_score = np.max(abs_conformity_scores)
         if max_conf_score > self.eps:
@@ -153,9 +143,23 @@ class ConformityScore(metaclass=ABCMeta):
                 "sure that the two methods are consistent."
             )
 
-    def get_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike
-    ) -> NDArray:
+    def get_weights(self, X: NDArray) -> NDArray:
+        """
+        Compute weights for conformity scores on calibration samples.
+
+        Parameters
+        ----------
+        X : NDArray
+            Dataset used for computing the weights
+
+        Returns
+        -------
+        NDArray
+            Estimated weights
+        """
+        return np.ones(shape=(len(X) + 1))
+
+    def get_conformity_scores(self, y: ArrayLike, y_pred: ArrayLike) -> NDArray:
         """
         Get the conformity score considering the symmetrical property if so.
 
@@ -179,41 +183,6 @@ class ConformityScore(metaclass=ABCMeta):
         return conformity_scores
 
 
-class CovariateShiftConformityScore(ConformityScore):
-    def __init__(
-        self,
-        density_ratio_estimator: DensityRatioEstimator,
-    ) -> None:
-        super().__init__(
-            sym=True,
-            consistency_check=False,
-            compute_score_weights=True,
-        )
-        self.density_ratio_estimator = density_ratio_estimator
-
-    def get_signed_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray
-    ) -> NDArray:
-        scores = np.subtract(y, y_pred)
-        return scores
-
-    def get_weights(self, X: NDArray) -> NDArray:
-        dre_test = self.density_ratio_estimator.predict(X)  # n_test
-        dre_calib = self.density_ratio_estimator.calib_dr_estimates_  # n_calib
-        denom = dre_calib.sum() + dre_test  # n_test
-        calib_weights = dre_calib[:, np.newaxis] / denom  # (n_calib, n_test)
-        test_weights = dre_test / denom  # n_test
-        weights_stacked = np.vstack([calib_weights, test_weights]).T
-        return weights_stacked  # (n_test, n_calib+1)
-
-    def get_estimation_distribution(
-        self, y_pred: NDArray, conformity_scores: NDArray
-    ) -> NDArray:
-        return np.add(y_pred, conformity_scores)
-
-
 class AbsoluteConformityScore(ConformityScore):
     """
     Absolute conformity score.
@@ -229,7 +198,9 @@ class AbsoluteConformityScore(ConformityScore):
         super().__init__(sym=True, consistency_check=True)
 
     def get_signed_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike,
+        self,
+        y: ArrayLike,
+        y_pred: ArrayLike,
     ) -> NDArray:
         """
         Compute the signed conformity scores from the predicted values
@@ -289,7 +260,9 @@ class GammaConformityScore(ConformityScore):
         return True
 
     def get_signed_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike,
+        self,
+        y: ArrayLike,
+        y_pred: ArrayLike,
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
@@ -311,3 +284,34 @@ class GammaConformityScore(ConformityScore):
         """
         self._check_predicted_data(y_pred)
         return np.multiply(y_pred, np.add(1, conformity_scores))
+
+
+class CovariateShiftConformityScore(ConformityScore):
+    def __init__(
+        self,
+        density_ratio_estimator: DensityRatioEstimator,
+    ) -> None:
+        super().__init__(
+            sym=True,
+            consistency_check=False,
+            compute_score_weights=True,
+        )
+        self.density_ratio_estimator = density_ratio_estimator
+
+    def get_signed_conformity_scores(self, y: NDArray, y_pred: NDArray) -> NDArray:
+        scores = np.subtract(y, y_pred)
+        return scores
+
+    def get_weights(self, X: NDArray) -> NDArray:
+        dre_test = self.density_ratio_estimator.predict(X)  # n_test
+        dre_calib = self.density_ratio_estimator.calib_dr_estimates_  # n_calib
+        denom = dre_calib.sum() + dre_test  # n_test
+        calib_weights = dre_calib[:, np.newaxis] / denom  # (n_calib, n_test)
+        test_weights = dre_test / denom  # n_test
+        weights_stacked = np.vstack([calib_weights, test_weights]).T
+        return weights_stacked  # (n_test, n_calib+1)
+
+    def get_estimation_distribution(
+        self, y_pred: NDArray, conformity_scores: NDArray
+    ) -> NDArray:
+        return np.add(y_pred, conformity_scores)
