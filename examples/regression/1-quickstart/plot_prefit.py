@@ -3,10 +3,10 @@
 Example use of the prefit parameter with neural networks
 ========================================================
 
-:class:`mapie.regression.MapieRegressor` and 
+:class:`mapie.regression.MapieRegressor` and
 :class:`mapie.quantile_regression.MapieQuantileRegressor``
-are used to calibrate uncertainties for large models for 
-which the cost of cross-validation is too high. Typically, 
+are used to calibrate uncertainties for large models for
+which the cost of cross-validation is too high. Typically,
 neural networks rely on a single validation set.
 
 In this example, we first fit a neural network on the training set. We
@@ -14,16 +14,12 @@ then compute residuals on a validation set with the `cv="prefit"` parameter.
 Finally, we evaluate the model with prediction intervals on a testing set.
 """
 
-from cProfile import label
-import subprocess
 
-subprocess.run("pip install lightgbm", shell=True)
-
-import scipy
-from lightgbm import LGBMRegressor
 import numpy as np
-from sklearn.model_selection import train_test_split
+from lightgbm import LGBMRegressor
 from matplotlib import pyplot as plt
+import scipy
+from sklearn.model_selection import train_test_split
 
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
@@ -87,7 +83,7 @@ list_estimators.append(estimator_high)
 estimator = LGBMRegressor(
     objective='quantile',
     alpha=0.5,
-)
+) # Note that this is the same model as used for QR
 estimator.fit(X_train.reshape(-1, 1), y_train)
 list_estimators.append(estimator)
 
@@ -95,7 +91,7 @@ list_estimators.append(estimator)
 mapie_cqr = MapieQuantileRegressor(list_estimators, cv="prefit")
 mapie_cqr.fit(X_val.reshape(-1, 1), y_val)
 y_pred_cqr, y_pis_cqr = mapie_cqr.predict(X_test.reshape(-1, 1))
-y_pred_low_cqr, y_pred_up_cqr = y_pis[:, 0, 0], y_pis[:, 1, 0]
+y_pred_low_cqr, y_pred_up_cqr = y_pis_cqr[:, 0, 0], y_pis_cqr[:, 1, 0]
 coverage_cqr = regression_coverage_score(y_test, y_pred_low_cqr, y_pred_up_cqr)
 
 # Plot obtained prediction intervals on testing set
@@ -127,14 +123,14 @@ plt.fill_between(
     X_test[order],
     y_pred_low[order],
     y_pred_up[order],
-    alpha=0.2,
+    alpha=0.4,
     label="prediction intervals QR"
 )
 plt.fill_between(
     X_test[order],
     y_pred_low_cqr[order],
     y_pred_up_cqr[order],
-    alpha=0.2,
+    alpha=0.4,
     label="prediction intervals CQR"
 )
 plt.title(
