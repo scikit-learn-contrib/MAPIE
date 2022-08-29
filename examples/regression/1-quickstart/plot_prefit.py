@@ -83,7 +83,7 @@ list_estimators.append(estimator_high)
 estimator = LGBMRegressor(
     objective='quantile',
     alpha=0.5,
-) # Note that this is the same model as used for QR
+)  # Note that this is the same model as used for QR
 estimator.fit(X_train.reshape(-1, 1), y_train)
 list_estimators.append(estimator)
 

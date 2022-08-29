@@ -22,6 +22,7 @@ from .utils import (
     fit_estimator,
     check_lower_upper_bounds,
     check_defined_variables_predict_cqr,
+    check_estimator_fit_predict,
 )
 from ._compatibility import np_quantile
 from .regression import MapieRegressor
@@ -190,6 +191,12 @@ class MapieQuantileRegressor(MapieRegressor):
         ValueError
             If the value of alpha is not between 0 and 1.0.
         """
+        if self.cv == "prefit":
+            warnings.warn(
+                "WARNING: The alpha that is set needs to be the same"
+                + " as the alpha of your prefitted model in the following"
+                " order [alpha/2, 1 - alpha/2, 0.5]"
+            )
         if isinstance(alpha, float):
             if np.any(np.logical_or(alpha <= 0, alpha >= 1.0)):
                 raise ValueError(
@@ -251,11 +258,7 @@ class MapieQuantileRegressor(MapieRegressor):
                 solver="highs-ds",
                 alpha=0.0,
             )
-        if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
-            raise ValueError(
-                "Invalid estimator. "
-                "Please provide a regressor with fit and predict methods."
-            )
+        check_estimator_fit_predict(estimator)
         if isinstance(estimator, Pipeline):
             self._check_estimator(estimator[-1])
             return estimator
@@ -408,10 +411,6 @@ class MapieQuantileRegressor(MapieRegressor):
     def _check_prefit_params(
         self,
         estimator: List[Union[RegressorMixin, Pipeline]],
-        X: ArrayLike,
-        y: ArrayLike,
-        X_calib: Optional[ArrayLike] = None,
-        y_calib: Optional[ArrayLike] = None,
     ) -> None:
         """
         Check the parameters set for the specific case of prefit
@@ -451,19 +450,14 @@ class MapieQuantileRegressor(MapieRegressor):
             )
         if len(estimator) == 3:
             for est in estimator:
-                self._check_estimator(est)
+                check_estimator_fit_predict(est)
+                check_is_fitted(est)
         else:
             raise ValueError(
                     "You need to have provided 3 different estimators, they"
                     " need to be preset with alpha values in the following"
                     " order [alpha/2, 1 - alpha/2, 0.5]."
                     )
-        if self.alpha is not None:
-            warnings.warn(
-                "WARNING: The alpha that is set needs to be the same"
-                + " as the alpha of your prefitted model in the following"
-                " order [alpha/2, 1 - alpha/2, 0.5]"
-            )
 
     def fit(
         self,
@@ -536,12 +530,11 @@ class MapieQuantileRegressor(MapieRegressor):
         self.estimators_: List[RegressorMixin] = []
         if self.cv == "prefit":
             estimator = cast(List, self.estimator)
-            self._check_prefit_params(estimator, X, y)
+            alpha = self._check_alpha(self.alpha)
+            self._check_prefit_params(estimator)
             X_calib, y_calib = indexable(X, y)
 
             self.n_calib_samples = _num_samples(y_calib)
-            check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
-
             y_calib_preds = np.full(
                 shape=(3, self.n_calib_samples),
                 fill_value=np.nan

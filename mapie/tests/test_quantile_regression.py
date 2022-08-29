@@ -519,6 +519,120 @@ def test_linear_regression_results(strategy: str) -> None:
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
 
+def test_quantile_prefit_non_list() -> None:
+    """
+    Test that there is a list of estimators provided when cv='prefit'
+    is called for MapieQuantileRegressor.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r".*Estimator for prefit must be an iterable object.*",
+    ):
+        not_an_iterable = 10
+        mapie_reg = MapieQuantileRegressor(
+            estimator=not_an_iterable,
+            cv="prefit"
+        )
+        mapie_reg.fit(
+            X_calib_toy,
+            y_calib_toy
+        )
+
+
+def test_quantile_prefit_three_estimators() -> None:
+    """
+    Test that there is a list of estimators three estimators provided for
+    cv="prefit".
+    """
+    with pytest.raises(
+        ValueError,
+        match=r".*You need to have provided 3 different estimators, th*",
+    ):
+        gb_trained1, gb_trained2 = clone(gb), clone(gb)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
+        list_estimators = [gb_trained1, gb_trained2]
+        mapie_reg = MapieQuantileRegressor(
+            estimator=list_estimators,
+            cv="prefit"
+        )
+        mapie_reg.fit(
+            X_calib,
+            y_calib
+        )
+
+
+def test_prefit_no_fit_predict() -> None:
+    """
+    Check that the user is warned that the alphas need to be correctly set.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r"Invalid estimator. Please provide a regressor with fit and*",
+    ):
+        gb_trained1, gb_trained2 = clone(gb), clone(gb)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
+        gb_trained3 = 3
+        list_estimators = [gb_trained1, gb_trained2, gb_trained3]
+        mapie_reg = MapieQuantileRegressor(
+            estimator=list_estimators,
+            cv="prefit",
+            alpha=0.3
+        )
+        mapie_reg.fit(
+            X_calib,
+            y_calib
+        )
+
+
+def test_non_trained_estimator() -> None:
+    """
+    Check that the user is warned that the alphas need to be correctly set.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r".*instance is not fitted yet. Call 'fit' with appropriate*",
+    ):
+        gb_trained1, gb_trained2, gb_trained3 = clone(gb), clone(gb), clone(gb)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
+        list_estimators = [gb_trained1, gb_trained2, gb_trained3]
+        mapie_reg = MapieQuantileRegressor(
+            estimator=list_estimators,
+            cv="prefit",
+            alpha=0.3
+        )
+        mapie_reg.fit(
+            X_calib,
+            y_calib
+        )
+
+
+def test_warning_alpha_prefit() -> None:
+    """
+    Check that the user is warned that the alphas need to be correctly set.
+    """
+    with pytest.warns(
+        UserWarning,
+        match=r".*WARNING: The alpha that is set needs to be the same*"
+    ):
+        gb_trained1, gb_trained2, gb_trained3 = clone(gb), clone(gb), clone(gb)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
+        gb_trained3.fit(X_train, y_train)
+        list_estimators = [gb_trained1, gb_trained2, gb_trained3]
+        mapie_reg = MapieQuantileRegressor(
+            estimator=list_estimators,
+            cv="prefit",
+            alpha=0.3
+        )
+        mapie_reg.fit(
+            X_calib,
+            y_calib
+        )
+
+
 @pytest.mark.parametrize("estimator", ESTIMATOR)
 def test_pipeline_compatibility(estimator: RegressorMixin) -> None:
     """Check that MAPIE works on pipeline based on pandas dataframes"""
