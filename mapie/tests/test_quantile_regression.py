@@ -519,7 +519,8 @@ def test_linear_regression_results(strategy: str) -> None:
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
 
-def test_quantile_prefit_non_list() -> None:
+@pytest.mark.parametrize("estimator", [-1, 3, KFold(), LeaveOneOut()])
+def test_quantile_prefit_non_list(estimator: Any) -> None:
     """
     Test that there is a list of estimators provided when cv='prefit'
     is called for MapieQuantileRegressor.
@@ -528,9 +529,8 @@ def test_quantile_prefit_non_list() -> None:
         ValueError,
         match=r".*Estimator for prefit must be an iterable object.*",
     ):
-        not_an_iterable = 10
         mapie_reg = MapieQuantileRegressor(
-            estimator=not_an_iterable,
+            estimator=estimator,
             cv="prefit"
         )
         mapie_reg.fit(
@@ -541,7 +541,7 @@ def test_quantile_prefit_non_list() -> None:
 
 def test_quantile_prefit_three_estimators() -> None:
     """
-    Test that there is a list of estimators three estimators provided for
+    Test that there is a list with three estimators provided for
     cv="prefit".
     """
     with pytest.raises(
@@ -564,7 +564,7 @@ def test_quantile_prefit_three_estimators() -> None:
 
 def test_prefit_no_fit_predict() -> None:
     """
-    Check that the user is warned that the alphas need to be correctly set.
+    Check that the estimators given have a prefit and fit attribute.
     """
     with pytest.raises(
         ValueError,
@@ -588,7 +588,7 @@ def test_prefit_no_fit_predict() -> None:
 
 def test_non_trained_estimator() -> None:
     """
-    Check that the user is warned that the alphas need to be correctly set.
+    Check that the estimators are all already trained when used in prefit.
     """
     with pytest.raises(
         ValueError,
@@ -631,6 +631,37 @@ def test_warning_alpha_prefit() -> None:
             X_calib,
             y_calib
         )
+
+
+def test_prefit_and_non_prefit_equal() -> None:
+    """
+    Check that the user is warned that the alphas need to be correctly set.
+    """
+    list_estimators = []
+    alphas_ = [0.15, 0.85, 0.5]
+    for alpha_ in alphas_:
+        est = clone(qt)
+        params = {"quantile": alpha_}
+        est.set_params(**params)
+        est.fit(X_train, y_train)
+        list_estimators.append(est)
+    mapie_reg_prefit = MapieQuantileRegressor(
+        estimator=list_estimators,
+        cv="prefit",
+        alpha=0.3
+    )
+    mapie_reg_prefit.fit(X_calib, y_calib)
+    y_pred_prefit, y_pis_prefit = mapie_reg_prefit.predict(X)
+
+    mapie_reg = MapieQuantileRegressor(
+        estimator=qt,
+        alpha=0.3
+    )
+    mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+    y_pred, y_pis = mapie_reg.predict(X)
+
+    np.testing.assert_allclose(y_pred_prefit, y_pred)
+    np.testing.assert_allclose(y_pis_prefit, y_pis)
 
 
 @pytest.mark.parametrize("estimator", ESTIMATOR)

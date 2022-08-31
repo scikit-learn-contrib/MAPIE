@@ -240,3 +240,23 @@ def test_alpha_in_predict() -> None:
     mapie_reg.fit(X, y)
     with pytest.warns(UserWarning, match=r"WARNING: ensemble is not util*"):
         mapie_reg.predict(X, ensemble=True)
+
+
+@pytest.mark.parametrize("estimator", [-1, 3])
+def test_quantile_prefit_non_iterable(estimator: Any) -> None:
+    """
+    Test that there is a list of estimators provided when cv='prefit'
+    is called for MapieQuantileRegressor.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r".*Estimator for prefit must be an iterable object.*",
+    ):
+        mapie_reg = MapieQuantileRegressor(
+            estimator=estimator,
+            cv="prefit"
+        )
+        mapie_reg.fit(
+            [1, 2, 3],
+            [4, 5, 6]
+        )

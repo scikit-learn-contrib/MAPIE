@@ -444,7 +444,7 @@ class MapieQuantileRegressor(MapieRegressor):
             If the alpha is defined, warns the user that it must be set
             accordingly with the prefit estimators.
         """
-        if hasattr(estimator, '__iter__') is False:
+        if isinstance(estimator, Iterable) is False:
             raise ValueError(
                 "Estimator for prefit must be an iterable object."
             )

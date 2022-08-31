@@ -1,10 +1,10 @@
 """
-========================================================
-Example use of the prefit parameter with neural networks
-========================================================
+===========================================================================
+Example use of the prefit parameter with neural networks and LGBM Regressor
+===========================================================================
 
 :class:`mapie.regression.MapieRegressor` and
-:class:`mapie.quantile_regression.MapieQuantileRegressor``
+:class:`mapie.quantile_regression.MapieQuantileRegressor`
 are used to calibrate uncertainties for large models for
 which the cost of cross-validation is too high. Typically,
 neural networks rely on a single validation set.
@@ -12,6 +12,8 @@ neural networks rely on a single validation set.
 In this example, we first fit a neural network on the training set. We
 then compute residuals on a validation set with the `cv="prefit"` parameter.
 Finally, we evaluate the model with prediction intervals on a testing set.
+We will also show how to use the prefit method in the comformalized quantile
+regressor.
 """
 
 
@@ -20,11 +22,24 @@ from lightgbm import LGBMRegressor
 from matplotlib import pyplot as plt
 import scipy
 from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPRegressor
 
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
 from mapie.metrics import regression_coverage_score
 from mapie._typing import NDArray
+import warnings
+warnings.filterwarnings("ignore")
+
+alpha = 0.1
+
+##############################################################################
+# 1. Generate dataset
+# -----------------------------------------------------------------------------
+#
+# We start by defining a function that we will use to generate data. We then
+# add random noise y values. Then we split the dataset to have a training,
+# calibration and test set.
 
 
 def f(x: NDArray) -> NDArray:
@@ -39,67 +54,123 @@ X = np.linspace(0, 1, n_samples)
 y = f(X) + np.random.normal(0, sigma, n_samples)
 
 # Train/validation/test split
-X_train_val, X_test, y_train_val, y_test = train_test_split(
+X_train_cal, X_test, y_train_cal, y_test = train_test_split(
     X, y, test_size=1 / 10
 )
-X_train, X_val, y_train, y_val = train_test_split(
-    X_train_val, y_train_val, test_size=1 / 9
+X_train, X_cal, y_train, y_cal = train_test_split(
+    X_train_cal, y_train_cal, test_size=1 / 9
 )
 
-# Train model on training set for MapieRegressor
-model = estimator = LGBMRegressor(
-    objective='quantile',
-    alpha=0.5,
-)
-model.fit(X_train.reshape(-1, 1), y_train)
 
-# Calibrate uncertainties on validation set
-mapie = MapieRegressor(model, cv="prefit")
-mapie.fit(X_val.reshape(-1, 1), y_val)
+##############################################################################
+# 2. Pre-train models
+# -----------------------------------------------------------------------------
+#
+# For this example, we will train a MLPRegressor for
+# :class:`mapie.regression.MapieRegressor` and multiple LGBMRegressor in the
+# with a quantile objective as this is a requirement to perform conformalized
+# quantile regression using
+# :class:`mapie.quanitle_regression.MapieQuantileRegressor`. Note that the
+# three estimators need to be trained at quantile values of
+# $(\alpha/2, 1-(\alpha/2), 0.5)$.
+
+
+# Train a MLPRegressor for MapieRegressor
+est_mlp = MLPRegressor(activation="relu", random_state=1)
+est_mlp.fit(X_train.reshape(-1, 1), y_train)
+
+# Train LGBMRegressor models for MapieQuantileRegressor
+list_estimators_cqr = []
+for alpha_ in [alpha/2, (1-(alpha/2)), 0.5]:
+    estimator_ = LGBMRegressor(
+        objective='quantile',
+        alpha=alpha_,
+    )
+    estimator_.fit(X_train.reshape(-1, 1), y_train)
+    list_estimators_cqr.append(estimator_)
+
+
+##############################################################################
+# 3. Using MAPIE to calibrate the models
+# -----------------------------------------------------------------------------
+#
+# We will now proceed to calibrate the models using MAPIE. This means using
+# the `cv="prefit"` so that we use the models that we already trained prior.
+# We then precict using the test set and evaluate its coverage.
+
+
+# Calibrate uncertainties on calibration set
+mapie = MapieRegressor(est_mlp, cv="prefit")
+mapie.fit(X_cal.reshape(-1, 1), y_cal)
 
 # Evaluate prediction and coverage level on testing set
-alpha = 0.1
 y_pred, y_pis = mapie.predict(X_test.reshape(-1, 1), alpha=alpha)
-y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
-coverage = regression_coverage_score(y_test, y_pred_low, y_pred_up)
+coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
 
-# Train models for MapieQuantileRegressor
-list_estimators = []
-estimator_low = LGBMRegressor(
-    objective='quantile',
-    alpha=(alpha/2),
-)
-estimator_low.fit(X_train.reshape(-1, 1), y_train)
-list_estimators.append(estimator_low)
+# Calibrate uncertainties on calibration set
+mapie_cqr = MapieQuantileRegressor(list_estimators_cqr, cv="prefit")
+mapie_cqr.fit(X_cal.reshape(-1, 1), y_cal)
 
-estimator_high = LGBMRegressor(
-    objective='quantile',
-    alpha=(1-(alpha/2)),
-)
-estimator_high.fit(X_train.reshape(-1, 1), y_train)
-list_estimators.append(estimator_high)
-
-
-estimator = LGBMRegressor(
-    objective='quantile',
-    alpha=0.5,
-)  # Note that this is the same model as used for QR
-estimator.fit(X_train.reshape(-1, 1), y_train)
-list_estimators.append(estimator)
-
-# Calibrate uncertainties on validation set
-mapie_cqr = MapieQuantileRegressor(list_estimators, cv="prefit")
-mapie_cqr.fit(X_val.reshape(-1, 1), y_val)
+# Evaluate prediction and coverage level on testing set
 y_pred_cqr, y_pis_cqr = mapie_cqr.predict(X_test.reshape(-1, 1))
-y_pred_low_cqr, y_pred_up_cqr = y_pis_cqr[:, 0, 0], y_pis_cqr[:, 1, 0]
-coverage_cqr = regression_coverage_score(y_test, y_pred_low_cqr, y_pred_up_cqr)
+coverage_cqr = regression_coverage_score(
+    y_test,
+    y_pis_cqr[:, 0, 0],
+    y_pis_cqr[:, 1, 0]
+)
+
+
+##############################################################################
+# 4. Plots
+# -----------------------------------------------------------------------------
+#
+# In order to view the results shown above, we will plot each othe predictions
+# with their prediction interval. The multi-layer perceptron (MLP) with
+# :class:`mapie.regression.MapieRegressor` and LGBMRegressor with
+# :class:`mapie.quantile_regression.MapieQuantileRegressor`.
 
 # Plot obtained prediction intervals on testing set
 theoretical_semi_width = scipy.stats.norm.ppf(1 - alpha) * sigma
 y_test_theoretical = f(X_test)
 order = np.argsort(X_test)
 
-plt.scatter(X_test, y_test, color="red", alpha=0.3, label="testing", s=2)
+plt.figure(figsize=(8, 8))
+plt.plot(
+    X_test[order],
+    y_pred[order],
+    label="Predictions MLP",
+    color="green"
+)
+plt.fill_between(
+    X_test[order],
+    y_pis[:, 0, 0][order],
+    y_pis[:, 1, 0][order],
+    alpha=0.4,
+    label="prediction intervals MP",
+    color="green"
+)
+plt.plot(
+    X_test[order],
+    y_pred_cqr[order],
+    label="Predictions LGBM",
+    color="blue"
+)
+plt.fill_between(
+    X_test[order],
+    y_pis_cqr[:, 0, 0][order],
+    y_pis_cqr[:, 1, 0][order],
+    alpha=0.4,
+    label="prediction intervals MQP",
+    color="blue"
+)
+plt.title(
+    f"Target and effective coverages for:\n "
+    f"MLP with MapieRegressor alpha={alpha}: "
+    + f"({1 - alpha:.3f}, {coverage:.3f})\n"
+    f"LGBM with MapieQuantileRegressor alpha={alpha}: "
+    + f"({1 - alpha:.3f}, {coverage_cqr:.3f})"
+)
+plt.scatter(X_test, y_test, color="red", alpha=0.7, label="testing", s=2)
 plt.plot(
     X_test[order],
     y_test_theoretical[order],
@@ -118,27 +189,13 @@ plt.plot(
     color="gray",
     ls="--",
 )
-plt.plot(X_test[order], y_pred[order], label="Predictions")
-plt.fill_between(
-    X_test[order],
-    y_pred_low[order],
-    y_pred_up[order],
-    alpha=0.4,
-    label="prediction intervals QR"
-)
-plt.fill_between(
-    X_test[order],
-    y_pred_low_cqr[order],
-    y_pred_up_cqr[order],
-    alpha=0.4,
-    label="prediction intervals CQR"
-)
-plt.title(
-    f"Target and effective coverages for:\n "
-    f"QR alpha={alpha}: ({1 - alpha:.3f}, {coverage:.3f})\n"
-    f"CQR alpha={alpha}: ({1 - alpha:.3f}, {coverage_cqr:.3f})"
-)
 plt.xlabel("x")
 plt.ylabel("y")
-plt.legend()
+plt.legend(
+    loc='upper center',
+    bbox_to_anchor=(0.5, -0.05),
+    fancybox=True,
+    shadow=True,
+    ncol=3
+)
 plt.show()
