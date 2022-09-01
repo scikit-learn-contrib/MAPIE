@@ -218,7 +218,6 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             Whether to optimize the PIs' width or not.
 
         """
-
         # Checks
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)

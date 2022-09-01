@@ -6,5 +6,5 @@ problems for computer vision settings that are too heavy to be included in the e
 galleries.
 
 
-   1. Estimating prediction sets on the Cifar10 dataset : `notebook <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/classification/Cifar10.ipynb>`_
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+1. Estimating prediction sets on the Cifar10 dataset : `notebook <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/classification/Cifar10.ipynb>`_
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
