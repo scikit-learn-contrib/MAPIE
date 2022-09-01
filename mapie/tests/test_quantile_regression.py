@@ -519,26 +519,6 @@ def test_linear_regression_results(strategy: str) -> None:
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
 
-@pytest.mark.parametrize("estimator", [-1, 3, 0.2])
-def test_quantile_prefit_non_list(estimator: Any) -> None:
-    """
-    Test that there is a list of estimators provided when cv='prefit'
-    is called for MapieQuantileRegressor.
-    """
-    with pytest.raises(
-        ValueError,
-        match=r".*Estimator for prefit must be an iterable object.*",
-    ):
-        mapie_reg = MapieQuantileRegressor(
-            estimator=estimator,
-            cv="prefit"
-        )
-        mapie_reg.fit(
-            X_calib_toy,
-            y_calib_toy
-        )
-
-
 def test_quantile_prefit_three_estimators() -> None:
     """
     Test that there is a list with three estimators provided for
@@ -669,8 +649,8 @@ def test_prefit_and_non_prefit_equal(alpha: float) -> None:
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2, 0.3])
 def test_prefit_different_type_list_tuple_array(alpha: float) -> None:
     """
-    Check that as long as the estimators are given in a Iterable object,
-    the we have the same results for each.}
+    Check that the type of Iterable (list, np.array, tuple) to
+    estimators gives similar results.
     """
     list_estimators = []
     alphas_ = [alpha/2, 1-(alpha/2), 0.5]

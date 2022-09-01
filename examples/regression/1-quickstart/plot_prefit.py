@@ -39,7 +39,7 @@ alpha = 0.1
 # -----------------------------------------------------------------------------
 #
 # We start by defining a function that we will use to generate data. We then
-# add random noise dependent variable values. Then we split the dataset to have
+# add random noise to the y values. Then we split the dataset to have
 # a training, calibration and test set.
 
 
