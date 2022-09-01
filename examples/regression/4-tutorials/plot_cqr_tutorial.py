@@ -316,7 +316,6 @@ def get_coverages_widths_by_bins(
 ):
     cuts = []
     cuts_ = pd.qcut(y_test["naive"], bins).unique()[:-1]
-    print(cuts_)
     for item in cuts_:
         cuts.append(item.left)
     cuts.append(cuts_[-1].right)
