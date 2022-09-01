@@ -10,6 +10,9 @@ class ConformityScore(metaclass=ABCMeta):
     """
     Base class for conformity scores.
 
+    Warning: This class should not be used directly.
+    Use derived classes instead.
+
     Parameters
     ----------
     sym : bool
@@ -30,9 +33,6 @@ class ConformityScore(metaclass=ABCMeta):
         ) == y
         It should be specified if consistency_check==True.
         by default sys.float_info.epsilon.
-
-    Warning: This class should not be used directly.
-    Use derived classes instead.
     """
 
     def __init__(

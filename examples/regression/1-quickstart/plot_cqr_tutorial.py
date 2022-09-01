@@ -1,21 +1,21 @@
 """
-==========================================================
-Using California housing dataset for conformal regressions
-==========================================================
+==============================================
+Tutorial for conformalized quantile regression
+==============================================
 
 We will use the sklearn california housing dataset as the
-base for the comparaison of the different methods available
+base for the comparison of the different methods available
 on MAPIE. Two classes will be used:
 :class:`mapie.regression.MapieRegressor` and
 :class:`mapie.quantile_regression.MapieQuantileRegressor`.
 
-The methods are chosen with the parameter `method` of
-:class:`mapie.regression.MapieRegressor` and the parameter
-`cv` is the strategy for cross-validation. In this method,
-to use a "leave-one out" strategy, one would have to use
-`cv=-1` and a positive value would indicate the number of
-folds for a more classic cross-validation strategy. Note
-that for the jackknife+ after boostrap, we need to use the
+The type of conformal methods are chosen with the parameter
+``method`` of :class:`mapie.regression.MapieRegressor` and
+the parameter ``cv`` is the strategy for cross-validation.
+In this method, to use a "leave-one-out" strategy, one would
+have to use `cv=-1` and a positive value would indicate the
+number of folds for a cross-validation strategy. Note that
+for the jackknife+ after boostrap, we need to use the
 class :class:`mapie.subsample.Subsample`.
 """
 
@@ -30,9 +30,7 @@ import pandas as pd
 from sklearn.model_selection import RandomizedSearchCV, train_test_split, KFold
 from sklearn.datasets import fetch_california_housing
 from scipy.stats import randint, uniform
-from typing import Tuple, Dict
 
-from mapie._typing import ArrayLike, NDArray
 from mapie.metrics import (
     regression_coverage_score,
     regression_mean_width_score
@@ -51,9 +49,13 @@ warnings.filterwarnings("ignore")
 ##############################################################################
 # 1. Data
 # --------------------------------------------------------------------------
-# The target variable is the median house value for California districts. As
-# the value is expressed in thousands of dollars we will times it by 100 to
-# view the dataset in thousands.
+# The target variable is the median house value for California districts.
+# There are 8 features, including variables such as the age of the house,
+# the median income of the neighborhood, the average numbe rooms or bedrooms
+# or even the location in latitude and longitude. In total there are around
+# 20k observations in total. As the value is expressed in thousands of $ we
+# will multiply it by 100 for better visualization (but won't influence the
+# results).
 
 
 data = fetch_california_housing(as_frame=True)
@@ -61,7 +63,7 @@ X = pd.DataFrame(data=data.data, columns=data.feature_names)
 y = pd.DataFrame(data=data.target)*100
 
 ##############################################################################
-# Let's visualize the two-dimensional dataset, the correlations between the
+# Let's visualize the dataset by showing the correlations between the
 # independent variables.
 
 
@@ -84,7 +86,8 @@ plt.show()
 
 ##############################################################################
 # Let's now create the different splits for the dataset, with a training,
-# calibration and test set.
+# calibration and test set. Recall that the calibration set is used for
+# calibrating the prediction intervals.
 
 
 X_train, X_test, y_train, y_test = train_test_split(
@@ -102,8 +105,9 @@ X_train, X_calib, y_train, y_calib = train_test_split(
 ##############################################################################
 # 2. Optimizing estimator
 # --------------------------------------------------------------------------
-# Optimization of the `LGBMRegressor` using `RandomizedSearchCV` to find the
-# optimal model to predict the house prices.
+# Before estimating uncertainties, let's start by optimizing the base model
+# from the :class:`LGBMRegressor` is done using :class:`RandomizedSearchCV`
+# to find the optimal model to predict the house prices.
 
 
 estimator = LGBMRegressor(
@@ -122,40 +126,29 @@ optim_model = RandomizedSearchCV(
     param_distributions=params_distributions,
     n_jobs=-1,
     n_iter=100,
-    cv=KFold(n_splits=5),
+    cv=KFold(n_splits=5, shuffle=True),
     verbose=-1
 )
 optim_model.fit(X_train, y_train)
-estimator = estimator.set_params(**optim_model.best_params_)
+estimator = optim_model.best_estimator_
 
 
 ##############################################################################
-# 3. Comparaison of MAPIE methods
+# 3. Comparison of MAPIE methods
 # --------------------------------------------------------------------------
-# We will now proceed to compare the different regression method available
-# on MAPIE. For this tutorial we will compare the "naive", "jackknife plus ab",
-# "cv plus" and "conformalized quantile regression".
+# We will now proceed to compare the different methods available in MAPIE used
+# for uncertainty quantification on regression settings. For this tutorial we
+# will compare the "naive", "Jackknife plus after Bootstrap", "cv plus" and
+# "conformalized quantile regression". Please have a look at the theoretical
+# description of the documentation for more details on these methods.
+# We also create two functions, one to sort the dataset in increasing values
+# of y_test and a plotting function, so that we can plot all predictions and
+# prediction intervals for different conformal methods.
 
 
-def sort(
-    y_test: NDArray, y_pred: NDArray, y_pis: NDArray
-) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
+def sort_time_series(y_test, y_pred, y_pis):
     """
-    Sorting the dataset such that you can make better plots.
-
-    Parameters
-    ----------
-    y_test : NDArray
-        _description_
-    y_pred : NDArray
-        _description_
-    y_pis : NDArray
-        _description_
-
-    Returns
-    -------
-    Tuple[NDArray, NDArray, NDArray, NDArray]
-        _description_
+    Sorting the dataset in order to make plots using the fill_between function.
     """
     indices = np.argsort(y_test)
     y_test_sorted = np.array(y_test)[indices]
@@ -165,41 +158,20 @@ def sort(
     return y_test_sorted, y_pred_sorted, y_lower_bound, y_upper_bound
 
 
-def plot(
-    title: str,
-    axs: plt.Axes,
-    y_test_sorted: NDArray,
-    y_pred_sorted: NDArray,
-    lower_bound: NDArray,
-    upper_bound: NDArray,
-    coverage: float,
-    width: float,
-    num_plots_idx: NDArray,
-) -> None:
+def plot_prediction_intervals(
+    title,
+    axs,
+    y_test_sorted,
+    y_pred_sorted,
+    lower_bound,
+    upper_bound,
+    coverage,
+    width,
+    num_plots_idx
+):
     """
-    Plotting of the different error bars, in red the test points
-    that fall outside of the error bars.
-
-    Parameters
-    ----------
-    title : str
-        _description_
-    axs : plt.Axes
-        _description_
-    y_test_sorted : NDArray
-        _description_
-    y_pred_sorted : NDArray
-        _description_
-    lower_bound : NDArray
-        _description_
-    upper_bound : NDArray
-        _description_
-    coverage : float
-        _description_
-    width : float
-        _description_
-    num_plots_idx : NDArray
-        _description_
+    Plot of the prediction intervals for each different conformal
+    method.
     """
     axs.yaxis.set_major_formatter(FormatStrFormatter('%.0f'+"k"))
     axs.xaxis.set_major_formatter(FormatStrFormatter('%.0f'+"k"))
@@ -217,27 +189,42 @@ def plot(
         y_test_sorted_[~warnings],
         y_pred_sorted_[~warnings],
         yerr=error[~warnings],
-        capsize=5, marker="o", elinewidth=2, linewidth=0
+        capsize=5, marker="o", elinewidth=2, linewidth=0,
+        label="Inside prediction interval"
         )
     axs.errorbar(
         y_test_sorted_[warnings],
         y_pred_sorted_[warnings],
         yerr=error[warnings],
-        capsize=5, marker="o", elinewidth=2, linewidth=0, color="red"
+        capsize=5, marker="o", elinewidth=2, linewidth=0, color="red",
+        label="Outside prediction interval"
         )
     axs.scatter(
         y_test_sorted_[warnings],
         y_test_sorted_[warnings],
-        marker="*", color="green"
+        marker="*", color="green",
+        label="True value"
     )
     axs.set_xlabel("True house prices in $")
     axs.set_ylabel("Prediction of house prices in $")
     ab = AnnotationBbox(
-        TextArea(f"Coverage: {coverage}\nInterval width: {width}"),
+        TextArea(
+            f"Coverage: {np.round(coverage, round_to)}\n"
+            + f"Interval width: {np.round(width, round_to)}"
+        ),
         xy=(np.min(y_test_sorted_)*3, np.max(y_pred_sorted_+error)*0.95),
         )
+    lims = [
+        np.min([axs.get_xlim(), axs.get_ylim()]),  # min of both axes
+        np.max([axs.get_xlim(), axs.get_ylim()]),  # max of both axes
+    ]
+    axs.plot(lims, lims, '--', alpha=0.75, color="black", label="x=y")
     axs.add_artist(ab)
     axs.set_title(title, fontweight='bold')
+
+
+##############################################################################
+# We proceed to using MAPIE to return the predictions and prediction intervals.
 
 
 STRATEGIES = {
@@ -263,16 +250,21 @@ for strategy, params in STRATEGIES.items():
         y_pred_sorted[strategy],
         lower_bound[strategy],
         upper_bound[strategy]
-    ) = sort(y_test, y_pred[strategy], y_pis[strategy])
-    coverage[strategy] = np.round(regression_coverage_score(
+    ) = sort_time_series(y_test, y_pred[strategy], y_pis[strategy])
+    coverage[strategy] = regression_coverage_score(
         y_test,
         y_pis[strategy][:, 0, 0],
         y_pis[strategy][:, 1, 0]
-        ), round_to)
-    width[strategy] = np.round(regression_mean_width_score(
+        )
+    width[strategy] = regression_mean_width_score(
         y_pis[strategy][:, 0, 0],
         y_pis[strategy][:, 1, 0]
-        ), round_to)
+        )
+
+
+##############################################################################
+# We will now proceed to the plotting stage, note that we only plot 2% of the
+# observations in order to not crowd the plot too much.
 
 
 perc_obs_plot = 0.02
@@ -282,7 +274,7 @@ num_plots = rng.choice(
 fig, axs = plt.subplots(2, 2, figsize=(15, 13))
 coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
 for strategy, coord in zip(STRATEGIES.keys(), coords):
-    plot(
+    plot_prediction_intervals(
         strategy,
         coord,
         y_test_sorted[strategy],
@@ -293,58 +285,44 @@ for strategy, coord in zip(STRATEGIES.keys(), coords):
         width[strategy],
         num_plots
         )
+lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
+lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+plt.legend(
+    lines[:4], labels[:4],
+    loc='upper center',
+    bbox_to_anchor=(0, -0.15),
+    fancybox=True,
+    shadow=True,
+    ncol=2
+)
 plt.show()
 
 
 ##############################################################################
 # We notice more adaptability of the prediction intervals for the
 # conformalized quantile regression while the other methods have fixed
-# interval width.
+# interval width. Indeed, as the prices get larger, the prediction intervals
+# are increase with the increase in price.
 
 
-def get_bins(
-    want: str,
-    y_test: Dict,
-    y_pred: Dict,
-    lower_bound: Dict,
-    upper_bound: Dict,
-    STRATEGIES: Dict,
-    bins: ArrayLike
-) -> pd.DataFrame:
-    """
-    Splits the data into different sections according to the bins selected.
-    Computes the coverage and width of that split.
-
-    Parameters
-    ----------
-    want : str
-        _description_
-    y_test : Dict
-        _description_
-    y_pred : Dict
-        _description_
-    lower_bound : Dict
-        _description_
-    upper_bound : Dict
-        _description_
-    STRATEGIES : Dict
-        _description_
-    bins : ArrayLike
-        _description_
-
-    Returns
-    -------
-    pd.DataFrame
-        _description_
-    """
+def get_coverages_widths_by_bins(
+    want,
+    y_test,
+    y_pred,
+    lower_bound,
+    upper_bound,
+    STRATEGIES,
+    bins
+):
     cuts = []
     cuts_ = pd.qcut(y_test["naive"], bins).unique()[:-1]
+    print(cuts_)
     for item in cuts_:
         cuts.append(item.left)
     cuts.append(cuts_[-1].right)
     cuts.append(np.max(y_test["naive"])+1)
     recap = {}  # type: ignore
-    for i in range(len(cuts)-1):
+    for i in range(len(cuts) - 1):
         cut1, cut2 = cuts[i], cuts[i+1]
         name = f"[{np.round(cut1, 0)}, {np.round(cut2, 0)}]"
         recap[name] = []
@@ -359,17 +337,18 @@ def get_bins(
                 recap[name].append(regression_coverage_score(
                     y_test_trunc[0],
                     y_low_[0],
-                    y_high_[0]))
+                    y_high_[0]
+                ))
             elif want == "width":
                 recap[name].append(
                     regression_mean_width_score(y_low_[0], y_high_[0])
-                    )
+                )
     recap_df = pd.DataFrame(recap, index=STRATEGIES)
     return recap_df
 
 
 bins = list(np.arange(0, 1, 0.1))
-binned_data = get_bins(
+binned_data = get_coverages_widths_by_bins(
     "coverage",
     y_test_sorted,
     y_pred_sorted,
@@ -382,7 +361,8 @@ binned_data = get_bins(
 
 ##############################################################################
 # To confirm this insights, we will now observe what happens when we plot
-# the conditional coverage and interval width on these intervals.
+# the conditional coverage and interval width on these intervals splitted by
+# quantiles.
 
 
 binned_data.T.plot.bar(figsize=(12, 4))
@@ -392,15 +372,20 @@ plt.xlabel("Binned house prices")
 plt.xticks(rotation=345)
 plt.ylim(0.3, 1.0)
 plt.legend(loc=[1, 0])
+plt.show()
 
 
 ##############################################################################
 # What we observe from these results is that none of the methods seems to
-# have conditional coverage. It is however suprising to see that the
-# conformalized quantile regression does not outperform the other methods.
+# have conditional coverage at the target :math:`1 - \alpha`. However, we can
+# clearly notice that the CQR seems to better adapt to large prices. Its
+# conditional coverage is closer to the target coverage not only for higher
+# prices, but also for lower prices where the other methods have a higher
+# coverage than needed. This will very likely have an impact on the widths
+# of the intervals.
 
 
-binned_data = get_bins(
+binned_data = get_coverages_widths_by_bins(
     "width",
     y_test_sorted,
     y_pred_sorted,
@@ -416,6 +401,7 @@ plt.ylabel("Interval width")
 plt.xlabel("Binned house prices")
 plt.xticks(rotation=350)
 plt.legend(loc=[1, 0])
+plt.show()
 
 
 ##############################################################################
