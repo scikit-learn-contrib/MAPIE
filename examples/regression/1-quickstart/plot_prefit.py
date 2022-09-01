@@ -12,7 +12,7 @@ neural networks rely on a single validation set.
 In this example, we first fit a neural network on the training set. We
 then compute residuals on a validation set with the `cv="prefit"` parameter.
 Finally, we evaluate the model with prediction intervals on a testing set.
-We will also show how to use the prefit method in the comformalized quantile
+We will also show how to use the prefit method in the conformalized quantile
 regressor.
 """
 
@@ -23,12 +23,13 @@ from matplotlib import pyplot as plt
 import scipy
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
+import warnings
 
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
 from mapie.metrics import regression_coverage_score
 from mapie._typing import NDArray
-import warnings
+
 warnings.filterwarnings("ignore")
 
 alpha = 0.1
@@ -38,8 +39,8 @@ alpha = 0.1
 # -----------------------------------------------------------------------------
 #
 # We start by defining a function that we will use to generate data. We then
-# add random noise y values. Then we split the dataset to have a training,
-# calibration and test set.
+# add random noise dependent variable values. Then we split the dataset to have
+# a training, calibration and test set.
 
 
 def f(x: NDArray) -> NDArray:
@@ -67,12 +68,12 @@ X_train, X_cal, y_train, y_cal = train_test_split(
 # -----------------------------------------------------------------------------
 #
 # For this example, we will train a MLPRegressor for
-# :class:`mapie.regression.MapieRegressor` and multiple LGBMRegressor in the
-# with a quantile objective as this is a requirement to perform conformalized
+# :class:`mapie.regression.MapieRegressor` and multiple LGBMRegressor with a
+# quantile objective as this is a requirement to perform conformalized
 # quantile regression using
 # :class:`mapie.quanitle_regression.MapieQuantileRegressor`. Note that the
 # three estimators need to be trained at quantile values of
-# $(\alpha/2, 1-(\alpha/2), 0.5)$.
+# :math:`(\alpha/2, 1-(\alpha/2), 0.5)`.
 
 
 # Train a MLPRegressor for MapieRegressor
@@ -81,7 +82,7 @@ est_mlp.fit(X_train.reshape(-1, 1), y_train)
 
 # Train LGBMRegressor models for MapieQuantileRegressor
 list_estimators_cqr = []
-for alpha_ in [alpha/2, (1-(alpha/2)), 0.5]:
+for alpha_ in [alpha / 2, (1 - (alpha / 2)), 0.5]:
     estimator_ = LGBMRegressor(
         objective='quantile',
         alpha=alpha_,
@@ -94,8 +95,8 @@ for alpha_ in [alpha/2, (1-(alpha/2)), 0.5]:
 # 3. Using MAPIE to calibrate the models
 # -----------------------------------------------------------------------------
 #
-# We will now proceed to calibrate the models using MAPIE. This means using
-# the `cv="prefit"` so that we use the models that we already trained prior.
+# We will now proceed to calibrate the models using MAPIE. To this aim, we set
+# `cv="prefit"` so that we use the models that we already trained prior.
 # We then precict using the test set and evaluate its coverage.
 
 
@@ -124,7 +125,7 @@ coverage_cqr = regression_coverage_score(
 # 4. Plots
 # -----------------------------------------------------------------------------
 #
-# In order to view the results shown above, we will plot each othe predictions
+# In order to view the results shown above, we will plot each other predictions
 # with their prediction interval. The multi-layer perceptron (MLP) with
 # :class:`mapie.regression.MapieRegressor` and LGBMRegressor with
 # :class:`mapie.quantile_regression.MapieQuantileRegressor`.

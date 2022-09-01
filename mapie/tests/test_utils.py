@@ -242,7 +242,7 @@ def test_alpha_in_predict() -> None:
         mapie_reg.predict(X, ensemble=True)
 
 
-@pytest.mark.parametrize("estimator", [-1, 3])
+@pytest.mark.parametrize("estimator", [-1, 3, 0.2])
 def test_quantile_prefit_non_iterable(estimator: Any) -> None:
     """
     Test that there is a list of estimators provided when cv='prefit'
