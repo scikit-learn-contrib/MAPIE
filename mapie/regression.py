@@ -653,6 +653,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             - [:, 0, :]: Lower bound of the prediction interval.
             - [:, 1, :]: Upper bound of the prediction interval.
+
         """
         # Checks
         check_is_fitted(self, self.fit_attributes)
