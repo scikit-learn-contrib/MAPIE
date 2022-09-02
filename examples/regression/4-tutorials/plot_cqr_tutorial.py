@@ -16,8 +16,8 @@ For the conformalized quantile regression (CQR), we will use a split-conformal
 method meaning that we will split the training set into a training and
 calibration set. This means using
 :class:`mapie.quantile_regression.MapieQuantileRegression` with ``cv="split"``
-and the `alpha` parameter already defined. Recall that the :math:`\alpha` is
-:math:`1-\text{target_coverage}`.
+and the `alpha` parameter already defined. Recall that the `alpha` is
+`1 - target coverage`.
 
 For the other type of conformal methods, they are chosen with the
 parameter ``method`` of :class:`mapie.regression.MapieRegressor` and the
@@ -244,11 +244,12 @@ def plot_prediction_intervals(
 # :class:`mapie.regression.MapieRegressor`, it needs to be set in the `predict`
 # ).
 # Note that for the CQR, there are two options for `cv`:
-# * ``cv="split" (by default), the split-conformal where MAPIE trains the model
-# on a training set and then calibrates on the calibration set
-# * ``cv="prefit"`` meaning that you can train your models with the correct
+# 1. ``cv="split" (by default), the split-conformal where MAPIE trains the
+# model on a training set and then calibrates on the calibration set
+# 2. ``cv="prefit"`` meaning that you can train your models with the correct
 # quantile values (must be given in the following order:
 # :math:``(\alpha, 1-(\alpha/2), 0.5) and given to MAPIE as an iterable object.
+#
 # Additionally, note that there is a list of accepted models by
 # :class:`mapie.quantile_regression.MapieQuantileRegression`
 # (``quantile_estimator_params``).
