@@ -1,4 +1,5 @@
 from __future__ import annotations
+import warnings
 from typing import Optional, Tuple, Union, cast, List, Iterable
 
 import numpy as np
@@ -21,6 +22,12 @@ from .utils import (
     check_lower_upper_bounds,
     check_null_weight,
     fit_estimator,
+<<<<<<< HEAD
+=======
+    check_lower_upper_bounds,
+    check_defined_variables_predict_cqr,
+    check_estimator_fit_predict,
+>>>>>>> master
 )
 
 from ._compatibility import np_quantile
@@ -139,7 +146,13 @@ class MapieQuantileRegressor(MapieRegressor):
 
     def __init__(
         self,
-        estimator: Optional[Union[RegressorMixin, Pipeline]] = None,
+        estimator: Optional[
+            Union[
+                RegressorMixin,
+                Pipeline,
+                List[Union[RegressorMixin, Pipeline]]
+            ]
+        ] = None,
         method: str = "quantile",
         cv: Optional[str] = None,
         alpha: float = 0.1,
@@ -184,6 +197,12 @@ class MapieQuantileRegressor(MapieRegressor):
         ValueError
             If the value of alpha is not between 0 and 1.0.
         """
+        if self.cv == "prefit":
+            warnings.warn(
+                "WARNING: The alpha that is set needs to be the same"
+                + " as the alpha of your prefitted model in the following"
+                " order [alpha/2, 1 - alpha/2, 0.5]"
+            )
         if isinstance(alpha, float):
             if np.any(np.logical_or(alpha <= 0, alpha >= 1.0)):
                 raise ValueError(
@@ -199,7 +218,7 @@ class MapieQuantileRegressor(MapieRegressor):
 
     def _check_estimator(
         self,
-        estimator: Optional[Union[RegressorMixin, Pipeline]] = None
+        estimator: Optional[Union[RegressorMixin, Pipeline]] = None,
     ) -> Union[RegressorMixin, Pipeline]:
         """
         Perform several checks on the estimator to check if it has
@@ -245,11 +264,7 @@ class MapieQuantileRegressor(MapieRegressor):
                 solver="highs-ds",
                 alpha=0.0,
             )
-        if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
-            raise ValueError(
-                "Invalid estimator. "
-                "Please provide a regressor with fit and predict methods."
-            )
+        check_estimator_fit_predict(estimator)
         if isinstance(estimator, Pipeline):
             self._check_estimator(estimator[-1])
             return estimator
@@ -299,7 +314,7 @@ class MapieQuantileRegressor(MapieRegressor):
         cv: Optional[str] = None
     ) -> str:
         """
-        Check if cv argument is None or "split".
+        Check if cv argument is None, "split" or "prefit".
 
         Parameters
         ----------
@@ -314,12 +329,13 @@ class MapieQuantileRegressor(MapieRegressor):
         Raises
         ------
         ValueError
-            Raises an error if the cv is anything else but the method "split".
+            Raises an error if the cv is anything else but the method "split"
+            or "prefit.
             Only the split method has been implemented.
         """
         if cv is None:
             return "split"
-        if cv == "split":
+        if cv in ("split", "prefit"):
             return cv
         else:
             raise ValueError(
@@ -398,6 +414,57 @@ class MapieQuantileRegressor(MapieRegressor):
         sample_weight_train = cast(ArrayLike, sample_weight_train)
         return X_train, y_train, X_calib, y_calib, sample_weight_train
 
+    def _check_prefit_params(
+        self,
+        estimator: List[Union[RegressorMixin, Pipeline]],
+    ) -> None:
+        """
+        Check the parameters set for the specific case of prefit
+        estimators.
+
+        Parameters
+        ----------
+        estimator : List[Union[RegressorMixin, Pipeline]]
+            List of three prefitted estimators that should have
+            pre-defined quantile levels of alpha/2, 1 - alpha/2 and 0.5.
+        X : ArrayLike of shape (n_samples, n_features)
+            Training data.
+        y : ArrayLike of shape (n_samples,)
+            Training labels.
+        X_calib : Optional[ArrayLike] of shape (n_calib_samples, n_features)
+            Calibration data.
+        y_calib : Optional[ArrayLike] of shape (n_calib_samples,)
+            Calibration labels.
+
+        Raises
+        ------
+        ValueError
+            If a non-iterable variable is provided for estimator.
+        ValueError
+            If less or more than three models are defined.
+        Warning
+            If X and y are defined, then warning that they are not used.
+        ValueError
+            If the calibration set is not defined.
+        Warning
+            If the alpha is defined, warns the user that it must be set
+            accordingly with the prefit estimators.
+        """
+        if isinstance(estimator, Iterable) is False:
+            raise ValueError(
+                "Estimator for prefit must be an iterable object."
+            )
+        if len(estimator) == 3:
+            for est in estimator:
+                check_estimator_fit_predict(est)
+                check_is_fitted(est)
+        else:
+            raise ValueError(
+                    "You need to have provided 3 different estimators, they"
+                    " need to be preset with alpha values in the following"
+                    " order [alpha/2, 1 - alpha/2, 0.5]."
+                    )
+
     def fit(
         self,
         X: ArrayLike,
@@ -463,65 +530,80 @@ class MapieQuantileRegressor(MapieRegressor):
         MapieQuantileRegressor
              The model itself.
         """
-        # Checks
-        self._check_parameters()
-        checked_estimator = self._check_estimator(self.estimator)
-        alpha = self._check_alpha(self.alpha)
         self.cv = self._check_cv(cast(str, self.cv))
-        X, y = indexable(X, y)
-        random_state = check_random_state(random_state)
-        results = self._check_calib_set(
-            X,
-            y,
-            sample_weight,
-            X_calib,
-            y_calib,
-            calib_size,
-            random_state,
-            shuffle,
-            stratify,
-        )
-        X_train, y_train, X_calib, y_calib, sample_weight_train = results
-        X_train, y_train = indexable(X_train, y_train)
-        X_calib, y_calib = indexable(X_calib, y_calib)
-        y_train, y_calib = _check_y(y_train), _check_y(y_calib)
-        self.n_calib_samples = _num_samples(y_calib)
-        check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
-        sample_weight_train, X_train, y_train = check_null_weight(
-            sample_weight_train,
-            X_train,
-            y_train
-        )
-        y_train = cast(NDArray, y_train)
 
         # Initialization
         self.estimators_: List[RegressorMixin] = []
+        if self.cv == "prefit":
+            estimator = cast(List, self.estimator)
+            alpha = self._check_alpha(self.alpha)
+            self._check_prefit_params(estimator)
+            X_calib, y_calib = indexable(X, y)
 
-        # Work
-        y_calib_preds = np.full(
-            shape=(3, self.n_calib_samples),
-            fill_value=np.nan
-        )
-
-        if isinstance(checked_estimator, Pipeline):
-            estimator = checked_estimator[-1]
+            self.n_calib_samples = _num_samples(y_calib)
+            y_calib_preds = np.full(
+                shape=(3, self.n_calib_samples),
+                fill_value=np.nan
+            )
+            for i, est in enumerate(estimator):
+                self.estimators_.append(est)
+                y_calib_preds[i] = est.predict(X_calib).ravel()
         else:
-            estimator = checked_estimator
-        name_estimator = estimator.__class__.__name__
-        alpha_name = self.quantile_estimator_params[
-            name_estimator
-        ]["alpha_name"]
-        for i, alpha_ in enumerate(alpha):
-            cloned_estimator_ = clone(checked_estimator)
-            params = {alpha_name: alpha_}
+            # Checks
+            self._check_parameters()
+            checked_estimator = self._check_estimator(self.estimator)
+            alpha = self._check_alpha(self.alpha)
+            X, y = indexable(X, y)
+            random_state = check_random_state(random_state)
+            results = self._check_calib_set(
+                X,
+                y,
+                sample_weight,
+                X_calib,
+                y_calib,
+                calib_size,
+                random_state,
+                shuffle,
+                stratify,
+            )
+            X_train, y_train, X_calib, y_calib, sample_weight_train = results
+            X_train, y_train = indexable(X_train, y_train)
+            X_calib, y_calib = indexable(X_calib, y_calib)
+            y_train, y_calib = _check_y(y_train), _check_y(y_calib)
+            self.n_calib_samples = _num_samples(y_calib)
+            check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
+            sample_weight_train, X_train, y_train = check_null_weight(
+                sample_weight_train,
+                X_train,
+                y_train
+            )
+            y_train = cast(NDArray, y_train)
+
+            # Work
+            y_calib_preds = np.full(
+                shape=(3, self.n_calib_samples),
+                fill_value=np.nan
+            )
+
             if isinstance(checked_estimator, Pipeline):
-                cloned_estimator_[-1].set_params(**params)
+                estimator = checked_estimator[-1]
             else:
-                cloned_estimator_.set_params(**params)
-            self.estimators_.append(fit_estimator(
-                cloned_estimator_, X_train, y_train, sample_weight_train
-            ))
-            y_calib_preds[i] = self.estimators_[-1].predict(X_calib)
+                estimator = checked_estimator
+            name_estimator = estimator.__class__.__name__
+            alpha_name = self.quantile_estimator_params[
+                name_estimator
+            ]["alpha_name"]
+            for i, alpha_ in enumerate(alpha):
+                cloned_estimator_ = clone(checked_estimator)
+                params = {alpha_name: alpha_}
+                if isinstance(checked_estimator, Pipeline):
+                    cloned_estimator_[-1].set_params(**params)
+                else:
+                    cloned_estimator_.set_params(**params)
+                self.estimators_.append(fit_estimator(
+                    cloned_estimator_, X_train, y_train, sample_weight_train
+                ))
+                y_calib_preds[i] = self.estimators_[-1].predict(X_calib)
 
         self.conformity_scores_ = np.full(
                 shape=(3, self.n_calib_samples),
@@ -565,8 +647,7 @@ class MapieQuantileRegressor(MapieRegressor):
         symmetry : Optional[bool], optional
             Deciding factor to whether to find the quantile value for
             each residuals separatly or to use the maximum of the two
-            combined. This results in having either symmetric constants
-            added for both upper and lower bounds or not.
+            combined.
 
         Returns
         -------

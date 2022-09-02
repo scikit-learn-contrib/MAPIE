@@ -31,6 +31,7 @@ from .utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
+    check_estimator_fit_predict,
 )
 
 
@@ -320,11 +321,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         if estimator is None:
             return LinearRegression()
-        if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
-            raise ValueError(
-                "Invalid estimator. "
-                "Please provide a regressor with fit and predict methods."
-            )
+        check_estimator_fit_predict(estimator)
         if self.cv == "prefit":
             if isinstance(self.estimator, Pipeline):
                 check_is_fitted(self.estimator[-1])
