@@ -19,15 +19,10 @@ from ._typing import ArrayLike, NDArray
 from .utils import (
     check_alpha_and_n_samples,
     check_defined_variables_predict_cqr,
+    check_estimator_fit_predict,
     check_lower_upper_bounds,
     check_null_weight,
     fit_estimator,
-<<<<<<< HEAD
-=======
-    check_lower_upper_bounds,
-    check_defined_variables_predict_cqr,
-    check_estimator_fit_predict,
->>>>>>> master
 )
 
 from ._compatibility import np_quantile

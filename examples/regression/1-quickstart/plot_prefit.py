@@ -67,7 +67,8 @@ X_train, X_cal, y_train, y_cal = train_test_split(
 # 2. Pre-train models
 # -----------------------------------------------------------------------------
 #
-# For this example, we will train a MLPRegressor for
+# For this example, we will train a
+# :class:`sklearn.neural_network.MLPRegressor` for
 # :class:`mapie.regression.MapieRegressor` and multiple LGBMRegressor with a
 # quantile objective as this is a requirement to perform conformalized
 # quantile regression using
