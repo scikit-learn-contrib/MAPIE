@@ -243,7 +243,7 @@ def plot_prediction_intervals(
 # :class:`~mapie.quantile_regression.MapieQuantileRegressor` and when using
 # :class:`~mapie.regression.MapieRegressor`, it needs to be set in the
 # ``predict``).
-# Note that for the CQR, there are two options for ``cv```:
+# Note that for the CQR, there are two options for ``cv``:
 #
 # 1. ``cv="split"`` (by default), the split-conformal where MAPIE trains the
 # model on a training set and then calibrates on the calibration set.
@@ -251,8 +251,6 @@ def plot_prediction_intervals(
 # 2. ``cv="prefit"`` meaning that you can train your models with the correct
 # quantile values (must be given in the following order:
 # :math:`(\alpha, 1-(\alpha/2), 0.5)` and given to MAPIE as an iterable object.
-# Check :ref:`sphx_glr_examples_regression_1_quickstart_plot_prefit.py` for an
-# example using the prefit method.
 #
 # Additionally, note that there is a list of accepted models by
 # :class:`~mapie.quantile_regression.MapieQuantileRegressor`
