@@ -563,3 +563,26 @@ def check_defined_variables_predict_cqr(
             "WARNING: Alpha should not be specified in the prediction method\n"
             + "with conformalized quantile regression."
         )
+
+
+def check_estimator_fit_predict(
+    estimator: Union[RegressorMixin, ClassifierMixin]
+) -> None:
+    """
+    Check that the estimator has a fit and precict method.
+
+    Parameters
+    ----------
+    estimator : Union[RegressorMixin, ClassifierMixin]
+        Estimator to train.
+
+    Raises
+    ------
+    ValueError
+        If the estimator does not have a fit or predict attribute.
+    """
+    if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
+        raise ValueError(
+            "Invalid estimator. "
+            "Please provide a regressor with fit and predict methods."
+        )
