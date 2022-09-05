@@ -251,6 +251,9 @@ def plot_prediction_intervals(
 # 2. ``cv="prefit"`` meaning that you can train your models with the correct
 # quantile values (must be given in the following order:
 # :math:`(\alpha, 1-(\alpha/2), 0.5)` and given to MAPIE as an iterable object.
+# Check :ref:`example
+# <sphx_glr_examples_regression_1_quickstart_plot_prefit.py>`
+# for how to use prefit in MAPIE.
 #
 # Additionally, note that there is a list of accepted models by
 # :class:`~mapie.quantile_regression.MapieQuantileRegressor`
