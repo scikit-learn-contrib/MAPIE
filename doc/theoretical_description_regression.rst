@@ -278,7 +278,7 @@ hypotheses:
 1. Errors are short-term independent and identically distributed (i.i.d)
 
 2. Estimation quality: there exists a real sequence :math:`(\delta_T)_{T > 0}`
-  that converges to zero such that
+   that converges to zero such that
 
 .. math::
     \frac{1}{T}\sum_1^T(\hat{\mu}_{-t}(x_t) - \mu(x_t))^2 < \delta_T^2

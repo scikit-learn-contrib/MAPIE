@@ -610,7 +610,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         - quantiles of conformity scores (naive and base methods),
         - quantiles of (predictions +/- conformity scores) (plus method),
         - quantiles of (max/min(predictions) +/- conformity scores)
-        (minmax method).
+          (minmax method).
 
         Parameters
         ----------
