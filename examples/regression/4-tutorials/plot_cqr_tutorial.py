@@ -5,8 +5,8 @@ Tutorial for conformalized quantile regression (CQR)
 
 We will use the sklearn california housing dataset as the base for the
 comparison of the different methods available on MAPIE. Two classes will
-be used: :class:`~~mapie.quantile_regression.MapieQuantileRegressor` for CQR and
-:class:`~~mapie.regression.MapieRegressor` for the other methods.
+be used: :class:`~~mapie.quantile_regression.MapieQuantileRegressor` for CQR
+and :class:`~~mapie.regression.MapieRegressor` for the other methods.
 
 For this example, the estimator will be :class:`~~lightgbm.LGBMRegressor` with
 ``objective="quantile"`` as this is a necessary component for CQR, the

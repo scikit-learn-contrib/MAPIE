@@ -23,8 +23,8 @@ Once the base model is optimized, we can use
 the prediction intervals associated with one-step ahead forecasts through
 the EnbPI method [1].
 
-As its parent class :class:`~MapieRegressor`, :class:`~MapieTimeSeriesRegressor`
-has two main arguments : "cv", and "method".
+As its parent class :class:`~MapieRegressor`,
+:class:`~MapieTimeSeriesRegressor` has two main arguments : "cv", and "method".
 In order to implement EnbPI, "method" must be set to "enbpi" (the default
 value) while "cv" must be set to the :class:`~mapie.subsample.BlockBootstrap`
 class that block bootstraps the training set.
