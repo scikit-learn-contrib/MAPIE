@@ -5,27 +5,27 @@ Tutorial for conformalized quantile regression (CQR)
 
 We will use the sklearn california housing dataset as the base for the
 comparison of the different methods available on MAPIE. Two classes will
-be used: :class:`~~mapie.quantile_regression.MapieQuantileRegressor` for CQR
-and :class:`~~mapie.regression.MapieRegressor` for the other methods.
+be used: :class:`~mapie.quantile_regression.MapieQuantileRegressor` for CQR
+and :class:`~mapie.regression.MapieRegressor` for the other methods.
 
-For this example, the estimator will be :class:`~~lightgbm.LGBMRegressor` with
+For this example, the estimator will be :class:`~lightgbm.LGBMRegressor` with
 ``objective="quantile"`` as this is a necessary component for CQR, the
 regression needs to be from a quantile regressor.
 
 For the conformalized quantile regression (CQR), we will use a split-conformal
 method meaning that we will split the training set into a training and
 calibration set. This means using
-:class:`~~mapie.quantile_regression.MapieQuantileRegressor` with ``cv="split"``
+:class:`~mapie.quantile_regression.MapieQuantileRegressor` with ``cv="split"``
 and the ``alpha`` parameter already defined. Recall that the ``alpha`` is
 `1 - target coverage`.
 
 For the other type of conformal methods, they are chosen with the
-parameter ``method`` of :class:`~~mapie.regression.MapieRegressor` and the
+parameter ``method`` of :class:`~mapie.regression.MapieRegressor` and the
 parameter ``cv`` is the strategy for cross-validation. In this method, to use a
 "leave-one-out" strategy, one would have to use ``cv=-1`` where a positive
 value would indicate the number of folds for a cross-validation strategy.
 Note that for the jackknife+ after boostrap, we need to use the
-class :class:`~~mapie.subsample.Subsample` (note that the `alpha` parameter is
+class :class:`~mapie.subsample.Subsample` (note that the `alpha` parameter is
 defined in the ``predict`` for these methods).
 """
 
@@ -118,7 +118,7 @@ X_train, X_calib, y_train, y_calib = train_test_split(
 # Before estimating uncertainties, let's start by optimizing the base model
 # in order to reduce our prediction error. We will use the
 # :class:`~lightgbm.LGBMRegressor` in the quantile setting. The optimization
-# is performed using :class:`~~sklearn.model_selection.RandomizedSearchCV`
+# is performed using :class:`~sklearn.model_selection.RandomizedSearchCV`
 # to find the optimal model to predict the house prices.
 
 
@@ -240,8 +240,8 @@ def plot_prediction_intervals(
 # We proceed to using MAPIE to return the predictions and prediction intervals.
 # We will use an :math:`\alpha=0.2`, this means a target coverage of 0.8
 # (recall that this parameter needs to be initialized directly when setting
-# :class:`~~mapie.quantile_regression.MapieQuantileRegressor` and when using
-# :class:`~~mapie.regression.MapieRegressor`, it needs to be set in the
+# :class:`~mapie.quantile_regression.MapieQuantileRegressor` and when using
+# :class:`~mapie.regression.MapieRegressor`, it needs to be set in the
 # ``predict``).
 # Note that for the CQR, there are two options for ``cv``:
 #
@@ -256,7 +256,7 @@ def plot_prediction_intervals(
 # for how to use prefit in MAPIE.
 #
 # Additionally, note that there is a list of accepted models by
-# :class:`~~mapie.quantile_regression.MapieQuantileRegressor`
+# :class:`~mapie.quantile_regression.MapieQuantileRegressor`
 # (``quantile_estimator_params``).
 
 
