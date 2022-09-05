@@ -257,7 +257,7 @@ def plot_prediction_intervals(
 #
 # Additionally, note that there is a list of accepted models by
 # :class:`~mapie.quantile_regression.MapieQuantileRegressor`
-# (``quantile_estimator_params``).
+# (``quantile_estimator_params``) and that we will use symmetrical residuals.
 
 
 STRATEGIES = {
@@ -319,7 +319,7 @@ for strategy, coord in zip(STRATEGIES.keys(), coords):
         num_plots
         )
 lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
-lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+lines, labels = [sum(_, []) for _ in zip(*lines_labels)]
 plt.legend(
     lines[:4], labels[:4],
     loc='upper center',
