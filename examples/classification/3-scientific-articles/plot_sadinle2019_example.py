@@ -3,16 +3,16 @@
 Reproducing Example 7 from Sadinle et al. (2019)
 ================================================
 
-We use :class:`mapie.classification.MapieClassifier` to reproduce
+We use :class:`~mapie.classification.MapieClassifier` to reproduce
 Example 7 from Sadinle et al. (2019).
 
 We consider a two-dimensional dataset with three labels. The distribution
 of the data is a bivariate normal with diagonal covariance matrices for
 each label.
 We model the data with Gaussian Naive Bayes classifier
-:class:`sklearn.naive_bayes.GaussianNB` as a base model.
+:class:`~sklearn.naive_bayes.GaussianNB` as a base model.
 
-Prediction sets are estimated by :class:`mapie.classification.MapieClassifier`
+Prediction sets are estimated by :class:`~mapie.classification.MapieClassifier`
 from the distribution of the softmax scores of the true labels for three
 alpha values (0.2, 0.1, and 0.05) giving different class coverage levels.
 

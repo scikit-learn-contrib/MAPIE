@@ -3,8 +3,8 @@
 Estimate the prediction intervals of 1D heteroscedastic data
 ============================================================
 
-:class:`mapie.regression.MapieRegressor` and
-:class:`mapie.quantile_regression.MapieQuantileRegressor` is used
+:class:`~mapie.regression.MapieRegressor` and
+:class:`~mapie.quantile_regression.MapieQuantileRegressor` is used
 to estimate the prediction intervals of 1D heteroscedastic data using
 different strategies. The latter class should provide the same
 coverage for a lower width of intervals because it adapts the prediction
