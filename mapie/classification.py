@@ -502,10 +502,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 y_pred_proba_last[:, 0, :]
             )
         else:
+            L = np.sum(prediction_sets, axis=1)
             vs = (
                 (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
-                y_pred_proba_last[:, 0, :]
-            ) + 1  # TODO: remove + 1 and take into account Angelopoulos answer
+                (
+                    y_pred_proba_last[:, 0, :] -
+                    self.lambda_star * np.maximum(0, L - self.k_star) +
+                    self.lambda_star * (L > self.k_star)
+                )
+            )
 
         # get random numbers for each observation and alpha value
         random_state = check_random_state(self.random_state)

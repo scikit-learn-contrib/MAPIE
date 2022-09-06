@@ -253,6 +253,17 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
+    "raps_randomized": (
+        Params(
+            method="raps",
+            cv="prefit",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label="randomized",
+            agg_scores="mean"
+        )
+    ),
 }
 
 COVERAGES = {
