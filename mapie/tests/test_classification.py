@@ -281,7 +281,8 @@ COVERAGES = {
     "cumulated_score_randomized_cv_crossval": 4 / 9,
     "naive": 5 / 9,
     "top_k": 1,
-    "raps": 1
+    "raps": 1,
+    "raps_randomized": 8/9
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -452,6 +453,17 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True],
         [False, True, True],
+    ],
+    "raps_randomized": [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, True],
+        [False, False, True],
     ],
 }
 
