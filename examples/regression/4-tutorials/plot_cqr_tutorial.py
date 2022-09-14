@@ -33,7 +33,7 @@ import warnings
 
 from lightgbm import LGBMRegressor
 import matplotlib.pyplot as plt
-from matplotlib.offsetbox import (TextArea, AnnotationBbox)
+from matplotlib.offsetbox import TextArea, AnnotationBbox
 from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 import pandas as pd
@@ -70,7 +70,7 @@ warnings.filterwarnings("ignore")
 
 data = fetch_california_housing(as_frame=True)
 X = pd.DataFrame(data=data.data, columns=data.feature_names)
-y = pd.DataFrame(data=data.target)*100
+y = pd.DataFrame(data=data.target) * 100
 
 ##############################################################################
 # Let's visualize the dataset by showing the correlations between the
@@ -90,7 +90,7 @@ fig, axs = plt.subplots(1, 1, figsize=(5, 5))
 axs.hist(y, bins=50)
 axs.set_xlabel("Median price of houses")
 axs.set_title("Histogram of house prices")
-axs.xaxis.set_major_formatter(FormatStrFormatter('%.0f'+"k"))
+axs.xaxis.set_major_formatter(FormatStrFormatter('%.0f' + "k"))
 plt.show()
 
 
@@ -159,7 +159,7 @@ estimator = optim_model.best_estimator_
 # and prediction intervals for different conformal methods.
 
 
-def sort_time_series(y_test, y_pred, y_pis):
+def sort_y_values(y_test, y_pred, y_pis):
     """
     Sorting the dataset in order to make plots using the fill_between function.
     """
@@ -186,8 +186,8 @@ def plot_prediction_intervals(
     Plot of the prediction intervals for each different conformal
     method.
     """
-    axs.yaxis.set_major_formatter(FormatStrFormatter('%.0f'+"k"))
-    axs.xaxis.set_major_formatter(FormatStrFormatter('%.0f'+"k"))
+    axs.yaxis.set_major_formatter(FormatStrFormatter('%.0f' + "k"))
+    axs.xaxis.set_major_formatter(FormatStrFormatter('%.0f' + "k"))
 
     lower_bound_ = np.take(lower_bound, num_plots_idx)
     y_pred_sorted_ = np.take(y_pred_sorted, num_plots_idx)
@@ -280,7 +280,7 @@ for strategy, params in STRATEGIES.items():
         y_pred_sorted[strategy],
         lower_bound[strategy],
         upper_bound[strategy]
-    ) = sort_time_series(y_test, y_pred[strategy], y_pis[strategy])
+    ) = sort_y_values(y_test, y_pred[strategy], y_pis[strategy])
     coverage[strategy] = regression_coverage_score(
         y_test,
         y_pis[strategy][:, 0, 0],
@@ -362,7 +362,7 @@ def get_coverages_widths_by_bins(
         recap[name] = []
         for strategy in STRATEGIES:
             indices = np.where(
-                (y_test[strategy] > cut1)*(y_test[strategy] <= cut2)
+                (y_test[strategy] > cut1) * (y_test[strategy] <= cut2)
                 )
             y_test_trunc = np.take(y_test[strategy], indices)
             y_low_ = np.take(lower_bound[strategy], indices)
