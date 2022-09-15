@@ -258,6 +258,7 @@ However the confidence intervals are like those of the jackknife method.
 
 .. math::
   \hat{C}_{n, \alpha}^{\rm EnbPI}(X_{n+1}) = [\hat{\mu}_{agg}(X_{n+1}) + \hat{q}_{n, \beta}\{ R_i^{\rm LOO} \}, \hat{\mu}_{agg}(X_{n+1}) + \hat{q}_{n, (1 - \alpha + \beta)}\{ R_i^{\rm LOO} \}]
+
 where :math:`\hat{\mu}_{agg}(X_{n+1})` is the aggregation of the predictions of
 the LOO estimators (mean or median), and
 :math:`R_i^{\rm LOO} = |Y_i - \hat{\mu}_{-i}(X_{i})|` 
@@ -277,7 +278,7 @@ hypotheses:
 1. Errors are short-term independent and identically distributed (i.i.d)
 
 2. Estimation quality: there exists a real sequence :math:`(\delta_T)_{T > 0}`
-  that converges to zero such that
+   that converges to zero such that
 
 .. math::
     \frac{1}{T}\sum_1^T(\hat{\mu}_{-t}(x_t) - \mu(x_t))^2 < \delta_T^2

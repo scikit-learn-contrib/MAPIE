@@ -161,9 +161,9 @@ for strategy, params in STRATEGIES.items():
 # intervals obtained with the Jackknife+, Jackknife-minmax, CV+, CV-minmax,
 # Jackknife+-after-Boostrap, and conformalized quantile regression (CQR)
 # strategies. Note that for the Jackknife-after-Bootstrap method, we call the
-# :class:`mapie.subsample.Subsample` object that allows us to train
+# :class:`~mapie.subsample.Subsample` object that allows us to train
 # bootstrapped models. Note also that the CQR method is called with
-# :class:`mapie.quantile_regression.MapieQuantileRegressor` with a
+# :class:`~mapie.quantile_regression.MapieQuantileRegressor` with a
 # "split" strategy.
 
 

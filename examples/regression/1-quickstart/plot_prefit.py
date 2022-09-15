@@ -3,8 +3,8 @@
 Example use of the prefit parameter with neural networks and LGBM Regressor
 ===========================================================================
 
-:class:`mapie.regression.MapieRegressor` and
-:class:`mapie.quantile_regression.MapieQuantileRegressor`
+:class:`~mapie.regression.MapieRegressor` and
+:class:`~mapie.quantile_regression.MapieQuantileRegressor`
 are used to calibrate uncertainties for large models for
 which the cost of cross-validation is too high. Typically,
 neural networks rely on a single validation set.
@@ -67,11 +67,12 @@ X_train, X_cal, y_train, y_cal = train_test_split(
 # 2. Pre-train models
 # -----------------------------------------------------------------------------
 #
-# For this example, we will train a MLPRegressor for
-# :class:`mapie.regression.MapieRegressor` and multiple LGBMRegressor with a
+# For this example, we will train a
+# :class:`~sklearn.neural_network.MLPRegressor` for
+# :class:`~mapie.regression.MapieRegressor` and multiple LGBMRegressor with a
 # quantile objective as this is a requirement to perform conformalized
 # quantile regression using
-# :class:`mapie.quanitle_regression.MapieQuantileRegressor`. Note that the
+# :class:`~mapie.quanitle_regression.MapieQuantileRegressor`. Note that the
 # three estimators need to be trained at quantile values of
 # :math:`(\alpha/2, 1-(\alpha/2), 0.5)`.
 
@@ -127,8 +128,8 @@ coverage_cqr = regression_coverage_score(
 #
 # In order to view the results shown above, we will plot each other predictions
 # with their prediction interval. The multi-layer perceptron (MLP) with
-# :class:`mapie.regression.MapieRegressor` and LGBMRegressor with
-# :class:`mapie.quantile_regression.MapieQuantileRegressor`.
+# :class:`~mapie.regression.MapieRegressor` and LGBMRegressor with
+# :class:`~mapie.quantile_regression.MapieQuantileRegressor`.
 
 # Plot obtained prediction intervals on testing set
 theoretical_semi_width = scipy.stats.norm.ppf(1 - alpha) * sigma
