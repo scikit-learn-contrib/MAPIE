@@ -928,7 +928,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Optimal values of lambda.
         """
         lambda_star = np.zeros(len(alpha_np))
-        best_sizes = np.ones(len(alpha_np)) * np.inf
+        best_sizes = np.full(len(alpha_np), np.inf)
 
         for lambda_ in [.001, .01, .1, .2, .5]:  # values given in the paper
             true_label_cumsum_proba, cutoff = (
@@ -1168,7 +1168,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             if a cross-validation strategy is used. Choose among:
 
             - "mean", take the mean of scores.
-            - "crossval", compare the scores between al training data and each
+            - "crossval", compare the scores between all training data and each
               test point for each label to estimate if the label must be
               included in the prediction set. Follows algorithm 2 of
               Romano+2020.
