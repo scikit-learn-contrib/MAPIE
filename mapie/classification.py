@@ -63,9 +63,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
           labels until the true label is reached, on the calibration set.
           See [2] for more details.
 
-        - "raps", regularized Adaptive Prediction Set method. It uses the
-          same technique as for cumulated_score method but add a penalty
-          term to reduce the prediction sets size. See [3] for more
+        - "raps", Regularized Adaptive Prediction Sets method. It uses the
+          same technique as cumulated_score method but with a penalty term
+          to reduce the size of prediction sets. See [3] for more
           details. For now, this method only works with "prefit" strategy.
 
         - "top_k", based on the sorted index of the probability of the true
@@ -215,7 +215,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.method not in self.valid_methods_:
             raise ValueError(
                 "Invalid method. "
-                "Allowed values are 'score', 'cumulated_score' or 'raps'."
+                "Allowed values are 'score', 'cumulated_score', "
+                "'raps', 'naive' or 'top_k'"
             )
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
@@ -223,15 +224,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self._check_raps()
 
     def _check_raps(self):
-        """Check that is the method used is RAPS, then
+        """
+        Check that if the method used is RAPS, then
         the cross validation strategy is "prefit".
 
         Raises
         ------
         ValueError
-            If method is "raps" and cv not "prefit".
+            If method is "raps" and cv is not "prefit".
         """
-        if self.method == "raps" and self.cv != "prefit":
+        if (self.method == "raps") and (self.cv != "prefit"):
             raise ValueError("RAPS method can only be used with cv='prefit'")
 
     def _check_estimator(
@@ -417,14 +419,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             (include_last_label == 'randomized')
         ):
             y_pred_index_last = (
-                np.argmin(
                     np.ma.masked_less(
                         y_pred_proba_cumsum
                         - threshold[np.newaxis, :],
                         -EPSILON
-                    ),
-                    axis=1
-                )
+                    ).argmin(axis=1)
             )
         elif (include_last_label is False):
             max_threshold = np.maximum(
@@ -495,13 +494,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 axis=1
             ), axis=1
         )
-        # compute V parameter from Romano+(2020)
+
         if self.method == "cumulated_score":
+            # compute V parameter from Romano+(2020)
             vs = (
                 (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
                 y_pred_proba_last[:, 0, :]
             )
         else:
+            # compute V parameter from Angelopoulos+(2020)
             L = np.sum(prediction_sets, axis=1)
             vs = (
                 (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
@@ -663,7 +664,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y: NDArray,
         y_pred_proba: NDArray
     ) -> Tuple[NDArray, NDArray]:
-        """Compute the cumsumed probability of the true label.
+        """
+        Compute the cumsumed probability of the true label.
 
         Parameters
         ----------
@@ -674,9 +676,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-         Tuple[NDArray, NDArray] of shapes
-         (n_samples, 1) and (n_samples, ). The first element
-         is the cumsum probability of the true label. The second
+        Tuple[NDArray, NDArray] of shapes
+        (n_samples, 1) and (n_samples, ). The first element
+        is the cumsum probability of the true label. The second
         is the sorted position of the true label.
         """
         y_true = label_binarize(
@@ -702,7 +704,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         conf_score: NDArray,
         cutoff: NDArray
     ) -> NDArray:
-        """Regularize the conformity scores with the RAPS
+        """
+        Regularize the conformity scores with the RAPS
         method. See algo. 2 in [3].
 
         Parameters
@@ -743,7 +746,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred_proba: NDArray,
         y: NDArray
     ) -> NDArray:
-        """Return the sorted position of the true label in the
+        """
+        Return the sorted position of the true label in the
         prediction
 
         Parameters
@@ -777,7 +781,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         lambda_: Union[NDArray, float, None],
         k_star: Union[NDArray, Any]
     ) -> Tuple[NDArray, NDArray, NDArray]:
-        """Function that returns the smallest score
+        """
+        Function that returns the smallest score
         among those which are included in the prediciton set.
 
         Parameters
@@ -788,7 +793,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Quantiles that have been computed from the conformity
             scores.
         include_last_label : Union[bool, str, None]
-            Whether or not to include the label whose score
+            Whether to include or not the label whose score
             exceeds the threshold.
         lambda_ : Union[NDArray, float, None] of shape (n_alphas)
             Values of lambda for the regularization.
@@ -876,8 +881,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         Returns
         -------
         Tuple[NDArray, NDArray]
-            Arrays of shape (n_alphas, ) and (n_alphas) which
-            respectively represents the update values of lambda_star
+            Arrays of shape (n_alphas, ) and (n_alpha, ) which
+            respectively represent the updated values of lambda_star
             and the new best sizes.
         """
 
@@ -896,8 +901,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         return lambda_star, best_sizes
 
     def _find_lambda_star(
-        self, y_pred_proba_raps: NDArray,
-        alpha_np: NDArray, include_last_label: Union[bool, str, None],
+        self,
+        y_pred_proba_raps: NDArray,
+        alpha_np: NDArray,
+        include_last_label: Union[bool, str, None],
         k_star: NDArray
     ) -> Union[NDArray, float]:
         """Find the optimal value of lambda for each alpha.
@@ -908,22 +915,22 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Predictions of the model repeated on the last axis as many times
             as the number of alphas
         alpha_np : NDArray of shape (n_alphas, )
-            Level of confidences.
+            Levels of confidences.
         include_last_label : bool
-            Whether or not to include last label in
-            prediction sets
+            Whether to include or not last label in
+            the prediction sets
         k_star: NDArray of shape (n_alphas, )
             Values of k for the regularization.
 
         Returns
         -------
-        ArrayLike of shape (n_alphas)
+        ArrayLike of shape (n_alphas, )
             Optimal values of lambda.
         """
         lambda_star = np.zeros(len(alpha_np))
-        best_sizes = np.ones(len(alpha_np)) * 1e10
+        best_sizes = np.ones(len(alpha_np)) * np.inf
 
-        for lambda_ in [.001, .01, .1, .2, .5]:
+        for lambda_ in [.001, .01, .1, .2, .5]:  # values given in the paper
             true_label_cumsum_proba, cutoff = (
                 self._get_true_label_cumsum_proba(
                     self.y_raps,
