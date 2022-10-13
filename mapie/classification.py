@@ -930,7 +930,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         lambda_star = np.zeros(len(alpha_np))
         best_sizes = np.full(len(alpha_np), np.inf)
 
-        for lambda_ in [.001, .01, .1, .2, .5]:  # values given in the paper
+        for lambda_ in [.001, .01, .1, .2, .5]:  # values given in the paper [3]
             true_label_cumsum_proba, cutoff = (
                 self._get_true_label_cumsum_proba(
                     self.y_raps,
