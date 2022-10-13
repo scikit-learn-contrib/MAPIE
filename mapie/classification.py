@@ -17,9 +17,9 @@ from sklearn.utils.validation import (
     _check_y,
 )
 
-from ._typing import ArrayLike, NDArray
 from ._machine_precision import EPSILON
 from .metrics import classification_mean_width_score
+from ._typing import ArrayLike, NDArray
 from .utils import (
     check_cv,
     check_null_weight,
