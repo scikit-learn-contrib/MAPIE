@@ -39,7 +39,7 @@ class Subsample(BaseCrossValidator):
     >>> X = np.array([1,2,3,4,5,6,7,8,9,10])
     >>> for train_index, test_index in cv.split(X):
     ...    print(f"train index is {train_index}, test index is {test_index}")
-    train index is [5 0 3 3 7 9 3 5 2 4], test index is [8 1 6]
+    train index is [5 0 3 3 7 9 3 5 2 4], test index is [1 6 8]
     train index is [7 6 8 8 1 6 7 7 8 1], test index is [0 2 3 4 5 9]
     """
 
@@ -86,9 +86,7 @@ class Subsample(BaseCrossValidator):
                 random_state=random_state,
                 stratify=None,
             )
-            test_index = np.array(
-                list(set(indices) - set(train_index)), dtype=np.int64
-            )
+            test_index = np.setdiff1d(indices, train_index)
             yield train_index, test_index
 
     def get_n_splits(self, *args: Any, **kargs: Any) -> int:

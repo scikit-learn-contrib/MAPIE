@@ -1,12 +1,12 @@
 """
-======================================================
-Introducing cross-conformal methods for classification
-======================================================
+==================================
+Cross-conformal for classification
+==================================
 
 In this tutorial, we estimate the impact of the
 training/calibration split on the prediction sets and
 on the resulting coverage estimated by
-:class:`mapie.classification.MapieClassifier`.
+:class:`~mapie.classification.MapieClassifier`.
 We then adopt a cross-validation approach in which the
 conformity scores of all calibration sets are used to
 estimate the quantile. We demonstrate that this second
@@ -22,7 +22,7 @@ in :math:`K` folds and sequentially use each fold as a
 calibration set, the :math:`K-1` folds remaining folds are
 used for training the base model using
 the ``cv="prefit"`` option of
-:class:`mapie.classification.MapieClassifier`.
+:class:`~mapie.classification.MapieClassifier`.
 """
 
 
@@ -104,7 +104,7 @@ plt.show()
 # We split our training dataset into 5 folds and use each fold as a
 # calibration set. Each calibration set is therefore used to estimate the
 # conformity scores and the given quantiles for the two methods implemented in
-# :class:`mapie.classification.MapieClassifier`.
+# :class:`~mapie.classification.MapieClassifier`.
 
 
 kf = KFold(n_splits=5, shuffle=True)
@@ -312,7 +312,7 @@ plot_coverage_width(
 #    (as presented in Romano et al. 2020 for the "cumulated_score" method)
 #
 # Let's explore the two possibilites with the "score" method using
-# :class:`mapie.classification.MapieClassifier`.
+# :class:`~mapie.classification.MapieClassifier`.
 #
 # All we need to do is to provide with the `cv` argument a cross-validation
 # object or an integer giving the number of folds.

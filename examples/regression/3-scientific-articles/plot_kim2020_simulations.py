@@ -3,7 +3,7 @@
 Reproducing the simulations from Kim et al. (2020)
 ==================================================
 
-:class:`mapie.regression.MapieRegressor` is used to reproduce the simulations
+:class:`~mapie.regression.MapieRegressor` is used to reproduce the simulations
 by Kim et al. (2020) [1] in their article which introduces the
 jackknife+-after-bootstrap method.
 

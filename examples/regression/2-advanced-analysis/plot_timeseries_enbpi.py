@@ -4,7 +4,7 @@ Estimating prediction intervals of time series forecast with EnbPI
 ==================================================================
 
 This example uses
-:class:`mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate
+:class:`~mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate
 prediction intervals associated with time series forecast. It follows [6].
 
 We use here the Victoria electricity demand dataset used in the book
@@ -13,11 +13,11 @@ The electricity demand features daily and weekly seasonalities and is impacted
 by the temperature, considered here as a exogeneous variable.
 
 A Random Forest model is already fitted on data. The hyper-parameters are
-optimized with a :class:`sklearn.model_selection.RandomizedSearchCV` using a
-sequential :class:`sklearn.model_selection.TimeSeriesSplit` cross validation,
+optimized with a :class:`~sklearn.model_selection.RandomizedSearchCV` using a
+sequential :class:`~sklearn.model_selection.TimeSeriesSplit` cross validation,
 in which the training set is prior to the validation set.
 The best model is then feeded into
-:class:`mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate the
+:class:`~mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate the
 associated prediction intervals. We compare two approaches: with or without
 ``partial_fit`` called at every step following [6]. It appears that
 ``partial_fit`` offer a coverage closer to the targeted coverage, and with

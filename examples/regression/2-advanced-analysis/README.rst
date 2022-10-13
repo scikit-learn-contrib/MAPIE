@@ -1,4 +1,4 @@
-.. _regression_examples:
+.. _regression_examples_2:
 
 2. Advanced analysis
 --------------------

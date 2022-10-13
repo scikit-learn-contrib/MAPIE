@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 
 DISTNAME = "MAPIE"
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 DESCRIPTION = (
     "A scikit-learn-compatible module "
     "for estimating prediction intervals."
@@ -20,12 +20,12 @@ PROJECT_URLS = {
 }
 LICENSE = "new BSD"
 MAINTAINER = "V. Taquet, V. Blot, T. Morzadec, G. Martinon"
-MAINTAINER_EMAIL = """
-vtaquet@quantmetry.com,
-vblot@quantmetry.com,
-tmorzadec@quantmetry.com,
-gmartinon@quantmetry.com
-"""
+MAINTAINER_EMAIL = (
+    "vtaquet@quantmetry.com, "
+    "vblot@quantmetry.com, "
+    "tmorzadec@quantmetry.com, "
+    "gmartinon@quantmetry.com"
+)
 PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
 INSTALL_REQUIRES = ["scikit-learn", "numpy>=1.21", "packaging"]
@@ -61,7 +61,7 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.10"
 ]
 
 setup(

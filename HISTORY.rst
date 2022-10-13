@@ -2,6 +2,20 @@
 History
 =======
 
+0.4.2 (2022-09-02)
+------------------
+
+* Add tutorial for time series
+* Convert existing tutorials in .py
+* Add prefit method for CQR
+* Add tutorial for CQR
+
+0.4.1 (2022-06-27)
+------------------
+
+* Add `packaging` library in requirements
+* Fix displaying problem in pypi
+
 0.4.0 (2022-06-24)
 ------------------
 

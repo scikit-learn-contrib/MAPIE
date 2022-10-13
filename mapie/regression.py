@@ -31,6 +31,7 @@ from .utils import (
     check_null_weight,
     check_verbose,
     fit_estimator,
+    check_estimator_fit_predict,
 )
 
 
@@ -320,11 +321,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         if estimator is None:
             return LinearRegression()
-        if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
-            raise ValueError(
-                "Invalid estimator. "
-                "Please provide a regressor with fit and predict methods."
-            )
+        check_estimator_fit_predict(estimator)
         if self.cv == "prefit":
             if isinstance(self.estimator, Pipeline):
                 check_is_fitted(self.estimator[-1])
@@ -546,7 +543,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
             self.k_ = np.full(
-                shape=(n_samples, 1), fill_value=np.nan, dtype="float"
+                shape=(n_samples, 1), fill_value=np.nan, dtype=float
             )
         else:
             cv = cast(BaseCrossValidator, cv)
@@ -584,13 +581,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 )
 
                 for i, val_ind in enumerate(val_indices):
-                    pred_matrix[val_ind, i] = np.array(predictions[i])
+                    pred_matrix[val_ind, i] = np.array(
+                        predictions[i], dtype=float
+                    )
                     self.k_[val_ind, i] = 1
                 check_nan_in_aposteriori_prediction(pred_matrix)
 
                 y_pred = aggregate_all(agg_function, pred_matrix)
 
-        self.conformity_score_function_.check_consistency(y, y_pred)
         self.conformity_scores_ = (
             self.conformity_score_function_.get_conformity_scores(y, y_pred)
         )
@@ -612,7 +610,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         - quantiles of conformity scores (naive and base methods),
         - quantiles of (predictions +/- conformity scores) (plus method),
         - quantiles of (max/min(predictions) +/- conformity scores)
-        (minmax method).
+          (minmax method).
 
         Parameters
         ----------
@@ -652,6 +650,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             - [:, 0, :]: Lower bound of the prediction interval.
             - [:, 1, :]: Upper bound of the prediction interval.
+
         """
         # Checks
         check_is_fitted(self, self.fit_attributes)
@@ -671,12 +670,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         else:
             y_pred_multi = self._pred_multi(X)
 
-            if self.method in self.plus_like_method:
-                y_pred_multi_low = y_pred_multi
-                y_pred_multi_up = y_pred_multi
-            elif self.method == "minmax":
+            if self.method == "minmax":
                 y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
                 y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
+            else:
+                y_pred_multi_low = y_pred_multi
+                y_pred_multi_up = y_pred_multi
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
 

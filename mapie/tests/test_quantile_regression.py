@@ -519,6 +519,179 @@ def test_linear_regression_results(strategy: str) -> None:
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
 
+def test_quantile_prefit_three_estimators() -> None:
+    """
+    Test that there is a list with three estimators provided for
+    cv="prefit".
+    """
+    with pytest.raises(
+        ValueError,
+        match=r".*You need to have provided 3 different estimators, th*",
+    ):
+        gb_trained1, gb_trained2 = clone(gb), clone(gb)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
+        list_estimators = [gb_trained1, gb_trained2]
+        mapie_reg = MapieQuantileRegressor(
+            estimator=list_estimators,
+            cv="prefit"
+        )
+        mapie_reg.fit(
+            X_calib,
+            y_calib
+        )
+
+
+def test_prefit_no_fit_predict() -> None:
+    """
+    Check that the estimators given have a prefit and fit attribute.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r"Invalid estimator. Please provide a regressor with fit and*",
+    ):
+        gb_trained1, gb_trained2 = clone(gb), clone(gb)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
+        gb_trained3 = 3
+        list_estimators = [gb_trained1, gb_trained2, gb_trained3]
+        mapie_reg = MapieQuantileRegressor(
+            estimator=list_estimators,
+            cv="prefit",
+            alpha=0.3
+        )
+        mapie_reg.fit(
+            X_calib,
+            y_calib
+        )
+
+
+def test_non_trained_estimator() -> None:
+    """
+    Check that the estimators are all already trained when used in prefit.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r".*instance is not fitted yet. Call 'fit' with appropriate*",
+    ):
+        gb_trained1, gb_trained2, gb_trained3 = clone(gb), clone(gb), clone(gb)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
+        list_estimators = [gb_trained1, gb_trained2, gb_trained3]
+        mapie_reg = MapieQuantileRegressor(
+            estimator=list_estimators,
+            cv="prefit",
+            alpha=0.3
+        )
+        mapie_reg.fit(
+            X_calib,
+            y_calib
+        )
+
+
+def test_warning_alpha_prefit() -> None:
+    """
+    Check that the user is warned that the alphas need to be correctly set.
+    """
+    with pytest.warns(
+        UserWarning,
+        match=r".*WARNING: The alpha that is set needs to be the same*"
+    ):
+        gb_trained1, gb_trained2, gb_trained3 = clone(gb), clone(gb), clone(gb)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
+        gb_trained3.fit(X_train, y_train)
+        list_estimators = [gb_trained1, gb_trained2, gb_trained3]
+        mapie_reg = MapieQuantileRegressor(
+            estimator=list_estimators,
+            cv="prefit",
+            alpha=0.3
+        )
+        mapie_reg.fit(
+            X_calib,
+            y_calib
+        )
+
+
+@pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2, 0.3])
+def test_prefit_and_non_prefit_equal(alpha: float) -> None:
+    """
+    Check that when using prefit and not prefit, the same values
+    are found.
+    """
+    list_estimators = []
+    alphas_ = [alpha/2, 1-(alpha/2), 0.5]
+    for alpha_ in alphas_:
+        est = clone(qt)
+        params = {"quantile": alpha_}
+        est.set_params(**params)
+        est.fit(X_train, y_train)
+        list_estimators.append(est)
+    mapie_reg_prefit = MapieQuantileRegressor(
+        estimator=list_estimators,
+        cv="prefit",
+        alpha=alpha
+    )
+    mapie_reg_prefit.fit(X_calib, y_calib)
+    y_pred_prefit, y_pis_prefit = mapie_reg_prefit.predict(X)
+
+    mapie_reg = MapieQuantileRegressor(
+        estimator=qt,
+        alpha=alpha
+    )
+    mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+    y_pred, y_pis = mapie_reg.predict(X)
+
+    np.testing.assert_allclose(y_pred_prefit, y_pred)
+    np.testing.assert_allclose(y_pis_prefit, y_pis)
+
+
+@pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2, 0.3])
+def test_prefit_different_type_list_tuple_array(alpha: float) -> None:
+    """
+    Check that the type of Iterable (list, np.array, tuple) to
+    estimators gives similar results.
+    """
+    list_estimators = []
+    alphas_ = [alpha/2, 1-(alpha/2), 0.5]
+    for alpha_ in alphas_:
+        est = clone(qt)
+        params = {"quantile": alpha_}
+        est.set_params(**params)
+        est.fit(X_train, y_train)
+        list_estimators.append(est)
+
+    mapie_reg_prefit_list = MapieQuantileRegressor(
+        estimator=list_estimators,
+        cv="prefit",
+        alpha=alpha
+    )
+    mapie_reg_prefit_list.fit(X_calib, y_calib)
+    y_pred_prefit_list, y_pis_prefit_list = mapie_reg_prefit_list.predict(X)
+
+    mapie_reg_prefit_tuple = MapieQuantileRegressor(
+        estimator=tuple(list_estimators),
+        cv="prefit",
+        alpha=alpha
+    )
+    mapie_reg_prefit_tuple.fit(X_calib, y_calib)
+    y_pred_prefit_tuple, y_pis_prefit_tuple = mapie_reg_prefit_tuple.predict(X)
+
+    mapie_reg_prefit_array = MapieQuantileRegressor(
+        estimator=np.array(list_estimators),
+        cv="prefit",
+        alpha=alpha
+    )
+    mapie_reg_prefit_array.fit(X_calib, y_calib)
+    y_pred_prefit_array, y_pis_prefit_array = mapie_reg_prefit_array.predict(X)
+
+    np.testing.assert_allclose(y_pred_prefit_list, y_pred_prefit_tuple)
+    np.testing.assert_allclose(y_pis_prefit_list, y_pis_prefit_tuple)
+
+    np.testing.assert_allclose(y_pred_prefit_list, y_pred_prefit_array)
+    np.testing.assert_allclose(y_pis_prefit_list, y_pis_prefit_array)
+
+
 @pytest.mark.parametrize("estimator", ESTIMATOR)
 def test_pipeline_compatibility(estimator: RegressorMixin) -> None:
     """Check that MAPIE works on pipeline based on pandas dataframes"""

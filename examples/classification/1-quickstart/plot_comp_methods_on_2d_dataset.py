@@ -4,7 +4,7 @@ Comparing prediction sets on a two-dimensional dataset
 ======================================================
 
 In this tutorial, we compare the prediction sets estimated by
-:class:`mapie.classification.MapieClassifier` with the "score"
+:class:`~mapie.classification.MapieClassifier` with the "score"
 and "cumulated_score" on the two-dimensional dataset presented
 by Sadinle et al. (2019).
 """
@@ -102,7 +102,7 @@ plt.show()
 
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator.
-# Then we apply :class:`mapie.classification.MapieClassifier` in the
+# Then we apply :class:`~mapie.classification.MapieClassifier` in the
 # calibration data with the methods ``score`` and ``cumulated_score```
 # to the estimator indicating that it has already been fitted with
 # `cv="prefit"`.
