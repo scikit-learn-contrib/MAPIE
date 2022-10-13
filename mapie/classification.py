@@ -415,7 +415,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Index of the last included sorted probability.
         """
         if (
-            (include_last_label is True) or
+            (include_last_label) or
             (include_last_label == 'randomized')
         ):
             y_pred_index_last = (
