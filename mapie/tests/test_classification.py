@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Tuple, Union, Iterable, Dict
+from typing import Any, Optional, Union, Iterable, List, Dict, cast
 from typing_extensions import TypedDict
 
 import pytest
@@ -19,10 +19,11 @@ from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
+from mapie.utils import check_alpha
 from mapie._typing import ArrayLike, NDArray
 
 
-METHODS = ["score", "cumulated_score"]
+METHODS = ["score", "cumulated_score", "raps"]
 WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "other", 1, 2.5, (1, 2)]
 Y_PRED_PROBA_WRONG = [
@@ -50,6 +51,26 @@ Y_PRED_PROBA_WRONG = [
         ]
     )
 ]
+
+Y_TRUE_PROBA_PLACE = [
+    [
+        np.array([2, 0]),
+        np.array([
+            [.1, .3, .6],
+            [.2, .7, .1]
+        ]),
+        np.array([[0], [1]])
+    ],
+    [
+        np.array([1, 0]),
+        np.array([
+            [.7, .12, .18],
+            [.5, .24, .26]
+        ]),
+        np.array([[2], [0]])
+    ]
+]
+
 Params = TypedDict(
     "Params",
     {
@@ -221,6 +242,28 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
+    "raps": (
+        Params(
+            method="raps",
+            cv="prefit",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="mean"
+        )
+    ),
+    "raps_randomized": (
+        Params(
+            method="raps",
+            cv="prefit",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label="randomized",
+            agg_scores="mean"
+        )
+    ),
 }
 
 COVERAGES = {
@@ -237,7 +280,9 @@ COVERAGES = {
     "cumulated_score_not_include_cv_crossval": 0,
     "cumulated_score_randomized_cv_crossval": 4 / 9,
     "naive": 5 / 9,
-    "top_k": 1
+    "top_k": 1,
+    "raps": 1,
+    "raps_randomized": 8/9
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -398,7 +443,35 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True],
     ],
+    "raps": [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+    ],
+    "raps_randomized": [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, True],
+        [False, False, True],
+    ],
 }
+
+REGULARIZATION_PARAMETERS = [
+    [.001, [1]],
+    [[.01, .2], [1, 3]],
+    [.1, [2, 4]]
+]
 
 IMAGE_INPUT = [
     {
@@ -562,7 +635,7 @@ def test_valid_estimator(strategy: str) -> None:
 @pytest.mark.parametrize("method", METHODS)
 def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
-    mapie_clf = MapieClassifier(method=method)
+    mapie_clf = MapieClassifier(method=method, cv="prefit")
     mapie_clf.fit(X_toy, y_toy)
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
@@ -626,15 +699,13 @@ def test_invalid_include_last_label(include_last_label: Any) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_predict_output_shape(
-    strategy: str, alpha: Any, dataset: Tuple[NDArray, NDArray]
+    strategy: str, alpha: Any,
 ) -> None:
     """Test predict output shape."""
     args_init, args_predict = STRATEGIES[strategy]
     mapie_clf = MapieClassifier(**args_init)
-    X, y = dataset
     mapie_clf.fit(X, y)
     y_pred, y_ps = mapie_clf.predict(
         X,
@@ -710,16 +781,16 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     args_init, args_predict = STRATEGIES[strategy]
     mapie_clf_single = MapieClassifier(n_jobs=1, **args_init)
     mapie_clf_multi = MapieClassifier(n_jobs=-1, **args_init)
-    mapie_clf_single.fit(X_toy, y_toy)
-    mapie_clf_multi.fit(X_toy, y_toy)
+    mapie_clf_single.fit(X, y)
+    mapie_clf_multi.fit(X, y)
     y_pred_single, y_ps_single = mapie_clf_single.predict(
-        X_toy,
+        X,
         alpha=0.2,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
     )
     y_pred_multi, y_ps_multi = mapie_clf_multi.predict(
-        X_toy,
+        X,
         alpha=0.2,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
@@ -738,28 +809,28 @@ def test_results_with_constant_sample_weights(
     """
     args_init, args_predict = STRATEGIES[strategy]
     lr = LogisticRegression(C=1e-99)
-    lr.fit(X_toy, y_toy)
-    n_samples = len(X_toy)
+    lr.fit(X, y)
+    n_samples = len(X)
     mapie_clf0 = MapieClassifier(lr, **args_init)
     mapie_clf1 = MapieClassifier(lr, **args_init)
     mapie_clf2 = MapieClassifier(lr, **args_init)
-    mapie_clf0.fit(X_toy, y_toy, sample_weight=None)
-    mapie_clf1.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples))
-    mapie_clf2.fit(X_toy, y_toy, sample_weight=np.ones(shape=n_samples) * 5)
+    mapie_clf0.fit(X, y, sample_weight=None)
+    mapie_clf1.fit(X, y, sample_weight=np.ones(shape=n_samples))
+    mapie_clf2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
     y_pred0, y_ps0 = mapie_clf0.predict(
-        X_toy,
+        X,
         alpha=0.2,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
     )
     y_pred1, y_ps1 = mapie_clf1.predict(
-        X_toy,
+        X,
         alpha=0.2,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
     )
     y_pred2, y_ps2 = mapie_clf2.predict(
-        X_toy,
+        X,
         alpha=0.2,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
@@ -788,7 +859,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     args_init, args_predict = STRATEGIES[strategy]
     clf = LogisticRegression().fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(estimator=clf, **args_init)
-    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.fit(X_toy, y_toy, size_raps=.5)
     _, y_ps = mapie_clf.predict(
         X_toy,
         alpha=0.5,
@@ -1047,3 +1118,139 @@ def test_classif_float32(cv):
     assert (
         np.repeat([[True, False, False]], 20, axis=0)[:, :, np.newaxis] == yps
     ).all()
+
+
+def test_raps_regularization_parameters():
+    """Check that the regularization parameters for the
+    raps method are the expected ones.
+    """
+    args_init, args_predict = STRATEGIES["raps"]
+    clf = LogisticRegression().fit(X_toy, y_toy)
+    mapie_clf = MapieClassifier(estimator=clf, **args_init)
+    mapie_clf.fit(X_toy, y_toy, size_raps=.5)
+    _, _ = mapie_clf.predict(
+        X_toy,
+        alpha=0.5,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(mapie_clf.lambda_star, 0.001)
+    np.testing.assert_allclose(mapie_clf.k_star, 1)
+
+
+@pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
+def test_regularize_conf_scores_shape(k_lambda):
+    """Test that the conformity scores have the correct shape.
+    """
+    lambda_, k = k_lambda[0], k_lambda[1]
+    args_init, _ = STRATEGIES["raps"]
+    clf = LogisticRegression().fit(X, y)
+    mapie_clf = MapieClassifier(estimator=clf, **args_init)
+    conf_scores = np.random.rand(100, 1)
+    cutoff = np.cumsum(np.ones(conf_scores.shape)) - 1
+    reg_conf_scores = mapie_clf._regularize_conformity_score(
+        k, lambda_, conf_scores, cutoff
+    )
+
+    assert reg_conf_scores.shape == (100, 1, len(k))
+
+
+def test_get_true_label_cumsum_proba_shape():
+    """Test that the true label cumsumed probabilities
+    have the correct shape.
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    y_pred = clf.predict_proba(X)
+    mapie_clf = MapieClassifier(estimator=clf)
+    mapie_clf.fit(X, y)
+    cumsum_proba, cutoff = mapie_clf._get_true_label_cumsum_proba(
+        y, y_pred
+    )
+    assert cumsum_proba.shape == (len(X), 1)
+    assert cutoff.shape == (len(X), )
+
+
+def test_get_true_label_cumsum_proba_result():
+    """Test that the true label cumsumed probabilities
+    are the expected ones.
+    """
+    clf = LogisticRegression()
+    clf.fit(X_toy, y_toy)
+    y_pred = clf.predict_proba(X_toy)
+    mapie_clf = MapieClassifier(estimator=clf)
+    mapie_clf.fit(X_toy, y_toy)
+    cumsum_proba, cutoff = mapie_clf._get_true_label_cumsum_proba(
+        y_toy, y_pred
+    )
+    np.testing.assert_allclose(
+        cumsum_proba,
+        np.array(
+            [
+                y_pred[0, 0], y_pred[1, 0],
+                y_pred[2, 0] + y_pred[2, 1],
+                y_pred[3, 0] + y_pred[3, 1],
+                y_pred[4, 1], y_pred[5, 1],
+                y_pred[6, 1] + y_pred[6, 2],
+                y_pred[7, 1] + y_pred[7, 2],
+                y_pred[8, 2]
+            ]
+        )[:, np.newaxis]
+    )
+    np.testing.assert_allclose(cutoff, np.array([1, 1, 2, 2, 1, 1, 2, 2, 1]))
+
+
+@pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_get_last_included_proba_shape(k_lambda, strategy):
+    """Test that the outputs of _get_last_included_proba method
+    have the correct shape.
+    """
+    lambda_, k = k_lambda[0], k_lambda[1]
+    if len(k) == 1:
+        thresholds = .2
+    else:
+        thresholds = np.random.rand(len(k))
+    thresholds = cast(NDArray, check_alpha(thresholds))
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    y_pred_proba = clf.predict_proba(X)
+    y_pred_proba = np.repeat(
+        y_pred_proba[:, :, np.newaxis], len(thresholds), axis=2
+    )
+
+    mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
+    include_last_label = STRATEGIES[strategy][1]["include_last_label"]
+
+    y_p_p_c, y_p_i_l, y_p_p_i_l = mapie._get_last_included_proba(
+        y_pred_proba, thresholds,
+        include_last_label, lambda_, k
+    )
+
+    assert y_p_p_c.shape == (len(X), len(np.unique(y)), len(thresholds))
+    assert y_p_i_l.shape == (len(X), 1, len(thresholds))
+    assert y_p_p_i_l.shape == (len(X), 1, len(thresholds))
+
+
+@pytest.mark.parametrize("y_true_proba_place", Y_TRUE_PROBA_PLACE)
+def test_get_true_label_position(y_true_proba_place: List[NDArray]):
+    """Check that the returned true label position the good.
+    """
+    y_true = y_true_proba_place[0]
+    y_pred_proba = y_true_proba_place[1]
+    place = y_true_proba_place[2]
+
+    mapie = MapieClassifier()
+    found_place = mapie._get_true_label_position(y_pred_proba, y_true)
+
+    assert (found_place == place).all()
+
+
+@pytest.mark.parametrize("cv", [5, None])
+def test_error_raps_cv_not_prefit(cv: Union[int, None]):
+    """Test that an error is raised if the method is RAPS
+    and cv is different from prefit.
+    """
+    mapie = MapieClassifier(method="raps", cv=5)
+    with pytest.raises(ValueError, match=r".*RAPS method can only.*"):
+        mapie.fit(X_toy, y_toy)

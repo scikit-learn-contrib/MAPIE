@@ -15,12 +15,13 @@ from mapie.utils import (
     check_n_jobs,
     check_null_weight,
     check_verbose,
+    compute_quantiles,
     fit_estimator,
     check_lower_upper_bounds,
 )
 from mapie.quantile_regression import MapieQuantileRegressor
 
-from mapie._typing import ArrayLike
+from mapie._typing import ArrayLike, NDArray
 
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -31,6 +32,10 @@ n_features = 10
 X, y = make_regression(
     n_samples=500, n_features=n_features, noise=1.0, random_state=1
 )
+ALPHAS = [
+    np.array([.1]),
+    np.array([.05, .1, .2]),
+]
 
 
 class DumbEstimator:
@@ -242,21 +247,54 @@ def test_alpha_in_predict() -> None:
         mapie_reg.predict(X, ensemble=True)
 
 
-@pytest.mark.parametrize("estimator", [-1, 3, 0.2])
-def test_quantile_prefit_non_iterable(estimator: Any) -> None:
+def test_compute_quantiles_value_error():
+    """Test that if the size of the last axis of vector
+    is different from the number of aphas an error is raised.
     """
-    Test that there is a list of estimators provided when cv='prefit'
-    is called for MapieQuantileRegressor.
+    vector = np.random.rand(1000, 1, 1)
+    alphas = [.1, .2, .3]
+
+    with pytest.raises(ValueError, match=r".*In case of the vector .*"):
+        compute_quantiles(vector, alphas)
+
+
+@pytest.mark.parametrize("alphas", ALPHAS)
+def test_compute_quantiles_2D_shape(alphas: NDArray):
+    """Test that the number of quantiles is equal to
+    the number of alphas for a 2D input vector
+
+    Parameters
+    ----------
+    alphas : NDArray
+        Levels of confidence.
     """
-    with pytest.raises(
-        ValueError,
-        match=r".*Estimator for prefit must be an iterable object.*",
-    ):
-        mapie_reg = MapieQuantileRegressor(
-            estimator=estimator,
-            cv="prefit"
-        )
-        mapie_reg.fit(
-            [1, 2, 3],
-            [4, 5, 6]
-        )
+    vector = np.random.rand(1000, 1)
+    quantiles = compute_quantiles(vector, alphas)
+
+    assert len(quantiles) == len(alphas)
+
+
+@pytest.mark.parametrize("alphas", ALPHAS)
+def test_compute_quantiles_3D_shape(alphas: NDArray):
+    """Test that the number of quantiles is equal to
+    the number of alphas for a 3D input vector
+    """
+    vector = np.random.rand(1000, 1)
+    vector = np.repeat(vector, len(alphas), axis=1)
+    quantiles = compute_quantiles(vector, alphas)
+
+    assert len(quantiles) == len(alphas)
+
+
+@pytest.mark.parametrize("alphas", ALPHAS)
+def test_compute_quantiles_2D_and_3D(alphas: NDArray):
+    """Test that if to matrices are equal (modulo one dimension)
+    then there quantiles are the same.
+    """
+    vector1 = np.random.rand(1000, 1)
+    vector2 = np.repeat(vector1, len(alphas), axis=1)
+
+    quantiles1 = compute_quantiles(vector1, alphas)
+    quantiles2 = compute_quantiles(vector2, alphas)
+
+    assert (quantiles1 == quantiles2).all()

@@ -8,6 +8,7 @@ from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.utils.validation import _check_sample_weight, _num_features
 from sklearn.utils import _safe_indexing
 
+from ._compatibility import np_quantile
 from .conformity_scores import AbsoluteConformityScore, ConformityScore
 from ._typing import ArrayLike, NDArray
 
@@ -503,7 +504,7 @@ def check_conformity_score(
     ...     print(exception)
     ...
     Invalid conformity_score argument.
-    Must be ``None`` or a ConformityScore instance.
+    Must be None or a ConformityScore instance.
     """
     if conformity_score is None:
         return AbsoluteConformityScore()
@@ -512,7 +513,7 @@ def check_conformity_score(
     else:
         raise ValueError(
             "Invalid conformity_score argument.\n"
-            "Must be ``None`` or a ConformityScore instance."
+            "Must be None or a ConformityScore instance."
         )
 
 
@@ -586,3 +587,70 @@ def check_estimator_fit_predict(
             "Invalid estimator. "
             "Please provide a regressor with fit and predict methods."
         )
+
+
+def check_alpha_and_last_axis(vector: NDArray, alpha_np: NDArray):
+    """Check when the dimension of vector is 3 that its last axis
+    size is the same than the number of alphas.
+
+    Parameters
+    ----------
+    vector : NDArray of shape (n_samples, 1, n_alphas)
+        Vector on which compute the quantile.
+    alpha_np : NDArray of shape (n_alphas, )
+        Confidence levels.
+
+
+    Raises
+    ------
+    ValueError
+        Error is the last axis dimension is different from the
+        number of alphas.
+    """
+    if len(alpha_np) != vector.shape[2]:
+        raise ValueError(
+            "In case of the vector has 3 dimensions, the dimension\n"
+            + "of his last axis must be equal to the number of alphas"
+        )
+    else:
+        return vector, alpha_np
+
+
+def compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
+    """Compute the desired quantiles of a vector.
+
+    Parameters
+    ----------
+    vector : NDArray of shape Union[(n_samples, 1), (n_samples, 1, n_alphas)]
+        Vector on which compute the quantile. If the vector has 3 dimensions,
+        then each 1-alpha quantile will be computed on its corresping matrix
+        selected on the last axis of the matrix.
+    alpha : NDArray for shape (n_alphas, )
+        Risk levels.
+
+    Returns
+    -------
+    NDArray of shape (n_alphas, )
+        Quantiles of the vector.
+    """
+    n = len(vector)
+    if len(vector.shape) <= 2:
+        quantiles_ = np.stack([
+                    np_quantile(
+                        vector,
+                        ((n + 1) * (1 - _alpha)) / n,
+                        method="higher",
+                    ) for _alpha in alpha
+        ])
+
+    else:
+        check_alpha_and_last_axis(vector, alpha)
+        quantiles_ = np.stack(
+                [
+                    compute_quantiles(
+                        vector[:, :, i],
+                        np.array([alpha_])
+                    ) for i, alpha_ in enumerate(alpha)
+                ]
+            )[:, 0]
+    return quantiles_
