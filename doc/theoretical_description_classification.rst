@@ -107,7 +107,7 @@ coverage remains close to the target (marginal) coverage. We refer the reader to
 
 
 4. Regularized Adaptive Prediction Sets (RAPS)
----------------------------------
+----------------------------------------------
 
 The RAPS method which stands for Regularized Adaptive Prediction Set, is an improvement made by Angelopoulos et al. in 
 [3]. This regularization is able to overcome the very large prediction sets given by the APS method. The conformity scores are
@@ -117,15 +117,16 @@ computed by summing the regularized ranked scores of each label, from the higher
    s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)_{\pi_j} + \lambda (k-k_{reg})^+ \quad \text{where} \quad Y_i = \pi_k
 
 Where:
-- :math:\pi_i is the is the label associated to the  :math:i^{th} ranked score.
-- :math:(z)^+ denotes the positive part of :math:z
-- :math:k_{reg} is the optimal set size (in the sense that if all prediction sets have :math:k_reg elements, then one achieve the desired coverage)
-- :math:\lambda is a regularization parameter whose calculation we will explain next.
 
-The optimization of :math:k_{reg} and :math:\lambda requires an extra data-splitting (by default, 20% of the calibration data). To choose :math:k_{reg},
- we simply run the Top-K method over this new split. For the choice of :math:\lambda, we follow the guidelines of [3] and try to find the value of 
- lambda such that it minimizes the size of the prediction set. A simple grid search if done on different values of :math:\lambda (to be consistent 
- with Angelopoulos et al., we choose :math:\lambda :math:\in :math:\{0.001, 0.01, 0.1, 0.2, 0.5 \}$).
+- :math:`\pi_i is` the is the label associated to the  :math:`i^{th}` ranked score.
+- :math:`(z)^+` denotes the positive part of :math:`z`
+- :math:`k_{reg}` is the optimal set size (in the sense that if all prediction sets have :math:`k_reg` elements, then one achieve the desired coverage)
+- :math:`\lambda` is a regularization parameter whose calculation we will explain next.
+
+The optimization of :math:`k_{reg}` and :math:`\lambda` requires an extra data-splitting (by default, 20% of the calibration data). To choose :math:`k_{reg}`,
+we simply run the Top-K method over this new split. For the choice of :math:`\lambda`, we follow the guidelines of [3] and try to find the value of 
+lambda such that it minimizes the size of the prediction set. A simple grid search if done on different values of :math:`\lambda` (to be consistent 
+with Angelopoulos et al., we choose :math:`\lambda \in \{0.001, 0.01, 0.1, 0.2, 0.5 \}`).
 
 For the construction of the prediction set for a new test point, the following procedure is applied:
 
@@ -133,17 +134,17 @@ For the construction of the prediction set for a new test point, the following p
    \hat{C}(X_{test}) = \{\pi_1, ..., \pi_k\} \quad \text{where} \quad k = \text{inf}\{k : \sum^k_{j=1} \hat{\mu}(X_{test})_{\pi_j} + \lambda(k-k_{reg})^+ \geq \hat{q}\}
 
 Intuitively, the goal of the method is to penalize the prediction sets whose size are greater than the optimal prediction set size. The level of this 
-regularization is controlled by the parameter :math:\lambda.
+regularization is controlled by the parameter :math:`\lambda`.
 
 Despite that RAPS methods have relatively small set size, its coverage tends to be higher than the one required (especially for high values of
-:math:\alpha, which means low level of confidence). Hence, to achieve exact coverage, one can implement a randomization concerning the inclusio
+:math:`\alpha`, which means low level of confidence). Hence, to achieve exact coverage, one can implement a randomization concerning the inclusio
 of the last label in the prediction set. This randomization is done as follows:
 
-- First : define the $V$ parameter:
+- First : define the :math:`V` parameter:
 .. math::
         V_i = (s_i(X_i, Y_i) - \hat{q}_{1-\alpha}) / \left(\hat{\mu}(X_i)_{\pi_k} + \lambda \mathbb{1} (k > k_{reg})\right)
-- Compare each :math:V_i to:math U :math:\sim Unif(0, 1)
-- If :math:V_i :math:\leq :math:U, the last included label is removed, else we keep the prediction set as it is.
+- Compare each :math:`V_i` to :math:`U \sim` Unif(0, 1)
+- If :math:`V_i \leq U`, the last included label is removed, else we keep the prediction set as it is.
 
 
 5. Split- and cross-conformal methods
