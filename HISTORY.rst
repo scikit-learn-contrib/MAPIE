@@ -2,15 +2,18 @@
 History
 =======
 
-0.5.0 (2022-10-08)
+0.5.0 (2022-10-20)
+------------------
+* Add RAPS method for classification
+* Add theoretical description for RAPS
+
+0.4.2 (2022-09-02)
 ------------------
 
 * Add tutorial for time series
 * Convert existing tutorials in .py
 * Add prefit method for CQR
 * Add tutorial for CQR
-* Add RAPS method for classification
-* Add theoretical description for RAPS
 
 0.4.1 (2022-06-27)
 ------------------
