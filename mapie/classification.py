@@ -1003,7 +1003,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         X, y = indexable(X, y)
         y = _check_y(y)
-        assert type_of_target(y) == "multiclass"
+        if type_of_target(y) != "multiclass" and self.method != "mondrian":
+            raise ValueError(
+                "Invalid method. "
+                "Binary classification problems require the mondrian method. "
+            )
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         y = cast(NDArray, y)
         n_samples = _num_samples(y)
@@ -1352,6 +1356,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 - y_pred_proba_last,
                 -EPSILON
             )
+        elif self.
         else:
             raise ValueError(
                 "Invalid method. "
