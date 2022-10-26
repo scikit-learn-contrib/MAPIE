@@ -131,7 +131,7 @@ class MapieQuantileRegressor(MapieRegressor):
         },
         "HistGradientBoostingRegressor": {
             "loss_name": "loss",
-            "alpha_name": "quantile"
+            "alpha_name": "alpha"
         },
         "LGBMRegressor": {
             "loss_name": "objective",
