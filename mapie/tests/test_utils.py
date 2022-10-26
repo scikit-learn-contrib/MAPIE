@@ -298,3 +298,23 @@ def test_compute_quantiles_2D_and_3D(alphas: NDArray):
     quantiles2 = compute_quantiles(vector2, alphas)
 
     assert (quantiles1 == quantiles2).all()
+
+
+@pytest.mark.parametrize("estimator", [-1, 3, 0.2])
+def test_quantile_prefit_non_iterable(estimator: Any) -> None:
+    """
+    Test that there is a list of estimators provided when cv='prefit'
+    is called for MapieQuantileRegressor.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r".*Estimator for prefit must be an iterable object.*",
+    ):
+        mapie_reg = MapieQuantileRegressor(
+            estimator=estimator,
+            cv="prefit"
+        )
+        mapie_reg.fit(
+            [1, 2, 3],
+            [4, 5, 6]
+        )
