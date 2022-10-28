@@ -220,7 +220,7 @@ Confiance.AI and with the financial support from Région Ile de France.
     :width: 100
 .. _ENS: https://ens-paris-saclay.fr/en
 
-.. |Confiance.AI| image:: https://www.confiance.ai/wp-content/uploads/2021/02/logo-confiance@2x.png
+.. |Confiance.AI| image:: https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg
     :width: 100
 .. _Confiance.AI: https://www.confiance.ai/
 
