@@ -203,8 +203,8 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 🤝  Affiliations
 ================
 
-MAPIE has been developed through a collaboration between Quantmetry, Michelin, and ENS Paris-Saclay
-with the financial support from Région Ile de France.
+MAPIE has been developed through a collaboration between Quantmetry, Michelin, ENS Paris-Saclay,
+Confiance.AI and with the financial support from Région Ile de France.
 
 |Quantmetry|_ |Michelin|_ |ENS|_ |IledeFrance|_ 
 
@@ -219,6 +219,10 @@ with the financial support from Région Ile de France.
 .. |ENS| image:: https://file.diplomeo-static.com/file/00/00/01/34/13434.svg
     :width: 100
 .. _ENS: https://ens-paris-saclay.fr/en
+
+.. |Confiance.AI| image:: https://www.google.com/url?sa=i&url=https%3A%2F%2Ffr.linkedin.com%2Fcompany%2Fconfiance-ai&psig=AOvVaw2l6Rszm_zfeVmlz14rKVKX&ust=1667059522587000&source=images&cd=vfe&ved=0CA0QjRxqFwoTCIid9eamg_sCFQAAAAAdAAAAABAE
+    :width: 100
+.. _Confiance.AI: https://www.confiance.ai/
 
 .. |IledeFrance| image:: https://www.iledefrance.fr/themes/custom/portail_idf/logo.svg
     :width: 100
