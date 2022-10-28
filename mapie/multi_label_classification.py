@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union, Tuple, Iterable, List, cast
+from typing import Optional, Union, Tuple, Iterable, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -10,7 +10,6 @@ from sklearn.utils.validation import (
     indexable,
     check_is_fitted,
     _num_samples,
-    _check_y,
 )
 
 from ._typing import ArrayLike, NDArray
@@ -19,7 +18,6 @@ from .utils import (
     check_alpha,
     check_n_jobs,
     check_verbose,
-    get_r_hat_plus
 )
 
 
@@ -139,7 +137,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         lambdas = np.arange(
             0, 1,
             1 / self.n_lambdas
-        )[:, np.newaxis, np.newaxis]
+        )[np.newaxis, np.newaxis, :]
 
         y_pred_proba_repeat = np.repeat(
             y_pred_proba_array,
@@ -150,11 +148,14 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         y_pred_th = (y_pred_proba_repeat > lambdas).astype(int)
 
         y_repeat = np.repeat(y[..., np.newaxis], self.n_lambdas, axis=2)
-        risks = 1 - y_pred_th * y_repeat / y.sum(axis=1)[:, np.newaxis]
+        risks = 1 - (
+            (y_pred_th * y_repeat).sum(axis=1) /
+            y.sum(axis=1)[:, np.newaxis]
+        )
 
         return risks
 
-    def find_lambda_star(self, r_hat_plus, alphas):
+    def _find_lambda_star(self, r_hat_plus, alphas):
         """Find the optimal lambda for each of the bound in
         r_hat_plus
 
@@ -171,15 +172,20 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             Optimal lambdas which controls the risks.
         """
 
-        alphas_np = np.zeros((len(alphas), 1))
-        alphas_np[:, 0] = alphas
+        if len(alphas) > 1:
+            alphas_np = alphas[:, np.newaxis]
+        else:
+            alphas_np = alphas
 
         bound_rep = np.repeat(
             np.expand_dims(r_hat_plus, axis=0),
-            len(alphas),
+            len(alphas_np),
             axis=0
         )
-
+        bound_rep[:, np.argmax(bound_rep, axis=1)] = np.maximum(
+            alphas_np,
+            bound_rep[:, np.argmax(bound_rep, axis=1)]
+        )
         lambdas_star = np.argmin(
                 - np.greater_equal(
                     bound_rep,
@@ -189,6 +195,115 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             ) / len(r_hat_plus)
 
         return lambdas_star
+
+    def _get_r_hat_plus(self, losses, bound, delta, sigma_init=.25):
+        """Compute the upper bound of the loss for each lambda.
+
+        Parameters
+        ----------
+        losses : np.ndarray of shape (n_samples, n_lambdas)
+            Loss computed with the get_losses function.
+        bound : str
+            Bounds to compute. Either hoeffding, bernstein or wsr.
+        delta : float
+            Level of confidence.
+        sigma_init : float, optional
+            First variance in the sigma_hat array. The default
+            value is the same as in the paper implmentation.
+
+            By default .25
+
+        Returns
+        -------
+        Dict[str, np.ndarray]
+            Upper bound of the loss for each technique.
+        """
+
+        assert (
+            bound in ["hoeffding", "bernstein", "wsr", None]
+        ), 'bounds must be in ["hoeffding", "bernstein", "wsr", None]'
+
+        r_hat = losses.mean(axis=0)
+        n_obs = len(losses)
+        n_lambdas = len(r_hat)
+
+        if self.method == "rcps":
+            if bound == "hoeffding":
+                r_hat_plus = (
+                    r_hat +
+                    np.sqrt((1 / (2 * n_obs)) * np.log(1 / delta))
+                )
+
+            elif bound == "bernstein":
+                sigma_hat_bern = np.var(r_hat, axis=0, ddof=1)
+                r_hat_plus = (
+                    r_hat +
+                    np.sqrt((sigma_hat_bern * 2 * np.log(2 / delta)) / n_obs) +
+                    (7 * np.log(2 / delta)) / (3 * (n_obs - 1))
+                )
+
+            elif bound == "wsr":
+                mu_hat = (
+                    (.5 + np.cumsum(losses, axis=0)) /
+                    (np.repeat([range(1, n_obs + 1)], n_lambdas, axis=0).T + 1)
+                )
+                sigma_hat = (
+                    (.25 + np.cumsum((losses - mu_hat)**2, axis=0)) /
+                    (np.repeat([range(1, n_obs + 1)], n_lambdas, axis=0).T + 1)
+                )
+                sigma_hat = np.concatenate(
+                    [np.ones((1, n_lambdas)) * sigma_init, sigma_hat[:-1]]
+                )
+                nu = np.minimum(
+                    1,
+                    np.sqrt((2 * np.log(1 / delta)) / (n_obs * sigma_hat))
+                )
+                batches = {
+                    "1": int(n_obs / 2),
+                    "2": n_obs - int(n_obs / 2)
+                }  # Split the calculation in two as their might be memory issues
+                K_R_max = np.zeros((n_lambdas, n_lambdas))
+                for batch, n_batch in batches.items():
+                    K_R = np.zeros((n_batch, n_lambdas, n_lambdas))
+                    for i in range(n_lambdas):
+                        R = i / n_lambdas
+                        if int(batch) == 1:
+                            K_R[:, :, i] = np.sum(
+                                np.log(
+                                    (
+                                        1 -
+                                        nu[:n_batch] *
+                                        (losses[:n_batch] - R)
+                                    ) +
+                                    np.finfo(np.float64).eps
+                                ),
+                                axis=0
+                            )
+                        else:
+                            K_R[:, :, i] = np.sum(
+                                np.log(
+                                    (
+                                        1 -
+                                        nu[n_batch:] *
+                                        (losses[n_batch:] - R)
+                                    ) +
+                                    np.finfo(np.float64).eps
+                                ),
+                                axis=0
+                            )
+                    K_R = np.max(K_R, axis=0)
+                    K_R_max += K_R
+
+                r_hat_plus_tronc = (np.argwhere(
+                    np.cumsum(K_R_max > -np.log(delta), axis=1) == 1
+                )[:, 1] / n_lambdas)
+                r_hat_plus = np.ones(n_lambdas)
+                r_hat_plus[:len(r_hat_plus_tronc)] = r_hat_plus_tronc
+
+        elif self.method == "crc":
+            r_hat_plus = (n_obs / (n_obs + 1)) * r_hat + (1 / (n_obs + 1))
+
+        return r_hat, r_hat_plus
 
     def fit(
         self,
@@ -226,12 +341,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         estimator = self._check_estimator(X, y, self.estimator)
 
         X, y = indexable(X, y)
-        y = _check_y(y)
         assert type_of_target(y) == "multilabel-indicator"
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         y = cast(NDArray, y)
 
-        self.n_classes_ = len(y.shape[1])
+        self.n_classes_ = y.shape[1]
         self.n_samples_ = _num_samples(X)
 
         # Work
@@ -247,7 +361,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         delta: Optional[Union[float, Iterable[float]]] = None,
-        bound: Optional[Union[str, List[str]]] = "wsr"
+        bound: Optional[Union[str, None]] = "wsr"
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
 
         alpha = cast(Optional[NDArray], check_alpha(alpha))
@@ -265,12 +379,21 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         alpha_np = cast(NDArray, alpha)
 
         y_pred_proba = self.single_estimator_.predict_proba(X)
-        y_pred_proba = np.repeat(
-            y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
+
+        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
+        y_pred_proba_array = np.repeat(
+            y_pred_proba_array,
+            len(alpha_np),
+            axis=2
         )
-
-        r_hat_plus = get_r_hat_plus(self.risks, bound, delta)
-
-        lambdas_star = self.find_lambda_star(r_hat_plus, alpha_np)
-
-        return y_pred, lambdas_star
+        self.r_hat, self.r_hat_plus = self._get_r_hat_plus(
+            self.risks,
+            bound,
+            delta
+        )
+        self.lambdas_star = self._find_lambda_star(self.r_hat_plus, alpha_np)
+        y_pred_proba_array = (
+            y_pred_proba_array >
+            self.lambdas_star[np.newaxis, np.newaxis, :]
+        )
+        return y_pred, y_pred_proba_array
