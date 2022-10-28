@@ -204,7 +204,7 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 ================
 
 MAPIE has been developed through a collaboration between Quantmetry, Michelin, ENS Paris-Saclay,
-Confiance.AI and with the financial support from Région Ile de France.
+Confiance.ai and with the financial support from Région Ile de France.
 
 |Quantmetry|_ |Michelin|_ |ENS|_ |Confiance.ai|_  |IledeFrance|_ 
 
