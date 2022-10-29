@@ -373,9 +373,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         if alpha is None:
             return np.array(y_pred)
 
-        # Estimate of probabilities from estimator(s)
-        # In all cases : len(y_pred_proba.shape) == 3
-        # with  (n_test, n_classes, n_alpha or n_train_samples)
         alpha_np = cast(NDArray, alpha)
 
         y_pred_proba = self.single_estimator_.predict_proba(X)
