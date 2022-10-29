@@ -261,7 +261,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 batches = {
                     "1": int(n_obs / 2),
                     "2": n_obs - int(n_obs / 2)
-                }  # Split the calculation in two as their might be memory issues
+                }  # Split the calculation in two to prevent memory issues
                 K_R_max = np.zeros((n_lambdas, n_lambdas))
                 for batch, n_batch in batches.items():
                     K_R = np.zeros((n_batch, n_lambdas, n_lambdas))
