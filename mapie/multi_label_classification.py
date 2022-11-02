@@ -123,16 +123,16 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         return estimator
 
     def _transform_pred_proba(self, y_pred_proba):
-        y_pred_proba_stacked = np.stack(y_pred_proba, 0)[:, :, 1]
-        y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
+        if type(y_pred_proba) == np.ndarray:
+            y_pred_proba_array = y_pred_proba
+        else:
+            y_pred_proba_stacked = np.stack(y_pred_proba, 0)[:, :, 1]
+            y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
 
         return y_pred_proba_array[..., np.newaxis]
 
     def _compute_risks(self, y_pred_proba, y):
-        if type(y_pred_proba) == list:
-            y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-        else:
-            y_pred_proba_array = y_pred_proba
+        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
 
         lambdas = np.arange(
             0, 1,
@@ -310,6 +310,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        partial: bool = False
     ) -> MapieMultiLabelClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -351,8 +352,14 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         # Work
         self.single_estimator_ = estimator
         y_pred_proba = self.single_estimator_.predict_proba(X)
-
-        self.risks = self._compute_risks(y_pred_proba, y)
+        if partial:
+            if hasattr(self, "risks"):
+                partial_risk = self._compute_risks(y_pred_proba, y)
+                self.risks = np.concatenate([self.risks, partial_risk], axis=0)
+            else:
+                self.risks = self._compute_risks(y_pred_proba, y)
+        else:
+            self.risks = self._compute_risks(y_pred_proba, y)
 
         return self
 
