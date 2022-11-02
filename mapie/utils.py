@@ -648,7 +648,7 @@ def compute_quantiles(vector: NDArray, alpha: NDArray,mondrian = False) -> NDArr
                         vector,
                         ((n + 1) * (1 - _alpha)) / n,
                         method="higher",
-                        axis=1
+                        axis=0
                     ) for _alpha in alpha
         ])
     else:

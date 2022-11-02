@@ -1263,6 +1263,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                         alpha_np
                     )
                 elif self.method == "mondrian":
+
                     self.quantiles_ = compute_quantiles(
                         self.conformity_scores_,
                         alpha_np,
@@ -1281,6 +1282,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # Build prediction sets
         if self.method == "score":
             if (cv == "prefit") or (agg_scores == "mean"):
+                print("y proba shape")
+                print(y_pred_proba.shape)
+                print("quantiles shape")
+                print(self.quantiles_.shape)
                 prediction_sets = np.greater_equal(
                     y_pred_proba - (1 - self.quantiles_), -EPSILON
                 )
@@ -1368,11 +1373,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 -EPSILON
             )
         elif self.method == "mondrian": #TODO:
-            print(y_pred_proba)
-            print(y_pred_proba.shape)
-            prediction_sets = np.greater_equal(
+            self.quantiles_ = np.transpose(self.quantiles_,[1,0])
+
+            prediction_sets = (np.greater_equal(
                 y_pred_proba,self.quantiles_
-            )
+            ))
+            
             
             
         else:
@@ -1380,4 +1386,5 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 "Invalid method. "
                 "Allowed values are 'score' or 'cumulated_score'."
             )
+        print(prediction_sets)
         return y_pred, prediction_sets
