@@ -1262,13 +1262,19 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                         self.conformity_scores_regularized,
                         alpha_np
                     )
+                elif self.method == "mondrian":
+                    self.quantiles_ = compute_quantiles(
+                        self.conformity_scores_,
+                        alpha_np,
+                        mondrian = True
+                    )
                 else:
-                    print("1")
+                    
                     self.quantiles_ = compute_quantiles(
                         self.conformity_scores_,
                         alpha_np
                     )
-                    print("2")
+                    
             else:
                 self.quantiles_ = (n + 1) * (1 - alpha_np)
 
@@ -1362,6 +1368,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 -EPSILON
             )
         elif self.method == "mondrian": #TODO:
+            print(y_pred_proba)
+            print(y_pred_proba.shape)
             prediction_sets = np.greater_equal(
                 y_pred_proba,self.quantiles_
             )
