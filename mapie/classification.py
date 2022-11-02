@@ -1263,10 +1263,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                         alpha_np
                     )
                 else:
+                    print("1")
                     self.quantiles_ = compute_quantiles(
                         self.conformity_scores_,
                         alpha_np
                     )
+                    print("2")
             else:
                 self.quantiles_ = (n + 1) * (1 - alpha_np)
 
