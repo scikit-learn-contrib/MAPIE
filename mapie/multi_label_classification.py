@@ -33,13 +33,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
-        method: str = "crc",
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
-        self.method = method
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
@@ -53,14 +51,43 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If parameters are not valid.
         """
+        # if self.method not in self.valid_methods_:
+        #     raise ValueError(
+        #         "Invalid method. "
+        #         "Allowed values are 'crc' or 'rcps"
+        #     )
+        check_n_jobs(self.n_jobs)
+        check_verbose(self.verbose)
+        check_random_state(self.random_state)
+
+    def _check_method(self) -> None:
         if self.method not in self.valid_methods_:
             raise ValueError(
                 "Invalid method. "
                 "Allowed values are 'crc' or 'rcps"
             )
-        check_n_jobs(self.n_jobs)
-        check_verbose(self.verbose)
-        check_random_state(self.random_state)
+
+    def _check_delta(self, delta):
+        if (self.method == "rcps") and (delta is None):
+            raise ValueError(
+                "Invalid delta. "
+                "delta can not be None when using "
+                "a RCPS method."
+            )
+
+        if ((delta <= 0) or (delta >= 1)) and self.method == "rcps":
+            raise ValueError(
+                "Invalid delta. "
+                "delta must be in the ]0, 1[ interval"
+            )
+
+    def _check_y(self, y) -> None:
+        if not type_of_target(y) == "multilabel-indicator":
+            raise ValueError(
+                "Invalid target type. "
+                "The target should be an array of shape "
+                "(n_samples, n_labels)"
+            )
 
     def _check_estimator(
         self,
@@ -129,7 +156,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba_stacked = np.stack(y_pred_proba, 0)[:, :, 1]
             y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
 
-        return y_pred_proba_array[..., np.newaxis]
+        return np.expand_dims(y_pred_proba_array, axis=2)
 
     def _compute_risks(self, y_pred_proba, y):
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
@@ -264,33 +291,36 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 }  # Split the calculation in two to prevent memory issues
                 K_R_max = np.zeros((n_lambdas, n_lambdas))
                 for batch, n_batch in batches.items():
-                    K_R = np.zeros((n_batch, n_lambdas, n_lambdas))
-                    for i in range(n_lambdas):
-                        R = i / n_lambdas
-                        if int(batch) == 1:
-                            K_R[:, :, i] = np.sum(
-                                np.log(
-                                    (
-                                        1 -
-                                        nu[:n_batch] *
-                                        (losses[:n_batch] - R)
-                                    ) +
-                                    np.finfo(np.float64).eps
-                                ),
-                                axis=0
-                            )
-                        else:
-                            K_R[:, :, i] = np.sum(
-                                np.log(
-                                    (
-                                        1 -
-                                        nu[n_batch:] *
-                                        (losses[n_batch:] - R)
-                                    ) +
-                                    np.finfo(np.float64).eps
-                                ),
-                                axis=0
-                            )
+                    if int(batch) == 1:
+                        nu_batch = nu[:n_batch]
+                        losses_batch = losses[:n_batch]
+                    else:
+                        nu_batch = nu[n_batch:]
+                        losses_batch = losses[n_batch:]
+
+                    nu_batch = np.repeat(
+                        np.expand_dims(nu_batch, axis=2),
+                        n_lambdas,
+                        axis=2
+                    )
+                    losses_batch = np.repeat(
+                        np.expand_dims(losses_batch, axis=2),
+                        n_lambdas,
+                        axis=2
+                    )
+
+                    R = np.arange(n_lambdas) / n_lambdas
+                    K_R = np.cumsum(
+                        np.log(
+                            (
+                                1 -
+                                nu_batch *
+                                (losses_batch - R)
+                            ) +
+                            np.finfo(np.float64).eps
+                        ),
+                        axis=0
+                    )
                     K_R = np.max(K_R, axis=0)
                     K_R_max += K_R
 
@@ -342,7 +372,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         estimator = self._check_estimator(X, y, self.estimator)
 
         X, y = indexable(X, y)
-        assert type_of_target(y) == "multilabel-indicator"
+        self._check_y(y)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         y = cast(NDArray, y)
 
@@ -366,11 +396,15 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     def predict(
         self,
         X: ArrayLike,
+        method: Optional[str] = "crc",
         alpha: Optional[Union[float, Iterable[float]]] = None,
-        delta: Optional[Union[float, Iterable[float]]] = None,
+        delta: Optional[float] = None,
         bound: Optional[Union[str, None]] = "wsr"
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
 
+        self.method = method
+        self._check_method()
+        self._check_delta(delta)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         check_is_fitted(self, self.fit_attributes)
 
