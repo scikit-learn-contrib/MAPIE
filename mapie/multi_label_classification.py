@@ -51,11 +51,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If parameters are not valid.
         """
-        # if self.method not in self.valid_methods_:
-        #     raise ValueError(
-        #         "Invalid method. "
-        #         "Allowed values are 'crc' or 'rcps"
-        #     )
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
         check_random_state(self.random_state)
@@ -182,7 +177,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         return risks
 
-    def _find_lambda_star(self, r_hat_plus, alphas):
+    def _find_lambda_star(self, r_hat_plus, alpha_np):
         """Find the optimal lambda for each of the bound in
         r_hat_plus
 
@@ -199,10 +194,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             Optimal lambdas which controls the risks.
         """
 
-        if len(alphas) > 1:
-            alphas_np = alphas[:, np.newaxis]
+        if len(alpha_np) > 1:
+            alphas_np = alpha_np[:, np.newaxis]
         else:
-            alphas_np = alphas
+            alphas_np = alpha_np
 
         bound_rep = np.repeat(
             np.expand_dims(r_hat_plus, axis=0),
@@ -223,7 +218,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         return lambdas_star
 
-    def _get_r_hat_plus(self, losses, bound, delta, sigma_init=.25):
+    def _get_r_hat_plus(self, bound, delta, sigma_init=.25):
         """Compute the upper bound of the loss for each lambda.
 
         Parameters
@@ -249,9 +244,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         assert (
             bound in ["hoeffding", "bernstein", "wsr", None]
         ), 'bounds must be in ["hoeffding", "bernstein", "wsr", None]'
-
-        r_hat = losses.mean(axis=0)
-        n_obs = len(losses)
+        r_hat = self.risks.mean(axis=0)
+        n_obs = len(self.risks)
         n_lambdas = len(r_hat)
 
         if self.method == "rcps":
@@ -271,11 +265,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
             elif bound == "wsr":
                 mu_hat = (
-                    (.5 + np.cumsum(losses, axis=0)) /
+                    (.5 + np.cumsum(self.risks, axis=0)) /
                     (np.repeat([range(1, n_obs + 1)], n_lambdas, axis=0).T + 1)
                 )
                 sigma_hat = (
-                    (.25 + np.cumsum((losses - mu_hat)**2, axis=0)) /
+                    (.25 + np.cumsum((self.risks - mu_hat)**2, axis=0)) /
                     (np.repeat([range(1, n_obs + 1)], n_lambdas, axis=0).T + 1)
                 )
                 sigma_hat = np.concatenate(
@@ -293,10 +287,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 for batch, n_batch in batches.items():
                     if int(batch) == 1:
                         nu_batch = nu[:n_batch]
-                        losses_batch = losses[:n_batch]
+                        losses_batch = self.risks[:n_batch]
                     else:
                         nu_batch = nu[n_batch:]
-                        losses_batch = losses[n_batch:]
+                        losses_batch = self.risks[n_batch:]
 
                     nu_batch = np.repeat(
                         np.expand_dims(nu_batch, axis=2),
@@ -425,7 +419,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             axis=2
         )
         self.r_hat, self.r_hat_plus = self._get_r_hat_plus(
-            self.risks,
             bound,
             delta
         )
