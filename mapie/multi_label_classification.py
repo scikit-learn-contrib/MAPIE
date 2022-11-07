@@ -24,7 +24,111 @@ from .utils import (
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
+    """
+    Prediction sets for multilabel-classification.
 
+    This class implements two conformal prediction strategies for
+    estimating prediction sets for multi-classification. It guarantees
+    (under the hypothesis of exchangeability) that the recall is at
+    leat 1 - alpha (alpha being a user-specified parameter).
+
+    Parameters
+    ----------
+    estimator : Optional[ClassifierMixin]
+        Any fitted multi-label classifier with scikit-learn API
+        (i.e. with fit, predict, and predict_proba methods), by default None.
+        If ``None``, estimator defaults to a ``LogisticRegression`` instance.
+
+    n_jobs: Optional[int]
+        Number of jobs for parallel processing using joblib
+        via the "locky" backend.
+        At this moment, parallel processing is disabled.
+        If ``-1`` all CPUs are used.
+        If ``1`` is given, no parallel computing code is used at all,
+        which is useful for debugging.
+        For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
+        None is a marker for `unset` that will be interpreted as ``n_jobs=1``
+        (sequential execution).
+
+        By default ``None``.
+
+    random_state: Optional[Union[int, RandomState]]
+        Pseudo random number generator state used for random uniform sampling
+        for evaluation quantiles and prediction sets in cumulated_score.
+        Pass an int for reproducible output across multiple function calls.
+
+        By default ```1``.
+
+    verbose : int, optional
+        The verbosity level, used with joblib for multiprocessing.
+        At this moment, parallel processing is disabled.
+        The frequency of the messages increases with the verbosity level.
+        If it more than ``10``, all iterations are reported.
+        Above ``50``, the output is sent to stdout.
+
+        By default ``0``.
+
+    Attributes
+    ----------
+    valid_methods: List[str]
+        List of all valid methods.
+
+    single_estimator_ : sklearn.ClassifierMixin
+        Estimator fitted on the whole training set.
+
+    n_lambdas: int
+        Number of thresolds on which we compute the risk.
+
+    risks : ArrayLike of shape (n_samples_cal, n_lambdas)
+        The risk for each observation for each threshold
+
+    r_hat : ArrayLike of shape (n_lambdas)
+        Average risk for each lambda
+
+    r_hat_plus: ArrayLike of shape (n_lambdas)
+        Upper confidence bound for each lambda, computed
+        with different bounds (see predict). Only relevant when
+        method="rcps".
+
+    lambdas_star: ArrayLike of shape (n_lambdas)
+        Optimal threshold according to alpha.
+
+    References
+    ----------
+    [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
+    and Michael I. Jordan. Distribution-free, risk-controlling prediction
+    sets. CoRR, abs/2101.02703, 2021.
+    URL https://arxiv.org/abs/2101.02703.39
+
+    [2] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
+    Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
+
+    Examples
+    --------
+    import numpy as np
+    >>> from sklearn.multioutput import MultiOutputClassifier
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> from mapie.multi_label_classification import MapieMultiLabelClassifier
+    >>> X_toy = np.arange(9).reshape(-1, 1)
+    >>> y_toy = np.stack(
+        [[1, 0, 1], [1, 0, 0], [0, 1, 1],
+        [0, 1, 0], [0, 0, 1], [1, 1, 1],
+        [1, 1, 0], [1, 0, 1], [0, 1, 1]]
+    )
+    >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
+    >>> mapie = MapieMultiLabelClassifier(estimator=clf).fit(X_toy, y_toy)
+    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.2)
+    >>> print(y_pi_mapie[:, :, 0])
+    [[ True False  True]
+    [ True False  True]
+    [ True False  True]
+    [ True False  True]
+    [ True  True  True]
+    [ True  True  True]
+    [ True  True  True]
+    [ True  True  True]
+    [False  True  True]]
+    """
     valid_methods_ = ["crc", "rcps"]
     n_lambdas = 100
     fit_attributes = [
@@ -173,7 +277,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         bool
             True if it is the first time, else False.
         """
-        return hasattr(self, "risks")
+        return not hasattr(self, "risks")
 
     def _check_bound(self, bound: Optional[str]):
         """Check the value on the bound.
@@ -195,7 +299,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
     def _transform_pred_proba(
         self,
-        y_pred_proba: Sequence[ArrayLike]
+        y_pred_proba: Union[Sequence[NDArray], NDArray]
     ) -> NDArray:
         """If the output of the predict_proba is a list of arrays (output of
         the ``predict_proba`` of ``MultiOutputClassifier``) we transform it
@@ -214,8 +318,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         if type(y_pred_proba) == np.ndarray:
             y_pred_proba_array = y_pred_proba
         else:
-            y_pred_proba_stacked = np.stack(y_pred_proba)
-            y_pred_proba_stacked = y_pred_proba_stacked[:, :, 1]
+            y_pred_proba_stacked = np.stack(
+                y_pred_proba,  # type: ignore
+                axis=0
+            )[:, :, 1]
             y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
 
         return np.expand_dims(y_pred_proba_array, axis=2)
@@ -417,7 +523,9 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         sample_weight: Optional[ArrayLike] = None,
     ) -> MapieMultiLabelClassifier:
         """
-        Fit the base estimator or use the fitted base estimator.
+        Fit the base estimator or use the fitted base estimator on
+        batch data. All the computed risks will be concatenated each
+        time the partial_fit method is called.
 
         Parameters
         ----------
