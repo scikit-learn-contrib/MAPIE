@@ -114,7 +114,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         [[1, 0, 1], [1, 0, 0], [0, 1, 1],
         [0, 1, 0], [0, 0, 1], [1, 1, 1],
         [1, 1, 0], [1, 0, 1], [0, 1, 1]]
-    )
+        )
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     >>> mapie = MapieMultiLabelClassifier(estimator=clf).fit(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.2)
