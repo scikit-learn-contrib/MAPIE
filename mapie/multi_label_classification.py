@@ -1,15 +1,17 @@
 from __future__ import annotations
-from typing import Optional, Union, Tuple, Iterable, cast
+from typing import List, Optional, Union, Tuple, Iterable, cast, Sequence
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.linear_model import LogisticRegression
+from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import (
     indexable,
     check_is_fitted,
     _num_samples,
+    _check_y
 )
 
 from ._typing import ArrayLike, NDArray
@@ -29,6 +31,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         "single_estimator_",
         "risks"
     ]
+    sigma_init = .25
 
     def __init__(
         self,
@@ -62,7 +65,24 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 "Allowed values are 'crc' or 'rcps"
             )
 
-    def _check_delta(self, delta):
+    def _check_delta(self, delta: Optional[float]):
+        """Check that delta is not ``None`` when the
+        method is RCPS and that it has values between
+        0 and 1.
+
+        Parameters
+        ----------
+        delta : float
+            Probability with wchi we control the risk.
+
+        Raises
+        ------
+        ValueError
+            If delta is ``None`` and method is RCSP
+        ValueError
+            If delta value is not in [0, 1] and method
+            is RCPS.
+        """
         if (self.method == "rcps") and (delta is None):
             raise ValueError(
                 "Invalid delta. "
@@ -70,18 +90,13 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 "a RCPS method."
             )
 
-        if ((delta <= 0) or (delta >= 1)) and self.method == "rcps":
+        if (delta is not None) and (
+            ((delta <= 0) or (delta >= 1)) and
+            self.method == "rcps"
+        ):
             raise ValueError(
                 "Invalid delta. "
                 "delta must be in the ]0, 1[ interval"
-            )
-
-    def _check_y(self, y) -> None:
-        if not type_of_target(y) == "multilabel-indicator":
-            raise ValueError(
-                "Invalid target type. "
-                "The target should be an array of shape "
-                "(n_samples, n_labels)"
             )
 
     def _check_estimator(
@@ -92,9 +107,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     ) -> ClassifierMixin:
         """
         Check if estimator is ``None``,
-        and returns a ``LogisticRegression`` instance if necessary.
-        If the ``cv`` attribute is ``"prefit"``,
-        check if estimator is indeed already fitted.
+        and returns a multi-output ``LogisticRegression``
+        instance if necessary.
 
         Parameters
         ----------
@@ -110,7 +124,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Returns
         -------
         ClassifierMixin
-            The estimator itself or a default ``LogisticRegression`` instance.
+            The estimator itself or a default multi-output
+            ``LogisticRegression`` instance.
 
         Raises
         ------
@@ -119,8 +134,13 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             and has no fit, predict, nor predict_proba methods.
 
         NotFittedError
-            If the estimator is not fitted and ``cv`` attribute is "prefit".
+            If the estimator is not fitted.
         """
+        if estimator is None:
+            return MultiOutputClassifier(
+                LogisticRegression(multi_class="multinomial")
+            ).fit(X, y)
+
         if isinstance(estimator, Pipeline):
             est = estimator[-1]
         else:
@@ -144,25 +164,84 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             )
         return estimator
 
-    def _transform_pred_proba(self, y_pred_proba):
+    def _check_partial_fit_first_call(self) -> bool:
+        """Check that this is the first time partial_fit
+        or fit is called.
+
+        Returns
+        -------
+        bool
+            True if it is the first time, else False.
+        """
+        return hasattr(self, "risks")
+
+    def _check_bound(self, bound: Optional[str]):
+        """Check the value on the bound.
+
+        Parameters
+        ----------
+        bound : Optional[str]
+            Bound defined in the predict.
+
+        Raises
+        ------
+        AttributeError
+            If bound in not in ["hoeffding", "bernstein", "wsr", None]
+        """
+        if bound not in ["hoeffding", "bernstein", "wsr", None]:
+            raise AttributeError(
+                'bound must be in ["hoeffding", "bernstein", "wsr", None]'
+            )
+
+    def _transform_pred_proba(
+        self,
+        y_pred_proba: Sequence[ArrayLike]
+    ) -> NDArray:
+        """If the output of the predict_proba is a list of arrays (output of
+        the ``predict_proba`` of ``MultiOutputClassifier``) we transform it
+        into an array of shape (n_samples, n_classes)
+
+        Parameters
+        ----------
+        y_pred_proba : Union[List, NDArray]
+            Output of the multi-label classifier.
+
+        Returns
+        -------
+        NDArray of shape (n_samples, n_classes)
+            Output of the model ready for risk computation.
+        """
         if type(y_pred_proba) == np.ndarray:
             y_pred_proba_array = y_pred_proba
         else:
-            y_pred_proba_stacked = np.stack(y_pred_proba, 0)[:, :, 1]
+            y_pred_proba_stacked = np.stack(y_pred_proba)
+            y_pred_proba_stacked = y_pred_proba_stacked[:, :, 1]
             y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
 
         return np.expand_dims(y_pred_proba_array, axis=2)
 
-    def _compute_risks(self, y_pred_proba, y):
-        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
+    def _compute_risks(self, y_pred_proba: NDArray, y: NDArray) -> NDArray:
+        """Compute the risk
 
+        Parameters
+        ----------
+        y_pred_proba : NDArray
+            Predicted probabilities for each label and each observation
+        y : NDArray
+            Labels.
+
+        Returns
+        -------
+        NDArray of shape (n_samples, n_lambdas)
+            Risk for each observation and each value of lambda.
+        """
         lambdas = np.arange(
             0, 1,
             1 / self.n_lambdas
         )[np.newaxis, np.newaxis, :]
 
         y_pred_proba_repeat = np.repeat(
-            y_pred_proba_array,
+            y_pred_proba,
             self.n_lambdas,
             axis=2
         )
@@ -177,21 +256,27 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         return risks
 
-    def _find_lambda_star(self, r_hat_plus, alpha_np):
-        """Find the optimal lambda for each of the bound in
-        r_hat_plus
+    def _find_lambda_star(
+        self,
+        r_hat_plus: NDArray,
+        alpha_np: NDArray
+    ) -> NDArray:
+        """Find the higher value of lambda such that for
+        all smaller lambda, the risk is smaller, for each value
+        of alpha.
 
         Parameters
         ----------
-        r_hat_plus : Dict[str, np.ndarray]
+        r_hat_plus : NDArray
             Upper bounds computed in the get_r_hat_plus function.
-        alphas : Union[float, List[float]]
+        alphas : NDArray
             Risk levels.
 
         Returns
         -------
-        Dict[str, float]
-            Optimal lambdas which controls the risks.
+        NDArray of shape (n_alphas, )
+            Optimal lambdas which controls the risks for each value
+            of alpha.
         """
 
         if len(alpha_np) > 1:
@@ -218,13 +303,15 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         return lambdas_star
 
-    def _get_r_hat_plus(self, bound, delta, sigma_init=.25):
+    def _get_r_hat_plus(
+        self, bound: Optional[str],
+        delta: Optional[float],
+        sigma_init: float = .25
+    ) -> Tuple[NDArray, NDArray]:
         """Compute the upper bound of the loss for each lambda.
 
         Parameters
         ----------
-        losses : np.ndarray of shape (n_samples, n_lambdas)
-            Loss computed with the get_losses function.
         bound : str
             Bounds to compute. Either hoeffding, bernstein or wsr.
         delta : float
@@ -237,18 +324,14 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        Dict[str, np.ndarray]
-            Upper bound of the loss for each technique.
+        Tuple[NDArray, NDArray] of shape (n_lambdas, ) and (n_lambdas)
+            Average risk over all the obervations and upper bound of the risk.
         """
-
-        assert (
-            bound in ["hoeffding", "bernstein", "wsr", None]
-        ), 'bounds must be in ["hoeffding", "bernstein", "wsr", None]'
         r_hat = self.risks.mean(axis=0)
         n_obs = len(self.risks)
         n_lambdas = len(r_hat)
 
-        if self.method == "rcps":
+        if (self.method == "rcps") and (delta is not None):
             if bound == "hoeffding":
                 r_hat_plus = (
                     r_hat +
@@ -279,18 +362,16 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                     1,
                     np.sqrt((2 * np.log(1 / delta)) / (n_obs * sigma_hat))
                 )
-                batches = {
-                    "1": int(n_obs / 2),
-                    "2": n_obs - int(n_obs / 2)
-                }  # Split the calculation in two to prevent memory issues
+
+                # Split the calculation in two to prevent memory issues
+                batches = [
+                    range(int(n_obs / 2)),
+                    range(n_obs - int(n_obs / 2), n_obs)
+                ]
                 K_R_max = np.zeros((n_lambdas, n_lambdas))
-                for batch, n_batch in batches.items():
-                    if int(batch) == 1:
-                        nu_batch = nu[:n_batch]
-                        losses_batch = self.risks[:n_batch]
-                    else:
-                        nu_batch = nu[n_batch:]
-                        losses_batch = self.risks[n_batch:]
+                for batch in batches:
+                    nu_batch = nu[batch]
+                    losses_batch = self.risks[batch]
 
                     nu_batch = np.repeat(
                         np.expand_dims(nu_batch, axis=2),
@@ -329,12 +410,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         return r_hat, r_hat_plus
 
-    def fit(
+    def partial_fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        partial: bool = False
     ) -> MapieMultiLabelClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -362,13 +442,15 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             The model itself.
         """
         # Checks
+        first_call = self._check_partial_fit_first_call()
         self._check_parameters()
         estimator = self._check_estimator(X, y, self.estimator)
 
         X, y = indexable(X, y)
-        self._check_y(y)
+        _check_y(y, multi_output=True)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         y = cast(NDArray, y)
+        X = cast(NDArray, X)
 
         self.n_classes_ = y.shape[1]
         self.n_samples_ = _num_samples(X)
@@ -376,16 +458,51 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         # Work
         self.single_estimator_ = estimator
         y_pred_proba = self.single_estimator_.predict_proba(X)
-        if partial:
-            if hasattr(self, "risks"):
-                partial_risk = self._compute_risks(y_pred_proba, y)
-                self.risks = np.concatenate([self.risks, partial_risk], axis=0)
-            else:
-                self.risks = self._compute_risks(y_pred_proba, y)
+        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
+        if first_call:
+            self.theta_ = np.zeros(X.shape[1])
+            self.risks = self._compute_risks(y_pred_proba_array, y)
         else:
-            self.risks = self._compute_risks(y_pred_proba, y)
+            if X.shape[1] != self.theta_.shape:
+                msg = "Number of features %d does not match previous data %d."
+                raise ValueError(msg % (X.shape[1], self.theta_.shape[1]))
+            partial_risk = self._compute_risks(y_pred_proba_array, y)
+            self.risks = np.concatenate([self.risks, partial_risk], axis=0)
 
         return self
+
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+    ) -> MapieMultiLabelClassifier:
+        """
+        Fit the base estimator or use the fitted base estimator.
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Training data.
+
+        y : NDArray of shape (n_samples, n_classes)
+            Training labels.
+
+        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for fitting the out-of-fold models.
+            If None, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no prediction sets.
+
+            By default None.
+
+        Returns
+        -------
+        MapieMultiLabelClassifier
+            The model itself.
+        """
+        return self.partial_fit(X, y, sample_weight)
 
     def predict(
         self,
@@ -395,10 +512,64 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         delta: Optional[float] = None,
         bound: Optional[Union[str, None]] = "wsr"
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
+        """
+        Prediction prediction sets on new samples based on target confidence
+        interval.
+        Prediction sets for a given ``alpha`` are deduced from the computed
+        risks.
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Test data.
+        method : Optional[str], optional
+            Method to choose for prediction interval estimates.
+            Choose among:
+
+            - "crc", for Conformal Risk Control. See [1] fot
+            more details.
+
+            - "rcps", based on computation of the upper bound
+            of the risk. See [2] for more details.
+
+            By default "crc".
+
+        alpha : Optional[Union[float, Iterable[float]]]
+            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
+            Between 0 and 1, represent the uncertainty of the confidence
+            interval.
+            Lower ``alpha`` produce larger (more conservative) prediction
+            sets.
+            ``alpha`` is the complement of the target coverage level.
+            By default ``None``.
+        delta : Optional[float]
+            Can be a float, or ``None``. If using method="rcps", then it
+            can not be set to ``None``.
+            Between 0 and 1, the level of certainty with which we compute
+            the Upper Confidence Bound of the average risk.
+            Lower ``delta`` produce larger (more conservative) prediction
+            sets.
+            By default ``None``.
+        bound : Optional[Union[str, None]]
+            Method used to compute the Upper Confience Bound of the
+            average risk. Only necessary with the RCPS method.
+            By default "wsr"
+
+        Returns
+        -------
+        Union[NDArray, Tuple[NDArray, NDArray]]
+
+        - NDArray of shape (n_samples,) if alpha is None.
+
+        - Tuple[NDArray, NDArray] of shapes
+        (n_samples, n_classes) and (n_samples, n_classes, n_alpha)
+        if alpha is not None.
+        """
 
         self.method = method
         self._check_method()
         self._check_delta(delta)
+        self._check_bound(bound)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         check_is_fitted(self, self.fit_attributes)
 
@@ -420,7 +591,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         )
         self.r_hat, self.r_hat_plus = self._get_r_hat_plus(
             bound,
-            delta
+            delta,
+            self.sigma_init
         )
         self.lambdas_star = self._find_lambda_star(self.r_hat_plus, alpha_np)
         y_pred_proba_array = (
