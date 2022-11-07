@@ -105,28 +105,20 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
     Examples
     --------
-    import numpy as np
+    >>> import numpy as np
     >>> from sklearn.multioutput import MultiOutputClassifier
     >>> from sklearn.linear_model import LogisticRegression
     >>> from mapie.multi_label_classification import MapieMultiLabelClassifier
-    >>> X_toy = np.arange(9).reshape(-1, 1)
-    >>> y_toy = np.stack(
-        [[1, 0, 1], [1, 0, 0], [0, 1, 1],
-        [0, 1, 0], [0, 0, 1], [1, 1, 1],
-        [1, 1, 0], [1, 0, 1], [0, 1, 1]])
+    >>> X_toy = np.arange(4).reshape(-1, 1)
+    >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     >>> mapie = MapieMultiLabelClassifier(estimator=clf).fit(X_toy, y_toy)
-    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.2)
+    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False  True]
     [ True False  True]
-    [ True False  True]
-    [ True False  True]
-    [ True  True  True]
-    [ True  True  True]
-    [ True  True  True]
-    [ True  True  True]
-    [False  True  True]]
+    [False  True False]
+    [False  True False]]
     """
     valid_methods_ = ["crc", "rcps"]
     n_lambdas = 100
