@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Optional, Union, Tuple, Iterable, cast, Sequence
+from typing import Optional, Union, Tuple, Iterable, cast, Sequence
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
