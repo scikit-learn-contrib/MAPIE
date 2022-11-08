@@ -110,15 +110,15 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     >>> from sklearn.linear_model import LogisticRegression
     >>> from mapie.multi_label_classification import MapieMultiLabelClassifier
     >>> X_toy = np.arange(4).reshape(-1, 1)
-    >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0])
+    >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     >>> mapie = MapieMultiLabelClassifier(estimator=clf).fit(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False  True]
-    [ True False  True]
-    [False  True False]
-    [False  True False]]
+     [ True False  True]
+     [False  True False]
+     [False  True False]]
     """
     valid_methods_ = ["crc", "rcps"]
     n_lambdas = 100
@@ -184,7 +184,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 "delta can not be None when using "
                 "a RCPS method."
             )
-
+        if hasattr(delta, "__len__"):
+            raise ValueError(
+                "Invalid delta. "
+                f"delta must be a float, not a {type(delta)}"
+            )
         if (delta is not None) and (
             ((delta <= 0) or (delta >= 1)) and
             self.method == "rcps"
@@ -242,8 +246,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             est = estimator
         if (
             not hasattr(est, "fit")
-            and not hasattr(est, "predict")
-            and not hasattr(est, "predict_proba")
+            or not hasattr(est, "predict")
+            or not hasattr(est, "predict_proba")
         ):
             raise ValueError(
                 "Invalid estimator. "
@@ -251,12 +255,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 "predict, and predict_proba methods."
             )
         check_is_fitted(est)
-        if not hasattr(est, "classes_"):
-            raise AttributeError(
-                "Invalid classifier. "
-                "Fitted classifier does not contain "
-                "'classes_' attribute."
-            )
         return estimator
 
     def _check_partial_fit_first_call(self) -> bool:
@@ -284,7 +282,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             If bound in not in ["hoeffding", "bernstein", "wsr", None]
         """
         if bound not in ["hoeffding", "bernstein", "wsr", None]:
-            raise AttributeError(
+            raise ValueError(
                 'bound must be in ["hoeffding", "bernstein", "wsr", None]'
             )
 
@@ -443,7 +441,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                     (7 * np.log(2 / delta)) / (3 * (n_obs - 1))
                 )
 
-            elif bound == "wsr":
+            else:
                 mu_hat = (
                     (.5 + np.cumsum(self.risks, axis=0)) /
                     (np.repeat([range(1, n_obs + 1)], n_lambdas, axis=0).T + 1)
@@ -502,7 +500,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 r_hat_plus = np.ones(n_lambdas)
                 r_hat_plus[:len(r_hat_plus_tronc)] = r_hat_plus_tronc
 
-        elif self.method == "crc":
+        else:
             r_hat_plus = (n_obs / (n_obs + 1)) * r_hat + (1 / (n_obs + 1))
 
         return r_hat, r_hat_plus
@@ -551,7 +549,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         y = cast(NDArray, y)
         X = cast(NDArray, X)
 
-        self.n_classes_ = y.shape[1]
         self.n_samples_ = _num_samples(X)
 
         # Work
@@ -562,9 +559,9 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             self.theta_ = np.zeros(X.shape[1])
             self.risks = self._compute_risks(y_pred_proba_array, y)
         else:
-            if X.shape[1] != self.theta_.shape:
+            if X.shape[1] != self.theta_.shape[0]:
                 msg = "Number of features %d does not match previous data %d."
-                raise ValueError(msg % (X.shape[1], self.theta_.shape[1]))
+                raise ValueError(msg % (X.shape[1], self.theta_.shape[0]))
             partial_risk = self._compute_risks(y_pred_proba_array, y)
             self.risks = np.concatenate([self.risks, partial_risk], axis=0)
 
@@ -601,6 +598,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         MapieMultiLabelClassifier
             The model itself.
         """
+        if not self._check_partial_fit_first_call():
+            delattr(self, "risks")
         return self.partial_fit(X, y, sample_weight)
 
     def predict(
