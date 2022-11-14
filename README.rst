@@ -203,10 +203,10 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 🤝  Affiliations
 ================
 
-MAPIE has been developed through a collaboration between Quantmetry, Michelin, and ENS Paris-Saclay
-with the financial support from Région Ile de France.
+MAPIE has been developed through a collaboration between Quantmetry, Michelin, ENS Paris-Saclay,
+and with the financial support from Région Ile de France and Confiance.ai.
 
-|Quantmetry|_ |Michelin|_ |ENS|_ |IledeFrance|_ 
+|Quantmetry|_ |Michelin|_ |ENS|_ |Confiance.ai|_  |IledeFrance|_ 
 
 .. |Quantmetry| image:: https://www.quantmetry.com/wp-content/uploads/2020/08/08-Logo-quant-Texte-noir.svg
     :width: 150
@@ -220,6 +220,10 @@ with the financial support from Région Ile de France.
     :width: 100
 .. _ENS: https://ens-paris-saclay.fr/en
 
+.. |Confiance.ai| image:: https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg
+    :width: 100
+.. _Confiance.ai: https://www.confiance.ai/
+
 .. |IledeFrance| image:: https://www.iledefrance.fr/themes/custom/portail_idf/logo.svg
     :width: 100
 .. _IledeFrance: https://www.iledefrance.fr/
@@ -230,7 +234,7 @@ with the financial support from Région Ile de France.
 
 MAPIE methods belong to the field of conformal inference.
 
-[1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
+[1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
 "Predictive inference with the jackknife+." Ann. Statist., 49(1):486–507, February 2021.
 
 [2] Byol Kim, Chen Xu, and Rina Foygel Barber.
