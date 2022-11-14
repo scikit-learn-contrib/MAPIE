@@ -3,7 +3,6 @@ from typing import Any, Optional, Union, Tuple, Iterable, List, cast
 
 import numpy as np
 from joblib import Parallel, delayed
-from sklearn.base import CalibratedClassifierCV, clone
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, train_test_split
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
@@ -11,7 +10,8 @@ from sklearn.svm import LinearSVC
 from sklearn.preprocessing import label_binarize
 from sklearn.utils import check_random_state, _safe_indexing
 from sklearn.utils.multiclass import type_of_target, check_classification_targets
-from sklearn.calibration import _get_prediction_method, _compute_predictions
+from sklearn.isotonic import IsotonicRegression
+from sklearn.calibration import _compute_predictions, _SigmoidCalibration
 
 from sklearn.utils.validation import (
     indexable,
@@ -35,6 +35,7 @@ from .utils import (
     check_verbose,
     compute_quantiles,
     fit_estimator,
+    check_calib_set,
 )
 
 
@@ -90,11 +91,27 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 shuffle,
                 stratify,
             )
-            
+            X_train, y_train, X_calib, y_calib, sample_weight_train = results
+            X_train, y_train = indexable(X_train, y_train)
+            X_calib, y_calib = indexable(X_calib, y_calib)
+            y_train, y_calib = _check_y(y_train), _check_y(y_calib)
+            self.n_calib_samples = _num_samples(y_calib)
+            sample_weight_train, X_train, y_train = check_null_weight(
+                sample_weight_train,
+                X_train,
+                y_train
+            )
+            y_train = cast(NDArray, y_train)
 
+            estimator_ = fit_estimator(
+                clone(estimator), X_train, y_train, sample_weight
+            )
 
-            top_class_prob = np.max(preds_calib, axis=1)
-            top_class_prob_arg = np.argmax(preds_calib, axis=1)+1
+            calibrator = _get_calibrator(self.calibrator_method)
+
+            y_pred_calib_ = estimator_.predict_proba(X_calib)
+            top_class_prob = np.max(y_pred_calib_, axis=1)
+            top_class_prob_arg = np.argmax(y_pred_calib_, axis=1)+1
 
             calibrators = {}
             for item in np.unique(top_class_prob_arg):
@@ -104,10 +121,19 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 if(bins_l == 0):
                     print("Predictions for class {:d} not recalibrated since fewer than {:d} calibration points were predicted as class {:d}.".format(item, points_per_bin, item))
                 else:
-                    hb_clone = HB_binary(n_bins=bins_l)
+                    hb_clone = calibrator
                     y_calib_ = (y_calib[correct_label] == item)
                     top_class_prob_ = top_class_prob[correct_label]
                     hb_clone.fit(top_class_prob_, y_calib_)
                     calibrators[item] = hb_clone
 
             self.calibrators = calibrators
+
+    
+
+def _get_calibrator(calibrator_method: str):
+    if calibrator_method == "sigmoid":
+        calibrator = _SigmoidCalibration()
+    elif calibrator_method == "isotonic":
+        calibrator = IsotonicRegression(out_of_bounds="clip")
+    return calibrator
