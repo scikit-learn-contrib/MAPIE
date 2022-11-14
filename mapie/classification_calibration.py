@@ -61,6 +61,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         sample_weight: Optional[ArrayLike] = None,
         calib_size: Optional[float] = 0.3,
         random_state: Optional[Union[int, np.random.RandomState, None]] = None,
+        shuffle: Optional[bool] = True,
+        stratify: Optional[ArrayLike] = None,
     ):
         cv = check_cv(self.cv)
         estimator = self._check_estimator(X, y, self.estimator)
@@ -79,6 +81,18 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         if cv == "prefit":
             pass
         elif cv == "split":
+            results = check_calib_set(
+                X,
+                y,
+                sample_weight,
+                calib_size,
+                random_state,
+                shuffle,
+                stratify,
+            )
+            
+
+
             top_class_prob = np.max(preds_calib, axis=1)
             top_class_prob_arg = np.argmax(preds_calib, axis=1)+1
 
