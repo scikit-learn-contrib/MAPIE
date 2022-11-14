@@ -466,7 +466,10 @@ def test_method_error_if_no_label_fit() -> None:
 
 def test_method_error_if_no_label_partial_fit() -> None:
     """Test error for wrong method"""
-    clf = MultiOutputClassifier(LogisticRegression()).fit(X_no_label, y_no_label)
+    clf = MultiOutputClassifier(LogisticRegression()).fit(
+        X_no_label,
+        y_no_label
+    )
     mapie_clf = MapieMultiLabelClassifier(clf)
     with pytest.raises(ValueError, match=r".*Invalid y.*"):
         for i in range(len(X_no_label)):

@@ -473,11 +473,19 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             else:
                 mu_hat = (
                     (.5 + np.cumsum(self.risks, axis=0)) /
-                    (np.repeat([range(1, n_obs + 1)], self.n_lambdas, axis=0).T + 1)
+                    (np.repeat(
+                        [range(1, n_obs + 1)],
+                        self.n_lambdas,
+                        axis=0
+                    ).T + 1)
                 )
                 sigma_hat = (
                     (.25 + np.cumsum((self.risks - mu_hat)**2, axis=0)) /
-                    (np.repeat([range(1, n_obs + 1)], self.n_lambdas, axis=0).T + 1)
+                    (np.repeat(
+                        [range(1, n_obs + 1)],
+                        self.n_lambdas,
+                        axis=0
+                    ).T + 1)
                 )
                 sigma_hat = np.concatenate(
                     [np.ones((1, self.n_lambdas)) * sigma_init, sigma_hat[:-1]]
