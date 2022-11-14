@@ -154,10 +154,40 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         check_random_state(self.random_state)
 
     def _check_method(self) -> None:
+        """Check that the specified method is valid
+
+        Raises
+        ------
+        ValueError
+            Raise error if the name of the method is not
+            in ["crc", "rcps"]
+        """
         if self.method not in self.valid_methods_:
             raise ValueError(
                 "Invalid method. "
                 "Allowed values are 'crc' or 'rcps"
+            )
+
+    def _check_all_labelled(self, y: NDArray) -> None:
+        """Check that all observations have at least
+        one label
+
+        Parameters
+        ----------
+        y : NDArray of shape (n_samples, n_labels)
+            Labels of the observations.
+
+        Raises
+        ------
+        ValueError
+            Raise error if at least one observation
+            has no label.
+        """
+        if 0 in np.unique(y.sum(axis=1)):
+            raise ValueError(
+                "Invalid y. "
+                "All observations should contain at "
+                "least one label."
             )
 
     def _check_delta(self, delta: Optional[float]):
@@ -548,6 +578,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         y = cast(NDArray, y)
         X = cast(NDArray, X)
 
+        self._check_all_labelled(y)
         self.n_samples_ = _num_samples(X)
 
         # Work

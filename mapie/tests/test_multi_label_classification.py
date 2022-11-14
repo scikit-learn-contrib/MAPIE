@@ -162,6 +162,13 @@ X, y = make_multilabel_classification(
     allow_unlabeled=False
 )
 
+X_no_label, y_no_label = make_multilabel_classification(
+    n_samples=1000,
+    n_classes=5,
+    random_state=42,
+    allow_unlabeled=True
+)
+
 
 def test_initialized() -> None:
     """Test that initialization does not crash."""
@@ -448,6 +455,25 @@ def test_method_error_in_predict(method: str) -> None:
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         mapie_clf.predict(X_toy, method=method)
+
+
+def test_method_error_if_no_label_fit() -> None:
+    """Test error for wrong method"""
+    mapie_clf = MapieMultiLabelClassifier()
+    with pytest.raises(ValueError, match=r".*Invalid y.*"):
+        mapie_clf.fit(X_no_label, y_no_label)
+
+
+def test_method_error_if_no_label_partial_fit() -> None:
+    """Test error for wrong method"""
+    clf = MultiOutputClassifier(LogisticRegression()).fit(X_no_label, y_no_label)
+    mapie_clf = MapieMultiLabelClassifier(clf)
+    with pytest.raises(ValueError, match=r".*Invalid y.*"):
+        for i in range(len(X_no_label)):
+            mapie_clf.partial_fit(
+                np.expand_dims(X_no_label[i], axis=0),
+                np.expand_dims(y_no_label[i], axis=0)
+            )
 
 
 @pytest.mark.parametrize("bound", WRONG_BOUNDS)
