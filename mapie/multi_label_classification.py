@@ -424,7 +424,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         """
         r_hat = self.risks.mean(axis=0)
         n_obs = len(self.risks)
-        n_lambdas = len(r_hat)
 
         if (self.method == "rcps") and (delta is not None):
             if bound == "hoeffding":
@@ -444,14 +443,14 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             else:
                 mu_hat = (
                     (.5 + np.cumsum(self.risks, axis=0)) /
-                    (np.repeat([range(1, n_obs + 1)], n_lambdas, axis=0).T + 1)
+                    (np.repeat([range(1, n_obs + 1)], self.n_lambdas, axis=0).T + 1)
                 )
                 sigma_hat = (
                     (.25 + np.cumsum((self.risks - mu_hat)**2, axis=0)) /
-                    (np.repeat([range(1, n_obs + 1)], n_lambdas, axis=0).T + 1)
+                    (np.repeat([range(1, n_obs + 1)], self.n_lambdas, axis=0).T + 1)
                 )
                 sigma_hat = np.concatenate(
-                    [np.ones((1, n_lambdas)) * sigma_init, sigma_hat[:-1]]
+                    [np.ones((1, self.n_lambdas)) * sigma_init, sigma_hat[:-1]]
                 )
                 nu = np.minimum(
                     1,
@@ -463,23 +462,23 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                     range(int(n_obs / 2)),
                     range(n_obs - int(n_obs / 2), n_obs)
                 ]
-                K_R_max = np.zeros((n_lambdas, n_lambdas))
+                K_R_max = np.zeros((self.n_lambdas, self.n_lambdas))
                 for batch in batches:
                     nu_batch = nu[batch]
                     losses_batch = self.risks[batch]
 
                     nu_batch = np.repeat(
                         np.expand_dims(nu_batch, axis=2),
-                        n_lambdas,
+                        self.n_lambdas,
                         axis=2
                     )
                     losses_batch = np.repeat(
                         np.expand_dims(losses_batch, axis=2),
-                        n_lambdas,
+                        self.n_lambdas,
                         axis=2
                     )
 
-                    R = np.arange(n_lambdas) / n_lambdas
+                    R = np.arange(self.n_lambdas) / self.n_lambdas
                     K_R = np.cumsum(
                         np.log(
                             (
@@ -496,8 +495,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
                 r_hat_plus_tronc = (np.argwhere(
                     np.cumsum(K_R_max > -np.log(delta), axis=1) == 1
-                )[:, 1] / n_lambdas)
-                r_hat_plus = np.ones(n_lambdas)
+                )[:, 1] / self.n_lambdas)
+                r_hat_plus = np.ones(self.n_lambdas)
                 r_hat_plus[:len(r_hat_plus_tronc)] = r_hat_plus_tronc
 
         else:
