@@ -7,6 +7,8 @@ from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
 from sklearn.utils.validation import _check_sample_weight, _num_features
 from sklearn.utils import _safe_indexing
+from sklearn.model_selection import train_test_split
+
 
 from ._compatibility import np_quantile
 from .conformity_scores import AbsoluteConformityScore, ConformityScore
@@ -153,7 +155,11 @@ def check_cv(
             return LeaveOneOut()
         if cv >= 2:
             return KFold(n_splits=cv)
-    if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
+    if (
+        isinstance(cv, BaseCrossValidator)
+        or (cv == "prefit")
+        or (cv == "split")
+    ):
         return cv
     raise ValueError(
         "Invalid cv argument. "
@@ -654,3 +660,77 @@ def compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
                 ]
             )[:, 0]
     return quantiles_
+
+
+def check_calib_set(
+    X: ArrayLike,
+    y: ArrayLike,
+    sample_weight: Optional[ArrayLike] = None,
+    X_calib: Optional[ArrayLike] = None,
+    y_calib: Optional[ArrayLike] = None,
+    calib_size: Optional[float] = 0.3,
+    random_state: Optional[Union[int, np.random.RandomState, None]] = None,
+    shuffle: Optional[bool] = True,
+    stratify: Optional[ArrayLike] = None,
+) -> Tuple[
+    ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]
+]:
+    """
+    Check if a calibration set has already been defined, if not, then
+    we define one using the `train_test_split` method.
+
+    Parameters
+    ----------
+    Same definition of parameters as for the ``fit`` method.
+
+    Returns
+    -------
+    Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]
+        - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)
+            X_train
+        - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)
+            y_train
+        - [2]: ArrayLike of shape (n_samples_*calib_size, n_features)
+            X_calib
+        - [3]: ArrayLike of shape (n_samples_*calib_size,)
+            y_calib
+        - [4]: ArrayLike of shape (n_samples_,)
+            sample_weight_train
+
+    """
+    if X_calib is None or y_calib is None:
+        if sample_weight is None:
+            (
+                X_train, X_calib, y_train, y_calib
+            ) = train_test_split(
+                    X,
+                    y,
+                    test_size=calib_size,
+                    random_state=random_state,
+                    shuffle=shuffle,
+                    stratify=stratify
+            )
+            sample_weight_train = sample_weight
+        else:
+            (
+                    X_train,
+                    X_calib,
+                    y_train,
+                    y_calib,
+                    sample_weight_train,
+                    _,
+            ) = train_test_split(
+                    X,
+                    y,
+                    sample_weight,
+                    test_size=calib_size,
+                    random_state=random_state,
+                    shuffle=shuffle,
+                    stratify=stratify
+            )
+    else:
+        X_train, y_train, sample_weight_train = X, y, sample_weight
+    X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
+    y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
+    sample_weight_train = cast(ArrayLike, sample_weight_train)
+    return X_train, y_train, X_calib, y_calib, sample_weight_train
