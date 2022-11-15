@@ -580,10 +580,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         X_val = _safe_indexing(X, val_index)
         y_val = _safe_indexing(y, val_index)
 
-        sample_weight_train = _safe_indexing(sample_weight, train_index)
-        estimator = fit_estimator(
-            estimator, X_train, y_train, sample_weight_train
-        )
+        if sample_weight is None:
+            estimator = fit_estimator(estimator, X_train, y_train)
+        else:
+            sample_weight_train = _safe_indexing(sample_weight, train_index)
+            estimator = fit_estimator(
+                estimator, X_train, y_train, sample_weight_train
+            )
         if _num_samples(X_val) > 0:
             y_pred_proba = self._predict_oof_model(estimator, X_val)
         else:

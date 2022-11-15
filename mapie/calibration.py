@@ -51,9 +51,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         calibration_method: Optional[Union[str, RegressorMixin]] = None,
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
     ) -> None:
-        self.estimator = estimator,
-        self.method = method,
-        self.calibration_method = calibration_method,
+        self.estimator = estimator
+        self.method = method
+        self.calibration_method = calibration_method
         self.cv = cv
 
     def _fit_calibrator(
