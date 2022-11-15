@@ -4,10 +4,16 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
-from sklearn.utils.validation import _check_sample_weight, _num_features
+from sklearn.utils.validation import (
+    _check_sample_weight, _num_features, check_is_fitted
+)
 from sklearn.utils import _safe_indexing
 from sklearn.model_selection import train_test_split
+from sklearn.isotonic import IsotonicRegression
+from sklearn.calibration import _SigmoidCalibration
 
 
 from ._compatibility import np_quantile
@@ -669,7 +675,7 @@ def check_calib_set(
     X_calib: Optional[ArrayLike] = None,
     y_calib: Optional[ArrayLike] = None,
     calib_size: Optional[float] = 0.3,
-    random_state: Optional[Union[int, np.random.RandomState, None]] = None,
+    random_state: Optional[Union[int, np.random.RandomState]] = None,
     shuffle: Optional[bool] = True,
     stratify: Optional[ArrayLike] = None,
 ) -> Tuple[
@@ -734,3 +740,76 @@ def check_calib_set(
     y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
     sample_weight_train = cast(ArrayLike, sample_weight_train)
     return X_train, y_train, X_calib, y_calib, sample_weight_train
+
+
+def get_calibrator(calibrator_method: str):
+    if calibrator_method == "sigmoid":
+        calibrator = _SigmoidCalibration()
+    elif calibrator_method == "isotonic":
+        calibrator = IsotonicRegression(out_of_bounds="clip")
+    return calibrator
+
+
+def check_estimator_classification(
+    X: ArrayLike,
+    y: ArrayLike,
+    cv=None,
+    estimator: Optional[ClassifierMixin] = None,
+) -> ClassifierMixin:
+    """
+    Check if estimator is ``None``,
+    and returns a ``LogisticRegression`` instance if necessary.
+    If the ``cv`` attribute is ``"prefit"``,
+    check if estimator is indeed already fitted.
+
+    Parameters
+    ----------
+    X : ArrayLike of shape (n_samples, n_features)
+        Training data.
+
+    y : ArrayLike of shape (n_samples,)
+        Training labels.
+
+    estimator : Optional[ClassifierMixin], optional
+        Estimator to check, by default ``None``
+
+    Returns
+    -------
+    ClassifierMixin
+        The estimator itself or a default ``LogisticRegression`` instance.
+
+    Raises
+    ------
+    ValueError
+        If the estimator is not ``None``
+        and has no fit, predict, nor predict_proba methods.
+
+    NotFittedError
+        If the estimator is not fitted and ``cv`` attribute is "prefit".
+    """
+    if estimator is None:
+        return LogisticRegression(multi_class="multinomial").fit(X, y)
+
+    if isinstance(estimator, Pipeline):
+        est = estimator[-1]
+    else:
+        est = estimator
+    if (
+        not hasattr(est, "fit")
+        and not hasattr(est, "predict")
+        and not hasattr(est, "predict_proba")
+    ):
+        raise ValueError(
+            "Invalid estimator. "
+            "Please provide a classifier with fit,"
+            "predict, and predict_proba methods."
+        )
+    if cv == "prefit":
+        check_is_fitted(est)
+        if not hasattr(est, "classes_"):
+            raise AttributeError(
+                "Invalid classifier. "
+                "Fitted classifier does not contain "
+                "'classes_' attribute."
+            )
+    return estimator

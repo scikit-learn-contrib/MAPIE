@@ -4,9 +4,7 @@ from typing import Any, Optional, Union, Tuple, Iterable, List, cast
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, train_test_split
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import label_binarize
 from sklearn.utils import check_random_state, _safe_indexing
 from sklearn.utils.multiclass import type_of_target
@@ -30,6 +28,7 @@ from .utils import (
     check_verbose,
     compute_quantiles,
     fit_estimator,
+    check_estimator_classification,
 )
 
 
@@ -235,70 +234,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         if (self.method == "raps") and (self.cv != "prefit"):
             raise ValueError("RAPS method can only be used with cv='prefit'")
-
-    def _check_estimator(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        estimator: Optional[ClassifierMixin] = None,
-    ) -> ClassifierMixin:
-        """
-        Check if estimator is ``None``,
-        and returns a ``LogisticRegression`` instance if necessary.
-        If the ``cv`` attribute is ``"prefit"``,
-        check if estimator is indeed already fitted.
-
-        Parameters
-        ----------
-        X : ArrayLike of shape (n_samples, n_features)
-            Training data.
-
-        y : ArrayLike of shape (n_samples,)
-            Training labels.
-
-        estimator : Optional[ClassifierMixin], optional
-            Estimator to check, by default ``None``
-
-        Returns
-        -------
-        ClassifierMixin
-            The estimator itself or a default ``LogisticRegression`` instance.
-
-        Raises
-        ------
-        ValueError
-            If the estimator is not ``None``
-            and has no fit, predict, nor predict_proba methods.
-
-        NotFittedError
-            If the estimator is not fitted and ``cv`` attribute is "prefit".
-        """
-        if estimator is None:
-            return LogisticRegression(multi_class="multinomial").fit(X, y)
-
-        if isinstance(estimator, Pipeline):
-            est = estimator[-1]
-        else:
-            est = estimator
-        if (
-            not hasattr(est, "fit")
-            and not hasattr(est, "predict")
-            and not hasattr(est, "predict_proba")
-        ):
-            raise ValueError(
-                "Invalid estimator. "
-                "Please provide a classifier with fit,"
-                "predict, and predict_proba methods."
-            )
-        if self.cv == "prefit":
-            check_is_fitted(est)
-            if not hasattr(est, "classes_"):
-                raise AttributeError(
-                    "Invalid classifier. "
-                    "Fitted classifier does not contain "
-                    "'classes_' attribute."
-                )
-        return estimator
 
     def _check_include_last_label(
         self,
@@ -645,13 +580,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         X_val = _safe_indexing(X, val_index)
         y_val = _safe_indexing(y, val_index)
 
-        if sample_weight is None:
-            estimator = fit_estimator(estimator, X_train, y_train)
-        else:
-            sample_weight_train = _safe_indexing(sample_weight, train_index)
-            estimator = fit_estimator(
-                estimator, X_train, y_train, sample_weight_train
-            )
+        sample_weight_train = _safe_indexing(sample_weight, train_index)
+        estimator = fit_estimator(
+            estimator, X_train, y_train, sample_weight_train
+        )
         if _num_samples(X_val) > 0:
             y_pred_proba = self._predict_oof_model(estimator, X_val)
         else:
@@ -973,7 +905,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        size_raps: Optional[float] = .2
+        size_raps: Optional[float] = .2,
     ) -> MapieClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -1010,8 +942,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # Checks
         self._check_parameters()
         cv = check_cv(self.cv)
-        estimator = self._check_estimator(X, y, self.estimator)
-
+        estimator = check_estimator_classification(X, y, cv, self.estimator)
         X, y = indexable(X, y)
         y = _check_y(y)
         assert type_of_target(y) == "multiclass"
