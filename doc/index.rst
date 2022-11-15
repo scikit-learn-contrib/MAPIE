@@ -33,6 +33,14 @@
 .. toctree::
    :maxdepth: 2
    :hidden:
+   :caption: MULTI-LABEL CLASSIFICATION
+
+   theoretical_description_multilabel_classification
+   examples_classification/1-quickstart/plot_main-tutorial-classification
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
    :caption: API
 
    api
