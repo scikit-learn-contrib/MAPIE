@@ -741,39 +741,33 @@ def check_calib_set(
 
 
 def check_estimator_classification(
-    X: ArrayLike,
-    y: ArrayLike,
-    cv=None,
-    estimator: Optional[ClassifierMixin] = None,
+        X: ArrayLike,
+        y: ArrayLike,
+        cv: Union[str, BaseCrossValidator],
+        estimator: Optional[ClassifierMixin] = None,
 ) -> ClassifierMixin:
     """
     Check if estimator is ``None``,
     and returns a ``LogisticRegression`` instance if necessary.
     If the ``cv`` attribute is ``"prefit"``,
     check if estimator is indeed already fitted.
-
     Parameters
     ----------
     X : ArrayLike of shape (n_samples, n_features)
         Training data.
-
     y : ArrayLike of shape (n_samples,)
         Training labels.
-
     estimator : Optional[ClassifierMixin], optional
         Estimator to check, by default ``None``
-
     Returns
     -------
     ClassifierMixin
         The estimator itself or a default ``LogisticRegression`` instance.
-
     Raises
     ------
     ValueError
         If the estimator is not ``None``
         and has no fit, predict, nor predict_proba methods.
-
     NotFittedError
         If the estimator is not fitted and ``cv`` attribute is "prefit".
     """
