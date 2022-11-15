@@ -12,8 +12,6 @@ from sklearn.utils.validation import (
 )
 from sklearn.utils import _safe_indexing
 from sklearn.model_selection import train_test_split
-from sklearn.isotonic import IsotonicRegression
-from sklearn.calibration import _SigmoidCalibration
 
 
 from ._compatibility import np_quantile
@@ -740,14 +738,6 @@ def check_calib_set(
     y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
     sample_weight_train = cast(ArrayLike, sample_weight_train)
     return X_train, y_train, X_calib, y_calib, sample_weight_train
-
-
-def get_calibrator(calibrator_method: str):
-    if calibrator_method == "sigmoid":
-        calibrator = _SigmoidCalibration()
-    elif calibrator_method == "isotonic":
-        calibrator = IsotonicRegression(out_of_bounds="clip")
-    return calibrator
 
 
 def check_estimator_classification(

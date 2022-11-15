@@ -1,18 +1,21 @@
 from __future__ import annotations
-from typing import Optional, Union, cast
+from typing import Optional, Union, cast, Tuple
 import warnings
 
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.base import BaseEstimator, ClassifierMixin, clone, RegressorMixin
-from sklearn.utils import check_random_state
+from sklearn.utils import check_random_state, check_consistent_length
 from sklearn.utils.multiclass import type_of_target
 from sklearn.calibration import _compute_predictions, _get_prediction_method
+from sklearn.isotonic import IsotonicRegression
+from sklearn.calibration import _SigmoidCalibration
 
 from sklearn.utils.validation import (
     indexable,
     check_is_fitted,
     _check_y,
+    _num_samples,
 )
 
 from ._typing import ArrayLike, NDArray
@@ -21,9 +24,9 @@ from .utils import (
     check_null_weight,
     check_n_features_in,
     check_calib_set,
-    get_calibrator,
     fit_estimator,
     check_estimator_classification,
+    check_estimator_fit_predict,
 )
 
 
@@ -36,15 +39,20 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         "max_prob_arg",
     ]
 
+    valid_calibrators = {
+        "sigmoid": _SigmoidCalibration(),
+        "isotonic": IsotonicRegression(out_of_bounds="clip")
+    }
+
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
-        class_method: str = "top_label",
-        calibration_method: str = "sigmoid",
+        method: str = "top_label",
+        calibration_method: Optional[Union[str, RegressorMixin]] = None,
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
     ) -> None:
         self.estimator = estimator,
-        self.class_method = class_method,
+        self.method = method,
         self.calibration_method = calibration_method,
         self.cv = cv
 
@@ -52,9 +60,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         self,
         item: int,
         calibrator: RegressorMixin,
-        y_calib: ArrayLike,
-        top_class_prob_: ArrayLike,
-        top_class_prob_arg_: ArrayLike,
+        y_calib: NDArray,
+        top_class_prob_: NDArray,
+        top_class_prob_arg_: NDArray,
     ) -> RegressorMixin:
         calibrator_ = clone(calibrator)
         correct_label = np.array(
@@ -65,30 +73,63 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         calibrator_.fit_estimator(label_top_class_prob_, y_calib_)
         return calibrator
 
+    def _check_calibration_method(
+        self,
+        calibration_method: Optional[Union[str, RegressorMixin]]
+    ):
+        if calibration_method is None:
+            calibration_method = "sigmoid"
+        elif (
+            isinstance(calibration_method, str) and
+            calibration_method not in self.valid_calibrator.keys()
+        ):
+            ValueError(
+                "Please provide a valid calibrator."
+            )
+        elif isinstance(calibration_method, RegressorMixin):
+            check_estimator_fit_predict(calibration_method)
+        return calibration_method
+
     def _get_labels(
-        self, method: str, y: ArrayLike
-    ) -> Union[ArrayLike, ArrayLike]:
+        self, method: str, y: NDArray
+    ) -> Tuple[NDArray, NDArray]:
         if method == "top_label":
-            max_class_prob = np.max(y, axis=1)
-            max_class_prob_arg = np.argmax(y, axis=1)+1
+            max_class_prob = np.max(y, axis=1).reshape(-1, 1)
+            max_class_prob_arg = (np.argmax(y, axis=1)+1).reshape(-1, 1)
         else:
             ValueError("No other methods have been implemented yet.")
+        check_consistent_length(max_class_prob, max_class_prob_arg)
         return max_class_prob, max_class_prob_arg
 
+    def _get_calibrator(
+        self,
+        calibration_method: Optional[Union[str, RegressorMixin]]
+    ):
+        if calibration_method in self.valid_calibrator.keys():
+            calibrator = self.valid_calibrator[calibration_method]
+        elif isinstance(calibration_method, RegressorMixin):
+            calibrator = calibration_method
+        else:
+            ValueError(
+                "Please provide a valid calibrator or input a valid"
+                + " regressor to be used as a calibrator."
+            )
+        return calibrator
+
     def _pred_proba_calib(
-        self, item, new_values, max_prob, max_prob_arg, calibrator,
-    ) -> ArrayLike:
+        self, item, new_values, max_prob, max_prob_arg, calibrators,
+    ) -> NDArray:
         correct_label = np.array(
             np.where(np.array(max_prob_arg) == item)
         )
-        if item not in calibrator:
+        if item not in calibrators:
             new_values[correct_label] = max_prob[correct_label]
             warnings.warn(
                 "WARNING: This calibration was not previously seen"
                 + " and therefore scores will remain unchanged"
             )
         else:
-            calibrator_ = calibrator[item]
+            calibrator_ = calibrators[item]
             new_values[correct_label] = calibrator_.predict_proba(
                 max_prob[correct_label]
             )
@@ -105,10 +146,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         stratify: Optional[ArrayLike] = None,
     ):
         cv = check_cv(self.cv)
-        self.calibration_method = _check_calibration_method(
-            cast(str, self.calibration_method)
+        self.method = self._check_method(cast(str, self.method))
+        self.calibration_method = self._check_calibration_method(
+            self.calibration_method
             )
-        self.class_method = _check_class_method(cast(str, self.class_method))
         estimator = check_estimator_classification(X, y, self.estimator)
         X, y = indexable(X, y)
         y = _check_y(y)
@@ -125,11 +166,11 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             results = check_calib_set(
                 X,
                 y,
-                sample_weight,
-                calib_size,
-                random_state,
-                shuffle,
-                stratify,
+                sample_weight=sample_weight,
+                calib_size=calib_size,
+                random_state=random_state,
+                shuffle=shuffle,
+                stratify=stratify,
             )
             X_train, y_train, X_calib, y_calib, sample_weight_train = results
             X_train, y_train = indexable(X_train, y_train)
@@ -156,9 +197,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 self.n_classes_
             )
 
-            calibrator = get_calibrator(self.calibration_method)
+            calibrator = self._get_calibrator(self.calibration_method)
             max_prob, max_prob_arg = self._get_labels(
-                self.class_method,
+                cast(str, self.method),
                 y_pred_calib
             )
             self.max_prob = max_prob
@@ -169,40 +210,40 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 calibrator_ = self._fit_calibrator(
                     item,
                     calibrator,
-                    y_calib,
+                    cast(NDArray, y_calib),
                     max_prob,
                     max_prob_arg
                 )
                 calibrators[item] = calibrator_
             self.calibrators = calibrators
 
-
-def predict_proba(
-    self,
-    X: ArrayLike,
-):
-    check_is_fitted(self, self.fit_attributes)
-    pred_method, method_name = _get_prediction_method(self.estimator_)
-    y_pred_calib = _compute_predictions(
-        pred_method,
-        method_name,
-        X,
-        self.n_classes_
-    )
-
-    max_prob, max_prob_arg = self._get_labels(
-        self.class_method,
-        y_pred_calib
-    )
-
-    n = len(max_prob)
-    calibrated_test_values = np.zeros((n))
-
-    for item in np.unique(max_prob_arg):
-        calibrated_test_values = self._pred_proba_calib(
-            item,
-            calibrated_test_values,
-            max_prob,
-            self.calibrator,
+    def predict_proba(
+        self,
+        X: ArrayLike,
+    ):
+        check_is_fitted(self, self.fit_attributes)
+        pred_method, method_name = _get_prediction_method(self.estimator_)
+        y_pred_calib = _compute_predictions(
+            pred_method,
+            method_name,
+            X,
+            self.n_classes_
         )
-    return calibrated_test_values
+
+        max_prob, max_prob_arg = self._get_labels(
+            cast(str, self.method),
+            y_pred_calib
+        )
+
+        n = _num_samples(max_prob)
+        calibrated_test_values = np.zeros((n))
+
+        for item in np.unique(max_prob_arg):
+            calibrated_test_values = self._pred_proba_calib(
+                item,
+                calibrated_test_values,
+                max_prob,
+                max_prob_arg,
+                self.calibrators,
+            )
+        return calibrated_test_values
