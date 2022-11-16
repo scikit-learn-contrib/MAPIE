@@ -97,9 +97,9 @@ plt.show()
 # Bernstein and Waudby-Smith–Ramdas).
 # The two methods give two different guaranties on the risk:
 #
-# * RCPS: :math:`\mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha )`
-# :math:`\geq 1 - \delta$ where $R(\mathcal{T}_{\hat{\lambda}})` is the risk we
-# want to control and $\alpha$ is the desired risk
+# * RCPS: :math:`P(R(\mathcal{T}_{\hat{\lambda}})\leq\alpha)\geq 1-\delta`
+# where :math:`R(\mathcal{T}_{\hat{\lambda}})`
+# is the risk we want to control and $\alpha$ is the desired risk
 #
 # * CRC: :math:`\mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha`
 # where :math:`L_{n+1}(\hat{\lambda})` is the risk of a new observation and
@@ -147,11 +147,11 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 # * Plots where the level of confidence is varied. Here two metrics are plotted
 #   for each method and for each UCB
 #     * The actual recall (which should be always near to the required one):
-#        we can see that they are close to each other.
+#       we can see that they are close to each other.
 #     * The value of the threshold: we see that the threshold is decreasing as
-#        :math:`1 - \alpha`` increases, which is what we expected because a
-#        smaller threshold will give you larger prediction sets, hence a larger
-#        recall.
+#       :math:`1 - \alpha`` increases, which is what we expected because a
+#       smaller threshold will give you larger prediction sets, hence a larger
+#       recall.
 #
 
 vars_y = [recalls, thresholds]
@@ -174,9 +174,9 @@ plt.show()
 #   the average risk, the UCB of the risk (for RCPS methods) and the choice of
 #   the thresold :math:`\lambda`
 #     * We can see that among the RCPS methods, the Bernstein method is the
-#        one who gives the best results as for a given value of :math:`\alpha`
-#        as we are above the required recall but with a larger value of
-#        :math:`\lambda` than the two others bounds.
+#       one who gives the best results as for a given value of :math:`\alpha`
+#       as we are above the required recall but with a larger value of
+#       :math:`\lambda` than the two others bounds.
 #     * The CRC method gives the best results
 
 fig, axs = plt.subplots(
