@@ -51,7 +51,7 @@ The goal of the method is to compute an Upper Confidence Bound (UCB) :math:`\hat
 :math:`\hat{\lambda}` as follows:
 
 .. math::
-    \hat{\lambda} = \inf\{\lambda \in \Lambda: \hat{R}^+(\lambda ') < \alpha}, \forall \lambda ' \geq \lambda \}
+    \hat{\lambda} = \inf\{\lambda \in \Lambda: \hat{R}^+(\lambda ') < \alpha, \forall \lambda ' \geq \lambda \}
 
 The figure bellow explains this procedure:
 
