@@ -1,7 +1,7 @@
 """
-===========================
-Tutorial for classification
-===========================
+======================================
+Tutorial for multilabel-classification
+======================================
 In this tutorial, we compare the prediction sets estimated by the
 RCPS and RCR methods implemented in MAPIE on a toy two-dimensional dataset.
 
@@ -87,6 +87,7 @@ for i in range(7):
         edgecolor='k'
     )
 plt.legend([c["label"] for c in colors.values()])
+plt.show()
 
 ##############################################################################
 # 2. Fitting MapieMultiLabelClassifier
@@ -145,21 +146,13 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 #
 # * Plots where the level of confidence is varied. Here two metrics are plotted
 #   for each method and for each UCB
-#     ** The actual recall (which should be always near to the required one):
+#     * The actual recall (which should be always near to the required one):
 #        we can see that they are close to each other.
-#     ** The value of the threshold: we see that the threshold is decreasing as
+#     * The value of the threshold: we see that the threshold is decreasing as
 #        :math:`1 - \alpha`` increases, which is what we expected because a
 #        smaller threshold will give you larger prediction sets, hence a larger
 #        recall.
 #
-# * Plots where we choose a specific risk value (0.1 in our case) and look at
-#   the average risk, the UCB of the risk (for RCPS methods) and the choice of
-#   the thresold :math:`\lambda`
-#     ** We can see that among the RCPS methods, the Bernstein method is the
-#        one who gives the best results as for a given value of :math:\alpha`
-#        as we are above the required recall but with a larger value of
-#        :math:`\lambda`` than the two others bounds.
-#     ** The CRC method gives the best results
 
 vars_y = [recalls, thresholds]
 labels_y = ["Average number of kept labels", "Recall", "Thresold"]
@@ -174,7 +167,17 @@ for i, var in enumerate(vars_y):
     axs[i].set_ylabel(labels_y[i], fontsize=20)
     if i == len(vars_y) - 1:
         axs[i].legend(fontsize=20, loc=[1, 0])
+plt.show()
 
+##############################################################################
+# * Plots where we choose a specific risk value (0.1 in our case) and look at
+#   the average risk, the UCB of the risk (for RCPS methods) and the choice of
+#   the thresold :math:`\lambda`
+#     * We can see that among the RCPS methods, the Bernstein method is the
+#        one who gives the best results as for a given value of :math:\alpha`
+#        as we are above the required recall but with a larger value of
+#        :math:`\lambda`` than the two others bounds.
+#     * The CRC method gives the best results
 
 fig, axs = plt.subplots(
     1,
@@ -201,3 +204,4 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
         f"{name} - Recall = {round(recalls[name][9], 2)}",
         fontsize=20
     )
+plt.show()
