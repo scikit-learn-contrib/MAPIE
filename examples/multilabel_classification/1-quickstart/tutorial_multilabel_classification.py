@@ -126,8 +126,14 @@ y_pss, recalls, thresholds, r_hats, r_hat_pluss = {}, {}, {}, {}, {}
 y_test_repeat = np.repeat(y_test[:, :, np.newaxis], len(alpha), 2)
 for i, (name, (method, bound)) in enumerate(method_params.items()):
 
-    _, y_pss[name] = mapie.predict(X_test, method=method, alpha=alpha, bound=bound, delta=.1)
-    recalls[name] = ((y_test_repeat * y_pss[name]).sum(axis=1) / y_test_repeat.sum(axis=1)).mean(axis=0)
+    _, y_pss[name] = mapie.predict(
+        X_test, method=method,
+        alpha=alpha, bound=bound, delta=.1
+    )
+    recalls[name] = (
+        (y_test_repeat * y_pss[name]).sum(axis=1) /
+        y_test_repeat.sum(axis=1)
+    ).mean(axis=0)
     thresholds[name] = mapie.lambdas_star
     r_hats[name] = mapie.r_hat
     r_hat_pluss[name] = mapie.r_hat_plus
