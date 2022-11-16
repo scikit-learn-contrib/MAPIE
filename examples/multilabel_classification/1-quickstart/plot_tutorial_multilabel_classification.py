@@ -97,12 +97,12 @@ plt.show()
 # Bernstein and Waudby-Smith–Ramdas).
 # The two methods give two different guaranties on the risk:
 #
-# * RCPS: :math:`\mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha )
-# \geq 1 - \delta$ where $R(\mathcal{T}_{\hat{\lambda}})` is the risk we
+# * RCPS: :math:`\mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha )`
+# :math:`\geq 1 - \delta$ where $R(\mathcal{T}_{\hat{\lambda}})` is the risk we
 # want to control and $\alpha$ is the desired risk
 #
 # * CRC: :math:`\mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha`
-# where :math:`[L_{n+1}(\hat{\lambda})` is the risk of a new observation and
+# where :math:`L_{n+1}(\hat{\lambda})` is the risk of a new observation and
 # :math:`\alpha` is the desired risk
 #
 # In both cases, the objective of the method is to find the optimal value of
@@ -174,9 +174,9 @@ plt.show()
 #   the average risk, the UCB of the risk (for RCPS methods) and the choice of
 #   the thresold :math:`\lambda`
 #     * We can see that among the RCPS methods, the Bernstein method is the
-#        one who gives the best results as for a given value of :math:\alpha`
+#        one who gives the best results as for a given value of :math:`\alpha`
 #        as we are above the required recall but with a larger value of
-#        :math:`\lambda`` than the two others bounds.
+#        :math:`\lambda` than the two others bounds.
 #     * The CRC method gives the best results
 
 fig, axs = plt.subplots(
