@@ -22,7 +22,7 @@ from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
 from mapie.utils import check_alpha
 
-METHODS = ["score", "cumulated_score", "raps"]
+METHODS = ["score", "cumulated_score", "raps","mondrian"]
 WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "other", 1, 2.5, (1, 2)]
 Y_PRED_PROBA_WRONG = [
@@ -257,6 +257,17 @@ STRATEGIES = {
             method="raps",
             cv="prefit",
             random_state=42
+        ),
+        ParamsPredict(
+            include_last_label="randomized",
+            agg_scores="mean"
+        )
+    ),
+    "mondrian": (
+        Params(
+            method="mondrian",
+            cv="prefit",
+            random_state=None
         ),
         ParamsPredict(
             include_last_label="randomized",

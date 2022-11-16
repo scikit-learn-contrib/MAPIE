@@ -167,7 +167,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
      [False False  True]]
     """
 
-    valid_methods_ = ["naive", "score", "cumulated_score", "top_k", "raps","mondrian"]
+    valid_methods_ = ["naive",
+                      "score",
+                      "cumulated_score",
+                      "top_k",
+                      "raps",
+                      "mondrian"
+                      ]
     fit_attributes = [
         "single_estimator_",
         "estimators_",
@@ -1230,7 +1236,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         check_alpha_and_n_samples(alpha_np, n)
 
         if self.method == "naive":
-            self.quantiles_ = 1 - alpha_np 
+            self.quantiles_ = 1 - alpha_np
         else:
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 if self.method == "raps":
@@ -1267,15 +1273,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     self.quantiles_ = compute_quantiles(
                         self.conformity_scores_,
                         alpha_np,
-                        mondrian = True
+                        mondrian=True
                     )
                 else:
-                    
+
                     self.quantiles_ = compute_quantiles(
                         self.conformity_scores_,
                         alpha_np
                     )
-                    
+
             else:
                 self.quantiles_ = (n + 1) * (1 - alpha_np)
 
@@ -1368,15 +1374,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 - y_pred_proba_last,
                 -EPSILON
             )
-        elif self.method == "mondrian": #TODO:
-            self.quantiles_ = np.transpose(self.quantiles_,[1,0])
+        elif self.method == "mondrian":
+            self.quantiles_ = np.transpose(self.quantiles_, [1, 0])
 
             prediction_sets = np.greater_equal(
-            y_pred_proba - (1 - self.quantiles_), -EPSILON
+                y_pred_proba - (1 - self.quantiles_),
+                -EPSILON
             )
-            
-            
-            
+
         else:
             raise ValueError(
                 "Invalid method. "
