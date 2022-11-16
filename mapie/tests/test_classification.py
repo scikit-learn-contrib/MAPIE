@@ -292,7 +292,8 @@ COVERAGES = {
     "naive": 5 / 9,
     "top_k": 1,
     "raps": 1,
-    "raps_randomized": 8/9
+    "raps_randomized": 8/9,
+    "mondrian": 1
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -472,6 +473,17 @@ y_toy_mapie = {
         [False, True, False],
         [False, True, False],
         [False, True, False],
+        [False, True, True],
+        [False, False, True],
+    ],
+    "mondrian": [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [False, True, True],
         [False, True, True],
         [False, False, True],
     ],
@@ -875,7 +887,8 @@ def test_toy_dataset_predictions(strategy: str) -> None:
         alpha=0.5,
         include_last_label=args_predict["include_last_label"],
         agg_scores=args_predict["agg_scores"]
-    )
+    ) 
+
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
     np.testing.assert_allclose(
         classification_coverage_score(y_toy, y_ps[:, :, 0]),
