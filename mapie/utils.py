@@ -616,7 +616,9 @@ def check_alpha_and_last_axis(vector: NDArray, alpha_np: NDArray):
         return vector, alpha_np
 
 
-def compute_quantiles(vector: NDArray, alpha: NDArray,mondrian = False) -> NDArray:
+def compute_quantiles(vector: NDArray,
+                      alpha: NDArray,
+                      mondrian=False) -> NDArray:
     """Compute the desired quantiles of a vector.
 
     Parameters
