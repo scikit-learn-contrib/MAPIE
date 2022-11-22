@@ -17,7 +17,7 @@ CALIBRATORS = [
 random_state = 20
 
 X, y = make_classification(
-    n_samples=100000,
+    n_samples=1000,
     n_classes=3,
     n_informative=4,
     random_state=random_state
@@ -105,9 +105,8 @@ def test_not_seen_calibrator() -> None:
 @pytest.mark.parametrize("calibrator", CALIBRATORS)
 def test_shape_of_output(
     calibrator: Union[str, RegressorMixin]
-    ) -> None:
+) -> None:
     mapie_cal = MapieCalibrator(calibration_method=calibrator)
     mapie_cal.fit(X, y)
     calib_ = mapie_cal.predict_proba(X)
-    assert len(calib_) == len(y)
-    assert np.size(calib_.shape) == 1
+    assert calib_.shape == (len(y), mapie_cal.n_classes_)

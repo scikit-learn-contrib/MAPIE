@@ -1,4 +1,4 @@
-from typing import cast, Union, Optional
+from typing import cast, Union, Optional, Any, Tuple
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -176,7 +176,7 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
 
 def get_binning_groups(
     y_score: NDArray,
-    num_bins: NDArray,
+    num_bins: int,
     strategy: str,
 ) -> Union[NDArray, NDArray]:
     """_summary_
@@ -202,7 +202,9 @@ def get_binning_groups(
     elif strategy == "array split":
         bin_groups = np.array_split(y_score, num_bins)
         bins = np.sort(
-            np.array([bin_group.max() for bin_group in bin_groups[:-1]]+[np.inf])
+            np.array(
+                [bin_group.max() for bin_group in bin_groups[:-1]]+[np.inf]
+                )
         )
     else:
         ValueError("We don't have this strategy")
@@ -231,19 +233,26 @@ def calc_bins(
     Returns
     -------
     _type_
-        Multiple arrays, the upper and lower bound of each bins, indices of 
-        y that belong to each bins, the accuracy, confidecne and size of each bins.
+        Multiple arrays, the upper and lower bound of each bins,
+        indices of y that belong to each bins, the accuracy,
+        confidence and size of each bins.
     """
     bins, binned = get_binning_groups(y_score, num_bins, strategy)
     bin_accs = np.zeros(num_bins)
     bin_confs = np.zeros(num_bins)
     bin_sizes = np.zeros(num_bins)
-        
+
     for bin in range(num_bins):
         bin_sizes[bin] = len(y_score[binned == bin])
         if bin_sizes[bin] > 0:
-            bin_accs[bin] = (y_true[binned==bin]).sum() / bin_sizes[bin]
-            bin_confs[bin] = (y_score[binned==bin]).sum() / bin_sizes[bin]
+            bin_accs[bin] = np.divide(
+                np.sum(y_true[binned == bin]),
+                bin_sizes[bin],
+            )
+            bin_confs[bin] = np.divide(
+                np.sum(y_score[binned == bin]),
+                bin_sizes[bin],
+            )
     return bins, bin_accs, bin_confs, bin_sizes
 
 
@@ -270,7 +279,7 @@ def check_number_bins(
     elif num_bins < 1:
         raise ValueError(
             """
-            Please provide a bin number greater than 
+            Please provide a bin number greater than
             or equal to  1.
             """
         )
@@ -302,8 +311,9 @@ def expected_calibration_error(
     split_strategy = check_split_strategy(split_strategy)
     check_number_bins(num_bins)
     y_true = cast(NDArray, column_or_1d(y_true))
+    y_scores = cast(NDArray, column_or_1d(y_scores))
 
-    if np.size(y_scores.shape) == 2:        
+    if np.size(y_scores.shape) == 2:
         y_score = cast(
             NDArray, column_or_1d(np.max(y_scores, axis=1))
         )
@@ -326,7 +336,7 @@ def top_label_ece(
     num_bins: int = 50,
     split_strategy: Optional[str] = None,
 ) -> float:
-    ece = 0
+    ece = float(0)
     split_strategy = check_split_strategy(split_strategy)
     check_number_bins(num_bins)
     y_true = cast(NDArray, column_or_1d(y_true))
@@ -339,11 +349,11 @@ def top_label_ece(
     labels = np.unique(y_score_arg)
 
     for label in labels:
-        label_ind = np.where(label==y_score_arg)[0]
+        label_ind = np.where(label == y_score_arg)[0]
         ece += expected_calibration_error(
             y_scores=y_score[label_ind],
             y_true=np.array(
-                y_true[label_ind]==label+1,
+                y_true[label_ind] == (label + 1),
                 dtype=int
             ),
             num_bins=num_bins,
@@ -362,7 +372,8 @@ def draw_reliability_graph(
     axs: plt.Axes = None,
 ):
     """
-    Plotting the accuracy and confidence per bins and showing the values of ECE and MCE.
+    Plotting the accuracy and confidence per bins and showing
+    the values of ECE and MCE.
     Parameters
     ----------
     y_score : _type_
@@ -394,31 +405,22 @@ def draw_reliability_graph(
     else:
         ax = axs
 
-    # x/y limits
     ax.set_xlim(0, 1.05)
     ax.set_ylim(0, 1)
-
-    # x/y labels
     ax.set_xlabel('Confidence score')
     ax.set_ylabel('Accuracy')
-
-    ## Create grid
-    ax.set_axisbelow(True) 
+    ax.set_axisbelow(True)
     ax.grid(color='gray', linestyle='dashed')
-
-    # Error bars
     ax.bar(
         bins, bins, width=1/(bins.shape[0]+1),
         alpha=0.3, edgecolor='black', color='r', hatch='\\'
     )
-
-    # Draw bars and identity line
     ax.bar(
         bins, bin_accs, width=1/(bins.shape[0]+1),
         alpha=1, edgecolor='black', color='b'
     )
-    ax.plot([0,1],[0,1], '--', color='gray', linewidth=2)
+    ax.plot([0, 1], [0, 1], '--', color='gray', linewidth=2)
     ax.set_title(title)
-    
+
     if axs is None:
         plt.show()

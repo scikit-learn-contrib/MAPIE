@@ -118,7 +118,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     ) -> NDArray:
         correct_label = np.where(max_prob_arg.ravel() == item)[0].ravel()
         if item not in calibrators:
-            calibrated_values[correct_label, item-1] = max_prob[correct_label].ravel()
+            calibrated_values[
+                correct_label, item-1
+                ] = max_prob[correct_label].ravel()
             warnings.warn(
                 "WARNING: This calibration was not previously seen"
                 + " and therefore scores will remain unchanged."
