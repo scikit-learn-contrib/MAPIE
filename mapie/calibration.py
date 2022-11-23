@@ -58,15 +58,26 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         item: int,
         calibrator: RegressorMixin,
         y_calib: NDArray,
-        top_class_prob_: NDArray,
-        top_class_prob_arg_: NDArray,
+        top_class_prob: NDArray,
+        top_class_prob_arg: NDArray,
+        sample_weight: Optional[ArrayLike] = None,
     ) -> RegressorMixin:
         calibrator_ = clone(calibrator)
-        correct_label = np.where(top_class_prob_arg_.ravel() == item)[0]
+        correct_label = np.where(top_class_prob_arg.ravel() == item)[0]
         y_calib_ = np.equal(y_calib[correct_label], item).astype(int)
-        label_top_class_prob_ = top_class_prob_[correct_label]
+        top_class_prob_ = top_class_prob[correct_label]
+
+        if sample_weight is not None:
+            sample_weight_ = sample_weight[correct_label]
+            sample_weight_, top_class_prob_, y_calib_ = check_null_weight(
+                sample_weight_,
+                top_class_prob_,
+                y_calib_
+            )
+        else:
+            sample_weight_ = sample_weight 
         calibrator_ = fit_estimator(
-            calibrator_, label_top_class_prob_, y_calib_
+            calibrator_, top_class_prob_, y_calib_, sample_weight_
         )
         return calibrator_
 
@@ -154,7 +165,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         assert type_of_target(y) in ["multiclass", "binary"]
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         y = cast(NDArray, y)
-        self.n_classes_ = len(np.unique(y))
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         random_state = check_random_state(random_state)
 
@@ -170,22 +180,22 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             shuffle=shuffle,
             stratify=stratify,
         )
-        X_train, y_train, X_calib, y_calib, sample_weight_train = results
+        X_train, y_train, X_calib, y_calib, sw_train, sw_calib = results
         X_train, y_train = indexable(X_train, y_train)
         X_calib, y_calib = indexable(X_calib, y_calib)
         y_train, y_calib = _check_y(y_train), _check_y(y_calib)
-        sample_weight_train, X_train, y_train = check_null_weight(
-            sample_weight_train,
+        sw_train, X_train, y_train = check_null_weight(
+            sw_train,
             X_train,
             y_train
         )
         y_train = cast(NDArray, y_train)
+        self.n_classes_ = len(np.unique(y_train))
 
         self.estimator = fit_estimator(
-            clone(estimator), X_train, y_train, sample_weight,
+            clone(estimator), X_train, y_train, sw_train,
         )
-
-        self.n_classes_ = len(np.unique(y))
+        
         y_pred_calib = self.estimator.predict_proba(X=X_calib)
         calibrator = self._get_calibrator(self.calibration_method)
         max_prob, max_prob_arg = self._get_labels(
@@ -200,10 +210,12 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 calibrator,
                 cast(NDArray, y_calib),
                 max_prob,
-                max_prob_arg
+                max_prob_arg,
+                sw_calib,
             )
             calibrators[item] = calibrator_
         self.calibrators = calibrators
+        self.classes_ = self.estimator.classes_
         return self
 
     def predict_proba(
@@ -211,12 +223,12 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
     ):
         check_is_fitted(self, self.fit_attributes)
-        y_pred_calib = self.estimator.predict_proba(X=X)
-        self.uncalib_pred = y_pred_calib
+        y_pred_probs = self.estimator.predict_proba(X=X)
+        self.uncalib_pred = y_pred_probs
 
         max_prob, max_prob_arg = self._get_labels(
             cast(str, self.method),
-            y_pred_calib
+            y_pred_probs
         )
 
         n = _num_samples(max_prob)
@@ -231,3 +243,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 self.calibrators,
             )
         return calibrated_test_values
+
+    def predict(
+        self,
+        X: ArrayLike,
+    ):
+        check_is_fitted(self, self.fit_attributes)
+        return self.classes_[np.argmax(self.predict_proba(X=X), axis=1)]

@@ -672,6 +672,7 @@ def check_calib_set(
     sample_weight: Optional[ArrayLike] = None,
     X_calib: Optional[ArrayLike] = None,
     y_calib: Optional[ArrayLike] = None,
+    sample_weight_calib: Optional[ArrayLike] = None,
     calib_size: Optional[float] = 0.3,
     random_state: Optional[Union[int, np.random.RandomState]] = None,
     shuffle: Optional[bool] = True,
@@ -689,7 +690,7 @@ def check_calib_set(
 
     Returns
     -------
-    Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]
+    Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]
         - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)
             X_train
         - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)
@@ -698,11 +699,18 @@ def check_calib_set(
             X_calib
         - [3]: ArrayLike of shape (n_samples_*calib_size,)
             y_calib
-        - [4]: ArrayLike of shape (n_samples_,)
+        - [4]: ArrayLike of shape (n_samples_*(1-calib_size),)
             sample_weight_train
+        - [5]: ArrayLike of shape (n_samples_*calib_size,)
+            sample_weight_calib
 
     """
     if X_calib is None or y_calib is None:
+        if sample_weight_calib is not None:
+            warnings.warn(
+            "WARNING: sample weight for calibration"
+            + " were provided without X_calib and y_calib."
+        )
         if sample_weight is None:
             (
                 X_train, X_calib, y_train, y_calib
@@ -722,7 +730,7 @@ def check_calib_set(
                     y_train,
                     y_calib,
                     sample_weight_train,
-                    _,
+                    sample_weight_calib,
             ) = train_test_split(
                     X,
                     y,
@@ -736,8 +744,9 @@ def check_calib_set(
         X_train, y_train, sample_weight_train = X, y, sample_weight
     X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
     y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
-    sample_weight_train = cast(ArrayLike, sample_weight_train)
-    return X_train, y_train, X_calib, y_calib, sample_weight_train
+    sw_train = cast(ArrayLike, sample_weight_train)
+    sw_calib = cast(ArrayLike, sample_weight_calib)
+    return X_train, y_train, X_calib, y_calib, sw_train, sw_calib
 
 
 def check_estimator_classification(

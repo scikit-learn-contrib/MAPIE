@@ -484,12 +484,13 @@ class MapieQuantileRegressor(MapieRegressor):
                 sample_weight,
                 X_calib,
                 y_calib,
+                None,
                 calib_size,
                 random_state,
                 shuffle,
                 stratify,
             )
-            X_train, y_train, X_calib, y_calib, sample_weight_train = results
+            X_train, y_train, X_calib, y_calib, sample_weight_train, _ = results
             X_train, y_train = indexable(X_train, y_train)
             X_calib, y_calib = indexable(X_calib, y_calib)
             y_train, y_calib = _check_y(y_train), _check_y(y_calib)
