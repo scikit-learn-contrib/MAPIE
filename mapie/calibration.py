@@ -60,7 +60,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         y_calib: NDArray,
         top_class_prob: NDArray,
         top_class_prob_arg: NDArray,
-        sample_weight: Optional[ArrayLike] = None,
+        sample_weight: Optional[NDArray] = None,
     ) -> RegressorMixin:
         calibrator_ = clone(calibrator)
         correct_label = np.where(top_class_prob_arg.ravel() == item)[0]
@@ -75,7 +75,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 y_calib_
             )
         else:
-            sample_weight_ = sample_weight 
+            sample_weight_ = sample_weight
         calibrator_ = fit_estimator(
             calibrator_, top_class_prob_, y_calib_, sample_weight_
         )
@@ -147,7 +147,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
+        sample_weight: Optional[NDArray] = None,
         X_calib: Optional[ArrayLike] = None,
         y_calib: Optional[ArrayLike] = None,
         calib_size: Optional[float] = 0.3,
@@ -165,6 +165,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         assert type_of_target(y) in ["multiclass", "binary"]
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         y = cast(NDArray, y)
+        sample_weight = cast(Optional[NDArray], sample_weight)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         random_state = check_random_state(random_state)
 
@@ -172,7 +173,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         results = check_calib_set(
             X,
             y,
-            sample_weight=sample_weight,
+            sw=sample_weight,
             X_calib=X_calib,
             y_calib=y_calib,
             calib_size=calib_size,
@@ -195,7 +196,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         self.estimator = fit_estimator(
             clone(estimator), X_train, y_train, sw_train,
         )
-        
         y_pred_calib = self.estimator.predict_proba(X=X_calib)
         calibrator = self._get_calibrator(self.calibrator)
         max_prob, max_prob_arg = self._get_labels(

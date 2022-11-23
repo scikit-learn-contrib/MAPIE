@@ -949,6 +949,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         X, y = indexable(X, y)
         y = _check_y(y)
         assert type_of_target(y) == "multiclass"
+        sample_weight = cast(Optional[NDArray], sample_weight)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         y = cast(NDArray, y)
         n_samples = _num_samples(y)

@@ -527,6 +527,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         agg_function = self._check_agg_function(self.agg_function)
         X, y = indexable(X, y)
         y = _check_y(y)
+        sample_weight = cast(Optional[NDArray], sample_weight)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         self.conformity_score_function_ = check_conformity_score(

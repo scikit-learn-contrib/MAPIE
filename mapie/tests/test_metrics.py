@@ -3,11 +3,14 @@ Testing for metrics module.
 """
 import pytest
 import numpy as np
+from numpy.random import RandomState
 from mapie.metrics import (
     classification_coverage_score,
     classification_mean_width_score,
     regression_coverage_score,
     regression_mean_width_score,
+    expected_calibration_error,
+    top_label_ece
 )
 from mapie._typing import ArrayLike
 
@@ -33,6 +36,11 @@ y_pred_set = np.array(
         [False, True, False, True],
     ]
 )
+
+prng = RandomState(1234567890)
+y_score = prng.random(51)
+y_scores = prng.random((51, 5))
+y_true = prng.randint(0, 2, 51)
 
 
 def test_regression_ypredlow_shape() -> None:
@@ -148,3 +156,18 @@ def test_regression_ypredup_type_mean_width_score() -> None:
     "Test that list(y_pred_up) gives right coverage."
     scr = regression_mean_width_score(y_preds[:, 1], list(y_preds[:, 2]))
     assert scr == 2.3
+
+
+def test_ece_score() -> None:
+    scr = expected_calibration_error(y_score, y_true)
+    assert np.round(scr, 4) == 0.4471
+
+
+def test_ece_scores() -> None:
+    scr = expected_calibration_error(y_scores, y_true)
+    assert np.round(scr, 4) == 0.5363
+
+
+def test_top_lable_ece() -> None:
+    scr = top_label_ece(y_scores, y_true)
+    assert np.round(scr, 4) == 0.7862

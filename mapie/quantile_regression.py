@@ -476,6 +476,7 @@ class MapieQuantileRegressor(MapieRegressor):
             self._check_parameters()
             checked_estimator = self._check_estimator(self.estimator)
             alpha = self._check_alpha(self.alpha)
+            sample_weight = cast(Optional[NDArray], sample_weight)
             X, y = indexable(X, y)
             random_state = check_random_state(random_state)
             results = check_calib_set(
@@ -490,14 +491,14 @@ class MapieQuantileRegressor(MapieRegressor):
                 shuffle,
                 stratify,
             )
-            X_train, y_train, X_calib, y_calib, sample_weight_train, _ = results
+            X_train, y_train, X_calib, y_calib, sw_train, _ = results
             X_train, y_train = indexable(X_train, y_train)
             X_calib, y_calib = indexable(X_calib, y_calib)
             y_train, y_calib = _check_y(y_train), _check_y(y_calib)
             self.n_calib_samples = _num_samples(y_calib)
             check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
-            sample_weight_train, X_train, y_train = check_null_weight(
-                sample_weight_train,
+            sw_train, X_train, y_train = check_null_weight(
+                sw_train,
                 X_train,
                 y_train
             )
@@ -525,7 +526,7 @@ class MapieQuantileRegressor(MapieRegressor):
                 else:
                     cloned_estimator_.set_params(**params)
                 self.estimators_.append(fit_estimator(
-                    cloned_estimator_, X_train, y_train, sample_weight_train
+                    cloned_estimator_, X_train, y_train, sw_train
                 ))
                 y_calib_preds[i] = self.estimators_[-1].predict(X_calib)
 

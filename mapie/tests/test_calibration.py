@@ -29,13 +29,13 @@ ESTIMATORS = [
 
 results = {
     "normal": [
-    [0.        , 0.66666667, 0.        ],
-    [0.33333333, 0.        , 0.        ],
-    [0.        , 0.66666667, 0.        ],
-    [0.        , 0.66666667, 0.        ],
-    [0.        , 0.66666667, 0.        ],
-    [0.        , 0.        , 0.2       ],
-    [0.        , 0.        , 0.2       ]
+        [0, 0.66666667, 0],
+        [0.33333333, 0, 0],
+        [0, 0.66666667, 0],
+        [0, 0.66666667, 0],
+        [0, 0.66666667, 0],
+        [0, 0, 0.2],
+        [0, 0, 0.2]
     ],
 }
 
@@ -172,14 +172,13 @@ def test_same_predict():
 def test_correct_results():
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(
-        X=X_train, 
+        X=X_train,
         y=y_train,
         X_calib=X_calib,
         y_calib=y_calib
     )
     pred_ = mapie_cal.predict_proba(X_test)
     np.testing.assert_allclose(results["normal"], pred_)
-
 
 
 @pytest.mark.parametrize("calibrator", CALIBRATORS)
@@ -202,7 +201,6 @@ def test_results_with_constant_sample_weights(
     y_pred0 = mapie_clf0.predict_proba(X)
     y_pred1 = mapie_clf1.predict_proba(X)
     y_pred2 = mapie_clf2.predict_proba(X)
-
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred0, y_pred2)
 
