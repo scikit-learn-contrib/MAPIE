@@ -1,6 +1,11 @@
 from typing import Union
 import numpy as np
+import pandas as pd
 from sklearn.calibration import _SigmoidCalibration
+from sklearn.pipeline import make_pipeline, Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.base import RegressorMixin, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
@@ -58,7 +63,7 @@ def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_cal = MapieCalibrator()
     assert mapie_cal.method == "top_label"
-    assert mapie_cal.calibration_method is None
+    assert mapie_cal.calibrator is None
     assert mapie_cal.cv == "split"
 
 
@@ -93,7 +98,7 @@ def test_false_str_estimator() -> None:
         match=r".*Please provide a valid string*",
     ):
         mapie_cal = MapieCalibrator(
-            calibration_method="not_estimator"
+            calibrator="not_estimator"
         )
         mapie_cal.fit(X, y)
 
@@ -101,7 +106,7 @@ def test_false_str_estimator() -> None:
 def test_estimator_none() -> None:
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(X, y)
-    assert mapie_cal.calibration_method == "sigmoid"
+    assert mapie_cal.calibrator == "sigmoid"
 
 
 def test_other_methods() -> None:
@@ -132,7 +137,7 @@ def test_shape_of_output(
 ) -> None:
     mapie_cal = MapieCalibrator(
         estimator=estimator,
-        calibration_method=calibrator,
+        calibrator=calibrator,
     )
     mapie_cal.fit(X, y)
     calib_ = mapie_cal.predict_proba(X)
@@ -188,9 +193,9 @@ def test_results_with_constant_sample_weights(
     or constant with different values.
     """
     n_samples = len(X)
-    mapie_clf0 = MapieCalibrator(estimator=estimator, calibration_method=calibrator)
-    mapie_clf1 = MapieCalibrator(estimator=estimator, calibration_method=calibrator)
-    mapie_clf2 = MapieCalibrator(estimator=estimator, calibration_method=calibrator)
+    mapie_clf0 = MapieCalibrator(estimator=estimator, calibrator=calibrator)
+    mapie_clf1 = MapieCalibrator(estimator=estimator, calibrator=calibrator)
+    mapie_clf2 = MapieCalibrator(estimator=estimator, calibrator=calibrator)
     mapie_clf0.fit(X, y, sample_weight=None)
     mapie_clf1.fit(X, y, sample_weight=np.ones(shape=n_samples))
     mapie_clf2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
@@ -200,3 +205,35 @@ def test_results_with_constant_sample_weights(
 
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred0, y_pred2)
+
+
+def test_pipeline_compatibility() -> None:
+    """Check that MAPIE works on pipeline based on pandas dataframes"""
+    X = pd.DataFrame(
+        {
+            "x_cat": ["A", "A", "B", "A", "A", "B"],
+            "x_num": [0, 1, 1, 4, np.nan, 5],
+        }
+    )
+    y = pd.Series([0, 1, 2, 0, 1, 0])
+    numeric_preprocessor = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="mean")),
+        ]
+    )
+    categorical_preprocessor = Pipeline(
+        steps=[
+            ("encoding", OneHotEncoder(handle_unknown="ignore"))
+        ]
+    )
+    preprocessor = ColumnTransformer(
+        [
+            ("cat", categorical_preprocessor, ["x_cat"]),
+            ("num", numeric_preprocessor, ["x_num"])
+        ]
+    )
+    pipe = make_pipeline(preprocessor, LogisticRegression())
+    pipe.fit(X, y)
+    mapie = MapieCalibrator(estimator=pipe)
+    mapie.fit(X, y)
+    mapie.predict(X)

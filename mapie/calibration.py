@@ -45,12 +45,12 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         self,
         estimator: Optional[ClassifierMixin] = None,
         method: str = "top_label",
-        calibration_method: Optional[Union[str, RegressorMixin]] = None,
+        calibrator: Optional[Union[str, RegressorMixin]] = None,
         cv: Optional[Union[int, str, BaseCrossValidator]] = "split",
     ) -> None:
         self.estimator = estimator
         self.method = method
-        self.calibration_method = calibration_method
+        self.calibrator = calibrator
         self.cv = cv
 
     def _fit_calibrator(
@@ -81,20 +81,20 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         )
         return calibrator_
 
-    def _check_calibration_method(
+    def _check_calibrator(
         self,
-        calibration_method: Union[str, RegressorMixin]
+        calibrator: Union[str, RegressorMixin]
     ) -> Union[str, RegressorMixin]:
-        if calibration_method is None:
-            calibration_method = "sigmoid"
+        if calibrator is None:
+            calibrator = "sigmoid"
         if (
-            isinstance(calibration_method, str) and
-            calibration_method not in self.valid_calibrators.keys()
+            isinstance(calibrator, str) and
+            calibrator not in self.valid_calibrators.keys()
         ):
             raise ValueError(
                 "Please provide a valid string from the valid calibrators."
             )
-        return calibration_method
+        return calibrator
 
     def _get_labels(
         self, method: str,
@@ -110,12 +110,12 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     def _get_calibrator(
         self,
-        calibration_method: Union[str, RegressorMixin]
+        calibrator: Union[str, RegressorMixin]
     ) -> RegressorMixin:
-        if calibration_method in self.valid_calibrators.keys():
-            calibrator = self.valid_calibrators[calibration_method]
+        if calibrator in self.valid_calibrators.keys():
+            calibrator = self.valid_calibrators[calibrator]
         else:
-            calibrator = calibration_method
+            calibrator = calibrator
         check_estimator_fit_predict(calibrator)
         return calibrator
 
@@ -156,8 +156,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         stratify: Optional[ArrayLike] = None,
     ):
         cv = check_cv(self.cv)
-        self.calibration_method = self._check_calibration_method(
-            self.calibration_method
+        self.calibrator = self._check_calibrator(
+            self.calibrator
             )
         estimator = check_estimator_classification(X, y, self.estimator)
         X, y = indexable(X, y)
@@ -197,7 +197,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         )
         
         y_pred_calib = self.estimator.predict_proba(X=X_calib)
-        calibrator = self._get_calibrator(self.calibration_method)
+        calibrator = self._get_calibrator(self.calibrator)
         max_prob, max_prob_arg = self._get_labels(
             cast(str, self.method),
             y_pred_calib
