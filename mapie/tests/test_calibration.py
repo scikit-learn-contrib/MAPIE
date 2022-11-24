@@ -183,8 +183,8 @@ def test_correct_results() -> None:
     )
     pred_ = mapie_cal.predict_proba(X_test)
     top_label_ece_ = top_label_ece(pred_, y_test)
-    np.testing.assert_array_almost_equal(  # type:ignore
-        results["y_score"], pred_
+    np.testing.assert_array_almost_equal(
+        results["y_score"], pred_  # type:ignore
     )
     assert results["top_label_ece"] == top_label_ece_
 
@@ -199,8 +199,8 @@ def test_correct_results_binary() -> None:
     )
     pred_ = mapie_cal.predict_proba(X_test)
     top_label_ece_ = top_label_ece(pred_, y_test)
-    np.testing.assert_array_almost_equal(  # type:ignore
-        results["y_score"], pred_
+    np.testing.assert_array_almost_equal(
+        results["y_score"], pred_  # type:ignore
     )
     assert results["top_label_ece"] == top_label_ece_
 
