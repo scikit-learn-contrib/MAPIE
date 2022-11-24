@@ -353,7 +353,7 @@ def test_quantile_prefit_non_iterable(estimator: Any) -> None:
 
 
 def test_calib_set_no_Xy_but_sample_weight() -> None:
-    """Test final values upper bound lower bound above/below one another"""
+    """Test warning message if sample weight provided but no X y in calib."""
     X = np.array([4, 5, 6])
     y = np.array([4, 3, 2])
     sample_weight = np.array([4, 4, 4])
@@ -367,7 +367,7 @@ def test_calib_set_no_Xy_but_sample_weight() -> None:
 
 @pytest.mark.parametrize("strategy", ["quantile", "uniform", "array split"])
 def test_binning_group_strategies(strategy: str) -> None:
-    """Test that invalid verboses raise errors."""
+    """Test that different strategies have the correct outputs."""
     bins_ = get_binning_groups(
         y_score, num_bins=10, strategy=strategy
     )
@@ -379,18 +379,20 @@ def test_binning_group_strategies(strategy: str) -> None:
 
 
 def test_wrong_split_strategy() -> None:
-    """Test that invalid verboses raise errors."""
+    """Test for wrong split strategies."""
     with pytest.raises(ValueError, match=r"Please provide a valid*"):
         check_split_strategy(strategy="not_valid")
 
 
 def test_split_strategy_None() -> None:
+    """Test what occurs if None is provided as split strategy."""
     strategy = check_split_strategy(None)
     assert strategy == "uniform"
 
 
 @pytest.mark.parametrize("bins", ["random", LinearRegression(), 0.5])
 def test_num_bins_not_int(bins: int) -> None:
+    """Test input for bins is an integer."""
     with pytest.raises(
         ValueError,
         match=r"Please provide a bin number as an int*"
@@ -399,6 +401,7 @@ def test_num_bins_not_int(bins: int) -> None:
 
 
 def test_num_bins_below_zero() -> None:
+    """Test input for bins is positive integer."""
     with pytest.raises(
         ValueError,
         match=r"Please provide a bin number greater*"
@@ -407,6 +410,9 @@ def test_num_bins_below_zero() -> None:
 
 
 def test_binary_target() -> None:
+    """
+    Test that input of binary will provide an error message for non binary.
+    """
     with pytest.raises(
         ValueError,
         match=r"Please provide y_true as a bina*"
@@ -415,5 +421,6 @@ def test_binary_target() -> None:
 
 
 def test_change_values_zero_one() -> None:
+    """Test that binary output are changed to zero one outputs."""
     array_ = check_binary_zero_one(np.array([0, 4, 4]))
     assert (np.unique(array_) == np.array([0, 1])).all()

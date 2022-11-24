@@ -161,7 +161,7 @@ def test_regression_ypredup_type_mean_width_score() -> None:
 
 def test_ece_score() -> None:
     """
-    Test the expected calibration score for 
+    Test the expected calibration score for
     dataset if score is list of max scores.
     """
     scr = expected_calibration_error(y_score, y_true)
@@ -170,7 +170,7 @@ def test_ece_score() -> None:
 
 def test_ece_scores() -> None:
     """
-    Test the expected calibration score for 
+    Test the expected calibration score for
     dataset if score probability output.
     """
     scr = expected_calibration_error(y_scores, y_true)
