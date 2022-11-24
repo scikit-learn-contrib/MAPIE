@@ -72,7 +72,7 @@ def test_default_parameters() -> None:
 
 
 def test_default_fit_params() -> None:
-    """Test default sample weights."""
+    """Test default sample weights and other parameters."""
     mapie_cal = MapieCalibrator()
     assert (
         signature(mapie_cal.fit).parameters["sample_weight"].default
@@ -97,6 +97,7 @@ def test_default_fit_params() -> None:
 
 
 def test_false_str_estimator() -> None:
+    """Test invalid string input for calibrator."""
     with pytest.raises(
         ValueError,
         match=r".*Please provide a valid string*",
@@ -108,12 +109,14 @@ def test_false_str_estimator() -> None:
 
 
 def test_estimator_none() -> None:
+    """Test that no input for calibrator will return a sigmoid"""
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(X, y)
     assert mapie_cal.calibrator == "sigmoid"
 
 
 def test_other_methods() -> None:
+    """Test that invalid string for method returns error"""
     with pytest.raises(
         ValueError,
         match=r".*No other methods have been*",
@@ -123,6 +126,10 @@ def test_other_methods() -> None:
 
 
 def test_not_seen_calibrator() -> None:
+    """
+    Test that there is a warning if no calibration occurs
+    due to no calibrator for this class.
+    """
     with pytest.warns(
         UserWarning,
         match=r".*WARNING: This calibration was not previously seen*"
@@ -139,6 +146,7 @@ def test_shape_of_output(
     calibrator: Union[str, RegressorMixin],
     estimator: ClassifierMixin
 ) -> None:
+    """Test that the size of the outputs are coherent."""
     mapie_cal = MapieCalibrator(
         estimator=estimator,
         calibrator=calibrator,
@@ -149,6 +157,10 @@ def test_shape_of_output(
 
 
 def test_number_of_classes_equal_calibrators() -> None:
+    """
+    Test that the number of calibrators is the same as the number
+    of classes in the calibration step.
+    """
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(
         X=X_train,
@@ -161,7 +173,8 @@ def test_number_of_classes_equal_calibrators() -> None:
 
 
 def test_same_predict() -> None:
-    mapie_cal = MapieCalibrator()
+    """Test that the same prediction is made regardless of the calibration."""
+    mapie_cal = MapieCalibrator(method="top_label")
     mapie_cal.fit(
         X=X_train,
         y=y_train,
@@ -174,6 +187,10 @@ def test_same_predict() -> None:
 
 
 def test_correct_results() -> None:
+    """
+    Test that the y_score and top label score from the test dataset result
+    in the correct scores (in a multi-class setting).
+    """
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(
         X=X_train,
@@ -190,6 +207,10 @@ def test_correct_results() -> None:
 
 
 def test_correct_results_binary() -> None:
+    """
+    Test that the y_score and top label score from the test dataset result
+    in the correct scores (in a binary setting).
+    """
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(
         X=X_train,
@@ -206,6 +227,10 @@ def test_correct_results_binary() -> None:
 
 
 def test_different_binary_y_combinations() -> None:
+    """
+    Test that despite the different maximum in y value, the
+    scores are always the same.
+    """
     X_comb, y_comb = make_classification(
         n_samples=20,
         n_classes=3,
@@ -227,6 +252,8 @@ def test_different_binary_y_combinations() -> None:
     y_score2 = mapie_cal.predict_proba(X_comb)
     np.testing.assert_array_almost_equal(y_score, y_score1)
     np.testing.assert_array_almost_equal(y_score, y_score2)
+    assert top_label_ece(y_score, y_comb) == top_label_ece(y_score1, y_comb)
+    assert top_label_ece(y_score, y_comb) == top_label_ece(y_score2, y_comb)
 
 
 @pytest.mark.parametrize("calibrator", CALIBRATORS)
