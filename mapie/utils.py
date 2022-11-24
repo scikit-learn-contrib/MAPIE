@@ -18,6 +18,8 @@ from ._compatibility import np_quantile
 from .conformity_scores import AbsoluteConformityScore, ConformityScore
 from ._typing import ArrayLike, NDArray
 
+SPLIT_STRATEGIES = ["uniform", "quantile", "array split"]
+
 
 def check_null_weight(
     sample_weight: Optional[NDArray], X: ArrayLike, y: ArrayLike
@@ -668,10 +670,10 @@ def compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
 def check_calib_set(
     X: ArrayLike,
     y: ArrayLike,
-    sw: Optional[NDArray] = None,
+    sample_weight: Optional[NDArray] = None,
     X_calib: Optional[ArrayLike] = None,
     y_calib: Optional[ArrayLike] = None,
-    sw_calib: Optional[NDArray] = None,
+    sample_weight_calib: Optional[NDArray] = None,
     calib_size: Optional[float] = 0.3,
     random_state: Optional[Union[int, np.random.RandomState]] = None,
     shuffle: Optional[bool] = True,
@@ -705,13 +707,14 @@ def check_calib_set(
             sample_weight_calib
 
     """
+    sw_calib = sample_weight_calib
     if X_calib is None or y_calib is None:
         if sw_calib is not None:
             warnings.warn(
                 "WARNING: sample weight for calibration"
                 + " were provided without X_calib and y_calib."
             )
-        if sw is None:
+        if sample_weight is None:
             (
                 X_train, X_calib, y_train, y_calib
             ) = train_test_split(
@@ -722,7 +725,7 @@ def check_calib_set(
                     shuffle=shuffle,
                     stratify=stratify
             )
-            sw_train = sw
+            sw_train = sample_weight
         else:
             (
                     X_train,
@@ -734,14 +737,14 @@ def check_calib_set(
             ) = train_test_split(
                     X,
                     y,
-                    sw,
+                    sample_weight,
                     test_size=calib_size,
                     random_state=random_state,
                     shuffle=shuffle,
                     stratify=stratify
             )
     else:
-        X_train, y_train, sw_train = X, y, sw
+        X_train, y_train, sw_train = X, y, sample_weight
     X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
     y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
     return X_train, y_train, X_calib, y_calib, sw_train, sw_calib
@@ -833,13 +836,13 @@ def get_binning_groups(
         bins = np.linspace(0.0, 1.0, num_bins)
     elif strategy == "array split":
         bin_groups = np.array_split(y_score, num_bins)
-        bins = np.sort(
-            np.array(
-                [bin_group.max() for bin_group in bin_groups[:-1]]+[np.inf]
-                )
+        bins = np.sort(np.array(
+                [
+                    bin_group.max() for bin_group in bin_groups[:-1]
+                ]
+                + [np.inf]
+            )
         )
-    else:
-        ValueError("We don't have this strategy")
     bin_assignments = np.digitize(y_score, bins, right=True)
     return bins, bin_assignments
 
@@ -891,10 +894,9 @@ def calc_bins(
 def check_split_strategy(
     strategy: Optional[str]
 ) -> str:
-    valid_split_strategies = ["uniform", "quantile", "array split"]
     if strategy is None:
         strategy = "uniform"
-    if strategy not in valid_split_strategies:
+    if strategy not in SPLIT_STRATEGIES:
         raise ValueError(
             "Please provide a valid splitting strategy."
         )
@@ -921,8 +923,11 @@ def check_binary_zero_one(
     y_true: ArrayLike
 ) -> NDArray:
     cast(NDArray, column_or_1d(y_true))
-    assert type_of_target(y_true) == "binary"
-    if (np.unique(y_true) != np.array([0, 1])).all():
+    if type_of_target(y_true) != "binary":
+        raise ValueError(
+            "Please provide y_true as a binary array."
+        )
+    if (np.unique(y_true) != np.array([0, 1])).any():
         idx_min = np.where(y_true == np.min(y_true))[0]
         y_true[idx_min] = 0
         idx_max = np.where(y_true == np.max(y_true))[0]

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 import numpy as np
+from numpy.random import RandomState
 import pytest
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
@@ -18,6 +19,11 @@ from mapie.utils import (
     compute_quantiles,
     fit_estimator,
     check_lower_upper_bounds,
+    check_calib_set,
+    get_binning_groups,
+    check_split_strategy,
+    check_number_bins,
+    check_binary_zero_one,
 )
 from mapie.quantile_regression import MapieQuantileRegressor
 
@@ -36,6 +42,54 @@ ALPHAS = [
     np.array([.1]),
     np.array([.05, .1, .2]),
 ]
+
+
+prng = RandomState(1234567890)
+y_score = prng.random(51)
+y_scores = prng.random((51, 5))
+y_true = prng.randint(0, 2, 51)
+
+results_binning = {
+    "quantile":
+        (
+            [
+                0.03075388, 0.17261836, 0.33281326, 0.43939618,
+                0.54867626, 0.64881987, 0.73440899, 0.77793816,
+                0.89000413, 0.99610621
+            ],
+            [
+                5, 5, 8, 9, 4, 8, 2, 9, 4, 4, 3, 6, 3, 9, 0,
+                1, 1, 3, 2, 7, 6, 6, 1, 8, 4, 5, 4, 5, 3, 2,
+                1, 2, 8, 9, 1, 5, 6, 8, 4, 6, 7, 9, 6, 2, 7,
+                7, 3, 9, 2, 8, 7
+            ],
+        ),
+    "uniform":
+        (
+            [
+                0, 0.11111111, 0.22222222, 0.33333333, 0.44444444,
+                0.55555556, 0.66666667, 0.77777778, 0.88888889, 1
+            ],
+            [
+                6, 6, 8, 9, 5, 8, 3, 9, 5, 5, 4, 7, 4, 9, 1, 2, 1,
+                4, 3, 7, 6, 7, 2, 8, 5, 6, 5, 6, 4, 3, 1, 2, 8, 9,
+                2, 6, 7, 8, 5, 6, 7, 9, 7, 3, 7, 7, 4, 9, 3, 8, 7
+            ],
+        ),
+    "array split":
+        (
+            [
+                0.62689056, 0.74743526, 0.87642114, 0.88321124,
+                0.8916548,  0.94083846, 0.94999075, 0.98759822,
+                0.99610621, np.inf
+            ],
+            [
+                0, 0, 4, 4, 0, 2, 0, 8, 0, 0, 0, 1, 0, 6, 0, 0,
+                0, 0, 0, 1, 1, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
+                2, 7, 0, 1, 1, 3, 0, 1, 1, 5, 1, 0, 2, 2, 0, 5, 0, 2, 2
+            ],
+        ),
+}
 
 
 class DumbEstimator:
@@ -318,3 +372,75 @@ def test_quantile_prefit_non_iterable(estimator: Any) -> None:
             [1, 2, 3],
             [4, 5, 6]
         )
+
+
+def test_calib_set_no_Xy_but_sample_weight() -> None:
+    """Test final values upper bound lower bound above/below one another"""
+    X = np.array([4, 5, 6])
+    y = np.array([4, 3, 2])
+    sample_weight = np.array([4, 4, 4])
+    sample_weight_calib = np.array([4, 3, 4])
+    with pytest.warns(UserWarning, match=r"WARNING: sample weight*"):
+        check_calib_set(
+            X=X, y=y, sample_weight=sample_weight,
+            sample_weight_calib=sample_weight_calib
+        )
+
+
+@pytest.mark.parametrize("strategy", ["quantile", "uniform", "array split"])
+def test_binning_group_strategies(strategy: str) -> None:
+    """Test that invalid verboses raise errors."""
+    bins_, assignement_ = get_binning_groups(
+        y_score, num_bins=10, strategy=strategy
+    )
+    print(strategy)
+    np.testing.assert_allclose(
+        results_binning[strategy][0],
+        bins_,
+        rtol=1e-05
+    )
+    np.testing.assert_allclose(
+        results_binning[strategy][1],
+        assignement_,
+    )
+
+
+def test_wrong_split_strategy() -> None:
+    """Test that invalid verboses raise errors."""
+    with pytest.raises(ValueError, match=r"Please provide a valid*"):
+        check_split_strategy(strategy="not_valid")
+
+
+def test_split_strategy_None() -> None:
+    strategy = check_split_strategy(None)
+    assert strategy == "uniform"
+
+
+@pytest.mark.parametrize("bins", ["random", LinearRegression(), 0.5])
+def test_num_bins_not_int(bins: int) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"Please provide a bin number as an int*"
+    ):
+        check_number_bins(num_bins=bins)
+
+
+def test_num_bins_below_zero() -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"Please provide a bin number greater*"
+    ):
+        check_number_bins(num_bins=-1)
+
+
+def test_binary_target() -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"Please provide y_true as a bina*"
+    ):
+        check_binary_zero_one(np.array([0, 5, 4]))
+
+
+def test_change_values_zero_one() -> None:
+    array_ = check_binary_zero_one(np.array([0, 4, 4]))
+    assert (np.unique(array_) == np.array([0, 1])).all()

@@ -37,6 +37,7 @@ y_pred_set = np.array(
     ]
 )
 
+
 prng = RandomState(1234567890)
 y_score = prng.random(51)
 y_scores = prng.random((51, 5))
@@ -170,4 +171,4 @@ def test_ece_scores() -> None:
 
 def test_top_lable_ece() -> None:
     scr = top_label_ece(y_scores, y_true)
-    assert np.round(scr, 4) == 0.7862
+    assert np.round(scr, 4) == 0.264

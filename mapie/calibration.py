@@ -26,6 +26,7 @@ from .utils import (
     fit_estimator,
     check_estimator_classification,
     check_estimator_fit_predict,
+    check_binary_zero_one,
 )
 
 
@@ -64,7 +65,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     ) -> RegressorMixin:
         calibrator_ = clone(calibrator)
         correct_label = np.where(top_class_prob_arg.ravel() == item)[0]
-        y_calib_ = np.equal(y_calib[correct_label], item).astype(int)
+        y_calib_ = check_binary_zero_one(
+            np.equal(y_calib[correct_label], item).astype(int)
+        )
         top_class_prob_ = top_class_prob[correct_label]
 
         if sample_weight is not None:
@@ -173,7 +176,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         results = check_calib_set(
             X,
             y,
-            sw=sample_weight,
+            sample_weight=sample_weight,
             X_calib=X_calib,
             y_calib=y_calib,
             calib_size=calib_size,
@@ -223,7 +226,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
     ):
         check_is_fitted(self, self.fit_attributes)
-        y_pred_probs = self.estimator.predict_proba(X=X)
+        y_pred_probs = self.estimator.predict_proba(X=X)  # type: ignore
         self.uncalib_pred = y_pred_probs
 
         max_prob, max_prob_arg = self._get_labels(

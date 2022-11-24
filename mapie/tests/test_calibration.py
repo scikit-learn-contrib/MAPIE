@@ -13,6 +13,7 @@ from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 
 from mapie.calibration import MapieCalibrator
+from mapie.metrics import top_label_ece, expected_calibration_error
 from inspect import signature
 import pytest
 
@@ -28,16 +29,19 @@ ESTIMATORS = [
 ]
 
 results = {
-    "normal": [
+    "y_score": [
         [0, 0.66666667, 0],
-        [0.33333333, 0, 0],
+        [0.66666667, 0, 0],
         [0, 0.66666667, 0],
         [0, 0.66666667, 0],
         [0, 0.66666667, 0],
-        [0, 0, 0.2],
-        [0, 0, 0.2]
+        [0, 0, 0.8],
+        [0, 0, 0.8],
     ],
+    "top_label_ece": 0.2888888888888889,
+    "ece": 0.16480978061996931,
 }
+
 
 X, y = make_classification(
     n_samples=20,
@@ -144,7 +148,7 @@ def test_shape_of_output(
     assert calib_.shape == (len(y), mapie_cal.n_classes_)
 
 
-def test_number_of_classes_equal_calibrators():
+def test_number_of_classes_equal_calibrators() -> None:
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(
         X=X_train,
@@ -156,7 +160,7 @@ def test_number_of_classes_equal_calibrators():
     assert len(mapie_cal.calibrators) == len(np.unique(y_pred_calib_set))
 
 
-def test_same_predict():
+def test_same_predict() -> None:
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(
         X=X_train,
@@ -169,7 +173,21 @@ def test_same_predict():
     np.testing.assert_allclose(y_pred_calib_set, y_pred_calibrated_test_set)
 
 
-def test_correct_results():
+def test_correct_binary_ece_results() -> None:
+    X_bin, y_comb = make_classification(
+        n_samples=200000,
+        n_classes=2,
+        n_informative=4,
+        random_state=random_state
+    )
+    mapie_cal = MapieCalibrator()
+    mapie_cal.fit(X_bin, y_comb)
+    pred_ = mapie_cal.predict_proba(X_bin)
+    ece_ = expected_calibration_error(pred_, y_comb)
+    np.testing.assert_almost_equal(results["ece"], ece_, decimal=2)
+
+
+def test_correct_results() -> None:
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(
         X=X_train,
@@ -178,7 +196,47 @@ def test_correct_results():
         y_calib=y_calib
     )
     pred_ = mapie_cal.predict_proba(X_test)
-    np.testing.assert_allclose(results["normal"], pred_)
+    top_label_ece_ = top_label_ece(pred_, y_test)
+    np.testing.assert_allclose(results["y_score"], pred_)
+    np.testing.assert_allclose(results["top_label_ece"], top_label_ece_)
+
+
+def test_correct_results_binary() -> None:
+    mapie_cal = MapieCalibrator()
+    mapie_cal.fit(
+        X=X_train,
+        y=y_train,
+        X_calib=X_calib,
+        y_calib=y_calib
+    )
+    pred_ = mapie_cal.predict_proba(X_test)
+    top_label_ece_ = top_label_ece(pred_, y_test)
+    np.testing.assert_allclose(results["y_score"], pred_)
+    np.testing.assert_allclose(results["top_label_ece"], top_label_ece_)
+
+
+def test_different_binary_y_combinations() -> None:
+    X_comb, y_comb = make_classification(
+        n_samples=20,
+        n_classes=3,
+        n_informative=4,
+        random_state=random_state
+    )
+    mapie_cal = MapieCalibrator()
+    mapie_cal.fit(X_comb, y_comb)
+    y_score = mapie_cal.predict_proba(X_comb)
+
+    y_comb += 1
+    mapie_cal1 = MapieCalibrator()
+    mapie_cal1.fit(X_comb, y_comb)
+    y_score1 = mapie_cal.predict_proba(X_comb)
+
+    y_comb[np.where(y_comb == 2)[0]] = 3
+    mapie_cal2 = MapieCalibrator()
+    mapie_cal2.fit(X_comb, y_comb)
+    y_score2 = mapie_cal.predict_proba(X_comb)
+    np.testing.assert_array_almost_equal(y_score, y_score1)
+    np.testing.assert_array_almost_equal(y_score, y_score2)
 
 
 @pytest.mark.parametrize("calibrator", CALIBRATORS)
