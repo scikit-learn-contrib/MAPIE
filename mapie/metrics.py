@@ -184,21 +184,27 @@ def expected_calibration_error(
     split_strategy: Optional[str] = None,
 ) -> float:
     """
-    Function to get the different metrics of interest.
+    The expected calibration error, which is the difference between
+    the confidence scores and accuracy per bin [1].
+
+    [1] Naeini, Mahdi Pakdaman, Gregory Cooper, and Milos Hauskrecht.
+    "Obtaining well calibrated probabilities using bayesian binning."
+    Twenty-Ninth AAAI Conference on Artificial Intelligence. 2015.
+
     Parameters
     ----------
-    y_score : _type_
+    y_score : ArrayLike of shape (n_samples,) or (n_samples, n_classes)
         The predictions scores.
-    y_true : _type_
+    y_true : ArrayLike of shape (n_samples,)
         The "true" values, target for the calibrator.
-    num_bins : _type_
+    num_bins : int
         Number of bins to make the split in the y_score.
-    strategy : _type_
+    strategy : str
         The way of splitting the predictions into different bins.
     Returns
     -------
-    _type_
-        The score of ECE (Expected Calibration Error)
+    float
+        The score of ECE (Expected Calibration Error).
     """
     split_strategy = check_split_strategy(split_strategy)
     check_number_bins(num_bins)
@@ -228,6 +234,30 @@ def top_label_ece(
     num_bins: int = 50,
     split_strategy: Optional[str] = None,
 ) -> float:
+    """
+    The Top-Label ECE which is a method adapted to fit the
+    ECE to a Top-Label setting. [2].
+
+    [2] Gupta, Chirag, and Aaditya K. Ramdas.
+    "Top-label calibration and multiclass-to-binary reductions."
+    arXiv preprint arXiv:2107.08353 (2021).
+
+    Parameters
+    ----------
+    y_score : ArrayLike of shape (n_samples, n_classes)
+        The predictions scores.
+    y_true : ArrayLike of shape (n_samples,)
+        The "true" values, target for the calibrator.
+    num_bins : int
+        Number of bins to make the split in the y_score.
+    strategy : str
+        The way of splitting the predictions into different bins.
+
+    Returns
+    -------
+    float
+        The ECE score adapted in the top label setting.
+    """
     ece = float(0)
     split_strategy = check_split_strategy(split_strategy)
     check_number_bins(num_bins)
