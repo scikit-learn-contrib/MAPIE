@@ -693,20 +693,22 @@ def check_calib_set(
 
     Returns
     -------
-    Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]
-        - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)
-            X_train
-        - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)
-            y_train
-        - [2]: ArrayLike of shape (n_samples_*calib_size, n_features)
-            X_calib
-        - [3]: ArrayLike of shape (n_samples_*calib_size,)
-            y_calib
-        - [4]: ArrayLike of shape (n_samples_*(1-calib_size),)
-            sample_weight_train
-        - [5]: ArrayLike of shape (n_samples_*calib_size,)
-            sample_weight_calib
-
+    Tuple[
+        ArrayLike, ArrayLike, ArrayLike, ArrayLike,
+        Optional[NDArray], Optional[NDArray]
+    ]
+    - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)
+        X_train
+    - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)
+        y_train
+    - [2]: ArrayLike of shape (n_samples_*calib_size, n_features)
+        X_calib
+    - [3]: ArrayLike of shape (n_samples_*calib_size,)
+        y_calib
+    - [4]: Optional[NDArray] of shape (n_samples_*(1-calib_size),)
+        sample_weight_train
+    - [5]: Optional[NDArray] of shape (n_samples_*calib_size,)
+        sample_weight_calib
     """
     sw_calib = sample_weight_calib
     if X_calib is None or y_calib is None:
@@ -768,6 +770,8 @@ def check_estimator_classification(
         Training data.
     y : ArrayLike of shape (n_samples,)
         Training labels.
+    cv : Union[str, BaseCrossValidator]
+        Cross validation parameter.
     estimator : Optional[ClassifierMixin], optional
         Estimator to check, by default ``None``
     Returns
@@ -818,17 +822,16 @@ def get_binning_groups(
     """_summary_
     Parameters
     ----------
-    y_score : _type_
+    y_score : NDArray of shape (n_samples,)
         The scores given from the calibrator.
-    num_bins : _type_
+    num_bins : int
         Number of bins to make the split in the y_score.
-    strategy : _type_
-        The way of splitting the predictions into different bins.
+    strategy : string
+        The splitting strategy to split y_scores into different bins.
     Returns
     -------
-    _type_
-        Returns the upper and lower bound values for the bins and the indices
-        of the y_score that belong to each bins.
+    NDArray of shape (num_bins,)
+        An array of all the splitting points for a new bin.
     """
     if strategy == "quantile":
         quantiles = np.linspace(0, 1, num_bins)
@@ -857,20 +860,25 @@ def calc_bins(
     For each bins, calculate the accuracy, average confidence and size.
     Parameters
     ----------
-    y_score : _type_
+    y_score : NDArray of shape (n_samples,)
         The scores given from the calibrator.
-    y_true : _type_
+    y_true : NDArray of shape (n_samples,)
         The "true" values, target for the calibrator.
-    num_bins : _type_
+    num_bins : int
         Number of bins to make the split in the y_score.
-    strategy : _type_
+    strategy : str
         The way of splitting the predictions into different bins.
     Returns
     -------
-    _type_
-        Multiple arrays, the upper and lower bound of each bins,
-        indices of y that belong to each bins, the accuracy,
-        confidence and size of each bins.
+    Union[NDArray, NDArray, NDArray, NDArray]
+    - [0]: NDArray of shape (num_bins,)
+    An array of all the splitting points for a new bin.
+    - [1]: NDArray of shape (num_bins,)
+    An array of the average accuracy in each of the bins.
+    - [2]: NDArray of shape (num_bins,)
+    An array of the average confidence in each of the bins.
+    - [3]: NDArray of shape (num_bins,)
+    An array of the number of observations in each of the bins.
     """
     bins = get_binning_groups(y_score, num_bins, strategy)
     binned = np.digitize(y_score, bins, right=True)
@@ -895,6 +903,24 @@ def calc_bins(
 def check_split_strategy(
     strategy: Optional[str]
 ) -> str:
+    """
+    Checks that the split strategy provided is valid
+    and defults None split strategy to "uniform".
+    Parameters
+    ----------
+    strategy : Optional[str]
+        Can be a string or None.
+
+    Returns
+    -------
+    str
+        The spitting strategy that will be adopted, needs to be a string.
+
+    Raises
+    ------
+    ValueError
+        If the strategy is not part of the valid strategies.
+    """
     if strategy is None:
         strategy = "uniform"
     if strategy not in SPLIT_STRATEGIES:
@@ -923,6 +949,26 @@ def check_number_bins(
 def check_binary_zero_one(
     y_true: ArrayLike
 ) -> NDArray:
+    """
+    Checks if the array is binary and changes a non binary array
+    to a zero, one array.
+
+    Parameters
+    ----------
+    y_true : ArrayLike of shape (n_samples,)
+        Could be any array, but in this case is the true values
+        as binary input.
+
+    Returns
+    -------
+    NDArray of shape (n_samples,)
+        An array of zero, one values.
+
+    Raises
+    ------
+    ValueError
+        If the input array is not binary, then an error is raised.
+    """
     y_true = cast(NDArray, column_or_1d(y_true))
     if type_of_target(y_true) != "binary":
         raise ValueError(
