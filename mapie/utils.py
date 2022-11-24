@@ -72,6 +72,7 @@ def check_null_weight(
         X = _safe_indexing(X, non_null_weight)
         y = _safe_indexing(y, non_null_weight)
         sample_weight = _safe_indexing(sample_weight, non_null_weight)
+        sample_weight = cast(NDArray, sample_weight)
     return sample_weight, X, y
 
 
@@ -813,7 +814,7 @@ def get_binning_groups(
     y_score: NDArray,
     num_bins: int,
     strategy: str,
-) -> Union[NDArray, NDArray]:
+) -> NDArray:
     """_summary_
     Parameters
     ----------
@@ -843,8 +844,7 @@ def get_binning_groups(
                 + [np.inf]
             )
         )
-    bin_assignments = np.digitize(y_score, bins, right=True)
-    return bins, bin_assignments
+    return bins
 
 
 def calc_bins(
@@ -872,7 +872,8 @@ def calc_bins(
         indices of y that belong to each bins, the accuracy,
         confidence and size of each bins.
     """
-    bins, binned = get_binning_groups(y_score, num_bins, strategy)
+    bins = get_binning_groups(y_score, num_bins, strategy)
+    binned = np.digitize(y_score, bins, right=True)
     bin_accs = np.zeros(num_bins)
     bin_confs = np.zeros(num_bins)
     bin_sizes = np.zeros(num_bins)
@@ -888,7 +889,7 @@ def calc_bins(
                 np.sum(y_score[binned == bin]),
                 bin_sizes[bin],
             )
-    return bins, bin_accs, bin_confs, bin_sizes
+    return bins, bin_accs, bin_confs, bin_sizes  # type: ignore
 
 
 def check_split_strategy(
@@ -922,7 +923,7 @@ def check_number_bins(
 def check_binary_zero_one(
     y_true: ArrayLike
 ) -> NDArray:
-    cast(NDArray, column_or_1d(y_true))
+    y_true = cast(NDArray, column_or_1d(y_true))
     if type_of_target(y_true) != "binary":
         raise ValueError(
             "Please provide y_true as a binary array."

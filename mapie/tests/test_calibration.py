@@ -13,7 +13,7 @@ from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 
 from mapie.calibration import MapieCalibrator
-from mapie.metrics import top_label_ece, expected_calibration_error
+from mapie.metrics import top_label_ece
 from inspect import signature
 import pytest
 
@@ -39,7 +39,7 @@ results = {
         [0, 0, 0.8],
     ],
     "top_label_ece": 0.2888888888888889,
-    "ece": 0.16480978061996931,
+    "ece": 0.46652295951911177,
 }
 
 
@@ -156,7 +156,7 @@ def test_number_of_classes_equal_calibrators() -> None:
         X_calib=X_calib,
         y_calib=y_calib
     )
-    y_pred_calib_set = mapie_cal.estimator.predict(X=X_calib)
+    y_pred_calib_set = mapie_cal.estimator.predict(X=X_calib)  # type: ignore
     assert len(mapie_cal.calibrators) == len(np.unique(y_pred_calib_set))
 
 
@@ -168,23 +168,9 @@ def test_same_predict() -> None:
         X_calib=X_calib,
         y_calib=y_calib
     )
-    y_pred_calib_set = mapie_cal.estimator.predict(X=X_test)
+    y_pred_calib_set = mapie_cal.estimator.predict(X=X_test)  # type: ignore
     y_pred_calibrated_test_set = mapie_cal.predict(X=X_test)
     np.testing.assert_allclose(y_pred_calib_set, y_pred_calibrated_test_set)
-
-
-def test_correct_binary_ece_results() -> None:
-    X_bin, y_comb = make_classification(
-        n_samples=200000,
-        n_classes=2,
-        n_informative=4,
-        random_state=random_state
-    )
-    mapie_cal = MapieCalibrator()
-    mapie_cal.fit(X_bin, y_comb)
-    pred_ = mapie_cal.predict_proba(X_bin)
-    ece_ = expected_calibration_error(pred_, y_comb)
-    np.testing.assert_almost_equal(results["ece"], ece_, decimal=2)
 
 
 def test_correct_results() -> None:
@@ -197,8 +183,10 @@ def test_correct_results() -> None:
     )
     pred_ = mapie_cal.predict_proba(X_test)
     top_label_ece_ = top_label_ece(pred_, y_test)
-    np.testing.assert_allclose(results["y_score"], pred_)
-    np.testing.assert_allclose(results["top_label_ece"], top_label_ece_)
+    np.testing.assert_array_almost_equal(  # type:ignore
+        results["y_score"], pred_
+    )
+    assert results["top_label_ece"] == top_label_ece_
 
 
 def test_correct_results_binary() -> None:
@@ -211,8 +199,10 @@ def test_correct_results_binary() -> None:
     )
     pred_ = mapie_cal.predict_proba(X_test)
     top_label_ece_ = top_label_ece(pred_, y_test)
-    np.testing.assert_allclose(results["y_score"], pred_)
-    np.testing.assert_allclose(results["top_label_ece"], top_label_ece_)
+    np.testing.assert_array_almost_equal(  # type:ignore
+        results["y_score"], pred_
+    )
+    assert results["top_label_ece"] == top_label_ece_
 
 
 def test_different_binary_y_combinations() -> None:

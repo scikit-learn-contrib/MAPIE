@@ -61,7 +61,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         y_calib: NDArray,
         top_class_prob: NDArray,
         top_class_prob_arg: NDArray,
-        sample_weight: Optional[NDArray] = None,
+        sample_weight: Optional[NDArray],
     ) -> RegressorMixin:
         calibrator_ = clone(calibrator)
         correct_label = np.where(top_class_prob_arg.ravel() == item)[0]
@@ -72,7 +72,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
         if sample_weight is not None:
             sample_weight_ = sample_weight[correct_label]
-            sample_weight_, top_class_prob_, y_calib_ = check_null_weight(
+            (
+                sample_weight_, top_class_prob_, y_calib_
+            ) = check_null_weight(  # type: ignore
                 sample_weight_,
                 top_class_prob_,
                 y_calib_
@@ -153,6 +155,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         sample_weight: Optional[NDArray] = None,
         X_calib: Optional[ArrayLike] = None,
         y_calib: Optional[ArrayLike] = None,
+        sample_weight_calib: Optional[NDArray] = None,
         calib_size: Optional[float] = 0.3,
         random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
@@ -179,6 +182,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             sample_weight=sample_weight,
             X_calib=X_calib,
             y_calib=y_calib,
+            sample_weight_calib=cast(Optional[NDArray], sample_weight_calib),
             calib_size=calib_size,
             random_state=random_state,
             shuffle=shuffle,
