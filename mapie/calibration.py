@@ -1,15 +1,13 @@
-from typing import Optional, Union, cast, Tuple
+from typing import Optional, Union, cast, Tuple, Dict
+
 import warnings
 import numpy as np
-
 from sklearn.base import BaseEstimator, ClassifierMixin, clone, RegressorMixin
 from sklearn.calibration import _SigmoidCalibration
 from sklearn.isotonic import IsotonicRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state, check_consistent_length
 from sklearn.utils.multiclass import type_of_target
-
-
 from sklearn.utils.validation import (
     indexable,
     check_is_fitted,
@@ -63,6 +61,31 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         top_class_prob_arg: NDArray,
         sample_weight: Optional[NDArray],
     ) -> RegressorMixin:
+        """
+        Fitting the calibrator requires that for each class we
+        get the correct values to fit a calibrator for this specific
+        class.
+
+        Parameters
+        ----------
+        item : int
+            The class for which we will fit a calibrator.
+        calibrator : RegressorMixin
+            Calibrator to train.
+        y_calib : NDArray of shape (n_samples,)
+            The dependent values of the calibrator.
+        top_class_prob : NDArray of shape (n_samples,)
+            The independent values of the calibrator.
+        top_class_prob_arg : NDArray of shape (n_samples,)
+            The array to determine which class the max prediction belongs to.
+        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+            Sample weights. If None, then samples are equally weighted.
+
+        Returns
+        -------
+        RegressorMixin
+            Calibrated estimator.
+        """
         calibrator_ = clone(calibrator)
         correct_label = np.where(top_class_prob_arg.ravel() == item)[0]
         y_calib_ = check_binary_zero_one(
@@ -86,25 +109,84 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         )
         return calibrator_
 
-    def _check_calibrator(
+    def _get_calibrator(
         self,
-        calibrator: Union[str, RegressorMixin]
-    ) -> Union[str, RegressorMixin]:
+        calibrator: Optional[Union[str, RegressorMixin]]
+    ) -> RegressorMixin:
+        """
+        Check the input that has been provided for
+        calibrator and checks that the calibrator is a correct
+        estimator to calibrate.
+
+        Parameters
+        ----------
+        calibrator : Union[str, RegressorMixin]
+            Calibrator as string to then be linked to one of the
+            valid methods otherwise calibrator as estimator.
+
+        Returns
+        -------
+        RegressorMixin
+            RegressorMixin to be used as calibrator.
+
+
+        Raises
+        ------
+        ValueError
+            If str is not one of the valid estimators.
+
+        ValueError
+            If the calibrator provided is not a RegressorMixin.
+        """
         if calibrator is None:
             calibrator = "sigmoid"
-        if (
-            isinstance(calibrator, str) and
-            calibrator not in self.valid_calibrators.keys()
-        ):
-            raise ValueError(
-                "Please provide a valid string from the valid calibrators."
-            )
+        elif isinstance(calibrator, str):
+            if calibrator in self.valid_calibrators.keys():
+                calibrator = self.valid_calibrators[calibrator]
+            else:
+                raise ValueError(
+                    "Please provide a valid string from the valid calibrators."
+                )
+        elif isinstance(calibrator, RegressorMixin):
+            calibrator = calibrator
+            check_estimator_fit_predict(calibrator)
+        else:
+            raise ValueError("Please provide a valid regressor.")
         return calibrator
 
     def _get_labels(
         self, method: str,
         pred: NDArray
     ) -> Tuple[NDArray, NDArray]:
+        """
+        The "labels" is the way to create the different arrays needed
+        for the type of calibration method you want to make.
+
+        - Top-Label method means that you take the maximum probability
+        and calibrated each class when it is the maximum separately.
+
+        Parameters
+        ----------
+        method : str
+            The method that will be taken into account.
+        pred : NDArray of shape (n_samples, n_classes)
+            The output from the predict_proba of the classifier.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray] of shapes (n_samples,) and (n_samples,)
+            The first element corresponds to the values that have to be
+            calibrated and the second element corresponds to class to be
+            associated.
+
+            In the Top-Label setting, the latter refers to the different
+            classes that have to be individually calibrated.
+
+        Raises
+        ------
+        ValueError
+            If the method provided has not been implemented.
+        """
         if method == "top_label":
             max_class_prob = np.max(pred, axis=1).reshape(-1, 1)
             max_class_prob_arg = (np.argmax(pred, axis=1)+1).reshape(-1, 1)
@@ -113,25 +195,40 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         check_consistent_length(max_class_prob, max_class_prob_arg)
         return max_class_prob, max_class_prob_arg
 
-    def _get_calibrator(
-        self,
-        calibrator: Union[str, RegressorMixin]
-    ) -> RegressorMixin:
-        if calibrator in self.valid_calibrators.keys():
-            calibrator = self.valid_calibrators[calibrator]
-        else:
-            calibrator = calibrator
-        check_estimator_fit_predict(calibrator)
-        return calibrator
-
     def _pred_proba_calib(
         self,
         item: int,
         calibrated_values: NDArray,
         max_prob: NDArray,
         max_prob_arg: NDArray,
-        calibrators: RegressorMixin,
+        calibrators: Dict[int, RegressorMixin],
     ) -> NDArray:
+        """
+        Using the predicted probabilities, we calibrate new values with
+        the fitted calibrators. Note that if there is no calibrator for a
+        the specific class, then we simply output the not calibrated values.
+
+        Parameters
+        ----------
+        item : int
+            The class value to be calibrated.
+        calibrated_values : NDArray
+            Array of calibrated values.
+        max_prob : NDArray of shape (n_samples,)
+            Values to be calibrated.
+        max_prob_arg : NDArray of shape (n_samples,)
+            Indicator of the values to be calibrated.
+        calibrators : Dict[RegressorMixin] of len n_classes in calibration set
+            Dictionary of all the previously fitted calibrators.
+
+        Returns
+        -------
+        NDArray
+            Updated calibrated values from the predictions of the calibrators.
+
+        Warnings
+            If there has not been a fitted calibrator for the specific class.
+        """
         correct_label = np.where(max_prob_arg.ravel() == item)[0].ravel()
         if item not in calibrators:
             calibrated_values[
@@ -160,9 +257,68 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
-    ):
+    ):  # It's not recognizing MapieCalibrator here?
+        """
+        Fit estimator will calibrate the predicted proabilities from the output
+        of a classifier.
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Training data.
+        y : ArrayLike of shape (n_samples,)
+            Training labels.
+        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for fitting the out-of-fold models.
+            If None, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no residuals.
+            If weights are non-uniform, residuals are still uniformly weighted.
+            Note that the sample weight defined are only for the training, not
+            for the calibration procedure.
+            By default ``None``.
+        X_calib : Optional[ArrayLike] of shape (n_calib_samples, n_features)
+            Calibration data.
+        y_calib : Optional[ArrayLike] of shape (n_calib_samples,)
+            Calibration labels.
+        sample_weight_calib : Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for calib for fitting the out-of-fold models.
+            If None, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no residuals.
+            If weights are non-uniform, residuals are still uniformly weighted.
+            Note that the sample weight defined are only for the training, not
+            for the calibration procedure.
+            By default ``None``.
+        calib_size : Optional[float]
+            If X_calib and y_calib are not defined, then the calibration
+            dataset is created with the split defined by calib_size.
+        random_state : int, RandomState instance or None, default=None
+            For the ``sklearn.model_selection.train_test_split`` documentation.
+            Controls the shuffling applied to the data before applying the
+            split.
+            Pass an int for reproducible output across multiple function calls.
+            See :term:`Glossary <random_state>`.
+        shuffle : bool, default=True
+            For the ``sklearn.model_selection.train_test_split`` documentation.
+            Whether or not to shuffle the data before splitting.
+            If shuffle=False
+            then stratify must be None.
+        stratify : array-like, default=None
+            For the ``sklearn.model_selection.train_test_split`` documentation.
+            If not None, data is split in a stratified fashion, using this as
+            the class labels.
+            Read more in the :ref:`User Guide <stratification>`.
+
+        Returns
+        -------
+        MapieCalibrator
+            The model itself.
+        """
         cv = check_cv(self.cv)
-        self.calibrator = self._check_calibrator(
+        self.calibrator = self._get_calibrator(
             self.calibrator
             )
         estimator = check_estimator_classification(X, y, self.estimator)
@@ -228,7 +384,22 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     def predict_proba(
         self,
         X: ArrayLike,
-    ):
+    ) -> NDArray:
+        """
+        Prediction of the calibrated probability score of the class after
+        fitting of the classifer and calibrator.
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Test data.
+
+        Returns
+        -------
+        NDArray of shape (n_samples, n_classes)
+            The calibrated score for each max score and zeros at every
+            other position in that line.
+        """
         check_is_fitted(self, self.fit_attributes)
         y_pred_probs = self.estimator.predict_proba(X=X)  # type: ignore
         self.uncalib_pred = y_pred_probs
@@ -254,6 +425,20 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     def predict(
         self,
         X: ArrayLike,
-    ):
+    ) -> NDArray:
+        """
+        Predict the class of the estimator after calibration.
+        Note that in the top-label setting, this class does not change.
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Test data.
+
+        Returns
+        -------
+        NDArray of shape (n_samples,)
+            The class from the predictions.
+        """
         check_is_fitted(self, self.fit_attributes)
         return self.classes_[np.argmax(self.predict_proba(X=X), axis=1)]

@@ -108,6 +108,18 @@ def test_false_str_estimator() -> None:
         mapie_cal.fit(X, y)
 
 
+def test_wrong_estimator() -> None:
+    """Test invalid input for calibrator."""
+    with pytest.raises(
+        ValueError,
+        match=r".*Please provide a valid regressor.*",
+    ):
+        mapie_cal = MapieCalibrator(
+            calibrator=0.5
+        )
+        mapie_cal.fit(X, y)
+
+
 def test_estimator_none() -> None:
     """Test that no input for calibrator will return a sigmoid"""
     mapie_cal = MapieCalibrator()

@@ -933,6 +933,23 @@ def check_split_strategy(
 def check_number_bins(
     num_bins: int
 ) -> None:
+    """
+    Checks that the bin specified is a number.
+
+    Parameters
+    ----------
+    num_bins : int
+        An integer that determines the number of bins to create
+        on an array.
+
+    Raises
+    ------
+    ValueError
+        When num_bins is not an integer is raises an error.
+
+    ValueError
+        When num_bins is a negative number is raises an error.
+    """
     if isinstance(num_bins, int) is False:
         raise ValueError(
             "Please provide a bin number as an integer."
