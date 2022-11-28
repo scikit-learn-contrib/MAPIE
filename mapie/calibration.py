@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, clone, RegressorMixin
 from sklearn.calibration import _SigmoidCalibration
 from sklearn.isotonic import IsotonicRegression
+from sklearn.pipeline import Pipeline
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state, check_consistent_length
 from sklearn.utils.multiclass import type_of_target
@@ -45,7 +46,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         estimator: Optional[ClassifierMixin] = None,
         method: str = "top_label",
         calibrator: Optional[Union[str, RegressorMixin]] = None,
-        cv: Optional[Union[int, str, BaseCrossValidator]] = "split",
+        cv: Optional[Union[str, BaseCrossValidator]] = "split",
     ) -> None:
         self.estimator = estimator
         self.method = method
@@ -56,10 +57,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         self,
         item: int,
         calibrator: RegressorMixin,
-        y_calib: NDArray,
+        y_calib: ArrayLike,
         top_class_prob: NDArray,
         top_class_prob_arg: NDArray,
-        sample_weight: Optional[NDArray],
+        sample_weight: Optional[ArrayLike],
     ) -> RegressorMixin:
         """
         Fitting the calibrator requires that for each class we
@@ -87,6 +88,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             Calibrated estimator.
         """
         calibrator_ = clone(calibrator)
+        y_calib = cast(NDArray, y_calib)
+        sample_weight = cast(NDArray, sample_weight)
         correct_label = np.where(top_class_prob_arg.ravel() == item)[0]
         y_calib_ = check_binary_zero_one(
             np.equal(y_calib[correct_label], item).astype(int)
@@ -111,7 +114,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     def _get_calibrator(
         self,
-        calibrator: Optional[Union[str, RegressorMixin]]
+        cv: Union[str, BaseCrossValidator],
+        calibrator: Optional[Union[str, RegressorMixin]],
     ) -> RegressorMixin:
         """
         Check the input that has been provided for
@@ -120,6 +124,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
+        cv : Union[str, BaseCrossValidator]
+            Cross validation parameter.
         calibrator : Union[str, RegressorMixin]
             Calibrator as string to then be linked to one of the
             valid methods otherwise calibrator as estimator.
@@ -128,30 +134,28 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         -------
         RegressorMixin
             RegressorMixin to be used as calibrator.
-
-
         Raises
         ------
         ValueError
             If str is not one of the valid estimators.
-
-        ValueError
-            If the calibrator provided is not a RegressorMixin.
         """
         if calibrator is None:
             calibrator = "sigmoid"
-        elif isinstance(calibrator, str):
+
+        if isinstance(calibrator, str):
             if calibrator in self.valid_calibrators.keys():
                 calibrator = self.valid_calibrators[calibrator]
             else:
                 raise ValueError(
                     "Please provide a valid string from the valid calibrators."
                 )
-        elif isinstance(calibrator, RegressorMixin):
-            calibrator = calibrator
-            check_estimator_fit_predict(calibrator)
+        if isinstance(calibrator, Pipeline):
+            est = calibrator[-1]
         else:
-            raise ValueError("Please provide a valid regressor.")
+            est = calibrator
+        check_estimator_fit_predict(est)
+        if cv == "prefit":
+            check_is_fitted(est)
         return calibrator
 
     def _get_labels(
@@ -194,6 +198,60 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             raise ValueError("No other methods have been implemented yet.")
         check_consistent_length(max_class_prob, max_class_prob_arg)
         return max_class_prob, max_class_prob_arg
+
+    def _fit_calibrators(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike],
+        estimator: Union[ClassifierMixin, Pipeline],
+        calibrator: RegressorMixin,
+    ) -> Dict[int, RegressorMixin]:
+        """_summary_
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Training data.
+        y : ArrayLike of shape (n_samples,)
+            Training labels.
+        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for fitting the out-of-fold models.
+            If None, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no residuals.
+            If weights are non-uniform, residuals are still uniformly weighted.
+            Note that the sample weight defined are only for the training, not
+            for the calibration procedure.
+            By default ``None``.
+        estimator : ClassifierMixin
+            Estimator fitted.
+        calibrator : RegressorMixin
+            Calibrator to train.
+
+        Returns
+        -------
+        Dict[int, RegressorMixin]
+            Dictionnary of fitted calibrators.
+        """
+        y_pred_calib = estimator.predict_proba(X=X)
+        max_prob, max_prob_arg = self._get_labels(
+            cast(str, self.method),
+            y_pred_calib
+        )
+        calibrators = {}
+        for item in np.unique(max_prob_arg):            
+            calibrator_ = self._fit_calibrator(
+                item,
+                calibrator,
+                y,
+                max_prob,
+                max_prob_arg,
+                sample_weight,
+            )
+            calibrators[item] = calibrator_
+        return calibrators
 
     def _pred_proba_calib(
         self,
@@ -318,10 +376,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             The model itself.
         """
         cv = check_cv(self.cv)
-        self.calibrator = self._get_calibrator(
-            self.calibrator
-            )
         estimator = check_estimator_classification(X, y, self.estimator)
+        calibrator = self._get_calibrator(cv, self.calibrator)
         X, y = indexable(X, y)
         y = _check_y(y)
         assert type_of_target(y) in ["multiclass", "binary"]
@@ -355,30 +411,13 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         )
         y_train = cast(NDArray, y_train)
         self.n_classes_ = len(np.unique(y_train))
-
         self.estimator = fit_estimator(
             clone(estimator), X_train, y_train, sw_train,
         )
-        y_pred_calib = self.estimator.predict_proba(X=X_calib)
-        calibrator = self._get_calibrator(self.calibrator)
-        max_prob, max_prob_arg = self._get_labels(
-            cast(str, self.method),
-            y_pred_calib
+        self.calibrators = self._fit_calibrators(
+            X_calib, y_calib, sw_calib, estimator, calibrator
         )
-
-        calibrators = {}
-        for item in np.unique(max_prob_arg):
-            calibrator_ = self._fit_calibrator(
-                item,
-                calibrator,
-                cast(NDArray, y_calib),
-                max_prob,
-                max_prob_arg,
-                sw_calib,
-            )
-            calibrators[item] = calibrator_
-        self.calibrators = calibrators
-        self.classes_ = self.estimator.classes_
+        self.classes_ = estimator.classes_
         return self
 
     def predict_proba(

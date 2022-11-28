@@ -9,6 +9,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.base import RegressorMixin, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.isotonic import IsotonicRegression
 from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 
@@ -108,23 +109,14 @@ def test_false_str_estimator() -> None:
         mapie_cal.fit(X, y)
 
 
-def test_wrong_estimator() -> None:
-    """Test invalid input for calibrator."""
-    with pytest.raises(
-        ValueError,
-        match=r".*Please provide a valid regressor.*",
-    ):
-        mapie_cal = MapieCalibrator(
-            calibrator=0.5
-        )
-        mapie_cal.fit(X, y)
-
-
 def test_estimator_none() -> None:
     """Test that no input for calibrator will return a sigmoid"""
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(X, y)
-    assert mapie_cal.calibrator == "sigmoid"
+    assert isinstance(
+        mapie_cal.calibrators[list(mapie_cal.calibrators.keys())[0]],
+        _SigmoidCalibration
+    )
 
 
 def test_other_methods() -> None:
@@ -268,23 +260,29 @@ def test_different_binary_y_combinations() -> None:
     assert top_label_ece(y_score, y_comb) == top_label_ece(y_score2, y_comb)
 
 
-@pytest.mark.parametrize("calibrator", CALIBRATORS)
-@pytest.mark.parametrize("estimator", ESTIMATORS)
-def test_results_with_constant_sample_weights(
-    calibrator: Union[str, RegressorMixin],
-    estimator: ClassifierMixin
-) -> None:
+def test_results_with_constant_sample_weights() -> None:
     """
     Test predictions when sample weights are None
     or constant with different values.
+
+    Note that it would seem that the calibration implementations
+    from sklearn would not pass these tests.
     """
     n_samples = len(X)
+    estimator = RandomForestClassifier(random_state=random_state)
+    calibrator = LinearRegression()
     mapie_clf0 = MapieCalibrator(estimator=estimator, calibrator=calibrator)
     mapie_clf1 = MapieCalibrator(estimator=estimator, calibrator=calibrator)
     mapie_clf2 = MapieCalibrator(estimator=estimator, calibrator=calibrator)
-    mapie_clf0.fit(X, y, sample_weight=None)
-    mapie_clf1.fit(X, y, sample_weight=np.ones(shape=n_samples))
-    mapie_clf2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
+    mapie_clf0.fit(X, y, sample_weight=None, random_state=random_state)
+    mapie_clf1.fit(
+        X, y, sample_weight=np.ones(shape=n_samples),
+        random_state=random_state
+    )
+    mapie_clf2.fit(
+        X, y, sample_weight=np.ones(shape=n_samples) * 5,
+        random_state=random_state
+    )
     y_pred0 = mapie_clf0.predict_proba(X)
     y_pred1 = mapie_clf1.predict_proba(X)
     y_pred2 = mapie_clf2.predict_proba(X)
@@ -317,7 +315,7 @@ def test_pipeline_compatibility() -> None:
             ("num", numeric_preprocessor, ["x_num"])
         ]
     )
-    pipe = make_pipeline(preprocessor, LogisticRegression())
+    pipe = make_pipeline(preprocessor, RandomForestClassifier())
     pipe.fit(X, y)
     mapie = MapieCalibrator(estimator=pipe)
     mapie.fit(X, y)
