@@ -9,7 +9,6 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.base import RegressorMixin, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.isotonic import IsotonicRegression
 from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 

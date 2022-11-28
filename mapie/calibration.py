@@ -235,13 +235,15 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         Dict[int, RegressorMixin]
             Dictionnary of fitted calibrators.
         """
+        # X, y = indexable(X, y)
+        # y = _check_y(y)
         y_pred_calib = estimator.predict_proba(X=X)
         max_prob, max_prob_arg = self._get_labels(
             cast(str, self.method),
             y_pred_calib
         )
         calibrators = {}
-        for item in np.unique(max_prob_arg):            
+        for item in np.unique(max_prob_arg):
             calibrator_ = self._fit_calibrator(
                 item,
                 calibrator,
@@ -402,8 +404,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         )
         X_train, y_train, X_calib, y_calib, sw_train, sw_calib = results
         X_train, y_train = indexable(X_train, y_train)
-        X_calib, y_calib = indexable(X_calib, y_calib)
-        y_train, y_calib = _check_y(y_train), _check_y(y_calib)
+        y_train = _check_y(y_train)
         sw_train, X_train, y_train = check_null_weight(
             sw_train,
             X_train,
