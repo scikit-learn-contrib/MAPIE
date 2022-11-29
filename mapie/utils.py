@@ -757,7 +757,7 @@ def check_estimator_classification(
         X: ArrayLike,
         y: ArrayLike,
         cv: Union[str, BaseCrossValidator],
-        estimator: Optional[ClassifierMixin] = None,
+        estimator: Optional[ClassifierMixin],
 ) -> ClassifierMixin:
     """
     Check if estimator is ``None``,
@@ -772,8 +772,8 @@ def check_estimator_classification(
         Training labels.
     cv : Union[str, BaseCrossValidator]
         Cross validation parameter.
-    estimator : Optional[ClassifierMixin], optional
-        Estimator to check, by default ``None``
+    estimator : Optional[ClassifierMixin]
+        Estimator to check.
     Returns
     -------
     ClassifierMixin
@@ -836,9 +836,9 @@ def get_binning_groups(
     if strategy == "quantile":
         quantiles = np.linspace(0, 1, num_bins)
         bins = np.percentile(y_score, quantiles * 100)
-    elif strategy == "uniform":
+    if strategy == "uniform":
         bins = np.linspace(0.0, 1.0, num_bins)
-    elif strategy == "array split":
+    if strategy == "array split":
         bin_groups = np.array_split(y_score, num_bins)
         bins = np.sort(np.array(
                 [
@@ -997,3 +997,38 @@ def check_binary_zero_one(
         idx_max = np.where(y_true == np.max(y_true))[0]
         y_true[idx_max] = 1
     return y_true
+
+
+def fix_number_of_classes(
+    n_classes_: int,
+    n_classes_training: NDArray,
+    y_proba: NDArray
+) -> NDArray:
+    """
+    Fix shape of y_proba of validation set if number of classes
+    of the training set used for cross-validation is different than
+    number of classes of the original dataset y.
+
+    Parameters
+    ----------
+    n_classes_training : NDArray
+        Classes of the training set.
+    y_proba : NDArray
+        Probabilities of the validation set.
+
+    Returns
+    -------
+    NDArray
+        Probabilities with the right number of classes.
+    """
+    y_pred_full = np.zeros(
+        shape=(len(y_proba), n_classes_)
+    )
+    y_index = np.tile(n_classes_training, (len(y_proba), 1))
+    np.put_along_axis(
+        y_pred_full,
+        y_index,
+        y_proba,
+        axis=1
+    )
+    return y_pred_full

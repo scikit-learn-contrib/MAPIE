@@ -208,7 +208,7 @@ def expected_calibration_error(
     """
     split_strategy = check_split_strategy(split_strategy)
     check_number_bins(num_bins)
-    y_true = check_binary_zero_one(y_true)
+    y_true_ = check_binary_zero_one(y_true)
     y_scores = cast(NDArray, y_scores)
 
     if np.size(y_scores.shape) == 2:
@@ -219,7 +219,7 @@ def expected_calibration_error(
         y_score = cast(NDArray, column_or_1d(y_scores))
 
     _, bin_accs, bin_confs, bin_sizes = calc_bins(
-        y_score, y_true, num_bins, split_strategy
+        y_score, y_true_, num_bins, split_strategy
     )
 
     return np.divide(

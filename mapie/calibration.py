@@ -149,17 +149,12 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 raise ValueError(
                     "Please provide a valid string from the valid calibrators."
                 )
-        if isinstance(calibrator, Pipeline):
-            est = calibrator[-1]
-        else:
-            est = calibrator
-        check_estimator_fit_predict(est)
-        if cv == "prefit":
-            check_is_fitted(est)
+        check_estimator_fit_predict(calibrator)
         return calibrator
 
     def _get_labels(
-        self, method: str,
+        self,
+        method: str,
         pred: NDArray
     ) -> Tuple[NDArray, NDArray]:
         """
@@ -193,7 +188,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         """
         if method == "top_label":
             max_class_prob = np.max(pred, axis=1).reshape(-1, 1)
-            max_class_prob_arg = (np.argmax(pred, axis=1)+1).reshape(-1, 1)
+            max_class_prob_arg = self.classes_[np.argmax(pred, axis=1)]
         else:
             raise ValueError("No other methods have been implemented yet.")
         check_consistent_length(max_class_prob, max_class_prob_arg)
@@ -257,6 +252,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     def _pred_proba_calib(
         self,
+        idx: int,
         item: int,
         calibrated_values: NDArray,
         max_prob: NDArray,
@@ -292,7 +288,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         correct_label = np.where(max_prob_arg.ravel() == item)[0].ravel()
         if item not in calibrators:
             calibrated_values[
-                correct_label, item-1
+                correct_label, idx
                 ] = max_prob[correct_label].ravel()
             warnings.warn(
                 "WARNING: This calibration was not previously seen"
@@ -300,7 +296,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             )
         else:
             calibrator_ = calibrators[item]
-            calibrated_values[correct_label, item-1] = calibrator_.predict(
+            calibrated_values[correct_label, idx] = calibrator_.predict(
                 max_prob[correct_label]
             )
         return calibrated_values
@@ -378,7 +374,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             The model itself.
         """
         cv = check_cv(self.cv)
-        estimator = check_estimator_classification(X, y, self.estimator)
+        estimator = check_estimator_classification(X, y, cv, self.estimator)
         calibrator = self._get_calibrator(cv, self.calibrator)
         X, y = indexable(X, y)
         y = _check_y(y)
@@ -387,35 +383,44 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         random_state = check_random_state(random_state)
 
-        assert cv == "split"
-        results = check_calib_set(
-            X,
-            y,
-            sample_weight=sample_weight,
-            X_calib=X_calib,
-            y_calib=y_calib,
-            sample_weight_calib=cast(Optional[NDArray], sample_weight_calib),
-            calib_size=calib_size,
-            random_state=random_state,
-            shuffle=shuffle,
-            stratify=stratify,
-        )
-        X_train, y_train, X_calib, y_calib, sw_train, sw_calib = results
-        X_train, y_train = indexable(X_train, y_train)
-        y_train = _check_y(y_train)
-        sw_train, X_train, y_train = check_null_weight(
-            sw_train,
-            X_train,
-            y_train
-        )
-        self.n_classes_ = len(np.unique(y_train))
-        self.estimator = fit_estimator(
-            clone(estimator), X_train, y_train, sw_train,
-        )
-        self.calibrators = self._fit_calibrators(
-            X_calib, y_calib, sw_calib, estimator, calibrator
-        )
-        self.classes_ = estimator.classes_
+        if cv == "prefit":
+            self.classes_ = self.estimator.classes_  # type: ignore
+            self.n_classes_ = len(self.classes_)
+            self.calibrators = self._fit_calibrators(
+                X, y, sample_weight, estimator, calibrator
+            )
+        if cv == "split":
+            results = check_calib_set(
+                X,
+                y,
+                sample_weight=sample_weight,
+                X_calib=X_calib,
+                y_calib=y_calib,
+                sample_weight_calib=cast(
+                    Optional[NDArray],
+                    sample_weight_calib
+                ),
+                calib_size=calib_size,
+                random_state=random_state,
+                shuffle=shuffle,
+                stratify=stratify,
+            )
+            X_train, y_train, X_calib, y_calib, sw_train, sw_calib = results
+            X_train, y_train = indexable(X_train, y_train)
+            y_train = _check_y(y_train)
+            sw_train, X_train, y_train = check_null_weight(
+                sw_train,
+                X_train,
+                y_train
+            )
+            self.n_classes_ = len(np.unique(y_train))
+            self.estimator = fit_estimator(
+                clone(estimator), X_train, y_train, sw_train,
+            )
+            self.classes_ = self.estimator.classes_  # type: ignore
+            self.calibrators = self._fit_calibrators(
+                X_calib, y_calib, sw_calib, self.estimator, calibrator
+            )
         return self
 
     def predict_proba(
@@ -439,6 +444,11 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         """
         check_is_fitted(self, self.fit_attributes)
         y_pred_probs = self.estimator.predict_proba(X=X)  # type: ignore
+        # y_pred_probs = fix_number_of_classes(
+        #     self.n_classes_,
+        #     self.estimator.classes_,  # type: ignore
+        #     y_pred_probs
+        # )
         self.uncalib_pred = y_pred_probs
 
         max_prob, max_prob_arg = self._get_labels(
@@ -449,8 +459,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         n = _num_samples(max_prob)
         calibrated_test_values = np.zeros((n, self.n_classes_))
 
-        for item in np.unique(max_prob_arg):
+        for idx, item in enumerate(np.unique(max_prob_arg)):
             calibrated_test_values = self._pred_proba_calib(
+                idx,
                 item,
                 calibrated_test_values,
                 max_prob,
@@ -478,4 +489,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             The class from the predictions.
         """
         check_is_fitted(self, self.fit_attributes)
-        return self.classes_[np.argmax(self.predict_proba(X=X), axis=1)]
+        return self.classes_[
+            np.argmax(self.predict_proba(X=X), axis=1)
+        ]

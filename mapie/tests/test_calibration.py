@@ -13,7 +13,7 @@ from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 
 from mapie.calibration import MapieCalibrator
-from mapie.metrics import top_label_ece
+from mapie.metrics import top_label_ece, expected_calibration_error
 from inspect import signature
 import pytest
 
@@ -35,11 +35,27 @@ results = {
         [0, 0.66666667, 0],
         [0, 0.66666667, 0],
         [0, 0.66666667, 0],
-        [0, 0, 0.8],
-        [0, 0, 0.8],
+        [0, 0, 0.35635314],
+        [0, 0, 0.18501723],
     ],
-    "top_label_ece": 0.2888888888888889,
-    "ece": 0.46652295951911177,
+    "top_label_ece": 0.4653271607043443,
+}
+
+results_binary = {
+    "y_score": [
+        [0.83169648, 0],
+        [0.3333333, 0],
+        [0, 0.66666667],
+        [0.82329671, 0],
+        [0, 0.66666667],
+        [0.88521744, 0],
+        [0.84504048, 0],
+        [0.6666663, 0],
+        [0, 0.66666667],
+        [0, 0.66666667],
+    ],
+    "top_label_ece": 0.5598820088961577,
+    "ece": 0.471858484018367,
 }
 
 
@@ -128,6 +144,33 @@ def test_other_methods() -> None:
         mapie_cal.fit(X, y)
 
 
+def test_prefit() -> None:
+    """Test that prefit method works"""
+    est = RandomForestClassifier().fit(X, y)
+    mapie_cal = MapieCalibrator(estimator=est, cv="prefit")
+    mapie_cal.fit(X, y)
+
+
+def test_prefit_split_same_results() -> None:
+    """Test that prefit and split method return the same result"""
+    est = RandomForestClassifier(
+        random_state=random_state
+    ).fit(X_train, y_train)
+    mapie_cal_prefit = MapieCalibrator(estimator=est, cv="prefit")
+    mapie_cal_prefit.fit(X_calib, y_calib)
+
+    mapie_cal_split = MapieCalibrator(
+        estimator=RandomForestClassifier(random_state=random_state)
+    )
+    mapie_cal_split.fit(
+        X_train, y_train, X_calib=X_calib, y_calib=y_calib
+    )
+
+    y_prefit = mapie_cal_prefit.predict_proba(X_test)
+    y_split = mapie_cal_split.predict_proba(X_test)
+    np.testing.assert_allclose(y_split, y_prefit)
+
+
 def test_not_seen_calibrator() -> None:
     """
     Test that there is a warning if no calibration occurs
@@ -194,7 +237,7 @@ def test_correct_results() -> None:
     Test that the y_score and top label score from the test dataset result
     in the correct scores (in a multi-class setting).
     """
-    mapie_cal = MapieCalibrator()
+    mapie_cal = MapieCalibrator(cv="split")
     mapie_cal.fit(
         X=X_train,
         y=y_train,
@@ -214,19 +257,26 @@ def test_correct_results_binary() -> None:
     Test that the y_score and top label score from the test dataset result
     in the correct scores (in a binary setting).
     """
+    X_binary, y_binary = make_classification(
+        n_samples=10,
+        n_classes=2,
+        n_informative=4,
+        random_state=random_state
+    )
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(
-        X=X_train,
-        y=y_train,
-        X_calib=X_calib,
-        y_calib=y_calib
+        X=X_binary,
+        y=y_binary,
+        random_state=random_state
     )
-    pred_ = mapie_cal.predict_proba(X_test)
-    top_label_ece_ = top_label_ece(pred_, y_test)
+    pred_ = mapie_cal.predict_proba(X_binary)
+    top_label_ece_ = top_label_ece(pred_, y_binary)
+    ece = expected_calibration_error(pred_, y_binary)
     np.testing.assert_array_almost_equal(
-        results["y_score"], pred_  # type:ignore
+        results_binary["y_score"], pred_  # type:ignore
     )
-    assert results["top_label_ece"] == top_label_ece_
+    assert results_binary["top_label_ece"] == top_label_ece_
+    assert results_binary["ece"] == ece
 
 
 def test_different_binary_y_combinations() -> None:
@@ -241,18 +291,18 @@ def test_different_binary_y_combinations() -> None:
         random_state=random_state
     )
     mapie_cal = MapieCalibrator()
-    mapie_cal.fit(X_comb, y_comb)
+    mapie_cal.fit(X_comb, y_comb, random_state=random_state)
     y_score = mapie_cal.predict_proba(X_comb)
 
-    y_comb += 1
-    mapie_cal1 = MapieCalibrator()
-    mapie_cal1.fit(X_comb, y_comb)
-    y_score1 = mapie_cal.predict_proba(X_comb)
-
     y_comb[np.where(y_comb == 2)[0]] = 3
+    mapie_cal1 = MapieCalibrator()
+    mapie_cal1.fit(X_comb, y_comb, random_state=random_state)
+    y_score1 = mapie_cal1.predict_proba(X_comb)
+
+    y_comb[np.where(y_comb == 3)[0]] = 40
     mapie_cal2 = MapieCalibrator()
-    mapie_cal2.fit(X_comb, y_comb)
-    y_score2 = mapie_cal.predict_proba(X_comb)
+    mapie_cal2.fit(X_comb, y_comb, random_state=random_state)
+    y_score2 = mapie_cal2.predict_proba(X_comb)
     np.testing.assert_array_almost_equal(y_score, y_score1)
     np.testing.assert_array_almost_equal(y_score, y_score2)
     assert top_label_ece(y_score, y_comb) == top_label_ece(y_score1, y_comb)

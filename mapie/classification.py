@@ -29,6 +29,7 @@ from .utils import (
     compute_quantiles,
     fit_estimator,
     check_estimator_classification,
+    fix_number_of_classes,
 )
 
 
@@ -461,40 +462,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         )
         return prediction_sets
 
-    def _fix_number_of_classes(
-        self,
-        n_classes_training: NDArray,
-        y_proba: NDArray
-    ) -> NDArray:
-        """
-        Fix shape of y_proba of validation set if number of classes
-        of the training set used for cross-validation is different than
-        number of classes of the original dataset y.
-
-        Parameters
-        ----------
-        n_classes_training : NDArray
-            Classes of the training set.
-        y_proba : NDArray
-            Probabilities of the validation set.
-
-        Returns
-        -------
-        NDArray
-            Probabilities with the right number of classes.
-        """
-        y_pred_full = np.zeros(
-            shape=(len(y_proba), self.n_classes_)
-        )
-        y_index = np.tile(n_classes_training, (len(y_proba), 1))
-        np.put_along_axis(
-            y_pred_full,
-            y_index,
-            y_proba,
-            axis=1
-        )
-        return y_pred_full
-
     def _predict_oof_model(
         self,
         estimator: ClassifierMixin,
@@ -518,7 +485,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred_proba = estimator.predict_proba(X)
         # we enforce y_pred_proba to contain all labels included in y
         if len(estimator.classes_) != self.n_classes_:
-            y_pred_proba = self._fix_number_of_classes(
+            y_pred_proba = fix_number_of_classes(
+                self.n_classes_,
                 estimator.classes_,
                 y_pred_proba
             )
