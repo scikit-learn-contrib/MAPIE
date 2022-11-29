@@ -851,8 +851,8 @@ def get_binning_groups(
 
 
 def calc_bins(
-    y_score: NDArray,
     y_true: NDArray,
+    y_score: NDArray,
     num_bins: int,
     strategy: str,
 ) -> Union[NDArray, NDArray, NDArray, NDArray]:
@@ -860,10 +860,10 @@ def calc_bins(
     For each bins, calculate the accuracy, average confidence and size.
     Parameters
     ----------
-    y_score : NDArray of shape (n_samples,)
-        The scores given from the calibrator.
     y_true : NDArray of shape (n_samples,)
         The "true" values, target for the calibrator.
+    y_score : NDArray of shape (n_samples,)
+        The scores given from the calibrator.
     num_bins : int
         Number of bins to make the split in the y_score.
     strategy : str

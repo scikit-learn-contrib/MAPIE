@@ -245,7 +245,7 @@ def test_correct_results() -> None:
         y_calib=y_calib
     )
     pred_ = mapie_cal.predict_proba(X_test)
-    top_label_ece_ = top_label_ece(pred_, y_test)
+    top_label_ece_ = top_label_ece(y_test, pred_)
     np.testing.assert_array_almost_equal(
         results["y_score"], pred_  # type:ignore
     )
@@ -274,8 +274,8 @@ def test_correct_results_binary() -> None:
         random_state=random_state
     )
     pred_ = mapie_cal.predict_proba(X_binary)
-    top_label_ece_ = top_label_ece(pred_, y_binary)
-    ece = expected_calibration_error(pred_, y_binary)
+    top_label_ece_ = top_label_ece(y_binary, pred_)
+    ece = expected_calibration_error(y_binary, pred_)
     np.testing.assert_array_almost_equal(
         results_binary["y_score"], pred_  # type:ignore
     )
@@ -317,8 +317,8 @@ def test_different_binary_y_combinations() -> None:
     y_score2 = mapie_cal2.predict_proba(X_comb)
     np.testing.assert_array_almost_equal(y_score, y_score1)
     np.testing.assert_array_almost_equal(y_score, y_score2)
-    assert top_label_ece(y_score, y_comb) == top_label_ece(y_score1, y_comb)
-    assert top_label_ece(y_score, y_comb) == top_label_ece(y_score2, y_comb)
+    assert top_label_ece(y_comb, y_score) == top_label_ece(y_comb, y_score1)
+    assert top_label_ece(y_comb, y_score) == top_label_ece(y_comb, y_score2)
 
 
 def test_results_with_constant_sample_weights() -> None:

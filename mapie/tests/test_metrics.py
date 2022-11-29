@@ -164,7 +164,7 @@ def test_ece_score() -> None:
     Test the expected calibration score for
     dataset if score is list of max scores.
     """
-    scr = expected_calibration_error(y_score, y_true)
+    scr = expected_calibration_error(y_true, y_score)
     assert np.round(scr, 4) == 0.4471
 
 
@@ -173,11 +173,11 @@ def test_ece_scores() -> None:
     Test the expected calibration score for
     dataset if score probability output.
     """
-    scr = expected_calibration_error(y_scores, y_true)
+    scr = expected_calibration_error(y_true, y_scores)
     assert np.round(scr, 4) == 0.5363
 
 
 def test_top_lable_ece() -> None:
     "Test that score is "
-    scr = top_label_ece(y_scores, y_true)
+    scr = top_label_ece(y_true, y_scores)
     assert np.round(scr, 4) == 0.264

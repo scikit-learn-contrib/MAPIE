@@ -178,8 +178,8 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
 
 
 def expected_calibration_error(
-    y_scores: ArrayLike,
     y_true: ArrayLike,
+    y_scores: ArrayLike,
     num_bins: int = 50,
     split_strategy: Optional[str] = None,
 ) -> float:
@@ -193,10 +193,10 @@ def expected_calibration_error(
 
     Parameters
     ----------
-    y_score : ArrayLike of shape (n_samples,) or (n_samples, n_classes)
-        The predictions scores.
     y_true : ArrayLike of shape (n_samples,)
         The "true" values, target for the calibrator.
+    y_score : ArrayLike of shape (n_samples,) or (n_samples, n_classes)
+        The predictions scores.
     num_bins : int
         Number of bins to make the split in the y_score.
     strategy : str
@@ -219,7 +219,7 @@ def expected_calibration_error(
         y_score = cast(NDArray, column_or_1d(y_scores))
 
     _, bin_accs, bin_confs, bin_sizes = calc_bins(
-        y_score, y_true_, num_bins, split_strategy
+        y_true_, y_score, num_bins, split_strategy
     )
 
     return np.divide(
@@ -229,8 +229,8 @@ def expected_calibration_error(
 
 
 def top_label_ece(
-    y_scores: ArrayLike,
     y_true: ArrayLike,
+    y_scores: ArrayLike,
     num_bins: int = 50,
     split_strategy: Optional[str] = None,
 ) -> float:
@@ -244,10 +244,10 @@ def top_label_ece(
 
     Parameters
     ----------
-    y_score : ArrayLike of shape (n_samples, n_classes)
-        The predictions scores.
     y_true : ArrayLike of shape (n_samples,)
         The "true" values, target for the calibrator.
+    y_score : ArrayLike of shape (n_samples, n_classes)
+        The predictions scores.
     num_bins : int
         Number of bins to make the split in the y_score.
     strategy : str
@@ -273,11 +273,11 @@ def top_label_ece(
     for label in labels:
         label_ind = np.where(label == y_score_arg)[0]
         ece += expected_calibration_error(
-            y_scores=y_score[label_ind],
             y_true=np.array(
                 y_true[label_ind] == (label + 1),
                 dtype=int
             ),
+            y_scores=y_score[label_ind],
             num_bins=num_bins,
             split_strategy=split_strategy
         )
