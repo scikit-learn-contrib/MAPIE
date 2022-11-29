@@ -51,8 +51,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     def _relative_conformity_scores(
         self,
-        X: NDArray,
-        y: NDArray,
+        X: ArrayLike,
+        y: ArrayLike,
     ) -> NDArray:
         """
         Compute the conformity scores on a data set.
