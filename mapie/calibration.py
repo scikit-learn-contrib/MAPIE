@@ -235,8 +235,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         Dict[int, RegressorMixin]
             Dictionnary of fitted calibrators.
         """
-        # X, y = indexable(X, y)
-        # y = _check_y(y)
+        X, y = indexable(X, y)
+        y = _check_y(y)
         y_pred_calib = estimator.predict_proba(X=X)
         max_prob, max_prob_arg = self._get_labels(
             cast(str, self.method),
@@ -317,7 +317,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
-    ):  # It's not recognizing MapieCalibrator here?
+    ) -> MapieCalibrator: # Don't understand why it's not recognized?
         """
         Fit estimator will calibrate the predicted proabilities from the output
         of a classifier.
@@ -410,7 +410,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             X_train,
             y_train
         )
-        y_train = cast(NDArray, y_train)
         self.n_classes_ = len(np.unique(y_train))
         self.estimator = fit_estimator(
             clone(estimator), X_train, y_train, sw_train,

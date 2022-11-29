@@ -314,7 +314,7 @@ def test_pipeline_compatibility() -> None:
             ("num", numeric_preprocessor, ["x_num"])
         ]
     )
-    pipe = make_pipeline(preprocessor, RandomForestClassifier())
+    pipe = make_pipeline(preprocessor, LogisticRegression())
     pipe.fit(X, y)
     mapie = MapieCalibrator(estimator=pipe)
     mapie.fit(X, y)
