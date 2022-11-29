@@ -317,7 +317,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
-    ) -> MapieCalibrator: # Don't understand why it's not recognized?
+    ):  # MapieCalibrator... Don't understand why it's not recognized?
         """
         Fit estimator will calibrate the predicted proabilities from the output
         of a classifier.
@@ -384,8 +384,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         y = _check_y(y)
         assert type_of_target(y) in ["multiclass", "binary"]
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
-        y = cast(NDArray, y)
-        sample_weight = cast(Optional[NDArray], sample_weight)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         random_state = check_random_state(random_state)
 
