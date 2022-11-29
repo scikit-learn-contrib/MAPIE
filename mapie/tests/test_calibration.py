@@ -249,7 +249,11 @@ def test_correct_results() -> None:
     np.testing.assert_array_almost_equal(
         results["y_score"], pred_  # type:ignore
     )
-    assert results["top_label_ece"] == top_label_ece_
+    np.testing.assert_allclose(  # type:ignore
+        results["top_label_ece"],
+        top_label_ece_,
+        rtol=1e-2
+    )
 
 
 def test_correct_results_binary() -> None:
@@ -275,8 +279,16 @@ def test_correct_results_binary() -> None:
     np.testing.assert_array_almost_equal(
         results_binary["y_score"], pred_  # type:ignore
     )
-    assert results_binary["top_label_ece"] == top_label_ece_
-    assert results_binary["ece"] == ece
+    np.testing.assert_allclose(  # type:ignore
+        results_binary["top_label_ece"],
+        top_label_ece_,
+        rtol=1e-2
+    )
+    np.testing.assert_allclose(  # type:ignore
+        results_binary["ece"],
+        ece,
+        rtol=1e-2
+    )
 
 
 def test_different_binary_y_combinations() -> None:
