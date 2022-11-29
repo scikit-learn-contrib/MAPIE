@@ -231,6 +231,7 @@ def expected_calibration_error(
 def top_label_ece(
     y_true: ArrayLike,
     y_scores: ArrayLike,
+    y_score_arg: Optional[ArrayLike] = None,
     num_bins: int = 50,
     split_strategy: Optional[str] = None,
 ) -> float:
@@ -246,8 +247,14 @@ def top_label_ece(
     ----------
     y_true : ArrayLike of shape (n_samples,)
         The "true" values, target for the calibrator.
-    y_score : ArrayLike of shape (n_samples, n_classes)
-        The predictions scores.
+    y_scores : ArrayLike of shape (n_samples, n_classes)
+    or (n_samples,)
+        The predictions scores, either the maximum score and the
+        argmax needs to be inputted or in the form of the prediction
+        probabilities.
+    y_score_arg : ArrayLike of shape (n_samples,)
+        If only the maximum is provided in the y_scores, the argmax must
+        be provided here.
     num_bins : int
         Number of bins to make the split in the y_score.
     strategy : str
@@ -262,12 +269,16 @@ def top_label_ece(
     split_strategy = check_split_strategy(split_strategy)
     check_number_bins(num_bins)
     y_true = cast(NDArray, column_or_1d(y_true))
-    y_score = cast(
-        NDArray, column_or_1d(np.max(y_scores, axis=1))
-    )
-    y_score_arg = cast(
-        NDArray, column_or_1d(np.argmax(y_scores, axis=1))
-    )
+    if y_score_arg is None:
+        y_score = cast(
+            NDArray, column_or_1d(np.max(y_scores, axis=1))
+        )
+        y_score_arg = cast(
+            NDArray, column_or_1d(np.argmax(y_scores, axis=1))
+        )
+    else:
+        y_score = cast(NDArray, column_or_1d(y_scores))
+        y_score_arg = cast(NDArray, column_or_1d(y_score_arg))
     labels = np.unique(y_score_arg)
 
     for label in labels:

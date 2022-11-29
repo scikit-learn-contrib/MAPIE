@@ -181,3 +181,28 @@ def test_top_lable_ece() -> None:
     "Test that score is "
     scr = top_label_ece(y_true, y_scores)
     assert np.round(scr, 4) == 0.264
+
+
+def test_top_label_same_result() -> None:
+    """
+    Test that we have the same results if the input contais
+    the maximum with the argmax values or if it is the probabilities
+    """
+    pred_proba_ = np.array(
+        [
+            [0.2, 0.2, 0.4],
+            [0.5, 0.3, 0.2],
+            [0, 0.4, 0.6],
+            [0.1, 0.7, 0.2]
+        ]
+    )
+    pred_max_ = np.max(pred_proba_, axis=1)
+    pred_argmax_ = np.argmax(pred_proba_, axis=1)
+
+    scr1 = top_label_ece(y_true, pred_proba_)
+    scr2 = top_label_ece(
+        y_true,
+        pred_max_,
+        y_score_arg=pred_argmax_
+    )
+    assert scr1 == scr2
