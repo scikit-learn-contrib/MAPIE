@@ -5,8 +5,10 @@ from sklearn.utils.validation import column_or_1d, check_array
 
 from ._typing import ArrayLike, NDArray
 from .utils import (
-    check_split_strategy, calc_bins, check_number_bins,
-    check_binary_zero_one
+    check_split_strategy,
+    calc_bins,
+    check_number_bins,
+    check_binary_zero_one,
 )
 
 
@@ -234,6 +236,7 @@ def top_label_ece(
     y_score_arg: Optional[ArrayLike] = None,
     num_bins: int = 50,
     split_strategy: Optional[str] = None,
+    classes: Optional[ArrayLike] = None,
 ) -> float:
     """
     The Top-Label ECE which is a method adapted to fit the
@@ -259,6 +262,9 @@ def top_label_ece(
         Number of bins to make the split in the y_score.
     strategy : str
         The way of splitting the predictions into different bins.
+    classes : ArrayLike of shape (n_classes,)
+        The different classes, in order of the indices that would be
+        present in a pred_proba.
 
     Returns
     -------
@@ -273,9 +279,15 @@ def top_label_ece(
         y_score = cast(
             NDArray, column_or_1d(np.max(y_scores, axis=1))
         )
-        y_score_arg = cast(
-            NDArray, column_or_1d(np.argmax(y_scores, axis=1))
-        )
+        if classes is None:
+            y_score_arg = cast(
+                NDArray, column_or_1d(np.argmax(y_scores, axis=1))
+            )
+        else:
+            classes = cast(NDArray, classes)
+            y_score_arg = cast(
+                NDArray, column_or_1d(classes[np.argmax(y_scores, axis=1)])
+            )
     else:
         y_score = cast(NDArray, column_or_1d(y_scores))
         y_score_arg = cast(NDArray, column_or_1d(y_score_arg))
@@ -283,11 +295,9 @@ def top_label_ece(
 
     for label in labels:
         label_ind = np.where(label == y_score_arg)[0]
+        y_true_ = np.array(y_true[label_ind] == label, dtype=int)
         ece += expected_calibration_error(
-            y_true=np.array(
-                y_true[label_ind] == (label + 1),
-                dtype=int
-            ),
+            y_true_,
             y_scores=y_score[label_ind],
             num_bins=num_bins,
             split_strategy=split_strategy

@@ -38,7 +38,7 @@ results = {
         [0, 0, 0.35635314],
         [0, 0, 0.18501723],
     ],
-    "top_label_ece": 0.4653271607043443,
+    "top_label_ece": 0.277,
 }
 
 results_binary = {
@@ -54,7 +54,7 @@ results_binary = {
         [0, 0.66666667],
         [0, 0.66666667],
     ],
-    "top_label_ece": 0.5598820088961577,
+    "top_label_ece": 0.273451,
     "ece": 0.471858484018367,
 }
 
@@ -306,19 +306,29 @@ def test_different_binary_y_combinations() -> None:
     mapie_cal.fit(X_comb, y_comb, random_state=random_state)
     y_score = mapie_cal.predict_proba(X_comb)
 
-    y_comb[np.where(y_comb == 2)[0]] = 3
+    y_comb1 = y_comb.copy()
+    y_comb1[np.where(y_comb1 == 2)[0]] = 3
     mapie_cal1 = MapieCalibrator()
-    mapie_cal1.fit(X_comb, y_comb, random_state=random_state)
+    mapie_cal1.fit(X_comb, y_comb1, random_state=random_state)
     y_score1 = mapie_cal1.predict_proba(X_comb)
 
-    y_comb[np.where(y_comb == 3)[0]] = 40
+    y_comb2 = y_comb.copy()
+    y_comb2[np.where(y_comb2 == 2)[0]] = 40
     mapie_cal2 = MapieCalibrator()
-    mapie_cal2.fit(X_comb, y_comb, random_state=random_state)
+    mapie_cal2.fit(X_comb, y_comb2, random_state=random_state)
     y_score2 = mapie_cal2.predict_proba(X_comb)
     np.testing.assert_array_almost_equal(y_score, y_score1)
     np.testing.assert_array_almost_equal(y_score, y_score2)
-    assert top_label_ece(y_comb, y_score) == top_label_ece(y_comb, y_score1)
-    assert top_label_ece(y_comb, y_score) == top_label_ece(y_comb, y_score2)
+    assert top_label_ece(
+        y_comb, y_score, classes=mapie_cal.classes_
+    ) == top_label_ece(
+        y_comb1, y_score1, classes=mapie_cal1.classes_
+    )
+    assert top_label_ece(
+        y_comb, y_score, classes=mapie_cal.classes_
+    ) == top_label_ece(
+        y_comb2, y_score2, classes=mapie_cal2.classes_
+    )
 
 
 def test_results_with_constant_sample_weights() -> None:
