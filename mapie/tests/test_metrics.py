@@ -207,7 +207,7 @@ def test_top_label_same_result() -> None:
         y_score_arg=pred_argmax_
     )
 
-    classes=np.unique([y_true_+1])
+    classes = np.unique([y_true_+1])
     scr3 = top_label_ece(
         y_true_+1,
         pred_proba_,
