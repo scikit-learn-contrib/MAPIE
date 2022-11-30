@@ -196,13 +196,29 @@ def test_top_label_same_result() -> None:
             [0.1, 0.7, 0.2]
         ]
     )
+    y_true_ = np.array([1, 0, 2, 1])
     pred_max_ = np.max(pred_proba_, axis=1)
     pred_argmax_ = np.argmax(pred_proba_, axis=1)
 
-    scr1 = top_label_ece(y_true, pred_proba_)
+    scr1 = top_label_ece(y_true_, pred_proba_)
     scr2 = top_label_ece(
-        y_true,
+        y_true_,
         pred_max_,
         y_score_arg=pred_argmax_
     )
+
+    classes=np.unique([y_true_+1])
+    scr3 = top_label_ece(
+        y_true_+1,
+        pred_proba_,
+        classes=classes,
+    )
+
+    scr4 = top_label_ece(
+        y_true_+1,
+        np.max(pred_proba_, axis=1),
+        classes[np.argmax(pred_proba_, axis=1)]
+    )
     assert scr1 == scr2
+    assert scr1 == scr3
+    assert scr1 == scr4
