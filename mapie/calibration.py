@@ -304,7 +304,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             EPSILON = 0.00001
             calibrator_ = calibrators[item]
             preds_ = calibrator_.predict(max_prob[correct_label])
-            idx_zero_pred = np.where(preds_<EPSILON)[0]
+            idx_zero_pred = np.where(preds_ < EPSILON)[0]
             preds_[idx_zero_pred] = EPSILON
             calibrated_values[correct_label, idx] = preds_
         return calibrated_values
