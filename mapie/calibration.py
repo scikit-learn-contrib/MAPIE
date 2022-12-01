@@ -264,6 +264,12 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         the fitted calibrators. Note that if there is no calibrator for a
         the specific class, then we simply output the not calibrated values.
 
+        Note that if the calibrated probability prediction is 0, there would
+        be an issue when finding the class is belongs to. We set it equal to
+        0.00001 as this would likely not have large impact on the calibration
+        scores, yet, would set the maximum to the correct label.
+
+
         Parameters
         ----------
         item : int
@@ -296,9 +302,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             )
         else:
             calibrator_ = calibrators[item]
-            calibrated_values[correct_label, idx] = calibrator_.predict(
-                max_prob[correct_label]
-            )
+            preds_ = calibrator_.predict(max_prob[correct_label])
+            idx_zero_pred = np.where(preds_ == 0)[0]
+            preds_[idx_zero_pred] = 0.00001
+            calibrated_values[correct_label, idx] = preds_
         return calibrated_values
 
     def fit(
