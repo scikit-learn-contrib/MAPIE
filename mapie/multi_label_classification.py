@@ -27,22 +27,24 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     """
     Prediction sets for multilabel-classification.
 
-    This class implements two conformal prediction strategies for
-    estimating prediction sets for multi-classification. It guarantees
-    (under the hypothesis of exchangeability) that the recall is at
-    leat 1 - alpha (alpha being a user-specified parameter).
+    This class implements two conformal prediction methods for
+    estimating prediction sets for multi-label. It guarantees
+    (under the hypothesis of exchangeability) that a risk (which
+    lower bound is tight) is at least 1 - alpha (alpha is a
+    user-specified parameter). For now, we consider the recall as risk.
 
     Parameters
     ----------
     estimator : Optional[ClassifierMixin]
         Any fitted multi-label classifier with scikit-learn API
         (i.e. with fit, predict, and predict_proba methods), by default None.
-        If ``None``, estimator defaults to a ``LogisticRegression`` instance.
+        If ``None``, estimator by default is a sklearn LogisticRegression
+        instance.
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
-        At this moment, parallel processing is disabled.
+        For this moment, parallel processing is disabled.
         If ``-1`` all CPUs are used.
         If ``1`` is given, no parallel computing code is used at all,
         which is useful for debugging.
@@ -54,14 +56,14 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random uniform sampling
-        for evaluation quantiles and prediction sets in cumulated_score.
+        to evaluate quantiles and prediction sets in cumulated_score method.
         Pass an int for reproducible output across multiple function calls.
 
-        By default ```1``.
+        By default ``1``.
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
-        At this moment, parallel processing is disabled.
+        For the moment, parallel processing is disabled.
         The frequency of the messages increases with the verbosity level.
         If it more than ``10``, all iterations are reported.
         Above ``50``, the output is sent to stdout.
@@ -71,7 +73,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     Attributes
     ----------
     valid_methods: List[str]
-        List of all valid methods.
+        List of all valid methods. Either CRC or RCPS
 
     single_estimator_ : sklearn.ClassifierMixin
         Estimator fitted on the whole training set.
@@ -126,7 +128,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         "single_estimator_",
         "risks"
     ]
-    sigma_init = .25
+    sigma_init = .25  # Value given in the paper.
 
     def __init__(
         self,
@@ -142,7 +144,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
     def _check_parameters(self) -> None:
         """
-        Perform several checks on input parameters.
+        Check n_jobs, verbose and random_states.
 
         Raises
         ------
@@ -154,22 +156,24 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         check_random_state(self.random_state)
 
     def _check_method(self) -> None:
-        """Check that the specified method is valid
+        """
+        Check that the specified method is valid
 
         Raises
         ------
         ValueError
             Raise error if the name of the method is not
-            in ["crc", "rcps"]
+            in self.valid_methods_
         """
         if self.method not in self.valid_methods_:
             raise ValueError(
                 "Invalid method. "
-                "Allowed values are 'crc' or 'rcps"
+                "Allowed values are" + " or ".join(self.valid_methods_)
             )
 
     def _check_all_labelled(self, y: NDArray) -> None:
-        """Check that all observations have at least
+        """
+        Check that all observations have at least
         one label
 
         Parameters
@@ -183,7 +187,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             Raise error if at least one observation
             has no label.
         """
-        if 0 in np.unique(y.sum(axis=1)):
+        if not (y.sum(axis=1) > 0).all():
             raise ValueError(
                 "Invalid y. "
                 "All observations should contain at "
@@ -191,9 +195,9 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             )
 
     def _check_delta(self, delta: Optional[float]):
-        """Check that delta is not ``None`` when the
-        method is RCPS and that it has values between
-        0 and 1.
+        """
+        Check that delta is not ``None`` when the
+        method is RCPS and that it is between 0 and 1.
 
         Parameters
         ----------
@@ -205,27 +209,27 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If delta is ``None`` and method is RCSP
         ValueError
-            If delta value is not in [0, 1] and method
+            If delta is not in [0, 1] and method
             is RCPS.
         """
         if (self.method == "rcps") and (delta is None):
             raise ValueError(
                 "Invalid delta. "
-                "delta can not be None when using "
-                "a RCPS method."
+                "delta cannot be None when using "
+                "RCPS method."
             )
-        if hasattr(delta, "__len__"):
+        if (not isinstance(delta, float)) and (delta is not None):
             raise ValueError(
                 "Invalid delta. "
                 f"delta must be a float, not a {type(delta)}"
             )
         if (delta is not None) and (
             ((delta <= 0) or (delta >= 1)) and
-            self.method == "rcps"
+            (self.method == "rcps")
         ):
             raise ValueError(
                 "Invalid delta. "
-                "delta must be in the ]0, 1[ interval"
+                "delta must be in ]0, 1["
             )
 
     def _check_estimator(
@@ -288,7 +292,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         return estimator
 
     def _check_partial_fit_first_call(self) -> bool:
-        """Check that this is the first time partial_fit
+        """
+        Check that this is the first time partial_fit
         or fit is called.
 
         Returns
@@ -299,7 +304,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         return not hasattr(self, "risks")
 
     def _check_bound(self, bound: Optional[str]):
-        """Check the value on the bound.
+        """
+        Check the value of the bound.
 
         Parameters
         ----------
@@ -313,7 +319,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         """
         if bound not in ["hoeffding", "bernstein", "wsr", None]:
             raise ValueError(
-                'bound must be in ["hoeffding", "bernstein", "wsr", None]'
+                "bound must be in ['hoeffding', 'bernstein', 'wsr', None]"
             )
 
     def _transform_pred_proba(
@@ -346,19 +352,20 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         return np.expand_dims(y_pred_proba_array, axis=2)
 
     def _compute_risks(self, y_pred_proba: NDArray, y: NDArray) -> NDArray:
-        """Compute the risk
+        """
+        Compute the risks
 
         Parameters
         ----------
         y_pred_proba : NDArray
             Predicted probabilities for each label and each observation
         y : NDArray
-            Labels.
+            True labels.
 
         Returns
         -------
         NDArray of shape (n_samples, n_lambdas)
-            Risk for each observation and each value of lambda.
+            Risks for each observation and each value of lambda.
         """
         lambdas = np.arange(
             0, 1,
@@ -393,14 +400,14 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Parameters
         ----------
         r_hat_plus : NDArray
-            Upper bounds computed in the get_r_hat_plus function.
+            Upper bounds computed in the get_r_hat_plus method.
         alphas : NDArray
             Risk levels.
 
         Returns
         -------
         NDArray of shape (n_alphas, )
-            Optimal lambdas which controls the risks for each value
+            Optimal lambdas which control the risks for each value
             of alpha.
         """
 
