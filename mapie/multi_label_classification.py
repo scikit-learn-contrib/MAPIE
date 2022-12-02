@@ -202,7 +202,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Parameters
         ----------
         delta : float
-            Probability with wchi we control the risk.
+            Probability with which we control the risk. The higher
+            the probability, the more conservative the algorithm will be.
 
         Raises
         ------
