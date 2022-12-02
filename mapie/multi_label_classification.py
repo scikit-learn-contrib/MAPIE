@@ -315,7 +315,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Raises
         ------
         AttributeError
-            If bound in not in ["hoeffding", "bernstein", "wsr", None]
+            If bound is not in ["hoeffding", "bernstein", "wsr", None]
         """
         if bound not in ["hoeffding", "bernstein", "wsr", None]:
             raise ValueError(
