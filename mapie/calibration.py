@@ -13,7 +13,7 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
 from ._typing import ArrayLike, NDArray
-from .utils import (check_binary_zero_one, check_calib_set, check_cv,
+from .utils import (check_binary_zero_one, get_calib_set, check_cv,
                     check_estimator_classification,
                     check_estimator_fit_predict, check_n_features_in,
                     check_null_weight, fit_estimator)
@@ -307,10 +307,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[NDArray] = None,
-        X_calib: Optional[ArrayLike] = None,
-        y_calib: Optional[ArrayLike] = None,
-        sample_weight_calib: Optional[NDArray] = None,
-        calib_size: Optional[float] = 0.3,
+        calib_size: Optional[float] = 0.33,
         random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
@@ -327,20 +324,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             Training labels.
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
-            If None, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
-            Note that the sample weight defined are only for the training, not
-            for the calibration procedure.
-            By default ``None``.
-        X_calib : Optional[ArrayLike] of shape (n_calib_samples, n_features)
-            Calibration data.
-        y_calib : Optional[ArrayLike] of shape (n_calib_samples,)
-            Calibration labels.
-        sample_weight_calib : Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for calib for fitting the out-of-fold models.
             If None, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
@@ -391,16 +374,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 X, y, sample_weight, estimator, calibrator
             )
         if cv == "split":
-            results = check_calib_set(
+            results = get_calib_set(
                 X,
                 y,
                 sample_weight=sample_weight,
-                X_calib=X_calib,
-                y_calib=y_calib,
-                sample_weight_calib=cast(
-                    Optional[NDArray],
-                    sample_weight_calib
-                ),
                 calib_size=calib_size,
                 random_state=random_state,
                 shuffle=shuffle,

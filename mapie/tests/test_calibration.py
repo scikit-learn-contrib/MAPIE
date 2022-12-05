@@ -96,7 +96,7 @@ def test_default_fit_params() -> None:
     )
     assert (
         signature(mapie_cal.fit).parameters["calib_size"].default
-        == 0.3
+        == 0.33
     )
     assert (
         signature(mapie_cal.fit).parameters["random_state"].default
@@ -163,9 +163,8 @@ def test_prefit_split_same_results() -> None:
         estimator=RandomForestClassifier(random_state=random_state)
     )
     mapie_cal_split.fit(
-        X_train, y_train, X_calib=X_calib, y_calib=y_calib
+        X_, y_, random_state=random_state
     )
-
     y_prefit = mapie_cal_prefit.predict_proba(X_test)
     y_split = mapie_cal_split.predict_proba(X_test)
     np.testing.assert_allclose(y_split, y_prefit)
@@ -178,7 +177,7 @@ def test_not_seen_calibrator() -> None:
     """
     with pytest.warns(
         UserWarning,
-        match=r".*WARNING: This calibration was not previously seen*"
+        match=r".*WARNING: This predicted label has not been*"
     ):
         mapie_cal = MapieCalibrator()
         mapie_cal.fit(X, y)
@@ -209,10 +208,9 @@ def test_number_of_classes_equal_calibrators() -> None:
     """
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(
-        X=X_train,
-        y=y_train,
-        X_calib=X_calib,
-        y_calib=y_calib
+        X=X_,
+        y=y_,
+        random_state=random_state
     )
     y_pred_calib_set = mapie_cal.estimator.predict(X=X_calib)  # type: ignore
     assert len(mapie_cal.calibrators) == len(np.unique(y_pred_calib_set))
@@ -222,10 +220,9 @@ def test_same_predict() -> None:
     """Test that the same prediction is made regardless of the calibration."""
     mapie_cal = MapieCalibrator(method="top_label")
     mapie_cal.fit(
-        X=X_train,
-        y=y_train,
-        X_calib=X_calib,
-        y_calib=y_calib
+        X=X_,
+        y=y_,
+        random_state=random_state
     )
     y_pred_calib_set = mapie_cal.estimator.predict(X=X_test)  # type: ignore
     y_pred_calibrated_test_set = mapie_cal.predict(X=X_test)
@@ -239,10 +236,9 @@ def test_correct_results() -> None:
     """
     mapie_cal = MapieCalibrator(cv="split")
     mapie_cal.fit(
-        X=X_train,
-        y=y_train,
-        X_calib=X_calib,
-        y_calib=y_calib
+        X=X_,
+        y=y_,
+        random_state=random_state
     )
     pred_ = mapie_cal.predict_proba(X_test)
     top_label_ece_ = top_label_ece(y_test, pred_)

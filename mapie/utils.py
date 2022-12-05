@@ -667,13 +667,10 @@ def compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
     return quantiles_
 
 
-def check_calib_set(
+def get_calib_set(
     X: ArrayLike,
     y: ArrayLike,
     sample_weight: Optional[NDArray] = None,
-    X_calib: Optional[ArrayLike] = None,
-    y_calib: Optional[ArrayLike] = None,
-    sample_weight_calib: Optional[NDArray] = None,
     calib_size: Optional[float] = 0.3,
     random_state: Optional[Union[int, np.random.RandomState]] = None,
     shuffle: Optional[bool] = True,
@@ -683,8 +680,7 @@ def check_calib_set(
     Optional[NDArray], Optional[NDArray]
 ]:
     """
-    Check if a calibration set has already been defined, if not, then
-    we define one using the `train_test_split` method.
+    Split the dataset into training and calibration sets.
 
     Parameters
     ----------
@@ -709,47 +705,42 @@ def check_calib_set(
     - [5]: Optional[NDArray] of shape (n_samples_*calib_size,)
         sample_weight_calib
     """
-    sw_calib = sample_weight_calib
-    if X_calib is None or y_calib is None:
-        if sw_calib is not None:
-            warnings.warn(
-                "WARNING: sample weight for calibration"
-                + " were provided without X_calib and y_calib."
-            )
-        if sample_weight is None:
-            (
-                X_train, X_calib, y_train, y_calib
-            ) = train_test_split(
-                    X,
-                    y,
-                    test_size=calib_size,
-                    random_state=random_state,
-                    shuffle=shuffle,
-                    stratify=stratify
-            )
-            sw_train = sample_weight
-        else:
-            (
-                    X_train,
-                    X_calib,
-                    y_train,
-                    y_calib,
-                    sw_train,
-                    sw_calib,
-            ) = train_test_split(
-                    X,
-                    y,
-                    sample_weight,
-                    test_size=calib_size,
-                    random_state=random_state,
-                    shuffle=shuffle,
-                    stratify=stratify
-            )
+    if sample_weight is None:
+        (
+            X_train, X_calib, y_train, y_calib
+        ) = train_test_split(
+                X,
+                y,
+                test_size=calib_size,
+                random_state=random_state,
+                shuffle=shuffle,
+                stratify=stratify
+        )
+        sample_weight_train = sample_weight
+        sample_weight_calib = None
     else:
-        X_train, y_train, sw_train = X, y, sample_weight
+        (
+                X_train,
+                X_calib,
+                y_train,
+                y_calib,
+                sample_weight_train,
+                sample_weight_calib,
+        ) = train_test_split(
+                X,
+                y,
+                sample_weight,
+                test_size=calib_size,
+                random_state=random_state,
+                shuffle=shuffle,
+                stratify=stratify
+        )
     X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
     y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
-    return X_train, y_train, X_calib, y_calib, sw_train, sw_calib
+    return (
+        X_train, y_train, X_calib, y_calib,
+        sample_weight_train, sample_weight_calib
+    )
 
 
 def check_estimator_classification(

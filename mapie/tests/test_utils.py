@@ -19,7 +19,6 @@ from mapie.utils import (
     compute_quantiles,
     fit_estimator,
     check_lower_upper_bounds,
-    check_calib_set,
     get_binning_groups,
     check_split_strategy,
     check_number_bins,
@@ -352,17 +351,17 @@ def test_quantile_prefit_non_iterable(estimator: Any) -> None:
         )
 
 
-def test_calib_set_no_Xy_but_sample_weight() -> None:
-    """Test warning message if sample weight provided but no X y in calib."""
-    X = np.array([4, 5, 6])
-    y = np.array([4, 3, 2])
-    sample_weight = np.array([4, 4, 4])
-    sample_weight_calib = np.array([4, 3, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: sample weight*"):
-        check_calib_set(
-            X=X, y=y, sample_weight=sample_weight,
-            sample_weight_calib=sample_weight_calib
-        )
+# def test_calib_set_no_Xy_but_sample_weight() -> None:
+#     """Test warning message if sample weight provided but no X y in calib."""
+#     X = np.array([4, 5, 6])
+#     y = np.array([4, 3, 2])
+#     sample_weight = np.array([4, 4, 4])
+#     sample_weight_calib = np.array([4, 3, 4])
+#     with pytest.warns(UserWarning, match=r"WARNING: sample weight*"):
+#         check_calib_set(
+#             X=X, y=y, sample_weight=sample_weight,
+#             sample_weight_calib=sample_weight_calib
+#         )
 
 
 @pytest.mark.parametrize("strategy", ["quantile", "uniform", "array split"])
