@@ -1,15 +1,11 @@
-from typing import cast, Optional
+from typing import Optional, cast
 
 import numpy as np
-from sklearn.utils.validation import column_or_1d, check_array
+from sklearn.utils.validation import check_array, column_or_1d
 
 from ._typing import ArrayLike, NDArray
-from .utils import (
-    check_split_strategy,
-    calc_bins,
-    check_number_bins,
-    check_binary_zero_one,
-)
+from .utils import (calc_bins, check_binary_zero_one, check_number_bins,
+                    check_split_strategy)
 
 
 def regression_coverage_score(
@@ -200,9 +196,12 @@ def expected_calibration_error(
     y_score : ArrayLike of shape (n_samples,) or (n_samples, n_classes)
         The predictions scores.
     num_bins : int
-        Number of bins to make the split in the y_score.
-    strategy : str
+        Number of bins to make the split in the y_score. The allowed
+        values are num_bins above 0.
+    split_strategy : str
         The way of splitting the predictions into different bins.
+        The allowed split strategies are "uniform", "quantile" and
+        "array split".
     Returns
     -------
     float
@@ -259,10 +258,13 @@ def top_label_ece(
         If only the maximum is provided in the y_scores, the argmax must
         be provided here.
     num_bins : int
-        Number of bins to make the split in the y_score.
-    strategy : str
+        Number of bins to make the split in the y_score. The allowed
+        values are num_bins above 0.
+    split_strategy : str
         The way of splitting the predictions into different bins.
-    classes : ArrayLike of shape (n_classes,)
+        The allowed split strategies are "uniform", "quantile" and
+        "array split".
+    classes : ArrayLike of shape (n_samples,)
         The different classes, in order of the indices that would be
         present in a pred_proba.
 
@@ -271,7 +273,7 @@ def top_label_ece(
     float
         The ECE score adapted in the top label setting.
     """
-    ece = float(0)
+    ece = float(0.)
     split_strategy = check_split_strategy(split_strategy)
     check_number_bins(num_bins)
     y_true = cast(NDArray, column_or_1d(y_true))

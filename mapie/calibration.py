@@ -1,32 +1,22 @@
-from typing import Optional, Union, cast, Tuple, Dict
-
 import warnings
+from typing import Dict, Optional, Tuple, Union, cast
+
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin, clone, RegressorMixin
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.calibration import _SigmoidCalibration
 from sklearn.isotonic import IsotonicRegression
-from sklearn.pipeline import Pipeline
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils import check_random_state, check_consistent_length
+from sklearn.pipeline import Pipeline
+from sklearn.utils import check_random_state
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (
-    indexable,
-    check_is_fitted,
-    _check_y,
-    _num_samples,
-)
+from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
+                                      indexable)
 
 from ._typing import ArrayLike, NDArray
-from .utils import (
-    check_cv,
-    check_null_weight,
-    check_n_features_in,
-    check_calib_set,
-    fit_estimator,
-    check_estimator_classification,
-    check_estimator_fit_predict,
-    check_binary_zero_one,
-)
+from .utils import (check_binary_zero_one, check_calib_set, check_cv,
+                    check_estimator_classification,
+                    check_estimator_fit_predict, check_n_features_in,
+                    check_null_weight, fit_estimator)
 
 
 class MapieCalibrator(BaseEstimator, ClassifierMixin):
@@ -41,12 +31,14 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         "isotonic": IsotonicRegression(out_of_bounds="clip")
     }
 
+    valid_methods = ["top_label"]
+
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
         method: str = "top_label",
         calibrator: Optional[Union[str, RegressorMixin]] = None,
-        cv: Optional[Union[str, BaseCrossValidator]] = "split",
+        cv: Optional[str] = "split",
     ) -> None:
         self.estimator = estimator
         self.method = method
@@ -74,9 +66,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         calibrator : RegressorMixin
             Calibrator to train.
         y_calib : NDArray of shape (n_samples,)
-            The dependent values of the calibrator.
+            Training labels.
         top_class_prob : NDArray of shape (n_samples,)
-            The independent values of the calibrator.
+            The independent values of the calibrator, it represents the
+            maximum score in the probability predictions.
         top_class_prob_arg : NDArray of shape (n_samples,)
             The array to determine which class the max prediction belongs to.
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
@@ -186,12 +179,12 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         ValueError
             If the method provided has not been implemented.
         """
-        if method == "top_label":
-            max_class_prob = np.max(pred, axis=1).reshape(-1, 1)
-            max_class_prob_arg = self.classes_[np.argmax(pred, axis=1)]
+        if method in self.valid_methods:
+            if method == "top_label":
+                max_class_prob = np.max(pred, axis=1).reshape(-1, 1)
+                max_class_prob_arg = self.classes_[np.argmax(pred, axis=1)]
         else:
             raise ValueError("No other methods have been implemented yet.")
-        check_consistent_length(max_class_prob, max_class_prob_arg)
         return max_class_prob, max_class_prob_arg
 
     def _fit_calibrators(
@@ -297,8 +290,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 correct_label, idx
                 ] = max_prob[correct_label].ravel()
             warnings.warn(
-                "WARNING: This calibration was not previously seen"
-                + " and therefore scores will remain unchanged."
+                "WARNING: This predicted label has not been seen during the"
+                + " calibration and therefore scores will remain unchanged."
             )
         else:
             EPSILON = 0.00001
