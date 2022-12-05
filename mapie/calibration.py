@@ -20,6 +20,84 @@ from .utils import (check_binary_zero_one, get_calib_set, check_cv,
 
 
 class MapieCalibrator(BaseEstimator, ClassifierMixin):
+    """
+    Calibration for multi-class problems.
+
+    This class performs a post-processing step on the output of a classifier
+    to calibrate the outputs and make them more accurate, closer to the
+    metric of accuracy.
+
+    Parameters
+    ----------
+    estimator : Optional[ClassifierMixin]
+        Any classifier with scikit-learn API
+        (i.e. with fit, predict, and predict_proba methods), by default None.
+        If ``None``, estimator defaults to a ``LogisticRegression`` instance.
+
+    method: Optional[str]
+        Method to choose for prediction interval estimates.
+        Choose among:
+
+        - "top_label", performs a calibration procedure on the class with
+           highest probability score.
+
+        By default "top_label".
+
+    estimator : Optional[Union[str, RegressorMixin]]
+        Any estimator with scikit-learn API
+        (i.e. with fit, predict, and predict_proba methods), by default None.
+        If ``None``, estimator defaults to a string ``sigmoid`` instance.
+
+        By default ``None``.
+
+    cv: Optional[str]
+        The cross-validation strategy for computing scores :
+
+        - ``split``, performs a standard splitting procedure into a
+          calibration and test set.
+        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
+          All data provided in the ``fit`` method is then used
+          to calibrate the predictions through the score computation.
+          At prediction time, quantiles of these scores are used to estimate
+          prediction sets.
+
+        By default ``split``.
+
+    Attributes
+    ----------
+    n_features_in_: List[str]
+        List of all valid methods.
+
+    classes_: NDArray
+        Array with the name of each class.
+
+    n_classes_: int
+        Number of classes that are in the training dataset.
+
+    uncalib_pred: NDArray
+        Array of the uncalibrated predictions.
+
+    calibrators: Dict[str, RegressorMixin]
+        Dictionnary of all the fitted calibrators.
+
+    References
+    ----------
+    [1] Gupta, Chirag, and Aaditya K. Ramdas. "Top-label calibration
+    and multiclass-to-binary reductions." arXiv preprint
+    arXiv:2107.08353 (2021).
+
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.calibration import MapieCalibrator
+    >>> X_toy = np.arange(9).reshape(-1, 1)
+    >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
+    >>> mapie = MapieCalibrator().fit(X_toy, y_toy, random_state=20)
+    >>> y_calib = mapie.predict(X_toy)
+    >>> print(y_calib)
+    [0 0 0 1 1 1 2 2 2]
+    """
 
     fit_attributes = [
         "estimator",
@@ -179,12 +257,11 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         ValueError
             If the method provided has not been implemented.
         """
-        if method in self.valid_methods:
-            if method == "top_label":
-                max_class_prob = np.max(pred, axis=1).reshape(-1, 1)
-                max_class_prob_arg = self.classes_[np.argmax(pred, axis=1)]
-        else:
+        if method not in self.valid_methods:
             raise ValueError("No other methods have been implemented yet.")
+        else:
+            max_class_prob = np.max(pred, axis=1).reshape(-1, 1)
+            max_class_prob_arg = self.classes_[np.argmax(pred, axis=1)]
         return max_class_prob, max_class_prob_arg
 
     def _fit_calibrators(

@@ -809,7 +809,7 @@ def get_binning_groups(
     num_bins: int,
     strategy: str,
 ) -> NDArray:
-    """_summary_
+    """
     Parameters
     ----------
     y_score : NDArray of shape (n_samples,)
@@ -823,12 +823,13 @@ def get_binning_groups(
     NDArray of shape (num_bins,)
         An array of all the splitting points for a new bin.
     """
+    bins = None
     if strategy == "quantile":
         quantiles = np.linspace(0, 1, num_bins)
         bins = np.percentile(y_score, quantiles * 100)
-    if strategy == "uniform":
+    elif strategy == "uniform":
         bins = np.linspace(0.0, 1.0, num_bins)
-    if strategy == "array split":
+    else:
         bin_groups = np.array_split(y_score, num_bins)
         bins = np.sort(np.array(
                 [
