@@ -945,7 +945,7 @@ def check_number_bins(
         raise ValueError(
             "Please provide a bin number as an integer."
         )
-    elif num_bins < 1:
+    if num_bins < 1:
         raise ValueError(
             """
             Please provide a bin number greater than
@@ -978,16 +978,21 @@ def check_binary_zero_one(
         If the input array is not binary, then an error is raised.
     """
     y_true = cast(NDArray, column_or_1d(y_true))
-    if type_of_target(y_true) != "binary":
+    if type_of_target(y_true) == "binary":
+        if (np.unique(y_true) != np.array([0, 1])).any():
+            idx_min = np.where(y_true == np.min(y_true))[0]
+            y_true[idx_min] = 0
+            idx_max = np.where(y_true == np.max(y_true))[0]
+            y_true[idx_max] = 1
+            return y_true
+        else:
+            return y_true
+    else:
         raise ValueError(
             "Please provide y_true as a binary array."
         )
-    if (np.unique(y_true) != np.array([0, 1])).any():
-        idx_min = np.where(y_true == np.min(y_true))[0]
-        y_true[idx_min] = 0
-        idx_max = np.where(y_true == np.max(y_true))[0]
-        y_true[idx_max] = 1
-    return y_true
+
+    
 
 
 def fix_number_of_classes(
