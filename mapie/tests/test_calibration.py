@@ -138,7 +138,7 @@ def test_other_methods() -> None:
     """Test that invalid string for method returns error"""
     with pytest.raises(
         ValueError,
-        match=r".*No other methods have been*",
+        match=r".*Invalid method, allowed method are*",
     ):
         mapie_cal = MapieCalibrator(method="no_method")
         mapie_cal.fit(X, y)

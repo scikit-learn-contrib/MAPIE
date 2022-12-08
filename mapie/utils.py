@@ -992,8 +992,6 @@ def check_binary_zero_one(
             "Please provide y_true as a binary array."
         )
 
-    
-
 
 def fix_number_of_classes(
     n_classes_: int,
