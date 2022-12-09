@@ -566,7 +566,6 @@ class MapieQuantileRegressor(MapieRegressor):
             )
             y_train = cast(NDArray, y_train)
 
-            # Work
             y_calib_preds = np.full(
                 shape=(3, self.n_calib_samples),
                 fill_value=np.nan

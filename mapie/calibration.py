@@ -230,7 +230,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     def _get_labels(
         self,
-        X: NDArray
+        X: ArrayLike
     ) -> Tuple[NDArray, NDArray]:
         """
         The "labels" is the way to create the different arrays needed
@@ -259,7 +259,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         ValueError
             If the method provided has not been implemented.
         """
-        pred = self.estimator.predict_proba(X=X)
+        pred = self.estimator.predict_proba(X=X)  # type: ignore
         max_class_prob = np.max(pred, axis=1).reshape(-1, 1)
         y_pred = self.classes_[np.argmax(pred, axis=1)]
         return max_class_prob, y_pred
@@ -508,7 +508,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             other position in that line.
         """
         check_is_fitted(self, self.fit_attributes)
-        self.uncalib_pred = self.estimator.predict_proba(X=X)
+        self.uncalib_pred = self.estimator.predict_proba(X=X)  # type: ignore
 
         max_prob, y_pred = self._get_labels(X)
 
@@ -545,4 +545,4 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             The class from the predictions.
         """
         check_is_fitted(self, self.fit_attributes)
-        return self.estimator.predict(X)
+        return self.estimator.predict(X)  # type: ignore

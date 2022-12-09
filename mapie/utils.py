@@ -21,7 +21,7 @@ SPLIT_STRATEGIES = ["uniform", "quantile", "array split"]
 
 
 def check_null_weight(
-    sample_weight: Optional[NDArray], X: ArrayLike, y: ArrayLike
+    sample_weight: Optional[ArrayLike], X: ArrayLike, y: ArrayLike
 ) -> Tuple[Optional[NDArray], ArrayLike, ArrayLike]:
     """
     Check sample weights and remove samples with null sample weights.
