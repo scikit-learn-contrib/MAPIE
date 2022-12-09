@@ -33,8 +33,8 @@ To apply calibration directly to a multi-class context, Gupta et al. propose a f
 binary calibration concepts to a multi-class problem.
 
 
-2. Top-Label
---------
+1. Top-Label
+------------
 
 Top-Label calibration is a calibration technique introduced by Gupta et al. to calibrate the label with the highest score.
 This calibration technique can therefore be directly applied to a multi-class problem.
@@ -51,7 +51,36 @@ for Top-Label calibration would be:
     Pr(Y = c(X) \mid h(X), c(X)) = h(X)
 
 
-2. References
+2. Metric for calibration
+-------------------------
+
+Expected calibration error:
+
+The main metric to check if the calibration has been done correctly is the Expected Calibration Error (ECE). It is made of two
+components, accuracy and confidence per bin. The number of bins is an hyperparamater :math:`M`, and we refer to a specific bin by
+:math:`B_m`.
+
+.. math::
+    \text{acc}(B_m) &= \frac{1}{\left| B_m \right|} \sum_{i \in B_m} {y}_i \\
+    \text{conf}(B_m) &= \frac{1}{\left| B_m \right|} \sum_{i \in B_m} \hat{f}(x)_i
+
+
+The ECE is the combination of these two metrics combined together.
+
+.. math::
+    \text{ECE} = \sum_{m=1}^M \frac{\left| B_m \right|}{n} \left| acc(B_m) - conf(B_m) \right|
+
+In simple terms, once all the different bins from the confidence scores have been created, we check the mean accuracy of each bin.
+The absolute mean difference between the two is the ECE. Hence, the lower the ECE, the better the calibration was performed. 
+
+
+Top-Label ECE:
+
+In the top-label scenario, we only calculate the ECE for the top-label. Hence, per top-label, we condition the calculation
+of the accuracy and confidence based on the top label and take the average ECE for each top-label.
+
+
+3. References
 -------------
 
 [1] Gupta, Chirag, and Aaditya K. Ramdas.
