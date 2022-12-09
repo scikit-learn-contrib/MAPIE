@@ -923,7 +923,7 @@ def check_split_strategy(
 
 def check_number_bins(
     num_bins: int
-) -> None:
+) -> int:
     """
     Checks that the bin specified is a number.
 
@@ -945,13 +945,15 @@ def check_number_bins(
         raise ValueError(
             "Please provide a bin number as an integer."
         )
-    if num_bins < 1:
+    elif num_bins < 1:
         raise ValueError(
             """
             Please provide a bin number greater than
             or equal to  1.
             """
         )
+    else:
+        return num_bins
 
 
 def check_binary_zero_one(

@@ -22,7 +22,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     Calibration for multi-class problems.
 
     This class performs a post-processing step on the output of a classifier
-    to calibrate the outputs and make them more accurate, closer to the
+    more representative of the confidence of the prediction, closer to the
     metric of accuracy.
 
     Parameters

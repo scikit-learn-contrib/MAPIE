@@ -208,7 +208,7 @@ def expected_calibration_error(
         The score of ECE (Expected Calibration Error).
     """
     split_strategy = check_split_strategy(split_strategy)
-    check_number_bins(num_bins)
+    num_bins = check_number_bins(num_bins)
     y_true_ = check_binary_zero_one(y_true)
     y_scores = cast(NDArray, y_scores)
 
@@ -254,9 +254,10 @@ def top_label_ece(
         The predictions scores, either the maximum score and the
         argmax needs to be inputted or in the form of the prediction
         probabilities.
-    y_score_arg : ArrayLike of shape (n_samples,)
+    y_score_arg : Optional[ArrayLike] of shape (n_samples,)
         If only the maximum is provided in the y_scores, the argmax must
-        be provided here.
+        be provided here. This is optional and could be directly infered
+        from the y_scores.
     num_bins : int
         Number of bins to make the split in the y_score. The allowed
         values are num_bins above 0.
@@ -275,7 +276,7 @@ def top_label_ece(
     """
     ece = float(0.)
     split_strategy = check_split_strategy(split_strategy)
-    check_number_bins(num_bins)
+    num_bins = check_number_bins(num_bins)
     y_true = cast(NDArray, column_or_1d(y_true))
     if y_score_arg is None:
         y_score = cast(
