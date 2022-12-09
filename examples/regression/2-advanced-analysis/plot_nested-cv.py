@@ -44,17 +44,21 @@ prediction intervals. However, in this particular example, effective
 coverages of both nested and non-nested methods are the same.
 """
 
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from scipy.stats import randint
-from sklearn.datasets import load_boston
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
 
 # Load the Boston data
-X_boston, y_boston = load_boston(return_X_y=True)
+data_url = "http://lib.stat.cmu.edu/datasets/boston"
+raw_df = pd.read_csv(data_url, sep="\s+", skiprows=22, header=None)
+X_boston = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
+y_boston = raw_df.values[1::2, 2]
 
 # Split the data into training and test sets.
 X_train, X_test, y_train, y_test = train_test_split(

@@ -36,7 +36,7 @@
    :caption: CALIBRATION
 
    theoretical_description_calibration
-   notebooks_classification
+   notebooks_calibration
 
 .. toctree::
    :maxdepth: 2
