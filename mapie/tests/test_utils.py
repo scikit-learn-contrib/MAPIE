@@ -3,31 +3,20 @@ from __future__ import annotations
 from typing import Any, Optional
 
 import numpy as np
-from numpy.random import RandomState
 import pytest
+from numpy.random import RandomState
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
 
-from mapie.utils import (
-    check_alpha,
-    check_alpha_and_n_samples,
-    check_n_features_in,
-    check_n_jobs,
-    check_null_weight,
-    check_verbose,
-    compute_quantiles,
-    fit_estimator,
-    check_lower_upper_bounds,
-    get_binning_groups,
-    check_split_strategy,
-    check_number_bins,
-    check_binary_zero_one,
-)
-from mapie.quantile_regression import MapieQuantileRegressor
-
 from mapie._typing import ArrayLike, NDArray
-
+from mapie.quantile_regression import MapieQuantileRegressor
+from mapie.utils import (check_alpha, check_alpha_and_n_samples,
+                         check_binary_zero_one, check_lower_upper_bounds,
+                         check_n_features_in, check_n_jobs, check_null_weight,
+                         check_number_bins, check_split_strategy,
+                         check_verbose, compute_quantiles, fit_estimator,
+                         get_binning_groups)
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])

@@ -11,10 +11,10 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
 from ._typing import ArrayLike, NDArray
-from .utils import (check_binary_zero_one, get_calib_set, check_cv,
+from .utils import (check_binary_zero_one, check_cv,
                     check_estimator_classification,
                     check_estimator_fit_predict, check_n_features_in,
-                    check_null_weight, fit_estimator)
+                    check_null_weight, fit_estimator, get_calib_set)
 
 
 class MapieCalibrator(BaseEstimator, ClassifierMixin):

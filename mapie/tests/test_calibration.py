@@ -1,21 +1,22 @@
+from inspect import signature
 from typing import Union
+
 import numpy as np
 import pandas as pd
+import pytest
+from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.calibration import _SigmoidCalibration
-from sklearn.pipeline import make_pipeline, Pipeline
 from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.base import RegressorMixin, ClassifierMixin
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.datasets import make_classification
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.preprocessing import OneHotEncoder
 
 from mapie.calibration import MapieCalibrator
-from mapie.metrics import top_label_ece, expected_calibration_error
-from inspect import signature
-import pytest
+from mapie.metrics import expected_calibration_error, top_label_ece
 
 random_state = 20
 

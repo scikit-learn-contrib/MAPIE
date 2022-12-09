@@ -1,7 +1,4 @@
-from . import regression
-from . import classification
-from . import metrics
-
+from . import classification, metrics, regression
 from ._version import __version__
 
 __all__ = [
