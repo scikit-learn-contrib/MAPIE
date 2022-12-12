@@ -43,9 +43,9 @@ cross-validation, since it does not underestimate conformity scores and hence
 prediction intervals. However, in this particular example, effective
 coverages of both nested and non-nested methods are the same.
 """
-
-import numpy as np
 import pandas as pd
+import numpy as np
+
 import matplotlib.pyplot as plt
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
@@ -56,7 +56,7 @@ from sklearn.model_selection import RandomizedSearchCV, train_test_split
 
 # Load the Boston data
 data_url = "http://lib.stat.cmu.edu/datasets/boston"
-raw_df = pd.read_csv(data_url, sep="\s+", skiprows=22, header=None)
+raw_df = pd.read_csv(data_url, sep=r'\s+', skiprows=22, header=None)
 X_boston = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
 y_boston = raw_df.values[1::2, 2]
 
