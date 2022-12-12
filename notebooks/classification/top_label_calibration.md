@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.13.6
+      jupytext_version: 1.14.4
   kernelspec:
     display_name: Python 3.10.8 ('mapie-dev')
     language: python
@@ -20,7 +20,7 @@ The goal of this notebook is to present :class:`mapie.calibration.MapieCalibrato
 
 ```python
 !git clone https://github.com/AIgen/df-posthoc-calibration
-!cd df-posthoc-calibration
+!cd df-posthoc-calibration && git checkout 109da93c1487cb38ee51fcac47088cdd29854999
 
 ```
 
