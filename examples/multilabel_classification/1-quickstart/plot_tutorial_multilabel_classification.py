@@ -3,7 +3,7 @@
 Tutorial for multilabel-classification
 ======================================
 In this tutorial, we compare the prediction sets estimated by the
-RCPS and RCR methods implemented in MAPIE on a toy two-dimensional dataset.
+RCPS and RCR methods implemented in MAPIE on a two-dimensional toy dataset.
 
 Throughout this tutorial, we will answer the following questions:
 
@@ -177,7 +177,8 @@ plt.show()
 #       one who gives the best results as for a given value of :math:`\alpha`
 #       as we are above the required recall but with a larger value of
 #       :math:`\lambda` than the two others bounds.
-#     * The CRC method gives the best results
+#     * The CRC method gives the best results as it guarantee the coverage
+#       with a larger threshold.
 
 fig, axs = plt.subplots(
     1,

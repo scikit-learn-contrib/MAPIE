@@ -1,27 +1,26 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Union, Iterable, List, Dict, cast
-from typing_extensions import TypedDict
+from typing import Any, Dict, Iterable, List, Optional, Union, cast
 
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 from sklearn.base import ClassifierMixin
+from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
+from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import KFold, LeaveOneOut
-from sklearn.pipeline import make_pipeline, Pipeline
-from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
 from sklearn.utils.validation import check_is_fitted
+from typing_extensions import TypedDict
 
+from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
 from mapie.utils import check_alpha
-from mapie._typing import ArrayLike, NDArray
-
 
 METHODS = ["score", "cumulated_score", "raps"]
 WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]

@@ -1,7 +1,7 @@
 from typing import cast
 
 import numpy as np
-from sklearn.utils.validation import column_or_1d, check_array
+from sklearn.utils.validation import check_array, column_or_1d
 
 from ._typing import ArrayLike, NDArray
 

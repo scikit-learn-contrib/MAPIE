@@ -1,5 +1,4 @@
 from typing import Any, Optional
-from typing_extensions import TypedDict
 
 import numpy as np
 import pandas as pd
@@ -9,13 +8,13 @@ from sklearn.datasets import make_multilabel_classification
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.multioutput import MultiOutputClassifier
-from sklearn.pipeline import make_pipeline, Pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
+from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.multi_label_classification import MapieMultiLabelClassifier
-
 
 Params = TypedDict(
     "Params",

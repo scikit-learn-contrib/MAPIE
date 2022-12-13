@@ -45,13 +45,14 @@ coverages of both nested and non-nested methods are the same.
 """
 
 import matplotlib.pyplot as plt
-from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieRegressor
 from scipy.stats import randint
 from sklearn.datasets import load_boston
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
+
+from mapie.metrics import regression_coverage_score
+from mapie.regression import MapieRegressor
 
 # Load the Boston data
 X_boston, y_boston = load_boston(return_X_y=True)
