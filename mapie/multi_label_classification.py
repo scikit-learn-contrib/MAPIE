@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Optional, Union, Tuple, Iterable, cast, Sequence
+
+from typing import Iterable, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -7,20 +8,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import (
-    indexable,
-    check_is_fitted,
-    _num_samples,
-    _check_y
-)
+from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
+                                      indexable)
 
 from ._typing import ArrayLike, NDArray
-from .utils import (
-    check_null_weight,
-    check_alpha,
-    check_n_jobs,
-    check_verbose,
-)
+from .utils import check_alpha, check_n_jobs, check_null_weight, check_verbose
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
@@ -74,7 +66,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     ----------
     valid_methods: List[str]
         List of all valid methods. Either CRC or RCPS
-
+    valid_methods: List[Union[str, None]]
+        List of all valid bounds computation.
     single_estimator_ : sklearn.ClassifierMixin
         Estimator fitted on the whole training set.
 
@@ -123,6 +116,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
      [False  True False]]
     """
     valid_methods_ = ["crc", "rcps"]
+    valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
     n_lambdas = 100
     fit_attributes = [
         "single_estimator_",
@@ -318,7 +312,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         AttributeError
             If bound is not in ["hoeffding", "bernstein", "wsr", None]
         """
-        if bound not in ["hoeffding", "bernstein", "wsr", None]:
+        if bound not in self.valid_bounds_:
             raise ValueError(
                 "bound must be in ['hoeffding', 'bernstein', 'wsr', None]"
             )
@@ -341,7 +335,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         NDArray of shape (n_samples, n_classes)
             Output of the model ready for risk computation.
         """
-        if type(y_pred_proba) == np.ndarray:
+        if isinstance(y_pred_proba, np.ndarray):
             y_pred_proba_array = y_pred_proba
         else:
             y_pred_proba_stacked = np.stack(
@@ -437,7 +431,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         return lambdas_star
 
     def _get_r_hat_plus(
-        self, bound: Optional[str],
+        self,
+        bound: Optional[str],
         delta: Optional[float],
         sigma_init: float = .25
     ) -> Tuple[NDArray, NDArray]:

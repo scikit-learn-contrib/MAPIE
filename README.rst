@@ -258,6 +258,14 @@ International Conference on Learning Representations 2021.
 "Conformal Prediction Interval for Dynamic Time-Series."
 International Conference on Machine Learning (ICML, 2021).
 
+[8] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
+and Michael I. Jordan. Distribution-free, risk-controlling prediction
+sets. CoRR, abs/2101.02703, 2021.
+URL https://arxiv.org/abs/2101.02703.39
+
+[9] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
+Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
+
 
 📝 License
 ==========

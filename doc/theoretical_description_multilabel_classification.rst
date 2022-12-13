@@ -23,6 +23,11 @@ on the recall. RCPS and CRC give two slightly different guarantees:
 .. math::
     \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta
 
+- CRC:
+
+.. math::
+    \mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha
+
 
 1. Risk-Controlling Prediction Sets
 -----------------------------------
@@ -69,7 +74,7 @@ Following those settings, the RCPS method gives the following guarantee on the r
 -----------------------
 
 In this section, we will consider only bounded losses (as for now, only the :math:`1-recall` loss is implemented.
-We will presenter three different Upper Calibration Bounds (Hoeffding, Bernstein and Waudby-Smith–Ramdas) of :math:`R(\lambda)`
+We will presenter three different Upper Calibration Bounds (UCB) (Hoeffding, Bernstein and Waudby-Smith–Ramdas) of :math:`R(\lambda)`
 based on the empirical risk which is defined as follows:
 
 .. math::
