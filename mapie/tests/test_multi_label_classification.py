@@ -495,7 +495,7 @@ def test_error_rcps_delta_null() -> None:
         mapie_clf.predict(X_toy, method="rcps")
 
 
-@pytest.mark.parametrize("delta", [-1, 0, 1, 4, -3])
+@pytest.mark.parametrize("delta", [-1., 0, 1, 4, -3])
 def test_error_delta_wrong_value(delta: Any) -> None:
     """Test error for RCPS method and delta None"""
     mapie_clf = MapieMultiLabelClassifier()
