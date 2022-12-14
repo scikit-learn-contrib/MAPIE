@@ -322,8 +322,8 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     regardless of number of parallel jobs.
     """
     args = STRATEGIES[strategy][0]
-    mapie_clf_single = MapieMultiLabelClassifier(n_jobs=1)
-    mapie_clf_multi = MapieMultiLabelClassifier(n_jobs=-1)
+    mapie_clf_single = MapieMultiLabelClassifier(n_jobs=1, random_state=42)
+    mapie_clf_multi = MapieMultiLabelClassifier(n_jobs=-1, random_state=42)
     mapie_clf_single.fit(X, y)
     mapie_clf_multi.fit(X, y)
     y_pred_single, y_ps_single = mapie_clf_single.predict(
@@ -342,51 +342,6 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     )
     np.testing.assert_allclose(y_pred_single, y_pred_multi)
     np.testing.assert_allclose(y_ps_single, y_ps_multi)
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_results_with_constant_sample_weights(
-    strategy: str
-) -> None:
-    """
-    Test predictions when sample weights are None
-    or constant with different values.
-    """
-    args = STRATEGIES[strategy][0]
-    lr = MultiOutputClassifier(LogisticRegression(C=1e-99))
-    lr.fit(X, y)
-    n_samples = len(X)
-    mapie_clf0 = MapieMultiLabelClassifier(lr)
-    mapie_clf1 = MapieMultiLabelClassifier(lr)
-    mapie_clf2 = MapieMultiLabelClassifier(lr)
-    mapie_clf0.fit(X, y, sample_weight=None)
-    mapie_clf1.fit(X, y, sample_weight=np.ones(shape=n_samples))
-    mapie_clf2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
-    y_pred0, y_ps0 = mapie_clf0.predict(
-        X,
-        alpha=0.2,
-        method=args["method"],
-        bound=args["bound"],
-        delta=.2
-    )
-    y_pred1, y_ps1 = mapie_clf1.predict(
-        X,
-        alpha=0.2,
-        method=args["method"],
-        bound=args["bound"],
-        delta=.2
-    )
-    y_pred2, y_ps2 = mapie_clf2.predict(
-        X,
-        alpha=0.2,
-        method=args["method"],
-        bound=args["bound"],
-        delta=.2
-    )
-    np.testing.assert_allclose(y_pred0, y_pred1)
-    np.testing.assert_allclose(y_pred0, y_pred2)
-    np.testing.assert_allclose(y_ps0, y_ps1)
-    np.testing.assert_allclose(y_ps0, y_ps2)
 
 
 @pytest.mark.parametrize(
@@ -441,10 +396,11 @@ def test_array_output_model(method: Any, alpha: Any, delta: Any, bound: Any):
 
 
 def test_reinit_new_fit():
-    mapie_clf = MapieMultiLabelClassifier()
+    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
+    mapie_clf = MapieMultiLabelClassifier(clf)
     mapie_clf.fit(X_toy, y_toy)
-    mapie_clf.fit(X, y)
-    assert len(mapie_clf.risks) == len(X)
+    mapie_clf.fit(X_toy, y_toy)
+    assert len(mapie_clf.risks) == len(X_toy)
 
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
@@ -498,10 +454,26 @@ def test_error_rcps_delta_null() -> None:
 @pytest.mark.parametrize("delta", [-1., 0, 1, 4, -3])
 def test_error_delta_wrong_value(delta: Any) -> None:
     """Test error for RCPS method and delta None"""
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(random_state=42)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*delta must be*"):
         mapie_clf.predict(X_toy, method="rcps", delta=delta)
+
+
+def test_bound_none_crc() -> None:
+    """Test that a warning is raised nound is not None with CRC method."""
+    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf.fit(X_toy, y_toy)
+    with pytest.warns(UserWarning, match=r"WARNING: you are using crc method,*"):
+        mapie_clf.predict(X_toy, method="crc", bound="wsr")
+
+
+def test_delta_none_crc() -> None:
+    """Test that a warning is raised nound is not None with CRC method."""
+    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf.fit(X_toy, y_toy)
+    with pytest.warns(UserWarning, match=r"WARNING: you are using crc method,*"):
+        mapie_clf.predict(X_toy, method="crc", delta=.1)
 
 
 @pytest.mark.parametrize("delta", [np.arange(0, 1, 0.01), (.1, .2), [.4, .5]])
@@ -515,7 +487,8 @@ def test_error_delta_wrong_type(delta: Any) -> None:
 
 def test_error_partial_fit_different_size() -> None:
     """Test error for RCPS method and delta None"""
-    mapie_clf = MapieMultiLabelClassifier()
+    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
+    mapie_clf = MapieMultiLabelClassifier(clf)
     mapie_clf.partial_fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Number of features*"):
         mapie_clf.partial_fit(X, y)
@@ -576,13 +549,25 @@ def test_error_no_fit() -> None:
         mapie_clf.fit(X_toy, y_toy)
 
 
+def test_error_estimator_none_partial() -> None:
+    """Test error for RCPS method and delta None"""
+    mapie_clf = MapieMultiLabelClassifier()
+
+    with pytest.raises(
+        ValueError,
+        match=r".*Invalid estimator with partial_fit*"
+    ):
+        mapie_clf.partial_fit(X_toy, y_toy)
+
+
 def test_partial_fit_first_time():
     mclf = MapieMultiLabelClassifier()
     assert mclf._check_partial_fit_first_call()
 
 
 def test_partial_fit_second_time():
-    mclf = MapieMultiLabelClassifier()
+    clf = MultiOutputClassifier(LogisticRegression()).fit(X, y)
+    mclf = MapieMultiLabelClassifier(clf)
     mclf.partial_fit(X, y)
     assert not mclf._check_partial_fit_first_call()
 
@@ -594,7 +579,8 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     are similar with two equal values of alpha.
     """
     args = STRATEGIES[strategy][0]
-    mapie_clf = MapieMultiLabelClassifier()
+    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
+    mapie_clf = MapieMultiLabelClassifier(clf)
     mapie_clf.fit(X_toy, y_toy)
     _, y_ps = mapie_clf.predict(
         X_toy,

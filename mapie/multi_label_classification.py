@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import warnings
 from typing import Iterable, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
@@ -12,7 +14,7 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
 from ._typing import ArrayLike, NDArray
-from .utils import check_alpha, check_n_jobs, check_null_weight, check_verbose
+from .utils import check_alpha, check_n_jobs, check_verbose
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
@@ -20,10 +22,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     Prediction sets for multilabel-classification.
 
     This class implements two conformal prediction methods for
-    estimating prediction sets for multi-label. It guarantees
-    (under the hypothesis of exchangeability) that a risk (which
-    lower bound is tight) is at least 1 - alpha (alpha is a
-    user-specified parameter). For now, we consider the recall as risk.
+    estimating prediction sets for multilabel-classification.
+    It guarantees (under the hypothesis of exchangeability) that
+    a risk is at least 1 - alpha (alpha is a user-specified parameter).
+    For now, we consider the recall as risk.
 
     Parameters
     ----------
@@ -72,7 +74,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Estimator fitted on the whole training set.
 
     n_lambdas: int
-        Number of thresolds on which we compute the risk.
+        Number of thresholds on which we compute the risk.
 
     risks : ArrayLike of shape (n_samples_cal, n_lambdas)
         The risk for each observation for each threshold
@@ -123,6 +125,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         "risks"
     ]
     sigma_init = .25  # Value given in the paper.
+    cal_size = .3
 
     def __init__(
         self,
@@ -226,16 +229,24 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 "Invalid delta. "
                 "delta must be in ]0, 1["
             )
+        if (self.method == "crc") and (delta is None):
+            warnings.warn(
+                "WARNING: you are using crc method, hence "
+                + "even if the delta is not None, it won't be"
+                + "taken into account"
+            )
 
     def _check_estimator(
         self,
         X: ArrayLike,
         y: ArrayLike,
         estimator: Optional[ClassifierMixin] = None,
+        _refit: Optional[bool] = False,
+        calib_size: Optional[float] = .3
     ) -> ClassifierMixin:
         """
-        Check if estimator is ``None``,
-        and returns a multi-output ``LogisticRegression``
+        Check the estimator value. If it is ``None``,
+        it returns a multi-output ``LogisticRegression``
         instance if necessary.
 
         Parameters
@@ -248,6 +259,16 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         estimator : Optional[ClassifierMixin], optional
             Estimator to check, by default ``None``
+
+        _refit : Optional[bool]
+            Whether or not the user is using fit (True) or
+            partial_fit (False).
+
+            By defualt False
+
+        calib_size : Optional[float]
+            Size of the calibration data compared to all the data if the
+            given estimator is `None`
 
         Returns
         -------
@@ -264,10 +285,24 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         NotFittedError
             If the estimator is not fitted.
         """
-        if estimator is None:
-            return MultiOutputClassifier(
+        if (estimator is None) and (not _refit):
+            raise ValueError(
+                "Invalid estimator with partial_fit. "
+                "If the estimator is `None` you can not "
+                "use partial_fit."
+            )
+        if (estimator is None) and (_refit):
+            estimator = MultiOutputClassifier(
                 LogisticRegression(multi_class="multinomial")
-            ).fit(X, y)
+            )
+            X_train, X_calib, y_train, y_calib = train_test_split(
+                    X,
+                    y,
+                    test_size=calib_size,
+                    random_state=self.random_state,
+            )
+            estimator.fit(X_train, y_train)
+            return estimator, X_calib, y_calib
 
         if isinstance(estimator, Pipeline):
             est = estimator[-1]
@@ -284,7 +319,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 "predict, and predict_proba methods."
             )
         check_is_fitted(est)
-        return estimator
+        return estimator, X, y
 
     def _check_partial_fit_first_call(self) -> bool:
         """
@@ -315,6 +350,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         if bound not in self.valid_bounds_:
             raise ValueError(
                 "bound must be in ['hoeffding', 'bernstein', 'wsr', None]"
+            )
+        elif (bound is not None) and (self.method == "crc"):
+            warnings.warn(
+                "WARNING: you are using crc method, hence "
+                + "even if the bound is not None, it won't be"
+                + "taken into account"
             )
 
     def _transform_pred_proba(
@@ -352,9 +393,9 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        y_pred_proba : NDArray
+        y_pred_proba : NDArray of shape (n_samples, n_labels)
             Predicted probabilities for each label and each observation
-        y : NDArray
+        y : NDArray of shape (n_samples, n_labels)
             True labels.
 
         Returns
@@ -383,58 +424,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         return risks
 
-    def _find_lambda_star(
-        self,
-        r_hat_plus: NDArray,
-        alpha_np: NDArray
-    ) -> NDArray:
-        """Find the higher value of lambda such that for
-        all smaller lambda, the risk is smaller, for each value
-        of alpha.
-
-        Parameters
-        ----------
-        r_hat_plus : NDArray
-            Upper bounds computed in the get_r_hat_plus method.
-        alphas : NDArray
-            Risk levels.
-
-        Returns
-        -------
-        NDArray of shape (n_alphas, )
-            Optimal lambdas which control the risks for each value
-            of alpha.
-        """
-
-        if len(alpha_np) > 1:
-            alphas_np = alpha_np[:, np.newaxis]
-        else:
-            alphas_np = alpha_np
-
-        bound_rep = np.repeat(
-            np.expand_dims(r_hat_plus, axis=0),
-            len(alphas_np),
-            axis=0
-        )
-        bound_rep[:, np.argmax(bound_rep, axis=1)] = np.maximum(
-            alphas_np,
-            bound_rep[:, np.argmax(bound_rep, axis=1)]
-        )
-        lambdas_star = np.argmin(
-                - np.greater_equal(
-                    bound_rep,
-                    alphas_np
-                ).astype(int),
-                axis=1
-            ) / len(r_hat_plus)
-
-        return lambdas_star
-
     def _get_r_hat_plus(
         self,
         bound: Optional[str],
         delta: Optional[float],
-        sigma_init: float = .25
     ) -> Tuple[NDArray, NDArray]:
         """Compute the upper bound of the loss for each lambda.
 
@@ -446,7 +439,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             Level of confidence.
         sigma_init : float, optional
             First variance in the sigma_hat array. The default
-            value is the same as in the paper implmentation.
+            value is the same as in the paper implementation.
 
             By default .25
 
@@ -458,7 +451,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         r_hat = self.risks.mean(axis=0)
         n_obs = len(self.risks)
 
-        if (self.method == "rcps") and (delta is not None):
+        if self.method == "rcps":
             if bound == "hoeffding":
                 r_hat_plus = (
                     r_hat +
@@ -491,7 +484,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                     ).T + 1)
                 )
                 sigma_hat = np.concatenate(
-                    [np.ones((1, self.n_lambdas)) * sigma_init, sigma_hat[:-1]]
+                    [
+                        np.full(
+                            (1, self.n_lambdas), fill_value=self.sigma_init
+                        ) * self.sigma_init, sigma_hat[:-1]
+                    ]
                 )
                 nu = np.minimum(
                     1,
@@ -545,11 +542,58 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         return r_hat, r_hat_plus
 
+    def _find_lambda_star(
+        self,
+        r_hat_plus: NDArray,
+        alpha_np: NDArray
+    ) -> NDArray:
+        """Find the higher value of lambda such that for
+        all smaller lambda, the risk is smaller, for each value
+        of alpha.
+
+        Parameters
+        ----------
+        r_hat_plus : NDArray of shape (n_lambdas, )
+            Upper bounds computed in the get_r_hat_plus method.
+        alphas : NDArray of shape (n_alphas, )
+            Risk levels.
+
+        Returns
+        -------
+        NDArray of shape (n_alphas, )
+            Optimal lambdas which control the risks for each value
+            of alpha.
+        """
+
+        if len(alpha_np) > 1:
+            alphas_np = alpha_np[:, np.newaxis]
+        else:
+            alphas_np = alpha_np
+
+        bound_rep = np.repeat(
+            np.expand_dims(r_hat_plus, axis=0),
+            len(alphas_np),
+            axis=0
+        )
+        bound_rep[:, np.argmax(bound_rep, axis=1)] = np.maximum(
+            alphas_np,
+            bound_rep[:, np.argmax(bound_rep, axis=1)]
+        )
+        lambdas_star = np.argmin(
+                - np.greater_equal(
+                    bound_rep,
+                    alphas_np
+                ).astype(int),
+                axis=1
+            ) / len(r_hat_plus)
+
+        return lambdas_star
+
     def partial_fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
+        _refit=False
     ) -> MapieMultiLabelClassifier:
         """
         Fit the base estimator or use the fitted base estimator on
@@ -564,15 +608,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         y : NDArray of shape (n_samples, n_classes)
             Training labels.
 
-        sample_weight : Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If None, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no prediction sets.
-
-            By default None.
-
         Returns
         -------
         MapieMultiLabelClassifier
@@ -581,11 +616,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         # Checks
         first_call = self._check_partial_fit_first_call()
         self._check_parameters()
-        estimator = self._check_estimator(X, y, self.estimator)
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
-        sample_weight, X, y = check_null_weight(sample_weight, X, y)
+        estimator, X, y = self._check_estimator(X, y, self.estimator, _refit)
+
         y = cast(NDArray, y)
         X = cast(NDArray, X)
 
@@ -593,16 +628,19 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         self.n_samples_ = _num_samples(X)
 
         # Work
-        self.single_estimator_ = estimator
-        y_pred_proba = self.single_estimator_.predict_proba(X)
-        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-        if first_call:
+        if first_call or _refit:
+            self.single_estimator_ = estimator
+            y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
             self.theta_ = np.zeros(X.shape[1])
             self.risks = self._compute_risks(y_pred_proba_array, y)
         else:
             if X.shape[1] != self.theta_.shape[0]:
                 msg = "Number of features %d does not match previous data %d."
                 raise ValueError(msg % (X.shape[1], self.theta_.shape[0]))
+            self.single_estimator_ = estimator
+            y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
             partial_risk = self._compute_risks(y_pred_proba_array, y)
             self.risks = np.concatenate([self.risks, partial_risk], axis=0)
 
@@ -612,7 +650,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
     ) -> MapieMultiLabelClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -625,23 +662,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         y : NDArray of shape (n_samples, n_classes)
             Training labels.
 
-        sample_weight : Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If None, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no prediction sets.
-
-            By default None.
-
         Returns
         -------
         MapieMultiLabelClassifier
             The model itself.
         """
-        if not self._check_partial_fit_first_call():
-            delattr(self, "risks")
-        return self.partial_fit(X, y, sample_weight)
+        return self.partial_fit(X, y, _refit=True)
 
     def predict(
         self,
@@ -652,7 +678,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         bound: Optional[Union[str, None]] = "wsr"
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
-        Prediction prediction sets on new samples based on target confidence
+        Prediction sets on new samples based on target confidence
         interval.
         Prediction sets for a given ``alpha`` are deduced from the computed
         risks.
@@ -684,7 +710,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         delta : Optional[float]
             Can be a float, or ``None``. If using method="rcps", then it
             can not be set to ``None``.
-            Between 0 and 1, the level of certainty with which we compute
+            Between 0 and 1, the level of certainty at which we compute
             the Upper Confidence Bound of the average risk.
             Lower ``delta`` produce larger (more conservative) prediction
             sets.
@@ -731,7 +757,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         self.r_hat, self.r_hat_plus = self._get_r_hat_plus(
             bound,
             delta,
-            self.sigma_init
         )
         self.lambdas_star = self._find_lambda_star(self.r_hat_plus, alpha_np)
         y_pred_proba_array = (
