@@ -437,7 +437,7 @@ def test_method_error_if_no_label_partial_fit() -> None:
 @pytest.mark.parametrize("bound", WRONG_BOUNDS)
 def test_bound_error_in_predict(bound: str) -> None:
     """Test error for wrong method"""
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(random_state=42)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*bound must be in.*"):
         mapie_clf.predict(X_toy, method="rcps", bound=bound, delta=.1)
@@ -445,7 +445,7 @@ def test_bound_error_in_predict(bound: str) -> None:
 
 def test_error_rcps_delta_null() -> None:
     """Test error for RCPS method and delta None"""
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(random_state=42)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*delta cannot be None*"):
         mapie_clf.predict(X_toy, method="rcps")
