@@ -192,7 +192,7 @@ def test_valid_method() -> None:
 @pytest.mark.parametrize("bound", BOUNDS)
 def test_valid_bound(bound: str) -> None:
     """Test that valid methods raise no errors."""
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(random_state=42)
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, method="rcps", bound=bound, delta=.1)
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
