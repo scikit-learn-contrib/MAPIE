@@ -406,7 +406,7 @@ def test_reinit_new_fit():
 @pytest.mark.parametrize("method", WRONG_METHODS)
 def test_method_error_in_predict(method: str) -> None:
     """Test error for wrong method"""
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(random_state=42)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         mapie_clf.predict(X_toy, method=method)
