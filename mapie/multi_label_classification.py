@@ -451,7 +451,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         r_hat = self.risks.mean(axis=0)
         n_obs = len(self.risks)
 
-        if self.method == "rcps":
+        if (self.method == "rcps") and (delta is not None):
             if bound == "hoeffding":
                 r_hat_plus = (
                     r_hat +
@@ -593,7 +593,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        _refit=False
+        _refit: Optional[bool] = False,
+        calib_size: Optional[float] = .3,
     ) -> MapieMultiLabelClassifier:
         """
         Fit the base estimator or use the fitted base estimator on
@@ -608,6 +609,18 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         y : NDArray of shape (n_samples, n_classes)
             Training labels.
 
+        calib_size: Optional[float]
+            Size of the calibration dataset with respect to X if the
+            given model is None and that MAPIE need to fit a
+            LogisticRegression.
+
+            By default .3
+
+        _refit: bool
+            Whether or not refit MAPIE from scratch.
+
+            By default False
+
         Returns
         -------
         MapieMultiLabelClassifier
@@ -619,7 +632,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
-        estimator, X, y = self._check_estimator(X, y, self.estimator, _refit)
+        estimator, X, y = self._check_estimator(
+            X, y, self.estimator,
+            _refit, calib_size
+        )
 
         y = cast(NDArray, y)
         X = cast(NDArray, X)
@@ -650,6 +666,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
+        calib_size: Optional[float] = .3
     ) -> MapieMultiLabelClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -662,12 +679,19 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         y : NDArray of shape (n_samples, n_classes)
             Training labels.
 
+        calib_size: Optional[float]
+            Size of the calibration dataset with respect to X if the
+            given model is None and that MAPIE need to fit a
+            LogisticRegression.
+
+            By default .3
+
         Returns
         -------
         MapieMultiLabelClassifier
             The model itself.
         """
-        return self.partial_fit(X, y, _refit=True)
+        return self.partial_fit(X, y, _refit=True, calib_size=calib_size)
 
     def predict(
         self,

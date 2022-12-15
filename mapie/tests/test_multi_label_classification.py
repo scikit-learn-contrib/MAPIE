@@ -464,7 +464,7 @@ def test_bound_none_crc() -> None:
     """Test that a warning is raised nound is not None with CRC method."""
     mapie_clf = MapieMultiLabelClassifier()
     mapie_clf.fit(X_toy, y_toy)
-    with pytest.warns(UserWarning, match=r"WARNING: you are using crc method,*"):
+    with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
         mapie_clf.predict(X_toy, method="crc", bound="wsr")
 
 
@@ -472,7 +472,7 @@ def test_delta_none_crc() -> None:
     """Test that a warning is raised nound is not None with CRC method."""
     mapie_clf = MapieMultiLabelClassifier()
     mapie_clf.fit(X_toy, y_toy)
-    with pytest.warns(UserWarning, match=r"WARNING: you are using crc method,*"):
+    with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
         mapie_clf.predict(X_toy, method="crc", delta=.1)
 
 
