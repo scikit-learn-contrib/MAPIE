@@ -31,7 +31,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     ----------
     estimator : Optional[ClassifierMixin]
         Any fitted multi-label classifier with scikit-learn API
-        (i.e. with fit, predict, and predict_proba methods), by default `None`.
+        (i.e. with fit, predict, and predict_proba methods), by default ``None``.
         If ``None``, estimator by default is a sklearn LogisticRegression
         instance.
 
@@ -56,7 +56,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         By default ``1``.
 
     verbose : int, optional
-        The verbosity level, used with joblib for multiprocessing.
+        The verbosity level, used with joblib for parallel processing.
         For the moment, parallel processing is disabled.
         The frequency of the messages increases with the verbosity level.
         If it more than ``10``, all iterations are reported.
@@ -69,7 +69,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     valid_methods: List[str]
         List of all valid methods. Either CRC or RCPS
     valid_methods: List[Union[str, None]]
-        List of all valid bounds computation.
+        List of all valid bounds computation for RCPS only.
     single_estimator_ : sklearn.ClassifierMixin
         Estimator fitted on the whole training set.
 
@@ -213,6 +213,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If delta is not in [0, 1] and method
             is RCPS.
+        Warning
+            If delta is not None and method is CRC
         """
         if (self.method == "rcps") and (delta is None):
             raise ValueError(
@@ -246,7 +248,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         y: ArrayLike,
         estimator: Optional[ClassifierMixin] = None,
         _refit: Optional[bool] = False,
-        calib_size: Optional[float] = .3
     ) -> ClassifierMixin:
         """
         Check the estimator value. If it is ``None``,
@@ -268,11 +269,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             Whether or not the user is using fit (True) or
             partial_fit (False).
 
-            By defualt False
+            By default False
 
-        calib_size : Optional[float]
-            Size of the calibration data compared to all the data if the
-            given estimator is `None`
 
         Returns
         -------
@@ -288,11 +286,15 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         NotFittedError
             If the estimator is not fitted.
+        
+        Warning
+            If estimator is then to warn about the split of the
+            data between train and calibration
         """
         if (estimator is None) and (not _refit):
             raise ValueError(
                 "Invalid estimator with partial_fit. "
-                "If the estimator is `None` you can not "
+                "If the estimator is ``None`` you can not "
                 "use partial_fit."
             )
         if (estimator is None) and (_refit):
@@ -302,7 +304,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             X_train, X_calib, y_train, y_calib = train_test_split(
                     X,
                     y,
-                    test_size=calib_size,
+                    test_size=self.calib_size,
                     random_state=self.random_state,
             )
             estimator.fit(X_train, y_train)
@@ -355,6 +357,9 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         ------
         AttributeError
             If bound is not in ["hoeffding", "bernstein", "wsr", None]
+        
+        Warning
+            If bound is not ``None``and method is CRC
         """
         if bound not in self.valid_bounds_:
             raise ValueError(
@@ -363,7 +368,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         elif (bound is not None) and (self.method == "crc"):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
-                + "even if the bound is not None, it won't be"
+                + "even if the bound is not ``None``, it won't be"
                 + "taken into account"
             )
 
@@ -492,7 +497,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                     [
                         np.full(
                             (1, self.n_lambdas), fill_value=self.sigma_init
-                        ) * self.sigma_init, sigma_hat[:-1]
+                        ), sigma_hat[:-1]
                     ]
                 )
                 nu = np.minimum(
@@ -521,7 +526,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                         axis=2
                     )
 
-                    R = np.arange(self.n_lambdas) / self.n_lambdas
+                    R = self.lambdas
                     K_R = np.cumsum(
                         np.log(
                             (
@@ -559,7 +564,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Parameters
         ----------
         r_hat_plus : NDArray of shape (n_lambdas, )
-            Upper bounds computed in the get_r_hat_plus method.
+            Upper bounds computed in the `get_r_hat_plus` method.
         alphas : NDArray of shape (n_alphas, )
             Risk levels.
 
@@ -583,14 +588,14 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         bound_rep[:, np.argmax(bound_rep, axis=1)] = np.maximum(
             alphas_np,
             bound_rep[:, np.argmax(bound_rep, axis=1)]
-        )
-        lambdas_star = np.argmin(
+        )  # to avoid an error if the risk is always higher than alpha
+        lambdas_star = self.lambdas[np.argmin(
                 - np.greater_equal(
                     bound_rep,
                     alphas_np
                 ).astype(int),
                 axis=1
-            ) / len(r_hat_plus)
+            )]
 
         return lambdas_star
 
@@ -599,7 +604,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: ArrayLike,
         _refit: Optional[bool] = False,
-        calib_size: Optional[float] = .3,
     ) -> MapieMultiLabelClassifier:
         """
         Fit the base estimator or use the fitted base estimator on
@@ -613,13 +617,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         y : NDArray of shape (n_samples, n_classes)
             Training labels.
-
-        calib_size: Optional[float]
-            Size of the calibration dataset with respect to X if the
-            given model is None and that MAPIE need to fit a
-            LogisticRegression.
-
-            By default .3
 
         _refit: bool
             Whether or not refit MAPIE from scratch.
@@ -639,7 +636,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         _check_y(y, multi_output=True)
         estimator, X, y = self._check_estimator(
             X, y, self.estimator,
-            _refit, calib_size
+            _refit
         )
 
         y = cast(NDArray, y)
@@ -686,8 +683,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         calib_size: Optional[float]
             Size of the calibration dataset with respect to X if the
-            given model is None and that MAPIE need to fit a
-            LogisticRegression.
+            given model is ``None`` need to fit a LogisticRegression.
 
             By default .3
 
@@ -696,7 +692,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         MapieMultiLabelClassifier
             The model itself.
         """
-        return self.partial_fit(X, y, _refit=True, calib_size=calib_size)
+        self.calib_size = calib_size
+        return self.partial_fit(X, y, _refit=True)
 
     def predict(
         self,
@@ -745,7 +742,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             sets.
             By default ``None``.
         bound : Optional[Union[str, None]]
-            Method used to compute the Upper Confience Bound of the
+            Method used to compute the Upper Confidence Bound of the
             average risk. Only necessary with the RCPS method.
             By default "wsr"
 
@@ -753,11 +750,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
 
-        - NDArray of shape (n_samples,) if alpha is None.
+        - NDArray of shape (n_samples,) if alpha is ``None``.
 
         - Tuple[NDArray, NDArray] of shapes
         (n_samples, n_classes) and (n_samples, n_classes, n_alpha)
-        if alpha is not None.
+        if alpha is not ``None``.
         """
 
         self.method = method
