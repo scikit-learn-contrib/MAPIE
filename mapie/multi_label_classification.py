@@ -119,7 +119,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     """
     valid_methods_ = ["crc", "rcps"]
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
-    n_lambdas = 100
+    lambdas = np.arange(0, 1, 0.01)
+    n_lambdas = len(lambdas)
     fit_attributes = [
         "single_estimator_",
         "risks"
@@ -403,18 +404,13 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         NDArray of shape (n_samples, n_lambdas)
             Risks for each observation and each value of lambda.
         """
-        lambdas = np.arange(
-            0, 1,
-            1 / self.n_lambdas
-        )[np.newaxis, np.newaxis, :]
-
         y_pred_proba_repeat = np.repeat(
             y_pred_proba,
             self.n_lambdas,
             axis=2
         )
 
-        y_pred_th = (y_pred_proba_repeat > lambdas).astype(int)
+        y_pred_th = (y_pred_proba_repeat > self.lambdas).astype(int)
 
         y_repeat = np.repeat(y[..., np.newaxis], self.n_lambdas, axis=2)
         risks = 1 - (
@@ -531,9 +527,9 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                     K_R = np.max(K_R, axis=0)
                     K_R_max += K_R
 
-                r_hat_plus_tronc = (np.argwhere(
+                r_hat_plus_tronc = self.lambdas[np.argwhere(
                     np.cumsum(K_R_max > -np.log(delta), axis=1) == 1
-                )[:, 1] / self.n_lambdas)
+                )[:, 1]]
                 r_hat_plus = np.ones(self.n_lambdas)
                 r_hat_plus[:len(r_hat_plus_tronc)] = r_hat_plus_tronc
 

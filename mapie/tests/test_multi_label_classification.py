@@ -462,7 +462,7 @@ def test_error_delta_wrong_value(delta: Any) -> None:
 
 def test_bound_none_crc() -> None:
     """Test that a warning is raised nound is not None with CRC method."""
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(random_state=42)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
         mapie_clf.predict(X_toy, method="crc", bound="wsr")
@@ -470,7 +470,7 @@ def test_bound_none_crc() -> None:
 
 def test_delta_none_crc() -> None:
     """Test that a warning is raised nound is not None with CRC method."""
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(random_state=42)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
         mapie_clf.predict(X_toy, method="crc", delta=.1)
@@ -479,7 +479,7 @@ def test_delta_none_crc() -> None:
 @pytest.mark.parametrize("delta", [np.arange(0, 1, 0.01), (.1, .2), [.4, .5]])
 def test_error_delta_wrong_type(delta: Any) -> None:
     """Test error for RCPS method and delta None"""
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(random_state=42)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*delta must be a float*"):
         mapie_clf.predict(X_toy, method="rcps", delta=delta)
