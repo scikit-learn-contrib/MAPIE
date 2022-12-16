@@ -31,7 +31,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     ----------
     estimator : Optional[ClassifierMixin]
         Any fitted multi-label classifier with scikit-learn API
-        (i.e. with fit, predict, and predict_proba methods), by default None.
+        (i.e. with fit, predict, and predict_proba methods), by default `None`.
         If ``None``, estimator by default is a sklearn LogisticRegression
         instance.
 
@@ -75,6 +75,9 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
     n_lambdas: int
         Number of thresholds on which we compute the risk.
+
+    lambdas: NDArray
+        Array with all the values of lambda.
 
     risks : ArrayLike of shape (n_samples_cal, n_lambdas)
         The risk for each observation for each threshold
