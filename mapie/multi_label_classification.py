@@ -286,7 +286,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         NotFittedError
             If the estimator is not fitted.
-        
+
         Warning
             If estimator is then to warn about the split of the
             data between train and calibration
@@ -357,7 +357,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         ------
         AttributeError
             If bound is not in ["hoeffding", "bernstein", "wsr", None]
-        
+
         Warning
             If bound is not ``None``and method is CRC
         """

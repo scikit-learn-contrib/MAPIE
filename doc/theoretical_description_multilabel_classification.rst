@@ -35,14 +35,14 @@ on the recall. RCPS and CRC give two slightly different guarantees:
 ---------------------
 
 
-Let first give the settings and the notations of the method:
+Let's first give the settings and the notations of the method:
 
-- Let :math:`\mathcal{T}_{\hat{\lambda}}: X \longrightarrow Y'` be a set-valued function (a tolerance region) that maps a feature vector to a set-valued prediction. This function is constructed from the model which was previously fitted on the training data. It is indexed by a one-dimensional parameter :math:`\lambda` which is taking values in :math:`\Lambda \subset \mathbb{R} \cup \{ \pm \infty \}` such that:
+- Let :math:`\mathcal{T}_{\hat{\lambda}}: X \longrightarrow Y'` be a set-valued function (a tolerance region) that maps a feature vector to a set-valued prediction. This function is built from the model which was previously fitted on the training data. It is indexed by a one-dimensional parameter :math:`\lambda` which is taking values in :math:`\Lambda \subset \mathbb{R} \cup \{ \pm \infty \}` such that:
 
 .. math::
    \lambda_1 < \lambda_2 \Rightarrow \mathcal{T}_{\lambda_1}(x) \subset \mathcal{T}_{\lambda_2}(x)
 
-- Let :math:`L: Y\times Y' \longrightarrow \mathbb{R}^+` a loss function on a prediction set with the following nesting property:
+- Let :math:`L: Y\times Y' \longrightarrow \mathbb{R}^+` be a loss function on a prediction set with the following nesting property:
 
 .. math::
    S_1 \subset S_2 \Rightarrow L(y, S_1) \geq L(y, S_2)
@@ -74,7 +74,7 @@ Following those settings, the RCPS method gives the following guarantee on the r
 -----------------------
 
 In this section, we will consider only bounded losses (as for now, only the :math:`1-recall` loss is implemented.
-We will presenter three different Upper Calibration Bounds (UCB) (Hoeffding, Bernstein and Waudby-Smith–Ramdas) of :math:`R(\lambda)`
+We will show three different Upper Calibration Bounds (UCB) (Hoeffding, Bernstein and Waudby-Smith–Ramdas) of :math:`R(\lambda)`
 based on the empirical risk which is defined as follows:
 
 .. math::
@@ -114,7 +114,7 @@ Where:
 --------------------------
 
 This last UCB is the one recommended by the authors of [1] to use when using a bounded loss as this is the one which gives
-the smallest prediction sets size while having the same guarantees. This UCB is defined as follows:
+the smallest prediction sets size while having the same risk guarantees. This UCB is defined as follows:
 
 Let :math:`L_i (\lambda) = L(Y_i, T_{\lambda}(X_i)` and
 
