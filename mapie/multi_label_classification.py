@@ -43,7 +43,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         If ``1`` is given, no parallel computing code is used at all,
         which is useful for debugging.
         For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
-        None is a marker for `unset` that will be interpreted as ``n_jobs=1``
+        "None" is a marker for `unset` that will be interpreted as ``n_jobs=1``
         (sequential execution).
 
         By default ``None``.
@@ -230,7 +230,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 "Invalid delta. "
                 "delta must be in ]0, 1["
             )
-        if (self.method == "crc") and (delta is None):
+        if (self.method == "crc") and (delta is not None):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
                 + "even if the delta is not None, it won't be"

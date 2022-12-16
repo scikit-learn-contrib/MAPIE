@@ -473,7 +473,7 @@ def test_delta_none_crc() -> None:
     mapie_clf = MapieMultiLabelClassifier(random_state=42)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
-        mapie_clf.predict(X_toy, method="crc", delta=.1)
+        mapie_clf.predict(X_toy, method="crc", bound= None, delta=.1)
 
 
 def test_warning_estimator_none() -> None:
