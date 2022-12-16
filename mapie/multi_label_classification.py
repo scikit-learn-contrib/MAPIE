@@ -303,6 +303,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                     random_state=self.random_state,
             )
             estimator.fit(X_train, y_train)
+            warnings.warn(
+                "WARNING: To avoid overffiting, X has been splitted"
+                + "into X_train and X_calib. The calibraiton will only"
+                + "be done on X_calib"
+            )
             return estimator, X_calib, y_calib
 
         if isinstance(estimator, Pipeline):
@@ -365,7 +370,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     ) -> NDArray:
         """If the output of the predict_proba is a list of arrays (output of
         the ``predict_proba`` of ``MultiOutputClassifier``) we transform it
-        into an array of shape (n_samples, n_classes)
+        into an array of shape (n_samples, n_classes), otherwise, we keep it
+        as it is.
 
         Parameters
         ----------

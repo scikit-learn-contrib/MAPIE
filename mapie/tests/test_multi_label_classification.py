@@ -476,6 +476,13 @@ def test_delta_none_crc() -> None:
         mapie_clf.predict(X_toy, method="crc", delta=.1)
 
 
+def test_warning_estimator_none() -> None:
+    """Test that a warning is raised nound is not None with CRC method."""
+    mapie_clf = MapieMultiLabelClassifier(random_state=42)
+    with pytest.warns(UserWarning, match=r"WARNING: To avoid overffiting,*"):
+        mapie_clf.fit(X_toy, y_toy)
+
+
 @pytest.mark.parametrize("delta", [np.arange(0, 1, 0.01), (.1, .2), [.4, .5]])
 def test_error_delta_wrong_type(delta: Any) -> None:
     """Test error for RCPS method and delta None"""
