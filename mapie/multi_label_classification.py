@@ -31,9 +31,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     ----------
     estimator : Optional[ClassifierMixin]
         Any fitted multi-label classifier with scikit-learn API
-        (i.e. with fit, predict, and predict_proba methods), by default ``None``.
+        (i.e. with fit, predict, and predict_proba methods).
         If ``None``, estimator by default is a sklearn LogisticRegression
         instance.
+
+         by default ``None``
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
