@@ -1,6 +1,6 @@
 import codecs
-from setuptools import find_packages, setup
 
+from setuptools import find_packages, setup
 
 DISTNAME = "MAPIE"
 VERSION = "0.5.0"

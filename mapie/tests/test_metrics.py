@@ -1,16 +1,14 @@
 """
 Testing for metrics module.
 """
-import pytest
 import numpy as np
-from mapie.metrics import (
-    classification_coverage_score,
-    classification_mean_width_score,
-    regression_coverage_score,
-    regression_mean_width_score,
-)
-from mapie._typing import ArrayLike
+import pytest
 
+from mapie._typing import ArrayLike
+from mapie.metrics import (classification_coverage_score,
+                           classification_mean_width_score,
+                           regression_coverage_score,
+                           regression_mean_width_score)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
 y_preds = np.array(

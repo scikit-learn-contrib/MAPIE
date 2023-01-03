@@ -2,37 +2,25 @@ from __future__ import annotations
 
 from typing import Iterable, List, Optional, Tuple, Union, cast
 
-from joblib import Parallel, delayed
 import numpy as np
+from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import (
-    _check_y,
-    _num_samples,
-    check_is_fitted,
-    indexable,
-)
+from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
+                                      indexable)
 
-from ._typing import ArrayLike, NDArray
 from ._compatibility import np_nanquantile
+from ._typing import ArrayLike, NDArray
 from .aggregation_functions import aggregate_all, phi2D
 from .conformity_scores import ConformityScore
-from .utils import (
-    check_alpha,
-    check_alpha_and_n_samples,
-    check_conformity_score,
-    check_cv,
-    check_n_features_in,
-    check_n_jobs,
-    check_nan_in_aposteriori_prediction,
-    check_null_weight,
-    check_verbose,
-    fit_estimator,
-    check_estimator_fit_predict,
-)
+from .utils import (check_alpha, check_alpha_and_n_samples,
+                    check_conformity_score, check_cv,
+                    check_estimator_fit_predict, check_n_features_in,
+                    check_n_jobs, check_nan_in_aposteriori_prediction,
+                    check_null_weight, check_verbose, fit_estimator)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):

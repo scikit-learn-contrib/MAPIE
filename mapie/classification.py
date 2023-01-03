@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Any, Optional, Union, Tuple, Iterable, List, cast
+
+from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -8,29 +9,17 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import label_binarize
-from sklearn.utils import check_random_state, _safe_indexing
+from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (
-    indexable,
-    check_is_fitted,
-    _num_samples,
-    _check_y,
-)
+from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
+                                      indexable)
 
 from ._machine_precision import EPSILON
-from .metrics import classification_mean_width_score
 from ._typing import ArrayLike, NDArray
-from .utils import (
-    check_cv,
-    check_null_weight,
-    check_n_features_in,
-    check_alpha,
-    check_alpha_and_n_samples,
-    check_n_jobs,
-    check_verbose,
-    compute_quantiles,
-    fit_estimator,
-)
+from .metrics import classification_mean_width_score
+from .utils import (check_alpha, check_alpha_and_n_samples, check_cv,
+                    check_n_features_in, check_n_jobs, check_null_weight,
+                    check_verbose, compute_quantiles, fit_estimator)
 
 
 class MapieClassifier(BaseEstimator, ClassifierMixin):

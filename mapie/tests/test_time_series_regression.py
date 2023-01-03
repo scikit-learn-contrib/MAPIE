@@ -12,8 +12,8 @@ from typing_extensions import TypedDict
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.metrics import regression_coverage_score
-from mapie.time_series_regression import MapieTimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
+from mapie.time_series_regression import MapieTimeSeriesRegressor
 
 X_toy = np.array(range(5)).reshape(-1, 1)
 y_toy = (5.0 + 2.0 * X_toy ** 1.1).flatten()

@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 
 from ._machine_precision import EPSILON
-from ._typing import NDArray, ArrayLike
+from ._typing import ArrayLike, NDArray
 
 
 class ConformityScore(metaclass=ABCMeta):

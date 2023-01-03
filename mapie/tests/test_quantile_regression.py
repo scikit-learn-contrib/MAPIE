@@ -1,28 +1,26 @@
 from __future__ import annotations
 
+from inspect import signature
 from typing import Any, Tuple
-from typing_extensions import TypedDict
 
-import pytest
 import numpy as np
 import pandas as pd
-from sklearn.datasets import make_regression
-from sklearn.linear_model import LinearRegression, QuantileRegressor
-from sklearn.model_selection import KFold, LeaveOneOut
-from sklearn.utils.validation import check_is_fitted
-from sklearn.pipeline import make_pipeline, Pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder
+import pytest
+from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.compose import ColumnTransformer
-from sklearn.model_selection import train_test_split
+from sklearn.datasets import make_regression
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestClassifier
-from sklearn.base import RegressorMixin, clone, BaseEstimator
-from inspect import signature
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
+from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils.validation import check_is_fitted
+from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.metrics import regression_coverage_score
 from mapie.quantile_regression import MapieQuantileRegressor
-
 
 X_toy = np.array(
     [0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4,

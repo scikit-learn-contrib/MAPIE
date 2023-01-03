@@ -3,29 +3,27 @@ from __future__ import annotations
 from itertools import combinations
 from typing import Any, List, Optional, Tuple, Union
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
+from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
+from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
-from sklearn.utils.validation import check_is_fitted
-from sklearn.pipeline import make_pipeline, Pipeline
-from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
+from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all
-from mapie.conformity_scores import (
-    ConformityScore, AbsoluteConformityScore, GammaConformityScore
-)
+from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
+                                     GammaConformityScore)
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
-
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])

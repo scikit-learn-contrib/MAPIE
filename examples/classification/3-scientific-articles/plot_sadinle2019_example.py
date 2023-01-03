@@ -21,12 +21,11 @@ empty.
 This happens because the model is uncertain at the border between two labels.
 These so-called null regions disappear for larger coverage levels.
 """
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.naive_bayes import GaussianNB
 
 from mapie.classification import MapieClassifier
-
 
 # Create training set from multivariate normal distribution
 centers = [(0, 3.5), (-2, 0), (2, 0)]
