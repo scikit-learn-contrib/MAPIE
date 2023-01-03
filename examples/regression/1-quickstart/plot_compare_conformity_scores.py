@@ -31,7 +31,6 @@ The empirical coverage is similar between the two conformity scores.
 """
 import matplotlib.pyplot as plt
 import numpy as np
-
 from sklearn.datasets import fetch_openml
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split

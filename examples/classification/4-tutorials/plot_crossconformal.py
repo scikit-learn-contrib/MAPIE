@@ -26,20 +26,19 @@ the ``cv="prefit"`` option of
 """
 
 
-from typing import Dict, Any, Optional, Union, List
-from typing_extensions import TypedDict
+from typing import Any, Dict, List, Optional, Union
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import KFold
-from mapie.classification import MapieClassifier
-from mapie.metrics import (
-    classification_coverage_score,
-    classification_mean_width_score
-)
-from mapie._typing import NDArray
+from sklearn.naive_bayes import GaussianNB
+from typing_extensions import TypedDict
 
+from mapie._typing import NDArray
+from mapie.classification import MapieClassifier
+from mapie.metrics import (classification_coverage_score,
+                           classification_mean_width_score)
 
 ##############################################################################
 # 1. Estimating the impact of train/calibration split on the prediction sets

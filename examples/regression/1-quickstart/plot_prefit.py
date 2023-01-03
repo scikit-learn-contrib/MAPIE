@@ -17,18 +17,19 @@ regressor.
 """
 
 
-import numpy as np
-from lightgbm import LGBMRegressor
-from matplotlib import pyplot as plt
-import scipy
-from sklearn.model_selection import train_test_split
-from sklearn.neural_network import MLPRegressor
 import warnings
 
-from mapie.regression import MapieRegressor
-from mapie.quantile_regression import MapieQuantileRegressor
-from mapie.metrics import regression_coverage_score
+import numpy as np
+import scipy
+from lightgbm import LGBMRegressor
+from matplotlib import pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPRegressor
+
 from mapie._typing import NDArray
+from mapie.metrics import regression_coverage_score
+from mapie.quantile_regression import MapieQuantileRegressor
+from mapie.regression import MapieRegressor
 
 warnings.filterwarnings("ignore")
 

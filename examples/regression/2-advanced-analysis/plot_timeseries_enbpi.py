@@ -26,18 +26,16 @@ narrower PIs.
 
 from typing import cast
 
-from matplotlib import pylab as plt
 import numpy as np
 import pandas as pd
+from matplotlib import pylab as plt
 from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
-from mapie.metrics import (
-    regression_coverage_score,
-    regression_mean_width_score,
-)
 from mapie._typing import NDArray
+from mapie.metrics import (regression_coverage_score,
+                           regression_mean_width_score)
 from mapie.subsample import BlockBootstrap
 from mapie.time_series_regression import MapieTimeSeriesRegressor
 
