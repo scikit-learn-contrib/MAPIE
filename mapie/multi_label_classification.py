@@ -379,8 +379,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     ) -> NDArray:
         """If the output of the predict_proba is a list of arrays (output of
         the ``predict_proba`` of ``MultiOutputClassifier``) we transform it
-        into an array of shape (n_samples, n_classes), otherwise, we keep it
-        as it is.
+        into an array of shape (n_samples, n_classes, 1), otherwise, we add
+        one dimension at the end.
 
         Parameters
         ----------
@@ -389,7 +389,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        NDArray of shape (n_samples, n_classes)
+        NDArray of shape (n_samples, n_classe, 1)
             Output of the model ready for risk computation.
         """
         if isinstance(y_pred_proba, np.ndarray):
@@ -651,12 +651,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             self.single_estimator_ = estimator
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-            self.theta_ = np.zeros(X.shape[1])
+            self.theta_ = X.shape[1]
             self.risks = self._compute_risks(y_pred_proba_array, y)
         else:
-            if X.shape[1] != self.theta_.shape[0]:
+            if X.shape[1] != self.theta_:
                 msg = "Number of features %d does not match previous data %d."
-                raise ValueError(msg % (X.shape[1], self.theta_.shape[0]))
+                raise ValueError(msg % (X.shape[1], self.theta_))
             self.single_estimator_ = estimator
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
