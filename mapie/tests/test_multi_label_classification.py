@@ -37,28 +37,28 @@ STRATEGIES = {
         Params(
             method="crc",
             bound=None,
-            random_state=None
+            random_state=42
         ),
     ),
     "rcps_wsr": (
         Params(
             method="rcps",
             bound="wsr",
-            random_state=None
+            random_state=42
         ),
     ),
     "rcps_hoeffding": (
         Params(
             method="rcps",
             bound="hoeffding",
-            random_state=None
+            random_state=42
         ),
     ),
     "rcps_bernstein": (
         Params(
             method="rcps",
             bound="bernstein",
-            random_state=None
+            random_state=42
         ),
     ),
 }
@@ -124,7 +124,7 @@ class WrongOutputModel:
         pass
 
 
-class ArrayOuputModel:
+class ArrayOutputModel:
 
     def __init__(self):
         self.trained_ = True
@@ -322,8 +322,14 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     regardless of number of parallel jobs.
     """
     args = STRATEGIES[strategy][0]
-    mapie_clf_single = MapieMultiLabelClassifier(n_jobs=1, random_state=42)
-    mapie_clf_multi = MapieMultiLabelClassifier(n_jobs=-1, random_state=42)
+    mapie_clf_single = MapieMultiLabelClassifier(
+        n_jobs=1,
+        random_state=args["random_state"]
+    )
+    mapie_clf_multi = MapieMultiLabelClassifier(
+        n_jobs=-1,
+        random_state=args["random_state"]
+    )
     mapie_clf_single.fit(X, y)
     mapie_clf_multi.fit(X, y)
     y_pred_single, y_ps_single = mapie_clf_single.predict(
@@ -383,7 +389,7 @@ def test_valid_prediction(alpha: Any, delta: Any, bound: Any) -> None:
     "method", METHODS,
 )
 def test_array_output_model(method: Any, alpha: Any, delta: Any, bound: Any):
-    model = ArrayOuputModel()
+    model = ArrayOutputModel()
     mapie_clf = MapieMultiLabelClassifier(estimator=model)
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(
