@@ -204,7 +204,7 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 ================
 
 MAPIE has been developed through a collaboration between Quantmetry, Michelin, ENS Paris-Saclay,
-Confiance.ai and with the financial support from Région Ile de France.
+and with the financial support from Région Ile de France and Confiance.ai.
 
 |Quantmetry|_ |Michelin|_ |ENS|_ |Confiance.ai|_  |IledeFrance|_ 
 
@@ -234,7 +234,7 @@ Confiance.ai and with the financial support from Région Ile de France.
 
 MAPIE methods belong to the field of conformal inference.
 
-[1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
+[1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
 "Predictive inference with the jackknife+." Ann. Statist., 49(1):486–507, February 2021.
 
 [2] Byol Kim, Chen Xu, and Rina Foygel Barber.
@@ -257,6 +257,14 @@ International Conference on Learning Representations 2021.
 [7] Chen Xu and Yao Xie.
 "Conformal Prediction Interval for Dynamic Time-Series."
 International Conference on Machine Learning (ICML, 2021).
+
+[8] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
+and Michael I. Jordan. Distribution-free, risk-controlling prediction
+sets. CoRR, abs/2101.02703, 2021.
+URL https://arxiv.org/abs/2101.02703.39
+
+[9] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
+Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
 
 
 📝 License
