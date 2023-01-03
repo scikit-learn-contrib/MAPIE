@@ -186,12 +186,12 @@ fig, axs = plt.subplots(
 )
 for i, (name, (method, bound)) in enumerate(method_params.items()):
     axs[i].plot(
-        [mapie.lambdas],
+        mapie.lambdas,
         r_hats[name], label=r"$\hat{R}$", linewidth=2
     )
     if name != "CRC":
         axs[i].plot(
-            [mapie.lambdas],
+            mapie.lambdas,
             r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2
         )
     axs[i].plot([0, 1], [alpha[9], alpha[9]], label=r"$\alpha$")
