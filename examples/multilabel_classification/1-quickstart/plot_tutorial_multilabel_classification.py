@@ -93,7 +93,7 @@ plt.show()
 # 2. Fitting MapieMultiLabelClassifier
 # ------------------------------------
 # MapieMultiLabelClassifier will be fitted with RCPS and CRC methods. For the
-# RCPS method, we will test all three Upper Confiance Bounds (Hoeffding,
+# RCPS method, we will test all three Upper Confidence Bounds (Hoeffding,
 # Bernstein and Waudby-Smith–Ramdas).
 # The two methods give two different guarantees on the risk:
 #
