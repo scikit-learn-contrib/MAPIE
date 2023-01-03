@@ -70,7 +70,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     ----------
     valid_methods: List[str]
         List of all valid methods. Either CRC or RCPS
-    valid_methods: List[Union[str, None]]
+    valid_methods: List[Union[str, ``None``]]
         List of all valid bounds computation for RCPS only.
     single_estimator_ : sklearn.ClassifierMixin
         Estimator fitted on the whole training set.
@@ -93,7 +93,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         method="rcps".
 
     lambdas_star: ArrayLike of shape (n_lambdas)
-        Optimal threshold according to alpha.
+        Optimal threshold for a given alpha.
 
     References
     ----------
@@ -211,17 +211,16 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-            If delta is ``None`` and method is RCSP
-        ValueError
-            If delta is not in [0, 1] and method
+            If delta is ``None`` and method is RCSP or
+            if delta is not in [0, 1] and method
             is RCPS.
         Warning
-            If delta is not None and method is CRC
+            If delta is not ``None`` and method is CRC
         """
         if (self.method == "rcps") and (delta is None):
             raise ValueError(
                 "Invalid delta. "
-                "delta cannot be None when using "
+                "delta cannot be ``None`` when using "
                 "RCPS method."
             )
         if (not isinstance(delta, float)) and (delta is not None):
@@ -240,7 +239,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         if (self.method == "crc") and (delta is not None):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
-                + "even if the delta is not None, it won't be"
+                + "even if the delta is not ``None``, it won't be"
                 + "taken into account"
             )
 
@@ -358,14 +357,14 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Raises
         ------
         AttributeError
-            If bound is not in ["hoeffding", "bernstein", "wsr", None]
+            If bound is not in ["hoeffding", "bernstein", "wsr", ``None``]
 
         Warning
             If bound is not ``None``and method is CRC
         """
         if bound not in self.valid_bounds_:
             raise ValueError(
-                "bound must be in ['hoeffding', 'bernstein', 'wsr', None]"
+                "bound must be in ['hoeffding', 'bernstein', 'wsr', ``None``]"
             )
         elif (bound is not None) and (self.method == "crc"):
             warnings.warn(
@@ -621,7 +620,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             Training labels.
 
         _refit: bool
-            Whether or not refit MAPIE from scratch.
+            Whether or not refit from scratch.
 
             By default False
 
@@ -715,11 +714,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         ----------
         X : ArrayLike of shape (n_samples, n_features)
             Test data.
-        method : Optional[str], optional
+        method : Optional[str]
             Method to choose for prediction interval estimates.
             Choose among:
 
-            - "crc", for Conformal Risk Control. See [1] fot
+            - "crc", for Conformal Risk Control. See [1] for
             more details.
 
             - "rcps", based on computation of the upper bound
@@ -743,7 +742,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             Lower ``delta`` produce larger (more conservative) prediction
             sets.
             By default ``None``.
-        bound : Optional[Union[str, None]]
+        bound : Optional[Union[str, ``None``]]
             Method used to compute the Upper Confidence Bound of the
             average risk. Only necessary with the RCPS method.
             By default "wsr"
