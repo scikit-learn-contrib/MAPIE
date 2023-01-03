@@ -1,13 +1,9 @@
-import pytest
 import numpy as np
+import pytest
 
-from mapie.conformity_scores import (
-    AbsoluteConformityScore,
-    ConformityScore,
-    GammaConformityScore,
-)
-from mapie._typing import NDArray, ArrayLike
-
+from mapie._typing import ArrayLike, NDArray
+from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
+                                     GammaConformityScore)
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])

@@ -11,10 +11,7 @@ from ._compatibility import np_nanquantile
 from ._typing import ArrayLike, NDArray
 from .aggregation_functions import aggregate_all
 from .regression import MapieRegressor
-from .utils import (
-    check_alpha,
-    check_alpha_and_n_samples,
-)
+from .utils import check_alpha, check_alpha_and_n_samples
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
@@ -51,8 +48,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     def _relative_conformity_scores(
         self,
-        X: NDArray,
-        y: NDArray,
+        X: ArrayLike,
+        y: ArrayLike,
     ) -> NDArray:
         """
         Compute the conformity scores on a data set.

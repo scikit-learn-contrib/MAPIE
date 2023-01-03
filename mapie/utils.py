@@ -5,12 +5,12 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
-from sklearn.utils.validation import _check_sample_weight, _num_features
 from sklearn.utils import _safe_indexing
+from sklearn.utils.validation import _check_sample_weight, _num_features
 
 from ._compatibility import np_quantile
-from .conformity_scores import AbsoluteConformityScore, ConformityScore
 from ._typing import ArrayLike, NDArray
+from .conformity_scores import AbsoluteConformityScore, ConformityScore
 
 
 def check_null_weight(

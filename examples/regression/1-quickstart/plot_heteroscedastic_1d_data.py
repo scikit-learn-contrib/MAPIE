@@ -12,17 +12,17 @@ intervals to the local heteroscedastic noise.
 """
 from typing import Tuple
 
-import scipy
 import numpy as np
+import scipy
+from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-from matplotlib import pyplot as plt
 
-from mapie.regression import MapieRegressor
-from mapie.quantile_regression import MapieQuantileRegressor
-from mapie.subsample import Subsample
 from mapie._typing import NDArray
+from mapie.quantile_regression import MapieQuantileRegressor
+from mapie.regression import MapieRegressor
+from mapie.subsample import Subsample
 
 random_state = 42
 

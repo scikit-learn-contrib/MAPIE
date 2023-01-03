@@ -31,24 +31,21 @@ defined in the ``predict`` for these methods).
 
 import warnings
 
-from lightgbm import LGBMRegressor
 import matplotlib.pyplot as plt
-from matplotlib.offsetbox import TextArea, AnnotationBbox
-from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import RandomizedSearchCV, train_test_split, KFold
-from sklearn.datasets import fetch_california_housing
+from lightgbm import LGBMRegressor
+from matplotlib.offsetbox import AnnotationBbox, TextArea
+from matplotlib.ticker import FormatStrFormatter
 from scipy.stats import randint, uniform
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import KFold, RandomizedSearchCV, train_test_split
 
-from mapie.metrics import (
-    regression_coverage_score,
-    regression_mean_width_score
-    )
+from mapie.metrics import (regression_coverage_score,
+                           regression_mean_width_score)
+from mapie.quantile_regression import MapieQuantileRegressor
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
-from mapie.quantile_regression import MapieQuantileRegressor
-
 
 random_state = 23
 rng = np.random.default_rng(random_state)

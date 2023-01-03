@@ -9,16 +9,16 @@ on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
 from typing import Any, Callable, Tuple, TypeVar
 
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-import matplotlib.pyplot as plt
 
-from mapie.regression import MapieRegressor
-from mapie.quantile_regression import MapieQuantileRegressor
-from mapie.subsample import Subsample
 from mapie._typing import NDArray
+from mapie.quantile_regression import MapieQuantileRegressor
+from mapie.regression import MapieRegressor
+from mapie.subsample import Subsample
 
 F = TypeVar("F", bound=Callable[..., Any])
 random_state = 42
