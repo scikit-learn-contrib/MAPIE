@@ -47,7 +47,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import randint
-from sklearn.datasets import load_boston
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
