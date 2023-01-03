@@ -33,7 +33,7 @@ from mapie.multi_label_classification import MapieMultiLabelClassifier
 
 centers = [(0, 10), (-5, 0), (5, 0), (0, 5), (0, 0), (-4, 5), (5, 5)]
 covs = [
-    np.eye(2)**2, np.eye(2)**2, np.eye(2)**2, np.diag([5, 5]), np.diag([3, 1]),
+    np.eye(2), np.eye(2), np.eye(2), np.diag([5, 5]), np.diag([3, 1]),
     np.array([
         [4, 3],
         [3, 4]
@@ -54,7 +54,7 @@ classes = [
     [1, 0, 1], [1, 1, 0], [0, 1, 1], [1, 1, 1],
     [0, 1, 0], [1, 0, 0], [0, 0, 1]
 ]
-y = np.vstack([np.full((n_samples, 3), i) for i in classes])
+y = np.vstack([np.full((n_samples, 3), row) for row in classes])
 
 X_train_cal, X_test, y_train_cal, y_test = train_test_split(
     X, y, test_size=0.2
@@ -93,9 +93,9 @@ plt.show()
 # 2. Fitting MapieMultiLabelClassifier
 # ------------------------------------
 # MapieMultiLabelClassifier will be fitted with RCPS and CRC methods. For the
-# RCPS method, we will test all three Upper Confiance Bound (Hoeffding,
+# RCPS method, we will test all three Upper Confiance Bounds (Hoeffding,
 # Bernstein and Waudby-Smith–Ramdas).
-# The two methods give two different guaranties on the risk:
+# The two methods give two different guarantees on the risk:
 #
 # * RCPS: :math:`P(R(\mathcal{T}_{\hat{\lambda}})\leq\alpha)\geq 1-\delta`
 # where :math:`R(\mathcal{T}_{\hat{\lambda}})`
@@ -112,13 +112,12 @@ plt.show()
 
 method_params = {
     "RCPS - Hoeffding": ("rcps", "hoeffding"),
-    "RCPS - Berstein": ("rcps", "bernstein"),
+    "RCPS - Bernstein": ("rcps", "bernstein"),
     "RCPS - WSR": ("rcps", "wsr"),
     "CRC": ("crc", None)
 }
 
 clf = MultiOutputClassifier(GaussianNB()).fit(X_train, y_train)
-mapie = MapieMultiLabelClassifier(clf)
 mapie = MapieMultiLabelClassifier(estimator=clf)
 mapie.fit(X_cal, y_cal)
 
@@ -144,18 +143,18 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 # ----------
 # To check the results of the methods, we propose to types of plots:
 #
-# * Plots where the level of confidence is varied. Here two metrics are plotted
+# * Plots where the level of confidence varies. Here two metrics are plotted
 #   for each method and for each UCB
 #     * The actual recall (which should be always near to the required one):
 #       we can see that they are close to each other.
 #     * The value of the threshold: we see that the threshold is decreasing as
-#       :math:`1 - \alpha`` increases, which is what we expected because a
-#       smaller threshold will give you larger prediction sets, hence a larger
+#       :math:`1 - \alpha` increases, which is what is expected because a
+#       smaller threshold will give larger prediction sets, hence a larger
 #       recall.
 #
 
 vars_y = [recalls, thresholds]
-labels_y = ["Average number of kept labels", "Recall", "Thresold"]
+labels_y = ["Average number of kept labels", "Recall", "Threshold"]
 
 fig, axs = plt.subplots(1, len(vars_y), figsize=(8*len(vars_y), 8))
 for i, var in enumerate(vars_y):
@@ -165,19 +164,19 @@ for i, var in enumerate(vars_y):
             axs[i].plot([0, 1], [0, 1], ls="--", color="k")
     axs[i].set_xlabel("Desired recall : 1 - alpha", fontsize=20)
     axs[i].set_ylabel(labels_y[i], fontsize=20)
-    if i == len(vars_y) - 1:
+    if i == (len(vars_y) - 1):
         axs[i].legend(fontsize=20, loc=[1, 0])
 plt.show()
 
 ##############################################################################
 # * Plots where we choose a specific risk value (0.1 in our case) and look at
 #   the average risk, the UCB of the risk (for RCPS methods) and the choice of
-#   the thresold :math:`\lambda`
-#     * We can see that among the RCPS methods, the Bernstein method is the
-#       one who gives the best results as for a given value of :math:`\alpha`
+#   the threshold :math:`\lambda`
+#     * We can see that among the RCPS methods, the Bernstein method
+#       gives the best results as for a given value of :math:`\alpha`
 #       as we are above the required recall but with a larger value of
 #       :math:`\lambda` than the two others bounds.
-#     * The CRC method gives the best results as it guarantee the coverage
+#     * The CRC method gives the best results since it guarantees the coverage
 #       with a larger threshold.
 
 fig, axs = plt.subplots(
@@ -187,12 +186,12 @@ fig, axs = plt.subplots(
 )
 for i, (name, (method, bound)) in enumerate(method_params.items()):
     axs[i].plot(
-        [lam / mapie.n_lambdas for lam in range(mapie.n_lambdas)],
+        [mapie.lambdas],
         r_hats[name], label=r"$\hat{R}$", linewidth=2
     )
     if name != "CRC":
         axs[i].plot(
-            [lam / mapie.n_lambdas for lam in range(mapie.n_lambdas)],
+            [mapie.lambdas],
             r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2
         )
     axs[i].plot([0, 1], [alpha[9], alpha[9]], label=r"$\alpha$")
