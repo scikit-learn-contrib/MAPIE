@@ -7,7 +7,7 @@ RCPS and RCR methods implemented in MAPIE on a two-dimensional toy dataset.
 
 Throughout this tutorial, we will answer the following questions:
 
-- How does the threshold varies according to the desired risk?
+- How does the threshold vary according to the desired risk?
 
 - Is the chosen conformal method well calibrated (i.e. does the actual risk
   equal to the desired one) ?
@@ -23,7 +23,7 @@ from sklearn.naive_bayes import GaussianNB
 from mapie.multi_label_classification import MapieMultiLabelClassifier
 
 ##############################################################################
-# 1. Contruction of the dataset
+# 1. Construction of the dataset
 # -----------------------------
 # We use a two-dimensional toy dataset with three possible labels. The idea
 # is to create a triangle where the observations on the edges have only one
@@ -99,7 +99,7 @@ plt.show()
 #
 # * RCPS: :math:`P(R(\mathcal{T}_{\hat{\lambda}})\leq\alpha)\geq 1-\delta`
 # where :math:`R(\mathcal{T}_{\hat{\lambda}})`
-# is the risk we want to control and $\alpha$ is the desired risk
+# is the risk we want to control and :math:`\alpha` is the desired risk
 #
 # * CRC: :math:`\mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha`
 # where :math:`L_{n+1}(\hat{\lambda})` is the risk of a new observation and
@@ -141,9 +141,9 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 ##############################################################################
 # 3. Results
 # ----------
-# To check the results of the methods, we propose to types of plots:
+# To check the results of the methods, we propose two types of plots:
 #
-# * Plots where the level of confidence varies. Here two metrics are plotted
+# * Plots where the confidence level varies. Here two metrics are plotted
 #   for each method and for each UCB
 #     * The actual recall (which should be always near to the required one):
 #       we can see that they are close to each other.
