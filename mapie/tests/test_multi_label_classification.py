@@ -453,7 +453,7 @@ def test_error_rcps_delta_null() -> None:
     """Test error for RCPS method and delta None"""
     mapie_clf = MapieMultiLabelClassifier(random_state=42)
     mapie_clf.fit(X_toy, y_toy)
-    with pytest.raises(ValueError, match=r".*delta cannot be None*"):
+    with pytest.raises(ValueError, match=r".*delta cannot be ``None``*"):
         mapie_clf.predict(X_toy, method="rcps")
 
 
