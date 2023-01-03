@@ -245,7 +245,7 @@ MAPIE methods belong to the field of conformal inference.
 "Least Ambiguous Set-Valued Classifiers With Bounded Error Levels." Journal of the American Statistical Association, 114:525, 223-234, 2019.
 
 [4] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
-"Classification with Valid and Adaptive Coverage." NeurIPS 202 (spotlight).
+"Classification with Valid and Adaptive Coverage." NeurIPS 2020 (spotlight).
 
 [5] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan and Jitendra Malik.
 "Uncertainty Sets for Image Classifiers using Conformal Prediction."
