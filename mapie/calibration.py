@@ -13,8 +13,7 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
 from ._typing import ArrayLike, NDArray
-from .utils import (check_binary_zero_one, check_cv,
-                    check_estimator_classification,
+from .utils import (check_cv, check_estimator_classification,
                     check_estimator_fit_predict, check_n_features_in,
                     check_null_weight, fit_estimator, get_calib_set)
 
@@ -100,9 +99,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     [[0.84900723 0.         0.        ]
      [0.75432411 0.         0.        ]
      [0.62285341 0.         0.        ]
-     [0.         0.66666667 0.        ]
-     [0.         0.66666667 0.        ]
-     [0.         0.66666667 0.        ]
+     [0.         0.33333333 0.        ]
+     [0.         0.33333333 0.        ]
+     [0.         0.33333333 0.        ]
      [0.         0.         0.33333002]
      [0.         0.         0.54326683]
      [0.         0.         0.66666124]]
@@ -172,9 +171,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         y_calib = cast(NDArray, y_calib)
         sample_weight = cast(NDArray, sample_weight)
         given_label_indices = np.where(y_pred.ravel() == item)[0]
-        y_calib_ = check_binary_zero_one(
-            np.equal(y_calib[given_label_indices], item).astype(int)
-        )
+        y_calib_ = np.equal(y_calib[given_label_indices], item).astype(int)
         top_class_prob_ = top_class_prob[given_label_indices]
 
         if sample_weight is not None:
@@ -198,9 +195,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         calibrator: Optional[Union[str, RegressorMixin]],
     ) -> RegressorMixin:
         """
-        Check the input that has been provided for
-        calibrator and check that the calibrator is a valid
-        estimator to calibrate.
+        Check the input that has been provided for calibrator and
+        check that the calibrator is a valid estimator to calibrate.
 
         Parameters
         ----------
@@ -219,7 +215,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-            If str is not one of the valid estimators.
+            If calibrator is not one of the valid calibrators.
         """
         if calibrator is None:
             calibrator = "sigmoid"

@@ -177,7 +177,7 @@ def test_ece_scores() -> None:
 def test_top_lable_ece() -> None:
     "Test that score is "
     scr = top_label_ece(y_true, y_scores)
-    assert np.round(scr, 4) == 0.2955
+    assert np.round(scr, 4) == 0.6997
 
 
 def test_top_label_same_result() -> None:

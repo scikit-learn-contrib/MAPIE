@@ -880,6 +880,7 @@ def calc_bins(
     for bin in range(num_bins):
         bin_sizes[bin] = len(y_score[binned == bin])
         if bin_sizes[bin] > 0:
+            print(np.sum(y_true[binned == bin]))
             bin_accs[bin] = np.divide(
                 np.sum(y_true[binned == bin]),
                 bin_sizes[bin],
@@ -981,7 +982,8 @@ def check_binary_zero_one(
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     if type_of_target(y_true) == "binary":
-        if (np.unique(y_true) != np.array([0, 1])).any():
+        if ((np.unique(y_true) != np.array([0, 1])).any() and
+                len(np.unique(y_true)) == 2):
             idx_min = np.where(y_true == np.min(y_true))[0]
             y_true[idx_min] = 0
             idx_max = np.where(y_true == np.max(y_true))[0]
