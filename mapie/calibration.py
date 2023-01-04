@@ -23,7 +23,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     Calibration for multi-class problems.
 
     This class performs calibration for various methods, currently only
-    top-level [1].
+    top-label calibration [1].
 
     Parameters
     ----------
@@ -345,9 +345,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         calibrators: Dict[int, RegressorMixin],
     ) -> NDArray:
         """
-        Using the predicted scores, we calibrate scores with the fitted
-        calibrators. Note that if there is no calibrator for a the specific
-        class, then we simply output the not calibrated values.
+        Using the predicted scores, we calibrate the maximum score with the
+        specifically fitted calibrator. Note that if there is no calibrator
+        for a the specific class, then we simply output the not calibrated
+        values.
 
         Note that if the calibrated score prediction is 0, there would be an
         issue when finding the class it belongs to. We set it equal to

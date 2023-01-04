@@ -192,7 +192,7 @@ def expected_calibration_error(
     Parameters
     ----------
     y_true : ArrayLike of shape (n_samples,)
-        The "true" values, target for the calibrator.
+        The target values for the calibrator.
     y_score : ArrayLike of shape (n_samples,) or (n_samples, n_classes)
         The predictions scores.
     num_bins : int
@@ -239,7 +239,7 @@ def top_label_ece(
 ) -> float:
     """
     The Top-Label ECE which is a method adapted to fit the
-    ECE to a Top-Label setting. [2].
+    ECE to a Top-Label setting [2].
 
     [2] Gupta, Chirag, and Aaditya K. Ramdas.
     "Top-label calibration and multiclass-to-binary reductions."
@@ -248,7 +248,7 @@ def top_label_ece(
     Parameters
     ----------
     y_true : ArrayLike of shape (n_samples,)
-        The "true" values, target for the calibrator.
+        The target values for the calibrator.
     y_scores : ArrayLike of shape (n_samples, n_classes)
     or (n_samples,)
         The predictions scores, either the maximum score and the
