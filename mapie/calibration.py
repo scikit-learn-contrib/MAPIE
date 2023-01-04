@@ -231,7 +231,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 raise ValueError(
                     """
                     Please provide a valid string from the valid calibrators
-                    such as {self.valid_calibrators.keys().join(", ")}.
+                    such as {(", ").join(self.valid_calibrators.keys())}.
                     """
                 )
         check_estimator_fit_predict(calibrator)
@@ -285,7 +285,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         if self.method not in self.valid_methods:
             raise ValueError(
                 "Invalid method, allowed method are ",
-                self.valid_methods.join(", ")
+                (", ").join(self.valid_methods)
             )
 
     def _fit_calibrators(
@@ -413,8 +413,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         stratify: Optional[ArrayLike] = None,
     ) -> MapieCalibrator:
         """
-        Fit estimator will calibrate the predicted probabilities from the output
-        of a classifier.
+        Fit estimator will calibrate the predicted probabilities from the
+        output of a classifier.
 
         Parameters
         ----------
@@ -507,8 +507,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
     ) -> NDArray:
         """
-        Prediction of the calibrated score of the class after fitting of
-        the classifer and calibrator.
+        Prediction of the calibrated scores using fitted classifer and
+        calibrator.
 
         Parameters
         ----------

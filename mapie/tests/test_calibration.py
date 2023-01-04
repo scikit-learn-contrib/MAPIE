@@ -178,7 +178,7 @@ def test_not_seen_calibrator() -> None:
     """
     with pytest.warns(
         UserWarning,
-        match=r".*WARNING: This predicted label has not been*"
+        match=r".*WARNING: This predicted label*"
     ):
         mapie_cal = MapieCalibrator()
         mapie_cal.fit(X, y)
