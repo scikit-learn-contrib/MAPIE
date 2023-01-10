@@ -205,7 +205,7 @@ def check_alpha(
         )
     if len(alpha_np.shape) != 1:
         raise ValueError(
-            "Invalid alpha. "
+            "Invalid alpha."
             "Please provide a one-dimensional list of values."
         )
     if alpha_np.dtype.type not in [np.float64, np.float32]:
@@ -271,15 +271,16 @@ def check_n_features_in(
     if cv == "prefit" and hasattr(estimator, "n_features_in_"):
         if cast(Any, estimator).n_features_in_ != n_features_in:
             raise ValueError(
-                "Invalid mismatch between "
+                "Invalid mismatch between ",
                 "X.shape and estimator.n_features_in_."
             )
     return n_features_in
 
 
 def check_alpha_and_n_samples(
-    alphas: Union[Iterable[float], float], n: int
-) -> None:
+        alphas: Union[Iterable[float], float],
+        n: int) -> None:
+
     """
     Check if the quantile can be computed based
     on the number of samples and the alpha value.
@@ -414,26 +415,25 @@ def check_lower_upper_bounds(
     y_preds: NDArray, y_pred_low: NDArray, y_pred_up: NDArray
 ) -> None:
     """
-    Check if the lower or upper bounds are inconsistent.
-    If checking for MapieQuantileRegressor, then also checking
-    initial quantile values.
+    Check if the lower or upper bounds are consistent.
+    If check for MapieQuantileRegressor's outputs, then also check
+    initial quantile predictions.
 
     Parameters
     ----------
-    y_pred : NDArray of shape (n_samples, 3) or (n_samples,)
+    y_preds : NDArray of shape (n_samples, 3) or (n_samples,)
         All the predictions at quantile:
         alpha/2, (1 - alpha/2), 0.5 or only the predictions
     y_pred_low : NDArray of shape (n_samples,)
-        Final lower bound prediction with additional quantile
-        value added
+        Final lower bound prediction
     y_pred_up : NDArray of shape (n_samples,)
-        Final upper bound prediction with additional quantile
-        value added
+        Final upper bound prediction
 
     Raises
     ------
     Warning
-        If the aggregated predictions of any training sample would be nan.
+        If y_preds, y_pred_low and y_pred_up are ill sorted
+        at anay rank.
 
     Examples
     --------
@@ -441,7 +441,7 @@ def check_lower_upper_bounds(
     >>> warnings.filterwarnings("error")
     >>> import numpy as np
     >>> from mapie.utils import check_lower_upper_bounds
-    >>> y_preds = np.array([[4, 2, 3], [3, 4, 5], [2, 3, 4]])
+    >>> y_preds = np.array([[4, 3, 2], [4, 4, 4], [2, 3, 4]])
     >>> y_pred_low = np.array([4, 3, 2])
     >>> y_pred_up = np.array([4, 4, 4])
     >>> try:
@@ -449,38 +449,49 @@ def check_lower_upper_bounds(
     ... except Exception as exception:
     ...     print(exception)
     ...
-    WARNING: The initial prediction values from the quantile method
-    present issues as the upper quantile values might be higher than the
-    lower quantile values.
+    WARNING: The predictions of the quantile regression have issues.
+    The upper quantile predictions are lower
+    than the lower quantile predictions
+    at some points.
     """
     if y_preds.ndim == 1:
         init_pred = y_preds
     else:
-        init_pred, init_lower_bound, init_upper_bound = y_preds
-    if y_preds.ndim != 1 and np.any(
-        np.logical_or(
-            init_lower_bound >= init_upper_bound,
-            init_pred <= init_lower_bound,
-            init_pred >= init_upper_bound,
+        init_lower_bound, init_upper_bound, init_pred = y_preds
+
+        any_init_inversion = np.any(
+            np.logical_or(
+                np.logical_or(
+                    init_lower_bound > init_upper_bound,
+                    init_pred < init_lower_bound,
+                ),
+                init_pred > init_upper_bound,
+            )
         )
-    ):
+
+    if (y_preds.ndim != 1) and any_init_inversion:
         warnings.warn(
-            "WARNING: The initial prediction values from the "
-            + "quantile method\npresent issues as the upper "
-            "quantile values might be higher than the\nlower "
-            + "quantile values."
+            "WARNING: The predictions of the quantile regression "
+            + "have issues.\nThe upper quantile predictions are lower\n"
+            + "than the lower quantile predictions\n"
+            + "at some points."
         )
-    if np.any(
+
+    any_final_inversion = np.any(
         np.logical_or(
-            y_pred_low >= y_pred_up,
-            init_pred <= y_pred_low,
-            init_pred >= y_pred_up,
+            np.logical_or(
+                y_pred_low > y_pred_up,
+                init_pred < y_pred_low,
+            ),
+            init_pred > y_pred_up,
         )
-    ):
+    )
+
+    if any_final_inversion:
         warnings.warn(
-            "WARNING: Following the additional value added to have conformal "
-            "predictions, the upper and lower bound present issues as one "
-            "might be higher or lower than the other."
+            "WARNING: The predictions have issues.\n"
+            + "The upper predictions are lower than"
+            + "the lower predictions at some points."
         )
 
 
@@ -635,22 +646,23 @@ def compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
     """
     n = len(vector)
     if len(vector.shape) <= 2:
-        quantiles_ = np.stack([
-                    np_quantile(
-                        vector,
-                        ((n + 1) * (1 - _alpha)) / n,
-                        method="higher",
-                    ) for _alpha in alpha
-        ])
+        quantiles_ = np.stack(
+            [
+                np_quantile(
+                    vector,
+                    ((n + 1) * (1 - _alpha)) / n,
+                    method="higher",
+                )
+                for _alpha in alpha
+            ]
+        )
 
     else:
         check_alpha_and_last_axis(vector, alpha)
         quantiles_ = np.stack(
-                [
-                    compute_quantiles(
-                        vector[:, :, i],
-                        np.array([alpha_])
-                    ) for i, alpha_ in enumerate(alpha)
-                ]
-            )[:, 0]
+            [
+                compute_quantiles(vector[:, :, i], np.array([alpha_]))
+                for i, alpha_ in enumerate(alpha)
+            ]
+        )[:, 0]
     return quantiles_

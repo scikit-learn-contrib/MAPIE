@@ -10,10 +10,17 @@ from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.quantile_regression import MapieQuantileRegressor
-from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_lower_upper_bounds, check_n_features_in,
-                         check_n_jobs, check_null_weight, check_verbose,
-                         compute_quantiles, fit_estimator)
+from mapie.utils import (
+    check_alpha,
+    check_alpha_and_n_samples,
+    check_lower_upper_bounds,
+    check_n_features_in,
+    check_n_jobs,
+    check_null_weight,
+    check_verbose,
+    compute_quantiles,
+    fit_estimator,
+)
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -24,15 +31,16 @@ X, y = make_regression(
     n_samples=500, n_features=n_features, noise=1.0, random_state=1
 )
 ALPHAS = [
-    np.array([.1]),
-    np.array([.05, .1, .2]),
+    np.array([0.1]),
+    np.array([0.05, 0.1, 0.2]),
 ]
 
 
 class DumbEstimator:
     def fit(
-        self, X: ArrayLike, y: Optional[ArrayLike] = None
-    ) -> DumbEstimator:
+            self,
+            X: ArrayLike,
+            y: Optional[ArrayLike] = None) -> DumbEstimator:
         self.fitted_ = True
         return self
 
@@ -71,8 +79,8 @@ def test_check_null_weight_with_zeros() -> None:
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
 def test_fit_estimator(
-    estimator: Any, sample_weight: Optional[ArrayLike]
-) -> None:
+        estimator: Any,
+        sample_weight: Optional[ArrayLike]) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = fit_estimator(estimator, X_toy, y_toy, sample_weight)
     check_is_fitted(estimator)
@@ -152,7 +160,7 @@ def test_invalid_calculation_of_quantile(alpha: Any) -> None:
     """Test that alpha with 1/alpha > number of samples  raise errors."""
     n = 10
     with pytest.raises(
-        ValueError, match=r".*Number of samples of the score is too low*"
+        ValueError, match=r".*Number of samples of the score is too low.*"
     ):
         check_alpha_and_n_samples(alpha, n)
 
@@ -193,29 +201,31 @@ def test_valid_verbose(verbose: Any) -> None:
 
 
 def test_initial_low_high_pred() -> None:
-    """Test initial values upper bound lower bound above/below one another"""
-    y_preds = np.array([[4, 2, 3], [3, 4, 5], [2, 3, 4]])
+    """Test lower/upper predictions of the quantiles regression crossing"""
+    y_preds = np.array([[4, 3, 2], [4, 4, 4], [2, 3, 4]])
     y_pred_low = np.array([4, 3, 2])
     y_pred_up = np.array([4, 4, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: The initial prediction*"):
+    with pytest.warns(UserWarning, match=r"WARNING: The prediction.*"):
         check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
 
 
 def test_final_low_high_pred() -> None:
-    """Test final values upper bound lower bound above/below one another"""
-    y_preds = np.array([[1, 2, 3], [3, 4, 5], [2, 3, 4]])
+    """Test lower/upper predictions crossing"""
+    y_preds = np.array(
+        [[4, 3, 2], [3, 3, 3], [2, 3, 4]]
+    )
     y_pred_low = np.array([4, 3, 2])
-    y_pred_up = np.array([4, 4, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: Following the addition*"):
+    y_pred_up = np.array([3, 3, 3])
+    with pytest.warns(UserWarning, match=r"WARNING: The predictions of .*"):
         check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
 
 
 def test_final1D_low_high_pred() -> None:
-    """Test final values upper bound lower bound above/below one another"""
+    """Test lower/upper predictions crossing when y_preds is 1D"""
     y_preds = np.array([4, 3, 4])
     y_pred_low = np.array([7, 3, 2])
     y_pred_up = np.array([3, 4, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: Following the addition*"):
+    with pytest.warns(UserWarning, match=r"WARNING: The predictions .*"):
         check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
 
 
@@ -224,8 +234,7 @@ def test_ensemble_in_predict() -> None:
     mapie_reg = MapieQuantileRegressor()
     mapie_reg.fit(X, y)
     with pytest.warns(
-        UserWarning,
-        match=r"WARNING: Alpha should not be specified in the prediction*"
+        UserWarning, match=r"WARNING: Alpha should not be spec.*"
     ):
         mapie_reg.predict(X, alpha=0.2)
 
@@ -243,7 +252,7 @@ def test_compute_quantiles_value_error():
     is different from the number of aphas an error is raised.
     """
     vector = np.random.rand(1000, 1, 1)
-    alphas = [.1, .2, .3]
+    alphas = [0.1, 0.2, 0.3]
 
     with pytest.raises(ValueError, match=r".*In case of the vector .*"):
         compute_quantiles(vector, alphas)
@@ -301,11 +310,5 @@ def test_quantile_prefit_non_iterable(estimator: Any) -> None:
         ValueError,
         match=r".*Estimator for prefit must be an iterable object.*",
     ):
-        mapie_reg = MapieQuantileRegressor(
-            estimator=estimator,
-            cv="prefit"
-        )
-        mapie_reg.fit(
-            [1, 2, 3],
-            [4, 5, 6]
-        )
+        mapie_reg = MapieQuantileRegressor(estimator=estimator, cv="prefit")
+        mapie_reg.fit([1, 2, 3], [4, 5, 6])
