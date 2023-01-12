@@ -510,7 +510,7 @@ class CumulatedScoreClassifier:
         )
         self.X_test = np.array([3, 4, 5]).reshape(-1, 1)
         self.y_pred_sets = np.array(
-            [[True, True, False], [False, True, True], [True, True, False]]
+            [[True, True, False], [False, True, True], [False, True, False]]
         )
         self.classes_ = self.y_calib
 
@@ -528,7 +528,7 @@ class CumulatedScoreClassifier:
             )
         else:
             return np.array(
-                [[0.2, 0.7, 0.1], [0.1, 0.2, 0.7], [0.3, 0.5, 0.2]]
+                [[0.2, 0.7, 0.1], [0.1, 0.2, 0.7], [0., 1., 0.]]
             )
 
 
@@ -1220,7 +1220,7 @@ def test_get_last_included_proba_shape(k_lambda, strategy):
 
     mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
     include_last_label = STRATEGIES[strategy][1]["include_last_label"]
-
+    mapie.n_classes_ = len(np.unique(y))
     y_p_p_c, y_p_i_l, y_p_p_i_l = mapie._get_last_included_proba(
         y_pred_proba, thresholds,
         include_last_label, lambda_, k

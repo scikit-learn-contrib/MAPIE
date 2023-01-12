@@ -837,7 +837,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             y_pred_index_last,
             axis=1
         )
-
+        y_pred_proba_last[
+            y_pred_proba_cumsum[:, :, 0].sum(axis=1) == self.n_classes_
+        ] = 1
         return y_pred_proba_cumsum, y_pred_index_last, y_pred_proba_last
 
     def _update_size_and_lambda(
