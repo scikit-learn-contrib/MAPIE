@@ -838,8 +838,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             axis=1
         )
         y_pred_proba_last[
-            y_pred_proba_cumsum[:, :, 0].sum(axis=1) == self.n_classes_
-        ] = 1
+            y_pred_proba_sorted_cumsum[:, -2, 0] == 1
+        ] = np.expand_dims(
+            np.min(
+                np.ma.masked_less(
+                    y_pred_proba[y_pred_proba_sorted_cumsum[:, -2, 0] == 1],
+                    EPSILON
+                ).filled(fill_value=np.inf),
+                axis=1
+            ),
+            axis=2
+        )
         return y_pred_proba_cumsum, y_pred_index_last, y_pred_proba_last
 
     def _update_size_and_lambda(

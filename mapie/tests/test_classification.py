@@ -510,7 +510,7 @@ class CumulatedScoreClassifier:
         )
         self.X_test = np.array([3, 4, 5]).reshape(-1, 1)
         self.y_pred_sets = np.array(
-            [[True, True, False], [False, True, True], [False, True, False]]
+            [[True, True, False], [False, True, False], [False, True, True]]
         )
         self.classes_ = self.y_calib
 
@@ -528,7 +528,7 @@ class CumulatedScoreClassifier:
             )
         else:
             return np.array(
-                [[0.2, 0.7, 0.1], [0.1, 0.2, 0.7], [0., 1., 0.]]
+                [[0.2, 0.7, 0.1], [0., 1., 0.], [0., .7, 0.3]]
             )
 
 
