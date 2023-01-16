@@ -1225,7 +1225,6 @@ def test_get_last_included_proba_shape(k_lambda, strategy):
 
     mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
     include_last_label = STRATEGIES[strategy][1]["include_last_label"]
-    mapie.n_classes_ = len(np.unique(y))
     y_p_p_c, y_p_i_l, y_p_p_i_l = mapie._get_last_included_proba(
         y_pred_proba, thresholds,
         include_last_label, lambda_, k
