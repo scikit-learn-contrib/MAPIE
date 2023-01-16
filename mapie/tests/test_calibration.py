@@ -117,7 +117,7 @@ def test_false_str_estimator() -> None:
     """Test invalid string input for calibrator."""
     with pytest.raises(
         ValueError,
-        match=r".*Please provide a valid string*",
+        match=r".*Please provide a string in*",
     ):
         mapie_cal = MapieCalibrator(
             calibrator="not_estimator"
@@ -315,14 +315,12 @@ def test_different_binary_y_combinations() -> None:
     mapie_cal.fit(X_comb, y_comb, random_state=random_state)
     y_score = mapie_cal.predict_proba(X_comb)
 
-    y_comb1 = y_comb.copy()
-    y_comb1[np.where(y_comb1 == 2)[0]] = 3
+    y_comb1 = np.where(y_comb == 2, 3, y_comb)
     mapie_cal1 = MapieCalibrator()
     mapie_cal1.fit(X_comb, y_comb1, random_state=random_state)
     y_score1 = mapie_cal1.predict_proba(X_comb)
 
-    y_comb2 = y_comb.copy()
-    y_comb2[np.where(y_comb2 == 2)[0]] = 40
+    y_comb2 = np.where(y_comb == 2, 40, y_comb)
     mapie_cal2 = MapieCalibrator()
     mapie_cal2.fit(X_comb, y_comb2, random_state=random_state)
     y_score2 = mapie_cal2.predict_proba(X_comb)
@@ -340,17 +338,21 @@ def test_different_binary_y_combinations() -> None:
     )
 
 
-def test_results_with_constant_sample_weights() -> None:
+@pytest.mark.parametrize(
+    "calibrator", [LinearRegression(), "isotonic"]
+)
+def test_results_with_constant_sample_weights(
+    calibrator: Union[str, RegressorMixin]
+) -> None:
     """
     Test predictions when sample weights are None
     or constant with different values.
 
-    Note that it would seem that the calibration implementations
-    from sklearn would not pass these tests.
+    Note that the calibration implementations from sklearn `calibration.py`
+    file would not pass these tests.
     """
     n_samples = len(X)
     estimator = RandomForestClassifier(random_state=random_state)
-    calibrator = LinearRegression()
     mapie_clf0 = MapieCalibrator(estimator=estimator, calibrator=calibrator)
     mapie_clf1 = MapieCalibrator(estimator=estimator, calibrator=calibrator)
     mapie_clf2 = MapieCalibrator(estimator=estimator, calibrator=calibrator)
