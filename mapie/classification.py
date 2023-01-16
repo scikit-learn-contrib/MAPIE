@@ -853,7 +853,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     ).filled(fill_value=np.inf),
                     axis=1
                 ),
-                axis=2
+                axis=1
             )
         return y_pred_proba_cumsum, y_pred_index_last, y_pred_proba_last
 
