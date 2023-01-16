@@ -473,11 +473,11 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         """
         self._check_method()
         cv = check_cv(self.cv)
-        estimator = check_estimator_classification(X, y, cv, self.estimator)
-        calibrator = self._get_calibrator(self.calibrator)
         X, y = indexable(X, y)
         y = _check_y(y)
         self._check_type_of_target(y)
+        estimator = check_estimator_classification(X, y, cv, self.estimator)
+        calibrator = self._get_calibrator(self.calibrator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         random_state = check_random_state(random_state)

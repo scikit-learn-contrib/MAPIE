@@ -135,6 +135,18 @@ def test_estimator_none() -> None:
     )
 
 
+def test_check_type_of_target() -> None:
+    """Test the type of target."""
+    X = [0.5, 0.2, 0.4, 0.8, 3.8]
+    y = [0.4, 0.2, 3.6, 3, 0.2]
+    mapie_cal = MapieCalibrator()
+    with pytest.raises(
+        ValueError,
+        match=r".*Make sure to have one of the allowed targets:*"
+    ):
+        mapie_cal.fit(X, y)
+
+
 def test_other_methods() -> None:
     """Test that invalid string for method returns error"""
     with pytest.raises(

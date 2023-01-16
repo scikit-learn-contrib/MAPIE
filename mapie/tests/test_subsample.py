@@ -72,12 +72,14 @@ def test_split_BlockBootstrap() -> None:
     np.testing.assert_equal(trains, trains_expected)
     np.testing.assert_equal(tests, tests_expected)
 
+
 def test_split_BlockBootstrap_error_below_zero() -> None:
     """Test outputs of subsamplings for length block below 0."""
     X = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     cv = BlockBootstrap(length=20)
     with pytest.raises(ValueError, match=r".*The length of blocks is <= 0 *"):
         next(cv.split(X))
+
 
 def test_split_BlockBootstrap_error() -> None:
     """Test outputs of subsamplings."""
