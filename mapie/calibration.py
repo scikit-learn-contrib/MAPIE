@@ -119,6 +119,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     valid_methods = ["top_label"]
 
+    valid_inputs = ["multiclass", "binary"]
+
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
@@ -154,8 +156,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         y_calib : NDArray of shape (n_samples,)
             Training labels.
         top_class_prob : NDArray of shape (n_samples,)
-            The independent values of the calibrator, it represents the
-            maximum score of the predictions.
+            The values to be used as the independent variables of the
+            calibrator, they represent the maximum score of the predictions.
         y_pred : NDArray of shape (n_samples,)
             The array to determine which class the maximum prediction belongs
             to.
@@ -282,6 +284,21 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             raise ValueError(
                 "Invalid method, allowed method are ",
                 (", ").join(self.valid_methods)
+            )
+
+    def _check_type_of_target(self, y: ArrayLike):
+        """
+        Check type of target for calibration class.
+
+        Parameters
+        ----------
+        y : ArrayLike of shape (n_samples,)
+            Training labels.
+        """
+        if type_of_target(y) not in self.valid_inputs:
+            raise ValueError(
+                "Make sure to have one of the allowed targets: ",
+                (", ").join(self.valid_inputs)
             )
 
     def _fit_calibrators(
@@ -460,7 +477,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         calibrator = self._get_calibrator(self.calibrator)
         X, y = indexable(X, y)
         y = _check_y(y)
-        assert type_of_target(y) in ["multiclass", "binary"]
+        self._check_type_of_target(y)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         random_state = check_random_state(random_state)
