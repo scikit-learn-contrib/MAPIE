@@ -838,16 +838,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             axis=1
         )
 
-        zeros_scores = y_pred_proba_sorted_cumsum[:, -2, 0] == 1
+        zeros_scores = (y_pred_proba_last == 0).ravel()
 
+        # If the last included proba is zero, change it to the
+        # smallest non-zero value to avoid inluding them in the
+        # prediction sets.
         if np.sum(zeros_scores) > 0:
-            y_pred_proba_last[
-                y_pred_proba_sorted_cumsum[:, -2, 0] == 1
-            ] = np.expand_dims(
+            y_pred_proba_last[zeros_scores] = np.expand_dims(
                 np.min(
-                    np.ma.masked_less(
-                        y_pred_proba[
-                            y_pred_proba_sorted_cumsum[:, -2, 0] == 1
+                    np.ma.masked_less(y_pred_proba[
+                            zeros_scores
                         ],
                         EPSILON
                     ).filled(fill_value=np.inf),
