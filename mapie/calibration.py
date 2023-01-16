@@ -55,11 +55,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
         - ``split``, performs a standard splitting procedure into a
           calibration and test set.
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
-          All data provided in the ``fit`` method is then used
+        - ``prefit``, assumes that ``estimator`` has been fitted already.
+          All the data that is provided in the ``fit`` method is then used
           to calibrate the predictions through the score computation.
-          At prediction time, quantiles of these scores are used to estimate
-          prediction sets.
 
         By default ``split``.
 
@@ -75,7 +73,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         Number of classes that are in the training dataset.
 
     uncalib_pred: NDArray
-        Array of the uncalibrated predictions.
+        Array of the uncalibrated predictions set by the estimator.
 
     calibrators: Dict[str, RegressorMixin]
         Dictionnary of all the fitted calibrators.
@@ -112,7 +110,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         "calibrators",
     ]
 
-    valid_calibrators = {
+    named_calibrators = {
         "sigmoid": _SigmoidCalibration(),
         "isotonic": IsotonicRegression(out_of_bounds="clip")
     }
@@ -135,21 +133,21 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     def _fit_calibrator(
         self,
-        item: int,
+        label: Union[int, str],
         calibrator: RegressorMixin,
-        y_calib: ArrayLike,
+        y_calib: NDArray,
         top_class_prob: NDArray,
         y_pred: NDArray,
         sample_weight: Optional[ArrayLike],
     ) -> RegressorMixin:
         """
-        Fitting the calibrator requires that we have a binary setting in place,
+        Fitting the calibrator requires that we have a binary targets in place,
         hence, we find the subset of values on which we want to apply this
         calibration and apply a binary calibration on these.
 
         Parameters
         ----------
-        item : int
+        label : int
             The class for which we fit a calibrator.
         calibrator : RegressorMixin
             Calibrator to fit.
@@ -157,10 +155,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             Training labels.
         top_class_prob : NDArray of shape (n_samples,)
             The values to be used as the independent variables of the
-            calibrator, they represent the maximum score of the predictions.
+            calibrator, they represent the maximum score for a prediction.
         y_pred : NDArray of shape (n_samples,)
-            The array to determine which class the maximum prediction belongs
-            to.
+            Predictions.
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If ``None``, then samples are equally weighted.
 
@@ -170,10 +167,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             Calibrated estimator.
         """
         calibrator_ = clone(calibrator)
-        y_calib = cast(NDArray, y_calib)
         sample_weight = cast(NDArray, sample_weight)
-        given_label_indices = np.where(y_pred.ravel() == item)[0]
-        y_calib_ = np.equal(y_calib[given_label_indices], item).astype(int)
+        given_label_indices = np.argwhere(y_pred.ravel() == label).ravel()
+        given_label_indices_what_i_want = np.where(y_pred.ravel() == label)[0]
+        y_calib_ = np.equal(y_calib[given_label_indices], label).astype(int)
         top_class_prob_ = top_class_prob[given_label_indices]
 
         if sample_weight is not None:
@@ -192,7 +189,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         )
         return calibrator_
 
-    def _get_calibrator(
+    def _check_calibrator(
         self,
         calibrator: Optional[Union[str, RegressorMixin]],
     ) -> RegressorMixin:
@@ -202,34 +199,32 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        cv : Union[str, BaseCrossValidator]
-            Cross validation parameter.
         calibrator : Union[str, RegressorMixin]
-            If calibrator is a string then it is linked to one of the
-            valid methods else calibrator as estimator.
+            If calibrator is a string then it returns the corresponding
+            estimator of ``valid_calibrators``, else returns calibrator.
 
-            By defaults ``None``. And if ``None``, we set to ``sigmoid``.
+            By defaults ``None``. If ``None``, set to ``sigmoid``.
 
         Returns
         -------
         RegressorMixin
-            RegressorMixin to be used as calibrator.
+            RegressorMixin calibrator.
         Raises
         ------
         ValueError
-            If calibrator is not one of the valid calibrators.
+            If calibrator is not a key of ``named_calibrators``.
         """
         if calibrator is None:
             calibrator = "sigmoid"
 
         if isinstance(calibrator, str):
-            if calibrator in self.valid_calibrators.keys():
-                calibrator = self.valid_calibrators[calibrator]
+            if calibrator in self.named_calibrators.keys():
+                calibrator = self.named_calibrators[calibrator]
             else:
                 raise ValueError(
                     """
                     Please provide a valid string from the valid calibrators
-                    such as {(", ").join(self.valid_calibrators.keys())}.
+                    such as {(", ").join(self.named_calibrators.keys())}.
                     """
                 )
         check_estimator_fit_predict(calibrator)
@@ -344,7 +339,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             calibrator_ = self._fit_calibrator(
                 item,
                 calibrator,
-                y,
+                cast(NDArray, y),
                 max_prob,
                 y_pred,
                 sample_weight,
@@ -477,7 +472,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         y = _check_y(y)
         self._check_type_of_target(y)
         estimator = check_estimator_classification(X, y, cv, self.estimator)
-        calibrator = self._get_calibrator(self.calibrator)
+        calibrator = self._check_calibrator(self.calibrator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         random_state = check_random_state(random_state)
