@@ -225,7 +225,7 @@ def test_number_of_classes_equal_calibrators() -> None:
         y=y_,
         random_state=random_state
     )
-    y_pred_calib_set = mapie_cal.main_estimator.predict(X=X_calib)
+    y_pred_calib_set = mapie_cal.single_estimator_.predict(X=X_calib)
     assert len(mapie_cal.calibrators) == len(np.unique(y_pred_calib_set))
 
 
@@ -237,7 +237,7 @@ def test_same_predict() -> None:
         y=y_,
         random_state=random_state
     )
-    y_pred_calib_set = mapie_cal.main_estimator.predict(X=X_test)
+    y_pred_calib_set = mapie_cal.single_estimator_.predict(X=X_test)
     y_pred_calib_set_through_predict = mapie_cal.predict(X=X_test)
     y_pred_calibrated_test_set = np.nanargmax(
         mapie_cal.predict_proba(X=X_test),

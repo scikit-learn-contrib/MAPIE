@@ -75,6 +75,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     uncalib_pred: NDArray
         Array of the uncalibrated predictions set by the ``estimator``.
 
+    single_estimator_: ClassifierMixin
+        Classifier fitted on the training data.
+
     calibrators: Dict[Union[int, str], RegressorMixin]
         Dictionnary of all the fitted calibrators.
 
@@ -199,7 +202,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             In the "top_label" setting, this refers to the maximum scores
             and the class associated to the maximum score.
         """
-        pred = self.main_estimator.predict_proba(X=X)
+        pred = self.single_estimator_.predict_proba(X=X)
         max_class_prob = np.max(pred, axis=1).reshape(-1, 1)
         y_pred = self.classes_[np.argmax(pred, axis=1)]
         return max_class_prob, y_pred
@@ -457,8 +460,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         random_state = check_random_state(random_state)
 
         if cv == "prefit":
-            self.main_estimator = estimator
-            self.classes_ = self.main_estimator.classes_
+            self.single_estimator_ = estimator
+            self.classes_ = self.single_estimator_.classes_
             self.n_classes_ = len(self.classes_)
             self.calibrators = self._fit_calibrators(
                 X, y, sample_weight, calibrator
@@ -484,8 +487,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             estimator = fit_estimator(
                 clone(estimator), X_train, y_train, sw_train,
             )
-            self.main_estimator = estimator
-            self.classes_ = self.main_estimator.classes_
+            self.single_estimator_ = estimator
+            self.classes_ = self.single_estimator_.classes_
             self.n_classes_ = len(self.classes_)
             self.calibrators = self._fit_calibrators(
                 X_calib, y_calib, sw_calib, calibrator
@@ -512,7 +515,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             other position in that line.
         """
         check_is_fitted(self, self.fit_attributes)
-        self.uncalib_pred = self.main_estimator.predict_proba(X=X)
+        self.uncalib_pred = self.single_estimator_.predict_proba(X=X)
 
         max_prob, y_pred = self._get_labels(X)
 
@@ -549,4 +552,4 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             The class from the scores.
         """
         check_is_fitted(self, self.fit_attributes)
-        return self.main_estimator.predict(X)
+        return self.single_estimator_.predict(X)
