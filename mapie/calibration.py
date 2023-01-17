@@ -17,8 +17,6 @@ from .utils import (check_cv, check_estimator_classification,
                     check_estimator_fit_predict, check_n_features_in,
                     check_null_weight, fit_estimator, get_calib_set)
 
-EPSILON = np.finfo(np.float64).eps
-
 
 class MapieCalibrator(BaseEstimator, ClassifierMixin):
     """
