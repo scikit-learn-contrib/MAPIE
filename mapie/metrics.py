@@ -214,7 +214,7 @@ def expected_calibration_error(
 
     if np.size(y_scores.shape) == 2:
         y_score = cast(
-            NDArray, column_or_1d(np.max(y_scores, axis=1))
+            NDArray, column_or_1d(np.nanmax(y_scores, axis=1))
         )
     else:
         y_score = cast(NDArray, column_or_1d(y_scores))
@@ -280,16 +280,16 @@ def top_label_ece(
     y_true = cast(NDArray, column_or_1d(y_true))
     if y_score_arg is None:
         y_score = cast(
-            NDArray, column_or_1d(np.max(y_scores, axis=1))
+            NDArray, column_or_1d(np.nanmax(y_scores, axis=1))
         )
         if classes is None:
             y_score_arg = cast(
-                NDArray, column_or_1d(np.argmax(y_scores, axis=1))
+                NDArray, column_or_1d(np.nanargmax(y_scores, axis=1))
             )
         else:
             classes = cast(NDArray, classes)
             y_score_arg = cast(
-                NDArray, column_or_1d(classes[np.argmax(y_scores, axis=1)])
+                NDArray, column_or_1d(classes[np.nanargmax(y_scores, axis=1)])
             )
     else:
         y_score = cast(NDArray, column_or_1d(y_scores))

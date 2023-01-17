@@ -880,7 +880,6 @@ def calc_bins(
     for bin in range(num_bins):
         bin_sizes[bin] = len(y_score[binned == bin])
         if bin_sizes[bin] > 0:
-            print(np.sum(y_true[binned == bin]))
             bin_accs[bin] = np.divide(
                 np.sum(y_true[binned == bin]),
                 bin_sizes[bin],

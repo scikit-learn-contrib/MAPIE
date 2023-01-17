@@ -67,7 +67,7 @@ class MapieQuantileRegressor(MapieRegressor):
         Conformity scores between ``y_calib`` and ``y_pred``:
             - [:, 0]: for y_calib coming from prediction estimator with
             quantile of alpha/2
-            - [:, 0]: for y_calib coming from prediction estimator with
+            - [:, 1]: for y_calib coming from prediction estimator with
             quantile of 1 - alpha/2
             - [:, 2]: maximum of those first two scores
 

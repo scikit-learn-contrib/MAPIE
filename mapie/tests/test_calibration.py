@@ -31,29 +31,29 @@ ESTIMATORS = [
 
 results = {
     "y_score": [
-        [0, 0.33333333, 0],
-        [0.66666667, 0, 0],
-        [0, 0.33333333, 0],
-        [0, 0.33333333, 0],
-        [0, 0.33333333, 0],
-        [0, 0, 0.35635314],
-        [0, 0, 0.18501723],
+        [np.nan, 0.33333333, np.nan],
+        [0.66666667, np.nan, np.nan],
+        [np.nan, 0.33333333, np.nan],
+        [np.nan, 0.33333333, np.nan],
+        [np.nan, 0.33333333, np.nan],
+        [np.nan, np.nan, 0.35635314],
+        [np.nan, np.nan, 0.18501723],
     ],
     "top_label_ece": 0.3881,
 }
 
 results_binary = {
     "y_score": [
-        [0.76226014, 0],
-        [0.39557708, 0],
-        [0, 0.66666667],
-        [0.75506701, 0],
-        [0, 0.66666667],
-        [0.81175724, 0],
-        [0.77294068, 0],
-        [0.62599563, 0],
-        [0, 0.66666667],
-        [0, 0.66666667],
+        [0.76226014, np.nan],
+        [0.39557708, np.nan],
+        [np.nan, 0.66666667],
+        [0.75506701, np.nan],
+        [np.nan, 0.66666667],
+        [0.81175724, np.nan],
+        [0.77294068, np.nan],
+        [0.62599563, np.nan],
+        [np.nan, 0.66666667],
+        [np.nan, 0.66666667],
     ],
     "top_label_ece": 0.30562,
     "ece": 0.56657,
@@ -225,7 +225,7 @@ def test_number_of_classes_equal_calibrators() -> None:
         y=y_,
         random_state=random_state
     )
-    y_pred_calib_set = mapie_cal.estimator.predict(X=X_calib)  # type: ignore
+    y_pred_calib_set = mapie_cal.main_estimator.predict(X=X_calib)
     assert len(mapie_cal.calibrators) == len(np.unique(y_pred_calib_set))
 
 
@@ -237,9 +237,17 @@ def test_same_predict() -> None:
         y=y_,
         random_state=random_state
     )
-    y_pred_calib_set = mapie_cal.estimator.predict(X=X_test)  # type: ignore
-    y_pred_calibrated_test_set = mapie_cal.predict(X=X_test)
+    y_pred_calib_set = mapie_cal.main_estimator.predict(X=X_test)
+    y_pred_calib_set_through_predict = mapie_cal.predict(X=X_test)
+    y_pred_calibrated_test_set = np.nanargmax(
+        mapie_cal.predict_proba(X=X_test),
+        axis=1
+    )
     np.testing.assert_allclose(y_pred_calib_set, y_pred_calibrated_test_set)
+    np.testing.assert_allclose(
+        y_pred_calib_set,
+        y_pred_calib_set_through_predict
+    )
 
 
 def test_correct_results() -> None:
