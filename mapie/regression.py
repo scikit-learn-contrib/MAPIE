@@ -647,6 +647,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y_pred = self.single_estimator_.predict(X)
         n = len(self.conformity_scores_)
 
+        if alpha is None:
+            return np.array(y_pred)
+
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
         if self.method in ["naive", "base"] or self.cv == "prefit":
@@ -662,9 +665,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 y_pred_multi_up = y_pred_multi
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
-
-        if alpha is None:
-            return np.array(y_pred)
 
         # compute distributions of lower and upper bounds
         if self.conformity_score_function_.sym:
