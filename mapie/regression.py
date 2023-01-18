@@ -657,6 +657,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             y_pred_multi_up = y_pred[:, np.newaxis]
         else:
             y_pred_multi = self._pred_multi(X)
+            
             if self.method == "minmax":
                 y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
                 y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
