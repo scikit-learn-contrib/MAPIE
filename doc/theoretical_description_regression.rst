@@ -183,7 +183,10 @@ methods and emphasizes their main differences.
 
 In order to reduce the computational time, and get more robust predictions, 
 one can adopt a bootstrap approach instead of a leave-one-out approach, called 
-the jackknife+-after-bootstrap method, offered by Kim and al. [2].
+the jackknife+-after-bootstrap method, offered by Kim and al. [2]. Intuitively,
+this method uses ensemble methodology to calculate the :math:`i^{\text{th}}`
+aggregated prediction and residual by only taking subsets in which the
+:math:`i^{\text{th}}` observation is not used to fit the estimator.
 
 By analogy with the CV+ method, estimating the prediction intervals with 
 jackknife+-after-bootstrap is performed in four main steps:
@@ -203,7 +206,7 @@ jackknife+-after-bootstrap is performed in four main steps:
   (with :math:`K(j)` the boostraps not containing :math:`X_j`).
 
  
-- The sets :math:`\{{\rm agg}(\hat{\mu}_{K(j)}(X_i) + r_j\}` (where :math:`j` indexes  
+- The sets :math:`\{\rm agg(\hat{\mu}_{K(j)}(X_i)) + r_j\}` (where :math:`j` indexes  
   the training set) are used to estimate the prediction intervals.
 
 
