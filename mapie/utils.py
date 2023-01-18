@@ -278,9 +278,9 @@ def check_n_features_in(
 
 
 def check_alpha_and_n_samples(
-        alphas: Union[Iterable[float], float],
-        n: int) -> None:
-
+    alphas: Union[Iterable[float], float],
+    n: int,
+) -> None:
     """
     Check if the quantile can be computed based
     on the number of samples and the alpha value.

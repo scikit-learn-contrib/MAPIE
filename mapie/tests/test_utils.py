@@ -79,8 +79,9 @@ def test_check_null_weight_with_zeros() -> None:
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
 def test_fit_estimator(
-        estimator: Any,
-        sample_weight: Optional[ArrayLike]) -> None:
+    estimator: Any,
+    sample_weight: Optional[ArrayLike]
+) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = fit_estimator(estimator, X_toy, y_toy, sample_weight)
     check_is_fitted(estimator)

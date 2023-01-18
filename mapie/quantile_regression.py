@@ -661,8 +661,9 @@ class MapieQuantileRegressor(MapieRegressor):
         n = self.n_calib_samples
         q = (1 - (alpha)) * (1 + (1 / n))
 
-        y_preds = np.empty(
+        y_preds = np.full(
             shape=(3, _num_samples(X)),
+            fill_value=np.nan,
             dtype=float,
         )
         for i, est in enumerate(self.estimators_):
