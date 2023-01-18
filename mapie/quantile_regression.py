@@ -58,6 +58,9 @@ class MapieQuantileRegressor(MapieRegressor):
     valid_methods: List[str]
         List of all valid methods.
 
+    single_estimator_: RegressorMixin
+        Estimator fitted on the whole training set.
+
     estimators_ : List[RegressorMixin]
         - [0]: Estimator with quantile value of alpha/2
         - [1]: Estimator with quantile value of 1 - alpha/2
@@ -535,6 +538,7 @@ class MapieQuantileRegressor(MapieRegressor):
             for i, est in enumerate(estimator):
                 self.estimators_.append(est)
                 y_calib_preds[i] = est.predict(X_calib).ravel()
+            self.single_estimator_ = self.estimators_[2]
         else:
             # Checks
             self._check_parameters()
@@ -590,6 +594,7 @@ class MapieQuantileRegressor(MapieRegressor):
                     cloned_estimator_, X_train, y_train, sample_weight_train
                 ))
                 y_calib_preds[i] = self.estimators_[-1].predict(X_calib)
+            self.single_estimator_ = self.estimators_[2]
 
         self.conformity_scores_ = np.full(
                 shape=(3, self.n_calib_samples),
