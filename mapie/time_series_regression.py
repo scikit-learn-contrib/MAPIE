@@ -9,7 +9,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from ._compatibility import np_nanquantile
 from ._typing import ArrayLike, NDArray
-from .aggregation_functions import aggregate_all
+from .aggregation_functions import aggregate_all, pred_multi
 from .regression import MapieRegressor
 from .utils import check_alpha, check_alpha_and_n_samples
 
@@ -221,6 +221,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         y_pred = self.single_estimator_.predict(X)
         n = len(self.conformity_scores_)
+        agg_function = self._check_agg_function(self.agg_function)
 
         if alpha is None:
             return np.array(y_pred)
@@ -256,7 +257,12 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
             y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
         else:
-            y_pred_multi = self._pred_multi(X)
+            y_pred_multi = pred_multi(
+                X,
+                self.estimators_,
+                agg_function,
+                self.k_
+            )
             pred = aggregate_all(self.agg_function, y_pred_multi)
             lower_bounds, upper_bounds = pred, pred
 

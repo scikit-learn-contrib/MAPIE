@@ -42,7 +42,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         (i.e. with fit and predict methods), by default ``None``.
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
-    method: str, optional
+    method : str, optional
         Method to choose for prediction interval estimates.
         Choose among:
 
@@ -55,7 +55,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default "plus".
 
-    cv: Optional[Union[int, str, BaseCrossValidator]]
+    cv : Optional[Union[int, str, BaseCrossValidator]]
         The cross-validation strategy for computing conformity scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
@@ -80,7 +80,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default ``None``.
 
-    n_jobs: Optional[int]
+    n_jobs : Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
         If ``-1`` all CPUs are used.
@@ -335,11 +335,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         ------
         ValueError
             If ``ensemble`` is True and ``self.agg_function`` is None.
+
+        ValueError
+            If ``ensemble`` is True and ``self.cv`` is ``"prefit"``.
         """
         if ensemble and (self.agg_function is None):
             raise ValueError(
                 "If ensemble is True, the aggregation function has to be "
                 "'mean' or 'median'."
+            )
+        if ensemble and (self.cv == "prefit"):
+            raise ValueError(
+                "There should not be aggregation of predictions if cv is "
+                "'prefit'"
             )
 
     def _fit_and_predict_oof_model(
@@ -468,10 +476,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             )
         else:
             cv = cast(BaseCrossValidator, cv)
-            self.k_ = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y)),
-                fill_value=np.nan,
-                dtype=float,
+            self.k_ = cast(
+                NDArray,
+                np.full(
+                    shape=(n_samples, cv.get_n_splits(X, y)),
+                    fill_value=np.nan,
+                    dtype=float,
+                )
             )
 
             pred_matrix = np.full(
@@ -497,13 +508,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     )
                     for train_index, val_index in cv.split(X)
                 )
-                self.estimators_, predictions, val_indices = map(
+                self.estimators_, self.predictions, val_indices = map(
                     list, zip(*outputs)
                 )
 
                 for i, val_ind in enumerate(val_indices):
                     pred_matrix[val_ind, i] = np.array(
-                        predictions[i], dtype=float
+                        self.predictions[i], dtype=float
                     )
                     self.k_[val_ind, i] = 1
                 check_nan_in_aposteriori_prediction(pred_matrix)
@@ -579,6 +590,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         y_pred = self.single_estimator_.predict(X)
         n = len(self.conformity_scores_)
+        agg_function = self._check_agg_function(self.agg_function)
 
         if alpha is None:
             if self.method == "naive" or self.cv == "prefit":
@@ -588,11 +600,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     y_pred_multi = pred_multi(
                         X,
                         self.estimators_,
-                        self.agg_function,
-                        self.cv,
+                        agg_function,
                         self.k_
                     )
-                    y_pred = aggregate_all(self.agg_function, y_pred_multi)
+                    y_pred = aggregate_all(agg_function, y_pred_multi)
                 return np.array(y_pred)
         else:
             alpha_np = cast(NDArray, alpha)
@@ -604,8 +615,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 y_pred_multi = pred_multi(
                         X,
                         self.estimators_,
-                        self.agg_function,
-                        self.cv,
+                        agg_function,
                         self.k_
                     )
                 if self.method == "minmax":
@@ -619,7 +629,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     y_pred_multi_low = y_pred_multi
                     y_pred_multi_up = y_pred_multi
                 if ensemble:
-                    y_pred = aggregate_all(self.agg_function, y_pred_multi)
+                    y_pred = aggregate_all(agg_function, y_pred_multi)
 
         # compute distributions of lower and upper bounds
         if self.conformity_score_function_.sym:

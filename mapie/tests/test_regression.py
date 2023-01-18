@@ -5,26 +5,25 @@ from typing import Any, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
 import pytest
-from sklearn.base import BaseEstimator, RegressorMixin, clone
-from sklearn.utils import _safe_indexing
+from joblib import Parallel, delayed
+from sklearn.base import clone
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
-from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
+from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
+                                     train_test_split)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.aggregation_functions import aggregate_all, pred_multi
+from mapie.aggregation_functions import aggregate_all, aggregate_with_mask, pred_multi
 from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore)
 from mapie.metrics import regression_coverage_score
@@ -429,21 +428,21 @@ def test_invalid_aggregate_all() -> None:
 
 def test_aggregate_with_mask_with_prefit() -> None:
     """
-    Test ``_aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
+    Test ``aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
     """
     mapie_reg = MapieRegressor(cv="prefit")
+    mapie_reg.fit(X, y)
     with pytest.raises(
         ValueError,
         match=r".*There should not be aggregation of predictions if cv is*",
     ):
-        mapie_reg._aggregate_with_mask(k, k)
+        mapie_reg.predict(ensemble=True)
 
-    mapie_reg = MapieRegressor(agg_function="nonsense")
     with pytest.raises(
         ValueError,
         match=r".*The value of self.agg_function is not correct*",
     ):
-        mapie_reg._aggregate_with_mask(k, k)
+        aggregate_with_mask(k, agg_function="nonsense")
 
 
 def test_pred_loof_isnan() -> None:
@@ -475,9 +474,9 @@ def test_none_alpha_results_with_ensemble() -> None:
 
     cv = cast(BaseCrossValidator, KFold(n_splits=20))
     agg_function = "mean"
-    estimator = BaseEstimator()
+    estimator = RandomForestRegressor(random_state=random_state)
     n_samples = len(y)
-    
+
     k_ = np.full(
         shape=(n_samples, cv.get_n_splits(X, y)),
         fill_value=np.nan,
@@ -511,7 +510,6 @@ def test_none_alpha_results_with_ensemble() -> None:
         X,
         estimators_,
         agg_function,
-        cv,
         k_
     )
     y_pred_expected = aggregate_all(agg_function, y_pred_multi)
@@ -522,7 +520,7 @@ def test_none_alpha_results_with_ensemble() -> None:
         agg_function=agg_function
     )
     mapie_estimator.fit(X, y)
-    y_pred = mapie_estimator.predict(X, alpha=None)
+    y_pred = mapie_estimator.predict(X, ensemble=True, alpha=None)
     np.testing.assert_allclose(y_pred_expected, y_pred)
 
 

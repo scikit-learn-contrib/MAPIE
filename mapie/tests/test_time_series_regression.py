@@ -246,7 +246,10 @@ def test_results_prefit() -> None:
         X_train_val, y_train_val, test_size=1 / 9, random_state=1
     )
     estimator = LinearRegression().fit(X_train, y_train)
-    mapie_ts_reg = MapieTimeSeriesRegressor(estimator=estimator, cv="prefit")
+    mapie_ts_reg = MapieTimeSeriesRegressor(
+        estimator=estimator,
+        cv="prefit",
+    )
     mapie_ts_reg.fit(X_val, y_val)
     _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
