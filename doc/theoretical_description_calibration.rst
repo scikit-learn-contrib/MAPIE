@@ -8,55 +8,54 @@ Theoretical Description
 
 
 One method for multi-class calibration has been implemented in MAPIE so far :
-Top-Label [1].
+Top-Label Calibration [1].
 
-The goal of binary calibration is to transform a score (typically the one returned by an ML model) that has no mathematical meaning into a
-probability. The algorithms that are used for this type of calibration can be interpreted as estimators of the confidence level. Hence,
-they are made of an independent and dependent variable.
+The goal of binary calibration is to transform a score (typically given by an ML model) that is not a probability into a
+probability. The algorithms that are used for calibration can be interpreted as estimators of the confidence level. Hence,
+they need independent and dependent variables to be fitted.
 
-The figure below illustrates what we would expect as a result from a calibration procedure, with the scores predicted being closer to the
-true accuracy compared to the original output.
+The figure below illustrates what we would expect as a result from a calibration, with the scores predicted being closer to the
+true probability compared to the original output.
 
 .. image:: images/calibration_basic.png
    :width: 300
    :align: center
 
 
-Firstly, we introduce binary calibration, we denote the :math:`(X, y)` pair as the score and ground truth for the object. Hence, :math:`y`
-is made of :math:`{0, 1}`. We define a calibrated output if for every prediction :math:`q \in [0, 1]`:
+Firstly, we introduce binary calibration, we denote the :math:`(h(X), y)` pair as the score and ground truth for the object. Hence, :math:`y`
+is made of :math:`{0, 1}`. The model is calibrated if for every output :math:`q \in [0, 1]`, we have:
 
 .. math:: 
-    Pr(Y = 1 \mid h(X) = q) = q \quad \text{where} \quad h() \text{is the probabilistic predictor}
+    Pr(Y = 1 \mid h(X) = q) = q
 
+where :math:`h()` is the score predictor.
 
-To apply calibration directly to a multi-class context, Gupta et al. propose a framework, multiclass-to-binary (M2B), in order to apply
-binary calibration concepts to a multi-class problem.
+To apply calibration directly to a multi-class context, Gupta et al. propose a framework, multiclass-to-binary (M2B), in order to reduce
+a multi-class calibration to multiple binary calibrations (M2B).
 
 
 1. Top-Label
 ------------
 
-Top-Label calibration is a calibration technique introduced by Gupta et al. to calibrate the label with the highest score.
-This calibration technique can therefore be directly applied to a multi-class problem.
+Top-Label calibration is a calibration technique introduced by Gupta et al. to calibrate the model according to the highest score and
+the corresponding class (see [1] Section 2). This framework offers to apply binary calibration techniques to multi-class calibration.
 
-To be explained in the most intuitive way, top-label calibration simply performs a standard calibration procedure
-(such as Platt scaling or Isotonic regression) on the maximum prediction values. This enables us to say that when we choose
-label for our classification task, we are sure that specifically for this class the scores are calibrated. 
+More intuitively, top-label calibration simply performs a binary calibration (such as Platt scaling or isotonic regression) on the
+highest score AND the corresponding class, whereas confidence calibration only calibrate on the highest score (see [1] Section 2).
 
-
-We denote :math:`c` as the classifier and :math:`h` as the maximum score from the classifier. In this context, a calibrated output
-for Top-Label calibration would be:
+Let :math:`c` be the classifier and :math:`h` be the maximum score from the classifier. The couple :math:`(c, h)` is calibrated
+according to Top-Label calibration if:
 
 .. math:: 
     Pr(Y = c(X) \mid h(X), c(X)) = h(X)
 
 
-2. Metric for calibration
+2. Metrics for calibration
 -------------------------
 
-Expected calibration error:
+**Expected calibration error**
 
-The main metric to check if the calibration has been done correctly is the Expected Calibration Error (ECE). It is made of two
+The main metric to check if the calibration is correct is the Expected Calibration Error (ECE). It is based on two
 components, accuracy and confidence per bin. The number of bins is an hyperparamater :math:`M`, and we refer to a specific bin by
 :math:`B_m`.
 
@@ -74,9 +73,9 @@ In simple terms, once all the different bins from the confidence scores have bee
 The absolute mean difference between the two is the ECE. Hence, the lower the ECE, the better the calibration was performed. 
 
 
-Top-Label ECE:
+**Top-Label ECE**
 
-In the top-label scenario, we only calculate the ECE for the top-label. Hence, per top-label, we condition the calculation
+In the top-label calibration, we only calculate the ECE for the top-label class. Hence, per top-label class, we condition the calculation
 of the accuracy and confidence based on the top label and take the average ECE for each top-label.
 
 
