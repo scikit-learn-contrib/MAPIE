@@ -121,7 +121,7 @@ def fit_estimator(
 
 
 def check_cv(
-    cv: Optional[Union[int, str, BaseCrossValidator]] = None
+    cv: Optional[Union[int, str, BaseCrossValidator]],
 ) -> Union[str, BaseCrossValidator]:
     """
     Check if cross-validator is

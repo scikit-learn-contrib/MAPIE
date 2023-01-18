@@ -1,15 +1,21 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 import pytest
+from sklearn.base import BaseEstimator, RegressorMixin, clone
+from sklearn.utils import _safe_indexing
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.impute import SimpleImputer
+from sklearn.base import BaseEstimator, RegressorMixin, clone
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
 from sklearn.pipeline import Pipeline, make_pipeline
@@ -18,17 +24,20 @@ from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.aggregation_functions import aggregate_all
+from mapie.aggregation_functions import aggregate_all, pred_multi
 from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore)
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
+from mapie.utils import fit_estimator
+
+random_state = 1
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 X, y = make_regression(
-    n_samples=500, n_features=10, noise=1.0, random_state=1
+    n_samples=500, n_features=10, noise=1.0, random_state=random_state
 )
 k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
@@ -49,34 +58,34 @@ STRATEGIES = {
     "cv": Params(
         method="base",
         agg_function="mean",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
     ),
     "cv_plus": Params(
         method="plus",
         agg_function="mean",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
     ),
     "cv_minmax": Params(
         method="minmax",
         agg_function="mean",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
     ),
     "jackknife_plus_ab": Params(
         method="plus",
         agg_function="mean",
-        cv=Subsample(n_resamplings=30, random_state=1),
+        cv=Subsample(n_resamplings=30, random_state=random_state),
     ),
     "jackknife_minmax_ab": Params(
         method="minmax",
         agg_function="mean",
-        cv=Subsample(n_resamplings=30, random_state=1),
+        cv=Subsample(n_resamplings=30, random_state=random_state),
     ),
     "jackknife_plus_median_ab": Params(
         method="plus",
         agg_function="median",
         cv=Subsample(
             n_resamplings=30,
-            random_state=1,
+            random_state=random_state,
         ),
     ),
 }
@@ -366,10 +375,10 @@ def test_results_prefit_naive() -> None:
 def test_results_prefit() -> None:
     """Test prefit results on a standard train/validation/test split."""
     X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X, y, test_size=1 / 10, random_state=1
+        X, y, test_size=1 / 10, random_state=random_state
     )
     X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val, y_train_val, test_size=1 / 9, random_state=1
+        X_train_val, y_train_val, test_size=1 / 9, random_state=random_state
     )
     estimator = LinearRegression().fit(X_train, y_train)
     mapie_reg = MapieRegressor(estimator=estimator, cv="prefit")
@@ -449,6 +458,72 @@ def test_pred_loof_isnan() -> None:
         val_index=[],
     )
     assert len(y_pred) == 0
+
+
+def test_none_alpha_results_with_ensemble() -> None:
+    """
+    Test that alpha set to ``None`` in MapieEstimator gives same predictions
+    as base estimator with ensemble.
+    """
+    def fit_and_predict_oof_model(estimator, X, y, train_index, val_index):
+        X_train = _safe_indexing(X, train_index)
+        y_train = _safe_indexing(y, train_index)
+        X_val = _safe_indexing(X, val_index)
+        estimator = fit_estimator(estimator, X_train, y_train)
+        y_pred = estimator.predict(X_val)
+        return estimator, y_pred, val_index
+
+    cv = cast(BaseCrossValidator, KFold(n_splits=20))
+    agg_function = "mean"
+    estimator = BaseEstimator()
+    n_samples = len(y)
+    
+    k_ = np.full(
+        shape=(n_samples, cv.get_n_splits(X, y)),
+        fill_value=np.nan,
+        dtype=float,
+    )
+    pred_matrix = np.full(
+        shape=(n_samples, cv.get_n_splits(X, y)),
+        fill_value=np.nan,
+        dtype=float,
+    )
+    outputs = Parallel(n_jobs=-1)(
+        delayed(fit_and_predict_oof_model)(
+            clone(estimator),
+            X,
+            y,
+            train_index,
+            val_index,
+        )
+        for train_index, val_index in cv.split(X)
+    )
+
+    estimators_, predictions, val_indices = map(list, zip(*outputs))
+
+    for i, val_ind in enumerate(val_indices):
+        pred_matrix[val_ind, i] = np.array(
+            predictions[i], dtype=float
+        )
+        k_[val_ind, i] = 1
+
+    y_pred_multi = pred_multi(
+        X,
+        estimators_,
+        agg_function,
+        cv,
+        k_
+    )
+    y_pred_expected = aggregate_all(agg_function, y_pred_multi)
+
+    mapie_estimator = MapieRegressor(
+        estimator=estimator,
+        cv=cv,
+        agg_function=agg_function
+    )
+    mapie_estimator.fit(X, y)
+    y_pred = mapie_estimator.predict(X, alpha=None)
+    np.testing.assert_allclose(y_pred_expected, y_pred)
 
 
 def test_pipeline_compatibility() -> None:

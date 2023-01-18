@@ -14,7 +14,7 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 
 from ._compatibility import np_nanquantile
 from ._typing import ArrayLike, NDArray
-from .aggregation_functions import aggregate_all, phi2D
+from .aggregation_functions import aggregate_all, pred_multi
 from .conformity_scores import ConformityScore
 from .utils import (check_alpha, check_alpha_and_n_samples,
                     check_conformity_score, check_cv,
@@ -145,7 +145,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     single_estimator_ : sklearn.RegressorMixin
         Estimator fitted on the whole training set.
 
-    estimators_ : list
+    estimators_ : List[RegressorMixin]
         List of out-of-folds estimators.
 
     conformity_scores_ : ArrayLike of shape (n_samples_train,)
@@ -402,73 +402,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             y_pred = np.array([])
         return estimator, y_pred, val_index
 
-    def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
-        """
-        Take the array of predictions, made by the refitted estimators,
-        on the testing set, and the 1-or-nan array indicating for each training
-        sample which one to integrate, and aggregate to produce phi-{t}(x_t)
-        for each training sample x_t.
-
-
-        Parameters:
-        -----------
-        x : ArrayLike of shape (n_samples_test, n_estimators)
-            Array of predictions, made by the refitted estimators,
-            for each sample of the testing set.
-
-        k : ArrayLike of shape (n_samples_training, n_estimators)
-            1-or-nan array: indicates whether to integrate the prediction
-            of a given estimator into the aggregation, for each training
-            sample.
-
-        Returns:
-        --------
-        ArrayLike of shape (n_samples_test,)
-            Array of aggregated predictions for each testing  sample.
-        """
-        if self.cv == "prefit":
-            raise ValueError(
-                "There should not be aggregation of predictions if cv is "
-                "'prefit'"
-            )
-        if self.agg_function == "median":
-            return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
-
-        # To aggregate with mean() the aggregation coud be done
-        # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
-        # However, phi2D contains a np.apply_along_axis loop which
-        # is much slower than the matrices multiplication that can
-        # be used to compute the means.
-        if self.agg_function in ["mean", None]:
-            K = np.nan_to_num(k, nan=0.0)
-            return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
-        raise ValueError("The value of self.agg_function is not correct")
-
-    def _pred_multi(self, X: ArrayLike) -> NDArray:
-        """
-        Return a prediction per train sample for each test sample, by
-        aggregation with matrix  ``k_``.
-
-        Parameters
-        ----------
-            X: NDArray of shape (n_samples_test, n_features)
-                Input data
-
-        Returns
-        -------
-            NDArray of shape (n_samples_test, n_samples_train)
-        """
-        y_pred_multi = np.column_stack(
-            [e.predict(X) for e in self.estimators_]
-        )
-        # At this point, y_pred_multi is of shape
-        # (n_samples_test, n_estimators_). The method
-        # ``_aggregate_with_mask`` fits it to the right size
-        # thanks to the shape of k_.
-
-        y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
-        return y_pred_multi
-
     def fit(
         self,
         X: ArrayLike,
@@ -613,7 +546,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             the aggregation function specified in the ``agg_function``
             attribute.
 
-            If cv is ``"prefit"``, ``ensemble`` is ignored.
+            If cv is ``"prefit"`` or ``"naive"``, ``ensemble`` is ignored.
 
             By default ``False``.
 
@@ -647,24 +580,46 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y_pred = self.single_estimator_.predict(X)
         n = len(self.conformity_scores_)
 
-        alpha_np = cast(NDArray, alpha)
-        check_alpha_and_n_samples(alpha_np, n)
-        if self.method in ["naive", "base"] or self.cv == "prefit":
-            y_pred_multi_low = y_pred[:, np.newaxis]
-            y_pred_multi_up = y_pred[:, np.newaxis]
-        else:
-            y_pred_multi = self._pred_multi(X)
-            if self.method == "minmax":
-                y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
-                y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
-            else:
-                y_pred_multi_low = y_pred_multi
-                y_pred_multi_up = y_pred_multi
-            if ensemble:
-                y_pred = aggregate_all(self.agg_function, y_pred_multi)
-
         if alpha is None:
-            return np.array(y_pred)
+            if self.method == "naive" or self.cv == "prefit":
+                return np.array(y_pred)
+            else:
+                if ensemble:
+                    y_pred_multi = pred_multi(
+                        X,
+                        self.estimators_,
+                        self.agg_function,
+                        self.cv,
+                        self.k_
+                    )
+                    y_pred = aggregate_all(self.agg_function, y_pred_multi)
+                return np.array(y_pred)
+        else:
+            alpha_np = cast(NDArray, alpha)
+            check_alpha_and_n_samples(alpha_np, n)
+            if self.method in ["naive", "base"] or self.cv == "prefit":
+                y_pred_multi_low = y_pred[:, np.newaxis]
+                y_pred_multi_up = y_pred[:, np.newaxis]
+            else:
+                y_pred_multi = pred_multi(
+                        X,
+                        self.estimators_,
+                        self.agg_function,
+                        self.cv,
+                        self.k_
+                    )
+                if self.method == "minmax":
+                    y_pred_multi_low = np.min(
+                        y_pred_multi, axis=1, keepdims=True
+                    )
+                    y_pred_multi_up = np.max(
+                        y_pred_multi, axis=1, keepdims=True
+                    )
+                else:
+                    y_pred_multi_low = y_pred_multi
+                    y_pred_multi_up = y_pred_multi
+                if ensemble:
+                    y_pred = aggregate_all(self.agg_function, y_pred_multi)
 
         # compute distributions of lower and upper bounds
         if self.conformity_score_function_.sym:

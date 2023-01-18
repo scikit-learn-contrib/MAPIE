@@ -1,8 +1,13 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
+
+
+from sklearn.base import BaseEstimator, RegressorMixin, clone
+from sklearn.model_selection import BaseCrossValidator
+
 
 import numpy as np
 
-from ._typing import NDArray
+from ._typing import NDArray, ArrayLike
 
 
 def phi1D(
@@ -79,6 +84,89 @@ def phi2D(
     [ 2.  4.  7.  9. 12. 14.]
     """
     return np.apply_along_axis(phi1D, axis=1, arr=A, B=B, fun=fun)
+
+
+def pred_multi(X: ArrayLike, estimators_, agg_function, cv, k_) -> NDArray:
+    """
+    Return a prediction per train sample for each test sample, by
+    aggregation with matrix  ``k_``.
+
+    Parameters
+    ----------
+        X: NDArray of shape (n_samples_test, n_features)
+            Input data
+        
+        estimators_ : List[RegressorMixin]
+            List of out-of-folds estimators.
+
+        k_ : ArrayLike
+            - Array of nans, of shape (len(y), 1) if cv is ``"prefit"``
+            (defined but not used)
+            - Dummy array of folds containing each training sample, otherwise.
+            Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
+
+    Returns
+    -------
+        NDArray of shape (n_samples_test, n_samples_train)
+    """
+    y_pred_multi = np.column_stack(
+        [e.predict(X) for e in estimators_]
+    )
+    # At this point, y_pred_multi is of shape
+    # (n_samples_test, n_estimators_). The method
+    # ``_aggregate_with_mask`` fits it to the right size
+    # thanks to the shape of k_.
+
+    y_pred_multi = aggregate_with_mask(y_pred_multi, agg_function, cv, k_)
+    return y_pred_multi
+
+
+def aggregate_with_mask(
+    x: NDArray,
+    agg_function: Optional[str],
+    cv: Union[str, BaseCrossValidator],
+    k: NDArray,
+) -> NDArray:
+    """
+    Take the array of predictions, made by the refitted estimators,
+    on the testing set, and the 1-or-nan array indicating for each training
+    sample which one to integrate, and aggregate to produce phi-{t}(x_t)
+    for each training sample x_t.
+
+
+    Parameters:
+    -----------
+    x : ArrayLike of shape (n_samples_test, n_estimators)
+        Array of predictions, made by the refitted estimators,
+        for each sample of the testing set.
+
+    k : ArrayLike of shape (n_samples_training, n_estimators)
+        1-or-nan array: indicates whether to integrate the prediction
+        of a given estimator into the aggregation, for each training
+        sample.
+
+    Returns:
+    --------
+    ArrayLike of shape (n_samples_test,)
+        Array of aggregated predictions for each testing  sample.
+    """
+    if cv == "prefit":
+        raise ValueError(
+            "There should not be aggregation of predictions if cv is "
+            "'prefit'"
+        )
+    if agg_function == "median":
+        return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
+
+    # To aggregate with mean() the aggregation coud be done
+    # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
+    # However, phi2D contains a np.apply_along_axis loop which
+    # is much slower than the matrices multiplication that can
+    # be used to compute the means.
+    if agg_function in ["mean", None]:
+        K = np.nan_to_num(k, nan=0.0)
+        return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
+    raise ValueError("The value of self.agg_function is not correct")
 
 
 def aggregate_all(agg_function: Optional[str], X: NDArray) -> NDArray:
