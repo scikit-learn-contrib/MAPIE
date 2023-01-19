@@ -103,7 +103,7 @@ def test_check_null_weight_with_zeros() -> None:
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
 def test_fit_estimator(
     estimator: Any,
-    sample_weight: Optional[ArrayLike]
+    sample_weight: Optional[NDArray]
 ) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = fit_estimator(estimator, X_toy, y_toy, sample_weight)
@@ -410,4 +410,3 @@ def test_change_values_zero_one() -> None:
     """Test that binary output are changed to zero one outputs."""
     array_ = check_binary_zero_one(np.array([0, 4, 4]))
     assert (np.unique(array_) == np.array([0, 1])).all()
-
