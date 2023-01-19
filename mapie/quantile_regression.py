@@ -663,7 +663,8 @@ class MapieQuantileRegressor(MapieRegressor):
 
         y_preds = np.full(
             shape=(3, _num_samples(X)),
-            fill_value=np.nan
+            fill_value=np.nan,
+            dtype=float,
         )
         for i, est in enumerate(self.estimators_):
             y_preds[i] = est.predict(X)
