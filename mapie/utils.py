@@ -4,13 +4,20 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
-from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
+                                     train_test_split)
+from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _check_sample_weight, _num_features
+from sklearn.utils.multiclass import type_of_target
+from sklearn.utils.validation import (_check_sample_weight, _num_features,
+                                      check_is_fitted, column_or_1d)
 
 from ._compatibility import np_quantile
 from ._typing import ArrayLike, NDArray
 from .conformity_scores import AbsoluteConformityScore, ConformityScore
+
+SPLIT_STRATEGIES = ["uniform", "quantile", "array split"]
 
 
 def check_null_weight(
@@ -64,7 +71,7 @@ def check_null_weight(
         X = _safe_indexing(X, non_null_weight)
         y = _safe_indexing(y, non_null_weight)
         sample_weight = _safe_indexing(sample_weight, non_null_weight)
-    sample_weight = cast(Optional[NDArray], sample_weight)
+        sample_weight = cast(NDArray, sample_weight)
     return sample_weight, X, y
 
 
@@ -72,7 +79,7 @@ def fit_estimator(
     estimator: Union[RegressorMixin, ClassifierMixin],
     X: ArrayLike,
     y: ArrayLike,
-    sample_weight: Optional[ArrayLike] = None,
+    sample_weight: Optional[NDArray] = None,
 ) -> Union[RegressorMixin, ClassifierMixin]:
     """
     Fit an estimator on training data by distinguishing two cases:
@@ -153,7 +160,11 @@ def check_cv(
             return LeaveOneOut()
         if cv >= 2:
             return KFold(n_splits=cv)
-    if isinstance(cv, BaseCrossValidator) or (cv == "prefit"):
+    if (
+        isinstance(cv, BaseCrossValidator)
+        or (cv == "prefit")
+        or (cv == "split")
+    ):
         return cv
     raise ValueError(
         "Invalid cv argument. "
@@ -666,3 +677,367 @@ def compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
             ]
         )[:, 0]
     return quantiles_
+
+
+def get_calib_set(
+    X: ArrayLike,
+    y: ArrayLike,
+    sample_weight: Optional[NDArray] = None,
+    calib_size: Optional[float] = 0.3,
+    random_state: Optional[Union[int, np.random.RandomState]] = None,
+    shuffle: Optional[bool] = True,
+    stratify: Optional[ArrayLike] = None,
+) -> Tuple[
+    ArrayLike, ArrayLike, ArrayLike, ArrayLike,
+    Optional[NDArray], Optional[NDArray]
+]:
+    """
+    Split the dataset into training and calibration sets.
+
+    Parameters
+    ----------
+    Same definition of parameters as for the ``fit`` method.
+
+    Returns
+    -------
+    Tuple[
+        ArrayLike, ArrayLike, ArrayLike, ArrayLike,
+        Optional[NDArray], Optional[NDArray]
+    ]
+    - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)
+        X_train
+    - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)
+        y_train
+    - [2]: ArrayLike of shape (n_samples_*calib_size, n_features)
+        X_calib
+    - [3]: ArrayLike of shape (n_samples_*calib_size,)
+        y_calib
+    - [4]: Optional[NDArray] of shape (n_samples_*(1-calib_size),)
+        sample_weight_train
+    - [5]: Optional[NDArray] of shape (n_samples_*calib_size,)
+        sample_weight_calib
+    """
+    if sample_weight is None:
+        (
+            X_train, X_calib, y_train, y_calib
+        ) = train_test_split(
+                X,
+                y,
+                test_size=calib_size,
+                random_state=random_state,
+                shuffle=shuffle,
+                stratify=stratify
+        )
+        sample_weight_train = sample_weight
+        sample_weight_calib = None
+    else:
+        (
+                X_train,
+                X_calib,
+                y_train,
+                y_calib,
+                sample_weight_train,
+                sample_weight_calib,
+        ) = train_test_split(
+                X,
+                y,
+                sample_weight,
+                test_size=calib_size,
+                random_state=random_state,
+                shuffle=shuffle,
+                stratify=stratify
+        )
+    X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
+    y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
+    return (
+        X_train, y_train, X_calib, y_calib,
+        sample_weight_train, sample_weight_calib
+    )
+
+
+def check_estimator_classification(
+        X: ArrayLike,
+        y: ArrayLike,
+        cv: Union[str, BaseCrossValidator],
+        estimator: Optional[ClassifierMixin],
+) -> ClassifierMixin:
+    """
+    Check if estimator is ``None``,
+    and returns a ``LogisticRegression`` instance if necessary.
+    If the ``cv`` attribute is ``"prefit"``,
+    check if estimator is indeed already fitted.
+    Parameters
+    ----------
+    X : ArrayLike of shape (n_samples, n_features)
+        Training data.
+    y : ArrayLike of shape (n_samples,)
+        Training labels.
+    cv : Union[str, BaseCrossValidator]
+        Cross validation parameter.
+    estimator : Optional[ClassifierMixin]
+        Estimator to check.
+    Returns
+    -------
+    ClassifierMixin
+        The estimator itself or a default ``LogisticRegression`` instance.
+    Raises
+    ------
+    ValueError
+        If the estimator is not ``None``
+        and has no fit, predict, nor predict_proba methods.
+    NotFittedError
+        If the estimator is not fitted and ``cv`` attribute is "prefit".
+    """
+    if estimator is None:
+        return LogisticRegression(multi_class="multinomial").fit(X, y)
+
+    if isinstance(estimator, Pipeline):
+        est = estimator[-1]
+    else:
+        est = estimator
+    if (
+        not hasattr(est, "fit")
+        and not hasattr(est, "predict")
+        and not hasattr(est, "predict_proba")
+    ):
+        raise ValueError(
+            "Invalid estimator. "
+            "Please provide a classifier with fit,"
+            "predict, and predict_proba methods."
+        )
+    if cv == "prefit":
+        check_is_fitted(est)
+        if not hasattr(est, "classes_"):
+            raise AttributeError(
+                "Invalid classifier. "
+                "Fitted classifier does not contain "
+                "'classes_' attribute."
+            )
+    return estimator
+
+
+def get_binning_groups(
+    y_score: NDArray,
+    num_bins: int,
+    strategy: str,
+) -> NDArray:
+    """
+    Parameters
+    ----------
+    y_score : NDArray of shape (n_samples,)
+        The scores given from the calibrator.
+    num_bins : int
+        Number of bins to make the split in the y_score.
+    strategy : string
+        The splitting strategy to split y_scores into different bins.
+    Returns
+    -------
+    NDArray of shape (num_bins,)
+        An array of all the splitting points for a new bin.
+    """
+    bins = None
+    if strategy == "quantile":
+        quantiles = np.linspace(0, 1, num_bins)
+        bins = np.percentile(y_score, quantiles * 100)
+    elif strategy == "uniform":
+        bins = np.linspace(0.0, 1.0, num_bins)
+    else:
+        bin_groups = np.array_split(y_score, num_bins)
+        bins = np.sort(np.array(
+                [
+                    bin_group.max() for bin_group in bin_groups[:-1]
+                ]
+                + [np.inf]
+            )
+        )
+    return bins
+
+
+def calc_bins(
+    y_true: NDArray,
+    y_score: NDArray,
+    num_bins: int,
+    strategy: str,
+) -> Union[NDArray, NDArray, NDArray, NDArray]:
+    """
+    For each bins, calculate the accuracy, average confidence and size.
+    Parameters
+    ----------
+    y_true : NDArray of shape (n_samples,)
+        The "true" values, target for the calibrator.
+    y_score : NDArray of shape (n_samples,)
+        The scores given from the calibrator.
+    num_bins : int
+        Number of bins to make the split in the y_score.
+    strategy : str
+        The way of splitting the predictions into different bins.
+    Returns
+    -------
+    Union[NDArray, NDArray, NDArray, NDArray]
+    - [0]: NDArray of shape (num_bins,)
+    An array of all the splitting points for a new bin.
+    - [1]: NDArray of shape (num_bins,)
+    An array of the average accuracy in each of the bins.
+    - [2]: NDArray of shape (num_bins,)
+    An array of the average confidence in each of the bins.
+    - [3]: NDArray of shape (num_bins,)
+    An array of the number of observations in each of the bins.
+    """
+    bins = get_binning_groups(y_score, num_bins, strategy)
+    binned = np.digitize(y_score, bins, right=True)
+    bin_accs = np.zeros(num_bins)
+    bin_confs = np.zeros(num_bins)
+    bin_sizes = np.zeros(num_bins)
+
+    for bin in range(num_bins):
+        bin_sizes[bin] = len(y_score[binned == bin])
+        if bin_sizes[bin] > 0:
+            bin_accs[bin] = np.divide(
+                np.sum(y_true[binned == bin]),
+                bin_sizes[bin],
+            )
+            bin_confs[bin] = np.divide(
+                np.sum(y_score[binned == bin]),
+                bin_sizes[bin],
+            )
+    return bins, bin_accs, bin_confs, bin_sizes  # type: ignore
+
+
+def check_split_strategy(
+    strategy: Optional[str]
+) -> str:
+    """
+    Checks that the split strategy provided is valid
+    and defults None split strategy to "uniform".
+    Parameters
+    ----------
+    strategy : Optional[str]
+        Can be a string or None.
+
+    Returns
+    -------
+    str
+        The spitting strategy that will be adopted, needs to be a string.
+
+    Raises
+    ------
+    ValueError
+        If the strategy is not part of the valid strategies.
+    """
+    if strategy is None:
+        strategy = "uniform"
+    if strategy not in SPLIT_STRATEGIES:
+        raise ValueError(
+            "Please provide a valid splitting strategy."
+        )
+    return strategy
+
+
+def check_number_bins(
+    num_bins: int
+) -> int:
+    """
+    Checks that the bin specified is a number.
+
+    Parameters
+    ----------
+    num_bins : int
+        An integer that determines the number of bins to create
+        on an array.
+
+    Raises
+    ------
+    ValueError
+        When num_bins is not an integer is raises an error.
+
+    ValueError
+        When num_bins is a negative number is raises an error.
+    """
+    if isinstance(num_bins, int) is False:
+        raise ValueError(
+            "Please provide a bin number as an integer."
+        )
+    elif num_bins < 1:
+        raise ValueError(
+            """
+            Please provide a bin number greater than
+            or equal to  1.
+            """
+        )
+    else:
+        return num_bins
+
+
+def check_binary_zero_one(
+    y_true: ArrayLike
+) -> NDArray:
+    """
+    Checks if the array is binary and changes a non binary array
+    to a zero, one array.
+
+    Parameters
+    ----------
+    y_true : ArrayLike of shape (n_samples,)
+        Could be any array, but in this case is the true values
+        as binary input.
+
+    Returns
+    -------
+    NDArray of shape (n_samples,)
+        An array of zero, one values.
+
+    Raises
+    ------
+    ValueError
+        If the input array is not binary, then an error is raised.
+    """
+    y_true = cast(NDArray, column_or_1d(y_true))
+    if type_of_target(y_true) == "binary":
+        if ((np.unique(y_true) != np.array([0, 1])).any() and
+                len(np.unique(y_true)) == 2):
+            idx_min = np.where(y_true == np.min(y_true))[0]
+            y_true[idx_min] = 0
+            idx_max = np.where(y_true == np.max(y_true))[0]
+            y_true[idx_max] = 1
+            return y_true
+        else:
+            return y_true
+    else:
+        raise ValueError(
+            "Please provide y_true as a binary array."
+        )
+
+
+def fix_number_of_classes(
+    n_classes_: int,
+    n_classes_training: NDArray,
+    y_proba: NDArray
+) -> NDArray:
+    """
+    Fix shape of y_proba of validation set if number of classes
+    of the training set used for cross-validation is different than
+    number of classes of the original dataset y.
+
+    Parameters
+    ----------
+    n_classes_training : NDArray
+        Classes of the training set.
+    y_proba : NDArray
+        Probabilities of the validation set.
+
+    Returns
+    -------
+    NDArray
+        Probabilities with the right number of classes.
+    """
+    y_pred_full = np.zeros(
+        shape=(len(y_proba), n_classes_)
+    )
+    y_index = np.tile(n_classes_training, (len(y_proba), 1))
+    np.put_along_axis(
+        y_pred_full,
+        y_index,
+        y_proba,
+        axis=1
+    )
+    return y_pred_full

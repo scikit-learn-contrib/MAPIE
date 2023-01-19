@@ -5,9 +5,7 @@ from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, train_test_split
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.multiclass import type_of_target
@@ -18,8 +16,9 @@ from ._machine_precision import EPSILON
 from ._typing import ArrayLike, NDArray
 from .metrics import classification_mean_width_score
 from .utils import (check_alpha, check_alpha_and_n_samples, check_cv,
-                    check_n_features_in, check_n_jobs, check_null_weight,
-                    check_verbose, compute_quantiles, fit_estimator)
+                    check_estimator_classification, check_n_features_in,
+                    check_n_jobs, check_null_weight, check_verbose,
+                    compute_quantiles, fit_estimator, fix_number_of_classes)
 
 
 class MapieClassifier(BaseEstimator, ClassifierMixin):
@@ -224,70 +223,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         if (self.method == "raps") and (self.cv != "prefit"):
             raise ValueError("RAPS method can only be used with cv='prefit'")
-
-    def _check_estimator(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        estimator: Optional[ClassifierMixin] = None,
-    ) -> ClassifierMixin:
-        """
-        Check if estimator is ``None``,
-        and returns a ``LogisticRegression`` instance if necessary.
-        If the ``cv`` attribute is ``"prefit"``,
-        check if estimator is indeed already fitted.
-
-        Parameters
-        ----------
-        X : ArrayLike of shape (n_samples, n_features)
-            Training data.
-
-        y : ArrayLike of shape (n_samples,)
-            Training labels.
-
-        estimator : Optional[ClassifierMixin], optional
-            Estimator to check, by default ``None``
-
-        Returns
-        -------
-        ClassifierMixin
-            The estimator itself or a default ``LogisticRegression`` instance.
-
-        Raises
-        ------
-        ValueError
-            If the estimator is not ``None``
-            and has no fit, predict, nor predict_proba methods.
-
-        NotFittedError
-            If the estimator is not fitted and ``cv`` attribute is "prefit".
-        """
-        if estimator is None:
-            return LogisticRegression(multi_class="multinomial").fit(X, y)
-
-        if isinstance(estimator, Pipeline):
-            est = estimator[-1]
-        else:
-            est = estimator
-        if (
-            not hasattr(est, "fit")
-            and not hasattr(est, "predict")
-            and not hasattr(est, "predict_proba")
-        ):
-            raise ValueError(
-                "Invalid estimator. "
-                "Please provide a classifier with fit,"
-                "predict, and predict_proba methods."
-            )
-        if self.cv == "prefit":
-            check_is_fitted(est)
-            if not hasattr(est, "classes_"):
-                raise AttributeError(
-                    "Invalid classifier. "
-                    "Fitted classifier does not contain "
-                    "'classes_' attribute."
-                )
-        return estimator
 
     def _check_include_last_label(
         self,
@@ -515,40 +450,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         )
         return prediction_sets
 
-    def _fix_number_of_classes(
-        self,
-        n_classes_training: NDArray,
-        y_proba: NDArray
-    ) -> NDArray:
-        """
-        Fix shape of y_proba of validation set if number of classes
-        of the training set used for cross-validation is different than
-        number of classes of the original dataset y.
-
-        Parameters
-        ----------
-        n_classes_training : NDArray
-            Classes of the training set.
-        y_proba : NDArray
-            Probabilities of the validation set.
-
-        Returns
-        -------
-        NDArray
-            Probabilities with the right number of classes.
-        """
-        y_pred_full = np.zeros(
-            shape=(len(y_proba), self.n_classes_)
-        )
-        y_index = np.tile(n_classes_training, (len(y_proba), 1))
-        np.put_along_axis(
-            y_pred_full,
-            y_index,
-            y_proba,
-            axis=1
-        )
-        return y_pred_full
-
     def _predict_oof_model(
         self,
         estimator: ClassifierMixin,
@@ -572,7 +473,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred_proba = estimator.predict_proba(X)
         # we enforce y_pred_proba to contain all labels included in y
         if len(estimator.classes_) != self.n_classes_:
-            y_pred_proba = self._fix_number_of_classes(
+            y_pred_proba = fix_number_of_classes(
+                self.n_classes_,
                 estimator.classes_,
                 y_pred_proba
             )
@@ -979,7 +881,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        size_raps: Optional[float] = .2
+        size_raps: Optional[float] = .2,
     ) -> MapieClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -1016,11 +918,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # Checks
         self._check_parameters()
         cv = check_cv(self.cv)
-        estimator = self._check_estimator(X, y, self.estimator)
-
+        estimator = check_estimator_classification(X, y, cv, self.estimator)
         X, y = indexable(X, y)
         y = _check_y(y)
         assert type_of_target(y) == "multiclass"
+        sample_weight = cast(Optional[NDArray], sample_weight)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         y = cast(NDArray, y)
         n_samples = _num_samples(y)

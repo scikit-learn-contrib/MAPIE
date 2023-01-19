@@ -70,7 +70,7 @@ class MapieQuantileRegressor(MapieRegressor):
         Conformity scores between ``y_calib`` and ``y_pred``:
             - [:, 0]: for y_calib coming from prediction estimator with
             quantile of alpha/2
-            - [:, 0]: for y_calib coming from prediction estimator with
+            - [:, 1]: for y_calib coming from prediction estimator with
             quantile of 1 - alpha/2
             - [:, 2]: maximum of those first two scores
 
@@ -570,7 +570,6 @@ class MapieQuantileRegressor(MapieRegressor):
             )
             y_train = cast(NDArray, y_train)
 
-            # Work
             y_calib_preds = np.full(
                 shape=(3, self.n_calib_samples),
                 fill_value=np.nan
