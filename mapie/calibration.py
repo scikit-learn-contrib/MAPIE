@@ -51,9 +51,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         By default ``None``.
 
     cv: Optional[str]
-        The cross-validation strategy for computing scores :
+        The cross-validation strategy to compute scores :
 
-        - "split", performs a standard splitting into a calibration and
+        - "split", performs a standard splitting into a calibration and a
         test set.
         - "prefit", assumes that ``estimator`` has been fitted already.
           All the data that are provided in the ``fit`` method are then used
@@ -148,7 +148,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             If calibrator is a string then it returns the corresponding
             estimator of ``named_calibrators``, else returns calibrator.
 
-            By defaults ``None``. If ``None``, set to ``sigmoid``.
+            By defaults ``None``. If ``None``, defaults to ``"sigmoid"``.
 
         Returns
         -------
@@ -179,9 +179,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         X: ArrayLike
     ) -> Tuple[NDArray, NDArray]:
         """
-        This method depends on the value of``method`` and collects the labels
-        that are needed to transform a multi-class problem to a binary
-        calibration.
+        This method depends on the value of ``method`` and collects the labels
+        that are needed to transform a multi-class calibration to multiple
+        binary calibrations.
 
         - "top_label" method means that you take the maximum score and
         calibrate each maximum class separately in a one-versus all setting,
@@ -348,7 +348,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         calibrated_values: NDArray,
         max_prob: NDArray,
         y_pred: NDArray,
-        calibrators: Dict[Union[int, str], RegressorMixin],
     ) -> None:
         """
         Using the predicted scores, we calibrate the maximum score with the
@@ -356,15 +355,11 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         for the specific class, then we simply output the not calibrated
         values.
 
-        Note that if the calibrated score prediction is 0, there would be an
-        issue when finding the class it belongs to. We set it equal to
-        {np.finfo(np.float64).eps} as this would likely not have large impact
-        on the calibration scores, yet, would set the maximum to the correct
-        label.
-
 
         Parameters
         ----------
+        idx : int
+            Position of the label for an enumerate of all labels.
         label : Union[int, str]
             The label to define the subset of values to be taken into account.
         calibrated_values : NDArray
@@ -374,10 +369,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         y_pred : NDArray of shape (n_samples,)
             Indicator of the values to be calibrated.
 
-        Returns
-        -------
-        NDArray
-            Updated calibrated values from the predictions of the calibrators.
 
         Raises
         ------
@@ -426,10 +417,11 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             for the calibration procedure.
             By default ``None``.
         calib_size : Optional[float]
-            If ``cv == split` and X_calib and y_calib are not defined, then the
-            calibration dataset is created with the split defined by
+            If ``cv == split`` and X_calib and y_calib are not defined, then
+            the calibration dataset is created with the split defined by
             calib_size.
-        random_state : int, RandomState instance or ``None``, default=None
+        random_state : int, RandomState instance or ``None``, default is
+            ``None``
             See ``sklearn.model_selection.train_test_split`` documentation.
             Controls the shuffling applied to the data before applying the
             split.
@@ -529,7 +521,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 calibrated_test_values,
                 max_prob,
                 y_pred,
-                self.calibrators,
             )
         return calibrated_test_values
 

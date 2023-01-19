@@ -23,14 +23,14 @@ true probability compared to the original output.
 
 
 Firstly, we introduce binary calibration, we denote the :math:`(h(X), y)` pair as the score and ground truth for the object. Hence, :math:`y`
-is made of :math:`{0, 1}`. The model is calibrated if for every output :math:`q \in [0, 1]`, we have:
+values are in :math:`{0, 1}`. The model is calibrated if for every output :math:`q \in [0, 1]`, we have:
 
 .. math:: 
     Pr(Y = 1 \mid h(X) = q) = q
 
 where :math:`h()` is the score predictor.
 
-To apply calibration directly to a multi-class context, Gupta et al. propose a framework, multiclass-to-binary (M2B), in order to reduce
+To apply calibration directly to a multi-class context, Gupta et al. propose a framework, multiclass-to-binary, in order to reduce
 a multi-class calibration to multiple binary calibrations (M2B).
 
 
@@ -41,7 +41,7 @@ Top-Label calibration is a calibration technique introduced by Gupta et al. to c
 the corresponding class (see [1] Section 2). This framework offers to apply binary calibration techniques to multi-class calibration.
 
 More intuitively, top-label calibration simply performs a binary calibration (such as Platt scaling or isotonic regression) on the
-highest score AND the corresponding class, whereas confidence calibration only calibrate on the highest score (see [1] Section 2).
+highest score and the corresponding class, whereas confidence calibration only calibrates on the highest score (see [1] Section 2).
 
 Let :math:`c` be the classifier and :math:`h` be the maximum score from the classifier. The couple :math:`(c, h)` is calibrated
 according to Top-Label calibration if:
