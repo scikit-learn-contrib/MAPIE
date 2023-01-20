@@ -30,6 +30,9 @@
    examples_classification/index
    notebooks_classification
 
+.. toctree::
+   :maxdepth: 2
+   :hidden:
    :caption: MULTI-LABEL CLASSIFICATION
 
    theoretical_description_multilabel_classification
