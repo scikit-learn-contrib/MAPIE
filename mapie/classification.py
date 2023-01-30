@@ -740,7 +740,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             axis=1
         )
 
-        zeros_scores = (y_pred_proba_last == 0).ravel()
+        zeros_scores = (y_pred_proba_last <= EPSILON).ravel()
 
         # If the last included proba is zero, change it to the
         # smallest non-zero value to avoid inluding them in the
