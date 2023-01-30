@@ -636,9 +636,14 @@ class MapieQuantileRegressor(MapieRegressor):
             For ``MapieQuantileRegresor`` the alpha has to be defined
             directly in initial arguments of the class.
         symmetry : Optional[bool], optional
-            Deciding factor to whether to find the quantile value for
-            each residuals separatly or to use the maximum of the two
-            combined.
+            If ``False``, the conformity scores are built for the upper
+            quantile (1 - alpha/2) and lower quantile (alpha/2) by taking
+            the difference with the true observations. Then a quantile is
+            chosen independently for each as the added value to make the
+            predictor a conformal predictor. If ``True``, then the maximum
+            difference is taken for each observation.
+
+            By default, ``True``.
 
         Returns
         -------
