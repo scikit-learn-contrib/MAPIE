@@ -2,6 +2,16 @@
 History
 =======
 
+0.6.1 (2023-01-31)
+------------------
+* Fix still existing bug for classification with very low scores
+
+0.6.0 (2023-01-19)
+------------------
+* Add RCPS and CRC for multilabel-classifcation
+* Add Top-Label calibration
+* Fix bug for classification with very low scores
+
 0.5.0 (2022-10-20)
 ------------------
 * Add RAPS method for classification
