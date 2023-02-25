@@ -269,12 +269,12 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
 
         return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
-    
+
     def _more_tags(self):
         return {
-            "_xfail_checks": 
+            "_xfail_checks":
             {
-                "check_estimators_partial_fit_n_features": 
+                "check_estimators_partial_fit_n_features":
                 "partial_fit() can only be called on fitted models"
             }
         }

@@ -7,6 +7,7 @@ import pytest
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
+from sklearn.utils.estimator_checks import check_estimator
 from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
@@ -79,6 +80,10 @@ COVERAGES = {
     "prefit": 0.98,
 
 }
+
+
+def test_sklearn_checks() -> None:
+    check_estimator(MapieTimeSeriesRegressor())
 
 
 @pytest.mark.parametrize("agg_function", ["dummy", 0, 1, 2.5, [1, 2]])
