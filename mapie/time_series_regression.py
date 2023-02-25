@@ -32,6 +32,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/abs/2010.09107
     """
 
+    cv_need_agg_function = ["Subsample", "BlockBootstrap"]
+    valid_methods_ = ["enbpi"]
+    plus_like_method = ["plus", "enbpi"]
+
     def __init__(
         self,
         estimator: Optional[RegressorMixin] = None,
@@ -42,9 +46,6 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         verbose: int = 0,
     ) -> None:
         super().__init__(estimator, method, cv, n_jobs, agg_function, verbose)
-        self.cv_need_agg_function.append("BlockBootstrap")
-        self.valid_methods_ = ["enbpi"]
-        self.plus_like_method.append("enbpi")
 
     def _relative_conformity_scores(
         self,
@@ -182,6 +183,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         ValueError
             If the length of y is greater than the length of the training set.
         """
+        check_is_fitted(self, self.fit_attributes)
         X = cast(NDArray, X)
         y = cast(NDArray, y)
         n = len(self.conformity_scores_)
@@ -267,3 +269,12 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
 
         return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
+    
+    def _more_tags(self):
+        return {
+            "_xfail_checks": 
+            {
+                "check_estimators_partial_fit_n_features": 
+                "partial_fit() can only be called on fitted models"
+            }
+        }
