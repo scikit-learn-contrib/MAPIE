@@ -118,13 +118,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 endpoint=True,
             )
             one_alpha_beta = np_nanquantile(
-                upper_bounds,
+                upper_bounds.astype(float),
                 1 - _alpha + betas,
                 axis=1,
                 method="higher",
             )
             beta = np_nanquantile(
-                lower_bounds,
+                lower_bounds.astype(float),
                 betas,
                 axis=1,
                 method="lower",
@@ -240,13 +240,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             betas_0 = np.repeat(alpha[:, np.newaxis] / 2, n, axis=0)
 
         lower_quantiles = np_nanquantile(
-            self.conformity_scores_,
+            self.conformity_scores_.astype(float),
             betas_0[0, :],
             axis=0,
             method="lower",
         ).T
         higher_quantiles = np_nanquantile(
-            self.conformity_scores_,
+            self.conformity_scores_.astype(float),
             1 - alpha_np + betas_0[0, :],
             axis=0,
             method="higher",
