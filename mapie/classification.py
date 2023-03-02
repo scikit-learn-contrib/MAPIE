@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -920,108 +921,130 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         estimator = check_estimator_classification(X, y, cv, self.estimator)
         X, y = indexable(X, y)
         y = _check_y(y)
-        assert type_of_target(y) == "multiclass"
         sample_weight = cast(Optional[NDArray], sample_weight)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         y = cast(NDArray, y)
         n_samples = _num_samples(y)
         self.n_classes_ = len(np.unique(y))
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
-
-        if self.method == "raps":
-            X, self.X_raps, y, self.y_raps = train_test_split(
-                X,
-                y,
-                test_size=size_raps,
-                random_state=self.random_state
-            )
-            y = cast(NDArray, y)
-            n_samples = _num_samples(y)
-            self.y_pred_proba_raps = estimator.predict_proba(
-                self.X_raps
-            )
-            self.position_raps = self._get_true_label_position(
-                self.y_pred_proba_raps,
-                self.y_raps
-            )
-
-        # Initialization
-        self.estimators_: List[ClassifierMixin] = []
-        self.k_ = np.empty_like(y, dtype=int)
-        self.n_samples_ = _num_samples(X)
-
-        # Work
-        if cv == "prefit":
-            self.single_estimator_ = estimator
-            y_pred_proba = self.single_estimator_.predict_proba(X)
-            y_pred_proba = self._check_proba_normalized(y_pred_proba)
-
-        else:
-            cv = cast(BaseCrossValidator, cv)
-            self.single_estimator_ = fit_estimator(
-                clone(estimator), X, y, sample_weight
-            )
-            y_pred_proba = np.empty((n_samples, self.n_classes_), dtype=float)
-            outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                delayed(self._fit_and_predict_oof_model)(
-                    clone(estimator),
+        if type_of_target(y) == "multiclass":
+            self.type_of_target = "multiclass"
+            if self.method == "raps":
+                X, self.X_raps, y, self.y_raps = train_test_split(
                     X,
                     y,
-                    train_index,
-                    val_index,
-                    k,
-                    sample_weight,
+                    test_size=size_raps,
+                    random_state=self.random_state
                 )
-                for k, (train_index, val_index) in enumerate(cv.split(X))
-            )
-            (
-                self.estimators_,
-                predictions_list,
-                val_ids_list,
-                val_indices_list
-            ) = map(list, zip(*outputs))
-            predictions = np.concatenate(cast(List[NDArray], predictions_list))
-            val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
-            val_indices = np.concatenate(cast(List[NDArray], val_indices_list))
-            self.k_[val_indices] = val_ids
-            y_pred_proba[val_indices] = predictions
-
-        if self.method == "naive":
-            self.conformity_scores_ = np.empty(
-                y_pred_proba.shape,
-                dtype="float"
-            )
-        elif self.method == "score":
-            self.conformity_scores_ = np.take_along_axis(
-                1 - y_pred_proba, y.reshape(-1, 1), axis=1
-            )
-        elif self.method in ["cumulated_score", "raps"]:
-            self.conformity_scores_, self.cutoff = (
-                self._get_true_label_cumsum_proba(
-                    y,
-                    y_pred_proba
+                y = cast(NDArray, y)
+                n_samples = _num_samples(y)
+                self.y_pred_proba_raps = estimator.predict_proba(
+                    self.X_raps
                 )
-            )
-            y_proba_true = np.take_along_axis(
-                y_pred_proba, y.reshape(-1, 1), axis=1
-            )
-            random_state = check_random_state(self.random_state)
-            u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
-            self.conformity_scores_ -= u * y_proba_true
-        elif self.method == "top_k":
-            # Here we reorder the labels by decreasing probability
-            # and get the position of each label from decreasing probability
+                self.position_raps = self._get_true_label_position(
+                    self.y_pred_proba_raps,
+                    self.y_raps
+                )
 
-            self.conformity_scores_ = self._get_true_label_position(
-                y_pred_proba,
-                y
-            )
+            # Initialization
+            self.estimators_: List[ClassifierMixin] = []
+            self.k_ = np.empty_like(y, dtype=int)
+            self.n_samples_ = _num_samples(X)
 
+            # Work
+            if cv == "prefit":
+                self.single_estimator_ = estimator
+                y_pred_proba = self.single_estimator_.predict_proba(X)
+                y_pred_proba = self._check_proba_normalized(y_pred_proba)
+
+            else:
+                cv = cast(BaseCrossValidator, cv)
+                self.single_estimator_ = fit_estimator(
+                    clone(estimator), X, y, sample_weight
+                )
+                y_pred_proba = np.empty(
+                    (n_samples, self.n_classes_),
+                    dtype=float
+                )
+                outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                    delayed(self._fit_and_predict_oof_model)(
+                        clone(estimator),
+                        X,
+                        y,
+                        train_index,
+                        val_index,
+                        k,
+                        sample_weight,
+                    )
+                    for k, (train_index, val_index) in enumerate(cv.split(X))
+                )
+                (
+                    self.estimators_,
+                    predictions_list,
+                    val_ids_list,
+                    val_indices_list
+                ) = map(list, zip(*outputs))
+                predictions = np.concatenate(
+                    cast(List[NDArray],
+                         predictions_list)
+                )
+                val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
+                val_indices = np.concatenate(
+                    cast(List[NDArray], val_indices_list)
+                )
+                self.k_[val_indices] = val_ids
+                y_pred_proba[val_indices] = predictions
+
+            if self.method == "naive":
+                self.conformity_scores_ = np.empty(
+                    y_pred_proba.shape,
+                    dtype="float"
+                )
+            elif self.method == "score":
+                self.conformity_scores_ = np.take_along_axis(
+                    1 - y_pred_proba, y.reshape(-1, 1), axis=1
+                )
+            elif self.method in ["cumulated_score", "raps"]:
+                self.conformity_scores_, self.cutoff = (
+                    self._get_true_label_cumsum_proba(
+                        y,
+                        y_pred_proba
+                    )
+                )
+                y_proba_true = np.take_along_axis(
+                    y_pred_proba, y.reshape(-1, 1), axis=1
+                )
+                random_state = check_random_state(self.random_state)
+                u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
+                self.conformity_scores_ -= u * y_proba_true
+            elif self.method == "top_k":
+                # Here we reorder the labels by decreasing probability
+                # and get the position of each label from decreasing
+                # probability
+
+                self.conformity_scores_ = self._get_true_label_position(
+                    y_pred_proba,
+                    y
+                )
+
+            else:
+                raise ValueError(
+                    "Invalid method. "
+                    "Allowed values are 'score' or 'cumulated_score'."
+                )
         else:
-            raise ValueError(
-                "Invalid method. "
-                "Allowed values are 'score' or 'cumulated_score'."
+            warnings.warn(
+                "WARNING: your target is not of type multiclass."
+                + " Still fitting the model but not conformal prediction"
+                + " algorithm will be run."
             )
+            self.type_of_target = type_of_target(y)
+            if cv == "prefit":
+                self.single_estimator_ = estimator
+            else:
+                self.single_estimator_ = fit_estimator(
+                    clone(estimator), X, y, sample_weight
+                )
 
         return self
 
@@ -1103,7 +1126,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred = self.single_estimator_.predict(X)
         n = len(self.conformity_scores_)
 
-        if alpha is None:
+        if (alpha is None) or (self.type_of_target != "multiclass"):
             return np.array(y_pred)
 
         # Estimate of probabilities from estimator(s)
