@@ -375,7 +375,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred_index_last: NDArray,
         y_pred_proba_cumsum: NDArray,
         y_pred_proba_last: NDArray,
-        threshold: NDArray
+        threshold: NDArray,
+        lambda_star: NDArray,
+        k_star: NDArray
     ) -> NDArray:
         """
         Randomly remove last label from prediction set based on the
@@ -405,6 +407,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             - the conformity score from training samples otherwise
               (i.e., when ``cv`` is a CV splitter and
               ``agg_scores`` is "crossval)
+        lambda_star: NDArray of shape (n_alpha):
+            Optimal value of the regulizer lambda.
+
+        lambda_star: NDArray of shape (n_alpha):
+            Optimal value of the regulizer k.
 
         Returns
         -------
@@ -434,8 +441,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
                 (
                     y_pred_proba_last[:, 0, :] -
-                    self.lambda_star * np.maximum(0, L - self.k_star) +
-                    self.lambda_star * (L > self.k_star)
+                    lambda_star * np.maximum(0, L - k_star) +
+                    lambda_star * (L > k_star)
                 )
             )
 
@@ -931,8 +938,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self.n_classes_ = len(np.unique(y))
         self.classes_ = np.unique(y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
-        self.type_of_target = type_of_target(y)
-        if self.type_of_target == "multiclass":
+        self._target_type = type_of_target(y)
+        if self._target_type == "multiclass":
             if self.method == "raps":
                 X, self.X_raps, y, self.y_raps = train_test_split(
                     X,
@@ -1127,11 +1134,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         include_last_label = self._check_include_last_label(include_last_label)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         check_is_fitted(self, self.fit_attributes)
-        self.lambda_star, self.k_star = None, None
+        lambda_star, k_star = None, None
         # Estimate prediction sets
         y_pred = self.single_estimator_.predict(X)
 
-        if (alpha is None) or (self.type_of_target != "multiclass"):
+        if (alpha is None) or (self._type_of_target != "multiclass"):
             return np.array(y_pred)
 
         n = len(self.conformity_scores_)
@@ -1176,7 +1183,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 if self.method == "raps":
                     check_alpha_and_n_samples(alpha_np, len(self.X_raps))
-                    self.k_star = compute_quantiles(
+                    k_star = compute_quantiles(
                         self.position_raps,
                         alpha_np
                     ) + 1
@@ -1185,16 +1192,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                         len(alpha_np),
                         axis=2
                     )
-                    self.lambda_star = self._find_lambda_star(
+                    lambda_star = self._find_lambda_star(
                         y_pred_proba_raps,
                         alpha_np,
                         include_last_label,
-                        self.k_star
+                        k_star
                     )
                     self.conformity_scores_regularized = (
                         self._regularize_conformity_score(
-                                    self.k_star,
-                                    self.lambda_star,
+                                    k_star,
+                                    lambda_star,
                                     self.conformity_scores_,
                                     self.cutoff
                         )
@@ -1243,8 +1250,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     y_pred_proba,
                     thresholds,
                     include_last_label,
-                    self.lambda_star,
-                    self.k_star,
+                    lambda_star,
+                    k_star,
                 )
             )
             # get the prediction set by taking all probabilities
@@ -1265,6 +1272,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     y_pred_proba_cumsum,
                     y_pred_proba_last,
                     thresholds,
+                    lambda_star
                 )
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 prediction_sets = y_pred_included
