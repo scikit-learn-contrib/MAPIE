@@ -7,7 +7,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import BaseCrossValidator, train_test_split
-from sklearn.preprocessing import label_binarize
+from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
@@ -173,7 +173,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         "estimators_",
         "k_",
         "n_features_in_",
-        "conformity_scores_"
+        "conformity_scores_",
+        "classes_"
     ]
 
     def __init__(
@@ -924,15 +925,18 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         sample_weight = cast(Optional[NDArray], sample_weight)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         y = cast(NDArray, y)
+        enc = LabelEncoder()
+        y_enc = enc.fit_transform(y)
         n_samples = _num_samples(y)
         self.n_classes_ = len(np.unique(y))
+        self.classes_ = np.unique(y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
-        if type_of_target(y) == "multiclass":
-            self.type_of_target = "multiclass"
+        self.type_of_target = type_of_target(y)
+        if self.type_of_target == "multiclass":
             if self.method == "raps":
                 X, self.X_raps, y, self.y_raps = train_test_split(
                     X,
-                    y,
+                    y_enc,
                     test_size=size_raps,
                     random_state=self.random_state
                 )
@@ -970,7 +974,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     delayed(self._fit_and_predict_oof_model)(
                         clone(estimator),
                         X,
-                        y,
+                        y_enc,
                         train_index,
                         val_index,
                         k,
@@ -1002,17 +1006,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 )
             elif self.method == "score":
                 self.conformity_scores_ = np.take_along_axis(
-                    1 - y_pred_proba, y.reshape(-1, 1), axis=1
+                    1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1
                 )
             elif self.method in ["cumulated_score", "raps"]:
                 self.conformity_scores_, self.cutoff = (
                     self._get_true_label_cumsum_proba(
-                        y,
+                        y_enc,
                         y_pred_proba
                     )
                 )
                 y_proba_true = np.take_along_axis(
-                    y_pred_proba, y.reshape(-1, 1), axis=1
+                    y_pred_proba, y_enc.reshape(-1, 1), axis=1
                 )
                 random_state = check_random_state(self.random_state)
                 u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
@@ -1038,13 +1042,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 + " Still fitting the model but not conformal prediction"
                 + " algorithm will be run."
             )
-            self.type_of_target = type_of_target(y)
             if cv == "prefit":
                 self.single_estimator_ = estimator
             else:
                 self.single_estimator_ = fit_estimator(
                     clone(estimator), X, y, sample_weight
                 )
+            self.conformity_scores_ = None
+            self.estimators_: List[ClassifierMixin] = []
+            self.k_ = np.empty_like(y_enc, dtype=int)
 
         return self
 
@@ -1124,10 +1130,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self.lambda_star, self.k_star = None, None
         # Estimate prediction sets
         y_pred = self.single_estimator_.predict(X)
-        n = len(self.conformity_scores_)
 
         if (alpha is None) or (self.type_of_target != "multiclass"):
             return np.array(y_pred)
+
+        n = len(self.conformity_scores_)
 
         # Estimate of probabilities from estimator(s)
         # In all cases : len(y_pred_proba.shape) == 3
