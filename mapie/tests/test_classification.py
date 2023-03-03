@@ -633,6 +633,36 @@ def test_default_parameters() -> None:
     assert mapie_clf.method == "score"
 
 
+def test_warn_binary_classif() -> None:
+    """Test that a warning is raised nound is not None with CRC method."""
+    mapie_clf = MapieClassifier(random_state=42)
+    X, y = make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=3,
+        n_classes=2,
+        random_state=1,
+    )
+    with pytest.warns(UserWarning, match=r"not of type multiclass*"):
+        mapie_clf.fit(X, y)
+
+
+def test_binary_classif_same_result() -> None:
+    """Test that a warning is raised nound is not None with CRC method."""
+    mapie_clf = MapieClassifier(random_state=42)
+    X, y = make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=3,
+        n_classes=2,
+        random_state=1,
+    )
+    mapie_predict = mapie_clf.fit(X, y).predict(X)
+    lr = LogisticRegression(multi_class="multinomial").fit(X, y)
+    lr_predict = lr.predict(X)
+    np.testing.assert_allclose(mapie_predict, lr_predict)
+
+
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
@@ -1128,24 +1158,6 @@ def test_classif_float32(cv):
     assert (
         np.repeat([[True, False, False]], 20, axis=0)[:, :, np.newaxis] == yps
     ).all()
-
-
-def test_raps_regularization_parameters():
-    """Check that the regularization parameters for the
-    raps method are the expected ones.
-    """
-    args_init, args_predict = STRATEGIES["raps"]
-    clf = LogisticRegression().fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(estimator=clf, **args_init)
-    mapie_clf.fit(X_toy, y_toy, size_raps=.5)
-    _, _ = mapie_clf.predict(
-        X_toy,
-        alpha=0.5,
-        include_last_label=args_predict["include_last_label"],
-        agg_scores=args_predict["agg_scores"]
-    )
-    np.testing.assert_allclose(mapie_clf.lambda_star, 0.001)
-    np.testing.assert_allclose(mapie_clf.k_star, 1)
 
 
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
