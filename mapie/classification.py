@@ -410,10 +410,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             - the conformity score from training samples otherwise
               (i.e., when ``cv`` is a CV splitter and
               ``agg_scores`` is "crossval)
+
         lambda_star: Union[NDArray, float, None] of shape (n_alpha):
             Optimal value of the regulizer lambda.
 
-        lambda_star: Union[NDArray, None] of shape (n_alpha):
+        k_star: Union[NDArray, None] of shape (n_alpha):
             Optimal value of the regulizer k.
 
         Returns
