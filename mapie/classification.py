@@ -379,8 +379,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred_proba_cumsum: NDArray,
         y_pred_proba_last: NDArray,
         threshold: NDArray,
-        lambda_star: NDArray,
-        k_star: NDArray
+        lambda_star: Union[NDArray, float, None],
+        k_star: Union[NDArray, None]
     ) -> NDArray:
         """
         Randomly remove last label from prediction set based on the
@@ -410,10 +410,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             - the conformity score from training samples otherwise
               (i.e., when ``cv`` is a CV splitter and
               ``agg_scores`` is "crossval)
-        lambda_star: NDArray of shape (n_alpha):
+        lambda_star: Union[NDArray, float, None] of shape (n_alpha):
             Optimal value of the regulizer lambda.
 
-        lambda_star: NDArray of shape (n_alpha):
+        lambda_star: Union[NDArray, None] of shape (n_alpha):
             Optimal value of the regulizer k.
 
         Returns
@@ -931,24 +931,34 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         cv = check_cv(self.cv)
         X, y = indexable(X, y)
         y = _check_y(y)
+
         sample_weight = cast(Optional[NDArray], sample_weight)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
+
         y = cast(NDArray, y)
         enc = LabelEncoder()
         y_enc = enc.fit_transform(y)
         self.label_encoder_ = enc
+
         estimator = check_estimator_classification(
             X,
             y_enc,
             cv,
             self.estimator
         )
+        self.n_features_in_ = check_n_features_in(X, cv, estimator)
+
         n_samples = _num_samples(y)
         self.n_classes_ = len(np.unique(y))
         self.classes_ = np.unique(y)
-        self.n_features_in_ = check_n_features_in(X, cv, estimator)
         check_classification_targets(y)
         self._target_type = type_of_target(y_enc)
+
+        # Initialization
+        self.estimators_: List[ClassifierMixin] = []
+        self.k_ = np.empty_like(y, dtype=int)
+        self.n_samples_ = _num_samples(X)
+
         if self._target_type == "multiclass":
             if self.method == "raps":
                 X, self.X_raps, y_enc, self.y_raps = train_test_split(
@@ -966,11 +976,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     self.y_pred_proba_raps,
                     self.y_raps
                 )
-
-            # Initialization
-            self.estimators_: List[ClassifierMixin] = []
-            self.k_ = np.empty_like(y, dtype=int)
-            self.n_samples_ = _num_samples(X)
 
             # Work
             if cv == "prefit":
@@ -1065,8 +1070,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 self.single_estimator_ = fit_estimator(
                     clone(estimator), X, y_enc, sample_weight
                 )
-            self.conformity_scores_ = None
-            self.estimators_: List[ClassifierMixin] = []
+            self.conformity_scores_ = np.array([])
             self.k_ = np.empty_like(y_enc, dtype=int)
 
         return self
