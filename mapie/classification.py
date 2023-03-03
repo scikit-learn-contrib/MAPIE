@@ -9,7 +9,9 @@ from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import BaseCrossValidator, train_test_split
 from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
-from sklearn.utils.multiclass import check_classification_targets, type_of_target
+from sklearn.utils.multiclass import (
+    check_classification_targets, type_of_target
+)
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
