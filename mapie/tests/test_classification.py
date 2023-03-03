@@ -634,7 +634,7 @@ def test_default_parameters() -> None:
 
 
 def test_warning_binary_classif() -> None:
-    """Test that a warning is raised nound is not None with CRC method."""
+    """Test that a warning is raised y is binary."""
     mapie_clf = MapieClassifier(random_state=42)
     X, y = make_classification(
         n_samples=500,
