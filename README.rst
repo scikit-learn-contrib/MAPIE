@@ -168,7 +168,11 @@ The effective coverage is the actual fraction of true labels lying in the predic
 
 The full documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
 
-**How does MAPIE work on regression ?** It is basically based on cross-validation and relies on:
+**How does MAPIE work?** 
+
+It is basically based on two types of techniques:
+
+**Cross conformal predictions**
 
 - Conformity scores on the whole training set obtained by cross-validation,
 - Perturbed models generated during the cross-validation.
@@ -179,7 +183,7 @@ The full documentation can be found `on this link <https://mapie.readthedocs.io/
     :width: 300
     :align: center
 
-**How does MAPIE work on classification ?** It is based on the construction of calibrated conformity scores to estimate prediction sets and relies on:
+**Split conformal predictions**
 
 - Construction of a conformity score
 - Calibration of the conformity score on a calibration set not seen by the model during training
@@ -189,6 +193,7 @@ The full documentation can be found `on this link <https://mapie.readthedocs.io/
 .. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_internals_classification.png
     :width: 300
     :align: center
+
 
 
 📝 Contributing
