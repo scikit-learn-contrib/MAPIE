@@ -2,6 +2,10 @@
 History
 =======
 
+Xxxxxxxxxxxx
+------------------
+* Make MapieClassifier a scikit-learn object
+
 0.6.1 (2023-01-31)
 ------------------
 * Fix still existing bug for classification with very low scores
