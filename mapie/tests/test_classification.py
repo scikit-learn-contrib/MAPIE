@@ -648,7 +648,7 @@ def test_warning_binary_classif() -> None:
 
 
 def test_binary_classif_same_result() -> None:
-    """Test that a warning is raised if y is binary."""
+    """Test MAPIE doesnt change model output when y is binary."""
     mapie_clf = MapieClassifier(random_state=42)
     X, y = make_classification(
         n_samples=500,
