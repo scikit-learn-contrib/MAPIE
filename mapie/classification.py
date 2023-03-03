@@ -9,7 +9,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import BaseCrossValidator, train_test_split
 from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
-from sklearn.utils.multiclass import type_of_target
+from sklearn.utils.multiclass import check_classification_targets, type_of_target
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
@@ -174,7 +174,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         "k_",
         "n_features_in_",
         "conformity_scores_",
-        "classes_"
+        "classes_",
+        "label_encoder_"
     ]
 
     def __init__(
@@ -926,7 +927,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # Checks
         self._check_parameters()
         cv = check_cv(self.cv)
-        estimator = check_estimator_classification(X, y, cv, self.estimator)
         X, y = indexable(X, y)
         y = _check_y(y)
         sample_weight = cast(Optional[NDArray], sample_weight)
@@ -934,21 +934,29 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y = cast(NDArray, y)
         enc = LabelEncoder()
         y_enc = enc.fit_transform(y)
+        self.label_encoder_ = enc
+        estimator = check_estimator_classification(
+            X,
+            y_enc,
+            cv,
+            self.estimator
+        )
         n_samples = _num_samples(y)
         self.n_classes_ = len(np.unique(y))
         self.classes_ = np.unique(y)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
-        self._target_type = type_of_target(y)
+        check_classification_targets(y)
+        self._target_type = type_of_target(y_enc)
         if self._target_type == "multiclass":
             if self.method == "raps":
-                X, self.X_raps, y, self.y_raps = train_test_split(
+                X, self.X_raps, y_enc, self.y_raps = train_test_split(
                     X,
                     y_enc,
                     test_size=size_raps,
                     random_state=self.random_state
                 )
-                y = cast(NDArray, y)
-                n_samples = _num_samples(y)
+                y_enc = cast(NDArray, y_enc)
+                n_samples = _num_samples(y_enc)
                 self.y_pred_proba_raps = estimator.predict_proba(
                     self.X_raps
                 )
@@ -971,7 +979,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             else:
                 cv = cast(BaseCrossValidator, cv)
                 self.single_estimator_ = fit_estimator(
-                    clone(estimator), X, y, sample_weight
+                    clone(estimator), X, y_enc, sample_weight
                 )
                 y_pred_proba = np.empty(
                     (n_samples, self.n_classes_),
@@ -1053,7 +1061,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 self.single_estimator_ = estimator
             else:
                 self.single_estimator_ = fit_estimator(
-                    clone(estimator), X, y, sample_weight
+                    clone(estimator), X, y_enc, sample_weight
                 )
             self.conformity_scores_ = None
             self.estimators_: List[ClassifierMixin] = []
@@ -1138,8 +1146,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # Estimate prediction sets
         y_pred = self.single_estimator_.predict(X)
 
-        if (alpha is None) or (self._type_of_target != "multiclass"):
-            return np.array(y_pred)
+        if (alpha is None) or (self._target_type != "multiclass"):
+            return self.label_encoder_.inverse_transform(np.array(y_pred))
 
         n = len(self.conformity_scores_)
 
@@ -1272,7 +1280,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     y_pred_proba_cumsum,
                     y_pred_proba_last,
                     thresholds,
-                    lambda_star
+                    lambda_star,
+                    k_star
                 )
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 prediction_sets = y_pred_included
@@ -1313,4 +1322,4 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 "Invalid method. "
                 "Allowed values are 'score' or 'cumulated_score'."
             )
-        return y_pred, prediction_sets
+        return self.label_encoder_.inverse_transform(y_pred), prediction_sets
