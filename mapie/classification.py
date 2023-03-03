@@ -1118,6 +1118,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
               number and the difference between the cumulated score of
               the last label and the quantile.
 
+            When set to ``True`` or ``False``, it may result in a coverage
+            higher than ``1 - alpha`` (because contrary to the "randomized"
+            setting, none of this methods create empty prediction sets). See
+            [2] and [3] for more details.
+
             By default ``True``.
 
         agg_scores: Optional[str]
