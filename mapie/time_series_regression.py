@@ -32,9 +32,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/abs/2010.09107
     """
 
-    cv_need_agg_function = ["Subsample", "BlockBootstrap"]
+    cv_need_agg_function = MapieRegressor.cv_need_agg_function + ["BlockBootstrap"]
     valid_methods_ = ["enbpi"]
-    plus_like_method = ["plus", "enbpi"]
+    plus_like_method = MapieRegressor.plus_like_method + ["enbpi"]
 
     def __init__(
         self,
@@ -275,6 +275,6 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             "_xfail_checks":
             {
                 "check_estimators_partial_fit_n_features":
-                "partial_fit() can only be called on fitted models"
+                "partial_fit can only be called on fitted models"
             }
         }
