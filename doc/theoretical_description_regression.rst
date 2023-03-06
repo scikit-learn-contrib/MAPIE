@@ -72,9 +72,10 @@ or
 where :math:`\hat{q}_{n, \alpha}^+` is the :math:`(1-\alpha)` quantile of the distribution.
 
 Since this method estimates the conformity scores only on a calibration set, one must have enough
-observations to split its training dataset into train and calibration as mentioned in [5]. We can
+observations to split its original dataset into train and calibration as mentioned in [5]. We can
 notice that this method is very similar to the naive one, the only difference being that the conformity
-scores are not computed on the calibration set.
+scores are not computed on the calibration set. Moreover, this method will always give prediction intervals
+with a constant width.
 
 The figure below illustrates the split method. 
 
