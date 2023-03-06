@@ -32,7 +32,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/abs/2010.09107
     """
 
-    cv_need_agg_function = MapieRegressor.cv_need_agg_function + ["BlockBootstrap"]
+    cv_need_agg_function = MapieRegressor.cv_need_agg_function \
+        + ["BlockBootstrap"]
     valid_methods_ = ["enbpi"]
     plus_like_method = MapieRegressor.plus_like_method + ["enbpi"]
 

@@ -84,9 +84,9 @@ COVERAGES = {
 
 def test_sklearn_checks() -> None:
     """
-    Test that all sklearn estimator checks pass as intended. 
+    Test that all sklearn estimator checks pass as intended.
     The usage of ``partial_fit`` does not match the sklearn convention
-    in the strictest sense since ``partial_fit`` can only be invoked 
+    in the strictest sense since ``partial_fit`` can only be invoked
     after ``fit``; the corresponding estimator check is marked as an
     expected failure.
     """
