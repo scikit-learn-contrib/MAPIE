@@ -14,6 +14,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import KFold, LeaveOneOut
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
@@ -616,6 +617,11 @@ def do_nothing(*args: Any) -> None:
     pass
 
 
+def test_mapie_classifier_sklearn_estim() -> None:
+    """Test that MapieClassifier is an sklearn estimator"""
+    check_estimator(MapieClassifier())
+
+
 def test_initialized() -> None:
     """Test that initialization does not crash."""
     MapieClassifier()
@@ -625,6 +631,36 @@ def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_clf = MapieClassifier()
     assert mapie_clf.method == "score"
+
+
+def test_warning_binary_classif() -> None:
+    """Test that a warning is raised y is binary."""
+    mapie_clf = MapieClassifier(random_state=42)
+    X, y = make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=3,
+        n_classes=2,
+        random_state=1,
+    )
+    with pytest.warns(UserWarning, match=r"not of type multiclass*"):
+        mapie_clf.fit(X, y)
+
+
+def test_binary_classif_same_result() -> None:
+    """Test MAPIE doesnt change model output when y is binary."""
+    mapie_clf = MapieClassifier(random_state=42)
+    X, y = make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=3,
+        n_classes=2,
+        random_state=1,
+    )
+    mapie_predict = mapie_clf.fit(X, y).predict(X)
+    lr = LogisticRegression(multi_class="multinomial").fit(X, y)
+    lr_predict = lr.predict(X)
+    np.testing.assert_allclose(mapie_predict, lr_predict)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -1122,24 +1158,6 @@ def test_classif_float32(cv):
     assert (
         np.repeat([[True, False, False]], 20, axis=0)[:, :, np.newaxis] == yps
     ).all()
-
-
-def test_raps_regularization_parameters():
-    """Check that the regularization parameters for the
-    raps method are the expected ones.
-    """
-    args_init, args_predict = STRATEGIES["raps"]
-    clf = LogisticRegression().fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(estimator=clf, **args_init)
-    mapie_clf.fit(X_toy, y_toy, size_raps=.5)
-    _, _ = mapie_clf.predict(
-        X_toy,
-        alpha=0.5,
-        include_last_label=args_predict["include_last_label"],
-        agg_scores=args_predict["agg_scores"]
-    )
-    np.testing.assert_allclose(mapie_clf.lambda_star, 0.001)
-    np.testing.assert_allclose(mapie_clf.k_star, 1)
 
 
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
