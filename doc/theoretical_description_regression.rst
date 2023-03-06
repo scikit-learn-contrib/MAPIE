@@ -76,12 +76,6 @@ observations to split its original dataset into train and calibration as mention
 notice that this method is very similar to the naive one, the only difference being that the conformity
 scores are not computed on the calibration set. Moreover, this method will always give prediction intervals
 with a constant width.
-
-The figure below illustrates the split method. 
-
-.. image:: images/jackknife_naive.png
-   :width: 200
-   :align: center
   
 
 3. The jackknife method
