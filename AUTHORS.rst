@@ -24,4 +24,5 @@ Contributors
 * Louis Lacombe <llacombe@quantmetry.com>
 * Arnaud Capitaine <arnaud.gc.capitaine@gmail.com>
 * Tarik Tazi <ttazi@quantmetry.com>
+* Daniel Herbst <daniel.herbst@tum.de>
 To be continued ...
