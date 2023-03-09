@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
+                                     BaseShuffleSplit, ShuffleSplit, 
                                      train_test_split)
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
@@ -158,13 +159,15 @@ def check_cv(
     if isinstance(cv, int):
         if cv == -1:
             return LeaveOneOut()
+        if cv == 1:
+            return ShuffleSplit(n_splits=1, test_size=0.1)
         if cv >= 2:
             return KFold(n_splits=cv)
-    if (
-        isinstance(cv, BaseCrossValidator)
-        or (cv == "prefit")
-        or (cv == "split")
-    ):
+    if isinstance(cv, BaseCrossValidator):
+        return cv
+    if isinstance(cv, BaseShuffleSplit):
+        return cv
+    if cv in ["prefit", "split"]:
         return cv
     raise ValueError(
         "Invalid cv argument. "
