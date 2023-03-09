@@ -5,7 +5,9 @@ Credits
 Development Lead
 ----------------
 
+* Thibault Cordier <tcordier@quantmetry.com>
 * Vincent Blot <vblot@quantmetry.com>
+* Louis Lacombe <llacombe@quantmetry.com>
 * Grégoire Martinon <gmartinon@quantmetry.com>
 
 Contributors
@@ -21,7 +23,8 @@ Contributors
 * Adirtha Borgohain <adirthaborgohain@gmail.com>
 * Thomas Morzadec <tmorzadec@quantmetry.com>
 * Julien Roussel <jroussel@quantmetry.com>
-* Louis Lacombe <llacombe@quantmetry.com>
 * Arnaud Capitaine <arnaud.gc.capitaine@gmail.com>
 * Tarik Tazi <ttazi@quantmetry.com>
+* Daniel Herbst <daniel.herbst@tum.de>
+
 To be continued ...
