@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
-                                     BaseShuffleSplit, ShuffleSplit, 
+                                     BaseShuffleSplit, ShuffleSplit,
                                      train_test_split)
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing

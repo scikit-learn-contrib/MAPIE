@@ -63,8 +63,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         - integer, to specify the number of folds.
           - If equal to -1, equivalent to
           ``sklearn.model_selection.LeaveOneOut()``.
-          - If equal to 1, does not involve cross-validation but a division 
-          of the data into training and calibration subsets. The splitter 
+          - If equal to 1, does not involve cross-validation but a division
+          of the data into training and calibration subsets. The splitter
           used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
           Main variants are:
@@ -547,7 +547,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.single_estimator_ = fit_estimator(
                 clone(estimator), X, y, sample_weight
             )
-            
+
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
             else:
@@ -656,7 +656,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
-        
+
         if self.method in ["naive", "base"] or self.cv == "prefit":
             y_pred_multi_low = y_pred[:, np.newaxis]
             y_pred_multi_up = y_pred[:, np.newaxis]
@@ -669,7 +669,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             else:
                 y_pred_multi_low = y_pred_multi
                 y_pred_multi_up = y_pred_multi
-            
+
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
 
@@ -681,7 +681,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             conformity_scores_low = self.conformity_scores_
             conformity_scores_up = self.conformity_scores_
             alpha_np = alpha_np / 2
-        
+
         lower_bounds = (
             self.conformity_score_function_.get_estimation_distribution(
                 y_pred_multi_low, conformity_scores_low
