@@ -184,6 +184,7 @@ class MapieQuantileRegressor(MapieRegressor):
         ------
         ValueError
             If alpha is not a float.
+
         ValueError
             If the value of alpha is not between 0 and 1.0.
         """
@@ -234,17 +235,21 @@ class MapieQuantileRegressor(MapieRegressor):
         ------
         ValueError
             If the estimator fit or predict methods.
+
         ValueError
             We check if it's a known estimator that does quantile regression
             according to the dictionnary set quantile_estimator_params.
             This dictionnary will need to be updated with the latest new
             available estimators.
+
         ValueError
             The estimator does not have the "loss_name" in its parameters and
             therefore can not be used as an estimator.
+
         ValueError
             There is no quantile "loss_name" and therefore this estimator
             can not be used as a ``MapieQuantileRegressor``.
+
         ValueError
             The parameter to set the alpha value does not exist in this
             estimator and therefore we cannot use it.
@@ -430,12 +435,16 @@ class MapieQuantileRegressor(MapieRegressor):
         ------
         ValueError
             If a non-iterable variable is provided for estimator.
+
         ValueError
             If less or more than three models are defined.
+
         Warning
             If X and y are defined, then warning that they are not used.
+
         ValueError
             If the calibration set is not defined.
+
         Warning
             If the alpha is defined, warns the user that it must be set
             accordingly with the prefit estimators.
@@ -479,8 +488,10 @@ class MapieQuantileRegressor(MapieRegressor):
         ----------
         X : ArrayLike of shape (n_samples, n_features)
             Training data.
+
         y : ArrayLike of shape (n_samples,)
             Training labels.
+
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
             If None, then samples are equally weighted.
@@ -490,6 +501,7 @@ class MapieQuantileRegressor(MapieRegressor):
             If weights are non-uniform, residuals are still uniformly weighted.
             Note that the sample weight defined are only for the training, not
             for the calibration procedure.
+            
             By default ``None``.
         X_calib : Optional[ArrayLike] of shape (n_calib_samples, n_features)
             Calibration data.
@@ -629,12 +641,14 @@ class MapieQuantileRegressor(MapieRegressor):
         ----------
         X : ArrayLike of shape (n_samples, n_features)
             Test data.
+
         ensemble : bool
             Ensemble has not been defined in predict and therefore should
             will not have any effects in this method.
         alpha : Optional[Union[float, Iterable[float]]]
-            For ``MapieQuantileRegresor`` the alpha has to be defined
+            For ``MapieQuantileRegressor`` the alpha has to be defined
             directly in initial arguments of the class.
+
         symmetry : Optional[bool], optional
             Deciding factor to whether to find the quantile value for
             each residuals separatly or to use the maximum of the two
@@ -652,6 +666,7 @@ class MapieQuantileRegressor(MapieRegressor):
             - [:, 0, :]: Lower bound of the prediction interval.
             - [:, 1, :]: Upper bound of the prediction interval.
         """
+        # Checks
         check_is_fitted(self, self.fit_attributes)
         check_defined_variables_predict_cqr(ensemble, alpha)
         alpha = self.alpha if symmetry else self.alpha/2
