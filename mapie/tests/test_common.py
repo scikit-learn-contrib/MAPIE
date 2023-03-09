@@ -158,7 +158,7 @@ def test_invalid_method(MapieEstimator: BaseEstimator, method: str) -> None:
 
 @pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 @pytest.mark.parametrize(
-    "cv", [-3.14, -2, 0, 1, "cv", LinearRegression(), [1, 2]]
+    "cv", [-3.14, -2, 0, "cv", LinearRegression(), [2, 3]]
 )
 def test_invalid_cv(MapieEstimator: BaseEstimator, cv: Any) -> None:
     """Test that invalid cv raise errors."""

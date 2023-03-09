@@ -11,7 +11,8 @@ from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
+from sklearn.model_selection import (KFold, LeaveOneOut, 
+                                     ShuffleSplit, train_test_split)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -42,10 +43,31 @@ Params = TypedDict(
     },
 )
 STRATEGIES = {
-    "naive": Params(method="naive", agg_function="median", cv=None),
-    "jackknife": Params(method="base", agg_function="mean", cv=-1),
-    "jackknife_plus": Params(method="plus", agg_function="mean", cv=-1),
-    "jackknife_minmax": Params(method="minmax", agg_function="mean", cv=-1),
+    "naive": Params(
+        method="naive",
+        agg_function="median",
+        cv=None
+    ),
+    "split": Params(
+        method="base",
+        agg_function="median",
+        cv=ShuffleSplit(n_splits=1, test_size=0.1, random_state=1)
+    ),
+    "jackknife": Params(
+        method="base",
+        agg_function="mean",
+        cv=-1
+    ),
+    "jackknife_plus": Params(
+        method="plus",
+        agg_function="mean",
+        cv=-1
+    ),
+    "jackknife_minmax": Params(
+        method="minmax",
+        agg_function="mean",
+        cv=-1
+    ),
     "cv": Params(
         method="base",
         agg_function="mean",
@@ -74,15 +96,13 @@ STRATEGIES = {
     "jackknife_plus_median_ab": Params(
         method="plus",
         agg_function="median",
-        cv=Subsample(
-            n_resamplings=30,
-            random_state=1,
-        ),
+        cv=Subsample(n_resamplings=30, random_state=1),
     ),
 }
 
 WIDTHS = {
     "naive": 3.81,
+    "split": 4.33,
     "jackknife": 3.89,
     "jackknife_plus": 3.90,
     "jackknife_minmax": 3.96,
@@ -98,6 +118,7 @@ WIDTHS = {
 
 COVERAGES = {
     "naive": 0.952,
+    "split": 0.972,
     "jackknife": 0.952,
     "jackknife_plus": 0.952,
     "jackknife_minmax": 0.952,
@@ -159,7 +180,7 @@ def test_valid_agg_function(agg_function: str) -> None:
     mapie_reg.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])
+@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut(), 1])
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     mapie = MapieRegressor(cv=cv)
