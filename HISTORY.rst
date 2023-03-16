@@ -4,21 +4,27 @@ History
 
 Xxxxxxxxxxxx
 ------------------
+
+* Add split conformal option for regression and classification
+* Update check method for calibration
 * Make MapieClassifier a scikit-learn object
 * Update documentation for MapieClassifier
 
 0.6.1 (2023-01-31)
 ------------------
+
 * Fix still existing bug for classification with very low scores
 
 0.6.0 (2023-01-19)
 ------------------
+
 * Add RCPS and CRC for multilabel-classifcation
 * Add Top-Label calibration
 * Fix bug for classification with very low scores
 
 0.5.0 (2022-10-20)
 ------------------
+
 * Add RAPS method for classification
 * Add theoretical description for RAPS
 

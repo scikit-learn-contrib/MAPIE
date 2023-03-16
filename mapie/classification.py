@@ -68,7 +68,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         By default "score".
 
     cv: Optional[str]
-        The cross-validation strategy for computing scores :
+        The cross-validation strategy for computing scores.
+        It directly drives the distinction between jackknife and cv variants.
+        Choose among:
 
         - ``None``, to use the default 5-fold cross-validation
         - integer, to specify the number of folds.
@@ -78,6 +80,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
           Main variants are:
           - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
           - ``sklearn.model_selection.KFold`` (cross-validation)
+        - ``"split"``, does not involve cross-validation but a division
+          of the data into training and calibration subsets. The splitter
+          used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used
           to calibrate the predictions through the score computation.
@@ -329,10 +334,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Threshold to compare with y_proba_last_cumsum, can be either:
 
             - the quantiles associated with alpha values when
-              ``cv`` == "prefit" or ``agg_scores`` is "mean"
+              ``cv`` == "prefit", ``cv`` == "split"
+              or ``agg_scores`` is "mean"
             - the conformity score from training samples otherwise
               (i.e., when ``cv`` is a CV splitter and
-              ``agg_scores`` is "crossval)
+              ``agg_scores`` is "crossval")
 
         include_last_label : Union[bool, str]
             Whether or not include the last label. If 'randomized',
@@ -406,10 +412,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Threshold to compare with y_proba_last_cumsum, can be either:
 
             - the quantiles associated with alpha values when
-              ``cv`` == "prefit" or ``agg_scores`` is "mean"
+              ``cv`` == "prefit", ``cv`` == "split" or
+              ``agg_scores`` is "mean"
             - the conformity score from training samples otherwise
               (i.e., when ``cv`` is a CV splitter and
-              ``agg_scores`` is "crossval)
+              ``agg_scores`` is "crossval")
 
         lambda_star: Union[NDArray, float, None] of shape (n_alpha):
             Optimal value of the regulizer lambda.

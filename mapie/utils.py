@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
+                                     BaseShuffleSplit, ShuffleSplit,
                                      train_test_split)
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
@@ -132,7 +133,7 @@ def check_cv(
 ) -> Union[str, BaseCrossValidator]:
     """
     Check if cross-validator is
-    ``None``, ``int``, ``"prefit"`` or ``BaseCrossValidator``.
+    ``None``, ``int``, ``"prefit"``, ``"split"``or ``BaseCrossValidator``.
     Return a ``LeaveOneOut`` instance if integer equal to -1.
     Return a ``KFold`` instance if integer superior or equal to 2.
     Return a ``KFold`` instance if ``None``.
@@ -160,15 +161,17 @@ def check_cv(
             return LeaveOneOut()
         if cv >= 2:
             return KFold(n_splits=cv)
-    if (
-        isinstance(cv, BaseCrossValidator)
-        or (cv == "prefit")
-        or (cv == "split")
-    ):
+    if isinstance(cv, BaseCrossValidator):
         return cv
+    if isinstance(cv, BaseShuffleSplit):
+        return cv
+    if cv in ["prefit"]:
+        return cv
+    if cv in ["split"]:
+        return ShuffleSplit(n_splits=1, test_size=0.5)
     raise ValueError(
         "Invalid cv argument. "
-        "Allowed values are None, -1, int >= 2, 'prefit', "
+        "Allowed values are None, -1, int >= 2, 'prefit', 'split', "
         "or a BaseCrossValidator object (Kfold, LeaveOneOut)."
     )
 

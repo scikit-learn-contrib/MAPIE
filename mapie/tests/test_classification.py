@@ -11,7 +11,7 @@ from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import KFold, LeaveOneOut
+from sklearn.model_selection import KFold, LeaveOneOut, ShuffleSplit
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.estimator_checks import check_estimator
@@ -633,9 +633,10 @@ def test_default_parameters() -> None:
     assert mapie_clf.method == "score"
 
 
-def test_warning_binary_classif() -> None:
+@pytest.mark.parametrize("cv", ["prefit", "split"])
+def test_warning_binary_classif(cv: str) -> None:
     """Test that a warning is raised y is binary."""
-    mapie_clf = MapieClassifier(random_state=42)
+    mapie_clf = MapieClassifier(cv=cv, random_state=42)
     X, y = make_classification(
         n_samples=500,
         n_features=10,
@@ -680,7 +681,10 @@ def test_valid_method(method: str) -> None:
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
 
-@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])
+@pytest.mark.parametrize(
+    "cv", [None, -1, 2, KFold(), LeaveOneOut(),
+           ShuffleSplit(n_splits=1, test_size=0.1), "prefit"]
+)
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raises no errors."""
     model = LogisticRegression(multi_class="multinomial")

@@ -32,8 +32,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     idea is to evaluate out-of-fold conformity scores (signed residuals,
     absolute residuals, residuals normalized by the predicted mean...)
     on hold-out validation sets and to deduce valid confidence intervals
-    with strong theoretical
-    guarantees.
+    with strong theoretical guarantees.
 
     Parameters
     ----------
@@ -69,6 +68,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
           - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
           - ``sklearn.model_selection.KFold`` (cross-validation),
           - ``subsample.Subsample`` object (bootstrap).
+        - ``"split"``, does not involve cross-validation but a division
+          of the data into training and calibration subsets. The splitter
+          used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
@@ -112,7 +114,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Jackknife+-after-Bootstrap method), this function is also used to
         aggregate the training set in-sample predictions.
 
-        If cv is ``"prefit"``, ``agg_function`` is ignored.
+        If cv is ``"prefit"`` or ``"split"``, ``agg_function`` is ignored.
 
         By default "mean".
 
@@ -165,7 +167,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     Rina Foygel Barber, Emmanuel J. Candès,
     Aaditya Ramdas, and Ryan J. Tibshirani.
     "Predictive inference with the jackknife+."
-    Ann. Statist., 49(1):486–507, February 2021.
+    Ann. Statist., 49(1):486-507, February 2021.
 
     Byol Kim, Chen Xu, and Rina Foygel Barber.
     "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
@@ -275,7 +277,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 "You need to specify an aggregation function when "
                 f"cv's type is in {self.cv_need_agg_function}."
             )
-        if (agg_function is not None) or (self.cv == "prefit"):
+        if (agg_function is not None) or (self.cv in ["prefit", "split"]):
             return agg_function
         return "mean"
 
@@ -409,7 +411,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         sample which one to integrate, and aggregate to produce phi-{t}(x_t)
         for each training sample x_t.
 
-
         Parameters:
         -----------
         x : ArrayLike of shape (n_samples_test, n_estimators)
@@ -424,12 +425,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Returns:
         --------
         ArrayLike of shape (n_samples_test,)
-            Array of aggregated predictions for each testing  sample.
+            Array of aggregated predictions for each testing sample.
         """
-        if self.cv == "prefit":
+        if self.cv in ["prefit", "split"]:
             raise ValueError(
                 "There should not be aggregation of predictions if cv is "
-                "'prefit'"
+                "'prefit' or 'split'."
             )
         if self.agg_function == "median":
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
@@ -542,15 +543,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 dtype=float,
             )
 
-            pred_matrix = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y)),
-                fill_value=np.nan,
-                dtype=float,
-            )
-
             self.single_estimator_ = fit_estimator(
                 clone(estimator), X, y, sample_weight
             )
+
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
             else:
@@ -569,6 +565,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     list, zip(*outputs)
                 )
 
+                pred_matrix = np.full(
+                    shape=(n_samples, cv.get_n_splits(X, y)),
+                    fill_value=np.nan,
+                    dtype=float,
+                )
                 for i, val_ind in enumerate(val_indices):
                     pred_matrix[val_ind, i] = np.array(
                         predictions[i], dtype=float
@@ -614,7 +615,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             the aggregation function specified in the ``agg_function``
             attribute.
 
-            If cv is ``"prefit"``, ``ensemble`` is ignored.
+            If cv is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
 
@@ -645,6 +646,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
+
         y_pred = self.single_estimator_.predict(X)
         n = len(self.conformity_scores_)
 
@@ -653,7 +655,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
-        if self.method in ["naive", "base"] or self.cv == "prefit":
+
+        if self.method in ["naive", "base"] or self.cv in ["prefit", "split"]:
             y_pred_multi_low = y_pred[:, np.newaxis]
             y_pred_multi_up = y_pred[:, np.newaxis]
         else:
@@ -665,6 +668,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             else:
                 y_pred_multi_low = y_pred_multi
                 y_pred_multi_up = y_pred_multi
+
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
 
@@ -676,6 +680,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             conformity_scores_low = self.conformity_scores_
             conformity_scores_up = self.conformity_scores_
             alpha_np = alpha_np / 2
+
         lower_bounds = (
             self.conformity_score_function_.get_estimation_distribution(
                 y_pred_multi_low, conformity_scores_low
@@ -698,17 +703,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 )
                 for _alpha in alpha_np
             ]
-        ).data
+        )
         y_pred_up = np.column_stack(
             [
                 np_nanquantile(
                     upper_bounds.astype(float),
-                    1 - _alpha,
+                    1-_alpha,
                     axis=1,
                     method="higher",
                 )
                 for _alpha in alpha_np
             ]
-        ).data
+        )
 
         return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
