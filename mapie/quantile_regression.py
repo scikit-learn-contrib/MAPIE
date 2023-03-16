@@ -58,9 +58,7 @@ class MapieQuantileRegressor(MapieRegressor):
 
         - ``None``, to use the default 5-fold cross-validation
         - integer, to specify the number of folds.
-          - If equal to -1, equivalent to
-          ``sklearn.model_selection.LeaveOneOut()``.
-          - If equal to 1, does not involve cross-validation but a division
+          If equal to 1, does not involve cross-validation but a division
           of the data into training and calibration subsets. The splitter
           used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
@@ -68,6 +66,9 @@ class MapieQuantileRegressor(MapieRegressor):
           - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
           - ``sklearn.model_selection.KFold`` (cross-validation),
           - ``subsample.Subsample`` object (bootstrap).
+        - ``"split"``, does not involve cross-validation but a division
+          of the data into training and calibration subsets. The splitter
+          used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
