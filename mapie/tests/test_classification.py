@@ -220,17 +220,6 @@ STRATEGIES = {
             agg_scores="crossval"
         )
     ),
-    "score_split": (
-        Params(
-            method="score",
-            cv=ShuffleSplit(n_splits=1, test_size=0.5, random_state=42),
-            random_state=42
-        ),
-        ParamsPredict(
-            include_last_label=True,
-            agg_scores="mean"
-        )
-    ),
     "naive": (
         Params(
             method="naive",
@@ -290,7 +279,6 @@ COVERAGES = {
     "cumulated_score_include_cv_crossval": 2 / 9,
     "cumulated_score_not_include_cv_crossval": 0,
     "cumulated_score_randomized_cv_crossval": 4 / 9,
-    "score_split": 5 / 9,
     "naive": 5 / 9,
     "top_k": 1,
     "raps": 1,
