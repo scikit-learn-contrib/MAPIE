@@ -61,16 +61,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         - ``None``, to use the default 5-fold cross-validation
         - integer, to specify the number of folds.
-          - If equal to -1, equivalent to
+          If equal to -1, equivalent to
           ``sklearn.model_selection.LeaveOneOut()``.
-          - If equal to 1, does not involve cross-validation but a division
-          of the data into training and calibration subsets. The splitter
-          used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
           Main variants are:
           - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
           - ``sklearn.model_selection.KFold`` (cross-validation),
           - ``subsample.Subsample`` object (bootstrap).
+        - ``"split"``, does not involve cross-validation but a division
+          of the data into training and calibration subsets. The splitter
+          used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
           and the ``method`` parameter is ignored.
           All data provided in the ``fit`` method is then used
@@ -411,7 +411,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         sample which one to integrate, and aggregate to produce phi-{t}(x_t)
         for each training sample x_t.
 
-
         Parameters:
         -----------
         x : ArrayLike of shape (n_samples_test, n_estimators)
@@ -426,12 +425,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Returns:
         --------
         ArrayLike of shape (n_samples_test,)
-            Array of aggregated predictions for each testing  sample.
+            Array of aggregated predictions for each testing sample.
         """
-        if self.cv == "prefit":
+        if self.cv in ["prefit", "split"]:
             raise ValueError(
                 "There should not be aggregation of predictions if cv is "
-                "'prefit'"
+                "'prefit' or 'split'."
             )
         if self.agg_function == "median":
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
@@ -657,7 +656,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
 
-        if self.method in ["naive", "base"] or self.cv == "prefit":
+        if self.method in ["naive", "base"] or self.cv in ["prefit", "split"]:
             y_pred_multi_low = y_pred[:, np.newaxis]
             y_pred_multi_up = y_pred[:, np.newaxis]
         else:
