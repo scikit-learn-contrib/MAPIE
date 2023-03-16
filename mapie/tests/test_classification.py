@@ -694,7 +694,7 @@ def test_valid_method(method: str) -> None:
 
 @pytest.mark.parametrize(
     "cv", [None, -1, 2, KFold(), LeaveOneOut(),
-           ShuffleSplit(n_splits=1, test_size=0.1), "prefit"]  #, "split"]
+           ShuffleSplit(n_splits=1, test_size=0.1), "prefit"]
 )
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raises no errors."""
