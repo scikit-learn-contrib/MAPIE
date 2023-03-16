@@ -181,12 +181,16 @@ def test_valid_agg_function(agg_function: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "cv", [None, -1, 2, KFold(), LeaveOneOut(), ShuffleSplit(n_splits=1)]
+    "cv", [None, -1, 2, KFold(), LeaveOneOut(),
+           ShuffleSplit(n_splits=1), "prefit", "split"]
 )
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
-    mapie = MapieRegressor(cv=cv)
-    mapie.fit(X_toy, y_toy)
+    model = LinearRegression()
+    model.fit(X_toy, y_toy)
+    mapie_reg = MapieRegressor(estimator=model, cv=cv)
+    mapie_reg.fit(X_toy, y_toy)
+    mapie_reg.predict(X_toy, alpha=0.5)
 
 
 @pytest.mark.parametrize("cv", [100, 200, 300])

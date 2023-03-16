@@ -157,17 +157,16 @@ def test_other_methods() -> None:
         mapie_cal.fit(X, y)
 
 
-def test_prefit() -> None:
+def test_prefit_cv_argument() -> None:
     """Test that prefit method works"""
     est = RandomForestClassifier().fit(X, y)
     mapie_cal = MapieCalibrator(estimator=est, cv="prefit")
     mapie_cal.fit(X, y)
 
 
-def test_split() -> None:
+def test_split_cv_argument() -> None:
     """Test that split method works"""
-    est = RandomForestClassifier().fit(X, y)
-    mapie_cal = MapieCalibrator(estimator=est, cv="split")
+    mapie_cal = MapieCalibrator(cv="split")
     mapie_cal.fit(X, y)
 
 
@@ -178,8 +177,7 @@ def test_invalid_cv_argument(cv: str) -> None:
         ValueError,
         match=r".*Invalid cv argument*",
     ):
-        est = RandomForestClassifier().fit(X, y)
-        mapie_cal = MapieCalibrator(estimator=est, cv=cv)
+        mapie_cal = MapieCalibrator(cv=cv)
         mapie_cal.fit(X, y)
 
 
