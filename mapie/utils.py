@@ -133,8 +133,9 @@ def check_cv(
 ) -> Union[str, BaseCrossValidator]:
     """
     Check if cross-validator is
-    ``None``, ``int``, ``"prefit"`` or ``BaseCrossValidator``.
+    ``None``, ``int``, ``"prefit"``, ``"split"``or ``BaseCrossValidator``.
     Return a ``LeaveOneOut`` instance if integer equal to -1.
+    Return a ``ShuffleSplit`` instance if integer equal to 1.
     Return a ``KFold`` instance if integer superior or equal to 2.
     Return a ``KFold`` instance if ``None``.
     Else raise error.
@@ -159,19 +160,19 @@ def check_cv(
     if isinstance(cv, int):
         if cv == -1:
             return LeaveOneOut()
-        if cv == 1:
-            return ShuffleSplit(n_splits=1, test_size=0.1)
         if cv >= 2:
             return KFold(n_splits=cv)
     if isinstance(cv, BaseCrossValidator):
         return cv
     if isinstance(cv, BaseShuffleSplit):
         return cv
-    if cv in ["prefit", "split"]:
+    if cv in ["prefit"]:
         return cv
+    if cv in ["split"]:
+        return ShuffleSplit(n_splits=1, test_size=0.5)
     raise ValueError(
         "Invalid cv argument. "
-        "Allowed values are None, -1, int >= 2, 'prefit', "
+        "Allowed values are None, -1, int >= 2, 'prefit', 'split', "
         "or a BaseCrossValidator object (Kfold, LeaveOneOut)."
     )
 
