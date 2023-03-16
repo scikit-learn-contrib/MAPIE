@@ -164,6 +164,25 @@ def test_prefit() -> None:
     mapie_cal.fit(X, y)
 
 
+def test_split() -> None:
+    """Test that split method works"""
+    est = RandomForestClassifier().fit(X, y)
+    mapie_cal = MapieCalibrator(estimator=est, cv="split")
+    mapie_cal.fit(X, y)
+
+
+@pytest.mark.parametrize("cv", ["noprefit", "nosplit"])
+def test_invalid_cv_argument(cv: str) -> None:
+    """Test that other cv method does not work"""
+    with pytest.raises(
+        ValueError,
+        match=r".*Invalid cv argument*",
+    ):
+        est = RandomForestClassifier().fit(X, y)
+        mapie_cal = MapieCalibrator(estimator=est, cv=cv)
+        mapie_cal.fit(X, y)
+
+
 def test_prefit_split_same_results() -> None:
     """Test that prefit and split method return the same result"""
     est = RandomForestClassifier(
