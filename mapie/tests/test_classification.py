@@ -656,9 +656,10 @@ def test_default_parameters() -> None:
     assert mapie_clf.method == "score"
 
 
-def test_warning_binary_classif() -> None:
+@pytest.mark.parametrize("cv", ["prefit", "split"])
+def test_warning_binary_classif(cv: str) -> None:
     """Test that a warning is raised y is binary."""
-    mapie_clf = MapieClassifier(random_state=42)
+    mapie_clf = MapieClassifier(cv=cv, random_state=42)
     X, y = make_classification(
         n_samples=500,
         n_features=10,
