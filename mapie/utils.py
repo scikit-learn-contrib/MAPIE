@@ -135,7 +135,6 @@ def check_cv(
     Check if cross-validator is
     ``None``, ``int``, ``"prefit"``, ``"split"``or ``BaseCrossValidator``.
     Return a ``LeaveOneOut`` instance if integer equal to -1.
-    Return a ``ShuffleSplit`` instance if integer equal to 1.
     Return a ``KFold`` instance if integer superior or equal to 2.
     Return a ``KFold`` instance if ``None``.
     Else raise error.
