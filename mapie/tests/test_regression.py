@@ -180,7 +180,9 @@ def test_valid_agg_function(agg_function: str) -> None:
     mapie_reg.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut(), 1])
+@pytest.mark.parametrize(
+    "cv", [None, -1, 2, KFold(), LeaveOneOut(), ShuffleSplit(n_splits=1)]
+)
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     mapie = MapieRegressor(cv=cv)

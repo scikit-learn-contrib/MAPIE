@@ -11,7 +11,7 @@ from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import KFold, LeaveOneOut
+from sklearn.model_selection import KFold, LeaveOneOut, ShuffleSplit
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.estimator_checks import check_estimator
@@ -220,6 +220,17 @@ STRATEGIES = {
             agg_scores="crossval"
         )
     ),
+    "score_split": (
+        Params(
+            method="score",
+            cv=ShuffleSplit(n_splits=1, test_size=0.5, random_state=42),
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="mean"
+        )
+    ),
     "naive": (
         Params(
             method="naive",
@@ -279,6 +290,7 @@ COVERAGES = {
     "cumulated_score_include_cv_crossval": 2 / 9,
     "cumulated_score_not_include_cv_crossval": 0,
     "cumulated_score_randomized_cv_crossval": 4 / 9,
+    "score_split": 5 / 9,
     "naive": 5 / 9,
     "top_k": 1,
     "raps": 1,
@@ -420,6 +432,17 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True],
         [False, True, False],
+    ],
+    "score_split": [
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, True],
+        [False, False, True],
+        [False, False, True],
+        [False, False, True],
     ],
     "naive": [
         [True, False, False],
@@ -680,7 +703,10 @@ def test_valid_method(method: str) -> None:
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
 
-@pytest.mark.parametrize("cv", [None, -1, 2, KFold(), LeaveOneOut()])
+@pytest.mark.parametrize(
+    "cv", [None, -1, 2, KFold(), LeaveOneOut(),
+           ShuffleSplit(n_splits=1, test_size=0.1)]
+)
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raises no errors."""
     model = LogisticRegression(multi_class="multinomial")
