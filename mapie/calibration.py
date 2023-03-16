@@ -136,7 +136,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     def _check_cv(
         self,
-        cv: str,
+        cv: Optional[str],
     ) -> str:
         """
         Check if cross-validator is ``"prefit"`` or ``"split"``.
@@ -161,7 +161,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             return cv
         raise ValueError(
             "Invalid cv argument. "
-            "Allowed values are None, 'prefit' or 'split'."
+            "Allowed values are 'prefit' or 'split'."
         )
 
     def _check_calibrator(
