@@ -421,17 +421,6 @@ y_toy_mapie = {
         [False, False, True],
         [False, True, False],
     ],
-    "score_split": [
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, True],
-        [False, False, True],
-        [False, False, True],
-        [False, False, True],
-    ],
     "naive": [
         [True, False, False],
         [True, False, False],
