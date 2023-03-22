@@ -2,7 +2,7 @@
 History
 =======
 
-Xxxxxxxxxxxx
+0.6.2 (2023-03-22)
 ------------------
 * Make MapieClassifier a scikit-learn object
 * Update documentation for MapieClassifier
