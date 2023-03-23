@@ -565,7 +565,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     def _get_true_label_cumsum_proba(
         self,
-        y: NDArray,
+        y: ArrayLike,
         y_pred_proba: NDArray
     ) -> Tuple[NDArray, NDArray]:
         """
