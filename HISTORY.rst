@@ -2,6 +2,10 @@
 History
 =======
 
+0.6.3 (2023-03-23)
+------------------
+* Fix bug when labels do not start at 0
+
 0.6.2 (2023-03-22)
 ------------------
 * Make MapieClassifier a scikit-learn object
