@@ -4,7 +4,7 @@ Comparing prediction sets on a two-dimensional dataset
 ======================================================
 
 In this tutorial, we compare the prediction sets estimated by
-:class:`mapie.classification.MapieClassifier` with the "score"
+:class:`~mapie.classification.MapieClassifier` with the "score"
 and "cumulated_score" on the two-dimensional dataset presented
 by Sadinle et al. (2019).
 """
@@ -47,18 +47,16 @@ by Sadinle et al. (2019).
 # Journal of the American Statistical Association, 114:525, 223-234, 2019.
 
 from typing import List
-import numpy as np
-from sklearn.naive_bayes import GaussianNB
-from sklearn.model_selection import train_test_split
+
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
 
-from mapie.classification import MapieClassifier
-from mapie.metrics import (
-    classification_coverage_score,
-    classification_mean_width_score
-)
 from mapie._typing import NDArray
-
+from mapie.classification import MapieClassifier
+from mapie.metrics import (classification_coverage_score,
+                           classification_mean_width_score)
 
 centers = [(0, 3.5), (-2, 0), (2, 0)]
 covs = [np.eye(2), np.eye(2) * 2, np.diag([5, 1])]
@@ -102,7 +100,7 @@ plt.show()
 
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator.
-# Then we apply :class:`mapie.classification.MapieClassifier` in the
+# Then we apply :class:`~mapie.classification.MapieClassifier` in the
 # calibration data with the methods ``score`` and ``cumulated_score```
 # to the estimator indicating that it has already been fitted with
 # `cv="prefit"`.

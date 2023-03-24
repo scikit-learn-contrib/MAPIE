@@ -2,13 +2,39 @@
 History
 =======
 
-0.4.2 (XXXX-XX-XX)
+0.6.3 (2023-03-23)
+------------------
+* Fix bug when labels do not start at 0
+
+0.6.2 (2023-03-22)
+------------------
+* Make MapieClassifier a scikit-learn object
+* Update documentation for MapieClassifier
+
+0.6.1 (2023-01-31)
+------------------
+* Fix still existing bug for classification with very low scores
+
+0.6.0 (2023-01-19)
+------------------
+* Add RCPS and CRC for multilabel-classifcation
+* Add Top-Label calibration
+* Fix bug for classification with very low scores
+
+0.5.0 (2022-10-20)
+------------------
+* Add RAPS method for classification
+* Add theoretical description for RAPS
+
+0.4.2 (2022-09-02)
 ------------------
 
 * Add tutorial for time series
 * Convert existing tutorials in .py
+* Add prefit method for CQR
+* Add tutorial for CQR
 
-0.4.1 (2002-06-27)
+0.4.1 (2022-06-27)
 ------------------
 
 * Add `packaging` library in requirements

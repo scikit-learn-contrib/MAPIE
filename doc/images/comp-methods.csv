@@ -1,5 +1,6 @@
 **Method**,**Theoretical coverage**,**Typical coverage**,**Training cost**,**Evaluation cost**
 **Naïve**,No guarantee,:math:`< 1-\alpha`,1,:math:`n_{test}`
+**Split**,:math:`\geq 1-\alpha`,:math:`\simeq 1-\alpha`,1,:math:`n_{test}`
 **Jackknife**,No guarantee,:math:`\simeq 1-\alpha`,:math:`n`,:math:`n_{test}`
 ,, or :math:`< 1-\alpha` if :math:`\hat{\mu}` unstable,,
 **Jackknife+**,:math:`\geq 1-2\alpha`,:math:`\simeq 1-\alpha`,:math:`n`,:math:`n \times n_{test}`

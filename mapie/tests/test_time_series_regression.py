@@ -7,13 +7,14 @@ import pytest
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
+from sklearn.utils.estimator_checks import check_estimator
 from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.metrics import regression_coverage_score
-from mapie.time_series_regression import MapieTimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
+from mapie.time_series_regression import MapieTimeSeriesRegressor
 
 X_toy = np.array(range(5)).reshape(-1, 1)
 y_toy = (5.0 + 2.0 * X_toy ** 1.1).flatten()
@@ -79,6 +80,17 @@ COVERAGES = {
     "prefit": 0.98,
 
 }
+
+
+def test_sklearn_checks() -> None:
+    """
+    Test that all sklearn estimator checks pass as intended.
+    The usage of ``partial_fit`` does not match the sklearn convention
+    in the strictest sense since ``partial_fit`` can only be invoked
+    after ``fit``; the corresponding estimator check is marked as an
+    expected failure.
+    """
+    check_estimator(MapieTimeSeriesRegressor())
 
 
 @pytest.mark.parametrize("agg_function", ["dummy", 0, 1, 2.5, [1, 2]])

@@ -33,7 +33,9 @@ def np_nanquantile_version_below_122(
     **kwargs: Any
 ) -> NDArray:
     """Wrapper of np.quantile function for numpy version < 1.22."""
-    return np.nanquantile(a, q, interpolation=method, **kwargs)  # type: ignore
+    # Does not work if `a` is of dtype object. Converting `a` to a float array
+    # is necessary in order to use this function safely.
+    return np.nanquantile(a, q, interpolation=method, **kwargs)
 
 
 def np_nanquantile_version_above_122(

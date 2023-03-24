@@ -87,7 +87,7 @@ copyright = u"2022, Quantmetry"
 # built documents.
 #
 # The short X.Y version.
-version = "0.4.1"
+version = "0.6.3"
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -311,8 +311,15 @@ intersphinx_mapping = {
 
 # sphinx-gallery configuration
 sphinx_gallery_conf = {
-    "examples_dirs": ["../examples/regression", "../examples/classification"],
-    "gallery_dirs": ["examples_regression", "examples_classification"],
+    "examples_dirs": [
+        "../examples/regression",
+        "../examples/classification",
+        "../examples/multilabel_classification"],
+    "gallery_dirs": [
+        "examples_regression",
+        "examples_classification",
+        "examples_multilabel_classification"
+    ],
     "doc_module": "mapie",
     "backreferences_dir": os.path.join("generated"),
     "reference_url": {"mapie": None},

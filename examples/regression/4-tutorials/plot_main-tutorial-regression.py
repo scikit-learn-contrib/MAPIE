@@ -35,14 +35,14 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieRegressor
-from mapie.quantile_regression import MapieQuantileRegressor
-from mapie.subsample import Subsample
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
+
+from mapie.metrics import regression_coverage_score
+from mapie.quantile_regression import MapieQuantileRegressor
+from mapie.regression import MapieRegressor
+from mapie.subsample import Subsample
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 warnings.filterwarnings("ignore")
@@ -161,9 +161,9 @@ for strategy, params in STRATEGIES.items():
 # intervals obtained with the Jackknife+, Jackknife-minmax, CV+, CV-minmax,
 # Jackknife+-after-Boostrap, and conformalized quantile regression (CQR)
 # strategies. Note that for the Jackknife-after-Bootstrap method, we call the
-# :class:`mapie.subsample.Subsample` object that allows us to train
+# :class:`~mapie.subsample.Subsample` object that allows us to train
 # bootstrapped models. Note also that the CQR method is called with
-# :class:`mapie.quantile_regression.MapieQuantileRegressor` with a
+# :class:`~mapie.quantile_regression.MapieQuantileRegressor` with a
 # "split" strategy.
 
 
@@ -708,7 +708,6 @@ from scikeras.wrappers import KerasRegressor  # noqa: E402
 from tensorflow.keras import Sequential  # noqa: E402
 from tensorflow.keras.layers import Dense  # noqa: E402
 from xgboost import XGBRegressor  # noqa: E402
-
 
 min_x, max_x, n_samples, noise = -5, 5, 100, 0.5
 X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(

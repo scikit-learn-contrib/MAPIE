@@ -168,7 +168,11 @@ The effective coverage is the actual fraction of true labels lying in the predic
 
 The full documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
 
-**How does MAPIE work on regression ?** It is basically based on cross-validation and relies on:
+**How does MAPIE work?** 
+
+It is basically based on two types of techniques:
+
+**Cross conformal predictions**
 
 - Conformity scores on the whole training set obtained by cross-validation,
 - Perturbed models generated during the cross-validation.
@@ -179,7 +183,7 @@ The full documentation can be found `on this link <https://mapie.readthedocs.io/
     :width: 300
     :align: center
 
-**How does MAPIE work on classification ?** It is based on the construction of calibrated conformity scores to estimate prediction sets and relies on:
+**Split conformal predictions**
 
 - Construction of a conformity score
 - Calibration of the conformity score on a calibration set not seen by the model during training
@@ -189,6 +193,7 @@ The full documentation can be found `on this link <https://mapie.readthedocs.io/
 .. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_internals_classification.png
     :width: 300
     :align: center
+
 
 
 📝 Contributing
@@ -203,10 +208,10 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 🤝  Affiliations
 ================
 
-MAPIE has been developed through a collaboration between Quantmetry, Michelin, and ENS Paris-Saclay
-with the financial support from Région Ile de France.
+MAPIE has been developed through a collaboration between Quantmetry, Michelin, ENS Paris-Saclay,
+and with the financial support from Région Ile de France and Confiance.ai.
 
-|Quantmetry|_ |Michelin|_ |ENS|_ |IledeFrance|_ 
+|Quantmetry|_ |Michelin|_ |ENS|_ |Confiance.ai|_  |IledeFrance|_ 
 
 .. |Quantmetry| image:: https://www.quantmetry.com/wp-content/uploads/2020/08/08-Logo-quant-Texte-noir.svg
     :width: 150
@@ -220,6 +225,10 @@ with the financial support from Région Ile de France.
     :width: 100
 .. _ENS: https://ens-paris-saclay.fr/en
 
+.. |Confiance.ai| image:: https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg
+    :width: 100
+.. _Confiance.ai: https://www.confiance.ai/
+
 .. |IledeFrance| image:: https://www.iledefrance.fr/themes/custom/portail_idf/logo.svg
     :width: 100
 .. _IledeFrance: https://www.iledefrance.fr/
@@ -230,7 +239,7 @@ with the financial support from Région Ile de France.
 
 MAPIE methods belong to the field of conformal inference.
 
-[1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
+[1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
 "Predictive inference with the jackknife+." Ann. Statist., 49(1):486–507, February 2021.
 
 [2] Byol Kim, Chen Xu, and Rina Foygel Barber.
@@ -241,7 +250,7 @@ MAPIE methods belong to the field of conformal inference.
 "Least Ambiguous Set-Valued Classifiers With Bounded Error Levels." Journal of the American Statistical Association, 114:525, 223-234, 2019.
 
 [4] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
-"Classification with Valid and Adaptive Coverage." NeurIPS 202 (spotlight).
+"Classification with Valid and Adaptive Coverage." NeurIPS 2020 (spotlight).
 
 [5] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan and Jitendra Malik.
 "Uncertainty Sets for Image Classifiers using Conformal Prediction."
@@ -253,6 +262,14 @@ International Conference on Learning Representations 2021.
 [7] Chen Xu and Yao Xie.
 "Conformal Prediction Interval for Dynamic Time-Series."
 International Conference on Machine Learning (ICML, 2021).
+
+[8] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
+and Michael I. Jordan. Distribution-free, risk-controlling prediction
+sets. CoRR, abs/2101.02703, 2021.
+URL https://arxiv.org/abs/2101.02703.39
+
+[9] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
+Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
 
 
 📝 License

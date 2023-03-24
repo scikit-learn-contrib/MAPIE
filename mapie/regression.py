@@ -2,36 +2,25 @@ from __future__ import annotations
 
 from typing import Iterable, List, Optional, Tuple, Union, cast
 
-from joblib import Parallel, delayed
 import numpy as np
+from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import (
-    _check_y,
-    _num_samples,
-    check_is_fitted,
-    indexable,
-)
+from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
+                                      indexable)
 
-from ._typing import ArrayLike, NDArray
 from ._compatibility import np_nanquantile
+from ._typing import ArrayLike, NDArray
 from .aggregation_functions import aggregate_all, phi2D
 from .conformity_scores import ConformityScore
-from .utils import (
-    check_alpha,
-    check_alpha_and_n_samples,
-    check_conformity_score,
-    check_cv,
-    check_n_features_in,
-    check_n_jobs,
-    check_nan_in_aposteriori_prediction,
-    check_null_weight,
-    check_verbose,
-    fit_estimator,
-    weighted_quantile
+from .utils import (check_alpha, check_alpha_and_n_samples,
+                    check_conformity_score, check_cv,
+                    check_estimator_fit_predict, check_n_features_in,
+                    check_n_jobs, check_nan_in_aposteriori_prediction,
+                    check_null_weight, check_verbose, fit_estimator, weighted_quantile
 )
 
 
@@ -321,11 +310,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         if estimator is None:
             return LinearRegression()
-        if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
-            raise ValueError(
-                "Invalid estimator. "
-                "Please provide a regressor with fit and predict methods."
-            )
+        check_estimator_fit_predict(estimator)
         if self.cv == "prefit":
             if isinstance(self.estimator, Pipeline):
                 check_is_fitted(self.estimator[-1])
@@ -554,6 +539,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         agg_function = self._check_agg_function(self.agg_function)
         X, y = indexable(X, y)
         y = _check_y(y)
+        sample_weight = cast(Optional[NDArray], sample_weight)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
         self.conformity_score_function_ = check_conformity_score(
@@ -637,7 +623,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         - quantiles of conformity scores (naive and base methods),
         - quantiles of (predictions +/- conformity scores) (plus method),
         - quantiles of (max/min(predictions) +/- conformity scores)
-        (minmax method).
+          (minmax method).
 
         Parameters
         ----------
@@ -677,6 +663,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             - [:, 0, :]: Lower bound of the prediction interval.
             - [:, 1, :]: Upper bound of the prediction interval.
+
         """
         # Checks
         check_is_fitted(self, self.fit_attributes)
@@ -741,8 +728,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         # get desired confidence intervals according to alpha
         y_pred_low = np.column_stack(
             [
-                self._quantile(
-                    lower_bounds,
+                np_nanquantile(
+                    lower_bounds.astype(float),
                     _alpha,
                     axis=1,
                     method="lower",
@@ -753,8 +740,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         ).data
         y_pred_up = np.column_stack(
             [
-                self._quantile(
-                    upper_bounds,
+                np_nanquantile(
+                    upper_bounds.astype(float),
                     1 - _alpha,
                     axis=1,
                     method="higher",

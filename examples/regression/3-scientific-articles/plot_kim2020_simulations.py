@@ -3,7 +3,7 @@
 Reproducing the simulations from Kim et al. (2020)
 ==================================================
 
-:class:`mapie.regression.MapieRegressor` is used to reproduce the simulations
+:class:`~mapie.regression.MapieRegressor` is used to reproduce the simulations
 by Kim et al. (2020) [1] in their article which introduces the
 jackknife+-after-bootstrap method.
 
@@ -44,10 +44,8 @@ from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.metrics import (
-    regression_mean_width_score,
-    regression_coverage_score,
-)
+from mapie.metrics import (regression_coverage_score,
+                           regression_mean_width_score)
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
 

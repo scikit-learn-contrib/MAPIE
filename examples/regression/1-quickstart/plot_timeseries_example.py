@@ -2,7 +2,7 @@
 =======================================================
 Estimating prediction intervals of time series forecast
 =======================================================
-This example uses :class:`mapie.regression.MapieRegressor` to estimate
+This example uses :class:`~mapie.regression.MapieRegressor` to estimate
 prediction intervals associated with time series forecast. We use the
 standard cross-validation approach to estimate conformity scores and associated
 prediction intervals.
@@ -13,10 +13,10 @@ The electricity demand features daily and weekly seasonalities and is impacted
 by the temperature, considered here as a exogeneous variable.
 
 The data is modelled by a Random Forest model with a
-:class:`sklearn.model_selection.RandomizedSearchCV` using a sequential
-:class:`sklearn.model_selection.TimeSeriesSplit` cross validation, in which the
-training set is prior to the validation set.
-The best model is then feeded into :class:`mapie.regression.MapieRegressor`
+:class:`~sklearn.model_selection.RandomizedSearchCV` using a sequential
+:class:`~sklearn.model_selection.TimeSeriesSplit` cross validation, in which
+the training set is prior to the validation set.
+The best model is then feeded into :class:`~mapie.regression.MapieRegressor`
 to estimate the associated prediction intervals.
 We consider the standard CV+ resampling method.
 
@@ -35,10 +35,8 @@ from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
-from mapie.metrics import (
-    regression_coverage_score,
-    regression_mean_width_score,
-)
+from mapie.metrics import (regression_coverage_score,
+                           regression_mean_width_score)
 from mapie.regression import MapieRegressor
 
 # Load input data and feature engineering
