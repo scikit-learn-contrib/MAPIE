@@ -445,8 +445,8 @@ y_toy_mapie = {
         [False, True, True],
     ],
     "raps": [
-        [True, False, False],
-        [True, False, False],
+        [True, True, False],
+        [True, True, False],
         [True, True, False],
         [True, True, False],
         [True, True, False],
