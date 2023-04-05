@@ -812,7 +812,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             ) for i in range(len(alpha_np))
         ]
 
-        sizes_improve = (sizes < best_sizes)
+        sizes_improve = (sizes < best_sizes - EPSILON)
         lambda_star = (
             sizes_improve * lambda_ + (1 - sizes_improve) * lambda_star
         )
@@ -848,12 +848,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Optimal values of lambda.
         """
         lambda_star = np.zeros(len(alpha_np))
-        best_sizes = np.full(len(alpha_np), np.inf)
+        best_sizes = np.full(len(alpha_np), np.finfo(np.float64).max)
 
         for lambda_ in [.001, .01, .1, .2, .5]:  # values given in paper[3]
             true_label_cumsum_proba, cutoff = (
                 self._get_true_label_cumsum_proba(
-                    self.y_raps,
+                    self.y_raps_no_enc,
                     y_pred_proba_raps[:, :, 0],
                 )
             )
@@ -967,6 +967,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     y_enc,
                     test_size=size_raps,
                     random_state=self.random_state
+                )
+                self.y_raps_no_enc = self.label_encoder_.inverse_transform(
+                    self.y_raps
                 )
                 y = self.label_encoder_.inverse_transform(y_enc)
                 y_enc = cast(NDArray, y_enc)

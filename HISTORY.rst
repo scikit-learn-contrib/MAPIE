@@ -2,6 +2,10 @@
 History
 =======
 
+0.6.4 (xxxx-xx-xx)
+------------------
+* Fix runtime warning with RAPS method
+
 0.6.3 (2023-03-23)
 ------------------
 * Fix bug when labels do not start at 0
