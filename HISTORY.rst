@@ -2,7 +2,7 @@
 History
 =======
 
-0.6.4 (xxxx-xx-xx)
+0.6.4 (2023-04-05)
 ------------------
 * Fix runtime warning with RAPS method
 
