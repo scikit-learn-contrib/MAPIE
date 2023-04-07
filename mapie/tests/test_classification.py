@@ -1370,3 +1370,37 @@ def test_error_raps_cv_not_prefit(cv: Union[int, None]):
     mapie = MapieClassifier(method="raps", cv=5)
     with pytest.raises(ValueError, match=r".*RAPS method can only.*"):
         mapie.fit(X_toy, y_toy)
+
+
+def test_not_all_label_in_calib():
+    """Test that the true label cumsumed probabilities
+    have the correct shape.
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    X_mapie = X[y != 2]
+    y_mapie = y[y != 2]
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    mapie_clf.fit(X_mapie, y_mapie)
+    y_pred, y_pss = mapie_clf.predict(X, alpha=0.5)
+    assert y_pred.shape == (len(X), )
+    assert y_pss.shape == (len(X), len(np.unique(y)), 1)
+
+
+def test_warning_not_all_label_in_calib() -> None:
+    """Test that a warning is raised y is binary."""
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    X_mapie = X[y != 2]
+    y_mapie = y[y != 2]
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    with pytest.warns(
+        UserWarning, match=r"your calibration dataset do not have the same*"
+    ):
+        mapie_clf.fit(X_mapie, y_mapie)
