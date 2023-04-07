@@ -926,6 +926,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         -------
         MapieClassifier
             The model itself.
+
+        Raises
+        ------
+        ValueError
+            If number of calibration labels is higher than number of labels
+            for training (in prefit setting)
+        Warning
+            If number of calibration labels is lower than number of labels
+            for training (in prefit setting)
         """
         # Checks
         self._check_parameters()
