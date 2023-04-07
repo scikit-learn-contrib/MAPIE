@@ -1401,6 +1401,25 @@ def test_warning_not_all_label_in_calib() -> None:
         cv="prefit"
     )
     with pytest.warns(
-        UserWarning, match=r"your calibration dataset do not have the same*"
+        UserWarning, match=r".*WARNING: your calibration dataset.*"
+    ):
+        mapie_clf.fit(X_mapie, y_mapie)
+
+
+def test_calib_have_more_label_raise_error():
+    """Test that the true label cumsumed probabilities
+    have the correct shape.
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    X_mapie = X.copy()
+    y_mapie = y
+    y_mapie[0] = 5
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    with pytest.raises(
+        ValueError, match=r".*You have more labels in.*"
     ):
         mapie_clf.fit(X_mapie, y_mapie)

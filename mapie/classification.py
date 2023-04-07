@@ -943,22 +943,33 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         estimator = check_estimator_classification(
             X,
-            y_enc,
+            y,
             cv,
             self.estimator
         )
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
 
         n_samples = _num_samples(y)
+
         if self.cv == "prefit":
-            self.classes_ = self.estimator.classes_
+            self.classes_ = estimator.classes_
             self.n_classes_ = len(np.unique(self.classes_))
-            if self.n_classes_ != len(np.unique(y)):
+            if self.n_classes_ == len(np.unique(y)):
+                pass
+            elif self.n_classes_ > len(np.unique(y)):
                 warnings.warn(
-                    "WARNING: your calibration dataset do not have the same"
-                    + " number of labels as your training dataset (training"
+                    "WARNING: your calibration dataset has less labels"
+                    + " than your training dataset (training"
                     + f" has {self.n_classes_} unique labels while"
                     + f" calibration have {len(np.unique(y))} unique labels"
+                )
+            else:
+                raise ValueError(
+                    "You have more labels in the y of your calibration dataset"
+                    + " than during training (training"
+                    + f" has {len(np.unique(estimator.classes_))} unique"
+                    + f" labels while calibration have {len(np.unique(y))}"
+                    + " unique labels"
                 )
 
         else:
