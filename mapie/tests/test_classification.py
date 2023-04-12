@@ -99,6 +99,17 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
+    "score_split": (
+        Params(
+            method="score",
+            cv="split",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=False,
+            agg_scores="mean"
+        )
+    ),
     "score_cv_mean": (
         Params(
             method="score",
@@ -267,22 +278,23 @@ STRATEGIES = {
 }
 
 COVERAGES = {
-    "score": 6 / 9,
-    "score_cv_mean": 1,
-    "score_cv_crossval": 1,
-    "cumulated_score_include": 1,
-    "cumulated_score_not_include": 5 / 9,
-    "cumulated_score_randomized": 6 / 9,
-    "cumulated_score_include_cv_mean": 1,
-    "cumulated_score_not_include_cv_mean": 5 / 9,
-    "cumulated_score_randomized_cv_mean": 5 / 9,
-    "cumulated_score_include_cv_crossval": 2 / 9,
-    "cumulated_score_not_include_cv_crossval": 0,
-    "cumulated_score_randomized_cv_crossval": 4 / 9,
-    "naive": 5 / 9,
-    "top_k": 1,
-    "raps": 1,
-    "raps_randomized": 8/9
+    'score': 0.6666666666666666,
+    'score_split': 0.5555555555555556,
+    'score_cv_mean': 1.0,
+    'score_cv_crossval': 1.0,
+    'cumulated_score_include': 1.0,
+    'cumulated_score_not_include': 0.5555555555555556,
+    'cumulated_score_randomized': 0.6666666666666666,
+    'cumulated_score_include_cv_mean': 1.0,
+    'cumulated_score_not_include_cv_mean': 0.5555555555555556,
+    'cumulated_score_randomized_cv_mean': 0.8888888888888888,
+    'cumulated_score_include_cv_crossval': 0.4444444444444444,
+    'cumulated_score_not_include_cv_crossval': 0.1111111111111111,
+    'cumulated_score_randomized_cv_crossval': 0.7777777777777778,
+    'naive': 0.5555555555555556,
+    'top_k': 1.0,
+    'raps': 1.0,
+    'raps_randomized': 0.8888888888888888
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -290,139 +302,62 @@ y_toy = np.array([0, 0, 1, 0, 1, 1, 2, 1, 2])
 y_toy_string = np.array(["0", "0", "1", "0", "1", "1", "2", "1", "2"])
 
 y_toy_mapie = {
-    "score": [
+    'score': [
         [True, False, False],
         [True, False, False],
         [True, False, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, True],
+        [False, False, True]
+    ],
+    'score_split': [
+        [False, True, False],
         [False, True, False],
         [False, True, False],
         [False, True, False],
         [False, True, False],
         [False, True, True],
         [False, False, True],
-    ],
-    "score_cv_mean": [
-        [True, False, False],
-        [True, False, False],
-        [True, True, False],
-        [True, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
-    ],
-    "score_cv_crossval": [
-        [True, False, False],
-        [True, False, False],
-        [True, True, False],
-        [True, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
-    ],
-    "cumulated_score_include": [
-        [True, False, False],
-        [True, False, False],
-        [True, True, False],
-        [True, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, True],
-        [False, True, True],
         [False, False, True],
+        [False, False, True]
     ],
-    "cumulated_score_not_include": [
+    'score_cv_mean': [
         [True, False, False],
         [True, False, False],
-        [True, False, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, False, True],
-        [False, False, True],
-    ],
-    "cumulated_score_randomized": [
-        [True, False, False],
-        [True, False, False],
-        [True, False, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, True],
-        [False, False, True],
-    ],
-    "cumulated_score_include_cv_mean": [
-        [True, False, False],
-        [True, False, False],
-        [True, True, False],
         [True, True, False],
         [True, True, False],
         [False, True, False],
         [False, True, True],
         [False, True, True],
         [False, True, True],
+        [False, True, True]
     ],
-    "cumulated_score_not_include_cv_mean": [
+    'score_cv_crossval': [
         [True, False, False],
         [True, False, False],
-        [True, False, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-    ],
-    "cumulated_score_randomized_cv_mean": [
-        [True, False, False],
-        [True, False, False],
-        [True, False, False],
-        [False, True, False],
-        [False, True, False],
+        [True, True, False],
+        [True, True, False],
         [False, True, False],
         [False, True, False],
         [False, True, True],
-        [False, True, False],
+        [False, True, True],
+        [False, True, True]
     ],
-    "cumulated_score_include_cv_crossval": [
-        [False, False, False],
-        [False, False, False],
+    'cumulated_score_include': [
         [True, False, False],
-        [False, False, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, False, False],
-        [False, False, False],
-    ],
-    "cumulated_score_not_include_cv_crossval": [
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-    ],
-    "cumulated_score_randomized_cv_crossval": [
         [True, False, False],
-        [False, False, False],
-        [True, False, False],
-        [False, True, False],
+        [True, True, False],
+        [True, True, False],
         [False, True, False],
         [False, True, False],
         [False, True, True],
-        [False, False, True],
-        [False, True, False],
+        [False, True, True],
+        [False, False, True]
     ],
-    "naive": [
+    'cumulated_score_not_include': [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -431,41 +366,129 @@ y_toy_mapie = {
         [False, True, False],
         [False, True, False],
         [False, False, True],
+        [False, False, True]
+    ],
+    'cumulated_score_randomized': [
+        [True, False, False],
+        [True, False, False],
+        [True, False, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, True],
+        [False, False, True]
+    ],
+    'cumulated_score_include_cv_mean': [
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True]
+    ],
+    'cumulated_score_not_include_cv_mean': [
+        [True, False, False],
+        [True, False, False],
+        [True, False, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
         [False, False, True],
+        [False, False, True]
     ],
-    "top_k": [
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
-    ],
-    "raps": [
-        [True, False, False],
+    'cumulated_score_randomized_cv_mean': [
         [True, False, False],
         [True, True, False],
         [True, True, False],
-        [True, True, False],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
-    ],
-    "raps_randomized": [
-        [True, False, False],
-        [True, False, False],
         [True, True, False],
         [True, True, False],
         [False, True, False],
         [False, True, False],
-        [False, True, False],
         [False, True, True],
+        [False, True, True]
+    ],
+    'cumulated_score_include_cv_crossval': [
+        [False, False, False],
+        [True, False, False],
+        [False, False, False],
+        [False, True, False],
+        [True, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, False, False]
+    ],
+    'cumulated_score_not_include_cv_crossval': [
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+        [False, True, False],
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+        [False, False, False]
+    ],
+    'cumulated_score_randomized_cv_crossval': [
+        [True, False, False],
+        [True, False, False],
+        [True, False, False],
+        [False, True, False],
+        [True, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, False],
+        [False, False, True]
+    ],
+    'naive': [
+        [True, False, False],
+        [True, False, False],
+        [True, False, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
         [False, False, True],
+        [False, False, True]
     ],
+    'top_k': [
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True]
+    ],
+    'raps': [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True]
+    ],
+    'raps_randomized': [
+        [True, False, False],
+        [True, False, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, True],
+        [False, False, True]
+    ]
 }
 
 REGULARIZATION_PARAMETERS = [
@@ -500,6 +523,27 @@ X, y = make_classification(
     n_classes=n_classes,
     random_state=1,
 )
+
+strategy = "score_split"
+alpha = 0.1
+args_init, args_predict = STRATEGIES[strategy]
+mapie_clf_str = MapieClassifier(**args_init)
+mapie_clf_str.fit(X, y.astype('str'))
+mapie_clf_int = MapieClassifier(**args_init)
+mapie_clf_int.fit(X, y)
+_, y_ps_str = mapie_clf_str.predict(
+    X,
+    alpha=alpha,
+    include_last_label=args_predict["include_last_label"],
+    agg_scores=args_predict["agg_scores"],
+)
+_, y_ps_int = mapie_clf_int.predict(
+    X,
+    alpha=alpha,
+    include_last_label=args_predict["include_last_label"],
+    agg_scores=args_predict["agg_scores"]
+)
+# np.testing.assert_allclose(y_ps_int, y_ps_str)
 
 
 class CumulatedScoreClassifier:
