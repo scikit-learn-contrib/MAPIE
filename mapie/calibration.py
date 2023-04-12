@@ -163,7 +163,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             return cv
         raise ValueError(
             "Invalid cv argument. "
-            "Allowed values are 'prefit' or 'split'."
+            f"Allowed values are {self.valid_cv}."
         )
 
     def _check_calibrator(
