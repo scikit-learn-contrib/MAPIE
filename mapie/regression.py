@@ -434,8 +434,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         if self.method in self.no_agg_methods_ \
                 or self.cv in self.no_agg_cv_:
             raise ValueError(
-                "There should not be aggregation of predictions"
-                f"if cv is in '{self.no_agg_cv_}'"
+                "There should not be aggregation of predictions "
+                f"if cv is in '{self.no_agg_cv_}' "
                 f"or if method is in '{self.no_agg_methods_}'."
             )
         if self.agg_function == "median":
