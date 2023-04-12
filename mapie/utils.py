@@ -165,9 +165,9 @@ def check_cv(
         return cv
     if isinstance(cv, BaseShuffleSplit):
         return cv
-    if cv in ["prefit"]:
+    if cv == "prefit":
         return cv
-    if cv in ["split"]:
+    if cv == "split":
         return ShuffleSplit(n_splits=1, test_size=0.5)
     raise ValueError(
         "Invalid cv argument. "
