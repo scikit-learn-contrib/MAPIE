@@ -92,7 +92,7 @@ STRATEGIES = {
         Params(
             method="score",
             cv="prefit",
-            random_state=None
+            random_state=42
         ),
         ParamsPredict(
             include_last_label=False,
@@ -103,7 +103,7 @@ STRATEGIES = {
         Params(
             method="score",
             cv=3,
-            random_state=None
+            random_state=42
         ),
         ParamsPredict(
             include_last_label=False,
@@ -114,7 +114,7 @@ STRATEGIES = {
         Params(
             method="score",
             cv=3,
-            random_state=None
+            random_state=42
         ),
         ParamsPredict(
             include_last_label=False,
@@ -287,6 +287,7 @@ COVERAGES = {
 
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 1, 2, 1, 2])
+y_toy_string = np.array(["0", "0", "1", "0", "1", "1", "2", "1", "2"])
 
 y_toy_mapie = {
     "score": [
@@ -760,6 +761,100 @@ def test_predict_output_shape(
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
     assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_y_is_list_of_string(
+    strategy: str, alpha: Any,
+) -> None:
+    """Test predict output shape with string y."""
+    args_init, args_predict = STRATEGIES[strategy]
+    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf.fit(X, y.astype('str'))
+    y_pred, y_ps = mapie_clf.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
+    assert y_pred.shape == (X.shape[0],)
+    assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_same_result_y_numeric_and_string(
+    strategy: str, alpha: Any,
+) -> None:
+    """Test that MAPIE outputs the same results if y is
+    numeric or string"""
+    args_init, args_predict = STRATEGIES[strategy]
+    mapie_clf_str = MapieClassifier(**args_init)
+    mapie_clf_str.fit(X, y.astype('str'))
+    mapie_clf_int = MapieClassifier(**args_init)
+    mapie_clf_int.fit(X, y)
+    _, y_ps_str = mapie_clf_str.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"],
+    )
+    _, y_ps_int = mapie_clf_int.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(y_ps_int, y_ps_str)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_y_1_to_l_minus_1(
+    strategy: str, alpha: Any,
+) -> None:
+    """Test predict output shape with string y."""
+    args_init, args_predict = STRATEGIES[strategy]
+    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf.fit(X, y + 1)
+    y_pred, y_ps = mapie_clf.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
+    assert y_pred.shape == (X.shape[0],)
+    assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_same_result_y_numeric_and_1_to_l_minus_1(
+    strategy: str, alpha: Any,
+) -> None:
+    """Test that MAPIE outputs the same results if y is
+    numeric or string"""
+    args_init, args_predict = STRATEGIES[strategy]
+    mapie_clf_1 = MapieClassifier(**args_init)
+    mapie_clf_1.fit(X, y + 1)
+    mapie_clf_int = MapieClassifier(**args_init)
+    mapie_clf_int.fit(X, y)
+    _, y_ps_1 = mapie_clf_1.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"],
+    )
+    _, y_ps_int = mapie_clf_int.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(y_ps_int, y_ps_1)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])

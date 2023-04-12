@@ -572,7 +572,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     def _get_true_label_cumsum_proba(
         self,
-        y: NDArray,
+        y: ArrayLike,
         y_pred_proba: NDArray
     ) -> Tuple[NDArray, NDArray]:
         """
@@ -593,7 +593,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         is the sorted position of the true label.
         """
         y_true = label_binarize(
-            y=y, classes=self.single_estimator_.classes_
+            y=y, classes=self.classes_
         )
         index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
         y_pred_proba_sorted = np.take_along_axis(
@@ -819,7 +819,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             ) for i in range(len(alpha_np))
         ]
 
-        sizes_improve = (sizes < best_sizes)
+        sizes_improve = (sizes < best_sizes - EPSILON)
         lambda_star = (
             sizes_improve * lambda_ + (1 - sizes_improve) * lambda_star
         )
@@ -855,12 +855,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Optimal values of lambda.
         """
         lambda_star = np.zeros(len(alpha_np))
-        best_sizes = np.full(len(alpha_np), np.inf)
+        best_sizes = np.full(len(alpha_np), np.finfo(np.float64).max)
 
         for lambda_ in [.001, .01, .1, .2, .5]:  # values given in paper[3]
             true_label_cumsum_proba, cutoff = (
                 self._get_true_label_cumsum_proba(
-                    self.y_raps,
+                    self.y_raps_no_enc,
                     y_pred_proba_raps[:, :, 0],
                 )
             )
@@ -960,7 +960,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self.n_classes_ = len(np.unique(y))
         self.classes_ = np.unique(y)
         check_classification_targets(y)
-        self._target_type = type_of_target(y_enc)
+        self._target_type = type_of_target(y)
 
         # Initialization
         self.estimators_: List[ClassifierMixin] = []
@@ -975,6 +975,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     test_size=size_raps,
                     random_state=self.random_state
                 )
+                self.y_raps_no_enc = self.label_encoder_.inverse_transform(
+                    self.y_raps
+                )
+                y = self.label_encoder_.inverse_transform(y_enc)
                 y_enc = cast(NDArray, y_enc)
                 n_samples = _num_samples(y_enc)
                 self.y_pred_proba_raps = estimator.predict_proba(
@@ -994,7 +998,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             else:
                 cv = cast(BaseCrossValidator, cv)
                 self.single_estimator_ = fit_estimator(
-                    clone(estimator), X, y_enc, sample_weight
+                    clone(estimator), X, y, sample_weight
                 )
                 y_pred_proba = np.empty(
                     (n_samples, self.n_classes_),
@@ -1004,7 +1008,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     delayed(self._fit_and_predict_oof_model)(
                         clone(estimator),
                         X,
-                        y_enc,
+                        y,
                         train_index,
                         val_index,
                         k,
@@ -1041,7 +1045,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             elif self.method in ["cumulated_score", "raps"]:
                 self.conformity_scores_, self.cutoff = (
                     self._get_true_label_cumsum_proba(
-                        y_enc,
+                        y,
                         y_pred_proba
                     )
                 )
@@ -1058,7 +1062,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
                 self.conformity_scores_ = self._get_true_label_position(
                     y_pred_proba,
-                    y
+                    y_enc
                 )
 
             else:
@@ -1076,7 +1080,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 self.single_estimator_ = estimator
             else:
                 self.single_estimator_ = fit_estimator(
-                    clone(estimator), X, y_enc, sample_weight
+                    clone(estimator), X, y, sample_weight
                 )
             self.conformity_scores_ = np.array([])
             self.k_ = np.empty_like(y_enc, dtype=int)
@@ -1166,7 +1170,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred = self.single_estimator_.predict(X)
 
         if (alpha is None) or (self._target_type != "multiclass"):
-            return self.label_encoder_.inverse_transform(np.array(y_pred))
+            return y_pred
 
         n = len(self.conformity_scores_)
 
@@ -1341,4 +1345,4 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 "Invalid method. "
                 "Allowed values are 'score' or 'cumulated_score'."
             )
-        return self.label_encoder_.inverse_transform(y_pred), prediction_sets
+        return y_pred, prediction_sets
