@@ -8,7 +8,7 @@ from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
-from sklearn.utils import _safe_indexing
+from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
@@ -139,6 +139,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default ``None``.
 
+    random_state: Optional[Union[int, RandomState]]
+        Pseudo random number generator state used for random uniform sampling
+        for evaluation quantiles and prediction sets in cumulated_score.
+        Pass an int for reproducible output across multiple function calls.
+
+        By default ```None``.
+
     Attributes
     ----------
     valid_methods: List[str]
@@ -180,15 +187,17 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> mapie_reg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
+    >>> clf = LinearRegression().fit(X_toy, y_toy)
+    >>> mapie_reg = MapieRegressor(estimator=clf, cv="prefit")
+    >>> mapie_reg = mapie_reg.fit(X_toy, y_toy)
     >>> y_pred, y_pis = mapie_reg.predict(X_toy, alpha=0.5)
     >>> print(y_pis[:, :, 0])
-    [[ 4.7972973   5.8       ]
-     [ 6.69767442  7.65540541]
-     [ 8.59883721  9.58108108]
-     [10.5        11.40116279]
-     [12.4        13.30232558]
-     [14.25       15.20348837]]
+    [[ 4.95714286  5.61428571]
+     [ 6.84285714  7.5       ]
+     [ 8.72857143  9.38571429]
+     [10.61428571 11.27142857]
+     [12.5        13.15714286]
+     [14.38571429 15.04285714]]
     >>> print(y_pred)
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
@@ -218,6 +227,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
         conformity_score: Optional[ConformityScore] = None,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         self.estimator = estimator
         self.method = method
@@ -226,6 +236,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self.agg_function = agg_function
         self.verbose = verbose
         self.conformity_score = conformity_score
+        self.random_state = random_state
 
     def _check_parameters(self) -> None:
         """
@@ -243,6 +254,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
+        check_random_state(self.random_state)
 
     def _check_agg_function(
         self, agg_function: Optional[str] = None
@@ -518,7 +530,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         # Checks
         self._check_parameters()
-        cv = check_cv(self.cv)
+        cv = check_cv(self.cv, random_state=self.random_state)
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
         X, y = indexable(X, y)

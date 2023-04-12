@@ -109,7 +109,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         for evaluation quantiles and prediction sets in cumulated_score.
         Pass an int for reproducible output across multiple function calls.
 
-        By default ```1``.
+        By default ```None``.
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
@@ -936,7 +936,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         # Checks
         self._check_parameters()
-        cv = check_cv(self.cv)
+        cv = check_cv(self.cv, random_state=self.random_state)
         X, y = indexable(X, y)
         y = _check_y(y)
 
@@ -1161,7 +1161,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.method == "top_k":
             agg_scores = "mean"
         # Checks
-        cv = check_cv(self.cv)
+        cv = check_cv(self.cv, random_state=self.random_state)
         include_last_label = self._check_include_last_label(include_last_label)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         check_is_fitted(self, self.fit_attributes)

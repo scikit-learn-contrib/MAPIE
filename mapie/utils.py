@@ -129,7 +129,8 @@ def fit_estimator(
 
 
 def check_cv(
-    cv: Optional[Union[int, str, BaseCrossValidator]] = None
+    cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+    random_state: Optional[int] = None,
 ) -> Union[str, BaseCrossValidator]:
     """
     Check if cross-validator is
@@ -144,6 +145,12 @@ def check_cv(
     cv : Optional[Union[int, str, BaseCrossValidator]], optional
         Cross-validator to check, by default ``None``.
 
+    random_state : Optional[int], optional
+        Pseudo random number generator state used for random uniform sampling
+        for evaluation quantiles and prediction sets in cumulated_score.
+        Pass an int for reproducible output across multiple function calls.
+        By default ```None``.
+
     Returns
     -------
     Optional[Union[float, str]]
@@ -155,12 +162,16 @@ def check_cv(
         If the cross-validator is not valid.
     """
     if cv is None:
-        return KFold(n_splits=5)
+        return KFold(
+            n_splits=5, shuffle=True, random_state=random_state
+        )
     if isinstance(cv, int):
         if cv == -1:
             return LeaveOneOut()
         if cv >= 2:
-            return KFold(n_splits=cv)
+            return KFold(
+                n_splits=cv, shuffle=True, random_state=random_state
+            )
     if isinstance(cv, BaseCrossValidator):
         return cv
     if isinstance(cv, BaseShuffleSplit):
@@ -168,7 +179,9 @@ def check_cv(
     if cv == "prefit":
         return cv
     if cv == "split":
-        return ShuffleSplit(n_splits=1, test_size=0.5)
+        return ShuffleSplit(
+            n_splits=1, test_size=0.5, random_state=random_state
+        )
     raise ValueError(
         "Invalid cv argument. "
         "Allowed values are None, -1, int >= 2, 'prefit', 'split', "
