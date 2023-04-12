@@ -199,7 +199,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     no_agg_methods_ = ["naive", "base"]
     plus_like_method = ["plus"]
     valid_agg_functions_ = [None, "median", "mean"]
-    ensemble_agg_functions_= ["median", "mean"]
+    ensemble_agg_functions_ = ["median", "mean"]
     fit_attributes = [
         "single_estimator_",
         "estimators_",

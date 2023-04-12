@@ -119,7 +119,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     }
 
     valid_methods = ["top_label"]
-    
+
     valid_cv = ["prefit", "split"]
 
     valid_inputs = ["multiclass", "binary"]
