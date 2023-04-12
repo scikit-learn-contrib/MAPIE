@@ -199,6 +199,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     no_agg_methods_ = ["naive", "base"]
     plus_like_method = ["plus"]
     valid_agg_functions_ = [None, "median", "mean"]
+    ensemble_agg_functions_= ["median", "mean"]
     fit_attributes = [
         "single_estimator_",
         "estimators_",
@@ -269,7 +270,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         if agg_function not in self.valid_agg_functions_:
             raise ValueError(
                 "Invalid aggregation function "
-                "Allowed values are None, 'mean', 'median'."
+                f"Allowed values are '{self.valid_agg_functions_}'."
             )
 
         if (agg_function is None) and (
@@ -344,7 +345,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         if ensemble and (self.agg_function is None):
             raise ValueError(
                 "If ensemble is True, the aggregation function has to be "
-                "'mean' or 'median'."
+                f"in '{self.ensemble_agg_functions_}'."
             )
 
     def _fit_and_predict_oof_model(
