@@ -2,19 +2,25 @@
 History
 =======
 
+##### (##########)
+------------------
+
+* Add split conformal option for regression and classification
+* Update check method for calibration
+
 0.6.4 (2023-04-05)
 ------------------
+
 * Fix runtime warning with RAPS method
 
 0.6.3 (2023-03-23)
 ------------------
+
 * Fix bug when labels do not start at 0
 
 0.6.2 (2023-03-22)
 ------------------
 
-* Add split conformal option for regression and classification
-* Update check method for calibration
 * Make MapieClassifier a scikit-learn object
 * Update documentation for MapieClassifier
 
