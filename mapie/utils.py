@@ -130,7 +130,7 @@ def fit_estimator(
 
 def check_cv(
     cv: Optional[Union[int, str, BaseCrossValidator]] = None,
-    random_state: Optional[int] = None,
+    random_state: Optional[Union[int, np.random.RandomState]] = None,
 ) -> Union[str, BaseCrossValidator]:
     """
     Check if cross-validator is
@@ -145,7 +145,7 @@ def check_cv(
     cv : Optional[Union[int, str, BaseCrossValidator]], optional
         Cross-validator to check, by default ``None``.
 
-    random_state : Optional[int], optional
+    random_state : Optional[Union[int, np.random.RandomState]], optional
         Pseudo random number generator state used for random uniform sampling
         for evaluation quantiles and prediction sets in cumulated_score.
         Pass an int for reproducible output across multiple function calls.
