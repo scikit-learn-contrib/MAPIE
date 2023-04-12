@@ -194,7 +194,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     """
 
     cv_need_agg_function = ["Subsample"]
+    no_agg_cv_ = ["prefit", "split"]
     valid_methods_ = ["naive", "base", "plus", "minmax"]
+    no_agg_methods_ = ["naive", "base"]
     plus_like_method = ["plus"]
     valid_agg_functions_ = [None, "median", "mean"]
     fit_attributes = [
@@ -277,8 +279,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 "You need to specify an aggregation function when "
                 f"cv's type is in {self.cv_need_agg_function}."
             )
-        if (agg_function is not None) or (self.cv in ["prefit", "split"]):
+        if (agg_function is not None) or (self.cv in self.no_agg_cv_):
             return agg_function
+
         return "mean"
 
     def _check_estimator(
@@ -427,10 +430,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         ArrayLike of shape (n_samples_test,)
             Array of aggregated predictions for each testing sample.
         """
-        if self.cv in ["prefit", "split"]:
+        if self.method in self.no_agg_methods_ \
+                or self.cv in self.no_agg_cv_:
             raise ValueError(
-                "There should not be aggregation of predictions if cv is "
-                "'prefit' or 'split'."
+                "There should not be aggregation of predictions"
+                "if cv is in 'self.no_agg_cv_'"
+                "or if method is in 'self.no_agg_methods_'."
             )
         if self.agg_function == "median":
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
@@ -443,6 +448,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         if self.agg_function in ["mean", None]:
             K = np.nan_to_num(k, nan=0.0)
             return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
+
         raise ValueError("The value of self.agg_function is not correct")
 
     def _pred_multi(self, X: ArrayLike) -> NDArray:
@@ -656,7 +662,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
 
-        if self.method in ["naive", "base"] or self.cv in ["prefit", "split"]:
+        if self.method in self.no_agg_methods_ \
+                or self.cv in self.no_agg_cv_:
             y_pred_multi_low = y_pred[:, np.newaxis]
             y_pred_multi_up = y_pred[:, np.newaxis]
         else:
