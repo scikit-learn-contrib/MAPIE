@@ -434,8 +434,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 or self.cv in self.no_agg_cv_:
             raise ValueError(
                 "There should not be aggregation of predictions"
-                "if cv is in 'self.no_agg_cv_'"
-                "or if method is in 'self.no_agg_methods_'."
+                f"if cv is in '{self.no_agg_cv_}'"
+                f"or if method is in '{self.no_agg_methods_}'."
             )
         if self.agg_function == "median":
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
