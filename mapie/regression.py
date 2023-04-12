@@ -716,7 +716,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             [
                 np_nanquantile(
                     upper_bounds.astype(float),
-                    1-_alpha,
+                    1 - _alpha,
                     axis=1,
                     method="higher",
                 )
