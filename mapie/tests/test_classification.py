@@ -278,23 +278,23 @@ STRATEGIES = {
 }
 
 COVERAGES = {
-    'score': 0.6666666666666666,
-    'score_split': 0.8888888888888888,
+    'score': 6/9,
+    'score_split': 8/9,
     'score_cv_mean': 1.0,
     'score_cv_crossval': 1.0,
     'cumulated_score_include': 1.0,
-    'cumulated_score_not_include': 0.5555555555555556,
-    'cumulated_score_randomized': 0.6666666666666666,
+    'cumulated_score_not_include': 5/9,
+    'cumulated_score_randomized': 6/9,
     'cumulated_score_include_cv_mean': 1.0,
-    'cumulated_score_not_include_cv_mean': 0.5555555555555556,
-    'cumulated_score_randomized_cv_mean': 0.8888888888888888,
-    'cumulated_score_include_cv_crossval': 0.4444444444444444,
-    'cumulated_score_not_include_cv_crossval': 0.1111111111111111,
-    'cumulated_score_randomized_cv_crossval': 0.7777777777777778,
-    'naive': 0.5555555555555556,
+    'cumulated_score_not_include_cv_mean': 5/9,
+    'cumulated_score_randomized_cv_mean': 8/9,
+    'cumulated_score_include_cv_crossval': 4/9,
+    'cumulated_score_not_include_cv_crossval': 1/9,
+    'cumulated_score_randomized_cv_crossval': 7/9,
+    'naive': 5/9,
     'top_k': 1.0,
     'raps': 1.0,
-    'raps_randomized': 0.8888888888888888
+    'raps_randomized': 8/9
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
