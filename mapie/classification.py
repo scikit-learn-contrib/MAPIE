@@ -109,7 +109,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         for evaluation quantiles and prediction sets in cumulated_score.
         Pass an int for reproducible output across multiple function calls.
 
-        By default ```None``.
+        By default ``None``.
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
