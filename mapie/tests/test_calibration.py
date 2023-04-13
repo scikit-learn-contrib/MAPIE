@@ -73,8 +73,8 @@ results_binary = {
         "top_label_ece": 0.30562,
         "ece": 0.56657,
     },
-    'prefit': {
-        'y_score': [
+    "prefit": {
+        "y_score": [
             [0.85714286, np.nan],
             [np.nan, 0.85714286],
             [np.nan, 0.85714286],
@@ -86,8 +86,8 @@ results_binary = {
             [np.nan, 0.85714286],
             [np.nan, 0.85714286]
         ],
-        'top_label_ece': 0.1428571428571429,
-        'ece': 0.3571428571428571
+        "top_label_ece": 0.1428571428571429,
+        "ece": 0.3571428571428571
     },
 }
 
