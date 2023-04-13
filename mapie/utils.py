@@ -165,28 +165,34 @@ def check_cv(
         return KFold(
             n_splits=5, shuffle=True, random_state=random_state
         )
-    if isinstance(cv, int):
+    elif isinstance(cv, int):
         if cv == -1:
             return LeaveOneOut()
-        if cv >= 2:
+        elif cv >= 2:
             return KFold(
                 n_splits=cv, shuffle=True, random_state=random_state
             )
-    if isinstance(cv, BaseCrossValidator):
+        else:
+            raise ValueError(
+                "Invalid cv argument. "
+                "Allowed integer values are -1 or int >= 2."
+            )
+    elif isinstance(cv, BaseCrossValidator):
         return cv
-    if isinstance(cv, BaseShuffleSplit):
+    elif isinstance(cv, BaseShuffleSplit):
         return cv
-    if cv == "prefit":
+    elif cv == "prefit":
         return cv
-    if cv == "split":
+    elif cv == "split":
         return ShuffleSplit(
             n_splits=1, test_size=0.5, random_state=random_state
         )
-    raise ValueError(
-        "Invalid cv argument. "
-        "Allowed values are None, -1, int >= 2, 'prefit', 'split', "
-        "or a BaseCrossValidator object (Kfold, LeaveOneOut)."
-    )
+    else:
+        raise ValueError(
+            "Invalid cv argument. "
+            "Allowed values are None, -1, int >= 2, 'prefit', 'split', "
+            "or a BaseCrossValidator object (Kfold, LeaveOneOut)."
+        )
 
 
 def check_alpha(
