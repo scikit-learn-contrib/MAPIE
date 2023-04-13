@@ -144,7 +144,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         for evaluation quantiles and prediction sets in cumulated_score.
         Pass an int for reproducible output across multiple function calls.
 
-        By default ```None``.
+        By default ``None``.
 
     Attributes
     ----------
