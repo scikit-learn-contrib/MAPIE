@@ -34,75 +34,89 @@ X, y = make_regression(
 k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
 
+random_state = 1
+
 Params = TypedDict(
     "Params",
     {
         "method": str,
         "agg_function": str,
         "cv": Optional[Union[int, KFold, Subsample]],
+        "random_state": Optional[int],
     },
 )
 STRATEGIES = {
     "naive": Params(
         method="naive",
         agg_function="median",
-        cv=None
+        cv=None,
+        random_state=random_state
     ),
     "split": Params(
         method="base",
         agg_function="median",
-        cv=ShuffleSplit(n_splits=1, test_size=0.1, random_state=1)
+        cv="split",
+        random_state=random_state
     ),
     "jackknife": Params(
         method="base",
         agg_function="mean",
-        cv=-1
+        cv=-1,
+        random_state=random_state
     ),
     "jackknife_plus": Params(
         method="plus",
         agg_function="mean",
-        cv=-1
+        cv=-1,
+        random_state=random_state
     ),
     "jackknife_minmax": Params(
         method="minmax",
         agg_function="mean",
-        cv=-1
+        cv=-1,
+        random_state=random_state
     ),
     "cv": Params(
         method="base",
         agg_function="mean",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        random_state=random_state
     ),
     "cv_plus": Params(
         method="plus",
         agg_function="mean",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        random_state=random_state
     ),
     "cv_minmax": Params(
         method="minmax",
         agg_function="mean",
-        cv=KFold(n_splits=3, shuffle=True, random_state=1),
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        random_state=random_state
     ),
     "jackknife_plus_ab": Params(
         method="plus",
         agg_function="mean",
-        cv=Subsample(n_resamplings=30, random_state=1),
+        cv=Subsample(n_resamplings=30, random_state=random_state),
+        random_state=random_state
     ),
     "jackknife_minmax_ab": Params(
         method="minmax",
         agg_function="mean",
-        cv=Subsample(n_resamplings=30, random_state=1),
+        cv=Subsample(n_resamplings=30, random_state=random_state),
+        random_state=random_state
     ),
     "jackknife_plus_median_ab": Params(
         method="plus",
         agg_function="median",
-        cv=Subsample(n_resamplings=30, random_state=1),
+        cv=Subsample(n_resamplings=30, random_state=random_state),
+        random_state=random_state
     ),
 }
 
 WIDTHS = {
     "naive": 3.81,
-    "split": 4.33,
+    "split": 3.87,
     "jackknife": 3.89,
     "jackknife_plus": 3.90,
     "jackknife_minmax": 3.96,
@@ -118,7 +132,7 @@ WIDTHS = {
 
 COVERAGES = {
     "naive": 0.952,
-    "split": 0.972,
+    "split": 0.952,
     "jackknife": 0.952,
     "jackknife_plus": 0.952,
     "jackknife_minmax": 0.952,
