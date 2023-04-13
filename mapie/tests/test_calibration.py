@@ -42,8 +42,8 @@ results = {
         ],
         "top_label_ece": 0.3881,
     },
-    'prefit': {
-        'y_score': [
+    "prefit": {
+        "y_score": [
             [np.nan, np.nan, 0.85714286],
             [0.83333333, np.nan, np.nan],
             [np.nan, 0.83333333, np.nan],
@@ -52,7 +52,7 @@ results = {
             [np.nan, np.nan, 0.85714286],
             [0.83333333, np.nan, np.nan]
         ],
-        'top_label_ece': 0.31349206349206343
+        "top_label_ece": 0.31349206349206343
     }
 }
 
