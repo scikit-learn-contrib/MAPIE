@@ -1032,6 +1032,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 )
                 self.k_[val_indices] = val_ids
                 y_pred_proba[val_indices] = predictions
+                
+                if self.cv == "split":
+                    # Should delete values indices that
+                    # are not used during calibration
+                    self.k_ = self.k_[val_indices]
+                    y_pred_proba = y_pred_proba[val_indices]
+                    y_enc = y_enc[val_indices]
 
             if self.method == "naive":
                 self.conformity_scores_ = np.empty(
