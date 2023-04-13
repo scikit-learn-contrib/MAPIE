@@ -524,27 +524,6 @@ X, y = make_classification(
     random_state=1,
 )
 
-strategy = "score_split"
-alpha = 0.1
-args_init, args_predict = STRATEGIES[strategy]
-mapie_clf_str = MapieClassifier(**args_init)
-mapie_clf_str.fit(X, y.astype('str'))
-mapie_clf_int = MapieClassifier(**args_init)
-mapie_clf_int.fit(X, y)
-_, y_ps_str = mapie_clf_str.predict(
-    X,
-    alpha=alpha,
-    include_last_label=args_predict["include_last_label"],
-    agg_scores=args_predict["agg_scores"],
-)
-_, y_ps_int = mapie_clf_int.predict(
-    X,
-    alpha=alpha,
-    include_last_label=args_predict["include_last_label"],
-    agg_scores=args_predict["agg_scores"]
-)
-# np.testing.assert_allclose(y_ps_int, y_ps_str)
-
 
 class CumulatedScoreClassifier:
 
