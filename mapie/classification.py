@@ -1032,7 +1032,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 )
                 self.k_[val_indices] = val_ids
                 y_pred_proba[val_indices] = predictions
-                
+
                 if self.cv == "split":
                     # Should delete values indices that
                     # are not used during calibration
