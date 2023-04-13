@@ -278,23 +278,23 @@ STRATEGIES = {
 }
 
 COVERAGES = {
-    'score': 6/9,
-    'score_split': 8/9,
-    'score_cv_mean': 1.0,
-    'score_cv_crossval': 1.0,
-    'cumulated_score_include': 1.0,
-    'cumulated_score_not_include': 5/9,
-    'cumulated_score_randomized': 6/9,
-    'cumulated_score_include_cv_mean': 1.0,
-    'cumulated_score_not_include_cv_mean': 5/9,
-    'cumulated_score_randomized_cv_mean': 8/9,
-    'cumulated_score_include_cv_crossval': 4/9,
-    'cumulated_score_not_include_cv_crossval': 1/9,
-    'cumulated_score_randomized_cv_crossval': 7/9,
-    'naive': 5/9,
-    'top_k': 1.0,
-    'raps': 1.0,
-    'raps_randomized': 8/9
+    "score": 6/9,
+    "score_split": 8/9,
+    "score_cv_mean": 1.0,
+    "score_cv_crossval": 1.0,
+    "cumulated_score_include": 1.0,
+    "cumulated_score_not_include": 5/9,
+    "cumulated_score_randomized": 6/9,
+    "cumulated_score_include_cv_mean": 1.0,
+    "cumulated_score_not_include_cv_mean": 5/9,
+    "cumulated_score_randomized_cv_mean": 8/9,
+    "cumulated_score_include_cv_crossval": 4/9,
+    "cumulated_score_not_include_cv_crossval": 1/9,
+    "cumulated_score_randomized_cv_crossval": 7/9,
+    "naive": 5/9,
+    "top_k": 1.0,
+    "raps": 1.0,
+    "raps_randomized": 8/9
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -302,7 +302,7 @@ y_toy = np.array([0, 0, 1, 0, 1, 1, 2, 1, 2])
 y_toy_string = np.array(["0", "0", "1", "0", "1", "1", "2", "1", "2"])
 
 y_toy_mapie = {
-    'score': [
+    "score": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -313,7 +313,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True]
     ],
-    'score_split': [
+    "score_split": [
         [True, True, False],
         [True, True, False],
         [True, True, False],
@@ -324,7 +324,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True],
     ],
-    'score_cv_mean': [
+    "score_cv_mean": [
         [True, False, False],
         [True, False, False],
         [True, True, False],
@@ -335,7 +335,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    'score_cv_crossval': [
+    "score_cv_crossval": [
         [True, False, False],
         [True, False, False],
         [True, True, False],
@@ -346,7 +346,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    'cumulated_score_include': [
+    "cumulated_score_include": [
         [True, False, False],
         [True, False, False],
         [True, True, False],
@@ -357,7 +357,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True]
     ],
-    'cumulated_score_not_include': [
+    "cumulated_score_not_include": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -368,7 +368,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True]
     ],
-    'cumulated_score_randomized': [
+    "cumulated_score_randomized": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -379,7 +379,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True]
     ],
-    'cumulated_score_include_cv_mean': [
+    "cumulated_score_include_cv_mean": [
         [True, False, False],
         [True, True, False],
         [True, True, False],
@@ -390,7 +390,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    'cumulated_score_not_include_cv_mean': [
+    "cumulated_score_not_include_cv_mean": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -401,7 +401,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True]
     ],
-    'cumulated_score_randomized_cv_mean': [
+    "cumulated_score_randomized_cv_mean": [
         [True, False, False],
         [True, True, False],
         [True, True, False],
@@ -412,7 +412,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    'cumulated_score_include_cv_crossval': [
+    "cumulated_score_include_cv_crossval": [
         [False, False, False],
         [True, False, False],
         [False, False, False],
@@ -423,7 +423,7 @@ y_toy_mapie = {
         [False, True, False],
         [False, False, False]
     ],
-    'cumulated_score_not_include_cv_crossval': [
+    "cumulated_score_not_include_cv_crossval": [
         [False, False, False],
         [False, False, False],
         [False, False, False],
@@ -434,7 +434,7 @@ y_toy_mapie = {
         [False, False, False],
         [False, False, False]
     ],
-    'cumulated_score_randomized_cv_crossval': [
+    "cumulated_score_randomized_cv_crossval": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -445,7 +445,7 @@ y_toy_mapie = {
         [False, True, False],
         [False, False, True]
     ],
-    'naive': [
+    "naive": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -456,7 +456,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True]
     ],
-    'top_k': [
+    "top_k": [
         [True, True, False],
         [True, True, False],
         [True, True, False],
@@ -467,7 +467,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    'raps': [
+    "raps": [
         [True, False, False],
         [True, False, False],
         [True, True, False],
@@ -478,7 +478,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    'raps_randomized': [
+    "raps_randomized": [
         [True, False, False],
         [True, False, False],
         [True, True, False],
