@@ -1220,7 +1220,8 @@ def test_pred_proba_float64() -> None:
 
 @pytest.mark.parametrize("cv", ["prefit", None])
 def test_classif_float32(cv) -> None:
-    """Check that by returning float64 arrays there are not
+    """
+    Check that by returning float64 arrays there are not
     empty predictions sets with naive method using both
     prefit and cv=5. If the y_pred_proba was still in
     float32, as the quantile=0.90 would have been equal
@@ -1257,7 +1258,8 @@ def test_classif_float32(cv) -> None:
 
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
 def test_regularize_conf_scores_shape(k_lambda) -> None:
-    """Test that the conformity scores have the correct shape.
+    """
+    Test that the conformity scores have the correct shape.
     """
     lambda_, k = k_lambda[0], k_lambda[1]
     args_init, _ = STRATEGIES["raps"]
@@ -1273,7 +1275,8 @@ def test_regularize_conf_scores_shape(k_lambda) -> None:
 
 
 def test_get_true_label_cumsum_proba_shape() -> None:
-    """Test that the true label cumsumed probabilities
+    """
+    Test that the true label cumsumed probabilities
     have the correct shape.
     """
     clf = LogisticRegression()
@@ -1289,7 +1292,8 @@ def test_get_true_label_cumsum_proba_shape() -> None:
 
 
 def test_get_true_label_cumsum_proba_result() -> None:
-    """Test that the true label cumsumed probabilities
+    """
+    Test that the true label cumsumed probabilities
     are the expected ones.
     """
     clf = LogisticRegression()
@@ -1320,7 +1324,8 @@ def test_get_true_label_cumsum_proba_result() -> None:
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_get_last_included_proba_shape(k_lambda, strategy):
-    """Test that the outputs of _get_last_included_proba method
+    """
+    Test that the outputs of _get_last_included_proba method
     have the correct shape.
     """
     lambda_, k = k_lambda[0], k_lambda[1]
@@ -1352,7 +1357,8 @@ def test_get_last_included_proba_shape(k_lambda, strategy):
 def test_get_true_label_position(
     y_true_proba_place: List[NDArray]
 ) -> None:
-    """Check that the returned true label position the good.
+    """
+    Check that the returned true label position the good.
     """
     y_true = y_true_proba_place[0]
     y_pred_proba = y_true_proba_place[1]
@@ -1366,7 +1372,8 @@ def test_get_true_label_position(
 
 @pytest.mark.parametrize("cv", [5, None])
 def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
-    """Test that an error is raised if the method is RAPS
+    """
+    Test that an error is raised if the method is RAPS
     and cv is different from prefit.
     """
     mapie = MapieClassifier(method="raps", cv=5)
@@ -1375,7 +1382,8 @@ def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
 
 
 def test_not_all_label_in_calib() -> None:
-    """Test that the true label cumsumed probabilities
+    """
+    Test that the true label cumsumed probabilities
     have the correct shape.
     """
     clf = LogisticRegression()
@@ -1393,7 +1401,9 @@ def test_not_all_label_in_calib() -> None:
 
 
 def test_warning_not_all_label_in_calib() -> None:
-    """Test that a warning is raised y is binary."""
+    """
+    Test that a warning is raised y is binary.
+    """
     clf = LogisticRegression()
     clf.fit(X, y)
     X_mapie = X[y != 2]
@@ -1409,7 +1419,8 @@ def test_warning_not_all_label_in_calib() -> None:
 
 
 def test_calib_have_more_label_raise_error() -> None:
-    """Test that the true label cumsumed probabilities
+    """
+    Test that the true label cumsumed probabilities
     have the correct shape.
     """
     clf = LogisticRegression()
