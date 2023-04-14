@@ -1388,8 +1388,9 @@ def test_not_all_label_in_calib() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    X_mapie = X[y != 2]
-    y_mapie = y[y != 2]
+    indices_remove = y != 2
+    X_mapie = X[indices_remove]
+    y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
         estimator=clf, method="cumulated_score",
         cv="prefit"
