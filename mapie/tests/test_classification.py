@@ -1207,7 +1207,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
     mapie.predict(X)
 
 
-def test_pred_proba_float64():
+def test_pred_proba_float64() -> None:
     """Check that the method _check_proba_normalized returns float64."""
     y_pred_proba = np.random.random((1000, 10)).astype(np.float32)
     sum_of_rows = y_pred_proba.sum(axis=1)
@@ -1219,7 +1219,7 @@ def test_pred_proba_float64():
 
 
 @pytest.mark.parametrize("cv", ["prefit", None])
-def test_classif_float32(cv):
+def test_classif_float32(cv) -> None:
     """Check that by returning float64 arrays there are not
     empty predictions sets with naive method using both
     prefit and cv=5. If the y_pred_proba was still in
@@ -1256,7 +1256,7 @@ def test_classif_float32(cv):
 
 
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
-def test_regularize_conf_scores_shape(k_lambda):
+def test_regularize_conf_scores_shape(k_lambda) -> None:
     """Test that the conformity scores have the correct shape.
     """
     lambda_, k = k_lambda[0], k_lambda[1]
@@ -1272,7 +1272,7 @@ def test_regularize_conf_scores_shape(k_lambda):
     assert reg_conf_scores.shape == (100, 1, len(k))
 
 
-def test_get_true_label_cumsum_proba_shape():
+def test_get_true_label_cumsum_proba_shape() -> None:
     """Test that the true label cumsumed probabilities
     have the correct shape.
     """
@@ -1288,7 +1288,7 @@ def test_get_true_label_cumsum_proba_shape():
     assert cutoff.shape == (len(X), )
 
 
-def test_get_true_label_cumsum_proba_result():
+def test_get_true_label_cumsum_proba_result() -> None:
     """Test that the true label cumsumed probabilities
     are the expected ones.
     """
@@ -1349,7 +1349,9 @@ def test_get_last_included_proba_shape(k_lambda, strategy):
 
 
 @pytest.mark.parametrize("y_true_proba_place", Y_TRUE_PROBA_PLACE)
-def test_get_true_label_position(y_true_proba_place: List[NDArray]):
+def test_get_true_label_position(
+    y_true_proba_place: List[NDArray]
+) -> None:
     """Check that the returned true label position the good.
     """
     y_true = y_true_proba_place[0]
@@ -1363,7 +1365,7 @@ def test_get_true_label_position(y_true_proba_place: List[NDArray]):
 
 
 @pytest.mark.parametrize("cv", [5, None])
-def test_error_raps_cv_not_prefit(cv: Union[int, None]):
+def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
     """Test that an error is raised if the method is RAPS
     and cv is different from prefit.
     """
@@ -1372,7 +1374,7 @@ def test_error_raps_cv_not_prefit(cv: Union[int, None]):
         mapie.fit(X_toy, y_toy)
 
 
-def test_not_all_label_in_calib():
+def test_not_all_label_in_calib() -> None:
     """Test that the true label cumsumed probabilities
     have the correct shape.
     """
@@ -1406,7 +1408,7 @@ def test_warning_not_all_label_in_calib() -> None:
         mapie_clf.fit(X_mapie, y_mapie)
 
 
-def test_calib_have_more_label_raise_error():
+def test_calib_have_more_label_raise_error() -> None:
     """Test that the true label cumsumed probabilities
     have the correct shape.
     """
