@@ -888,6 +888,34 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             lambda_star = lambda_star[0]
         return lambda_star
 
+    def _get_classes_info(self, estimator, y):
+        n_unique_y_labels = len(np.unique(y))
+        if self.cv == "prefit":
+            classes = estimator.classes_
+            n_classes = len(np.unique(classes))
+
+            if n_classes > n_unique_y_labels:
+                warnings.warn(
+                    "WARNING: your calibration dataset has less labels"
+                    + " than your training dataset (training"
+                    + f" has {n_classes} unique labels while"
+                    + f" calibration have {n_unique_y_labels} unique labels"
+                )
+            elif n_classes < n_unique_y_labels:
+                raise ValueError(
+                    "You have more labels in the y of your calibration dataset"
+                    + " than during training (training"
+                    + f" has {len(np.unique(estimator.classes_))} unique"
+                    + f" labels while calibration have {n_unique_y_labels}"
+                    + " unique labels"
+                )
+
+        else:
+            n_classes = n_unique_y_labels
+            classes = np.unique(y)
+
+        return n_classes, classes
+
     def fit(
         self,
         X: ArrayLike,
@@ -960,30 +988,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         n_samples = _num_samples(y)
 
-        n_unique_y_labels = len(np.unique(y))
-        if self.cv == "prefit":
-            self.classes_ = estimator.classes_
-            self.n_classes_ = len(np.unique(self.classes_))
-
-            if self.n_classes_ > n_unique_y_labels:
-                warnings.warn(
-                    "WARNING: your calibration dataset has less labels"
-                    + " than your training dataset (training"
-                    + f" has {self.n_classes_} unique labels while"
-                    + f" calibration have {n_unique_y_labels} unique labels"
-                )
-            elif self.n_classes_ < n_unique_y_labels:
-                raise ValueError(
-                    "You have more labels in the y of your calibration dataset"
-                    + " than during training (training"
-                    + f" has {len(np.unique(estimator.classes_))} unique"
-                    + f" labels while calibration have {n_unique_y_labels}"
-                    + " unique labels"
-                )
-
-        else:
-            self.n_classes_ = n_unique_y_labels
-            self.classes_ = np.unique(y)
+        self.n_classes_, self.classes_ = self._get_classes_info(
+            estimator, y
+        )
         check_classification_targets(y)
         self._target_type = type_of_target(y)
 
