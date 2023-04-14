@@ -1407,8 +1407,9 @@ def test_warning_not_all_label_in_calib() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    X_mapie = X[y != 2]
-    y_mapie = y[y != 2]
+    indices_remove = y != 2
+    X_mapie = X[indices_remove]
+    y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
         estimator=clf, method="cumulated_score",
         cv="prefit"
@@ -1437,3 +1438,69 @@ def test_calib_have_more_label_raise_error() -> None:
         ValueError, match=r".*You have more labels in.*"
     ):
         mapie_clf.fit(X_mapie, y_mapie)
+
+
+def test_n_classes_prefit() -> None:
+    """
+    Test that the attribute n_classes_ has the correct
+    value with cv="prefit".
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    indices_remove = y != 2
+    X_mapie = X[indices_remove]
+    y_mapie = y[indices_remove]
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    mapie_clf.fit(X_mapie, y_mapie)
+    assert mapie_clf.n_classes_ == len(np.unique(y))
+
+
+def test_classes_prefit() -> None:
+    """
+    Test that the attribute classes_ has the correct
+    value with cv="prefit".
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    indices_remove = y != 2
+    X_mapie = X[indices_remove]
+    y_mapie = y[indices_remove]
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    mapie_clf.fit(X_mapie, y_mapie)
+    assert (mapie_clf.classes_ == np.unique(y)).all()
+
+
+def test_n_classes_cv() -> None:
+    """
+    Test that the attribute n_classes_ has the correct
+    value with cross_validation.
+    """
+    clf = LogisticRegression()
+
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv=5
+    )
+    mapie_clf.fit(X, y)
+    assert mapie_clf.n_classes_ == len(np.unique(y))
+
+
+def test_classes_cv() -> None:
+    """
+    Test that the attribute classes_ has the correct
+    value with cross_validation.
+    """
+    clf = LogisticRegression()
+
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv=5
+    )
+    mapie_clf.fit(X, y)
+    assert (mapie_clf.classes_ == np.unique(y)).all()
