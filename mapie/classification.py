@@ -244,8 +244,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         if (self.method == "raps") and (self.cv not in self.raps_valid_cv_):
             raise ValueError(
-                f"RAPS method can only be used "
-                "with cv in {self.raps_valid_cv_}."
+                "RAPS method can only be used "
+                f"with cv in {self.raps_valid_cv_}."
             )
 
     def _check_include_last_label(
