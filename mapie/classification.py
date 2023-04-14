@@ -6,7 +6,8 @@ from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
-from sklearn.model_selection import BaseCrossValidator, train_test_split
+from sklearn.model_selection import (BaseCrossValidator, train_test_split,
+                                     ShuffleSplit)
 from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.multiclass import (
@@ -1033,7 +1034,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 self.k_[val_indices] = val_ids
                 y_pred_proba[val_indices] = predictions
 
-                if self.cv == "split":
+                if isinstance(cv, ShuffleSplit):
                     # Should delete values indices that
                     # are not used during calibration
                     self.k_ = self.k_[val_indices]
@@ -1091,6 +1092,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 )
             self.conformity_scores_ = np.array([])
             self.k_ = np.empty_like(y_enc, dtype=int)
+
+        if self._target_type == "multiclass":
+            if isinstance(cv, ShuffleSplit):
+                self.single_estimator_ = self.estimators_[0]
 
         return self
 

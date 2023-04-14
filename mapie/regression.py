@@ -6,7 +6,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
@@ -601,6 +601,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self.conformity_scores_ = (
             self.conformity_score_function_.get_conformity_scores(y, y_pred)
         )
+
+        if isinstance(cv, ShuffleSplit):
+            self.single_estimator_ = self.estimators_[0]
 
         return self
 

@@ -707,7 +707,7 @@ def test_valid_method(method: str) -> None:
 
 @pytest.mark.parametrize(
     "cv", [None, -1, 2, KFold(), LeaveOneOut(),
-           ShuffleSplit(n_splits=1, test_size=0.1), "prefit"]
+           ShuffleSplit(n_splits=1, test_size=0.5), "prefit"]
 )
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raises no errors."""
@@ -804,6 +804,38 @@ def test_y_is_list_of_string(
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
     assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
+
+
+def test_same_results_prefit_split() -> None:
+    """
+    Test checking that if split and prefit method have exactly
+    the same data split, then we have exactly the same results.
+    """
+    random_state = 1
+    X, y = make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=3,
+        n_classes=n_classes,
+        random_state=random_state,
+    )
+    cv = ShuffleSplit(n_splits=1, test_size=0.1, random_state=random_state)
+    train_index, val_index = list(cv.split(X))[0]
+    X_train, X_calib = X[train_index], X[val_index]
+    y_train, y_calib = y[train_index], y[val_index]
+
+    mapie_reg = MapieClassifier(cv=cv)
+    mapie_reg.fit(X, y)
+    y_pred_1, y_pis_1 = mapie_reg.predict(X, alpha=0.1)
+
+    model = LogisticRegression().fit(X_train, y_train)
+    mapie_reg = MapieClassifier(estimator=model, cv="prefit")
+    mapie_reg.fit(X_calib, y_calib)
+    y_pred_2, y_pis_2 = mapie_reg.predict(X, alpha=0.1)
+
+    np.testing.assert_allclose(y_pred_1, y_pred_2)
+    np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
+    np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])

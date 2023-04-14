@@ -234,6 +234,33 @@ def test_predict_output_shape(
     assert y_pis.shape == (X.shape[0], 2, n_alpha)
 
 
+def test_same_results_prefit_split() -> None:
+    """
+    Test checking that if split and prefit method have exactly
+    the same data split, then we have exactly the same results.
+    """
+    X, y = make_regression(
+        n_samples=500, n_features=10, noise=1.0, random_state=1
+    )
+    cv = ShuffleSplit(n_splits=1, test_size=0.1, random_state=random_state)
+    train_index, val_index = list(cv.split(X))[0]
+    X_train, X_calib = X[train_index], X[val_index]
+    y_train, y_calib = y[train_index], y[val_index]
+
+    mapie_reg = MapieRegressor(cv=cv)
+    mapie_reg.fit(X, y)
+    y_pred_1, y_pis_1 = mapie_reg.predict(X, alpha=0.1)
+
+    model = LinearRegression().fit(X_train, y_train)
+    mapie_reg = MapieRegressor(estimator=model, cv="prefit")
+    mapie_reg.fit(X_calib, y_calib)
+    y_pred_2, y_pis_2 = mapie_reg.predict(X, alpha=0.1)
+
+    np.testing.assert_allclose(y_pred_1, y_pred_2)
+    np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
+    np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
+
+
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_for_same_alpha(strategy: str) -> None:
     """
