@@ -1039,7 +1039,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     self.k_ = self.k_[val_indices]
                     y_pred_proba = y_pred_proba[val_indices]
                     y_enc = y_enc[val_indices]
-                    y = cast(ArrayLike, y[val_indices])
+                    y = cast(NDArray, y)[val_indices]
 
             if self.method == "naive":
                 self.conformity_scores_ = np.empty(
