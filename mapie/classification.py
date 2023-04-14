@@ -183,6 +183,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
      [False False  True]]
     """
 
+    raps_valid_cv_ = ["prefit"]
     valid_methods_ = ["naive", "score", "cumulated_score", "top_k", "raps"]
     fit_attributes = [
         "single_estimator_",
@@ -224,8 +225,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.method not in self.valid_methods_:
             raise ValueError(
                 "Invalid method. "
-                "Allowed values are 'score', 'cumulated_score', "
-                "'raps', 'naive' or 'top_k'"
+                f"Allowed values are {self.valid_methods_}."
             )
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
@@ -242,8 +242,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If method is "raps" and cv is not "prefit".
         """
-        if (self.method == "raps") and (self.cv != "prefit"):
-            raise ValueError("RAPS method can only be used with cv='prefit'")
+        if (self.method == "raps") and (self.cv not in self.raps_valid_cv_):
+            raise ValueError(
+                f"RAPS method can only be used "
+                "with cv in {self.raps_valid_cv_}."
+            )
 
     def _check_include_last_label(
         self,
@@ -1089,7 +1092,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             else:
                 raise ValueError(
                     "Invalid method. "
-                    "Allowed values are 'score' or 'cumulated_score'."
+                    f"Allowed values are {self.valid_methods_}."
                 )
 
             if isinstance(cv, ShuffleSplit):
@@ -1370,6 +1373,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         else:
             raise ValueError(
                 "Invalid method. "
-                "Allowed values are 'score' or 'cumulated_score'."
+                f"Allowed values are {self.valid_methods_}."
             )
         return y_pred, prediction_sets

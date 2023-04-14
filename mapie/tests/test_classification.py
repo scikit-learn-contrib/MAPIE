@@ -293,11 +293,35 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
+    "naive_split": (
+        Params(
+            method="naive",
+            cv="split",
+            test_size=0.5,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="mean"
+        )
+    ),
     "top_k": (
         Params(
             method="top_k",
             cv="prefit",
             test_size=None,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="mean"
+        )
+    ),
+    "top_k_split": (
+        Params(
+            method="top_k",
+            cv="split",
+            test_size=0.5,
             random_state=42
         ),
         ParamsPredict(
@@ -349,7 +373,9 @@ COVERAGES = {
     "cumulated_score_not_include_cv_crossval": 1/9,
     "cumulated_score_randomized_cv_crossval": 7/9,
     "naive": 5/9,
+    "naive_split": 5/9,
     "top_k": 1.0,
+    "top_k_split": 1.0,
     "raps": 1.0,
     "raps_randomized": 8/9
 }
@@ -546,7 +572,29 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True]
     ],
+    "naive_split": [
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, True],
+        [False, False, True],
+        [False, False, True],
+        [False, False, True]
+    ],
     "top_k": [
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True],
+        [False, True, True]
+    ],
+    "top_k_split": [
         [True, True, False],
         [True, True, False],
         [True, True, False],
