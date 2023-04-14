@@ -11,8 +11,8 @@ from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (KFold, LeaveOneOut,
-                                     ShuffleSplit, train_test_split)
+from sklearn.model_selection import (KFold, LeaveOneOut, ShuffleSplit,
+                                     train_test_split)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
