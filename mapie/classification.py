@@ -1091,6 +1091,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     "Invalid method. "
                     "Allowed values are 'score' or 'cumulated_score'."
                 )
+
+            if isinstance(cv, ShuffleSplit):
+                self.single_estimator_ = self.estimators_[0]
+
         else:
             warnings.warn(
                 "WARNING: your target is not of type multiclass."
@@ -1105,10 +1109,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 )
             self.conformity_scores_ = np.array([])
             self.k_ = np.empty_like(y_enc, dtype=int)
-
-        if self._target_type == "multiclass":
-            if isinstance(cv, ShuffleSplit):
-                self.single_estimator_ = self.estimators_[0]
 
         return self
 
