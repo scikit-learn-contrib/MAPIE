@@ -203,7 +203,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     """
 
     cv_need_agg_function = ["Subsample"]
-    no_agg_cv_ = ["prefit"]
+    no_agg_cv_ = ["prefit", "split"]
     valid_methods_ = ["naive", "base", "plus", "minmax"]
     no_agg_methods_ = ["naive", "base"]
     plus_like_method = ["plus"]
