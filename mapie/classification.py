@@ -888,7 +888,36 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             lambda_star = lambda_star[0]
         return lambda_star
 
-    def _get_classes_info(self, estimator, y):
+    def _get_classes_info(
+            self, estimator: ClassifierMixin, y: NDArray
+    ) -> Tuple[int, NDArray]:
+        """
+        Compute the number of classes and the classes values
+        according to either the pre-trained model or to the
+        values in y.
+
+        Parameters
+        ----------
+        estimator : ClassifierMixin
+            Estimator pre-fitted or not.
+        y : NDArray
+            Values to predict.
+
+        Returns
+        -------
+        Tuple[int, NDArray]
+            The number of unique classes and their unique
+            values.
+
+        Raises
+        ------
+        ValueError
+            If number of calibration labels is higher than number of labels
+            for training (in prefit setting)
+        Warning
+            If number of calibration labels is lower than number of labels
+            for training (in prefit setting)
+        """
         n_unique_y_labels = len(np.unique(y))
         if self.cv == "prefit":
             classes = estimator.classes_
@@ -954,15 +983,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         -------
         MapieClassifier
             The model itself.
-
-        Raises
-        ------
-        ValueError
-            If number of calibration labels is higher than number of labels
-            for training (in prefit setting)
-        Warning
-            If number of calibration labels is lower than number of labels
-            for training (in prefit setting)
         """
         # Checks
         self._check_parameters()
