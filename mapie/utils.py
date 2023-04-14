@@ -130,6 +130,7 @@ def fit_estimator(
 
 def check_cv(
     cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+    test_size: Optional[Union[int, float]] = None,
     random_state: Optional[Union[int, np.random.RandomState]] = None,
 ) -> Union[str, BaseCrossValidator]:
     """
@@ -144,6 +145,15 @@ def check_cv(
     ----------
     cv : Optional[Union[int, str, BaseCrossValidator]], optional
         Cross-validator to check, by default ``None``.
+
+    test_size: Optional[Union[int, float]]
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the test split. If int, represents the
+        absolute number of test samples. If None, it will be set to 0.1.
+
+        If cv is not ``"split"``, ``test_size`` is ignored.
+
+        By default ``None``.
 
     random_state : Optional[Union[int, np.random.RandomState]], optional
         Pseudo random number generator state used for random uniform sampling
@@ -185,7 +195,7 @@ def check_cv(
         return cv
     elif cv == "split":
         return ShuffleSplit(
-            n_splits=1, test_size=0.5, random_state=random_state
+            n_splits=1, test_size=test_size, random_state=random_state
         )
     else:
         raise ValueError(

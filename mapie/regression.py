@@ -52,7 +52,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         - "minmax", based on validation conformity scores and
           testing predictions (min/max among cross-validation clones).
 
-        By default "plus".
+        By default ``"plus"``.
 
     cv: Optional[Union[int, str, BaseCrossValidator]]
         The cross-validation strategy for computing conformity scores.
@@ -79,6 +79,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
           to provide a prediction interval with fixed width.
           The user has to take care manually that data for model fitting and
           conformity scores estimate are disjoint.
+
+        By default ``None``.
+
+    test_size: Optional[Union[int, float]]
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the test split. If int, represents the
+        absolute number of test samples. If None, it will be set to 0.1.
+
+        If cv is not ``"split"``, ``test_size`` is ignored.
 
         By default ``None``.
 
@@ -116,7 +125,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         If cv is ``"prefit"`` or ``"split"``, ``agg_function`` is ignored.
 
-        By default "mean".
+        By default ``"mean"``.
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
@@ -223,6 +232,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         estimator: Optional[RegressorMixin] = None,
         method: str = "plus",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        test_size: Optional[Union[int, float]] = None,
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
@@ -232,6 +242,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self.estimator = estimator
         self.method = method
         self.cv = cv
+        self.test_size = test_size
         self.n_jobs = n_jobs
         self.agg_function = agg_function
         self.verbose = verbose
@@ -530,7 +541,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         # Checks
         self._check_parameters()
-        cv = check_cv(self.cv, random_state=self.random_state)
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
         X, y = indexable(X, y)

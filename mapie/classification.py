@@ -91,6 +91,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         By default ``None``.
 
+    test_size: Optional[Union[int, float]]
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the test split. If int, represents the
+        absolute number of test samples. If None, it will be set to 0.1.
+
+        If cv is not ``"split"``, ``test_size`` is ignored.
+
+        By default ``None``.
+
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
@@ -190,6 +199,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         estimator: Optional[ClassifierMixin] = None,
         method: str = "score",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        test_size: Optional[Union[int, float]] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0
@@ -197,6 +207,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self.estimator = estimator
         self.method = method
         self.cv = cv
+        self.test_size = test_size
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
@@ -936,7 +947,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         # Checks
         self._check_parameters()
-        cv = check_cv(self.cv, random_state=self.random_state)
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
         X, y = indexable(X, y)
         y = _check_y(y)
 
@@ -1173,7 +1186,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.method == "top_k":
             agg_scores = "mean"
         # Checks
-        cv = check_cv(self.cv, random_state=self.random_state)
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
         include_last_label = self._check_include_last_label(include_last_label)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         check_is_fitted(self, self.fit_attributes)

@@ -76,6 +76,7 @@ Params = TypedDict(
     {
         "method": str,
         "cv": Optional[Union[int, str]],
+        "test_size": Optional[Union[int, float]],
         "random_state": Optional[int]
     }
 )
@@ -92,6 +93,7 @@ STRATEGIES = {
         Params(
             method="score",
             cv="prefit",
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -103,6 +105,7 @@ STRATEGIES = {
         Params(
             method="score",
             cv="split",
+            test_size=0.5,
             random_state=42
         ),
         ParamsPredict(
@@ -114,6 +117,7 @@ STRATEGIES = {
         Params(
             method="score",
             cv=3,
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -125,6 +129,7 @@ STRATEGIES = {
         Params(
             method="score",
             cv=3,
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -136,6 +141,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv="prefit",
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -147,6 +153,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv="prefit",
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -158,6 +165,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv="prefit",
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -169,6 +177,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv="split",
+            test_size=0.5,
             random_state=42
         ),
         ParamsPredict(
@@ -180,6 +189,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv="split",
+            test_size=0.5,
             random_state=42
         ),
         ParamsPredict(
@@ -191,6 +201,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv="split",
+            test_size=0.5,
             random_state=42
         ),
         ParamsPredict(
@@ -202,6 +213,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv=3,
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -213,6 +225,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv=3,
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -224,6 +237,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv=3,
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -235,6 +249,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv=3,
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -246,6 +261,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv=3,
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -257,6 +273,7 @@ STRATEGIES = {
         Params(
             method="cumulated_score",
             cv=3,
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -268,6 +285,7 @@ STRATEGIES = {
         Params(
             method="naive",
             cv="prefit",
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -279,6 +297,7 @@ STRATEGIES = {
         Params(
             method="top_k",
             cv="prefit",
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -290,6 +309,7 @@ STRATEGIES = {
         Params(
             method="raps",
             cv="prefit",
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
@@ -301,6 +321,7 @@ STRATEGIES = {
         Params(
             method="raps",
             cv="prefit",
+            test_size=None,
             random_state=42
         ),
         ParamsPredict(
