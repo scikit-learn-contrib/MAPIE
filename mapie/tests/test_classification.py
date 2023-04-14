@@ -165,6 +165,39 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
+    "cumulated_score_include_split": (
+        Params(
+            method="cumulated_score",
+            cv="split",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="mean"
+        )
+    ),
+    "cumulated_score_not_include_split": (
+        Params(
+            method="cumulated_score",
+            cv="split",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=False,
+            agg_scores="mean"
+        )
+    ),
+    "cumulated_score_randomized_split": (
+        Params(
+            method="cumulated_score",
+            cv="split",
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label="randomized",
+            agg_scores="mean"
+        )
+    ),
     "cumulated_score_include_cv_mean": (
         Params(
             method="cumulated_score",
@@ -285,6 +318,9 @@ COVERAGES = {
     "cumulated_score_include": 1.0,
     "cumulated_score_not_include": 5/9,
     "cumulated_score_randomized": 6/9,
+    "cumulated_score_include_split": 8/9,
+    "cumulated_score_not_include_split": 5/9,
+    "cumulated_score_randomized_split": 7/9,
     "cumulated_score_include_cv_mean": 1.0,
     "cumulated_score_not_include_cv_mean": 5/9,
     "cumulated_score_randomized_cv_mean": 8/9,
@@ -377,6 +413,39 @@ y_toy_mapie = {
         [False, True, False],
         [False, True, False],
         [False, True, True],
+        [False, False, True]
+    ],
+    "cumulated_score_include_split": [
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, True],
+        [True, True, True],
+        [False, True, True],
+        [False, False, True],
+        [False, False, True]
+    ],
+    "cumulated_score_not_include_split": [
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [False, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, False, True],
+        [False, False, True],
+        [False, False, True]
+    ],
+    "cumulated_score_randomized_split": [
+        [False, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, False, True],
+        [False, False, True],
         [False, False, True]
     ],
     "cumulated_score_include_cv_mean": [
