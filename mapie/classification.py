@@ -6,8 +6,7 @@ from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
-from sklearn.model_selection import (BaseCrossValidator, ShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
 from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.multiclass import (check_classification_targets,
@@ -57,7 +56,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         - "raps", Regularized Adaptive Prediction Sets method. It uses the
           same technique as cumulated_score method but with a penalty term
           to reduce the size of prediction sets. See [3] for more
-          details. For now, this method only works with "prefit" strategy.
+          details. For now, this method only works with "prefit" and "split"
+          strategies.
 
         - "top_k", based on the sorted index of the probability of the true
           label in the softmax outputs, on the calibration set. In case two
@@ -183,7 +183,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
      [False False  True]]
     """
 
-    raps_valid_cv_ = ["prefit"]
+    raps_valid_cv_ = ["prefit", "split"]
     valid_methods_ = ["naive", "score", "cumulated_score", "top_k", "raps"]
     fit_attributes = [
         "single_estimator_",
@@ -985,12 +985,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         if self._target_type == "multiclass":
             if self.method == "raps":
-                X, self.X_raps, y_enc, self.y_raps = train_test_split(
-                    X,
-                    y_enc,
-                    test_size=size_raps,
-                    random_state=self.random_state
+                raps_split = ShuffleSplit(
+                    1, test_size=size_raps, random_state=self.random_state
                 )
+                train_raps_index, val_raps_index = next(raps_split.split(X))
+                X, self.X_raps, y_enc, self.y_raps =\
+                    _safe_indexing(X, train_raps_index),\
+                    _safe_indexing(X, val_raps_index),\
+                    _safe_indexing(y_enc, train_raps_index),\
+                    _safe_indexing(y_enc, val_raps_index)
                 self.y_raps_no_enc = self.label_encoder_.inverse_transform(
                     self.y_raps
                 )
@@ -1004,6 +1007,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     self.y_pred_proba_raps,
                     self.y_raps
                 )
+                if sample_weight is not None:
+                    sample_weight = sample_weight[train_raps_index]
+                    sample_weight = cast(NDArray, sample_weight)
 
             # Work
             if cv == "prefit":

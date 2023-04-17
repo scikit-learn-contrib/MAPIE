@@ -341,11 +341,35 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
+    "raps_split": (
+        Params(
+            method="raps",
+            cv="split",
+            test_size=0.5,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="mean"
+        )
+    ),
     "raps_randomized": (
         Params(
             method="raps",
             cv="prefit",
             test_size=None,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label="randomized",
+            agg_scores="mean"
+        )
+    ),
+    "raps_randomized_split": (
+        Params(
+            method="raps",
+            cv="split",
+            test_size=0.5,
             random_state=42
         ),
         ParamsPredict(
@@ -377,7 +401,9 @@ COVERAGES = {
     "top_k": 1.0,
     "top_k_split": 1.0,
     "raps": 1.0,
-    "raps_randomized": 8/9
+    "raps_split": 7/9,
+    "raps_randomized": 8/9,
+    "raps_randomized_split": 1.0
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -616,6 +642,17 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
+    "raps_split": [
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False],
+        [True, True, False]
+    ],
     "raps_randomized": [
         [True, False, False],
         [True, False, False],
@@ -626,6 +663,17 @@ y_toy_mapie = {
         [False, True, False],
         [False, True, True],
         [False, False, True]
+    ],
+    "raps_randomized_split": [
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True]
     ]
 }
 
