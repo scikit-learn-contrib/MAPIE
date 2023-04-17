@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Optional, Union, cast
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -992,7 +993,10 @@ def test_y_is_list_of_string(
     assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
 
 
-def test_same_results_prefit_split() -> None:
+@pytest.mark.parametrize(
+    "strategy", ["naive", "top_k", "score", "cumulated_score_include"]
+)
+def test_same_results_prefit_split(strategy: str) -> None:
     """
     Test checking that if split and prefit method have exactly
     the same data split, then we have exactly the same results.
@@ -1005,19 +1009,22 @@ def test_same_results_prefit_split() -> None:
         n_classes=n_classes,
         random_state=random_state,
     )
-    cv = ShuffleSplit(n_splits=1, test_size=0.1, random_state=random_state)
-    train_index, val_index = list(cv.split(X))[0]
-    X_train, X_calib = X[train_index], X[val_index]
-    y_train, y_calib = y[train_index], y[val_index]
+    cv = ShuffleSplit(n_splits=1, test_size=0.5, random_state=random_state)
+    train_index, val_index = next(cv.split(X))
+    X_train_, X_calib_ = X[train_index], X[val_index]
+    y_train_, y_calib_ = y[train_index], y[val_index]
 
-    mapie_reg = MapieClassifier(cv=cv)
+    args_init, args_predict = deepcopy(STRATEGIES[strategy + '_split'])
+    args_init["cv"] = cv
+    mapie_reg = MapieClassifier(**args_init)
     mapie_reg.fit(X, y)
-    y_pred_1, y_pis_1 = mapie_reg.predict(X, alpha=0.1)
+    y_pred_1, y_pis_1 = mapie_reg.predict(X, alpha=0.1, **args_predict)
 
-    model = LogisticRegression().fit(X_train, y_train)
-    mapie_reg = MapieClassifier(estimator=model, cv="prefit")
-    mapie_reg.fit(X_calib, y_calib)
-    y_pred_2, y_pis_2 = mapie_reg.predict(X, alpha=0.1)
+    args_init, _ = STRATEGIES[strategy]
+    model = LogisticRegression().fit(X_train_, y_train_)
+    mapie_reg = MapieClassifier(estimator=model, **args_init)
+    mapie_reg.fit(X_calib_, y_calib_)
+    y_pred_2, y_pis_2 = mapie_reg.predict(X, alpha=0.1, **args_predict)
 
     np.testing.assert_allclose(y_pred_1, y_pred_2)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
@@ -1610,7 +1617,7 @@ def test_get_true_label_position(y_true_proba_place: List[NDArray]):
 @pytest.mark.parametrize("cv", [5, None])
 def test_error_raps_cv_not_prefit(cv: Union[int, None]):
     """Test that an error is raised if the method is RAPS
-    and cv is different from prefit.
+    and cv is different from prefit and split.
     """
     mapie = MapieClassifier(method="raps", cv=5)
     with pytest.raises(ValueError, match=r".*RAPS method can only.*"):

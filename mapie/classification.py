@@ -242,7 +242,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If method is "raps" and cv is not "prefit".
         """
-        if (self.method == "raps") and (self.cv not in self.raps_valid_cv_):
+        if (self.method == "raps") and (self.cv not in self.raps_valid_cv_ \
+                or isinstance(ShuffleSplit, self.cv)):
             raise ValueError(
                 "RAPS method can only be used "
                 f"with cv in {self.raps_valid_cv_}."
