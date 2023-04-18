@@ -118,10 +118,10 @@ class WrongOutputModel:
         pass
 
     def predict_proba(self, *args: Any) -> NDArray:
-        pass
+        """Dummy predict_proba."""
 
     def predict(self, *args: Any) -> NDArray:
-        pass
+        """Dummy predict."""
 
 
 class ArrayOutputModel:
@@ -131,7 +131,6 @@ class ArrayOutputModel:
 
     def fit(self, *args: Any) -> None:
         """Dummy fit."""
-        self.trained_ = True
 
     def predict_proba(self, X: NDArray, *args: Any) -> NDArray:
         probas = np.array([[.9, .05, .05]])
