@@ -1244,7 +1244,10 @@ def test_valid_prediction(alpha: Any) -> None:
 def test_toy_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     args_init, args_predict = STRATEGIES[strategy]
-    clf = LogisticRegression().fit(X_toy, y_toy)
+    if "split" not in strategy:
+        clf = LogisticRegression().fit(X_toy, y_toy)
+    else:
+        clf = LogisticRegression()
     mapie_clf = MapieClassifier(estimator=clf, **args_init)
     mapie_clf.fit(X_toy, y_toy, size_raps=.5)
     _, y_ps = mapie_clf.predict(

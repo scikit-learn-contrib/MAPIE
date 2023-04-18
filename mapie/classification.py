@@ -1003,13 +1003,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 y = self.label_encoder_.inverse_transform(y_enc)
                 y_enc = cast(NDArray, y_enc)
                 n_samples = _num_samples(y_enc)
-                self.y_pred_proba_raps = estimator.predict_proba(
-                    self.X_raps
-                )
-                self.position_raps = self._get_true_label_position(
-                    self.y_pred_proba_raps,
-                    self.y_raps
-                )
                 if sample_weight is not None:
                     sample_weight = sample_weight[train_raps_index]
                     sample_weight = cast(NDArray, sample_weight)
@@ -1066,6 +1059,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     y_enc = y_enc[val_indices]
                     y = cast(NDArray, y)[val_indices]
 
+            # RAPS: compute y_pred and position on the RAPS validation dataset
+            if self.method == "raps":
+                self.y_pred_proba_raps = self.single_estimator_.predict_proba(
+                    self.X_raps
+                )
+                self.position_raps = self._get_true_label_position(
+                    self.y_pred_proba_raps,
+                    self.y_raps
+                )
+
+            # Conformity scores
             if self.method == "naive":
                 self.conformity_scores_ = np.empty(
                     y_pred_proba.shape,
@@ -1092,12 +1096,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 # Here we reorder the labels by decreasing probability
                 # and get the position of each label from decreasing
                 # probability
-
                 self.conformity_scores_ = self._get_true_label_position(
                     y_pred_proba,
                     y_enc
                 )
-
             else:
                 raise ValueError(
                     "Invalid method. "
