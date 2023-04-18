@@ -15,11 +15,10 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 from ._compatibility import np_nanquantile
 from ._typing import ArrayLike, NDArray
 from .aggregation_functions import aggregate_all
-from .regression import MapieRegressor
 from .conformity_scores import ConformityScore
-from .utils import (check_alpha_and_n_samples,
-                    check_defined_variables_predict_cqr,
-                    check_conformity_score, check_cv,
+from .regression import MapieRegressor
+from .utils import (check_alpha_and_n_samples, check_conformity_score,
+                    check_cv, check_defined_variables_predict_cqr,
                     check_estimator_fit_predict, check_lower_upper_bounds,
                     check_n_features_in, check_nan_in_aposteriori_prediction,
                     check_null_weight, fit_estimator)
