@@ -6,12 +6,11 @@ from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
-from sklearn.model_selection import BaseCrossValidator, train_test_split
+from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
 from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
-from sklearn.utils.multiclass import (
-    check_classification_targets, type_of_target
-)
+from sklearn.utils.multiclass import (check_classification_targets,
+                                      type_of_target)
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
@@ -57,7 +56,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         - "raps", Regularized Adaptive Prediction Sets method. It uses the
           same technique as cumulated_score method but with a penalty term
           to reduce the size of prediction sets. See [3] for more
-          details. For now, this method only works with "prefit" strategy.
+          details. For now, this method only works with "prefit" and "split"
+          strategies.
 
         - "top_k", based on the sorted index of the probability of the true
           label in the softmax outputs, on the calibration set. In case two
@@ -68,7 +68,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         By default "score".
 
     cv: Optional[str]
-        The cross-validation strategy for computing scores :
+        The cross-validation strategy for computing scores.
+        It directly drives the distinction between jackknife and cv variants.
+        Choose among:
 
         - ``None``, to use the default 5-fold cross-validation
         - integer, to specify the number of folds.
@@ -78,11 +80,23 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
           Main variants are:
           - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
           - ``sklearn.model_selection.KFold`` (cross-validation)
+        - ``"split"``, does not involve cross-validation but a division
+          of the data into training and calibration subsets. The splitter
+          used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used
           to calibrate the predictions through the score computation.
           At prediction time, quantiles of these scores are used to estimate
           prediction sets.
+
+        By default ``None``.
+
+    test_size: Optional[Union[int, float]]
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the test split. If int, represents the
+        absolute number of test samples. If None, it will be set to 0.1.
+
+        If cv is not ``"split"``, ``test_size`` is ignored.
 
         By default ``None``.
 
@@ -104,7 +118,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         for evaluation quantiles and prediction sets in cumulated_score.
         Pass an int for reproducible output across multiple function calls.
 
-        By default ```1``.
+        By default ``None``.
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
@@ -169,6 +183,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
      [False False  True]]
     """
 
+    raps_valid_cv_ = ["prefit", "split"]
     valid_methods_ = ["naive", "score", "cumulated_score", "top_k", "raps"]
     fit_attributes = [
         "single_estimator_",
@@ -185,6 +200,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         estimator: Optional[ClassifierMixin] = None,
         method: str = "score",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        test_size: Optional[Union[int, float]] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0
@@ -192,6 +208,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self.estimator = estimator
         self.method = method
         self.cv = cv
+        self.test_size = test_size
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
@@ -208,8 +225,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.method not in self.valid_methods_:
             raise ValueError(
                 "Invalid method. "
-                "Allowed values are 'score', 'cumulated_score', "
-                "'raps', 'naive' or 'top_k'"
+                f"Allowed values are {self.valid_methods_}."
             )
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
@@ -226,8 +242,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If method is "raps" and cv is not "prefit".
         """
-        if (self.method == "raps") and (self.cv != "prefit"):
-            raise ValueError("RAPS method can only be used with cv='prefit'")
+        if (self.method == "raps") and (
+            (self.cv not in self.raps_valid_cv_)
+            or isinstance(self.cv, ShuffleSplit)
+        ):
+            raise ValueError(
+                "RAPS method can only be used "
+                f"with cv in {self.raps_valid_cv_}."
+            )
 
     def _check_include_last_label(
         self,
@@ -329,10 +351,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Threshold to compare with y_proba_last_cumsum, can be either:
 
             - the quantiles associated with alpha values when
-              ``cv`` == "prefit" or ``agg_scores`` is "mean"
+              ``cv`` == "prefit", ``cv`` == "split"
+              or ``agg_scores`` is "mean"
             - the conformity score from training samples otherwise
               (i.e., when ``cv`` is a CV splitter and
-              ``agg_scores`` is "crossval)
+              ``agg_scores`` is "crossval")
 
         include_last_label : Union[bool, str]
             Whether or not include the last label. If 'randomized',
@@ -406,10 +429,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Threshold to compare with y_proba_last_cumsum, can be either:
 
             - the quantiles associated with alpha values when
-              ``cv`` == "prefit" or ``agg_scores`` is "mean"
+              ``cv`` == "prefit", ``cv`` == "split" or
+              ``agg_scores`` is "mean"
             - the conformity score from training samples otherwise
               (i.e., when ``cv`` is a CV splitter and
-              ``agg_scores`` is "crossval)
+              ``agg_scores`` is "crossval")
 
         lambda_star: Union[NDArray, float, None] of shape (n_alpha):
             Optimal value of the regulizer lambda.
@@ -929,7 +953,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         # Checks
         self._check_parameters()
-        cv = check_cv(self.cv)
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
         X, y = indexable(X, y)
         y = _check_y(y)
 
@@ -962,25 +988,24 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         if self._target_type == "multiclass":
             if self.method == "raps":
-                X, self.X_raps, y_enc, self.y_raps = train_test_split(
-                    X,
-                    y_enc,
-                    test_size=size_raps,
-                    random_state=self.random_state
+                raps_split = ShuffleSplit(
+                    1, test_size=size_raps, random_state=self.random_state
                 )
+                train_raps_index, val_raps_index = next(raps_split.split(X))
+                X, self.X_raps, y_enc, self.y_raps =\
+                    _safe_indexing(X, train_raps_index),\
+                    _safe_indexing(X, val_raps_index),\
+                    _safe_indexing(y_enc, train_raps_index),\
+                    _safe_indexing(y_enc, val_raps_index)
                 self.y_raps_no_enc = self.label_encoder_.inverse_transform(
                     self.y_raps
                 )
                 y = self.label_encoder_.inverse_transform(y_enc)
                 y_enc = cast(NDArray, y_enc)
                 n_samples = _num_samples(y_enc)
-                self.y_pred_proba_raps = estimator.predict_proba(
-                    self.X_raps
-                )
-                self.position_raps = self._get_true_label_position(
-                    self.y_pred_proba_raps,
-                    self.y_raps
-                )
+                if sample_weight is not None:
+                    sample_weight = sample_weight[train_raps_index]
+                    sample_weight = cast(NDArray, sample_weight)
 
             # Work
             if cv == "prefit":
@@ -1026,6 +1051,25 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 self.k_[val_indices] = val_ids
                 y_pred_proba[val_indices] = predictions
 
+                if isinstance(cv, ShuffleSplit):
+                    # Should delete values indices that
+                    # are not used during calibration
+                    self.k_ = self.k_[val_indices]
+                    y_pred_proba = y_pred_proba[val_indices]
+                    y_enc = y_enc[val_indices]
+                    y = cast(NDArray, y)[val_indices]
+
+            # RAPS: compute y_pred and position on the RAPS validation dataset
+            if self.method == "raps":
+                self.y_pred_proba_raps = self.single_estimator_.predict_proba(
+                    self.X_raps
+                )
+                self.position_raps = self._get_true_label_position(
+                    self.y_pred_proba_raps,
+                    self.y_raps
+                )
+
+            # Conformity scores
             if self.method == "naive":
                 self.conformity_scores_ = np.empty(
                     y_pred_proba.shape,
@@ -1052,17 +1096,19 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 # Here we reorder the labels by decreasing probability
                 # and get the position of each label from decreasing
                 # probability
-
                 self.conformity_scores_ = self._get_true_label_position(
                     y_pred_proba,
                     y_enc
                 )
-
             else:
                 raise ValueError(
                     "Invalid method. "
-                    "Allowed values are 'score' or 'cumulated_score'."
+                    f"Allowed values are {self.valid_methods_}."
                 )
+
+            if isinstance(cv, ShuffleSplit):
+                self.single_estimator_ = self.estimators_[0]
+
         else:
             warnings.warn(
                 "WARNING: your target is not of type multiclass."
@@ -1154,7 +1200,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.method == "top_k":
             agg_scores = "mean"
         # Checks
-        cv = check_cv(self.cv)
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
         include_last_label = self._check_include_last_label(include_last_label)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         check_is_fitted(self, self.fit_attributes)
@@ -1336,6 +1384,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         else:
             raise ValueError(
                 "Invalid method. "
-                "Allowed values are 'score' or 'cumulated_score'."
+                f"Allowed values are {self.valid_methods_}."
             )
         return y_pred, prediction_sets
