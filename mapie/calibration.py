@@ -120,6 +120,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     valid_methods = ["top_label"]
 
+    valid_cv = ["prefit", "split"]
+
     valid_inputs = ["multiclass", "binary"]
 
     def __init__(
@@ -157,11 +159,11 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         ValueError
             If the cross-validator is not valid.
         """
-        if cv in ["prefit", "split"]:
+        if cv in self.valid_cv:
             return cv
         raise ValueError(
             "Invalid cv argument. "
-            "Allowed values are 'prefit' or 'split'."
+            f"Allowed values are {self.valid_cv}."
         )
 
     def _check_calibrator(

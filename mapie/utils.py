@@ -129,7 +129,9 @@ def fit_estimator(
 
 
 def check_cv(
-    cv: Optional[Union[int, str, BaseCrossValidator]] = None
+    cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+    test_size: Optional[Union[int, float]] = None,
+    random_state: Optional[Union[int, np.random.RandomState]] = None,
 ) -> Union[str, BaseCrossValidator]:
     """
     Check if cross-validator is
@@ -144,6 +146,21 @@ def check_cv(
     cv : Optional[Union[int, str, BaseCrossValidator]], optional
         Cross-validator to check, by default ``None``.
 
+    test_size: Optional[Union[int, float]]
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the test split. If int, represents the
+        absolute number of test samples. If None, it will be set to 0.1.
+
+        If cv is not ``"split"``, ``test_size`` is ignored.
+
+        By default ``None``.
+
+    random_state : Optional[Union[int, np.random.RandomState]], optional
+        Pseudo random number generator state used for random uniform sampling
+        for evaluation quantiles and prediction sets in cumulated_score.
+        Pass an int for reproducible output across multiple function calls.
+        By default ```None``.
+
     Returns
     -------
     Optional[Union[float, str]]
@@ -155,25 +172,37 @@ def check_cv(
         If the cross-validator is not valid.
     """
     if cv is None:
-        return KFold(n_splits=5)
-    if isinstance(cv, int):
+        return KFold(
+            n_splits=5, shuffle=True, random_state=random_state
+        )
+    elif isinstance(cv, int):
         if cv == -1:
             return LeaveOneOut()
-        if cv >= 2:
-            return KFold(n_splits=cv)
-    if isinstance(cv, BaseCrossValidator):
+        elif cv >= 2:
+            return KFold(
+                n_splits=cv, shuffle=True, random_state=random_state
+            )
+        else:
+            raise ValueError(
+                "Invalid cv argument. "
+                "Allowed integer values are -1 or int >= 2."
+            )
+    elif isinstance(cv, BaseCrossValidator):
         return cv
-    if isinstance(cv, BaseShuffleSplit):
+    elif isinstance(cv, BaseShuffleSplit):
         return cv
-    if cv in ["prefit"]:
+    elif cv == "prefit":
         return cv
-    if cv in ["split"]:
-        return ShuffleSplit(n_splits=1, test_size=0.5)
-    raise ValueError(
-        "Invalid cv argument. "
-        "Allowed values are None, -1, int >= 2, 'prefit', 'split', "
-        "or a BaseCrossValidator object (Kfold, LeaveOneOut)."
-    )
+    elif cv == "split":
+        return ShuffleSplit(
+            n_splits=1, test_size=test_size, random_state=random_state
+        )
+    else:
+        raise ValueError(
+            "Invalid cv argument. "
+            "Allowed values are None, -1, int >= 2, 'prefit', 'split', "
+            "or a BaseCrossValidator object (Kfold, LeaveOneOut)."
+        )
 
 
 def check_alpha(

@@ -45,8 +45,17 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
-        super().__init__(estimator, method, cv, n_jobs, agg_function, verbose)
+        super().__init__(
+            estimator=estimator,
+            method=method,
+            cv=cv,
+            n_jobs=n_jobs,
+            agg_function=agg_function,
+            verbose=verbose,
+            random_state=random_state
+        )
 
     def _relative_conformity_scores(
         self,
@@ -255,7 +264,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.lower_quantiles_ = lower_quantiles
         self.higher_quantiles_ = higher_quantiles
 
-        if self.cv == "prefit":
+        if self.method in self.no_agg_methods_ \
+                or self.cv in self.no_agg_cv_:
             y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
             y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
         else:

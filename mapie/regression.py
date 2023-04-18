@@ -6,9 +6,9 @@ import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
 from sklearn.pipeline import Pipeline
-from sklearn.utils import _safe_indexing
+from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
@@ -52,7 +52,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         - "minmax", based on validation conformity scores and
           testing predictions (min/max among cross-validation clones).
 
-        By default "plus".
+        By default ``"plus"``.
 
     cv: Optional[Union[int, str, BaseCrossValidator]]
         The cross-validation strategy for computing conformity scores.
@@ -79,6 +79,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
           to provide a prediction interval with fixed width.
           The user has to take care manually that data for model fitting and
           conformity scores estimate are disjoint.
+
+        By default ``None``.
+
+    test_size: Optional[Union[int, float]]
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the test split. If int, represents the
+        absolute number of test samples. If None, it will be set to 0.1.
+
+        If cv is not ``"split"``, ``test_size`` is ignored.
 
         By default ``None``.
 
@@ -116,7 +125,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         If cv is ``"prefit"`` or ``"split"``, ``agg_function`` is ignored.
 
-        By default "mean".
+        By default ``"mean"``.
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
@@ -136,6 +145,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         - ``None``, to use the default ``AbsoluteConformityScore`` conformity
           score
         - ConformityScore: any ``ConformityScore`` class
+
+        By default ``None``.
+
+    random_state: Optional[Union[int, RandomState]]
+        Pseudo random number generator state used for random uniform sampling
+        for evaluation quantiles and prediction sets in cumulated_score.
+        Pass an int for reproducible output across multiple function calls.
 
         By default ``None``.
 
@@ -180,23 +196,28 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> mapie_reg = MapieRegressor(LinearRegression()).fit(X_toy, y_toy)
+    >>> clf = LinearRegression().fit(X_toy, y_toy)
+    >>> mapie_reg = MapieRegressor(estimator=clf, cv="prefit")
+    >>> mapie_reg = mapie_reg.fit(X_toy, y_toy)
     >>> y_pred, y_pis = mapie_reg.predict(X_toy, alpha=0.5)
     >>> print(y_pis[:, :, 0])
-    [[ 4.7972973   5.8       ]
-     [ 6.69767442  7.65540541]
-     [ 8.59883721  9.58108108]
-     [10.5        11.40116279]
-     [12.4        13.30232558]
-     [14.25       15.20348837]]
+    [[ 4.95714286  5.61428571]
+     [ 6.84285714  7.5       ]
+     [ 8.72857143  9.38571429]
+     [10.61428571 11.27142857]
+     [12.5        13.15714286]
+     [14.38571429 15.04285714]]
     >>> print(y_pred)
     [ 5.28571429  7.17142857  9.05714286 10.94285714 12.82857143 14.71428571]
     """
 
     cv_need_agg_function = ["Subsample"]
+    no_agg_cv_ = ["prefit", "split"]
     valid_methods_ = ["naive", "base", "plus", "minmax"]
+    no_agg_methods_ = ["naive", "base"]
     plus_like_method = ["plus"]
     valid_agg_functions_ = [None, "median", "mean"]
+    ensemble_agg_functions_ = ["median", "mean"]
     fit_attributes = [
         "single_estimator_",
         "estimators_",
@@ -211,18 +232,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         estimator: Optional[RegressorMixin] = None,
         method: str = "plus",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        test_size: Optional[Union[int, float]] = None,
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
         conformity_score: Optional[ConformityScore] = None,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         self.estimator = estimator
         self.method = method
         self.cv = cv
+        self.test_size = test_size
         self.n_jobs = n_jobs
         self.agg_function = agg_function
         self.verbose = verbose
         self.conformity_score = conformity_score
+        self.random_state = random_state
 
     def _check_parameters(self) -> None:
         """
@@ -240,6 +265,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
+        check_random_state(self.random_state)
 
     def _check_agg_function(
         self, agg_function: Optional[str] = None
@@ -267,7 +293,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         if agg_function not in self.valid_agg_functions_:
             raise ValueError(
                 "Invalid aggregation function "
-                "Allowed values are None, 'mean', 'median'."
+                f"Allowed values are '{self.valid_agg_functions_}'."
             )
 
         if (agg_function is None) and (
@@ -277,8 +303,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 "You need to specify an aggregation function when "
                 f"cv's type is in {self.cv_need_agg_function}."
             )
-        if (agg_function is not None) or (self.cv in ["prefit", "split"]):
+        if (agg_function is not None) or (self.cv in self.no_agg_cv_):
             return agg_function
+
         return "mean"
 
     def _check_estimator(
@@ -341,7 +368,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         if ensemble and (self.agg_function is None):
             raise ValueError(
                 "If ensemble is True, the aggregation function has to be "
-                "'mean' or 'median'."
+                f"in '{self.ensemble_agg_functions_}'."
             )
 
     def _fit_and_predict_oof_model(
@@ -427,10 +454,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         ArrayLike of shape (n_samples_test,)
             Array of aggregated predictions for each testing sample.
         """
-        if self.cv in ["prefit", "split"]:
+        if self.method in self.no_agg_methods_ \
+                or self.cv in self.no_agg_cv_:
             raise ValueError(
-                "There should not be aggregation of predictions if cv is "
-                "'prefit' or 'split'."
+                "There should not be aggregation of predictions "
+                f"if cv is in '{self.no_agg_cv_}' "
+                f"or if method is in '{self.no_agg_methods_}'."
             )
         if self.agg_function == "median":
             return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
@@ -443,6 +472,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         if self.agg_function in ["mean", None]:
             K = np.nan_to_num(k, nan=0.0)
             return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
+
         raise ValueError("The value of self.agg_function is not correct")
 
     def _pred_multi(self, X: ArrayLike) -> NDArray:
@@ -511,7 +541,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         # Checks
         self._check_parameters()
-        cv = check_cv(self.cv)
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
         X, y = indexable(X, y)
@@ -582,6 +614,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self.conformity_scores_ = (
             self.conformity_score_function_.get_conformity_scores(y, y_pred)
         )
+
+        if isinstance(cv, ShuffleSplit):
+            self.single_estimator_ = self.estimators_[0]
 
         return self
 
@@ -656,7 +691,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
 
-        if self.method in ["naive", "base"] or self.cv in ["prefit", "split"]:
+        if self.method in self.no_agg_methods_ \
+                or self.cv in self.no_agg_cv_:
             y_pred_multi_low = y_pred[:, np.newaxis]
             y_pred_multi_up = y_pred[:, np.newaxis]
         else:
@@ -708,7 +744,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             [
                 np_nanquantile(
                     upper_bounds.astype(float),
-                    1-_alpha,
+                    1 - _alpha,
                     axis=1,
                     method="higher",
                 )
