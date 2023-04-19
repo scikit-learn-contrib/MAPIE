@@ -1420,26 +1420,6 @@ def test_warning_not_all_label_in_calib() -> None:
         mapie_clf.fit(X_mapie, y_mapie)
 
 
-def test_calib_have_more_label_raise_error() -> None:
-    """
-    Test that the true label cumsumed probabilities
-    have the correct shape.
-    """
-    clf = LogisticRegression()
-    clf.fit(X, y)
-    X_mapie = X.copy()
-    y_mapie = y
-    y_mapie[0] = 5
-    mapie_clf = MapieClassifier(
-        estimator=clf, method="cumulated_score",
-        cv="prefit"
-    )
-    with pytest.raises(
-        ValueError, match=r".*You have more labels in.*"
-    ):
-        mapie_clf.fit(X_mapie, y_mapie)
-
-
 def test_n_classes_prefit() -> None:
     """
     Test that the attribute n_classes_ has the correct
