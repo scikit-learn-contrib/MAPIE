@@ -432,11 +432,7 @@ def test_method_error_if_no_label_partial_fit() -> None:
     )
     mapie_clf = MapieMultiLabelClassifier(clf)
     with pytest.raises(ValueError, match=r".*Invalid y.*"):
-        for i in range(len(X_no_label)):
-            mapie_clf.partial_fit(
-                np.expand_dims(X_no_label[i], axis=0),
-                np.expand_dims(y_no_label[i], axis=0)
-            )
+        mapie_clf.partial_fit(X_no_label, y_no_label)
 
 
 @pytest.mark.parametrize("bound", WRONG_BOUNDS)
