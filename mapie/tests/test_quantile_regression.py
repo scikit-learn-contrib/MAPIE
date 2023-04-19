@@ -317,7 +317,8 @@ def test_quantile_prefit_three_estimators() -> None:
         gb_trained1.fit(X_train, y_train)
         gb_trained2.fit(X_train, y_train)
         list_estimators = [gb_trained1, gb_trained2]
-        mapie_reg = MapieQuantileRegressor(estimator=list_estimators,
+        mapie_reg = MapieQuantileRegressor(
+            estimator=list_estimators,
             cv="prefit"
         )
         mapie_reg.fit(X_calib, y_calib)
