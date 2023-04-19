@@ -89,27 +89,27 @@ STRATEGIES = {
         test_size=0.5,
         random_state=random_state
     ),
-    # "jackknife": Params(
-    #     method="base",
-    #     agg_function="mean",
-    #     cv=-1,
-    #     test_size=None,
-    #     random_state=random_state
-    # ),
-    # "jackknife_plus": Params(
-    #     method="plus",
-    #     agg_function="mean",
-    #     cv=-1,
-    #     test_size=None,
-    #     random_state=random_state
-    # ),
-    # "jackknife_minmax": Params(
-    #     method="minmax",
-    #     agg_function="mean",
-    #     cv=-1,
-    #     test_size=None,
-    #     random_state=random_state
-    # ),
+    "jackknife": Params(
+        method="base",
+        agg_function="mean",
+        cv=-1,
+        test_size=None,
+        random_state=random_state
+    ),
+    "jackknife_plus": Params(
+        method="plus",
+        agg_function="mean",
+        cv=-1,
+        test_size=None,
+        random_state=random_state
+    ),
+    "jackknife_minmax": Params(
+        method="minmax",
+        agg_function="mean",
+        cv=-1,
+        test_size=None,
+        random_state=random_state
+    ),
     "cv": Params(
         method="base",
         agg_function="mean",
@@ -173,9 +173,9 @@ WIDTHS = {
     "MapieQuantileRegressor": {
         "naive": 3.5572792865593614,
         "split": 3.944242271894282,
-        "jackknife": 3.89,
-        "jackknife_plus": 3.9,
-        "jackknife_minmax": 3.96,
+        "jackknife": 4.028541,
+        "jackknife_plus": 3.964452,
+        "jackknife_minmax": 4.271764,
         "cv": 4.28527422069905,
         "cv_plus": 4.220017125028603,
         "cv_minmax": 4.705129924994261,
@@ -202,9 +202,9 @@ COVERAGES = {
     "MapieQuantileRegressor": {
         "naive": 0.952,
         "split": 0.968,
-        "jackknife": 0.952,
-        "jackknife_plus": 0.952,
-        "jackknife_minmax": 0.952,
+        "jackknife": 0.97,
+        "jackknife_plus": 0.966,
+        "jackknife_minmax": 0.974,
         "cv": 0.972,
         "cv_plus": 0.972,
         "cv_minmax": 0.984,

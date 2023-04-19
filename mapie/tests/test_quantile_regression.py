@@ -9,6 +9,7 @@ from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.datasets import make_regression
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestClassifier
 from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.model_selection import train_test_split
 from typing_extensions import TypedDict
 
 from mapie.metrics import regression_coverage_score
@@ -38,14 +39,13 @@ X, y = make_regression(
     random_state=random_state
 )
 
-X_calib, y_calib = make_regression(
-    n_samples=500,
-    n_features=10,
-    noise=1.0,
+X_train, X_calib, y_train, y_calib = train_test_split(
+    X,
+    y,
+    test_size=0.5,
     random_state=random_state
 )
 
-SYMMETRY = [True, False]
 ESTIMATOR = [qt, gb]
 
 Params = TypedDict(
@@ -69,18 +69,18 @@ STRATEGIES = {
 }
 
 WIDTHS = {
-    'quantile_alpha2': 2.744639410027496,
-    'quantile_alpha3': 2.100088918692794,
-    'quantile_alpha4': 1.7101104296999252,
-    'quantile_alpha8': 0.4907343583658844
+    "quantile_alpha2": 2.744639410027496,
+    "quantile_alpha3": 2.100088918692794,
+    "quantile_alpha4": 1.7101104296999252,
+    "quantile_alpha8": 0.4907343583658844
 }
 
 
 COVERAGES = {
-    'quantile_alpha2': 0.84,
-    'quantile_alpha3': 0.732,
-    'quantile_alpha4': 0.608,
-    'quantile_alpha8': 0.206
+    "quantile_alpha2": 0.84,
+    "quantile_alpha3": 0.732,
+    "quantile_alpha4": 0.608,
+    "quantile_alpha8": 0.206
 }
 
 
@@ -188,11 +188,7 @@ def test_no_para_alpha_estimator() -> None:
 
 
 @pytest.mark.parametrize("estimator", ESTIMATOR)
-@pytest.mark.parametrize("symmetry", SYMMETRY)
-def test_results_for_same_alpha(
-    estimator: RegressorMixin,
-    symmetry: bool
-) -> None:
+def test_results_for_same_alpha(estimator: RegressorMixin) -> None:
     """
     Test that predictions and intervals
     are similar with two equal values of alpha.
@@ -318,14 +314,13 @@ def test_quantile_prefit_three_estimators() -> None:
         match=r".*You need to have provided 3 different estimators, th*",
     ):
         gb_trained1, gb_trained2 = clone(gb), clone(gb)
-        gb_trained1.fit(X, y)
-        gb_trained2.fit(X, y)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
         list_estimators = [gb_trained1, gb_trained2]
-        mapie_reg = MapieQuantileRegressor(
-            estimator=list_estimators,
+        mapie_reg = MapieQuantileRegressor(estimator=list_estimators,
             cv="prefit"
         )
-        mapie_reg.fit(X, y)
+        mapie_reg.fit(X_calib, y_calib)
 
 
 def test_prefit_no_fit_predict() -> None:
@@ -337,8 +332,8 @@ def test_prefit_no_fit_predict() -> None:
         match=r"Invalid estimator. Please provide a regressor with fit and*",
     ):
         gb_trained1, gb_trained2 = clone(gb), clone(gb)
-        gb_trained1.fit(X, y)
-        gb_trained2.fit(X, y)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
         gb_trained3 = 3
         list_estimators = [gb_trained1, gb_trained2, gb_trained3]
         mapie_reg = MapieQuantileRegressor(
@@ -346,7 +341,7 @@ def test_prefit_no_fit_predict() -> None:
             cv="prefit",
             alpha=0.3
         )
-        mapie_reg.fit(X, y)
+        mapie_reg.fit(X_calib, y_calib)
 
 
 def test_non_trained_estimator() -> None:
@@ -358,8 +353,8 @@ def test_non_trained_estimator() -> None:
         match=r".*instance is not fitted yet. Call 'fit' with appropriate*",
     ):
         gb_trained1, gb_trained2, gb_trained3 = clone(gb), clone(gb), clone(gb)
-        gb_trained1.fit(X, y)
-        gb_trained2.fit(X, y)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
         list_estimators = [gb_trained1, gb_trained2, gb_trained3]
         mapie_reg = MapieQuantileRegressor(
             estimator=list_estimators,
@@ -378,9 +373,9 @@ def test_warning_alpha_prefit() -> None:
         match=r".*WARNING: The alpha that is set needs to be the same*"
     ):
         gb_trained1, gb_trained2, gb_trained3 = clone(gb), clone(gb), clone(gb)
-        gb_trained1.fit(X, y)
-        gb_trained2.fit(X, y)
-        gb_trained3.fit(X, y)
+        gb_trained1.fit(X_train, y_train)
+        gb_trained2.fit(X_train, y_train)
+        gb_trained3.fit(X_train, y_train)
         list_estimators = [gb_trained1, gb_trained2, gb_trained3]
         mapie_reg = MapieQuantileRegressor(
             estimator=list_estimators,
@@ -409,13 +404,10 @@ def test_prefit_and_non_prefit_equal(alpha: float) -> None:
         cv="prefit",
         alpha=alpha
     )
-    mapie_reg_prefit.fit(X_calib, y_calib)
+    mapie_reg_prefit.fit(X, y)
     y_pred_prefit, y_pis_prefit = mapie_reg_prefit.predict(X, alpha=alpha)
 
-    mapie_reg = MapieQuantileRegressor(
-        estimator=qt,
-        alpha=alpha
-    )
+    mapie_reg = MapieQuantileRegressor(estimator=qt, alpha=alpha)
     mapie_reg.fit(X, y)
     y_pred, y_pis = mapie_reg.predict(X, alpha=alpha)
 
@@ -435,7 +427,7 @@ def test_prefit_different_type_list_tuple_array(alpha: float) -> None:
         est = clone(qt)
         params = {"quantile": alpha_}
         est.set_params(**params)
-        est.fit(X, y)
+        est.fit(X_train, y_train)
         list_estimators.append(est)
 
     mapie_reg_prefit_list = MapieQuantileRegressor(
