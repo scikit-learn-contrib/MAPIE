@@ -1,2 +1,5 @@
 [run]
-omit = _compatibility.py
+omit = mapie/_compatibility.py
+
+[report]
+omit = mapie/_compatibility.py
