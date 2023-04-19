@@ -1629,7 +1629,7 @@ def test_get_true_label_position(
 def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
     """
     Test that an error is raised if the method is RAPS
-    and cv is different from prefit.s
+    and cv is different from prefit and split.
     """
     mapie = MapieClassifier(method="raps", cv=5)
     with pytest.raises(ValueError, match=r".*RAPS method can only.*"):
