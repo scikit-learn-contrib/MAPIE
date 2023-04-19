@@ -7,7 +7,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import QuantileRegressor
-from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
@@ -17,8 +17,9 @@ from ._typing import ArrayLike, NDArray
 from .aggregation_functions import aggregate_all
 from .conformity_scores import ConformityScore
 from .regression import MapieRegressor
-from .utils import (check_alpha_and_n_samples, check_conformity_score,
-                    check_cv, check_defined_variables_predict_cqr,
+from .utils import (check_alpha, check_alpha_and_n_samples,
+                    check_conformity_score, check_cv,
+                    check_defined_variables_predict_cqr,
                     check_estimator_fit_predict, check_lower_upper_bounds,
                     check_n_features_in, check_nan_in_aposteriori_prediction,
                     check_null_weight, fit_estimator)
@@ -28,7 +29,7 @@ class MapieQuantileRegressor(MapieRegressor):
     """
     This class implements the conformalized quantile regression strategy
     as proposed by Romano et al. (2019) to make conformal predictions.
-    The valid ``method``and ``cv`` are the same as for MapieRegressor.
+    The valid ``method`` and ``cv`` are the same as for MapieRegressor.
 
     Parameters
     ----------
@@ -48,7 +49,7 @@ class MapieQuantileRegressor(MapieRegressor):
         - "minmax", based on validation conformity scores and
           testing predictions (min/max among cross-validation clones).
 
-        By default "plus".
+        By default ``"plus"``.
 
     cv: Optional[Union[int, str, BaseCrossValidator]]
         The cross-validation strategy for computing conformity scores.
@@ -76,6 +77,15 @@ class MapieQuantileRegressor(MapieRegressor):
           to provide a prediction interval with fixed width.
           The user has to take care manually that data for model fitting and
           conformity scores estimate are disjoint.
+
+        By default ``None``.
+
+    test_size: Optional[Union[int, float]]
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the test split. If int, represents the
+        absolute number of test samples. If None, it will be set to 0.1.
+
+        If cv is not ``"split"``, ``test_size`` is ignored.
 
         By default ``None``.
 
@@ -113,7 +123,7 @@ class MapieQuantileRegressor(MapieRegressor):
 
         If cv is ``"prefit"`` or ``"split"``, ``agg_function`` is ignored.
 
-        By default "mean".
+        By default ``"mean"``.
 
     verbose : int, optional
         The verbosity level, used with joblib for multiprocessing.
@@ -136,6 +146,13 @@ class MapieQuantileRegressor(MapieRegressor):
 
         By default ``None``.
 
+    random_state: Optional[Union[int, RandomState]]
+        Pseudo random number generator state used for random uniform sampling
+        for evaluation quantiles and prediction sets in cumulated_score.
+        Pass an int for reproducible output across multiple function calls.
+
+        By default ``None``.
+
     alpha: float
         Between 0 and 1.0, represents the risk level of the confidence
         interval.
@@ -143,7 +160,7 @@ class MapieQuantileRegressor(MapieRegressor):
         intervals.
         ``alpha`` is the complement of the target coverage level.
 
-        By default 0.1.
+        By default ``0.1``.
 
     Attributes
     ----------
@@ -176,29 +193,27 @@ class MapieQuantileRegressor(MapieRegressor):
     --------
     >>> import numpy as np
     >>> from mapie.quantile_regression import MapieQuantileRegressor
-    >>> X_train = np.array([[0], [1], [2], [3], [4], [5]])
-    >>> y_train = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> X_calib = np.array([[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]])
-    >>> y_calib = np.array([5, 7, 9, 4, 8, 1, 5, 7.5, 9.5, 12])
-    >>> mapie_reg = MapieQuantileRegressor().fit(
-    ...     X_train,
-    ...     y_train,
-    ...     X_calib=X_calib,
-    ...     y_calib=y_calib
-    ... )
-    >>> y_pred, y_pis = mapie_reg.predict(X_train)
+    >>> X = np.array([[0], [1], [2], [3], [4], [5], [6], [7], [8], [9], [10]])
+    >>> y = np.array([5, 7.5, 9.5, 10.5, 12.5, 15, 16, 17.5, 18.5, 20, 21])
+    >>> mapie_reg = MapieQuantileRegressor(alpha=0.25, random_state=42)
+    >>> mapie_reg = mapie_reg.fit(X, y)
+    >>> y_pred, y_pis = mapie_reg.predict(X, alpha=0.25)
     >>> print(y_pis[:, :, 0])
-    [[-8.16666667 19.        ]
-     [-6.33333333 20.83333333]
-     [-4.5        22.66666667]
-     [-2.66666667 24.5       ]
-     [-0.83333333 26.33333333]
-     [ 1.         28.16666667]]
+    [[ 5.          6.4       ]
+     [ 6.5         8.        ]
+     [ 8.          9.6       ]
+     [ 9.5        11.2       ]
+     [11.         12.9       ]
+     [12.66666667 14.6       ]
+     [14.33333333 16.3       ]
+     [16.         18.        ]
+     [17.66666667 19.7       ]
+     [19.33333333 21.4       ]
+     [21.         23.1       ]]
     >>> print(y_pred)
-    [ 5.  7.  9. 11. 13. 15.]
+    [ 5.92857143  7.5         9.07142857 10.64285714 12.21428571 13.78571429
+     15.35714286 16.92857143 18.5        20.07142857 21.64285714]
     """
-    valid_methods_ = ["naive", "base", "plus"]
-    valid_agg_functions_ = [None, "median", "mean"]
     fit_attributes = [
         "single_estimator_",
         "single_estimator_alpha_",
@@ -240,19 +255,23 @@ class MapieQuantileRegressor(MapieRegressor):
         method: str = "plus",
         alpha: float = 0.1,
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+        test_size: Optional[Union[int, float]] = None,
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
-        conformity_score: Optional[ConformityScore] = None
+        conformity_score: Optional[ConformityScore] = None,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         super().__init__(
             estimator=estimator,
             method=method,
             cv=cv,
+            test_size=test_size,
             n_jobs=n_jobs,
             agg_function=agg_function,
             verbose=verbose,
-            conformity_score=conformity_score
+            conformity_score=conformity_score,
+            random_state=random_state
         )
         self.alpha = alpha
 
@@ -361,6 +380,11 @@ class MapieQuantileRegressor(MapieRegressor):
                 solver="highs-ds",
                 alpha=0.0,
             )
+
+        if check_cv(self.cv) == "prefit":
+            self._check_prefit_params(estimator)
+            return estimator
+
         check_estimator_fit_predict(estimator)
         if isinstance(estimator, Pipeline):
             self._check_estimator(estimator[-1])
@@ -401,7 +425,7 @@ class MapieQuantileRegressor(MapieRegressor):
                         "The base model does not seem to be accepted"
                         + " by MapieQuantileRegressor. \n"
                         "Give a base model among: \n"
-                        "``quantile_estimator_params.keys()``"
+                        f"{self.quantile_estimator_params.keys()}"
                         "Or, add your base model to"
                         + " ``quantile_estimator_params``."
                     )
@@ -468,7 +492,7 @@ class MapieQuantileRegressor(MapieRegressor):
         -------
             NDArray of shape (n_samples_test, n_samples_train)
         """
-        y_pred_alpha = []
+        y_pred_alpha_list = []
         for i, est_list in enumerate(self.estimators_):
             y_pred_multi = np.column_stack(
                 [e.predict(X) for e in est_list]
@@ -477,11 +501,11 @@ class MapieQuantileRegressor(MapieRegressor):
             # (n_samples_test, n_estimators_). The method
             # ``_aggregate_with_mask`` fits it to the right size
             # thanks to the shape of k_.
-            y_pred_alpha.append(
+            y_pred_alpha_list.append(
                 self._aggregate_with_mask(y_pred_multi, self.k_[i])
             )
 
-        y_pred_alpha = np.array(y_pred_alpha)
+        y_pred_alpha = np.array(y_pred_alpha_list)
 
         return y_pred_alpha
 
@@ -526,13 +550,11 @@ class MapieQuantileRegressor(MapieRegressor):
         """
         # Checks
         self._check_parameters()
-        cv = check_cv(self.cv)
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
         alpha = self._check_alpha(self.alpha)
         estimator = self._check_estimator(self.estimator)
-        if cv == "prefit":
-            self._check_prefit_params(estimator)
-        else:
-            cv = cast(BaseCrossValidator, cv)
         agg_function = self._check_agg_function(self.agg_function)
         X, y = indexable(X, y)
         y = _check_y(y)
@@ -545,6 +567,7 @@ class MapieQuantileRegressor(MapieRegressor):
         y = cast(NDArray, y)
         n_samples = _num_samples(y)
         check_alpha_and_n_samples(alpha, n_samples)
+        cv = cast(BaseCrossValidator, cv)
 
         # Initialization
         self.single_estimator_alpha_: List[RegressorMixin] = []
@@ -587,6 +610,10 @@ class MapieQuantileRegressor(MapieRegressor):
                 shape=(3, n_samples, cv.get_n_splits(X, y)),
                 fill_value=np.nan,
                 dtype=float,
+            )
+        else:
+            self.k_ = np.full(
+                shape=(3, n_samples, 1), fill_value=np.nan, dtype=float
             )
 
         for i, alpha_ in enumerate(alpha):
@@ -637,7 +664,10 @@ class MapieQuantileRegressor(MapieRegressor):
                 )
             )
 
-        self.single_estimator_ = self.single_estimator_alpha_[2]
+        if isinstance(cv, ShuffleSplit):
+            self.single_estimator_ = self.estimators_[2][0]
+        else:
+            self.single_estimator_ = self.single_estimator_alpha_[2]
 
         return self
 
@@ -646,22 +676,24 @@ class MapieQuantileRegressor(MapieRegressor):
         X: ArrayLike,
         ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
-        symmetry: Optional[bool] = True,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
-        Residuals from the training set and predictions from the model clones
-        are central to the computation.
-        Prediction Intervals for a given ``alpha`` are deduced from the
-        quantile regression at the alpha values: alpha/2, 1 - (alpha/2)
-        while adding a constant based uppon their residuals.
+        Conformity scores from the training set and predictions
+        from the model clones are central to the computation.
+        Prediction Intervals for a given ``alpha`` are deduced from either
+
+        - quantiles of conformity scores (naive and base methods),
+        - quantiles of (predictions +/- conformity scores) (plus method),
+        - quantiles of (max/min(predictions) +/- conformity scores)
+          (minmax method).
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Test data.
 
-        ensemble : bool
+        ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
             If False, predictions are those of the model trained on the whole
             training set.
@@ -669,18 +701,19 @@ class MapieQuantileRegressor(MapieRegressor):
             the aggregation function specified in the ``agg_function``
             attribute.
 
-            If cv is ``"prefit"``, ``ensemble`` is ignored.
+            If cv is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
 
-        alpha : Optional[Union[float, Iterable[float]]]
-            For ``MapieQuantileRegressor`` the alpha has to be defined
-            directly in initial arguments of the class.
+        alpha: Optional[Union[float, Iterable[float]]]
+            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
+            Between 0 and 1, represents the uncertainty of the confidence
+            interval.
+            Lower ``alpha`` produce larger (more conservative) prediction
+            intervals.
+            ``alpha`` is the complement of the target coverage level.
 
-        symmetry : Optional[bool], optional
-            Deciding factor to whether to find the quantile value for
-            each residuals separatly or to use the maximum of the two
-            combined.
+            By default ``None``.
 
         Returns
         -------
@@ -699,25 +732,29 @@ class MapieQuantileRegressor(MapieRegressor):
         check_defined_variables_predict_cqr(ensemble, alpha)
         self._check_ensemble(ensemble)
 
-        n = len(self.conformity_scores_[-1])
-        alpha = self.alpha/2  # self.alpha if symmetry else self.alpha/2
-        check_alpha_and_n_samples(alpha, n)
+        y_pred = self.single_estimator_.predict(X)
+
+        if alpha is None:
+            return np.array(y_pred)
+
+        n_samples = len(self.conformity_scores_[-1])
+        alpha_np = cast(NDArray, check_alpha(alpha))
+        check_alpha_and_n_samples(alpha_np, n_samples)
 
         y_pred = np.full(
             shape=(3, _num_samples(X)),
             fill_value=np.nan,
             dtype=float,
         )
-        if not (ensemble or self.method in ["plus", "minmax"]):
-            for i, est in enumerate(self.single_estimator_alpha_):
-                y_pred[i] = est.predict(X)
+        for i, est in enumerate(self.single_estimator_alpha_):
+            y_pred[i] = est.predict(X)
 
+        if self.method in self.no_agg_methods_ \
+                or self.cv in self.no_agg_cv_:
             y_pred_multi_low = y_pred[0, :, np.newaxis]
             y_pred_multi_up = y_pred[1, :, np.newaxis]
         else:
             y_pred_multi = self._pred_multi_alpha(X)
-            for i, est in enumerate(self.single_estimator_alpha_):
-                y_pred[i] = aggregate_all(self.agg_function, y_pred_multi[i])
 
             if self.method == "minmax":
                 y_pred_multi_low = np.min(
@@ -730,41 +767,53 @@ class MapieQuantileRegressor(MapieRegressor):
                 y_pred_multi_low = y_pred_multi[0]
                 y_pred_multi_up = y_pred_multi[1]
 
+            if ensemble:
+                for i, est in enumerate(self.single_estimator_alpha_):
+                    y_pred[i] = aggregate_all(
+                        self.agg_function, y_pred_multi[i]
+                    )
+
+        # compute distributions of lower and upper bounds
+        conformity_scores_low = self.conformity_scores_[0]
+        conformity_scores_up = self.conformity_scores_[1]
+        alpha_np = alpha_np/2
+
         lower_bounds = (
             self.conformity_score_function_.get_estimation_distribution(
-                y_pred_multi_low, self.conformity_scores_[0]
+                y_pred_multi_low, conformity_scores_low
             )
-        )  # = np.add(y_pred[0] test, np.subtract(y, y_pred[0] calib))
+        )
         upper_bounds = (
             self.conformity_score_function_.get_estimation_distribution(
-                y_pred_multi_up, self.conformity_scores_[1]
+                y_pred_multi_up, conformity_scores_up
             )
-        )  # = np.add(y_pred[1] test, np.subtract(y, y_pred[1] calib))
+        )
 
         # get desired confidence intervals according to alpha
         y_pred_low = np.column_stack(
             [
                 np_nanquantile(
                     lower_bounds.astype(float),
-                    _alpha/2,
+                    _alpha,
                     axis=1,
                     method="lower",
                 )
-                for _alpha in [self.alpha]
+                for _alpha in alpha_np
             ]
         )
         y_pred_up = np.column_stack(
             [
                 np_nanquantile(
                     upper_bounds.astype(float),
-                    1-_alpha/2,
+                    1-_alpha,
                     axis=1,
                     method="higher",
                 )
-                for _alpha in [self.alpha]
+                for _alpha in alpha_np
             ]
         )
 
-        check_lower_upper_bounds(y_pred, y_pred_low, y_pred_up)
+        for i in range(len(alpha_np)):
+            check_lower_upper_bounds(y_pred, y_pred_low[:, i], y_pred_up[:, i])
 
         return y_pred[2], np.stack([y_pred_low, y_pred_up], axis=1)
