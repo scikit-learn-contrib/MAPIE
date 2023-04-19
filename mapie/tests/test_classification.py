@@ -1388,7 +1388,7 @@ def test_not_all_label_in_calib() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = y != 2
+    indices_remove = np.where(y != 2)
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
@@ -1407,7 +1407,7 @@ def test_warning_not_all_label_in_calib() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = y != 2
+    indices_remove = np.where(y != 2)
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
@@ -1427,7 +1427,7 @@ def test_n_classes_prefit() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = y != 2
+    indices_remove = np.where(y != 2)
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
