@@ -1504,3 +1504,21 @@ def test_classes_cv() -> None:
     )
     mapie_clf.fit(X, y)
     assert (mapie_clf.classes_ == np.unique(y)).all()
+
+
+def test_raise_error_new_class() -> None:
+    """
+    Test that the attribute if there is an unseen
+    classe in `y` then an error is raised.
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    y[-1] = 10
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    with pytest.raises(
+        ValueError, match=r".*Values in y do not matched values.*"
+    ):
+        mapie_clf.fit(X, y)

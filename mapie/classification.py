@@ -912,6 +912,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
+            If `cv="prefit"` and that classes in `y` are not included into
+            `estimator.classes_`.
             If number of calibration labels is higher than number of labels
             for training (in prefit setting)
         Warning
@@ -922,7 +924,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.cv == "prefit":
             classes = estimator.classes_
             n_classes = len(np.unique(classes))
-
+            if not set(np.unique(y)).issubset(classes):
+                raise ValueError(
+                    "Values in y do not matched values in estimator.classes_."
+                    + " Check that you are not adding any new label"
+                )
             if n_classes > n_unique_y_labels:
                 warnings.warn(
                     "WARNING: your calibration dataset has less labels"
