@@ -273,14 +273,11 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
-
-        - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
-
-        - Tuple[NDArray, NDArray] of shapes (n_samples,) and
-            (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
-
-            - [:, 0, :]: Lower bound of the prediction interval.
-            - [:, 1, :]: Upper bound of the prediction interval.
+            - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
+            - Tuple[NDArray, NDArray] of shapes (n_samples,) and
+              (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
+                - [:, 0, :]: Lower bound of the prediction interval.
+                - [:, 1, :]: Upper bound of the prediction interval.
         """
         # Checks
         check_is_fitted(self, self.fit_attributes)

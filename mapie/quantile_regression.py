@@ -74,11 +74,11 @@ class MapieQuantileRegressor(MapieRegressor):
 
     conformity_scores_: NDArray of shape (n_samples_train, 3)
         Conformity scores between ``y_calib`` and ``y_pred``.
-            - [:, 0]: for ``y_calib`` coming from prediction estimator
-                with quantile of alpha/2
-            - [:, 1]: for ``y_calib`` coming from prediction estimator
-                with quantile of 1 - alpha/2
-            - [:, 2]: maximum of those first two scores
+        - [:, 0]: for ``y_calib`` coming from prediction estimator
+          with quantile of alpha/2
+        - [:, 1]: for ``y_calib`` coming from prediction estimator
+          with quantile of 1 - alpha/2
+        - [:, 2]: maximum of those first two scores
 
     n_calib_samples: int
         Number of samples in the calibration dataset.
@@ -662,14 +662,11 @@ class MapieQuantileRegressor(MapieRegressor):
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
-
-        - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
-
-        - Tuple[NDArray, NDArray] of shapes (n_samples,) and
-            (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
-
-            - [:, 0, :]: Lower bound of the prediction interval.
-            - [:, 1, :]: Upper bound of the prediction interval.
+            - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
+            - Tuple[NDArray, NDArray] of shapes (n_samples,) and
+              (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
+                - [:, 0, :]: Lower bound of the prediction interval.
+                - [:, 1, :]: Upper bound of the prediction interval.
         """
         check_is_fitted(self, self.fit_attributes)
         check_defined_variables_predict_cqr(ensemble, alpha)
