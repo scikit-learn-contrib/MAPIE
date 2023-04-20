@@ -74,6 +74,7 @@ class MapieQuantileRegressor(MapieRegressor):
 
     conformity_scores_: NDArray of shape (n_samples_train, 3)
         Conformity scores between ``y_calib`` and ``y_pred``.
+
         - [:, 0]: for ``y_calib`` coming from prediction estimator
           with quantile of alpha/2
         - [:, 1]: for ``y_calib`` coming from prediction estimator
