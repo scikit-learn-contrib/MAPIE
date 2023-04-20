@@ -40,7 +40,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Any regressor with scikit-learn API
         (i.e. with ``fit`` and ``predict`` methods).
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
-        
+
         By default ``None``.
 
     method: str
