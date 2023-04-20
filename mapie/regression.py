@@ -38,8 +38,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     ----------
     estimator: Optional[RegressorMixin]
         Any regressor with scikit-learn API
-        (i.e. with ``fit`` and ``predict`` methods), by default ``None``.
+        (i.e. with ``fit`` and ``predict`` methods).
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
+        
+        By default ``None``.
 
     method: str
         Method to choose for prediction interval estimates.
@@ -83,7 +85,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         By default ``None``.
 
     test_size: Optional[Union[int, float]]
-        If float, should be between ``0.0`` and ``1.0`` and represent the
+        If ``float``, should be between ``0.0`` and ``1.0`` and represent the
         proportion of the dataset to include in the test split. If ``int``,
         represents the absolute number of test samples. If ``None``,
         it will be set to ``0.1``.
@@ -108,7 +110,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Determines how to aggregate predictions from perturbed models, both at
         training and prediction time.
 
-        If ``None``, it is ignored except if cv class is ``Subsample``,
+        If ``None``, it is ignored except if ``cv`` class is ``Subsample``,
         in which case an error is raised.
         If ``"mean"`` or ``"median"``, returns the mean or median of the
         predictions computed from the out-of-folds models.
@@ -170,7 +172,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         Conformity scores between ``y_train`` and ``y_pred``.
 
     k_: ArrayLike
-        - Array of nans, of shape (len(y), 1) if cv is ``"prefit"``
+        - Array of nans, of shape (len(y), 1) if ``cv`` is ``"prefit"``
           (defined but not used)
         - Dummy array of folds containing each training sample, otherwise.
           Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
@@ -553,7 +555,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
-            If None, then samples are equally weighted.
+            If ``None``, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
             before the fitting process and hence have no conformity scores.
@@ -660,10 +662,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         from the model clones are central to the computation.
         Prediction Intervals for a given ``alpha`` are deduced from either
 
-        - quantiles of conformity scores (naive and base methods),
-        - quantiles of (predictions +/- conformity scores) (plus method),
+        - quantiles of conformity scores (``naive`` and ``base`` methods),
+        - quantiles of (predictions +/- conformity scores) (``plus`` method),
         - quantiles of (max/min(predictions) +/- conformity scores)
-          (minmax method).
+          (``minmax`` method).
 
         Parameters
         ----------

@@ -20,7 +20,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     This class implements the EnbPI strategy for estimating
     prediction intervals on single-output time series. The only valid
-    ``method`` is 'enbpi'.
+    ``method`` is ``"enbpi"``.
 
     Actually, EnbPI only corresponds to ``MapieTimeSeriesRegressor`` if the
     ``cv`` argument is of type ``BlockBootstrap``.
@@ -277,7 +277,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
 
         - Tuple[NDArray, NDArray] of shapes (n_samples,) and
-          (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
+            (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
 
             - [:, 0, :]: Lower bound of the prediction interval.
             - [:, 1, :]: Upper bound of the prediction interval.

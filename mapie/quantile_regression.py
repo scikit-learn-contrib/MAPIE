@@ -25,7 +25,7 @@ class MapieQuantileRegressor(MapieRegressor):
     """
     This class implements the conformalized quantile regression strategy
     as proposed by Romano et al. (2019) to make conformal predictions.
-    The only valid ``method`` is ``"quantile"`` and the only valid default
+    The only valid ``method`` is ``"quantile"`` and the only valid
     ``cv`` is ``"split"``.
 
     Parameters
@@ -73,11 +73,11 @@ class MapieQuantileRegressor(MapieRegressor):
         - [2]: Estimator with quantile value of 0.5
 
     conformity_scores_: NDArray of shape (n_samples_train, 3)
-        Conformity scores between ``y_calib`` and ``y_pred``:
+        Conformity scores between ``y_calib`` and ``y_pred``.
             - [:, 0]: for ``y_calib`` coming from prediction estimator
-            with quantile of alpha/2
+                with quantile of alpha/2
             - [:, 1]: for ``y_calib`` coming from prediction estimator
-            with quantile of 1 - alpha/2
+                with quantile of 1 - alpha/2
             - [:, 2]: maximum of those first two scores
 
     n_calib_samples: int
@@ -519,14 +519,13 @@ class MapieQuantileRegressor(MapieRegressor):
         shuffle: bool, default=True
             For the ``sklearn.model_selection.train_test_split`` documentation.
             Whether or not to shuffle the data before splitting.
-            If shuffle=False
-            then stratify must be None.
+            If ``shuffle=False`` then stratify must be None.
 
             By default ``True``.
 
         stratify: array-like, default=None
             For the ``sklearn.model_selection.train_test_split`` documentation.
-            If not `None``, data is split in a stratified fashion, using this
+            If not ``None``, data is split in a stratified fashion, using this
             as the class labels.
             Read more in the :ref:`User Guide <stratification>`.
 
@@ -667,7 +666,7 @@ class MapieQuantileRegressor(MapieRegressor):
         - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
 
         - Tuple[NDArray, NDArray] of shapes (n_samples,) and
-          (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
+            (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
 
             - [:, 0, :]: Lower bound of the prediction interval.
             - [:, 1, :]: Upper bound of the prediction interval.
