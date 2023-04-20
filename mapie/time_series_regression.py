@@ -32,10 +32,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/abs/2010.09107
     """
 
-    cv_need_agg_function = MapieRegressor.cv_need_agg_function \
+    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ \
         + ["BlockBootstrap"]
     valid_methods_ = ["enbpi"]
-    plus_like_method = MapieRegressor.plus_like_method + ["enbpi"]
 
     def __init__(
         self,
@@ -156,6 +155,25 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         method of ``MapieTimeSeriesRegressor`` computes the
         ``conformity_scores_`` with relative values.
 
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Training data.
+
+        y: ArrayLike of shape (n_samples,)
+            Training labels.
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for fitting the out-of-fold models.
+            If ``None``, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no conformity scores.
+            If weights are non-uniform,
+            conformity scores are still uniformly weighted.
+
+            By default ``None``.
+
         Returns
         -------
         MapieTimeSeriesRegressor
@@ -177,10 +195,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples_test, n_features)
+        X: ArrayLike of shape (n_samples_test, n_features)
             Input data.
 
-        y : ArrayLike of shape (n_samples_test,)
+        y: ArrayLike of shape (n_samples_test,)
             Input labels.
 
         Returns
@@ -191,7 +209,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         Raises
         ------
         ValueError
-            If the length of y is greater than the length of the training set.
+            If the length of ``y`` is greater than
+            the length of the training set.
         """
         check_is_fitted(self, self.fit_attributes)
         X = cast(NDArray, X)
@@ -223,9 +242,45 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         Parameters
         ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Test data.
+
+        ensemble: bool
+            Boolean determining whether the predictions are ensembled or not.
+            If ``False``, predictions are those of the model trained on the
+            whole training set.
+            If ``True``, predictions from perturbed models are aggregated by
+            the aggregation function specified in the ``agg_function``
+            attribute.
+
+            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
+
+            By default ``False``.
+
+        alpha: Optional[Union[float, Iterable[float]]]
+            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
+            Between ``0`` and ``1``, represents the uncertainty of the
+            confidence interval.
+            Lower ``alpha`` produce larger (more conservative) prediction
+            intervals.
+            ``alpha`` is the complement of the target coverage level.
+
+            By default ``None``.
+
         optimize_beta: bool
             Whether to optimize the PIs' width or not.
 
+        Returns
+        -------
+        Union[NDArray, Tuple[NDArray, NDArray]]
+
+        - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
+
+        - Tuple[NDArray, NDArray] of shapes (n_samples,) and
+          (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
+
+            - [:, 0, :]: Lower bound of the prediction interval.
+            - [:, 1, :]: Upper bound of the prediction interval.
         """
         # Checks
         check_is_fitted(self, self.fit_attributes)
