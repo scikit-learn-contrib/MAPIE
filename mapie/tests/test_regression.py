@@ -156,34 +156,34 @@ STRATEGIES = {
 
 WIDTHS = {
     "MapieRegressor": {
-        "naive": 3.808655189220827,
-        "split": 3.867357801101889,
+        "naive": 3.81,
+        "split": 3.87,
         "jackknife": 3.89,
         "jackknife_plus": 3.9,
         "jackknife_minmax": 3.96,
-        "cv": 3.8453475902497893,
-        "cv_plus": 3.901988737790367,
-        "cv_minmax": 4.035935502637255,
+        "cv": 3.84,
+        "cv_plus": 3.90,
+        "cv_minmax": 4.04,
         "prefit": 4.81,
         "cv_plus_median": 3.9,
-        "jackknife_plus_ab": 3.89363152631518,
-        "jackknife_minmax_ab": 4.136767552445276,
-        "jackknife_plus_median_ab": 3.8832876650864354
+        "jackknife_plus_ab": 3.89,
+        "jackknife_minmax_ab": 4.14,
+        "jackknife_plus_median_ab": 3.88
     },
     "MapieQuantileRegressor": {
-        "naive": 3.5572792865593614,
-        "split": 3.944242271894282,
-        "jackknife": 4.028541,
-        "jackknife_plus": 3.964452,
-        "jackknife_minmax": 4.271764,
-        "cv": 4.28527422069905,
-        "cv_plus": 4.220017125028603,
-        "cv_minmax": 4.705129924994261,
+        "naive": 3.56,
+        "split": 3.94,
+        "jackknife": 4.03,
+        "jackknife_plus": 3.96,
+        "jackknife_minmax": 4.27,
+        "cv": 4.29,
+        "cv_plus": 4.22,
+        "cv_minmax": 4.71,
         "prefit": 4.81,
         "cv_plus_median": 3.9,
-        "jackknife_plus_ab": 4.014862750502347,
-        "jackknife_minmax_ab": 4.555279544109818,
-        "jackknife_plus_median_ab": 4.095923800708406}}
+        "jackknife_plus_ab": 4.01,
+        "jackknife_minmax_ab": 4.56,
+        "jackknife_plus_median_ab": 4.1}}
 COVERAGES = {
     "MapieRegressor": {
         "naive": 0.952,
