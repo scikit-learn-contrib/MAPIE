@@ -1462,7 +1462,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
     mapie.predict(X)
 
 
-def test_pred_proba_float64():
+def test_pred_proba_float64() -> None:
     """Check that the method _check_proba_normalized returns float64."""
     y_pred_proba = np.random.random((1000, 10)).astype(np.float32)
     sum_of_rows = y_pred_proba.sum(axis=1)
@@ -1474,8 +1474,9 @@ def test_pred_proba_float64():
 
 
 @pytest.mark.parametrize("cv", ["prefit", None])
-def test_classif_float32(cv):
-    """Check that by returning float64 arrays there are not
+def test_classif_float32(cv) -> None:
+    """
+    Check that by returning float64 arrays there are not
     empty predictions sets with naive method using both
     prefit and cv=5. If the y_pred_proba was still in
     float32, as the quantile=0.90 would have been equal
@@ -1511,8 +1512,9 @@ def test_classif_float32(cv):
 
 
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
-def test_regularize_conf_scores_shape(k_lambda):
-    """Test that the conformity scores have the correct shape.
+def test_regularize_conf_scores_shape(k_lambda) -> None:
+    """
+    Test that the conformity scores have the correct shape.
     """
     lambda_, k = k_lambda[0], k_lambda[1]
     args_init, _ = STRATEGIES["raps"]
@@ -1527,8 +1529,9 @@ def test_regularize_conf_scores_shape(k_lambda):
     assert reg_conf_scores.shape == (100, 1, len(k))
 
 
-def test_get_true_label_cumsum_proba_shape():
-    """Test that the true label cumsumed probabilities
+def test_get_true_label_cumsum_proba_shape() -> None:
+    """
+    Test that the true label cumsumed probabilities
     have the correct shape.
     """
     clf = LogisticRegression()
@@ -1543,8 +1546,9 @@ def test_get_true_label_cumsum_proba_shape():
     assert cutoff.shape == (len(X), )
 
 
-def test_get_true_label_cumsum_proba_result():
-    """Test that the true label cumsumed probabilities
+def test_get_true_label_cumsum_proba_result() -> None:
+    """
+    Test that the true label cumsumed probabilities
     are the expected ones.
     """
     clf = LogisticRegression()
@@ -1575,7 +1579,8 @@ def test_get_true_label_cumsum_proba_result():
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_get_last_included_proba_shape(k_lambda, strategy):
-    """Test that the outputs of _get_last_included_proba method
+    """
+    Test that the outputs of _get_last_included_proba method
     have the correct shape.
     """
     lambda_, k = k_lambda[0], k_lambda[1]
@@ -1604,8 +1609,11 @@ def test_get_last_included_proba_shape(k_lambda, strategy):
 
 
 @pytest.mark.parametrize("y_true_proba_place", Y_TRUE_PROBA_PLACE)
-def test_get_true_label_position(y_true_proba_place: List[NDArray]):
-    """Check that the returned true label position the good.
+def test_get_true_label_position(
+    y_true_proba_place: List[NDArray]
+) -> None:
+    """
+    Check that the returned true label position the good.
     """
     y_true = y_true_proba_place[0]
     y_pred_proba = y_true_proba_place[1]
@@ -1618,10 +1626,134 @@ def test_get_true_label_position(y_true_proba_place: List[NDArray]):
 
 
 @pytest.mark.parametrize("cv", [5, None])
-def test_error_raps_cv_not_prefit(cv: Union[int, None]):
-    """Test that an error is raised if the method is RAPS
+def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
+    """
+    Test that an error is raised if the method is RAPS
     and cv is different from prefit and split.
     """
     mapie = MapieClassifier(method="raps", cv=5)
     with pytest.raises(ValueError, match=r".*RAPS method can only.*"):
         mapie.fit(X_toy, y_toy)
+
+
+def test_not_all_label_in_calib() -> None:
+    """
+    Test that the true label cumsumed probabilities
+    have the correct shape.
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    indices_remove = np.where(y != 2)
+    X_mapie = X[indices_remove]
+    y_mapie = y[indices_remove]
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    mapie_clf.fit(X_mapie, y_mapie)
+    y_pred, y_pss = mapie_clf.predict(X, alpha=0.5)
+    assert y_pred.shape == (len(X), )
+    assert y_pss.shape == (len(X), len(np.unique(y)), 1)
+
+
+def test_warning_not_all_label_in_calib() -> None:
+    """
+    Test that a warning is raised y is binary.
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    indices_remove = np.where(y != 2)
+    X_mapie = X[indices_remove]
+    y_mapie = y[indices_remove]
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    with pytest.warns(
+        UserWarning, match=r".*WARNING: your calibration dataset.*"
+    ):
+        mapie_clf.fit(X_mapie, y_mapie)
+
+
+def test_n_classes_prefit() -> None:
+    """
+    Test that the attribute n_classes_ has the correct
+    value with cv="prefit".
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    indices_remove = np.where(y != 2)
+    X_mapie = X[indices_remove]
+    y_mapie = y[indices_remove]
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    mapie_clf.fit(X_mapie, y_mapie)
+    assert mapie_clf.n_classes_ == len(np.unique(y))
+
+
+def test_classes_prefit() -> None:
+    """
+    Test that the attribute classes_ has the correct
+    value with cv="prefit".
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    indices_remove = np.where(y != 2)
+    X_mapie = X[indices_remove]
+    y_mapie = y[indices_remove]
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    mapie_clf.fit(X_mapie, y_mapie)
+    assert (mapie_clf.classes_ == np.unique(y)).all()
+
+
+def test_n_classes_cv() -> None:
+    """
+    Test that the attribute n_classes_ has the correct
+    value with cross_validation.
+    """
+    clf = LogisticRegression()
+
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv=5
+    )
+    mapie_clf.fit(X, y)
+    assert mapie_clf.n_classes_ == len(np.unique(y))
+
+
+def test_classes_cv() -> None:
+    """
+    Test that the attribute classes_ has the correct
+    value with cross_validation.
+    """
+    clf = LogisticRegression()
+
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv=5
+    )
+    mapie_clf.fit(X, y)
+    assert (mapie_clf.classes_ == np.unique(y)).all()
+
+
+def test_raise_error_new_class() -> None:
+    """
+    Test that the attribute if there is an unseen
+    classe in `y` then an error is raised.
+    """
+    clf = LogisticRegression()
+    clf.fit(X, y)
+    y[-1] = 10
+    mapie_clf = MapieClassifier(
+        estimator=clf, method="cumulated_score",
+        cv="prefit"
+    )
+    with pytest.raises(
+        ValueError, match=r".*Values in y do not matched values.*"
+    ):
+        mapie_clf.fit(X, y)

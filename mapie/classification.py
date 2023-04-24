@@ -912,6 +912,60 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             lambda_star = lambda_star[0]
         return lambda_star
 
+    def _get_classes_info(
+            self, estimator: ClassifierMixin, y: NDArray
+    ) -> Tuple[int, NDArray]:
+        """
+        Compute the number of classes and the classes values
+        according to either the pre-trained model or to the
+        values in y.
+
+        Parameters
+        ----------
+        estimator : ClassifierMixin
+            Estimator pre-fitted or not.
+        y : NDArray
+            Values to predict.
+
+        Returns
+        -------
+        Tuple[int, NDArray]
+            The number of unique classes and their unique
+            values.
+
+        Raises
+        ------
+        ValueError
+            If `cv="prefit"` and that classes in `y` are not included into
+            `estimator.classes_`.
+
+        Warning
+            If number of calibration labels is lower than number of labels
+            for training (in prefit setting)
+        """
+        n_unique_y_labels = len(np.unique(y))
+        if self.cv == "prefit":
+            classes = estimator.classes_
+            n_classes = len(np.unique(classes))
+            if not set(np.unique(y)).issubset(classes):
+                raise ValueError(
+                    "Values in y do not matched values in estimator.classes_."
+                    + " Check that you are not adding any new label"
+                )
+            if n_classes > n_unique_y_labels:
+                warnings.warn(
+                    "WARNING: your calibration dataset has less labels"
+                    + " than your training dataset (training"
+                    + f" has {n_classes} unique labels while"
+                    + f" calibration have {n_unique_y_labels} unique labels"
+                )
+
+        else:
+            n_classes = n_unique_y_labels
+            classes = np.unique(y)
+
+        return n_classes, classes
+
     def fit(
         self,
         X: ArrayLike,
@@ -969,15 +1023,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         estimator = check_estimator_classification(
             X,
-            y_enc,
+            y,
             cv,
             self.estimator
         )
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
 
         n_samples = _num_samples(y)
-        self.n_classes_ = len(np.unique(y))
-        self.classes_ = np.unique(y)
+
+        self.n_classes_, self.classes_ = self._get_classes_info(
+            estimator, y
+        )
         check_classification_targets(y)
         self._target_type = type_of_target(y)
 
