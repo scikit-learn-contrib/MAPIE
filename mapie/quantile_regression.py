@@ -45,7 +45,7 @@ class MapieQuantileRegressor(MapieRegressor):
 
     cv: Optional[str]
         The cross-validation strategy for computing conformity scores.
-        In theory a split method is implemented as it is needed to provided
+        In theory a split method is implemented as it is needed to provide
         both a training and calibration set.
 
         By default ``None``.
