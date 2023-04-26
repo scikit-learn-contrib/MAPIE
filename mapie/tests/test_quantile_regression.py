@@ -363,7 +363,7 @@ def test_wrong_alphas(alphas: float) -> None:
     """Checking for alphas values that are too big according to all value."""
     with pytest.raises(
         ValueError,
-        match=r".*Invalid alpha. Allowed values are between 0 and .*",
+        match=r".*Invalid alpha. Allowed values are between .*",
     ):
         mapie_reg = MapieQuantileRegressor(alpha=alphas)
         mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
