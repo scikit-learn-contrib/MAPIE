@@ -54,7 +54,31 @@ The figure below illustrates the naive method.
    :width: 200
    :align: center
 
-2. The jackknife method
+2. The split method
+=====================
+
+The so-called split method computes the residuals of a calibration dataset to estimate the 
+typical error obtained on a new test data point. 
+The prediction interval is therefore given by the prediction obtained by the 
+model trained on the training set :math:`\pm` the quantiles of the 
+conformity scores of the calibration set:
+    
+.. math:: \hat{\mu}(X_{n+1}) \pm ((1-\alpha) \textrm{quantile of} |Y_1-\hat{\mu}(X_1)|, ..., |Y_n-\hat{\mu}(X_n)|)
+
+or
+
+.. math:: \hat{C}_{n, \alpha}^{\rm split}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{q}_{n, \alpha}^+{|Y_i-\hat{\mu}(X_i)|}
+
+where :math:`\hat{q}_{n, \alpha}^+` is the :math:`(1-\alpha)` quantile of the distribution.
+
+Since this method estimates the conformity scores only on a calibration set, one must have enough
+observations to split its original dataset into train and calibration as mentioned in [5]. We can
+notice that this method is very similar to the naive one, the only difference being that the conformity
+scores are not computed on the calibration set. Moreover, this method will always give prediction intervals
+with a constant width.
+  
+
+3. The jackknife method
 =======================
 
 The *standard* jackknife method is based on the construction of a set of 
@@ -89,7 +113,7 @@ sample size is closed to the number of features
 (as seen in the "Reproducing the simulations from Foygel-Barber et al. (2020)" example). 
 
 
-3. The jackknife+ method
+4. The jackknife+ method
 ========================
 
 Unlike the standard jackknife method which estimates a prediction interval centered 
@@ -105,7 +129,7 @@ with a coverage level of :math:`1-2\alpha` for a target coverage level of :math:
 without any *a priori* assumption on the distribution of the data :math:`(X, Y)`
 nor on the predictive model.
 
-4. The jackknife-minmax method
+5. The jackknife-minmax method
 ==============================
 
 The jackknife-minmax method offers a slightly more conservative alternative since it uses 
@@ -132,7 +156,7 @@ they require to run as many simulations as the number of training points, which 
 for a typical data science use case. 
 
 
-5. The CV+ method
+6. The CV+ method
 =================
 
 In order to reduce the computational time, one can adopt a cross-validation approach
@@ -162,7 +186,7 @@ more conservative, but gives a reasonable compromise for large datasets when the
 method is unfeasible.
 
 
-6. The CV and CV-minmax methods
+7. The CV and CV-minmax methods
 ===============================
 
 By analogy with the standard jackknife and jackknife-minmax methods, the CV and CV-minmax approaches
@@ -178,7 +202,7 @@ methods and emphasizes their main differences.
    :width: 800
 
 
-7. The jackknife+-after-bootstrap method
+8. The jackknife+-after-bootstrap method
 ========================================
 
 In order to reduce the computational time, and get more robust predictions, 
@@ -218,7 +242,7 @@ uncertainty is higher, than :math:`CV+`, because the models' prediction spread
 is then higher.
 
 
-8. The conformalized quantile regression (CQR) method
+9. The conformalized quantile regression (CQR) method
 =====================================================
 
 The conformalized quantile method allows for better interval widths with
@@ -244,7 +268,7 @@ Note that only the split method has been implemented and that it will run three 
 regressions when using :class:`mapie.quantile_regression.MapieQuantileRegressor`.
 
 
-9. The ensemble batch prediction intervals (EnbPI) method
+10. The ensemble batch prediction intervals (EnbPI) method
 =========================================================
 
 The coverage guarantee offered by the various resampling methods based on the
@@ -355,3 +379,7 @@ References
 [4] Chen Xu and Yao Xie. 
 "Conformal Prediction Interval for Dynamic Time-Series."
 International Conference on Machine Learning (ICML, 2021).
+
+[5] Jing Lei, Max G’Sell, Alessandro Rinaldo, Ryan J Tibshirani, and Larry Wasserman.
+"Distribution-free predictive inference for regression". 
+Journal of the American Statistical Association, 113(523):1094–1111, 2018.

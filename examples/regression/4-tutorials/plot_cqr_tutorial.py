@@ -267,7 +267,7 @@ for strategy, params in STRATEGIES.items():
     if strategy == "cqr":
         mapie = MapieQuantileRegressor(estimator, **params)
         mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, symmetry=True)
     else:
         mapie = MapieRegressor(estimator, **params)
         mapie.fit(X_train, y_train)

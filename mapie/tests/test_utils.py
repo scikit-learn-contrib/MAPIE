@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 import numpy as np
 import pytest
+from numpy.random import RandomState
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
@@ -11,9 +12,12 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._typing import ArrayLike, NDArray
 from mapie.quantile_regression import MapieQuantileRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_lower_upper_bounds, check_n_features_in,
-                         check_n_jobs, check_null_weight, check_verbose,
-                         compute_quantiles, fit_estimator)
+                         check_binary_zero_one, check_lower_upper_bounds,
+                         check_n_features_in, check_n_jobs, check_null_weight,
+                         check_number_bins, check_split_strategy,
+                         check_verbose, compute_quantiles, fit_estimator,
+                         get_binning_groups)
+
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -24,15 +28,42 @@ X, y = make_regression(
     n_samples=500, n_features=n_features, noise=1.0, random_state=1
 )
 ALPHAS = [
-    np.array([.1]),
-    np.array([.05, .1, .2]),
+    np.array([0.1]),
+    np.array([0.05, 0.1, 0.2]),
 ]
+
+
+prng = RandomState(1234567890)
+y_score = prng.random(51)
+y_scores = prng.random((51, 5))
+y_true = prng.randint(0, 2, 51)
+
+results_binning = {
+    "quantile":
+        [
+            0.03075388, 0.17261836, 0.33281326, 0.43939618,
+            0.54867626, 0.64881987, 0.73440899, 0.77793816,
+            0.89000413, 0.99610621
+        ],
+    "uniform":
+        [
+            0, 0.11111111, 0.22222222, 0.33333333, 0.44444444,
+            0.55555556, 0.66666667, 0.77777778, 0.88888889, 1
+        ],
+    "array split":
+        [
+            0.62689056, 0.74743526, 0.87642114, 0.88321124,
+            0.8916548,  0.94083846, 0.94999075, 0.98759822,
+            0.99610621, np.inf
+        ],
+}
 
 
 class DumbEstimator:
     def fit(
-        self, X: ArrayLike, y: Optional[ArrayLike] = None
-    ) -> DumbEstimator:
+            self,
+            X: ArrayLike,
+            y: Optional[ArrayLike] = None) -> DumbEstimator:
         self.fitted_ = True
         return self
 
@@ -71,7 +102,8 @@ def test_check_null_weight_with_zeros() -> None:
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
 def test_fit_estimator(
-    estimator: Any, sample_weight: Optional[ArrayLike]
+    estimator: Any,
+    sample_weight: Optional[NDArray]
 ) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = fit_estimator(estimator, X_toy, y_toy, sample_weight)
@@ -152,7 +184,7 @@ def test_invalid_calculation_of_quantile(alpha: Any) -> None:
     """Test that alpha with 1/alpha > number of samples  raise errors."""
     n = 10
     with pytest.raises(
-        ValueError, match=r".*Number of samples of the score is too low*"
+        ValueError, match=r".*Number of samples of the score is too low.*"
     ):
         check_alpha_and_n_samples(alpha, n)
 
@@ -193,29 +225,31 @@ def test_valid_verbose(verbose: Any) -> None:
 
 
 def test_initial_low_high_pred() -> None:
-    """Test initial values upper bound lower bound above/below one another"""
-    y_preds = np.array([[4, 2, 3], [3, 4, 5], [2, 3, 4]])
+    """Test lower/upper predictions of the quantiles regression crossing"""
+    y_preds = np.array([[4, 3, 2], [4, 4, 4], [2, 3, 4]])
     y_pred_low = np.array([4, 3, 2])
     y_pred_up = np.array([4, 4, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: The initial prediction*"):
+    with pytest.warns(UserWarning, match=r"WARNING: The prediction.*"):
         check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
 
 
 def test_final_low_high_pred() -> None:
-    """Test final values upper bound lower bound above/below one another"""
-    y_preds = np.array([[1, 2, 3], [3, 4, 5], [2, 3, 4]])
+    """Test lower/upper predictions crossing"""
+    y_preds = np.array(
+        [[4, 3, 2], [3, 3, 3], [2, 3, 4]]
+    )
     y_pred_low = np.array([4, 3, 2])
-    y_pred_up = np.array([4, 4, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: Following the addition*"):
+    y_pred_up = np.array([3, 3, 3])
+    with pytest.warns(UserWarning, match=r"WARNING: The predictions of .*"):
         check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
 
 
 def test_final1D_low_high_pred() -> None:
-    """Test final values upper bound lower bound above/below one another"""
+    """Test lower/upper predictions crossing when y_preds is 1D"""
     y_preds = np.array([4, 3, 4])
     y_pred_low = np.array([7, 3, 2])
     y_pred_up = np.array([3, 4, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: Following the addition*"):
+    with pytest.warns(UserWarning, match=r"WARNING: The predictions .*"):
         check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
 
 
@@ -224,8 +258,7 @@ def test_ensemble_in_predict() -> None:
     mapie_reg = MapieQuantileRegressor()
     mapie_reg.fit(X, y)
     with pytest.warns(
-        UserWarning,
-        match=r"WARNING: Alpha should not be specified in the prediction*"
+        UserWarning, match=r"WARNING: Alpha should not be spec.*"
     ):
         mapie_reg.predict(X, alpha=0.2)
 
@@ -243,7 +276,7 @@ def test_compute_quantiles_value_error():
     is different from the number of aphas an error is raised.
     """
     vector = np.random.rand(1000, 1, 1)
-    alphas = [.1, .2, .3]
+    alphas = [0.1, 0.2, 0.3]
 
     with pytest.raises(ValueError, match=r".*In case of the vector .*"):
         compute_quantiles(vector, alphas)
@@ -301,11 +334,79 @@ def test_quantile_prefit_non_iterable(estimator: Any) -> None:
         ValueError,
         match=r".*Estimator for prefit must be an iterable object.*",
     ):
-        mapie_reg = MapieQuantileRegressor(
-            estimator=estimator,
-            cv="prefit"
-        )
-        mapie_reg.fit(
-            [1, 2, 3],
-            [4, 5, 6]
-        )
+        mapie_reg = MapieQuantileRegressor(estimator=estimator, cv="prefit")
+        mapie_reg.fit([1, 2, 3], [4, 5, 6])
+
+
+# def test_calib_set_no_Xy_but_sample_weight() -> None:
+#     """Test warning message if sample weight provided but no X y in calib."""
+#     X = np.array([4, 5, 6])
+#     y = np.array([4, 3, 2])
+#     sample_weight = np.array([4, 4, 4])
+#     sample_weight_calib = np.array([4, 3, 4])
+#     with pytest.warns(UserWarning, match=r"WARNING: sample weight*"):
+#         check_calib_set(
+#             X=X, y=y, sample_weight=sample_weight,
+#             sample_weight_calib=sample_weight_calib
+#         )
+
+
+@pytest.mark.parametrize("strategy", ["quantile", "uniform", "array split"])
+def test_binning_group_strategies(strategy: str) -> None:
+    """Test that different strategies have the correct outputs."""
+    bins_ = get_binning_groups(
+        y_score, num_bins=10, strategy=strategy
+    )
+    np.testing.assert_allclose(
+        results_binning[strategy],
+        bins_,
+        rtol=1e-05
+    )
+
+
+def test_wrong_split_strategy() -> None:
+    """Test for wrong split strategies."""
+    with pytest.raises(ValueError, match=r"Please provide a valid*"):
+        check_split_strategy(strategy="not_valid")
+
+
+def test_split_strategy_None() -> None:
+    """Test what occurs if None is provided as split strategy."""
+    strategy = check_split_strategy(None)
+    assert strategy == "uniform"
+
+
+@pytest.mark.parametrize("bins", ["random", LinearRegression(), 0.5])
+def test_num_bins_not_int(bins: int) -> None:
+    """Test input for bins is an integer."""
+    with pytest.raises(
+        ValueError,
+        match=r"Please provide a bin number as an int*"
+    ):
+        check_number_bins(num_bins=bins)
+
+
+def test_num_bins_below_zero() -> None:
+    """Test input for bins is positive integer."""
+    with pytest.raises(
+        ValueError,
+        match=r"Please provide a bin number greater*"
+    ):
+        check_number_bins(num_bins=-1)
+
+
+def test_binary_target() -> None:
+    """
+    Test that input of binary will provide an error message for non binary.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r"Please provide y_true as a bina*"
+    ):
+        check_binary_zero_one(np.array([0, 5, 4]))
+
+
+def test_change_values_zero_one() -> None:
+    """Test that binary output are changed to zero one outputs."""
+    array_ = check_binary_zero_one(np.array([0, 4, 4]))
+    assert (np.unique(array_) == np.array([0, 1])).all()

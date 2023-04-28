@@ -2,6 +2,29 @@
 History
 =======
 
+0.6.4 (2023-04-05)
+------------------
+* Fix runtime warning with RAPS method
+
+0.6.3 (2023-03-23)
+------------------
+* Fix bug when labels do not start at 0
+
+0.6.2 (2023-03-22)
+------------------
+* Make MapieClassifier a scikit-learn object
+* Update documentation for MapieClassifier
+
+0.6.1 (2023-01-31)
+------------------
+* Fix still existing bug for classification with very low scores
+
+0.6.0 (2023-01-19)
+------------------
+* Add RCPS and CRC for multilabel-classifcation
+* Add Top-Label calibration
+* Fix bug for classification with very low scores
+
 0.5.0 (2022-10-20)
 ------------------
 * Add RAPS method for classification

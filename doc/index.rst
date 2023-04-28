@@ -41,6 +41,14 @@
 .. toctree::
    :maxdepth: 2
    :hidden:
+   :caption: CALIBRATION
+
+   theoretical_description_calibration
+   notebooks_calibration
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
    :caption: API
 
    api

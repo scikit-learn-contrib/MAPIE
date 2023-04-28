@@ -70,7 +70,7 @@ class MapieQuantileRegressor(MapieRegressor):
         Conformity scores between ``y_calib`` and ``y_pred``:
             - [:, 0]: for y_calib coming from prediction estimator with
             quantile of alpha/2
-            - [:, 0]: for y_calib coming from prediction estimator with
+            - [:, 1]: for y_calib coming from prediction estimator with
             quantile of 1 - alpha/2
             - [:, 2]: maximum of those first two scores
 
@@ -570,7 +570,6 @@ class MapieQuantileRegressor(MapieRegressor):
             )
             y_train = cast(NDArray, y_train)
 
-            # Work
             y_calib_preds = np.full(
                 shape=(3, self.n_calib_samples),
                 fill_value=np.nan
@@ -637,9 +636,14 @@ class MapieQuantileRegressor(MapieRegressor):
             For ``MapieQuantileRegresor`` the alpha has to be defined
             directly in initial arguments of the class.
         symmetry : Optional[bool], optional
-            Deciding factor to whether to find the quantile value for
-            each residuals separatly or to use the maximum of the two
-            combined.
+            If ``False``, the conformity scores are built for the upper
+            quantile (1 - alpha/2) and lower quantile (alpha/2) by taking
+            the difference with the true observations. Then a quantile is
+            chosen independently for each as the added value to make the
+            predictor a conformal predictor. If ``True``, then the maximum
+            difference is taken for each observation.
+
+            By default, ``True``.
 
         Returns
         -------
@@ -663,7 +667,8 @@ class MapieQuantileRegressor(MapieRegressor):
 
         y_preds = np.full(
             shape=(3, _num_samples(X)),
-            fill_value=np.nan
+            fill_value=np.nan,
+            dtype=float,
         )
         for i, est in enumerate(self.estimators_):
             y_preds[i] = est.predict(X)

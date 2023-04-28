@@ -14,6 +14,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import KFold, LeaveOneOut
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
@@ -91,7 +92,7 @@ STRATEGIES = {
         Params(
             method="score",
             cv="prefit",
-            random_state=None
+            random_state=42
         ),
         ParamsPredict(
             include_last_label=False,
@@ -102,7 +103,7 @@ STRATEGIES = {
         Params(
             method="score",
             cv=3,
-            random_state=None
+            random_state=42
         ),
         ParamsPredict(
             include_last_label=False,
@@ -113,7 +114,7 @@ STRATEGIES = {
         Params(
             method="score",
             cv=3,
-            random_state=None
+            random_state=42
         ),
         ParamsPredict(
             include_last_label=False,
@@ -286,6 +287,7 @@ COVERAGES = {
 
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 1, 2, 1, 2])
+y_toy_string = np.array(["0", "0", "1", "0", "1", "1", "2", "1", "2"])
 
 y_toy_mapie = {
     "score": [
@@ -616,6 +618,11 @@ def do_nothing(*args: Any) -> None:
     pass
 
 
+def test_mapie_classifier_sklearn_estim() -> None:
+    """Test that MapieClassifier is an sklearn estimator"""
+    check_estimator(MapieClassifier())
+
+
 def test_initialized() -> None:
     """Test that initialization does not crash."""
     MapieClassifier()
@@ -625,6 +632,36 @@ def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_clf = MapieClassifier()
     assert mapie_clf.method == "score"
+
+
+def test_warning_binary_classif() -> None:
+    """Test that a warning is raised y is binary."""
+    mapie_clf = MapieClassifier(random_state=42)
+    X, y = make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=3,
+        n_classes=2,
+        random_state=1,
+    )
+    with pytest.warns(UserWarning, match=r"not of type multiclass*"):
+        mapie_clf.fit(X, y)
+
+
+def test_binary_classif_same_result() -> None:
+    """Test MAPIE doesnt change model output when y is binary."""
+    mapie_clf = MapieClassifier(random_state=42)
+    X, y = make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=3,
+        n_classes=2,
+        random_state=1,
+    )
+    mapie_predict = mapie_clf.fit(X, y).predict(X)
+    lr = LogisticRegression(multi_class="multinomial").fit(X, y)
+    lr_predict = lr.predict(X)
+    np.testing.assert_allclose(mapie_predict, lr_predict)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -720,6 +757,100 @@ def test_predict_output_shape(
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
     assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_y_is_list_of_string(
+    strategy: str, alpha: Any,
+) -> None:
+    """Test predict output shape with string y."""
+    args_init, args_predict = STRATEGIES[strategy]
+    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf.fit(X, y.astype('str'))
+    y_pred, y_ps = mapie_clf.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
+    assert y_pred.shape == (X.shape[0],)
+    assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_same_result_y_numeric_and_string(
+    strategy: str, alpha: Any,
+) -> None:
+    """Test that MAPIE outputs the same results if y is
+    numeric or string"""
+    args_init, args_predict = STRATEGIES[strategy]
+    mapie_clf_str = MapieClassifier(**args_init)
+    mapie_clf_str.fit(X, y.astype('str'))
+    mapie_clf_int = MapieClassifier(**args_init)
+    mapie_clf_int.fit(X, y)
+    _, y_ps_str = mapie_clf_str.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"],
+    )
+    _, y_ps_int = mapie_clf_int.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(y_ps_int, y_ps_str)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_y_1_to_l_minus_1(
+    strategy: str, alpha: Any,
+) -> None:
+    """Test predict output shape with string y."""
+    args_init, args_predict = STRATEGIES[strategy]
+    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf.fit(X, y + 1)
+    y_pred, y_ps = mapie_clf.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
+    assert y_pred.shape == (X.shape[0],)
+    assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
+def test_same_result_y_numeric_and_1_to_l_minus_1(
+    strategy: str, alpha: Any,
+) -> None:
+    """Test that MAPIE outputs the same results if y is
+    numeric or string"""
+    args_init, args_predict = STRATEGIES[strategy]
+    mapie_clf_1 = MapieClassifier(**args_init)
+    mapie_clf_1.fit(X, y + 1)
+    mapie_clf_int = MapieClassifier(**args_init)
+    mapie_clf_int.fit(X, y)
+    _, y_ps_1 = mapie_clf_1.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"],
+    )
+    _, y_ps_int = mapie_clf_int.predict(
+        X,
+        alpha=alpha,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(y_ps_int, y_ps_1)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -1122,24 +1253,6 @@ def test_classif_float32(cv):
     assert (
         np.repeat([[True, False, False]], 20, axis=0)[:, :, np.newaxis] == yps
     ).all()
-
-
-def test_raps_regularization_parameters():
-    """Check that the regularization parameters for the
-    raps method are the expected ones.
-    """
-    args_init, args_predict = STRATEGIES["raps"]
-    clf = LogisticRegression().fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(estimator=clf, **args_init)
-    mapie_clf.fit(X_toy, y_toy, size_raps=.5)
-    _, _ = mapie_clf.predict(
-        X_toy,
-        alpha=0.5,
-        include_last_label=args_predict["include_last_label"],
-        agg_scores=args_predict["agg_scores"]
-    )
-    np.testing.assert_allclose(mapie_clf.lambda_star, 0.001)
-    np.testing.assert_allclose(mapie_clf.k_star, 1)
 
 
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
