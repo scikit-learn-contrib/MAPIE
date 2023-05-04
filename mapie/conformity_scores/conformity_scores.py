@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 
 from mapie._typing import ArrayLike, NDArray
+from mapie._compatibility import np_nanquantile
 
 
 class ConformityScore(metaclass=ABCMeta):
@@ -81,7 +82,7 @@ class ConformityScore(metaclass=ABCMeta):
         conformity_scores: ArrayLike,
     ) -> NDArray:
         """
-        Placeholder for get_estimation_distribution.
+        Placeholder for ``get_estimation_distribution``.
         Subclasses should implement this method!
 
         Compute samples of the estimation distribution from the predicted
@@ -174,3 +175,49 @@ class ConformityScore(metaclass=ABCMeta):
         if self.sym:
             conformity_scores = np.abs(conformity_scores)
         return conformity_scores
+
+    def get_quantile(
+        self,
+        y_pred: ArrayLike,
+        conformity_scores: ArrayLike,
+        alpha: np.float64,
+        method: str,
+    ):
+        """
+        Get the quantile of the estimated ditribution of the
+        conformity scores, considering the symmetrical property if so.
+        If ``method=="lower"``, get the alpha-quantile.
+        Else (``method=="higher"``), get the (1-alpha)-quantile.
+
+        Parameters
+        ----------
+        y_pred : NDArray
+            Predicted values.
+
+        conformity_scores : NDArray
+            Conformity scores.
+
+        alpha: float
+            Between ``0`` and ``1``, represents the uncertainty of the
+            confidence interval.
+            Lower ``alpha`` produce larger (more conservative) prediction
+            intervals.
+            ``alpha`` is the complement of the target coverage level.
+
+        method: str
+            ``lower`` or ``higher``.
+
+        Returns
+        -------
+        NDArray
+            Quantiles of the estimated ditribution of the conformity scores.
+        """
+        alpha = alpha if self.sym else alpha / 2
+        alpha = alpha if method == "lower" else 1 - alpha
+        if method == "lower" and self.sym:
+            conformity_scores = -np.array(conformity_scores)
+        y_distribution = self.get_estimation_distribution(
+            y_pred, conformity_scores
+        )
+        y_alpha = np_nanquantile(y_distribution, alpha, axis=1, method=method)
+        return y_alpha

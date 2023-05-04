@@ -12,7 +12,6 @@ from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
-from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
 from mapie.conformity_scores import ConformityScore
@@ -734,48 +733,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
 
-        # compute distributions of lower and upper bounds
-        if self.conformity_score_function_.sym:
-            conformity_scores_low = -self.conformity_scores_
-            conformity_scores_up = self.conformity_scores_
-        else:
-            conformity_scores_low = self.conformity_scores_
-            conformity_scores_up = self.conformity_scores_
-            alpha_np = alpha_np / 2
-
-        lower_bounds = (
-            self.conformity_score_function_.get_estimation_distribution(
-                y_pred_multi_low, conformity_scores_low
-            )
-        )
-        upper_bounds = (
-            self.conformity_score_function_.get_estimation_distribution(
-                y_pred_multi_up, conformity_scores_up
-            )
-        )
-
         # get desired confidence intervals according to alpha
-        y_pred_low = np.column_stack(
-            [
-                np_nanquantile(
-                    lower_bounds.astype(float),
-                    _alpha,
-                    axis=1,
-                    method="lower",
-                )
-                for _alpha in alpha_np
-            ]
-        )
-        y_pred_up = np.column_stack(
-            [
-                np_nanquantile(
-                    upper_bounds.astype(float),
-                    1 - _alpha,
-                    axis=1,
-                    method="higher",
-                )
-                for _alpha in alpha_np
-            ]
-        )
+        y_pred_low = np.column_stack([
+            self.conformity_score_function_.get_quantile(
+                y_pred_multi_low, self.conformity_scores_, _alpha, "lower"
+            )
+            for _alpha in alpha_np
+        ])
+        y_pred_up = np.column_stack([
+            self.conformity_score_function_.get_quantile(
+                y_pred_multi_up, self.conformity_scores_, _alpha, "higher"
+            )
+            for _alpha in alpha_np
+        ])
 
         return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
