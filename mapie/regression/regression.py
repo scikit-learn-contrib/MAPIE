@@ -12,15 +12,15 @@ from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
-from ._compatibility import np_nanquantile
-from ._typing import ArrayLike, NDArray
-from .aggregation_functions import aggregate_all, phi2D
-from .conformity_scores import ConformityScore
-from .utils import (check_alpha, check_alpha_and_n_samples,
-                    check_conformity_score, check_cv,
-                    check_estimator_fit_predict, check_n_features_in,
-                    check_n_jobs, check_nan_in_aposteriori_prediction,
-                    check_null_weight, check_verbose, fit_estimator)
+from mapie._compatibility import np_nanquantile
+from mapie._typing import ArrayLike, NDArray
+from mapie.aggregation_functions import aggregate_all, phi2D
+from mapie.conformity_scores import ConformityScore
+from mapie.utils import (check_alpha, check_alpha_and_n_samples,
+                         check_conformity_score, check_cv,
+                         check_estimator_fit_predict, check_n_features_in,
+                         check_n_jobs, check_nan_in_aposteriori_prediction,
+                         check_null_weight, check_verbose, fit_estimator)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
