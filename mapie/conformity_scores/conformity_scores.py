@@ -219,5 +219,7 @@ class ConformityScore(metaclass=ABCMeta):
         y_distribution = self.get_estimation_distribution(
             y_pred, conformity_scores
         )
-        y_alpha = np_nanquantile(y_distribution, alpha, axis=1, method=method)
+        y_alpha = np_nanquantile(
+            y_distribution.astype(float), alpha, axis=1, method=method
+        )
         return y_alpha
