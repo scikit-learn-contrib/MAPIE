@@ -17,11 +17,15 @@ class AbsoluteConformityScore(ConformityScore):
     its range is approximatively the same over the range of predicted values.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+    ) -> None:
         super().__init__(sym=True, consistency_check=True)
 
     def get_signed_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike,
+        self,
+        y: ArrayLike,
+        y_pred: ArrayLike,
     ) -> NDArray:
         """
         Compute the signed conformity scores from the predicted values
@@ -31,7 +35,9 @@ class AbsoluteConformityScore(ConformityScore):
         return np.subtract(y, y_pred)
 
     def get_estimation_distribution(
-        self, y_pred: ArrayLike, conformity_scores: ArrayLike
+        self,
+        y_pred: ArrayLike,
+        conformity_scores: ArrayLike,
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
@@ -54,10 +60,15 @@ class GammaConformityScore(ConformityScore):
     its support is limited to strictly positive reals.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+    ) -> None:
         super().__init__(sym=False, consistency_check=False, eps=EPSILON)
 
-    def _check_observed_data(self, y: ArrayLike) -> None:
+    def _check_observed_data(
+        self,
+        y: ArrayLike,
+    ) -> None:
         if not self._all_strictly_positive(y):
             raise ValueError(
                 f"At least one of the observed target is negative "
@@ -66,7 +77,10 @@ class GammaConformityScore(ConformityScore):
                 "in conformity with the Gamma distribution support."
             )
 
-    def _check_predicted_data(self, y_pred: ArrayLike) -> None:
+    def _check_predicted_data(
+        self,
+        y_pred: ArrayLike,
+    ) -> None:
         if not self._all_strictly_positive(y_pred):
             raise ValueError(
                 f"At least one of the predicted target is negative "
@@ -75,13 +89,18 @@ class GammaConformityScore(ConformityScore):
                 "in conformity with the Gamma distribution support."
             )
 
-    def _all_strictly_positive(self, y: ArrayLike) -> bool:
+    def _all_strictly_positive(
+        self,
+        y: ArrayLike,
+    ) -> bool:
         if np.any(np.less_equal(y, 0)):
             return False
         return True
 
     def get_signed_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike,
+        self,
+        y: ArrayLike,
+        y_pred: ArrayLike,
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
@@ -93,7 +112,9 @@ class GammaConformityScore(ConformityScore):
         return np.divide(np.subtract(y, y_pred), y_pred)
 
     def get_estimation_distribution(
-        self, y_pred: ArrayLike, conformity_scores: ArrayLike
+        self,
+        y_pred: ArrayLike,
+        conformity_scores: ArrayLike,
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
