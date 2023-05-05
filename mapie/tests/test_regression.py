@@ -618,7 +618,8 @@ def test_wrong_not_fitted_conformity_score(cv: Any) -> None:
 
 
 def test_wrong_conformity_score() -> None:
-    mapie_reg = MapieRegressor(conformity_score=object())
+    wrong_conformity_score = cast(ConformityScore, object())
+    mapie_reg = MapieRegressor(conformity_score=wrong_conformity_score)
     with pytest.raises(
         ValueError,
         match=r".*Invalid conformity_score argument.*",
