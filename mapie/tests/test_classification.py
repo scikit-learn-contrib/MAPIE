@@ -900,7 +900,7 @@ def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raises no errors."""
     model = LogisticRegression(multi_class="multinomial")
     model.fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(estimator=model, cv=cv)
+    mapie_clf = MapieClassifier(estimator=model, cv=cv, random_state=42)
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, alpha=0.5)
 
