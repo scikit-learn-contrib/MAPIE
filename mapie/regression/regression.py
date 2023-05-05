@@ -383,7 +383,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         if conformity_score is None:
             return AbsoluteConformityScore()
-        elif not(isinstance(conformity_score, ConformityScore)):
+        elif not isinstance(conformity_score, ConformityScore):
             raise ValueError(
                 "Invalid conformity_score argument. "
                 "Must be None or a ConformityScore instance."
