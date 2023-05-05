@@ -178,6 +178,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     n_features_in_: int
         Number of features passed to the ``fit`` method.
 
+    n_samples_in_: int
+        Number of samples passed to the ``fit`` method.
+
     References
     ----------
     Rina Foygel Barber, Emmanuel J. Candès,
@@ -224,6 +227,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         "conformity_scores_",
         "conformity_score_function_",
         "n_features_in_",
+        "n_samples_in_",
     ]
 
     def __init__(
@@ -558,6 +562,42 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
         return y_pred_multi
 
+    def _check_fit_parameters(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+    ) -> Tuple[BaseCrossValidator, RegressorMixin, ConformityScore,
+               Optional[str], NDArray, NDArray, Optional[NDArray]]:
+        # Checking
+        self._check_parameters()
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
+        estimator = self._check_estimator(self.estimator)
+        cs_estimator = self._check_conformity_score(
+            self.conformity_score
+        )
+        agg_function = self._check_agg_function(self.agg_function)
+        X, y = indexable(X, y)
+        y = _check_y(y)
+        sample_weight, X, y = check_null_weight(sample_weight, X, y)
+
+        # Get some fit attributes
+        self.n_features_in_ = check_n_features_in(X)
+        self.n_samples_in_ = _num_samples(X)
+
+        # Casting
+        cv = cast(BaseCrossValidator, cv)
+        estimator = cast(RegressorMixin, estimator)
+        cs_estimator = cast(ConformityScore, cs_estimator)
+        agg_function = cast(Optional[str], agg_function)
+        X = cast(NDArray, X)
+        y = cast(NDArray, y)
+        sample_weight = cast(Optional[NDArray], sample_weight)
+
+        return cv, estimator, cs_estimator, agg_function, X, y, sample_weight
+
     def fit(
         self,
         X: ArrayLike,
@@ -597,38 +637,26 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         MapieRegressor
             The model itself.
         """
-        # Checks
-        self._check_parameters()
-        cv = check_cv(
-            self.cv, test_size=self.test_size, random_state=self.random_state
-        )
-        estimator = self._check_estimator(self.estimator)
-        agg_function = self._check_agg_function(self.agg_function)
-        X, y = indexable(X, y)
-        y = _check_y(y)
-        sample_weight = cast(Optional[NDArray], sample_weight)
-        self.n_features_in_ = check_n_features_in(X, cv, estimator)
-        sample_weight, X, y = check_null_weight(sample_weight, X, y)
-        self.conformity_score_function_ = self._check_conformity_score(
-            self.conformity_score
-        )
-        y = cast(NDArray, y)
-        n_samples = _num_samples(y)
+        # Checking
+        cv, estimator, cs_estimator, agg_function, X, y, sample_weight = \
+            self._check_fit_parameters(X, y, sample_weight)
 
         # Initialization
+        self.single_estimator_: RegressorMixin = estimator
         self.estimators_: List[RegressorMixin] = []
+        self.conformity_score_function_: ConformityScore = cs_estimator
 
         # Work
         if cv == "prefit":
             self.single_estimator_ = estimator
             y_pred = self.single_estimator_.predict(X)
             self.k_ = np.full(
-                shape=(n_samples, 1), fill_value=np.nan, dtype=float
+                shape=(self.n_samples_in_, 1), fill_value=np.nan, dtype=float
             )
         else:
             cv = cast(BaseCrossValidator, cv)
             self.k_ = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y)),
+                shape=(self.n_samples_in_, cv.get_n_splits(X, y)),
                 fill_value=np.nan,
                 dtype=float,
             )
@@ -656,7 +684,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 )
 
                 pred_matrix = np.full(
-                    shape=(n_samples, cv.get_n_splits(X, y)),
+                    shape=(self.n_samples_in_, cv.get_n_splits(X, y)),
                     fill_value=np.nan,
                     dtype=float,
                 )
@@ -677,6 +705,28 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.single_estimator_ = self.estimators_[0]
 
         return self
+
+    def _check_predict_parameters(
+        self,
+        ensemble: bool,
+        alpha: Optional[Union[float, Iterable[float]]],
+    ) -> Tuple[Optional[str], bool, Optional[NDArray]]:
+        # Checking
+        self._check_parameters()
+        check_is_fitted(self, self.fit_attributes)
+        agg_function = self._check_agg_function(self.agg_function)
+        self._check_ensemble(ensemble)
+        alpha_np = check_alpha(alpha)
+
+        # Casting
+        agg_function = cast(Optional[str], agg_function)
+        alpha_np = cast(Optional[NDArray], alpha_np)
+
+        # Check if alpha is consistent with n_samples_in_
+        if not(alpha_np is None):
+            check_alpha_and_n_samples(alpha_np, self.n_samples_in_)
+
+        return agg_function, ensemble, alpha_np
 
     def predict(
         self,
@@ -731,22 +781,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 - [:, 0, :]: Lower bound of the prediction interval.
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
-        # Checks
-        check_is_fitted(self, self.fit_attributes)
-        self._check_ensemble(ensemble)
-        alpha = cast(Optional[NDArray], check_alpha(alpha))
+        # Checking
+        agg_function, ensemble, alpha_np = \
+            self._check_predict_parameters(ensemble, alpha)
 
+        # Prediction of the target
         y_pred = self.single_estimator_.predict(X)
-        n = len(self.conformity_scores_)
 
         if alpha is None:
-            return np.array(y_pred)
+            return y_pred
 
-        alpha_np = cast(NDArray, alpha)
-        check_alpha_and_n_samples(alpha_np, n)
+        alpha_np = cast(NDArray, alpha_np)
 
-        if self.method in self.no_agg_methods_ \
-                or self.cv in self.no_agg_cv_:
+        if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
             y_pred_multi_low = y_pred[:, np.newaxis]
             y_pred_multi_up = y_pred[:, np.newaxis]
         else:
@@ -760,7 +807,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 y_pred_multi_up = y_pred_multi
 
             if ensemble:
-                y_pred = aggregate_all(self.agg_function, y_pred_multi)
+                y_pred = aggregate_all(agg_function, y_pred_multi)
 
         # get desired confidence intervals according to alpha
         y_pred_low = np.column_stack([
