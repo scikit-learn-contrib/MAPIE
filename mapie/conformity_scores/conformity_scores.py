@@ -64,9 +64,9 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        y : NDArray
+        y: NDArray
             Observed values.
-        y_pred : NDArray
+        y_pred: NDArray
             Predicted values.
 
         Returns
@@ -90,10 +90,10 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        y_pred : NDArray
+        y_pred: NDArray
             Predicted values.
 
-        conformity_scores : NDArray
+        conformity_scores: NDArray
             Conformity scores.
 
         Returns
@@ -119,10 +119,10 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        y : NDArray
+        y: NDArray
             Observed values.
 
-        y_pred : NDArray
+        y_pred: NDArray
             Predicted values.
 
         Raises
@@ -158,10 +158,10 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        y : NDArray
+        y: NDArray
             Observed values.
 
-        y_pred : NDArray
+        y_pred: NDArray
             Predicted values.
 
         Returns
@@ -180,7 +180,7 @@ class ConformityScore(metaclass=ABCMeta):
         self,
         y_pred: ArrayLike,
         conformity_scores: ArrayLike,
-        alpha: np.float64,
+        alpha: float,
         method: str,
     ):
         """
@@ -191,10 +191,10 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        y_pred : NDArray
+        y_pred: NDArray
             Predicted values.
 
-        conformity_scores : NDArray
+        conformity_scores: NDArray
             Conformity scores.
 
         alpha: float
@@ -205,7 +205,8 @@ class ConformityScore(metaclass=ABCMeta):
             ``alpha`` is the complement of the target coverage level.
 
         method: str
-            ``lower`` or ``higher``.
+            Method between ``lower'' and ``upper'' to find the quantile
+            in the lower or upper part of the distribution.
 
         Returns
         -------
