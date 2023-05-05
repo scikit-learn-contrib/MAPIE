@@ -104,7 +104,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default ``None``.
 
-    agg_function : Optional[str]
+    agg_function: Optional[str]
         Determines how to aggregate predictions from perturbed models, both at
         training and prediction time.
 
@@ -128,7 +128,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default ``"mean"``.
 
-    verbose : int
+    verbose: int
         The verbosity level, used with joblib for multiprocessing.
         The frequency of the messages increases with the verbosity level.
         If it more than ``10``, all iterations are reported.
@@ -136,7 +136,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default ``0``.
 
-    conformity_score : Optional[ConformityScore]
+    conformity_score: Optional[ConformityScore]
         ConformityScore instance.
         It defines the link between the observed values, the predicted ones
         and the conformity scores. For instance, the default ``None`` value
@@ -160,7 +160,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     valid_methods_: List[str]
         List of all valid methods.
 
-    single_estimator_ : sklearn.RegressorMixin
+    single_estimator_: sklearn.RegressorMixin
         Estimator fitted on the whole training set.
 
     estimators_: list
@@ -575,13 +575,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Training data.
 
-        y : ArrayLike of shape (n_samples,)
+        y: ArrayLike of shape (n_samples,)
             Training labels.
 
-        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
             If ``None``, then samples are equally weighted.
             If some weights are null,
