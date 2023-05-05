@@ -723,7 +723,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha_np = cast(Optional[NDArray], alpha_np)
 
         # Check if alpha is consistent with n_samples_in_
-        if not(alpha_np is None):
+        if alpha_np is not None:
             check_alpha_and_n_samples(alpha_np, self.n_samples_in_)
 
         return agg_function, ensemble, alpha_np
