@@ -205,7 +205,7 @@ class ConformityScore(metaclass=ABCMeta):
             ``alpha`` is the complement of the target coverage level.
 
         method: str
-            Method between ``lower'' and ``upper'' to find the quantile
+            Method between ``lower'' and ``higher'' to find the quantile
             in the lower or upper part of the distribution.
 
         Returns
