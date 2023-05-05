@@ -537,7 +537,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
     def _pred_multi(
         self,
-        X: ArrayLike
+        X: ArrayLike,
     ) -> NDArray:
         """
         Return a prediction per train sample for each test sample, by
@@ -552,14 +552,22 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         -------
         NDArray of shape (n_samples_test, n_samples_train)
         """
-        y_pred_multi = np.column_stack(
-            [e.predict(X) for e in self.estimators_]
-        )
-        # At this point, y_pred_multi is of shape
-        # (n_samples_test, n_estimators_). The method
-        # ``_aggregate_with_mask`` fits it to the right size
-        # thanks to the shape of k_.
-        y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
+        # Computation
+        if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
+            # Shape: (n_samples_test, 1)
+            y_pred_multi = self.single_estimator_.predict(X)[:, np.newaxis]
+            # Here all test predictions per train sample are the same
+            # Thus we only keep one element in last dimension
+        else:
+            # Shape: (n_samples_test,)
+            y_pred_multi = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                delayed(estimator.predict)(X)
+                for estimator in self.estimators_
+            )
+            # Shape: (n_samples_test, n_estimators)
+            y_pred_multi = np.column_stack(y_pred_multi)
+            # Shape: (n_samples_test, n_samples_train)
+            y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
         return y_pred_multi
 
     def _check_fit_parameters(
@@ -728,6 +736,53 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         return agg_function, ensemble, alpha_np
 
+    def _predict_bound(
+        self,
+        y_pred: ArrayLike,
+        alpha_np: Iterable[float],
+        method: str,
+        **kwargs
+    ):
+        """
+        Predict one bound (lower or higher) of the prediction intervals
+        for given ``alpha_np``.
+
+        Parameters
+        ----------
+        y_pred: ArrayLike
+            Predicted labels array of shape (n_samples_test, n_samples_train)
+            that is consistent with the shape of the conformity scores array.
+
+        alpha_np: Iterable[float]
+            Iterable of shape (n_alpha,).
+            Between ``0`` and ``1``, represents the uncertainty of the
+            confidence interval.
+            Lower ``alpha`` produce larger (more conservative) prediction
+            intervals.
+            ``alpha`` is the complement of the target coverage level.
+
+        method: str
+            Method between ``lower'' and ``higher'' to find the quantile
+            in the lower or upper part of the distribution.
+
+        Returns
+        -------
+        NDArray of shape (n_samples_test, n_alpha)
+        """
+        if self.method == "minmax":
+            projection_function = np.min if method == "lower" else np.max
+            y_pred = projection_function(y_pred, axis=1, keepdims=True)
+
+        # get desired confidence intervals according to alpha
+        y_bound = np.column_stack([
+            self.conformity_score_function_.get_quantile(
+                y_pred, self.conformity_scores_, alpha, method, **kwargs
+            )
+            for alpha in alpha_np
+        ])
+
+        return y_bound
+
     def predict(
         self,
         X: ArrayLike,
@@ -790,37 +845,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         if alpha is None:
             return y_pred
-
         alpha_np = cast(NDArray, alpha_np)
 
-        if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
-            y_pred_multi_low = y_pred[:, np.newaxis]
-            y_pred_multi_up = y_pred[:, np.newaxis]
-        else:
-            y_pred_multi = self._pred_multi(X)
-
-            if self.method == "minmax":
-                y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
-                y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
-            else:
-                y_pred_multi_low = y_pred_multi
-                y_pred_multi_up = y_pred_multi
-
-            if ensemble:
-                y_pred = aggregate_all(agg_function, y_pred_multi)
+        y_pred_multi = self._pred_multi(X)
+        if ensemble:
+            y_pred = aggregate_all(agg_function, y_pred_multi)
 
         # get desired confidence intervals according to alpha
-        y_pred_low = np.column_stack([
-            self.conformity_score_function_.get_quantile(
-                y_pred_multi_low, self.conformity_scores_, _alpha, "lower"
-            )
-            for _alpha in alpha_np
-        ])
-        y_pred_up = np.column_stack([
-            self.conformity_score_function_.get_quantile(
-                y_pred_multi_up, self.conformity_scores_, _alpha, "higher"
-            )
-            for _alpha in alpha_np
-        ])
+        y_lower = self._predict_bound(y_pred_multi, alpha_np, "lower")
+        y_higher = self._predict_bound(y_pred_multi, alpha_np, "higher")
+        y_pred_bound = np.stack([y_lower, y_higher], axis=1)
 
-        return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
+        return y_pred, y_pred_bound
