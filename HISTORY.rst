@@ -5,6 +5,9 @@ History
 ##### (##########)
 ------------------
 
+* Add check conformity score if not trainable for no prefit setting in MapieRegressor
+* Migrate conformity scores classes into conformity_scores module
+* Migrate regression classes into regression module
 * Add split conformal option for regression and classification
 * Update check method for calibration
 
