@@ -606,6 +606,72 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         return cv, estimator, cs_estimator, agg_function, X, y, sample_weight
 
+    def _fit_estimator(
+        self,
+        estimator,
+        X,
+        y,
+        cv,
+        agg_function,
+        sample_weight=None,
+    ):
+        if cv == "prefit":
+            single_estimator = estimator
+            estimators = [single_estimator]
+            y_pred = self.single_estimator_.predict(X)
+            self.k_ = np.full(
+                shape=(self.n_samples_in_, 1), fill_value=np.nan, dtype=float
+            )
+        else:
+            cv = cast(BaseCrossValidator, cv)
+            self.k_ = np.full(
+                shape=(self.n_samples_in_, cv.get_n_splits(X, y)),
+                fill_value=np.nan,
+                dtype=float,
+            )
+
+            single_estimator = fit_estimator(
+                clone(estimator), X, y, sample_weight
+            )
+
+            if self.method == "naive":
+                estimators = [single_estimator]
+                y_pred = single_estimator.predict(X)
+            else:
+                outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                    delayed(self._fit_and_predict_oof_model)(
+                        clone(estimator),
+                        X,
+                        y,
+                        train_index,
+                        val_index,
+                        sample_weight,
+                    )
+                    for train_index, val_index in cv.split(X)
+                )
+                estimators, predictions, val_indices = map(
+                    list, zip(*outputs)
+                )
+
+                pred_matrix = np.full(
+                    shape=(self.n_samples_in_, cv.get_n_splits(X, y)),
+                    fill_value=np.nan,
+                    dtype=float,
+                )
+                for i, val_ind in enumerate(val_indices):
+                    pred_matrix[val_ind, i] = np.array(
+                        predictions[i], dtype=float
+                    )
+                    self.k_[val_ind, i] = 1
+                check_nan_in_aposteriori_prediction(pred_matrix)
+
+                y_pred = aggregate_all(agg_function, pred_matrix)
+
+        if isinstance(cv, ShuffleSplit):
+            single_estimator = estimators[0]
+
+        return single_estimator, estimators, y_pred
+
     def fit(
         self,
         X: ArrayLike,
@@ -655,62 +721,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self.conformity_score_function_: ConformityScore = cs_estimator
 
         # Work
-        if cv == "prefit":
-            self.single_estimator_ = estimator
-            y_pred = self.single_estimator_.predict(X)
-            self.k_ = np.full(
-                shape=(self.n_samples_in_, 1), fill_value=np.nan, dtype=float
-            )
-        else:
-            cv = cast(BaseCrossValidator, cv)
-            self.k_ = np.full(
-                shape=(self.n_samples_in_, cv.get_n_splits(X, y)),
-                fill_value=np.nan,
-                dtype=float,
-            )
-
-            self.single_estimator_ = fit_estimator(
-                clone(estimator), X, y, sample_weight
-            )
-
-            if self.method == "naive":
-                y_pred = self.single_estimator_.predict(X)
-            else:
-                outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                    delayed(self._fit_and_predict_oof_model)(
-                        clone(estimator),
-                        X,
-                        y,
-                        train_index,
-                        val_index,
-                        sample_weight,
-                    )
-                    for train_index, val_index in cv.split(X)
-                )
-                self.estimators_, predictions, val_indices = map(
-                    list, zip(*outputs)
-                )
-
-                pred_matrix = np.full(
-                    shape=(self.n_samples_in_, cv.get_n_splits(X, y)),
-                    fill_value=np.nan,
-                    dtype=float,
-                )
-                for i, val_ind in enumerate(val_indices):
-                    pred_matrix[val_ind, i] = np.array(
-                        predictions[i], dtype=float
-                    )
-                    self.k_[val_ind, i] = 1
-                check_nan_in_aposteriori_prediction(pred_matrix)
-
-                y_pred = aggregate_all(agg_function, pred_matrix)
+        self.single_estimator_, self.estimators_, y_pred = self._fit_estimator(
+            estimator, X, y, cv, agg_function, sample_weight
+        )
 
         self.conformity_scores_ = (
             self.conformity_score_function_.get_conformity_scores(y, y_pred)
         )
-
-        if isinstance(cv, ShuffleSplit):
-            self.single_estimator_ = self.estimators_[0]
 
         return self
 
