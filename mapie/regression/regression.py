@@ -14,9 +14,8 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
-from mapie.conformity_scores import ConformityScore
-from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_conformity_score, check_cv,
+from mapie.conformity_scores import AbsoluteConformityScore, ConformityScore
+from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
                          check_estimator_fit_predict, check_n_features_in,
                          check_n_jobs, check_nan_in_aposteriori_prediction,
                          check_null_weight, check_verbose, fit_estimator)
@@ -370,6 +369,36 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 else:
                     check_is_fitted(estimator)
             return estimator
+
+    def _check_conformity_score(
+        self, conformity_score: Optional[ConformityScore] = None,
+    ) -> ConformityScore:
+        """
+        Check parameter ``conformity_score``.
+
+        Raises
+        ------
+        ValueError
+            If parameter is not valid.
+        """
+        if conformity_score is None:
+            return AbsoluteConformityScore()
+        elif not(isinstance(conformity_score, ConformityScore)):
+            raise ValueError(
+                "Invalid conformity_score argument. "
+                "Must be None or a ConformityScore instance."
+            )
+        elif hasattr(conformity_score, "fit"):
+            if self.cv == "prefit":
+                check_is_fitted(conformity_score)
+                return conformity_score
+            else:
+                raise ValueError(
+                    "Invalid conformity_score argument. "
+                    "Incompatible with cv different of prefit."
+                )
+        else:
+            return conformity_score
 
     def _check_ensemble(
         self, ensemble: bool,

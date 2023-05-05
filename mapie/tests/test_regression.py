@@ -9,6 +9,7 @@ import pytest
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
+from sklearn.exceptions import NotFittedError
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import (KFold, LeaveOneOut, ShuffleSplit,
@@ -565,13 +566,65 @@ def test_pipeline_compatibility() -> None:
 @pytest.mark.parametrize(
     "conformity_score", [AbsoluteConformityScore(), GammaConformityScore()]
 )
-def test_gammaconformityscore(
+def test_conformity_score(
     strategy: str, conformity_score: ConformityScore
 ) -> None:
-    """Test that GammaConformityScore with MAPIE raises no error."""
+    """Test that any conformity score function with MAPIE raises no error."""
     mapie_reg = MapieRegressor(
         conformity_score=conformity_score,
         **STRATEGIES[strategy]
     )
     mapie_reg.fit(X, y + 1e3)
-    _, y_pis = mapie_reg.predict(X, alpha=0.05)
+    mapie_reg.predict(X, alpha=0.05)
+
+
+class ConformityScoreEstimator(AbsoluteConformityScore):
+    fit_attributes = ["foo_"]
+
+    def fit(self):
+        self.foo_ = True
+        return self
+
+
+@pytest.mark.parametrize(
+    "cv",
+    [None, -1, 2, KFold(), LeaveOneOut(), "split", ShuffleSplit(n_splits=1)]
+)
+def test_wrong_cv_with_fitted_conformity_score(cv: Any) -> None:
+    mapie_reg = MapieRegressor(
+        estimator=LinearRegression().fit(X, y),
+        conformity_score=ConformityScoreEstimator().fit(),
+        cv=cv
+    )
+    with pytest.raises(
+        ValueError,
+        match=r".*Incompatible with cv different of prefit.*",
+    ):
+        mapie_reg.fit(X, y)
+        mapie_reg.predict(X, alpha=0.05)
+
+
+@pytest.mark.parametrize("cv", ["prefit"])
+def test_wrong_not_fitted_conformity_score(cv: Any) -> None:
+    mapie_reg = MapieRegressor(
+        estimator=LinearRegression().fit(X, y),
+        conformity_score=ConformityScoreEstimator(),
+        cv=cv
+    )
+    with pytest.raises(
+        NotFittedError,
+        match=r".*instance is not fitted yet.*",
+    ):
+        mapie_reg.fit(X, y)
+        mapie_reg.predict(X, alpha=0.05)
+
+
+@pytest.mark.parametrize("cv", ["prefit"])
+def test_right_cv_with_fitted_conformity_score(cv: Any) -> None:
+    mapie_reg = MapieRegressor(
+        estimator=LinearRegression().fit(X, y),
+        conformity_score=ConformityScoreEstimator().fit(),
+        cv=cv
+    )
+    mapie_reg.fit(X, y)
+    mapie_reg.predict(X, alpha=0.05)
