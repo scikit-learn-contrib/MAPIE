@@ -575,28 +575,3 @@ def test_conformity_score(
     )
     mapie_reg.fit(X, y + 1e3)
     mapie_reg.predict(X, alpha=0.05)
-
-
-class ConformityScoreEstimator(AbsoluteConformityScore):
-    fit_attributes = ["foo_"]
-
-    def fit(self):
-        self.foo_ = True
-        return self
-
-
-@pytest.mark.parametrize(
-    "cv",
-    [None, -1, 2, KFold(), LeaveOneOut(), "split", ShuffleSplit(n_splits=1)]
-)
-def test_wrong_cv_with_fitted_conformity_score(cv: Any) -> None:
-    mapie_reg = MapieRegressor(
-        estimator=LinearRegression().fit(X, y),
-        conformity_score=ConformityScoreEstimator().fit(),
-        cv=cv
-    )
-    with pytest.raises(
-        ValueError,
-        match=r".*Incompatible with cv different of prefit.*",
-    ):
-        mapie_reg.fit(X, y)
