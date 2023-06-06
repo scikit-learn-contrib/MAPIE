@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import Any, List, Optional, Tuple, Union, cast
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,6 @@ import pytest
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
-from sklearn.exceptions import NotFittedError
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import (KFold, LeaveOneOut, ShuffleSplit,
