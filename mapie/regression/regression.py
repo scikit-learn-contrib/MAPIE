@@ -764,12 +764,18 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     method="lower",
                 )
                 for _alpha in alpha_np
-        ])
-        y_pred_up = np.column_stack([
-            self.conformity_score_function_.get_quantile(
-                y_pred_multi_up, self.conformity_scores_, _alpha, "higher"
-            )
-            for _alpha in alpha_np
-        ])
+            ]
+        )
+        y_pred_up = np.column_stack(
+            [
+                np_nanquantile(
+                    upper_bounds.astype(float),
+                    1 - _alpha,
+                    axis=1,
+                    method="higher",
+                )
+                for _alpha in alpha_np
+            ]
+        )
 
         return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
