@@ -3,7 +3,6 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 
 from mapie._typing import ArrayLike, NDArray
-from mapie._compatibility import np_nanquantile
 
 
 class ConformityScore(metaclass=ABCMeta):
@@ -176,4 +175,3 @@ class ConformityScore(metaclass=ABCMeta):
         if self.sym:
             conformity_scores = np.abs(conformity_scores)
         return conformity_scores
-
