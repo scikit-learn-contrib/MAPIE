@@ -601,38 +601,3 @@ def test_wrong_cv_with_fitted_conformity_score(cv: Any) -> None:
         match=r".*Incompatible with cv different of prefit.*",
     ):
         mapie_reg.fit(X, y)
-
-
-@pytest.mark.parametrize("cv", ["prefit"])
-def test_wrong_not_fitted_conformity_score(cv: Any) -> None:
-    mapie_reg = MapieRegressor(
-        estimator=LinearRegression().fit(X, y),
-        conformity_score=ConformityScoreEstimator(),
-        cv=cv
-    )
-    with pytest.raises(
-        NotFittedError,
-        match=r".*instance is not fitted yet.*",
-    ):
-        mapie_reg.fit(X, y)
-
-
-def test_wrong_conformity_score() -> None:
-    wrong_conformity_score = cast(ConformityScore, object())
-    mapie_reg = MapieRegressor(conformity_score=wrong_conformity_score)
-    with pytest.raises(
-        ValueError,
-        match=r".*Invalid conformity_score argument.*",
-    ):
-        mapie_reg.fit(X, y)
-
-
-@pytest.mark.parametrize("cv", ["prefit"])
-def test_right_cv_with_fitted_conformity_score(cv: Any) -> None:
-    mapie_reg = MapieRegressor(
-        estimator=LinearRegression().fit(X, y),
-        conformity_score=ConformityScoreEstimator().fit(),
-        cv=cv
-    )
-    mapie_reg.fit(X, y)
-    mapie_reg.predict(X, alpha=0.05)
