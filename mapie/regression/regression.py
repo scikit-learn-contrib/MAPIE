@@ -371,36 +371,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     check_is_fitted(estimator)
             return estimator
 
-    def _check_conformity_score(
-        self, conformity_score: Optional[ConformityScore] = None,
-    ) -> ConformityScore:
-        """
-        Check parameter ``conformity_score``.
-
-        Raises
-        ------
-        ValueError
-            If parameter is not valid.
-        """
-        if conformity_score is None:
-            return AbsoluteConformityScore()
-        elif not isinstance(conformity_score, ConformityScore):
-            raise ValueError(
-                "Invalid conformity_score argument. "
-                "Must be None or a ConformityScore instance."
-            )
-        elif hasattr(conformity_score, "fit"):
-            if self.cv == "prefit":
-                check_is_fitted(conformity_score)
-                return conformity_score
-            else:
-                raise ValueError(
-                    "Invalid conformity_score argument. "
-                    "Incompatible with cv different of prefit."
-                )
-        else:
-            return conformity_score
-
     def _check_ensemble(
         self, ensemble: bool,
     ) -> None:
@@ -610,7 +580,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         sample_weight = cast(Optional[NDArray], sample_weight)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
-        self.conformity_score_function_ = self._check_conformity_score(
+        self.conformity_score_function_ = check_conformity_score(
             self.conformity_score
         )
         y = cast(NDArray, y)
