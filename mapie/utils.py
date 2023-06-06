@@ -16,6 +16,7 @@ from sklearn.utils.validation import (_check_sample_weight, _num_features,
 
 from ._compatibility import np_quantile
 from ._typing import ArrayLike, NDArray
+from .conformity_scores import AbsoluteConformityScore, ConformityScore
 
 SPLIT_STRATEGIES = ["uniform", "quantile", "array split"]
 
@@ -534,6 +535,37 @@ def check_lower_upper_bounds(
             "WARNING: The predictions have issues.\n"
             + "The upper predictions are lower than"
             + "the lower predictions at some points."
+        )
+
+
+def check_conformity_score(
+    conformity_score: Optional[ConformityScore],
+) -> ConformityScore:
+    """
+    Check parameter ``conformity_score``.
+    Raises
+    ------
+    ValueError
+        If parameter is not valid.
+    Examples
+    --------
+    >>> from mapie.utils import check_conformity_score
+    >>> try:
+    ...     check_conformity_score(1)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    Invalid conformity_score argument.
+    Must be None or a ConformityScore instance.
+    """
+    if conformity_score is None:
+        return AbsoluteConformityScore()
+    elif isinstance(conformity_score, ConformityScore):
+        return conformity_score
+    else:
+        raise ValueError(
+            "Invalid conformity_score argument.\n"
+            "Must be None or a ConformityScore instance."
         )
 
 

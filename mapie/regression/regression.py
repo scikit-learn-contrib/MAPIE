@@ -14,8 +14,9 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
-from mapie.conformity_scores import AbsoluteConformityScore, ConformityScore
-from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
+from mapie.conformity_scores import ConformityScore
+from mapie.utils import (check_alpha, check_alpha_and_n_samples,
+                         check_conformity_score, check_cv,
                          check_estimator_fit_predict, check_n_features_in,
                          check_n_jobs, check_nan_in_aposteriori_prediction,
                          check_null_weight, check_verbose, fit_estimator)
