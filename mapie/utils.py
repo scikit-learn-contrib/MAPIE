@@ -543,12 +543,10 @@ def check_conformity_score(
 ) -> ConformityScore:
     """
     Check parameter ``conformity_score``.
-
     Raises
     ------
     ValueError
         If parameter is not valid.
-
     Examples
     --------
     >>> from mapie.utils import check_conformity_score
