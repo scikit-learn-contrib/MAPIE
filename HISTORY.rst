@@ -5,6 +5,7 @@ History
 ##### (##########)
 ------------------
 
+* Fix an unfixed random state in one of the classification tests
 * Add split conformal option for regression and classification
 * Update check method for calibration
 
