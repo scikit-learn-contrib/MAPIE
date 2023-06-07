@@ -565,13 +565,13 @@ def test_pipeline_compatibility() -> None:
 @pytest.mark.parametrize(
     "conformity_score", [AbsoluteConformityScore(), GammaConformityScore()]
 )
-def test_gammaconformityscore(
+def test_conformity_score(
     strategy: str, conformity_score: ConformityScore
 ) -> None:
-    """Test that GammaConformityScore with MAPIE raises no error."""
+    """Test that any conformity score function with MAPIE raises no error."""
     mapie_reg = MapieRegressor(
         conformity_score=conformity_score,
         **STRATEGIES[strategy]
     )
     mapie_reg.fit(X, y + 1e3)
-    _, y_pis = mapie_reg.predict(X, alpha=0.05)
+    mapie_reg.predict(X, alpha=0.05)

@@ -6,6 +6,8 @@ History
 ------------------
 
 * Fix an unfixed random state in one of the classification tests
+* Migrate conformity scores classes into conformity_scores module
+* Migrate regression classes into regression module
 * Add split conformal option for regression and classification
 * Update check method for calibration
 
