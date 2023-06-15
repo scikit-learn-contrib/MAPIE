@@ -1016,11 +1016,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         sample_weight = cast(Optional[NDArray], sample_weight)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
-        y = cast(NDArray, y)
-        enc = LabelEncoder()
-        y_enc = enc.fit_transform(y)
-        self.label_encoder_ = enc
-
         estimator = check_estimator_classification(
             X,
             y,
@@ -1034,6 +1029,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self.n_classes_, self.classes_ = self._get_classes_info(
             estimator, y
         )
+
+        y = cast(NDArray, y)
+        enc = LabelEncoder()
+        
+        enc = enc.fit(self.classes_)
+        y_enc = enc.transform(y)
+        self.label_encoder_ = enc
+
         check_classification_targets(y)
         self._target_type = type_of_target(y)
 
