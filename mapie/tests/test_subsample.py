@@ -87,3 +87,35 @@ def test_split_BlockBootstrap_error() -> None:
     cv = BlockBootstrap()
     with pytest.raises(ValueError, match=r".*Exactly one argument*"):
         next(cv.split(X))
+      
+def test_split_samples_are_different()->None:
+    """Test that subsamples are different """
+    X = np.array([0,1,2,3])
+    cv = Subsample(n_resamplings=2, random_state=1)
+    trains = [x[0] for x in cv.split(X)]
+    tests = [x[1] for x in cv.split(X)]
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(trains[0], trains[1])
+        np.testing.assert_equal(trains[1], trains[2])
+        np.testing.assert_equal(trains[2], trains[3])
+
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(tests[0], tests[1])
+        np.testing.assert_equal(tests[1], tests[2])
+        np.testing.assert_equal(tests[2], tests[3])
+
+def test_split_blockbootstraps_are_different()->None:
+    """Test that BlockBootstrap outputs are different """
+    X = np.array([0,1,2,3])
+    cv = BlockBootstrap(n_resamplings=2, random_state=1)
+    trains = [x[0] for x in cv.split(X)]
+    tests = [x[1] for x in cv.split(X)]
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(trains[0], trains[1])
+        np.testing.assert_equal(trains[1], trains[2])
+        np.testing.assert_equal(trains[2], trains[3])
+
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(tests[0], tests[1])
+        np.testing.assert_equal(tests[1], tests[2])
+        np.testing.assert_equal(tests[2], tests[3])  
