@@ -5,8 +5,10 @@ import numpy as np
 import pytest
 from numpy.random import RandomState
 
+from typing import Union
 from typing_extensions import TypedDict
-from mapie._typing import ArrayLike
+from mapie._typing import ArrayLike, NDArray
+
 from mapie.metrics import (classification_coverage_score,
                            classification_mean_width_score,
                            expected_calibration_error,
@@ -19,34 +21,20 @@ from mapie.metrics import (classification_coverage_score,
                            hsic)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
-y_preds = np.array(
-    [
-        [5, 4, 6],
-        [7.5, 6.0, 9.0],
-        [9.5, 9, 10.0],
-        [10.5, 8.5, 12.5],
-        [11.5, 10.5, 12.0],
-    ]
-)
-intervals = np.array(
-    [
-        [
-            [4, 4], [6, 7.5]
-        ],
-        [
-            [6.0, 8], [9.0, 10]
-        ],
-        [
-            [9, 9], [10.0, 10.0]
-        ],
-        [
-            [8.5, 9], [12.5, 12]
-        ],
-        [
-            [10.5, 10.5], [12.0, 12]
-        ]
-    ]
-)
+y_preds = np.array([
+    [5, 4, 6],
+    [7.5, 6.0, 9.0],
+    [9.5, 9, 10.0],
+    [10.5, 8.5, 12.5],
+    [11.5, 10.5, 12.0],
+])
+intervals = np.array([
+    [[4, 4], [6, 7.5]],
+    [[6.0, 8], [9.0, 10]],
+    [[9, 9], [10.0, 10.0]],
+    [[8.5, 9], [12.5, 12]],
+    [[10.5, 10.5], [12.0, 12]]
+])
 
 y_true_class = np.array([3, 3, 1, 2, 2])
 y_pred_set = np.array(
@@ -94,142 +82,88 @@ y_pred_set_2alphas = np.array([
 Params_ssc_reg = TypedDict(
     "Params_ssc_reg",
     {
-        "intervals": ArrayLike,
-        "n_splits": int,
-        "method": str
+        "y_intervals": NDArray,
+        "num_bins": int
     },
 )
 Params_ssc_classif = TypedDict(
     "Params_ssc_classif",
     {
-        "y_pred_set": ArrayLike,
-        "n_splits": int,
-        "method": str
+        "y_pred_set": NDArray,
+        "num_bins": Union[int, None]
     },
 )
 SSC_REG = {
     "1alpha_base": Params_ssc_reg(
-        intervals=intervals[:, :, 0],
-        n_splits=2,
-        method="uniform"
+        y_intervals=intervals[:, :, 0],
+        num_bins=2
     ),
     "1alpha_3sp": Params_ssc_reg(
-        intervals=intervals[:, :, 0],
-        n_splits=3,
-        method="uniform"
-    ),
-    "1alpha_3sp_quant": Params_ssc_reg(
-        intervals=intervals[:, :, 0],
-        n_splits=3,
-        method="quantile"
-    ),
-    "1alpha_quant": Params_ssc_reg(
-        intervals=intervals[:, :, 0],
-        n_splits=2,
-        method="quantile"
+        y_intervals=intervals[:, :, 0],
+        num_bins=3
     ),
     "2alpha_base": Params_ssc_reg(
-        intervals=intervals,
-        n_splits=2,
-        method="uniform"
+        y_intervals=intervals,
+        num_bins=2
     ),
     "2alpha_3sp": Params_ssc_reg(
-        intervals=intervals,
-        n_splits=3,
-        method="uniform"
-    ),
-    "2alpha_3sp_quant": Params_ssc_reg(
-        intervals=intervals,
-        n_splits=3,
-        method="quantile"
-    ),
-    "2alpha_quant": Params_ssc_reg(
-        intervals=intervals,
-        n_splits=2,
-        method="quantile"
+        y_intervals=intervals,
+        num_bins=3
     ),
 }
 SSC_CLASSIF = {
     "1alpha_base": Params_ssc_classif(
         y_pred_set=y_pred_set_2alphas[:, :, 0],
-        n_splits=2,
-        method="uniform"
+        num_bins=2
     ),
     "1alpha_3sp": Params_ssc_classif(
         y_pred_set=y_pred_set_2alphas[:, :, 0],
-        n_splits=3,
-        method="uniform"
+        num_bins=3
     ),
-    "1alpha_3sp_quant": Params_ssc_classif(
+    "1alpha_None": Params_ssc_classif(
         y_pred_set=y_pred_set_2alphas[:, :, 0],
-        n_splits=3,
-        method="quantile"
-    ),
-    "1alpha_quant": Params_ssc_classif(
-        y_pred_set=y_pred_set_2alphas[:, :, 0],
-        n_splits=2,
-        method="quantile"
+        num_bins=None
     ),
     "2alpha_base": Params_ssc_classif(
         y_pred_set=y_pred_set_2alphas,
-        n_splits=2,
-        method="uniform"
+        num_bins=2,
     ),
     "2alpha_3sp": Params_ssc_classif(
         y_pred_set=y_pred_set_2alphas,
-        n_splits=3,
-        method="uniform"
+        num_bins=3
     ),
-    "2alpha_3sp_quant": Params_ssc_classif(
+    "2alpha_None": Params_ssc_classif(
         y_pred_set=y_pred_set_2alphas,
-        n_splits=3,
-        method="quantile"
-    ),
-    "2alpha_quant": Params_ssc_classif(
-        y_pred_set=y_pred_set_2alphas,
-        n_splits=2,
-        method="quantile"
+        num_bins=None
     ),
 }
 SSC_REG_COVERAGES = {
     "1alpha_base": np.array([[2/3, 1.]]),
     "1alpha_3sp": np.array([[0.5, 1., 1.]]),
-    "1alpha_3sp_quant": np.array([[0.5, 1., 1.]]),
-    "1alpha_quant": np.array([[2/3, 1.]]),
     "2alpha_base": np.array([[2/3, 1.], [1/3, 1.]]),
     "2alpha_3sp": np.array([[0.5, 1., 1.], [0.5, 0.5, 1.]]),
-    "2alpha_3sp_quant": np.array([[0.5, 1., 1.], [0.5, 0., 1.]]),
-    "2alpha_quant": np.array([[2/3, 1.], [1/3, 1.]])
 }
 SSC_REG_COVERAGES_SCORE = {
     "1alpha_base": np.array([2/3]),
     "1alpha_3sp": np.array([0.5]),
-    "1alpha_3sp_quant": np.array([0.5]),
-    "1alpha_quant": np.array([2/3]),
     "2alpha_base": np.array([2/3, 1/3]),
     "2alpha_3sp": np.array([0.5, 0.5]),
-    "2alpha_3sp_quant": np.array([0.5, 0.]),
-    "2alpha_quant": np.array([2/3, 1/3])
 }
 SSC_CLASSIF_COVERAGES = {
     "1alpha_base": np.array([[1/3, 1.]]),
     "1alpha_3sp": np.array([[0.5, 0.5, 1.]]),
-    "1alpha_3sp_quant": np.array([[0.5, 0., 1.]]),
-    "1alpha_quant": np.array([[1/3, 1.]]),
+    "1alpha_None": np.array([[0., 1., 0., 1., 1.]]),
     "2alpha_base": np.array([[1/3, 1.], [1/3, 1.]]),
     "2alpha_3sp": np.array([[0.5, 0.5, 1.], [0.5, 0.5, 1.]]),
-    "2alpha_3sp_quant": np.array([[0.5, 0., 1.], [0.5, 0., 1.]]),
-    "2alpha_quant": np.array([[1/3, 1.], [1/3, 1.]]),
+    "2alpha_None": np.array([[0., 1., 0., 1., 1.], [0., 1., 0., 1., 1.]]),
 }
 SSC_CLASSIF_COVERAGES_SCORE = {
     "1alpha_base": np.array([1 / 3]),
     "1alpha_3sp": np.array([0.5]),
-    "1alpha_3sp_quant": np.array([0.]),
-    "1alpha_quant": np.array([1 / 3]),
+    "1alpha_None": np.array([0.]),
     "2alpha_base": np.array([1 / 3, 1 / 3]),
     "2alpha_3sp": np.array([0.5, 0.5]),
-    "2alpha_3sp_quant": np.array([0., 0.]),
-    "2alpha_quant": np.array([1 / 3, 1 / 3]),
+    "2alpha_None": np.array([0., 0.]),
 }
 
 prng = RandomState(1234567890)
@@ -470,44 +404,30 @@ def test_top_label_same_result() -> None:
     assert scr1 == scr4
 
 
-@pytest.mark.parametrize("method", ["uniform", "quantile"])
-def test_valid_method_regression_ssc(method: str) -> None:
-    """Test that valid method for ssc splits raise no errors."""
-    regression_ssc(y_toy, intervals, method=method)
+@pytest.mark.parametrize("num_bins", [10, 0, -1])
+def test_invalid_splits_regression_ssc(num_bins: int) -> None:
+    """Test that invalid number of bins for ssc raise errors."""
+    with pytest.raises(ValueError):
+        regression_ssc(y_toy, intervals, num_bins=num_bins)
 
 
-@pytest.mark.parametrize("method", ["equal", 5, [6, 7]])
-def test_invalid_method_regression_ssc(method: str) -> None:
-    """Test that invalid method for ssc splits raise errors."""
-    with pytest.raises(ValueError, match=r".*Invalid method for ssc splits*"):
-        regression_ssc(y_toy, intervals, method=method)
+@pytest.mark.parametrize("num_bins", [10, 0, -1])
+def test_invalid_splits_regression_ssc_score(num_bins: int) -> None:
+    """Test that invalid number of bins for ssc raise errors."""
+    with pytest.raises(ValueError):
+        regression_ssc_score(y_toy, intervals, num_bins=num_bins)
 
 
-@pytest.mark.parametrize("n_splits", [10, 0, 1])
-def test_invalid_splits_regression_ssc(n_splits: int) -> None:
-    """Test that invalid number of splits for ssc raise errors."""
-    with pytest.raises(ValueError, match=r".*Invalid number of splits*"):
-        regression_ssc(y_toy, intervals, n_splits=n_splits)
+@pytest.mark.parametrize("num_bins", [1, 2, 3])
+def test_valid_splits_regression_ssc(num_bins: int) -> None:
+    """Test that valid number of bins for ssc raise no error."""
+    regression_ssc(y_toy, intervals, num_bins=num_bins)
 
 
-@pytest.mark.parametrize("method", ["uniform", "quantile"])
-def test_valid_method_regression_ssc_score(method: str) -> None:
-    """Test that valid method for ssc splits raise no errors."""
-    regression_ssc_score(y_toy, intervals, method=method)
-
-
-@pytest.mark.parametrize("method", ["equal", 5, [6, 7]])
-def test_invalid_method_regression_ssc_score(method: str) -> None:
-    """Test that invalid method for ssc splits raise errors."""
-    with pytest.raises(ValueError, match=r".*Invalid method for ssc splits*"):
-        regression_ssc_score(y_toy, intervals, method=method)
-
-
-@pytest.mark.parametrize("n_splits", [10, 0, 1])
-def test_invalid_splits_regression_ssc_score(n_splits: int) -> None:
-    """Test that invalid number of splits for ssc raise errors."""
-    with pytest.raises(ValueError, match=r".*Invalid number of splits*"):
-        regression_ssc_score(y_toy, intervals, n_splits=n_splits)
+@pytest.mark.parametrize("num_bins", [1, 2, 3])
+def test_valid_splits_regression_ssc_score(num_bins: int) -> None:
+    """Test that valid number of bins for ssc score raise no error."""
+    regression_ssc_score(y_toy, intervals, num_bins=num_bins)
 
 
 @pytest.mark.parametrize("params", [*SSC_REG])
@@ -538,48 +458,32 @@ def test_regression_ssc_score_coverage_values(params: str):
     np.testing.assert_allclose(cond_cov_min, SSC_REG_COVERAGES_SCORE[params])
 
 
-@pytest.mark.parametrize("method", ["uniform", "quantile"])
-def test_valid_method_classification_ssc(method: str) -> None:
-    """Test that valid method for ssc splits raise no errors."""
-    classification_ssc(y_true_class, y_pred_set_2alphas, method=method)
+@pytest.mark.parametrize("num_bins", [10, 0, -1])
+def test_invalid_splits_classification_ssc(num_bins: int) -> None:
+    """Test that invalid number of bins for ssc raise errors."""
+    with pytest.raises(ValueError):
+        classification_ssc(y_true_class, y_pred_set_2alphas, num_bins=num_bins)
 
 
-@pytest.mark.parametrize("method", ["equal", 5, [6, 7]])
-def test_invalid_method_classification_ssc(method: str) -> None:
-    """Test that invalid method for ssc splits raise errors."""
-    with pytest.raises(ValueError, match=r".*Invalid method for ssc splits*"):
-        classification_ssc(y_true_class, y_pred_set_2alphas, method=method)
+@pytest.mark.parametrize("num_bins", [10, 0, -1])
+def test_invalid_splits_classification_ssc_score(num_bins: int) -> None:
+    """Test that invalid number of bins for ssc raise errors."""
+    with pytest.raises(ValueError):
+        classification_ssc_score(y_true_class, y_pred_set_2alphas,
+                                 num_bins=num_bins)
 
 
-@pytest.mark.parametrize("n_splits", [10, 0, 1])
-def test_invalid_splits_classification_ssc(n_splits: int) -> None:
-    """Test that invalid number of splits for ssc raise errors."""
-    with pytest.raises(ValueError, match=r".*Invalid number of splits*"):
-        classification_ssc(y_true_class, y_pred_set_2alphas, n_splits=n_splits)
+@pytest.mark.parametrize("num_bins", [3, 2, None])
+def test_valid_splits_classification_ssc(num_bins: int) -> None:
+    """Test that valid number of bins for ssc raise no error."""
+    classification_ssc(y_true_class, y_pred_set_2alphas, num_bins=num_bins)
 
 
-@pytest.mark.parametrize("method", ["uniform", "quantile"])
-def test_valid_method_classification_ssc_score(method: str) -> None:
-    """Test that valid method for ssc splits raise no errors."""
-    classification_ssc_score(y_true_class, y_pred_set_2alphas, method=method)
-
-
-@pytest.mark.parametrize("method", ["equal", 5, [6, 7]])
-def test_invalid_method_classification_ssc_score(method: str) -> None:
-    """Test that invalid method for ssc splits raise errors."""
-    with pytest.raises(ValueError, match=r".*Invalid method for ssc splits*"):
-        classification_ssc_score(
-            y_true_class, y_pred_set_2alphas, method=method
-        )
-
-
-@pytest.mark.parametrize("n_splits", [10, 0, 1])
-def test_invalid_splits_classification_ssc_score(n_splits: int) -> None:
-    """Test that invalid number of splits for ssc raise errors."""
-    with pytest.raises(ValueError, match=r".*Invalid number of splits*"):
-        classification_ssc_score(
-            y_true_class, y_pred_set_2alphas, n_splits=n_splits
-        )
+@pytest.mark.parametrize("num_bins", [3, 2, None])
+def test_valid_splits_classification_ssc_score(num_bins: int) -> None:
+    """Test that valid number of bins for ssc raise no error."""
+    classification_ssc_score(y_true_class, y_pred_set_2alphas,
+                             num_bins=num_bins)
 
 
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
@@ -592,32 +496,9 @@ def test_classification_ssc_return_shape(params: str) -> None:
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
 def test_classification_ssc_score_return_shape(params: str) -> None:
     """Test that the arrays returned by ssc metrics have the correct shape."""
-    cond_cov_min = classification_ssc_score(
-        y_true_class, **SSC_CLASSIF[params]
-    )
+    cond_cov_min = classification_ssc_score(y_true_class,
+                                            **SSC_CLASSIF[params])
     assert cond_cov_min.shape == SSC_CLASSIF_COVERAGES_SCORE[params].shape
-
-
-@pytest.mark.parametrize("params", [*SSC_CLASSIF])
-def test_classification_ssc_return_shape_n_classes(params: str) -> None:
-    """
-    Test that the arrays returned by ssc metrics have the correct shape,
-    when splits=None, there is n_classes+1 groups.
-    """
-    cond_cov = classification_ssc(y_true_class, **SSC_CLASSIF[params])
-    assert cond_cov.shape == SSC_CLASSIF_COVERAGES[params].shape
-
-
-@pytest.mark.parametrize("params", [*SSC_CLASSIF])
-def test_classification_ssc_score_return_shape_n_classes(params: str) -> None:
-    """
-    Test that the arrays returned by ssc metrics have the correct shape,
-    when splits=None, there is n_classes+1 groups.
-    """
-    cond_cov_min = classification_ssc_score(
-        y_true_class, **SSC_CLASSIF[params]
-    )
-    assert cond_cov_min.shape == SSC_CLASSIF_COVERAGES_SCORE[params]
 
 
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
@@ -630,31 +511,34 @@ def test_classification_ssc_coverage_values(params: str):
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
 def test_classification_ssc_score_coverage_values(params: str):
     """Test that the conditional coverage values returned are correct."""
-    cond_cov_min = classification_ssc_score(
-        y_true_class, **SSC_CLASSIF[params]
-    )
+    cond_cov_min = classification_ssc_score(y_true_class,
+                                            **SSC_CLASSIF[params])
     np.testing.assert_allclose(
         cond_cov_min, SSC_CLASSIF_COVERAGES_SCORE[params]
     )
 
 
-@pytest.mark.parametrize("kernel_sizes", [(1, 2, 1), [1], 2, [[1, 2]]])
+@pytest.mark.parametrize("kernel_sizes", [[1], 2, [[1, 2]]])
 def test_hsic_invalid_kernel_sizes(kernel_sizes: ArrayLike):
-    with pytest.raises(TypeError):
+    """Test that invalid kernel sizes raises an error"""
+    with pytest.raises(ValueError):
         hsic(y_toy, intervals, kernel_sizes=kernel_sizes)
 
 
-@pytest.mark.parametrize("kernel_sizes", [(1, 1), (2, 2), (3, 1)])
+@pytest.mark.parametrize("kernel_sizes", [(1, 1), [2, 2], (3, 1)])
 def test_hsic_valid_kernel_sizes(kernel_sizes: ArrayLike):
+    """Test that valid kernel sizes raises no errors"""
     hsic(y_toy, intervals, kernel_sizes=kernel_sizes)
 
 
 @pytest.mark.parametrize("kernel_sizes", [(1, 1), (2, 2), (3, 1)])
 def test_hsic_return_shape(kernel_sizes: ArrayLike):
+    """Test that the arrau returned by hsic has the good shape"""
     coef = hsic(y_toy, intervals, kernel_sizes=kernel_sizes)
     assert coef.shape == (2,)
 
 
 def test_hsic_correlation_value():
+    """Test that the values returned by hsic are correct"""
     coef = hsic(y_toy, intervals, kernel_sizes=(1, 1))
     np.testing.assert_allclose(coef, np.array([0.16829506, 0.3052798]))
