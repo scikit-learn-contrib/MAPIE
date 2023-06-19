@@ -239,7 +239,7 @@ y_true = prng.randint(0, 2, 51)
 
 
 def test_regression_ypredlow_shape() -> None:
-    "Test shape of y_pred_low."
+    """Test shape of y_pred_low."""
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_coverage_score(y_toy, y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
@@ -247,57 +247,74 @@ def test_regression_ypredlow_shape() -> None:
 
 
 def test_regression_ypredup_shape() -> None:
-    "Test shape of y_pred_up."
+    """Test shape of y_pred_up."""
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_coverage_score(y_toy, y_preds[:, 1], y_preds[:, 1:])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
 
 
-def test_regression_intervals_shape() -> None:
-    """Test shape of intervals"""
-    with pytest.raises(ValueError, match=r".*Expected 3D array*"):
-        regression_ssc(y_toy, y_preds)
-    with pytest.raises(ValueError, match=r".*Expected 3D array*"):
-        regression_ssc_score(y_toy, y_preds)
-    with pytest.raises(ValueError, match=r".*Expected 3D array*"):
-        hsic(y_toy, y_preds)
+def test_regression_intervals_invalid_shape() -> None:
+    """Test invalid shape of intervals raises an error"""
+    with pytest.raises(ValueError, match=r".*should be a 3D array*"):
+        regression_ssc(y_toy, y_preds[0])
+    with pytest.raises(ValueError, match=r".*should be a 3D array*"):
+        regression_ssc_score(y_toy, y_preds[0])
+    with pytest.raises(ValueError, match=r".*should be a 3D array*"):
+        hsic(y_toy, y_preds[0])
+
+
+def test_regression_ytrue_invalid_shape() -> None:
+    """Test invalid shape of y_true raises an error"""
+    with pytest.raises(ValueError, match=r".*should be a 1d array*"):
+        regression_ssc(np.tile(y_toy, 2).reshape(5, 2), y_preds)
+    with pytest.raises(ValueError, match=r".*should be a 1d array*"):
+        regression_ssc_score(np.tile(y_toy, 2).reshape(5, 2), y_preds)
+    with pytest.raises(ValueError, match=r".*should be a 1d array*"):
+        hsic(np.tile(y_toy, 2).reshape(5, 2), y_preds)
+
+
+def test_regression_valid_input_shape() -> None:
+    """Test valid shape of intervals raises no error"""
+    regression_ssc(y_toy, intervals)
+    regression_ssc_score(y_toy, intervals)
+    hsic(y_toy, intervals)
 
 
 def test_regression_same_length() -> None:
-    "Test when y_true and y_preds have different lengths."
+    """Test when y_true and y_preds have different lengths."""
     with pytest.raises(ValueError, match=r".*could not be broadcast*"):
         regression_coverage_score(y_toy, y_preds[:-1, 1], y_preds[:-1, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
-    with pytest.raises(ValueError, match=r".*could not be broadcast*"):
+    with pytest.raises(ValueError, match=r".*shape mismatch*"):
         regression_ssc(y_toy, intervals[:-1, ])
-    with pytest.raises(ValueError, match=r".*could not be broadcast*"):
+    with pytest.raises(ValueError, match=r".*shape mismatch*"):
         regression_ssc_score(y_toy, intervals[:-1, ])
-    with pytest.raises(ValueError, match=r".*could not be broadcast*"):
+    with pytest.raises(ValueError, match=r".*shape mismatch*"):
         hsic(y_toy, intervals[:-1, ])
 
 
 def test_regression_toydata_coverage_score() -> None:
-    "Test coverage_score for toy data."
+    """Test coverage_score for toy data."""
     scr = regression_coverage_score(y_toy, y_preds[:, 1], y_preds[:, 2])
     assert scr == 0.8
 
 
 def test_regression_ytrue_type_coverage_score() -> None:
-    "Test that list(y_true) gives right coverage."
+    """Test that list(y_true) gives right coverage."""
     scr = regression_coverage_score(list(y_toy), y_preds[:, 1], y_preds[:, 2])
     assert scr == 0.8
 
 
 def test_regression_ypredlow_type_coverage_score() -> None:
-    "Test that list(y_pred_low) gives right coverage."
+    """Test that list(y_pred_low) gives right coverage."""
     scr = regression_coverage_score(y_toy, list(y_preds[:, 1]), y_preds[:, 2])
     assert scr == 0.8
 
 
 def test_regression_ypredup_type_coverage_score() -> None:
-    "Test that list(y_pred_up) gives right coverage."
+    """Test that list(y_pred_up) gives right coverage."""
     scr = regression_coverage_score(y_toy, y_preds[:, 1], list(y_preds[:, 2]))
     assert scr == 0.8
 
@@ -309,78 +326,81 @@ def test_classification_y_true_shape() -> None:
             np.tile(y_true_class, (2, 1)), y_pred_set
         )
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        classification_ssc(
-            np.tile(y_true_class, (2, 1)), y_pred_set_2alphas
-        )
+        classification_ssc(np.tile(y_true_class, (2, 1)), y_pred_set_2alphas)
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        classification_ssc_score(
-            np.tile(y_true_class, (2, 1)), y_pred_set_2alphas
-        )
+        classification_ssc_score(np.tile(y_true_class, (2, 1)),
+                                 y_pred_set_2alphas)
 
 
 def test_classification_y_pred_set_shape() -> None:
-    "Test shape of y_pred_set."
+    """Test shape of y_pred_set."""
     with pytest.raises(ValueError, match=r".*Expected 2D array*"):
         classification_coverage_score(y_true_class, y_pred_set[:, 0])
-    with pytest.raises(ValueError, match=r".*Expected 3D array*"):
+    with pytest.raises(ValueError, match=r".*should be a 3D array*"):
         classification_ssc(y_true_class, y_pred_set[:, 0])
-    with pytest.raises(ValueError, match=r".*Expected 3D array*"):
+    with pytest.raises(ValueError, match=r".*should be a 3D array*"):
         classification_ssc_score(y_true_class, y_pred_set[:, 0])
 
 
 def test_classification_same_length() -> None:
-    "Test when y_true and y_pred_set have different lengths."
+    """Test when y_true and y_pred_set have different lengths."""
     with pytest.raises(IndexError, match=r".*shape mismatch*"):
         classification_coverage_score(y_true_class, y_pred_set[:-1, :])
-    with pytest.raises(IndexError, match=r".*shape mismatch*"):
+    with pytest.raises(ValueError, match=r".*shape mismatch*"):
         classification_ssc(y_true_class, y_pred_set_2alphas[:-1, :, :])
-    with pytest.raises(IndexError, match=r".*shape mismatch*"):
+    with pytest.raises(ValueError, match=r".*shape mismatch*"):
         classification_ssc_score(y_true_class, y_pred_set_2alphas[:-1, :, :])
 
 
+def test_classification_valid_input_shape() -> None:
+    """Test that valid inputs shape raise no error."""
+    classification_ssc(y_true_class, y_pred_set_2alphas)
+    classification_ssc_score(y_true_class, y_pred_set_2alphas)
+
+
 def test_classification_toydata() -> None:
-    "Test coverage_score for toy data."
+    """Test coverage_score for toy data."""
     assert classification_coverage_score(y_true_class, y_pred_set) == 0.8
 
 
 def test_classification_ytrue_type() -> None:
-    "Test that list(y_true_class) gives right coverage."
+    """Test that list(y_true_class) gives right coverage."""
     scr = classification_coverage_score(list(y_true_class), y_pred_set)
     assert scr == 0.8
 
 
 def test_classification_y_pred_set_type() -> None:
-    "Test that list(y_pred_set) gives right coverage."
+    """Test that list(y_pred_set) gives right coverage."""
     scr = classification_coverage_score(y_true_class, list(y_pred_set))
     assert scr == 0.8
 
 
 @pytest.mark.parametrize("pred_set", [y_pred_set, list(y_pred_set)])
 def test_classification_toydata_width(pred_set: ArrayLike) -> None:
-    "Test width mean for toy data."
+    """Test width mean for toy data."""
     assert classification_mean_width_score(pred_set) == 2.0
 
 
 def test_classification_y_pred_set_width_shape() -> None:
-    "Test shape of y_pred_set in classification_mean_width_score."
+    """Test shape of y_pred_set in classification_mean_width_score."""
     with pytest.raises(ValueError, match=r".*Expected 2D array*"):
         classification_mean_width_score(y_pred_set[:, 0])
 
 
 def test_regression_toydata_mean_width_score() -> None:
-    "Test mean_width_score for toy data."
+    """Test mean_width_score for toy data."""
     scr = regression_mean_width_score(y_preds[:, 1], y_preds[:, 2])
     assert scr == 2.3
 
 
 def test_regression_ypredlow_type_mean_width_score() -> None:
-    "Test that list(y_pred_low) gives right coverage."
+    """Test that list(y_pred_low) gives right coverage."""
     scr = regression_mean_width_score(list(y_preds[:, 1]), y_preds[:, 2])
     assert scr == 2.3
 
 
 def test_regression_ypredup_type_mean_width_score() -> None:
-    "Test that list(y_pred_up) gives right coverage."
+    """Test that list(y_pred_up) gives right coverage."""
     scr = regression_mean_width_score(y_preds[:, 1], list(y_preds[:, 2]))
     assert scr == 2.3
 
@@ -404,7 +424,7 @@ def test_ece_scores() -> None:
 
 
 def test_top_lable_ece() -> None:
-    "Test that score is "
+    """Test that score is """
     scr = top_label_ece(y_true, y_scores)
     assert np.round(scr, 4) == 0.6997
 
