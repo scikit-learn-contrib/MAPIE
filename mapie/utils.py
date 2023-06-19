@@ -1071,3 +1071,73 @@ def fix_number_of_classes(
         axis=1
     )
     return y_pred_full
+
+
+def check_array_shape_classification(
+        y_true: NDArray,
+        y_pred_set: NDArray
+) -> Tuple[NDArray, NDArray]:
+    """
+    Fix shape of y_true (to 1d array) and y_pred_sets (to 3d array
+    of shape (n_obs, n_class, n_alpha)).
+    Raise an error if y_true and y_pred_set doesn't have the same
+    number of observations, if y_pred_sets is an array of shape greater
+    than 3 or lower than 2.
+
+    Parameters
+    ----------
+    y_true : ArrayLike
+        True labels.
+    y_pred_set : ArrayLike
+        Prediction sets given by booleans of labels.
+    """
+    y_true = cast(NDArray, column_or_1d(y_true))
+    if y_true.shape[0] != y_pred_set.shape[0]:
+        raise ValueError(
+            f"shape mismatch between y_true {y_true.shape} \
+                and y_pred_set {y_pred_set.shape}"
+        )
+    if len(y_pred_set.shape) != 3:
+        if len(y_pred_set.shape) != 2:
+            raise ValueError(
+                "intervals should be a 3D array of shape \
+                (n_obs, n_classes, n_alpha)"
+            )
+        else:
+            y_pred_set = np.expand_dims(y_pred_set, axis=2)
+    return y_true, y_pred_set
+
+
+def check_array_shape_regression(
+        y_true: NDArray,
+        y_intervals: NDArray
+) -> Tuple[NDArray, NDArray]:
+    """
+    Fix shape of y_true (to 1d array) and y_intervals (to 3d array
+    of shape (n_obs, 2, n_alpha)).
+    Raise an error if y_true and y_intervals doesn't have the same
+    number of observations, if y_intervals is an array of shape greater
+    than 3 or lower than 2.
+
+    Parameters
+    ----------
+    y_true : NDArray
+        True labels.
+    y_intervals : NDArray
+        Lower and upper bound of prediction intervals
+        with different alpha risks.
+    """
+    y_true = cast(NDArray, column_or_1d(y_true))
+    if len(y_intervals.shape) != 3:
+        if len(y_intervals.shape) != 2:
+            raise ValueError(
+                "intervals should be a 3D array of shape (n_obs, 2, n_alpha)"
+            )
+        else:
+            y_intervals = np.expand_dims(y_intervals, axis=2)
+    if y_true.shape[0] != y_intervals.shape[0]:
+        raise ValueError(
+            f"shape mismatch between y_true {y_true.shape} \
+                and y_pred_set {y_intervals.shape}"
+        )
+    return y_true, y_intervals
