@@ -1,24 +1,25 @@
 """
 Testing for metrics module.
 """
+from typing import Union
+
 import numpy as np
 import pytest
 from numpy.random import RandomState
-
-from typing import Union
 from typing_extensions import TypedDict
-from mapie._typing import ArrayLike, NDArray
 
+from mapie._typing import ArrayLike, NDArray
 from mapie.metrics import (classification_coverage_score,
                            classification_mean_width_score,
-                           expected_calibration_error,
-                           regression_coverage_score,
-                           regression_mean_width_score, top_label_ece,
-                           regression_ssc,
-                           regression_ssc_score,
                            classification_ssc,
                            classification_ssc_score,
-                           hsic)
+                           expected_calibration_error,
+                           hsic,
+                           regression_coverage_score,
+                           regression_mean_width_score,
+                           regression_ssc,
+                           regression_ssc_score,
+                           top_label_ece)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
 y_preds = np.array([

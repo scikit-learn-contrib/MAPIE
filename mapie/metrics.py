@@ -4,9 +4,12 @@ import numpy as np
 from sklearn.utils.validation import check_array, column_or_1d
 
 from ._typing import ArrayLike, NDArray
-from .utils import (calc_bins, check_binary_zero_one, check_number_bins,
-                    check_split_strategy, check_array_shape_regression,
-                    check_array_shape_classification)
+from .utils import (calc_bins,
+                    check_array_shape_classification,
+                    check_array_shape_regression,
+                    check_binary_zero_one,
+                    check_number_bins,
+                    check_split_strategy)
 
 
 def regression_coverage_score(
