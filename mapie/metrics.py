@@ -522,7 +522,7 @@ def classification_ssc(
     Compute Size-Stratified Coverage metrics proposed in [3] that is
     the conditional coverage conditioned by the size of the predictions sets.
     The sets are ranked by their size (ascending) and then divided into
-    num_bins groups : one value of coverage by groups is computed.
+    num_bins groups: one value of coverage by groups is computed.
 
     [3] Angelopoulos, A. N., & Bates, S. (2021).
     A gentle introduction to conformal prediction and
@@ -694,8 +694,8 @@ def hsic(
 
     Returns
     -------
-        NDArray of shape (n_alpha,)
-    One hsic correlation coefficient by alpha.
+    NDArray of shape (n_alpha,)
+        One hsic correlation coefficient by alpha.
 
     Raises
     ------
