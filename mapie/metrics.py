@@ -319,6 +319,8 @@ def regression_coverage_score_v2(
 
     The effective coverage is obtained by estimating the fraction
     of true labels that lie within the prediction intervals.
+    Uses directly the output of predict method and computes the coverage for
+    each alpha.
 
     Parameters
     ----------
@@ -352,6 +354,8 @@ def classification_coverage_score_v2(
 
     The effective coverage is obtained by estimating the fraction
     of true labels that lie within the prediction sets.
+    Uses directly the output of predict method and computes the coverage for
+    each alpha.
 
     Parameters
     ----------
@@ -489,7 +493,6 @@ def classification_ssc(
     The sets are ranked by their size (ascending) and then divided into
     num_bins groups : one value of coverage by groups is computed.
 
-
     [3] Angelopoulos, A. N., & Bates, S. (2021).
     A gentle introduction to conformal prediction and
     distribution-free uncertainty quantification.
@@ -573,7 +576,7 @@ def classification_ssc_score(
     num_bins: Union[int, None] = None
 ) -> NDArray:
     """
-    Aggregate by the minimum for each alpha the Size-Stratified Coverage [3] :
+    Aggregate by the minimum for each alpha the Size-Stratified Coverage [3]:
     returns the maximum violation of the conditional coverage
     (with the groups defined).
 

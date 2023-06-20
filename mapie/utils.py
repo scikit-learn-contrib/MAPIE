@@ -1100,7 +1100,7 @@ def check_array_shape_classification(
     if len(y_pred_set.shape) != 3:
         if len(y_pred_set.shape) != 2:
             raise ValueError(
-                "intervals should be a 3D array of shape \
+                "y_pred_set should be a 3D array of shape \
                 (n_obs, n_classes, n_alpha)"
             )
         else:
@@ -1131,13 +1131,13 @@ def check_array_shape_regression(
     if len(y_intervals.shape) != 3:
         if len(y_intervals.shape) != 2:
             raise ValueError(
-                "intervals should be a 3D array of shape (n_obs, 2, n_alpha)"
+                "y_intervals should be a 3D array of shape (n_obs, 2, n_alpha)"
             )
         else:
             y_intervals = np.expand_dims(y_intervals, axis=2)
     if y_true.shape[0] != y_intervals.shape[0]:
         raise ValueError(
             f"shape mismatch between y_true {y_true.shape} \
-                and y_pred_set {y_intervals.shape}"
+                and y_intervals {y_intervals.shape}"
         )
     return y_true, y_intervals
