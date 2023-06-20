@@ -10,9 +10,9 @@ from .utils import (calc_bins, check_binary_zero_one, check_number_bins,
 
 
 def regression_coverage_score(
-        y_true: ArrayLike,
-        y_pred_low: ArrayLike,
-        y_pred_up: ArrayLike,
+    y_true: ArrayLike,
+    y_pred_low: ArrayLike,
+    y_pred_up: ArrayLike,
 ) -> float:
     """
     Effective coverage score obtained by the prediction intervals.
@@ -54,8 +54,8 @@ def regression_coverage_score(
 
 
 def classification_coverage_score(
-        y_true: ArrayLike,
-        y_pred_set: ArrayLike
+    y_true: ArrayLike,
+    y_pred_set: ArrayLike
 ) -> float:
     """
     Effective coverage score obtained by the prediction sets.
@@ -104,8 +104,8 @@ def classification_coverage_score(
 
 
 def regression_mean_width_score(
-        y_pred_low: ArrayLike,
-        y_pred_up: ArrayLike
+    y_pred_low: ArrayLike,
+    y_pred_up: ArrayLike
 ) -> float:
     """
     Effective mean width score obtained by the prediction intervals.
@@ -177,10 +177,10 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
 
 
 def expected_calibration_error(
-        y_true: ArrayLike,
-        y_scores: ArrayLike,
-        num_bins: int = 50,
-        split_strategy: Optional[str] = None,
+    y_true: ArrayLike,
+    y_scores: ArrayLike,
+    num_bins: int = 50,
+    split_strategy: Optional[str] = None,
 ) -> float:
     """
     The expected calibration error, which is the difference between
@@ -231,12 +231,12 @@ def expected_calibration_error(
 
 
 def top_label_ece(
-        y_true: ArrayLike,
-        y_scores: ArrayLike,
-        y_score_arg: Optional[ArrayLike] = None,
-        num_bins: int = 50,
-        split_strategy: Optional[str] = None,
-        classes: Optional[ArrayLike] = None,
+    y_true: ArrayLike,
+    y_scores: ArrayLike,
+    y_score_arg: Optional[ArrayLike] = None,
+    num_bins: int = 50,
+    split_strategy: Optional[str] = None,
+    classes: Optional[ArrayLike] = None,
 ) -> float:
     """
     The Top-Label ECE which is a method adapted to fit the
@@ -311,8 +311,8 @@ def top_label_ece(
 
 
 def regression_coverage_score_v2(
-        y_true: NDArray,
-        y_intervals: NDArray,
+    y_true: NDArray,
+    y_intervals: NDArray,
 ) -> NDArray:
     """
     Effective coverage score obtained by the prediction intervals.
@@ -344,8 +344,8 @@ def regression_coverage_score_v2(
 
 
 def classification_coverage_score_v2(
-        y_true: NDArray,
-        y_pred_set: NDArray
+    y_true: NDArray,
+    y_pred_set: NDArray
 ) -> NDArray:
     """
     Effective coverage score obtained by the prediction sets.
@@ -375,9 +375,9 @@ def classification_coverage_score_v2(
 
 
 def regression_ssc(
-        y_true: NDArray,
-        y_intervals: NDArray,
-        num_bins: int = 3
+    y_true: NDArray,
+    y_intervals: NDArray,
+    num_bins: int = 3
 ) -> NDArray:
     """
     Compute Size-Stratified Coverage metrics proposed in [3] that is
@@ -440,9 +440,9 @@ def regression_ssc(
 
 
 def regression_ssc_score(
-        y_true: NDArray,
-        y_intervals: NDArray,
-        num_bins: int = 3
+    y_true: NDArray,
+    y_intervals: NDArray,
+    num_bins: int = 3
 ) -> NDArray:
     """
     Aggregate by the minimum for each alpha the Size-Stratified Coverage [3]:
@@ -479,9 +479,9 @@ def regression_ssc_score(
 
 
 def classification_ssc(
-        y_true: NDArray,
-        y_pred_set: NDArray,
-        num_bins: Union[int, None] = None
+    y_true: NDArray,
+    y_pred_set: NDArray,
+    num_bins: Union[int, None] = None
 ) -> NDArray:
     """
     Compute Size-Stratified Coverage metrics proposed in [3] that is
@@ -568,9 +568,9 @@ def classification_ssc(
 
 
 def classification_ssc_score(
-        y_true: NDArray,
-        y_pred_set: NDArray,
-        num_bins: Union[int, None] = None
+    y_true: NDArray,
+    y_pred_set: NDArray,
+    num_bins: Union[int, None] = None
 ) -> NDArray:
     """
     Aggregate by the minimum for each alpha the Size-Stratified Coverage [3] :
@@ -609,8 +609,8 @@ def classification_ssc_score(
 
 
 def _gaussian_kernel(
-        x: NDArray,
-        kernel_size: int
+    x: NDArray,
+    kernel_size: int
 ) -> NDArray:
     """
     Computes the gaussian kernel of x. (Used in hsic function)
@@ -629,9 +629,9 @@ def _gaussian_kernel(
 
 
 def hsic(
-        y_true: NDArray,
-        y_intervals: NDArray,
-        kernel_sizes: ArrayLike = (1, 1)
+    y_true: NDArray,
+    y_intervals: NDArray,
+    kernel_sizes: ArrayLike = (1, 1)
 ) -> NDArray:
     """
     Compute the square root of the hsic coefficient. HSIC is Hilbert-Schmidt

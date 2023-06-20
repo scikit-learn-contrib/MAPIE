@@ -786,10 +786,10 @@ def get_calib_set(
 
 
 def check_estimator_classification(
-        X: ArrayLike,
-        y: ArrayLike,
-        cv: Union[str, BaseCrossValidator],
-        estimator: Optional[ClassifierMixin],
+    X: ArrayLike,
+    y: ArrayLike,
+    cv: Union[str, BaseCrossValidator],
+    estimator: Optional[ClassifierMixin],
 ) -> ClassifierMixin:
     """
     Check if estimator is ``None``,
@@ -1074,8 +1074,8 @@ def fix_number_of_classes(
 
 
 def check_array_shape_classification(
-        y_true: NDArray,
-        y_pred_set: NDArray
+    y_true: NDArray,
+    y_pred_set: NDArray
 ) -> Tuple[NDArray, NDArray]:
     """
     Fix shape of y_true (to 1d array) and y_pred_sets (to 3d array
@@ -1109,8 +1109,8 @@ def check_array_shape_classification(
 
 
 def check_array_shape_regression(
-        y_true: NDArray,
-        y_intervals: NDArray
+    y_true: NDArray,
+    y_intervals: NDArray
 ) -> Tuple[NDArray, NDArray]:
     """
     Fix shape of y_true (to 1d array) and y_intervals (to 3d array
