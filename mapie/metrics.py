@@ -319,8 +319,10 @@ def regression_coverage_score_v2(
 
     The effective coverage is obtained by estimating the fraction
     of true labels that lie within the prediction intervals.
-    Uses directly the output of predict method and computes the coverage for
-    each alpha.
+
+    It is different from ``regression_coverage_score`` because it uses
+    directly the output of ``predict`` method and can compute the
+    coverage for each alpha.
 
     Parameters
     ----------
@@ -354,8 +356,10 @@ def classification_coverage_score_v2(
 
     The effective coverage is obtained by estimating the fraction
     of true labels that lie within the prediction sets.
-    Uses directly the output of predict method and computes the coverage for
-    each alpha.
+
+    It is different from ``classification_coverage_score`` because it uses
+    directly the output of ``predict`` method and can compute the
+    coverage for each alpha.
 
     Parameters
     ----------
