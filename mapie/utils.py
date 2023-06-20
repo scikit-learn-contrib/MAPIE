@@ -1076,10 +1076,9 @@ def fix_number_of_classes(
 def check_array_shape_classification(
     y_true: NDArray,
     y_pred_set: NDArray
-) -> Tuple[NDArray, NDArray]:
+) -> NDArray:
     """
-    Fix shape of y_true (to 1d array) and y_pred_sets (to 3d array
-    of shape (n_obs, n_class, n_alpha)).
+    Fix shape of y_pred_set (to 3d array of shape (n_obs, n_class, n_alpha)).
 
     Parameters
     ----------
@@ -1090,8 +1089,8 @@ def check_array_shape_classification(
 
     Returns
     -------
-    Tuple[NDArray, NDArray]
-        Fixed y_true and y_pred_set.
+    NDArray
+        Fixed y_pred_set.
 
     Raises
     ------
@@ -1099,7 +1098,6 @@ def check_array_shape_classification(
         If y_true and y_pred_set doesn't have the same number of samples
         and if y_pred_sets is an array of shape greater than 3 or lower than 2.
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
     if y_true.shape[0] != y_pred_set.shape[0]:
         raise ValueError(
             f"shape mismatch between y_true {y_true.shape} \
@@ -1113,16 +1111,15 @@ def check_array_shape_classification(
             )
         else:
             y_pred_set = np.expand_dims(y_pred_set, axis=2)
-    return y_true, y_pred_set
+    return y_pred_set
 
 
 def check_array_shape_regression(
     y_true: NDArray,
     y_intervals: NDArray
-) -> Tuple[NDArray, NDArray]:
+) -> NDArray:
     """
-    Fix shape of y_true (to 1d array) and y_intervals (to 3d array
-    of shape (n_obs, 2, n_alpha)).
+    Fix shape of y_intervals (to 3d array of shape (n_obs, 2, n_alpha)).
 
     Parameters
     ----------
@@ -1134,8 +1131,8 @@ def check_array_shape_regression(
 
     Returns
     -------
-    Tuple[NDArray, NDArray]
-        Fixed y_true and y_intervals.
+    NDArray
+        Fixed y_intervals.
 
     Raises
     ------
@@ -1143,7 +1140,6 @@ def check_array_shape_regression(
         If y_true and y_intervals doesn't have the same number of samples
         and if y_intervals is an array of shape greater than 3 or lower than 2.
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
     if len(y_intervals.shape) != 3:
         if len(y_intervals.shape) != 2:
             raise ValueError(
@@ -1156,4 +1152,4 @@ def check_array_shape_regression(
             f"shape mismatch between y_true {y_true.shape} \
                 and y_intervals {y_intervals.shape}"
         )
-    return y_true, y_intervals
+    return y_intervals

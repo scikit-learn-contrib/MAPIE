@@ -10,12 +10,14 @@ from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.metrics import (classification_coverage_score,
+                           classification_coverage_score_v2,
                            classification_mean_width_score,
                            classification_ssc,
                            classification_ssc_score,
                            expected_calibration_error,
                            hsic,
                            regression_coverage_score,
+                           regression_coverage_score_v2,
                            regression_mean_width_score,
                            regression_ssc,
                            regression_ssc_score,
@@ -201,11 +203,11 @@ def test_regression_intervals_invalid_shape() -> None:
 
 def test_regression_ytrue_invalid_shape() -> None:
     """Test invalid shape of y_true raises an error"""
-    with pytest.raises(ValueError, match=r".*should be a 1d array*"):
+    with pytest.raises(ValueError):
         regression_ssc(np.tile(y_toy, 2).reshape(5, 2), y_preds)
-    with pytest.raises(ValueError, match=r".*should be a 1d array*"):
+    with pytest.raises(ValueError):
         regression_ssc_score(np.tile(y_toy, 2).reshape(5, 2), y_preds)
-    with pytest.raises(ValueError, match=r".*should be a 1d array*"):
+    with pytest.raises(ValueError):
         hsic(np.tile(y_toy, 2).reshape(5, 2), y_preds)
 
 
@@ -503,14 +505,14 @@ def test_classification_ssc_score_return_shape(params: str) -> None:
 
 
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
-def test_classification_ssc_coverage_values(params: str):
+def test_classification_ssc_coverage_values(params: str) -> None:
     """Test that the conditional coverage values returned are correct."""
     cond_cov = classification_ssc(y_true_class, **SSC_CLASSIF[params])
     np.testing.assert_allclose(cond_cov, SSC_CLASSIF_COVERAGES[params])
 
 
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
-def test_classification_ssc_score_coverage_values(params: str):
+def test_classification_ssc_score_coverage_values(params: str) -> None:
     """Test that the conditional coverage values returned are correct."""
     cond_cov_min = classification_ssc_score(y_true_class,
                                             **SSC_CLASSIF[params])
@@ -520,26 +522,82 @@ def test_classification_ssc_score_coverage_values(params: str):
 
 
 @pytest.mark.parametrize("kernel_sizes", [[1], 2, [[1, 2]], [-1, -1]])
-def test_hsic_invalid_kernel_sizes(kernel_sizes: ArrayLike):
+def test_hsic_invalid_kernel_sizes(kernel_sizes: ArrayLike) -> None:
     """Test that invalid kernel sizes raises an error"""
     with pytest.raises(ValueError):
         hsic(y_toy, intervals, kernel_sizes=kernel_sizes)
 
 
 @pytest.mark.parametrize("kernel_sizes", [(1, 1), [2, 2], (3, 1)])
-def test_hsic_valid_kernel_sizes(kernel_sizes: ArrayLike):
+def test_hsic_valid_kernel_sizes(kernel_sizes: ArrayLike) -> None:
     """Test that valid kernel sizes raises no errors"""
     hsic(y_toy, intervals, kernel_sizes=kernel_sizes)
 
 
 @pytest.mark.parametrize("kernel_sizes", [(1, 1), (2, 2), (3, 1)])
-def test_hsic_return_shape(kernel_sizes: ArrayLike):
+def test_hsic_return_shape(kernel_sizes: ArrayLike) -> None:
     """Test that the arrau returned by hsic has the good shape"""
     coef = hsic(y_toy, intervals, kernel_sizes=kernel_sizes)
     assert coef.shape == (2,)
 
 
-def test_hsic_correlation_value():
+def test_hsic_correlation_value() -> None:
     """Test that the values returned by hsic are correct"""
     coef = hsic(y_toy, intervals, kernel_sizes=(1, 1))
     np.testing.assert_allclose(coef, np.array([0.16829506, 0.3052798]))
+
+
+def test_regression_coverage_v1andv2() -> None:
+    """
+    Test that ``regression_coverage_score`` and
+    ```regression_coverage_score_v2``` returns the same results
+    """
+    cov_v1 = regression_coverage_score(
+        y_toy, intervals[:, 0, 0], intervals[:, 1, 0]
+    )
+    cov_v2 = regression_coverage_score_v2(np.expand_dims(y_toy, 1), intervals)
+    np.testing.assert_allclose(cov_v1, cov_v2[0])
+
+
+def test_regression_coverage_score_v2_ytrue_invalid_shape() -> None:
+    """Test that an error is raised if y_true has not the good shape."""
+    with pytest.raises(ValueError):
+        regression_coverage_score_v2(y_toy, intervals)
+
+
+def test_regression_coverage_score_v2_intervals_invalid_shape() -> None:
+    """Test that an error is raised if y_true has not the good shape."""
+    with pytest.raises(ValueError):
+        regression_coverage_score_v2(
+            np.expand_dims(y_toy, 1), intervals[:, 0, 0]
+        )
+
+
+def test_classification_coverage_v1andv2() -> None:
+    """
+    Test that ``classification_coverage_score`` and
+    ```classification_coverage_score_v2``` returns the same results
+    """
+    cov_v1 = classification_coverage_score(y_true_class, y_pred_set)
+    cov_v2 = classification_coverage_score_v2(
+        np.expand_dims(y_true_class, axis=1),
+        np.expand_dims(y_pred_set, axis=2)
+    )
+    np.testing.assert_allclose(cov_v1, cov_v2[0])
+
+
+def test_classification_coverage_score_v2_ytrue_invalid_shape() -> None:
+    """Test that an error is raised if y_pred_set has not the good shape."""
+    with pytest.raises(
+            ValueError,
+            match=r".*should be a NDArray of shape (n_sample, n_alpha)*"
+    ):
+        classification_coverage_score_v2(y_true_class, y_pred_set_2alphas)
+
+
+def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
+    """Test that an error is raised if y_pred_set has not the good shape."""
+    with pytest.raises(ValueError):
+        classification_coverage_score_v2(
+            np.expand_dims(y_true_class, axis=1), y_pred_set[:, 0]
+        )

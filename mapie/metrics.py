@@ -329,7 +329,7 @@ def regression_coverage_score_v2(
 
     Parameters
     ----------
-    y_true: NDArray of shape (n_samples,)
+    y_true: NDArray of shape (n_samples, n_alpha)
         True labels.
     y_intervals: NDArray of shape (n_samples, 2, n_alpha)
         Lower and upper bound of prediction intervals
@@ -339,7 +339,17 @@ def regression_coverage_score_v2(
     -------
     NDArray of shape (n_alpha,)
         Effective coverage obtained by the prediction intervals.
+
+    Raises
+    ------
+    ValueError
+        If y_true is not of shape (n_samples, n_alpha)
     """
+    y_intervals = check_array_shape_regression(y_true, y_intervals)
+    if len(y_true.shape) != 2:
+        raise ValueError(
+            "y_true should be a NDArray of shape (n_sample, n_alpha)"
+        )
     coverages = np.mean(
         np.logical_and(
             np.less_equal(y_intervals[:, 0, :], y_true),
@@ -366,7 +376,7 @@ def classification_coverage_score_v2(
 
     Parameters
     ----------
-    y_true: NDArray of shape (n_samples,)
+    y_true: NDArray of shape (n_samples, n_alpha)
         True labels.
     y_pred_set: NDArray of shape (n_samples, n_class, n_alpha)
         Prediction sets given by booleans of labels.
@@ -375,13 +385,21 @@ def classification_coverage_score_v2(
     -------
     NDArray of shape (n_alpha,)
         Effective coverage obtained by the prediction sets.
-    """
-    if len(y_true.shape) < len(y_pred_set.shape):
-        y_true = np.expand_dims(y_true, axis=1)
 
+    Raises
+    ------
+    ValueError
+        If y_true is not of shape (n_samples, n_alpha)
+    """
+    y_pred_set = check_array_shape_classification(y_true, y_pred_set)
+    if len(y_true.shape) != 2:
+        raise ValueError(
+            "y_true should be a NDArray of shape (n_sample, n_alpha)"
+        )
+    y_true = np.expand_dims(y_true, axis=1)
     coverage = np.take_along_axis(
         y_pred_set, y_true, axis=1
-    ).mean(axis=0)
+    ).mean(axis=0)[0]
     return coverage
 
 
@@ -432,7 +450,8 @@ def regression_ssc(
     >>> print(regression_ssc(y_true, y_intervals, num_bins=2))
     [[1. 1.]]
     """
-    y_true, y_intervals = check_array_shape_regression(y_true, y_intervals)
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_intervals = check_array_shape_regression(y_true, y_intervals)
     check_number_bins(num_bins)
     if num_bins > y_intervals.shape[0]:
         raise ValueError(
@@ -543,7 +562,8 @@ def classification_ssc(
     >>> print(classification_ssc(y_true,y_pred_set,num_bins=2))
     [[1. 1.]]
     """
-    y_true, y_pred_set = check_array_shape_classification(y_true, y_pred_set)
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_pred_set = check_array_shape_classification(y_true, y_pred_set)
 
     sizes = np.sum(y_pred_set, axis=1)
     if num_bins is not None:
@@ -560,9 +580,7 @@ def classification_ssc(
             coverages[:, i] = classification_coverage_score_v2(
                 y_true[indexes],
                 np.take_along_axis(
-                    y_pred_set,
-                    np.expand_dims(indexes, axis=1),
-                    axis=0
+                    y_pred_set, np.expand_dims(indexes, axis=1), axis=0
                 )
             )
     else:
@@ -698,7 +716,8 @@ def hsic(
     >>> print(hsic(y_true, y_intervals))
     [0.31787614 0.2962914 ]
     """
-    y_true, y_intervals = check_array_shape_regression(y_true, y_intervals)
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_intervals = check_array_shape_regression(y_true, y_intervals)
     kernel_sizes = cast(NDArray, column_or_1d(kernel_sizes))
     if len(kernel_sizes) != 2:
         raise ValueError(
