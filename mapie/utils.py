@@ -29,22 +29,22 @@ def check_null_weight(
 
     Parameters
     ----------
-    sample_weight : Optional[ArrayLike] of shape (n_samples,)
+    sample_weight: Optional[ArrayLike] of shape (n_samples,)
         Sample weights.
-    X : ArrayLike of shape (n_samples, n_features)
+    X: ArrayLike of shape (n_samples, n_features)
         Training samples.
-    y : ArrayLike of shape (n_samples,)
+    y: ArrayLike of shape (n_samples,)
         Training labels.
 
     Returns
     -------
-    sample_weight : Optional[NDArray] of shape (n_samples,)
+    sample_weight: Optional[NDArray] of shape (n_samples,)
         Non-null sample weights.
 
-    X : ArrayLike of shape (n_samples, n_features)
+    X: ArrayLike of shape (n_samples, n_features)
         Training samples with non-null weights.
 
-    y : ArrayLike of shape (n_samples,)
+    y: ArrayLike of shape (n_samples,)
         Training labels with non-null weights.
 
     Examples
@@ -90,13 +90,13 @@ def fit_estimator(
 
     Parameters
     ----------
-    estimator : Union[RegressorMixin, ClassifierMixin]
+    estimator: Union[RegressorMixin, ClassifierMixin]
         Estimator to train.
 
-    X : ArrayLike of shape (n_samples, n_features)
+    X: ArrayLike of shape (n_samples, n_features)
         Input data.
 
-    y : ArrayLike of shape (n_samples,)
+    y: ArrayLike of shape (n_samples,)
         Input labels.
 
     sample_weight : Optional[ArrayLike] of shape (n_samples,)
@@ -143,7 +143,7 @@ def check_cv(
 
     Parameters
     ----------
-    cv : Optional[Union[int, str, BaseCrossValidator]], optional
+    cv: Optional[Union[int, str, BaseCrossValidator]], optional
         Cross-validator to check, by default ``None``.
 
     test_size: Optional[Union[int, float]]
@@ -155,7 +155,7 @@ def check_cv(
 
         By default ``None``.
 
-    random_state : Optional[Union[int, np.random.RandomState]], optional
+    random_state: Optional[Union[int, np.random.RandomState]], optional
         Pseudo random number generator state used for random uniform sampling
         for evaluation quantiles and prediction sets in cumulated_score.
         Pass an int for reproducible output across multiple function calls.
@@ -213,7 +213,7 @@ def check_alpha(
 
     Parameters
     ----------
-    alpha : Union[float, Iterable[float]]
+    alpha: Union[float, Iterable[float]]
         Can be a float, a list of floats, or a ArrayLike of floats.
         Between 0 and 1, represent the uncertainty of the confidence interval.
         Lower alpha produce larger (more conservative) prediction intervals.
@@ -274,14 +274,14 @@ def check_n_features_in(
 
     Parameters
     ----------
-    cv : Optional[Union[float, str]]
+    cv: Optional[Union[float, str]]
         The cross-validation strategy for computing scores,
         by default ``None``.
 
-    X : ArrayLike of shape (n_samples, n_features)
+    X: ArrayLike of shape (n_samples, n_features)
         Data passed into the ``fit`` method.
 
-    estimator : RegressorMixin
+    estimator: RegressorMixin
         Backend estimator of MAPIE.
 
     Returns
@@ -330,10 +330,10 @@ def check_alpha_and_n_samples(
 
     Parameters
     ----------
-    alphas : Iterable[float]
+    alphas: Iterable[float]
         Iterable of floats.
 
-    n : int
+    n: int
         number of samples.
 
     Raises
@@ -424,7 +424,7 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
 
     Parameters
     ----------
-    X : Array of shape (size of training set, number of estimators) whose rows
+    X: Array of shape (size of training set, number of estimators) whose rows
     are the predictions by each estimator of each training sample.
 
     Raises
@@ -464,12 +464,12 @@ def check_lower_upper_bounds(
 
     Parameters
     ----------
-    y_preds : NDArray of shape (n_samples, 3) or (n_samples,)
+    y_preds: NDArray of shape (n_samples, 3) or (n_samples,)
         All the predictions at quantile:
         alpha/2, (1 - alpha/2), 0.5 or only the predictions
-    y_pred_low : NDArray of shape (n_samples,)
+    y_pred_low: NDArray of shape (n_samples,)
         Final lower bound prediction
-    y_pred_up : NDArray of shape (n_samples,)
+    y_pred_up: NDArray of shape (n_samples,)
         Final upper bound prediction
 
     Raises
@@ -579,10 +579,10 @@ def check_defined_variables_predict_cqr(
 
     Parameters
     ----------
-    ensemble : bool
+    ensemble: bool
         Ensemble has not been defined in predict and therefore should
         will not have any effects in this method.
-    alpha : Optional[Union[float, Iterable[float]]]
+    alpha: Optional[Union[float, Iterable[float]]]
         For ``MapieQuantileRegresor`` the alpha has to be defined
         directly in initial arguments of the class.
 
@@ -626,7 +626,7 @@ def check_estimator_fit_predict(
 
     Parameters
     ----------
-    estimator : Union[RegressorMixin, ClassifierMixin]
+    estimator: Union[RegressorMixin, ClassifierMixin]
         Estimator to train.
 
     Raises
@@ -647,9 +647,9 @@ def check_alpha_and_last_axis(vector: NDArray, alpha_np: NDArray):
 
     Parameters
     ----------
-    vector : NDArray of shape (n_samples, 1, n_alphas)
+    vector: NDArray of shape (n_samples, 1, n_alphas)
         Vector on which compute the quantile.
-    alpha_np : NDArray of shape (n_alphas, )
+    alpha_np: NDArray of shape (n_alphas, )
         Confidence levels.
 
 
@@ -673,11 +673,11 @@ def compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
 
     Parameters
     ----------
-    vector : NDArray of shape Union[(n_samples, 1), (n_samples, 1, n_alphas)]
+    vector: NDArray of shape Union[(n_samples, 1), (n_samples, 1, n_alphas)]
         Vector on which compute the quantile. If the vector has 3 dimensions,
         then each 1-alpha quantile will be computed on its corresping matrix
         selected on the last axis of the matrix.
-    alpha : NDArray for shape (n_alphas, )
+    alpha: NDArray for shape (n_alphas, )
         Risk levels.
 
     Returns
@@ -798,13 +798,13 @@ def check_estimator_classification(
     check if estimator is indeed already fitted.
     Parameters
     ----------
-    X : ArrayLike of shape (n_samples, n_features)
+    X: ArrayLike of shape (n_samples, n_features)
         Training data.
-    y : ArrayLike of shape (n_samples,)
+    y: ArrayLike of shape (n_samples,)
         Training labels.
-    cv : Union[str, BaseCrossValidator]
+    cv: Union[str, BaseCrossValidator]
         Cross validation parameter.
-    estimator : Optional[ClassifierMixin]
+    estimator: Optional[ClassifierMixin]
         Estimator to check.
     Returns
     -------
@@ -893,13 +893,13 @@ def calc_bins(
     For each bins, calculate the accuracy, average confidence and size.
     Parameters
     ----------
-    y_true : NDArray of shape (n_samples,)
+    y_true: NDArray of shape (n_samples,)
         The "true" values, target for the calibrator.
-    y_score : NDArray of shape (n_samples,)
+    y_score: NDArray of shape (n_samples,)
         The scores given from the calibrator.
-    num_bins : int
+    num_bins: int
         Number of bins to make the split in the y_score.
-    strategy : str
+    strategy: str
         The way of splitting the predictions into different bins.
     Returns
     -------
@@ -941,7 +941,7 @@ def check_split_strategy(
     and defults None split strategy to "uniform".
     Parameters
     ----------
-    strategy : Optional[str]
+    strategy: Optional[str]
         Can be a string or None.
 
     Returns
@@ -971,7 +971,7 @@ def check_number_bins(
 
     Parameters
     ----------
-    num_bins : int
+    num_bins: int
         An integer that determines the number of bins to create
         on an array.
 
@@ -1007,7 +1007,7 @@ def check_binary_zero_one(
 
     Parameters
     ----------
-    y_true : ArrayLike of shape (n_samples,)
+    y_true: ArrayLike of shape (n_samples,)
         Could be any array, but in this case is the true values
         as binary input.
 
@@ -1050,9 +1050,9 @@ def fix_number_of_classes(
 
     Parameters
     ----------
-    n_classes_training : NDArray
+    n_classes_training: NDArray
         Classes of the training set.
-    y_proba : NDArray
+    y_proba: NDArray
         Probabilities of the validation set.
 
     Returns
@@ -1086,9 +1086,9 @@ def check_array_shape_classification(
 
     Parameters
     ----------
-    y_true : ArrayLike
+    y_true: ArrayLike
         True labels.
-    y_pred_set : ArrayLike
+    y_pred_set: ArrayLike
         Prediction sets given by booleans of labels.
     """
     y_true = cast(NDArray, column_or_1d(y_true))
@@ -1121,9 +1121,9 @@ def check_array_shape_regression(
 
     Parameters
     ----------
-    y_true : NDArray
+    y_true: NDArray
         True labels.
-    y_intervals : NDArray
+    y_intervals: NDArray
         Lower and upper bound of prediction intervals
         with different alpha risks.
     """

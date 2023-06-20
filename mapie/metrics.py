@@ -22,11 +22,11 @@ def regression_coverage_score(
 
     Parameters
     ----------
-    y_true : ArrayLike of shape (n_samples,)
+    y_true: ArrayLike of shape (n_samples,)
         True labels.
-    y_pred_low : ArrayLike of shape (n_samples,)
+    y_pred_low: ArrayLike of shape (n_samples,)
         Lower bound of prediction intervals.
-    y_pred_up : ArrayLike of shape (n_samples,)
+    y_pred_up: ArrayLike of shape (n_samples,)
         Upper bound of prediction intervals.
 
     Returns
@@ -65,9 +65,9 @@ def classification_coverage_score(
 
     Parameters
     ----------
-    y_true : ArrayLike of shape (n_samples,)
+    y_true: ArrayLike of shape (n_samples,)
         True labels.
-    y_pred_set : ArrayLike of shape (n_samples, n_class)
+    y_pred_set: ArrayLike of shape (n_samples, n_class)
         Prediction sets given by booleans of labels.
 
     Returns
@@ -112,9 +112,9 @@ def regression_mean_width_score(
 
     Parameters
     ----------
-    y_pred_low : ArrayLike of shape (n_samples,)
+    y_pred_low: ArrayLike of shape (n_samples,)
         Lower bound of prediction intervals.
-    y_pred_up : ArrayLike of shape (n_samples,)
+    y_pred_up: ArrayLike of shape (n_samples,)
         Upper bound of prediction intervals.
 
     Returns
@@ -144,7 +144,7 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
 
     Parameters
     ----------
-    y_pred_set : ArrayLike of shape (n_samples, n_class)
+    y_pred_set: ArrayLike of shape (n_samples, n_class)
         Prediction sets given by booleans of labels.
 
     Returns
@@ -192,14 +192,14 @@ def expected_calibration_error(
 
     Parameters
     ----------
-    y_true : ArrayLike of shape (n_samples,)
+    y_true: ArrayLike of shape (n_samples,)
         The target values for the calibrator.
-    y_score : ArrayLike of shape (n_samples,) or (n_samples, n_classes)
+    y_score: ArrayLike of shape (n_samples,) or (n_samples, n_classes)
         The predictions scores.
-    num_bins : int
+    num_bins: int
         Number of bins to make the split in the y_score. The allowed
         values are num_bins above 0.
-    split_strategy : str
+    split_strategy: str
         The way of splitting the predictions into different bins.
         The allowed split strategies are "uniform", "quantile" and
         "array split".
@@ -248,25 +248,25 @@ def top_label_ece(
 
     Parameters
     ----------
-    y_true : ArrayLike of shape (n_samples,)
+    y_true: ArrayLike of shape (n_samples,)
         The target values for the calibrator.
-    y_scores : ArrayLike of shape (n_samples, n_classes)
+    y_scores: ArrayLike of shape (n_samples, n_classes)
     or (n_samples,)
         The predictions scores, either the maximum score and the
         argmax needs to be inputted or in the form of the prediction
         probabilities.
-    y_score_arg : Optional[ArrayLike] of shape (n_samples,)
+    y_score_arg: Optional[ArrayLike] of shape (n_samples,)
         If only the maximum is provided in the y_scores, the argmax must
         be provided here. This is optional and could be directly infered
         from the y_scores.
-    num_bins : int
+    num_bins: int
         Number of bins to make the split in the y_score. The allowed
         values are num_bins above 0.
-    split_strategy : str
+    split_strategy: str
         The way of splitting the predictions into different bins.
         The allowed split strategies are "uniform", "quantile" and
         "array split".
-    classes : ArrayLike of shape (n_samples,)
+    classes: ArrayLike of shape (n_samples,)
         The different classes, in order of the indices that would be
         present in a pred_proba.
 
@@ -322,9 +322,9 @@ def regression_coverage_score_v2(
 
     Parameters
     ----------
-    y_true : NDArray of shape (n_samples,)
+    y_true: NDArray of shape (n_samples,)
         True labels.
-    y_intervals : NDArray of shape (n_samples, 2, n_alpha)
+    y_intervals: NDArray of shape (n_samples, 2, n_alpha)
         Lower and upper bound of prediction intervals
         with different alpha risks.
 
@@ -355,9 +355,9 @@ def classification_coverage_score_v2(
 
     Parameters
     ----------
-    y_true NDArray of shape (n_samples,)
+    y_true: NDArray of shape (n_samples,)
         True labels.
-    y_pred_set NDArray of shape (n_samples, n_class, n_alpha)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_alpha)
         Prediction sets given by booleans of labels.
 
     Returns
@@ -392,11 +392,11 @@ def regression_ssc(
 
     Parameters
     ----------
-    y_true : NDArray of shape (n_samples,)
+    y_true: NDArray of shape (n_samples,)
         True labels.
-    y_intervals : NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
+    y_intervals: NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
         Prediction intervals given by booleans of labels.
-    num_bins : int n
+    num_bins: int n
         Number of groups.
 
     Returns
@@ -451,11 +451,11 @@ def regression_ssc_score(
 
     Parameters
     ----------
-    y_true : NDArray of shape (n_samples,)
+    y_true: NDArray of shape (n_samples,)
         True labels.
-    y_intervals : NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
+    y_intervals: NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
         Prediction intervals given by booleans of labels.
-    num_bins : int n
+    num_bins: int n
         Number of groups.
 
     Returns
@@ -497,12 +497,12 @@ def classification_ssc(
 
     Parameters
     ----------
-    y_true : NDArray of shape (n_samples,)
+    y_true: NDArray of shape (n_samples,)
         True labels.
-    y_pred_set : NDArray of shape (n_samples, n_class, n_alpha)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_alpha)
     or (n_samples, n_class)
         Prediction sets given by booleans of labels.
-    num_bins : int or None
+    num_bins: int or None
         Number of groups. If None, one value of coverage by possible
         size of sets (n_classes +1) is computed.
 
@@ -579,12 +579,12 @@ def classification_ssc_score(
 
     Parameters
     ----------
-    y_true : NDArray of shape (n_samples,)
+    y_true: NDArray of shape (n_samples,)
         True labels.
-    y_pred_set : NDArray of shape (n_samples, n_class, n_alpha)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_alpha)
     or (n_samples, n_class)
         Prediction sets given by booleans of labels.
-    num_bins : int or None
+    num_bins: int or None
         Number of groups. If None, one value of coverage by possible
         size of sets (n_classes +1) is computed.
 
@@ -617,9 +617,9 @@ def _gaussian_kernel(
 
     Parameters
     ----------
-    x : NDArray
+    x: NDArray
         The values from which to compute the gaussian kernel.
-    kernel_size : int
+    kernel_size: int
         The variance (sigma), this coefficient controls the width of the curve.
     """
     norm_x = x ** 2
@@ -648,11 +648,11 @@ def hsic(
 
     Parameters
     ----------
-    y_true : NDArray of shape (n_samples,)
+    y_true: NDArray of shape (n_samples,)
         True labels.
-    y_intervals : NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
+    y_intervals: NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
         Prediction sets given by booleans of labels.
-    kernel_sizes : int
+    kernel_sizes: int
         The variance (sigma), this coefficient controls the width of the curve.
 
     Returns
