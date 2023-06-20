@@ -518,7 +518,7 @@ def test_classification_ssc_score_coverage_values(params: str):
     )
 
 
-@pytest.mark.parametrize("kernel_sizes", [[1], 2, [[1, 2]]])
+@pytest.mark.parametrize("kernel_sizes", [[1], 2, [[1, 2]], [-1, -1]])
 def test_hsic_invalid_kernel_sizes(kernel_sizes: ArrayLike):
     """Test that invalid kernel sizes raises an error"""
     with pytest.raises(ValueError):

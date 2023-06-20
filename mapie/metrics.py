@@ -682,7 +682,10 @@ def hsic(
         raise ValueError(
             "kernel_sizes should be an ArrayLike of length 2"
         )
-
+    if kernel_sizes[0] <= 0 or kernel_sizes[1] <= 0:
+        raise ValueError(
+            "kernel_size should be positive"
+        )
     n_samples, _, n_alpha = y_intervals.shape
     y_true_per_alpha = np.tile(y_true, (n_alpha, 1)).transpose()
     widths = np.expand_dims(
