@@ -642,7 +642,7 @@ def classification_ssc_score(
     >>> print(classification_ssc_score(y_true,y_pred_set,num_bins=2))
     [1.]
     """
-    return np.min(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
+    return np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
 
 
 def _gaussian_kernel(

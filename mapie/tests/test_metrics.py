@@ -57,7 +57,7 @@ y_pred_set_2alphas = np.array([
         [False, False],
     ],
     [
-        [False, True],
+        [False, False],
         [True, True],
         [True, True],
         [True, True]
@@ -65,7 +65,7 @@ y_pred_set_2alphas = np.array([
     [
         [False, False],
         [True, False],
-        [False, False],
+        [True, False],
         [False, False]
     ],
     [
@@ -155,10 +155,11 @@ SSC_REG_COVERAGES_SCORE = {
 SSC_CLASSIF_COVERAGES = {
     "1alpha_base": np.array([[1/3, 1.]]),
     "1alpha_3sp": np.array([[0.5, 0.5, 1.]]),
-    "1alpha_None": np.array([[0., 1., 0., 1., 1.]]),
+    "1alpha_None": np.array([[0., np.nan, 0.5, 1., 1.]]),
     "2alpha_base": np.array([[1/3, 1.], [1/3, 1.]]),
     "2alpha_3sp": np.array([[0.5, 0.5, 1.], [0.5, 0.5, 1.]]),
-    "2alpha_None": np.array([[0., 1., 0., 1., 1.], [0., 1., 0., 1., 1.]]),
+    "2alpha_None": np.array([[0., np.nan, 0.5, 1., 1.],
+                             [0., 1., 0., 1., np.nan]]),
 }
 SSC_CLASSIF_COVERAGES_SCORE = {
     "1alpha_base": np.array([1 / 3]),
