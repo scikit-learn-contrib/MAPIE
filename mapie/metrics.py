@@ -414,6 +414,11 @@ def regression_ssc(
     -------
     NDArray of shape (n_alpha, num_bins)
 
+    Raises
+    ------
+    ValueError
+        If num_bins is greater than n_samples.
+
     Examples
     --------
     >>> from mapie.metrics import regression_ssc
@@ -431,7 +436,7 @@ def regression_ssc(
     check_number_bins(num_bins)
     if num_bins > y_intervals.shape[0]:
         raise ValueError(
-            "Please provide a bin number lower than the number of observations"
+            "Please provide a bin number lower than the number of samples"
         )
 
     widths = np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :])
@@ -520,6 +525,11 @@ def classification_ssc(
     -------
     NDArray of shape (n_alpha, num_bins)
 
+    Raises
+    ------
+    ValueError
+        If num_bins is greater than n_samples.
+
     Examples
     --------
     >>> from mapie.metrics import classification_ssc
@@ -540,8 +550,7 @@ def classification_ssc(
         check_number_bins(num_bins)
         if num_bins > y_pred_set.shape[0]:
             raise ValueError(
-                "Please provide a bin number lower \
-                than the number of observations"
+                "Please provide a bin number lower than the number of samples"
             )
 
         indexes_sorted = np.argsort(sizes, axis=0)
@@ -669,6 +678,12 @@ def hsic(
     -------
         NDArray of shape (n_alpha,)
     One hsic correlation coefficient by alpha.
+
+    Raises
+    ------
+    ValueError
+        If kernel_sizes has a length different from 2
+        and if it has negative or null values.
 
     Examples
     -------

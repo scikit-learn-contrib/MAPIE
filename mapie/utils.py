@@ -1080,9 +1080,6 @@ def check_array_shape_classification(
     """
     Fix shape of y_true (to 1d array) and y_pred_sets (to 3d array
     of shape (n_obs, n_class, n_alpha)).
-    Raise an error if y_true and y_pred_set doesn't have the same
-    number of observations, if y_pred_sets is an array of shape greater
-    than 3 or lower than 2.
 
     Parameters
     ----------
@@ -1090,6 +1087,17 @@ def check_array_shape_classification(
         True labels.
     y_pred_set: ArrayLike
         Prediction sets given by booleans of labels.
+
+    Returns
+    -------
+    Tuple[NDArray, NDArray]
+        Fixed y_true and y_pred_set.
+
+    Raises
+    ------
+    ValueError
+        If y_true and y_pred_set doesn't have the same number of samples
+        and if y_pred_sets is an array of shape greater than 3 or lower than 2.
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     if y_true.shape[0] != y_pred_set.shape[0]:
@@ -1115,9 +1123,6 @@ def check_array_shape_regression(
     """
     Fix shape of y_true (to 1d array) and y_intervals (to 3d array
     of shape (n_obs, 2, n_alpha)).
-    Raise an error if y_true and y_intervals doesn't have the same
-    number of observations, if y_intervals is an array of shape greater
-    than 3 or lower than 2.
 
     Parameters
     ----------
@@ -1126,6 +1131,17 @@ def check_array_shape_regression(
     y_intervals: NDArray
         Lower and upper bound of prediction intervals
         with different alpha risks.
+
+    Returns
+    -------
+    Tuple[NDArray, NDArray]
+        Fixed y_true and y_intervals.
+
+    Raises
+    ------
+    ValueError
+        If y_true and y_intervals doesn't have the same number of samples
+        and if y_intervals is an array of shape greater than 3 or lower than 2.
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     if len(y_intervals.shape) != 3:
