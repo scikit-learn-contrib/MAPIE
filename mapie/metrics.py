@@ -329,7 +329,7 @@ def regression_coverage_score_v2(
 
     Parameters
     ----------
-    y_true: NDArray of shape (n_samples, n_alpha)
+    y_true: NDArray of shape (n_samples, n_alpha) or (n_samples,)
         True labels.
     y_intervals: NDArray of shape (n_samples, 2, n_alpha)
         Lower and upper bound of prediction intervals
@@ -339,17 +339,11 @@ def regression_coverage_score_v2(
     -------
     NDArray of shape (n_alpha,)
         Effective coverage obtained by the prediction intervals.
-
-    Raises
-    ------
-    ValueError
-        If y_true is not of shape (n_samples, n_alpha)
     """
     y_intervals = check_array_shape_regression(y_true, y_intervals)
     if len(y_true.shape) != 2:
-        raise ValueError(
-            "y_true should be a NDArray of shape (n_sample, n_alpha)"
-        )
+        y_true = cast(NDArray, column_or_1d(y_true))
+        y_true = np.expand_dims(y_true, axis=1)
     coverages = np.mean(
         np.logical_and(
             np.less_equal(y_intervals[:, 0, :], y_true),
@@ -376,7 +370,7 @@ def classification_coverage_score_v2(
 
     Parameters
     ----------
-    y_true: NDArray of shape (n_samples, n_alpha)
+    y_true: NDArray of shape (n_samples, n_alpha) or (n_samples,)
         True labels.
     y_pred_set: NDArray of shape (n_samples, n_class, n_alpha)
         Prediction sets given by booleans of labels.
@@ -385,17 +379,11 @@ def classification_coverage_score_v2(
     -------
     NDArray of shape (n_alpha,)
         Effective coverage obtained by the prediction sets.
-
-    Raises
-    ------
-    ValueError
-        If y_true is not of shape (n_samples, n_alpha)
     """
     y_pred_set = check_array_shape_classification(y_true, y_pred_set)
     if len(y_true.shape) != 2:
-        raise ValueError(
-            "y_true should be a NDArray of shape (n_sample, n_alpha)"
-        )
+        y_true = cast(NDArray, column_or_1d(y_true))
+        y_true = np.expand_dims(y_true, axis=1)
     y_true = np.expand_dims(y_true, axis=1)
     coverage = np.take_along_axis(
         y_pred_set, y_true, axis=1

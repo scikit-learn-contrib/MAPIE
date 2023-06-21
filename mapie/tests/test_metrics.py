@@ -560,14 +560,13 @@ def test_regression_coverage_v1andv2() -> None:
     np.testing.assert_allclose(cov_v1, cov_v2[0])
 
 
-def test_regression_coverage_score_v2_ytrue_invalid_shape() -> None:
-    """Test that an error is raised if y_true has not the good shape."""
-    with pytest.raises(ValueError):
-        regression_coverage_score_v2(y_toy, intervals)
+def test_regression_coverage_score_v2_ytrue_valid_shape() -> None:
+    """Test that no error is raised if y_true has the shape (n_samples,)."""
+    regression_coverage_score_v2(y_toy, intervals)
 
 
 def test_regression_coverage_score_v2_intervals_invalid_shape() -> None:
-    """Test that an error is raised if y_true has not the good shape."""
+    """Test that an error is raised if intervals has not the good shape."""
     with pytest.raises(ValueError):
         regression_coverage_score_v2(
             np.expand_dims(y_toy, 1), intervals[:, 0, 0]
@@ -587,13 +586,9 @@ def test_classification_coverage_v1andv2() -> None:
     np.testing.assert_allclose(cov_v1, cov_v2[0])
 
 
-def test_classification_coverage_score_v2_ytrue_invalid_shape() -> None:
-    """Test that an error is raised if y_pred_set has not the good shape."""
-    with pytest.raises(
-            ValueError,
-            match=r".*should be a NDArray of shape (n_sample, n_alpha)*"
-    ):
-        classification_coverage_score_v2(y_true_class, y_pred_set_2alphas)
+def test_classification_coverage_score_v2_ytrue_valid_shape() -> None:
+    """Test that no error is raised if y_true has a shape (n_samples,)."""
+    classification_coverage_score_v2(y_true_class, y_pred_set_2alphas)
 
 
 def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
