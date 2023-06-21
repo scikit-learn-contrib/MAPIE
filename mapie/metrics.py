@@ -710,7 +710,7 @@ def hsic(
         raise ValueError(
             "kernel_sizes should be an ArrayLike of length 2"
         )
-    if kernel_sizes[0] <= 0 or kernel_sizes[1] <= 0:
+    if (kernel_sizes[0] <= 0).any():
         raise ValueError(
             "kernel_size should be positive"
         )
