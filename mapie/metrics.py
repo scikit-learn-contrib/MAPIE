@@ -676,8 +676,9 @@ def hsic(
         True labels.
     y_intervals: NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
         Prediction sets given by booleans of labels.
-    kernel_sizes: int
-        The variance (sigma), this coefficient controls the width of the curve.
+    kernel_sizes: ArrayLike of size (2,)
+        The variance (sigma) for each variable (the indicator of coverage and
+        the interval size), this coefficient controls the width of the curve.
 
     Returns
     -------
@@ -710,7 +711,7 @@ def hsic(
         raise ValueError(
             "kernel_sizes should be an ArrayLike of length 2"
         )
-    if (kernel_sizes[0] <= 0).any():
+    if (kernel_sizes <= 0).any():
         raise ValueError(
             "kernel_size should be positive"
         )
