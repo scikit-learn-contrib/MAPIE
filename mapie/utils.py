@@ -1153,3 +1153,55 @@ def check_array_shape_regression(
                 and y_intervals {y_intervals.shape}"
         )
     return y_intervals
+
+
+def check_nb_intervals_sizes(widths: NDArray, num_bins: int) -> None:
+    """
+    Checks that the number of bins is less than the number of different
+    interval widths.
+
+    Parameters
+    ----------
+    widths: NDArray (n_samples, n_alpha)
+        Widths of the prediction intervals.
+    num_bins: int
+        Number of bins.
+
+    Raises
+    ------
+    ValueError
+        If the number of bins is greater than the number of different widths.
+    """
+    for alpha in range(widths.shape[1]):
+        nb_widths = len(np.unique(widths[:, alpha].round(5)))
+        if nb_widths <= num_bins:
+            raise ValueError(
+                "The number of bins should be lower or equal to the number of \
+                different interval widths."
+            )
+
+
+def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
+    """
+    Checks that the number of bins is less than the number of different
+    set sizes.
+
+    Parameters
+    ----------
+    sizes: NDArrat of shape (n_samples, n_alpha)
+        Sizes of the prediction sets.
+    num_bins: int
+        Number of bins.
+
+    Raises
+    ------
+    ValueError
+        If the number of bins is greater than the number of different sizes.
+    """
+    for alpha in range(sizes.shape[1]):
+        nb_sizes = len(np.unique(sizes[:, alpha]))
+        if nb_sizes <= num_bins:
+            raise ValueError(
+                "The number of bins should be less than the number of \
+                different set sizes."
+            )

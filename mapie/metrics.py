@@ -8,6 +8,8 @@ from .utils import (calc_bins,
                     check_array_shape_classification,
                     check_array_shape_regression,
                     check_binary_zero_one,
+                    check_nb_intervals_sizes,
+                    check_nb_sets_sizes,
                     check_number_bins,
                     check_split_strategy)
 
@@ -419,16 +421,12 @@ def regression_ssc(
     y_intervals: NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
         Prediction intervals given by booleans of labels.
     num_bins: int n
-        Number of groups.
+        Number of groups. Should be less than the number of different
+        interval widths.
 
     Returns
     -------
     NDArray of shape (n_alpha, num_bins)
-
-    Raises
-    ------
-    ValueError
-        If num_bins is greater than n_samples.
 
     Examples
     --------
@@ -446,15 +444,11 @@ def regression_ssc(
     y_true = cast(NDArray, column_or_1d(y_true))
     y_intervals = check_array_shape_regression(y_true, y_intervals)
     check_number_bins(num_bins)
-    if num_bins > y_intervals.shape[0]:
-        raise ValueError(
-            "Please provide a bin number lower than the number of samples"
-        )
-
     widths = np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :])
+    check_nb_intervals_sizes(widths, num_bins)
+
     indexes_sorted = np.argsort(widths, axis=0)
     indexes_bybins = np.array_split(indexes_sorted, num_bins, axis=0)
-
     coverages = np.zeros((y_intervals.shape[2], num_bins))
     for i, indexes in enumerate(indexes_bybins):
         intervals_binned = np.stack([
@@ -488,7 +482,8 @@ def regression_ssc_score(
     y_intervals: NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
         Prediction intervals given by booleans of labels.
     num_bins: int n
-        Number of groups.
+        Number of groups. Should be less than the number of different
+        interval widths.
 
     Returns
     -------
@@ -535,16 +530,12 @@ def classification_ssc(
         Prediction sets given by booleans of labels.
     num_bins: int or None
         Number of groups. If None, one value of coverage by possible
-        size of sets (n_classes +1) is computed.
+        size of sets (n_classes +1) is computed. Should be less than the
+        number of different set sizes.
 
     Returns
     -------
     NDArray of shape (n_alpha, num_bins)
-
-    Raises
-    ------
-    ValueError
-        If num_bins is greater than n_samples.
 
     Examples
     --------
@@ -552,13 +543,13 @@ def classification_ssc(
     >>> import numpy as np
     >>> y_true = y_true_class = np.array([3, 3, 1, 2, 2])
     >>> y_pred_set = np.array([
-    ...    [False, False, True, True],
+    ...    [True, True, True, True],
     ...    [False, True, False, True],
     ...    [True, True, True, False],
     ...    [False, False, True, True],
     ...    [True, True, False, True]])
     >>> print(classification_ssc(y_true, y_pred_set, num_bins=2))
-    [[1.  0.5]]
+    [[1.         0.66666667]]
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_set = check_array_shape_classification(y_true, y_pred_set)
@@ -568,11 +559,8 @@ def classification_ssc(
     if num_bins is None:
         bins = list(range(n_classes + 1))
     else:
+        check_nb_sets_sizes(sizes, num_bins)
         check_number_bins(num_bins)
-        if num_bins > y_pred_set.shape[0]:
-            raise ValueError(
-                "Please provide a bin number lower than the number of samples"
-            )
         bins = [
             b[0] for b in np.array_split(range(n_classes + 1), num_bins)
         ]
@@ -616,7 +604,8 @@ def classification_ssc_score(
         Prediction sets given by booleans of labels.
     num_bins: int or None
         Number of groups. If None, one value of coverage by possible
-        size of sets (n_classes +1) is computed.
+        size of sets (n_classes +1) is computed. Should be less than
+        the number of different set sizes.
 
     Returns
     -------
@@ -628,13 +617,13 @@ def classification_ssc_score(
     >>> import numpy as np
     >>> y_true = y_true_class = np.array([3, 3, 1, 2, 2])
     >>> y_pred_set = np.array([
-    ...    [False, False, True, True],
+    ...    [True, True, True, True],
     ...    [False, True, False, True],
     ...    [True, True, True, False],
     ...    [False, False, True, True],
     ...    [True, True, False, True]])
     >>> print(classification_ssc_score(y_true, y_pred_set, num_bins=2))
-    [0.5]
+    [0.66666667]
     """
     return np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
 

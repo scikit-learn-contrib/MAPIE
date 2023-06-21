@@ -408,7 +408,7 @@ def test_top_label_same_result() -> None:
     assert scr1 == scr4
 
 
-@pytest.mark.parametrize("num_bins", [10, 0, -1])
+@pytest.mark.parametrize("num_bins", [10, 0, -1, 5])
 def test_invalid_splits_regression_ssc(num_bins: int) -> None:
     """Test that invalid number of bins for ssc raise errors."""
     with pytest.raises(ValueError):
@@ -462,7 +462,7 @@ def test_regression_ssc_score_coverage_values(params: str):
     np.testing.assert_allclose(cond_cov_min, SSC_REG_COVERAGES_SCORE[params])
 
 
-@pytest.mark.parametrize("num_bins", [10, 0, -1])
+@pytest.mark.parametrize("num_bins", [10, 0, -1, 4])
 def test_invalid_splits_classification_ssc(num_bins: int) -> None:
     """Test that invalid number of bins for ssc raise errors."""
     with pytest.raises(ValueError):
