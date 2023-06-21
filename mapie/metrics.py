@@ -412,7 +412,11 @@ def regression_ssc(
     Compute Size-Stratified Coverage metrics proposed in [3] that is
     the conditional coverage conditioned by the size of the intervals.
     The intervals are ranked by their size (ascending) and then divided into
-    num_bins groups : one value of coverage by groups is computed.
+    num_bins groups: one value of coverage by groups is computed.
+
+    Warning: This metric should be used only with non constant intervals
+    (intervals of different sizes), with constant intervals the result
+    may be misinterpreted.
 
     [3] Angelopoulos, A. N., & Bates, S. (2021).
     A gentle introduction to conformal prediction and
@@ -483,6 +487,10 @@ def regression_ssc_score(
     Aggregate by the minimum for each alpha the Size-Stratified Coverage [3]:
     returns the maximum violation of the conditional coverage
     (with the groups defined).
+
+    Warning: This metric should be used only with non constant intervals
+    (intervals of different sizes), with constant intervals the result
+    may be misinterpreted.
 
     Parameters
     ----------
@@ -676,8 +684,12 @@ def hsic(
     proposed in [4], to compute the correlation between the indicator of
     coverage and the interval size.
 
-    If hsic is 0, the two variables (he indicator of coverage and the
+    If hsic is 0, the two variables (the indicator of coverage and the
     interval size) are independant.
+
+    Warning: This metric should be used only with non constant intervals
+    (intervals of different sizes), with constant intervals the result
+    may be misinterpreted.
 
     [4] Feldman, S., Bates, S., & Romano, Y. (2021).
     Improving conditional coverage via orthogonal quantile regression.
