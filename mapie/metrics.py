@@ -385,10 +385,11 @@ def classification_coverage_score_v2(
         y_true = cast(NDArray, column_or_1d(y_true))
         y_true = np.expand_dims(y_true, axis=1)
     y_true = np.expand_dims(y_true, axis=1)
-    coverage = np.take_along_axis(
-        y_pred_set, y_true, axis=1
-    ).mean(axis=0)[0]
-    return coverage
+    coverage = np.nanmean(
+        np.take_along_axis(y_pred_set, y_true, axis=1),
+        axis=0
+    )
+    return coverage[0]
 
 
 def regression_ssc(
@@ -549,54 +550,50 @@ def classification_ssc(
     --------
     >>> from mapie.metrics import classification_ssc
     >>> import numpy as np
-    >>> y_true = y_true_class = np.array([3, 3, 1,])
+    >>> y_true = y_true_class = np.array([3, 3, 1, 2, 2])
     >>> y_pred_set = np.array([
-    ... [False, False, True, True],
-    ... [False, True, False, True],
-    ... [False, True, True, False]
-    ... ])
-    >>> print(classification_ssc(y_true,y_pred_set,num_bins=2))
-    [[1. 1.]]
+    ...    [False, False, True, True],
+    ...    [False, True, False, True],
+    ...    [True, True, True, False],
+    ...    [False, False, True, True],
+    ...    [True, True, False, True]])
+    >>> print(classification_ssc(y_true, y_pred_set, num_bins=2))
+    [[1.  0.5]]
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_set = check_array_shape_classification(y_true, y_pred_set)
 
     sizes = np.sum(y_pred_set, axis=1)
-    if num_bins is not None:
+    n_classes = y_pred_set.shape[1]
+    if num_bins is None:
+        bins = list(range(n_classes + 1))
+    else:
         check_number_bins(num_bins)
         if num_bins > y_pred_set.shape[0]:
             raise ValueError(
                 "Please provide a bin number lower than the number of samples"
             )
+        bins = [
+            b[0] for b in np.array_split(range(n_classes + 1), num_bins)
+        ]
 
-        indexes_sorted = np.argsort(sizes, axis=0)
-        indexes_bybins = np.array_split(indexes_sorted, num_bins, axis=0)
-        coverages = np.zeros((y_pred_set.shape[2], num_bins))
+    digitized_sizes = np.digitize(sizes, bins)
+    coverages = np.zeros((y_pred_set.shape[2], len(bins)))
+    for alpha in range(y_pred_set.shape[2]):
+        indexes_bybins = [
+            np.argwhere(digitized_sizes[:, alpha] == i)
+            for i in range(1, len(bins)+1)
+        ]
+
         for i, indexes in enumerate(indexes_bybins):
-            coverages[:, i] = classification_coverage_score_v2(
+            coverages[alpha, i] = classification_coverage_score_v2(
                 y_true[indexes],
                 np.take_along_axis(
-                    y_pred_set, np.expand_dims(indexes, axis=1), axis=0
+                    y_pred_set[:, :, alpha],
+                    indexes,
+                    axis=0
                 )
             )
-    else:
-        n_classes = y_pred_set.shape[1]
-        coverages = np.zeros((y_pred_set.shape[2], n_classes + 1))
-        for alpha in range(y_pred_set.shape[2]):
-            indexes_bybins = [
-                np.argwhere(sizes[:, alpha] == i)
-                for i in range(n_classes + 1)
-            ]
-
-            for i, indexes in enumerate(indexes_bybins):
-                coverages[alpha, i] = classification_coverage_score_v2(
-                    y_true[indexes],
-                    np.take_along_axis(
-                        y_pred_set[:, :, alpha],
-                        indexes,
-                        axis=0
-                    )
-                )
     return coverages
 
 
@@ -629,14 +626,15 @@ def classification_ssc_score(
     --------
     >>> from mapie.metrics import classification_ssc_score
     >>> import numpy as np
-    >>> y_true = y_true_class = np.array([3, 3, 1,])
+    >>> y_true = y_true_class = np.array([3, 3, 1, 2, 2])
     >>> y_pred_set = np.array([
-    ... [False, False, True, True],
-    ... [False, True, False, True],
-    ... [False, True, True, False]
-    ... ])
-    >>> print(classification_ssc_score(y_true,y_pred_set,num_bins=2))
-    [1.]
+    ...    [False, False, True, True],
+    ...    [False, True, False, True],
+    ...    [True, True, True, False],
+    ...    [False, False, True, True],
+    ...    [True, True, False, True]])
+    >>> print(classification_ssc_score(y_true, y_pred_set, num_bins=2))
+    [0.5]
     """
     return np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
 

@@ -154,19 +154,19 @@ SSC_REG_COVERAGES_SCORE = {
 }
 SSC_CLASSIF_COVERAGES = {
     "1alpha_base": np.array([[1/3, 1.]]),
-    "1alpha_3sp": np.array([[0.5, 0.5, 1.]]),
+    "1alpha_3sp": np.array([[0., 2/3, 1.]]),
     "1alpha_None": np.array([[0., np.nan, 0.5, 1., 1.]]),
     "2alpha_base": np.array([[1/3, 1.], [1/3, 1.]]),
-    "2alpha_3sp": np.array([[0.5, 0.5, 1.], [0.5, 0.5, 1.]]),
+    "2alpha_3sp": np.array([[0., 2/3, 1.], [0.5, 2/3, np.nan]]),
     "2alpha_None": np.array([[0., np.nan, 0.5, 1., 1.],
                              [0., 1., 0., 1., np.nan]]),
 }
 SSC_CLASSIF_COVERAGES_SCORE = {
     "1alpha_base": np.array([1 / 3]),
-    "1alpha_3sp": np.array([0.5]),
+    "1alpha_3sp": np.array([0.]),
     "1alpha_None": np.array([0.]),
     "2alpha_base": np.array([1 / 3, 1 / 3]),
-    "2alpha_3sp": np.array([0.5, 0.5]),
+    "2alpha_3sp": np.array([0., 0.5]),
     "2alpha_None": np.array([0., 0.]),
 }
 
