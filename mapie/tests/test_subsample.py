@@ -107,7 +107,7 @@ def test_split_samples_are_different()->None:
 def test_split_blockbootstraps_are_different()->None:
     """Test that BlockBootstrap outputs are different """
     X = np.array([0,1,2,3])
-    cv = BlockBootstrap(n_resamplings=2, random_state=1)
+    cv = BlockBootstrap(n_blocks=2, n_resamplings=2, random_state=1)
     trains = [x[0] for x in cv.split(X)]
     tests = [x[1] for x in cv.split(X)]
     with np.testing.assert_raises(AssertionError):
