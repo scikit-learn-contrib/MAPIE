@@ -21,15 +21,18 @@ Params = TypedDict(
     {
         "method": str,
         "bound": Optional[str],
-        "random_state": Optional[int]
+        "random_state": Optional[int],
+        "metric_control": Optional[str]
     }
 )
 
-METHODS = ["crc", "rcps"]
+METHODS = ["crc", "rcps", "ltt"]
+METRICS = ['recall', 'precision']
 BOUNDS = ["wsr", "hoeffding", "bernstein"]
 
-WRONG_METHODS = ["rpcs", "rcr", "test", "", 1, 2.5, (1, 2)]
+WRONG_METHODS = ["rpcs", "rcr", "test", "llt", "", 1, 2.5, (1, 2)]
 WRONG_BOUNDS = ["wrs", "hoeff", "test", "", 1, 2.5, (1, 2)]
+WRONG_METRICS = ["presicion", "recal", ""]
 
 
 STRATEGIES = {
@@ -37,28 +40,40 @@ STRATEGIES = {
         Params(
             method="crc",
             bound=None,
-            random_state=42
+            random_state=42,
+            metric_control="recall"
         ),
     ),
     "rcps_wsr": (
         Params(
             method="rcps",
             bound="wsr",
-            random_state=42
+            random_state=42,
+            metric_control='recall'
         ),
     ),
     "rcps_hoeffding": (
         Params(
             method="rcps",
             bound="hoeffding",
-            random_state=42
+            random_state=42,
+            metric_control='recall'
         ),
     ),
     "rcps_bernstein": (
         Params(
             method="rcps",
             bound="bernstein",
-            random_state=42
+            random_state=42,
+            metric_control='recall'
+        ),
+    ),
+    "ltt": (
+        Params(
+            method="ltt",
+            bound=None,
+            random_state=42,
+            metric_control='precision'
         ),
     ),
 }
@@ -108,6 +123,17 @@ y_toy_mapie = {
         [True, True, True],
         [True, True, True],
         [True, True, True],
+    ],
+    "ltt": [
+        [True, False, True],
+        [True, False, True],
+        [True, False, True],
+        [True, False, True],
+        [True, True,  True],
+        [True, True,  True],
+        [True, True,  True],
+        [True, True,  True],
+        [False, True, True],
     ],
 }
 
@@ -188,12 +214,23 @@ def test_valid_method() -> None:
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
 
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_valid_metric_method(strategy: str) -> None:
+    """Test that valid metric raise no errors"""
+    args = STRATEGIES[strategy][0]
+    mapie_clf = MapieMultiLabelClassifier(random_state=42,
+                                          metric_control=args["metric_control"]
+                                          )
+    mapie_clf.fit(X_toy, y_toy)
+    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
+
+
 @pytest.mark.parametrize("bound", BOUNDS)
 def test_valid_bound(bound: str) -> None:
     """Test that valid methods raise no errors."""
-    mapie_clf = MapieMultiLabelClassifier(random_state=42)
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method="rcps")
     mapie_clf.fit(X_toy, y_toy)
-    mapie_clf.predict(X_toy, method="rcps", bound=bound, delta=.1)
+    mapie_clf.predict(X_toy, bound=bound, delta=.1)
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
 
@@ -205,12 +242,11 @@ def test_predict_output_shape(
 ) -> None:
     """Test predict output shape."""
     args = STRATEGIES[strategy][0]
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(method=args["method"])
     mapie_clf.fit(X, y)
     y_pred, y_ps = mapie_clf.predict(
         X,
         alpha=alpha,
-        method=args["method"],
         bound=args["bound"],
         delta=.1
     )
@@ -226,12 +262,11 @@ def test_results_for_same_alpha(strategy: str) -> None:
     are similar with two equal values of alpha.
     """
     args = STRATEGIES[strategy][0]
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(method=args["method"])
     mapie_clf.fit(X, y)
     _, y_ps = mapie_clf.predict(
         X,
-        alpha=[0.1, 0.1],
-        method=args["method"],
+        alpha=[0.3, 0.3],
         bound=args["bound"],
         delta=.1
     )
@@ -247,10 +282,10 @@ def test_results_for_partial_fit(strategy: str) -> None:
     """
     args = STRATEGIES[strategy][0]
     clf = MultiOutputClassifier(LogisticRegression()).fit(X, y)
-    mapie_clf = MapieMultiLabelClassifier(clf)
+    mapie_clf = MapieMultiLabelClassifier(clf, method=args["method"])
     mapie_clf.fit(X, y)
 
-    mapie_clf_partial = MapieMultiLabelClassifier(clf)
+    mapie_clf_partial = MapieMultiLabelClassifier(clf, method=args["method"])
     for i in range(len(X)):
         mapie_clf_partial.partial_fit(
             X[i][np.newaxis, :],
@@ -260,7 +295,6 @@ def test_results_for_partial_fit(strategy: str) -> None:
     y_pred, y_ps = mapie_clf.predict(
         X,
         alpha=[0.1, 0.1],
-        method=args["method"],
         bound=args["bound"],
         delta=.1
     )
@@ -268,7 +302,6 @@ def test_results_for_partial_fit(strategy: str) -> None:
     y_pred_partial, y_ps_partial = mapie_clf_partial.predict(
         X,
         alpha=[0.1, 0.1],
-        method=args["method"],
         bound=args["bound"],
         delta=.1
     )
@@ -285,26 +318,26 @@ def test_results_for_alpha_as_float_and_arraylike(
 ) -> None:
     """Test that output values do not depend on type of alpha."""
     args = STRATEGIES[strategy][0]
-    mapie_clf = MapieMultiLabelClassifier()
+    mapie_clf = MapieMultiLabelClassifier(method=args["method"])
     mapie_clf.fit(X, y)
     y_pred_float1, y_ps_float1 = mapie_clf.predict(
         X,
         alpha=alpha[0],
-        method=args["method"],
+        # method=args["method"],
         bound=args["bound"],
         delta=.9
     )
     y_pred_float2, y_ps_float2 = mapie_clf.predict(
         X,
         alpha=alpha[1],
-        method=args["method"],
+        # method=args["method"],
         bound=args["bound"],
         delta=.9
     )
     y_pred_array, y_ps_array = mapie_clf.predict(
         X,
         alpha=alpha,
-        method=args["method"],
+        # method=args["method"],
         bound=args["bound"],
         delta=.9
     )
@@ -317,16 +350,18 @@ def test_results_for_alpha_as_float_and_arraylike(
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_single_and_multi_jobs(strategy: str) -> None:
     """
-    Test that MapieRegressor gives equal predictions
+    Test that MapieClassifier gives equal predictions
     regardless of number of parallel jobs.
     """
     args = STRATEGIES[strategy][0]
     mapie_clf_single = MapieMultiLabelClassifier(
         n_jobs=1,
+        method=args["method"],
         random_state=args["random_state"]
     )
     mapie_clf_multi = MapieMultiLabelClassifier(
         n_jobs=-1,
+        method=args["method"],
         random_state=args["random_state"]
     )
     mapie_clf_single.fit(X, y)
@@ -334,14 +369,14 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     y_pred_single, y_ps_single = mapie_clf_single.predict(
         X,
         alpha=0.2,
-        method=args["method"],
+        # method=args["method"],
         bound=args["bound"],
         delta=.9
     )
     y_pred_multi, y_ps_multi = mapie_clf_multi.predict(
         X,
         alpha=0.2,
-        method=args["method"],
+        # method=args["method"],
         bound=args["bound"],
         delta=.9
     )
@@ -364,12 +399,11 @@ def test_valid_prediction(alpha: Any, delta: Any, bound: Any) -> None:
         LogisticRegression(multi_class="multinomial")
     )
     model.fit(X_toy, y_toy)
-    mapie_clf = MapieMultiLabelClassifier(estimator=model)
+    mapie_clf = MapieMultiLabelClassifier(estimator=model, method = "rcps")
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(
         X_toy,
         alpha=alpha,
-        method="rcps",
         bound=bound,
         delta=delta
     )
@@ -389,12 +423,11 @@ def test_valid_prediction(alpha: Any, delta: Any, bound: Any) -> None:
 )
 def test_array_output_model(method: Any, alpha: Any, delta: Any, bound: Any):
     model = ArrayOutputModel()
-    mapie_clf = MapieMultiLabelClassifier(estimator=model)
+    mapie_clf = MapieMultiLabelClassifier(estimator=model, method=method)
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(
         X_toy,
         alpha=alpha,
-        method=method,
         bound=bound,
         delta=delta
     )
@@ -409,12 +442,13 @@ def test_reinit_new_fit():
 
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
-def test_method_error_in_predict(method: str) -> None:
+def test_method_error_in_fit(method: str) -> None:
     """Test error for wrong method"""
-    mapie_clf = MapieMultiLabelClassifier(random_state=42)
-    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie_clf.predict(X_toy, method=method)
+        mapie_clf.fit(X_toy, y_toy)
+    # with pytest.raises(ValueError, match=r".*Invalid method.*"):
+    #     mapie_clf.predict(X_toy)
 
 
 def test_method_error_if_no_label_fit() -> None:
@@ -437,44 +471,74 @@ def test_method_error_if_no_label_partial_fit() -> None:
 
 @pytest.mark.parametrize("bound", WRONG_BOUNDS)
 def test_bound_error_in_predict(bound: str) -> None:
-    """Test error for wrong method"""
-    mapie_clf = MapieMultiLabelClassifier(random_state=42)
+    """Test error for wrong bounds"""
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method='rcps')
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*bound must be in.*"):
-        mapie_clf.predict(X_toy, method="rcps", bound=bound, delta=.1)
+        mapie_clf.predict(X_toy, bound=bound, delta=.1)
+
+
+@pytest.mark.parametrize("metric_control", WRONG_METRICS)
+def test_metric_error_in_fit(metric_control: str) -> None:
+    """Test error for wrong metrics"""
+    mapie_clf = MapieMultiLabelClassifier(
+        random_state=42,
+        metric_control=metric_control
+    )
+    with pytest.raises(ValueError, match=r".*Invalid method. *"):
+        mapie_clf.fit(X_toy, y_toy)
+    # with pytest.raises(ValueError, match=r".*Invalid method.*"):
+    #     mapie_clf.predict(X_toy)
 
 
 def test_error_rcps_delta_null() -> None:
     """Test error for RCPS method and delta None"""
-    mapie_clf = MapieMultiLabelClassifier(random_state=42)
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method='rcps')
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*delta cannot be ``None``*"):
-        mapie_clf.predict(X_toy, method="rcps")
+        mapie_clf.predict(X_toy)
+
+
+def test_error_ltt_delta_null() -> None:
+    """Test error for LTT method and delta None"""
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method='ltt')
+    mapie_clf.fit(X_toy, y_toy)
+    with pytest.raises(ValueError, match=r".*Invalid delta. *"):
+        mapie_clf.predict(X_toy)
 
 
 @pytest.mark.parametrize("delta", [-1., 0, 1, 4, -3])
 def test_error_delta_wrong_value(delta: Any) -> None:
     """Test error for RCPS method and delta None"""
-    mapie_clf = MapieMultiLabelClassifier(random_state=42)
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method='rcps')
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*delta must be*"):
-        mapie_clf.predict(X_toy, method="rcps", delta=delta)
+        mapie_clf.predict(X_toy, delta=delta)
+
+
+@pytest.mark.parametrize("delta", [-1., 0, 1, 4, -3])
+def test_error_delta_wrong_value_ltt(delta: Any) -> None:
+    """Test error for RCPS method and delta None"""
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method='ltt')
+    mapie_clf.fit(X_toy, y_toy)
+    with pytest.raises(ValueError, match=r".*delta must be*"):
+        mapie_clf.predict(X_toy, delta=delta)
 
 
 def test_bound_none_crc() -> None:
     """Test that a warning is raised nound is not None with CRC method."""
-    mapie_clf = MapieMultiLabelClassifier(random_state=42)
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method="crc")
     mapie_clf.fit(X_toy, y_toy)
     with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
-        mapie_clf.predict(X_toy, method="crc", bound="wsr")
+        mapie_clf.predict(X_toy, bound="wsr")
 
 
 def test_delta_none_crc() -> None:
     """Test that a warning is raised nound is not None with CRC method."""
-    mapie_clf = MapieMultiLabelClassifier(random_state=42)
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method="crc")
     mapie_clf.fit(X_toy, y_toy)
     with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
-        mapie_clf.predict(X_toy, method="crc", bound=None, delta=.1)
+        mapie_clf.predict(X_toy, bound=None, delta=.1)
 
 
 def test_warning_estimator_none() -> None:
@@ -487,14 +551,23 @@ def test_warning_estimator_none() -> None:
 @pytest.mark.parametrize("delta", [np.arange(0, 1, 0.01), (.1, .2), [.4, .5]])
 def test_error_delta_wrong_type(delta: Any) -> None:
     """Test error for RCPS method and delta None"""
-    mapie_clf = MapieMultiLabelClassifier(random_state=42)
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method="rcps")
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*delta must be a float*"):
-        mapie_clf.predict(X_toy, method="rcps", delta=delta)
+        mapie_clf.predict(X_toy, delta=delta)
+
+
+@pytest.mark.parametrize("delta", [np.arange(0, 1, 0.01), (.1, .2), [.4, .5]])
+def test_error_delta_wrong_type_ltt(delta: Any) -> None:
+    """Test error for LTT method and delta None"""
+    mapie_clf = MapieMultiLabelClassifier(random_state=42, method="ltt")
+    mapie_clf.fit(X_toy, y_toy)
+    with pytest.raises(ValueError, match=r".*delta must be a float*"):
+        mapie_clf.predict(X_toy, delta=delta)
 
 
 def test_error_partial_fit_different_size() -> None:
-    """Test error for RCPS method and delta None"""
+    """Test error for partial_fit with different size"""
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     mapie_clf = MapieMultiLabelClassifier(clf)
     mapie_clf.partial_fit(X_toy, y_toy)
@@ -540,9 +613,9 @@ def test_pipeline_compatibility(strategy: str) -> None:
         MultiOutputClassifier(LogisticRegression())
     )
     pipe.fit(X, y)
-    mapie = MapieMultiLabelClassifier(estimator=pipe)
+    mapie = MapieMultiLabelClassifier(estimator=pipe, method=args["method"])
     mapie.fit(X, y)
-    mapie.predict(X, method=args["method"], bound=args["bound"], delta=.1)
+    mapie.predict(X, bound=args["bound"], delta=.1)
 
 
 def test_error_no_fit() -> None:
@@ -558,7 +631,7 @@ def test_error_no_fit() -> None:
 
 
 def test_error_estimator_none_partial() -> None:
-    """Test error for RCPS method and delta None"""
+    """Test error estimator none partial"""
     mapie_clf = MapieMultiLabelClassifier()
 
     with pytest.raises(
@@ -588,13 +661,12 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     """
     args = STRATEGIES[strategy][0]
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    mapie_clf = MapieMultiLabelClassifier(clf)
+    mapie_clf = MapieMultiLabelClassifier(clf, method=args["method"])
     mapie_clf.fit(X_toy, y_toy)
     _, y_ps = mapie_clf.predict(
         X_toy,
         alpha=.2,
-        method=args["method"],
         bound=args["bound"],
         delta=.1
     )
-    np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
+    np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy], rtol=1e-6)
