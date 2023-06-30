@@ -1,0 +1,139 @@
+"""
+Testing for control_risk module.
+Testing for now risks for multilabel classification
+"""
+import numpy as np
+# from numpy.typing import NDArray
+from mapie.control_risk.risks import (_compute_precision,
+                                      _compute_recall)
+import pytest
+from typing import Union, Optional, Iterable
+from numpy.typing import NDArray, ArrayLike
+from mapie.control_risk.p_values import hoefdding_bentkus_p_value
+from mapie.control_risk.ltt import (_ltt_procedure,
+                                    _find_lambda_control_star)
+
+
+lambdas = np.array([0.5, 0.9])
+y_toy = np.stack([
+    [1, 0, 1],
+    [0, 1, 0],
+    [1, 1, 0],
+    [1, 1, 1],
+])
+y_preds_proba = np.stack([
+    [0.2, 0.6, 0.9],
+    [0.8, 0.2, 0.6],
+    [0.4, 0.8, 0.1],
+    [0.6, 0.8, 0.7]
+])
+y_preds_proba = np.expand_dims(y_preds_proba, axis=2)
+test_recall = np.array([
+    [1/2, 1.],
+    [1., 1.],
+    [1/2, 1.],
+    [0., 1.]
+])
+test_precision = np.array([
+    [1/2, 1.],
+    [1., 1.],
+    [0., 1.],
+    [0., 1.]
+])
+r_hat = np.array([
+    0.5, 0.8
+])
+n = 1100
+alpha = 0.2
+valid_index = np.array([
+    0, 1
+])
+
+
+def test_compute_recall_equal() -> None:
+    recall = _compute_recall(lambdas, y_preds_proba, y_toy)
+    np.testing.assert_equal(recall, test_recall)
+
+
+def test_compute_precision() -> None:
+    precision = _compute_precision(lambdas, y_preds_proba, y_toy)
+    np.testing.assert_equal(precision, test_precision)
+
+
+def test_recall_with_zero_sum_is_equal_nan() -> None:
+    y_toy = np.zeros((4, 3))
+    y_preds_proba = np.random.rand(4, 3, 1)
+    recall = _compute_recall(lambdas, y_preds_proba, y_toy)
+    np.testing.assert_array_equal(recall, np.empty_like(recall))
+
+
+def test_precision_with_zero_sum_is_equal_ones() -> None:
+    y_toy = np.random.rand(4, 3)
+    y_preds_proba = np.zeros((4, 3, 1))
+    precision = _compute_precision(lambdas, y_preds_proba, y_toy)
+    np.testing.assert_array_equal(precision, np.ones_like(precision))
+
+
+def test_compute_recall_shape() -> None:
+    recall = _compute_recall(lambdas, y_preds_proba, y_toy)
+    np.testing.assert_equal(recall.shape, test_recall.shape)
+
+
+def test_compute_shape() -> None:
+    precision = _compute_precision(lambdas, y_preds_proba, y_toy)
+    np.testing.assert_equal(precision.shape, test_precision.shape)
+
+
+def test_compute_recall_with_wrong_shape() -> None:
+    with pytest.raises(ValueError, match=r".*y_pred_proba should be a 3d*"):
+        _compute_recall(lambdas, y_preds_proba.squeeze(), y_toy)
+    with pytest.raises(ValueError, match=r".*y should be a 2d*"):
+        _compute_recall(lambdas, y_preds_proba, np.expand_dims(y_toy, 2))
+    with pytest.raises(ValueError, match=r".*could not be broadcast*"):
+        _compute_recall(lambdas, y_preds_proba, y_toy[:-1])
+
+
+def test_compute_precision_with_wrong_shape() -> None:
+    with pytest.raises(ValueError, match=r".*y_pred_proba should be a 3d*"):
+        _compute_precision(lambdas, y_preds_proba.squeeze(), y_toy)
+    with pytest.raises(ValueError, match=r".*y should be a 2d*"):
+        _compute_precision(lambdas, y_preds_proba, np.expand_dims(y_toy, 2))
+    with pytest.raises(ValueError, match=r".*could not be broadcast*"):
+        _compute_precision(lambdas, y_preds_proba, y_toy[:-1])
+
+
+@pytest.mark.parametrize("alpha", [0.5, [0.5], [0.5, 0.9]])
+def test_p_values_different_alpha(alpha: Union[float, Iterable]) -> None:
+    # assert hoefdding_bentkus_p_value(r_hat, n, alpha)
+    result = hoefdding_bentkus_p_value(r_hat, n, alpha)
+    assert isinstance(result, np.ndarray)
+
+
+@pytest.mark.parametrize("delta", [0.1, 0.2])
+def test_ltt_different_delta(delta: float) -> None:
+    assert _ltt_procedure(r_hat, alpha, delta, n)
+
+
+def test_find_lambda_control_star() -> None:
+    assert _find_lambda_control_star(r_hat, valid_index, lambdas)
+
+
+@pytest.mark.parametrize("delta", [0.1, 0.8])
+@pytest.mark.parametrize("alpha", [0.6, [0.5], [0.6, 0.8]])
+def test_ltt_type_output_alpha_delta(alpha: Union[float, Iterable], delta: float) -> None:
+    valid_index, p_values = _ltt_procedure(r_hat, alpha, delta, n)
+    assert isinstance(valid_index, np.ndarray)
+    assert isinstance(p_values, np.ndarray)
+
+
+@pytest.mark.parametrize("valid_index", [np.array([0, 1])])
+def test_find_lambda_control_star_output(valid_index: NDArray) -> None:
+    assert _find_lambda_control_star(r_hat, valid_index, lambdas)
+
+
+def test_error_valid_index_empty() -> None:
+    valid_index = np.array([])
+    with pytest.raises(ValueError, match=r".*The list of valid index is empty*"):
+        _find_lambda_control_star(r_hat, valid_index, lambdas)
+
+
