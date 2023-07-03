@@ -1,12 +1,12 @@
 import numpy as np
 from numpy.typing import NDArray
-from typing import Iterable
+from typing import Iterable, Union
 
 
 def hoefdding_bentkus_p_value(
     r_hat: NDArray,
     n: int,
-    alpha: NDArray
+    alpha: Union[float, NDArray]
 ) -> NDArray:
     """
     Parameters

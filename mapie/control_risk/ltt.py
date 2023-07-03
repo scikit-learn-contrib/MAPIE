@@ -1,13 +1,13 @@
 import numpy as np
-from numpy.typing import NDArray, ArrayLike
-from typing import Optional, Tuple
+from numpy.typing import NDArray
+from typing import Tuple, List, Union
 from .p_values import hoefdding_bentkus_p_value
 
 
 def _ltt_procedure(
     r_hat: NDArray,
     alpha_np: NDArray,
-    delta: Optional[float],
+    delta: float,
     n_obs: int
 ) -> Tuple[NDArray, NDArray]:
     """
@@ -39,31 +39,24 @@ def _ltt_procedure(
         Contains the values of p_value for different alpha
     """
     p_values = hoefdding_bentkus_p_value(r_hat, n_obs, alpha_np)
-    if p_values.shape[1] > 1:
-        valid_index = []
-        for i in range(len(alpha_np)):
-            N_coarse = len(np.where(p_values[:, i] < delta/n_obs)[0])
-            if N_coarse == 0:
-                l_index = np.array([])
-                valid_index.append(l_index)
-            else:
-                l_index = np.where(p_values[:, i] <= delta/n_obs)[0]
-                valid_index.append(l_index)
-        return np.array(valid_index), p_values
-    else:
-        N_coarse = len(np.where(p_values <= delta/n_obs)[0])
+    valid_index = []
+    for i in range(len(alpha_np)):
+        N_coarse = len(np.where(p_values[:, i] < delta/n_obs)[0])
         if N_coarse == 0:
-            valid_index = np.array([])
+            l_index = np.array([])
+            valid_index.append(l_index)
         else:
-            valid_index = np.where(p_values <= delta/N_coarse)[0]
-        return valid_index, p_values
+            l_index = np.where(p_values[:, i] <= delta/n_obs)[0]
+            valid_index.append(l_index)
+    return np.array(valid_index), p_values
+ 
 
 
 def _find_lambda_control_star(
         r_hat: NDArray,
         valid_index: NDArray,
         lambdas: NDArray
-) -> Tuple[NDArray, ArrayLike]:
+) -> Tuple[Union[NDArray, List], Union[NDArray, List]]:
     """
     Return the lambda that give the maximum precision with a control
     guarantee of level delta.
@@ -95,7 +88,7 @@ def _find_lambda_control_star(
         lambda_star = lambdas[valid_index[np.argmin(r_hat[valid_index])]]
         r_star = r_hat[valid_index[np.argmin(r_hat[valid_index])]]
 
-        return lambda_star, r_star
+        return np.array(lambda_star), np.array(r_star)
 
     else:
 

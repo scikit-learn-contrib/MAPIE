@@ -270,7 +270,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             )
 
     def _check_valid_index(self,
-                           alpha: Optional[float]
+                           alpha: NDArray
                            ):
         """
         Check if valid index is empty, if it's empty,

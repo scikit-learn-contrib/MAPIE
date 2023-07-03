@@ -44,7 +44,7 @@ r_hat = np.array([
     0.5, 0.8
 ])
 n = 1100
-alpha = 0.2
+alpha = np.array([0.2])
 valid_index = np.array([
     0, 1
 ])
@@ -103,7 +103,7 @@ def test_compute_precision_with_wrong_shape() -> None:
 
 
 @pytest.mark.parametrize("alpha", [0.5, [0.5], [0.5, 0.9]])
-def test_p_values_different_alpha(alpha: Union[float, Iterable]) -> None:
+def test_p_values_different_alpha(alpha: Union[float, NDArray]) -> None:
     result = hoefdding_bentkus_p_value(r_hat, n, alpha)
     assert isinstance(result, np.ndarray)
 
@@ -118,9 +118,9 @@ def test_find_lambda_control_star() -> None:
 
 
 @pytest.mark.parametrize("delta", [0.1, 0.8])
-@pytest.mark.parametrize("alpha", [0.6, [0.5], [0.6, 0.8]])
+@pytest.mark.parametrize("alpha", [[0.5], [0.6, 0.8]])
 def test_ltt_type_output_alpha_delta(
-    alpha: Union[float, Iterable],
+    alpha: NDArray,
     delta: float
 ) -> None:
     valid_index, p_values = _ltt_procedure(r_hat, alpha, delta, n)
