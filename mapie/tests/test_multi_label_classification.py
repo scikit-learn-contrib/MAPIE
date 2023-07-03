@@ -121,11 +121,9 @@ class WrongOutputModel:
 
     def predict_proba(self, *args: Any):
         """Dummy predict_proba."""
-        pass
 
     def predict(self, *args: Any):
         """Dummy predict."""
-        pass
 
 
 class ArrayOutputModel:
