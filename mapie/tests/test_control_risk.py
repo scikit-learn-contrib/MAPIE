@@ -7,8 +7,8 @@ import numpy as np
 from mapie.control_risk.risks import (_compute_precision,
                                       _compute_recall)
 import pytest
-from typing import Union, Optional, Iterable
-from numpy.typing import NDArray, ArrayLike
+from typing import Union, Iterable
+from numpy.typing import NDArray
 from mapie.control_risk.p_values import hoefdding_bentkus_p_value
 from mapie.control_risk.ltt import (_ltt_procedure,
                                     _find_lambda_control_star)
@@ -104,7 +104,6 @@ def test_compute_precision_with_wrong_shape() -> None:
 
 @pytest.mark.parametrize("alpha", [0.5, [0.5], [0.5, 0.9]])
 def test_p_values_different_alpha(alpha: Union[float, Iterable]) -> None:
-    # assert hoefdding_bentkus_p_value(r_hat, n, alpha)
     result = hoefdding_bentkus_p_value(r_hat, n, alpha)
     assert isinstance(result, np.ndarray)
 
@@ -120,7 +119,10 @@ def test_find_lambda_control_star() -> None:
 
 @pytest.mark.parametrize("delta", [0.1, 0.8])
 @pytest.mark.parametrize("alpha", [0.6, [0.5], [0.6, 0.8]])
-def test_ltt_type_output_alpha_delta(alpha: Union[float, Iterable], delta: float) -> None:
+def test_ltt_type_output_alpha_delta(
+    alpha: Union[float, Iterable],
+    delta: float
+) -> None:
     valid_index, p_values = _ltt_procedure(r_hat, alpha, delta, n)
     assert isinstance(valid_index, np.ndarray)
     assert isinstance(p_values, np.ndarray)
@@ -133,7 +135,6 @@ def test_find_lambda_control_star_output(valid_index: NDArray) -> None:
 
 def test_error_valid_index_empty() -> None:
     valid_index = np.array([])
-    with pytest.raises(ValueError, match=r".*The list of valid index is empty*"):
+    with pytest.raises(ValueError,
+                       match=r".*The list of valid index is empty*"):
         _find_lambda_control_star(r_hat, valid_index, lambdas)
-
-

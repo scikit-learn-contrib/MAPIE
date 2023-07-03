@@ -5,30 +5,30 @@ from .p_values import hoefdding_bentkus_p_value
 
 
 def _ltt_procedure(
-        r_hat: NDArray,
-        alpha_np: NDArray,
-        delta: Optional[float],
-        n_obs: int
+    r_hat: NDArray,
+    alpha_np: NDArray,
+    delta: Optional[float],
+    n_obs: int
 ) -> Tuple[NDArray, NDArray]:
     """
     Apply the ltt procedure for risk control
     should be precision for multilabelclassif
     Note that we will do a multipletest for r_hat that are
     less than level alpha.
-    Procedure: 
+    Procedure:
         - compute p_values for each lambdas descretize
         - Apply a fwer algorithm, here Bonferonni correction
-        - Return the index lambdas that give you the control 
+        - Return the index lambdas that give you the control
         at alpha level
         - n_obs is the length of data cal
-   Parameters
+    Parameters
     ----------
-    r_hat : NDArray of shape (n_samples, )
+    r_hat: NDArray of shape (n_samples, )
         Empirical risk of metric_control with respect
         to the lambdas.
-    alpha : NDArray of alphas level.
+    alpha: NDArray of alphas level.
     delta: Float value
-        Correspond to proportion of failure we don't 
+        Correspond to proportion of failure we don't
         want to exceed.
     Returns
     ----------
@@ -39,7 +39,6 @@ def _ltt_procedure(
         Contains the values of p_value for different alpha
     """
     p_values = hoefdding_bentkus_p_value(r_hat, n_obs, alpha_np)
-    
     if p_values.shape[1] > 1:
         valid_index = []
         for i in range(len(alpha_np)):
@@ -82,14 +81,14 @@ def _find_lambda_control_star(
     ----------
     l_lambda_star: NDArray of shape (n_alpha, )
         the lambda that give the highest precision
-    r_star : NDArray of shape (n_alpha, )
-        the value of lowest risk.
+    r_star: NDArray of shape (n_alpha, )
+    the value of lowest risk.
     """
     if len(valid_index) == 0:
         raise ValueError(
-        """
-        ERROR: The list of valid index is empty, use higher alpha or delta.
-        """
+            """
+            ERROR: The list of valid index is empty, use higher alpha or delta.
+            """
         )
     if isinstance(valid_index[0], (np.int64)):
 
@@ -111,9 +110,10 @@ def _find_lambda_control_star(
         return l_lambda_star, l_r_star
 
 
-def fixed_sequence_testing(p_values: NDArray,
-                           delta: float,
-                           downsample_factor: int
+def fixed_sequence_testing(
+    p_values: NDArray,
+    delta: float,
+    downsample_factor: int
 ) -> NDArray:
     """
     Other technique for FWER control
@@ -121,7 +121,7 @@ def fixed_sequence_testing(p_values: NDArray,
     correction.
     This one is another presented in LTT paper.
     """
-    
+
     N = p_values.shape[0]
     N_coarse = max(int(p_values.shape[0] / downsample_factor), 1)
 

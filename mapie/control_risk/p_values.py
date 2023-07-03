@@ -1,6 +1,6 @@
 import numpy as np
-from numpy.typing import NDArray, ArrayLike
-from typing import List, Union, Optional, Iterable
+from numpy.typing import NDArray
+from typing import Iterable
 
 
 def hoefdding_bentkus_p_value(
@@ -15,7 +15,7 @@ def hoefdding_bentkus_p_value(
         Empirical risk of metric_control with respect
         to the lambdas.
     n : Integer value
-        Correspond to the number of observations in 
+        Correspond to the number of observations in
         X_cal dataset.
     alpha: NDArray.
         Correspond to the value that r_hat should not
@@ -23,14 +23,14 @@ def hoefdding_bentkus_p_value(
 
     Method
     -------
-    The method computes the p_values according to 
-    the Hoeffding_Bentkus inequality for each 
+    The method computes the p_values according to
+    the Hoeffding_Bentkus inequality for each
     alpha.
-    Note that we are only using for now Hoeffding 
+    Note that we are only using for now Hoeffding
     part.
     Returns
     -------
-    p_values: NDArray of shape 
+    p_values: NDArray of shape
         (len(lambdas), len(alpha)).
     """
     # bentkus_p_value = np.e * binom.cdf(np.ceil(n*r_hat), n, alpha)
@@ -47,7 +47,7 @@ def hoefdding_bentkus_p_value(
             "Invalid alpha."
             "Please provide a one-dimensional list of values."
         )
-  
+
     alpha_np = alpha_np[:, np.newaxis]
     r_hat_repeat = np.repeat(
         np.expand_dims(r_hat, axis=1),
@@ -81,8 +81,9 @@ def h1(
     -------
     NDArray of same shape as r_hat.
     """
-    
-    return r_hat * np.log(r_hat/alpha) + (1-r_hat) * np.log((1-r_hat)/(1-alpha))
+
+    return r_hat * np.log(r_hat/alpha) + (1-r_hat) * np.log(
+                                        (1-r_hat)/(1-alpha))
 
 
 def binomial_cdf(
@@ -120,7 +121,9 @@ def bentkus_p_value(r_hat: NDArray,
         INVALID VALUE DU TO BINOM-CDF
     """
     p_values = []
-    for i in range (len(r_hat)):
-        p_values.append(binomial_cdf(np.ceil(r_hat[i]*n), n, alpha)[np.ceil(r_hat[i]*n).astype(int)])
-        
+    for i in range(len(r_hat)):
+        p_values.append(binomial_cdf(
+            np.ceil(r_hat[i] * n),
+            n, alpha)[np.ceil(r_hat[i] * n).astype(int)])
+
     return np.array(p_values)

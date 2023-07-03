@@ -399,7 +399,7 @@ def test_valid_prediction(alpha: Any, delta: Any, bound: Any) -> None:
         LogisticRegression(multi_class="multinomial")
     )
     model.fit(X_toy, y_toy)
-    mapie_clf = MapieMultiLabelClassifier(estimator=model, method = "rcps")
+    mapie_clf = MapieMultiLabelClassifier(estimator=model, method="rcps")
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(
         X_toy,

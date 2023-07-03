@@ -124,7 +124,7 @@ def VP(
 
     Returns
     -------
-    Return Number of TP 
+    Return Number of TP
     """
     vp = (y_pred_th * y_repeat).sum(axis=1)
     return vp
