@@ -119,10 +119,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     >>> mapie = MapieMultiLabelClassifier(estimator=clf).fit(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3, delta=0.1)
     >>> print(y_pi_mapie[:, :, 0])
-    [[True  True  True]
-     [True  True  True]
-     [True  True  True]
-     [True  True  True]]
+    [[ True  True  True]
+     [ True  True  True]
+     [ True  True  True]
+     [ True  True  True]]
     """
     valid_methods_ = ["crc", "rcps", "ltt"]
     # valid_score = ['precision', 'recall', 'f1_score', ['precision', 'OOD']]
