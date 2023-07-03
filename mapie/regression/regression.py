@@ -12,15 +12,15 @@ from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
-from ._compatibility import np_nanquantile
-from ._typing import ArrayLike, NDArray
-from .aggregation_functions import aggregate_all, phi2D
-from .conformity_scores import ConformityScore
-from .utils import (check_alpha, check_alpha_and_n_samples,
-                    check_conformity_score, check_cv,
-                    check_estimator_fit_predict, check_n_features_in,
-                    check_n_jobs, check_nan_in_aposteriori_prediction,
-                    check_null_weight, check_verbose, fit_estimator)
+from mapie._compatibility import np_nanquantile
+from mapie._typing import ArrayLike, NDArray
+from mapie.aggregation_functions import aggregate_all, phi2D
+from mapie.conformity_scores import ConformityScore
+from mapie.utils import (check_alpha, check_alpha_and_n_samples,
+                         check_conformity_score, check_cv,
+                         check_estimator_fit_predict, check_n_features_in,
+                         check_n_jobs, check_nan_in_aposteriori_prediction,
+                         check_null_weight, check_verbose, fit_estimator)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
@@ -106,7 +106,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default ``None``.
 
-    agg_function : Optional[str]
+    agg_function: Optional[str]
         Determines how to aggregate predictions from perturbed models, both at
         training and prediction time.
 
@@ -130,7 +130,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default ``"mean"``.
 
-    verbose : int
+    verbose: int
         The verbosity level, used with joblib for multiprocessing.
         The frequency of the messages increases with the verbosity level.
         If it more than ``10``, all iterations are reported.
@@ -138,7 +138,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default ``0``.
 
-    conformity_score : Optional[ConformityScore]
+    conformity_score: Optional[ConformityScore]
         ConformityScore instance.
         It defines the link between the observed values, the predicted ones
         and the conformity scores. For instance, the default ``None`` value
@@ -162,7 +162,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     valid_methods_: List[str]
         List of all valid methods.
 
-    single_estimator_ : sklearn.RegressorMixin
+    single_estimator_: sklearn.RegressorMixin
         Estimator fitted on the whole training set.
 
     estimators_: list
@@ -547,13 +547,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Training data.
 
-        y : ArrayLike of shape (n_samples,)
+        y: ArrayLike of shape (n_samples,)
             Training labels.
 
-        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
             If ``None``, then samples are equally weighted.
             If some weights are null,
