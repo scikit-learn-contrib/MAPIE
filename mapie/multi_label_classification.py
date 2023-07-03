@@ -709,7 +709,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 self.risks = _compute_recall(self.lambdas,
                                              y_pred_proba_array,
                                              y)
-                if self.method == None:
+                if self.method is None:
                     self.method = "rcps"
 
             elif (self.metric_control == "precision") or (
@@ -717,7 +717,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 self.risks = _compute_precision(self.lambdas,
                                                 y_pred_proba_array,
                                                 y)
-                if self.method == None:
+                if self.method is None:
                     self.method = "ltt"
 
             self._check_method()
