@@ -117,16 +117,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     >>> mapie = MapieMultiLabelClassifier(estimator=clf).fit(X_toy, y_toy)
-    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
+    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3, delta=0.1)
     >>> print(y_pi_mapie[:, :, 0])
-    [[ True False  True]
-     [ True False  True]
-     [False  True False]
-     [False  True False]]
-
-
-     We have to change the way we call class MLC, we should be able
-     to call atrributes method and metric control!
+    [[True  True  True]
+     [True  True  True]
+     [True  True  True]
+     [True  True  True]]
     """
     valid_methods_ = ["crc", "rcps", "ltt"]
     # valid_score = ['precision', 'recall', 'f1_score', ['precision', 'OOD']]

@@ -49,7 +49,6 @@ def _ltt_procedure(
             l_index = np.where(p_values[:, i] <= delta/n_obs)[0]
             valid_index.append(l_index)
     return np.array(valid_index), p_values
- 
 
 
 def _find_lambda_control_star(

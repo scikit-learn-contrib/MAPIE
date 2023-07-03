@@ -7,7 +7,7 @@ import numpy as np
 from mapie.control_risk.risks import (_compute_precision,
                                       _compute_recall)
 import pytest
-from typing import Union, Iterable
+from typing import Union
 from numpy.typing import NDArray
 from mapie.control_risk.p_values import hoefdding_bentkus_p_value
 from mapie.control_risk.ltt import (_ltt_procedure,
