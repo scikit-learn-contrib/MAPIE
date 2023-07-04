@@ -232,6 +232,31 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         check_random_state(self.random_state)
         self._check_raps()
 
+    def _check_binary_target(self, y: ArrayLike) -> None:
+        """
+        Check that if the type of target is binary (not multi-class),
+        then the method have to be "score".
+
+        Parameters
+        ----------
+        y: NDArray of shape (n_samples,)
+            Training labels.
+
+        Raises
+        ------
+        ValueError
+            If type of target is binary and method is not "score".
+        """
+        self._target_type = type_of_target(y)
+        if self._target_type == "binary" and \
+            self.method not in ["score"]:
+            raise ValueError(
+                "Invalid method for binary target. "
+                "Your target is not of type multiclass and "
+                "allowed values for binary type are "
+                f"{['score']}."
+            )
+
     def _check_raps(self):
         """
         Check that if the method used is RAPS, then
@@ -1037,150 +1062,134 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         self.label_encoder_ = enc
         check_classification_targets(y)
-        self._target_type = type_of_target(y)
+        self._check_binary_target(y)
 
         # Initialization
         self.estimators_: List[ClassifierMixin] = []
         self.k_ = np.empty_like(y, dtype=int)
         self.n_samples_ = _num_samples(X)
 
-        if self._target_type == "multiclass":
-            if self.method == "raps":
-                raps_split = ShuffleSplit(
-                    1, test_size=size_raps, random_state=self.random_state
-                )
-                train_raps_index, val_raps_index = next(raps_split.split(X))
-                X, self.X_raps, y_enc, self.y_raps =\
-                    _safe_indexing(X, train_raps_index),\
-                    _safe_indexing(X, val_raps_index),\
-                    _safe_indexing(y_enc, train_raps_index),\
-                    _safe_indexing(y_enc, val_raps_index)
-                self.y_raps_no_enc = self.label_encoder_.inverse_transform(
-                    self.y_raps
-                )
-                y = self.label_encoder_.inverse_transform(y_enc)
-                y_enc = cast(NDArray, y_enc)
-                n_samples = _num_samples(y_enc)
-                if sample_weight is not None:
-                    sample_weight = sample_weight[train_raps_index]
-                    sample_weight = cast(NDArray, sample_weight)
+        if self.method == "raps":
+            raps_split = ShuffleSplit(
+                1, test_size=size_raps, random_state=self.random_state
+            )
+            train_raps_index, val_raps_index = next(raps_split.split(X))
+            X, self.X_raps, y_enc, self.y_raps =\
+                _safe_indexing(X, train_raps_index),\
+                _safe_indexing(X, val_raps_index),\
+                _safe_indexing(y_enc, train_raps_index),\
+                _safe_indexing(y_enc, val_raps_index)
+            self.y_raps_no_enc = self.label_encoder_.inverse_transform(
+                self.y_raps
+            )
+            y = self.label_encoder_.inverse_transform(y_enc)
+            y_enc = cast(NDArray, y_enc)
+            n_samples = _num_samples(y_enc)
+            if sample_weight is not None:
+                sample_weight = sample_weight[train_raps_index]
+                sample_weight = cast(NDArray, sample_weight)
 
-            # Work
-            if cv == "prefit":
-                self.single_estimator_ = estimator
-                y_pred_proba = self.single_estimator_.predict_proba(X)
-                y_pred_proba = self._check_proba_normalized(y_pred_proba)
-
-            else:
-                cv = cast(BaseCrossValidator, cv)
-                self.single_estimator_ = fit_estimator(
-                    clone(estimator), X, y, sample_weight
-                )
-                y_pred_proba = np.empty(
-                    (n_samples, self.n_classes_),
-                    dtype=float
-                )
-                outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                    delayed(self._fit_and_predict_oof_model)(
-                        clone(estimator),
-                        X,
-                        y,
-                        train_index,
-                        val_index,
-                        k,
-                        sample_weight,
-                    )
-                    for k, (train_index, val_index) in enumerate(cv.split(X))
-                )
-                (
-                    self.estimators_,
-                    predictions_list,
-                    val_ids_list,
-                    val_indices_list
-                ) = map(list, zip(*outputs))
-                predictions = np.concatenate(
-                    cast(List[NDArray],
-                         predictions_list)
-                )
-                val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
-                val_indices = np.concatenate(
-                    cast(List[NDArray], val_indices_list)
-                )
-                self.k_[val_indices] = val_ids
-                y_pred_proba[val_indices] = predictions
-
-                if isinstance(cv, ShuffleSplit):
-                    # Should delete values indices that
-                    # are not used during calibration
-                    self.k_ = self.k_[val_indices]
-                    y_pred_proba = y_pred_proba[val_indices]
-                    y_enc = y_enc[val_indices]
-                    y = cast(NDArray, y)[val_indices]
-
-            # RAPS: compute y_pred and position on the RAPS validation dataset
-            if self.method == "raps":
-                self.y_pred_proba_raps = self.single_estimator_.predict_proba(
-                    self.X_raps
-                )
-                self.position_raps = self._get_true_label_position(
-                    self.y_pred_proba_raps,
-                    self.y_raps
-                )
-
-            # Conformity scores
-            if self.method == "naive":
-                self.conformity_scores_ = np.empty(
-                    y_pred_proba.shape,
-                    dtype="float"
-                )
-            elif self.method == "score":
-                self.conformity_scores_ = np.take_along_axis(
-                    1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1
-                )
-            elif self.method in ["cumulated_score", "raps"]:
-                self.conformity_scores_, self.cutoff = (
-                    self._get_true_label_cumsum_proba(
-                        y,
-                        y_pred_proba
-                    )
-                )
-                y_proba_true = np.take_along_axis(
-                    y_pred_proba, y_enc.reshape(-1, 1), axis=1
-                )
-                random_state = check_random_state(self.random_state)
-                u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
-                self.conformity_scores_ -= u * y_proba_true
-            elif self.method == "top_k":
-                # Here we reorder the labels by decreasing probability
-                # and get the position of each label from decreasing
-                # probability
-                self.conformity_scores_ = self._get_true_label_position(
-                    y_pred_proba,
-                    y_enc
-                )
-            else:
-                raise ValueError(
-                    "Invalid method. "
-                    f"Allowed values are {self.valid_methods_}."
-                )
-
-            if isinstance(cv, ShuffleSplit):
-                self.single_estimator_ = self.estimators_[0]
+        # Work
+        if cv == "prefit":
+            self.single_estimator_ = estimator
+            y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba = self._check_proba_normalized(y_pred_proba)
 
         else:
-            warnings.warn(
-                "WARNING: your target is not of type multiclass."
-                + " Still fitting the model but not conformal prediction"
-                + " algorithm will be run."
+            cv = cast(BaseCrossValidator, cv)
+            self.single_estimator_ = fit_estimator(
+                clone(estimator), X, y, sample_weight
             )
-            if cv == "prefit":
-                self.single_estimator_ = estimator
-            else:
-                self.single_estimator_ = fit_estimator(
-                    clone(estimator), X, y, sample_weight
+            y_pred_proba = np.empty(
+                (n_samples, self.n_classes_),
+                dtype=float
+            )
+            outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                delayed(self._fit_and_predict_oof_model)(
+                    clone(estimator),
+                    X,
+                    y,
+                    train_index,
+                    val_index,
+                    k,
+                    sample_weight,
                 )
-            self.conformity_scores_ = np.array([])
-            self.k_ = np.empty_like(y_enc, dtype=int)
+                for k, (train_index, val_index) in enumerate(cv.split(X))
+            )
+            (
+                self.estimators_,
+                predictions_list,
+                val_ids_list,
+                val_indices_list
+            ) = map(list, zip(*outputs))
+            predictions = np.concatenate(
+                cast(List[NDArray],
+                        predictions_list)
+            )
+            val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
+            val_indices = np.concatenate(
+                cast(List[NDArray], val_indices_list)
+            )
+            self.k_[val_indices] = val_ids
+            y_pred_proba[val_indices] = predictions
+
+            if isinstance(cv, ShuffleSplit):
+                # Should delete values indices that
+                # are not used during calibration
+                self.k_ = self.k_[val_indices]
+                y_pred_proba = y_pred_proba[val_indices]
+                y_enc = y_enc[val_indices]
+                y = cast(NDArray, y)[val_indices]
+
+        # RAPS: compute y_pred and position on the RAPS validation dataset
+        if self.method == "raps":
+            self.y_pred_proba_raps = self.single_estimator_.predict_proba(
+                self.X_raps
+            )
+            self.position_raps = self._get_true_label_position(
+                self.y_pred_proba_raps,
+                self.y_raps
+            )
+
+        # Conformity scores
+        if self.method == "naive":
+            self.conformity_scores_ = np.empty(
+                y_pred_proba.shape,
+                dtype="float"
+            )
+        elif self.method == "score":
+            self.conformity_scores_ = np.take_along_axis(
+                1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1
+            )
+        elif self.method in ["cumulated_score", "raps"]:
+            self.conformity_scores_, self.cutoff = (
+                self._get_true_label_cumsum_proba(
+                    y,
+                    y_pred_proba
+                )
+            )
+            y_proba_true = np.take_along_axis(
+                y_pred_proba, y_enc.reshape(-1, 1), axis=1
+            )
+            random_state = check_random_state(self.random_state)
+            u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
+            self.conformity_scores_ -= u * y_proba_true
+        elif self.method == "top_k":
+            # Here we reorder the labels by decreasing probability
+            # and get the position of each label from decreasing
+            # probability
+            self.conformity_scores_ = self._get_true_label_position(
+                y_pred_proba,
+                y_enc
+            )
+        else:
+            raise ValueError(
+                "Invalid method. "
+                f"Allowed values are {self.valid_methods_}."
+            )
+
+        if isinstance(cv, ShuffleSplit):
+            self.single_estimator_ = self.estimators_[0]
 
         return self
 
@@ -1268,7 +1277,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # Estimate prediction sets
         y_pred = self.single_estimator_.predict(X)
 
-        if (alpha is None) or (self._target_type != "multiclass"):
+        if alpha is None:
             return y_pred
 
         n = len(self.conformity_scores_)
