@@ -249,7 +249,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         self._target_type = type_of_target(y)
         if self._target_type == "binary" and \
-            self.method not in ["score"]:
+                self.method not in ["score"]:
             raise ValueError(
                 "Invalid method for binary target. "
                 "Your target is not of type multiclass and "
@@ -1123,8 +1123,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 val_indices_list
             ) = map(list, zip(*outputs))
             predictions = np.concatenate(
-                cast(List[NDArray],
-                        predictions_list)
+                cast(List[NDArray], predictions_list)
             )
             val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
             val_indices = np.concatenate(
