@@ -1,13 +1,13 @@
 import numpy as np
 from numpy.typing import NDArray
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Optional
 from .p_values import hoefdding_bentkus_p_value
 
 
 def _ltt_procedure(
     r_hat: NDArray,
     alpha_np: NDArray,
-    delta: float,
+    delta: Optional[float],
     n_obs: int
 ) -> Tuple[NDArray, NDArray]:
     """
@@ -38,6 +38,11 @@ def _ltt_procedure(
     p_values: NDArray of shape (n_lambda, n_alpha)
         Contains the values of p_value for different alpha
     """
+    if delta is None:
+        raise ValueError(
+            "Invalid delta: delta cannot be None while"
+            + " using LTT for precision control. "
+        )
     p_values = hoefdding_bentkus_p_value(r_hat, n_obs, alpha_np)
     valid_index = []
     for i in range(len(alpha_np)):

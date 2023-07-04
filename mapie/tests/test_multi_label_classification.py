@@ -145,10 +145,15 @@ class WrongOutputModel:
 
     def predict_proba(self, *args: Any) -> NDArray:
         """Dummy predict_proba."""
+        raise NotImplementedError(
+            "Method predict_proba not implemented."
+        )
 
     def predict(self, *args: Any) -> NDArray:
         """Dummy predict."""
-
+        raise NotImplementedError(
+            "Method predict not implemented."
+        )
 
 class ArrayOutputModel:
 
@@ -619,7 +624,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
 
 
 def test_error_no_fit() -> None:
-    """Test error for RCPS method and delta None"""
+    """Test error for no fit"""
     clf = WrongOutputModel()
     mapie_clf = MapieMultiLabelClassifier(clf)
 
