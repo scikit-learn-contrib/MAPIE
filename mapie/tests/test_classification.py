@@ -24,6 +24,8 @@ from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
 from mapie.utils import check_alpha
 
+random_state = 42
+
 METHODS = ["score", "cumulated_score", "raps"]
 WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "other", 1, 2.5, (1, 2)]
@@ -95,7 +97,7 @@ STRATEGIES = {
             method="score",
             cv="prefit",
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=False,
@@ -107,7 +109,7 @@ STRATEGIES = {
             method="score",
             cv="split",
             test_size=0.5,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=False,
@@ -119,7 +121,7 @@ STRATEGIES = {
             method="score",
             cv=3,
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=False,
@@ -131,7 +133,7 @@ STRATEGIES = {
             method="score",
             cv=3,
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=False,
@@ -143,7 +145,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv="prefit",
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=True,
@@ -155,7 +157,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv="prefit",
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=False,
@@ -167,7 +169,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv="prefit",
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label="randomized",
@@ -179,7 +181,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv="split",
             test_size=0.5,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=True,
@@ -191,7 +193,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv="split",
             test_size=0.5,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=False,
@@ -203,7 +205,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv="split",
             test_size=0.5,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label="randomized",
@@ -215,7 +217,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv=3,
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=True,
@@ -227,7 +229,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv=3,
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=False,
@@ -239,7 +241,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv=3,
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label="randomized",
@@ -251,7 +253,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv=3,
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=True,
@@ -263,7 +265,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv=3,
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=False,
@@ -275,7 +277,7 @@ STRATEGIES = {
             method="cumulated_score",
             cv=3,
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label="randomized",
@@ -287,7 +289,7 @@ STRATEGIES = {
             method="naive",
             cv="prefit",
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=True,
@@ -299,7 +301,7 @@ STRATEGIES = {
             method="naive",
             cv="split",
             test_size=0.5,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=True,
@@ -311,7 +313,7 @@ STRATEGIES = {
             method="top_k",
             cv="prefit",
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=True,
@@ -323,7 +325,7 @@ STRATEGIES = {
             method="top_k",
             cv="split",
             test_size=0.5,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=True,
@@ -335,7 +337,7 @@ STRATEGIES = {
             method="raps",
             cv="prefit",
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=True,
@@ -347,7 +349,7 @@ STRATEGIES = {
             method="raps",
             cv="split",
             test_size=0.5,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label=True,
@@ -359,7 +361,7 @@ STRATEGIES = {
             method="raps",
             cv="prefit",
             test_size=None,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label="randomized",
@@ -371,7 +373,7 @@ STRATEGIES = {
             method="raps",
             cv="split",
             test_size=0.5,
-            random_state=42
+            random_state=random_state
         ),
         ParamsPredict(
             include_last_label="randomized",
@@ -816,7 +818,7 @@ X, y = make_classification(
     n_features=10,
     n_informative=3,
     n_classes=n_classes,
-    random_state=1,
+    random_state=random_state,
 )
 
 
@@ -956,13 +958,15 @@ def test_default_parameters() -> None:
 @pytest.mark.parametrize("method", ["cumulated_score", "raps"])
 def test_warning_binary_classif(cv: str, method: str) -> None:
     """Test that a warning is raised y is binary."""
-    mapie_clf = MapieClassifier(cv=cv, method=method, random_state=42)
+    mapie_clf = MapieClassifier(
+      cv=cv, method=method, random_state=random_state
+    )
     X, y = make_classification(
         n_samples=500,
         n_features=10,
         n_informative=3,
         n_classes=2,
-        random_state=1,
+        random_state=random_state,
     )
     with pytest.raises(
         ValueError, match=r".*Invalid method for binary target.*"
@@ -972,13 +976,13 @@ def test_warning_binary_classif(cv: str, method: str) -> None:
 
 def test_binary_classif_same_result() -> None:
     """Test MAPIE doesnt change model output when y is binary."""
-    mapie_clf = MapieClassifier(random_state=42)
+    mapie_clf = MapieClassifier(random_state=random_state)
     X, y = make_classification(
         n_samples=500,
         n_features=10,
         n_informative=3,
         n_classes=2,
-        random_state=1,
+        random_state=random_state,
     )
     mapie_predict = mapie_clf.fit(X, y).predict(X)
     lr = LogisticRegression(multi_class="multinomial").fit(X, y)
@@ -998,20 +1002,24 @@ def test_valid_estimator(strategy: str) -> None:
 @pytest.mark.parametrize("method", METHODS)
 def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
-    mapie_clf = MapieClassifier(method=method, cv="prefit")
+    mapie_clf = MapieClassifier(
+        method=method, cv="prefit", random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
 
 @pytest.mark.parametrize(
-    "cv", [None, -1, 2, KFold(), LeaveOneOut(),
-           ShuffleSplit(n_splits=1, test_size=0.5), "prefit"]
+    "cv", [None, -1, 2, KFold(), LeaveOneOut(), "prefit",
+           ShuffleSplit(n_splits=1, test_size=0.5, random_state=random_state)]
 )
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raises no errors."""
     model = LogisticRegression(multi_class="multinomial")
     model.fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(estimator=model, cv=cv)
+    mapie_clf = MapieClassifier(
+        estimator=model, cv=cv, random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, alpha=0.5)
 
@@ -1019,7 +1027,9 @@ def test_valid_cv(cv: Any) -> None:
 @pytest.mark.parametrize("agg_scores", ["mean", "crossval"])
 def test_agg_scores_argument(agg_scores: str) -> None:
     """Test that predict passes with all valid 'agg_scores' arguments."""
-    mapie_clf = MapieClassifier(cv=3, method="score")
+    mapie_clf = MapieClassifier(
+        cv=3, method="score", random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
 
@@ -1027,7 +1037,9 @@ def test_agg_scores_argument(agg_scores: str) -> None:
 @pytest.mark.parametrize("agg_scores", ["median", 1, None])
 def test_invalid_agg_scores_argument(agg_scores: str) -> None:
     """Test that invalid 'agg_scores' raise errors."""
-    mapie_clf = MapieClassifier(cv=3, method="score")
+    mapie_clf = MapieClassifier(
+        cv=3, method="score", random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(
         ValueError, match=r".*Invalid 'agg_scores' argument.*"
@@ -1038,7 +1050,7 @@ def test_invalid_agg_scores_argument(agg_scores: str) -> None:
 @pytest.mark.parametrize("cv", [100, 200, 300])
 def test_too_large_cv(cv: Any) -> None:
     """Test that too large cv raise sklearn errors."""
-    mapie_clf = MapieClassifier(cv=cv)
+    mapie_clf = MapieClassifier(cv=cv, random_state=random_state)
     with pytest.raises(
         ValueError,
         match=rf".*Cannot have number of splits n_splits={cv} greater.*",
@@ -1052,7 +1064,7 @@ def test_too_large_cv(cv: Any) -> None:
 )
 def test_invalid_include_last_label(include_last_label: Any) -> None:
     """Test that invalid include_last_label raise errors."""
-    mapie_clf = MapieClassifier()
+    mapie_clf = MapieClassifier(random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(
         ValueError, match=r".*Invalid include_last_label argument.*"
@@ -1112,7 +1124,6 @@ def test_same_results_prefit_split(strategy: str) -> None:
     Test checking that if split and prefit method have exactly
     the same data split, then we have exactly the same results.
     """
-    random_state = 1
     X, y = make_classification(
         n_samples=500,
         n_features=10,
@@ -1346,7 +1357,9 @@ def test_valid_prediction(alpha: Any) -> None:
     """Test fit and predict."""
     model = LogisticRegression(multi_class="multinomial")
     model.fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(estimator=model, cv="prefit")
+    mapie_clf = MapieClassifier(
+        estimator=model, cv="prefit", random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, alpha=alpha)
 
@@ -1410,7 +1423,7 @@ def test_cumulated_scores() -> None:
         cumclf,
         method="cumulated_score",
         cv="prefit",
-        random_state=42
+        random_state=random_state
     )
     mapie_clf.fit(cumclf.X_calib, cumclf.y_calib)
     np.testing.assert_allclose(
@@ -1440,7 +1453,7 @@ def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
         cumclf,
         method="cumulated_score",
         cv="prefit",
-        random_state=42
+        random_state=random_state
     )
     mapie.fit(cumclf.X_calib, cumclf.y_calib)
     np.testing.assert_allclose(mapie.conformity_scores_, cumclf.y_calib_scores)
@@ -1479,7 +1492,7 @@ def test_sum_proba_to_one_predict(
     sum to one, return an error in the predict method.
     """
     wrong_model = WrongOutputModel(y_pred_proba)
-    mapie_clf = MapieClassifier(cv="prefit")
+    mapie_clf = MapieClassifier(cv="prefit", random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.single_estimator_ = wrong_model
     with pytest.raises(
@@ -1502,7 +1515,9 @@ def test_classifier_without_classes_attribute(
         delattr(estimator[-1], "classes_")
     else:
         delattr(estimator, "classes_")
-    mapie = MapieClassifier(estimator=estimator, cv="prefit")
+    mapie = MapieClassifier(
+        estimator=estimator, cv="prefit", random_state=random_state
+    )
     with pytest.raises(
         AttributeError, match=r".*does not contain 'classes_'.*"
     ):
@@ -1515,7 +1530,9 @@ def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
     monkeypatch.setattr(
         MapieClassifier, "_check_parameters", do_nothing
     )
-    mapie_clf = MapieClassifier(method=method)
+    mapie_clf = MapieClassifier(
+        method=method, random_state=random_state
+    )
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         mapie_clf.fit(X_toy, y_toy)
 
@@ -1524,7 +1541,9 @@ def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_method_error_in_predict(method: Any, alpha: float) -> None:
     """Test else condition for the method in .predict"""
-    mapie_clf = MapieClassifier(method="score")
+    mapie_clf = MapieClassifier(
+        method="score", random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.method = method
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
@@ -1542,7 +1561,9 @@ def test_include_label_error_in_predict(
         "_check_include_last_label",
         do_nothing
     )
-    mapie_clf = MapieClassifier(method="cumulated_score")
+    mapie_clf = MapieClassifier(
+        method="cumulated_score", random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid include.*"):
         mapie_clf.predict(
@@ -1553,7 +1574,7 @@ def test_include_label_error_in_predict(
 
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
-    mapie_clf = MapieClassifier()
+    mapie_clf = MapieClassifier(random_state=random_state)
     _, y_pred, _, _ = mapie_clf._fit_and_predict_oof_model(
         estimator=LogisticRegression(),
         X=X_toy,
@@ -1603,7 +1624,7 @@ def test_pred_proba_float64() -> None:
     y_pred_proba = np.random.random((1000, 10)).astype(np.float32)
     sum_of_rows = y_pred_proba.sum(axis=1)
     normalized_array = y_pred_proba / sum_of_rows[:, np.newaxis]
-    mapie = MapieClassifier()
+    mapie = MapieClassifier(random_state=random_state)
     checked_normalized_array = mapie._check_proba_normalized(normalized_array)
 
     assert checked_normalized_array.dtype == "float64"
@@ -1637,7 +1658,7 @@ def test_classif_float32(cv) -> None:
 
     mapie = MapieClassifier(
         estimator=dummy_classif, method="naive",
-        cv=cv, random_state=42
+        cv=cv, random_state=random_state
     )
     mapie.fit(X_cal, y_cal)
     _, yps = mapie.predict(X_test, alpha=alpha, include_last_label=True)
@@ -1673,7 +1694,9 @@ def test_get_true_label_cumsum_proba_shape() -> None:
     clf = LogisticRegression()
     clf.fit(X, y)
     y_pred = clf.predict_proba(X)
-    mapie_clf = MapieClassifier(estimator=clf)
+    mapie_clf = MapieClassifier(
+        estimator=clf, random_state=random_state
+    )
     mapie_clf.fit(X, y)
     cumsum_proba, cutoff = mapie_clf._get_true_label_cumsum_proba(
         y, y_pred
@@ -1690,7 +1713,9 @@ def test_get_true_label_cumsum_proba_result() -> None:
     clf = LogisticRegression()
     clf.fit(X_toy, y_toy)
     y_pred = clf.predict_proba(X_toy)
-    mapie_clf = MapieClassifier(estimator=clf)
+    mapie_clf = MapieClassifier(
+        estimator=clf, random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
     cumsum_proba, cutoff = mapie_clf._get_true_label_cumsum_proba(
         y_toy, y_pred
@@ -1755,7 +1780,7 @@ def test_get_true_label_position(
     y_pred_proba = y_true_proba_place[1]
     place = y_true_proba_place[2]
 
-    mapie = MapieClassifier()
+    mapie = MapieClassifier(random_state=random_state)
     found_place = mapie._get_true_label_position(y_pred_proba, y_true)
 
     assert (found_place == place).all()
@@ -1767,7 +1792,9 @@ def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
     Test that an error is raised if the method is RAPS
     and cv is different from prefit and split.
     """
-    mapie = MapieClassifier(method="raps", cv=5)
+    mapie = MapieClassifier(
+        method="raps", cv=cv, random_state=random_state
+    )
     with pytest.raises(ValueError, match=r".*RAPS method can only.*"):
         mapie.fit(X_toy, y_toy)
 
@@ -1784,7 +1811,7 @@ def test_not_all_label_in_calib() -> None:
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
         estimator=clf, method="cumulated_score",
-        cv="prefit"
+        cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
     y_pred, y_pss = mapie_clf.predict(X, alpha=0.5)
@@ -1803,7 +1830,7 @@ def test_warning_not_all_label_in_calib() -> None:
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
         estimator=clf, method="cumulated_score",
-        cv="prefit"
+        cv="prefit", random_state=random_state
     )
     with pytest.warns(
         UserWarning, match=r".*WARNING: your calibration dataset.*"
@@ -1823,7 +1850,7 @@ def test_n_classes_prefit() -> None:
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
         estimator=clf, method="cumulated_score",
-        cv="prefit"
+        cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
     assert mapie_clf.n_classes_ == len(np.unique(y))
@@ -1841,7 +1868,7 @@ def test_classes_prefit() -> None:
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
         estimator=clf, method="cumulated_score",
-        cv="prefit"
+        cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
     assert (mapie_clf.classes_ == np.unique(y)).all()
@@ -1874,7 +1901,7 @@ def test_n_classes_cv() -> None:
 
     mapie_clf = MapieClassifier(
         estimator=clf, method="cumulated_score",
-        cv=5
+        cv=5, random_state=random_state
     )
     mapie_clf.fit(X, y)
     assert mapie_clf.n_classes_ == len(np.unique(y))
@@ -1889,7 +1916,7 @@ def test_classes_cv() -> None:
 
     mapie_clf = MapieClassifier(
         estimator=clf, method="cumulated_score",
-        cv=5
+        cv=5, random_state=random_state
     )
     mapie_clf.fit(X, y)
     assert (mapie_clf.classes_ == np.unique(y)).all()
@@ -1905,7 +1932,7 @@ def test_raise_error_new_class() -> None:
     y[-1] = 10
     mapie_clf = MapieClassifier(
         estimator=clf, method="cumulated_score",
-        cv="prefit"
+        cv="prefit", random_state=random_state
     )
     with pytest.raises(
         ValueError, match=r".*Values in y do not matched values.*"

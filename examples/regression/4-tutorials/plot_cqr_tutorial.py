@@ -135,7 +135,7 @@ optim_model = RandomizedSearchCV(
     n_jobs=-1,
     n_iter=100,
     cv=KFold(n_splits=5, shuffle=True),
-    verbose=-1
+    verbose=0
 )
 optim_model.fit(X_train, y_train)
 estimator = optim_model.best_estimator_
