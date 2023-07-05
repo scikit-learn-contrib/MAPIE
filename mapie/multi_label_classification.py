@@ -125,8 +125,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
      [ True  True  True]]
     """
     valid_methods_ = ["crc", "rcps", "ltt"]
-    # valid_score = ['precision', 'recall', 'f1_score', ['precision', 'OOD']]
-    valid_score = ['precision', 'recall']
+    # valid_metric_ = ['precision', 'recall', 'f1_score', ['precision', 'OOD']]
+    valid_metric_ = ['precision', 'recall']
+    valid_methods_by_metric_ = {
+        "precision": ["ltt"],
+        "recall": ["rcps", "crc"]
+    }
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
     lambdas = np.arange(0, 1, 0.01)
     n_lambdas = len(lambdas)
@@ -166,21 +170,21 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         check_verbose(self.verbose)
         check_random_state(self.random_state)
 
-    def _check_method(self) -> None:
-        """
-        Check that the specified method is valid
+    # def _check_method(self) -> None:
+    #     """
+    #     Check that the specified method is valid
 
-        Raises
-        ------
-        ValueError
-            Raise error if the name of the method is not
-            in self.valid_methods_
-        """
-        if self.method not in self.valid_methods_:
-            raise ValueError(
-                "Invalid method. "
-                "Allowed values are " + " or ".join(self.valid_methods_)
-            )
+    #     Raises
+    #     ------
+    #     ValueError
+    #         Raise error if the name of the method is not
+    #         in self.valid_methods_
+    #     """
+    #     if self.method not in self.valid_methods_:
+    #         raise ValueError(
+    #             "Invalid method. "
+    #             "Allowed methods are " + " or ".join(self.valid_methods_)
+    #         )
 
     def _check_all_labelled(self, y: NDArray) -> None:
         """
@@ -265,9 +269,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 "delta must be in ]0, 1["
             )
 
-    def _check_valid_index(self,
-                           alpha: NDArray
-                           ):
+    def _check_valid_index(self):
         """
         Check if valid index is empty, if it's empty,
         we should warn the user that for the value alpha and level delta
@@ -275,11 +277,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         The user must be less risk averse or he has to take a higher
         alpha value.
         """
-        if (self.metric_control == 'precision') and (len(alpha) == 1) and (
-                np.size(self.valid_index) == 0
+        if (self.metric_control == 'precision') and (
+            [] in self.valid_index
                 ):
-            raise ValueError(
-                "ERROR: LTT method has returned an empty sequence"
+            warnings.warn(
+                "Warning: LTT method has returned at least"
+                + "one empty sequence."
                 + "you have to take more risk by augmenting alpha"
                 + "if you want result."
                 )
@@ -426,17 +429,27 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Check that the metrics to control are valid
         (can be a string or list of string.)
         """
-        if self.metric_control not in self.valid_score:
+        if self.metric_control not in self.valid_metric_:
             raise ValueError(
-                "Invalid score. "
-                "Allowed scores are" + " or ".join(self.valid_score)
+                "Invalid metric. "
+                "Allowed scores are" + " or ".join(self.valid_metric_)
             )
-        if (self.metric_control == 'precision') and ((self.method == 'rcps')
-                                                     or self.method == 'crc'):
+
+        if self.method is None:
+            if self.metric_control == "recall":
+                self.method = "rcps"
+            elif self.metric_control == "precision":
+                self.method = "ltt"
+        elif self.method not in self.valid_methods_by_metric_[
+            self.metric_control
+        ]:
             raise ValueError(
-                "Invalid method. "
-                + "RCPS method can't deal precision score. "
-                + "Use method='ltt' instead. "
+                "Invalid method for metric: "
+                + "You are controlling " + self.metric_control
+                + " And you are using invalid method: " + self.method
+                + ". Use instead: " + "".join(self.valid_methods_by_metric_[
+                    self.metric_control
+                ])
             )
 
     def _transform_pred_proba(
@@ -666,8 +679,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         # Checks
         first_call = self._check_partial_fit_first_call()
         self._check_parameters()
+        self._check_metric_control()
         # self._check_method()
-        # self._check_metric_control()
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
@@ -688,37 +701,15 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
             self.theta_ = X.shape[1]
-            # if (self.method == 'rcps') or (self.method == 'crc'):
-            #     self.risks = _compute_recall(self.lambdas,
-            #                                  y_pred_proba_array,
-            #                                  y)
-            # else:
-            #     # if user is using default parameter we should control
-            #     # precision if ltt is used
-            #     if (self.metric_control == 'recall'):
-            #         self.metric_control = 'precision'
-            #     self.risks = _compute_precision(self.lambdas,
-            #                                     y_pred_proba_array,
-            #                                     y)
-            if (self.metric_control == "recall"):
 
-                self.risks = _compute_recall(self.lambdas,
-                                             y_pred_proba_array,
-                                             y)
-                if self.method is None:
-                    self.method = "rcps"
-
-            elif (self.metric_control == "precision") or (
-                                    self.method == "ltt"):
-                self.risks = _compute_precision(self.lambdas,
-                                                y_pred_proba_array,
-                                                y)
-                if self.method is None:
-                    self.method = "ltt"
-
-            self._check_method()
-            self._check_metric_control()
-
+            if self.metric_control == "recall":
+                self.risks = _compute_recall(
+                    self.lambdas, y_pred_proba_array, y
+                )
+            elif self.metric_control == "precision":
+                self.risks = _compute_precision(
+                    self.lambdas, y_pred_proba_array, y
+                )
         else:
             if X.shape[1] != self.theta_:
                 msg = "Number of features %d does not match previous data %d."
@@ -855,7 +846,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                                                              alpha_np,
                                                              delta,
                                                              self.n_obs)
-            self._check_valid_index(alpha_np)
+            self._check_valid_index()
             self.lambdas_star, self.r_star = _find_lambda_control_star(
                self.r_hat, self.valid_index, self.lambdas)
 

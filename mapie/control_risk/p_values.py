@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
 from typing import Iterable, Union
+from scipy.stats import binom
 
 
 def hoefdding_bentkus_p_value(
@@ -26,8 +27,9 @@ def hoefdding_bentkus_p_value(
     The method computes the p_values according to
     the Hoeffding_Bentkus inequality for each
     alpha.
-    Note that we are only using for now Hoeffding
-    part.
+    We return the min between the Hoeffding and
+    Bentkus p-values (Note that it depends on
+    scipy.stats).
     Returns
     -------
     p_values: NDArray of shape
@@ -40,7 +42,7 @@ def hoefdding_bentkus_p_value(
         alpha_np = np.array(alpha)
     else:
         raise ValueError(
-            "Invalid alpha. Allowed values are float or Iterable."
+            "Invalid alpha. Allowed values are float or NDArray."
         )
     if len(alpha_np.shape) != 1:
         raise ValueError(
@@ -62,7 +64,13 @@ def hoefdding_bentkus_p_value(
     hoeffding_p_value = np.exp(-n * h1(np.where(
         r_hat_repeat > alpha_repeat, alpha_repeat, r_hat_repeat),
         alpha_repeat))
-    return hoeffding_p_value
+    bentkus_p_value = np.e * binom.cdf(np.ceil(n * r_hat_repeat),
+                                       n, alpha_repeat)
+    hb_p_value = np.where(bentkus_p_value > hoeffding_p_value,
+                          hoeffding_p_value,
+                          bentkus_p_value)
+    # return hoeffding_p_value
+    return hb_p_value
 
 
 def h1(
@@ -84,46 +92,3 @@ def h1(
 
     return r_hat * np.log(r_hat/alpha) + (1-r_hat) * np.log(
                                         (1-r_hat)/(1-alpha))
-
-
-def binomial_cdf(
-    k: int,
-    n: int,
-    p: float
-) -> NDArray:
-    """
-    Computes the cumulative distribution function (CDF) of
-    the binomial distribution for the given values of k, n, and p.
-
-        THIS FUNCTION DOES NOT WORK
-
-    """
-    # Calculate the individual probabilities
-    indices = np.arange(np.max(k) + 1)
-    comb_func = np.frompyfunc(lambda x: np.prod(np.arange(n, n-x, -1)) //
-                              np.prod(np.arange(1, x+1)), 1, 1)
-    comb = comb_func(indices)
-    probabilités = comb * (p**indices) * ((1 - p)**(n - indices))
-
-    # Calculate the cumulative sum of probabilities
-    cdf = np.cumsum(probabilités)
-    return cdf
-
-
-def bentkus_p_value(r_hat: NDArray,
-                    n: int,
-                    alpha: float
-                    ) -> NDArray:
-    """
-    Compute the bentkus pvalue by
-    taking the ceil of r_hat*n of binomial
-    cdf.
-        INVALID VALUE DU TO BINOM-CDF
-    """
-    p_values = []
-    for i in range(len(r_hat)):
-        p_values.append(binomial_cdf(
-            np.ceil(r_hat[i] * n),
-            n, alpha)[np.ceil(r_hat[i] * n).astype(int)])
-
-    return np.array(p_values)

@@ -1,6 +1,7 @@
 import numpy as np
+import warnings
 from numpy.typing import NDArray
-from typing import Tuple, List, Union, Optional
+from typing import Tuple, List, Union, Optional, Any
 from .p_values import hoefdding_bentkus_p_value
 
 
@@ -9,7 +10,7 @@ def _ltt_procedure(
     alpha_np: NDArray,
     delta: Optional[float],
     n_obs: int
-) -> Tuple[NDArray, NDArray]:
+) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the ltt procedure for risk control
     should be precision for multilabelclassif
@@ -48,17 +49,17 @@ def _ltt_procedure(
     for i in range(len(alpha_np)):
         N_coarse = len(np.where(p_values[:, i] < delta/n_obs)[0])
         if N_coarse == 0:
-            l_index = np.array([])
+            l_index = []  # type: List[int]
             valid_index.append(l_index)
         else:
-            l_index = np.where(p_values[:, i] <= delta/n_obs)[0]
+            l_index = np.where(p_values[:, i] <= delta/n_obs)[0].tolist()
             valid_index.append(l_index)
-    return np.array(valid_index), p_values
+    return valid_index, p_values
 
 
 def _find_lambda_control_star(
         r_hat: NDArray,
-        valid_index: NDArray,
+        valid_index: List[List[Any]],
         lambdas: NDArray
 ) -> Tuple[Union[NDArray, List], Union[NDArray, List]]:
     """
@@ -81,51 +82,22 @@ def _find_lambda_control_star(
     r_star: NDArray of shape (n_alpha, )
     the value of lowest risk.
     """
-    if len(valid_index) == 0:
-        raise ValueError(
+    if [] in valid_index:
+        warnings.warn(
             """
-            ERROR: The list of valid index is empty, use higher alpha or delta.
+            Warning: At least one sequence is empty!
             """
         )
-    if isinstance(valid_index[0], (np.int64)):
-
-        lambda_star = lambdas[valid_index[np.argmin(r_hat[valid_index])]]
-        r_star = r_hat[valid_index[np.argmin(r_hat[valid_index])]]
-
-        return np.array(lambda_star), np.array(r_star)
-
-    else:
-
-        l_lambda_star = []
-        l_r_star = []
-        for i in range(len(valid_index)):
+    l_lambda_star = []  # type: List[Any]
+    l_r_star = []  # type: List[Any]
+    for i in range(len(valid_index)):
+        if len(valid_index[i]) == 0:
+            l_lambda_star.append([])
+            l_r_star.append([])
+        else:
             l_lambda_star.append(lambdas[valid_index[i][np.argmin(
                 r_hat[valid_index[i]])]])
             l_r_star.append(
                 r_hat[valid_index[i][np.argmin(r_hat[valid_index[i]])]])
 
-        return l_lambda_star, l_r_star
-
-
-def fixed_sequence_testing(
-    p_values: NDArray,
-    delta: float,
-    downsample_factor: int
-) -> NDArray:
-    """
-    Other technique for FWER control
-    In LTT procedure we use by default Bonferonni
-    correction.
-    This one is another presented in LTT paper.
-    """
-
-    N = p_values.shape[0]
-    N_coarse = max(int(p_values.shape[0] / downsample_factor), 1)
-
-    coarse_indexes = np.arange(0, N, downsample_factor)
-    coarse_indexes = np.append(coarse_indexes, [N-1])
-
-    mask = p_values < delta / N_coarse
-    mask_index = np.where(mask)[0]
-
-    return mask_index
+    return l_lambda_star, l_r_star

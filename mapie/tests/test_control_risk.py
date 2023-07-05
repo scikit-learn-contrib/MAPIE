@@ -7,7 +7,7 @@ import numpy as np
 from mapie.control_risk.risks import (_compute_precision,
                                       _compute_recall)
 import pytest
-from typing import Union
+from typing import Union, List
 from numpy.typing import NDArray
 from mapie.control_risk.p_values import hoefdding_bentkus_p_value
 from mapie.control_risk.ltt import (_ltt_procedure,
@@ -44,10 +44,16 @@ r_hat = np.array([
     0.5, 0.8
 ])
 n = 1100
-alpha = np.array([0.2])
-valid_index = np.array([
+alpha = np.array([0.6])
+valid_index = [[
     0, 1
+]]
+wrong_alpha = 0
+wrong_alpha_shape = np.array([
+    [0.1, 0.2],
+    [0.3, 0.4]
 ])
+wrong_delta = None
 
 
 def test_compute_recall_equal() -> None:
@@ -124,17 +130,32 @@ def test_ltt_type_output_alpha_delta(
     delta: float
 ) -> None:
     valid_index, p_values = _ltt_procedure(r_hat, alpha, delta, n)
-    assert isinstance(valid_index, np.ndarray)
+    assert isinstance(valid_index, list)
     assert isinstance(p_values, np.ndarray)
 
 
-@pytest.mark.parametrize("valid_index", [np.array([0, 1])])
-def test_find_lambda_control_star_output(valid_index: NDArray) -> None:
+@pytest.mark.parametrize("valid_index", [[[0, 1]]])
+def test_find_lambda_control_star_output(valid_index: List[List[int]]) -> None:
     assert _find_lambda_control_star(r_hat, valid_index, lambdas)
 
 
-def test_error_valid_index_empty() -> None:
-    valid_index = np.array([])
-    with pytest.raises(ValueError,
-                       match=r".*The list of valid index is empty*"):
+def test_warning_valid_index_empty() -> None:
+    valid_index = [[]]  # type: List[List[int]]
+    with pytest.warns(UserWarning,
+                      match=r".*At least one sequence is empty*"):
         _find_lambda_control_star(r_hat, valid_index, lambdas)
+
+
+def test_invalid_alpha_hb() -> None:
+    with pytest.raises(ValueError, match=r".*Invalid alpha"):
+        hoefdding_bentkus_p_value(r_hat, n, wrong_alpha)
+
+
+def test_invalid_shape_alpha_hb() -> None:
+    with pytest.raises(ValueError, match=r".*Invalid alpha"):
+        hoefdding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
+
+
+def test_delta_none_ltt() -> None:
+    with pytest.raises(ValueError, match=r".*Invalid delta"):
+        _ltt_procedure(r_hat, alpha, wrong_delta, n)

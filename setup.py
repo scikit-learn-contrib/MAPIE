@@ -27,7 +27,7 @@ MAINTAINER_EMAIL = (
 )
 PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
-INSTALL_REQUIRES = ["scikit-learn", "numpy>=1.21", "packaging"]
+INSTALL_REQUIRES = ["scikit-learn", "scipy", "numpy>=1.21", "packaging"]
 CLASSIFIERS = [
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
