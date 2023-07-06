@@ -4,9 +4,6 @@ import pytest
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore)
-from mapie.regression.estimator import EnsembleRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import KFold
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
