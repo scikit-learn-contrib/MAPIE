@@ -2,10 +2,10 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 from typing import Tuple
+from sklearn.base import RegressorMixin
 
 from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
-from sklearn.base import RegressorMixin
 
 
 class ConformityScore(metaclass=ABCMeta):

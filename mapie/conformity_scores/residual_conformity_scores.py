@@ -2,6 +2,7 @@ import numpy as np
 
 from mapie._machine_precision import EPSILON
 from mapie._typing import ArrayLike, NDArray
+
 from mapie.conformity_scores import ConformityScore
 
 
