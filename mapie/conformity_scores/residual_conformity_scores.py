@@ -30,7 +30,7 @@ class AbsoluteConformityScore(ConformityScore):
     ) -> NDArray:
         """
         Compute the signed conformity scores from the observed values
-        and the estimator, from the following formula:
+        and the predicted ones, from the following formula:
         signed conformity score = y - y_pred
         """
         return np.subtract(y, y_pred)
@@ -47,8 +47,8 @@ class AbsoluteConformityScore(ConformityScore):
         signed conformity score = y - y_pred
         <=> y = y_pred + signed conformity score
 
-        ``values`` can be either the conformity scores or
-        the conformity scores aggregated with the predictions.
+        ``values`` can be either the conformity scores or the quantile of
+        the conformity scores.
         """
         return np.add(y_pred, values)
 
@@ -108,7 +108,7 @@ class GammaConformityScore(ConformityScore):
     ) -> NDArray:
         """
         Compute the signed conformity scores from the observed values
-        and the estimator, from the following formula:
+        and the predicted ones, from the following formula:
         signed conformity score = (y - y_pred) / y_pred
         """
         self._check_observed_data(y)
@@ -127,8 +127,8 @@ class GammaConformityScore(ConformityScore):
         signed conformity score = (y - y_pred) / y_pred
         <=> y = y_pred * (1 + signed conformity score)
 
-        ``values`` can be either the conformity scores or
-        the conformity scores aggregated with the predictions.
+        ``values`` can be either the conformity scores or the quantile of
+        the conformity scores.
         """
         self._check_predicted_data(y_pred)
         return np.multiply(y_pred, np.add(1, values))

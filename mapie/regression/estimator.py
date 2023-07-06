@@ -252,7 +252,6 @@ class EnsembleRegressor(RegressorMixin):
         -------
         EnsembleRegressor
             The estimator fitted.
-
         """
         # Initialization
         single_estimator_: RegressorMixin

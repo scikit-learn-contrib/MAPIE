@@ -96,8 +96,8 @@ class ConformityScore(metaclass=ABCMeta):
         Subclasses should implement this method!
 
         Compute samples of the estimation distribution from the predicted
-        targets and ``values``that can be either the conformity scores or
-        the conformity scores aggregated with the predictions.
+        targets and ``values`` that can be either the conformity scores or
+        the quantile of the conformity scores.
 
         Parameters
         ----------
@@ -109,8 +109,8 @@ class ConformityScore(metaclass=ABCMeta):
             The last dimension is the reference of the prediction.
 
         values: ArrayLike
-            Either the conformity scores or the conformity scores aggregated
-            with the predictions according to the subclass formula.
+            Either the conformity scores or the quantile of the conformity
+            scores aggregated.
 
         Returns
         -------
@@ -213,8 +213,8 @@ class ConformityScore(metaclass=ABCMeta):
         method: str
     ) -> NDArray:
         """
-        Compute the alpha quantile of the conformity scores considering
-        the symmetrical property if so.
+        Compute the alpha quantile of the conformity scores or the conformity
+        scores aggregated with the predictions.
 
         Parameters
         ----------
@@ -236,8 +236,6 @@ class ConformityScore(metaclass=ABCMeta):
         Returns
         -------
         NDArray
-            Lower and upper quantile of the prediction intervals.
-            These quantiles are identical if the score is not symmetrical.
         """
         quantile = np.column_stack([
             np_nanquantile(
@@ -261,7 +259,7 @@ class ConformityScore(metaclass=ABCMeta):
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
-        the estimator of MapieRegressor and the conformity scores.
+        the estimator of ``EnsembleRegressor`` and the conformity scores.
 
         Parameters
         ----------
@@ -282,7 +280,8 @@ class ConformityScore(metaclass=ABCMeta):
             Boolean determining whether the predictions are ensembled or not.
 
         method: str
-            The method parameter of MapieRegressor.
+            The method parameter of MapieRegressor : ``"base"``, ``"minmax"``
+            or ``"plus"``.
 
         Returns
         -------

@@ -215,7 +215,7 @@ def test_gamma_conformity_score_check_predicted_value(
 def test_check_consistency() -> None:
     """
     Test that a dummy ConformityScore class that gives inconsistent
-    conformityscores and distributions raises an error.
+    conformity scores and distributions raises an error.
     """
     dummy_conf_score = DummyConformityScore()
     conformity_scores = dummy_conf_score.get_signed_conformity_scores(
