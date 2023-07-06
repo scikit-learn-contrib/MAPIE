@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.typing import NDArray
-from typing import Iterable, Union, cast, Optional
+from typing import Union, cast
 from scipy.stats import binom
 from mapie.utils import check_alpha
 
