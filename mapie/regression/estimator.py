@@ -223,76 +223,37 @@ class EnsembleRegressor(RegressorMixin):
         )
         return estimator
 
-    def fit(
-        self,
+    @staticmethod
+    def _predict_oof_estimator(
+        estimator: RegressorMixin,
         X: ArrayLike,
-        y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
-    ) -> EnsembleRegressor:
+        val_index: ArrayLike,
+    ):
         """
-        Fit the base estimator under the ``single_estimator_`` attribute.
-        Fit all cross-validated estimator clones
-        and rearrange them into a list, the ``estimators_`` attribute.
-        Out-of-fold conformity scores are stored under
-        the ``conformity_scores_`` attribute.
+        Perform predictions on a single out-of-fold model on a validation set.
 
         Parameters
         ----------
+        estimator: RegressorMixin
+            Estimator to train.
+
         X: ArrayLike of shape (n_samples, n_features)
             Input data.
 
-        y: ArrayLike of shape (n_samples,)
-            Input labels.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights. If None, then samples are equally weighted.
-            By default ``None``.
+        val_index: ArrayLike of shape (n_samples_val)
+            Validation data indices.
 
         Returns
         -------
-        EnsembleRegressor
-            The estimator fitted.
+        Tuple[NDArray, ArrayLike]
+            Predictions of estimator from val_index of X.
         """
-        # Initialization
-        single_estimator_: RegressorMixin
-        estimators_: List[RegressorMixin] = []
-        full_indexes = np.arange(_num_samples(X))
-        cv = self.cv
-        estimator = self.estimator
-        n_samples = _num_samples(y)
-
-        # Computation
-        if cv == "prefit":
-            single_estimator_ = estimator
-            self.k_ = np.full(
-                shape=(n_samples, 1), fill_value=np.nan, dtype=float
-            )
+        X_val = _safe_indexing(X, val_index)
+        if _num_samples(X_val) > 0:
+            y_pred = estimator.predict(X_val)
         else:
-            single_estimator_ = self._fit_oof_estimator(
-                clone(estimator), X, y, full_indexes, sample_weight
-            )
-            cv = cast(BaseCrossValidator, cv)
-            self.k_ = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y)),
-                fill_value=np.nan,
-                dtype=float,
-            )
-            if self.method == "naive":
-                estimators_ = [single_estimator_]
-            else:
-                estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
-                    delayed(self._fit_oof_estimator)(
-                        clone(estimator), X, y, train_index, sample_weight
-                    )
-                    for train_index, _ in cv.split(X)
-                )
-            if isinstance(cv, ShuffleSplit):
-                single_estimator_ = estimators_[0]
-
-        self.single_estimator_ = single_estimator_
-        self.estimators_ = estimators_
-
-        return self
+            y_pred = np.array([])
+        return y_pred, val_index
 
     def _aggregate_with_mask(
         self,
@@ -339,38 +300,6 @@ class EnsembleRegressor(RegressorMixin):
             return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
         else:
             raise ValueError("The value of self.agg_function is not correct")
-
-    @staticmethod
-    def _predict_oof_estimator(
-        estimator: RegressorMixin,
-        X: ArrayLike,
-        val_index: ArrayLike,
-    ):
-        """
-        Perform predictions on a single out-of-fold model on a validation set.
-
-        Parameters
-        ----------
-        estimator: RegressorMixin
-            Estimator to train.
-
-        X: ArrayLike of shape (n_samples, n_features)
-            Input data.
-
-        val_index: ArrayLike of shape (n_samples_val)
-            Validation data indices.
-
-        Returns
-        -------
-        Tuple[NDArray, ArrayLike]
-            Predictions of estimator from val_index of X.
-        """
-        X_val = _safe_indexing(X, val_index)
-        if _num_samples(X_val) > 0:
-            y_pred = estimator.predict(X_val)
-        else:
-            y_pred = np.array([])
-        return y_pred, val_index
 
     def _pred_multi(self, X: ArrayLike) -> NDArray:
         """
@@ -446,6 +375,77 @@ class EnsembleRegressor(RegressorMixin):
                 y_pred = aggregate_all(self.agg_function, pred_matrix)
 
         return y_pred
+
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+    ) -> EnsembleRegressor:
+        """
+        Fit the base estimator under the ``single_estimator_`` attribute.
+        Fit all cross-validated estimator clones
+        and rearrange them into a list, the ``estimators_`` attribute.
+        Out-of-fold conformity scores are stored under
+        the ``conformity_scores_`` attribute.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        y: ArrayLike of shape (n_samples,)
+            Input labels.
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights. If None, then samples are equally weighted.
+            By default ``None``.
+
+        Returns
+        -------
+        EnsembleRegressor
+            The estimator fitted.
+        """
+        # Initialization
+        single_estimator_: RegressorMixin
+        estimators_: List[RegressorMixin] = []
+        full_indexes = np.arange(_num_samples(X))
+        cv = self.cv
+        estimator = self.estimator
+        n_samples = _num_samples(y)
+
+        # Computation
+        if cv == "prefit":
+            single_estimator_ = estimator
+            self.k_ = np.full(
+                shape=(n_samples, 1), fill_value=np.nan, dtype=float
+            )
+        else:
+            single_estimator_ = self._fit_oof_estimator(
+                clone(estimator), X, y, full_indexes, sample_weight
+            )
+            cv = cast(BaseCrossValidator, cv)
+            self.k_ = np.full(
+                shape=(n_samples, cv.get_n_splits(X, y)),
+                fill_value=np.nan,
+                dtype=float,
+            )
+            if self.method == "naive":
+                estimators_ = [single_estimator_]
+            else:
+                estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
+                    delayed(self._fit_oof_estimator)(
+                        clone(estimator), X, y, train_index, sample_weight
+                    )
+                    for train_index, _ in cv.split(X)
+                )
+            if isinstance(cv, ShuffleSplit):
+                single_estimator_ = estimators_[0]
+
+        self.single_estimator_ = single_estimator_
+        self.estimators_ = estimators_
+
+        return self
 
     def predict(
         self,

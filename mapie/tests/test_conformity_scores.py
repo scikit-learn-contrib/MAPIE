@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mapie._typing import NDArray, ArrayLike
+from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore)
 from mapie.regression.estimator import EnsembleRegressor

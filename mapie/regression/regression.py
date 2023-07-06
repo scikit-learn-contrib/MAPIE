@@ -545,7 +545,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             alpha_np = cast(NDArray, alpha)
             check_alpha_and_n_samples(alpha_np, n)
 
-            y_pred, bound_low, bound_up = \
+            y_pred, y_pred_low, y_pred_up = \
                 self.conformity_score_function_.get_bounds(
                     X,
                     self.estimator_,
@@ -554,7 +554,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     ensemble,
                     self.method
                 )
-            return y_pred, np.stack([bound_low, bound_up], axis=1)
+            return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
 
         else:
             y_pred, _, _ = self.estimator_.predict(X, ensemble)

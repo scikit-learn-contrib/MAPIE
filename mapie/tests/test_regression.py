@@ -514,12 +514,16 @@ def test_aggregate_with_mask_with_prefit() -> None:
 
 def test_aggregate_with_mask_with_invalid_agg_function() -> None:
     """Test ``_aggregate_with_mask`` in case ``agg_function`` is invalid."""
-    ens_reg = EnsembleRegressor(LinearRegression(), "plus",
-                                KFold(
-                                    n_splits=5, random_state=None, shuffle=True
-                                ),
-                                "nonsense", None, random_state, 0.20, False
-                                )
+    ens_reg = EnsembleRegressor(
+        LinearRegression(),
+        "plus",
+        KFold(n_splits=5, random_state=None, shuffle=True),
+        "nonsense",
+        None,
+        random_state,
+        0.20,
+        False
+    )
     with pytest.raises(
         ValueError,
         match=r".*The value of self.agg_function is not correct*",
