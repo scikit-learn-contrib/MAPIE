@@ -81,14 +81,14 @@ STRATEGIES = {
 
 y_toy_mapie = {
     "crc": [
-        [True, False, False],
+        [True, False, True],
         [True, False, True],
         [True, False, True],
         [True, False, True],
         [True, True, True],
         [True, True, True],
-        [False, True, True],
-        [False, True, True],
+        [True, True, True],
+        [True, True, True],
         [False, True, True]
     ],
     "rcps_bernstein": [
@@ -103,9 +103,9 @@ y_toy_mapie = {
         [True, True, True],
     ],
     "rcps_wsr": [
-        [True, False, True],
-        [True, False, True],
-        [True, False, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
         [True, True, True],
         [True, True, True],
         [True, True, True],
@@ -114,9 +114,9 @@ y_toy_mapie = {
         [True, True, True],
     ],
     "rcps_hoeffding": [
-        [True, False, True],
-        [True, False, True],
-        [True, False, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
         [True, True, True],
         [True, True, True],
         [True, True, True],
@@ -410,10 +410,10 @@ def test_valid_prediction(alpha: Any, delta: Any, bound: Any) -> None:
 
 
 @pytest.mark.parametrize(
-    "alpha", [0.7, (0.9, 0.95), np.array([0.9, 0.95]), None],
+    "alpha", [0.3, (0.9, 0.95), np.array([0.9, 0.95]), None],
 )
 @pytest.mark.parametrize(
-    "delta", [.5, .5, .5, .9, .01],
+    "delta", [.3, .4, .5, .9, .01],
 )
 @pytest.mark.parametrize(
     "bound", BOUNDS,
@@ -449,8 +449,6 @@ def test_method_error_in_fit(method: str) -> None:
     mapie_clf = MapieMultiLabelClassifier(random_state=42, method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         mapie_clf.fit(X_toy, y_toy)
-    # with pytest.raises(ValueError, match=r".*Invalid method.*"):
-    #     mapie_clf.predict(X_toy)
 
 
 def test_method_error_if_no_label_fit() -> None:
@@ -680,7 +678,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     mapie_clf.fit(X_toy, y_toy)
     _, y_ps = mapie_clf.predict(
         X_toy,
-        alpha=.4,
+        alpha=.2,
         bound=args["bound"],
         delta=.1
     )

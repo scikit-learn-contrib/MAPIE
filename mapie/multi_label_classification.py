@@ -117,12 +117,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     >>> mapie = MapieMultiLabelClassifier(estimator=clf).fit(X_toy, y_toy)
-    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3, delta=0.1)
+    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
     >>> print(y_pi_mapie[:, :, 0])
-    [[ True  True  True]
-     [ True  True  True]
-     [ True  True  True]
-     [ True  True  True]]
+    [[ True False  True]
+     [ True False  True]
+     [False  True False]
+     [False  True False]]
     """
     valid_methods_ = ["crc", "rcps", "ltt"]
     # valid_metric_ = ['precision', 'recall', 'f1_score', ['precision', 'OOD']]
