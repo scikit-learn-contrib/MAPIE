@@ -828,10 +828,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
             self.n_obs = len(self.risks)
-            self.valid_index, self.p_values = _ltt_procedure(self.r_hat,
-                                                             alpha_np,
-                                                             delta,
-                                                             self.n_obs)
+            self.valid_index, self.p_values = _ltt_procedure(
+                self.r_hat,
+                alpha_np,
+                delta,
+                self.n_obs
+            )
             self._check_valid_index()
             self.lambdas_star, self.r_star = _find_lambda_control_star(
                self.r_hat,

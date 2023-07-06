@@ -88,7 +88,6 @@ def _compute_precision(
     -------
     NDArray of shape (n_samples, n_labels, n_lambdas)
         Risks for each observation and each value of lambda
-
     """
     if y_pred_proba.ndim != 3:
         raise ValueError(

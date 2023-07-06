@@ -91,6 +91,6 @@ def _h1(
     -------
     NDArray of same shape as r_hat (n_lambdas, ).
     """
-    first_part = r_hat * np.log(r_hat/alpha)
-    second_part = (1-r_hat) * np.log((1-r_hat)/(1-alpha))
-    return first_part + second_part
+    elt1 = r_hat * np.log(r_hat/alpha)
+    elt2 = (1-r_hat) * np.log((1-r_hat)/(1-alpha))
+    return elt1 + elt2
