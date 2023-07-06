@@ -61,27 +61,31 @@ def _ltt_procedure(
 
 
 def _find_lambda_control_star(
-        r_hat: NDArray,
-        valid_index: List[List[Any]],
-        lambdas: NDArray
+    r_hat: NDArray,
+    valid_index: List[List[Any]],
+    lambdas: NDArray
 ) -> Tuple[Union[NDArray, List], Union[NDArray, List]]:
     """
     Return the lambda that give the maximum precision with a control
     guarantee of level delta.
+
     Parameters
     ----------
     r_hat : NDArray of shape (n_samples, )
         Empirical risk of metric_control with respect
         to the lambdas.
+        
     valid_index: NDArray of shape (n_alpha, ).
         Contain the valid index that satisfy fwer control
         for each alpha (shape aren't the same for each alpha)
+
     lambdas: Discretize parameters use for ltt procedure.
 
     Returns
-    ----------
+    -------
     l_lambda_star: NDArray of shape (n_alpha, )
         the lambda that give the highest precision
+
     r_star: NDArray of shape (n_alpha, )
     the value of lowest risk.
     """
