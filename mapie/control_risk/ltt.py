@@ -55,13 +55,8 @@ def _ltt_procedure(
     p_values = hoefdding_bentkus_p_value(r_hat, n_obs, alpha_np)
     valid_index = []
     for i in range(len(alpha_np)):
-        N_coarse = len(np.where(p_values[:, i] < delta/n_obs)[0])
-        if N_coarse == 0:
-            l_index = []  # type: List[int]
-            valid_index.append(l_index)
-        else:
-            l_index = np.where(p_values[:, i] <= delta/n_obs)[0].tolist()
-            valid_index.append(l_index)
+        l_index = np.where(p_values[:, i] <= delta/n_obs)[0].tolist()
+        valid_index.append(l_index)
     return valid_index, p_values
 
 
