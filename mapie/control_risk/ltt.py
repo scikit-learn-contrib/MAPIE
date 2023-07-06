@@ -25,19 +25,20 @@ def _ltt_procedure(
     Parameters
     ----------
     r_hat: NDArray of shape (n_samples, )
-        Empirical risk of metric_control with respect
-        to the lambdas.
+    Empirical risk of metric_control with respect
+    to the lambdas.
     alpha: NDArray of control level. The empirical risk should
     be less than alpha with probability 1-delta.
     delta: Float value
-        Correspond to proportion of failure we don't
-        want to exceed.
+    Correspond to proportion of failure we don't
+    want to exceed.
 
     Returns
     -------
     valid_index: NDArray of shape (n_alpha, ).
-        Contain the valid index that satisfy fwer control
-        for each alpha (shape aren't the same for each alpha)
+    Contain the valid index that satisfy fwer control
+    for each alpha (shape aren't the same for each alpha)
+    
     p_values: NDArray of shape (n_lambda, n_alpha)
         Contains the values of p_value for different alpha
 
@@ -72,12 +73,12 @@ def _find_lambda_control_star(
     Parameters
     ----------
     r_hat : NDArray of shape (n_samples, )
-        Empirical risk of metric_control with respect
-        to the lambdas.
+    Empirical risk of metric_control with respect
+    to the lambdas.
 
     valid_index: NDArray of shape (n_alpha, ).
-        Contain the valid index that satisfy fwer control
-        for each alpha (shape aren't the same for each alpha)
+    Contain the valid index that satisfy fwer control
+    for each alpha (shape aren't the same for each alpha)
 
     lambdas: Discretize parameters use for ltt procedure.
 
