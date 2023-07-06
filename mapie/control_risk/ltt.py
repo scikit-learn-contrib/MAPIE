@@ -12,13 +12,14 @@ def _ltt_procedure(
     n_obs: int
 ) -> Tuple[List[List[Any]], NDArray]:
     """
-    Apply the learn then test procedure for risk control
-    should be precision for multi-label-classification.
-    Note that we will do a multipletest for r_hat that are
-    less than level alpha.
+    Apply the Learn-Then-Test procedure for risk control.
+    This procedure is called in multi-label-classification
+    if ``metric=precision``.
+    Note that we will do a multiple test for ``r_hat`` that are
+    less than level ``alpha_np``.
 
     Procedure:
-        - compute p_values for each lambdas descretize
+        - Calculate p-values for each lambdas descretize
         - Apply a fwer algorithm, here Bonferonni correction
         - Return the index lambdas that give you the control
         at alpha level
