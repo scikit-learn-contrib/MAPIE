@@ -69,18 +69,18 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: ArrayLike
+        X: ArrayLike of shape (n_samples_calib, n_features)
             Observed feature values.
 
-        y: ArrayLike
+        y: ArrayLike of shape (n_samples_calib,)
             Observed target values.
 
-        y_pred: ArrayLike
+        y_pred: ArrayLike of shape (n_samples_calib,)
             Predicted target values.
 
         Returns
         -------
-        NDArray
+        NDArray of shape (n_samples_calib,)
             Signed conformity scores.
         """
 
@@ -101,20 +101,24 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: ArrayLike
+        X: ArrayLike of shape (n_samples_calib, n_features)
             Observed feature values.
 
         y_pred: ArrayLike
-            Predicted reference values of shape (n_samples, ...).
-            The last dimension is the reference of the prediction.
+            The shape is either (n_samples_calib, n_samples_train): when the
+            method is called in ``get_bounds`` it needs a prediction per train
+            sample for each test sample to compute the bounds.
+            Or (n_samples_calib, 1): when it is called in ``check_consistency``
 
         conformity_scores: ArrayLike
-            Either the conformity scores or the quantile of the conformity
-            scores aggregated.
+            The shape is either (n_samples_calib, n_alpha) when it is the
+            conformity scores themselves or (n_alpha, 1) when it is only the
+            quantile of the conformity scores.
 
         Returns
         -------
-        NDArray
+        NDArray of shape (n_samples_calib, n_alpha) or
+        (n_samples_calib, n_samples_train) according to the shape of ``y_pred``
             Observed values.
         """
 
@@ -138,16 +142,16 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: ArrayLike
+        X: ArrayLike of shape (n_samples_calib, n_features)
             Observed feature values.
 
-        y: ArrayLike
+        y: ArrayLike of shape (n_samples_calib,)
             Observed target values.
 
-        y_pred: ArrayLike
+        y_pred: ArrayLike of shape (n_samples_calib,)
             Predicted target values.
 
-        conformity_scores: ArrayLike
+        conformity_scores: ArrayLike of shape (n_samples_calib,)
             Conformity scores.
 
         Raises
@@ -155,8 +159,9 @@ class ConformityScore(metaclass=ABCMeta):
         ValueError
             If the two methods are not consistent.
         """
-        score_distribution = self.get_estimation_distribution(X, y_pred,
-                                                              conformity_scores)
+        score_distribution = self.get_estimation_distribution(
+            X, y_pred, conformity_scores
+        )
         abs_conformity_scores = np.abs(np.subtract(score_distribution, y))
         max_conf_score = np.max(abs_conformity_scores)
         if max_conf_score > self.eps:
@@ -183,18 +188,18 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: NDArray
+        X: NDArray of shape (n_samples_calib, n_features)
             Observed feature values.
 
-        y: NDArray
+        y: NDArray of shape (n_samples_calib,)
             Observed target values.
 
-        y_pred: NDArray
+        y_pred: NDArray of shape (n_samples_calib,)
             Predicted target values.
 
         Returns
         -------
-        NDArray
+        NDArray of shape (n_samples_calib, 1)
             Conformity scores.
         """
         conformity_scores = self.get_signed_conformity_scores(X, y, y_pred)
@@ -217,12 +222,13 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        values: NDArray
+        values: NDArray of shape (n_samples_calib, n_alpha) or
+        (n_samples_calib, n_samples_train)
             Values from which the quantile is computed, it can be the
             conformity scores or the conformity scores aggregated with
             the predictions.
 
-        alpha_np: NDArray
+        alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between ``0`` and ``1``, represents the
             uncertainty of the confidence interval.
 
@@ -234,7 +240,7 @@ class ConformityScore(metaclass=ABCMeta):
 
         Returns
         -------
-        NDArray
+        NDArray of shape (n_alpha,)
             The quantile of the conformity scores.
         """
         quantile = np.column_stack([
@@ -263,16 +269,16 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: ArrayLike
+        X: ArrayLike of shape (n_samples_test, n_features)
             Observed feature values.
 
         estimator: RegressorMixin
             Estimator that is fitted to predict y from X.
 
-        conformity_scores: ArrayLike
+        conformity_scores: ArrayLike of shape (n_samples_calib,)
             Conformity scores.
 
-        alpha_np: NDArray
+        alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between ``0`` and ``1``, represents the
             uncertainty of the confidence interval.
 
@@ -289,9 +295,11 @@ class ConformityScore(metaclass=ABCMeta):
         Returns
         -------
         Tuple[NDArray, NDArray, NDArray]
-            - The predictions itself. (y_pred)
-            - The lower bounds of the prediction intervals.
-            - The upper bounds of the prediction intervals.
+            - The predictions itself. (y_pred) of shape (n_samples_test,).
+            - The lower bounds of the prediction intervals of shape
+            (n_samples_test,).
+            - The upper bounds of the prediction intervals of shape
+            (n_samples_test,).
         """
         y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble)
         signed = -1 if self.sym else 1
