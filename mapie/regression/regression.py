@@ -540,7 +540,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self._check_ensemble(ensemble)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
 
-        if not (alpha is None):
+        if alpha is None:
+            y_pred, _, _ = self.estimator_.predict(X, ensemble)
+            return y_pred
+
+        else:
             n = len(self.conformity_scores_)
             alpha_np = cast(NDArray, alpha)
             check_alpha_and_n_samples(alpha_np, n)
@@ -555,7 +559,3 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     self.method
                 )
             return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
-
-        else:
-            y_pred, _, _ = self.estimator_.predict(X, ensemble)
-            return y_pred
