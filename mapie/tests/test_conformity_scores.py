@@ -28,15 +28,14 @@ class DummyConformityScore(ConformityScore):
     ) -> NDArray:
         return np.subtract(y, y_pred)
 
-    def get_estimation_distribution(
-        self, X: ArrayLike, y_pred: ArrayLike, values: ArrayLike
-    ) -> NDArray:
+    def get_estimation_distribution(self, X: ArrayLike, y_pred: ArrayLike,
+                                    conformity_scores: ArrayLike) -> NDArray:
         """
         A positive constant is added to the sum between predictions and
         conformity scores to make the estimated distribution inconsistent
         with the conformity score.
         """
-        return np.add(y_pred, values) + 1
+        return np.add(y_pred, conformity_scores) + 1
 
 
 estimator_toy = EnsembleRegressor(
@@ -85,9 +84,8 @@ def test_absolute_conformity_score_get_estimation_distribution(
 ) -> None:
     """Test conformity observed value computation for AbsoluteConformityScore."""  # noqa: E501
     abs_conf_score = AbsoluteConformityScore()
-    y_obs = abs_conf_score.get_estimation_distribution(
-        X_toy_test, y_pred, conf_scores
-    )
+    y_obs = abs_conf_score.get_estimation_distribution(X_toy_test, y_pred,
+                                                       conf_scores)
     np.testing.assert_allclose(y_obs, y_toy_test)
 
 
@@ -98,9 +96,8 @@ def test_absolute_conformity_score_consistency(y_pred: NDArray) -> None:
     signed_conf_scores = abs_conf_score.get_signed_conformity_scores(
         X_toy_test, y_toy_test, y_pred
     )
-    y_obs = abs_conf_score.get_estimation_distribution(
-        X_toy_test, y_pred, signed_conf_scores
-    )
+    y_obs = abs_conf_score.get_estimation_distribution(X_toy_test, y_pred,
+                                                       signed_conf_scores)
     np.testing.assert_allclose(y_obs, y_toy_test)
 
 
@@ -129,9 +126,8 @@ def test_gamma_conformity_score_get_estimation_distribution(
 ) -> None:
     """Test conformity observed value computation for GammaConformityScore."""  # noqa: E501
     gamma_conf_score = GammaConformityScore()
-    y_obs = gamma_conf_score.get_estimation_distribution(
-        X_toy_test, y_pred, conf_scores
-    )
+    y_obs = gamma_conf_score.get_estimation_distribution(X_toy_test, y_pred,
+                                                         conf_scores)
     np.testing.assert_allclose(y_obs, y_toy_test)
 
 
@@ -142,9 +138,8 @@ def test_gamma_conformity_score_consistency(y_pred: NDArray) -> None:
     signed_conf_scores = gamma_conf_score.get_signed_conformity_scores(
         X_toy_test, y_toy_test, y_pred
     )
-    y_obs = gamma_conf_score.get_estimation_distribution(
-        X_toy_test, y_pred, signed_conf_scores
-    )
+    y_obs = gamma_conf_score.get_estimation_distribution(X_toy_test, y_pred,
+                                                         signed_conf_scores)
     np.testing.assert_allclose(y_obs, y_toy_test)
 
 
@@ -207,9 +202,8 @@ def test_gamma_conformity_score_check_predicted_value(
         ValueError,
         match=r".*At least one of the predicted target is negative.*"
     ):
-        gamma_conf_score.get_estimation_distribution(
-            X_toy_test, y_pred, conf_scores
-        )
+        gamma_conf_score.get_estimation_distribution(X_toy_test, y_pred,
+                                                     conf_scores)
 
 
 def test_check_consistency() -> None:

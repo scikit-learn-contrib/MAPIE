@@ -39,18 +39,18 @@ class AbsoluteConformityScore(ConformityScore):
         self,
         X: ArrayLike,
         y_pred: ArrayLike,
-        values: ArrayLike
-    ):
+        conformity_scores: ArrayLike
+    ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
-        targets and ``values``, from the following formula:
+        targets and ``conformity_scores``, from the following formula:
         signed conformity score = y - y_pred
         <=> y = y_pred + signed conformity score
 
-        ``values`` can be either the conformity scores or the quantile of
-        the conformity scores.
+        ``conformity_scores`` can be either the conformity scores or
+        the quantile of the conformity scores.
         """
-        return np.add(y_pred, values)
+        return np.add(y_pred, conformity_scores)
 
 
 class GammaConformityScore(ConformityScore):
@@ -119,16 +119,16 @@ class GammaConformityScore(ConformityScore):
         self,
         X: ArrayLike,
         y_pred: ArrayLike,
-        values: ArrayLike,
+        conformity_scores: ArrayLike
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
-        targets and ``values``, from the following formula:
+        targets and ``conformity_scores``, from the following formula:
         signed conformity score = (y - y_pred) / y_pred
         <=> y = y_pred * (1 + signed conformity score)
 
-        ``values`` can be either the conformity scores or the quantile of
-        the conformity scores.
+        ``conformity_scores`` can be either the conformity scores or
+        the quantile of the conformity scores.
         """
         self._check_predicted_data(y_pred)
-        return np.multiply(y_pred, np.add(1, values))
+        return np.multiply(y_pred, np.add(1, conformity_scores))
