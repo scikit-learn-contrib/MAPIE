@@ -283,7 +283,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
-        y_pred = self.single_estimator_.predict(X)
+        y_pred = self.estimator_.single_estimator_.predict(X)
         n = len(self.conformity_scores_)
 
         if alpha is None:
@@ -321,7 +321,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
             y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
         else:
-            y_pred_multi = self._pred_multi(X)
+            y_pred_multi = self.estimator_._pred_multi(X)
             pred = aggregate_all(self.agg_function, y_pred_multi)
             lower_bounds, upper_bounds = pred, pred
 

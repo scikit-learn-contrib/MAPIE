@@ -108,7 +108,12 @@ def test_none_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     MapieEstimator, DefaultEstimator = pack
     mapie_estimator = MapieEstimator(estimator=None)
     mapie_estimator.fit(X_toy, y_toy)
-    assert isinstance(mapie_estimator.single_estimator_, DefaultEstimator)
+    if isinstance(mapie_estimator, MapieClassifier):
+        assert isinstance(mapie_estimator.single_estimator_, DefaultEstimator)
+    if isinstance(mapie_estimator, MapieRegressor):
+        assert isinstance(
+            mapie_estimator.estimator_.single_estimator_, DefaultEstimator
+        )
 
 
 @pytest.mark.parametrize("estimator", [0, "a", KFold(), ["a", "b"]])

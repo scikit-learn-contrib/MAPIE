@@ -317,11 +317,10 @@ def test_invalid_aggregate_all() -> None:
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
     mapie_ts_reg = MapieTimeSeriesRegressor()
-    _, y_pred, _ = mapie_ts_reg._fit_and_predict_oof_model(
-        estimator=mapie_ts_reg,
+    mapie_ts_reg.fit(X_toy, y_toy)
+    y_pred, _ = mapie_ts_reg.estimator_._predict_oof_estimator(
+        estimator=mapie_ts_reg.estimator_.estimators_[0],
         X=X_toy,
-        y=y_toy,
-        train_index=[0, 1, 2, 3, 4],
         val_index=[],
     )
     assert len(y_pred) == 0

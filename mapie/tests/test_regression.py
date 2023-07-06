@@ -18,12 +18,12 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
-from mapie._typing import ArrayLike, NDArray
+from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore)
 from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieRegressor
+from mapie.regression import MapieRegressor, EnsembleRegressor
 from mapie.subsample import Subsample
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -173,8 +173,8 @@ def test_valid_estimator(strategy: str) -> None:
         estimator=DummyRegressor(), **STRATEGIES[strategy]
     )
     mapie_reg.fit(X_toy, y_toy)
-    assert isinstance(mapie_reg.single_estimator_, DummyRegressor)
-    for estimator in mapie_reg.estimators_:
+    assert isinstance(mapie_reg.estimator_.single_estimator_, DummyRegressor)
+    for estimator in mapie_reg.estimator_.estimators_:
         assert isinstance(estimator, DummyRegressor)
 
 
@@ -502,30 +502,38 @@ def test_aggregate_with_mask_with_prefit() -> None:
     """
     Test ``_aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
     """
-    mapie_reg = MapieRegressor(cv="prefit")
+    mapie_reg = MapieRegressor(LinearRegression().fit(X, y), cv="prefit")
+    mapie_reg = mapie_reg.fit(X, y)
     with pytest.raises(
         ValueError,
         match=r".*There should not be aggregation of predictions if cv is*",
     ):
-        mapie_reg._aggregate_with_mask(k, k)
+        mapie_reg.estimator_._aggregate_with_mask(k, k)
 
-    mapie_reg = MapieRegressor(agg_function="nonsense")
+
+def test_aggregate_with_mask_with_invalid_agg_function() -> None:
+    """Test ``_aggregate_with_mask`` in case ``agg_function`` is invalid."""
+    ens_reg = EnsembleRegressor(LinearRegression(), "plus",
+                                KFold(
+                                    n_splits=5, random_state=None, shuffle=True
+                                ),
+                                "nonsense", None, random_state, 0.20, False
+                                )
     with pytest.raises(
         ValueError,
         match=r".*The value of self.agg_function is not correct*",
     ):
-        mapie_reg._aggregate_with_mask(k, k)
+        ens_reg._aggregate_with_mask(k, k)
 
 
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
     mapie_reg = MapieRegressor()
-    y_pred: ArrayLike
-    _, y_pred, _ = mapie_reg._fit_and_predict_oof_model(
+    mapie_reg = mapie_reg.fit(X, y)
+    y_pred: NDArray
+    y_pred, _ = mapie_reg.estimator_._predict_oof_estimator(
         estimator=LinearRegression(),
         X=X_toy,
-        y=y_toy,
-        train_index=[0, 1, 2, 3, 4],
         val_index=[],
     )
     assert len(y_pred) == 0
