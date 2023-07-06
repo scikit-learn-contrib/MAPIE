@@ -28,23 +28,23 @@ def compute_hoefdding_bentkus_p_value(
     Parameters
     ----------
     r_hat: NDArray of shape (n_lambdas, )
-    Empirical risk of metric_control with respect
-    to the lambdas.
-    Note: r_hat is the empirical mean of a matrix of
-    shape (n_samples, n_lambdas).
+        Empirical risk of metric_control with respect
+        to the lambdas.
+        Note: r_hat is the empirical mean of a matrix of
+            shape (n_samples, n_lambdas).
 
     n: Integer value
-    Correspond to the number of observations in
-    dataset.
+        Correspond to the number of observations in
+        dataset.
 
     alpha: NDArray of shape (n_alpha) chosen by user.
-    Correspond to the value that r_hat should not
-    exceed.
+        Correspond to the value that r_hat should not
+        exceed.
 
     Returns
     -------
     hb_p_values: NDArray of shape
-    (n_lambdas, n_alpha).
+        (n_lambdas, n_alpha).
     """
     alpha_np = cast(NDArray, check_alpha(alpha))
     alpha_np = alpha_np[:, np.newaxis]
@@ -82,16 +82,16 @@ def _h1(
     Parameters
     ----------
     r_hat: NDArray of shape (n_lambdas, ).
-    Empirical risk of metric_control with respect
-    to the lambdas.
+        Empirical risk of metric_control with respect
+        to the lambdas.
 
     alpha: NDArray of alphas level of
-    shape (n_alpha), determined by user.
+        shape (n_alpha), determined by user.
 
     Returns
     -------
     NDArray of same shape as r_hat
-    (n_lambdas, ).
+        (n_lambdas, ).
     """
 
     return r_hat * np.log(r_hat/alpha) + (1-r_hat) * np.log(

@@ -18,18 +18,18 @@ def _compute_recall(
     Parameters
     ----------
     y_pred_proba: NDArray of shape (n_samples, n_labels, 1)
-    Predicted probabilities for each label and each observation
+        Predicted probabilities for each label and each observation
 
     y: NDArray of shape (n_samples, n_labels)
-    True labels.
+        True labels.
 
     lambdas: NDArray of shape (n_lambdas, )
-    Threshold that permit to compute recall.
+        Threshold that permit to compute recall.
 
     Returns
     -------
     NDArray of shape (n_samples, n_labels, n_lambdas)
-    Risks for each observation and each value of lambda.
+        Risks for each observation and each value of lambda.
     """
     if y_pred_proba.ndim != 3:
         raise ValueError(
@@ -76,13 +76,13 @@ def _compute_precision(
     Parameters
     ----------
     y_pred_proba: NDArray of shape (n_samples, n_labels, 1)
-    Predicted probabilities for each label and each observation
+        Predicted probabilities for each label and each observation
 
     y: NDArray of shape (n_samples, n_labels)
-    True labels.
+        True labels.
 
     lambdas: NDArray of shape (n_lambdas, )
-    Threshold that permit to compute precision score.
+        Threshold that permit to compute precision score.
 
     Returns
     -------
