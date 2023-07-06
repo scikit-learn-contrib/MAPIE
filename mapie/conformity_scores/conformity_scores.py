@@ -292,7 +292,6 @@ class ConformityScore(metaclass=ABCMeta):
             - The upper bounds of the prediction intervals.
         """
         y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble)
-
         signed = -1 if self.sym else 1
 
         if method == "plus":
@@ -316,10 +315,12 @@ class ConformityScore(metaclass=ABCMeta):
             alpha_low = 1 - alpha_np if self.sym else alpha_np / 2
             alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
 
-            quantile_low = self.get_quantile(conformity_scores, alpha_low,
-                                             axis=0, method=quantile_search)
-            quantile_up = self.get_quantile(conformity_scores, alpha_up,
-                                            axis=0, method="higher")
+            quantile_low = self.get_quantile(
+                conformity_scores, alpha_low, axis=0, method=quantile_search
+            )
+            quantile_up = self.get_quantile(
+                conformity_scores, alpha_up, axis=0, method="higher"
+            )
             bound_low = self.get_estimation_distribution(
                 X, y_pred_low, signed * quantile_low
             )
