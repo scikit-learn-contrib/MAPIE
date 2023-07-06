@@ -206,7 +206,7 @@ class ConformityScore(metaclass=ABCMeta):
         return conformity_scores
 
     @staticmethod
-    def _get_quantile(
+    def get_quantile(
         values: NDArray,
         alpha_np: NDArray,
         axis: int,
@@ -298,32 +298,20 @@ class ConformityScore(metaclass=ABCMeta):
         alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
 
         if method == "plus":
-            bound_low = self._get_quantile(
-                self.get_estimation_distribution(
-                    X, y_pred_low, signed * conformity_scores
-                ),
-                alpha_low,
-                axis=1,
-                method="lower"
-            )
-            bound_up = self._get_quantile(
-                self.get_estimation_distribution(
-                    X, y_pred_up, conformity_scores
-                ),
-                alpha_up,
-                axis=1,
-                method="higher"
-            )
+            bound_low = self.get_quantile(self.get_estimation_distribution(
+                X, y_pred_low, signed * conformity_scores
+            ), alpha_low, axis=1, method="lower")
+            bound_up = self.get_quantile(self.get_estimation_distribution(
+                X, y_pred_up, conformity_scores
+            ), alpha_up, axis=1, method="higher")
         else:
             quantile_search = "higher" if self.sym else "lower"
             alpha_low = 1 - alpha_np if self.sym else alpha_np / 2
 
-            quantile_low = self._get_quantile(
-                conformity_scores, alpha_low, axis=0, method=quantile_search
-            )
-            quantile_up = self._get_quantile(
-                conformity_scores, alpha_up, axis=0, method="higher"
-            )
+            quantile_low = self.get_quantile(conformity_scores, alpha_low,
+                                             axis=0, method=quantile_search)
+            quantile_up = self.get_quantile(conformity_scores, alpha_up,
+                                            axis=0, method="higher")
             bound_low = self.get_estimation_distribution(
                 X, y_pred_low, signed * quantile_low
             )
