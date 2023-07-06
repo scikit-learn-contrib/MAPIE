@@ -294,10 +294,11 @@ class ConformityScore(metaclass=ABCMeta):
         y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble)
 
         signed = -1 if self.sym else 1
-        alpha_low = alpha_np if self.sym else alpha_np / 2
-        alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
 
         if method == "plus":
+            alpha_low = alpha_np if self.sym else alpha_np / 2
+            alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
+
             values_low = self.get_estimation_distribution(
                 X, y_pred_low, signed * conformity_scores
             )
@@ -313,6 +314,7 @@ class ConformityScore(metaclass=ABCMeta):
         else:
             quantile_search = "higher" if self.sym else "lower"
             alpha_low = 1 - alpha_np if self.sym else alpha_np / 2
+            alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
 
             quantile_low = self.get_quantile(conformity_scores, alpha_low,
                                              axis=0, method=quantile_search)
