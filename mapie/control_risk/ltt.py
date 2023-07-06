@@ -12,8 +12,8 @@ def _ltt_procedure(
     n_obs: int
 ) -> Tuple[List[List[Any]], NDArray]:
     """
-    Apply the ltt procedure for risk control
-    should be precision for multilabelclassif
+    Apply the learn then test procedure for risk control
+    should be precision for multi-label-classification.
     Note that we will do a multipletest for r_hat that are
     less than level alpha.
     Procedure:
@@ -21,23 +21,31 @@ def _ltt_procedure(
         - Apply a fwer algorithm, here Bonferonni correction
         - Return the index lambdas that give you the control
         at alpha level
-        - n_obs is the length of data cal
+
     Parameters
     ----------
     r_hat: NDArray of shape (n_samples, )
         Empirical risk of metric_control with respect
         to the lambdas.
-    alpha: NDArray of alphas level.
+    alpha: NDArray of control level. The empirical risk should
+    be less than alpha with probability 1-delta.
     delta: Float value
         Correspond to proportion of failure we don't
         want to exceed.
+
     Returns
-    ----------
+    -------
     valid_index: NDArray of shape (n_alpha, ).
         Contain the valid index that satisfy fwer control
         for each alpha (shape aren't the same for each alpha)
     p_values: NDArray of shape (n_lambda, n_alpha)
         Contains the values of p_value for different alpha
+
+    References
+    ----------
+    [1] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
+    M. I., & Lei, L. (2021). Learn then test:
+    "Calibrating predictive algorithms to achieve risk control".
     """
     if delta is None:
         raise ValueError(
