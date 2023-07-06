@@ -92,7 +92,7 @@ class ConformityScore(metaclass=ABCMeta):
         values: ArrayLike
     ) -> NDArray:
         """
-        Placeholder for ``get_signed_conformity_scores``.
+        Placeholder for ``get_estimation_distribution``.
         Subclasses should implement this method!
 
         Compute samples of the estimation distribution from the predicted
@@ -105,8 +105,8 @@ class ConformityScore(metaclass=ABCMeta):
             Observed feature values.
 
         y_pred: ArrayLike
-            Predicted values, it can be any type of predictions
-            (multi, low, up, ...).
+            Predicted reference values of shape (n_samples, ...).
+            The last dimension is the reference of the prediction.
 
         values: ArrayLike
             Either the conformity scores or the conformity scores aggregated
@@ -114,7 +114,8 @@ class ConformityScore(metaclass=ABCMeta):
 
         Returns
         -------
-        ArrayLike
+        NDArray
+            Observed values.
         """
 
     def check_consistency(
