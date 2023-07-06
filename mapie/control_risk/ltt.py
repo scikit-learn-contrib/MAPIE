@@ -75,7 +75,7 @@ def _find_lambda_control_star(
 
     Parameters
     ----------
-    r_hat : NDArray of shape (n_samples, )
+    r_hat : NDArray of shape (n_lambdas, n_alpha)
         Empirical risk of metric_control with respect
         to the lambdas.
 
@@ -83,7 +83,8 @@ def _find_lambda_control_star(
         Contain the valid index that satisfy fwer control
         for each alpha (shape aren't the same for each alpha)
 
-    lambdas: Discretize parameters use for ltt procedure.
+    lambdas: NDArray of shape (n_lambda, )
+        Discretize parameters use for ltt procedure.
 
     Returns
     -------
@@ -108,7 +109,6 @@ def _find_lambda_control_star(
         else:
             idx = np.argmin(r_hat[valid_index[i]])
             l_lambda_star.append(lambdas[valid_index[i][idx]])
-            l_r_star.append(
-                r_hat[valid_index[i][idx]])
+            l_r_star.append(r_hat[valid_index[i][idx]])
 
     return l_lambda_star, l_r_star

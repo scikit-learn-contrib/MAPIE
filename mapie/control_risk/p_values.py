@@ -69,8 +69,8 @@ def compute_hoefdding_bentkus_p_value(
 
 
 def _h1(
-    r_hat: NDArray,
-    alpha: NDArray
+    r_hats: NDArray,
+    alphas: NDArray
 ) -> NDArray:
     """
     This function allow us to compute
@@ -80,17 +80,17 @@ def _h1(
 
     Parameters
     ----------
-    r_hat: NDArray of shape (n_lambdas, ).
+    r_hats: NDArray of shape (n_lambdas, n_alpha).
         Empirical risk of metric_control with respect
         to the lambdas.
 
-    alpha: NDArray of alphas level of
-        shape (n_alpha, ), determined by user.
+    alphas: NDArray of alpha level of
+        shape (n_lambdas, n_alpha).
 
     Returns
     -------
-    NDArray of same shape as r_hat (n_lambdas, ).
+    NDArray of same shape as r_hat (n_lambdas, n_alpha).
     """
-    elt1 = r_hat * np.log(r_hat/alpha)
-    elt2 = (1-r_hat) * np.log((1-r_hat)/(1-alpha))
+    elt1 = r_hats * np.log(r_hats/alphas)
+    elt2 = (1-r_hats) * np.log((1-r_hats)/(1-alphas))
     return elt1 + elt2
