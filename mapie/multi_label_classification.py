@@ -15,8 +15,8 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 
 from ._typing import ArrayLike, NDArray
 from .utils import check_alpha, check_n_jobs, check_verbose
-from .control_risk.ltt import (_ltt_procedure, _find_lambda_control_star)
-from .control_risk.risks import (_compute_precision, _compute_recall)
+from .control_risk.ltt import _ltt_procedure, _find_lambda_control_star
+from .control_risk.risks import _compute_precision, _compute_recall
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
@@ -181,7 +181,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         """
         self.method = cast(str, self.method)
         self.metric_control = cast(str, self.metric_control)
-        
+
         if self.method not in self.valid_methods_by_metric_[
             self.metric_control
         ]:
