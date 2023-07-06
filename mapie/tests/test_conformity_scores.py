@@ -35,18 +35,6 @@ class DummyConformityScore(ConformityScore):
         return np.add(y_pred, conformity_scores) + 1
 
 
-estimator_toy = EnsembleRegressor(
-    LinearRegression(),
-    "plus",
-    KFold(n_splits=5, random_state=None, shuffle=True),
-    "mean",
-    None,
-    random_state,
-    0.20,
-    False
-)
-
-
 @pytest.mark.parametrize("sym", [False, True])
 def test_error_mother_class_initialization(sym: bool) -> None:
     with pytest.raises(TypeError):
