@@ -10,32 +10,41 @@ def hoefdding_bentkus_p_value(
     alpha: Union[float, NDArray]
 ) -> NDArray:
     """
+    The method computes the p_values according to
+    the Hoeffding_Bentkus inequality for each
+    alpha.
+    We return the minimum between the Hoeffding and
+    Bentkus p-values (Note that it depends on
+    scipy.stats). The p_value is introduce in 
+    learn then test paper.
+
+    References
+    ----------
+    [1] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
+    M. I., & Lei, L. (2021). Learn then test:
+    "Calibrating predictive algorithms to achieve risk control".
+
     Parameters
     ----------
-    r_hat : NDArray of shape (len(lambdas), )
+    r_hat: NDArray of shape (n_lambdas, )
         Empirical risk of metric_control with respect
         to the lambdas.
-    n : Integer value
+        Note: r_hat is the empirical mean of a matrix of
+        shape (n_samples, n_lambdas).
+
+    n: Integer value
         Correspond to the number of observations in
-        X_cal dataset.
+        dataset.
+
     alpha: NDArray.
         Correspond to the value that r_hat should not
         exceed.
 
-    Method
-    -------
-    The method computes the p_values according to
-    the Hoeffding_Bentkus inequality for each
-    alpha.
-    We return the min between the Hoeffding and
-    Bentkus p-values (Note that it depends on
-    scipy.stats).
     Returns
     -------
-    p_values: NDArray of shape
+    hb_p_values: NDArray of shape
         (len(lambdas), len(alpha)).
     """
-    # bentkus_p_value = np.e * binom.cdf(np.ceil(n*r_hat), n, alpha)
     if isinstance(alpha, float):
         alpha_np = np.array([alpha])
     elif isinstance(alpha, Iterable):
@@ -69,7 +78,6 @@ def hoefdding_bentkus_p_value(
     hb_p_value = np.where(bentkus_p_value > hoeffding_p_value,
                           hoeffding_p_value,
                           bentkus_p_value)
-    # return hoeffding_p_value
     return hb_p_value
 
 
@@ -78,11 +86,17 @@ def h1(
     alpha: NDArray
 ) -> NDArray:
     """
+    This function allow us to compute
+    the tighter version of hoeffding inequality.
+    This function is then used in the 
+    hoeffding_bentkus_p_value function.
+
     Parameters
     ----------
-    r_hat : NDArray of shape (n_samples, )
+    r_hat : NDArray of shape (n_lambdas, )
         Empirical risk of metric_control with respect
         to the lambdas.
+
     alpha : NDArray of alphas level.
 
     Returns
