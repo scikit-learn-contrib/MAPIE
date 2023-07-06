@@ -437,10 +437,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         if self.method is None:
             if self.metric_control == "recall":
-                self.method = "rcps"
-            elif self.metric_control == "precision":
+                self.method = "crc"
+            else:
                 self.method = "ltt"
-        elif self.method not in self.valid_methods_by_metric_[
+        if self.method not in self.valid_methods_by_metric_[
             self.metric_control
         ]:
             raise ValueError(
@@ -468,7 +468,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        NDArray of shape (n_samples, n_classe, 1)∏
+        NDArray of shape (n_samples, n_classe, 1)
             Output of the model ready for risk computation.
         """
         if isinstance(y_pred_proba, np.ndarray):
@@ -706,7 +706,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 self.risks = _compute_recall(
                     self.lambdas, y_pred_proba_array, y
                 )
-            elif self.metric_control == "precision":
+            else:  # self.metric_control == "precision"
                 self.risks = _compute_precision(
                     self.lambdas, y_pred_proba_array, y
                 )

@@ -132,17 +132,11 @@ class WrongOutputModel:
     def __init__(self):
         pass
 
-    def predict_proba(self, *args: Any) -> NDArray:
+    def predict_proba(self, *args: Any):
         """Dummy predict_proba."""
-        raise NotImplementedError(
-            "Method predict_proba not implemented."
-        )
 
-    def predict(self, *args: Any) -> NDArray:
+    def predict(self, *args: Any):
         """Dummy predict."""
-        raise NotImplementedError(
-            "Method predict not implemented."
-        )
 
 
 class ArrayOutputModel:
@@ -749,7 +743,7 @@ def test_check_metric_control(method: str) -> None:
         mapie_clf.fit(X_toy, y_toy)
 
 
-def test_method_None_precision() -> None:
+def test_method_none_precision() -> None:
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     mapie_clf = MapieMultiLabelClassifier(
         clf,
@@ -759,11 +753,11 @@ def test_method_None_precision() -> None:
     assert mapie_clf.method == "ltt"
 
 
-def test_method_None_recall() -> None:
+def test_method_none_recall() -> None:
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     mapie_clf = MapieMultiLabelClassifier(
         clf,
         metric_control="recall"
     )
     mapie_clf.fit(X_toy, y_toy)
-    assert mapie_clf.method == "rcps"
+    assert mapie_clf.method == "crc"
