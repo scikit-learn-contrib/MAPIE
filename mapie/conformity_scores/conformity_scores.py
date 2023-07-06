@@ -298,12 +298,18 @@ class ConformityScore(metaclass=ABCMeta):
         alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
 
         if method == "plus":
-            bound_low = self.get_quantile(self.get_estimation_distribution(
+            values_low = self.get_estimation_distribution(
                 X, y_pred_low, signed * conformity_scores
-            ), alpha_low, axis=1, method="lower")
-            bound_up = self.get_quantile(self.get_estimation_distribution(
+            )
+            values_up = self.get_estimation_distribution(
                 X, y_pred_up, conformity_scores
-            ), alpha_up, axis=1, method="higher")
+            )
+            bound_low = self.get_quantile(
+                values_low, alpha_low, axis=1, method="lower"
+            )
+            bound_up = self.get_quantile(
+                values_up, alpha_up, axis=1, method="higher"
+            )
         else:
             quantile_search = "higher" if self.sym else "lower"
             alpha_low = 1 - alpha_np if self.sym else alpha_np / 2
