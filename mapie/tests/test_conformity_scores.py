@@ -4,7 +4,7 @@ import pytest
 from mapie._typing import NDArray, ArrayLike
 from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore)
-from mapie.regression import EnsembleRegressor
+from mapie.regression.estimator import EnsembleRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold
 
