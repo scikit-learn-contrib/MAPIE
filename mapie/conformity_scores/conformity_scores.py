@@ -235,6 +235,7 @@ class ConformityScore(metaclass=ABCMeta):
         Returns
         -------
         NDArray
+            The quantile of the conformity scores.
         """
         quantile = np.column_stack([
             np_nanquantile(
@@ -258,7 +259,7 @@ class ConformityScore(metaclass=ABCMeta):
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
-        the estimator of ``EnsembleRegressor`` and the conformity scores.
+        the estimator of type ``EnsembleRegressor`` and the conformity scores.
 
         Parameters
         ----------
@@ -279,8 +280,11 @@ class ConformityScore(metaclass=ABCMeta):
             Boolean determining whether the predictions are ensembled or not.
 
         method: str
-            The method parameter of MapieRegressor : ``"base"``, ``"minmax"``
-            or ``"plus"``.
+            Method to choose for prediction interval estimates.
+            The ``"plus"`` method implies that the quantile is calculated
+            after estimating the bounds, whereas the other methods
+            (among the ``"naive"``, ``"base"`` or ``"minmax"`` methods,
+            for example) do the opposite.
 
         Returns
         -------
