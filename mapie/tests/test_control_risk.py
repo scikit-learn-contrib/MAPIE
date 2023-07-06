@@ -3,56 +3,67 @@ Testing for control_risk module.
 Testing for now risks for multilabel classification
 """
 import numpy as np
-# from numpy.typing import NDArray
 from mapie.control_risk.risks import (_compute_precision,
                                       _compute_recall)
 import pytest
 from typing import Union, List
 from numpy.typing import NDArray
-from mapie.control_risk.p_values import hoefdding_bentkus_p_value
+from mapie.control_risk.p_values import compute_hoefdding_bentkus_p_value
 from mapie.control_risk.ltt import (_ltt_procedure,
                                     _find_lambda_control_star)
 
 
 lambdas = np.array([0.5, 0.9])
+
 y_toy = np.stack([
     [1, 0, 1],
     [0, 1, 0],
     [1, 1, 0],
     [1, 1, 1],
 ])
+
 y_preds_proba = np.stack([
     [0.2, 0.6, 0.9],
     [0.8, 0.2, 0.6],
     [0.4, 0.8, 0.1],
     [0.6, 0.8, 0.7]
 ])
+
 y_preds_proba = np.expand_dims(y_preds_proba, axis=2)
+
 test_recall = np.array([
     [1/2, 1.],
     [1., 1.],
     [1/2, 1.],
     [0., 1.]
 ])
+
 test_precision = np.array([
     [1/2, 1.],
     [1., 1.],
     [0., 1.],
     [0., 1.]
 ])
+
 r_hat = np.array([
     0.5, 0.8
 ])
+
 n = 1100
+
 alpha = np.array([0.6])
+
 valid_index = [[
     0, 1
 ]]
+
 wrong_alpha = 0
+
 wrong_alpha_shape = np.array([
     [0.1, 0.2],
     [0.3, 0.4]
 ])
+
 wrong_delta = None
 
 
@@ -110,7 +121,7 @@ def test_compute_precision_with_wrong_shape() -> None:
 
 @pytest.mark.parametrize("alpha", [0.5, [0.5], [0.5, 0.9]])
 def test_p_values_different_alpha(alpha: Union[float, NDArray]) -> None:
-    result = hoefdding_bentkus_p_value(r_hat, n, alpha)
+    result = compute_hoefdding_bentkus_p_value(r_hat, n, alpha)
     assert isinstance(result, np.ndarray)
 
 
@@ -148,12 +159,12 @@ def test_warning_valid_index_empty() -> None:
 
 def test_invalid_alpha_hb() -> None:
     with pytest.raises(ValueError, match=r".*Invalid alpha"):
-        hoefdding_bentkus_p_value(r_hat, n, wrong_alpha)
+        compute_hoefdding_bentkus_p_value(r_hat, n, wrong_alpha)
 
 
 def test_invalid_shape_alpha_hb() -> None:
     with pytest.raises(ValueError, match=r".*Invalid alpha"):
-        hoefdding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
+        compute_hoefdding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
 
 
 def test_delta_none_ltt() -> None:

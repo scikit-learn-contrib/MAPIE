@@ -2,7 +2,7 @@ import numpy as np
 import warnings
 from numpy.typing import NDArray
 from typing import Tuple, List, Union, Optional, Any
-from .p_values import hoefdding_bentkus_p_value
+from .p_values import compute_hoefdding_bentkus_p_value
 
 
 def _ltt_procedure(
@@ -52,7 +52,7 @@ def _ltt_procedure(
             "Invalid delta: delta cannot be None while"
             + " using LTT for precision control. "
         )
-    p_values = hoefdding_bentkus_p_value(r_hat, n_obs, alpha_np)
+    p_values = compute_hoefdding_bentkus_p_value(r_hat, n_obs, alpha_np)
     valid_index = []
     for i in range(len(alpha_np)):
         l_index = np.where(p_values[:, i] <= delta/n_obs)[0].tolist()
@@ -74,7 +74,7 @@ def _find_lambda_control_star(
     r_hat : NDArray of shape (n_samples, )
         Empirical risk of metric_control with respect
         to the lambdas.
-        
+
     valid_index: NDArray of shape (n_alpha, ).
         Contain the valid index that satisfy fwer control
         for each alpha (shape aren't the same for each alpha)

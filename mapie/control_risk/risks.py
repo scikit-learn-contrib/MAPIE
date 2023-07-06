@@ -11,20 +11,25 @@ def _compute_recall(
     y: NDArray
 ) -> NDArray:
     """
-    Compute the risks (recall)
+    In multi-label-classification, compute the
+    recall per observation for each different
+    thresholds lambdas.
 
     Parameters
     ----------
-    y_pred_proba : NDArray of shape (n_samples, n_labels, 1)
-        Predicted probabilities for each label and each observation
-    y : NDArray of shape (n_samples, n_labels)
-        True labels.
-    lambdas: NDArray of shape (100, )
-        Threshold that permit to compute recall.
+    y_pred_proba: NDArray of shape (n_samples, n_labels, 1)
+    Predicted probabilities for each label and each observation
+
+    y: NDArray of shape (n_samples, n_labels)
+    True labels.
+
+    lambdas: NDArray of shape (n_lambdas, )
+    Threshold that permit to compute recall.
+
     Returns
     -------
     NDArray of shape (n_samples, n_labels, n_lambdas)
-        Risks for each observation and each value of lambda.
+    Risks for each observation and each value of lambda.
     """
     if y_pred_proba.ndim != 3:
         raise ValueError(
@@ -52,7 +57,7 @@ def _compute_recall(
 
     y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
     risks = 1 - (
-        (y_pred_th * y_repeat).sum(axis=1) /
+        (_TP(y_pred_th, y_repeat)) /
         y.sum(axis=1)[:, np.newaxis]
     )
     return risks
@@ -64,15 +69,21 @@ def _compute_precision(
     y: NDArray
 ) -> NDArray:
     """
-    Compute the risk (precision)
+    In multi-label-classification, compute the
+    precision per observation for each different
+    thresholds lambdas.
+
     Parameters
     ----------
-    y_pred_proba : NDArray of shape (n_samples, n_labels, 1)
-        Predicted probabilities for each label and each observation
-    y : NDArray of shape (n_samples, n_labels)
-        True labels.
-    lambdas: NDArray of shape (100, )
-        Threshold that permit to compute precision score.
+    y_pred_proba: NDArray of shape (n_samples, n_labels, 1)
+    Predicted probabilities for each label and each observation
+
+    y: NDArray of shape (n_samples, n_labels)
+    True labels.
+
+    lambdas: NDArray of shape (n_lambdas, )
+    Threshold that permit to compute precision score.
+
     Returns
     -------
     NDArray of shape (n_samples, n_labels, n_lambdas)
@@ -104,21 +115,24 @@ def _compute_precision(
     y_pred_th = (y_pred_proba_repeat > lambdas).astype(int)
 
     y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
-    risks = 1 - (VP(y_pred_th, y_repeat))/y_pred_th.sum(axis=1)
+    risks = 1 - (_TP(y_pred_th, y_repeat))/y_pred_th.sum(axis=1)
     risks[np.isnan(risks)] = 1
 
     return risks
 
 
-def VP(
+def _TP(
     y_pred_th: NDArray,
     y_repeat: NDArray
 ) -> NDArray:
     """
+    Compute the number of true positif.
+
     Parameters
     ----------
     y_pred_proba : NDArray of shape (n_samples, n_labels, 1)
         Predicted probabilities for each label and each observation
+
     y : NDArray of shape (n_samples, n_labels)
         True labels.
 
@@ -126,5 +140,5 @@ def VP(
     -------
     Return Number of TP
     """
-    vp = (y_pred_th * y_repeat).sum(axis=1)
-    return vp
+    tp = (y_pred_th * y_repeat).sum(axis=1)
+    return tp

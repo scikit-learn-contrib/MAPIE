@@ -125,7 +125,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
      [False  True False]]
     """
     valid_methods_ = ["crc", "rcps", "ltt"]
-    # valid_metric_ = ['precision', 'recall', 'f1_score', ['precision', 'OOD']]
     valid_metric_ = ['precision', 'recall']
     valid_methods_by_metric_ = {
         "precision": ["ltt"],
@@ -144,18 +143,18 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
+        metric_control: Optional[str] = 'recall',
+        method: Optional[str] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
-        verbose: int = 0,
-        metric_control: Optional[str] = 'recall',
-        method: Optional[str] = None
+        verbose: int = 0
     ) -> None:
         self.estimator = estimator
+        self.metric_control = metric_control
+        self.method = method
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
-        self.metric_control = metric_control
-        self.method = method
 
     def _check_parameters(self) -> None:
         """
@@ -170,21 +169,30 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         check_verbose(self.verbose)
         check_random_state(self.random_state)
 
-    # def _check_method(self) -> None:
-    #     """
-    #     Check that the specified method is valid
+    def _check_method(self) -> None:
+        """
+        Check that the specified method is valid
 
-    #     Raises
-    #     ------
-    #     ValueError
-    #         Raise error if the name of the method is not
-    #         in self.valid_methods_
-    #     """
-    #     if self.method not in self.valid_methods_:
-    #         raise ValueError(
-    #             "Invalid method. "
-    #             "Allowed methods are " + " or ".join(self.valid_methods_)
-    #         )
+        Raises
+        ------
+        ValueError
+            Raise error if the name of the method is not
+            in self.valid_methods_
+        """
+        self.method = cast(str, self.method)
+        self.metric_control = cast(str, self.metric_control)
+        
+        if self.method not in self.valid_methods_by_metric_[
+            self.metric_control
+        ]:
+            raise ValueError(
+                "Invalid method for metric: "
+                + "You are controlling " + self.metric_control
+                + " And you are using invalid method: " + self.method
+                + ". Use instead: " + "".join(self.valid_methods_by_metric_[
+                    self.metric_control]
+                    )
+            )
 
     def _check_all_labelled(self, y: NDArray) -> None:
         """
@@ -414,17 +422,16 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
                 + "even if the bound is not ``None``, it won't be"
-                + "taken into account. "
+                + "taken into account."
             )
         elif (bound is not None) and (self.method == "ltt"):
             warnings.warn(
                 "WARNING: you are using ltt method hence "
                 + "even if bound is not ``None``, it won't be"
-                + "taken into account. "
+                + "taken into account."
             )
 
-    def _check_metric_control(self
-                              ):
+    def _check_metric_control(self):
         """
         Check that the metrics to control are valid
         (can be a string or list of string.)
@@ -432,7 +439,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         if self.metric_control not in self.valid_metric_:
             raise ValueError(
                 "Invalid metric. "
-                "Allowed scores are" + " or ".join(self.valid_metric_)
+                "Allowed scores are " + " or ".join(self.valid_metric_)
             )
 
         if self.method is None:
@@ -440,17 +447,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 self.method = "crc"
             else:
                 self.method = "ltt"
-        if self.method not in self.valid_methods_by_metric_[
-            self.metric_control
-        ]:
-            raise ValueError(
-                "Invalid method for metric: "
-                + "You are controlling " + self.metric_control
-                + " And you are using invalid method: " + self.method
-                + ". Use instead: " + "".join(self.valid_methods_by_metric_[
-                    self.metric_control
-                ])
-            )
 
     def _transform_pred_proba(
         self,
@@ -680,7 +676,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         first_call = self._check_partial_fit_first_call()
         self._check_parameters()
         self._check_metric_control()
-        # self._check_method()
+        self._check_method()
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
@@ -771,18 +767,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Parameters
         ----------
         X: ArrayLike of shape (n_samples, n_features)
-            Test data.
-        method : Optional[str]
-            Method to choose for prediction interval estimates.
-            Choose among:
-
-            - "crc", for Conformal Risk Control. See [1] for
-            more details.
-
-            - "rcps", based on computation of the upper bound
-            of the risk. See [2] for more details.
-
-            By default "crc".
 
         alpha : Optional[Union[float, Iterable[float]]]
             Can be a float, a list of floats, or a ``ArrayLike`` of floats.
@@ -792,6 +776,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             sets.
             ``alpha`` is the complement of the target coverage level.
             By default ``None``.
+
         delta : Optional[float]
             Can be a float, or ``None``. If using method="rcps", then it
             can not be set to ``None``.
@@ -800,6 +785,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             Lower ``delta`` produce larger (more conservative) prediction
             sets.
             By default ``None``.
+
         bound : Optional[Union[str, ``None``]]
             Method used to compute the Upper Confidence Bound of the
             average risk. Only necessary with the RCPS method.
@@ -848,17 +834,19 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                                                              self.n_obs)
             self._check_valid_index()
             self.lambdas_star, self.r_star = _find_lambda_control_star(
-               self.r_hat, self.valid_index, self.lambdas)
-
-            return y_pred, y_pred_proba_array
+               self.r_hat,
+               self.valid_index,
+               self.lambdas
+            )
 
         else:
             self.r_hat, self.r_hat_plus = self._get_r_hat_plus(
                 bound,
                 delta,
             )
-            self.lambdas_star = self._find_lambda_star(self.r_hat_plus,
-                                                       alpha_np)
+            self.lambdas_star = self._find_lambda_star(
+                self.r_hat_plus, alpha_np
+            )
             y_pred_proba_array = (
                 y_pred_proba_array >
                 self.lambdas_star[np.newaxis, np.newaxis, :]
