@@ -16,6 +16,7 @@ def _ltt_procedure(
     should be precision for multi-label-classification.
     Note that we will do a multipletest for r_hat that are
     less than level alpha.
+
     Procedure:
         - compute p_values for each lambdas descretize
         - Apply a fwer algorithm, here Bonferonni correction
@@ -27,9 +28,11 @@ def _ltt_procedure(
     r_hat: NDArray of shape (n_samples, )
         Empirical risk of metric_control with respect
         to the lambdas.
-        alpha: NDArray of control level. The empirical risk should
+
+    alpha: NDArray of control level. The empirical risk should
         be less than alpha with probability 1-delta.
-        delta: Float value
+
+    delta: Float value.
         Correspond to proportion of failure we don't
         want to exceed.
 
@@ -103,9 +106,9 @@ def _find_lambda_control_star(
             l_lambda_star.append([])
             l_r_star.append([])
         else:
-            l_lambda_star.append(lambdas[valid_index[i][np.argmin(
-                r_hat[valid_index[i]])]])
+            idx = np.argmin(r_hat[valid_index[i]])
+            l_lambda_star.append(lambdas[valid_index[i][idx]])
             l_r_star.append(
-                r_hat[valid_index[i][np.argmin(r_hat[valid_index[i]])]])
+                r_hat[valid_index[i][idx]])
 
     return l_lambda_star, l_r_star
