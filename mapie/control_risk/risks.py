@@ -57,7 +57,7 @@ def _compute_recall(
 
     y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
     risks = 1 - (
-        (_TP(y_pred_th, y_repeat)) /
+        (_true_positive(y_pred_th, y_repeat)) /
         y.sum(axis=1)[:, np.newaxis]
     )
     return risks
@@ -115,13 +115,13 @@ def _compute_precision(
     y_pred_th = (y_pred_proba_repeat > lambdas).astype(int)
 
     y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
-    risks = 1 - (_TP(y_pred_th, y_repeat))/y_pred_th.sum(axis=1)
+    risks = 1 - (_true_positive(y_pred_th, y_repeat))/y_pred_th.sum(axis=1)
     risks[np.isnan(risks)] = 1
 
     return risks
 
 
-def _TP(
+def _true_positive(
     y_pred_th: NDArray,
     y_repeat: NDArray
 ) -> NDArray:
