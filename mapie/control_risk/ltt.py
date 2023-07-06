@@ -83,7 +83,7 @@ def _find_lambda_control_star(
         Contain the valid index that satisfy fwer control
         for each alpha (shape aren't the same for each alpha)
 
-        lambdas: Discretize parameters use for ltt procedure.
+    lambdas: Discretize parameters use for ltt procedure.
 
     Returns
     -------

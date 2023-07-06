@@ -85,7 +85,7 @@ def _h1(
         to the lambdas.
 
     alpha: NDArray of alphas level of
-        shape (n_alpha), determined by user.
+        shape (n_alpha, ), determined by user.
 
     Returns
     -------
