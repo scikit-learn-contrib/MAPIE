@@ -1,7 +1,8 @@
 import numpy as np
 from numpy.typing import NDArray
-from typing import Iterable, Union
+from typing import Iterable, Union, cast, Optional
 from scipy.stats import binom
+from mapie.utils import check_alpha
 
 
 def compute_hoefdding_bentkus_p_value(
@@ -45,20 +46,7 @@ def compute_hoefdding_bentkus_p_value(
     hb_p_values: NDArray of shape
     (n_lambdas, n_alpha).
     """
-    if isinstance(alpha, float):
-        alpha_np = np.array([alpha])
-    elif isinstance(alpha, Iterable):
-        alpha_np = np.array(alpha)
-    else:
-        raise ValueError(
-            "Invalid alpha. Allowed values are float or NDArray."
-        )
-    if len(alpha_np.shape) != 1:
-        raise ValueError(
-            "Invalid alpha."
-            "Please provide a one-dimensional list of values."
-        )
-
+    alpha_np = cast(NDArray, check_alpha(alpha))
     alpha_np = alpha_np[:, np.newaxis]
     r_hat_repeat = np.repeat(
         np.expand_dims(r_hat, axis=1),
