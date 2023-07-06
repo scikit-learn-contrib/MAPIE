@@ -19,12 +19,6 @@ def compute_hoefdding_bentkus_p_value(
     scipy.stats). The p_value is introduced in
     learn then test paper.
 
-    References
-    ----------
-    [1] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
-    M. I., & Lei, L. (2021). Learn then test:
-    "Calibrating predictive algorithms to achieve risk control".
-
     Parameters
     ----------
     r_hat: NDArray of shape (n_lambdas, )
@@ -37,14 +31,19 @@ def compute_hoefdding_bentkus_p_value(
         Correspond to the number of observations in
         dataset.
 
-    alpha: NDArray of shape (n_alpha) chosen by user.
+    alpha: NDArray of shape (n_alpha, ) chosen by user.
         Correspond to the value that r_hat should not
         exceed.
 
     Returns
     -------
-    hb_p_values: NDArray of shape
-        (n_lambdas, n_alpha).
+    hb_p_values: NDArray of shape (n_lambdas, n_alpha).
+
+    References
+    ----------
+    [1] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
+    M. I., & Lei, L. (2021). Learn then test:
+    "Calibrating predictive algorithms to achieve risk control".
     """
     alpha_np = cast(NDArray, check_alpha(alpha))
     alpha_np = alpha_np[:, np.newaxis]
