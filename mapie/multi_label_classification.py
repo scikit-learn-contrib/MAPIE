@@ -17,7 +17,7 @@ from ._typing import ArrayLike, NDArray
 from .utils import check_alpha, check_n_jobs, check_verbose
 
 from .control_risk.ltt import _find_lambda_control_star, _ltt_procedure
-from .control_risk.risks import _compute_precision, _compute_recall
+from .control_risk.risks import _compute_risk_precision, _compute_risk_recall
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
@@ -696,11 +696,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             self.theta_ = X.shape[1]
 
             if self.metric_control == "recall":
-                self.risks = _compute_recall(
+                self.risks = _compute_risk_recall(
                     self.lambdas, y_pred_proba_array, y
                 )
             else:  # self.metric_control == "precision"
-                self.risks = _compute_precision(
+                self.risks = _compute_risk_precision(
                     self.lambdas, y_pred_proba_array, y
                 )
         else:
@@ -711,13 +711,13 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
             if self.metric_control == "recall":
-                partial_risk = _compute_recall(
+                partial_risk = _compute_risk_recall(
                     self.lambdas,
                     y_pred_proba_array,
                     y
                 )
             else:  # self.metric_control == "precision"
-                partial_risk = _compute_precision(
+                partial_risk = _compute_risk_precision(
                     self.lambdas,
                     y_pred_proba_array,
                     y

@@ -9,8 +9,8 @@ from mapie._typing import NDArray
 
 import numpy as np
 
-from mapie.control_risk.risks import (_compute_precision,
-                                      _compute_recall)
+from mapie.control_risk.risks import (_compute_risk_precision,
+                                      _compute_risk_recall)
 
 from mapie.control_risk.p_values import compute_hoeffdding_bentkus_p_value
 
@@ -69,13 +69,13 @@ wrong_delta = None
 
 def test_compute_recall_equal() -> None:
     """Test that compute_recall give good result"""
-    recall = _compute_recall(lambdas, y_preds_proba, y_toy)
+    recall = _compute_risk_recall(lambdas, y_preds_proba, y_toy)
     np.testing.assert_equal(recall, test_recall)
 
 
 def test_compute_precision() -> None:
     """Test that compute_precision give good result"""
-    precision = _compute_precision(lambdas, y_preds_proba, y_toy)
+    precision = _compute_risk_precision(lambdas, y_preds_proba, y_toy)
     np.testing.assert_equal(precision, test_precision)
 
 
@@ -83,7 +83,7 @@ def test_recall_with_zero_sum_is_equal_nan() -> None:
     """Test compute_recall with nan values"""
     y_toy = np.zeros((4, 3))
     y_preds_proba = np.random.rand(4, 3, 1)
-    recall = _compute_recall(lambdas, y_preds_proba, y_toy)
+    recall = _compute_risk_recall(lambdas, y_preds_proba, y_toy)
     np.testing.assert_array_equal(recall, np.empty_like(recall))
 
 
@@ -91,40 +91,40 @@ def test_precision_with_zero_sum_is_equal_ones() -> None:
     """Test compute_precision with nan values"""
     y_toy = np.random.rand(4, 3)
     y_preds_proba = np.zeros((4, 3, 1))
-    precision = _compute_precision(lambdas, y_preds_proba, y_toy)
+    precision = _compute_risk_precision(lambdas, y_preds_proba, y_toy)
     np.testing.assert_array_equal(precision, np.ones_like(precision))
 
 
 def test_compute_recall_shape() -> None:
     """Test shape when using _compute_recall"""
-    recall = _compute_recall(lambdas, y_preds_proba, y_toy)
+    recall = _compute_risk_recall(lambdas, y_preds_proba, y_toy)
     np.testing.assert_equal(recall.shape, test_recall.shape)
 
 
 def test_compute_precision_shape() -> None:
     """Test shape when using _compute_precision"""
-    precision = _compute_precision(lambdas, y_preds_proba, y_toy)
+    precision = _compute_risk_precision(lambdas, y_preds_proba, y_toy)
     np.testing.assert_equal(precision.shape, test_precision.shape)
 
 
 def test_compute_recall_with_wrong_shape() -> None:
     """Test error when wrong shape in _compute_recall"""
     with pytest.raises(ValueError, match=r".*y_pred_proba should be a 3d*"):
-        _compute_recall(lambdas, y_preds_proba.squeeze(), y_toy)
+        _compute_risk_recall(lambdas, y_preds_proba.squeeze(), y_toy)
     with pytest.raises(ValueError, match=r".*y should be a 2d*"):
-        _compute_recall(lambdas, y_preds_proba, np.expand_dims(y_toy, 2))
+        _compute_risk_recall(lambdas, y_preds_proba, np.expand_dims(y_toy, 2))
     with pytest.raises(ValueError, match=r".*could not be broadcast*"):
-        _compute_recall(lambdas, y_preds_proba, y_toy[:-1])
+        _compute_risk_recall(lambdas, y_preds_proba, y_toy[:-1])
 
 
 def test_compute_precision_with_wrong_shape() -> None:
     """Test shape when using _compute_precision"""
     with pytest.raises(ValueError, match=r".*y_pred_proba should be a 3d*"):
-        _compute_precision(lambdas, y_preds_proba.squeeze(), y_toy)
+        _compute_risk_precision(lambdas, y_preds_proba.squeeze(), y_toy)
     with pytest.raises(ValueError, match=r".*y should be a 2d*"):
-        _compute_precision(lambdas, y_preds_proba, np.expand_dims(y_toy, 2))
+        _compute_risk_precision(lambdas, y_preds_proba, np.expand_dims(y_toy, 2))
     with pytest.raises(ValueError, match=r".*could not be broadcast*"):
-        _compute_precision(lambdas, y_preds_proba, y_toy[:-1])
+        _compute_risk_precision(lambdas, y_preds_proba, y_toy[:-1])
 
 
 @pytest.mark.parametrize("alpha", [0.5, [0.5], [0.5, 0.9]])
