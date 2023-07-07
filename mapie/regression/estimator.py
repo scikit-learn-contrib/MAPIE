@@ -266,8 +266,8 @@ class EnsembleRegressor(RegressorMixin):
         sample which one to integrate, and aggregate to produce phi-{t}(x_t)
         for each training sample x_t.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         x: ArrayLike of shape (n_samples_test, n_estimators)
             Array of predictions, made by the refitted estimators,
             for each sample of the testing set.
@@ -277,8 +277,8 @@ class EnsembleRegressor(RegressorMixin):
             of a given estimator into the aggregation, for each training
             sample.
 
-        Returns:
-        --------
+        Returns
+        -------
         ArrayLike of shape (n_samples_test,)
             Array of aggregated predictions for each testing sample.
         """
@@ -450,7 +450,8 @@ class EnsembleRegressor(RegressorMixin):
     def predict(
         self,
         X: ArrayLike,
-        ensemble: bool = False
+        ensemble: bool = False,
+        return_multi_pred: bool = True
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample
@@ -473,6 +474,9 @@ class EnsembleRegressor(RegressorMixin):
 
             By default ``False``.
 
+        return_multi_pred: bool
+
+
         Returns
         -------
         Tuple[NDArray, NDArray, NDArray]
@@ -480,7 +484,6 @@ class EnsembleRegressor(RegressorMixin):
             - The multiple predictions for the lower bound of the intervals.
             - The multiple predictions for the upper bound of the intervals.
         """
-
         check_is_fitted(self, self.fit_attributes)
 
         y_pred = self.single_estimator_.predict(X)
@@ -500,4 +503,8 @@ class EnsembleRegressor(RegressorMixin):
 
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)
-        return y_pred, y_pred_multi_low, y_pred_multi_up
+
+        if return_multi_pred:
+            return y_pred, y_pred_multi_low, y_pred_multi_up
+        else:
+            return y_pred
