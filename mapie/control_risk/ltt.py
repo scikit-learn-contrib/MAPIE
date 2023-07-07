@@ -1,7 +1,10 @@
-import numpy as np
 import warnings
-from numpy.typing import NDArray
-from typing import Tuple, List, Union, Optional, Any
+
+from typing import Tuple, List, Optional, Any
+from mapie._typing import NDArray, ArrayLike
+
+import numpy as np
+
 from .p_values import compute_hoefdding_bentkus_p_value
 
 
@@ -19,19 +22,20 @@ def _ltt_procedure(
     less than level ``alpha_np``.
 
     Procedure:
-        - Calculate p-values for each lambdas descretize
+        - Calculate p-values for each lambdas descretized
         - Apply a fwer algorithm, here Bonferonni correction
         - Return the index lambdas that give you the control
         at alpha level
 
     Parameters
     ----------
-    r_hat: NDArray of shape (n_samples, )
+    r_hat: NDArray of shape (n_lambdas, ).
         Empirical risk of metric_control with respect
         to the lambdas.
 
-    alpha: NDArray of control level. The empirical risk should
-        be less than alpha with probability 1-delta.
+    alpha: NDArray of shape (n_alpha, ) control level.
+        The empirical risk should be less than alpha with
+        probability 1-delta.
 
     delta: Float value.
         Correspond to proportion of failure we don't
@@ -39,12 +43,12 @@ def _ltt_procedure(
 
     Returns
     -------
-    valid_index: NDArray of shape (n_alpha, ).
+    valid_index: List[List[Any]].
         Contain the valid index that satisfy fwer control
-        for each alpha (shape aren't the same for each alpha)
+        for each alpha (length aren't the same for each alpha).
 
-    p_values: NDArray of shape (n_lambda, n_alpha)
-        Contains the values of p_value for different alpha
+    p_values: NDArray of shape (n_lambda, n_alpha).
+        Contains the values of p_value for different alpha.
 
     References
     ----------
@@ -69,31 +73,32 @@ def _find_lambda_control_star(
     r_hat: NDArray,
     valid_index: List[List[Any]],
     lambdas: NDArray
-) -> Tuple[Union[NDArray, List], Union[NDArray, List]]:
+) -> Tuple[ArrayLike, ArrayLike]:
     """
     Return the lambda that give the maximum precision with a control
     guarantee of level delta.
 
     Parameters
     ----------
-    r_hat : NDArray of shape (n_lambdas, n_alpha)
+    r_hat: NDArray of shape (n_lambdas, n_alpha)
         Empirical risk of metric_control with respect
         to the lambdas.
 
-    valid_index: NDArray of shape (n_alpha, ).
+    valid_index: List[List[Any]].
         Contain the valid index that satisfy fwer control
-        for each alpha (shape aren't the same for each alpha)
+        for each alpha (length aren't the same for each alpha).
 
     lambdas: NDArray of shape (n_lambda, )
         Discretize parameters use for ltt procedure.
 
     Returns
     -------
-    l_lambda_star: NDArray of shape (n_alpha, )
-        the lambda that give the highest precision
+    l_lambda_star: ArrayLike of length n_alpha.
+        The lambda that give the highest precision
+        for a given alpha.
 
-    r_star: NDArray of shape (n_alpha, )
-        the value of lowest risk.
+    r_star: ArrayLike of length n_alpha
+        The value of lowest risk for a given alpha.
     """
     if [] in valid_index:
         warnings.warn(

@@ -15,6 +15,7 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 
 from ._typing import ArrayLike, NDArray
 from .utils import check_alpha, check_n_jobs, check_verbose
+
 from .control_risk.ltt import _ltt_procedure, _find_lambda_control_star
 from .control_risk.risks import _compute_precision, _compute_recall
 
@@ -191,7 +192,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 + " And you are using invalid method: " + self.method
                 + ". Use instead: " + "".join(self.valid_methods_by_metric_[
                     self.metric_control]
-                    )
+                )
             )
 
     def _check_all_labelled(self, y: NDArray) -> None:
@@ -287,13 +288,13 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         """
         if (self.metric_control == 'precision') and (
             [] in self.valid_index
-                ):
+        ):
             warnings.warn(
                 "Warning: LTT method has returned at least"
                 + "one empty sequence."
                 + "you have to take more risk by augmenting alpha"
                 + "if you want result."
-                )
+            )
 
     def _check_estimator(
         self,
@@ -713,9 +714,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             self.single_estimator_ = estimator
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-            partial_risk = _compute_recall(self.lambdas,
-                                           y_pred_proba_array,
-                                           y)
+            partial_risk = _compute_recall(
+                self.lambdas,
+                y_pred_proba_array,
+                y
+            )
             self.risks = np.concatenate([self.risks, partial_risk], axis=0)
 
         return self
@@ -802,7 +805,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         if alpha is not ``None``.
         """
 
-        # self._check_method()
         self._check_delta(delta)
         self._check_bound(bound)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
@@ -836,15 +838,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             )
             self._check_valid_index()
             self.lambdas_star, self.r_star = _find_lambda_control_star(
-               self.r_hat,
-               self.valid_index,
-               self.lambdas
+               self.r_hat, self.valid_index, self.lambdas
             )
 
         else:
             self.r_hat, self.r_hat_plus = self._get_r_hat_plus(
-                bound,
-                delta,
+                bound, delta,
             )
             self.lambdas_star = self._find_lambda_star(
                 self.r_hat_plus, alpha_np

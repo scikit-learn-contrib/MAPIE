@@ -1,7 +1,8 @@
 from typing import cast
 
+from mapie._typing import NDArray
+
 import numpy as np
-from numpy.typing import NDArray
 from sklearn.utils.validation import column_or_1d
 
 
@@ -18,7 +19,7 @@ def _compute_recall(
     Parameters
     ----------
     y_pred_proba: NDArray of shape (n_samples, n_labels, 1)
-        Predicted probabilities for each label and each observation
+        Predicted probabilities for each label and each observation.
 
     y: NDArray of shape (n_samples, n_labels)
         True labels.
@@ -57,7 +58,7 @@ def _compute_recall(
 
     y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
     risks = 1 - (
-        (_true_positive(y_pred_th, y_repeat)) /
+        _true_positive(y_pred_th, y_repeat) /
         y.sum(axis=1)[:, np.newaxis]
     )
     return risks
@@ -76,7 +77,7 @@ def _compute_precision(
     Parameters
     ----------
     y_pred_proba: NDArray of shape (n_samples, n_labels, 1)
-        Predicted probabilities for each label and each observation
+        Predicted probabilities for each label and each observation.
 
     y: NDArray of shape (n_samples, n_labels)
         True labels.
@@ -87,7 +88,7 @@ def _compute_precision(
     Returns
     -------
     NDArray of shape (n_samples, n_labels, n_lambdas)
-        Risks for each observation and each value of lambda
+        Risks for each observation and each value of lambda.
     """
     if y_pred_proba.ndim != 3:
         raise ValueError(
@@ -114,8 +115,8 @@ def _compute_precision(
     y_pred_th = (y_pred_proba_repeat > lambdas).astype(int)
 
     y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
-    risks = 1 - (_true_positive(y_pred_th, y_repeat))/y_pred_th.sum(axis=1)
-    risks[np.isnan(risks)] = 1
+    risks = 1 - _true_positive(y_pred_th, y_repeat)/y_pred_th.sum(axis=1)
+    risks[np.isnan(risks)] = 1  # nan value indicate high risks.
 
     return risks
 
@@ -130,14 +131,14 @@ def _true_positive(
     Parameters
     ----------
     y_pred_proba : NDArray of shape (n_samples, n_labels, 1)
-        Predicted probabilities for each label and each observation
+        Predicted probabilities for each label and each observation.
 
-    y : NDArray of shape (n_samples, n_labels)
+    y: NDArray of shape (n_samples, n_labels)
         True labels.
 
     Returns
     -------
-    Return Number of TP
+    Return Number of TP.
     """
     tp = (y_pred_th * y_repeat).sum(axis=1)
     return tp

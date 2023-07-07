@@ -1,13 +1,15 @@
-import numpy as np
-from numpy.typing import NDArray
 from typing import Union, cast
-from scipy.stats import binom
+
+from mapie._typing import NDArray
 from mapie.utils import check_alpha
+
+import numpy as np
+from scipy.stats import binom
 
 
 def compute_hoefdding_bentkus_p_value(
     r_hat: NDArray,
-    n: int,
+    n_obs: int,
     alpha: Union[float, NDArray]
 ) -> NDArray:
     """
@@ -31,7 +33,7 @@ def compute_hoefdding_bentkus_p_value(
         Correspond to the number of observations in
         dataset.
 
-    alpha: NDArray of shape (n_alpha, ) chosen by user.
+    alpha: Float or NDArray of shape (n_alpha, ) chosen by user.
         Correspond to the value that r_hat should not
         exceed.
 
@@ -57,14 +59,21 @@ def compute_hoefdding_bentkus_p_value(
         len(r_hat),
         axis=0
     )
-    hoeffding_p_value = np.exp(-n * _h1(np.where(
-        r_hat_repeat > alpha_repeat, alpha_repeat, r_hat_repeat),
-        alpha_repeat))
-    bentkus_p_value = np.e * binom.cdf(np.ceil(n * r_hat_repeat),
-                                       n, alpha_repeat)
-    hb_p_value = np.where(bentkus_p_value > hoeffding_p_value,
-                          hoeffding_p_value,
-                          bentkus_p_value)
+    hoeffding_p_value = np.exp(
+        -n_obs * _h1(np.where(
+            r_hat_repeat > alpha_repeat,
+            alpha_repeat,
+            r_hat_repeat
+            ),
+            alpha_repeat)
+    )
+    bentkus_p_value = np.e * binom.cdf(np.ceil(n_obs * r_hat_repeat),
+                                       n_obs, alpha_repeat)
+    hb_p_value = np.where(
+        bentkus_p_value > hoeffding_p_value,
+        hoeffding_p_value,
+        bentkus_p_value
+    )
     return hb_p_value
 
 
@@ -76,7 +85,8 @@ def _h1(
     This function allow us to compute
     the tighter version of hoeffding inequality.
     This function is then used in the
-    hoeffding_bentkus_p_value function.
+    hoeffding_bentkus_p_value function for the
+    computation of p-values.
 
     Parameters
     ----------
