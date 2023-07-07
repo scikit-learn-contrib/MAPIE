@@ -12,11 +12,10 @@ import numpy as np
 from mapie.control_risk.risks import (_compute_precision,
                                       _compute_recall)
 
-from mapie.control_risk.p_values import compute_hoefdding_bentkus_p_value
+from mapie.control_risk.p_values import compute_hoeffdding_bentkus_p_value
 
 from mapie.control_risk.ltt import (_ltt_procedure,
                                     _find_lambda_control_star)
-
 
 lambdas = np.array([0.5, 0.9])
 
@@ -50,17 +49,13 @@ test_precision = np.array([
     [0., 1.]
 ])
 
-r_hat = np.array([
-    0.5, 0.8
-])
+r_hat = np.array([0.5, 0.8])
 
 n = 1100
 
 alpha = np.array([0.6])
 
-valid_index = [[
-    0, 1
-]]
+valid_index = [[0, 1]]
 
 wrong_alpha = 0
 
@@ -135,7 +130,7 @@ def test_compute_precision_with_wrong_shape() -> None:
 @pytest.mark.parametrize("alpha", [0.5, [0.5], [0.5, 0.9]])
 def test_p_values_different_alpha(alpha: Union[float, NDArray]) -> None:
     """Test type for different alpha for p_values"""
-    result = compute_hoefdding_bentkus_p_value(r_hat, n, alpha)
+    result = compute_hoeffdding_bentkus_p_value(r_hat, n, alpha)
     assert isinstance(result, np.ndarray)
 
 
@@ -171,21 +166,22 @@ def test_find_lambda_control_star_output(valid_index: List[List[int]]) -> None:
 def test_warning_valid_index_empty() -> None:
     """Test warning sent when empty list"""
     valid_index = [[]]  # type: List[List[int]]
-    with pytest.warns(UserWarning,
-                      match=r".*At least one sequence is empty*"):
+    with pytest.warns(
+        UserWarning, match=r".*At least one sequence is empty*"
+    ):
         _find_lambda_control_star(r_hat, valid_index, lambdas)
 
 
 def test_invalid_alpha_hb() -> None:
     """Test error message when invalid alpha"""
     with pytest.raises(ValueError, match=r".*Invalid alpha"):
-        compute_hoefdding_bentkus_p_value(r_hat, n, wrong_alpha)
+        compute_hoeffdding_bentkus_p_value(r_hat, n, wrong_alpha)
 
 
 def test_invalid_shape_alpha_hb() -> None:
     """Test error message when invalid alpha shape"""
     with pytest.raises(ValueError, match=r".*Invalid alpha"):
-        compute_hoefdding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
+        compute_hoeffdding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
 
 
 def test_delta_none_ltt() -> None:

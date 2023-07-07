@@ -5,7 +5,7 @@ from mapie._typing import NDArray, ArrayLike
 
 import numpy as np
 
-from .p_values import compute_hoefdding_bentkus_p_value
+from .p_values import compute_hoeffdding_bentkus_p_value
 
 
 def _ltt_procedure(
@@ -17,11 +17,12 @@ def _ltt_procedure(
     """
     Apply the Learn-Then-Test procedure for risk control.
     This procedure is called in multi-label-classification
-    if ``metric=precision``.
+    if ``metric=precision``, this will apply learn then test
+    procedure for precision control.
     Note that we will do a multiple test for ``r_hat`` that are
     less than level ``alpha_np``.
 
-    Procedure:
+    The procedure follows the instructions in [1]:
         - Calculate p-values for each lambdas descretized
         - Apply a fwer algorithm, here Bonferonni correction
         - Return the index lambdas that give you the control
@@ -33,11 +34,13 @@ def _ltt_procedure(
         Empirical risk of metric_control with respect
         to the lambdas.
 
-    alpha: NDArray of shape (n_alpha, ) control level.
+    alpha_np: NDArray of shape (n_alpha, ).
+        Contains the different alphas control level.
         The empirical risk should be less than alpha with
         probability 1-delta.
 
-    delta: Float value.
+    delta: float.
+        Probability of not controlling empirical risk.
         Correspond to proportion of failure we don't
         want to exceed.
 
@@ -59,9 +62,9 @@ def _ltt_procedure(
     if delta is None:
         raise ValueError(
             "Invalid delta: delta cannot be None while"
-            + " using LTT for precision control. "
+            + " controlling precision with LTT. "
         )
-    p_values = compute_hoefdding_bentkus_p_value(r_hat, n_obs, alpha_np)
+    p_values = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha_np)
     valid_index = []
     for i in range(len(alpha_np)):
         l_index = np.where(p_values[:, i] <= delta/n_obs)[0].tolist()
@@ -86,7 +89,11 @@ def _find_lambda_control_star(
     ----------
     r_hat: NDArray of shape (n_lambdas, n_alpha)
         Empirical risk of metric_control with respect
-        to the lambdas.
+        to the lambdas and to the alphas.
+        Here, lambdas are thresholds that impact decision-making
+        and therefore the empirical risk.
+        Alphas are levels of empirical risk control such that
+        the empirical risk is less than alpha.
 
     valid_index: List[List[Any]].
         Contain the valid index that satisfy fwer control
@@ -97,11 +104,11 @@ def _find_lambda_control_star(
 
     Returns
     -------
-    l_lambda_star: ArrayLike of length n_alpha.
+    l_lambda_star: ArrayLike of shape (n_alpha, ).
         The lambda that give the highest precision
         for a given alpha.
 
-    r_star: ArrayLike of length n_alpha
+    r_star: ArrayLike of shape (n_alpha, ).
         The value of lowest risk for a given alpha.
     """
     if [] in valid_index:

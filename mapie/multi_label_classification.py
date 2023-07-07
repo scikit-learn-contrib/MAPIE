@@ -16,7 +16,7 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 from ._typing import ArrayLike, NDArray
 from .utils import check_alpha, check_n_jobs, check_verbose
 
-from .control_risk.ltt import _ltt_procedure, _find_lambda_control_star
+from .control_risk.ltt import _find_lambda_control_star, _ltt_procedure
 from .control_risk.risks import _compute_precision, _compute_recall
 
 
@@ -189,7 +189,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             raise ValueError(
                 "Invalid method for metric: "
                 + "You are controlling " + self.metric_control
-                + " And you are using invalid method: " + self.method
+                + " and you are using invalid method: " + self.method
                 + ". Use instead: " + "".join(self.valid_methods_by_metric_[
                     self.metric_control]
                 )
@@ -263,28 +263,26 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 + "even if the delta is not ``None``, it won't be"
                 + "taken into account"
             )
-        if (self.method == "ltt") and (delta is None):
-            raise ValueError(
-                "Invalid delta. "
-                "delta cannot be ''None'' when using "
-                "LTT method."
-            )
-        if (delta is not None) and (
-            ((delta <= 0) or (delta >= 1)) and
-            (self.method == "ltt")
-        ):
-            raise ValueError(
-                "Invalid delta. "
-                "delta must be in ]0, 1["
-            )
+        if (self.method == "ltt"):
+            if delta is None:
+                raise ValueError(
+                    "Invalid delta. "
+                    "delta cannot be ''None'' when using "
+                    "LTT method."
+                )
+            elif ((delta <= 0) or (delta >= 1)):
+                raise ValueError(
+                    "Invalid delta. "
+                    "delta must be in ]0, 1["
+                )
 
     def _check_valid_index(self, alpha: NDArray):
         """
-        Check if valid index is empty, if it's empty,
-        we should warn the user that for the value alpha and level delta
-        choosen, ltt can't return anything.
-        The user must be less risk averse or he has to take a higher
-        alpha value.
+        Check if the valid index is empty.
+        If it is, we should warn the user that for the alpha value
+        and delta level chosen, LTT will return no results.
+        The user must be less inclined to take risks or
+        must choose a higher alpha value.
         """
         for i in range(len(self.valid_index)):
             if self.valid_index[i] == []:
@@ -437,13 +435,14 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         if self.metric_control not in self.valid_metric_:
             raise ValueError(
                 "Invalid metric. "
-                "Allowed scores are " + " or ".join(self.valid_metric_)
+                "Allowed scores must be in the following list "
+                + ", ".join(self.valid_metric_)
             )
 
         if self.method is None:
             if self.metric_control == "recall":
                 self.method = "crc"
-            else:
+            else:  # self.metric_control == "precision"
                 self.method = "ltt"
 
     def _transform_pred_proba(
@@ -835,10 +834,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             self.r_hat = self.risks.mean(axis=0)
             self.n_obs = len(self.risks)
             self.valid_index, self.p_values = _ltt_procedure(
-                self.r_hat,
-                alpha_np,
-                delta,
-                self.n_obs
+                self.r_hat, alpha_np, delta, self.n_obs
             )
             self._check_valid_index(alpha_np)
             self.lambdas_star, self.r_star = _find_lambda_control_star(

@@ -12,8 +12,8 @@ def _compute_recall(
     y: NDArray
 ) -> NDArray:
     """
-    In multi-label-classification, compute the
-    recall per observation for each different
+    In `MapieMultiLabelClassifier` when`metric_control=recall`,
+    compute the recall per observation for each different
     thresholds lambdas.
 
     Parameters
@@ -70,8 +70,8 @@ def _compute_precision(
     y: NDArray
 ) -> NDArray:
     """
-    In multi-label-classification, compute the
-    precision per observation for each different
+    In `MapieMultiLabelClassifier` when`metric_control=precision`,
+    compute the precision per observation for each different
     thresholds lambdas.
 
     Parameters
@@ -126,7 +126,7 @@ def _true_positive(
     y_repeat: NDArray
 ) -> NDArray:
     """
-    Compute the number of true positif.
+    Compute the number of true positive.
 
     Parameters
     ----------
@@ -138,7 +138,8 @@ def _true_positive(
 
     Returns
     -------
-    Return Number of TP.
+    tp: float
+        The number of true positive.
     """
     tp = (y_pred_th * y_repeat).sum(axis=1)
     return tp
