@@ -77,6 +77,10 @@ def _find_lambda_control_star(
     """
     Return the lambda that give the maximum precision with a control
     guarantee of level delta.
+    Note: When a list inf valid_index is empty, we can assume that
+    lambda is equal to 1, as no lambda can verify the fwer control.
+    And so to make our statement clear we also assume that the risk is
+    high.
 
     Parameters
     ----------
@@ -110,8 +114,8 @@ def _find_lambda_control_star(
     l_r_star = []  # type: List[Any]
     for i in range(len(valid_index)):
         if len(valid_index[i]) == 0:
-            l_lambda_star.append([])
-            l_r_star.append([])
+            l_lambda_star.append(1)
+            l_r_star.append(1)
         else:
             idx = np.argmin(r_hat[valid_index[i]])
             l_lambda_star.append(lambdas[valid_index[i][idx]])

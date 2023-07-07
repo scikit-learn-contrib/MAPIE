@@ -278,7 +278,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 "delta must be in ]0, 1["
             )
 
-    def _check_valid_index(self):
+    def _check_valid_index(self, alpha: NDArray):
         """
         Check if valid index is empty, if it's empty,
         we should warn the user that for the value alpha and level delta
@@ -286,15 +286,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         The user must be less risk averse or he has to take a higher
         alpha value.
         """
-        if (self.metric_control == 'precision') and (
-            [] in self.valid_index
-        ):
-            warnings.warn(
-                "Warning: LTT method has returned at least"
-                + "one empty sequence."
-                + "you have to take more risk by augmenting alpha"
-                + "if you want result."
-            )
+        for i in range(len(self.valid_index)):
+            if self.valid_index[i] == []:
+                warnings.warn(
+                    "Warning: LTT method has returned an empty sequence"
+                    + " for alpha=" + str(alpha[i])
+                )
 
     def _check_estimator(
         self,
@@ -714,11 +711,18 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             self.single_estimator_ = estimator
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-            partial_risk = _compute_recall(
-                self.lambdas,
-                y_pred_proba_array,
-                y
-            )
+            if self.metric_control == "recall":
+                partial_risk = _compute_recall(
+                    self.lambdas,
+                    y_pred_proba_array,
+                    y
+                )
+            else:  # self.metric_control == "precision"
+                partial_risk = _compute_precision(
+                    self.lambdas,
+                    y_pred_proba_array,
+                    y
+                )
             self.risks = np.concatenate([self.risks, partial_risk], axis=0)
 
         return self
@@ -836,9 +840,13 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 delta,
                 self.n_obs
             )
-            self._check_valid_index()
+            self._check_valid_index(alpha_np)
             self.lambdas_star, self.r_star = _find_lambda_control_star(
                self.r_hat, self.valid_index, self.lambdas
+            )
+            y_pred_proba_array = (
+                y_pred_proba_array >
+                np.array(self.lambdas_star)[np.newaxis, np.newaxis, :]
             )
 
         else:
