@@ -327,8 +327,7 @@ class EnsembleRegressor(RegressorMixin):
 
     def predict_calib(self, X: ArrayLike) -> NDArray:
         """
-        Perform predictions on X : the calibration set. This method is
-        called in the ConformityScore class to compute the conformity scores.
+        Perform predictions on X : the calibration set.
 
         Parameters
         ----------
