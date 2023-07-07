@@ -13,9 +13,10 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
 from mapie.utils import (check_nan_in_aposteriori_prediction,
                          fit_estimator)
+from mapie.estimator.interface import EnsembleEstimator
 
 
-class EnsembleRegressor(RegressorMixin):
+class EnsembleRegressor(EnsembleEstimator):
     """
     This class implements methods to handle the training and usage of the
     estimator. This estimator can be unique or composed by cross validated

@@ -2,10 +2,10 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 from typing import Tuple
-from sklearn.base import RegressorMixin
 
 from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
+from mapie.estimator.interface import EnsembleEstimator
 
 
 class ConformityScore(metaclass=ABCMeta):
@@ -257,7 +257,7 @@ class ConformityScore(metaclass=ABCMeta):
     def get_bounds(
         self,
         X: ArrayLike,
-        estimator: RegressorMixin,
+        estimator: EnsembleEstimator,
         conformity_scores: NDArray,
         alpha_np: NDArray,
         ensemble: bool,
@@ -265,14 +265,14 @@ class ConformityScore(metaclass=ABCMeta):
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
-        the estimator of type ``EnsembleRegressor`` and the conformity scores.
+        the estimator of type ``EnsembleEstimator`` and the conformity scores.
 
         Parameters
         ----------
         X: ArrayLike of shape (n_samples_test, n_features)
             Observed feature values.
 
-        estimator: RegressorMixin
+        estimator: EnsembleEstimator
             Estimator that is fitted to predict y from X.
 
         conformity_scores: ArrayLike of shape (n_samples_calib,)
