@@ -124,6 +124,17 @@ y_toy_mapie = {
         [True, True, True],
         [True, True, True],
     ],
+    "ltt": [
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+        [False, False, False],
+    ]
 }
 
 
@@ -261,7 +272,7 @@ def test_results_for_same_alpha(strategy: str) -> None:
     mapie_clf.fit(X, y)
     _, y_ps = mapie_clf.predict(
         X,
-        alpha=[0.3, 0.3],
+        alpha=[0.1, 0.1],
         bound=args["bound"],
         delta=.1
     )
@@ -296,14 +307,14 @@ def test_results_for_partial_fit(strategy: str) -> None:
 
     y_pred, y_ps = mapie_clf.predict(
         X,
-        alpha=[0.6, 0.6],
+        alpha=[0.1, 0.1],
         bound=args["bound"],
         delta=.1
     )
 
     y_pred_partial, y_ps_partial = mapie_clf_partial.predict(
         X,
-        alpha=[0.6, 0.6],
+        alpha=[0.1, 0.1],
         bound=args["bound"],
         delta=.1
     )
@@ -410,10 +421,10 @@ def test_valid_prediction(alpha: Any, delta: Any, bound: Any) -> None:
 
 
 @pytest.mark.parametrize(
-    "alpha", [0.3, (0.9, 0.95), np.array([0.9, 0.95]), None],
+    "alpha", [[0.2, 0.8], (0.2, 0.8), np.array([0.2, 0.8]), None],
 )
 @pytest.mark.parametrize(
-    "delta", [.3, .4, .5, .9, .01],
+    "delta", [.1, .2, .5, .9, .001],
 )
 @pytest.mark.parametrize(
     "bound", BOUNDS,
@@ -682,21 +693,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
         bound=args["bound"],
         delta=.1
     )
-    test_ltt = [
-        [0.61739446, 0.30405609, 0.53659921],
-        [0.60229494, 0.36385266, 0.57171692],
-        [0.58699814, 0.42817389, 0.60612677],
-        [0.57153154, 0.49501769, 0.63951517],
-        [0.55592391, 0.56204008, 0.67160669],
-        [0.54020513, 0.62687213, 0.70217181],
-        [0.52440595, 0.68744407, 0.7310314],
-        [0.50855777, 0.74222641, 0.75805806],
-        [0.49269237, 0.79033541, 0.7831745]
-       ]
-    if strategy == "ltt":
-        np.testing.assert_allclose(y_ps[:, :, 0], test_ltt)
-    else:
-        np.testing.assert_allclose(
+    np.testing.assert_allclose(
             y_ps[:, :, 0],
             y_toy_mapie[strategy],
             rtol=1e-6
