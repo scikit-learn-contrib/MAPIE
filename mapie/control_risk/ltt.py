@@ -16,9 +16,10 @@ def _ltt_procedure(
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
-    This procedure is called in multi-label-classification
-    if ``metric=precision``, this will apply learn then test
-    procedure for precision control.
+    This procedure is called in MapieMultiLabelClassifier
+    if ``metric=precision``.
+    This will apply learn then test procedure for 
+    precision control.
     Note that we will do a multiple test for ``r_hat`` that are
     less than level ``alpha_np``.
 

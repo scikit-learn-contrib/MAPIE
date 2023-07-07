@@ -2,7 +2,7 @@
 Testing for control_risk module.
 Testing for now risks for multilabel classification
 """
-from typing import Union, List
+from typing import Union, List, Optional
 
 import pytest
 from mapie._typing import NDArray
@@ -184,7 +184,8 @@ def test_invalid_shape_alpha_hb() -> None:
         compute_hoeffdding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
 
 
-def test_delta_none_ltt() -> None:
+@pytest.mark.parametrize("delta", [None])
+def test_delta_none_ltt(delta: Optional[float]) -> None:
     """Test error message when invalid delta"""
     with pytest.raises(ValueError, match=r".*Invalid delta"):
-        _ltt_procedure(r_hat, alpha, wrong_delta, n)
+        _ltt_procedure(r_hat, alpha, delta, n)
