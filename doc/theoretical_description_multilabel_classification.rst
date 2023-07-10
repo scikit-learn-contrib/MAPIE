@@ -156,7 +156,28 @@ With :
 .. math::
     \hat{R}_n (\lambda) = (L_{1}(\lambda) + ... + L_{n}(\lambda)) / n
 
-3. References
+
+3. Learn Then Test
+------------------
+The goal of this method is to control any loss whether monotone, bounded or not. The main goal of this method is to achieve risk control
+throught multiple hypothesis testing. We can express the goal of the procedure as follows:
+
+.. math::
+    \mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha ) \geq 1 - \delta
+
+In order to find all the parameters :math:`\lambda` that satisfy the above condition, Learn Then Test propose to do the following:
+
+0: First across the collections of functions :math:`(T_\lambda)_{\lambda\in\Lambda}`, we estimate the risk on the calibration data
+\{(x_1, y_1), \ldots, (x_n, y_n)\}`.
+1: For each :math:`\lambda_j` in a discrete set :math:`\Lambda = \{\lambda_1, \lambda_2,\dots, \lambda_n\}`, we associate the null hypothesis
+:math:`\mathbb{H}_j: R(\lambda_j)>\alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
+is controlled.
+2: For each null hypothesis, we compute a valid p-value using a concentration inequality.
+3: Return :math:`\hat{\Lambda} =  \mathbb{A}(\{p_j\}_{j\in\{1,\dots,lvert \Lambda \rvert})`, where :math:`\mathbb{A}`, is an algorithm
+that controls the family-wise-error-rate (FWER).
+    
+
+4. References
 -------------
 
 [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
@@ -165,3 +186,7 @@ sets. CoRR, abs/2101.02703, 2021. URL https://arxiv.org/abs/2101.02703.39
 
 [2] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
 Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
+
+[3] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
+M. I., & Lei, L. (2021). Learn then test:
+"Calibrating predictive algorithms to achieve risk control".
