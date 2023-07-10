@@ -324,7 +324,7 @@ def test_results_for_partial_fit(strategy: str) -> None:
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize(
-    "alpha", [np.array([0.3, 0.4]), [0.3, 0.4], (0.3, 0.4)]
+    "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
 )
 def test_results_for_alpha_as_float_and_arraylike(
     strategy: str, alpha: Any

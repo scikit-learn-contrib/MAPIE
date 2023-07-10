@@ -66,6 +66,12 @@ wrong_alpha_shape = np.array([
 
 wrong_delta = None
 
+random_state = 42
+prng = np.random.RandomState(random_state)
+y_1 = prng.random(51)
+y_2 = prng.random((51, 5))
+y_3 = prng.randint(0, 2, 51)
+
 
 def test_compute_recall_equal() -> None:
     """Test that compute_recall give good result"""
@@ -122,7 +128,9 @@ def test_compute_precision_with_wrong_shape() -> None:
     with pytest.raises(ValueError, match=r".*y_pred_proba should be a 3d*"):
         _compute_risk_precision(lambdas, y_preds_proba.squeeze(), y_toy)
     with pytest.raises(ValueError, match=r".*y should be a 2d*"):
-        _compute_risk_precision(lambdas, y_preds_proba, np.expand_dims(y_toy, 2))
+        _compute_risk_precision(
+            lambdas, y_preds_proba, np.expand_dims(y_toy, 2)
+        )
     with pytest.raises(ValueError, match=r".*could not be broadcast*"):
         _compute_risk_precision(lambdas, y_preds_proba, y_toy[:-1])
 

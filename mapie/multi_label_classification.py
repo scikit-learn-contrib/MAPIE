@@ -3,8 +3,6 @@ from __future__ import annotations
 import warnings
 from typing import Iterable, Optional, Sequence, Tuple, Union, cast
 
-import itertools
-
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.linear_model import LogisticRegression
@@ -99,7 +97,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
     lambdas_star: ArrayLike of shape (n_lambdas)
         Optimal threshold for a given alpha.
-    
+
     valid_index: List[List[Any]]
         List of list of all index that satisfy fwer controlling
         for learn then test procedure. This attribute is compute
