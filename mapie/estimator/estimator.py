@@ -205,13 +205,8 @@ class EnsembleRegressor(EnsembleEstimator):
 
         Returns
         -------
-        Tuple[RegressorMixin, NDArray, ArrayLike]
-
-        - [0]: RegressorMixin, fitted estimator
-        - [1]: NDArray of shape (n_samples_val,),
-          estimator predictions on the validation fold.
-        - [2]: ArrayLike of shape (n_samples_val,),
-          validation data indices.
+        RegressorMixin
+            Fitted estimator.
         """
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)
@@ -229,7 +224,7 @@ class EnsembleRegressor(EnsembleEstimator):
         estimator: RegressorMixin,
         X: ArrayLike,
         val_index: ArrayLike,
-    ):
+    ) -> Tuple[NDArray, ArrayLike]:
         """
         Perform predictions on a single out-of-fold model on a validation set.
 
