@@ -3,6 +3,8 @@ from __future__ import annotations
 import warnings
 from typing import Iterable, Optional, Sequence, Tuple, Union, cast
 
+import itertools
+
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.linear_model import LogisticRegression
@@ -97,6 +99,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
     lambdas_star: ArrayLike of shape (n_lambdas)
         Optimal threshold for a given alpha.
+    
+    valid_index: List[List[Any]]
+        List of list of all index that satisfy fwer controlling
+        for learn then test procedure. This attribute is compute
+        when the user wants to control precision score. Contain
+        a number of n_alpha lists (see predict).
 
     References
     ----------
@@ -125,12 +133,15 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
      [False  True False]
      [False  True False]]
     """
-    valid_methods_ = ["crc", "rcps", "ltt"]
-    valid_metric_ = ['precision', 'recall']
     valid_methods_by_metric_ = {
         "precision": ["ltt"],
         "recall": ["rcps", "crc"]
     }
+    valid_methods_bis = [
+        method for metric in valid_methods_by_metric_.values()
+        for method in metric
+    ]
+    valid_metric_ = [metric for metric in valid_methods_by_metric_]
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
     lambdas = np.arange(0, 1, 0.01)
     n_lambdas = len(lambdas)

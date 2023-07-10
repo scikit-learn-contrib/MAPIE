@@ -24,7 +24,7 @@ def compute_hoeffdding_bentkus_p_value(
     Parameters
     ----------
     r_hat: NDArray of shape (n_lambdas, )
-        Empirical risk of metric_control with respect
+        Empirical risk with respect
         to the lambdas.
         Here lambdas are thresholds that impact decision
         making and therefore empirical risk.
@@ -96,7 +96,7 @@ def _h1(
     Parameters
     ----------
     r_hats: NDArray of shape (n_lambdas, n_alpha).
-        Empirical risk of metric_control with respect
+        Empirical risk with respect
         to the lambdas.
         Here lambdas are thresholds that impact decision
         making and therefore empirical risk.

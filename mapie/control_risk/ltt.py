@@ -16,7 +16,7 @@ def _ltt_procedure(
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
-    This procedure is called in MapieMultiLabelClassifier
+    This procedure is called in ``MapieMultiLabelClassifier``
     if ``metric=precision``.
     This will apply learn then test procedure for 
     precision control.
@@ -32,8 +32,10 @@ def _ltt_procedure(
     Parameters
     ----------
     r_hat: NDArray of shape (n_lambdas, ).
-        Empirical risk of metric_control with respect
+        Empirical risk with respect
         to the lambdas.
+        Here lambdas are thresholds that impact decision making,
+        therefore empirical risk.
 
     alpha_np: NDArray of shape (n_alpha, ).
         Contains the different alphas control level.
@@ -89,7 +91,7 @@ def _find_lambda_control_star(
     Parameters
     ----------
     r_hat: NDArray of shape (n_lambdas, n_alpha)
-        Empirical risk of metric_control with respect
+        Empirical risk with respect
         to the lambdas and to the alphas.
         Here, lambdas are thresholds that impact decision-making
         and therefore the empirical risk.
