@@ -7,8 +7,8 @@ Theoretical Description
 =======================
 
 
-Two methods for multi-label uncertainty-quantification have been implemented in MAPIE so far :
-Risk-Controlling Prediction Sets (RCPS) [1] and Conformal Risk Control (CRC) [2].
+Three methods for multi-label uncertainty-quantification have been implemented in MAPIE so far :
+Risk-Controlling Prediction Sets (RCPS) [1], Conformal Risk Control (CRC) [2] and Learn Then Test (LTT) [3].
 The difference between these methods is the way the conformity scores are computed. 
 
 For a multi-label classification problem in a standard independent and identically distributed (i.i.d) case,
@@ -16,7 +16,7 @@ our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`` has an un
 
 For any risk level :math:`\alpha` between 0 and 1, the methods implemented in MAPIE allow the user to construct a prediction
 set :math:`\hat{C}_{n, \alpha}(X_{n+1})` for a new observation :math:`\left( X_{n+1},Y_{n+1} \right)` with a guarantee
-on the recall. RCPS and CRC give two slightly different guarantees:
+on the recall or the precision. RCPS, LTT and CRC give three slightly different guarantees:
 
 - RCPS:
 
@@ -27,6 +27,10 @@ on the recall. RCPS and CRC give two slightly different guarantees:
 
 .. math::
     \mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha
+
+- LTT:
+.. math::
+    \mathbb{P}(R(\mathcal{T}_{\lambda_{\lambda\in\hat{\Lambda}}) \leq \alpha ) \geq 1 - \delta
 
 
 1. Risk-Controlling Prediction Sets
@@ -175,7 +179,7 @@ is controlled.
 2: For each null hypothesis, we compute a valid p-value using a concentration inequality.
 3: Return :math:`\hat{\Lambda} =  \mathbb{A}(\{p_j\}_{j\in\{1,\dots,lvert \Lambda \rvert})`, where :math:`\mathbb{A}`, is an algorithm
 that controls the family-wise-error-rate (FWER).
-    
+
 
 4. References
 -------------
