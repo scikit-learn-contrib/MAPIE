@@ -70,7 +70,7 @@ def _compute_risk_precision(
     y: NDArray
 ) -> NDArray:
     """
-    In `MapieMultiLabelClassifier` when`metric_control=precision`,
+    In `MapieMultiLabelClassifier` when `metric_control=precision`,
     compute the precision per observation for each different
     thresholds lambdas.
 
