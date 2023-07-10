@@ -29,8 +29,8 @@ class AbsoluteConformityScore(ConformityScore):
         y_pred: ArrayLike,
     ) -> NDArray:
         """
-        Compute the signed conformity scores from the observed values
-        and the predicted ones, from the following formula:
+        Compute the signed conformity scores from the predicted values
+        and the observed ones, from the following formula:
         signed conformity score = y - y_pred
         """
         return np.subtract(y, y_pred)
@@ -43,7 +43,7 @@ class AbsoluteConformityScore(ConformityScore):
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
-        targets and ``conformity_scores``, from the following formula:
+        values and the conformity scores, from the following formula:
         signed conformity score = y - y_pred
         <=> y = y_pred + signed conformity score
 
@@ -123,7 +123,7 @@ class GammaConformityScore(ConformityScore):
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
-        targets and ``conformity_scores``, from the following formula:
+        values and the conformity scores, from the following formula:
         signed conformity score = (y - y_pred) / y_pred
         <=> y = y_pred * (1 + signed conformity score)
 

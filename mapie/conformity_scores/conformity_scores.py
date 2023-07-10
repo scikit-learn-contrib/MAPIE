@@ -69,18 +69,18 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: ArrayLike of shape (n_samples_calib, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Observed feature values.
 
-        y: ArrayLike of shape (n_samples_calib,)
+        y: ArrayLike of shape (n_samples,)
             Observed target values.
 
-        y_pred: ArrayLike of shape (n_samples_calib,)
+        y_pred: ArrayLike of shape (n_samples,)
             Predicted target values.
 
         Returns
         -------
-        NDArray of shape (n_samples_calib,)
+        NDArray of shape (n_samples,)
             Signed conformity scores.
         """
 
@@ -101,24 +101,24 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: ArrayLike of shape (n_samples_calib, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Observed feature values.
 
         y_pred: ArrayLike
-            The shape is either (n_samples_calib, n_samples_train): when the
+            The shape is either (n_samples, n_references): when the
             method is called in ``get_bounds`` it needs a prediction per train
             sample for each test sample to compute the bounds.
-            Or (n_samples_calib, 1): when it is called in ``check_consistency``
+            Or (n_samples,): when it is called in ``check_consistency``
 
         conformity_scores: ArrayLike
-            The shape is either (n_samples_calib, n_alpha) when it is the
-            conformity scores themselves or (n_alpha, 1) when it is only the
+            The shape is either (n_samples, 1) when it is the
+            conformity scores themselves or (1, n_alpha) when it is only the
             quantile of the conformity scores.
 
         Returns
         -------
-        NDArray of shape (n_samples_calib, n_alpha) or
-        (n_samples_calib, n_samples_train) according to the shape of ``y_pred``
+        NDArray of shape (n_samples, n_alpha) or
+        (n_samples, n_references) according to the shape of ``y_pred``
             Observed values.
         """
 
@@ -142,16 +142,16 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: ArrayLike of shape (n_samples_calib, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Observed feature values.
 
-        y: ArrayLike of shape (n_samples_calib,)
+        y: ArrayLike of shape (n_samples,)
             Observed target values.
 
-        y_pred: ArrayLike of shape (n_samples_calib,)
+        y_pred: ArrayLike of shape (n_samples,)
             Predicted target values.
 
-        conformity_scores: ArrayLike of shape (n_samples_calib,)
+        conformity_scores: ArrayLike of shape (n_samples,)
             Conformity scores.
 
         Raises
@@ -188,18 +188,18 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: NDArray of shape (n_samples_calib, n_features)
+        X: NDArray of shape (n_samples, n_features)
             Observed feature values.
 
-        y: NDArray of shape (n_samples_calib,)
+        y: NDArray of shape (n_samples,)
             Observed target values.
 
-        y_pred: NDArray of shape (n_samples_calib,)
+        y_pred: NDArray of shape (n_samples,)
             Predicted target values.
 
         Returns
         -------
-        NDArray of shape (n_samples_calib, 1)
+        NDArray of shape (n_samples,)
             Conformity scores.
         """
         conformity_scores = self.get_signed_conformity_scores(X, y, y_pred)
@@ -222,8 +222,8 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        values: NDArray of shape (n_samples_calib, n_alpha) or
-        (n_samples_calib, n_samples_train)
+        values: NDArray of shape (n_samples,) or
+        (n_samples, n_references)
             Values from which the quantile is computed, it can be the
             conformity scores or the conformity scores aggregated with
             the predictions.
@@ -240,7 +240,7 @@ class ConformityScore(metaclass=ABCMeta):
 
         Returns
         -------
-        NDArray of shape (n_alpha,)
+        NDArray of shape (1, n_alpha) or (n_samples, n_alpha)
             The quantile of the conformity scores.
         """
         quantile = np.column_stack([
@@ -269,13 +269,13 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: ArrayLike of shape (n_samples_test, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Observed feature values.
 
         estimator: EnsembleEstimator
             Estimator that is fitted to predict y from X.
 
-        conformity_scores: ArrayLike of shape (n_samples_calib,)
+        conformity_scores: ArrayLike of shape (n_samples,)
             Conformity scores.
 
         alpha_np: NDArray of shape (n_alpha,)
@@ -295,11 +295,11 @@ class ConformityScore(metaclass=ABCMeta):
         Returns
         -------
         Tuple[NDArray, NDArray, NDArray]
-            - The predictions itself. (y_pred) of shape (n_samples_test,).
+            - The predictions itself. (y_pred) of shape (n_samples,).
             - The lower bounds of the prediction intervals of shape
-            (n_samples_test,).
+            (n_samples, n_alpha).
             - The upper bounds of the prediction intervals of shape
-            (n_samples_test,).
+            (n_samples, n_alpha).
         """
         y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble)
         signed = -1 if self.sym else 1
