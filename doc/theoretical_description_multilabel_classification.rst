@@ -168,7 +168,7 @@ throught multiple hypothesis testing. We can express the goal of the procedure a
 In order to find all the parameters :math:`\lambda` that satisfy the above condition, Learn Then Test propose to do the following:
 
 0: First across the collections of functions :math:`(T_\lambda)_{\lambda\in\Lambda}`, we estimate the risk on the calibration data
-\{(x_1, y_1), \ldots, (x_n, y_n)\}`.
+\{(x_1, y_1), \dots, (x_n, y_n)\}`.
 1: For each :math:`\lambda_j` in a discrete set :math:`\Lambda = \{\lambda_1, \lambda_2,\dots, \lambda_n\}`, we associate the null hypothesis
 :math:`\mathbb{H}_j: R(\lambda_j)>\alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
 is controlled.
