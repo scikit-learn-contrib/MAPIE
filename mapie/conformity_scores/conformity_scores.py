@@ -211,7 +211,7 @@ class ConformityScore(metaclass=ABCMeta):
 
     @staticmethod
     def get_quantile(
-        values: NDArray,
+        conformity_scores: NDArray,
         alpha_np: NDArray,
         axis: int,
         method: str
@@ -222,7 +222,7 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        values: NDArray of shape (n_samples,) or
+        conformity_scores: NDArray of shape (n_samples,) or
         (n_samples, n_references)
             Values from which the quantile is computed, it can be the
             conformity scores or the conformity scores aggregated with
@@ -245,7 +245,7 @@ class ConformityScore(metaclass=ABCMeta):
         """
         quantile = np.column_stack([
             np_nanquantile(
-                values.astype(float),
+                conformity_scores.astype(float),
                 _alpha,
                 axis=axis,
                 method=method
@@ -308,17 +308,17 @@ class ConformityScore(metaclass=ABCMeta):
             alpha_low = alpha_np if self.sym else alpha_np / 2
             alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
 
-            values_low = self.get_estimation_distribution(
+            conformity_scores_low = self.get_estimation_distribution(
                 X, y_pred_low, signed * conformity_scores
             )
-            values_up = self.get_estimation_distribution(
+            conformity_scores_up = self.get_estimation_distribution(
                 X, y_pred_up, conformity_scores
             )
             bound_low = self.get_quantile(
-                values_low, alpha_low, axis=1, method="lower"
+                conformity_scores_low, alpha_low, axis=1, method="lower"
             )
             bound_up = self.get_quantile(
-                values_up, alpha_up, axis=1, method="higher"
+                conformity_scores_up, alpha_up, axis=1, method="higher"
             )
         else:
             quantile_search = "higher" if self.sym else "lower"
