@@ -19,7 +19,7 @@ History
 * Fix bug in MapieClassifier with different number of labels in calibration dataset.
 
 
-0.6.4(2023-07-11)
+0.6.5(2023-07-11)
 ------------------
 
 * Add LTT for multilabel-classification
