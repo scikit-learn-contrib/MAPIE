@@ -23,7 +23,7 @@ def ltt_procedure(
 
     The procedure follows the instructions in [1]:
         - Calculate p-values for each lambdas descretized
-        - Apply a family wise error rate algorithm, 
+        - Apply a family wise error rate algorithm,
         here Bonferonni correction
         - Return the index lambdas that give you the control
         at alpha level
