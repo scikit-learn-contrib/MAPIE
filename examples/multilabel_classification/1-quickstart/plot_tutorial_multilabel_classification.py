@@ -118,17 +118,19 @@ method_params = {
 }
 
 clf = MultiOutputClassifier(GaussianNB()).fit(X_train, y_train)
-mapie = MapieMultiLabelClassifier(estimator=clf)
-mapie.fit(X_cal, y_cal)
 
 alpha = np.arange(0.01, 1, 0.01)
 y_pss, recalls, thresholds, r_hats, r_hat_pluss = {}, {}, {}, {}, {}
 y_test_repeat = np.repeat(y_test[:, :, np.newaxis], len(alpha), 2)
 for i, (name, (method, bound)) in enumerate(method_params.items()):
 
+    mapie = MapieMultiLabelClassifier(
+        estimator=clf, method=method, metric_control="recall"
+    )
+    mapie.fit(X_cal, y_cal)
+
     _, y_pss[name] = mapie.predict(
-        X_test, method=method,
-        alpha=alpha, bound=bound, delta=.1
+        X_test, alpha=alpha, bound=bound, delta=.1
     )
     recalls[name] = (
         (y_test_repeat * y_pss[name]).sum(axis=1) /
@@ -137,6 +139,7 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
     thresholds[name] = mapie.lambdas_star
     r_hats[name] = mapie.r_hat
     r_hat_pluss[name] = mapie.r_hat_plus
+
 
 ##############################################################################
 # 3. Results
