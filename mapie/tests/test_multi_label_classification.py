@@ -29,6 +29,7 @@ Params = TypedDict(
 METHODS = ["crc", "rcps", "ltt"]
 METRICS = ['recall', 'precision']
 BOUNDS = ["wsr", "hoeffding", "bernstein"]
+random_state = 42
 
 WRONG_METHODS = ["rpcs", "rcr", "test", "llt"]
 WRONG_BOUNDS = ["wrs", "hoeff", "test", "", 1, 2.5, (1, 2)]
@@ -40,7 +41,7 @@ STRATEGIES = {
         Params(
             method="crc",
             bound=None,
-            random_state=42,
+            random_state=random_state,
             metric_control="recall"
         ),
     ),
@@ -48,7 +49,7 @@ STRATEGIES = {
         Params(
             method="rcps",
             bound="wsr",
-            random_state=42,
+            random_state=random_state,
             metric_control='recall'
         ),
     ),
@@ -56,7 +57,7 @@ STRATEGIES = {
         Params(
             method="rcps",
             bound="hoeffding",
-            random_state=42,
+            random_state=random_state,
             metric_control='recall'
         ),
     ),
@@ -64,7 +65,7 @@ STRATEGIES = {
         Params(
             method="rcps",
             bound="bernstein",
-            random_state=42,
+            random_state=random_state,
             metric_control='recall'
         ),
     ),
@@ -72,7 +73,7 @@ STRATEGIES = {
         Params(
             method="ltt",
             bound=None,
-            random_state=42,
+            random_state=random_state,
             metric_control='precision'
         ),
     ),
@@ -218,9 +219,10 @@ def test_valid_method() -> None:
 def test_valid_metric_method(strategy: str) -> None:
     """Test that valid metric raise no errors"""
     args = STRATEGIES[strategy][0]
-    mapie_clf = MapieMultiLabelClassifier(random_state=42,
-                                          metric_control=args["metric_control"]
-                                          )
+    mapie_clf = MapieMultiLabelClassifier(
+        random_state=42,
+        metric_control=args["metric_control"]
+    )
     mapie_clf.fit(X_toy, y_toy)
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
@@ -228,7 +230,9 @@ def test_valid_metric_method(strategy: str) -> None:
 @pytest.mark.parametrize("bound", BOUNDS)
 def test_valid_bound(bound: str) -> None:
     """Test that valid methods raise no errors."""
-    mapie_clf = MapieMultiLabelClassifier(random_state=42, method="rcps")
+    mapie_clf = MapieMultiLabelClassifier(
+        random_state=random_state, method="rcps"
+    )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, bound=bound, delta=.1)
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)

@@ -10,6 +10,12 @@ History
 * Add split conformal option for regression and classification
 * Update check method for calibration
 
+
+0.6.4(2023-07-11)
+------------------
+
+* Add LTT for multilabel-classification
+
 0.6.4 (2023-04-05)
 ------------------
 
@@ -34,7 +40,7 @@ History
 0.6.0 (2023-01-19)
 ------------------
 
-* Add RCPS and CRC for multilabel-classifcation
+* Add RCPS and CRC for multilabel-classification
 * Add Top-Label calibration
 * Fix bug for classification with very low scores
 
