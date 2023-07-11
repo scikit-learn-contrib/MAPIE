@@ -16,8 +16,10 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 from ._typing import ArrayLike, NDArray
 from .utils import check_alpha, check_n_jobs, check_verbose
 
-from .control_risk.ltt import _find_lambda_control_star, _ltt_procedure
-from .control_risk.risks import _compute_risk_precision, _compute_risk_recall
+from itertools import chain
+
+from .control_risk.ltt import find_lambda_control_star, ltt_procedure
+from .control_risk.risks import compute_risk_precision, compute_risk_recall
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
@@ -135,11 +137,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         "precision": ["ltt"],
         "recall": ["rcps", "crc"]
     }
-    valid_methods_bis = [
-        method for metric in valid_methods_by_metric_.values()
-        for method in metric
-    ]
-    valid_metric_ = [metric for metric in valid_methods_by_metric_]
+    valid_methods = list(chain(*valid_methods_by_metric_.values()))
+    valid_metric_ = list(valid_methods_by_metric_.keys())
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
     lambdas = np.arange(0, 1, 0.01)
     n_lambdas = len(lambdas)
@@ -247,32 +246,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Warning
             If delta is not ``None`` and method is CRC
         """
-        if (self.method == "rcps") and (delta is None):
-            raise ValueError(
-                "Invalid delta. "
-                "delta cannot be ``None`` when using "
-                "RCPS method."
-            )
-        if (not isinstance(delta, float)) and (delta is not None):
-            raise ValueError(
-                "Invalid delta. "
-                f"delta must be a float, not a {type(delta)}"
-            )
-        if (delta is not None) and (
-            ((delta <= 0) or (delta >= 1)) and
-            (self.method == "rcps")
-        ):
-            raise ValueError(
-                "Invalid delta. "
-                "delta must be in ]0, 1["
-            )
-        if (self.method == "crc") and (delta is not None):
-            warnings.warn(
-                "WARNING: you are using crc method, hence "
-                + "even if the delta is not ``None``, it won't be"
-                + "taken into account"
-            )
-        if (self.method == "ltt"):
+        if (self.method == "rcps") or (self.method == "ltt"):
             if delta is None:
                 raise ValueError(
                     "Invalid delta. "
@@ -284,6 +258,17 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                     "Invalid delta. "
                     "delta must be in ]0, 1["
                 )
+        if (not isinstance(delta, float)) and (delta is not None):
+            raise ValueError(
+                "Invalid delta. "
+                f"delta must be a float, not a {type(delta)}"
+            )
+        if (self.method == "crc") and (delta is not None):
+            warnings.warn(
+                "WARNING: you are using crc method, hence "
+                + "even if the delta is not ``None``, it won't be"
+                + "taken into account"
+            )
 
     def _check_valid_index(self, alpha: NDArray):
         """
@@ -705,11 +690,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             self.theta_ = X.shape[1]
 
             if self.metric_control == "recall":
-                self.risks = _compute_risk_recall(
+                self.risks = compute_risk_recall(
                     self.lambdas, y_pred_proba_array, y
                 )
             else:  # self.metric_control == "precision"
-                self.risks = _compute_risk_precision(
+                self.risks = compute_risk_precision(
                     self.lambdas, y_pred_proba_array, y
                 )
         else:
@@ -720,13 +705,13 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
             if self.metric_control == "recall":
-                partial_risk = _compute_risk_recall(
+                partial_risk = compute_risk_recall(
                     self.lambdas,
                     y_pred_proba_array,
                     y
                 )
             else:  # self.metric_control == "precision"
-                partial_risk = _compute_risk_precision(
+                partial_risk = compute_risk_precision(
                     self.lambdas,
                     y_pred_proba_array,
                     y
@@ -804,7 +789,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         bound : Optional[Union[str, ``None``]]
             Method used to compute the Upper Confidence Bound of the
             average risk. Only necessary with the RCPS method.
-            By default "wsr"
+            By default "wsr".
 
         Returns
         -------
@@ -841,12 +826,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         if self.metric_control == 'precision':
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
-            self.n_obs = len(self.risks)
-            self.valid_index, self.p_values = _ltt_procedure(
+            self.valid_index, self.p_values = ltt_procedure(
                 self.r_hat, alpha_np, delta, self.n_obs
             )
             self._check_valid_index(alpha_np)
-            self.lambdas_star, self.r_star = _find_lambda_control_star(
+            self.lambdas_star, self.r_star = find_lambda_control_star(
                self.r_hat, self.valid_index, self.lambdas
             )
             y_pred_proba_array = (

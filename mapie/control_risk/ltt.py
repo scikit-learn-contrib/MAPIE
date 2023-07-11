@@ -8,7 +8,7 @@ import numpy as np
 from .p_values import compute_hoeffdding_bentkus_p_value
 
 
-def _ltt_procedure(
+def ltt_procedure(
     r_hat: NDArray,
     alpha_np: NDArray,
     delta: Optional[float],
@@ -16,10 +16,8 @@ def _ltt_procedure(
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
-    This procedure is called in ``MapieMultiLabelClassifier``
-    if ``metric=precision``.
     This will apply learn then test procedure for
-    precision control.
+    risk control.
     Note that we will do a multiple test for ``r_hat`` that are
     less than level ``alpha_np``.
 
@@ -75,7 +73,7 @@ def _ltt_procedure(
     return valid_index, p_values
 
 
-def _find_lambda_control_star(
+def find_lambda_control_star(
     r_hat: NDArray,
     valid_index: List[List[Any]],
     lambdas: NDArray

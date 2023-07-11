@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.utils.validation import column_or_1d
 
 
-def _compute_risk_recall(
+def compute_risk_recall(
     lambdas: NDArray,
     y_pred_proba: NDArray,
     y: NDArray
@@ -64,7 +64,7 @@ def _compute_risk_recall(
     return risks
 
 
-def _compute_risk_precision(
+def compute_risk_precision(
     lambdas: NDArray,
     y_pred_proba: NDArray,
     y: NDArray
