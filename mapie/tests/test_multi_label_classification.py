@@ -224,7 +224,7 @@ def test_valid_metric_method(strategy: str) -> None:
     """Test that valid metric raise no errors"""
     args = STRATEGIES[strategy][0]
     mapie_clf = MapieMultiLabelClassifier(
-        random_state=42,
+        random_state=random_state,
         metric_control=args["metric_control"]
     )
     mapie_clf.fit(X_toy, y_toy)
@@ -524,7 +524,7 @@ def test_bound_error_in_predict(bound: str) -> None:
 def test_metric_error_in_fit(metric_control: str) -> None:
     """Test error for wrong metrics"""
     mapie_clf = MapieMultiLabelClassifier(
-        random_state=42,
+        random_state=random_state,
         metric_control=metric_control
     )
     with pytest.raises(ValueError, match=r".*Invalid metric. *"):
@@ -545,7 +545,7 @@ def test_error_rcps_delta_null() -> None:
 def test_error_ltt_delta_null() -> None:
     """Test error for LTT method and delta None"""
     mapie_clf = MapieMultiLabelClassifier(
-        random_state=42,
+        random_state=random_state,
         metric_control='precision'
     )
     mapie_clf.fit(X_toy, y_toy)
@@ -590,11 +590,9 @@ def test_bound_none_crc() -> None:
 
 def test_delta_none_crc() -> None:
     """Test that a warning is raised nound is not None with CRC method."""
-
     mapie_clf = MapieMultiLabelClassifier(
       random_state=random_state, method="crc"
     )
-
     mapie_clf.fit(X_toy, y_toy)
     with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
         mapie_clf.predict(X_toy, bound=None, delta=.1)
