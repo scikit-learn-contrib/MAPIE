@@ -246,23 +246,23 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Warning
             If delta is not ``None`` and method is CRC
         """
+        if (not isinstance(delta, float)) and (delta is not None):
+            raise ValueError(
+                "Invalid delta. "
+                f"delta must be a float, not a {type(delta)}"
+            )
         if (self.method == "rcps") or (self.method == "ltt"):
             if delta is None:
                 raise ValueError(
                     "Invalid delta. "
-                    "delta cannot be ''None'' when using "
-                    "LTT method."
+                    "delta cannot be ``None`` when using "
+                    "RCPS or LTT method."
                 )
             elif ((delta <= 0) or (delta >= 1)):
                 raise ValueError(
                     "Invalid delta. "
                     "delta must be in ]0, 1["
                 )
-        if (not isinstance(delta, float)) and (delta is not None):
-            raise ValueError(
-                "Invalid delta. "
-                f"delta must be a float, not a {type(delta)}"
-            )
         if (self.method == "crc") and (delta is not None):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
