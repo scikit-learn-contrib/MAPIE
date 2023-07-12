@@ -66,9 +66,6 @@ wrong_alpha_shape = np.array([
 
 random_state = 42
 prng = np.random.RandomState(random_state)
-y_1 = prng.random(51)
-y_2 = prng.random((51, 5))
-y_3 = prng.randint(0, 2, 51)
 
 
 def test_compute_recall_equal() -> None:
@@ -86,14 +83,14 @@ def test_compute_precision() -> None:
 def test_recall_with_zero_sum_is_equal_nan() -> None:
     """Test compute_recall with nan values"""
     y_toy = np.zeros((4, 3))
-    y_preds_proba = np.random.rand(4, 3, 1)
+    y_preds_proba = prng.rand(4, 3, 1)
     recall = compute_risk_recall(lambdas, y_preds_proba, y_toy)
     np.testing.assert_array_equal(recall, np.empty_like(recall))
 
 
 def test_precision_with_zero_sum_is_equal_ones() -> None:
     """Test compute_precision with nan values"""
-    y_toy = np.random.rand(4, 3)
+    y_toy = prng.rand(4, 3)
     y_preds_proba = np.zeros((4, 3, 1))
     precision = compute_risk_precision(lambdas, y_preds_proba, y_toy)
     np.testing.assert_array_equal(precision, np.ones_like(precision))

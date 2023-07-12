@@ -457,7 +457,6 @@ def test_array_output_model(strategy: str, alpha: Any, delta: Any, bound: Any):
         metric_control=args["metric_control"],
         random_state=random_state
     )
-    
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(
         X_toy,
@@ -705,8 +704,6 @@ def test_error_no_fit() -> None:
 def test_error_estimator_none_partial() -> None:
     """Test error estimator none partial"""
     mapie_clf = MapieMultiLabelClassifier(random_state=random_state)
-
-
     with pytest.raises(
         ValueError,
         match=r".*Invalid estimator with partial_fit*"
@@ -739,8 +736,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
         clf,
         method=args["method"],
         metric_control=args["metric_control"],
-      random_state=random_state
-
+        random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     _, y_ps = mapie_clf.predict(
