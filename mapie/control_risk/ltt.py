@@ -67,9 +67,10 @@ def ltt_procedure(
             + " controlling precision with LTT. "
         )
     p_values = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha_np)
+    N = len(p_values)
     valid_index = []
     for i in range(len(alpha_np)):
-        l_index = np.where(p_values[:, i] <= delta/n_obs)[0].tolist()
+        l_index = np.where(p_values[:, i] <= delta/N)[0].tolist()
         valid_index.append(l_index)
     return valid_index, p_values
 
