@@ -486,7 +486,7 @@ class EnsembleRegressor(EnsembleEstimator):
         y_pred = self.single_estimator_.predict(X)
         if not return_multi_pred and not ensemble:
             return y_pred
-        
+
         if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
             y_pred_multi_low = y_pred[:, np.newaxis]
             y_pred_multi_up = y_pred[:, np.newaxis]

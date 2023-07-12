@@ -588,3 +588,27 @@ def test_conformity_score(
     )
     mapie_reg.fit(X, y + 1e3)
     mapie_reg.predict(X, alpha=0.05)
+
+
+@pytest.mark.parametrize("ensemble", [True, False])
+def test_return_only_ypred(ensemble: bool) -> None:
+    """Test that if return_multi_pred is False it only returns y_pred."""
+    mapie_reg = MapieRegressor()
+    mapie_reg.fit(X_toy, y_toy)
+    output = mapie_reg.estimator_.predict(
+        X_toy, ensemble=ensemble, return_multi_pred=False
+    )
+    assert len(output) == len(X_toy)
+
+
+@pytest.mark.parametrize("ensemble", [True, False])
+def test_return_multi_pred(ensemble: bool) -> None:
+    """
+    Test that if return_multi_pred is True it returns y_pred and multi_pred.
+    """
+    mapie_reg = MapieRegressor()
+    mapie_reg.fit(X_toy, y_toy)
+    output = mapie_reg.estimator_.predict(
+        X_toy, ensemble=ensemble, return_multi_pred=True
+    )
+    assert len(output) == 3
