@@ -470,7 +470,9 @@ class EnsembleRegressor(EnsembleEstimator):
             By default ``False``.
 
         return_multi_pred: bool
-
+            If ``True`` the method returns the predictions and the multiple
+            predictions (3 arrays). If ``False`` the method return the
+            simple predictions only.
 
         Returns
         -------
