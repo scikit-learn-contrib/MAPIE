@@ -4,7 +4,8 @@ History
 
 ##### (##########)
 ------------------
-
+* Refactor MapieRegressor and ConformityScore to add the possibility to use X in ConformityScore.
+* Separate the handling of the estimator from MapieRegressor into a new class called EnsembleEstimator.
 * Fix an unfixed random state in one of the classification tests
 
 0.6.5 (2023-06-06)
