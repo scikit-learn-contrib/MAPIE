@@ -20,8 +20,10 @@ from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
-from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
-                                     GammaConformityScore)
+from mapie.conformity_scores import (AbsoluteConformityScore,
+                                     ConformityScore,
+                                     GammaConformityScore,
+                                     FittedResidualNormalisingScore)
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.estimator.estimator import EnsembleRegressor
@@ -585,6 +587,24 @@ def test_conformity_score(
     mapie_reg = MapieRegressor(
         conformity_score=conformity_score,
         **STRATEGIES[strategy]
+    )
+    mapie_reg.fit(X, y + 1e3)
+    mapie_reg.predict(X, alpha=0.05)
+
+
+@pytest.mark.parametrize(
+    "conformity_score", [FittedResidualNormalisingScore()]
+)
+def test_conformity_score_with_split_strategies(
+   conformity_score: ConformityScore
+) -> None:
+    """
+    Test that any conformity score function that handle only split strategies
+    with MAPIE raises no error.
+    """
+    mapie_reg = MapieRegressor(
+        conformity_score=conformity_score,
+        **STRATEGIES["split"]
     )
     mapie_reg.fit(X, y + 1e3)
     mapie_reg.predict(X, alpha=0.05)
