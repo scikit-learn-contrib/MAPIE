@@ -12,7 +12,8 @@ from sklearn.utils.validation import (_check_y, check_is_fitted,
                                       indexable)
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import ConformityScore
+from mapie.conformity_scores import (ConformityScore,
+                                     FittedResidualNormalisingScore)
 from mapie.estimator.estimator import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_conformity_score, check_cv,
@@ -388,6 +389,27 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
     ):
+        """
+        Perform several checks on class parameters.
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed values.
+
+        y: ArrayLike
+            Target values.
+
+        sample_weight: Optional[NDArray] of shape (n_samples,)
+            Non-null sample weights.
+
+        Raises
+        ------
+        ValueError
+            If conformity score is FittedResidualNormalizing score and method
+            is neither ``"prefit"`` or ``"split"``
+
+        """
         # Checking
         self._check_parameters()
         cv = check_cv(
@@ -398,6 +420,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         cs_estimator = check_conformity_score(
             self.conformity_score
         )
+        if isinstance(cs_estimator, FittedResidualNormalisingScore) and \
+           self.cv not in ["split", "prefit"]:
+            raise ValueError(
+                "The FittedResisualNormalizingScore can be used only with "
+                "``split`` and ``prefit`` methods"
+            )
+
         X, y = indexable(X, y)
         y = _check_y(y)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)

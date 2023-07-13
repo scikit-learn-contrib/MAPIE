@@ -1,9 +1,11 @@
 from .conformity_scores import ConformityScore
 from .residual_conformity_scores import (AbsoluteConformityScore,
-                                         GammaConformityScore)
+                                         GammaConformityScore,
+                                         FittedResidualNormalisingScore)
 
 __all__ = [
     "ConformityScore",
     "AbsoluteConformityScore",
-    "GammaConformityScore"
+    "GammaConformityScore",
+    "FittedResidualNormalisingScore"
 ]
