@@ -2,7 +2,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing import Optional, Tuple
 
-sigma_init = .25
+sigma_init = .25  # Value given in the paper [1].
 
 
 def _get_r_hat_plus(
@@ -12,26 +12,40 @@ def _get_r_hat_plus(
     bound: Optional[str],
     delta: Optional[float],
 ) -> Tuple[NDArray, NDArray]:
-    """Compute the upper bound of the loss for each lambda.
+    """
+    Compute the upper bound of the loss for each lambda.
 
     Parameters
     ----------
-    bound : str
+
+    risks: ArrayLike of shape (n_samples_cal, n_lambdas)
+        The risk for each observation for each threshold
+
+    lambdas: NDArray
+        Array with all the values of lambda.
+        Threshold that permit to compute score.
+
+    bound: str
         Bounds to compute. Either hoeffding, bernstein or wsr.
 
-    delta : float
+    delta: float
         Level of confidence.
-
-    sigma_init : float, optional
-        First variance in the sigma_hat array. The default
-        value is the same as in the paper implementation.
-
-        By default .25
 
     Returns
     -------
     Tuple[NDArray, NDArray] of shape (n_lambdas, ) and (n_lambdas)
         Average risk over all the obervations and upper bound of the risk.
+
+    References
+    ----------
+    [1] Bates, S., Angelopoulos, A., Lei, L., Malik, J., & Jordan, M.
+    (2021).
+    Distribution-free, risk-controlling prediction sets.
+
+    [2] Angelopoulos, A. N., Bates, S., Fisch, A., Lei, L., & Schuster, T.
+    (2022).
+    Conformal risk control.
+
     """
     n_lambdas = len(lambdas)
     r_hat = risks.mean(axis=0)
@@ -140,10 +154,14 @@ def _find_lambda_star(
 
     Parameters
     ----------
-    r_hat_plus : NDArray of shape (n_lambdas, )
+    lambdas: NDArray
+        Array with all the values of lambda.
+        Threshold that permit to compute score.
+
+    r_hat_plus: NDArray of shape (n_lambdas, )
         Upper bounds computed in the `get_r_hat_plus` method.
 
-    alphas : NDArray of shape (n_alphas, )
+    alphas: NDArray of shape (n_alphas, )
         Risk levels.
 
     Returns
@@ -151,6 +169,16 @@ def _find_lambda_star(
     NDArray of shape (n_alphas, )
         Optimal lambdas which control the risks for each value
         of alpha.
+
+     References
+    ----------
+    [1] Bates, S., Angelopoulos, A., Lei, L., Malik, J., & Jordan, M.
+    (2021).
+    Distribution-free, risk-controlling prediction sets.
+
+    [2] Angelopoulos, A. N., Bates, S., Fisch, A., Lei, L., & Schuster, T.
+    (2022).
+    Conformal risk control.
     """
     if len(alpha_np) > 1:
         alphas_np = alpha_np[:, np.newaxis]
