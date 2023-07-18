@@ -5,7 +5,7 @@ History
 ##### (##########)
 ------------------
 
-* Fix an unfixed random state in one of the classification tests
+* Add LTT for multilabel-classification
 
 0.6.5 (2023-06-06)
 ------------------
@@ -19,11 +19,6 @@ History
 * Fix bug in MapieClassifier with different number of labels in calibration dataset.
 
 
-0.6.5(2023-07-11)
-------------------
-
-* Add LTT for multilabel-classification
-
 0.6.4 (2023-04-05)
 ------------------
 
@@ -36,6 +31,7 @@ History
 
 0.6.2 (2023-03-22)
 ------------------
+
 
 * Make MapieClassifier a scikit-learn object
 * Update documentation for MapieClassifier
