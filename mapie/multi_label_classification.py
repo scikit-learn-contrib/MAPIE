@@ -108,6 +108,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         when the user wants to control precision score. Contains
         n_alpha lists (see predict).
 
+     sigma_init : Optional[float]
+        First variance in the sigma_hat array. The default
+        value is the same as in the paper implementation [1].
+
     References
     ----------
     [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
