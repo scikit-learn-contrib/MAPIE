@@ -18,8 +18,10 @@ def _get_r_hat_plus(
     ----------
     bound : str
         Bounds to compute. Either hoeffding, bernstein or wsr.
+
     delta : float
         Level of confidence.
+
     sigma_init : float, optional
         First variance in the sigma_hat array. The default
         value is the same as in the paper implementation.
@@ -140,6 +142,7 @@ def _find_lambda_star(
     ----------
     r_hat_plus : NDArray of shape (n_lambdas, )
         Upper bounds computed in the `get_r_hat_plus` method.
+
     alphas : NDArray of shape (n_alphas, )
         Risk levels.
 
@@ -165,11 +168,11 @@ def _find_lambda_star(
         bound_rep[:, np.argmax(bound_rep, axis=1)]
     )  # to avoid an error if the risk is always higher than alpha
     lambdas_star = lambdas[np.argmin(
-            - np.greater_equal(
-                bound_rep,
-                alphas_np
-            ).astype(int),
-            axis=1
-        )]
+        - np.greater_equal(
+            bound_rep,
+            alphas_np
+        ).astype(int),
+        axis=1
+    )]
 
     return lambdas_star
