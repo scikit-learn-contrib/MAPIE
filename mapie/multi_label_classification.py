@@ -148,6 +148,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         "single_estimator_",
         "risks"
     ]
+    sigma_init = 0.25
     cal_size = .3
 
     def __init__(
@@ -677,7 +678,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         else:
             self.r_hat, self.r_hat_plus = _get_r_hat_plus(
                 self.risks, self.lambdas, self.method,
-                bound, delta
+                bound, delta, self.sigma_init
             )
             self.lambdas_star = _find_lambda_star(
                 self.lambdas, self.r_hat_plus, alpha_np

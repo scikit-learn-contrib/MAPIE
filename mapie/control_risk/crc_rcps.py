@@ -2,8 +2,6 @@ import numpy as np
 from numpy.typing import NDArray
 from typing import Optional, Tuple
 
-sigma_init = .25  # Value given in the paper [1].
-
 
 def _get_r_hat_plus(
     risks: NDArray,
@@ -11,6 +9,7 @@ def _get_r_hat_plus(
     method: Optional[str],
     bound: Optional[str],
     delta: Optional[float],
+    sigma_init: Optional[float]
 ) -> Tuple[NDArray, NDArray]:
     """
     Compute the upper bound of the loss for each lambda.
@@ -34,6 +33,11 @@ def _get_r_hat_plus(
 
     delta: float
         Level of confidence.
+    
+    sigma_init : float, optional
+        First variance in the sigma_hat array. The default
+        value is the same as in the paper implementation.
+        By default .25
 
     Returns
     -------
