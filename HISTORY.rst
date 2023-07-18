@@ -5,7 +5,8 @@ History
 ##### (##########)
 ------------------
 
-* Add LTT for multilabel-classification
+* Add Learn-Then-Test method for multilabel-classification
+* Fix an unfixed random state in one of the classification tests
 
 0.6.5 (2023-06-06)
 ------------------
