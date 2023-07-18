@@ -36,7 +36,7 @@ def _get_r_hat_plus(
     
     sigma_init : float, optional
         First variance in the sigma_hat array. The default
-        value is the same as in the paper implementation.
+        value is the same as in the paper implementation [1].
         By default .25
 
     Returns
