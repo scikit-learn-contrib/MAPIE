@@ -20,8 +20,8 @@ from itertools import chain
 
 from .control_risk.ltt import find_lambda_control_star, ltt_procedure
 from .control_risk.risks import compute_risk_precision, compute_risk_recall
-from .control_risk.RCPS_CRC import _get_r_hat_plus
-from .control_risk.RCPS_CRC import _find_lambda_star
+from .control_risk.rcps_crc import _get_r_hat_plus
+from .control_risk.rcps_crc import _find_lambda_star
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
@@ -469,7 +469,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
 
         return np.expand_dims(y_pred_proba_array, axis=2)
-
 
     def partial_fit(
         self,
