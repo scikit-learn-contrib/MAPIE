@@ -20,8 +20,8 @@ from itertools import chain
 
 from .control_risk.ltt import find_lambda_control_star, ltt_procedure
 from .control_risk.risks import compute_risk_precision, compute_risk_recall
-from .control_risk.rcps_crc import _get_r_hat_plus
-from .control_risk.rcps_crc import _find_lambda_star
+from .control_risk.crc_rcps import _get_r_hat_plus
+from .control_risk.crc_rcps import _find_lambda_star
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
