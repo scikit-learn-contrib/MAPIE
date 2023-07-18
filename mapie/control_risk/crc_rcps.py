@@ -21,9 +21,13 @@ def _get_r_hat_plus(
     risks: ArrayLike of shape (n_samples_cal, n_lambdas)
         The risk for each observation for each threshold
 
-    lambdas: NDArray
+    lambdas: NDArray of shape (n_lambdas, )
         Array with all the values of lambda.
         Threshold that permit to compute score.
+
+    method: Optional[str]
+        Correspond to the method use to control recall
+        score. Could be either CRC or RCPS.
 
     bound: str
         Bounds to compute. Either hoeffding, bernstein or wsr.
@@ -45,7 +49,6 @@ def _get_r_hat_plus(
     [2] Angelopoulos, A. N., Bates, S., Fisch, A., Lei, L., & Schuster, T.
     (2022).
     Conformal risk control.
-
     """
     n_lambdas = len(lambdas)
     r_hat = risks.mean(axis=0)
@@ -170,7 +173,7 @@ def _find_lambda_star(
         Optimal lambdas which control the risks for each value
         of alpha.
 
-     References
+    References
     ----------
     [1] Bates, S., Angelopoulos, A., Lei, L., Malik, J., & Jordan, M.
     (2021).
