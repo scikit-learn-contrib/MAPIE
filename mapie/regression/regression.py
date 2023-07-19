@@ -13,7 +13,7 @@ from sklearn.utils.validation import (_check_y, check_is_fitted,
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import (ConformityScore,
-                                     FittedResidualNormalisingScore)
+                                     ConformalResidualFittingScore)
 from mapie.estimator.estimator import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_conformity_score, check_cv,
@@ -420,7 +420,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         cs_estimator = check_conformity_score(
             self.conformity_score
         )
-        if isinstance(cs_estimator, FittedResidualNormalisingScore) and \
+        if isinstance(cs_estimator, ConformalResidualFittingScore) and \
            self.cv not in ["split", "prefit"]:
             raise ValueError(
                 "The FittedResisualNormalizingScore can be used only with "

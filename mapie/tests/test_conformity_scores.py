@@ -10,7 +10,7 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import (AbsoluteConformityScore,
                                      ConformityScore,
                                      GammaConformityScore,
-                                     FittedResidualNormalisingScore)
+                                     ConformalResidualFittingScore)
 from mapie.regression import MapieRegressor
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -231,7 +231,7 @@ def test_crf_prefit_conformity_score_get_conformity_scores(
     when prefit is True.
     """
     residual_estimator = LinearRegression().fit(X_toy, y_toy)
-    crf_conf_score = FittedResidualNormalisingScore(
+    crf_conf_score = ConformalResidualFittingScore(
         residual_estimator=residual_estimator,
         prefit=True,
         random_state=random_state
@@ -249,7 +249,7 @@ def test_crf_conformity_score_get_conformity_scores(y_pred: NDArray) -> None:
     Test conformity score computation for ConformalResidualFittingScore
     when prefit is False.
     """
-    crf_conf_score = FittedResidualNormalisingScore(random_state=random_state)
+    crf_conf_score = ConformalResidualFittingScore(random_state=random_state)
     conf_scores = crf_conf_score.get_conformity_scores(
         X_toy, y_toy, y_pred
     )
@@ -261,7 +261,7 @@ def test_crf_conformity_score_get_conformity_scores(y_pred: NDArray) -> None:
 
 def test_crf_score_prefit_with_notfitted_estim() -> None:
     """Test that a not fitted estimator and prefit=True raises an error."""
-    crf_conf_score = FittedResidualNormalisingScore(
+    crf_conf_score = ConformalResidualFittingScore(
             residual_estimator=LinearRegression(), prefit=True
     )
     with pytest.raises(ValueError):
@@ -272,7 +272,7 @@ def test_crf_score_prefit_with_notfitted_estim() -> None:
 
 def test_crf_score_prefit_with_default_params() -> None:
     """Test that no error is raised with default parameters."""
-    crf_conf_score = FittedResidualNormalisingScore()
+    crf_conf_score = ConformalResidualFittingScore()
     conf_scores = crf_conf_score.get_conformity_scores(
         X_toy, y_toy, y_pred_list
     )
@@ -286,7 +286,7 @@ def test_invalid_estimator() -> None:
         def __init__(self):
             pass
 
-    crf_conf_score = FittedResidualNormalisingScore(
+    crf_conf_score = ConformalResidualFittingScore(
         residual_estimator=DumbEstimator()
     )
     with pytest.raises(ValueError):
@@ -298,7 +298,7 @@ def test_invalid_estimator() -> None:
 def test_cross_crf() -> None:
     """Test that crf score called with cross method raises an error."""
     with pytest.raises(ValueError):
-        MapieRegressor(conformity_score=FittedResidualNormalisingScore()).fit(
+        MapieRegressor(conformity_score=ConformalResidualFittingScore()).fit(
             X_toy, y_toy
         )
 
@@ -312,7 +312,7 @@ def test_crf_score_pipe() -> None:
             ("linear", LinearRegression())
         ])
     mapie_reg = MapieRegressor(
-        conformity_score=FittedResidualNormalisingScore(
+        conformity_score=ConformalResidualFittingScore(
             residual_estimator=pipe, split_size=0.2
         ),
         cv="split",
@@ -333,7 +333,7 @@ def test_crf_score_pipe_prefit() -> None:
         ])
     pipe.fit(X_toy, y_toy)
     mapie_reg = MapieRegressor(
-        conformity_score=FittedResidualNormalisingScore(
+        conformity_score=ConformalResidualFittingScore(
             residual_estimator=pipe, split_size=0.2, prefit=True
         ),
         cv="split",
