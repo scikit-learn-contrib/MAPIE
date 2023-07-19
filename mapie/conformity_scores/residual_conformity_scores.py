@@ -289,7 +289,7 @@ class ConformalResidualFittingScore(ConformityScore):
         X: NDArray,
         y: NDArray,
         y_pred: NDArray,
-        calres_indexes: NDArray,
+        full_indexes: NDArray,
         random_state: Optional[Union[int, np.random.RandomState]]
     ) -> Tuple[NDArray, NDArray]:
         """
@@ -307,7 +307,7 @@ class ConformalResidualFittingScore(ConformityScore):
         y_pred: NDArray
             Predicted targets.
 
-        calres_indexes: NDArray
+        full_indexes: NDArray
             Indexes used for the training of the estimator and the calibration.
 
         random_state: Optional[Union[int, np.random.RandomState]]
@@ -322,8 +322,8 @@ class ConformalResidualFittingScore(ConformityScore):
          X_cal_indexes,
          y_res_indexes,
          y_cal_indexes) = train_test_split(
-            calres_indexes,
-            calres_indexes,
+            full_indexes,
+            full_indexes,
             test_size=self.split_size,
             random_state=random_state,
         )
@@ -368,27 +368,25 @@ class ConformalResidualFittingScore(ConformityScore):
          self.residual_estimator_,
          random_state) = self._check_parameters(X, y, y_pred)
 
-        calres_indexes = np.argwhere(
+        full_indexes = np.argwhere(
             np.logical_not(np.isnan(y_pred))
         ).reshape((-1,))
 
         if not self.prefit:
             cal_indexes, train_indexes = self._fit_residual_estimator(
-                clone(self.residual_estimator_),
-                X, y, y_pred, calres_indexes,
-                random_state
-            )
+                clone(self.residual_estimator_), X, y, y_pred, full_indexes,
+                random_state)
         else:
-            cal_indexes = calres_indexes
+            cal_indexes = full_indexes
             train_indexes = np.argwhere(np.isnan(y_pred)).reshape((-1,))
 
-        normalizer = np.maximum(
+        residuals_pred = np.maximum(
             np.exp(self.residual_estimator_.predict(X[cal_indexes])),
             self.eps
         )
         signed_conformity_scores = np.divide(
             np.abs(np.subtract(y[cal_indexes], y_pred[cal_indexes])),
-            normalizer
+            residuals_pred
         )
 
         # reconstruct array with nan and conformity scores
