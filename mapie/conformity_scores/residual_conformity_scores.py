@@ -377,7 +377,8 @@ class ConformalResidualFittingScore(ConformityScore):
         if not self.prefit:
             cal_indexes, train_indexes = self._fit_residual_estimator(
                 clone(self.residual_estimator_), X, y, y_pred, full_indexes,
-                random_state)
+                random_state
+            )
         else:
             cal_indexes = full_indexes
             train_indexes = np.argwhere(np.isnan(y_pred)).reshape((-1,))
