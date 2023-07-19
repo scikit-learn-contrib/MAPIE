@@ -169,14 +169,14 @@ class ConformalResidualFittingScore(ConformityScore):
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
     prefit: bool
-        Specify if the residual_estimator is already fitted or not.
+        Specify if the ``residual_estimator` is already fitted or not.
         By default ``False``.
 
     split_size: Optional[Union[int, float]]
-        The proportion of data that is used to fit the residual_estimator
+        The proportion of data that is used to fit the ``residual_estimator``.
         By default 0.5.
 
-    random_state: 0ptional[Union[int, np.random.RandomState]]
+    random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number used for random sampling.
         Pass an int for reproducible output across multiple function calls.
         By default ``None``.
@@ -296,17 +296,17 @@ class ConformalResidualFittingScore(ConformityScore):
 
         Parameters
         ----------
-        X : NDArray
+        X: NDArray
             All the observed values used in the general fit.
 
-        y : NDArray
+        y: NDArray
             All the observed targets used in the general fit.
 
-        y_pred : NDArray
+        y_pred: NDArray
             Predicted targets.
 
-        calres_indexes : NDArray
-            Indexes used for the training of the estimaot and the calibration.
+        calres_indexes: NDArray
+            Indexes used for the training of the estimator and the calibration.
 
         Returns
         -------
@@ -401,7 +401,7 @@ class ConformalResidualFittingScore(ConformityScore):
         """
         Compute samples of the estimation distribution from the predicted
         values and the conformity scores, from the following formula:
-        y_pred + conformity_scores * r_pred.
+        `y_pred + conformity_scores * r_pred``.
 
         The learning has been done with the log of the residual so we use the
         exponential of the prediction to avoid negative values.
