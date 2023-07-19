@@ -174,7 +174,7 @@ class ConformalResidualFittingScore(ConformityScore):
 
     split_size: Optional[Union[int, float]]
         The proportion of data that is used to fit the ``residual_estimator``.
-        By default it is the defaukt of
+        By default it is the default of
         ``sklearn.model_selection.train_test_split`` ie 0.2.
 
     random_state: Optional[Union[int, np.random.RandomState]]
