@@ -188,9 +188,11 @@ class ConformalResidualFittingScore(ConformityScore):
         residual_estimator: Optional[RegressorMixin] = None,
         prefit: bool = False,
         split_size: Optional[Union[int, float]] = None,
-        random_state: Optional[Union[int, np.random.RandomState]] = None
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
+        sym: bool = True,
+        consistency_check: bool = False
     ) -> None:
-        super().__init__(sym=True, consistency_check=False)
+        super().__init__(sym=sym, consistency_check=consistency_check)
         self.prefit = prefit
         self.residual_estimator = residual_estimator
         self.split_size = split_size
