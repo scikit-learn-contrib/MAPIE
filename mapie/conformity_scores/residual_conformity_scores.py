@@ -392,12 +392,9 @@ class ConformalResidualFittingScore(ConformityScore):
         )
 
         # reconstruct array with nan and conformity scores
-        complete_signed_cs = np.zeros_like(y_pred)
+        complete_signed_cs = np.zeros_like(y_pred, dtype=float)
         complete_signed_cs[cal_indexes] = signed_conformity_scores
-        complete_signed_cs[train_indexes] = np.full(
-            (train_indexes.shape[0],),
-            np.nan
-        )
+        complete_signed_cs[train_indexes] = np.nan
         return signed_conformity_scores
 
     def get_estimation_distribution(
