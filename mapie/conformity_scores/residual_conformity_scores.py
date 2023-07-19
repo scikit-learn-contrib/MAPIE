@@ -174,7 +174,8 @@ class ConformalResidualFittingScore(ConformityScore):
 
     split_size: Optional[Union[int, float]]
         The proportion of data that is used to fit the ``residual_estimator``.
-        By default 0.5.
+        By default it is the defaukt of
+        ``sklearn.model_selection.train_test_split`` ie 0.2.
 
     random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number used for random sampling.
@@ -245,7 +246,8 @@ class ConformalResidualFittingScore(ConformityScore):
         X: ArrayLike,
         y: ArrayLike,
         y_pred: ArrayLike
-    ) -> Tuple[NDArray, NDArray, NDArray, RegressorMixin]:
+    ) -> Tuple[NDArray, NDArray, NDArray, RegressorMixin,
+               Union[int, np.random.RandomState]]:
         """
         Checks all the parameters of the class. Raises an error if the
         parameter are not well defined.
@@ -269,18 +271,17 @@ class ConformalResidualFittingScore(ConformityScore):
             - y
             - y_pred
             - residual_estimator
+            - random_state
         """
         residual_estimator = self._check_estimator(
             self.residual_estimator
         )
-        check_random_state(self.random_state)
-        if self.split_size is None:
-            self.split_size = 0.5
+        random_state = check_random_state(self.random_state)
         X, y, y_pred = indexable(X, y, y_pred)
         X = np.array(X)
         y = np.array(y)
         y_pred = np.array(y_pred)
-        return X, y, y_pred, residual_estimator
+        return X, y, y_pred, residual_estimator, random_state
 
     def _fit_residual_estimator(
         self,
@@ -288,7 +289,8 @@ class ConformalResidualFittingScore(ConformityScore):
         X: NDArray,
         y: NDArray,
         y_pred: NDArray,
-        calres_indexes: NDArray
+        calres_indexes: NDArray,
+        random_state: Optional[Union[int, np.random.RandomState]]
     ) -> Tuple[NDArray, NDArray]:
         """
         Fit the residual estimator and returns the indexes used for the
@@ -308,6 +310,8 @@ class ConformalResidualFittingScore(ConformityScore):
         calres_indexes: NDArray
             Indexes used for the training of the estimator and the calibration.
 
+        random_state: Optional[Union[int, np.random.RandomState]]
+            Random state.
         Returns
         -------
         Tuple[NDArray, NDArray]
@@ -321,7 +325,7 @@ class ConformalResidualFittingScore(ConformityScore):
             calres_indexes,
             calres_indexes,
             test_size=self.split_size,
-            random_state=self.random_state,
+            random_state=random_state,
         )
 
         residuals = np.abs(np.subtract(
@@ -360,15 +364,19 @@ class ConformalResidualFittingScore(ConformityScore):
         The learning is done with the log of the residual and later we
         use the exponential of the prediction to avoid negative values.
         """
-        X, y, y_pred, self.residual_estimator_ = self._check_parameters(
-            X, y, y_pred
-        )
+        (X, y, y_pred,
+         self.residual_estimator_,
+         random_state) = self._check_parameters(X, y, y_pred)
+
         calres_indexes = np.argwhere(
-                            np.logical_not(np.isnan(y_pred))
-                        ).reshape((-1, ))
+            np.logical_not(np.isnan(y_pred))
+        ).reshape((-1,))
+
         if not self.prefit:
             cal_indexes, train_indexes = self._fit_residual_estimator(
-                clone(self.residual_estimator_), X, y, y_pred, calres_indexes
+                clone(self.residual_estimator_),
+                X, y, y_pred, calres_indexes,
+                random_state
             )
         else:
             cal_indexes = calres_indexes

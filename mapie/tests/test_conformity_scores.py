@@ -254,7 +254,7 @@ def test_crf_conformity_score_get_conformity_scores(y_pred: NDArray) -> None:
         X_toy, y_toy, y_pred
     )
     expected_signed_conf_scores = np.array(
-        [4.641589e-10, 0.000000e+00, 3.000000e+08]
+        [0.38167789, 0.]
     )
     np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
 
@@ -276,7 +276,7 @@ def test_crf_score_prefit_with_default_params() -> None:
     conf_scores = crf_conf_score.get_conformity_scores(
         X_toy, y_toy, y_pred_list
     )
-    _, X, _, y = train_test_split(X_toy, y_toy, test_size=0.5)
+    _, X, _, y = train_test_split(X_toy, y_toy, test_size=0.2)
     crf_conf_score.get_estimation_distribution(X, y, conf_scores)
 
 
