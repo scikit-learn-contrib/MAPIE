@@ -169,7 +169,7 @@ class ConformalResidualFittingScore(ConformityScore):
         If ``None``, estimator defaults to a ``LinearRegression`` instance.
 
     prefit: bool
-        Specify if the ``residual_estimator` is already fitted or not.
+        Specify if the ``residual_estimator`` is already fitted or not.
         By default ``False``.
 
     split_size: Optional[Union[int, float]]
@@ -407,7 +407,7 @@ class ConformalResidualFittingScore(ConformityScore):
         """
         Compute samples of the estimation distribution from the predicted
         values and the conformity scores, from the following formula:
-        `y_pred + conformity_scores * r_pred``.
+        ``y_pred + conformity_scores * r_pred``.
 
         The learning has been done with the log of the residual so we use the
         exponential of the prediction to avoid negative values.
