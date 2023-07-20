@@ -603,7 +603,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         delta: Optional[float] = None,
-        bound: Optional[Union[str, None]] = "wsr"
+        bound: Optional[Union[str, None]] = None
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Prediction sets on new samples based on target confidence
