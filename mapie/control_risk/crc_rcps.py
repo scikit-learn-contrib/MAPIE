@@ -29,9 +29,12 @@ def get_r_hat_plus(
     method: Optional[str]
         Correspond to the method use to control recall
         score. Could be either CRC or RCPS.
+        When method is RCPS and bound is None the default
+        bound use wsr.
 
     bound: Optional[str]
         Bounds to compute. Either hoeffding, bernstein or wsr.
+        When method is RCPS and bound in None, use wsr bound.
 
     delta: Optional[float]
         Level of confidence.
