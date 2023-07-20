@@ -1,6 +1,7 @@
-import numpy as np
 from numpy.typing import NDArray
 from typing import Optional, Tuple
+
+import numpy as np
 
 
 def get_r_hat_plus(
