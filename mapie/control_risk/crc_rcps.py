@@ -13,11 +13,13 @@ def get_r_hat_plus(
 ) -> Tuple[NDArray, NDArray]:
     """
     Compute the upper bound of the loss for each lambda.
+    The procedure here is the one presented in paper RCPS[1]
+    and CRC [2].
 
     Parameters
     ----------
     risks: ArrayLike of shape (n_samples_cal, n_lambdas)
-        The risk for each observation for each threshold
+        The risk for each observation for each threshold.
 
     lambdas: NDArray of shape (n_lambdas, )
         Array with all the values of lambda.
