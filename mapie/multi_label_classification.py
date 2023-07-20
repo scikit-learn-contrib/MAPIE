@@ -103,10 +103,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Optimal threshold for a given alpha.
 
     valid_index: List[List[Any]]
-        List of list of all index that satisfy fwer controlling
-        for learn then test procedure. This attribute is computed
-        when the user wants to control precision score. Contains
-        n_alpha lists (see predict).
+        List of list of all index that satisfy fwer controlling. 
+        This attribute is computed when the user wants to 
+        control precision score. 
+        Only relevant when metric_control="precision" as it uses
+        learn then test (ltt) procedure.
+        Contains n_alpha lists (see predict).
 
      sigma_init : Optional[float]
         First variance in the sigma_hat array. The default

@@ -33,7 +33,7 @@ def get_r_hat_plus(
     delta: Optional[float]
         Level of confidence.
 
-    sigma_init : Optional[float]
+    sigma_init: Optional[float]
         First variance in the sigma_hat array. The default
         value is the same as in the paper implementation [1].
 
