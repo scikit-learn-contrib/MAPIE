@@ -16,11 +16,8 @@ def ltt_procedure(
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
-    This will apply learn then test procedure for
-    risk control.
     Note that we will do a multiple test for ``r_hat`` that are
     less than level ``alpha_np``.
-
     The procedure follows the instructions in [1]:
         - Calculate p-values for each lambdas descretized
         - Apply a family wise error rate algorithm,

@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 from typing import Optional, Tuple
 
 
-def _get_r_hat_plus(
+def get_r_hat_plus(
     risks: NDArray,
     lambdas: NDArray,
     method: Optional[str],
@@ -16,7 +16,6 @@ def _get_r_hat_plus(
 
     Parameters
     ----------
-
     risks: ArrayLike of shape (n_samples_cal, n_lambdas)
         The risk for each observation for each threshold
 
@@ -28,16 +27,15 @@ def _get_r_hat_plus(
         Correspond to the method use to control recall
         score. Could be either CRC or RCPS.
 
-    bound: str
+    bound: Optional[str]
         Bounds to compute. Either hoeffding, bernstein or wsr.
 
-    delta: float
+    delta: Optional[float]
         Level of confidence.
 
-    sigma_init : float, optional
+    sigma_init : Optional[float]
         First variance in the sigma_hat array. The default
         value is the same as in the paper implementation [1].
-        By default .25
 
     Returns
     -------
@@ -150,7 +148,7 @@ def _get_r_hat_plus(
     return r_hat, r_hat_plus
 
 
-def _find_lambda_star(
+def find_lambda_star(
     lambdas: NDArray,
     r_hat_plus: NDArray,
     alpha_np: NDArray

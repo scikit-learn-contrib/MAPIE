@@ -20,8 +20,8 @@ from itertools import chain
 
 from .control_risk.ltt import find_lambda_control_star, ltt_procedure
 from .control_risk.risks import compute_risk_precision, compute_risk_recall
-from .control_risk.crc_rcps import _get_r_hat_plus
-from .control_risk.crc_rcps import _find_lambda_star
+from .control_risk.crc_rcps import get_r_hat_plus
+from .control_risk.crc_rcps import find_lambda_star
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
@@ -122,6 +122,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     [2] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
     Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
 
+    [3] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
+    M. I., & Lei, L. (2021). Learn then test:
+    "Calibrating predictive algorithms to achieve risk control".
+
     Examples
     --------
     >>> import numpy as np
@@ -152,7 +156,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         "single_estimator_",
         "risks"
     ]
-    sigma_init = 0.25
+    sigma_init = 0.25  # Value given in the paper [1]
     cal_size = .3
 
     def __init__(
@@ -680,11 +684,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             )
 
         else:
-            self.r_hat, self.r_hat_plus = _get_r_hat_plus(
+            self.r_hat, self.r_hat_plus = get_r_hat_plus(
                 self.risks, self.lambdas, self.method,
                 bound, delta, self.sigma_init
             )
-            self.lambdas_star = _find_lambda_star(
+            self.lambdas_star = find_lambda_star(
                 self.lambdas, self.r_hat_plus, alpha_np
             )
             y_pred_proba_array = (
