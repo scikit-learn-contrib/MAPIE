@@ -13,8 +13,8 @@ def get_r_hat_plus(
 ) -> Tuple[NDArray, NDArray]:
     """
     Compute the upper bound of the loss for each lambda.
-    The procedure here is the one presented in paper RCPS[1]
-    and CRC [2].
+    The procedure here are the RCPS[1]
+    and CRC [2] methods.
 
     Parameters
     ----------
