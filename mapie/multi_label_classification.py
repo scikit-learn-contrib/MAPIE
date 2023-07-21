@@ -636,7 +636,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         bound : Optional[Union[str, ``None``]]
             Method used to compute the Upper Confidence Bound of the
             average risk. Only necessary with the RCPS method.
-            By default "wsr".
+            By default ``None``.
 
         Returns
         -------

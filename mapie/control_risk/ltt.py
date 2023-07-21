@@ -124,7 +124,7 @@ def find_lambda_control_star(
             l_lambda_star.append(1)
             l_r_star.append(1)
         else:
-            idx = np.argmin(r_hat[valid_index[i]])
+            idx = np.argmin(valid_index[i])
             l_lambda_star.append(lambdas[valid_index[i][idx]])
             l_r_star.append(r_hat[valid_index[i][idx]])
 
