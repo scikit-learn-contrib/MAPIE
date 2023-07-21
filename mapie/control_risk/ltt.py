@@ -78,10 +78,10 @@ def find_lambda_control_star(
     lambdas: NDArray
 ) -> Tuple[ArrayLike, ArrayLike]:
     """
-    Return the lambda that give the maximum precision with a control
-    guarantee of level delta.
-    Note: When a list inf valid_index is empty, we can assume that
-    lambda is equal to 1, as no lambda can verify the fwer control.
+    Return the lambda that give the minimum precision along
+    the lambdas that satisfy FWER control.
+    Note: When a list in valid_index is empty, we can assume that
+    lambda is equal to 1, as no lambda can verify the FWER control.
     And so to make our statement clear we also assume that the risk is
     high.
 
