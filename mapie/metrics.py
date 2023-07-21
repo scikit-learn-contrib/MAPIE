@@ -1,4 +1,4 @@
-from typing import Optional, cast, Union
+from typing import Optional, cast, Union, Tuple
 
 import numpy as np
 from sklearn.utils.validation import check_array, column_or_1d
@@ -775,3 +775,37 @@ def jitter(
     noise = noise_amplitude * random_state_np.normal(size=n)
     x_jittered = x * (1 + noise)
     return x_jittered
+
+
+def sort_xy_by_y(x: NDArray, y: NDArray) -> Tuple[NDArray, NDArray]:
+    """
+    Sort two arrays x and y according to y values.
+
+    Parameters
+    ----------
+    x : NDArray
+        The array to sort according to y.
+    y : NDArray
+        The array to sort.
+
+    Returns
+    -------
+    Tuple[NDArray, NDArray]
+        Both arrays sorted.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from mapie.metrics import sort_xy_by_y
+    >>> x = np.array([1, 2, 3, 4, 5])
+    >>> y = np.array([5, 4, 3, 1, 2])
+    >>> x_sorted, y_sorted = sort_xy_by_y(x, y)
+    >>> print(x_sorted)
+    [4 5 3 2 1]
+    >>> print(y_sorted)
+    [1 2 3 4 5]
+    """
+    sort_index = np.argsort(y)
+    x_sorted = x[sort_index]
+    y_sorted = y[sort_index]
+    return x_sorted, y_sorted
