@@ -25,7 +25,10 @@ from mapie.metrics import (classification_coverage_score,
                            jitter,
                            sort_xy_by_y,
                            cumulative_differences,
-                           length_scale)
+                           length_scale,
+                           kolmogorov_smirnov_statistic,
+                           kuiper_statistic,
+                           spiegelhalter_statistic)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
 y_preds = np.array([
@@ -634,11 +637,35 @@ def test_cumulative_differences(random_state: int) -> None:
     assert np.min(cum_diff) >= -1
 
 
-@pytest.mark.parametrize("random_state", [1, 2, 3])
-def test_length_scale(random_state: int) -> None:
-    """Test that length scales are always between 0 and 1"""
-    generator = RandomState(random_state)
+def test_length_scale() -> None:
+    """Test that length scale are well computed"""
+    generator = RandomState(1)
     y_score = generator.uniform(size=100)
     scale = length_scale(y_score)
-    assert np.max(scale) <= 1
-    assert np.min(scale) >= 0
+    np.testing.assert_allclose(scale, 0.040389, atol=1e-6)
+
+
+def test_kolmogorov_smirnov_statistic() -> None:
+    """Test that Kolmogorov-Smirnov's statistics are well computed"""
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    ks_stat = kolmogorov_smirnov_statistic(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 5.607741, atol=1e-6)
+
+
+def test_kuiper_statistic() -> None:
+    """Test that Kuiper's statistics are well computed"""
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    ku_stat = kuiper_statistic(y_true, y_score)
+    np.testing.assert_allclose(ku_stat, 5.354395, atol=1e-6)
+
+def test_spiegelhalter_statistic() -> None:
+    """Test that Spiegelhalter's statistics are well computed"""
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    sp_stat = spiegelhalter_statistic(y_true, y_score)
+    np.testing.assert_allclose(sp_stat, 13.906833, atol=1e-6)

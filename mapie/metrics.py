@@ -752,9 +752,11 @@ def jitter(
     ----------
     x : NDArray
         The array to jitter.
-
     noise_amplitude : float, optional
         The tiny relative noise amplitude to add, by default 1e-8.
+    random_state: Optional[Union[int, RandomState]]
+        Pseudo random number generator state used for random sampling.
+        Pass an int for reproducible output across multiple function calls.
 
     Returns
     -------
@@ -816,7 +818,8 @@ def sort_xy_by_y(x: NDArray, y: NDArray) -> Tuple[NDArray, NDArray]:
 def cumulative_differences(
     y_true: NDArray,
     y_score: NDArray,
-    noise_amplitude: float = 1e-8
+    noise_amplitude: float = 1e-8,
+    random_state: Optional[Union[int, np.random.RandomState]] = 1
 ) -> NDArray:
     """
     Compute the cumulative difference between y_true and y_score, both ordered
@@ -828,6 +831,11 @@ def cumulative_differences(
         An array of ground truths.
     y_score : NDArray of size (n_samples,)
         An array of scores.
+    noise_amplitude : float, optional
+        The tiny relative noise amplitude to add, by default 1e-8.
+    random_state: Optional[Union[int, RandomState]]
+        Pseudo random number generator state used for random sampling.
+        Pass an int for reproducible output across multiple function calls.
 
     Returns
     -------
@@ -860,7 +868,7 @@ def cumulative_differences(
     y_true = cast(NDArray, column_or_1d(y_true))
     y_score = cast(NDArray, column_or_1d(y_score))
     n = len(y_true)
-    y_score_jittered = jitter(y_score, noise_amplitude=noise_amplitude)
+    y_score_jittered = jitter(y_score, noise_amplitude=noise_amplitude, random_state=random_state)
     y_true_sorted, y_score_sorted = sort_xy_by_y(y_true, y_score_jittered)
     cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted)/n
     return cumulative_differences
@@ -874,7 +882,7 @@ def length_scale(s: NDArray) -> float:
 
     Parameters
     ----------
-    s : NDArray
+    s : NDArray of shape (n_samples,)
         An array of scores.
 
     Returns
@@ -902,3 +910,129 @@ def length_scale(s: NDArray) -> float:
     n = len(s)
     length_scale = np.sqrt(np.sum(s * (1 - s)))/n
     return length_scale
+
+
+def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
+    """
+    Compute Kolmogorov-smirnov's statistic for calibration test.
+
+    Parameters
+    ----------
+    y_true : NDArray of shape (n_samples,)
+        An array of ground truth.
+    y_score : NDArray of shape (n_samples,)
+        An array of scores..
+
+    Returns
+    -------
+    float
+        Kolmogorov-smirnov's statistic.
+
+    References
+    ----------
+    Arrieta-Ibarra I, Gujral P, Tannen J, Tygert M, Xu C.
+    Metrics of calibration for probabilistic predictions.
+    The Journal of Machine Learning Research.
+    2022 Jan 1;23(1):15886-940.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from mapie.metrics import kolmogorov_smirnov_statistic
+    >>> y_true = np.array([0, 1, 0, 1, 0])
+    >>> y_score = np.array([0.1, 0.9, 0.21, 0.9, 0.5])
+    >>> print(np.round(kolmogorov_smirnov_statistic(y_true, y_score), 3))
+    0.978
+    """
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_score = cast(NDArray, column_or_1d(y_score))
+    cum_diff = cumulative_differences(y_true, y_score)
+    sigma = length_scale(y_score)
+    ks_stat = np.max(np.abs(cum_diff)) / sigma
+    return ks_stat
+
+
+def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
+    """
+    Compute Kuiper's statistic for calibration test.
+
+    Parameters
+    ----------
+    y_true : NDArray of shape (n_samples,)
+        An array of ground truth.
+    y_score : NDArray of shape (n_samples,)
+        An array of scores.
+
+    Returns
+    -------
+    float
+        Kuiper's statistic.
+
+    References
+    ----------
+    Arrieta-Ibarra I, Gujral P, Tannen J, Tygert M, Xu C.
+    Metrics of calibration for probabilistic predictions.
+    The Journal of Machine Learning Research.
+    2022 Jan 1;23(1):15886-940.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from mapie.metrics import kuiper_statistic
+    >>> y_true = np.array([0, 1, 0, 1, 0])
+    >>> y_score = np.array([0.1, 0.9, 0.21, 0.9, 0.5])
+    >>> print(np.round(kuiper_statistic(y_true, y_score), 3))
+    0.857
+    """
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_score = cast(NDArray, column_or_1d(y_score))
+    cum_diff = cumulative_differences(y_true, y_score)
+    sigma = length_scale(y_score)
+    ku_stat = (np.max(cum_diff) - np.min(cum_diff)) / sigma
+    return ku_stat
+
+
+def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
+    """
+    Compute Spiegelhalter's statistic for calibration test.
+
+    Parameters
+    ----------
+    y_true : NDArray of shape (n_samples,)
+        An array of ground truth.
+    y_score : NDArray of shape (n_samples,)
+        An array of scores.
+
+    Returns
+    -------
+    float
+        Spiegelhalter's statistic.
+
+    References
+    ----------
+    Spiegelhalter DJ.
+    Probabilistic prediction in patient management and clinical trials.
+    Statistics in medicine.
+    1986 Sep;5(5):421-33.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from mapie.metrics import spiegelhalter_statistic
+    >>> y_true = np.array([0, 1, 0, 1, 0])
+    >>> y_score = np.array([0.1, 0.9, 0.21, 0.9, 0.5])
+    >>> print(np.round(spiegelhalter_statistic(y_true, y_score), 3))
+    -0.757
+    """
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_score = cast(NDArray, column_or_1d(y_score))
+    numerator = np.sum(
+        (y_true - y_score) * (1 - 2 * y_score)
+    )
+    denominator = np.sqrt(
+        np.sum(
+            (1 - 2 * y_score) ** 2 * y_score * (1 - y_score)
+        )
+    )
+    sp_stat = numerator/denominator
+    return sp_stat
