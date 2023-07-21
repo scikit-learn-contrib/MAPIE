@@ -2,6 +2,7 @@ from typing import Optional, cast, Union
 
 import numpy as np
 from sklearn.utils.validation import check_array, column_or_1d
+from sklearn.utils import check_random_state
 
 from ._typing import ArrayLike, NDArray
 from .utils import (calc_bins,
@@ -737,3 +738,40 @@ def hsic(
     coef_hsic = np.sqrt(np.matrix.trace(hsic_mat, axis1=1, axis2=2))
 
     return coef_hsic
+
+
+def jitter(
+    x: NDArray,
+    noise_amplitude: float = 1e-8,
+    random_state: Optional[Union[int, np.random.RandomState]] = None
+) -> NDArray:
+    """
+    Add a tiny normal distributed perturbation to an array x.
+
+    Parameters
+    ----------
+    x : NDArray
+        The array to jitter.
+
+    noise_amplitude : float, optional
+        The tiny relative noise amplitude to add, by default 1e-8.
+
+    Returns
+    -------
+    NDArray
+        The array x jittered.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.metrics import jitter
+    >>> x = np.array([0, 1, 2, 3, 4])
+    >>> res = jitter(x, random_state=1)
+    >>> res
+    array([0.        , 0.99999999, 1.99999999, 2.99999997, 4.00000003])
+    """
+    n = len(x)
+    random_state_np = check_random_state(random_state)
+    noise = noise_amplitude * random_state_np.normal(size=n)
+    x_jittered = x * (1 + noise)
+    return x_jittered
