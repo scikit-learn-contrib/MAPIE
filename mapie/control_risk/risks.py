@@ -115,7 +115,8 @@ def compute_risk_precision(
     y_pred_th = (y_pred_proba_repeat > lambdas).astype(int)
 
     y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
-    risks = 1 - _true_positive(y_pred_th, y_repeat)/y_pred_th.sum(axis=1)
+    with np.errstate(divide='ignore', invalid="ignore"):
+        risks = 1 - _true_positive(y_pred_th, y_repeat)/y_pred_th.sum(axis=1)
     risks[np.isnan(risks)] = 1  # nan value indicate high risks.
 
     return risks
