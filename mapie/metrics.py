@@ -783,9 +783,9 @@ def sort_xy_by_y(x: NDArray, y: NDArray) -> Tuple[NDArray, NDArray]:
 
     Parameters
     ----------
-    x : NDArray
+    x : NDArray of size (n_samples,)
         The array to sort according to y.
-    y : NDArray
+    y : NDArray of size (n_samples,)
         The array to sort.
 
     Returns
@@ -805,7 +805,55 @@ def sort_xy_by_y(x: NDArray, y: NDArray) -> Tuple[NDArray, NDArray]:
     >>> print(y_sorted)
     [1 2 3 4 5]
     """
+    x = cast(NDArray, column_or_1d(x))
+    y = cast(NDArray, column_or_1d(y))
     sort_index = np.argsort(y)
     x_sorted = x[sort_index]
     y_sorted = y[sort_index]
     return x_sorted, y_sorted
+
+
+def cumulative_differences(
+    y_true: NDArray,
+    y_score: NDArray,
+    noise_amplitude: float = 1e-8
+) -> NDArray:
+    """
+    Compute the cumulative difference between y_true and y_score, both ordered
+    according to y_scores array.
+
+    Parameters
+    ----------
+    y_true : NDArray of size (n_samples,)
+        An array of ground truths.
+    y_score : NDArray of size (n_samples,)
+        An array of scores.
+
+    Returns
+    -------
+    NDArray
+        The mean cumulative difference between y_true and y_score.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from mapie.metrics import cumulative_differences
+    >>> y_true = np.array([1, 0, 0])
+    >>> y_score = np.array([0.7, 0.3, 0.6])
+    >>> cum_diff = cumulative_differences(y_true, y_score)
+    >>> print(len(cum_diff))
+    3
+    >>> print(np.max(cum_diff) <= 1)
+    True
+    >>> print(np.min(cum_diff) >= -1)
+    True
+    >>> cum_diff
+    array([-0.1, -0.3, -0.2])
+    """
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_score = cast(NDArray, column_or_1d(y_score))
+    n = len(y_true)
+    y_score_jittered = jitter(y_score, noise_amplitude=noise_amplitude)
+    y_true_sorted, y_score_sorted = sort_xy_by_y(y_true, y_score_jittered)
+    cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted)/n
+    return cumulative_differences
