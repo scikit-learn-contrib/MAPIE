@@ -24,7 +24,8 @@ from mapie.metrics import (classification_coverage_score,
                            top_label_ece,
                            jitter,
                            sort_xy_by_y,
-                           cumulative_differences)
+                           cumulative_differences,
+                           length_scale)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
 y_preds = np.array([
@@ -631,3 +632,13 @@ def test_cumulative_differences(random_state: int) -> None:
     cum_diff = cumulative_differences(y_true, y_score)
     assert np.max(cum_diff) <= 1
     assert np.min(cum_diff) >= -1
+
+
+@pytest.mark.parametrize("random_state", [1, 2, 3])
+def test_length_scale(random_state: int) -> None:
+    """Test that length scales are always between 0 and 1"""
+    generator = RandomState(random_state)
+    y_score = generator.uniform(size=100)
+    scale = length_scale(y_score)
+    assert np.max(scale) <= 1
+    assert np.min(scale) >= 0

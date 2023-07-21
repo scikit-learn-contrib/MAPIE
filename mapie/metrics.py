@@ -793,8 +793,8 @@ def sort_xy_by_y(x: NDArray, y: NDArray) -> Tuple[NDArray, NDArray]:
     Tuple[NDArray, NDArray]
         Both arrays sorted.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from mapie.metrics import sort_xy_by_y
     >>> x = np.array([1, 2, 3, 4, 5])
@@ -834,8 +834,15 @@ def cumulative_differences(
     NDArray
         The mean cumulative difference between y_true and y_score.
 
-    Example
-    -------
+    References
+    ----------
+    Arrieta-Ibarra I, Gujral P, Tannen J, Tygert M, Xu C.
+    Metrics of calibration for probabilistic predictions.
+    The Journal of Machine Learning Research.
+    2022 Jan 1;23(1):15886-940.
+
+    Examples
+    --------
     >>> import numpy as np
     >>> from mapie.metrics import cumulative_differences
     >>> y_true = np.array([1, 0, 0])
@@ -857,3 +864,41 @@ def cumulative_differences(
     y_true_sorted, y_score_sorted = sort_xy_by_y(y_true, y_score_jittered)
     cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted)/n
     return cumulative_differences
+
+
+def length_scale(s: NDArray) -> float:
+    """
+    Compute the mean square root of the sum  of s * (1 - s).
+    This is basically the standard deviation of the
+    cumulative differences.
+
+    Parameters
+    ----------
+    s : NDArray
+        An array of scores.
+
+    Returns
+    -------
+    float
+        The length_scale array.
+
+    References
+    ----------
+    Arrieta-Ibarra I, Gujral P, Tannen J, Tygert M, Xu C.
+    Metrics of calibration for probabilistic predictions.
+    The Journal of Machine Learning Research.
+    2022 Jan 1;23(1):15886-940.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.metrics import length_scale
+    >>> s = np.array([0, 0, 0.4, 0.3, 0.8])
+    >>> res = length_scale(s)
+    >>> print(np.round(res, 2))
+    0.16
+    """
+    s = cast(NDArray, column_or_1d(s))
+    n = len(s)
+    length_scale = np.sqrt(np.sum(s * (1 - s)))/n
+    return length_scale
