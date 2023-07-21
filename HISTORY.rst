@@ -12,6 +12,7 @@ History
 * Separate the handling of the estimator from MapieRegressor into a new class called EnsembleEstimator.
 * Fix an unfixed random state in one of the classification tests.
 * Fix and preserve the split behavior of the check_cv method with and without random state.
+* Add statistical calibration tests in binary classification.
 
 0.6.5 (2023-06-06)
 ------------------

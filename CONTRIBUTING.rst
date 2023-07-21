@@ -55,8 +55,8 @@ In order to build the documentation locally, run :
 .. code:: sh
 
     $ cd doc
-    $ make clean
-    $ make html
+    $ make clean-doc
+    $ make doc
 
 
 Updating changelog
