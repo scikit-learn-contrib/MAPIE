@@ -662,6 +662,7 @@ def test_kuiper_statistic() -> None:
     ku_stat = kuiper_statistic(y_true, y_score)
     np.testing.assert_allclose(ku_stat, 5.354395, atol=1e-6)
 
+
 def test_spiegelhalter_statistic() -> None:
     """Test that Spiegelhalter's statistics are well computed"""
     generator = RandomState(1)

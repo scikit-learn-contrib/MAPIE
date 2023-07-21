@@ -868,7 +868,11 @@ def cumulative_differences(
     y_true = cast(NDArray, column_or_1d(y_true))
     y_score = cast(NDArray, column_or_1d(y_score))
     n = len(y_true)
-    y_score_jittered = jitter(y_score, noise_amplitude=noise_amplitude, random_state=random_state)
+    y_score_jittered = jitter(
+        y_score,
+        noise_amplitude=noise_amplitude,
+        random_state=random_state
+    )
     y_true_sorted, y_score_sorted = sort_xy_by_y(y_true, y_score_jittered)
     cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted)/n
     return cumulative_differences
