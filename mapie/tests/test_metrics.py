@@ -602,7 +602,7 @@ def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
 
 @pytest.mark.parametrize("amplitude", [0.1, 0.01, 0.001])
 def test_jitter_amplitude(amplitude: float) -> None:
-    """Test that the noise perturbation is consistent with the required amplitude"""
+    """Test that noise perturbation is consistent with required amplitude"""
     x = np.array([0, 1, 2, 3, 4])
-    x_jittered = jitter(x, noise_amplitude=amplitude)
+    x_jittered = jitter(x, noise_amplitude=amplitude, random_state=1)
     np.testing.assert_allclose(x, x_jittered, rtol=5*amplitude)
