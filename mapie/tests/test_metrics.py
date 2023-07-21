@@ -22,7 +22,9 @@ from mapie.metrics import (classification_coverage_score,
                            regression_ssc,
                            regression_ssc_score,
                            top_label_ece,
-                           jitter)
+                           jitter,
+                           sort_xy_by_y,
+                           cumulative_differences)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
 y_preds = np.array([
@@ -606,3 +608,26 @@ def test_jitter_amplitude(amplitude: float) -> None:
     x = np.array([0, 1, 2, 3, 4])
     x_jittered = jitter(x, noise_amplitude=amplitude, random_state=1)
     np.testing.assert_allclose(x, x_jittered, rtol=5*amplitude)
+
+
+def test_sort_xy_by_y() -> None:
+    """
+    Test that sorting two reversed arrays by one of them
+    does reverse the arrays
+    """
+    x = np.linspace(-3, 3, 20)
+    y = np.linspace(3, -3, 20)
+    x_sorted, y_sorted = sort_xy_by_y(x, y)
+    np.testing.assert_allclose(x_sorted, y)
+    np.testing.assert_allclose(y_sorted, x)
+
+
+@pytest.mark.parametrize("random_state", [1, 2, 3])
+def test_cumulative_differences(random_state: int) -> None:
+    """Test that cumulative differences are always between -1 and 1"""
+    generator = RandomState(random_state)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    cum_diff = cumulative_differences(y_true, y_score)
+    assert np.max(cum_diff) <= 1
+    assert np.min(cum_diff) >= -1
