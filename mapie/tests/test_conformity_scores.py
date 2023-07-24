@@ -279,7 +279,7 @@ def test_crf_score_prefit_with_default_params() -> None:
 
 
 def test_invalid_estimator() -> None:
-    """Test that an estimator without predct method raises an error."""
+    """Test that an estimator without predict method raises an error."""
     class DumbEstimator:
         def __init__(self):
             pass
