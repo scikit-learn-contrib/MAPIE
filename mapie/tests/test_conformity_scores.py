@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
@@ -254,7 +253,7 @@ def test_crf_conformity_score_get_conformity_scores(y_pred: NDArray) -> None:
         X_toy, y_toy, y_pred
     )
     expected_signed_conf_scores = np.array(
-        [0.38167789, 0.]
+        [np.nan, np.nan, 1.e+08, 1.e+08, 0.e+00, 3.e+08]
     )
     np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
 
@@ -276,8 +275,7 @@ def test_crf_score_prefit_with_default_params() -> None:
     conf_scores = crf_conf_score.get_conformity_scores(
         X_toy, y_toy, y_pred_list
     )
-    _, X, _, y = train_test_split(X_toy, y_toy, test_size=0.2)
-    crf_conf_score.get_estimation_distribution(X, y, conf_scores)
+    crf_conf_score.get_estimation_distribution(X_toy, y_toy, conf_scores)
 
 
 def test_invalid_estimator() -> None:

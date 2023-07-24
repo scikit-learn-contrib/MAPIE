@@ -158,7 +158,7 @@ class ConformalResidualFittingScore(ConformityScore):
     only with split and prefit methods (not with cross methods).
 
     Warning : if the estimator provided is not fitted a subset of the
-    calibration data will be used to fit the model (50% by default).
+    calibration data will be used to fit the model (20% by default).
 
     Parameters
     ----------
@@ -291,8 +291,6 @@ class ConformalResidualFittingScore(ConformityScore):
         X: NDArray,
         y: NDArray,
         y_pred: NDArray,
-        full_indexes: NDArray,
-        random_state: Optional[Union[int, np.random.RandomState]]
     ) -> Tuple[NDArray, NDArray]:
         """
         Fit the residual estimator and returns the indexes used for the
@@ -309,47 +307,20 @@ class ConformalResidualFittingScore(ConformityScore):
         y_pred: NDArray
             Predicted targets.
 
-        full_indexes: NDArray
-            Indexes used for the training of the estimator and the calibration.
-
-        random_state: Optional[Union[int, np.random.RandomState]]
-            Random state.
         Returns
         -------
-        Tuple[NDArray, NDArray]
-            - indexes needed for the calibration.
-            - indexes used for the training of the base estimator.
+        RegressorMixin
+            Fitted residual estimator
         """
-        (X_res_indexes,
-         X_cal_indexes,
-         y_res_indexes,
-         y_cal_indexes) = train_test_split(
-            full_indexes,
-            full_indexes,
-            test_size=self.split_size,
-            random_state=random_state,
-        )
-
-        residuals = np.abs(np.subtract(
-            y[y_res_indexes],
-            y_pred[y_res_indexes]
-        ))
-        residual_estimator_targets = np.log(np.maximum(
+        residuals = np.abs(np.subtract(y, y_pred))
+        targets = np.log(np.maximum(
             residuals,
             np.full(residuals.shape, self.eps)
         ))
 
-        residual_estimator_ = residual_estimator_.fit(
-            X[X_res_indexes],
-            residual_estimator_targets
-        )
+        residual_estimator_ = residual_estimator_.fit(X, targets)
 
-        cal_index = X_cal_indexes
-        train_index = list(set(np.arange(y_pred.shape[0])) - set(cal_index))
-
-        self.residual_estimator_ = residual_estimator_
-
-        return cal_index, np.array(train_index)
+        return residual_estimator_
 
     def get_signed_conformity_scores(
         self,
@@ -375,28 +346,34 @@ class ConformalResidualFittingScore(ConformityScore):
         ).reshape((-1,))
 
         if not self.prefit:
-            cal_indexes, train_indexes = self._fit_residual_estimator(
-                clone(self.residual_estimator_), X, y, y_pred, full_indexes,
-                random_state
+            cal_indexes, res_indexes = train_test_split(
+                full_indexes,
+                test_size=self.split_size,
+                random_state=random_state,
+            )
+            self.residual_estimator_ = self._fit_residual_estimator(
+                clone(self.residual_estimator_),
+                X[res_indexes], y[res_indexes], y_pred[res_indexes]
             )
         else:
             cal_indexes = full_indexes
-            train_indexes = np.argwhere(np.isnan(y_pred)).reshape((-1,))
 
         residuals_pred = np.maximum(
             np.exp(self.residual_estimator_.predict(X[cal_indexes])),
             self.eps
         )
         signed_conformity_scores = np.divide(
-            np.subtract(y[cal_indexes], y_pred[cal_indexes]),
+            np.abs(np.subtract(y[cal_indexes], y_pred[cal_indexes])),
             residuals_pred
         )
 
         # reconstruct array with nan and conformity scores
-        complete_signed_cs = np.zeros_like(y_pred, dtype=float)
+        complete_signed_cs = np.full(
+            y_pred.shape, fill_value=np.nan, dtype=float
+        )
         complete_signed_cs[cal_indexes] = signed_conformity_scores
-        complete_signed_cs[train_indexes] = np.nan
-        return signed_conformity_scores
+
+        return complete_signed_cs
 
     def get_estimation_distribution(
         self,
