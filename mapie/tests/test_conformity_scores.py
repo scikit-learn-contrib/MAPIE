@@ -261,7 +261,7 @@ def test_crf_conformity_score_get_conformity_scores(y_pred: NDArray) -> None:
 def test_crf_score_prefit_with_notfitted_estim() -> None:
     """Test that a not fitted estimator and prefit=True raises an error."""
     crf_conf_score = ConformalResidualFittingScore(
-            residual_estimator=LinearRegression(), prefit=True
+        residual_estimator=LinearRegression(), prefit=True
     )
     with pytest.raises(ValueError):
         crf_conf_score.get_conformity_scores(
