@@ -408,7 +408,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         ValueError
             If conformity score is FittedResidualNormalizing score and method
             is neither ``"prefit"`` or ``"split"``
-
         """
         # Checking
         self._check_parameters()
