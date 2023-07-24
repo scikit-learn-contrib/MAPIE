@@ -1,26 +1,23 @@
 from __future__ import annotations
 
-from typing import Iterable, List, Optional, Tuple, Union, cast
+from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
-from joblib import Parallel, delayed
-from sklearn.base import BaseEstimator, RegressorMixin, clone
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
-from sklearn.utils import _safe_indexing, check_random_state
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
+from sklearn.utils import check_random_state
+from sklearn.utils.validation import (_check_y, check_is_fitted,
                                       indexable)
 
-from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
-from mapie.aggregation_functions import aggregate_all, phi2D
 from mapie.conformity_scores import ConformityScore
+from mapie.estimator.estimator import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_conformity_score, check_cv,
                          check_estimator_fit_predict, check_n_features_in,
-                         check_n_jobs, check_nan_in_aposteriori_prediction,
-                         check_null_weight, check_verbose, fit_estimator)
+                         check_n_jobs, check_null_weight, check_verbose)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
@@ -162,20 +159,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     valid_methods_: List[str]
         List of all valid methods.
 
-    single_estimator_: sklearn.RegressorMixin
-        Estimator fitted on the whole training set.
-
-    estimators_: list
-        List of out-of-folds estimators.
+    estimator_: EnsembleRegressor
+        Sklearn estimator that handle all that is related to the estimator.
 
     conformity_scores_: ArrayLike of shape (n_samples_train,)
         Conformity scores between ``y_train`` and ``y_pred``.
-
-    k_: ArrayLike
-        - Array of nans, of shape (len(y), 1) if ``cv`` is ``"prefit"``
-          (defined but not used)
-        - Dummy array of folds containing each training sample, otherwise.
-          Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
 
     n_features_in_: int
         Number of features passed to the ``fit`` method.
@@ -220,9 +208,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     valid_agg_functions_ = [None, "median", "mean"]
     ensemble_agg_functions_ = ["median", "mean"]
     fit_attributes = [
-        "single_estimator_",
-        "estimators_",
-        "k_",
+        "estimator_",
         "conformity_scores_",
         "conformity_score_function_",
         "n_features_in_",
@@ -396,139 +382,37 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 f"in '{self.ensemble_agg_functions_}'."
             )
 
-    def _fit_and_predict_oof_model(
+    def _check_fit_parameters(
         self,
-        estimator: RegressorMixin,
         X: ArrayLike,
         y: ArrayLike,
-        train_index: ArrayLike,
-        val_index: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-    ) -> Tuple[RegressorMixin, NDArray, ArrayLike]:
-        """
-        Fit a single out-of-fold model on a given training set and
-        perform predictions on a test set.
-
-        Parameters
-        ----------
-        estimator: RegressorMixin
-            Estimator to train.
-
-        X: ArrayLike of shape (n_samples, n_features)
-            Input data.
-
-        y: ArrayLike of shape (n_samples,)
-            Input labels.
-
-        train_index: ArrayLike of shape (n_samples_train)
-            Training data indices.
-
-        val_index: ArrayLike of shape (n_samples_val)
-            Validation data indices.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights. If ``None``, then samples are equally weighted.
-            By default ``None``.
-
-        Returns
-        -------
-        Tuple[RegressorMixin, NDArray, ArrayLike]
-
-        - [0]: RegressorMixin, fitted estimator
-        - [1]: NDArray of shape (n_samples_val,),
-          estimator predictions on the validation fold.
-        - [2]: ArrayLike of shape (n_samples_val,),
-          validation data indices.
-        """
-        X_train = _safe_indexing(X, train_index)
-        y_train = _safe_indexing(y, train_index)
-        X_val = _safe_indexing(X, val_index)
-        if sample_weight is None:
-            estimator = fit_estimator(estimator, X_train, y_train)
-        else:
-            sample_weight_train = _safe_indexing(sample_weight, train_index)
-            estimator = fit_estimator(
-                estimator, X_train, y_train, sample_weight_train
-            )
-        if _num_samples(X_val) > 0:
-            y_pred = estimator.predict(X_val)
-        else:
-            y_pred = np.array([])
-        return estimator, y_pred, val_index
-
-    def _aggregate_with_mask(
-        self,
-        x: NDArray,
-        k: NDArray
-    ) -> NDArray:
-        """
-        Take the array of predictions, made by the refitted estimators,
-        on the testing set, and the 1-or-nan array indicating for each training
-        sample which one to integrate, and aggregate to produce phi-{t}(x_t)
-        for each training sample x_t.
-
-        Parameters:
-        -----------
-        x: ArrayLike of shape (n_samples_test, n_estimators)
-            Array of predictions, made by the refitted estimators,
-            for each sample of the testing set.
-
-        k: ArrayLike of shape (n_samples_training, n_estimators)
-            1-or-nan array: indicates whether to integrate the prediction
-            of a given estimator into the aggregation, for each training
-            sample.
-
-        Returns:
-        --------
-        ArrayLike of shape (n_samples_test,)
-            Array of aggregated predictions for each testing sample.
-        """
-        if self.method in self.no_agg_methods_ \
-                or self.cv in self.no_agg_cv_:
-            raise ValueError(
-                "There should not be aggregation of predictions "
-                f"if cv is in '{self.no_agg_cv_}' "
-                f"or if method is in '{self.no_agg_methods_}'."
-            )
-        elif self.agg_function == "median":
-            return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
-        # To aggregate with mean() the aggregation coud be done
-        # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
-        # However, phi2D contains a np.apply_along_axis loop which
-        # is much slower than the matrices multiplication that can
-        # be used to compute the means.
-        elif self.agg_function in ["mean", None]:
-            K = np.nan_to_num(k, nan=0.0)
-            return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
-        else:
-            raise ValueError("The value of self.agg_function is not correct")
-
-    def _pred_multi(
-        self,
-        X: ArrayLike
-    ) -> NDArray:
-        """
-        Return a prediction per train sample for each test sample, by
-        aggregation with matrix ``k_``.
-
-        Parameters
-        ----------
-        X: NDArray of shape (n_samples_test, n_features)
-            Input data
-
-        Returns
-        -------
-        NDArray of shape (n_samples_test, n_samples_train)
-        """
-        y_pred_multi = np.column_stack(
-            [e.predict(X) for e in self.estimators_]
+    ):
+        # Checking
+        self._check_parameters()
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
         )
-        # At this point, y_pred_multi is of shape
-        # (n_samples_test, n_estimators_). The method
-        # ``_aggregate_with_mask`` fits it to the right size
-        # thanks to the shape of k_.
-        y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
-        return y_pred_multi
+        estimator = self._check_estimator(self.estimator)
+        agg_function = self._check_agg_function(self.agg_function)
+        cs_estimator = check_conformity_score(
+            self.conformity_score
+        )
+        X, y = indexable(X, y)
+        y = _check_y(y)
+        sample_weight, X, y = check_null_weight(sample_weight, X, y)
+        self.n_features_in_ = check_n_features_in(X)
+
+        # Casting
+        cv = cast(BaseCrossValidator, cv)
+        estimator = cast(RegressorMixin, estimator)
+        cs_estimator = cast(ConformityScore, cs_estimator)
+        agg_function = cast(Optional[str], agg_function)
+        X = cast(NDArray, X)
+        y = cast(NDArray, y)
+        sample_weight = cast(Optional[NDArray], sample_weight)
+
+        return estimator, cs_estimator, agg_function, cv, X, y, sample_weight
 
     def fit(
         self,
@@ -539,11 +423,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         Fit estimator and compute conformity scores used for
         prediction intervals.
-        Fit the base estimator under the ``single_estimator_`` attribute.
-        Fit all cross-validated estimator clones
-        and rearrange them into a list, the ``estimators_`` attribute.
-        Out-of-fold conformity scores are stored under
-        the ``conformity_scores_`` attribute.
+
+        All the types of estimator (single or cross validated ones) are
+        encapsulated under EnsembleRegressor.
 
         Parameters
         ----------
@@ -570,83 +452,33 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             The model itself.
         """
         # Checks
-        self._check_parameters()
-        cv = check_cv(
-            self.cv, test_size=self.test_size, random_state=self.random_state
+        (estimator,
+         self.conformity_score_function_,
+         agg_function,
+         cv,
+         X,
+         y,
+         sample_weight) = self._check_fit_parameters(X, y, sample_weight)
+
+        self.estimator_ = EnsembleRegressor(
+            estimator,
+            self.method,
+            cv,
+            agg_function,
+            self.n_jobs,
+            self.random_state,
+            self.test_size,
+            self.verbose
         )
-        estimator = self._check_estimator(self.estimator)
-        agg_function = self._check_agg_function(self.agg_function)
-        X, y = indexable(X, y)
-        y = _check_y(y)
-        sample_weight = cast(Optional[NDArray], sample_weight)
-        self.n_features_in_ = check_n_features_in(X, cv, estimator)
-        sample_weight, X, y = check_null_weight(sample_weight, X, y)
-        self.conformity_score_function_ = check_conformity_score(
-            self.conformity_score
-        )
-        y = cast(NDArray, y)
-        n_samples = _num_samples(y)
+        # Fit the prediction function
+        self.estimator_ = self.estimator_.fit(X, y, sample_weight)
+        y_pred = self.estimator_.predict_calib(X)
 
-        # Initialization
-        self.estimators_: List[RegressorMixin] = []
-
-        # Work
-        if cv == "prefit":
-            self.single_estimator_ = estimator
-            y_pred = self.single_estimator_.predict(X)
-            self.k_ = np.full(
-                shape=(n_samples, 1), fill_value=np.nan, dtype=float
+        # Compute the conformity scores (manage jk-ab case)
+        self.conformity_scores_ = \
+            self.conformity_score_function_.get_conformity_scores(
+                X, y, y_pred
             )
-        else:
-            cv = cast(BaseCrossValidator, cv)
-            self.k_ = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y)),
-                fill_value=np.nan,
-                dtype=float,
-            )
-
-            self.single_estimator_ = fit_estimator(
-                clone(estimator), X, y, sample_weight
-            )
-
-            if self.method == "naive":
-                y_pred = self.single_estimator_.predict(X)
-            else:
-                outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                    delayed(self._fit_and_predict_oof_model)(
-                        clone(estimator),
-                        X,
-                        y,
-                        train_index,
-                        val_index,
-                        sample_weight,
-                    )
-                    for train_index, val_index in cv.split(X)
-                )
-                self.estimators_, predictions, val_indices = map(
-                    list, zip(*outputs)
-                )
-
-                pred_matrix = np.full(
-                    shape=(n_samples, cv.get_n_splits(X, y)),
-                    fill_value=np.nan,
-                    dtype=float,
-                )
-                for i, val_ind in enumerate(val_indices):
-                    pred_matrix[val_ind, i] = np.array(
-                        predictions[i], dtype=float
-                    )
-                    self.k_[val_ind, i] = 1
-                check_nan_in_aposteriori_prediction(pred_matrix)
-
-                y_pred = aggregate_all(agg_function, pred_matrix)
-
-        self.conformity_scores_ = (
-            self.conformity_score_function_.get_conformity_scores(y, y_pred)
-        )
-
-        if isinstance(cv, ShuffleSplit):
-            self.single_estimator_ = self.estimators_[0]
 
         return self
 
@@ -708,74 +540,24 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self._check_ensemble(ensemble)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
 
-        y_pred = self.single_estimator_.predict(X)
-        n = len(self.conformity_scores_)
-
         if alpha is None:
+            y_pred = self.estimator_.predict(
+                X, ensemble, return_multi_pred=False
+            )
             return np.array(y_pred)
 
-        alpha_np = cast(NDArray, alpha)
-        check_alpha_and_n_samples(alpha_np, n)
-
-        if self.method in self.no_agg_methods_ \
-                or self.cv in self.no_agg_cv_:
-            y_pred_multi_low = y_pred[:, np.newaxis]
-            y_pred_multi_up = y_pred[:, np.newaxis]
         else:
-            y_pred_multi = self._pred_multi(X)
+            n = len(self.conformity_scores_)
+            alpha_np = cast(NDArray, alpha)
+            check_alpha_and_n_samples(alpha_np, n)
 
-            if self.method == "minmax":
-                y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
-                y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
-            else:
-                y_pred_multi_low = y_pred_multi
-                y_pred_multi_up = y_pred_multi
-
-            if ensemble:
-                y_pred = aggregate_all(self.agg_function, y_pred_multi)
-
-        # compute distributions of lower and upper bounds
-        if self.conformity_score_function_.sym:
-            conformity_scores_low = -self.conformity_scores_
-            conformity_scores_up = self.conformity_scores_
-        else:
-            conformity_scores_low = self.conformity_scores_
-            conformity_scores_up = self.conformity_scores_
-            alpha_np = alpha_np / 2
-
-        lower_bounds = (
-            self.conformity_score_function_.get_estimation_distribution(
-                y_pred_multi_low, conformity_scores_low
-            )
-        )
-        upper_bounds = (
-            self.conformity_score_function_.get_estimation_distribution(
-                y_pred_multi_up, conformity_scores_up
-            )
-        )
-
-        # get desired confidence intervals according to alpha
-        y_pred_low = np.column_stack(
-            [
-                np_nanquantile(
-                    lower_bounds.astype(float),
-                    _alpha,
-                    axis=1,
-                    method="lower",
+            y_pred, y_pred_low, y_pred_up = \
+                self.conformity_score_function_.get_bounds(
+                    X,
+                    self.estimator_,
+                    self.conformity_scores_,
+                    alpha_np,
+                    ensemble,
+                    self.method
                 )
-                for _alpha in alpha_np
-            ]
-        )
-        y_pred_up = np.column_stack(
-            [
-                np_nanquantile(
-                    upper_bounds.astype(float),
-                    1 - _alpha,
-                    axis=1,
-                    method="higher",
-                )
-                for _alpha in alpha_np
-            ]
-        )
-
-        return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
+            return np.array(y_pred), np.stack([y_pred_low, y_pred_up], axis=1)

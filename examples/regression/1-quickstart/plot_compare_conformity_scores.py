@@ -39,7 +39,7 @@ from mapie.conformity_scores import GammaConformityScore
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 
-np.random.seed(0)
+random_state = 42
 
 # Parameters
 features = [
@@ -50,7 +50,7 @@ features = [
     "GarageArea",
 ]
 alpha = 0.05
-rf_kwargs = {"n_estimators": 10, "random_state": 0}
+rf_kwargs = {"n_estimators": 10, "random_state": random_state}
 model = RandomForestRegressor(**rf_kwargs)
 
 ##############################################################################
@@ -66,7 +66,7 @@ model = RandomForestRegressor(**rf_kwargs)
 X, y = fetch_openml(name="house_prices", return_X_y=True)
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X[features], y, test_size=0.2
+    X[features], y, test_size=0.2, random_state=random_state
 )
 
 ##############################################################################
@@ -87,9 +87,11 @@ X_train, X_test, y_train, y_test = train_test_split(
 ##############################################################################
 # First, train model with
 # :class:`~mapie.conformity_scores.AbsoluteConformityScore`.
-mapie = MapieRegressor(model)
+mapie = MapieRegressor(model, random_state=random_state)
 mapie.fit(X_train, y_train)
-y_pred_absconfscore, y_pis_absconfscore = mapie.predict(X_test, alpha=alpha)
+y_pred_absconfscore, y_pis_absconfscore = mapie.predict(
+    X_test, alpha=alpha, ensemble=True
+)
 
 coverage_absconfscore = regression_coverage_score(
     y_test, y_pis_absconfscore[:, 0, 0], y_pis_absconfscore[:, 1, 0]
@@ -118,10 +120,12 @@ pred_int_width_absconfscore = (
 ##############################################################################
 # Then, train the model with
 # :class:`~mapie.conformity_scores.GammaConformityScore`.
-mapie = MapieRegressor(model, conformity_score=GammaConformityScore())
+mapie = MapieRegressor(
+    model, conformity_score=GammaConformityScore(), random_state=random_state
+)
 mapie.fit(X_train, y_train)
 y_pred_gammaconfscore, y_pis_gammaconfscore = mapie.predict(
-    X_test, alpha=[alpha]
+    X_test, alpha=[alpha], ensemble=True
 )
 
 coverage_gammaconfscore = regression_coverage_score(
