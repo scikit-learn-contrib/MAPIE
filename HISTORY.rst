@@ -4,6 +4,7 @@ History
 
 ##### (##########)
 ------------------
+* Add a new conformity score : ConformalizedResidualFitting that takes X into account and allows to compute adaptive intervals.
 * Refactor MapieRegressor and ConformityScore to add the possibility to use X in ConformityScore.
 * Separate the handling of the estimator from MapieRegressor into a new class called EnsembleEstimator.
 * Fix an unfixed random state in one of the classification tests
