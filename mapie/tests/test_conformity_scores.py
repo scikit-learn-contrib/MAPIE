@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import pytest
 
@@ -372,3 +374,23 @@ def test_crf_prefit_get_estimation_distribution() -> None:
     crf_conf_score.get_estimation_distribution(
         X_toy, y_pred_list, conf_scores
     )
+
+
+@pytest.mark.parametrize("score", [AbsoluteConformityScore(),
+                                   GammaConformityScore(),
+                                   ConformalResidualFittingScore()])
+@pytest.mark.parametrize("alpha", [[0.3], [0.5, 0.4]])
+def test_intervals_shape_with_every_score(
+    score: ConformityScore,
+    alpha: Any
+) -> None:
+    mapie_reg = MapieRegressor(
+        method="base", cv="split", conformity_score=score
+    )
+    X = np.concatenate((X_toy, X_toy))
+    y = np.concatenate((y_toy, y_toy))
+    mapie_reg = mapie_reg.fit(X, y)
+    y_pred, intervals = mapie_reg.predict(X, alpha=alpha)
+    n_samples = X.shape[0]
+    assert y_pred.shape[0] == n_samples
+    assert intervals.shape == (n_samples, 2, len(alpha))

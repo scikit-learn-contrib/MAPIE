@@ -433,7 +433,7 @@ class ConformalResidualFittingScore(ConformityScore):
         ``conformity_scores`` can be either the conformity scores or
         the quantile of the conformity scores.
         """
-        r_pred = self._predict_residual_estimator(X)
+        r_pred = self._predict_residual_estimator(X).reshape((-1, 1))
         if not self.prefit:
             return np.add(
                 y_pred,
