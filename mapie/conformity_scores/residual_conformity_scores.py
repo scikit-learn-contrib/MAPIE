@@ -147,7 +147,7 @@ class ConformalResidualFittingScore(ConformityScore):
     """
     ConformalResidualFittingScore (CRF) score.
 
-    The signed conformity score = (y - y_pred) / r_pred. r_pred being the
+    The signed conformity score = (|y - y_pred|) / r_pred. r_pred being the
     predicted residual (|y - y_pred|) of the base estimator.
     It is calculated by a model that learns to predict these residuals.
     The learning is done with the log of the residual and we use the
@@ -249,7 +249,7 @@ class ConformalResidualFittingScore(ConformityScore):
         y: ArrayLike,
         y_pred: ArrayLike
     ) -> Tuple[NDArray, NDArray, NDArray, RegressorMixin,
-               Union[int, np.random.RandomState]]:
+    Union[int, np.random.RandomState]]:
         """
         Checks all the parameters of the class. Raises an error if the
         parameter are not well defined.
