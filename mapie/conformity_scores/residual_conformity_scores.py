@@ -249,7 +249,7 @@ class ConformalResidualFittingScore(ConformityScore):
         y: ArrayLike,
         y_pred: ArrayLike
     ) -> Tuple[NDArray, NDArray, NDArray, RegressorMixin,
-    Union[int, np.random.RandomState]]:
+               Union[int, np.random.RandomState]]:
         """
         Checks all the parameters of the class. Raises an error if the
         parameter are not well defined.
