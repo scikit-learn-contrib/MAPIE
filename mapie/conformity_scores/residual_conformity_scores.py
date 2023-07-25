@@ -349,7 +349,7 @@ class ConformalResidualFittingScore(ConformityScore):
             the residuals and predict the exponential of the predictions.
         """
         pred = self.residual_estimator_.predict(X)
-        if np.any(pred < 0):
+        if self.prefit and np.any(pred < 0):
             warnings.warn(
                 "WARNING: The residual model predicts negative values, "
                 + "they are later thresholded at self.eps."
