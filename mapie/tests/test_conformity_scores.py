@@ -17,8 +17,7 @@ y_toy = np.array([5, 7, 9, 11, 13, 15])
 y_pred_list = [4, 7, 10, 12, 13, 12]
 conf_scores_list = [1, 0, -1, -1, 0, 3]
 conf_scores_gamma_list = [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]
-conf_scores_crf_list = [6.73794700e-03, 0.00000000e+00, 1.23409804e-04,
-                        1.67017008e-05, 0.00000000e+00, 9.17706962e-07]
+conf_scores_crf_list = [0.2, 0., 0.11111111, 0.09090909, 0., 0.2]
 random_state = 42
 
 
@@ -269,7 +268,7 @@ def test_crf_score_prefit_with_notfitted_estim() -> None:
         )
 
 
-def test_crf_score_prefit_with_default_params() -> None:
+def test_crf_score_with_default_params() -> None:
     """Test that no error is raised with default parameters."""
     crf_conf_score = ConformalResidualFittingScore()
     conf_scores = crf_conf_score.get_conformity_scores(
@@ -338,3 +337,38 @@ def test_crf_score_pipe_prefit() -> None:
         random_state=random_state
     )
     mapie_reg.fit(X_toy, y_toy)
+
+
+def test_crf_prefit_estimator_with_neg_values() -> None:
+    """
+    Test that a prefit estimator for crf that predicts negative values raises a
+    warning.
+    """
+    class NegativeRegresssor(LinearRegression):
+        def predict(self, X):
+            return np.full(X.shape[0], fill_value=-1.)
+    estim = NegativeRegresssor().fit(X_toy, y_toy)
+    crf_conf_score = ConformalResidualFittingScore(
+        residual_estimator=estim, prefit=True
+    )
+    with pytest.warns(UserWarning):
+        crf_conf_score.get_conformity_scores(
+            X_toy, y_toy, y_pred_list
+        )
+
+
+def test_crf_prefit_get_estimation_distribution() -> None:
+    """
+    Test that get_estimation_distribution with prefitted estimator  in crf
+    raises no error.
+    """
+    estim = LinearRegression().fit(X_toy, y_toy)
+    crf_conf_score = ConformalResidualFittingScore(
+        residual_estimator=estim, prefit=True
+    )
+    conf_scores = crf_conf_score.get_conformity_scores(
+        X_toy, y_toy, y_pred_list
+    )
+    crf_conf_score.get_estimation_distribution(
+        X_toy, y_pred_list, conf_scores
+    )

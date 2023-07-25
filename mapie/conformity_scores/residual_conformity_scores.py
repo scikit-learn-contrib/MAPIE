@@ -1,3 +1,4 @@
+import warnings
 from typing import Optional, Union, Tuple
 
 import numpy as np
@@ -322,6 +323,42 @@ class ConformalResidualFittingScore(ConformityScore):
 
         return residual_estimator_
 
+    def _predict_residual_estimator(
+        self,
+        X: ArrayLike
+    ) -> NDArray:
+        """
+        Returns the predictions of the residual estimator. Raises a warning if
+        the model predicts neagtive values.
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed value to predict from.
+
+        Returns
+        -------
+        NDArray
+            Predicted residuals.
+
+        Raises
+        ------
+        Warning
+            If the model predicts negative values as they are later thresholded
+            at self.eps. The model preffited should be trained with the log of
+            the residuals and predict the exponential of the predictions.
+        """
+        pred = self.residual_estimator_.predict(X)
+        if np.any(pred < 0):
+            warnings.warn(
+                "WARNING: The residual model predicts negative values, "
+                + "they are later thresholded at self.eps."
+                "The model preffited should be trained with the log of "
+                + "the residuals and his predict method should return "
+                + "the exponential of the predictions."
+            )
+        return pred
+
     def get_signed_conformity_scores(
         self,
         X: ArrayLike,
@@ -355,13 +392,17 @@ class ConformalResidualFittingScore(ConformityScore):
                 clone(self.residual_estimator_),
                 X[res_indexes], y[res_indexes], y_pred[res_indexes]
             )
+            residuals_pred = np.maximum(
+                np.exp(self._predict_residual_estimator(X[cal_indexes])),
+                self.eps
+            )
         else:
             cal_indexes = full_indexes
+            residuals_pred = np.maximum(
+                self._predict_residual_estimator(X[cal_indexes]),
+                self.eps
+            )
 
-        residuals_pred = np.maximum(
-            np.exp(self.residual_estimator_.predict(X[cal_indexes])),
-            self.eps
-        )
         signed_conformity_scores = np.divide(
             np.abs(np.subtract(y[cal_indexes], y_pred[cal_indexes])),
             residuals_pred
@@ -392,5 +433,11 @@ class ConformalResidualFittingScore(ConformityScore):
         ``conformity_scores`` can be either the conformity scores or
         the quantile of the conformity scores.
         """
-        r_pred = np.exp(self.residual_estimator_.predict(X))
-        return np.add(y_pred, np.multiply(conformity_scores, r_pred))
+        r_pred = self._predict_residual_estimator(X)
+        if not self.prefit:
+            return np.add(
+                y_pred,
+                np.multiply(conformity_scores, np.exp(r_pred))
+            )
+        else:
+            return np.add(y_pred, np.multiply(conformity_scores, r_pred))
