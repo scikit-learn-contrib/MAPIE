@@ -12,7 +12,8 @@ from sklearn.utils.validation import (_check_y, check_is_fitted,
                                       indexable)
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import ConformityScore
+from mapie.conformity_scores import (ConformityScore,
+                                     ConformalResidualFittingScore)
 from mapie.estimator.estimator import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_conformity_score, check_cv,
@@ -70,8 +71,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         - ``"split"``, does not involve cross-validation but a division
           of the data into training and calibration subsets. The splitter
           used is the following: ``sklearn.model_selection.ShuffleSplit``.
+          ``method`` parameter is set to ``"base"``.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already,
-          and the ``method`` parameter is ignored.
+          and the ``method`` parameter is set to ``"base"``.
           All data provided in the ``fit`` method is then used
           for computing conformity scores only.
           At prediction time, quantiles of these conformity scores are used
@@ -388,16 +390,49 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
     ):
+        """
+        Perform several checks on class parameters.
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed values.
+
+        y: ArrayLike
+            Target values.
+
+        sample_weight: Optional[NDArray] of shape (n_samples,)
+            Non-null sample weights.
+
+        Raises
+        ------
+        ValueError
+            If conformity score is FittedResidualNormalizing score and method
+            is neither ``"prefit"`` or ``"split"``.
+
+        ValueError
+            If ``cv`` is `"prefit"`` or ``"split"`` and ``method`` is not
+            ``"base"``.
+        """
         # Checking
         self._check_parameters()
         cv = check_cv(
             self.cv, test_size=self.test_size, random_state=self.random_state
         )
+        if self.cv in ["split", "prefit"] and self.method != "base":
+            self.method = "base"
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
         cs_estimator = check_conformity_score(
             self.conformity_score
         )
+        if isinstance(cs_estimator, ConformalResidualFittingScore) and \
+           self.cv not in ["split", "prefit"]:
+            raise ValueError(
+                "The ConformalResidualFittingScore can be used only with "
+                "``cv='split'`` and ``cv='prefit'``"
+            )
+
         X, y = indexable(X, y)
         y = _check_y(y)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)

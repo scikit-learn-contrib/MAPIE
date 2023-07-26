@@ -1,15 +1,25 @@
+from typing import Any
+
 import numpy as np
 import pytest
 
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
-                                     GammaConformityScore)
+from mapie.conformity_scores import (AbsoluteConformityScore,
+                                     ConformityScore,
+                                     GammaConformityScore,
+                                     ConformalResidualFittingScore)
+from mapie.regression import MapieRegressor
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
 y_pred_list = [4, 7, 10, 12, 13, 12]
 conf_scores_list = [1, 0, -1, -1, 0, 3]
 conf_scores_gamma_list = [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]
+conf_scores_crf_list = [0.2, 0., 0.11111111, 0.09090909, 0., 0.2]
 random_state = 42
 
 
@@ -210,3 +220,177 @@ def test_check_consistency() -> None:
         dummy_conf_score.check_consistency(
             X_toy, y_toy, y_pred_list, conformity_scores
         )
+
+
+@pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
+def test_crf_prefit_conformity_score_get_conformity_scores(
+    y_pred: NDArray
+) -> None:
+    """
+    Test conformity score computation for ConformalResidualFittingScore
+    when prefit is True.
+    """
+    residual_estimator = LinearRegression().fit(X_toy, y_toy)
+    crf_conf_score = ConformalResidualFittingScore(
+        residual_estimator=residual_estimator,
+        prefit=True,
+        random_state=random_state
+    )
+    conf_scores = crf_conf_score.get_conformity_scores(
+        X_toy, y_toy, y_pred
+    )
+    expected_signed_conf_scores = np.array(conf_scores_crf_list)
+    np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
+
+
+@pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
+def test_crf_conformity_score_get_conformity_scores(y_pred: NDArray) -> None:
+    """
+    Test conformity score computation for ConformalResidualFittingScore
+    when prefit is False.
+    """
+    crf_conf_score = ConformalResidualFittingScore(random_state=random_state)
+    conf_scores = crf_conf_score.get_conformity_scores(
+        X_toy, y_toy, y_pred
+    )
+    expected_signed_conf_scores = np.array(
+        [np.nan, np.nan, 1.e+08, 1.e+08, 0.e+00, 3.e+08]
+    )
+    np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
+
+
+def test_crf_score_prefit_with_notfitted_estim() -> None:
+    """Test that a not fitted estimator and prefit=True raises an error."""
+    crf_conf_score = ConformalResidualFittingScore(
+        residual_estimator=LinearRegression(), prefit=True
+    )
+    with pytest.raises(ValueError):
+        crf_conf_score.get_conformity_scores(
+            X_toy, y_toy, y_pred_list
+        )
+
+
+def test_crf_score_with_default_params() -> None:
+    """Test that no error is raised with default parameters."""
+    crf_conf_score = ConformalResidualFittingScore()
+    conf_scores = crf_conf_score.get_conformity_scores(
+        X_toy, y_toy, y_pred_list
+    )
+    crf_conf_score.get_estimation_distribution(X_toy, y_toy, conf_scores)
+
+
+def test_invalid_estimator() -> None:
+    """Test that an estimator without predict method raises an error."""
+    class DumbEstimator:
+        def __init__(self):
+            pass
+
+    crf_conf_score = ConformalResidualFittingScore(
+        residual_estimator=DumbEstimator()
+    )
+    with pytest.raises(ValueError):
+        crf_conf_score.get_conformity_scores(
+            X_toy, y_toy, y_pred_list
+        )
+
+
+def test_cross_crf() -> None:
+    """Test that crf score called with cross method raises an error."""
+    with pytest.raises(ValueError):
+        MapieRegressor(conformity_score=ConformalResidualFittingScore()).fit(
+            X_toy, y_toy
+        )
+
+
+def test_crf_score_pipe() -> None:
+    """
+    Test that crf score function raises no error with a pipeline estimator.
+    """
+    pipe = Pipeline([
+            ("poly", PolynomialFeatures(degree=2)),
+            ("linear", LinearRegression())
+        ])
+    mapie_reg = MapieRegressor(
+        conformity_score=ConformalResidualFittingScore(
+            residual_estimator=pipe, split_size=0.2
+        ),
+        cv="split",
+        random_state=random_state
+    )
+    mapie_reg.fit(np.concatenate((X_toy, X_toy)),
+                  np.concatenate((y_toy, y_toy)))
+
+
+def test_crf_score_pipe_prefit() -> None:
+    """
+    Test that crf score function raises no error with a pipeline estimator
+    prefitted.
+    """
+    pipe = Pipeline([
+            ("poly", PolynomialFeatures(degree=2)),
+            ("linear", LinearRegression())
+        ])
+    pipe.fit(X_toy, y_toy)
+    mapie_reg = MapieRegressor(
+        conformity_score=ConformalResidualFittingScore(
+            residual_estimator=pipe, split_size=0.2, prefit=True
+        ),
+        cv="split",
+        random_state=random_state
+    )
+    mapie_reg.fit(X_toy, y_toy)
+
+
+def test_crf_prefit_estimator_with_neg_values() -> None:
+    """
+    Test that a prefit estimator for crf that predicts negative values raises a
+    warning.
+    """
+    class NegativeRegresssor(LinearRegression):
+        def predict(self, X):
+            return np.full(X.shape[0], fill_value=-1.)
+    estim = NegativeRegresssor().fit(X_toy, y_toy)
+    crf_conf_score = ConformalResidualFittingScore(
+        residual_estimator=estim, prefit=True
+    )
+    with pytest.warns(UserWarning):
+        crf_conf_score.get_conformity_scores(
+            X_toy, y_toy, y_pred_list
+        )
+
+
+def test_crf_prefit_get_estimation_distribution() -> None:
+    """
+    Test that get_estimation_distribution with prefitted estimator  in crf
+    raises no error.
+    """
+    estim = LinearRegression().fit(X_toy, y_toy)
+    crf_conf_score = ConformalResidualFittingScore(
+        residual_estimator=estim, prefit=True
+    )
+    conf_scores = crf_conf_score.get_conformity_scores(
+        X_toy, y_toy, y_pred_list
+    )
+    crf_conf_score.get_estimation_distribution(
+        X_toy, y_pred_list, conf_scores
+    )
+
+
+@pytest.mark.parametrize("score", [AbsoluteConformityScore(),
+                                   GammaConformityScore(),
+                                   ConformalResidualFittingScore()])
+@pytest.mark.parametrize("alpha", [[0.3], [0.5, 0.4]])
+def test_intervals_shape_with_every_score(
+    score: ConformityScore,
+    alpha: Any
+) -> None:
+    mapie_reg = MapieRegressor(
+        method="base", cv="split", conformity_score=score
+    )
+    X = np.concatenate((X_toy, X_toy))
+    y = np.concatenate((y_toy, y_toy))
+    mapie_reg = mapie_reg.fit(X, y)
+    y_pred, intervals = mapie_reg.predict(X, alpha=alpha)
+    n_samples = X.shape[0]
+    assert y_pred.shape[0] == n_samples
+    assert intervals.shape == (n_samples, 2, len(alpha))
