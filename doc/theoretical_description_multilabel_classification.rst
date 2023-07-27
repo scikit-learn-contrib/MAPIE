@@ -7,8 +7,8 @@ Theoretical Description
 =======================
 
 
-Two methods for multi-label uncertainty-quantification have been implemented in MAPIE so far :
-Risk-Controlling Prediction Sets (RCPS) [1] and Conformal Risk Control (CRC) [2].
+Three methods for multi-label uncertainty-quantification have been implemented in MAPIE so far :
+Risk-Controlling Prediction Sets (RCPS) [1], Conformal Risk Control (CRC) [2] and Learn Then Test (LTT) [3].
 The difference between these methods is the way the conformity scores are computed. 
 
 For a multi-label classification problem in a standard independent and identically distributed (i.i.d) case,
@@ -16,7 +16,7 @@ our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`` has an un
 
 For any risk level :math:`\alpha` between 0 and 1, the methods implemented in MAPIE allow the user to construct a prediction
 set :math:`\hat{C}_{n, \alpha}(X_{n+1})` for a new observation :math:`\left( X_{n+1},Y_{n+1} \right)` with a guarantee
-on the recall. RCPS and CRC give two slightly different guarantees:
+on the recall. RCPS, LTT and CRC give three slightly different guarantees:
 
 - RCPS:
 
@@ -28,6 +28,12 @@ on the recall. RCPS and CRC give two slightly different guarantees:
 .. math::
     \mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha
 
+- LTT:
+.. math::
+    \mathbb{P}(R(\mathcal{T}_{\lambda_{\lambda\in\hat{\Lambda}}) \leq \alpha ) \geq 1 - \delta
+
+Notice that at the opposite of the other two methods, LTT allows to control any non-monotone loss. In MAPIE for multilabel classification,
+we use CRC and RCPS for recall control and LTT for precision control.
 
 1. Risk-Controlling Prediction Sets
 -----------------------------------
@@ -156,7 +162,29 @@ With :
 .. math::
     \hat{R}_n (\lambda) = (L_{1}(\lambda) + ... + L_{n}(\lambda)) / n
 
-3. References
+
+3. Learn Then Test
+------------------
+The goal of this method is to control any loss whether monotonic, bounded or not, by performing risk control through multiple
+hypothesis testing. We can express the goal of the procedure as follows:
+
+.. math::
+    \mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha ) \geq 1 - \delta
+
+In order to find all the parameters :math:`\lambda` that satisfy the above condition, Learn Then Test propose to do the following:
+
+1: First across the collections of functions :math:`(T_\lambda)_{\lambda\in\Lambda}`, we estimate the risk on the calibration data
+\{(x_1, y_1), \dots, (x_n, y_n)\}`.
+2: For each :math:`\lambda_j` in a discrete set :math:`\Lambda = \{\lambda_1, \lambda_2,\dots, \lambda_n\}`, we associate the null hypothesis
+:math:`\mathbb{H}_j: R(\lambda_j)>\alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
+is controlled.
+3: For each null hypothesis, we compute a valid p-value using a concentration inequality. Here we choose to compute the Hoeffding-Bentkus p-value
+introduced in the paper [3].
+4: Return :math:`\hat{\Lambda} =  \mathbb{A}(\{p_j\}_{j\in\{1,\dots,lvert \Lambda \rvert})`, where :math:`\mathbb{A}`, is an algorithm
+that controls the family-wise-error-rate (FWER).
+
+
+4. References
 -------------
 
 [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
@@ -165,3 +193,7 @@ sets. CoRR, abs/2101.02703, 2021. URL https://arxiv.org/abs/2101.02703.39
 
 [2] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
 Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
+
+[3] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
+M. I., & Lei, L. (2021). Learn then test:
+"Calibrating predictive algorithms to achieve risk control".
