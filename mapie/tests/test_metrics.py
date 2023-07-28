@@ -27,7 +27,9 @@ from mapie.metrics import (classification_coverage_score,
                            cumulative_differences,
                            length_scale,
                            kolmogorov_smirnov_statistic,
+                           kolmogorov_smirnov_cdf,
                            kuiper_statistic,
+                           kuiper_cdf,
                            spiegelhalter_statistic)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
@@ -654,6 +656,13 @@ def test_kolmogorov_smirnov_statistic() -> None:
     np.testing.assert_allclose(ks_stat, 5.607741, atol=1e-6)
 
 
+def test_kolmogorov_smirnov_cdf() -> None:
+    """Test that Kolmogorov-Smirnov's statistics are well computed"""
+    np.testing.assert_allclose(kolmogorov_smirnov_cdf(1), 0.370777, atol=1e-6)
+    np.testing.assert_allclose(kolmogorov_smirnov_cdf(2), 0.908999, atol=1e-6)
+    np.testing.assert_allclose(kolmogorov_smirnov_cdf(3), 0.9946, atol=1e-6)
+
+
 def test_kuiper_statistic() -> None:
     """Test that Kuiper's statistics are well computed"""
     generator = RandomState(1)
@@ -661,6 +670,13 @@ def test_kuiper_statistic() -> None:
     y_score = generator.uniform(size=100)
     ku_stat = kuiper_statistic(y_true, y_score)
     np.testing.assert_allclose(ku_stat, 5.354395, atol=1e-6)
+
+
+def test_kuiper_cdf() -> None:
+    """Test that Kolmogorov-Smirnov's statistics are well computed"""
+    np.testing.assert_allclose(kuiper_cdf(1), 0.063365, atol=1e-6)
+    np.testing.assert_allclose(kuiper_cdf(2), 0.818506, atol=1e-6)
+    np.testing.assert_allclose(kuiper_cdf(3), 0.989201, atol=1e-6)
 
 
 def test_spiegelhalter_statistic() -> None:

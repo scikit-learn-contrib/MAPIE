@@ -62,6 +62,15 @@ Metrics
    metrics.classification_ssc
    metrics.classification_ssc_score
    metrics.hsic
+   metrics.jitter
+   metrics.sort_xy_by_y
+   metrics.cumulative_differences
+   metrics.length_scale
+   metrics.kolmogorov_smirnov_statistic
+   metrics.kolmogorov_smirnov_cdf
+   metrics.kuiper_statistic
+   metrics.kuiper_cdf
+   metrics.spiegelhalter_statistic
 
 Conformity scores
 =================

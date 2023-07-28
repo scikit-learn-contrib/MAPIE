@@ -13,6 +13,7 @@ from .utils import (calc_bins,
                     check_nb_sets_sizes,
                     check_number_bins,
                     check_split_strategy)
+from ._machine_precision import EPSILON
 
 
 def regression_coverage_score(
@@ -919,11 +920,19 @@ def length_scale(s: NDArray) -> float:
 def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
     """
     Compute Kolmogorov-smirnov's statistic for calibration test.
+    Also called ECCE-MAD
+    (Estimated Cumulative Calibration Errors - Maximum Absolute Deviation).
+    The closer to zero, the better the scores are calibrated.
+    Indeed, if the scores are perfectly calibrated,
+    the cumulative differences between ``y_true`` and ``y_score``
+    should share the same properties of a standard Brownian motion
+    asymptotically.
 
     Parameters
     ----------
     y_true : NDArray of shape (n_samples,)
         An array of ground truth.
+
     y_score : NDArray of shape (n_samples,)
         An array of scores..
 
@@ -956,14 +965,71 @@ def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
     return ks_stat
 
 
+def kolmogorov_smirnov_cdf(x: float) -> float:
+    """
+    Compute the Kolmogorov-smirnov cumulative distribution
+    function (CDF) for the float x.
+    This is interpreted as the CDF of the maximum absolute value
+    of the standard Brownian motion over the unit interval [0, 1].
+    The function is approximated by its power series, truncated so as to hit
+    machine precision error.
+
+    Parameters
+    ----------
+    x : float
+        The float x to compute the cumulative distribution function on.
+
+    Returns
+    -------
+    float
+        The Kolmogorov-smirnov cumulative distribution function.
+
+    References
+    ----------
+    Tygert M.
+    Calibration of P-values for calibration and for deviation
+    of a subpopulation from the full population.
+    arXiv preprint arXiv:2202.00100.
+    2022 Jan 31.
+
+    D. A. Darling. A. J. F. Siegert.
+    The First Passage Problem for a Continuous Markov Process.
+    Ann. Math. Statist. 24 (4) 624 - 639, December,
+    1953.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from mapie.metrics import kolmogorov_smirnov_cdf
+    >>> print(np.round(kolmogorov_smirnov_cdf(1), 4))
+    0.3708
+    """
+    kmax = np.ceil(
+        0.5 + x * np.sqrt(2) / np.pi * np.sqrt(np.log(4 / (np.pi*EPSILON)))
+    )
+    c = 0.0
+    for k in range(int(kmax)):
+        kplus = k + 1 / 2
+        c += (-1)**k / kplus * np.exp(-kplus**2 * np.pi**2 / (2 * x**2))
+    c *= 2 / np.pi
+    return c
+
+
 def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
     """
     Compute Kuiper's statistic for calibration test.
+    Also called ECCE-R (Estimated Cumulative Calibration Errors - Range).
+    The closer to zero, the better the scores are calibrated.
+    Indeed, if the scores are perfectly calibrated,
+    the cumulative differences between ``y_true`` and ``y_score``
+    should share the same properties of a standard Brownian motion
+    asymptotically.
 
     Parameters
     ----------
     y_true : NDArray of shape (n_samples,)
         An array of ground truth.
+
     y_score : NDArray of shape (n_samples,)
         An array of scores.
 
@@ -996,14 +1062,79 @@ def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
     return ku_stat
 
 
+def kuiper_cdf(x: float) -> float:
+    """
+    Compute the Kuiper cumulative distribution function (CDF) for the float x.
+    This is interpreted as the CDF of the range
+    of the standard Brownian motion over the unit interval [0, 1].
+    The function is approximated by its power series, truncated so as to hit
+    machine precision error.
+
+    Parameters
+    ----------
+    x : float
+        The float x to compute the cumulative distribution function.
+
+    Returns
+    -------
+    float
+        The Kuiper cumulative distribution function.
+
+    References
+    ----------
+    Tygert M.
+    Calibration of P-values for calibration and for deviation
+    of a subpopulation from the full population.
+    arXiv preprint arXiv:2202.00100.
+    2022 Jan 31.
+
+    William Feller.
+    The Asymptotic Distribution of the Range of Sums of
+    Independent Random Variables.
+    Ann. Math. Statist. 22 (3) 427 - 432
+    September, 1951.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from mapie.metrics import kuiper_cdf
+    >>> print(np.round(kuiper_cdf(1), 4))
+    0.0634
+    """
+    kmax = np.ceil(
+        (
+            0.5 + x / (np.pi * np.sqrt(2)) *
+            np.sqrt(
+                np.log(
+                    4 / (np.sqrt(2 * np.pi) * EPSILON) * (1 / x + x / np.pi**2)
+                )
+            )
+        )
+    )
+    c = 0.0
+    for k in range(int(kmax)):
+        kplus = k + 1 / 2
+        c += (
+            (8 / x**2 + 2 / kplus**2 / np.pi**2) *
+            np.exp(-2 * kplus**2 * np.pi**2 / x**2)
+        )
+    return c
+
+
 def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     """
     Compute Spiegelhalter's statistic for calibration test.
+    The closer to zero, the better the scores are calibrated.
+    Indeed, if the scores are perfectly calibrated,
+    the Brier score simplifies to an expression whose expectancy
+    and variance are easy to compute. The statistic is no more that
+    a z-score on this normalized expression.
 
     Parameters
     ----------
     y_true : NDArray of shape (n_samples,)
         An array of ground truth.
+
     y_score : NDArray of shape (n_samples,)
         An array of scores.
 
