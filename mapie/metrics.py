@@ -1,5 +1,6 @@
 from typing import Optional, cast, Union, Tuple
 
+import scipy
 import numpy as np
 from sklearn.utils.validation import check_array, column_or_1d
 from sklearn.utils import check_random_state
@@ -753,8 +754,10 @@ def jitter(
     ----------
     x : NDArray
         The array to jitter.
+
     noise_amplitude : float, optional
         The tiny relative noise amplitude to add, by default 1e-8.
+
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random sampling.
         Pass an int for reproducible output across multiple function calls.
@@ -788,6 +791,7 @@ def sort_xy_by_y(x: NDArray, y: NDArray) -> Tuple[NDArray, NDArray]:
     ----------
     x : NDArray of size (n_samples,)
         The array to sort according to y.
+
     y : NDArray of size (n_samples,)
         The array to sort.
 
@@ -830,10 +834,13 @@ def cumulative_differences(
     ----------
     y_true : NDArray of size (n_samples,)
         An array of ground truths.
+
     y_score : NDArray of size (n_samples,)
         An array of scores.
+
     noise_amplitude : float, optional
         The tiny relative noise amplitude to add, by default 1e-8.
+
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random sampling.
         Pass an int for reproducible output across multiple function calls.
@@ -866,8 +873,6 @@ def cumulative_differences(
     >>> cum_diff
     array([-0.1, -0.3, -0.2])
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
-    y_score = cast(NDArray, column_or_1d(y_score))
     n = len(y_true)
     y_score_jittered = jitter(
         y_score,
@@ -911,7 +916,6 @@ def length_scale(s: NDArray) -> float:
     >>> print(np.round(res, 2))
     0.16
     """
-    s = cast(NDArray, column_or_1d(s))
     n = len(s)
     length_scale = np.sqrt(np.sum(s * (1 - s)))/n
     return length_scale
@@ -1013,6 +1017,54 @@ def kolmogorov_smirnov_cdf(x: float) -> float:
         c += (-1)**k / kplus * np.exp(-kplus**2 * np.pi**2 / (2 * x**2))
     c *= 2 / np.pi
     return c
+
+
+def kolmogorov_smirnov_p_value(y_true: NDArray, y_score: NDArray) -> float:
+    """
+    Compute Kolmogorov Smirnov p-value.
+    Deduced from the corresponding statistic and CDF.
+    It represents the probability of the observed statistic
+    under the null hypothesis of perfect calibration.
+
+    Parameters
+    ----------
+    y_true : NDArray of shape (n_samples,)
+        An array of ground truth.
+
+    y_score : NDArray of shape (n_samples,)
+        An array of scores.
+
+    Returns
+    -------
+    float
+        The Kolmogorov Smirnov p-value.
+
+    References
+    ----------
+    Tygert M.
+    Calibration of P-values for calibration and for deviation
+    of a subpopulation from the full population.
+    arXiv preprint arXiv:2202.00100.
+    2022 Jan 31.
+
+    D. A. Darling. A. J. F. Siegert.
+    The First Passage Problem for a Continuous Markov Process.
+    Ann. Math. Statist. 24 (4) 624 - 639, December,
+    1953.
+
+    Example
+    -------
+    >>> import pandas as pd
+    >>> from mapie.metrics import kolmogorov_smirnov_p_value
+    >>> y_true = np.array([1, 0, 1, 0, 1, 0])
+    >>> y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])
+    >>> ks_p_value = kolmogorov_smirnov_p_value(y_true, y_score)
+    >>> print(np.round(ks_p_value, 4))
+    0.7857
+    """
+    ks_stat = kolmogorov_smirnov_statistic(y_true, y_score)
+    ks_p_value = 1 - kolmogorov_smirnov_cdf(ks_stat)
+    return ks_p_value
 
 
 def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
@@ -1121,6 +1173,55 @@ def kuiper_cdf(x: float) -> float:
     return c
 
 
+def kuiper_p_value(y_true: NDArray, y_score: NDArray) -> float:
+    """
+    Compute Kuiper statistic p-value.
+    Deduced from the corresponding statistic and CDF.
+    It represents the probability of the observed statistic
+    under the null hypothesis of perfect calibration.
+
+    Parameters
+    ----------
+    y_true : NDArray of shape (n_samples,)
+        An array of ground truth.
+
+    y_score : NDArray of shape (n_samples,)
+        An array of scores.
+
+    Returns
+    -------
+    float
+        The Kuiper p-value.
+
+    References
+    ----------
+    Tygert M.
+    Calibration of P-values for calibration and for deviation
+    of a subpopulation from the full population.
+    arXiv preprint arXiv:2202.00100.
+    2022 Jan 31.
+
+    William Feller.
+    The Asymptotic Distribution of the Range of Sums of
+    Independent Random Variables.
+    Ann. Math. Statist. 22 (3) 427 - 432
+    September, 1951.
+
+    Example
+    -------
+    >>> import pandas as pd
+    >>> from mapie.metrics import kuiper_p_value
+    >>> y_true = np.array([1, 0, 1, 0, 1, 0])
+    >>> y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])
+    >>> ku_p_value = kuiper_p_value(y_true, y_score)
+    >>> print(np.round(ku_p_value, 4))
+    0.9684
+    """
+    ku_stat = kuiper_statistic(y_true, y_score)
+    ku_p_value = 1 - kuiper_cdf(ku_stat)
+    return ku_p_value
+
+
 def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     """
     Compute Spiegelhalter's statistic for calibration test.
@@ -1166,8 +1267,51 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     )
     denominator = np.sqrt(
         np.sum(
-            (1 - 2 * y_score) ** 2 * y_score * (1 - y_score)
+            (1 - 2 * y_score)** 2 * y_score * (1 - y_score)
         )
     )
     sp_stat = numerator/denominator
     return sp_stat
+
+
+def spiegelhalter_p_value(y_true: NDArray, y_score: NDArray) -> float:
+    """
+    Compute Spiegelhalter statistic p-value.
+    Deduced from the corresponding statistic and CDF,
+    which is no more than the normal distribution.
+    It represents the probability of the observed statistic
+    under the null hypothesis of perfect calibration.
+
+    Parameters
+    ----------
+    y_true : NDArray of shape (n_samples,)
+        An array of ground truth.
+
+    y_score : NDArray of shape (n_samples,)
+        An array of scores.
+
+    Returns
+    -------
+    float
+        The Spiegelhalter statistic p_value.
+
+    References
+    ----------
+    Spiegelhalter DJ.
+    Probabilistic prediction in patient management and clinical trials.
+    Statistics in medicine.
+    1986 Sep;5(5):421-33.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from mapie.metrics import spiegelhalter_p_value
+    >>> y_true = np.array([1, 0, 1, 0, 1, 0])
+    >>> y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])
+    >>> sp_p_value = spiegelhalter_p_value(y_true, y_score)
+    >>> print(np.round(sp_p_value, 4))
+    0.8486
+    """
+    sp_stat = spiegelhalter_statistic(y_true, y_score)
+    sp_p_value = 1 - scipy.stats.norm.cdf(sp_stat)
+    return sp_p_value
