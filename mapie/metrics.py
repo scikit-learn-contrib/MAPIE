@@ -1267,7 +1267,7 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     )
     denominator = np.sqrt(
         np.sum(
-            (1 - 2 * y_score)** 2 * y_score * (1 - y_score)
+            (1 - 2 * y_score) ** 2 * y_score * (1 - y_score)
         )
     )
     sp_stat = numerator/denominator
