@@ -68,9 +68,12 @@ Metrics
    metrics.length_scale
    metrics.kolmogorov_smirnov_statistic
    metrics.kolmogorov_smirnov_cdf
+   metrics.kolmogorov_smirnov_p_value
    metrics.kuiper_statistic
    metrics.kuiper_cdf
+   metrics.kuiper_p_value
    metrics.spiegelhalter_statistic
+   metrics.spiegelhalter_p_value
 
 Conformity scores
 =================

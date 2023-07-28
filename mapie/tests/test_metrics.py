@@ -28,9 +28,12 @@ from mapie.metrics import (classification_coverage_score,
                            length_scale,
                            kolmogorov_smirnov_statistic,
                            kolmogorov_smirnov_cdf,
+                           kolmogorov_smirnov_p_value,
                            kuiper_statistic,
                            kuiper_cdf,
-                           spiegelhalter_statistic)
+                           kuiper_p_value,
+                           spiegelhalter_statistic,
+                           spiegelhalter_p_value)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
 y_preds = np.array([
@@ -663,6 +666,31 @@ def test_kolmogorov_smirnov_cdf() -> None:
     np.testing.assert_allclose(kolmogorov_smirnov_cdf(3), 0.9946, atol=1e-6)
 
 
+def test_kolmogorov_smirnov_p_value_non_calibrated() -> None:
+    """
+    Test that Kolmogorov-Smirnov's p-values are well computed
+    for uncalibrated data.
+    """
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    ks_stat = kolmogorov_smirnov_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.0, atol=1e-6)
+
+
+def test_kolmogorov_smirnov_p_value_calibrated() -> None:
+    """
+    Test that Kolmogorov-Smirnov's p-values are well computed
+    for calibrated data.
+    """
+    generator = RandomState(1)
+    y_score = generator.uniform(size=100)
+    uniform = generator.uniform(size=len(y_score))
+    y_true = (uniform <= y_score).astype(float)
+    ks_stat = kolmogorov_smirnov_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.2148, atol=1e-6)
+
+
 def test_kuiper_statistic() -> None:
     """Test that Kuiper's statistics are well computed"""
     generator = RandomState(1)
@@ -673,10 +701,35 @@ def test_kuiper_statistic() -> None:
 
 
 def test_kuiper_cdf() -> None:
-    """Test that Kolmogorov-Smirnov's statistics are well computed"""
+    """Test that Kuiper's statistics are well computed"""
     np.testing.assert_allclose(kuiper_cdf(1), 0.063365, atol=1e-6)
     np.testing.assert_allclose(kuiper_cdf(2), 0.818506, atol=1e-6)
     np.testing.assert_allclose(kuiper_cdf(3), 0.989201, atol=1e-6)
+
+
+def test_kuiper_p_value_non_calibrated() -> None:
+    """
+    Test that Kuiper's p-values are well computed
+    for uncalibrated data
+    """
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    ks_stat = kuiper_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.0, atol=1e-6)
+
+
+def test_kuiper_p_value_calibrated() -> None:
+    """
+    Test that Kuiper's p-values are well computed
+    for calibrated data.
+    """
+    generator = RandomState(1)
+    y_score = generator.uniform(size=100)
+    uniform = generator.uniform(size=len(y_score))
+    y_true = (uniform <= y_score).astype(float)
+    ks_stat = kuiper_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.313006, atol=1e-6)
 
 
 def test_spiegelhalter_statistic() -> None:
@@ -686,3 +739,28 @@ def test_spiegelhalter_statistic() -> None:
     y_score = generator.uniform(size=100)
     sp_stat = spiegelhalter_statistic(y_true, y_score)
     np.testing.assert_allclose(sp_stat, 13.906833, atol=1e-6)
+
+
+def test_spiegelhalter_p_value_non_calibrated() -> None:
+    """
+    Test that Spiegelhalter's p-values are well computed
+    for uncalibrated data
+    """
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    ks_stat = spiegelhalter_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.0, atol=1e-6)
+
+
+def test_spiegelhalter_p_value_calibrated() -> None:
+    """
+    Test that Spiegelhalter's p-values are well computed
+    for calibrated data.
+    """
+    generator = RandomState(1)
+    y_score = generator.uniform(size=100)
+    uniform = generator.uniform(size=len(y_score))
+    y_true = (uniform <= y_score).astype(float)
+    ks_stat = spiegelhalter_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.174832, atol=1e-6)
