@@ -146,7 +146,7 @@ class GammaConformityScore(ConformityScore):
 
 class ConformalResidualFittingScore(ConformityScore):
     """
-    ConformalResidualFittingScore (CRF) score.
+    Conformal residual fitting score (CRF).
 
     The signed conformity score = (|y - y_pred|) / r_pred. r_pred being the
     predicted residual (|y - y_pred|) of the base estimator.
