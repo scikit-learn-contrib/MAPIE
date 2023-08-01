@@ -3,7 +3,7 @@
 Estimating conditional coverage
 ===============================
 This example uses :func:`~mapie.regression.MapieRegressor` with conformal
-scores that returns adaptive intervals ie
+scores that returns adaptive intervals i.e.
 (:class:`~mapie.conformity_scores.GammaConformityScore` and
 :class:`~mapie.conformity_scores.ConformalResidualFittingScore`) as well as
 :func:`~mapie.regression.MapieQuantileRegressor`.
@@ -113,7 +113,8 @@ STRATEGIES = {
             residual_estimator=LGBMRegressor(
                 alpha=0.5,
                 random_state=random_state),
-            split_size=0.6
+            split_size=0.7,
+            random_state=random_state
         )
     },
     "CQR": {
@@ -159,7 +160,9 @@ for m, cov, ssc, coef in zip(
     cond_coverage.values(),
     coef_corr.values()
 ):
-    estimated_cond_cov.loc[m] = [cov[0], ssc[0], coef[0]]
+    estimated_cond_cov.loc[m] = [
+        round(cov[0], 2), round(ssc[0], 2), round(coef[0],2)
+    ]
 
 with pd.option_context('display.max_rows', None, 'display.max_columns', None):
     print(estimated_cond_cov)

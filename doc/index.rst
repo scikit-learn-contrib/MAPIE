@@ -13,6 +13,7 @@
    :caption: REGRESSION
 
    theoretical_description_regression
+   theoretical_description_conformity_scores
    examples_regression/4-tutorials/plot_main-tutorial-regression
    examples_regression/4-tutorials/plot_cqr_tutorial
    examples_regression/4-tutorials/plot_ts-tutorial

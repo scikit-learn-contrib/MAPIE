@@ -2,9 +2,9 @@
 
 .. _theoretical_description_conformity_scores:
 
-=======================
-Theoretical Description
-=======================
+=========================================
+Theoretical Description Conformity Scores
+=========================================
 
 The :class:`mapie.conformity_scores.ConformityScore` class implements various
 methods to compute conformity scores for regression.

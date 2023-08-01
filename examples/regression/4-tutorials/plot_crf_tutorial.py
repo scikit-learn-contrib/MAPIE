@@ -60,9 +60,8 @@ plt.show()
 # Let's now create the different splits for the dataset, with a training,
 # calibration, residual and test set. Recall that the calibration set is used
 # for calibrating the prediction intervals and the residual set is used to fit
-# the residual estimator used by the CRF score (see
-# :doc:`../../../theoretical_description_conformity_scores.rst` for more
-# details).
+# the residual estimator used by the
+# :class:`~mapie.conformity_scores.ConformalResidualFittingScore`.
 
 np.array(X)
 np.array(y)

@@ -27,7 +27,7 @@ feature vector :math:`X_{n+1}` such that
     P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \} \geq 1 - \alpha
 
 All the methods below are described with the absolute residual conformity score for simplicity
-but other conformity scores are implemented in MAPIE (see :doc:`.theoretical_description_conformity_scores.rst`).
+but other conformity scores are implemented in MAPIE (see :doc:`theoretical_description_conformity_scores`).
 
 1. The "Naive" method
 =====================
