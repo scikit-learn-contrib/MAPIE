@@ -2,9 +2,9 @@
 
 .. _theoretical_description_conformity_scores:
 
-=========================================
-Theoretical Description Conformity Scores
-=========================================
+=============================================
+Theoretical Description for Conformity Scores
+=============================================
 
 The :class:`mapie.conformity_scores.ConformityScore` class implements various
 methods to compute conformity scores for regression.
@@ -34,7 +34,7 @@ of the model : in regression it is called the residual.
 .. math:: |Y-\hat{\mu}(X)|
 
 With this score the intervals of predictions will be constant over the whole dataset.
-This score is symmetric (*see above for definition*).
+This score is by default symmetric (*see above for definition*).
 
 2. The gamma score
 ==================
@@ -45,7 +45,7 @@ notion of adaptivity with the normalization of the residuals by the predictions.
 .. math:: \frac{|Y-\hat{\mu}(X)|}{\hat{\mu}(X)}
 
 It computes adaptive intervals : intervals of different size on each example.
-This score is asymmetric (*see definition above*).
+This score is by default asymmetric (*see definition above*).
 
 Compared to the absolute residual score, it allows to see regions with smaller intervals
 than others which are interpreted as regions with more certainty than others.
