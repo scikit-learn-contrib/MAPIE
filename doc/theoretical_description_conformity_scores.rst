@@ -49,6 +49,8 @@ This score is by default asymmetric (*see definition above*).
 
 Compared to the absolute residual score, it allows to see regions with smaller intervals
 than others which are interpreted as regions with more certainty than others.
+It is important to note that, this conformity score is proportional to the
+order of magnitude of the predictions.
 
 3. The conformal residual fitting score
 =======================================
@@ -66,14 +68,12 @@ and is by default symmetric (*see definition above*). Unlike the scores above, a
 the additionnal model required this score can only be used with split methods.
 
 Normalisation by the learned residuals from :math:`X` adds to the score a knowledge of
-:math:`X` and its similarity to the other examples in the dataset. In fact, using this
-score results in even more adaptive intervals. Compared to the gamma score, the other adaptive
-score implemented in MAPIE, it maintains relevant interval sizes over the entire dataset
-even when there are outliers that could perturb the model. With gamma score, if
-there are strong outliers, the intervals over the hole datset are sometimes too large
-to be useful.
-Therefore, the interpretation of the intervals provided by the conformal residual fitting
-score can help to detect outliers.
+:math:`X` and its similarity to the other examples in the dataset.
+Compared to the gamma score, the other adaptive score implemented in MAPIE,
+it maintains relevant interval sizes over the entire dataset even when the model
+is very uncertain (they would be large on the specific parts of the dataset where
+the model is uncertain). Whereas, with the gamma score, the intervals would be large
+over the hole dataset.
 
 
 Key takeaways
