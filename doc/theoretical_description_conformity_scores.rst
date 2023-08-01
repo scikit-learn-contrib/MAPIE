@@ -57,12 +57,12 @@ The conformal residual fitting score (:class:`mapie.conformity_scores.Conformali
 (CRF) is slightly more complex than the previous scores.
 The normalization of the residual is now done by the predictions of an additional model
 :math:`\sigma` which learns to predict the base model residuals from :math:`X`.
-:math:`\sigma` is trained on :math:`(X, |Y-\hat{\mu}(X)|)` and the formula of th score is :
+:math:`\sigma` is trained on :math:`(X, |Y-\hat{\mu}(X)|)` and the formula of the score is :
 
 .. math:: \frac{|Y-\hat{\mu}(X)|}{\hat{\sigma}(X)}
 
 This score provides adaptive intervals : intervals of different sizes in each point
-and is symmetric (*see definition above*). Unlike the scores above, and due to
+and is by default symmetric (*see definition above*). Unlike the scores above, and due to
 the additionnal model required this score can only be used with split methods.
 
 Normalisation by the learned residuals from :math:`X` adds to the score a knowledge of
