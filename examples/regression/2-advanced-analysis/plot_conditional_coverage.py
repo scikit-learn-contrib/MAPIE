@@ -161,7 +161,7 @@ for m, cov, ssc, coef in zip(
     coef_corr.values()
 ):
     estimated_cond_cov.loc[m] = [
-        round(cov[0], 2), round(ssc[0], 2), round(coef[0],2)
+        round(cov[0], 2), round(ssc[0], 2), round(coef[0], 2)
     ]
 
 with pd.option_context('display.max_rows', None, 'display.max_columns', None):
