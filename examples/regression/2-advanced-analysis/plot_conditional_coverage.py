@@ -239,7 +239,7 @@ def plot_intervals(X, y, y_pred, intervals, title="", ax=None):
     ax.legend()
 
 
-def plot_coverage_by_width(y, intervals, num_bins, title="", ax=None):
+def plot_coverage_by_width(y, intervals, num_bins, alpha, title="", ax=None):
     """
     PLots a bar diagram of coverages by groups of interval widths.
 
@@ -251,6 +251,8 @@ def plot_coverage_by_width(y, intervals, num_bins, title="", ax=None):
         Intervals of prediction
     num_bins: int
         Number of groups of interval widths
+    alpha: float
+        The risk level
     title: str
         Title of the plot
     ax: matplotlib axes
@@ -263,6 +265,7 @@ def plot_coverage_by_width(y, intervals, num_bins, title="", ax=None):
         np.arange(num_bins),
         regression_ssc(y, intervals, num_bins=num_bins)[0]
     )
+    ax.axhline(y=1 - alpha, color='r', linestyle='-')
     ax.set_title(title)
     ax.set_xlabel("intervals grouped by size")
     ax.set_ylabel("coverage")
@@ -288,7 +291,7 @@ for ax_viz, ax_hist, ax_distr, strategy in zip(
     )
     plot_coverage_by_width(
         y_test, intervals[strategy],
-        num_bins=num_bins, title=strategy, ax=ax_hist
+        num_bins=num_bins, alpha=alpha, title=strategy, ax=ax_hist
     )
 
     ax_distr.hist(

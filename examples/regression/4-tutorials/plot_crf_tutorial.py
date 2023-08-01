@@ -85,7 +85,7 @@ X_calib, X_res, y_calib, y_res = train_test_split(
 
 
 ##############################################################################
-# 1. Models
+# 2. Models
 # --------------------------------------------------------------------------
 # We will now define 4 different ways of using the CRF score. Remember that the
 # CRF score is only available in the split setup. First, the simplest one
