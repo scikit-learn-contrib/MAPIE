@@ -81,7 +81,7 @@ Key takeaways
 
 - The absolute residual score is the basic conformity score and gives constant intervals.
 - The gamma conformity score adds a notion of adaptivity by giving intervals of different sizes,
-  but it can give absurd results with strong outliers.
+  but it can give absurd results if the prediction model is too uncertain.
 - The conformal residual fitting score is a conformity score that requires an additional model
   to learn the residuals of the model from :math:`X`. It gives very adaptive intervals,
   and their sizes can help in detecting outliers.
