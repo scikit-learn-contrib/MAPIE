@@ -46,7 +46,7 @@ from mapie.metrics import (regression_coverage_score,
 from mapie.regression import MapieQuantileRegressor, MapieRegressor
 from mapie.subsample import Subsample
 
-random_state = 23
+random_state = 18
 rng = np.random.default_rng(random_state)
 round_to = 3
 
@@ -135,7 +135,8 @@ optim_model = RandomizedSearchCV(
     n_jobs=-1,
     n_iter=100,
     cv=KFold(n_splits=5, shuffle=True),
-    verbose=0
+    verbose=0,
+    random_state=random_state
 )
 optim_model.fit(X_train, y_train)
 estimator = optim_model.best_estimator_
@@ -265,10 +266,14 @@ coverage, width = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "cqr":
         mapie = MapieQuantileRegressor(estimator, **params)
-        mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+        mapie.fit(
+            X_train, y_train,
+            X_calib=X_calib, y_calib=y_calib,
+            random_state=random_state
+        )
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:
-        mapie = MapieRegressor(estimator, **params)
+        mapie = MapieRegressor(estimator, **params, random_state=random_state)
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.2)
     (
