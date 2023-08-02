@@ -33,6 +33,13 @@ of the model : in regression it is called the residual.
 
 .. math:: |Y-\hat{\mu}(X)|
 
+The intervals of prediction's bounds are then computed from the following formula :
+
+.. math:: [\hat{\mu}(X) - q(s), \hat{\mu}(X) + q(s)]
+
+Where :math:`q(s)` is the :math:`(1-\alpha)` quantile of the conformity scores.
+(see :doc:`theoretical_description_regression` for more details).
+
 With this score the intervals of predictions will be constant over the whole dataset.
 This score is by default symmetric (*see above for definition*).
 
@@ -44,7 +51,14 @@ notion of adaptivity with the normalization of the residuals by the predictions.
 
 .. math:: \frac{|Y-\hat{\mu}(X)|}{\hat{\mu}(X)}
 
-It computes adaptive intervals : intervals of different size on each example.
+It computes adaptive intervals : intervals of different size on each example, with
+the following formula  :
+
+.. math:: [\hat{\mu}(X) * (1 - q(s)), \hat{\mu}(X) * (1 + q(s))]
+
+Where :math:`q(s)` is the :math:`(1-\alpha)` quantile of the conformity scores.
+(see :doc:`theoretical_description_regression` for more details).
+
 This score is by default asymmetric (*see definition above*).
 
 Compared to the absolute residual score, it allows to see regions with smaller intervals
@@ -64,8 +78,15 @@ The normalization of the residual is now done by the predictions of an additiona
 .. math:: \frac{|Y-\hat{\mu}(X)|}{\hat{\sigma}(X)}
 
 This score provides adaptive intervals : intervals of different sizes in each point
-and is by default symmetric (*see definition above*). Unlike the scores above, and due to
-the additionnal model required this score can only be used with split methods.
+with the following formula :
+
+.. math:: [\hat{\mu}(X) - q(s) * \hat{\sigma}(X), \hat{\mu}(X) + q(s) * \hat{\sigma}(X)]
+
+Where :math:`q(s)` is the :math:`(1-\alpha)` quantile of the conformity scores.
+(see :doc:`theoretical_description_regression` for more details).
+
+This score is by default symmetric (*see definition above*). Unlike the scores above,
+and due to the additionnal model required this score can only be used with split methods.
 
 Normalisation by the learned residuals from :math:`X` adds to the score a knowledge of
 :math:`X` and its similarity to the other examples in the dataset.
