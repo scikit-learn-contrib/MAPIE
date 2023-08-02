@@ -169,7 +169,7 @@ num_bins = 10
 alpha = 0.1
 for strategy, params in STRATEGIES.items():
     mapie = MapieRegressor(**params, random_state=random_state)
-    if mapie.conformity_score.prefit == True:
+    if mapie.conformity_score.prefit:
         mapie.fit(X_calib_prefit, y_calib_prefit)
     else:
         mapie.fit(X_calib, y_calib)
