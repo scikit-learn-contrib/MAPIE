@@ -76,7 +76,7 @@ X_train, X_calib, y_train, y_calib = train_test_split(
     y_train,
     random_state=random_state
 )
-X_calib, X_res, y_calib, y_res = train_test_split(
+X_calib_prefit, X_res, y_calib_prefit, y_res = train_test_split(
     X_calib,
     y_calib,
     random_state=random_state,
@@ -97,16 +97,18 @@ X_calib, X_res, y_calib, y_res = train_test_split(
 # the base model trained beforehand. The third setup that we illustrate here
 # is with the residual model prefitted : we can set the estimator in parameters
 # of the class, not forgetting to specify ``prefit="True"``. Finally, as an
-# example of the exotic parameterisation we can do : we use as a resiudal
+# example of the exotic parameterisation we can do : we use as a residual
 # estimator a :class:`~sklearn.linear_model.LinearRegression` wrapped to avoid
-# negative values.
+# negative values like it is done by default in the class.
 
 class PosEstim(LinearRegression):
     def __init__(self):
         super().__init__()
 
     def fit(self, X, y):
-        super().fit(X, np.log(y))
+        super().fit(
+            X, np.log(np.maximum(y, np.full(y.shape, np.float64(1e-8))))
+        )
         return self
 
     def predict(self, X):
@@ -123,9 +125,12 @@ residual_estimator = RandomForestRegressor(
     min_samples_leaf=7,
     random_state=random_state
 )
-residual_estimator = residual_estimator.fit(X_res, y_res)
-wrapped_residual_estimator = PosEstim().fit(X_res, y_res)
-
+residual_estimator = residual_estimator.fit(
+    X_res, np.abs(np.subtract(y_res, base_model.predict(X_res)))
+)
+wrapped_residual_estimator = PosEstim().fit(
+    X_res, np.abs(np.subtract(y_res, base_model.predict(X_res)))
+)
 # Estimating prediction intervals
 STRATEGIES = {
     "Default": {
@@ -135,7 +140,9 @@ STRATEGIES = {
     "Base model prefit": {
         "cv": "prefit",
         "estimator": base_model,
-        "conformity_score": ConformalResidualFittingScore()
+        "conformity_score": ConformalResidualFittingScore(
+            split_size=0.5, random_state=random_state
+        )
     },
     "Base and residual model prefit": {
         "cv": "prefit",
@@ -162,10 +169,12 @@ num_bins = 10
 alpha = 0.1
 for strategy, params in STRATEGIES.items():
     mapie = MapieRegressor(**params, random_state=random_state)
-    mapie.fit(X_calib, y_calib)
-    y_pred[strategy], intervals[strategy] = mapie.predict(
-        X_test, alpha=alpha
-    )
+    if mapie.conformity_score.prefit == True:
+        mapie.fit(X_calib_prefit, y_calib_prefit)
+    else:
+        mapie.fit(X_calib, y_calib)
+    y_pred[strategy], intervals[strategy] = mapie.predict(X_test, alpha=alpha)
+
     coverage[strategy] = regression_coverage_score_v2(
         y_test, intervals[strategy]
     )
@@ -256,3 +265,10 @@ for ax, strategy in zip(axs.flat, STRATEGIES.keys()):
 fig.suptitle(f"Predicted values and intervals of level {alpha}")
 plt.tight_layout()
 plt.show()
+
+##############################################################################
+# The results show that all the setups reach the global coverage guaranteed of
+# 1-alpha.
+# It is interesting to note that the second and first models are the give
+# exactly the same results because they are the same models : one prefitted
+# and one fitted directly in the class.
