@@ -63,8 +63,10 @@ This score is by default asymmetric (*see definition above*).
 
 Compared to the absolute residual score, it allows to see regions with smaller intervals
 than others which are interpreted as regions with more certainty than others.
-It is important to note that, this conformity score is proportional to the
-order of magnitude of the predictions.
+It is important to note that, this conformity score is inversely proportional to the
+order of magnitude of the predictions. Therefore, the uncertainty is proportional to
+the order of magitude of the predictions, implying that this core should be used
+in use cases where we want greater uncertainty when the prediction is high.
 
 3. The conformal residual fitting score
 =======================================
@@ -91,10 +93,7 @@ and due to the additionnal model required this score can only be used with split
 Normalisation by the learned residuals from :math:`X` adds to the score a knowledge of
 :math:`X` and its similarity to the other examples in the dataset.
 Compared to the gamma score, the other adaptive score implemented in MAPIE,
-it maintains relevant interval sizes over the entire dataset even when the model
-is very uncertain (they would be large on the specific parts of the dataset where
-the model is uncertain). Whereas, with the gamma score, the intervals would be large
-over the hole dataset.
+it is not proportional to the uncertainty.
 
 
 Key takeaways
@@ -102,10 +101,10 @@ Key takeaways
 
 - The absolute residual score is the basic conformity score and gives constant intervals.
 - The gamma conformity score adds a notion of adaptivity by giving intervals of different sizes,
-  but it can give absurd results if the prediction model is too uncertain.
+  and is proportional to the uncertainty.
 - The conformal residual fitting score is a conformity score that requires an additional model
-  to learn the residuals of the model from :math:`X`. It gives very adaptive intervals,
-  and their sizes can help in detecting outliers.
+  to learn the residuals of the model from :math:`X`. It gives very adaptive intervals
+  without specific asumptions on the data.
 
 References
 ==========
