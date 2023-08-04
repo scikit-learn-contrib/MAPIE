@@ -44,6 +44,7 @@
    :caption: CALIBRATION
 
    theoretical_description_calibration
+   examples_calibration/index
    notebooks_calibration
 
 .. toctree::
