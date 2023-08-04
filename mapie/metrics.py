@@ -2,8 +2,8 @@ from typing import Optional, cast, Union, Tuple
 
 import scipy
 import numpy as np
-from sklearn.utils.validation import check_array, column_or_1d
 from sklearn.utils import check_random_state
+from sklearn.utils.validation import check_array, column_or_1d
 
 from ._typing import ArrayLike, NDArray
 from .utils import (calc_bins,
@@ -742,7 +742,7 @@ def hsic(
     return coef_hsic
 
 
-def jitter(
+def add_jitter(
     x: NDArray,
     noise_amplitude: float = 1e-8,
     random_state: Optional[Union[int, np.random.RandomState]] = None
@@ -770,9 +770,9 @@ def jitter(
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.metrics import jitter
+    >>> from mapie.metrics import add_jitter
     >>> x = np.array([0, 1, 2, 3, 4])
-    >>> res = jitter(x, random_state=1)
+    >>> res = add_jitter(x, random_state=1)
     >>> res
     array([0.        , 0.99999999, 1.99999999, 2.99999997, 4.00000003])
     """
@@ -812,8 +812,8 @@ def sort_xy_by_y(x: NDArray, y: NDArray) -> Tuple[NDArray, NDArray]:
     >>> print(y_sorted)
     [1 2 3 4 5]
     """
-    x = cast(NDArray, column_or_1d(x))
-    y = cast(NDArray, column_or_1d(y))
+    x = column_or_1d(x)
+    y = column_or_1d(y)
     sort_index = np.argsort(y)
     x_sorted = x[sort_index]
     y_sorted = y[sort_index]
@@ -874,7 +874,7 @@ def cumulative_differences(
     array([-0.1, -0.3, -0.2])
     """
     n = len(y_true)
-    y_score_jittered = jitter(
+    y_score_jittered = add_jitter(
         y_score,
         noise_amplitude=noise_amplitude,
         random_state=random_state
@@ -961,8 +961,8 @@ def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(kolmogorov_smirnov_statistic(y_true, y_score), 3))
     0.978
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
-    y_score = cast(NDArray, column_or_1d(y_score))
+    y_true = column_or_1d(y_true)
+    y_score = column_or_1d(y_score)
     cum_diff = cumulative_differences(y_true, y_score)
     sigma = length_scale(y_score)
     ks_stat = np.max(np.abs(cum_diff)) / sigma
@@ -1106,8 +1106,8 @@ def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(kuiper_statistic(y_true, y_score), 3))
     0.857
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
-    y_score = cast(NDArray, column_or_1d(y_score))
+    y_true = column_or_1d(y_true)
+    y_score = column_or_1d(y_score)
     cum_diff = cumulative_differences(y_true, y_score)
     sigma = length_scale(y_score)
     ku_stat = (np.max(cum_diff) - np.min(cum_diff)) / sigma
@@ -1260,8 +1260,8 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(spiegelhalter_statistic(y_true, y_score), 3))
     -0.757
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
-    y_score = cast(NDArray, column_or_1d(y_score))
+    y_true = column_or_1d(y_true)
+    y_score = column_or_1d(y_score)
     numerator = np.sum(
         (y_true - y_score) * (1 - 2 * y_score)
     )

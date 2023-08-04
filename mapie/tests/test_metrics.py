@@ -9,31 +9,31 @@ from numpy.random import RandomState
 from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.metrics import (classification_coverage_score,
+from mapie.metrics import (add_jitter,
+                           classification_coverage_score,
                            classification_coverage_score_v2,
                            classification_mean_width_score,
                            classification_ssc,
                            classification_ssc_score,
+                           cumulative_differences,
                            expected_calibration_error,
                            hsic,
-                           regression_coverage_score,
-                           regression_coverage_score_v2,
-                           regression_mean_width_score,
-                           regression_ssc,
-                           regression_ssc_score,
-                           top_label_ece,
-                           jitter,
-                           sort_xy_by_y,
-                           cumulative_differences,
-                           length_scale,
                            kolmogorov_smirnov_statistic,
                            kolmogorov_smirnov_cdf,
                            kolmogorov_smirnov_p_value,
                            kuiper_statistic,
                            kuiper_cdf,
                            kuiper_p_value,
+                           length_scale,
+                           regression_coverage_score,
+                           regression_coverage_score_v2,
+                           regression_mean_width_score,
+                           regression_ssc,
+                           regression_ssc_score,
+                           sort_xy_by_y,
                            spiegelhalter_statistic,
-                           spiegelhalter_p_value)
+                           spiegelhalter_p_value,
+                           top_label_ece)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
 y_preds = np.array([
@@ -612,10 +612,10 @@ def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
 
 
 @pytest.mark.parametrize("amplitude", [0.1, 0.01, 0.001])
-def test_jitter_amplitude(amplitude: float) -> None:
+def test_add_jitter_amplitude(amplitude: float) -> None:
     """Test that noise perturbation is consistent with required amplitude"""
     x = np.array([0, 1, 2, 3, 4])
-    x_jittered = jitter(x, noise_amplitude=amplitude, random_state=1)
+    x_jittered = add_jitter(x, noise_amplitude=amplitude, random_state=1)
     np.testing.assert_allclose(x, x_jittered, rtol=5*amplitude)
 
 
