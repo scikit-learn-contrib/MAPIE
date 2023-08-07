@@ -31,7 +31,7 @@ on the recall. RCPS, LTT and CRC give three slightly different guarantees:
 - LTT:
 
 .. math::
-    \mathbb{P}(R(\mathcal{T}_{\lambda_{\lambda\in\hat{\Lambda}}) \leq \alpha ) \geq 1 - \delta
+    \mathbb{P}(R(\mathcal{T}_{\lambda_{\lambda\in\hat{\Lambda}}}) \leq \alpha ) \geq 1 - \delta
 
 Notice that at the opposite of the other two methods, LTT allows to control any non-monotone loss. In MAPIE for multilabel classification,
 we use CRC and RCPS for recall control and LTT for precision control.
