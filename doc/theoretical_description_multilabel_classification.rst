@@ -29,6 +29,7 @@ on the recall. RCPS, LTT and CRC give three slightly different guarantees:
     \mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha
 
 - LTT:
+
 .. math::
     \mathbb{P}(R(\mathcal{T}_{\lambda_{\lambda\in\hat{\Lambda}}) \leq \alpha ) \geq 1 - \delta
 
