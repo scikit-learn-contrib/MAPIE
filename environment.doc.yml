@@ -4,7 +4,8 @@ channels:
     - conda-forge
 dependencies:
     - lightgbm=3.2.1
-    - scikeras
+    - pip:
+        - scikeras
     - tensorflow
     - xgboost
     - numpydoc=1.1.0
