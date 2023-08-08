@@ -17,24 +17,43 @@ from mapie.utils import check_alpha, check_alpha_and_n_samples
 class MapieTimeSeriesRegressor(MapieRegressor):
     """
     Prediction intervals with out-of-fold residuals for time series.
+    This class only has two valid ``method`` : ``"enbpi"`` or ``"aci"``
+    
+    The prediction intervals are calibrated on a split of the trained data.
+    Both strategies are estimating prediction intervals on single-output time series.
 
-    This class implements the EnbPI strategy for estimating
-    prediction intervals on single-output time series. The only valid
-    ``method`` is ``"enbpi"``.
+    
+    EnbPI allows you to update conformal scores using the partial_fit function.
+    It will replace the oldest one with the newest scores. 
+    It will keep the same amount of total scores
 
     Actually, EnbPI only corresponds to ``MapieTimeSeriesRegressor`` if the
     ``cv`` argument is of type ``BlockBootstrap``.
 
+    
+    The ACI strategy allows you to adapt the conformal inference (i.e the quantile).
+    If the real values are not in the coverage, the size of the intervals will grow.
+    Conversely, if the real values are in the coverage, the size of the intervals will decrease.
+
+    You can use a gamma coefficient to adjust the strength of the correction.
+    The correction formula is : αt+1 = αt + γ (α - 1{yt ∈/ (not in) Cαt (xt)}).
+    Where "Cαt" is the coverage given α (alpha) at a t time.
+    If γ = 0, it means we don't adapt the conformal inference.
+
     References
     ----------
-    Chen Xu, and Yao Xie.
+    Chen Xu, and Yao Xie. : EnbPI
     "Conformal prediction for dynamic time-series."
     https://arxiv.org/abs/2010.09107
+
+    Margaux Zaffran and cie. : ACI
+    "Adaptive Conformal Predictions for Time Series"
+    https://arxiv.org/pdf/2202.07282.pdf
     """
 
     cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ \
         + ["BlockBootstrap"]
-    valid_methods_ = ["enbpi"]
+    valid_methods_ = ["enbpi", "aci"]
 
     def __init__(
         self,
@@ -229,6 +248,65 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             -len(new_conformity_scores_):
         ] = new_conformity_scores_
         return self
+    
+    def adapt_conformal_inference(
+            self,
+            y_pred_bounds: Tuple[ArrayLike, ArrayLike],
+            y_true: ArrayLike,
+            gamma: float,
+    )-> MapieTimeSeriesRegressor:
+        
+        """
+        Adapt the ``alpha_t`` attribute when new data with known
+        labels are available.
+        Note: Don't use ``adapt_conformal_inference`` with samples of the training set.
+
+        Parameters
+        ----------
+        y_pred_bounds: Tuple[NDArray, NDArray]
+            Tuple[NDArray, NDArray] of shapes (n_samples, 2, n_alpha)
+                - [:, 0, :]: Lower bound of the prediction interval.
+                - [:, 1, :]: Upper bound of the prediction interval.
+        
+        y_true: ArrayLike of shape (n_samples_test,)
+            Input labels.
+
+        gamma: float
+            Coefficient that decides the correction of the conformal inference.
+            If it equals 0, there are no corrections.
+
+        Returns
+        -------
+        MapieTimeSeriesRegressor
+            The model itself.
+
+        Raises
+        ------
+        ValueError
+            If the length of ``y`` is greater than
+            the length of the training set.
+        """
+
+        check_is_fitted(self, self.fit_attributes)
+
+        if self.method != "aci":
+            "Warning : This method is only documented for the aci method !"
+        
+        #if alpha != self.alpha:
+        #    "Alpha has changed, you have to re-fit the model if you want to use an other alpha." 
+        #    "Former alpha is " + str(self.alpha)
+        
+        #S'assurer qu'y_pred_bounds est pas null
+        nb_predict = len(y_true)
+
+        for alpha_t_rank in range(self.alpha_t):
+            nb_true_quantile = sum(y_pred_bounds[:, 0, alpha_t_rank] < y_true < y_pred_bounds[:, 1, alpha_t_rank])
+            perc_true_quantile = nb_true_quantile / nb_predict
+
+            self.alpha_t[alpha_t_rank] = self.alpha_t[alpha_t_rank] 
+            + gamma * nb_predict * (self.alpha[alpha_t_rank] - perc_true_quantile)
+
+        return self
 
     def predict(
         self,
@@ -291,6 +369,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
+
+        if (self.method == "aci") & (self.lower_quantiles_ is None):
+            self.alpha, self.alpha_t = alpha_np, alpha_np
 
         if optimize_beta:
             betas_0 = self._beta_optimize(

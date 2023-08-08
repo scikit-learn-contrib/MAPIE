@@ -355,7 +355,7 @@ def test_MapieTimeSeriesRegressor_partial_fit_too_big() -> None:
         mapie_ts_reg = mapie_ts_reg.partial_fit(X=X, y=y)
 
 
-def test_MapieTimeSeriesRegressor_beta_optimize_eeror() -> None:
+def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
     """Test ``beta_optimize`` raised error."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1)
     with pytest.raises(ValueError, match=r".*Lower and upper bounds arrays*"):
