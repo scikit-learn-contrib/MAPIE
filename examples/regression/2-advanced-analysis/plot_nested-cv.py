@@ -67,11 +67,11 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # Define the Random Forest model as base regressor with parameter ranges.
 rf_model = RandomForestRegressor(random_state=59, verbose=0)
-rf_params = {"max_depth": randint(2, 30), "n_estimators": randint(10, 1e3)}
+rf_params = {"max_depth": randint(2, 30), "n_estimators": randint(10, 100)}
 
 # Cross-validation and prediction-interval parameters.
-cv = 5
-n_iter = 5
+cv = 3
+n_iter = 10
 alpha = 0.05
 random_state = 59
 
