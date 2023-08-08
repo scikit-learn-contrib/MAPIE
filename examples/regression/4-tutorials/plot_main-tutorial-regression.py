@@ -29,7 +29,6 @@ Tutorial for tabular regression
 # use the CV-minmax strategies.**
 
 import os
-import subprocess
 import warnings
 
 import matplotlib.pyplot as plt
@@ -685,6 +684,6 @@ pd.DataFrame([
 # 4. More Jupyter notebooks for regression
 # ----------------------------------------
 #
-# If you would like to run a series of Jupyter notebooks hosted on the MAPIE Github 
-# repository that can be run on Google Colab, please visit this documentation link:
-# https://mapie.readthedocs.io/en/stable/notebooks_regression.html.
+# If you would like to run a series of notebooks hosted on the MAPIE Github
+# repository that can be run on Google Colab, please visit this documentation
+# link: https://mapie.readthedocs.io/en/stable/notebooks_regression.html.
