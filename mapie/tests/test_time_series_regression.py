@@ -36,6 +36,24 @@ Params = TypedDict(
     },
 )
 STRATEGIES = {
+    "blockbootstrap_enbpi_mean_wopt": Params(
+        method="enbpi",
+        agg_function="mean",
+        cv=BlockBootstrap(
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
+        ),
+    ),
+    "blockbootstrap_enbpi_median_wopt": Params(
+        method="enbpi",
+        agg_function="median",
+        cv=BlockBootstrap(
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
+        ),
+    ),
     "blockbootstrap_enbpi_mean": Params(
         method="enbpi",
         agg_function="mean",
@@ -51,7 +69,7 @@ STRATEGIES = {
         cv=BlockBootstrap(
             n_resamplings=30,
             n_blocks=5,
-            random_state=random_state,
+            random_state=random_state
         ),
     ),
     "blockbootstrap_aci_mean": Params(
@@ -69,12 +87,14 @@ STRATEGIES = {
         cv=BlockBootstrap(
             n_resamplings=30,
             n_blocks=5,
-            random_state=random_state,
+            random_state=random_state
         ),
     ),
 }
 
 WIDTHS = {
+    "blockbootstrap_enbpi_mean_wopt": 3.76,
+    "blockbootstrap_enbpi_median_wopt": 3.76,
     "blockbootstrap_enbpi_mean": 3.76,
     "blockbootstrap_enbpi_median": 3.76,
     "blockbootstrap_aci_mean": 3.76,
@@ -83,6 +103,8 @@ WIDTHS = {
 }
 
 COVERAGES = {
+    "blockbootstrap_enbpi_mean_wopt": 0.952,
+    "blockbootstrap_enbpi_median_wopt": 0.946,
     "blockbootstrap_enbpi_mean": 0.952,
     "blockbootstrap_enbpi_median": 0.946,
     "blockbootstrap_aci_mean": 0.95,
