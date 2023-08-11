@@ -320,6 +320,28 @@ def check_n_features_in(
     return n_features_in
 
 
+def check_gamma(
+        gamma: float
+) -> None:
+    """
+    Check if gamma is between 0 and 1
+
+    Parameters
+    ----------
+    gamma: float
+
+    Raises
+    ------
+    ValueError
+        If gamma is lower than 0 or higher than 1.
+    """
+
+    if (gamma < 0) or (gamma > 1):
+        raise ValueError(
+                "Gamma must be between 0 and 1."
+            )
+
+
 def check_alpha_and_n_samples(
     alphas: Union[Iterable[float], float],
     n: int,

@@ -11,29 +11,32 @@ from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all
 from .regression import MapieRegressor
-from mapie.utils import check_alpha, check_alpha_and_n_samples
+from mapie.utils import check_alpha, check_alpha_and_n_samples, check_gamma
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
     """
     Prediction intervals with out-of-fold residuals for time series.
     This class only has two valid ``method`` : ``"enbpi"`` or ``"aci"``
-    
-    The prediction intervals are calibrated on a split of the trained data.
-    Both strategies are estimating prediction intervals on single-output time series.
 
-    
+    The prediction intervals are calibrated on a split of the trained data.
+    Both strategies are estimating prediction intervals
+    on single-output time series.
+
+
     EnbPI allows you to update conformal scores using the partial_fit function.
-    It will replace the oldest one with the newest scores. 
+    It will replace the oldest one with the newest scores.
     It will keep the same amount of total scores
 
     Actually, EnbPI only corresponds to ``MapieTimeSeriesRegressor`` if the
     ``cv`` argument is of type ``BlockBootstrap``.
 
-    
-    The ACI strategy allows you to adapt the conformal inference (i.e the quantile).
-    If the real values are not in the coverage, the size of the intervals will grow.
-    Conversely, if the real values are in the coverage, the size of the intervals will decrease.
+
+    The ACI strategy allows you to adapt the conformal inference
+    (i.e the quantile). If the real values are not in the coverage,
+    the size of the intervals will grow.
+    Conversely, if the real values are in the coverage,
+    the size of the intervals will decrease.
 
     You can use a gamma coefficient to adjust the strength of the correction.
     The correction formula is : αt+1 = αt + γ (α - 1{yt ∈/ (not in) Cαt (xt)}).
@@ -51,8 +54,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/pdf/2202.07282.pdf
     """
 
-    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ \
-        + ["BlockBootstrap"]
+    cv_need_agg_function_ = (
+        MapieRegressor.cv_need_agg_function_ + ["BlockBootstrap"]
+    )
     valid_methods_ = ["enbpi", "aci"]
 
     def __init__(
@@ -72,8 +76,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             n_jobs=n_jobs,
             agg_function=agg_function,
             verbose=verbose,
-            random_state=random_state
+            random_state=random_state,
         )
+        self.current_alpha: dict[float, float] = {}
 
     def _relative_conformity_scores(
         self,
@@ -157,9 +162,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 axis=1,
                 method="lower",
             )
-            betas_0[:, ind_alpha] = betas[
-                np.argmin(one_alpha_beta - beta, axis=0)
-            ]
+            betas_0[:, ind_alpha] = betas[np.argmin(one_alpha_beta
+                                                    - beta, axis=0)]
 
         return betas_0
 
@@ -246,28 +250,26 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         )
         self.conformity_scores_[
             -len(new_conformity_scores_):
-        ] = new_conformity_scores_
+            ] = new_conformity_scores_
         return self
-    
+
     def adapt_conformal_inference(
-            self,
-            y_pred_bounds: Tuple[ArrayLike, ArrayLike],
-            y_true: ArrayLike,
-            gamma: float,
-    )-> MapieTimeSeriesRegressor:
-        
+        self,
+        X: ArrayLike,
+        y_true: ArrayLike,
+        gamma: float = 0.01,
+    ) -> MapieTimeSeriesRegressor:
         """
         Adapt the ``alpha_t`` attribute when new data with known
         labels are available.
-        Note: Don't use ``adapt_conformal_inference`` with samples of the training set.
+        Note: Don't use ``adapt_conformal_inference``
+        with samples of the training set.
 
         Parameters
         ----------
-        y_pred_bounds: Tuple[NDArray, NDArray]
-            Tuple[NDArray, NDArray] of shapes (n_samples, 2, n_alpha)
-                - [:, 0, :]: Lower bound of the prediction interval.
-                - [:, 1, :]: Upper bound of the prediction interval.
-        
+        X: ArrayLike of shape (n_samples, n_features)
+            Test data.
+
         y_true: ArrayLike of shape (n_samples_test,)
             Input labels.
 
@@ -288,23 +290,26 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         """
 
         check_is_fitted(self, self.fit_attributes)
+        check_gamma(gamma)
 
         if self.method != "aci":
             "Warning : This method is only documented for the aci method !"
-        
-        #if alpha != self.alpha:
-        #    "Alpha has changed, you have to re-fit the model if you want to use an other alpha." 
-        #    "Former alpha is " + str(self.alpha)
-        
-        #S'assurer qu'y_pred_bounds est pas null
-        nb_predict = len(y_true)
 
-        for alpha_t_rank in range(self.alpha_t):
-            nb_true_quantile = sum(y_pred_bounds[:, 0, alpha_t_rank] < y_true < y_pred_bounds[:, 1, alpha_t_rank])
-            perc_true_quantile = nb_true_quantile / nb_predict
+        for x, y in zip(X, y_true):
+            x = np.expand_dims(x, axis=0)
+            _, y_pred_bounds = self.predict(
+                x,
+                alpha=list(self.current_alpha.keys())
+            )
 
-            self.alpha_t[alpha_t_rank] = self.alpha_t[alpha_t_rank] 
-            + gamma * nb_predict * (self.alpha[alpha_t_rank] - perc_true_quantile)
+            for alpha_t_ix, alpha_t in enumerate(self.current_alpha.values()):
+                is_true_in_quantile = float(
+                    y_pred_bounds[:, 0, alpha_t_ix]
+                    < y
+                    < y_pred_bounds[:, 1, alpha_t_ix]
+                )
+
+                alpha_t = alpha_t + gamma * (alpha_t - is_true_in_quantile)
 
         return self
 
@@ -369,9 +374,15 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
+        alpha_np = np.round(alpha_np, 2)
 
-        if (self.method == "aci") & (self.lower_quantiles_ is None):
-            self.alpha, self.alpha_t = alpha_np, alpha_np
+        if self.method == "aci":
+            for ix, alpha_checked in enumerate(alpha_np):
+                # Expliquer pourquoi on fait cette étape
+                if alpha_checked not in self.current_alpha:
+                    self.current_alpha[alpha_checked] = alpha_checked
+                else:
+                    alpha_np[ix] = self.current_alpha[alpha_checked]
 
         if optimize_beta:
             betas_0 = self._beta_optimize(
@@ -397,8 +408,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.lower_quantiles_ = lower_quantiles
         self.higher_quantiles_ = higher_quantiles
 
-        if self.method in self.no_agg_methods_ \
-                or self.cv in self.no_agg_cv_:
+        if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
             y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
             y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
         else:
@@ -416,8 +426,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     def _more_tags(self):
         return {
-            "_xfail_checks":
-            {
+            "_xfail_checks": {
                 "check_estimators_partial_fit_n_features":
                 "partial_fit can only be called on fitted models"
             }

@@ -18,7 +18,7 @@ from mapie.subsample import BlockBootstrap
 
 random_state = 1
 X_toy = np.array(range(5)).reshape(-1, 1)
-y_toy = (5.0 + 2.0 * X_toy ** 1.1).flatten()
+y_toy = (5.0 + 2.0 * X_toy**1.1).flatten()
 X, y = make_regression(
     n_samples=500, n_features=10, noise=1.0, random_state=random_state
 )
@@ -36,14 +36,15 @@ Params = TypedDict(
     },
 )
 STRATEGIES = {
-    "jackknife_enbpi_mean_ab_wopt": Params(
+    "blockbootstrap_enbpi_mean": Params(
         method="enbpi",
         agg_function="mean",
-        cv=BlockBootstrap(
-            n_resamplings=30, n_blocks=5, random_state=random_state
-        ),
+        cv=BlockBootstrap(n_resamplings=30,
+                          n_blocks=5,
+                          random_state=random_state
+                          ),
     ),
-    "jackknife_enbpi_median_ab_wopt": Params(
+    "blockbootstrap_enbpi_median": Params(
         method="enbpi",
         agg_function="median",
         cv=BlockBootstrap(
@@ -52,15 +53,17 @@ STRATEGIES = {
             random_state=random_state,
         ),
     ),
-    "jackknife_enbpi_mean_ab": Params(
-        method="enbpi",
+    "blockbootstrap_aci_mean": Params(
+        method="aci",
         agg_function="mean",
         cv=BlockBootstrap(
-            n_resamplings=30, n_blocks=5, random_state=random_state
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
         ),
     ),
-    "jackknife_enbpi_median_ab": Params(
-        method="enbpi",
+    "blockbootstrap_aci_median": Params(
+        method="aci",
         agg_function="median",
         cv=BlockBootstrap(
             n_resamplings=30,
@@ -71,21 +74,19 @@ STRATEGIES = {
 }
 
 WIDTHS = {
-    "jackknife_enbpi_mean_ab_wopt": 3.76,
-    "jackknife_enbpi_median_ab_wopt": 3.76,
-    "jackknife_enbpi_mean_ab": 3.76,
-    "jackknife_enbpi_median_ab": 3.76,
+    "blockbootstrap_enbpi_mean": 3.76,
+    "blockbootstrap_enbpi_median": 3.76,
+    "blockbootstrap_aci_mean": 3.76,
+    "blockbootstrap_aci_median": 3.76,
     "prefit": 4.79,
-
 }
 
 COVERAGES = {
-    "jackknife_enbpi_mean_ab_wopt": 0.952,
-    "jackknife_enbpi_median_ab_wopt": 0.946,
-    "jackknife_enbpi_mean_ab": 0.952,
-    "jackknife_enbpi_median_ab": 0.946,
+    "blockbootstrap_enbpi_mean": 0.952,
+    "blockbootstrap_enbpi_median": 0.946,
+    "blockbootstrap_aci_mean": 0.95,
+    "blockbootstrap_aci_median": 0.95,
     "prefit": 0.98,
-
 }
 
 
@@ -139,12 +140,12 @@ def test_results_for_same_alpha(strategy: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize(
-    "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
-)
-def test_results_for_alpha_as_float_and_arraylike(
-    strategy: str, alpha: Any
-) -> None:
+@pytest.mark.parametrize("alpha",
+                         [np.array([0.05, 0.1]),
+                          [0.05, 0.1],
+                          (0.05, 0.1)])
+def test_results_for_alpha_as_float_and_arraylike(strategy: str,
+                                                  alpha: Any) -> None:
     """Test that output values do not depend on type of alpha."""
     mapie_ts_reg = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts_reg.fit(X, y)
@@ -222,8 +223,9 @@ def test_prediction_agg_function(
     True or False.
     """
     mapie = MapieTimeSeriesRegressor(
-        method=method, cv=cv, agg_function=agg_function
-    )
+        method=method,
+        cv=cv,
+        agg_function=agg_function)
     mapie.fit(X, y)
     y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True, alpha=alpha)
     y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False, alpha=alpha)
@@ -269,19 +271,16 @@ def test_results_prefit() -> None:
     mapie_ts_reg.fit(X_val, y_val)
     _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = regression_coverage_score(
-        y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
-    )
+    coverage = regression_coverage_score(y_test,
+                                         y_pis[:, 0, 0],
+                                         y_pis[:, 1, 0])
     np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
 
 
 def test_not_enough_resamplings() -> None:
     """Test that a warning is raised if at least one residual is nan."""
-    with pytest.warns(
-        UserWarning,
-        match=r"WARNING: at least one point of*"
-    ):
+    with pytest.warns(UserWarning, match=r"WARNING: at least one point of*"):
         mapie_ts_reg = MapieTimeSeriesRegressor(
             cv=BlockBootstrap(n_resamplings=1, n_blocks=1), agg_function="mean"
         )
@@ -293,9 +292,8 @@ def test_no_agg_fx_specified_with_subsample() -> None:
     Test that an error is raised if ``cv`` is ``BlockBootstrap`` but
     ``agg_function`` is ``None``.
     """
-    with pytest.raises(
-        ValueError, match=r"You need to specify an aggregation*"
-    ):
+    with pytest.raises(ValueError,
+                       match=r"You need to specify an aggregation*"):
         mapie_ts_reg = MapieTimeSeriesRegressor(
             cv=BlockBootstrap(n_resamplings=1, n_blocks=1),
             agg_function=None,
@@ -359,20 +357,18 @@ def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
     """Test ``beta_optimize`` raised error."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1)
     with pytest.raises(ValueError, match=r".*Lower and upper bounds arrays*"):
-        mapie_ts_reg._beta_optimize(
-            alpha=0.1, upper_bounds=X, lower_bounds=X_toy
-        )
+        mapie_ts_reg._beta_optimize(alpha=0.1,
+                                    upper_bounds=X,
+                                    lower_bounds=X_toy)
 
 
 def test_deprecated_path_warning() -> None:
     """
     Test that a warning is raised if import with deprecated path.
     """
-    with pytest.warns(
-        FutureWarning,
-        match=r".*WARNING: Deprecated path*"
-    ):
+    with pytest.warns(FutureWarning, match=r".*WARNING: Deprecated path*"):
         from mapie.time_series_regression import MapieTimeSeriesRegressor
+
         _ = MapieTimeSeriesRegressor()
 
 
