@@ -18,12 +18,12 @@ from mapie.subsample import BlockBootstrap
 
 random_state = 1
 X_toy = np.array(range(5)).reshape(-1, 1)
-y_toy = (5.0 + 2.0 * X_toy**1.1).flatten()
+y_toy = (5.0 + 2.0 * X_toy ** 1.1).flatten()
 X, y = make_regression(
     n_samples=500, n_features=10, noise=1.0, random_state=random_state
 )
 k = np.ones(shape=(5, X.shape[1]))
-METHODS = ["enbpi"]
+METHODS = ["enbpi", "aci"]
 UPDATE_DATA = ([6], 17.5)
 CONFORMITY_SCORES = [14.189 - 14.038, 17.5 - 18.665]
 
@@ -105,10 +105,10 @@ def test_sklearn_checks() -> None:
 @pytest.mark.parametrize("agg_function", ["dummy", 0, 1, 2.5, [1, 2]])
 def test_invalid_agg_function(agg_function: Any) -> None:
     """Test that invalid agg_functions raise errors."""
-
     mapie_ts_reg = MapieTimeSeriesRegressor(agg_function=None)
     with pytest.raises(ValueError, match=r".*If ensemble is True*"):
         mapie_ts_reg.fit(X_toy, y_toy)
+        mapie_ts_reg.predict(X_toy, alpha=0.5, ensemble=True)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -242,7 +242,6 @@ def test_linear_regression_results(strategy: str) -> None:
     a multivariate linear regression problem
     with fixed random state.
     """
-
     mapie_ts = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts.fit(X, y)
     if "opt" in strategy:
@@ -309,8 +308,7 @@ def test_invalid_aggregate_all() -> None:
     Test that wrong aggregation in MAPIE raise errors.
     """
     with pytest.raises(
-        ValueError,
-        match=r".*Aggregation function called but not defined.*",
+        ValueError, match=r".*Aggregation function called but not defined.*",
     ):
         aggregate_all(None, X)
 
@@ -361,9 +359,7 @@ def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1)
     with pytest.raises(ValueError, match=r".*Lower and upper bounds arrays*"):
         mapie_ts_reg._beta_optimize(
-            alpha=0.1,
-            upper_bounds=X,
-            lower_bounds=X_toy
+            alpha=0.1, upper_bounds=X, lower_bounds=X_toy
         )
 
 

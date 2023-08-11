@@ -11,7 +11,8 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all
-from .regression import MapieRegressor
+from mapie.conformity_scores import ConformityScore
+from mapie.regression import MapieRegressor
 from mapie.utils import check_alpha, check_alpha_and_n_samples, check_gamma
 
 
@@ -73,6 +74,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
+        conformity_score: Optional[ConformityScore] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         super().__init__(
@@ -82,6 +84,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             n_jobs=n_jobs,
             agg_function=agg_function,
             verbose=verbose,
+            conformity_score=conformity_score,
             random_state=random_state
         )
 
@@ -105,8 +108,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         -------
             The conformity scores corresponding to the input data set.
         """
-        y_pred, _ = super().predict(X, alpha=0.5, ensemble=True)
-        return np.asarray(y) - np.asarray(y_pred)
+        y_pred = super().predict(X, ensemble=True)
+        return self.conformity_score_function_.get_signed_conformity_scores(
+            X, y, y_pred
+        )
 
     def _beta_optimize(
         self,
