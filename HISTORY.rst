@@ -11,7 +11,6 @@ History
 * Separate the handling of the estimator from MapieRegressor into a new class called EnsembleEstimator.
 * Fix an unfixed random state in one of the classification tests.
 * Add a new method for MapieTimeSeriesRegressor called ACI
-* Add a new metric for TimeSeries to compare methods based on coverage & interval widths
 
 0.6.5 (2023-06-06)
 ------------------

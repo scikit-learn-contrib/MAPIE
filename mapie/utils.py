@@ -321,7 +321,7 @@ def check_n_features_in(
 
 
 def check_gamma(
-        gamma: float
+    gamma: float
 ) -> None:
     """
     Check if gamma is between 0 and 1
@@ -338,8 +338,8 @@ def check_gamma(
 
     if (gamma < 0) or (gamma > 1):
         raise ValueError(
-                "Gamma must be between 0 and 1."
-            )
+            "Gamma must be between 0 and 1."
+        )
 
 
 def check_alpha_and_n_samples(

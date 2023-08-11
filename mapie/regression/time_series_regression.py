@@ -46,11 +46,16 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     References
     ----------
-    Chen Xu, and Yao Xie. : EnbPI
+    Chen Xu, and Yao Xie.
     "Conformal prediction for dynamic time-series."
     https://arxiv.org/abs/2010.09107
 
-    Margaux Zaffran and cie. : ACI
+    Isaac Gibbs, Emmanuel Candes
+    "Adaptive conformal inference under distribution shift"
+    https://proceedings.neurips.cc/paper/2021/file/\
+    0d441de75945e5acbc865406fc9a2559-Paper.pdf
+
+    Margaux Zaffran et al.
     "Adaptive Conformal Predictions for Time Series"
     https://arxiv.org/pdf/2202.07282.pdf
     """
@@ -77,7 +82,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             n_jobs=n_jobs,
             agg_function=agg_function,
             verbose=verbose,
-            random_state=random_state,
+            random_state=random_state
         )
         self.current_alpha: dict[float, float] = {}
 
@@ -163,8 +168,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 axis=1,
                 method="lower",
             )
-            betas_0[:, ind_alpha] = betas[np.argmin(one_alpha_beta
-                                                    - beta, axis=0)]
+            betas_0[:, ind_alpha] = betas[
+                np.argmin(one_alpha_beta - beta, axis=0)
+            ]
 
         return betas_0
 

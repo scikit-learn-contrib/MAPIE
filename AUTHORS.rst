@@ -33,6 +33,5 @@ Contributors
 * Candice Moyet <cmoyet@quantmetry.com>
 * Sofiane Ziane <sziane@quantmetry.com>
 * Remi Colliaux <rcolliaux@quantmetry.com>
-* Arthur Pham <apham@quantemtry.com>
 
 To be continued ...
