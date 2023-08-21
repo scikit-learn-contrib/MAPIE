@@ -21,7 +21,10 @@ from mapie.metrics import (classification_coverage_score,
                            regression_mean_width_score,
                            regression_ssc,
                            regression_ssc_score,
-                           top_label_ece)
+                           top_label_ece,
+                           _picp,
+                           _pinaw,
+                           cwc)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
 y_preds = np.array([
@@ -597,3 +600,183 @@ def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
         classification_coverage_score_v2(
             np.expand_dims(y_true_class, axis=1), y_pred_set[:, 0]
         )
+
+
+# Define some sample data for testing
+# Modify these arrays according to your actual data for more comprehensive
+# testing
+y_true = np.array([2, 4, 6, 8, 10])
+y_pred_low = np.array([1, 3, 5, 7, 9])
+y_pred_up = np.array([3, 5, 7, 9, 11])
+
+
+def test_picp_consistency() -> None:
+    assert _picp(y_true, y_pred_low, y_pred_up) == pytest.approx(1.0)
+
+
+def test_pinaw_consistency() -> None:
+    assert _pinaw(y_true, y_pred_low, y_pred_up) == pytest.approx(0.2)
+
+
+def test_cwc_consistency() -> None:
+    eta = 1  # Modify eta and mu according to your requirements
+    mu = 0.9
+    assert cwc(y_true, y_pred_low, y_pred_up, eta, mu) == pytest.approx(
+        0.49123845)
+
+
+def test_cwc_y_true_empty_arrays() -> None:
+    empty_array = np.array([])
+    with pytest.raises(ValueError):
+        cwc(empty_array, y_pred_low, y_pred_up, eta=1, mu=0.9)
+
+
+def test_cwc_y_pred_low_empty_arrays() -> None:
+    # Test with empty arrays
+    empty_array = np.array([])
+    with pytest.raises(ValueError):
+        cwc(y_true, empty_array, y_pred_up, eta=1, mu=0.9)
+
+
+def test_cwc_y_pred_up_empty_arrays() -> None:
+    empty_array = np.array([])
+    with pytest.raises(ValueError):
+        cwc(y_true, y_pred_low, empty_array, eta=1, mu=0.9)
+
+
+def test_cwc_y_true_single_element_arrays() -> None:
+    # Test with single element arrays
+    single_element_array = np.array([1])
+    with pytest.raises(ValueError):
+        cwc(single_element_array, y_pred_low, y_pred_up, eta=1, mu=0.9)
+
+
+def test_cwc_y_pred_low_single_element_arrays() -> None:
+    # Test with single element arrays
+    single_element_array = np.array([1])
+    with pytest.raises(ValueError):
+        cwc(y_true, single_element_array, y_pred_up, eta=1, mu=0.9)
+
+
+def test_cwc_y_pred_up_single_element_arrays() -> None:
+    # Test with single element arrays
+    single_element_array = np.array([1])
+    with pytest.raises(ValueError):
+        cwc(y_true, y_pred_low, single_element_array, eta=1, mu=0.9)
+
+
+def test_cwc_y_pred_low_nan_values() -> None:
+    # Test with NaN values
+    nan_array = np.array([np.nan, 1, 2, 3])
+    with pytest.raises(ValueError):
+        cwc(y_true, y_pred_low, nan_array, eta=1, mu=0.9)
+
+
+def test_cwc_y_pred_up_nan_values() -> None:
+    # Test with NaN values
+    nan_array = np.array([np.nan, 1, 2, 3])
+    with pytest.raises(ValueError):
+        cwc(y_true, y_pred_low, nan_array, eta=1, mu=0.9)
+
+
+def test_cwc_y_true_nan_values() -> None:
+    # Test with NaN values
+    nan_array = np.array([np.nan, 1, 2, 3])
+    with pytest.raises(ValueError):
+        cwc(y_true, y_pred_low, nan_array, eta=1, mu=0.9)
+
+
+def test_cwc_y_pred_low_infinite_values() -> None:
+    # Test with NaN values
+    inf_array = np.array([np.inf, 1, 2, 3])
+    with pytest.raises(ValueError):
+        cwc(y_true, y_pred_low, inf_array, eta=1, mu=0.9)
+
+
+def test_cwc_y_pred_up_infinite_values() -> None:
+    # Test with infinite values
+    inf_array = np.array([np.inf, 1, 2, 3])
+    with pytest.raises(ValueError):
+        cwc(y_true, y_pred_low, inf_array, eta=1, mu=0.9)
+
+
+def test_cwc_y_true_infinite_values() -> None:
+    # Test with infinite values
+    inf_array = np.array([np.inf, 1, 2, 3])
+    with pytest.raises(ValueError):
+        cwc(y_true, y_pred_low, inf_array, eta=1, mu=0.9)
+
+
+@pytest.mark.parametrize("eta,mu", [(1, 1), (100000, 0.9), (1, 100000),
+                                    (-100, 0.9), (1, -100), (0, 0)])
+def test_different_eta_mu_values(eta, mu) -> None:
+    # Test with different eta and mu values
+    assert cwc(y_true, y_pred_low, y_pred_up, eta, mu) == pytest.approx(
+        0.47807427)
+
+
+@pytest.mark.parametrize("y_true,y_pred_low,y_pred_up",
+                         [([0.5, 1.5, 2.5, 3.5, 4.5],
+                           [-0.5, 0.5, 1.5, 2.5, 3.5],
+                           [1.5, 2.5, 3.5, 4.5, 5.5]),
+                          ([-0.5, -1.5, -2.5, -3.5, -4.5],
+                           [-0.5, -0.5, -1.5, -2.5, -3.5],
+                           [-1.5, -2.5, -3.5, -4.5, -5.5])
+                          ])
+def test_different_ranges(y_true, y_pred_low, y_pred_up) -> None:
+    # Test with arrays where y_true and y_pred_low, y_pred_up
+    # have different ranges
+    y_true = np.array(y_true)
+    y_pred_low = np.array(y_pred_low)
+    y_pred_up = np.array(y_pred_up)
+    eta = 1
+    mu = 0.9
+    assert cwc(y_true, y_pred_low, y_pred_up, eta, mu) == pytest.approx(
+        0.49123845)
+
+
+@pytest.mark.parametrize("large_array_size", [(10**1), (10**3), (10**6)])
+def test_large_arrays(large_array_size) -> None:
+    # Test with large arrays
+    large_y_true = np.arange(1, large_array_size+1)
+    large_y_pred_low = large_y_true - 0.5
+    large_y_pred_up = large_y_true + 0.5
+    eta = 1
+    mu = 0.9
+    # Execution should not raise an error and finish successfully.
+    cwc(large_y_true, large_y_pred_low, large_y_pred_up, eta, mu)
+
+
+def test_symmetric_asymmetric_intervals() -> None:
+    # Test with symmetric and asymmetric prediction intervals
+    symmetric_y_pred_low = y_true - 1
+    symmetric_y_pred_up = y_true + 1
+    asymmetric_y_pred_low = y_true - np.array([0.5, 1, 2, 3, 4])
+    asymmetric_y_pred_up = y_true + np.array([1, 2, 3, 4, 5])
+    eta = 1
+    mu = 0.9
+    assert cwc(y_true, symmetric_y_pred_low,
+               symmetric_y_pred_up, eta, mu) == pytest.approx(0.49123845)
+    assert cwc(y_true, asymmetric_y_pred_low,
+               asymmetric_y_pred_up, eta, mu) == pytest.approx(0.33148119)
+
+
+def test_no_uncertainty() -> None:
+    # Test with data that has no uncertainty
+    no_uncertainty_y_pred_low = y_true
+    no_uncertainty_y_pred_up = y_true
+    eta = 1
+    mu = 0.9
+    assert cwc(y_true, no_uncertainty_y_pred_low, no_uncertainty_y_pred_up,
+               eta, mu) == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("uncertainty", [(10), (20), (100)])
+def test_high_uncertainty(uncertainty) -> None:
+    # Test with data that has high uncertainty
+    high_uncertainty_y_pred_low = y_true - uncertainty
+    high_uncertainty_y_pred_up = y_true + uncertainty
+    eta = 1
+    mu = 0.9
+    assert cwc(y_true, high_uncertainty_y_pred_low,
+               high_uncertainty_y_pred_up, eta, mu) == pytest.approx(0.0)

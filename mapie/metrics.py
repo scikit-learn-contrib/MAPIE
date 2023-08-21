@@ -1,7 +1,7 @@
 from typing import Optional, cast, Union
 
 import numpy as np
-from sklearn.utils.validation import check_array, column_or_1d
+from mapie.utils.validation import check_array, column_or_1d
 
 from ._typing import ArrayLike, NDArray
 from .utils import (calc_bins,
@@ -737,3 +737,184 @@ def hsic(
     coef_hsic = np.sqrt(np.matrix.trace(hsic_mat, axis1=1, axis2=2))
 
     return coef_hsic
+
+
+def _picp(
+    y_true: ArrayLike,
+    y_pred_low: ArrayLike,
+    y_pred_up: ArrayLike,
+) -> float:
+    """
+    Calculate the Prediction Interval Coverage Probability (PICP).
+
+    The Prediction Interval Coverage Probability (PICP) is a measure used to
+    estimate the fraction of true labels that lie within the prediction
+    intervals.
+
+    [5] Vilde Jensen, Filippo Maria Bianchi, Stian Norman Anfinsen (2022).
+    Ensemble Conformalized Quantile Regression for Probabilistic Time Series
+    Forecasting.
+
+    Parameters
+    ----------
+    y_true : ArrayLike
+        Array of true labels.
+    y_pred_low : ArrayLike
+        Array of lower bounds of prediction intervals.
+    y_pred_up : ArrayLike
+        Array of upper bounds of prediction intervals.
+
+    Returns
+    -------
+    float
+        Prediction Interval Coverage Probability (PICP).
+
+    Notes
+    -----
+    The PICP is calculated as follows:
+    1. Determine the number of true labels that lie within the prediction
+    intervals.
+       This is done by counting the number of elements that satisfy both
+       conditions:
+       (y_true >= y_pred_low) and (y_true <= y_pred_up). Let this count be
+       'in_the_range'.
+    2. Calculate the coverage by dividing 'in_the_range' by the total number
+    of true labels.
+
+    Examples
+    --------
+    >>> y_true = [5, 7.5, 9.5, 10.5, 12.5]
+    >>> y_pred_low = [4, 6, 9, 8.5, 10.5]
+    >>> y_pred_up = [6, 9, 10, 12.5, 12]
+    >>> y_true = np.array(y_true)
+    >>> y_pred_low = np.array(y_pred_low)
+    >>> y_pred_up = np.array(y_pred_up)
+    >>> print(_picp(y_true, y_pred_low, y_pred_up))
+    0.8
+    """
+    in_the_range = np.sum((y_true >= y_pred_low) & (y_true <= y_pred_up))
+    coverage = in_the_range / np.prod(y_true.shape)
+
+    return float(coverage)
+
+
+def _pinaw(
+    y_true: ArrayLike,
+    y_pred_low: ArrayLike,
+    y_pred_up: ArrayLike,
+) -> float:
+    """
+    Calculate the Prediction Interval Normalized Average Width (PINAW).
+
+    The Prediction Interval Normalized Average Width (PINAW) is a measure
+    used to evaluate the average width of prediction intervals (PIs) in
+    relation to the range of the true labels.
+
+
+    [5] Vilde Jensen, Filippo Maria Bianchi, Stian Norman Anfinsen (2022).
+    Ensemble Conformalized Quantile Regression for Probabilistic Time Series
+    Forecasting.
+
+    Parameters
+    ----------
+    y_true : ArrayLike
+        Array of true labels.
+    y_pred_low : ArrayLike
+        Array of lower bounds of prediction intervals.
+    y_pred_up : ArrayLike
+        Array of upper bounds of prediction intervals.
+
+    Returns
+    -------
+    float
+        Prediction Interval Normalized Average Width (PINAW).
+
+    Notes
+    -----
+    The PINAW is calculated as follows:
+    1. Calculate the average width of prediction intervals by taking the mean
+       of the absolute differences between the upper and lower bounds:
+       avg_length.
+    2. Normalize avg_length by dividing it by the range of the true labels:
+       (y_true.max() - y_true.min()).
+    3. The resulting value is the PINAW.
+
+    Examples
+    --------
+    >>> y_true = [5, 7.5, 9.5, 10.5, 12.5]
+    >>> y_pred_low = [4, 6, 9, 8.5, 10.5]
+    >>> y_pred_up = [6, 9, 10, 12.5, 12]
+    >>> y_true = np.array(y_true)
+    >>> y_pred_low = np.array(y_pred_low)
+    >>> y_pred_up = np.array(y_pred_up)
+    >>> print(_pinaw(y_true, y_pred_low, y_pred_up))
+    0.3
+    """
+    avg_length = np.mean(abs(y_pred_up - y_pred_low))
+    avg_length = avg_length/(y_true.max()-y_true.min())
+
+    return float(avg_length)
+
+
+def cwc(
+    y_true: ArrayLike,
+    y_pred_low: ArrayLike,
+    y_pred_up: ArrayLike,
+    eta: int,
+    mu: float,
+) -> float:
+    """
+    Coverage width-based criterion obtained by the prediction intervals.
+
+    The effective coverage score is a criterion used to evaluate the quality
+    of prediction intervals (PIs) based on their coverage and width.
+
+
+    [5] Vilde Jensen, Filippo Maria Bianchi, Stian Norman Anfinsen (2022).
+    Ensemble Conformalized Quantile Regression for Probabilistic Time Series
+    Forecasting.
+
+    Parameters
+    ----------
+    picp : float
+        Prediction interval coverage probability (PICP), which is the estimated
+        fraction of true labels that lie within the prediction intervals.
+    pinaw : float
+        Prediction interval normalized average width (PINAW), calculated as
+        the average width of the prediction intervals.
+    eta : int
+        A user-defined parameter that balances the contributions of PINAW and
+        PICP
+        in the coverage width-based criterion (CWC) calculation.
+    mu : float
+        A user-defined parameter representing the designed confidence level of
+        the PI.
+
+    Returns
+    -------
+    float
+        Effective coverage score (CWC) obtained by the prediction intervals.
+
+    Notes
+    -----
+    The effective coverage score (CWC) is calculated using the following
+    formula:
+    CWC = (1 - PINAW) * exp(-eta * (PICP - mu)**2)
+
+    The CWC penalizes under- and overcoverage in the same way and summarizes
+    the quality of the prediction intervals in a single value.
+
+    Examples
+    --------
+    >>> picp = 0.75
+    >>> pinaw = 0.2
+    >>> eta = 30
+    >>> mu = 0.9
+    >>> print(cwc(picp, pinaw, eta, mu))
+    0.4
+    """
+    picp = _picp(y_true, y_pred_low, y_pred_up)
+    pinaw = _pinaw(y_true, y_pred_low, y_pred_up)
+    cwc = (1-pinaw)*np.exp(-eta*(picp-mu)**2)
+
+    return float(cwc)
