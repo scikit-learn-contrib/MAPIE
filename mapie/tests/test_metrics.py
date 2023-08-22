@@ -626,20 +626,20 @@ def test_cwc_consistency() -> None:
 
 
 def test_cwc_y_true_empty_arrays() -> None:
-    empty_array = np.array([])
+    empty_array: np.ndarray = np.array([])
     with pytest.raises(ValueError):
         cwc(empty_array, y_pred_low, y_pred_up, eta=1, mu=0.9)
 
 
 def test_cwc_y_pred_low_empty_arrays() -> None:
     # Test with empty arrays
-    empty_array = np.array([])
+    empty_array: np.ndarray = np.array([])
     with pytest.raises(ValueError):
         cwc(y_true, empty_array, y_pred_up, eta=1, mu=0.9)
 
 
 def test_cwc_y_pred_up_empty_arrays() -> None:
-    empty_array = np.array([])
+    empty_array: np.ndarray = np.array([])
     with pytest.raises(ValueError):
         cwc(y_true, y_pred_low, empty_array, eta=1, mu=0.9)
 
