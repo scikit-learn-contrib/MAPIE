@@ -1,7 +1,7 @@
 from typing import Optional, cast, Union
 
 import numpy as np
-from mapie.utils.validation import check_array, column_or_1d
+from sklearn.utils.validation import check_array, column_or_1d
 
 from ._typing import ArrayLike, NDArray
 from .utils import (calc_bins,
@@ -742,7 +742,7 @@ def hsic(
 def _picp(
     y_true: ArrayLike,
     y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike,
+    y_pred_up: ArrayLike
 ) -> float:
     """
     Calculate the Prediction Interval Coverage Probability (PICP).
@@ -792,7 +792,15 @@ def _picp(
     >>> print(_picp(y_true, y_pred_low, y_pred_up))
     0.8
     """
-    in_the_range = np.sum((y_true >= y_pred_low) & (y_true <= y_pred_up))
+
+    # Ensure inputs are NumPy arrays for consistent operations
+    y_true = np.asarray(y_true)
+    y_pred_low = np.asarray(y_pred_low)
+    y_pred_up = np.asarray(y_pred_up)
+
+    in_the_range = np.sum((np.greater_equal(y_true, y_pred_low))
+                          and (np.less_equal(y_true, y_pred_up)))
+
     coverage = in_the_range / np.prod(y_true.shape)
 
     return float(coverage)
@@ -801,7 +809,7 @@ def _picp(
 def _pinaw(
     y_true: ArrayLike,
     y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike,
+    y_pred_up: ArrayLike
 ) -> float:
     """
     Calculate the Prediction Interval Normalized Average Width (PINAW).
@@ -850,8 +858,12 @@ def _pinaw(
     >>> print(_pinaw(y_true, y_pred_low, y_pred_up))
     0.3
     """
-    avg_length = np.mean(abs(y_pred_up - y_pred_low))
-    avg_length = avg_length/(y_true.max()-y_true.min())
+    # Convert y_true to a NumPy array of floats
+    y_true = np.array(y_true, dtype=float)
+
+    avg_length = np.mean(np.abs(np.subtract(y_pred_up, y_pred_low)))
+    avg_length = avg_length / (np.subtract(float(y_true.max()),
+                                           float(y_true.min())))
 
     return float(avg_length)
 
@@ -861,7 +873,7 @@ def cwc(
     y_pred_low: ArrayLike,
     y_pred_up: ArrayLike,
     eta: int,
-    mu: float,
+    mu: float
 ) -> float:
     """
     Coverage width-based criterion obtained by the prediction intervals.
