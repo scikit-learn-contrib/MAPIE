@@ -799,7 +799,7 @@ def _picp(
     y_pred_up = np.asarray(y_pred_up)
 
     in_the_range = np.sum((np.greater_equal(y_true, y_pred_low))
-                          and (np.less_equal(y_true, y_pred_up)))
+                          & (np.less_equal(y_true, y_pred_up)))
 
     coverage = in_the_range / np.prod(y_true.shape)
 
