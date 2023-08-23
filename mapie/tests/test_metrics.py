@@ -176,7 +176,7 @@ y_score = prng.random(51)
 y_scores = prng.random((51, 5))
 y_true = prng.randint(0, 2, 51)
 eta = 1
-mu = 0.9
+mu = 0.90
 
 
 def test_regression_ypredlow_shape() -> None:
