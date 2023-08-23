@@ -186,7 +186,7 @@ def test_regression_ypredlow_shape() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        cwc(y_toy, y_preds[:, :2], y_preds[:, 2])
+        cwc(y_toy, y_preds[:, :2], y_preds[:, 2], eta, mu)
 
 
 def test_regression_ypredup_shape() -> None:
@@ -196,7 +196,7 @@ def test_regression_ypredup_shape() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        cwc(y_toy, y_preds[:, 1], y_preds[:, 1:])
+        cwc(y_toy, y_preds[:, 1], y_preds[:, 1:], eta, mu)
 
 
 def test_regression_intervals_invalid_shape() -> None:
@@ -208,7 +208,7 @@ def test_regression_intervals_invalid_shape() -> None:
     with pytest.raises(ValueError, match=r".*should be a 3D array*"):
         hsic(y_toy, y_preds[0])
     with pytest.raises(ValueError, match=r".*should be a 3D array*"):
-        cwc(y_toy, y_preds[0])
+        cwc(y_toy, y_preds[0], eta, mu)
 
 
 def test_regression_ytrue_invalid_shape() -> None:
@@ -228,7 +228,7 @@ def test_regression_valid_input_shape() -> None:
     regression_ssc(y_toy, intervals)
     regression_ssc_score(y_toy, intervals)
     hsic(y_toy, intervals)
-    cwc(y_toy, intervals)
+    cwc(y_toy, intervals, eta, mu)
 
 
 def test_regression_same_length() -> None:
@@ -244,7 +244,7 @@ def test_regression_same_length() -> None:
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         hsic(y_toy, intervals[:-1, ])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
-        cwc(y_toy, intervals[:-1, ])
+        cwc(y_toy, intervals[:-1, ], eta, mu)
 
 
 def test_regression_toydata_coverage_score() -> None:
@@ -329,18 +329,18 @@ def test_classification_y_pred_set_type() -> None:
 
 def test_cwc_toydata() -> None:
     """Test coverage_score for toy data."""
-    assert cwc(y_true_class, y_pred_set) == 0.8
+    assert cwc(y_true_class, y_pred_set, eta, mu) == 0.8
 
 
 def test_cwc_ytrue_type() -> None:
     """Test that list(y_true_class) gives right coverage."""
-    scr = cwc(list(y_true_class), y_pred_set)
+    scr = cwc(list(y_true_class), y_pred_set, eta, mu)
     assert scr == 0.8
 
 
 def test_cwc_y_pred_set_type() -> None:
     """Test that list(y_pred_set) gives right coverage."""
-    scr = cwc(y_true_class, list(y_pred_set))
+    scr = cwc(y_true_class, list(y_pred_set), eta, mu)
     assert scr == 0.8
 
 
