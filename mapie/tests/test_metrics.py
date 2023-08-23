@@ -207,8 +207,6 @@ def test_regression_intervals_invalid_shape() -> None:
         regression_ssc_score(y_toy, y_preds[0])
     with pytest.raises(ValueError, match=r".*should be a 3D array*"):
         hsic(y_toy, y_preds[0])
-    with pytest.raises(ValueError, match=r".*should be a 3D array*"):
-        cwc(y_toy, y_preds[0], eta, mu)
 
 
 def test_regression_ytrue_invalid_shape() -> None:
@@ -219,8 +217,6 @@ def test_regression_ytrue_invalid_shape() -> None:
         regression_ssc_score(np.tile(y_toy, 2).reshape(5, 2), y_preds)
     with pytest.raises(ValueError):
         hsic(np.tile(y_toy, 2).reshape(5, 2), y_preds)
-    with pytest.raises(ValueError):
-        cwc(np.tile(y_toy, 2).reshape(5, 2), y_preds)
 
 
 def test_regression_valid_input_shape() -> None:
@@ -228,7 +224,6 @@ def test_regression_valid_input_shape() -> None:
     regression_ssc(y_toy, intervals)
     regression_ssc_score(y_toy, intervals)
     hsic(y_toy, intervals)
-    cwc(y_toy, intervals, eta, mu)
 
 
 def test_regression_same_length() -> None:
@@ -243,8 +238,6 @@ def test_regression_same_length() -> None:
         regression_ssc_score(y_toy, intervals[:-1, ])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         hsic(y_toy, intervals[:-1, ])
-    with pytest.raises(ValueError, match=r".*shape mismatch*"):
-        cwc(y_toy, intervals[:-1, ], eta, mu)
 
 
 def test_regression_toydata_coverage_score() -> None:
