@@ -22,6 +22,8 @@ from mapie.metrics import (classification_coverage_score,
                            regression_ssc,
                            regression_ssc_score,
                            top_label_ece,
+                           _picp,
+                           _pinaw,
                            cwc)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
@@ -175,8 +177,6 @@ prng = RandomState(1234567890)
 y_score = prng.random(51)
 y_scores = prng.random((51, 5))
 y_true = prng.randint(0, 2, 51)
-eta = 1
-mu = 0.90
 
 
 def test_regression_ypredlow_shape() -> None:
@@ -186,7 +186,7 @@ def test_regression_ypredlow_shape() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        cwc(y_toy, y_preds[:, :2], y_preds[:, 2], eta, mu)
+        cwc(y_toy, y_preds[:1], y_preds[:, 2], eta=30, mu=0.9)
 
 
 def test_regression_ypredup_shape() -> None:
@@ -196,7 +196,7 @@ def test_regression_ypredup_shape() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        cwc(y_toy, y_preds[:, 1], y_preds[:, 1:], eta, mu)
+        cwc(y_toy, y_preds[:, 1], y_preds[:1], eta=30, mu=0.9)
 
 
 def test_regression_intervals_invalid_shape() -> None:
@@ -217,6 +217,9 @@ def test_regression_ytrue_invalid_shape() -> None:
         regression_ssc_score(np.tile(y_toy, 2).reshape(5, 2), y_preds)
     with pytest.raises(ValueError):
         hsic(np.tile(y_toy, 2).reshape(5, 2), y_preds)
+    with pytest.raises(ValueError):
+        cwc(np.tile(y_toy, 2).reshape(5, 2), y_preds[:, 1], y_preds[:, 2],
+            eta=30, mu=0.9)
 
 
 def test_regression_valid_input_shape() -> None:
@@ -224,6 +227,7 @@ def test_regression_valid_input_shape() -> None:
     regression_ssc(y_toy, intervals)
     regression_ssc_score(y_toy, intervals)
     hsic(y_toy, intervals)
+    cwc(y_toy, y_preds[:, 1], y_preds[:, 2], eta=0, mu=0.9)
 
 
 def test_regression_same_length() -> None:
@@ -238,6 +242,8 @@ def test_regression_same_length() -> None:
         regression_ssc_score(y_toy, intervals[:-1, ])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         hsic(y_toy, intervals[:-1, ])
+    with pytest.raises(ValueError, match=r".*shape mismatch*"):
+        cwc(y_toy, y_preds[:-1, 1], y_preds[:, 2], eta=0, mu=0.9)
 
 
 def test_regression_toydata_coverage_score() -> None:
@@ -317,23 +323,6 @@ def test_classification_ytrue_type() -> None:
 def test_classification_y_pred_set_type() -> None:
     """Test that list(y_pred_set) gives right coverage."""
     scr = classification_coverage_score(y_true_class, list(y_pred_set))
-    assert scr == 0.8
-
-
-def test_cwc_toydata() -> None:
-    """Test coverage_score for toy data."""
-    assert cwc(y_true_class, y_pred_set, eta, mu) == 0.8
-
-
-def test_cwc_ytrue_type() -> None:
-    """Test that list(y_true_class) gives right coverage."""
-    scr = cwc(list(y_true_class), y_pred_set, eta, mu)
-    assert scr == 0.8
-
-
-def test_cwc_y_pred_set_type() -> None:
-    """Test that list(y_pred_set) gives right coverage."""
-    scr = cwc(y_true_class, list(y_pred_set), eta, mu)
     assert scr == 0.8
 
 
@@ -621,3 +610,60 @@ def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
         classification_coverage_score_v2(
             np.expand_dims(y_true_class, axis=1), y_pred_set[:, 0]
         )
+
+
+def test_mu_valid() -> None:
+    # Test mu valid
+    assert np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2],
+                                 eta=30, mu=0.9), 2), 0.48)
+
+
+def test_mu_invalid() -> None:
+    # Test mu invalid
+    try:
+        cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, mu=-1)
+        assert False
+    except ValueError:
+        assert True
+
+
+def test_high_eta() -> None:
+    # Test high eta
+    np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30,
+                          mu=0.9), 2), 0.48)
+
+
+def test_low_eta() -> None:
+    # Test low eta
+    np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2],
+                          eta=0.01, mu=0.9), 2), 0.65)
+
+
+def test_negative_eta() -> None:
+    # Test negative eta
+    np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=-1,
+                          mu=0.9), 2), 0.65)
+
+
+def test_null_eta() -> None:
+    # Test null eta
+    np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=0,
+                          mu=0.9), 2), 0.65)
+
+
+def test_coverage_score_picp() -> None:
+    # Test _picp function
+    assert np.allclose(round(_picp(y_preds[:, 0], y_preds[:, 1],
+                                   y_preds[:, 2]), 2), 1)
+
+
+def test_coverage_score_pinaw() -> None:
+    # Test _pinaw function
+    assert np.allclose(round(_pinaw(y_preds[:, 0], y_preds[:, 1],
+                                    y_preds[:, 2]), 2), 0.35)
+
+
+def test_coverage_score_cwc() -> None:
+    # Test cwc function
+    assert np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2],
+                                 eta=30, mu=0.9), 2), 0.48)

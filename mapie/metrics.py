@@ -916,6 +916,59 @@ def cwc(
     The CWC penalizes under- and overcoverage in the same way and summarizes
     the quality of the prediction intervals in a single value.
 
+    High Eta (Large Positive Value):
+
+    When eta is a high positive value, such as 10 or 100, it will strongly 
+    emphasize the contribution of (1-pinaw). This means that the algorithm 
+    will prioritize reducing the average width of the prediction intervals 
+    (pinaw) over achieving a high coverage probability (picp).
+    The exponential term np.exp(-eta*(picp-mu)**2) will have a sharp decline 
+    as picp deviates from mu. So, achieving a high picp becomes less important 
+    compared to minimizing pinaw.
+    The impact will be narrower prediction intervals on average, which may 
+    result in more precise but less conservative predictions.
+
+    Low Eta (Small Positive Value):
+
+    When eta is a low positive value, such as 0.01 or 0.1, it will still
+    prioritize reducing the average width of the prediction intervals (pinaw)
+    but with less emphasis compared to higher eta values.
+    The exponential term will be less steep, meaning that deviations of picp
+    from mu will have a moderate impact.
+    You'll get a balance between prediction precision and coverage, but the
+    exact balance will depend on the specific value of eta.
+
+    Negative Eta (Any Negative Value):
+
+    When eta is negative, it will have a different effect on the formula.
+    Negative values of eta will cause the exponential term 
+    np.exp(-eta*(picp-mu)**2)
+    to become larger as picp deviates from mu. This means that a negative eta
+    prioritizes achieving a high coverage probability (picp) over minimizing 
+    pinaw.
+    In this case, the algorithm will aim to produce wider prediction intervals
+    to ensure a higher likelihood of capturing the true values within those
+    intervals, even if it sacrifices precision.
+    Negative eta values might be used in scenarios where avoiding errors or
+    outliers is critical.
+
+    Null Eta (Eta = 0):
+
+    When eta is exactly zero, both pinaw and picp will have equal importance,
+    as the exponential term becomes 1. This means there is a balance
+    between minimizing the average width of prediction intervals (pinaw)
+    and achieving a high coverage probability (picp).
+    The algorithm will aim for a trade-off between precision and coverage,
+    without giving preference to either one.
+    In summary, the choice of eta determines how much importance you place on
+    pinaw versus picp in your coverage width-based criterion.
+
+    A high eta emphasizes precision, a low positive eta balances precision
+    and coverage, a negative eta prioritizes coverage,
+    and a null eta equally values both precision and coverage.
+    The specific choice of eta should align with your objectives and the
+    trade-offs that are acceptable in your particular application.
+
     Examples
     --------
     >>> picp = 0.75
@@ -925,8 +978,12 @@ def cwc(
     >>> print(cwc(picp, pinaw, eta, mu))
     0.4
     """
-    picp = _picp(y_true, y_pred_low, y_pred_up)
-    pinaw = _pinaw(y_true, y_pred_low, y_pred_up)
-    cwc = (1-pinaw)*np.exp(-eta*(picp-mu)**2)
+    if 0 <= mu <= 1:
+        # Mu is within the valid range
+        picp = _picp(y_true, y_pred_low, y_pred_up)
+        pinaw = _pinaw(y_true, y_pred_low, y_pred_up)
+        cwc = (1-pinaw)*np.exp(-eta*(picp-mu)**2)
 
-    return float(cwc)
+        return float(cwc)
+    else:
+        raise ValueError("mu must be between 0 and 1")
