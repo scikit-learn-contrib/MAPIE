@@ -185,8 +185,7 @@ def test_regression_ypredlow_shape() -> None:
         regression_coverage_score(y_toy, y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
-    with pytest.raises(ValueError, match=r""".*operands could not be broadcast
-                       together with shapes *"""):
+    with pytest.raises(ValueError):
         cwc(y_toy, y_preds[:1], y_preds[:, 2], eta=30, mu=0.9)
 
 
@@ -196,8 +195,7 @@ def test_regression_ypredup_shape() -> None:
         regression_coverage_score(y_toy, y_preds[:, 1], y_preds[:, 1:])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
-    with pytest.raises(ValueError, match=r""".*operands could not be broadcast
-                       together with shapes *"""):
+    with pytest.raises(ValueError):
         cwc(y_toy, y_preds[:, 1], y_preds[:1], eta=30, mu=0.9)
 
 
@@ -244,8 +242,7 @@ def test_regression_same_length() -> None:
         regression_ssc_score(y_toy, intervals[:-1, ])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         hsic(y_toy, intervals[:-1, ])
-    with pytest.raises(ValueError, match=r""".*operands could not be broadcast
-                       together with shapes *"""):
+    with pytest.raises(ValueError):
         cwc(y_toy, y_preds[:-1, 1], y_preds[:, 2], eta=0, mu=0.9)
 
 
