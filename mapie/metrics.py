@@ -855,8 +855,8 @@ def _pinaw(
     >>> y_true = np.array(y_true)
     >>> y_pred_low = np.array(y_pred_low)
     >>> y_pred_up = np.array(y_pred_up)
-    >>> print(_pinaw(y_true, y_pred_low, y_pred_up))
-    0.3
+    >>> print(np.round(_pinaw(y_true, y_pred_low, y_pred_up),2))
+    0.31
     """
     # Convert y_true to a NumPy array of floats
     y_true = np.array(y_true, dtype=float)
@@ -971,12 +971,18 @@ def cwc(
 
     Examples
     --------
-    >>> picp = 0.75
-    >>> pinaw = 0.2
+    >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
+    >>> y_preds = np.array([
+    >>> [5, 4, 6],
+    >>> [7.5, 6.0, 9.0],
+    >>> [9.5, 9, 10.0],
+    >>> [10.5, 8.5, 12.5],
+    >>> [11.5, 10.5, 12.0],
+    >>> ])
     >>> eta = 30
     >>> mu = 0.9
-    >>> print(cwc(picp, pinaw, eta, mu))
-    0.4
+    >>> print(np.round(cwc(y_true, y_preds[:,1], y_preds[:, 2], eta, mu),2))
+    0.51
     """
     if 0 <= mu <= 1:
         # Mu is within the valid range
