@@ -794,9 +794,9 @@ def _picp(
     """
 
     # Ensure inputs are NumPy arrays for consistent operations
-    y_true = np.asarray(y_true, column_or_1d(y_true))
-    y_pred_low = np.asarray(y_pred_low, column_or_1d(y_pred_low))
-    y_pred_up = np.asarray(y_pred_up, column_or_1d(y_pred_up))
+    y_true = np.asarray(y_true)
+    y_pred_low = np.asarray(y_pred_low)
+    y_pred_up = np.asarray(y_pred_up)
 
     in_the_range = np.sum((np.greater_equal(y_true, y_pred_low))
                           & (np.less_equal(y_true, y_pred_up)))
@@ -859,9 +859,6 @@ def _pinaw(
     0.31
     """
     # Convert y_true to a NumPy array of floats
-    y_true = np.asarray(y_true, column_or_1d(y_true))
-    y_pred_low = np.asarray(y_pred_low, column_or_1d(y_pred_low))
-    y_pred_up = np.asarray(y_pred_up, column_or_1d(y_pred_up))
     y_true = np.array(y_true, dtype=float)
 
     avg_length = np.mean(np.abs(np.subtract(y_pred_up, y_pred_low)))
@@ -975,16 +972,13 @@ def cwc(
     Examples
     --------
     >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
-    >>> y_preds = np.array([[5, 4, 6], [7.5, 6, 9], [9.5, 9, 10],
-                            [10.5, 8.5, 12.5], [11.5, 10.5, 12.0]])
+    >>> y_preds_low = np.array([4, 6, 9, 8.5, 10.5])
+    >>> y_preds_up = np.array([6, 9, 10, 12.5, 12])
     >>> eta = 30
     >>> mu = 0.9
-    >>> print(np.round(cwc(y_true, y_preds[:,1], y_preds[:, 2], eta, mu),2))
+    >>> print(np.round(cwc(y_true, y_preds_low, y_preds_up, eta, mu),2))
     0.51
     """
-    y_true = np.asarray(y_true, column_or_1d(y_true))
-    y_pred_low = np.asarray(y_pred_low, column_or_1d(y_pred_low))
-    y_pred_up = np.asarray(y_pred_up, column_or_1d(y_pred_up))
 
     if 0 <= mu <= 1:
         # Mu is within the valid range
