@@ -872,7 +872,7 @@ def cwc(
     y_true: ArrayLike,
     y_pred_low: ArrayLike,
     y_pred_up: ArrayLike,
-    eta: int,
+    eta: float,
     mu: float
 ) -> float:
     """
