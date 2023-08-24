@@ -128,8 +128,8 @@ def test_sklearn_checks() -> None:
 def test_invalid_agg_function(agg_function: Any) -> None:
     """Test that invalid agg_functions raise errors."""
     mapie_ts_reg = MapieTimeSeriesRegressor(agg_function=None)
+    mapie_ts_reg.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*If ensemble is True*"):
-        mapie_ts_reg.fit(X_toy, y_toy)
         mapie_ts_reg.predict(X_toy, alpha=0.5, ensemble=True)
 
 

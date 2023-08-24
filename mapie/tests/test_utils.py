@@ -16,7 +16,7 @@ from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_n_features_in, check_n_jobs, check_null_weight,
                          check_number_bins, check_split_strategy,
                          check_verbose, compute_quantiles, fit_estimator,
-                         get_binning_groups)
+                         get_binning_groups, check_gamma)
 
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -410,3 +410,25 @@ def test_change_values_zero_one() -> None:
     """Test that binary output are changed to zero one outputs."""
     array_ = check_binary_zero_one(np.array([0, 4, 4]))
     assert (np.unique(array_) == np.array([0, 1])).all()
+
+
+# Valid Gamma Test
+def test_valid_gamma():
+    valid_gamma = 0.5
+    try:
+        check_gamma(valid_gamma)
+    except ValueError:
+        pytest.fail("check_gamma raised ValueError for a valid gamma.")
+
+
+# Invalid Gamma Tests
+def test_invalid_negative_gamma():
+    negative_gamma = -0.1
+    with pytest.raises(ValueError, match="Gamma must be between 0 and 1."):
+        check_gamma(negative_gamma)
+
+
+def test_invalid_large_gamma():
+    large_gamma = 1.5
+    with pytest.raises(ValueError, match="Gamma must be between 0 and 1."):
+        check_gamma(large_gamma)

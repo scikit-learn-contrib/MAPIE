@@ -621,8 +621,7 @@ def test_mu_valid() -> None:
 def test_mu_invalid() -> None:
     # Test mu invalid
     try:
-        cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, mu=-1)
-        assert False
+        assert cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, mu=-1)
     except ValueError:
         assert True
 
