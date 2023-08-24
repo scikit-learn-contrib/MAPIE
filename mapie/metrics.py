@@ -918,14 +918,14 @@ def cwc(
 
     High Eta (Large Positive Value):
 
-    When eta is a high positive value, such as 10 or 100, it will strongly 
-    emphasize the contribution of (1-pinaw). This means that the algorithm 
-    will prioritize reducing the average width of the prediction intervals 
+    When eta is a high positive value, such as 10 or 100, it will strongly
+    emphasize the contribution of (1-pinaw). This means that the algorithm
+    will prioritize reducing the average width of the prediction intervals
     (pinaw) over achieving a high coverage probability (picp).
-    The exponential term np.exp(-eta*(picp-mu)**2) will have a sharp decline 
-    as picp deviates from mu. So, achieving a high picp becomes less important 
+    The exponential term np.exp(-eta*(picp-mu)**2) will have a sharp decline
+    as picp deviates from mu. So, achieving a high picp becomes less important
     compared to minimizing pinaw.
-    The impact will be narrower prediction intervals on average, which may 
+    The impact will be narrower prediction intervals on average, which may
     result in more precise but less conservative predictions.
 
     Low Eta (Small Positive Value):
@@ -941,10 +941,10 @@ def cwc(
     Negative Eta (Any Negative Value):
 
     When eta is negative, it will have a different effect on the formula.
-    Negative values of eta will cause the exponential term 
+    Negative values of eta will cause the exponential term
     np.exp(-eta*(picp-mu)**2)
     to become larger as picp deviates from mu. This means that a negative eta
-    prioritizes achieving a high coverage probability (picp) over minimizing 
+    prioritizes achieving a high coverage probability (picp) over minimizing
     pinaw.
     In this case, the algorithm will aim to produce wider prediction intervals
     to ensure a higher likelihood of capturing the true values within those
