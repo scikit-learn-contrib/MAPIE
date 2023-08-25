@@ -415,10 +415,7 @@ def test_change_values_zero_one() -> None:
 # Valid Gamma Test
 def test_valid_gamma():
     valid_gamma = 0.5
-    try:
-        check_gamma(valid_gamma)
-    except ValueError:
-        pytest.fail("check_gamma raised ValueError for a valid gamma.")
+    assert check_gamma(valid_gamma) is None
 
 
 # Invalid Gamma Tests

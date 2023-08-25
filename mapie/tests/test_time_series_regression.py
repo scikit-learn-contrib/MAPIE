@@ -128,9 +128,8 @@ def test_sklearn_checks() -> None:
 def test_invalid_agg_function(agg_function: Any) -> None:
     """Test that invalid agg_functions raise errors."""
     mapie_ts_reg = MapieTimeSeriesRegressor(agg_function=None)
-    mapie_ts_reg.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*If ensemble is True*"):
-        mapie_ts_reg.predict(X_toy, alpha=0.5, ensemble=True)
+        mapie_ts_reg.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -234,7 +233,7 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     np.testing.assert_allclose(y_pis1, y_pis2)
 
 
-@pytest.mark.parametrize("method", ["enbpi"])
+@pytest.mark.parametrize("method", ["enbpi", "aci"])
 @pytest.mark.parametrize("cv", [-1, 2, 3, 5])
 @pytest.mark.parametrize("agg_function", ["mean", "median"])
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2])
