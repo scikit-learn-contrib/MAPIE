@@ -67,10 +67,10 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # Define the Random Forest model as base regressor with parameter ranges.
 rf_model = RandomForestRegressor(random_state=59, verbose=0)
-rf_params = {"max_depth": randint(2, 30), "n_estimators": randint(10, 1e3)}
+rf_params = {"max_depth": randint(2, 10), "n_estimators": randint(10, 100)}
 
 # Cross-validation and prediction-interval parameters.
-cv = 5
+cv = 10
 n_iter = 5
 alpha = 0.05
 random_state = 59
@@ -90,7 +90,8 @@ cv_obj = RandomizedSearchCV(
 cv_obj.fit(X_train, y_train)
 best_est = cv_obj.best_estimator_
 mapie_non_nested = MapieRegressor(
-    best_est, method="plus", cv=cv, agg_function="median", n_jobs=-1
+    best_est, method="plus", cv=cv, agg_function="median", n_jobs=-1,
+    random_state=random_state
 )
 mapie_non_nested.fit(X_train, y_train)
 y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict(
@@ -115,7 +116,8 @@ cv_obj = RandomizedSearchCV(
     n_jobs=-1,
 )
 mapie_nested = MapieRegressor(
-    cv_obj, method="plus", cv=cv, agg_function="median"
+    cv_obj, method="plus", cv=cv, agg_function="median",
+    random_state=random_state
 )
 mapie_nested.fit(X_train, y_train)
 y_pred_nested, y_pis_nested = mapie_nested.predict(X_test, alpha=alpha)
@@ -142,8 +144,8 @@ print(
 
 # Compare prediction interval widths.
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 6))
-min_x = 14.5
-max_x = 16.0
+min_x = 14.0
+max_x = 17.0
 ax1.set_xlabel("Prediction interval width using the nested CV approach")
 ax1.set_ylabel("Prediction interval width using the non-nested CV approach")
 ax1.set_xlim([min_x, max_x])
