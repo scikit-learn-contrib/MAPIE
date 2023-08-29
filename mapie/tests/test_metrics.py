@@ -645,5 +645,5 @@ def test_picp_score() -> None:
 def test_pinaw_score() -> None:
     """Test the validity of pinaw score."""
     np.testing.assert_allclose(
-        _pinaw(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]), 0.353846, rtol=1e-2
+        _pinaw(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]), 0.35385, rtol=1e-2
     )
