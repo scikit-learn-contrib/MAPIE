@@ -414,3 +414,17 @@ def test_consistent_class() -> None:
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     np.testing.assert_allclose(y_pred_1, y_pred_2)
+
+
+def test_aci_method() -> None:
+    """TODO"""
+    mapie_regressor = MapieTimeSeriesRegressor(method="aci")
+    mapie_regressor.fit(X, y)
+    mapie_regressor.predict(X, alpha=0.05)
+    mapie_regressor.adapt_conformal_inference(X, y)
+    try:
+        mapie_regressor = MapieTimeSeriesRegressor(method="enbpi")
+        mapie_regressor.fit(X, y)
+        mapie_regressor.adapt_conformal_inference(X, y)
+    except Exception:
+        ()
