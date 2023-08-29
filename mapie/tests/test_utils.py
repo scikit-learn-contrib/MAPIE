@@ -415,7 +415,7 @@ def test_change_values_zero_one() -> None:
 @pytest.mark.parametrize("gamma", [0.1, 0.5, 0.9])
 def test_valid_gamma(gamma: float) -> None:
     """Test a valid gamma parameter."""
-    assert check_gamma(gamma) is None
+    check_gamma(gamma)
 
 
 @pytest.mark.parametrize("gamma", [1.5, -0.1])
