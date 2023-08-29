@@ -24,6 +24,8 @@ associated prediction intervals. We compare two approaches: with or without
 narrower PIs.
 """
 
+import warnings
+
 from typing import cast
 
 import numpy as np
@@ -38,6 +40,9 @@ from mapie.metrics import (regression_coverage_score,
                            regression_mean_width_score)
 from mapie.subsample import BlockBootstrap
 from mapie.regression import MapieTimeSeriesRegressor
+
+warnings.simplefilter("ignore")
+
 
 # Load input data and feature engineering
 url_file = (
@@ -99,7 +104,7 @@ else:
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.05
 cv_mapietimeseries = BlockBootstrap(
-    n_resamplings=100, length=48, overlapping=True, random_state=59
+    n_resamplings=10, n_blocks=10, overlapping=False, random_state=59
 )
 
 mapie_enpbi = MapieTimeSeriesRegressor(
