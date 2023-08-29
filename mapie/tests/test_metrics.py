@@ -612,7 +612,6 @@ def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
         )
 
 
-
 def test_mu_invalid_cwc_score() -> None:
     """Test a non-valid value of mu in cwc score."""
     with pytest.raises(ValueError):
@@ -648,4 +647,3 @@ def test_pinaw_score() -> None:
     np.testing.assert_allclose(
         _pinaw(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]), 0.35, rtol=1e-2
     )
-
