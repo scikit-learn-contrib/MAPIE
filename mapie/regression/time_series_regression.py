@@ -445,7 +445,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     def _more_tags(self):
         return {
-            "_xfail_checks": {
+            "_xfail_checks":
+            {
                 "check_estimators_partial_fit_n_features":
                 "partial_fit can only be called on fitted models"
             }

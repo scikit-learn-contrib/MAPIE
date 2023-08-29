@@ -10,8 +10,8 @@ History
 * Refactor MapieRegressor and ConformityScore to add the possibility to use X in ConformityScore.
 * Separate the handling of the estimator from MapieRegressor into a new class called EnsembleEstimator.
 * Fix an unfixed random state in one of the classification tests.
-* Add a new method for MapieTimeSeriesRegressor called ACI
-* Add a new metric named CWC
+* Add the Adaptative Conformal Inference (ACI) method for MapieTimeSeriesRegressor.
+* Add the Coverage Width-based Criterion (CWC) metric.
 
 0.6.5 (2023-06-06)
 ------------------

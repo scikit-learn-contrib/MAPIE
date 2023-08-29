@@ -301,7 +301,8 @@ def test_results_prefit() -> None:
 def test_not_enough_resamplings() -> None:
     """Test that a warning is raised if at least one residual is nan."""
     with pytest.warns(
-        UserWarning, match=r"WARNING: at least one point of*"
+        UserWarning,
+        match=r"WARNING: at least one point of*"
     ):
         mapie_ts_reg = MapieTimeSeriesRegressor(
             cv=BlockBootstrap(n_resamplings=1, n_blocks=1), agg_function="mean"
@@ -329,7 +330,8 @@ def test_invalid_aggregate_all() -> None:
     Test that wrong aggregation in MAPIE raise errors.
     """
     with pytest.raises(
-        ValueError, match=r".*Aggregation function called but not defined.*",
+        ValueError,
+        match=r".*Aggregation function called but not defined.*",
     ):
         aggregate_all(None, X)
 
@@ -389,7 +391,8 @@ def test_deprecated_path_warning() -> None:
     Test that a warning is raised if import with deprecated path.
     """
     with pytest.warns(
-        FutureWarning, match=r".*WARNING: Deprecated path*"
+        FutureWarning,
+        match=r".*WARNING: Deprecated path*"
     ):
         from mapie.time_series_regression import MapieTimeSeriesRegressor
         _ = MapieTimeSeriesRegressor()

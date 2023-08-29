@@ -792,11 +792,9 @@ def _picp(
     >>> print(_picp(y_true, y_pred_low, y_pred_up))
     0.8
     """
-
-    # Ensure inputs are NumPy arrays for consistent operations
-    y_true = np.asarray(y_true)
-    y_pred_low = np.asarray(y_pred_low)
-    y_pred_up = np.asarray(y_pred_up)
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
+    y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
     in_the_range = np.sum((np.greater_equal(y_true, y_pred_low))
                           & (np.less_equal(y_true, y_pred_up)))
@@ -858,12 +856,13 @@ def _pinaw(
     >>> print(np.round(_pinaw(y_true, y_pred_low, y_pred_up),2))
     0.31
     """
-    # Convert y_true to a NumPy array of floats
-    y_true = np.array(y_true, dtype=float)
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
+    y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
-    avg_length = np.mean(np.abs(np.subtract(y_pred_up, y_pred_low)))
-    avg_length = avg_length / (np.subtract(float(y_true.max()),
-                                           float(y_true.min())))
+    sum_length = np.mean(np.abs(np.subtract(y_pred_up, y_pred_low)))
+    ref_length = np.subtract(float(y_true.max()), float(y_true.min()))
+    avg_length = sum_length / ref_length
 
     return float(avg_length)
 
@@ -876,7 +875,7 @@ def cwc(
     mu: float
 ) -> float:
     """
-    Coverage width-based criterion obtained by the prediction intervals.
+    Coverage Width-based Criterion (CWC) obtained by the prediction intervals.
 
     The effective coverage score is a criterion used to evaluate the quality
     of prediction intervals (PIs) based on their coverage and width.
@@ -896,8 +895,7 @@ def cwc(
         the average width of the prediction intervals.
     eta : int
         A user-defined parameter that balances the contributions of PINAW and
-        PICP
-        in the coverage width-based criterion (CWC) calculation.
+        PICP in the CWC calculation.
     mu : float
         A user-defined parameter representing the designed confidence level of
         the PI.
@@ -979,6 +977,9 @@ def cwc(
     >>> print(np.round(cwc(y_true, y_preds_low, y_preds_up, eta, mu),2))
     0.51
     """
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
+    y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
     if 0 <= mu <= 1:
         # Mu is within the valid range

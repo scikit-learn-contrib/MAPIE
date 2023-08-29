@@ -612,57 +612,40 @@ def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
         )
 
 
-def test_mu_valid() -> None:
-    # Test mu valid
-    assert np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2],
-                                 eta=30, mu=0.9), 2), 0.48)
+
+def test_mu_invalid_cwc_score() -> None:
+    """Test a non-valid value of mu in cwc score."""
+    with pytest.raises(ValueError):
+        cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, mu=-1)
 
 
-def test_mu_invalid() -> None:
-    # Test mu invalid
-    try:
-        assert cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, mu=-1)
-    except ValueError:
-        assert True
+def test_valid_eta() -> None:
+    """Test different values of eta in cwc metric."""
+    y, y_low, y_up = y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]
+    np.testing.assert_allclose(
+        cwc(y, y_low, y_up, eta=30, mu=0.9), 0.48, rtol=1e-2
+    )
+    np.testing.assert_allclose(
+        cwc(y, y_low, y_up, eta=0.01, mu=0.9), 0.65, rtol=1e-2
+    )
+    np.testing.assert_allclose(
+        cwc(y, y_low, y_up, eta=-1, mu=0.9), 0.65, rtol=1e-2
+    )
+    np.testing.assert_allclose(
+        cwc(y, y_low, y_up, eta=0, mu=0.9), 0.65, rtol=1e-2
+    )
 
 
-def test_high_eta() -> None:
-    # Test high eta
-    np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30,
-                          mu=0.9), 2), 0.48)
+def test_picp_score() -> None:
+    """Test the validity of picp score."""
+    np.testing.assert_allclose(
+        _picp(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]), 1, rtol=1e-2
+    )
 
 
-def test_low_eta() -> None:
-    # Test low eta
-    np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2],
-                          eta=0.01, mu=0.9), 2), 0.65)
+def test_pinaw_score() -> None:
+    """Test the validity of pinaw score."""
+    np.testing.assert_allclose(
+        _pinaw(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]), 0.35, rtol=1e-2
+    )
 
-
-def test_negative_eta() -> None:
-    # Test negative eta
-    np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=-1,
-                          mu=0.9), 2), 0.65)
-
-
-def test_null_eta() -> None:
-    # Test null eta
-    np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=0,
-                          mu=0.9), 2), 0.65)
-
-
-def test_coverage_score_picp() -> None:
-    # Test _picp function
-    assert np.allclose(round(_picp(y_preds[:, 0], y_preds[:, 1],
-                                   y_preds[:, 2]), 2), 1)
-
-
-def test_coverage_score_pinaw() -> None:
-    # Test _pinaw function
-    assert np.allclose(round(_pinaw(y_preds[:, 0], y_preds[:, 1],
-                                    y_preds[:, 2]), 2), 0.35)
-
-
-def test_coverage_score_cwc() -> None:
-    # Test cwc function
-    assert np.allclose(round(cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2],
-                                 eta=30, mu=0.9), 2), 0.48)

@@ -412,20 +412,14 @@ def test_change_values_zero_one() -> None:
     assert (np.unique(array_) == np.array([0, 1])).all()
 
 
-# Valid Gamma Test
-def test_valid_gamma():
-    valid_gamma = 0.5
-    assert check_gamma(valid_gamma) is None
+@pytest.mark.parametrize("gamma", [0.1, 0.5, 0.9])
+def test_valid_gamma(gamma: float) -> None:
+    """Test a valid gamma parameter."""
+    assert check_gamma(gamma) is None
 
 
-# Invalid Gamma Tests
-def test_invalid_negative_gamma():
-    negative_gamma = -0.1
+@pytest.mark.parametrize("gamma", [1.5, -0.1])
+def test_invalid_large_gamma(gamma: float) -> None:
+    """Test a non-valid gamma parameter."""
     with pytest.raises(ValueError, match="Gamma must be between 0 and 1."):
-        check_gamma(negative_gamma)
-
-
-def test_invalid_large_gamma():
-    large_gamma = 1.5
-    with pytest.raises(ValueError, match="Gamma must be between 0 and 1."):
-        check_gamma(large_gamma)
+        check_gamma(gamma)
