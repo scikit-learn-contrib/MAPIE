@@ -16,6 +16,13 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 from ._typing import ArrayLike, NDArray
 from .utils import check_alpha, check_n_jobs, check_verbose
 
+from itertools import chain
+
+from .control_risk.ltt import find_lambda_control_star, ltt_procedure
+from .control_risk.risks import compute_risk_precision, compute_risk_recall
+from .control_risk.crc_rcps import get_r_hat_plus
+from .control_risk.crc_rcps import find_lambda_star
+
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     """
@@ -95,6 +102,18 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     lambdas_star: ArrayLike of shape (n_lambdas)
         Optimal threshold for a given alpha.
 
+    valid_index: List[List[Any]]
+        List of list of all index that satisfy fwer controlling.
+        This attribute is computed when the user wants to
+        control precision score.
+        Only relevant when metric_control="precision" as it uses
+        learn then test (ltt) procedure.
+        Contains n_alpha lists (see predict).
+
+     sigma_init : Optional[float]
+        First variance in the sigma_hat array. The default
+        value is the same as in the paper implementation [1].
+
     References
     ----------
     [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
@@ -104,6 +123,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
     [2] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
     Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
+
+    [3] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
+    M. I., & Lei, L. (2021). Learn then test:
+    "Calibrating predictive algorithms to achieve risk control".
 
     Examples
     --------
@@ -122,7 +145,12 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
      [False  True False]
      [False  True False]]
     """
-    valid_methods_ = ["crc", "rcps"]
+    valid_methods_by_metric_ = {
+        "precision": ["ltt"],
+        "recall": ["rcps", "crc"]
+    }
+    valid_methods = list(chain(*valid_methods_by_metric_.values()))
+    valid_metric_ = list(valid_methods_by_metric_.keys())
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
     lambdas = np.arange(0, 1, 0.01)
     n_lambdas = len(lambdas)
@@ -130,17 +158,21 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         "single_estimator_",
         "risks"
     ]
-    sigma_init = .25  # Value given in the paper.
+    sigma_init = 0.25  # Value given in the paper [1]
     cal_size = .3
 
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
+        metric_control: Optional[str] = 'recall',
+        method: Optional[str] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
+        self.metric_control = metric_control
+        self.method = method
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
@@ -168,10 +200,19 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             Raise error if the name of the method is not
             in self.valid_methods_
         """
-        if self.method not in self.valid_methods_:
+        self.method = cast(str, self.method)
+        self.metric_control = cast(str, self.metric_control)
+
+        if self.method not in self.valid_methods_by_metric_[
+            self.metric_control
+        ]:
             raise ValueError(
-                "Invalid method. "
-                "Allowed values are" + " or ".join(self.valid_methods_)
+                "Invalid method for metric: "
+                + "You are controlling " + self.metric_control
+                + " and you are using invalid method: " + self.method
+                + ". Use instead: " + "".join(self.valid_methods_by_metric_[
+                    self.metric_control]
+                )
             )
 
     def _check_all_labelled(self, y: NDArray) -> None:
@@ -217,31 +258,44 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         Warning
             If delta is not ``None`` and method is CRC
         """
-        if (self.method == "rcps") and (delta is None):
-            raise ValueError(
-                "Invalid delta. "
-                "delta cannot be ``None`` when using "
-                "RCPS method."
-            )
         if (not isinstance(delta, float)) and (delta is not None):
             raise ValueError(
                 "Invalid delta. "
                 f"delta must be a float, not a {type(delta)}"
             )
-        if (delta is not None) and (
-            ((delta <= 0) or (delta >= 1)) and
-            (self.method == "rcps")
-        ):
-            raise ValueError(
-                "Invalid delta. "
-                "delta must be in ]0, 1["
-            )
+        if (self.method == "rcps") or (self.method == "ltt"):
+            if delta is None:
+                raise ValueError(
+                    "Invalid delta. "
+                    "delta cannot be ``None`` when controlling "
+                    "Recall with RCPS or Precision with LTT"
+                )
+            elif ((delta <= 0) or (delta >= 1)):
+                raise ValueError(
+                    "Invalid delta. "
+                    "delta must be in ]0, 1["
+                )
         if (self.method == "crc") and (delta is not None):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
                 + "even if the delta is not ``None``, it won't be"
                 + "taken into account"
             )
+
+    def _check_valid_index(self, alpha: NDArray):
+        """
+        Check if the valid index is empty.
+        If it is, we should warn the user that for the alpha value
+        and delta level chosen, LTT will return no results.
+        The user must be less inclined to take risks or
+        must choose a higher alpha value.
+        """
+        for i in range(len(self.valid_index)):
+            if self.valid_index[i] == []:
+                warnings.warn(
+                    "Warning: LTT method has returned an empty sequence"
+                    + " for alpha=" + str(alpha[i])
+                )
 
     def _check_estimator(
         self,
@@ -370,8 +424,32 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
                 + "even if the bound is not ``None``, it won't be"
-                + "taken into account"
+                + "taken into account."
             )
+        elif (bound is not None) and (self.method == "ltt"):
+            warnings.warn(
+                "WARNING: you are using ltt method hence "
+                + "even if bound is not ``None``, it won't be"
+                + "taken into account."
+            )
+
+    def _check_metric_control(self):
+        """
+        Check that the metrics to control are valid
+        (can be a string or list of string.)
+        """
+        if self.metric_control not in self.valid_metric_:
+            raise ValueError(
+                "Invalid metric. "
+                "Allowed scores must be in the following list "
+                + ", ".join(self.valid_metric_)
+            )
+
+        if self.method is None:
+            if self.metric_control == "recall":
+                self.method = "crc"
+            else:  # self.metric_control == "precision"
+                self.method = "ltt"
 
     def _transform_pred_proba(
         self,
@@ -402,203 +480,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
 
         return np.expand_dims(y_pred_proba_array, axis=2)
-
-    def _compute_risks(self, y_pred_proba: NDArray, y: NDArray) -> NDArray:
-        """
-        Compute the risks
-
-        Parameters
-        ----------
-        y_pred_proba : NDArray of shape (n_samples, n_labels)
-            Predicted probabilities for each label and each observation
-        y : NDArray of shape (n_samples, n_labels)
-            True labels.
-
-        Returns
-        -------
-        NDArray of shape (n_samples, n_lambdas)
-            Risks for each observation and each value of lambda.
-        """
-        y_pred_proba_repeat = np.repeat(
-            y_pred_proba,
-            self.n_lambdas,
-            axis=2
-        )
-
-        y_pred_th = (y_pred_proba_repeat > self.lambdas).astype(int)
-
-        y_repeat = np.repeat(y[..., np.newaxis], self.n_lambdas, axis=2)
-        risks = 1 - (
-            (y_pred_th * y_repeat).sum(axis=1) /
-            y.sum(axis=1)[:, np.newaxis]
-        )
-
-        return risks
-
-    def _get_r_hat_plus(
-        self,
-        bound: Optional[str],
-        delta: Optional[float],
-    ) -> Tuple[NDArray, NDArray]:
-        """Compute the upper bound of the loss for each lambda.
-
-        Parameters
-        ----------
-        bound : str
-            Bounds to compute. Either hoeffding, bernstein or wsr.
-        delta : float
-            Level of confidence.
-        sigma_init : float, optional
-            First variance in the sigma_hat array. The default
-            value is the same as in the paper implementation.
-
-            By default .25
-
-        Returns
-        -------
-        Tuple[NDArray, NDArray] of shape (n_lambdas, ) and (n_lambdas)
-            Average risk over all the obervations and upper bound of the risk.
-        """
-        r_hat = self.risks.mean(axis=0)
-        n_obs = len(self.risks)
-
-        if (self.method == "rcps") and (delta is not None):
-            if bound == "hoeffding":
-                r_hat_plus = (
-                    r_hat +
-                    np.sqrt((1 / (2 * n_obs)) * np.log(1 / delta))
-                )
-
-            elif bound == "bernstein":
-                sigma_hat_bern = np.var(r_hat, axis=0, ddof=1)
-                r_hat_plus = (
-                    r_hat +
-                    np.sqrt((sigma_hat_bern * 2 * np.log(2 / delta)) / n_obs) +
-                    (7 * np.log(2 / delta)) / (3 * (n_obs - 1))
-                )
-
-            else:
-                mu_hat = (
-                    (.5 + np.cumsum(self.risks, axis=0)) /
-                    (np.repeat(
-                        [range(1, n_obs + 1)],
-                        self.n_lambdas,
-                        axis=0
-                    ).T + 1)
-                )
-                sigma_hat = (
-                    (.25 + np.cumsum((self.risks - mu_hat)**2, axis=0)) /
-                    (np.repeat(
-                        [range(1, n_obs + 1)],
-                        self.n_lambdas,
-                        axis=0
-                    ).T + 1)
-                )
-                sigma_hat = np.concatenate(
-                    [
-                        np.full(
-                            (1, self.n_lambdas), fill_value=self.sigma_init
-                        ), sigma_hat[:-1]
-                    ]
-                )
-                nu = np.minimum(
-                    1,
-                    np.sqrt((2 * np.log(1 / delta)) / (n_obs * sigma_hat))
-                )
-
-                # Split the calculation in two to prevent memory issues
-                batches = [
-                    range(int(n_obs / 2)),
-                    range(n_obs - int(n_obs / 2), n_obs)
-                ]
-                K_R_max = np.zeros((self.n_lambdas, self.n_lambdas))
-                for batch in batches:
-                    nu_batch = nu[batch]
-                    losses_batch = self.risks[batch]
-
-                    nu_batch = np.repeat(
-                        np.expand_dims(nu_batch, axis=2),
-                        self.n_lambdas,
-                        axis=2
-                    )
-                    losses_batch = np.repeat(
-                        np.expand_dims(losses_batch, axis=2),
-                        self.n_lambdas,
-                        axis=2
-                    )
-
-                    R = self.lambdas
-                    K_R = np.cumsum(
-                        np.log(
-                            (
-                                1 -
-                                nu_batch *
-                                (losses_batch - R)
-                            ) +
-                            np.finfo(np.float64).eps
-                        ),
-                        axis=0
-                    )
-                    K_R = np.max(K_R, axis=0)
-                    K_R_max += K_R
-
-                r_hat_plus_tronc = self.lambdas[np.argwhere(
-                    np.cumsum(K_R_max > -np.log(delta), axis=1) == 1
-                )[:, 1]]
-                r_hat_plus = np.ones(self.n_lambdas)
-                r_hat_plus[:len(r_hat_plus_tronc)] = r_hat_plus_tronc
-
-        else:
-            r_hat_plus = (n_obs / (n_obs + 1)) * r_hat + (1 / (n_obs + 1))
-
-        return r_hat, r_hat_plus
-
-    def _find_lambda_star(
-        self,
-        r_hat_plus: NDArray,
-        alpha_np: NDArray
-    ) -> NDArray:
-        """Find the higher value of lambda such that for
-        all smaller lambda, the risk is smaller, for each value
-        of alpha.
-
-        Parameters
-        ----------
-        r_hat_plus : NDArray of shape (n_lambdas, )
-            Upper bounds computed in the `get_r_hat_plus` method.
-        alphas : NDArray of shape (n_alphas, )
-            Risk levels.
-
-        Returns
-        -------
-        NDArray of shape (n_alphas, )
-            Optimal lambdas which control the risks for each value
-            of alpha.
-        """
-
-        if len(alpha_np) > 1:
-            alphas_np = alpha_np[:, np.newaxis]
-        else:
-            alphas_np = alpha_np
-
-        bound_rep = np.repeat(
-            np.expand_dims(r_hat_plus, axis=0),
-            len(alphas_np),
-            axis=0
-        )
-        bound_rep[:, np.argmax(bound_rep, axis=1)] = np.maximum(
-            alphas_np,
-            bound_rep[:, np.argmax(bound_rep, axis=1)]
-        )  # to avoid an error if the risk is always higher than alpha
-        lambdas_star = self.lambdas[np.argmin(
-                - np.greater_equal(
-                    bound_rep,
-                    alphas_np
-                ).astype(int),
-                axis=1
-            )]
-
-        return lambdas_star
 
     def partial_fit(
         self,
@@ -632,6 +513,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         # Checks
         first_call = self._check_partial_fit_first_call()
         self._check_parameters()
+        self._check_metric_control()
+        self._check_method()
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
@@ -652,7 +535,15 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
             self.theta_ = X.shape[1]
-            self.risks = self._compute_risks(y_pred_proba_array, y)
+
+            if self.metric_control == "recall":
+                self.risks = compute_risk_recall(
+                    self.lambdas, y_pred_proba_array, y
+                )
+            else:  # self.metric_control == "precision"
+                self.risks = compute_risk_precision(
+                    self.lambdas, y_pred_proba_array, y
+                )
         else:
             if X.shape[1] != self.theta_:
                 msg = "Number of features %d does not match previous data %d."
@@ -660,7 +551,18 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             self.single_estimator_ = estimator
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-            partial_risk = self._compute_risks(y_pred_proba_array, y)
+            if self.metric_control == "recall":
+                partial_risk = compute_risk_recall(
+                    self.lambdas,
+                    y_pred_proba_array,
+                    y
+                )
+            else:  # self.metric_control == "precision"
+                partial_risk = compute_risk_precision(
+                    self.lambdas,
+                    y_pred_proba_array,
+                    y
+                )
             self.risks = np.concatenate([self.risks, partial_risk], axis=0)
 
         return self
@@ -676,10 +578,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Training data.
 
-        y : NDArray of shape (n_samples, n_classes)
+        y: NDArray of shape (n_samples, n_classes)
             Training labels.
 
         calib_size: Optional[float]
@@ -699,10 +601,9 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     def predict(
         self,
         X: ArrayLike,
-        method: Optional[str] = "crc",
         alpha: Optional[Union[float, Iterable[float]]] = None,
         delta: Optional[float] = None,
-        bound: Optional[Union[str, None]] = "wsr"
+        bound: Optional[Union[str, None]] = None
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Prediction sets on new samples based on target confidence
@@ -712,19 +613,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
-            Test data.
-        method : Optional[str]
-            Method to choose for prediction interval estimates.
-            Choose among:
-
-            - "crc", for Conformal Risk Control. See [1] for
-            more details.
-
-            - "rcps", based on computation of the upper bound
-            of the risk. See [2] for more details.
-
-            By default "crc".
+        X: ArrayLike of shape (n_samples, n_features)
 
         alpha : Optional[Union[float, Iterable[float]]]
             Can be a float, a list of floats, or a ``ArrayLike`` of floats.
@@ -734,6 +623,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             sets.
             ``alpha`` is the complement of the target coverage level.
             By default ``None``.
+
         delta : Optional[float]
             Can be a float, or ``None``. If using method="rcps", then it
             can not be set to ``None``.
@@ -742,10 +632,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             Lower ``delta`` produce larger (more conservative) prediction
             sets.
             By default ``None``.
+
         bound : Optional[Union[str, ``None``]]
             Method used to compute the Upper Confidence Bound of the
             average risk. Only necessary with the RCPS method.
-            By default "wsr"
+            By default ``None``.
 
         Returns
         -------
@@ -758,8 +649,6 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         if alpha is not ``None``.
         """
 
-        self.method = method
-        self._check_method()
         self._check_delta(delta)
         self._check_bound(bound)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
@@ -781,13 +670,31 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             len(alpha_np),
             axis=2
         )
-        self.r_hat, self.r_hat_plus = self._get_r_hat_plus(
-            bound,
-            delta,
-        )
-        self.lambdas_star = self._find_lambda_star(self.r_hat_plus, alpha_np)
-        y_pred_proba_array = (
-            y_pred_proba_array >
-            self.lambdas_star[np.newaxis, np.newaxis, :]
-        )
+        if self.metric_control == 'precision':
+            self.n_obs = len(self.risks)
+            self.r_hat = self.risks.mean(axis=0)
+            self.valid_index, self.p_values = ltt_procedure(
+                self.r_hat, alpha_np, delta, self.n_obs
+            )
+            self._check_valid_index(alpha_np)
+            self.lambdas_star, self.r_star = find_lambda_control_star(
+               self.r_hat, self.valid_index, self.lambdas
+            )
+            y_pred_proba_array = (
+                y_pred_proba_array >
+                np.array(self.lambdas_star)[np.newaxis, np.newaxis, :]
+            )
+
+        else:
+            self.r_hat, self.r_hat_plus = get_r_hat_plus(
+                self.risks, self.lambdas, self.method,
+                bound, delta, self.sigma_init
+            )
+            self.lambdas_star = find_lambda_star(
+                self.lambdas, self.r_hat_plus, alpha_np
+            )
+            y_pred_proba_array = (
+                y_pred_proba_array >
+                self.lambdas_star[np.newaxis, np.newaxis, :]
+            )
         return y_pred, y_pred_proba_array
