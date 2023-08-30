@@ -198,14 +198,14 @@ def plot_prediction_intervals(
     axs.errorbar(
         y_test_sorted_[~warnings],
         y_pred_sorted_[~warnings],
-        yerr=error[~warnings],
+        yerr=np.abs(error[~warnings]),
         capsize=5, marker="o", elinewidth=2, linewidth=0,
         label="Inside prediction interval"
         )
     axs.errorbar(
         y_test_sorted_[warnings],
         y_pred_sorted_[warnings],
-        yerr=error[warnings],
+        yerr=np.abs(error[warnings]),
         capsize=5, marker="o", elinewidth=2, linewidth=0, color="red",
         label="Outside prediction interval"
         )
