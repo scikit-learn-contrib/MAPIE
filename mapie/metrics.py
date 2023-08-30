@@ -692,7 +692,7 @@ def hsic(
         and if it has negative or null values.
 
     Examples
-    -------
+    --------
     >>> from mapie.metrics import hsic
     >>> import numpy as np
     >>> y_true = np.array([9.5, 10.5, 12.5])
