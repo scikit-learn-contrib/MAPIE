@@ -41,13 +41,30 @@
 MAPIE - Model Agnostic Prediction Interval Estimator
 ====================================================
 
-**MAPIE** allows you to easily estimate prediction intervals (or prediction sets)
-using your favourite scikit-learn-compatible model for
-single-output regression or multi-class classification settings.
+Quantifying the uncertainties and controlling the risks of ML model predictions is of crucial importance
+for developing and deploying reliable artificial intelligence (AI) systems. Uncertainty quantification (UQ)
+involves all the stakeholders who develop and use AI models.
 
-Prediction intervals output by **MAPIE** encompass both aleatoric and epistemic
-uncertainties and are backed by strong theoretical guarantees thanks to conformal
-prediction methods [1-7].
+**MAPIE** is an open-source Python library hosted on scikit-learn-contrib project that allows you to:
+- easily **estimate conformal prediction intervals** (or prediction sets) given a degree of confidence or risk
+  for single-output regression, binary and multi-class classification settings [3-9].
+- easily **control risks** (such as coverage, recall or any other non-monotone risk) by estimating
+  relevant prediction sets for multi-label classification and beyond [10-12].
+- easily **wrap your favorite scikit-learn-compatible model** for the purposes just mentioned.
+
+**MAPIE** has been designed to respect three fundamental pillars:
+- Implemented methods are **model and use case agnostic** in order to address all relevant use cases tackled in industry.
+- Implemented methods must have **strong theoretical guarantees** on the marginal coverage of the estimated uncertainties
+  with as little assumption on the data or the model as possible.
+- Implemented methods follow **state-of-the-art trends** that respect programming standards in order to develop trustworthy AI systems.
+
+Importantly, **MAPIE** contributes to the wide diffusion of the attractive **Conformal Prediction** (CP) framework for regression
+and classification settings that is model and use case agnostic with mathematical guarantees on the marginal coverages on the prediction sets
+with few assumptions (distribution-free and data-exchangeability assumptions) [1-2].
+
+Prediction sets output by **MAPIE** encompass both aleatoric and epistemic uncertainties
+and are backed by strong theoretical guarantees using a variety of conformal prediction methods [3-9]
+and a variaty of conformal risk control methods [10-12].
 
 
 🔗 Requirements
@@ -177,7 +194,7 @@ It is basically based on two types of techniques:
 - Conformity scores on the whole training set obtained by cross-validation,
 - Perturbed models generated during the cross-validation.
 
-**MAPIE** then combines all these elements in a way that provides prediction intervals on new data with strong theoretical guarantees [1-2].
+**MAPIE** then combines all these elements in a way that provides prediction intervals on new data with strong theoretical guarantees [3-4].
 
 .. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_internals_regression.png
     :width: 300
@@ -188,7 +205,7 @@ It is basically based on two types of techniques:
 - Construction of a conformity score
 - Calibration of the conformity score on a calibration set not seen by the model during training
 
-**MAPIE** then uses the calibrated conformity scores to estimate sets of labels associated with the desired coverage on new data with strong theoretical guarantees [3-4-5].
+**MAPIE** then uses the calibrated conformity scores to estimate sets of labels associated with the desired coverage on new data with strong theoretical guarantees [5-6-7].
 
 .. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_internals_classification.png
     :width: 300
@@ -239,38 +256,29 @@ and with the financial support from Région Ile de France and Confiance.ai.
 
 MAPIE methods belong to the field of conformal inference.
 
-[1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
-"Predictive inference with the jackknife+." Ann. Statist., 49(1):486–507, February 2021.
+[1] Vovk, Vladimir, Alexander Gammerman, and Glenn Shafer. Algorithmic Learning in a Random World. Springer Nature, 2022.
 
-[2] Byol Kim, Chen Xu, and Rina Foygel Barber.
-"Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
-34th Conference on Neural Information Processing Systems (NeurIPS 2020).
+[2] Angelopoulos, Anastasios N., and Stephen Bates. "Conformal prediction: A gentle introduction." Foundations and Trends® in Machine Learning 16.4 (2023): 494-591.
 
-[3] Mauricio Sadinle, Jing Lei, and Larry Wasserman.
-"Least Ambiguous Set-Valued Classifiers With Bounded Error Levels." Journal of the American Statistical Association, 114:525, 223-234, 2019.
+[3] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani. "Predictive inference with the jackknife+." Ann. Statist., 49(1):486–507, (2021).
 
-[4] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
-"Classification with Valid and Adaptive Coverage." NeurIPS 2020 (spotlight).
+[4] Kim, Byol, Chen Xu, and Rina Barber. "Predictive inference is free with the jackknife+-after-bootstrap." Advances in Neural Information Processing Systems 33 (2020): 4138-4149.
 
-[5] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan and Jitendra Malik.
-"Uncertainty Sets for Image Classifiers using Conformal Prediction."
-International Conference on Learning Representations 2021.
+[5] Sadinle, Mauricio, Jing Lei, and Larry Wasserman. "Least ambiguous set-valued classifiers with bounded error levels." Journal of the American Statistical Association 114.525 (2019): 223-234.
 
-[6] Yaniv Romano, Evan Patterson, Emmanuel J. Candès.
-"Conformalized Quantile Regression." Advances in neural information processing systems 32 (2019).
+[6] Romano, Yaniv, Matteo Sesia, and Emmanuel Candes. "Classification with valid and adaptive coverage." Advances in Neural Information Processing Systems 33 (2020): 3581-3591.
 
-[7] Chen Xu and Yao Xie.
-"Conformal Prediction Interval for Dynamic Time-Series."
-International Conference on Machine Learning (ICML, 2021).
+[7] Angelopoulos, Anastasios, et al. "Uncertainty sets for image classifiers using conformal prediction." International Conference on Learning Representations (2021).
 
-[8] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
-and Michael I. Jordan. Distribution-free, risk-controlling prediction
-sets. CoRR, abs/2101.02703, 2021.
-URL https://arxiv.org/abs/2101.02703.39
+[8] Romano, Yaniv, Evan Patterson, and Emmanuel Candes. "Conformalized quantile regression." Advances in neural information processing systems 32 (2019).
 
-[9] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
-Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
+[9] Xu, Chen, and Yao Xie. "Conformal prediction interval for dynamic time-series." International Conference on Machine Learning. PMLR, (2021).
 
+[10] Bates, Stephen, et al. "Distribution-free, risk-controlling prediction sets." Journal of the ACM (JACM) 68.6 (2021): 1-34.
+
+[11] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua, Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
+
+[12] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al. "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022).
 
 📝 License
 ==========
