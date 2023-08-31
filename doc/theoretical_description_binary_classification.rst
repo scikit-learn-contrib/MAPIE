@@ -19,12 +19,12 @@ and on calibration for binary classification.
 Although set prediction is possible for binary classification, we don't recommend using this setting.
 Here is an argument from Gupta et al:
 
-    PSs and CIs are only ‘informative’ if the sets or intervals produced by them are small. To quantify
+    *PSs and CIs are only ‘informative’ if the sets or intervals produced by them are small. To quantify
     this, we measure CIs using their width (denoted as :math:`|C(.)|)`, and PSs using their diameter (defined as
     the width of the convex hull of the PS). For example, in the case of binary classification, the diameter
-    of a PS is :math:`1` if the prediction set is :math:`{0,1}`, and :math:`0` otherwise (since :math:`Y\in{0,1}`
-    always holds, the set :math:`{0,1}` is ‘uninformative’). A short CI such as :math:`[0.39, 0.41]`
-    is more informative than a wider one such as :math:`[0.3, 0.5]`.
+    of a PS is :math:`1` if the prediction set is :math:`\{0,1\}`, and :math:`0` otherwise (since :math:`Y\in\{0,1\}`
+    always holds, the set :math:`\{0,1\}` is ‘uninformative’). A short CI such as :math:`[0.39, 0.41]`
+    is more informative than a wider one such as :math:`[0.3, 0.5]`.*
 
 In a few words, what you need to remember about these concepts :
 
@@ -41,25 +41,30 @@ In a few words, what you need to remember about these concepts :
 1. Set Prediction
 -----------------
 
-Definition 1 (CI w.r.t .. :math:`f`) [1].
-    Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y} \sim P)`.
-    A function :math:`C:[0,1]\to\mathcal{I}` is said to be :math:`(1-\alpha)`-CI with respect to :math:`f` if:
+Definition 1 (Prediction Set (PS) w.r.t :math:`f`) [1].
+    Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
+    Define the set of all subsets of :math:`\mathcal{Y}`, :math:`L = \{\{0\}, \{1\}, \{0, 1\}, \emptyset\}`.
+    A function :math:`S:[0,1]\to\mathcal{L}` is said to be :math:`(1-\alpha)`-PS with respect to :math:`f` if:
 
 .. math:: 
-    P(\mathbb{E}[Y|f(X)]\in C(f(X))) \geq 1 - \alpha
+    P(Y\in S(f(X))) \geq 1 - \alpha
 
-See :class:`~mapie.classification.MapieClassifier`.
+PSs are typically studied for larger output sets, such as :math:`\mathcal{Y}_{regression}=\mathbb{R}` or
+:math:`\mathcal{Y}_{multiclass}=\{1, 2, ..., L > 2\}`.
+
+See :class:`~mapie.classification.MapieClassifier` to use a set predictor.
 
 
 2. Probabilistic Prediction
 ---------------------------
 
-Definition 1 (PS w.r.t .. :math:`f`) [1].
-    Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y} \sim P)`.
-    A function :math:`S:[0,1]\to\mathcal{L}` is said to be :math:`(1-\alpha)`-PS with respect to :math:`f` if:
+Definition 1 (Confidence Interval (CI) w.r.t :math:`f`) [1].
+    Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
+    Let :math:`I` denote the set of all subintervals of :math:`[0,1]`.
+    A function :math:`C:[0,1]\to\mathcal{I}` is said to be :math:`(1-\alpha)`-CI with respect to :math:`f` if:
 
 .. math:: 
-    P(Y\in S(f(X))) \geq 1 - \alpha
+    P(\mathbb{E}[Y|f(X)]\in C(f(X))) \geq 1 - \alpha
 
 In the framework of conformal prediction, the Venn predictor has this property.
 
@@ -68,14 +73,15 @@ In the framework of conformal prediction, the Venn predictor has this property.
 --------------
 
 Definition 3 (Approximate calibration) [1].
-    Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y} \sim P)`.
+    Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
     The predictor :math:`f:\mathcal{X} \to [0, 1]` is :math:`(\epsilon,\alpha)`-calibrated
     for some :math:`\epsilon,\alpha\in[0, 1]` if with probability at least :math:`1-\alpha`:
 
 .. math:: 
     |\mathbb{E}[Y|f(X)] - f(X)| \leq \epsilon
 
-See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calibration.MapieCalibrator`.
+See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calibration.MapieCalibrator`
+to use a calibrator.
 
 
 4. References
