@@ -46,6 +46,7 @@ for developing and deploying reliable artificial intelligence (AI) systems. Unce
 involves all the stakeholders who develop and use AI models.
 
 **MAPIE** is an open-source Python library hosted on scikit-learn-contrib project that allows you to:
+
 - easily **estimate conformal prediction intervals** (or prediction sets) given a degree of confidence or risk
   for single-output regression, binary and multi-class classification settings [3-9].
 - easily **control risks** (such as coverage, recall or any other non-monotone risk) by estimating
@@ -53,6 +54,7 @@ involves all the stakeholders who develop and use AI models.
 - easily **wrap your favorite scikit-learn-compatible model** for the purposes just mentioned.
 
 **MAPIE** has been designed to respect three fundamental pillars:
+
 - Implemented methods are **model and use case agnostic** in order to address all relevant use cases tackled in industry.
 - Implemented methods must have **strong theoretical guarantees** on the marginal coverage of the estimated uncertainties
   with as little assumption on the data or the model as possible.
