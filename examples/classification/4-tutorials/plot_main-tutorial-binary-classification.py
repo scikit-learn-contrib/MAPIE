@@ -21,7 +21,8 @@ PLEASE NOTE: we don't recommend using set prediction in MAPIE, even though
 we offer this tutorial for those who might be interested.
 Instead, we recommend the use of calibration (see more details in the
 Calibration section of the documentation or by using the
-:class:`~sklearn.calibration.CalibratedClassifierCV` proposed by sklearn).
+:class:`~sklearn.calibration.CalibratedClassifierCV` proposed by sklearn
+or :class:`~mapie.calibration.MapieCalibrator` proposed in MAPIE).
 """
 
 from typing import List
