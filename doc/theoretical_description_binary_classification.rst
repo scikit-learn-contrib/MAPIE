@@ -17,14 +17,14 @@ In MAPIE, we focus specifically on set prediction for multi-class classification
 and on calibration for binary classification.
 
 Although set prediction is possible for binary classification, we don't recommend using this setting.
-Here is an argument from Gupta et al:
+Here is an argument from Gupta et al [1]:
 
-    *PSs and CIs are only ‘informative’ if the sets or intervals produced by them are small. To quantify
+    PSs and CIs are only ‘informative’ if the sets or intervals produced by them are small. To quantify
     this, we measure CIs using their width (denoted as :math:`|C(.)|)`, and PSs using their diameter (defined as
     the width of the convex hull of the PS). For example, in the case of binary classification, the diameter
     of a PS is :math:`1` if the prediction set is :math:`\{0,1\}`, and :math:`0` otherwise (since :math:`Y\in\{0,1\}`
     always holds, the set :math:`\{0,1\}` is ‘uninformative’). A short CI such as :math:`[0.39, 0.41]`
-    is more informative than a wider one such as :math:`[0.3, 0.5]`.*
+    is more informative than a wider one such as :math:`[0.3, 0.5]`.
 
 In a few words, what you need to remember about these concepts :
 
@@ -58,7 +58,7 @@ See :class:`~mapie.classification.MapieClassifier` to use a set predictor.
 2. Probabilistic Prediction
 ---------------------------
 
-Definition 1 (Confidence Interval (CI) w.r.t :math:`f`) [1].
+Definition 2 (Confidence Interval (CI) w.r.t :math:`f`) [1].
     Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
     Let :math:`I` denote the set of all subintervals of :math:`[0,1]`.
     A function :math:`C:[0,1]\to\mathcal{I}` is said to be :math:`(1-\alpha)`-CI with respect to :math:`f` if:
