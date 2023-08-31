@@ -3,7 +3,7 @@
 Tutorial for binary classification with prediction sets
 =======================================================
 
-In this tutorial, we propose set prediction for binary classification 
+In this tutorial, we propose set prediction for binary classification
 estimated by :class:`~mapie.classification.MapieClassifier` with the "score"
 method on two-dimensional dataset.
 
@@ -150,7 +150,7 @@ y_pred_mapie, y_ps_mapie = mapie_clf.predict(
 ##############################################################################
 # MAPIE produces two outputs:
 #
-# - ``y_pred_mapie``: the prediction in the test set given by the 
+# - ``y_pred_mapie``: the prediction in the test set given by the
 #   base estimator.
 #
 # - ``y_ps_mapie``: the prediction sets estimated by MAPIE using the "score"
@@ -348,7 +348,7 @@ _, y_ps_mapie = mapie_clf.predict(
     X, alpha=alpha_
 )
 
-non_empty= np.mean(
+non_empty = np.mean(
     np.any(mapie_clf.predict(X_test, alpha=alpha_)[1], axis=1), axis=0
 )
 idx = np.argwhere(non_empty < 1)[0, 0]
