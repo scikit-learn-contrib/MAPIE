@@ -1,14 +1,47 @@
 """
-=======================================================================
-Prediction sets for binary classification on a two-dimensional data set
-=======================================================================
+=======================================================
+Tutorial for binary classification with prediction sets
+=======================================================
 
-In this tutorial, we propose to estimate the prediction sets estimated by
-:class:`~mapie.classification.MapieClassifier` with the "score" method
-for binary classification on the two-dimensional dataset.
+In this tutorial, we propose set prediction for binary classification 
+estimated by :class:`~mapie.classification.MapieClassifier` with the "score"
+method on two-dimensional dataset.
+
+Throughout this tutorial, we will answer the following questions:
+
+- How does the number of classes in the prediction sets vary according to
+  the significance level ?
+
+- Is the conformal method well calibrated ?
+
+- What are the pros and cons of the set prediction for binary classification
+  in MAPIE ?
+
+PLEASE NOTE: we don't recommend using set prediction in MAPIE, even though
+we offer this tutorial for those who might be interested.
+Instead, we recommend the use of calibration (see more details in the
+Calibration section of the documentation or by using the
+:class:`~sklearn.calibration.CalibratedClassifierCV` proposed by sklearn).
 """
 
+from typing import List
+
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+
+from mapie._typing import NDArray
+from mapie.classification import MapieClassifier
+from sklearn.calibration import CalibratedClassifierCV
+from mapie.metrics import (classification_coverage_score,
+                           classification_mean_width_score)
+
+
 ##############################################################################
+# 1. Conformal Prediction method using the softmax score of the true label
+# ------------------------------------------------------------------------
+#
 # We will use MAPIE to estimate a prediction set such that
 # the probability that the true label of a new test point is included in the
 # prediction set is always higher than the target confidence level :
@@ -37,25 +70,6 @@ for binary classification on the two-dimensional dataset.
 # We use a two-dimensional dataset with two classes (i.e. YES or NO).
 # The distribution of the data is a bivariate normal with arbitrary
 # covariance matrices for each label.
-
-# Reference:
-# Mauricio Sadinle, Jing Lei, and Larry Wasserman.
-# "Least Ambiguous Set-Valued Classifiers With Bounded Error Levels."
-# Journal of the American Statistical Association, 114:525, 223-234, 2019.
-
-from typing import List
-
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
-
-from mapie._typing import NDArray
-from mapie.classification import MapieClassifier
-from sklearn.calibration import CalibratedClassifierCV
-from mapie.metrics import (classification_coverage_score,
-                           classification_mean_width_score)
-
 
 centers = [(-2, 0), (2, 0)]
 covs = [np.array([[2, 1], [1, 2]]), np.diag([4, 1])]
@@ -117,29 +131,29 @@ y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
 
-methods = ["score"]
-mapie, y_pred_mapie, y_ps_mapie = {}, {}, {}
+calib = CalibratedClassifierCV(
+    estimator=clf, method='sigmoid', cv='prefit'
+)
+calib.fit(X_c1, y_c1)
+
+mapie_clf = MapieClassifier(
+    estimator=calib, method='score', cv='prefit', random_state=42
+)
+mapie_clf.fit(X_c2, y_c2)
+
 alpha = [0.2, 0.1, 0.05]
-for method in methods:
-    calib = CalibratedClassifierCV(
-        estimator=clf, method='sigmoid', cv='prefit'
-    )
-    calib.fit(X_c1, y_c1)
-    mapie[method] = MapieClassifier(
-        estimator=calib, method=method, cv='prefit', random_state=42
-    )
-    mapie[method].fit(X_c2, y_c2)
-    y_pred_mapie[method], y_ps_mapie[method] = mapie[method].predict(
-        X_test, alpha=alpha,
-    )
+y_pred_mapie, y_ps_mapie = mapie_clf.predict(
+    X_test, alpha=alpha,
+)
 
 
 ##############################################################################
 # MAPIE produces two outputs:
 #
-# - y_pred_mapie: the prediction in the test set given by the base estimator.
+# - ``y_pred_mapie``: the prediction in the test set given by the 
+#   base estimator.
 #
-# - y_ps_mapie: the prediction sets estimated by MAPIE using the selected
+# - ``y_ps_mapie``: the prediction sets estimated by MAPIE using the "score"
 #   method.
 #
 # Let's now visualize the distribution of the conformity scores with the two
@@ -172,12 +186,10 @@ def plot_scores(
     ax.set_ylabel("count")
 
 
-fig, axs = plt.subplots(1, len(methods), figsize=(10, 5))
-for method in methods:
-    conformity_scores = mapie[method].conformity_scores_
-    n = mapie[method].n_samples_
-    quantiles = mapie[method].quantiles_
-    plot_scores(alpha, conformity_scores, quantiles, method, axs)
+fig, axs = plt.subplots(1, 1, figsize=(10, 5))
+conformity_scores = mapie_clf.conformity_scores_
+quantiles = mapie_clf.quantiles_
+plot_scores(alpha, conformity_scores, quantiles, 'score', axs)
 plt.show()
 
 
@@ -243,8 +255,7 @@ def plot_results(
     plt.show()
 
 
-for method in methods:
-    plot_results(alpha, y_pred_mapie[method], y_ps_mapie[method])
+plot_results(alpha, y_pred_mapie, y_ps_mapie)
 
 
 ##############################################################################
@@ -262,11 +273,10 @@ for method in methods:
 # There are no ambiguous or uncertain classification regions. We'll illustrate
 # this later. Therefore, the accuracy of the model is similar to its coverage.
 
-for method in methods:
-    print(
-        f"Accuracy of the model with '{method}' method: "
-        f"{100*np.mean(mapie[method].predict(X_val) == y_val)}%"
-    )
+print(
+    f"Accuracy of the model with 'score' method: "
+    f"{100*np.mean(mapie_clf.predict(X_val) == y_val)}%"
+)
 
 
 ##############################################################################
@@ -274,48 +284,49 @@ for method in methods:
 # widths as function of the :math:`1-\alpha` target coverage.
 
 alpha_ = np.arange(0.02, 0.98, 0.02)
-coverage, mean_width = {}, {}
-mapie, y_ps_mapie = {}, {}
-non_empty = {}
-for method in methods:
-    calib = CalibratedClassifierCV(
-        estimator=clf, method='sigmoid', cv='prefit'
-    )
-    calib.fit(X_c1, y_c1)
-    mapie[method] = MapieClassifier(
-        estimator=calib, method=method, cv='prefit', random_state=42
-    )
-    mapie[method].fit(X_c2, y_c2)
-    _, y_ps_mapie[method] = mapie[method].predict(
-        X, alpha=alpha_
-    )
-    coverage[method] = np.array([
-        classification_coverage_score(y, y_ps_mapie[method][:, :, i])
-        for i, _ in enumerate(alpha_)
-    ])
-    mean_width[method] = [
-        classification_mean_width_score(y_ps_mapie[method][:, :, i])
-        for i, _ in enumerate(alpha_)
-    ]
 
-fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-axs[0].set_xlabel("1 - alpha")
-axs[0].set_ylabel("Quantile")
-for method in methods:
-    axs[0].scatter(1 - alpha_, mapie[method].quantiles_, label=method)
-axs[0].legend()
-for method in methods:
-    axs[1].scatter(1 - alpha_, coverage[method], label=method)
-axs[1].set_xlabel("1 - alpha")
-axs[1].set_ylabel("Coverage score")
-axs[1].plot([0, 1], [0, 1], label="x=y", color="black")
-axs[1].legend()
-for method in methods:
-    axs[2].scatter(1 - alpha_, mean_width[method], label=method)
-axs[2].set_xlabel("1 - alpha")
-axs[2].set_ylabel("Average size of prediction sets")
-axs[2].legend()
-plt.show()
+calib = CalibratedClassifierCV(
+    estimator=clf, method='sigmoid', cv='prefit'
+)
+calib.fit(X_c1, y_c1)
+
+mapie_clf = MapieClassifier(
+    estimator=calib, method='score', cv='prefit', random_state=42
+)
+mapie_clf.fit(X_c2, y_c2)
+_, y_ps_mapie = mapie_clf.predict(
+    X, alpha=alpha_
+)
+
+coverage = np.array([
+    classification_coverage_score(y, y_ps_mapie[:, :, i])
+    for i, _ in enumerate(alpha_)
+])
+mean_width = [
+    classification_mean_width_score(y_ps_mapie[:, :, i])
+    for i, _ in enumerate(alpha_)
+]
+
+
+def plot_coverages_widths(alpha, coverage, width, method):
+    _, axs = plt.subplots(1, 3, figsize=(15, 5))
+    axs[0].set_xlabel("1 - alpha")
+    axs[0].set_ylabel("Quantile")
+    axs[0].scatter(1 - alpha, mapie_clf.quantiles_, label=method)
+    axs[0].legend()
+    axs[1].scatter(1 - alpha, coverage, label=method)
+    axs[1].set_xlabel("1 - alpha")
+    axs[1].set_ylabel("Coverage score")
+    axs[1].plot([0, 1], [0, 1], label="x=y", color="black")
+    axs[1].legend()
+    axs[2].scatter(1 - alpha, width, label=method)
+    axs[2].set_xlabel("1 - alpha")
+    axs[2].set_ylabel("Average size of prediction sets")
+    axs[2].legend()
+    plt.show()
+
+
+plot_coverages_widths(alpha_, coverage, mean_width, 'score')
 
 
 ##############################################################################
@@ -323,31 +334,30 @@ plt.show()
 # regardless of the :math:`\alpha` value.
 
 alpha_ = np.arange(0.02, 0.16, 0.01)
-mapie, y_ps_mapie = {}, {}
-for method in methods:
-    calib = CalibratedClassifierCV(
-        estimator=clf, method='sigmoid', cv='prefit'
-    )
-    calib.fit(X_c1, y_c1)
-    mapie[method] = MapieClassifier(
-        estimator=calib, method=method, cv='prefit', random_state=42
-    )
-    mapie[method].fit(X_c2, y_c2)
-    _, y_ps_mapie[method] = mapie[method].predict(
-        X, alpha=alpha_
-    )
 
-non_empty = {}
-for method in methods:
-    non_empty[method] = np.mean(
-        np.any(mapie[method].predict(X_test, alpha=alpha_)[1], axis=1), axis=0
-    )
-    idx = np.argwhere(non_empty[method] < 1)[0, 0]
+calib = CalibratedClassifierCV(
+    estimator=clf, method='sigmoid', cv='prefit'
+)
+calib.fit(X_c1, y_c1)
 
-    _, axs = plt.subplots(1, 3, figsize=(15, 5))
-    plot_prediction_decision(y_pred_mapie[method], axs[0])
-    _, y_ps = mapie[method].predict(X_test, alpha=alpha_[idx-1])
-    plot_prediction_set(y_ps[:, :, 0], np.round(alpha_[idx-1], 3), axs[1])
-    _, y_ps = mapie[method].predict(X_test, alpha=alpha_[idx+1])
-    plot_prediction_set(y_ps[:, :, 0], np.round(alpha_[idx+1], 3), axs[2])
-    plt.show()
+mapie_clf = MapieClassifier(
+    estimator=calib, method='score', cv='prefit', random_state=42
+)
+mapie_clf.fit(X_c2, y_c2)
+_, y_ps_mapie = mapie_clf.predict(
+    X, alpha=alpha_
+)
+
+non_empty= np.mean(
+    np.any(mapie_clf.predict(X_test, alpha=alpha_)[1], axis=1), axis=0
+)
+idx = np.argwhere(non_empty < 1)[0, 0]
+
+_, axs = plt.subplots(1, 3, figsize=(15, 5))
+plot_prediction_decision(y_pred_mapie, axs[0])
+_, y_ps = mapie_clf.predict(X_test, alpha=alpha_[idx-1])
+plot_prediction_set(y_ps[:, :, 0], np.round(alpha_[idx-1], 3), axs[1])
+_, y_ps = mapie_clf.predict(X_test, alpha=alpha_[idx+1])
+plot_prediction_set(y_ps[:, :, 0], np.round(alpha_[idx+1], 3), axs[2])
+
+plt.show()
