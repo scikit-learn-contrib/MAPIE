@@ -36,7 +36,7 @@
    :caption: BINARY CLASSIFICATION
 
    theoretical_description_binary_classification
-   examples_classification/-tutorials/plot_main-tutorial-binary-classification
+   examples_classification/4-tutorials/plot_main-tutorial-binary-classification
 
 .. toctree::
    :maxdepth: 2
