@@ -1,7 +1,7 @@
 """
-=======================================================
-Tutorial for binary classification with prediction sets
-=======================================================
+===========================
+Tutorial for set prediction
+===========================
 
 In this tutorial, we propose set prediction for binary classification
 estimated by :class:`~mapie.classification.MapieClassifier` with the "score"
