@@ -46,7 +46,7 @@ This score is by default symmetric (*see above for definition*).
 2. The gamma score
 ==================
 
-The gamma score (:class:`mapie.conformity_scores.GammaConformityScore`) adds a
+The gamma score [2] (:class:`mapie.conformity_scores.GammaConformityScore`) adds a
 notion of adaptivity with the normalization of the residuals by the predictions.
 
 .. math:: \frac{|Y-\hat{\mu}(X)|}{\hat{\mu}(X)}
@@ -65,13 +65,13 @@ Compared to the absolute residual score, it allows to see regions with smaller i
 than others which are interpreted as regions with more certainty than others.
 It is important to note that, this conformity score is inversely proportional to the
 order of magnitude of the predictions. Therefore, the uncertainty is proportional to
-the order of magitude of the predictions, implying that this core should be used
+the order of magitude of the predictions, implying that this score should be used
 in use cases where we want greater uncertainty when the prediction is high.
 
 3. The conformal residual fitting score
 =======================================
 
-The conformal residual fitting score (:class:`mapie.conformity_scores.ConformalizedResidualFittingScore`)
+The conformal residual fitting score [1] (:class:`mapie.conformity_scores.ConformalizedResidualFittingScore`)
 (CRF) is slightly more complex than the previous scores.
 The normalization of the residual is now done by the predictions of an additional model
 :math:`\sigma` which learns to predict the base model residuals from :math:`X`.
@@ -99,7 +99,7 @@ it is not proportional to the uncertainty.
 Key takeaways
 =============
 
-- The absolute residual score is the basic conformity score and gives constant intervals.
+- The absolute residual score is the basic conformity score and gives constant intervals. It is the one used by default by :class:`mapie.regression.MapieRegressor`.
 - The gamma conformity score adds a notion of adaptivity by giving intervals of different sizes,
   and is proportional to the uncertainty.
 - The conformal residual fitting score is a conformity score that requires an additional model
@@ -111,3 +111,6 @@ References
 
 [1] Angelopoulos, A. N., & Bates, S. (2021). A gentle introduction to conformal
 prediction and distribution-free uncertainty quantification. arXiv preprint arXiv:2107.07511.
+[2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. &amp; Brunel, N.. (2023).
+Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library.
+Available from https://proceedings.mlr.press/v204/cordier23a.html.
