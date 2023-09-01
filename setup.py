@@ -28,9 +28,6 @@ PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
 INSTALL_REQUIRES = [
     "scikit-learn",
-    "scipy",
-    "numpy>=1.21",
-    "joblib",
     "packaging",
 ]
 CLASSIFIERS = [
