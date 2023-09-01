@@ -78,11 +78,12 @@ colors = {
 }
 
 for i in range(7):
+    color = y[n_samples * i]
     plt.scatter(
-        X[n_samples * i:n_samples * (i + 1), 0],
-        X[n_samples * i:n_samples * (i + 1), 1],
-        color=colors[tuple(y[n_samples * i])]["color"],
-        marker='o',
+        X[n_samples * i : n_samples * (i + 1), 0],
+        X[n_samples * i : n_samples * (i + 1), 1],
+        color=colors[(color[0], color[1], color[2])]["color"],
+        marker="o",
         s=10,
         edgecolor='k'
     )
