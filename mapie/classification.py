@@ -9,18 +9,33 @@ from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
 from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
-from sklearn.utils.multiclass import (check_classification_targets,
-                                      type_of_target)
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.multiclass import (
+    check_classification_targets,
+    type_of_target,
+)
+from sklearn.utils.validation import (
+    _check_y,
+    _num_samples,
+    check_is_fitted,
+    indexable,
+)
 
 from ._machine_precision import EPSILON
 from ._typing import ArrayLike, NDArray
 from .metrics import classification_mean_width_score
-from .utils import (check_alpha, check_alpha_and_n_samples, check_cv,
-                    check_estimator_classification, check_n_features_in,
-                    check_n_jobs, check_null_weight, check_verbose,
-                    compute_quantiles, fit_estimator, fix_number_of_classes)
+from .utils import (
+    check_alpha,
+    check_alpha_and_n_samples,
+    check_cv,
+    check_estimator_classification,
+    check_n_features_in,
+    check_n_jobs,
+    check_null_weight,
+    check_verbose,
+    compute_quantiles,
+    fit_estimator,
+    fix_number_of_classes,
+)
 
 
 class MapieClassifier(BaseEstimator, ClassifierMixin):
@@ -192,7 +207,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         "n_features_in_",
         "conformity_scores_",
         "classes_",
-        "label_encoder_"
+        "label_encoder_",
     ]
 
     def __init__(
@@ -203,7 +218,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         test_size: Optional[Union[int, float]] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
-        verbose: int = 0
+        verbose: int = 0,
     ) -> None:
         self.estimator = estimator
         self.method = method
@@ -224,8 +239,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         if self.method not in self.valid_methods_:
             raise ValueError(
-                "Invalid method. "
-                f"Allowed values are {self.valid_methods_}."
+                "Invalid method. " f"Allowed values are {self.valid_methods_}."
             )
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
@@ -252,8 +266,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
 
     def _check_include_last_label(
-        self,
-        include_last_label: Optional[Union[bool, str]]
+        self, include_last_label: Optional[Union[bool, str]]
     ) -> Optional[Union[bool, str]]:
         """
         Check if include_last_label is a boolean or a string.
@@ -284,9 +297,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             "Invalid include_last_label argument. "
             "Should be a boolean or 'randomized'."
         """
-        if (
-            (not isinstance(include_last_label, bool)) and
-            (not include_last_label == "randomized")
+        if (not isinstance(include_last_label, bool)) and (
+            not include_last_label == "randomized"
         ):
             raise ValueError(
                 "Invalid include_last_label argument. "
@@ -296,9 +308,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             return include_last_label
 
     def _check_proba_normalized(
-        self,
-        y_pred_proba: ArrayLike,
-        axis: int = 1
+        self, y_pred_proba: ArrayLike, axis: int = 1
     ) -> NDArray:
         """
         Check if, for all the observations, the sum of
@@ -326,7 +336,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             np.sum(y_pred_proba, axis=axis),
             1,
             err_msg="The sum of the scores is not equal to one.",
-            rtol=1e-5
+            rtol=1e-5,
         )
         y_pred_proba = cast(NDArray, y_pred_proba).astype(np.float64)
         return y_pred_proba
@@ -335,7 +345,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self,
         y_pred_proba_cumsum: NDArray,
         threshold: NDArray,
-        include_last_label: Optional[Union[bool, str]]
+        include_last_label: Optional[Union[bool, str]],
     ) -> NDArray:
         """
         Return the index of the last included sorted probability
@@ -366,27 +376,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         NDArray of shape (n_samples, n_alpha)
             Index of the last included sorted probability.
         """
-        if (
-            (include_last_label) or
-            (include_last_label == 'randomized')
-        ):
-            y_pred_index_last = (
-                    np.ma.masked_less(
-                        y_pred_proba_cumsum
-                        - threshold[np.newaxis, :],
-                        -EPSILON
-                    ).argmin(axis=1)
-            )
-        elif (include_last_label is False):
+        if (include_last_label) or (include_last_label == "randomized"):
+            y_pred_index_last = np.ma.masked_less(
+                y_pred_proba_cumsum - threshold[np.newaxis, :], -EPSILON
+            ).argmin(axis=1)
+        elif include_last_label is False:
             max_threshold = np.maximum(
-                threshold[np.newaxis, :],
-                np.min(y_pred_proba_cumsum, axis=1)
+                threshold[np.newaxis, :], np.min(y_pred_proba_cumsum, axis=1)
             )
             y_pred_index_last = np.argmax(
                 np.ma.masked_greater(
                     y_pred_proba_cumsum - max_threshold[:, np.newaxis, :],
-                    EPSILON
-                ), axis=1
+                    EPSILON,
+                ),
+                axis=1,
             )
         else:
             raise ValueError(
@@ -403,7 +406,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred_proba_last: NDArray,
         threshold: NDArray,
         lambda_star: Union[NDArray, float, None],
-        k_star: Union[NDArray, None]
+        k_star: Union[NDArray, None],
     ) -> NDArray:
         """
         Randomly remove last label from prediction set based on the
@@ -449,29 +452,22 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         # get cumsumed probabilities up to last retained label
         y_proba_last_cumsumed = np.squeeze(
-            np.take_along_axis(
-                y_pred_proba_cumsum,
-                y_pred_index_last,
-                axis=1
-            ), axis=1
+            np.take_along_axis(y_pred_proba_cumsum, y_pred_index_last, axis=1),
+            axis=1,
         )
 
         if self.method == "cumulated_score":
             # compute V parameter from Romano+(2020)
             vs = (
-                (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
-                y_pred_proba_last[:, 0, :]
-            )
+                y_proba_last_cumsumed - threshold.reshape(1, -1)
+            ) / y_pred_proba_last[:, 0, :]
         else:
             # compute V parameter from Angelopoulos+(2020)
             L = np.sum(prediction_sets, axis=1)
-            vs = (
-                (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
-                (
-                    y_pred_proba_last[:, 0, :] -
-                    lambda_star * np.maximum(0, L - k_star) +
-                    lambda_star * (L > k_star)
-                )
+            vs = (y_proba_last_cumsumed - threshold.reshape(1, -1)) / (
+                y_pred_proba_last[:, 0, :]
+                - lambda_star * np.maximum(0, L - k_star)
+                + lambda_star * (L > k_star)
             )
 
         # get random numbers for each observation and alpha value
@@ -483,7 +479,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             prediction_sets,
             y_pred_index_last,
             vs_less_than_us[:, np.newaxis, :],
-            axis=1
+            axis=1,
         )
         return prediction_sets
 
@@ -511,9 +507,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # we enforce y_pred_proba to contain all labels included in y
         if len(estimator.classes_) != self.n_classes_:
             y_pred_proba = fix_number_of_classes(
-                self.n_classes_,
-                estimator.classes_,
-                y_pred_proba
+                self.n_classes_, estimator.classes_, y_pred_proba
             )
         y_pred_proba = self._check_proba_normalized(y_pred_proba)
         return y_pred_proba
@@ -588,9 +582,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         return estimator, y_pred_proba, val_id, val_index
 
     def _get_true_label_cumsum_proba(
-        self,
-        y: ArrayLike,
-        y_pred_proba: NDArray
+        self, y: ArrayLike, y_pred_proba: NDArray
     ) -> Tuple[NDArray, NDArray]:
         """
         Compute the cumsumed probability of the true label.
@@ -609,9 +601,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         is the cumsum probability of the true label. The second
         is the sorted position of the true label.
         """
-        y_true = label_binarize(
-            y=y, classes=self.classes_
-        )
+        y_true = label_binarize(y=y, classes=self.classes_)
         index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
         y_pred_proba_sorted = np.take_along_axis(
             y_pred_proba, index_sorted, axis=1
@@ -630,7 +620,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         k_star: NDArray,
         lambda_: Union[NDArray, float],
         conf_score: NDArray,
-        cutoff: NDArray
+        cutoff: NDArray,
     ) -> NDArray:
         """
         Regularize the conformity scores with the RAPS
@@ -657,22 +647,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         conf_score = np.repeat(
             conf_score[:, :, np.newaxis], len(k_star), axis=2
         )
-        cutoff = np.repeat(
-            cutoff[:, np.newaxis], len(k_star), axis=1
-        )
+        cutoff = np.repeat(cutoff[:, np.newaxis], len(k_star), axis=1)
         conf_score += np.maximum(
-            np.expand_dims(
-                lambda_ * (cutoff - k_star),
-                axis=1
-            ),
-            0
+            np.expand_dims(lambda_ * (cutoff - k_star), axis=1), 0
         )
         return conf_score
 
     def _get_true_label_position(
-        self,
-        y_pred_proba: NDArray,
-        y: NDArray
+        self, y_pred_proba: NDArray, y: NDArray
     ) -> NDArray:
         """
         Return the sorted position of the true label in the
@@ -690,14 +672,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         NDArray of shape (n_samples, 1)
             Position of the true label in the prediction.
         """
-        index = np.argsort(
-                np.fliplr(np.argsort(y_pred_proba, axis=1))
-            )
-        position = np.take_along_axis(
-            index,
-            y.reshape(-1, 1),
-            axis=1
-        )
+        index = np.argsort(np.fliplr(np.argsort(y_pred_proba, axis=1)))
+        position = np.take_along_axis(index, y.reshape(-1, 1), axis=1)
 
         return position
 
@@ -707,7 +683,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         thresholds: NDArray,
         include_last_label: Union[bool, str, None],
         lambda_: Union[NDArray, float, None],
-        k_star: Union[NDArray, Any]
+        k_star: Union[NDArray, Any],
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Function that returns the smallest score
@@ -738,46 +714,36 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             with the RAPS method, the index of the last included score
             and the value of the last included score.
         """
-        index_sorted = np.flip(
-            np.argsort(y_pred_proba, axis=1), axis=1
-        )
+        index_sorted = np.flip(np.argsort(y_pred_proba, axis=1), axis=1)
         # sort probabilities by decreasing order
         y_pred_proba_sorted = np.take_along_axis(
             y_pred_proba, index_sorted, axis=1
         )
         # get sorted cumulated score
-        y_pred_proba_sorted_cumsum = np.cumsum(
-            y_pred_proba_sorted, axis=1
-        )
+        y_pred_proba_sorted_cumsum = np.cumsum(y_pred_proba_sorted, axis=1)
 
         if self.method == "raps":
             y_pred_proba_sorted_cumsum += lambda_ * np.maximum(
                 0,
-                np.cumsum(
-                    np.ones(y_pred_proba_sorted_cumsum.shape),
-                    axis=1
-                ) - k_star
+                np.cumsum(np.ones(y_pred_proba_sorted_cumsum.shape), axis=1)
+                - k_star,
             )
         # get cumulated score at their original position
         y_pred_proba_cumsum = np.take_along_axis(
             y_pred_proba_sorted_cumsum,
             np.argsort(index_sorted, axis=1),
-            axis=1
+            axis=1,
         )
         # get index of the last included label
         y_pred_index_last = self._get_last_index_included(
-            y_pred_proba_cumsum,
-            thresholds,
-            include_last_label
+            y_pred_proba_cumsum, thresholds, include_last_label
         )
         # get the probability of the last included label
         y_pred_proba_last = np.take_along_axis(
-            y_pred_proba,
-            y_pred_index_last,
-            axis=1
+            y_pred_proba, y_pred_index_last, axis=1
         )
 
-        zeros_scores_proba_last = (y_pred_proba_last <= EPSILON)
+        zeros_scores_proba_last = y_pred_proba_last <= EPSILON
 
         # If the last included proba is zero, change it to the
         # smallest non-zero value to avoid inluding them in the
@@ -785,12 +751,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if np.sum(zeros_scores_proba_last) > 0:
             y_pred_proba_last[zeros_scores_proba_last] = np.expand_dims(
                 np.min(
-                    np.ma.masked_less(
-                        y_pred_proba,
-                        EPSILON
-                    ).filled(fill_value=np.inf),
-                    axis=1
-                ), axis=1
+                    np.ma.masked_less(y_pred_proba, EPSILON).filled(
+                        fill_value=np.inf
+                    ),
+                    axis=1,
+                ),
+                axis=1,
             )[zeros_scores_proba_last]
 
         return y_pred_proba_cumsum, y_pred_index_last, y_pred_proba_last
@@ -801,7 +767,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         alpha_np: NDArray,
         y_ps: NDArray,
         lambda_: Union[NDArray, float],
-        lambda_star: NDArray
+        lambda_star: NDArray,
     ) -> Tuple[NDArray, NDArray]:
         """Update the values of the optimal lambda if the
         average size of the prediction sets decreases with
@@ -831,12 +797,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
 
         sizes = [
-            classification_mean_width_score(
-                y_ps[:, :, i]
-            ) for i in range(len(alpha_np))
+            classification_mean_width_score(y_ps[:, :, i])
+            for i in range(len(alpha_np))
         ]
 
-        sizes_improve = (sizes < best_sizes - EPSILON)
+        sizes_improve = sizes < best_sizes - EPSILON
         lambda_star = (
             sizes_improve * lambda_ + (1 - sizes_improve) * lambda_star
         )
@@ -849,7 +814,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred_proba_raps: NDArray,
         alpha_np: NDArray,
         include_last_label: Union[bool, str, None],
-        k_star: NDArray
+        k_star: NDArray,
     ) -> Union[NDArray, float]:
         """Find the optimal value of lambda for each alpha.
 
@@ -874,24 +839,27 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         lambda_star = np.zeros(len(alpha_np))
         best_sizes = np.full(len(alpha_np), np.finfo(np.float64).max)
 
-        for lambda_ in [.001, .01, .1, .2, .5]:  # values given in paper[3]
-            true_label_cumsum_proba, cutoff = (
-                self._get_true_label_cumsum_proba(
-                    self.y_raps_no_enc,
-                    y_pred_proba_raps[:, :, 0],
-                )
+        for lambda_ in [
+            0.001,
+            0.01,
+            0.1,
+            0.2,
+            0.5,
+        ]:  # values given in paper[3]
+            (
+                true_label_cumsum_proba,
+                cutoff,
+            ) = self._get_true_label_cumsum_proba(
+                self.y_raps_no_enc,
+                y_pred_proba_raps[:, :, 0],
             )
 
             true_label_cumsum_proba_reg = self._regularize_conformity_score(
-                k_star,
-                lambda_,
-                true_label_cumsum_proba,
-                cutoff
+                k_star, lambda_, true_label_cumsum_proba, cutoff
             )
 
             quantiles_ = compute_quantiles(
-                true_label_cumsum_proba_reg,
-                alpha_np
+                true_label_cumsum_proba_reg, alpha_np
             )
 
             _, _, y_pred_proba_last = self._get_last_included_proba(
@@ -899,11 +867,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 quantiles_,
                 include_last_label,
                 lambda_,
-                k_star
+                k_star,
             )
 
             y_ps = np.greater_equal(
-                    y_pred_proba_raps - y_pred_proba_last, -EPSILON
+                y_pred_proba_raps - y_pred_proba_last, -EPSILON
             )
             lambda_star, best_sizes = self._update_size_and_lambda(
                 best_sizes, alpha_np, y_ps, lambda_, lambda_star
@@ -913,7 +881,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         return lambda_star
 
     def _get_classes_info(
-            self, estimator: ClassifierMixin, y: NDArray
+        self, estimator: ClassifierMixin, y: NDArray
     ) -> Tuple[int, NDArray]:
         """
         Compute the number of classes and the classes values
@@ -971,7 +939,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        size_raps: Optional[float] = .2,
+        size_raps: Optional[float] = 0.2,
     ) -> MapieClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -1018,19 +986,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         y = cast(NDArray, y)
 
-        estimator = check_estimator_classification(
-            X,
-            y,
-            cv,
-            self.estimator
-        )
+        estimator = check_estimator_classification(X, y, cv, self.estimator)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
 
         n_samples = _num_samples(y)
 
-        self.n_classes_, self.classes_ = self._get_classes_info(
-            estimator, y
-        )
+        self.n_classes_, self.classes_ = self._get_classes_info(estimator, y)
         enc = LabelEncoder()
         enc.fit(self.classes_)
         y_enc = enc.transform(y)
@@ -1050,11 +1011,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     1, test_size=size_raps, random_state=self.random_state
                 )
                 train_raps_index, val_raps_index = next(raps_split.split(X))
-                X, self.X_raps, y_enc, self.y_raps =\
-                    _safe_indexing(X, train_raps_index),\
-                    _safe_indexing(X, val_raps_index),\
-                    _safe_indexing(y_enc, train_raps_index),\
-                    _safe_indexing(y_enc, val_raps_index)
+                X, self.X_raps, y_enc, self.y_raps = (
+                    _safe_indexing(X, train_raps_index),
+                    _safe_indexing(X, val_raps_index),
+                    _safe_indexing(y_enc, train_raps_index),
+                    _safe_indexing(y_enc, val_raps_index),
+                )
                 self.y_raps_no_enc = self.label_encoder_.inverse_transform(
                     self.y_raps
                 )
@@ -1077,8 +1039,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     clone(estimator), X, y, sample_weight
                 )
                 y_pred_proba = np.empty(
-                    (n_samples, self.n_classes_),
-                    dtype=float
+                    (n_samples, self.n_classes_), dtype=float
                 )
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_and_predict_oof_model)(
@@ -1096,11 +1057,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     self.estimators_,
                     predictions_list,
                     val_ids_list,
-                    val_indices_list
+                    val_indices_list,
                 ) = map(list, zip(*outputs))
                 predictions = np.concatenate(
-                    cast(List[NDArray],
-                         predictions_list)
+                    cast(List[NDArray], predictions_list)
                 )
                 val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
                 val_indices = np.concatenate(
@@ -1123,27 +1083,23 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     self.X_raps
                 )
                 self.position_raps = self._get_true_label_position(
-                    self.y_pred_proba_raps,
-                    self.y_raps
+                    self.y_pred_proba_raps, self.y_raps
                 )
 
             # Conformity scores
             if self.method == "naive":
                 self.conformity_scores_ = np.empty(
-                    y_pred_proba.shape,
-                    dtype="float"
+                    y_pred_proba.shape, dtype="float"
                 )
             elif self.method == "score":
                 self.conformity_scores_ = np.take_along_axis(
                     1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1
                 )
             elif self.method in ["cumulated_score", "raps"]:
-                self.conformity_scores_, self.cutoff = (
-                    self._get_true_label_cumsum_proba(
-                        y,
-                        y_pred_proba
-                    )
-                )
+                (
+                    self.conformity_scores_,
+                    self.cutoff,
+                ) = self._get_true_label_cumsum_proba(y, y_pred_proba)
                 y_proba_true = np.take_along_axis(
                     y_pred_proba, y_enc.reshape(-1, 1), axis=1
                 )
@@ -1155,8 +1111,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 # and get the position of each label from decreasing
                 # probability
                 self.conformity_scores_ = self._get_true_label_position(
-                    y_pred_proba,
-                    y_enc
+                    y_pred_proba, y_enc
                 )
             else:
                 raise ValueError(
@@ -1189,7 +1144,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         include_last_label: Optional[Union[bool, str]] = True,
-        agg_scores: Optional[str] = "mean"
+        agg_scores: Optional[str] = "mean",
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Prediction prediction sets on new samples based on target confidence
@@ -1285,9 +1240,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
         else:
             y_pred_proba_k = np.asarray(
-                Parallel(
-                    n_jobs=self.n_jobs, verbose=self.verbose
-                )(
+                Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._predict_oof_model)(estimator, X)
                     for estimator in self.estimators_
                 )
@@ -1313,37 +1266,31 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 if self.method == "raps":
                     check_alpha_and_n_samples(alpha_np, len(self.X_raps))
-                    k_star = compute_quantiles(
-                        self.position_raps,
-                        alpha_np
-                    ) + 1
+                    k_star = (
+                        compute_quantiles(self.position_raps, alpha_np) + 1
+                    )
                     y_pred_proba_raps = np.repeat(
                         self.y_pred_proba_raps[:, :, np.newaxis],
                         len(alpha_np),
-                        axis=2
+                        axis=2,
                     )
                     lambda_star = self._find_lambda_star(
-                        y_pred_proba_raps,
-                        alpha_np,
-                        include_last_label,
-                        k_star
+                        y_pred_proba_raps, alpha_np, include_last_label, k_star
                     )
                     self.conformity_scores_regularized = (
                         self._regularize_conformity_score(
-                                    k_star,
-                                    lambda_star,
-                                    self.conformity_scores_,
-                                    self.cutoff
+                            k_star,
+                            lambda_star,
+                            self.conformity_scores_,
+                            self.cutoff,
                         )
                     )
                     self.quantiles_ = compute_quantiles(
-                        self.conformity_scores_regularized,
-                        alpha_np
+                        self.conformity_scores_regularized, alpha_np
                     )
                 else:
                     self.quantiles_ = compute_quantiles(
-                        self.conformity_scores_,
-                        alpha_np
+                        self.conformity_scores_, alpha_np
                     )
             else:
                 self.quantiles_ = (n + 1) * (1 - alpha_np)
@@ -1357,7 +1304,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             else:
                 y_pred_included = np.less_equal(
                     (1 - y_pred_proba) - self.conformity_scores_.ravel(),
-                    EPSILON
+                    EPSILON,
                 ).sum(axis=2)
                 prediction_sets = np.stack(
                     [
@@ -1365,7 +1312,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                             y_pred_included - _alpha * (n - 1), -EPSILON
                         )
                         for _alpha in alpha_np
-                    ], axis=2
+                    ],
+                    axis=2,
                 )
 
         elif self.method in ["cumulated_score", "naive", "raps"]:
@@ -1375,14 +1323,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             else:
                 thresholds = self.conformity_scores_.ravel()
             # sort labels by decreasing probability
-            y_pred_proba_cumsum, y_pred_index_last, y_pred_proba_last = (
-                self._get_last_included_proba(
-                    y_pred_proba,
-                    thresholds,
-                    include_last_label,
-                    lambda_star,
-                    k_star,
-                )
+            (
+                y_pred_proba_cumsum,
+                y_pred_index_last,
+                y_pred_proba_last,
+            ) = self._get_last_included_proba(
+                y_pred_proba,
+                thresholds,
+                include_last_label,
+                lambda_star,
+                k_star,
             )
             # get the prediction set by taking all probabilities
             # above the last one
@@ -1403,7 +1353,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     y_pred_proba_last,
                     thresholds,
                     lambda_star,
-                    k_star
+                    k_star,
                 )
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 prediction_sets = y_pred_included
@@ -1413,35 +1363,31 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 prediction_sets = np.less_equal(
                     prediction_sets_summed[:, :, np.newaxis]
                     - self.quantiles_[np.newaxis, np.newaxis, :],
-                    EPSILON
+                    EPSILON,
                 )
         elif self.method == "top_k":
             y_pred_proba = y_pred_proba[:, :, 0]
             index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
             y_pred_index_last = np.stack(
-                [
-                    index_sorted[:, quantile]
-                    for quantile in self.quantiles_
-                ], axis=1
+                [index_sorted[:, quantile] for quantile in self.quantiles_],
+                axis=1,
             )
             y_pred_proba_last = np.stack(
                 [
                     np.take_along_axis(
                         y_pred_proba,
                         y_pred_index_last[:, iq].reshape(-1, 1),
-                        axis=1
+                        axis=1,
                     )
                     for iq, _ in enumerate(self.quantiles_)
-                ], axis=2
+                ],
+                axis=2,
             )
             prediction_sets = np.greater_equal(
-                y_pred_proba[:, :, np.newaxis]
-                - y_pred_proba_last,
-                -EPSILON
+                y_pred_proba[:, :, np.newaxis] - y_pred_proba_last, -EPSILON
             )
         else:
             raise ValueError(
-                "Invalid method. "
-                f"Allowed values are {self.valid_methods_}."
+                "Invalid method. " f"Allowed values are {self.valid_methods_}."
             )
         return y_pred, prediction_sets

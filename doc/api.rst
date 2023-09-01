@@ -48,7 +48,7 @@ Metrics
 .. autosummary::
    :toctree: generated/
    :template: function.rst
-   
+
    metrics.regression_coverage_score
    metrics.classification_coverage_score
    metrics.regression_mean_width_score

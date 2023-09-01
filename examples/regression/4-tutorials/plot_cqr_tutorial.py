@@ -41,8 +41,10 @@ from scipy.stats import randint, uniform
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import KFold, RandomizedSearchCV, train_test_split
 
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics import (
+    regression_coverage_score,
+    regression_mean_width_score,
+)
 from mapie.regression import MapieQuantileRegressor, MapieRegressor
 from mapie.subsample import Subsample
 
@@ -74,8 +76,8 @@ y = pd.DataFrame(data=data.target) * 100
 
 
 df = pd.concat([X, y], axis=1)
-pear_corr = df.corr(method='pearson')
-pear_corr.style.background_gradient(cmap='Greens', axis=0)
+pear_corr = df.corr(method="pearson")
+pear_corr.style.background_gradient(cmap="Greens", axis=0)
 
 
 ##############################################################################
@@ -86,7 +88,7 @@ fig, axs = plt.subplots(1, 1, figsize=(5, 5))
 axs.hist(y, bins=50)
 axs.set_xlabel("Median price of houses")
 axs.set_title("Histogram of house prices")
-axs.xaxis.set_major_formatter(FormatStrFormatter('%.0f' + "k"))
+axs.xaxis.set_major_formatter(FormatStrFormatter("%.0f" + "k"))
 plt.show()
 
 
@@ -97,14 +99,10 @@ plt.show()
 
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y['MedHouseVal'],
-    random_state=random_state
+    X, y["MedHouseVal"], random_state=random_state
 )
 X_train, X_calib, y_train, y_calib = train_test_split(
-    X_train,
-    y_train,
-    random_state=random_state
+    X_train, y_train, random_state=random_state
 )
 
 
@@ -119,15 +117,13 @@ X_train, X_calib, y_train, y_calib = train_test_split(
 
 
 estimator = LGBMRegressor(
-    objective='quantile',
-    alpha=0.5,
-    random_state=random_state
+    objective="quantile", alpha=0.5, random_state=random_state
 )
 params_distributions = dict(
     num_leaves=randint(low=10, high=50),
     max_depth=randint(low=3, high=20),
     n_estimators=randint(low=50, high=100),
-    learning_rate=uniform()
+    learning_rate=uniform(),
 )
 optim_model = RandomizedSearchCV(
     estimator,
@@ -135,7 +131,7 @@ optim_model = RandomizedSearchCV(
     n_jobs=-1,
     n_iter=10,
     cv=KFold(n_splits=5, shuffle=True),
-    verbose=0
+    verbose=0,
 )
 optim_model.fit(X_train, y_train)
 estimator = optim_model.best_estimator_
@@ -176,43 +172,51 @@ def plot_prediction_intervals(
     upper_bound,
     coverage,
     width,
-    num_plots_idx
+    num_plots_idx,
 ):
     """
     Plot of the prediction intervals for each different conformal
     method.
     """
-    axs.yaxis.set_major_formatter(FormatStrFormatter('%.0f' + "k"))
-    axs.xaxis.set_major_formatter(FormatStrFormatter('%.0f' + "k"))
+    axs.yaxis.set_major_formatter(FormatStrFormatter("%.0f" + "k"))
+    axs.xaxis.set_major_formatter(FormatStrFormatter("%.0f" + "k"))
 
     lower_bound_ = np.take(lower_bound, num_plots_idx)
     y_pred_sorted_ = np.take(y_pred_sorted, num_plots_idx)
     y_test_sorted_ = np.take(y_test_sorted, num_plots_idx)
 
-    error = y_pred_sorted_-lower_bound_
+    error = y_pred_sorted_ - lower_bound_
 
-    warning1 = y_test_sorted_ > y_pred_sorted_+error
-    warning2 = y_test_sorted_ < y_pred_sorted_-error
+    warning1 = y_test_sorted_ > y_pred_sorted_ + error
+    warning2 = y_test_sorted_ < y_pred_sorted_ - error
     warnings = warning1 + warning2
     axs.errorbar(
         y_test_sorted_[~warnings],
         y_pred_sorted_[~warnings],
         yerr=error[~warnings],
-        capsize=5, marker="o", elinewidth=2, linewidth=0,
-        label="Inside prediction interval"
-        )
+        capsize=5,
+        marker="o",
+        elinewidth=2,
+        linewidth=0,
+        label="Inside prediction interval",
+    )
     axs.errorbar(
         y_test_sorted_[warnings],
         y_pred_sorted_[warnings],
         yerr=error[warnings],
-        capsize=5, marker="o", elinewidth=2, linewidth=0, color="red",
-        label="Outside prediction interval"
-        )
+        capsize=5,
+        marker="o",
+        elinewidth=2,
+        linewidth=0,
+        color="red",
+        label="Outside prediction interval",
+    )
     axs.scatter(
         y_test_sorted_[warnings],
         y_test_sorted_[warnings],
-        marker="*", color="green",
-        label="True value"
+        marker="*",
+        color="green",
+        label="True value",
     )
     axs.set_xlabel("True house prices in $")
     axs.set_ylabel("Prediction of house prices in $")
@@ -221,15 +225,15 @@ def plot_prediction_intervals(
             f"Coverage: {np.round(coverage, round_to)}\n"
             + f"Interval width: {np.round(width, round_to)}"
         ),
-        xy=(np.min(y_test_sorted_)*3, np.max(y_pred_sorted_+error)*0.95),
-        )
+        xy=(np.min(y_test_sorted_) * 3, np.max(y_pred_sorted_ + error) * 0.95),
+    )
     lims = [
         np.min([axs.get_xlim(), axs.get_ylim()]),  # min of both axes
         np.max([axs.get_xlim(), axs.get_ylim()]),  # max of both axes
     ]
-    axs.plot(lims, lims, '--', alpha=0.75, color="black", label="x=y")
+    axs.plot(lims, lims, "--", alpha=0.75, color="black", label="x=y")
     axs.add_artist(ab)
-    axs.set_title(title, fontweight='bold')
+    axs.set_title(title, fontweight="bold")
 
 
 ##############################################################################
@@ -253,7 +257,7 @@ def plot_prediction_intervals(
 # (``quantile_estimator_params``) and that we will use symmetrical residuals.
 
 
-STRATEGIES = {
+STRATEGIES: dict[str, dict] = {
     "naive": {"method": "naive"},
     "cv_plus": {"method": "plus", "cv": 10},
     "jackknife_plus_ab": {"method": "plus", "cv": Subsample(n_resamplings=50)},
@@ -275,17 +279,14 @@ for strategy, params in STRATEGIES.items():
         y_test_sorted[strategy],
         y_pred_sorted[strategy],
         lower_bound[strategy],
-        upper_bound[strategy]
+        upper_bound[strategy],
     ) = sort_y_values(y_test, y_pred[strategy], y_pis[strategy])
     coverage[strategy] = regression_coverage_score(
-        y_test,
-        y_pis[strategy][:, 0, 0],
-        y_pis[strategy][:, 1, 0]
-        )
+        y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
+    )
     width[strategy] = regression_mean_width_score(
-        y_pis[strategy][:, 0, 0],
-        y_pis[strategy][:, 1, 0]
-        )
+        y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
+    )
 
 
 ##############################################################################
@@ -295,8 +296,8 @@ for strategy, params in STRATEGIES.items():
 
 perc_obs_plot = 0.02
 num_plots = rng.choice(
-    len(y_test), int(perc_obs_plot*len(y_test)), replace=False
-    )
+    len(y_test), int(perc_obs_plot * len(y_test)), replace=False
+)
 fig, axs = plt.subplots(2, 2, figsize=(15, 13))
 coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
 for strategy, coord in zip(STRATEGIES.keys(), coords):
@@ -309,17 +310,20 @@ for strategy, coord in zip(STRATEGIES.keys(), coords):
         upper_bound[strategy],
         coverage[strategy],
         width[strategy],
-        num_plots
-        )
+        num_plots,
+    )
 lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
+lines: list
+labels: list
 lines, labels = [sum(_, []) for _ in zip(*lines_labels)]
 plt.legend(
-    lines[:4], labels[:4],
-    loc='upper center',
+    lines[:4],
+    labels[:4],
+    loc="upper center",
     bbox_to_anchor=(0, -0.15),
     fancybox=True,
     shadow=True,
-    ncol=2
+    ncol=2,
 )
 plt.show()
 
@@ -332,13 +336,7 @@ plt.show()
 
 
 def get_coverages_widths_by_bins(
-    want,
-    y_test,
-    y_pred,
-    lower_bound,
-    upper_bound,
-    STRATEGIES,
-    bins
+    want, y_test, y_pred, lower_bound, upper_bound, STRATEGIES, bins
 ):
     """
     Given the results from MAPIE, this function split the data
@@ -350,25 +348,25 @@ def get_coverages_widths_by_bins(
     for item in cuts_:
         cuts.append(item.left)
     cuts.append(cuts_[-1].right)
-    cuts.append(np.max(y_test["naive"])+1)
+    cuts.append(np.max(y_test["naive"]) + 1)
     recap = {}
     for i in range(len(cuts) - 1):
-        cut1, cut2 = cuts[i], cuts[i+1]
+        cut1, cut2 = cuts[i], cuts[i + 1]
         name = f"[{np.round(cut1, 0)}, {np.round(cut2, 0)}]"
         recap[name] = []
         for strategy in STRATEGIES:
             indices = np.where(
                 (y_test[strategy] > cut1) * (y_test[strategy] <= cut2)
-                )
+            )
             y_test_trunc = np.take(y_test[strategy], indices)
             y_low_ = np.take(lower_bound[strategy], indices)
             y_high_ = np.take(upper_bound[strategy], indices)
             if want == "coverage":
-                recap[name].append(regression_coverage_score(
-                    y_test_trunc[0],
-                    y_low_[0],
-                    y_high_[0]
-                ))
+                recap[name].append(
+                    regression_coverage_score(
+                        y_test_trunc[0], y_low_[0], y_high_[0]
+                    )
+                )
             elif want == "width":
                 recap[name].append(
                     regression_mean_width_score(y_low_[0], y_high_[0])
@@ -385,7 +383,7 @@ binned_data = get_coverages_widths_by_bins(
     lower_bound,
     upper_bound,
     STRATEGIES,
-    bins
+    bins,
 )
 
 
@@ -422,7 +420,7 @@ binned_data = get_coverages_widths_by_bins(
     lower_bound,
     upper_bound,
     STRATEGIES,
-    bins
+    bins,
 )
 
 

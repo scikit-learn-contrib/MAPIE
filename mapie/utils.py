@@ -5,14 +5,23 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
-                                     BaseShuffleSplit, ShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import (
+    BaseCrossValidator,
+    KFold,
+    LeaveOneOut,
+    BaseShuffleSplit,
+    ShuffleSplit,
+    train_test_split,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (_check_sample_weight, _num_features,
-                                      check_is_fitted, column_or_1d)
+from sklearn.utils.validation import (
+    _check_sample_weight,
+    _num_features,
+    check_is_fitted,
+    column_or_1d,
+)
 
 from ._compatibility import np_quantile
 from ._typing import ArrayLike, NDArray
@@ -175,16 +184,12 @@ def check_cv(
         random_seeds = cast(list, np.random.get_state())[1]
         random_state = np.random.choice(random_seeds)
     if cv is None:
-        return KFold(
-            n_splits=5, shuffle=True, random_state=random_state
-        )
+        return KFold(n_splits=5, shuffle=True, random_state=random_state)
     elif isinstance(cv, int):
         if cv == -1:
             return LeaveOneOut()
         elif cv >= 2:
-            return KFold(
-                n_splits=cv, shuffle=True, random_state=random_state
-            )
+            return KFold(n_splits=cv, shuffle=True, random_state=random_state)
         else:
             raise ValueError(
                 "Invalid cv argument. "
@@ -251,8 +256,7 @@ def check_alpha(
         )
     if len(alpha_np.shape) != 1:
         raise ValueError(
-            "Invalid alpha."
-            "Please provide a one-dimensional list of values."
+            "Invalid alpha." "Please provide a one-dimensional list of values."
         )
     if alpha_np.dtype.type not in [np.float64, np.float32]:
         raise ValueError(
@@ -318,7 +322,7 @@ def check_n_features_in(
         if cast(Any, estimator).n_features_in_ != n_features_in:
             raise ValueError(
                 "Invalid mismatch between ",
-                "X.shape and estimator.n_features_in_."
+                "X.shape and estimator.n_features_in_.",
             )
     return n_features_in
 
@@ -359,6 +363,7 @@ def check_alpha_and_n_samples(
     """
     if isinstance(alphas, float):
         alphas = np.array([alphas])
+    alphas = cast(list, alphas)
     for alpha in alphas:
         if n < 1 / alpha or n < 1 / (1 - alpha):
             raise ValueError(
@@ -721,8 +726,12 @@ def get_calib_set(
     shuffle: Optional[bool] = True,
     stratify: Optional[ArrayLike] = None,
 ) -> Tuple[
-    ArrayLike, ArrayLike, ArrayLike, ArrayLike,
-    Optional[NDArray], Optional[NDArray]
+    ArrayLike,
+    ArrayLike,
+    ArrayLike,
+    ArrayLike,
+    Optional[NDArray],
+    Optional[NDArray],
 ]:
     """
     Split the dataset into training and calibration sets.
@@ -751,40 +760,42 @@ def get_calib_set(
         sample_weight_calib
     """
     if sample_weight is None:
-        (
-            X_train, X_calib, y_train, y_calib
-        ) = train_test_split(
-                X,
-                y,
-                test_size=calib_size,
-                random_state=random_state,
-                shuffle=shuffle,
-                stratify=stratify
+        (X_train, X_calib, y_train, y_calib) = train_test_split(
+            X,
+            y,
+            test_size=calib_size,
+            random_state=random_state,
+            shuffle=shuffle,
+            stratify=stratify,
         )
         sample_weight_train = sample_weight
         sample_weight_calib = None
     else:
         (
-                X_train,
-                X_calib,
-                y_train,
-                y_calib,
-                sample_weight_train,
-                sample_weight_calib,
+            X_train,
+            X_calib,
+            y_train,
+            y_calib,
+            sample_weight_train,
+            sample_weight_calib,
         ) = train_test_split(
-                X,
-                y,
-                sample_weight,
-                test_size=calib_size,
-                random_state=random_state,
-                shuffle=shuffle,
-                stratify=stratify
+            X,
+            y,
+            sample_weight,
+            test_size=calib_size,
+            random_state=random_state,
+            shuffle=shuffle,
+            stratify=stratify,
         )
     X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
     y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
     return (
-        X_train, y_train, X_calib, y_calib,
-        sample_weight_train, sample_weight_calib
+        X_train,
+        y_train,
+        X_calib,
+        y_calib,
+        sample_weight_train,
+        sample_weight_calib,
     )
 
 
@@ -876,11 +887,9 @@ def get_binning_groups(
         bins = np.linspace(0.0, 1.0, num_bins)
     else:
         bin_groups = np.array_split(y_score, num_bins)
-        bins = np.sort(np.array(
-                [
-                    bin_group.max() for bin_group in bin_groups[:-1]
-                ]
-                + [np.inf]
+        bins = np.sort(
+            np.array(
+                [bin_group.max() for bin_group in bin_groups[:-1]] + [np.inf]
             )
         )
     return bins
@@ -936,9 +945,7 @@ def calc_bins(
     return bins, bin_accs, bin_confs, bin_sizes  # type: ignore
 
 
-def check_split_strategy(
-    strategy: Optional[str]
-) -> str:
+def check_split_strategy(strategy: Optional[str]) -> str:
     """
     Checks that the split strategy provided is valid
     and defults None split strategy to "uniform".
@@ -960,15 +967,11 @@ def check_split_strategy(
     if strategy is None:
         strategy = "uniform"
     if strategy not in SPLIT_STRATEGIES:
-        raise ValueError(
-            "Please provide a valid splitting strategy."
-        )
+        raise ValueError("Please provide a valid splitting strategy.")
     return strategy
 
 
-def check_number_bins(
-    num_bins: int
-) -> int:
+def check_number_bins(num_bins: int) -> int:
     """
     Checks that the bin specified is a number.
 
@@ -987,9 +990,7 @@ def check_number_bins(
         When num_bins is a negative number is raises an error.
     """
     if isinstance(num_bins, int) is False:
-        raise ValueError(
-            "Please provide a bin number as an integer."
-        )
+        raise ValueError("Please provide a bin number as an integer.")
     elif num_bins < 1:
         raise ValueError(
             """
@@ -1001,9 +1002,7 @@ def check_number_bins(
         return num_bins
 
 
-def check_binary_zero_one(
-    y_true: ArrayLike
-) -> NDArray:
+def check_binary_zero_one(y_true: ArrayLike) -> NDArray:
     """
     Checks if the array is binary and changes a non binary array
     to a zero, one array.
@@ -1026,8 +1025,9 @@ def check_binary_zero_one(
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     if type_of_target(y_true) == "binary":
-        if ((np.unique(y_true) != np.array([0, 1])).any() and
-                len(np.unique(y_true)) == 2):
+        if (np.unique(y_true) != np.array([0, 1])).any() and len(
+            np.unique(y_true)
+        ) == 2:
             idx_min = np.where(y_true == np.min(y_true))[0]
             y_true[idx_min] = 0
             idx_max = np.where(y_true == np.max(y_true))[0]
@@ -1036,15 +1036,11 @@ def check_binary_zero_one(
         else:
             return y_true
     else:
-        raise ValueError(
-            "Please provide y_true as a binary array."
-        )
+        raise ValueError("Please provide y_true as a binary array.")
 
 
 def fix_number_of_classes(
-    n_classes_: int,
-    n_classes_training: NDArray,
-    y_proba: NDArray
+    n_classes_: int, n_classes_training: NDArray, y_proba: NDArray
 ) -> NDArray:
     """
     Fix shape of y_proba of validation set if number of classes
@@ -1063,22 +1059,14 @@ def fix_number_of_classes(
     NDArray
         Probabilities with the right number of classes.
     """
-    y_pred_full = np.zeros(
-        shape=(len(y_proba), n_classes_)
-    )
+    y_pred_full = np.zeros(shape=(len(y_proba), n_classes_))
     y_index = np.tile(n_classes_training, (len(y_proba), 1))
-    np.put_along_axis(
-        y_pred_full,
-        y_index,
-        y_proba,
-        axis=1
-    )
+    np.put_along_axis(y_pred_full, y_index, y_proba, axis=1)
     return y_pred_full
 
 
 def check_array_shape_classification(
-    y_true: NDArray,
-    y_pred_set: NDArray
+    y_true: NDArray, y_pred_set: NDArray
 ) -> NDArray:
     """
     Fix shape of y_pred_set (to 3d array of shape (n_obs, n_class, n_alpha)).
@@ -1118,8 +1106,7 @@ def check_array_shape_classification(
 
 
 def check_array_shape_regression(
-    y_true: NDArray,
-    y_intervals: NDArray
+    y_true: NDArray, y_intervals: NDArray
 ) -> NDArray:
     """
     Fix shape of y_intervals (to 3d array of shape (n_obs, 2, n_alpha)).

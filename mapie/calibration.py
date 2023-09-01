@@ -9,13 +9,22 @@ from sklearn.calibration import _SigmoidCalibration
 from sklearn.isotonic import IsotonicRegression
 from sklearn.utils import check_random_state
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import (
+    _check_y,
+    _num_samples,
+    check_is_fitted,
+    indexable,
+)
 
 from ._typing import ArrayLike, NDArray
-from .utils import (check_estimator_classification,
-                    check_estimator_fit_predict, check_n_features_in,
-                    check_null_weight, fit_estimator, get_calib_set)
+from .utils import (
+    check_estimator_classification,
+    check_estimator_fit_predict,
+    check_n_features_in,
+    check_null_weight,
+    fit_estimator,
+    get_calib_set,
+)
 
 
 class MapieCalibrator(BaseEstimator, ClassifierMixin):
@@ -115,7 +124,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     named_calibrators = {
         "sigmoid": _SigmoidCalibration(),
-        "isotonic": IsotonicRegression(out_of_bounds="clip")
+        "isotonic": IsotonicRegression(out_of_bounds="clip"),
     }
 
     valid_methods = ["top_label"]
@@ -162,8 +171,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         if cv in self.valid_cv:
             return cv
         raise ValueError(
-            "Invalid cv argument. "
-            f"Allowed values are {self.valid_cv}."
+            "Invalid cv argument. " f"Allowed values are {self.valid_cv}."
         )
 
     def _check_calibrator(
@@ -201,15 +209,13 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             else:
                 raise ValueError(
                     "Please provide a string in: "
-                    + (", ").join(self.named_calibrators.keys()) + "."
+                    + (", ").join(self.named_calibrators.keys())
+                    + "."
                 )
         check_estimator_fit_predict(calibrator)
         return calibrator
 
-    def _get_labels(
-        self,
-        X: ArrayLike
-    ) -> Tuple[NDArray, NDArray]:
+    def _get_labels(self, X: ArrayLike) -> Tuple[NDArray, NDArray]:
         """
         This method depends on the value of ``method`` and collects the labels
         that are needed to transform a multi-class calibration to multiple
@@ -251,7 +257,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         if self.method not in self.valid_methods:
             raise ValueError(
                 "Invalid method, allowed method are: "
-                + (", ").join(self.valid_methods) + "."
+                + (", ").join(self.valid_methods)
+                + "."
             )
 
     def _check_type_of_target(self, y: ArrayLike):
@@ -266,7 +273,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         if type_of_target(y) not in self.valid_inputs:
             raise ValueError(
                 "Make sure to have one of the allowed targets: "
-                + (", ").join(self.valid_inputs) + "."
+                + (", ").join(self.valid_inputs)
+                + "."
             )
 
     def _fit_calibrator(
@@ -312,12 +320,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
         if sample_weight is not None:
             sample_weight_ = sample_weight[given_label_indices]
-            (
+            (sample_weight_, top_class_prob_, y_calib_) = check_null_weight(
                 sample_weight_, top_class_prob_, y_calib_
-            ) = check_null_weight(
-                sample_weight_,
-                top_class_prob_,
-                y_calib_
             )
         else:
             sample_weight_ = sample_weight
@@ -409,9 +413,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         """
         idx_labels = np.where(y_pred.ravel() == label)[0].ravel()
         if label not in self.calibrators.keys():
-            calibrated_values[
-                idx_labels, idx
-                ] = max_prob[idx_labels].ravel()
+            calibrated_values[idx_labels, idx] = max_prob[idx_labels].ravel()
             warnings.warn(
                 f"WARNING: This predicted label {label} has not been seen "
                 + " during the calibration and therefore scores will remain"
@@ -504,12 +506,13 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             X_train, y_train = indexable(X_train, y_train)
             y_train = _check_y(y_train)
             sw_train, X_train, y_train = check_null_weight(
-                sw_train,
-                X_train,
-                y_train
+                sw_train, X_train, y_train
             )
             estimator = fit_estimator(
-                clone(estimator), X_train, y_train, sw_train,
+                clone(estimator),
+                X_train,
+                y_train,
+                sw_train,
             )
             self.single_estimator_ = estimator
             self.classes_ = self.single_estimator_.classes_

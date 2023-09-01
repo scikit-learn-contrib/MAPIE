@@ -18,7 +18,7 @@ from mapie.subsample import BlockBootstrap
 
 random_state = 1
 X_toy = np.array(range(5)).reshape(-1, 1)
-y_toy = (5.0 + 2.0 * X_toy ** 1.1).flatten()
+y_toy = (5.0 + 2.0 * X_toy**1.1).flatten()
 X, y = make_regression(
     n_samples=500, n_features=10, noise=1.0, random_state=random_state
 )
@@ -76,7 +76,6 @@ WIDTHS = {
     "jackknife_enbpi_mean_ab": 3.76,
     "jackknife_enbpi_median_ab": 3.76,
     "prefit": 4.79,
-
 }
 
 COVERAGES = {
@@ -85,7 +84,6 @@ COVERAGES = {
     "jackknife_enbpi_mean_ab": 0.952,
     "jackknife_enbpi_median_ab": 0.946,
     "prefit": 0.98,
-
 }
 
 
@@ -278,10 +276,7 @@ def test_results_prefit() -> None:
 
 def test_not_enough_resamplings() -> None:
     """Test that a warning is raised if at least one residual is nan."""
-    with pytest.warns(
-        UserWarning,
-        match=r"WARNING: at least one point of*"
-    ):
+    with pytest.warns(UserWarning, match=r"WARNING: at least one point of*"):
         mapie_ts_reg = MapieTimeSeriesRegressor(
             cv=BlockBootstrap(n_resamplings=1, n_blocks=1), agg_function="mean"
         )
@@ -368,11 +363,9 @@ def test_deprecated_path_warning() -> None:
     """
     Test that a warning is raised if import with deprecated path.
     """
-    with pytest.warns(
-        FutureWarning,
-        match=r".*WARNING: Deprecated path*"
-    ):
+    with pytest.warns(FutureWarning, match=r".*WARNING: Deprecated path*"):
         from mapie.time_series_regression import MapieTimeSeriesRegressor
+
         _ = MapieTimeSeriesRegressor()
 
 

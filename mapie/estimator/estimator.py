@@ -7,12 +7,11 @@ from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import (_num_samples, check_is_fitted)
+from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
-from mapie.utils import (check_nan_in_aposteriori_prediction,
-                         fit_estimator)
+from mapie.utils import check_nan_in_aposteriori_prediction, fit_estimator
 from mapie.estimator.interface import EnsembleEstimator
 
 
@@ -146,6 +145,7 @@ class EnsembleRegressor(EnsembleEstimator):
         - Dummy array of folds containing each training sample, otherwise.
           Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
     """
+
     no_agg_cv_ = ["prefit", "split"]
     no_agg_methods_ = ["naive", "base"]
     fit_attributes = [
@@ -163,7 +163,7 @@ class EnsembleRegressor(EnsembleEstimator):
         n_jobs: Optional[int],
         random_state: Optional[Union[int, np.random.RandomState]],
         test_size: Optional[Union[int, float]],
-        verbose: int
+        verbose: int,
     ):
         self.estimator = estimator
         self.method = method
@@ -251,11 +251,7 @@ class EnsembleRegressor(EnsembleEstimator):
             y_pred = np.array([])
         return y_pred, val_index
 
-    def _aggregate_with_mask(
-        self,
-        x: NDArray,
-        k: NDArray
-    ) -> NDArray:
+    def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
         """
         Take the array of predictions, made by the refitted estimators,
         on the testing set, and the 1-or-nan array indicating for each training
@@ -346,14 +342,15 @@ class EnsembleRegressor(EnsembleEstimator):
                 cv = cast(BaseCrossValidator, self.cv)
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._predict_oof_estimator)(
-                        estimator, X, calib_index,
+                        estimator,
+                        X,
+                        calib_index,
                     )
-                    for (_, calib_index), estimator in zip(cv.split(X),
-                                                           self.estimators_)
+                    for (_, calib_index), estimator in zip(
+                        cv.split(X), self.estimators_
+                    )
                 )
-                predictions, indices = map(
-                    list, zip(*outputs)
-                )
+                predictions, indices = map(list, zip(*outputs))
                 n_samples = _num_samples(X)
                 pred_matrix = np.full(
                     shape=(n_samples, cv.get_n_splits(X)),
@@ -361,9 +358,7 @@ class EnsembleRegressor(EnsembleEstimator):
                     dtype=float,
                 )
                 for i, ind in enumerate(indices):
-                    pred_matrix[ind, i] = np.array(
-                        predictions[i], dtype=float
-                    )
+                    pred_matrix[ind, i] = np.array(predictions[i], dtype=float)
                     self.k_[ind, i] = 1
                 check_nan_in_aposteriori_prediction(pred_matrix)
 
@@ -446,7 +441,7 @@ class EnsembleRegressor(EnsembleEstimator):
         self,
         X: ArrayLike,
         ensemble: bool = False,
-        return_multi_pred: bool = True
+        return_multi_pred: bool = True,
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample

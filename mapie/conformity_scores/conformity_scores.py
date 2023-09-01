@@ -86,10 +86,7 @@ class ConformityScore(metaclass=ABCMeta):
 
     @abstractmethod
     def get_estimation_distribution(
-        self,
-        X: ArrayLike,
-        y_pred: ArrayLike,
-        conformity_scores: ArrayLike
+        self, X: ArrayLike, y_pred: ArrayLike, conformity_scores: ArrayLike
     ) -> NDArray:
         """
         Placeholder for ``get_estimation_distribution``.
@@ -211,10 +208,7 @@ class ConformityScore(metaclass=ABCMeta):
 
     @staticmethod
     def get_quantile(
-        conformity_scores: NDArray,
-        alpha_np: NDArray,
-        axis: int,
-        method: str
+        conformity_scores: NDArray, alpha_np: NDArray, axis: int, method: str
     ) -> NDArray:
         """
         Compute the alpha quantile of the conformity scores or the conformity
@@ -243,15 +237,17 @@ class ConformityScore(metaclass=ABCMeta):
         NDArray of shape (1, n_alpha) or (n_samples, n_alpha)
             The quantile of the conformity scores.
         """
-        quantile = np.column_stack([
-            np_nanquantile(
-                conformity_scores.astype(float),
-                _alpha,
-                axis=axis,
-                method=method
-            )
-            for _alpha in alpha_np
-        ])
+        quantile = np.column_stack(
+            [
+                np_nanquantile(
+                    conformity_scores.astype(float),
+                    _alpha,
+                    axis=axis,
+                    method=method,
+                )
+                for _alpha in alpha_np
+            ]
+        )
         return quantile
 
     def get_bounds(
@@ -261,7 +257,7 @@ class ConformityScore(metaclass=ABCMeta):
         conformity_scores: NDArray,
         alpha_np: NDArray,
         ensemble: bool,
-        method: str
+        method: str,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,

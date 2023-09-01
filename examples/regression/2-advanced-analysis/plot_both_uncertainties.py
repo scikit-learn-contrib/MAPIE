@@ -91,10 +91,13 @@ polyn_model = Pipeline(
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", QuantileRegressor(
-            alpha=0,
-            solver="highs",  # highs-ds does not give good results
-            )),
+        (
+            "linear",
+            QuantileRegressor(
+                alpha=0,
+                solver="highs",  # highs-ds does not give good results
+            ),
+        ),
     ]
 )
 
@@ -110,8 +113,7 @@ y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "conformalized_quantile_regression":
         mapie = MapieQuantileRegressor(  # type: ignore
-            polyn_model_quant,
-            **params
+            polyn_model_quant, **params
         )
         mapie.fit(X_train, y_train, random_state=random_state)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)

@@ -55,8 +55,10 @@ from sklearn.naive_bayes import GaussianNB
 
 from mapie._typing import NDArray
 from mapie.classification import MapieClassifier
-from mapie.metrics import (classification_coverage_score,
-                           classification_mean_width_score)
+from mapie.metrics import (
+    classification_coverage_score,
+    classification_mean_width_score,
+)
 
 centers = [(0, 3.5), (-2, 0), (2, 0)]
 covs = [np.eye(2), np.eye(2) * 2, np.diag([5, 1])]
@@ -124,7 +126,9 @@ for method in methods:
     )
     mapie[method].fit(X_cal, y_cal)
     y_pred_mapie[method], y_ps_mapie[method] = mapie[method].predict(
-        X_test, alpha=alpha, include_last_label=True,
+        X_test,
+        alpha=alpha,
+        include_last_label=True,
     )
 
 

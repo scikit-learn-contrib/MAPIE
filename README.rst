@@ -85,7 +85,7 @@ To install directly from the github repository :
 ⚡️ Quickstart
 ==============
 
-Let us start with a basic regression problem. 
+Let us start with a basic regression problem.
 Here, we generate one-dimensional noisy data that we fit with a linear model.
 
 .. code:: python
@@ -117,14 +117,14 @@ for each desired alpha value.
 You can compute the coverage of your prediction intervals.
 
 .. code:: python
-    
+
     from mapie.metrics import regression_coverage_score
     coverage_scores = [
         regression_coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
         for i, _ in enumerate(alpha)
     ]
 
-The estimated prediction intervals can then be plotted as follows. 
+The estimated prediction intervals can then be plotted as follows.
 
 .. code:: python
 
@@ -168,7 +168,7 @@ The effective coverage is the actual fraction of true labels lying in the predic
 
 The full documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
 
-**How does MAPIE work?** 
+**How does MAPIE work?**
 
 It is basically based on two types of techniques:
 
@@ -211,7 +211,7 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 MAPIE has been developed through a collaboration between Quantmetry, Michelin, ENS Paris-Saclay,
 and with the financial support from Région Ile de France and Confiance.ai.
 
-|Quantmetry|_ |Michelin|_ |ENS|_ |Confiance.ai|_  |IledeFrance|_ 
+|Quantmetry|_ |Michelin|_ |ENS|_ |Confiance.ai|_  |IledeFrance|_
 
 .. |Quantmetry| image:: https://www.quantmetry.com/wp-content/uploads/2020/08/08-Logo-quant-Texte-noir.svg
     :width: 150

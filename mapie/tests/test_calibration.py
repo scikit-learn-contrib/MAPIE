@@ -21,7 +21,10 @@ from mapie.metrics import expected_calibration_error, top_label_ece
 random_state = 20
 
 CALIBRATORS = [
-    "sigmoid", "isotonic", _SigmoidCalibration(), LinearRegression()
+    "sigmoid",
+    "isotonic",
+    _SigmoidCalibration(),
+    LinearRegression(),
 ]
 
 ESTIMATORS = [
@@ -50,10 +53,10 @@ results = {
             [np.nan, np.nan, 0.85714286],
             [np.nan, np.nan, 0.85714286],
             [np.nan, np.nan, 0.85714286],
-            [0.83333333, np.nan, np.nan]
+            [0.83333333, np.nan, np.nan],
         ],
-        "top_label_ece": 0.31349206349206343
-    }
+        "top_label_ece": 0.31349206349206343,
+    },
 }
 
 results_binary = {
@@ -84,19 +87,16 @@ results_binary = {
             [0.85714286, np.nan],
             [0.85714286, np.nan],
             [np.nan, 0.85714286],
-            [np.nan, 0.85714286]
+            [np.nan, 0.85714286],
         ],
         "top_label_ece": 0.1428571428571429,
-        "ece": 0.3571428571428571
+        "ece": 0.3571428571428571,
     },
 }
 
 
 X, y = make_classification(
-    n_samples=20,
-    n_classes=3,
-    n_informative=4,
-    random_state=random_state
+    n_samples=20, n_classes=3, n_informative=4, random_state=random_state
 )
 
 X_, X_test, y_, y_test = train_test_split(
@@ -123,26 +123,11 @@ def test_default_parameters() -> None:
 def test_default_fit_params() -> None:
     """Test default sample weights and other parameters."""
     mapie_cal = MapieCalibrator()
-    assert (
-        signature(mapie_cal.fit).parameters["sample_weight"].default
-        is None
-    )
-    assert (
-        signature(mapie_cal.fit).parameters["calib_size"].default
-        == 0.33
-    )
-    assert (
-        signature(mapie_cal.fit).parameters["random_state"].default
-        is None
-    )
-    assert (
-        signature(mapie_cal.fit).parameters["shuffle"].default
-        is True
-    )
-    assert (
-        signature(mapie_cal.fit).parameters["stratify"].default
-        is None
-    )
+    assert signature(mapie_cal.fit).parameters["sample_weight"].default is None
+    assert signature(mapie_cal.fit).parameters["calib_size"].default == 0.33
+    assert signature(mapie_cal.fit).parameters["random_state"].default is None
+    assert signature(mapie_cal.fit).parameters["shuffle"].default is True
+    assert signature(mapie_cal.fit).parameters["stratify"].default is None
 
 
 def test_false_str_estimator() -> None:
@@ -151,9 +136,7 @@ def test_false_str_estimator() -> None:
         ValueError,
         match=r".*Please provide a string in*",
     ):
-        mapie_cal = MapieCalibrator(
-            calibrator="not_estimator"
-        )
+        mapie_cal = MapieCalibrator(calibrator="not_estimator")
         mapie_cal.fit(X, y)
 
 
@@ -163,7 +146,7 @@ def test_estimator_none() -> None:
     mapie_cal.fit(X, y)
     assert isinstance(
         mapie_cal.calibrators[list(mapie_cal.calibrators.keys())[0]],
-        _SigmoidCalibration
+        _SigmoidCalibration,
     )
 
 
@@ -173,8 +156,7 @@ def test_check_type_of_target() -> None:
     y = [0.4, 0.2, 3.6, 3, 0.2]
     mapie_cal = MapieCalibrator()
     with pytest.raises(
-        ValueError,
-        match=r".*Make sure to have one of the allowed targets:*"
+        ValueError, match=r".*Make sure to have one of the allowed targets:*"
     ):
         mapie_cal.fit(X, y)
 
@@ -215,18 +197,16 @@ def test_invalid_cv_argument(cv: str) -> None:
 
 def test_prefit_split_same_results() -> None:
     """Test that prefit and split method return the same result"""
-    est = RandomForestClassifier(
-        random_state=random_state
-    ).fit(X_train, y_train)
+    est = RandomForestClassifier(random_state=random_state).fit(
+        X_train, y_train
+    )
     mapie_cal_prefit = MapieCalibrator(estimator=est, cv="prefit")
     mapie_cal_prefit.fit(X_calib, y_calib)
 
     mapie_cal_split = MapieCalibrator(
         estimator=RandomForestClassifier(random_state=random_state)
     )
-    mapie_cal_split.fit(
-        X_, y_, random_state=random_state
-    )
+    mapie_cal_split.fit(X_, y_, random_state=random_state)
     y_prefit = mapie_cal_prefit.predict_proba(X_test)
     y_split = mapie_cal_split.predict_proba(X_test)
     np.testing.assert_allclose(y_split, y_prefit)
@@ -237,10 +217,7 @@ def test_not_seen_calibrator() -> None:
     Test that there is a warning if no calibration occurs
     due to no calibrator for this class.
     """
-    with pytest.warns(
-        UserWarning,
-        match=r".*WARNING: This predicted label*"
-    ):
+    with pytest.warns(UserWarning, match=r".*WARNING: This predicted label*"):
         mapie_cal = MapieCalibrator()
         mapie_cal.fit(X, y)
         mapie_cal.calibrators.clear()
@@ -250,8 +227,7 @@ def test_not_seen_calibrator() -> None:
 @pytest.mark.parametrize("calibrator", CALIBRATORS)
 @pytest.mark.parametrize("estimator", ESTIMATORS)
 def test_shape_of_output(
-    calibrator: Union[str, RegressorMixin],
-    estimator: ClassifierMixin
+    calibrator: Union[str, RegressorMixin], estimator: ClassifierMixin
 ) -> None:
     """Test that the size of the outputs are coherent."""
     mapie_cal = MapieCalibrator(
@@ -269,11 +245,7 @@ def test_number_of_classes_equal_calibrators() -> None:
     of classes in the calibration step.
     """
     mapie_cal = MapieCalibrator()
-    mapie_cal.fit(
-        X=X_,
-        y=y_,
-        random_state=random_state
-    )
+    mapie_cal.fit(X=X_, y=y_, random_state=random_state)
     y_pred_calib_set = mapie_cal.single_estimator_.predict(X=X_calib)
     assert len(mapie_cal.calibrators) == len(np.unique(y_pred_calib_set))
 
@@ -281,21 +253,15 @@ def test_number_of_classes_equal_calibrators() -> None:
 def test_same_predict() -> None:
     """Test that the same prediction is made regardless of the calibration."""
     mapie_cal = MapieCalibrator(method="top_label")
-    mapie_cal.fit(
-        X=X_,
-        y=y_,
-        random_state=random_state
-    )
+    mapie_cal.fit(X=X_, y=y_, random_state=random_state)
     y_pred_calib_set = mapie_cal.single_estimator_.predict(X=X_test)
     y_pred_calib_set_through_predict = mapie_cal.predict(X=X_test)
     y_pred_calibrated_test_set = np.nanargmax(
-        mapie_cal.predict_proba(X=X_test),
-        axis=1
+        mapie_cal.predict_proba(X=X_test), axis=1
     )
     np.testing.assert_allclose(y_pred_calib_set, y_pred_calibrated_test_set)
     np.testing.assert_allclose(
-        y_pred_calib_set,
-        y_pred_calib_set_through_predict
+        y_pred_calib_set, y_pred_calib_set_through_predict
     )
 
 
@@ -306,20 +272,14 @@ def test_correct_results(cv: str) -> None:
     in the correct scores (in a multi-class setting).
     """
     mapie_cal = MapieCalibrator(cv=cv)
-    mapie_cal.fit(
-        X=X_,
-        y=y_,
-        random_state=random_state
-    )
+    mapie_cal.fit(X=X_, y=y_, random_state=random_state)
     pred_ = mapie_cal.predict_proba(X_test)
     top_label_ece_ = top_label_ece(y_test, pred_)
     np.testing.assert_array_almost_equal(
         results[cv]["y_score"], pred_  # type:ignore
     )
     np.testing.assert_allclose(  # type:ignore
-        results[cv]["top_label_ece"],
-        top_label_ece_,
-        rtol=1e-2
+        results[cv]["top_label_ece"], top_label_ece_, rtol=1e-2
     )
 
 
@@ -330,17 +290,10 @@ def test_correct_results_binary(cv: str) -> None:
     in the correct scores (in a binary setting).
     """
     X_binary, y_binary = make_classification(
-        n_samples=10,
-        n_classes=2,
-        n_informative=4,
-        random_state=random_state
+        n_samples=10, n_classes=2, n_informative=4, random_state=random_state
     )
     mapie_cal = MapieCalibrator(cv=cv)
-    mapie_cal.fit(
-        X=X_binary,
-        y=y_binary,
-        random_state=random_state
-    )
+    mapie_cal.fit(X=X_binary, y=y_binary, random_state=random_state)
     pred_ = mapie_cal.predict_proba(X_binary)
     top_label_ece_ = top_label_ece(y_binary, pred_)
     ece = expected_calibration_error(y_binary, pred_)
@@ -348,14 +301,10 @@ def test_correct_results_binary(cv: str) -> None:
         results_binary[cv]["y_score"], pred_  # type:ignore
     )
     np.testing.assert_allclose(  # type:ignore
-        results_binary[cv]["top_label_ece"],
-        top_label_ece_,
-        rtol=1e-2
+        results_binary[cv]["top_label_ece"], top_label_ece_, rtol=1e-2
     )
     np.testing.assert_allclose(  # type:ignore
-        results_binary[cv]["ece"],
-        ece,
-        rtol=1e-2
+        results_binary[cv]["ece"], ece, rtol=1e-2
     )
 
 
@@ -365,10 +314,7 @@ def test_different_binary_y_combinations() -> None:
     scores are always the same.
     """
     X_comb, y_comb = make_classification(
-        n_samples=20,
-        n_classes=3,
-        n_informative=4,
-        random_state=random_state
+        n_samples=20, n_classes=3, n_informative=4, random_state=random_state
     )
     mapie_cal = MapieCalibrator()
     mapie_cal.fit(X_comb, y_comb, random_state=random_state)
@@ -387,19 +333,13 @@ def test_different_binary_y_combinations() -> None:
     np.testing.assert_array_almost_equal(y_score, y_score2)
     assert top_label_ece(
         y_comb, y_score, classes=mapie_cal.classes_
-    ) == top_label_ece(
-        y_comb1, y_score1, classes=mapie_cal1.classes_
-    )
+    ) == top_label_ece(y_comb1, y_score1, classes=mapie_cal1.classes_)
     assert top_label_ece(
         y_comb, y_score, classes=mapie_cal.classes_
-    ) == top_label_ece(
-        y_comb2, y_score2, classes=mapie_cal2.classes_
-    )
+    ) == top_label_ece(y_comb2, y_score2, classes=mapie_cal2.classes_)
 
 
-@pytest.mark.parametrize(
-    "calibrator", [LinearRegression(), "isotonic"]
-)
+@pytest.mark.parametrize("calibrator", [LinearRegression(), "isotonic"])
 def test_results_with_constant_sample_weights(
     calibrator: Union[str, RegressorMixin]
 ) -> None:
@@ -417,12 +357,13 @@ def test_results_with_constant_sample_weights(
     mapie_clf2 = MapieCalibrator(estimator=estimator, calibrator=calibrator)
     mapie_clf0.fit(X, y, sample_weight=None, random_state=random_state)
     mapie_clf1.fit(
-        X, y, sample_weight=np.ones(shape=n_samples),
-        random_state=random_state
+        X, y, sample_weight=np.ones(shape=n_samples), random_state=random_state
     )
     mapie_clf2.fit(
-        X, y, sample_weight=np.ones(shape=n_samples) * 5,
-        random_state=random_state
+        X,
+        y,
+        sample_weight=np.ones(shape=n_samples) * 5,
+        random_state=random_state,
     )
     y_pred0 = mapie_clf0.predict_proba(X)
     y_pred1 = mapie_clf1.predict_proba(X)
@@ -446,14 +387,12 @@ def test_pipeline_compatibility() -> None:
         ]
     )
     categorical_preprocessor = Pipeline(
-        steps=[
-            ("encoding", OneHotEncoder(handle_unknown="ignore"))
-        ]
+        steps=[("encoding", OneHotEncoder(handle_unknown="ignore"))]
     )
     preprocessor = ColumnTransformer(
         [
             ("cat", categorical_preprocessor, ["x_cat"]),
-            ("num", numeric_preprocessor, ["x_num"])
+            ("num", numeric_preprocessor, ["x_num"]),
         ]
     )
     pipe = make_pipeline(preprocessor, LogisticRegression())

@@ -5,5 +5,5 @@ from .time_series_regression import MapieTimeSeriesRegressor
 __all__ = [
     "MapieRegressor",
     "MapieQuantileRegressor",
-    "MapieTimeSeriesRegressor"
+    "MapieTimeSeriesRegressor",
 ]

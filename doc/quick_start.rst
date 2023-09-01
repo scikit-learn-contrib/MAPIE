@@ -35,7 +35,7 @@ To install directly from the github repository :
 2. Run MapieRegressor
 ---------------------
 
-Let us start with a basic regression problem. 
+Let us start with a basic regression problem.
 Here, we generate one-dimensional noisy data with normal distribution
 that we fit with a linear model.
 
@@ -68,10 +68,10 @@ and two standard deviations from the mean.
 MAPIE returns a ``np.ndarray`` of shape (n_samples, 3, len(alpha)) giving the predictions,
 as well as the lower and upper bounds of the prediction intervals for the target quantile
 for each desired alpha value.
-The estimated prediction intervals can then be plotted as follows. 
+The estimated prediction intervals can then be plotted as follows.
 
 .. code:: python
-    
+
     from matplotlib import pyplot as plt
     from mapie.metrics import coverage_score
 

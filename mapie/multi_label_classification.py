@@ -10,8 +10,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import (
+    _check_y,
+    _num_samples,
+    check_is_fitted,
+    indexable,
+)
 
 from ._typing import ArrayLike, NDArray
 from .utils import check_alpha, check_n_jobs, check_verbose
@@ -145,30 +149,28 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
      [False  True False]
      [False  True False]]
     """
+
     valid_methods_by_metric_ = {
         "precision": ["ltt"],
-        "recall": ["rcps", "crc"]
+        "recall": ["rcps", "crc"],
     }
     valid_methods = list(chain(*valid_methods_by_metric_.values()))
     valid_metric_ = list(valid_methods_by_metric_.keys())
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
     lambdas = np.arange(0, 1, 0.01)
     n_lambdas = len(lambdas)
-    fit_attributes = [
-        "single_estimator_",
-        "risks"
-    ]
+    fit_attributes = ["single_estimator_", "risks"]
     sigma_init = 0.25  # Value given in the paper [1]
-    cal_size = .3
+    cal_size = 0.3
 
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
-        metric_control: Optional[str] = 'recall',
+        metric_control: Optional[str] = "recall",
         method: Optional[str] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
-        verbose: int = 0
+        verbose: int = 0,
     ) -> None:
         self.estimator = estimator
         self.metric_control = metric_control
@@ -203,16 +205,18 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         self.method = cast(str, self.method)
         self.metric_control = cast(str, self.metric_control)
 
-        if self.method not in self.valid_methods_by_metric_[
-            self.metric_control
-        ]:
+        if (
+            self.method
+            not in self.valid_methods_by_metric_[self.metric_control]
+        ):
             raise ValueError(
                 "Invalid method for metric: "
-                + "You are controlling " + self.metric_control
-                + " and you are using invalid method: " + self.method
-                + ". Use instead: " + "".join(self.valid_methods_by_metric_[
-                    self.metric_control]
-                )
+                + "You are controlling "
+                + self.metric_control
+                + " and you are using invalid method: "
+                + self.method
+                + ". Use instead: "
+                + "".join(self.valid_methods_by_metric_[self.metric_control])
             )
 
     def _check_all_labelled(self, y: NDArray) -> None:
@@ -260,8 +264,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         """
         if (not isinstance(delta, float)) and (delta is not None):
             raise ValueError(
-                "Invalid delta. "
-                f"delta must be a float, not a {type(delta)}"
+                "Invalid delta. " f"delta must be a float, not a {type(delta)}"
             )
         if (self.method == "rcps") or (self.method == "ltt"):
             if delta is None:
@@ -270,11 +273,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                     "delta cannot be ``None`` when controlling "
                     "Recall with RCPS or Precision with LTT"
                 )
-            elif ((delta <= 0) or (delta >= 1)):
-                raise ValueError(
-                    "Invalid delta. "
-                    "delta must be in ]0, 1["
-                )
+            elif (delta <= 0) or (delta >= 1):
+                raise ValueError("Invalid delta. " "delta must be in ]0, 1[")
         if (self.method == "crc") and (delta is not None):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
@@ -294,7 +294,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             if self.valid_index[i] == []:
                 warnings.warn(
                     "Warning: LTT method has returned an empty sequence"
-                    + " for alpha=" + str(alpha[i])
+                    + " for alpha="
+                    + str(alpha[i])
                 )
 
     def _check_estimator(
@@ -357,10 +358,10 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 LogisticRegression(multi_class="multinomial")
             )
             X_train, X_calib, y_train, y_calib = train_test_split(
-                    X,
-                    y,
-                    test_size=self.calib_size,
-                    random_state=self.random_state,
+                X,
+                y,
+                test_size=self.calib_size,
+                random_state=self.random_state,
             )
             estimator.fit(X_train, y_train)
             warnings.warn(
@@ -452,8 +453,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                 self.method = "ltt"
 
     def _transform_pred_proba(
-        self,
-        y_pred_proba: Union[Sequence[NDArray], NDArray]
+        self, y_pred_proba: Union[Sequence[NDArray], NDArray]
     ) -> NDArray:
         """If the output of the predict_proba is a list of arrays (output of
         the ``predict_proba`` of ``MultiOutputClassifier``) we transform it
@@ -474,8 +474,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba_array = y_pred_proba
         else:
             y_pred_proba_stacked = np.stack(
-                y_pred_proba,  # type: ignore
-                axis=0
+                y_pred_proba, axis=0  # type: ignore
             )[:, :, 1]
             y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
 
@@ -518,10 +517,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
-        estimator, X, y = self._check_estimator(
-            X, y, self.estimator,
-            _refit
-        )
+        estimator, X, y = self._check_estimator(X, y, self.estimator, _refit)
 
         y = cast(NDArray, y)
         X = cast(NDArray, X)
@@ -553,25 +549,18 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
             if self.metric_control == "recall":
                 partial_risk = compute_risk_recall(
-                    self.lambdas,
-                    y_pred_proba_array,
-                    y
+                    self.lambdas, y_pred_proba_array, y
                 )
             else:  # self.metric_control == "precision"
                 partial_risk = compute_risk_precision(
-                    self.lambdas,
-                    y_pred_proba_array,
-                    y
+                    self.lambdas, y_pred_proba_array, y
                 )
             self.risks = np.concatenate([self.risks, partial_risk], axis=0)
 
         return self
 
     def fit(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        calib_size: Optional[float] = .3
+        self, X: ArrayLike, y: ArrayLike, calib_size: Optional[float] = 0.3
     ) -> MapieMultiLabelClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -603,7 +592,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         delta: Optional[float] = None,
-        bound: Optional[Union[str, None]] = None
+        bound: Optional[Union[str, None]] = None,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Prediction sets on new samples based on target confidence
@@ -666,11 +655,9 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
         y_pred_proba_array = np.repeat(
-            y_pred_proba_array,
-            len(alpha_np),
-            axis=2
+            y_pred_proba_array, len(alpha_np), axis=2
         )
-        if self.metric_control == 'precision':
+        if self.metric_control == "precision":
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
             self.valid_index, self.p_values = ltt_procedure(
@@ -678,23 +665,27 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             )
             self._check_valid_index(alpha_np)
             self.lambdas_star, self.r_star = find_lambda_control_star(
-               self.r_hat, self.valid_index, self.lambdas
+                self.r_hat, self.valid_index, self.lambdas
             )
             y_pred_proba_array = (
-                y_pred_proba_array >
-                np.array(self.lambdas_star)[np.newaxis, np.newaxis, :]
+                y_pred_proba_array
+                > np.array(self.lambdas_star)[np.newaxis, np.newaxis, :]
             )
 
         else:
             self.r_hat, self.r_hat_plus = get_r_hat_plus(
-                self.risks, self.lambdas, self.method,
-                bound, delta, self.sigma_init
+                self.risks,
+                self.lambdas,
+                self.method,
+                bound,
+                delta,
+                self.sigma_init,
             )
             self.lambdas_star = find_lambda_star(
                 self.lambdas, self.r_hat_plus, alpha_np
             )
             y_pred_proba_array = (
-                y_pred_proba_array >
-                self.lambdas_star[np.newaxis, np.newaxis, :]
+                y_pred_proba_array
+                > self.lambdas_star[np.newaxis, np.newaxis, :]
             )
         return y_pred, y_pred_proba_array

@@ -56,7 +56,7 @@ from mapie.regression import MapieRegressor
 
 # Load the Boston data
 data_url = "http://lib.stat.cmu.edu/datasets/boston"
-raw_df = pd.read_csv(data_url, sep=r'\s+', skiprows=22, header=None)
+raw_df = pd.read_csv(data_url, sep=r"\s+", skiprows=22, header=None)
 X_boston = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
 y_boston = raw_df.values[1::2, 2]
 
@@ -90,8 +90,12 @@ cv_obj = RandomizedSearchCV(
 cv_obj.fit(X_train, y_train)
 best_est = cv_obj.best_estimator_
 mapie_non_nested = MapieRegressor(
-    best_est, method="plus", cv=cv, agg_function="median", n_jobs=-1,
-    random_state=random_state
+    best_est,
+    method="plus",
+    cv=cv,
+    agg_function="median",
+    n_jobs=-1,
+    random_state=random_state,
 )
 mapie_non_nested.fit(X_train, y_train)
 y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict(
@@ -116,8 +120,11 @@ cv_obj = RandomizedSearchCV(
     n_jobs=-1,
 )
 mapie_nested = MapieRegressor(
-    cv_obj, method="plus", cv=cv, agg_function="median",
-    random_state=random_state
+    cv_obj,
+    method="plus",
+    cv=cv,
+    agg_function="median",
+    random_state=random_state,
 )
 mapie_nested.fit(X_train, y_train)
 y_pred_nested, y_pis_nested = mapie_nested.predict(X_test, alpha=alpha)

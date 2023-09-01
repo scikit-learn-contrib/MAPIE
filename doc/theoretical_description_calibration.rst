@@ -25,7 +25,7 @@ true probability compared to the original output.
 Firstly, we introduce binary calibration, we denote the :math:`(h(X), y)` pair as the score and ground truth for the object. Hence, :math:`y`
 values are in :math:`{0, 1}`. The model is calibrated if for every output :math:`q \in [0, 1]`, we have:
 
-.. math:: 
+.. math::
     Pr(Y = 1 \mid h(X) = q) = q
 
 where :math:`h()` is the score predictor.
@@ -46,7 +46,7 @@ highest score and the corresponding class, whereas confidence calibration only c
 Let :math:`c` be the classifier and :math:`h` be the maximum score from the classifier. The couple :math:`(c, h)` is calibrated
 according to Top-Label calibration if:
 
-.. math:: 
+.. math::
     Pr(Y = c(X) \mid h(X), c(X)) = h(X)
 
 
@@ -70,7 +70,7 @@ The ECE is the combination of these two metrics combined together.
     \text{ECE} = \sum_{m=1}^M \frac{\left| B_m \right|}{n} \left| acc(B_m) - conf(B_m) \right|
 
 In simple terms, once all the different bins from the confidence scores have been created, we check the mean accuracy of each bin.
-The absolute mean difference between the two is the ECE. Hence, the lower the ECE, the better the calibration was performed. 
+The absolute mean difference between the two is the ECE. Hence, the lower the ECE, the better the calibration was performed.
 
 
 **Top-Label ECE**

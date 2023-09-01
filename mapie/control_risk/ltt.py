@@ -9,10 +9,7 @@ from .p_values import compute_hoeffdding_bentkus_p_value
 
 
 def ltt_procedure(
-    r_hat: NDArray,
-    alpha_np: NDArray,
-    delta: Optional[float],
-    n_obs: int
+    r_hat: NDArray, alpha_np: NDArray, delta: Optional[float], n_obs: int
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
@@ -67,15 +64,13 @@ def ltt_procedure(
     N = len(p_values)
     valid_index = []
     for i in range(len(alpha_np)):
-        l_index = np.where(p_values[:, i] <= delta/N)[0].tolist()
+        l_index = np.where(p_values[:, i] <= delta / N)[0].tolist()
         valid_index.append(l_index)
     return valid_index, p_values
 
 
 def find_lambda_control_star(
-    r_hat: NDArray,
-    valid_index: List[List[Any]],
-    lambdas: NDArray
+    r_hat: NDArray, valid_index: List[List[Any]], lambdas: NDArray
 ) -> Tuple[ArrayLike, ArrayLike]:
     """
     Return the lambda that give the minimum precision along

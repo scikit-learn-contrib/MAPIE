@@ -9,35 +9,41 @@ from numpy.random import RandomState
 from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.metrics import (classification_coverage_score,
-                           classification_coverage_score_v2,
-                           classification_mean_width_score,
-                           classification_ssc,
-                           classification_ssc_score,
-                           expected_calibration_error,
-                           hsic,
-                           regression_coverage_score,
-                           regression_coverage_score_v2,
-                           regression_mean_width_score,
-                           regression_ssc,
-                           regression_ssc_score,
-                           top_label_ece)
+from mapie.metrics import (
+    classification_coverage_score,
+    classification_coverage_score_v2,
+    classification_mean_width_score,
+    classification_ssc,
+    classification_ssc_score,
+    expected_calibration_error,
+    hsic,
+    regression_coverage_score,
+    regression_coverage_score_v2,
+    regression_mean_width_score,
+    regression_ssc,
+    regression_ssc_score,
+    top_label_ece,
+)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
-y_preds = np.array([
-    [5, 4, 6],
-    [7.5, 6.0, 9.0],
-    [9.5, 9, 10.0],
-    [10.5, 8.5, 12.5],
-    [11.5, 10.5, 12.0],
-])
-intervals = np.array([
-    [[4, 4], [6, 7.5]],
-    [[6.0, 8], [9.0, 10]],
-    [[9, 9], [10.0, 10.0]],
-    [[8.5, 9], [12.5, 12]],
-    [[10.5, 10.5], [12.0, 12]]
-])
+y_preds = np.array(
+    [
+        [5, 4, 6],
+        [7.5, 6.0, 9.0],
+        [9.5, 9, 10.0],
+        [10.5, 8.5, 12.5],
+        [11.5, 10.5, 12.0],
+    ]
+)
+intervals = np.array(
+    [
+        [[4, 4], [6, 7.5]],
+        [[6.0, 8], [9.0, 10]],
+        [[9, 9], [10.0, 10.0]],
+        [[8.5, 9], [12.5, 12]],
+        [[10.5, 10.5], [12.0, 12]],
+    ]
+)
 
 y_true_class = np.array([3, 3, 1, 2, 2])
 y_pred_set = np.array(
@@ -49,125 +55,90 @@ y_pred_set = np.array(
         [False, True, False, True],
     ]
 )
-y_pred_set_2alphas = np.array([
+y_pred_set_2alphas = np.array(
     [
-        [False, False],
-        [False, True],
-        [False, True],
-        [False, False],
-    ],
-    [
-        [False, False],
-        [True, True],
-        [True, True],
-        [True, True]
-    ],
-    [
-        [False, False],
-        [True, False],
-        [True, False],
-        [False, False]
-    ],
-    [
-        [True, False],
-        [True, False],
-        [True, True],
-        [True, False],
-    ],
-    [
-        [False, False],
-        [True, True],
-        [False, True],
-        [True, True]
+        [
+            [False, False],
+            [False, True],
+            [False, True],
+            [False, False],
+        ],
+        [[False, False], [True, True], [True, True], [True, True]],
+        [[False, False], [True, False], [True, False], [False, False]],
+        [
+            [True, False],
+            [True, False],
+            [True, True],
+            [True, False],
+        ],
+        [[False, False], [True, True], [False, True], [True, True]],
     ]
-])
+)
 
 Params_ssc_reg = TypedDict(
     "Params_ssc_reg",
-    {
-        "y_intervals": NDArray,
-        "num_bins": int
-    },
+    {"y_intervals": NDArray, "num_bins": int},
 )
 Params_ssc_classif = TypedDict(
     "Params_ssc_classif",
-    {
-        "y_pred_set": NDArray,
-        "num_bins": Union[int, None]
-    },
+    {"y_pred_set": NDArray, "num_bins": Union[int, None]},
 )
 SSC_REG = {
-    "1alpha_base": Params_ssc_reg(
-        y_intervals=intervals[:, :, 0],
-        num_bins=2
-    ),
-    "1alpha_3sp": Params_ssc_reg(
-        y_intervals=intervals[:, :, 0],
-        num_bins=3
-    ),
-    "2alpha_base": Params_ssc_reg(
-        y_intervals=intervals,
-        num_bins=2
-    ),
-    "2alpha_3sp": Params_ssc_reg(
-        y_intervals=intervals,
-        num_bins=3
-    ),
+    "1alpha_base": Params_ssc_reg(y_intervals=intervals[:, :, 0], num_bins=2),
+    "1alpha_3sp": Params_ssc_reg(y_intervals=intervals[:, :, 0], num_bins=3),
+    "2alpha_base": Params_ssc_reg(y_intervals=intervals, num_bins=2),
+    "2alpha_3sp": Params_ssc_reg(y_intervals=intervals, num_bins=3),
 }
 SSC_CLASSIF = {
     "1alpha_base": Params_ssc_classif(
-        y_pred_set=y_pred_set_2alphas[:, :, 0],
-        num_bins=2
+        y_pred_set=y_pred_set_2alphas[:, :, 0], num_bins=2
     ),
     "1alpha_3sp": Params_ssc_classif(
-        y_pred_set=y_pred_set_2alphas[:, :, 0],
-        num_bins=3
+        y_pred_set=y_pred_set_2alphas[:, :, 0], num_bins=3
     ),
     "1alpha_None": Params_ssc_classif(
-        y_pred_set=y_pred_set_2alphas[:, :, 0],
-        num_bins=None
+        y_pred_set=y_pred_set_2alphas[:, :, 0], num_bins=None
     ),
     "2alpha_base": Params_ssc_classif(
         y_pred_set=y_pred_set_2alphas,
         num_bins=2,
     ),
     "2alpha_3sp": Params_ssc_classif(
-        y_pred_set=y_pred_set_2alphas,
-        num_bins=3
+        y_pred_set=y_pred_set_2alphas, num_bins=3
     ),
     "2alpha_None": Params_ssc_classif(
-        y_pred_set=y_pred_set_2alphas,
-        num_bins=None
+        y_pred_set=y_pred_set_2alphas, num_bins=None
     ),
 }
 SSC_REG_COVERAGES = {
-    "1alpha_base": np.array([[2/3, 1.]]),
-    "1alpha_3sp": np.array([[0.5, 1., 1.]]),
-    "2alpha_base": np.array([[2/3, 1.], [1/3, 1.]]),
-    "2alpha_3sp": np.array([[0.5, 1., 1.], [0.5, 0.5, 1.]]),
+    "1alpha_base": np.array([[2 / 3, 1.0]]),
+    "1alpha_3sp": np.array([[0.5, 1.0, 1.0]]),
+    "2alpha_base": np.array([[2 / 3, 1.0], [1 / 3, 1.0]]),
+    "2alpha_3sp": np.array([[0.5, 1.0, 1.0], [0.5, 0.5, 1.0]]),
 }
 SSC_REG_COVERAGES_SCORE = {
-    "1alpha_base": np.array([2/3]),
+    "1alpha_base": np.array([2 / 3]),
     "1alpha_3sp": np.array([0.5]),
-    "2alpha_base": np.array([2/3, 1/3]),
+    "2alpha_base": np.array([2 / 3, 1 / 3]),
     "2alpha_3sp": np.array([0.5, 0.5]),
 }
 SSC_CLASSIF_COVERAGES = {
-    "1alpha_base": np.array([[1/3, 1.]]),
-    "1alpha_3sp": np.array([[0., 2/3, 1.]]),
-    "1alpha_None": np.array([[0., np.nan, 0.5, 1., 1.]]),
-    "2alpha_base": np.array([[1/3, 1.], [1/3, 1.]]),
-    "2alpha_3sp": np.array([[0., 2/3, 1.], [0.5, 2/3, np.nan]]),
-    "2alpha_None": np.array([[0., np.nan, 0.5, 1., 1.],
-                             [0., 1., 0., 1., np.nan]]),
+    "1alpha_base": np.array([[1 / 3, 1.0]]),
+    "1alpha_3sp": np.array([[0.0, 2 / 3, 1.0]]),
+    "1alpha_None": np.array([[0.0, np.nan, 0.5, 1.0, 1.0]]),
+    "2alpha_base": np.array([[1 / 3, 1.0], [1 / 3, 1.0]]),
+    "2alpha_3sp": np.array([[0.0, 2 / 3, 1.0], [0.5, 2 / 3, np.nan]]),
+    "2alpha_None": np.array(
+        [[0.0, np.nan, 0.5, 1.0, 1.0], [0.0, 1.0, 0.0, 1.0, np.nan]]
+    ),
 }
 SSC_CLASSIF_COVERAGES_SCORE = {
     "1alpha_base": np.array([1 / 3]),
-    "1alpha_3sp": np.array([0.]),
-    "1alpha_None": np.array([0.]),
+    "1alpha_3sp": np.array([0.0]),
+    "1alpha_None": np.array([0.0]),
     "2alpha_base": np.array([1 / 3, 1 / 3]),
-    "2alpha_3sp": np.array([0., 0.5]),
-    "2alpha_None": np.array([0., 0.]),
+    "2alpha_3sp": np.array([0.0, 0.5]),
+    "2alpha_None": np.array([0.0, 0.0]),
 }
 
 prng = RandomState(1234567890)
@@ -226,11 +197,26 @@ def test_regression_same_length() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
-        regression_ssc(y_toy, intervals[:-1, ])
+        regression_ssc(
+            y_toy,
+            intervals[
+                :-1,
+            ],
+        )
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
-        regression_ssc_score(y_toy, intervals[:-1, ])
+        regression_ssc_score(
+            y_toy,
+            intervals[
+                :-1,
+            ],
+        )
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
-        hsic(y_toy, intervals[:-1, ])
+        hsic(
+            y_toy,
+            intervals[
+                :-1,
+            ],
+        )
 
 
 def test_regression_toydata_coverage_score() -> None:
@@ -266,8 +252,9 @@ def test_classification_y_true_shape() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         classification_ssc(np.tile(y_true_class, (2, 1)), y_pred_set_2alphas)
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        classification_ssc_score(np.tile(y_true_class, (2, 1)),
-                                 y_pred_set_2alphas)
+        classification_ssc_score(
+            np.tile(y_true_class, (2, 1)), y_pred_set_2alphas
+        )
 
 
 def test_classification_y_pred_set_shape() -> None:
@@ -362,7 +349,7 @@ def test_ece_scores() -> None:
 
 
 def test_top_lable_ece() -> None:
-    """Test that score is """
+    """Test that score is"""
     scr = top_label_ece(y_true, y_scores)
     assert np.round(scr, 4) == 0.6997
 
@@ -373,35 +360,26 @@ def test_top_label_same_result() -> None:
     the maximum with the argmax values or if it is the probabilities
     """
     pred_proba_ = np.array(
-        [
-            [0.2, 0.2, 0.4],
-            [0.5, 0.3, 0.2],
-            [0, 0.4, 0.6],
-            [0.1, 0.7, 0.2]
-        ]
+        [[0.2, 0.2, 0.4], [0.5, 0.3, 0.2], [0, 0.4, 0.6], [0.1, 0.7, 0.2]]
     )
     y_true_ = np.array([1, 0, 2, 1])
     pred_max_ = np.max(pred_proba_, axis=1)
     pred_argmax_ = np.argmax(pred_proba_, axis=1)
 
     scr1 = top_label_ece(y_true_, pred_proba_)
-    scr2 = top_label_ece(
-        y_true_,
-        pred_max_,
-        y_score_arg=pred_argmax_
-    )
+    scr2 = top_label_ece(y_true_, pred_max_, y_score_arg=pred_argmax_)
 
-    classes = np.unique([y_true_+1])
+    classes = np.unique([y_true_ + 1])
     scr3 = top_label_ece(
-        y_true_+1,
+        y_true_ + 1,
         pred_proba_,
         classes=classes,
     )
 
     scr4 = top_label_ece(
-        y_true_+1,
+        y_true_ + 1,
         np.max(pred_proba_, axis=1),
-        classes[np.argmax(pred_proba_, axis=1)]
+        classes[np.argmax(pred_proba_, axis=1)],
     )
     assert scr1 == scr2
     assert scr1 == scr3
@@ -473,8 +451,9 @@ def test_invalid_splits_classification_ssc(num_bins: int) -> None:
 def test_invalid_splits_classification_ssc_score(num_bins: int) -> None:
     """Test that invalid number of bins for ssc raise errors."""
     with pytest.raises(ValueError):
-        classification_ssc_score(y_true_class, y_pred_set_2alphas,
-                                 num_bins=num_bins)
+        classification_ssc_score(
+            y_true_class, y_pred_set_2alphas, num_bins=num_bins
+        )
 
 
 @pytest.mark.parametrize("num_bins", [3, 2, None])
@@ -486,8 +465,9 @@ def test_valid_splits_classification_ssc(num_bins: int) -> None:
 @pytest.mark.parametrize("num_bins", [3, 2, None])
 def test_valid_splits_classification_ssc_score(num_bins: int) -> None:
     """Test that valid number of bins for ssc raise no error."""
-    classification_ssc_score(y_true_class, y_pred_set_2alphas,
-                             num_bins=num_bins)
+    classification_ssc_score(
+        y_true_class, y_pred_set_2alphas, num_bins=num_bins
+    )
 
 
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
@@ -500,8 +480,9 @@ def test_classification_ssc_return_shape(params: str) -> None:
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
 def test_classification_ssc_score_return_shape(params: str) -> None:
     """Test that the arrays returned by ssc metrics have the correct shape."""
-    cond_cov_min = classification_ssc_score(y_true_class,
-                                            **SSC_CLASSIF[params])
+    cond_cov_min = classification_ssc_score(
+        y_true_class, **SSC_CLASSIF[params]
+    )
     assert cond_cov_min.shape == SSC_CLASSIF_COVERAGES_SCORE[params].shape
 
 
@@ -515,8 +496,9 @@ def test_classification_ssc_coverage_values(params: str) -> None:
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
 def test_classification_ssc_score_coverage_values(params: str) -> None:
     """Test that the conditional coverage values returned are correct."""
-    cond_cov_min = classification_ssc_score(y_true_class,
-                                            **SSC_CLASSIF[params])
+    cond_cov_min = classification_ssc_score(
+        y_true_class, **SSC_CLASSIF[params]
+    )
     np.testing.assert_allclose(
         cond_cov_min, SSC_CLASSIF_COVERAGES_SCORE[params]
     )
@@ -581,7 +563,7 @@ def test_classification_coverage_v1andv2() -> None:
     cov_v1 = classification_coverage_score(y_true_class, y_pred_set)
     cov_v2 = classification_coverage_score_v2(
         np.expand_dims(y_true_class, axis=1),
-        np.expand_dims(y_pred_set, axis=2)
+        np.expand_dims(y_pred_set, axis=2),
     )
     np.testing.assert_allclose(cov_v1, cov_v2[0])
 

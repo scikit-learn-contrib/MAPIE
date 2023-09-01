@@ -11,8 +11,12 @@ from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (KFold, LeaveOneOut, ShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import (
+    KFold,
+    LeaveOneOut,
+    ShuffleSplit,
+    train_test_split,
+)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -20,10 +24,12 @@ from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
-from mapie.conformity_scores import (AbsoluteConformityScore,
-                                     ConformityScore,
-                                     GammaConformityScore,
-                                     ConformalResidualFittingScore)
+from mapie.conformity_scores import (
+    AbsoluteConformityScore,
+    ConformityScore,
+    GammaConformityScore,
+    ConformalResidualFittingScore,
+)
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.estimator.estimator import EnsembleRegressor
@@ -31,9 +37,7 @@ from mapie.subsample import Subsample
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
-X, y = make_regression(
-    n_samples=500, n_features=10, noise=1.0, random_state=1
-)
+X, y = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
 k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
 
@@ -55,77 +59,77 @@ STRATEGIES = {
         agg_function="median",
         cv=None,
         test_size=None,
-        random_state=random_state
+        random_state=random_state,
     ),
     "split": Params(
         method="base",
         agg_function="median",
         cv="split",
         test_size=0.5,
-        random_state=random_state
+        random_state=random_state,
     ),
     "jackknife": Params(
         method="base",
         agg_function="mean",
         cv=-1,
         test_size=None,
-        random_state=random_state
+        random_state=random_state,
     ),
     "jackknife_plus": Params(
         method="plus",
         agg_function="mean",
         cv=-1,
         test_size=None,
-        random_state=random_state
+        random_state=random_state,
     ),
     "jackknife_minmax": Params(
         method="minmax",
         agg_function="mean",
         cv=-1,
         test_size=None,
-        random_state=random_state
+        random_state=random_state,
     ),
     "cv": Params(
         method="base",
         agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
         test_size=None,
-        random_state=random_state
+        random_state=random_state,
     ),
     "cv_plus": Params(
         method="plus",
         agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
         test_size=None,
-        random_state=random_state
+        random_state=random_state,
     ),
     "cv_minmax": Params(
         method="minmax",
         agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
         test_size=None,
-        random_state=random_state
+        random_state=random_state,
     ),
     "jackknife_plus_ab": Params(
         method="plus",
         agg_function="mean",
         cv=Subsample(n_resamplings=30, random_state=random_state),
         test_size=None,
-        random_state=random_state
+        random_state=random_state,
     ),
     "jackknife_minmax_ab": Params(
         method="minmax",
         agg_function="mean",
         cv=Subsample(n_resamplings=30, random_state=random_state),
         test_size=None,
-        random_state=random_state
+        random_state=random_state,
     ),
     "jackknife_plus_median_ab": Params(
         method="plus",
         agg_function="median",
         cv=Subsample(n_resamplings=30, random_state=random_state),
         test_size=None,
-        random_state=random_state
+        random_state=random_state,
     ),
 }
 
@@ -210,8 +214,17 @@ def test_valid_agg_function(agg_function: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "cv", [None, -1, 2, KFold(), LeaveOneOut(),
-           ShuffleSplit(n_splits=1), "prefit", "split"]
+    "cv",
+    [
+        None,
+        -1,
+        2,
+        KFold(),
+        LeaveOneOut(),
+        ShuffleSplit(n_splits=1),
+        "prefit",
+        "split",
+    ],
 )
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
@@ -524,7 +537,7 @@ def test_aggregate_with_mask_with_invalid_agg_function() -> None:
         None,
         random_state,
         0.20,
-        False
+        False,
     )
     with pytest.raises(
         ValueError,
@@ -585,26 +598,22 @@ def test_conformity_score(
 ) -> None:
     """Test that any conformity score function with MAPIE raises no error."""
     mapie_reg = MapieRegressor(
-        conformity_score=conformity_score,
-        **STRATEGIES[strategy]
+        conformity_score=conformity_score, **STRATEGIES[strategy]
     )
     mapie_reg.fit(X, y + 1e3)
     mapie_reg.predict(X, alpha=0.05)
 
 
-@pytest.mark.parametrize(
-    "conformity_score", [ConformalResidualFittingScore()]
-)
+@pytest.mark.parametrize("conformity_score", [ConformalResidualFittingScore()])
 def test_conformity_score_with_split_strategies(
-   conformity_score: ConformityScore
+    conformity_score: ConformityScore,
 ) -> None:
     """
     Test that any conformity score function that handle only split strategies
     with MAPIE raises no error.
     """
     mapie_reg = MapieRegressor(
-        conformity_score=conformity_score,
-        **STRATEGIES["split"]
+        conformity_score=conformity_score, **STRATEGIES["split"]
     )
     mapie_reg.fit(X, y + 1e3)
     mapie_reg.predict(X, alpha=0.05)

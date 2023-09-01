@@ -1,4 +1,5 @@
 from __future__ import annotations
+from abc import abstractmethod
 
 from typing import Optional, Tuple, Union
 
@@ -14,6 +15,7 @@ class EnsembleEstimator(RegressorMixin):
     estimators.
     """
 
+    @abstractmethod
     def fit(
         self,
         X: ArrayLike,
@@ -45,11 +47,12 @@ class EnsembleEstimator(RegressorMixin):
             The estimator fitted.
         """
 
+    @abstractmethod
     def predict(
         self,
         X: ArrayLike,
         ensemble: bool = False,
-        return_multi_pred: bool = True
+        return_multi_pred: bool = True,
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample

@@ -15,9 +15,7 @@ from mapie.classification import MapieClassifier
 from mapie.regression import MapieQuantileRegressor, MapieRegressor
 
 X_toy = np.arange(18).reshape(-1, 1)
-y_toy = np.array(
-    [0, 0, 1, 0, 1, 2, 1, 2, 2, 0, 0, 1, 0, 1, 2, 1, 2, 2]
-    )
+y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2, 0, 0, 1, 0, 1, 2, 1, 2, 2])
 
 
 def MapieSimpleEstimators() -> List[BaseEstimator]:

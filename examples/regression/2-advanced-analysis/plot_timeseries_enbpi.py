@@ -36,8 +36,10 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie._typing import NDArray
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics import (
+    regression_coverage_score,
+    regression_mean_width_score,
+)
 from mapie.subsample import BlockBootstrap
 from mapie.regression import MapieTimeSeriesRegressor
 
@@ -143,14 +145,14 @@ step_size = 1
 
 for step in range(step_size, len(X_test), step_size):
     mapie_enpbi.partial_fit(
-        X_test.iloc[(step - step_size):step, :],
-        y_test.iloc[(step - step_size):step],
+        X_test.iloc[(step - step_size) : step, :],
+        y_test.iloc[(step - step_size) : step],
     )
     (
-        y_pred_pfit_enbpi[step:step + step_size],
-        y_pis_pfit_enbpi[step:step + step_size, :, :],
+        y_pred_pfit_enbpi[step : step + step_size],
+        y_pis_pfit_enbpi[step : step + step_size, :, :],
     ) = mapie_enpbi.predict(
-        X_test.iloc[step:(step + step_size), :],
+        X_test.iloc[step : (step + step_size), :],
         alpha=alpha,
         ensemble=True,
         optimize_beta=True,
@@ -191,9 +193,7 @@ enbpi_pfit = {
 results = [enbpi_no_pfit, enbpi_pfit]
 
 # Plot estimated prediction intervals on test set
-fig, axs = plt.subplots(
-    nrows=2, ncols=1, figsize=(15, 12), sharex="col"
-)
+fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(15, 12), sharex="col")
 
 for i, (ax, w, result) in enumerate(
     zip(axs, ["EnbPI, without partial_fit", "EnbPI with partial_fit"], results)
@@ -224,10 +224,10 @@ for i, (ax, w, result) in enumerate(
         w + "\n"
         f"Coverage:{result['coverage']:.3f}  Width:{result['width']:.3f}",
         fontweight="bold",
-        size=20
+        size=20,
     )
     plt.xticks(size=15, rotation=45)
     plt.yticks(size=15)
 
-axs[0].legend(prop={'size': 22})
+axs[0].legend(prop={"size": 22})
 plt.show()

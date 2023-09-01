@@ -14,6 +14,7 @@ Throughout this tutorial, we will answer the following questions:
 
 """
 
+from typing import Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -33,26 +34,31 @@ from mapie.multi_label_classification import MapieMultiLabelClassifier
 
 centers = [(0, 10), (-5, 0), (5, 0), (0, 5), (0, 0), (-4, 5), (5, 5)]
 covs = [
-    np.eye(2), np.eye(2), np.eye(2), np.diag([5, 5]), np.diag([3, 1]),
-    np.array([
-        [4, 3],
-        [3, 4]
-    ]),
-    np.array([
-        [3, -2],
-        [-2, 3]
-    ]),
+    np.eye(2),
+    np.eye(2),
+    np.eye(2),
+    np.diag([5, 5]),
+    np.diag([3, 1]),
+    np.array([[4, 3], [3, 4]]),
+    np.array([[3, -2], [-2, 3]]),
 ]
 
 x_min, x_max, y_min, y_max, step = -15, 15, -5, 15, 0.1
 n_samples = 800
-X = np.vstack([
-    np.random.multivariate_normal(center, cov, n_samples)
-    for center, cov in zip(centers, covs)
-])
+X = np.vstack(
+    [
+        np.random.multivariate_normal(center, cov, n_samples)
+        for center, cov in zip(centers, covs)
+    ]
+)
 classes = [
-    [1, 0, 1], [1, 1, 0], [0, 1, 1], [1, 1, 1],
-    [0, 1, 0], [1, 0, 0], [0, 0, 1]
+    [1, 0, 1],
+    [1, 1, 0],
+    [0, 1, 1],
+    [1, 1, 1],
+    [0, 1, 0],
+    [1, 0, 0],
+    [0, 0, 1],
 ]
 y = np.vstack([np.full((n_samples, 3), row) for row in classes])
 
@@ -74,7 +80,7 @@ colors = {
     (0, 1, 0): {"color": "#d62728", "label": "0-1-0"},
     (1, 1, 0): {"color": "#ffd700", "label": "1-1-0"},
     (1, 0, 0): {"color": "#c20078", "label": "1-0-0"},
-    (1, 1, 1): {"color": "#06C2AC", "label": "1-1-1"}
+    (1, 1, 1): {"color": "#06C2AC", "label": "1-1-1"},
 }
 
 for i in range(7):
@@ -85,7 +91,7 @@ for i in range(7):
         color=colors[(color[0], color[1], color[2])]["color"],
         marker="o",
         s=10,
-        edgecolor='k'
+        edgecolor="k",
     )
 plt.legend([c["label"] for c in colors.values()])
 plt.show()
@@ -115,7 +121,7 @@ method_params = {
     "RCPS - Hoeffding": ("rcps", "hoeffding"),
     "RCPS - Bernstein": ("rcps", "bernstein"),
     "RCPS - WSR": ("rcps", "wsr"),
-    "CRC": ("crc", None)
+    "CRC": ("crc", None),
 }
 
 clf = MultiOutputClassifier(GaussianNB()).fit(X_train, y_train)
@@ -130,12 +136,9 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
     )
     mapie.fit(X_cal, y_cal)
 
-    _, y_pss[name] = mapie.predict(
-        X_test, alpha=alpha, bound=bound, delta=.1
-    )
+    _, y_pss[name] = mapie.predict(X_test, alpha=alpha, bound=bound, delta=0.1)
     recalls[name] = (
-        (y_test_repeat * y_pss[name]).sum(axis=1) /
-        y_test_repeat.sum(axis=1)
+        (y_test_repeat * y_pss[name]).sum(axis=1) / y_test_repeat.sum(axis=1)
     ).mean(axis=0)
     thresholds[name] = mapie.lambdas_star
     r_hats[name] = mapie.r_hat
@@ -160,7 +163,7 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 vars_y = [recalls, thresholds]
 labels_y = ["Average number of kept labels", "Recall", "Threshold"]
 
-fig, axs = plt.subplots(1, len(vars_y), figsize=(8*len(vars_y), 8))
+fig, axs = plt.subplots(1, len(vars_y), figsize=(8 * len(vars_y), 8))
 for i, var in enumerate(vars_y):
     for name, (method, bound) in method_params.items():
         axs[i].plot(1 - alpha, var[name], label=name, linewidth=2)
@@ -184,28 +187,22 @@ plt.show()
 #       with a larger threshold.
 
 fig, axs = plt.subplots(
-    1,
-    len(method_params),
-    figsize=(8*len(method_params), 8)
+    1, len(method_params), figsize=(8 * len(method_params), 8)
 )
 for i, (name, (method, bound)) in enumerate(method_params.items()):
-    axs[i].plot(
-        mapie.lambdas,
-        r_hats[name], label=r"$\hat{R}$", linewidth=2
-    )
+    axs[i].plot(mapie.lambdas, r_hats[name], label=r"$\hat{R}$", linewidth=2)
     if name != "CRC":
         axs[i].plot(
-            mapie.lambdas,
-            r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2
+            mapie.lambdas, r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2
         )
     axs[i].plot([0, 1], [alpha[9], alpha[9]], label=r"$\alpha$")
     axs[i].plot(
-        [thresholds[name][9], thresholds[name][9]], [0, 1],
-        label=r"$\lambda^*" + f" = {thresholds[name][9]}$"
+        [thresholds[name][9], thresholds[name][9]],
+        [0, 1],
+        label=r"$\lambda^*" + f" = {thresholds[name][9]}$",
     )
     axs[i].legend(fontsize=20)
     axs[i].set_title(
-        f"{name} - Recall = {round(recalls[name][9], 2)}",
-        fontsize=20
+        f"{name} - Recall = {round(recalls[name][9], 2)}", fontsize=20
     )
 plt.show()

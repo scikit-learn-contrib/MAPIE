@@ -35,8 +35,10 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from mapie._typing import NDArray
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics import (
+    regression_coverage_score,
+    regression_mean_width_score,
+)
 from mapie.regression import MapieRegressor
 
 

@@ -5,8 +5,7 @@ from setuptools import find_packages, setup
 DISTNAME = "MAPIE"
 VERSION = "0.6.5"
 DESCRIPTION = (
-    "A scikit-learn-compatible module "
-    "for estimating prediction intervals."
+    "A scikit-learn-compatible module " "for estimating prediction intervals."
 )
 with codecs.open("README.rst", encoding="utf-8-sig") as f:
     LONG_DESCRIPTION = f.read()
@@ -16,7 +15,7 @@ DOWNLOAD_URL = "https://pypi.org/project/MAPIE/#files"
 PROJECT_URLS = {
     "Bug Tracker": "https://github.com/scikit-learn-contrib/MAPIE/issues",
     "Documentation": "https://mapie.readthedocs.io/en/latest/",
-    "Source Code": "https://github.com/scikit-learn-contrib/MAPIE"
+    "Source Code": "https://github.com/scikit-learn-contrib/MAPIE",
 }
 LICENSE = "new BSD"
 MAINTAINER = "T. Cordier, V. Blot, L. Lacombe"
@@ -27,7 +26,13 @@ MAINTAINER_EMAIL = (
 )
 PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
-INSTALL_REQUIRES = ["scikit-learn", "scipy", "numpy>=1.21", "packaging"]
+INSTALL_REQUIRES = [
+    "scikit-learn",
+    "scipy",
+    "numpy>=1.21",
+    "joblib",
+    "packaging",
+]
 CLASSIFIERS = [
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
@@ -41,7 +46,7 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10"
+    "Programming Language :: Python :: 3.10",
 ]
 
 setup(
@@ -60,5 +65,5 @@ setup(
     python_requires=PYTHON_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     classifiers=CLASSIFIERS,
-    zip_safe=False  # the package can run out of an .egg file
+    zip_safe=False,  # the package can run out of an .egg file
 )

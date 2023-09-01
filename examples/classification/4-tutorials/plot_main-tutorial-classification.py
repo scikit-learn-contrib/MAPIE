@@ -23,8 +23,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
 from mapie.classification import MapieClassifier
-from mapie.metrics import (classification_coverage_score,
-                           classification_mean_width_score)
+from mapie.metrics import (
+    classification_coverage_score,
+    classification_mean_width_score,
+)
 
 ##############################################################################
 # 1. Conformal Prediction method using the softmax score of the true label
@@ -60,15 +62,17 @@ from mapie.metrics import (classification_coverage_score,
 # label.
 
 centers = [(0, 3.5), (-2, 0), (2, 0)]
-covs = [np.eye(2), np.eye(2)*2, np.diag([5, 1])]
+covs = [np.eye(2), np.eye(2) * 2, np.diag([5, 1])]
 x_min, x_max, y_min, y_max, step = -6, 8, -6, 8, 0.1
 n_samples = 1000
 n_classes = 3
 np.random.seed(42)
-X = np.vstack([
-    np.random.multivariate_normal(center, cov, n_samples)
-    for center, cov in zip(centers, covs)
-])
+X = np.vstack(
+    [
+        np.random.multivariate_normal(center, cov, n_samples)
+        for center, cov in zip(centers, covs)
+    ]
+)
 y = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 X_train_cal, X_test, y_train_cal, y_test = train_test_split(
     X, y, test_size=0.2
@@ -85,16 +89,16 @@ X_test_mesh = np.stack([xx.ravel(), yy.ravel()], axis=1)
 ##############################################################################
 # Let’s see our training data.
 
-colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
+colors = {0: "#1f77b4", 1: "#ff7f0e", 2: "#2ca02c", 3: "#d62728"}
 y_train_col = list(map(colors.get, y_train))
 fig = plt.figure()
 plt.scatter(
     X_train[:, 0],
     X_train[:, 1],
     color=y_train_col,
-    marker='o',
+    marker="o",
     s=10,
-    edgecolor='k'
+    edgecolor="k",
 )
 plt.xlabel("X")
 plt.ylabel("Y")
@@ -134,7 +138,7 @@ def plot_scores(n, alphas, scores, quantiles):
             ymax=400,
             color=colors[i],
             ls="dashed",
-            label=f"alpha = {alphas[i]}"
+            label=f"alpha = {alphas[i]}",
         )
     plt.title("Distribution of scores")
     plt.legend()
@@ -162,35 +166,30 @@ plot_scores(n, alpha, scores, quantiles)
 
 
 def plot_results(alphas, X, y_pred, y_ps):
-    tab10 = plt.cm.get_cmap('Purples', 4)
-    colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
+    tab10 = plt.cm.get_cmap("Purples", 4)
+    colors = {0: "#1f77b4", 1: "#ff7f0e", 2: "#2ca02c", 3: "#d62728"}
     y_pred_col = list(map(colors.get, y_pred))
     fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
-    axs = {0: ax1, 1: ax2, 2:  ax3, 3: ax4}
+    axs = {0: ax1, 1: ax2, 2: ax3, 3: ax4}
     axs[0].scatter(
-        X[:, 0],
-        X[:, 1],
-        color=y_pred_col,
-        marker='.',
-        s=10,
-        alpha=0.4
+        X[:, 0], X[:, 1], color=y_pred_col, marker=".", s=10, alpha=0.4
     )
     axs[0].set_title("Predicted labels")
     for i, alpha in enumerate(alphas):
         y_pi_sums = y_ps[:, :, i].sum(axis=1)
-        num_labels = axs[i+1].scatter(
+        num_labels = axs[i + 1].scatter(
             X[:, 0],
             X[:, 1],
             c=y_pi_sums,
-            marker='.',
+            marker=".",
             s=10,
             alpha=1,
             cmap=tab10,
             vmin=0,
-            vmax=3
+            vmax=3,
         )
-        plt.colorbar(num_labels, ax=axs[i+1])
-        axs[i+1].set_title(f"Number of labels for alpha={alpha}")
+        plt.colorbar(num_labels, ax=axs[i + 1])
+        axs[i + 1].set_title(f"Number of labels for alpha={alpha}")
     plt.show()
 
 

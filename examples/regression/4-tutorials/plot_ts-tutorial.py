@@ -51,8 +51,10 @@ from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics import (
+    regression_coverage_score,
+    regression_mean_width_score,
+)
 from mapie.subsample import BlockBootstrap
 from mapie.regression import MapieTimeSeriesRegressor
 
@@ -74,9 +76,7 @@ url_file = (
     "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
     "examples/data/demand_temperature.csv"
 )
-demand_df = pd.read_csv(
-    url_file, parse_dates=True, index_col=0
-)
+demand_df = pd.read_csv(url_file, parse_dates=True, index_col=0)
 demand_df["Date"] = pd.to_datetime(demand_df.index)
 demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype("int64")
 demand_df["Weekday"] = demand_df.Date.dt.isocalendar().day.astype("int64")
@@ -91,7 +91,7 @@ for hour in range(1, n_lags):
 # It aims at simulating an effect, such as blackout or lockdown due to a
 # pandemic, that was not taken into account by the model during its training.
 
-demand_df.Demand.iloc[-int(num_test_steps/2):] -= 2
+demand_df.Demand.iloc[-int(num_test_steps / 2) :] -= 2
 
 ##############################################################################
 # The last week of the dataset is considered as test set, the remaining data
@@ -223,17 +223,17 @@ y_pred_pfit[:gap], y_pis_pfit[:gap, :, :] = mapie_enbpi.predict(
 )
 for step in range(gap, len(X_test), gap):
     mapie_enbpi.partial_fit(
-        X_test.iloc[(step - gap):step, :],
-        y_test.iloc[(step - gap):step],
+        X_test.iloc[(step - gap) : step, :],
+        y_test.iloc[(step - gap) : step],
     )
     (
-        y_pred_pfit[step:step + gap],
-        y_pis_pfit[step:step + gap, :, :],
+        y_pred_pfit[step : step + gap],
+        y_pis_pfit[step : step + gap, :, :],
     ) = mapie_enbpi.predict(
-        X_test.iloc[step:(step + gap), :],
+        X_test.iloc[step : (step + gap), :],
         alpha=alpha,
         ensemble=True,
-        optimize_beta=True
+        optimize_beta=True,
     )
     conformity_scores_pfit.append(mapie_enbpi.conformity_scores_)
     lower_quantiles_pfit.append(mapie_enbpi.lower_quantiles_)
@@ -263,15 +263,11 @@ fig, axs = plt.subplots(
 for i, (ax, w) in enumerate(zip(axs, ["without", "with"])):
     ax.set_ylabel("Hourly demand (GW)")
     ax.plot(
-        y_train[int(-len(y_test)/2):],
-        lw=2,
-        label="Training data", c="C0"
+        y_train[int(-len(y_test) / 2) :], lw=2, label="Training data", c="C0"
     )
     ax.plot(y_test, lw=2, label="Test data", c="C1")
 
-    ax.plot(
-        y_test.index, y_preds[i], lw=2, c="C2", label="Predictions"
-    )
+    ax.plot(y_test.index, y_preds[i], lw=2, c="C2", label="Predictions")
     ax.fill_between(
         y_test.index,
         y_pis[i][:, 0, 0],
@@ -297,14 +293,16 @@ rolling_coverage_pfit, rolling_coverage_npfit = [], []
 for i in range(window, len(y_test), 1):
     rolling_coverage_pfit.append(
         regression_coverage_score(
-            y_test[i-window:i], y_pis_pfit[i-window:i, 0, 0],
-            y_pis_pfit[i-window:i, 1, 0]
+            y_test[i - window : i],
+            y_pis_pfit[i - window : i, 0, 0],
+            y_pis_pfit[i - window : i, 1, 0],
         )
     )
     rolling_coverage_npfit.append(
         regression_coverage_score(
-            y_test[i-window:i], y_pis_npfit[i-window:i, 0, 0],
-            y_pis_npfit[i-window:i, 1, 0]
+            y_test[i - window : i],
+            y_pis_npfit[i - window : i, 0, 0],
+            y_pis_npfit[i - window : i, 1, 0],
         )
     )
 
@@ -313,12 +311,12 @@ plt.ylabel(f"Rolling coverage [{window} hours]")
 plt.plot(
     y_test[window:].index,
     rolling_coverage_npfit,
-    label="Without update of residuals"
+    label="Without update of residuals",
 )
 plt.plot(
     y_test[window:].index,
     rolling_coverage_pfit,
-    label="With update of residuals"
+    label="With update of residuals",
 )
 plt.show()
 
