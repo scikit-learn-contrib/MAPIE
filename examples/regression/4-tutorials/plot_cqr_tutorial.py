@@ -126,14 +126,14 @@ estimator = LGBMRegressor(
 params_distributions = dict(
     num_leaves=randint(low=10, high=50),
     max_depth=randint(low=3, high=20),
-    n_estimators=randint(low=50, high=300),
+    n_estimators=randint(low=50, high=100),
     learning_rate=uniform()
 )
 optim_model = RandomizedSearchCV(
     estimator,
     param_distributions=params_distributions,
     n_jobs=-1,
-    n_iter=100,
+    n_iter=10,
     cv=KFold(n_splits=5, shuffle=True),
     verbose=0
 )

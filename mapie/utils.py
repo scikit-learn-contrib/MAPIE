@@ -171,6 +171,9 @@ def check_cv(
     ValueError
         If the cross-validator is not valid.
     """
+    if random_state is None:
+        random_seeds = cast(list, np.random.get_state())[1]
+        random_state = np.random.choice(random_seeds)
     if cv is None:
         return KFold(
             n_splits=5, shuffle=True, random_state=random_state

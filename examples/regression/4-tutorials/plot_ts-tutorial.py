@@ -153,7 +153,8 @@ if model_params_fit_not_done:
 else:
     # Model: Random Forest previously optimized with a cross-validation
     model = RandomForestRegressor(
-        max_depth=10, n_estimators=50, random_state=59)
+        max_depth=10, n_estimators=50, random_state=59
+    )
 
 ##############################################################################
 # 3. Estimate prediction intervals on the test set
@@ -179,12 +180,12 @@ else:
 # Following [1], we use the :class:`~BlockBootstrap` sampling
 # method instead of the traditional bootstrap strategy for training the model
 # since the former is more suited for time series data.
-# Here, we choose to perform 100 resamplings with blocks of 48 points.
+# Here, we choose to perform 10 resamplings with 10 blocks.
 
 alpha = 0.05
 gap = 1
 cv_mapiets = BlockBootstrap(
-    n_resamplings=100, length=48, overlapping=True, random_state=59
+    n_resamplings=10, n_blocks=10, overlapping=False, random_state=59
 )
 mapie_enbpi = MapieTimeSeriesRegressor(
     model, method="enbpi", cv=cv_mapiets, agg_function="mean", n_jobs=-1

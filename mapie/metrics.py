@@ -4,6 +4,7 @@ import scipy
 import numpy as np
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_array, column_or_1d
+from sklearn.utils import check_random_state
 
 from ._typing import ArrayLike, NDArray
 from .utils import (calc_bins,
@@ -791,7 +792,6 @@ def sort_xy_by_y(x: NDArray, y: NDArray) -> Tuple[NDArray, NDArray]:
     ----------
     x : NDArray of size (n_samples,)
         The array to sort according to y.
-
     y : NDArray of size (n_samples,)
         The array to sort.
 

@@ -4,10 +4,16 @@ History
 
 ##### (##########)
 ------------------
+
+* Add more notebooks and examples.
+* Add Learn-Then-Test method for multilabel-classification.
+* Add a new conformity score, ConformalizedResidualFitting, that takes X into account and allows to compute adaptive intervals.
 * Refactor MapieRegressor and ConformityScore to add the possibility to use X in ConformityScore.
 * Separate the handling of the estimator from MapieRegressor into a new class called EnsembleEstimator.
-* Fix an unfixed random state in one of the classification tests
-* Add statistical calibration tests in binary classification
+* Fix an unfixed random state in one of the classification tests.
+* Add statistical calibration tests in binary classification.
+* Fix and preserve the split behavior of the check_cv method with and without random state.
+* Add statistical calibration tests in binary classification.
 
 0.6.5 (2023-06-06)
 ------------------
@@ -44,7 +50,7 @@ History
 0.6.0 (2023-01-19)
 ------------------
 
-* Add RCPS and CRC for multilabel-classifcation
+* Add RCPS and CRC for multilabel-classification
 * Add Top-Label calibration
 * Fix bug for classification with very low scores
 
