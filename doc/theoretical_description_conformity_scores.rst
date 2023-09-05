@@ -27,7 +27,7 @@ and the other on the left side.
 1. The absolute residual score
 ==============================
 
-The absolute residual score (:class:`mapie.conformity_scores.AbsoluteResidualScore`)
+The absolute residual score (:class:`mapie.conformity_scores.AbsoluteConformityScore`)
 is the simplest and most commonly used conformal score, it translates the error
 of the model : in regression it is called the residual.
 
@@ -71,7 +71,7 @@ in use cases where we want greater uncertainty when the prediction is high.
 3. The conformal residual fitting score
 =======================================
 
-The conformal residual fitting score [1] (:class:`mapie.conformity_scores.ConformalizedResidualFittingScore`)
+The conformal residual fitting score [1] (:class:`mapie.conformity_scores.ConformalResidualFittingScore`)
 (CRF) is slightly more complex than the previous scores.
 The normalization of the residual is now done by the predictions of an additional model
 :math:`\sigma` which learns to predict the base model residuals from :math:`X`.
