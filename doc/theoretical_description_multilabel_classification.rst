@@ -31,7 +31,7 @@ on the recall. RCPS, LTT and CRC give three slightly different guarantees:
 - LTT:
 
 .. math::
-    \mathbb{P}(R(\mathcal{T}_\lambda) \leq \alpha ) \geq 1 - \delta & p_\lambda \leq \frac{\delta}{\lvert \Lambda \rvert}
+    \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta \quad \texttt{with} \quad p_{\hat{\lambda}} \leq \frac{\delta}{\lvert \Lambda \rvert}
 
 
 Notice that at the opposite of the other two methods, LTT allows to control any non-monotone loss. In MAPIE for multilabel classification,
@@ -81,7 +81,7 @@ Following those settings, the RCPS method gives the following guarantee on the r
 1.2. Bounds calculation
 -----------------------
 
-In this section, we will consider only bounded losses (as for now, only the :math:`1-recall` loss is implemented.
+In this section, we will consider only bounded losses (as for now, only the :math:`1-recall` loss is implemented).
 We will show three different Upper Calibration Bounds (UCB) (Hoeffding, Bernstein and Waudby-Smith–Ramdas) of :math:`R(\lambda)`
 based on the empirical risk which is defined as follows:
 
@@ -167,6 +167,15 @@ With :
 
 3. Learn Then Test
 ------------------
+
+3.1. General settings
+---------------------
+The settings here are the same as RCPS and CRC, we just need to introduce some new parameters:
+
+- Let :math:`\Lambda` be a discretized for our :math:`\lambda`, meaning that :math:`\Lambda = \{\lambda_1, ..., \lambda_n\}`.
+
+- Let :math:`p_\lambda` be a valid p-value for the null hypothesis :math:`\mathbb{H}_j: R(\lambda_j)>\alpha`.
+
 The goal of this method is to control any loss whether monotonic, bounded or not, by performing risk control through multiple
 hypothesis testing. We can express the goal of the procedure as follows:
 
@@ -179,14 +188,14 @@ In order to find all the parameters :math:`\lambda` that satisfy the above condi
 :math:`\{(x_1, y_1), \dots, (x_n, y_n)\}`.
 
 2: For each :math:`\lambda_j` in a discrete set :math:`\Lambda = \{\lambda_1, \lambda_2,\dots, \lambda_n\}`, we associate the null hypothesis
-:math:`\mathbb{H}_j: R(\lambda_j)>\alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
+:math:`\mathbb{H}_j: R(\lambda_j) > \alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
 is controlled.
 
-3: For each null hypothesis, we compute a valid p-value using a concentration inequality. Here we choose to compute the Hoeffding-Bentkus p-value
+3: For each null hypothesis, we compute a valid p-value using a concentration inequality :math: `p_\lambda_j`. Here we choose to compute the Hoeffding-Bentkus p-value
 introduced in the paper [3].
 
 4: Return :math:`\hat{\Lambda} =  \mathcal{A}(\{p_j\}_{j\in\{1,\dots,\lvert \Lambda \rvert})`, where :math:`\mathcal{A}`, is an algorithm
-that controls the family-wise-error-rate (FWER).
+that controls the family-wise-error-rate (FWER), for example bonferonni correction.
 
 
 4. References

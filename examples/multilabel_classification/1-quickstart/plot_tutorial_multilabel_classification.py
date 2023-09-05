@@ -93,7 +93,11 @@ plt.legend([c["label"] for c in colors.values()])
 plt.show()
 
 ##############################################################################
-# 2. Fitting MapieMultiLabelClassifier
+# 2 Recall control risk with CRC and RCPS
+# ---------------------------------------
+##############################################################################
+
+# 2.1 Fitting MapieMultiLabelClassifier
 # ------------------------------------
 # MapieMultiLabelClassifier will be fitted with RCPS and CRC methods. For the
 # RCPS method, we will test all three Upper Confidence Bounds (Hoeffding,
@@ -145,7 +149,7 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 
 
 ##############################################################################
-# 3. Results
+# 2.2. Results
 # ----------
 # To check the results of the methods, we propose two types of plots:
 #
@@ -213,20 +217,24 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 plt.show()
 
 ##############################################################################
-# 4. Learn Then Test
+# 3. Precision control risk with LTT
 # ------------------
-# In this part, we will use learn then test to control precision.
+##############################################################################
+# 3.1 Fitting MapieMultilabelClassifier
+# -------------------------------------
+#
+# In this part, we will use LTT precision.
 # At the opposite of the 2 previous method, LTT can handle non-monotonous loss.
 # The procedure consist in multiple hypothesis testing. This is why the output
 # of this procedure isn't reduce to one value of :math: `\lambda`.
-
+#
 # More precisely, we look after all the :math: `\lambda` that sastisfy the
 # following:
 # :math: `\mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha ) \geq 1 - \delta`,
 # where :math: `R(\mathcal{T}_{\lambda})` is the risk we want to control and
-# each $\lambda$ should satisfy FWER control. :math:`\alpha`
-# is the desired risk.
-
+# each :math:`\lambda`` should satisfy FWER control.
+# :math:`\alpha` is the desired risk.
+#
 # Notice that the procedure will diligently examine each :math: `\lambda`
 # such that the risk remains below level :math: `\alpha`, meaning not
 # every : math:`\lambda` will be considered.
@@ -258,6 +266,14 @@ maxi = lambdas[np.argmax(lambdas)]
 
 r_hat = mapie_clf.r_hat
 idx_max = np.argmin(r_hat[valid_index])
+
+##############################################################################
+# 3.2 Results
+# -----------
+# We can see that not all :math:`\lambda` such that risk is below the orange
+# line are choosen by the procedure. Otherwise, all the lambdas that are
+# in the red rectangle verify fwer control and allow to control precision
+# at the desired level with a high probability.
 
 plt.plot(mapie_clf.lambdas, r_hat, label=r"$\hat{R}_\lambda$")
 plt.plot([0, 1], [alpha, alpha], label=r"$\alpha$")
