@@ -49,7 +49,6 @@ Metrics
    :toctree: generated/
    :template: function.rst
    
-   metrics.add_jitter
    metrics.classification_coverage_score
    metrics.classification_coverage_score_v2
    metrics.classification_mean_width_score
@@ -70,7 +69,6 @@ Metrics
    metrics.regression_mean_width_score
    metrics.regression_ssc
    metrics.regression_ssc_score
-   metrics.sort_xy_by_y
    metrics.spiegelhalter_p_value
    metrics.spiegelhalter_statistic
    metrics.top_label_ece
