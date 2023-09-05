@@ -53,6 +53,16 @@ involves all the stakeholders who develop and use AI models.
   relevant prediction sets for multi-label classification and beyond [10-12].
 - easily **wrap your favorite scikit-learn-compatible model** for the purposes just mentioned.
 
+Here's a quick overview for regression and classification (more details in the Quickstart section):
+
+.. code:: python
+    from mapie.regression import MapieRegressor
+    mapie_regressor = MapieRegressor(estimator=regressor, method='plus', cv=5)
+
+.. code:: python
+    from mapie.classification import MapieClassifier
+    mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
+
 **MAPIE** has been designed to respect three fundamental pillars:
 
 - Implemented methods are **model and use case agnostic** in order to address all relevant use cases tackled in industry.
@@ -87,8 +97,7 @@ and a variety of conformal risk control methods [10-12].
     $ conda install -c conda-forge mapie  # or via `conda`
     $ pip install git+https://github.com/scikit-learn-contrib/MAPIE  # or directly from the github repository
 
-
-⚡️ Quickstart
+⚡ Quickstart
 =============
 
 Here we propose two basic uncertainty quantification problems for regression and classification tasks with scikit-learn.
