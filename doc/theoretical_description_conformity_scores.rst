@@ -74,8 +74,8 @@ in use cases where we want greater uncertainty when the prediction is high.
 The conformal residual fitting score [1] (:class:`mapie.conformity_scores.ConformalResidualFittingScore`)
 (CRF) is slightly more complex than the previous scores.
 The normalization of the residual is now done by the predictions of an additional model
-:math:`\sigma` which learns to predict the base model residuals from :math:`X`.
-:math:`\sigma` is trained on :math:`(X, |Y-\hat{\mu}(X)|)` and the formula of the score is :
+:math:`\hat\sigma` which learns to predict the base model residuals from :math:`X`.
+:math:`\hat\sigma` is trained on :math:`(X, |Y-\hat{\mu}(X)|)` and the formula of the score is:
 
 .. math:: \frac{|Y-\hat{\mu}(X)|}{\hat{\sigma}(X)}
 
