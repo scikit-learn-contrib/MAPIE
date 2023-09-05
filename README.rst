@@ -66,43 +66,79 @@ with few assumptions (distribution-free and data-exchangeability assumptions) [1
 
 Prediction sets output by **MAPIE** encompass both aleatoric and epistemic uncertainties
 and are backed by strong theoretical guarantees using a variety of conformal prediction methods [3-9]
-and a variaty of conformal risk control methods [10-12].
+and a variety of conformal risk control methods [10-12].
 
 
 🔗 Requirements
 ===============
 
-Python 3.7+
-
-**MAPIE** stands on the shoulders of giants.
-
-Its only internal dependencies are `scikit-learn <https://scikit-learn.org/stable/>`_ and `numpy=>1.21 <https://numpy.org/>`_.
+- **MAPIE** runs on Python 3.7+.
+- **MAPIE** stands on the shoulders of giants. Its only internal dependencies are `scikit-learn <https://scikit-learn.org/stable/>`_ and `numpy=>1.21 <https://numpy.org/>`_.
 
 
 🛠 Installation
 ===============
 
-Install via `pip`:
+**MAPIE** can be installed in different ways:
 
 .. code:: sh
 
-    $ pip install mapie
-
-or via `conda`:
-
-.. code:: sh
-
-    $ conda install -c conda-forge mapie
-
-To install directly from the github repository :
-
-.. code:: sh
-
-    $ pip install git+https://github.com/scikit-learn-contrib/MAPIE
+    $ pip install mapie  # installation via `pip`
+    $ conda install -c conda-forge mapie  # or via `conda`
+    $ pip install git+https://github.com/scikit-learn-contrib/MAPIE  # or directly from the github repository
 
 
 ⚡️ Quickstart
-==============
+=============
+
+Here we propose two basic uncertainty quantification problems for regression and classification tasks with scikit-learn.
+
+As **MAPIE** is compatible with the standard scikit-learn API, you can see that with just these few lines of code:
+- how easy it is **to wrap your favorite scikit-learn-compatible model** around your model.
+- how easy it is **to follow the standard sequential ``fit'' and ``predict'' process** like any scikit-learn estimator.
+
+.. code:: python
+
+    import numpy as np
+    from sklearn.linear_model import LinearRegression
+    from sklearn.datasets import make_regression
+    from sklearn.model_selection import train_test_split
+
+    from mapie.regression import MapieRegressor
+
+
+    X, y = make_regression(n_samples=500, n_features=1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+
+    regressor = LinearRegression()
+
+    mapie_regressor = MapieRegressor(estimator=regressor, method='plus', cv=5)
+
+    mapie_regressor = mapie_regressor.fit(X_train, y_train)
+    y_pred, y_pis = mapie_regressor.predict(X_test, alpha=[0.05, 0.32])
+
+.. code:: python
+
+    import numpy as np
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.datasets import make_blobs
+    from sklearn.model_selection import train_test_split
+
+    from mapie.classification import MapieClassifier
+
+
+    X, y = make_blobs(n_samples=500, n_features=2, centers=3)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+
+    classifier = LogisticRegression()
+
+    mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
+
+    mapie_classifier = mapie_classifier.fit(X_train, y_train)
+    y_pred, y_pis = mapie_classifier.predict(X_test, alpha=[0.05, 0.32])
+
+🔎 Further Explanations
+=======================
 
 Let us start with a basic regression problem. 
 Here, we generate one-dimensional noisy data that we fit with a linear model.
@@ -148,6 +184,7 @@ The estimated prediction intervals can then be plotted as follows.
 .. code:: python
 
     from matplotlib import pyplot as plt
+
     plt.xlabel("x")
     plt.ylabel("y")
     plt.scatter(X, y, alpha=0.3)
