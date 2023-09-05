@@ -289,5 +289,3 @@ plt.show()
 # It is interesting to note that the "base model prefit" and the "wrapped
 # residual model" give exactly the same results. And this is because they are
 # the same models : one prefitted and one fitted directly in the class.
-
-
