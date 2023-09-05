@@ -109,7 +109,7 @@ So we state the p-value associated to the statistical test of well calibration a
 
 **Kuiper test**
 
-Kuiper test was derived in [2, 3, 4] and is very similar to Kolmogorov-Smirnov. This time, the statistic is defined as 
+Kuiper test was derived in [2, 3, 4] and is very similar to Kolmogorov-Smirnov. This time, the statistic is defined as:
 
 .. math::
    H = (\max_k|C_k| - \min_k|C_k|)/sigma
