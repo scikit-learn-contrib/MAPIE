@@ -31,7 +31,8 @@ on the recall. RCPS, LTT and CRC give three slightly different guarantees:
 - LTT:
 
 .. math::
-    \mathbb{P}(R(\mathcal{T}_{\lambda_{\lambda\in\hat{\Lambda}}}) \leq \alpha ) \geq 1 - \delta
+    \mathbb{P}(R(\mathcal{T}_\lambda) \leq \alpha ) \geq 1 - \delta & p_\lambda \leq \frac{\delta}{\lvert \Lambda \rvert}
+
 
 Notice that at the opposite of the other two methods, LTT allows to control any non-monotone loss. In MAPIE for multilabel classification,
 we use CRC and RCPS for recall control and LTT for precision control.
@@ -57,7 +58,7 @@ Let's first give the settings and the notations of the method:
 - Let :math:`R` be the risk associated to a set-valued predictor:
 
 .. math::
-    R(\mathcal{T}_{\hat{\lambda}}) = \mathbb{E}[L(Y, \mathcal{T}_{\lambda}(X)]
+    R(\mathcal{T}_{\hat{\lambda}}) = \mathbb{E}[L(Y, \mathcal{T}_{\lambda}(X))]
 
 The goal of the method is to compute an Upper Confidence Bound (UCB) :math:`\hat{R}^+(\lambda)` of :math:`R(\lambda)` and then to find
 :math:`\hat{\lambda}` as follows:
@@ -123,12 +124,12 @@ Where:
 This last UCB is the one recommended by the authors of [1] to use when using a bounded loss as this is the one which gives
 the smallest prediction sets size while having the same risk guarantees. This UCB is defined as follows:
 
-Let :math:`L_i (\lambda) = L(Y_i, T_{\lambda}(X_i)` and
+Let :math:`L_i (\lambda) = L(Y_i, T_{\lambda}(X_i))` and
 
 .. math::
     \hat{\mu}_i (\lambda) = \frac{1/2 + \sum_{j=1}^i L_j (\lambda)}{1 + i},
     \hat{\sigma}_i^2 (\lambda) = \frac{1/4 + \sum_{j=1}^i (L_j (\lambda) - \hat{\mu}_i (\lambda))}{1 + i},
-    \nu_i (\lambda) = \min \left\{ 1, \sqrt{\frac{2\log (1/\delta}{n \hat{\sigma}_{i-1}^2 (\lambda)}}\right\}
+    \nu_i (\lambda) = \min \left\{ 1, \sqrt{\frac{2\log (1/\delta)}{n \hat{\sigma}_{i-1}^2 (\lambda)}}\right\}
 
 Further let:
 
@@ -175,13 +176,16 @@ hypothesis testing. We can express the goal of the procedure as follows:
 In order to find all the parameters :math:`\lambda` that satisfy the above condition, Learn Then Test propose to do the following:
 
 1: First across the collections of functions :math:`(T_\lambda)_{\lambda\in\Lambda}`, we estimate the risk on the calibration data
-\{(x_1, y_1), \dots, (x_n, y_n)\}`.
+:math:`\{(x_1, y_1), \dots, (x_n, y_n)\}`.
+
 2: For each :math:`\lambda_j` in a discrete set :math:`\Lambda = \{\lambda_1, \lambda_2,\dots, \lambda_n\}`, we associate the null hypothesis
 :math:`\mathbb{H}_j: R(\lambda_j)>\alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
 is controlled.
+
 3: For each null hypothesis, we compute a valid p-value using a concentration inequality. Here we choose to compute the Hoeffding-Bentkus p-value
 introduced in the paper [3].
-4: Return :math:`\hat{\Lambda} =  \mathbb{A}(\{p_j\}_{j\in\{1,\dots,lvert \Lambda \rvert})`, where :math:`\mathbb{A}`, is an algorithm
+
+4: Return :math:`\hat{\Lambda} =  \mathcal{A}(\{p_j\}_{j\in\{1,\dots,\lvert \Lambda \rvert})`, where :math:`\mathcal{A}`, is an algorithm
 that controls the family-wise-error-rate (FWER).
 
 

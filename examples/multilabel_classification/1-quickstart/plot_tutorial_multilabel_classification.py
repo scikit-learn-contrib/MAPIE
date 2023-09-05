@@ -3,7 +3,10 @@
 Tutorial for multilabel-classification
 ======================================
 In this tutorial, we compare the prediction sets estimated by the
-RCPS and RCR methods implemented in MAPIE on a two-dimensional toy dataset.
+RCPS and CRC methods implemented in MAPIE, for recall control purpose,
+on a two-dimensional toy dataset.
+We will also look at the Learn Then Test (LTT) procedure. It allows to
+create prediction sets for precision control.
 
 Throughout this tutorial, we will answer the following questions:
 
@@ -208,3 +211,62 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
         fontsize=20
     )
 plt.show()
+
+##############################################################################
+# 4. Learn Then Test
+# ------------------
+# In this part, we will use learn then test to control precision.
+# At the opposite of the 2 previous method, LTT can handle non-monotonous loss.
+# The procedure consist in multiple hypothesis testing. This is why the output
+# of this procedure isn't reduce to one value of :math: `\lambda`.
+
+# More precisely, we look after all the :math: `\lambda` that sastisfy the
+# following:
+# :math: `\mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha ) \geq 1 - \delta`,
+# where :math: `R(\mathcal{T}_{\lambda})` is the risk we want to control and
+# each $\lambda$ should satisfy FWER control. :math:`\alpha`
+# is the desired risk.
+
+# Notice that the procedure will diligently examine each :math: `\lambda`
+# such that the risk remains below level :math: `\alpha`, meaning not
+# every : math:`\lambda` will be considered.
+# This means that a for a :math:`\lambda` such that risk is below
+# :math:`\alpha`
+# doesn't necessarly pass the FWER control! This is what we are going to
+# explore.
+
+mapie_clf = MapieMultiLabelClassifier(
+    estimator=clf,
+    method='ltt',
+    metric_control='precision'
+)
+mapie_clf.fit(X_cal, y_cal)
+
+alpha = 0.1
+_, y_ps = mapie_clf.predict(
+    X_test,
+    alpha=alpha,
+    delta=0.1
+)
+
+valid_index = mapie_clf.valid_index[0]  # valid_index is a list of list
+
+lambdas = mapie_clf.lambdas[valid_index]
+
+mini = lambdas[np.argmin(lambdas)]
+maxi = lambdas[np.argmax(lambdas)]
+
+r_hat = mapie_clf.r_hat
+idx_max = np.argmin(r_hat[valid_index])
+
+plt.plot(mapie_clf.lambdas, r_hat, label=r"$\hat{R}_\lambda$")
+plt.plot([0, 1], [alpha, alpha], label=r"$\alpha$")
+plt.axvspan(mini, maxi, facecolor='red', alpha=0.3, label=r"LTT-$\lambda$")
+plt.plot(
+    [lambdas[idx_max], lambdas[idx_max]], [0, 1],
+    label=r"$\lambda^* =" + f"{lambdas[idx_max]}$"
+)
+plt.xlabel(r"Threshold $\lambda$")
+plt.ylabel(r"Empirical risk: $\hat{R}_\lambda$")
+plt.title("Precision risk curve", fontsize=20)
+plt.legend()
