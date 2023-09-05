@@ -69,7 +69,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
     random_state=random_state,
-    test_size=0.05
+    test_size=0.02
 )
 X_train, X_calib, y_train, y_calib = train_test_split(
     X_train,
@@ -232,15 +232,31 @@ def plot_predictions(y, y_pred, intervals, coverage, cond_coverage, ax=None):
 
     ax.set_xlim([-0.5, 5.5])
     ax.set_ylim([-0.5, 5.5])
+
+    error = y_pred - intervals[:, 0, 0]
+    warning1 = y_test > y_pred + error
+    warning2 = y_test < y_pred - error
+    warnings = warning1 + warning2
     ax.errorbar(
-        y,
-        y_pred,
-        yerr=yerr(y_pred, intervals),
-        color="#ff7f0e",
-        alpha=0.1,
+        y[~warnings],
+        y_pred[~warnings],
+        yerr=np.abs(error[~warnings]),
+        color="g",
+        alpha=0.2,
         linestyle="None",
+        label="Inside prediction interval"
     )
-    ax.scatter(y, y_pred, s=2, color="#1f77b4")
+    ax.errorbar(
+        y[warnings],
+        y_pred[warnings],
+        yerr=np.abs(error[warnings]),
+        color="r",
+        alpha=0.3,
+        linestyle="None",
+        label="Outside prediction interval"
+    )
+
+    ax.scatter(y, y_pred, s=3, color="black")
     ax.plot([0, max(max(y), max(y_pred))], [0, max(max(y), max(y_pred))], "-r")
     ax.set_title(
         f"{strategy} - coverage={coverage:.0%} " +
@@ -248,6 +264,7 @@ def plot_predictions(y, y_pred, intervals, coverage, cond_coverage, ax=None):
     )
     ax.set_xlabel("y true")
     ax.set_ylabel("y pred")
+    ax.legend()
     ax.grid()
 
 
