@@ -226,18 +226,18 @@ plt.show()
 # In this part, we will use LTT precision.
 # At the opposite of the 2 previous method, LTT can handle non-monotonous loss.
 # The procedure consist in multiple hypothesis testing. This is why the output
-# of this procedure isn't reduce to one value of :math: `\lambda`.
+# of this procedure isn't reduce to one value of :math:`\lambda`.
 #
-# More precisely, we look after all the :math: `\lambda` that sastisfy the
+# More precisely, we look after all the :math:`\lambda` that sastisfy the
 # following:
-# :math: `\mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha ) \geq 1 - \delta`,
-# where :math: `R(\mathcal{T}_{\lambda})` is the risk we want to control and
+# :math:`\mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha ) \geq 1 - \delta`,
+# where :math:`R(\mathcal{T}_{\lambda})` is the risk we want to control and
 # each :math:`\lambda`` should satisfy FWER control.
 # :math:`\alpha` is the desired risk.
 #
 # Notice that the procedure will diligently examine each :math: `\lambda`
-# such that the risk remains below level :math: `\alpha`, meaning not
-# every : math:`\lambda` will be considered.
+# such that the risk remains below level :math:`\alpha`, meaning not
+# every :math:`\lambda` will be considered.
 # This means that a for a :math:`\lambda` such that risk is below
 # :math:`\alpha`
 # doesn't necessarly pass the FWER control! This is what we are going to
