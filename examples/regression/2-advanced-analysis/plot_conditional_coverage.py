@@ -172,15 +172,16 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
 # all methods. What we want to understand is : "Are these methods good
 # adaptive conformal methods ?". For this we have the two metrics
 # :func:`~mapie.metrics.regression_ssc_score` and :func:`~mapie.metrics.hsic`.
-# The first one is the maximum violation of the coverage : the intervals are
-# grouped by width and the coverage is computed for each group. The
-# lower coverage is the maximum coverage violation. An adaptive method is
-# one where this maximum violation is as close as possible to the global
-# coverage. If we interpret the result for the four methods here : CV+ seems to
-# be the better one. And with the hsic correlation coefficient, we have the
-# same interpretation : :func:`~mapie.metrics.hsic` computes the correlation
-# between the coverage indicator and the interval size, a value of 0
-# translates an independence between the two.
+# - SSC (Size Stratified Coverage) is the maximum violation of the coverage :
+#   the intervals are grouped by width and the coverage is computed for each
+#   group. The lower coverage is the maximum coverage violation. An adaptive
+#   method is one where this maximum violation is as close as possible to the
+#   global coverage. If we interpret the result for the four methods here :
+#   CV+ seems to be the better one.
+# - And with the hsic correlation coefficient, we have the
+#   same interpretation : :func:`~mapie.metrics.hsic` computes the correlation
+#   between the coverage indicator and the interval size, a value of 0
+#   translates an independence between the two.
 #
 # We would like to highlight here the misinterpretation that can be made
 # with these metrics. In fact, here CV+ with the absolute residual score
@@ -188,6 +189,12 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
 # Therefore, it is very important to check that the intervals widths are well
 # spread before drawing conclusions (with a plot of the distribution of
 # interval widths or a visualisation of the data for example).
+#
+# In this example, with the hsic correlation coefficient, none of the methods
+# stand out from the others. However, the SSC score for the method using the
+# gamma score is significantly worse than for CQR and CRF, even though their
+# global coverage is similar. CRF and CQR are very close here, with CRF being
+# slightly more conservative.
 
 
 # Visualition of the data and predictions
@@ -320,3 +327,10 @@ plt.show()
 # Finally, with the plot of coverage by bins of intervals grouped by widths
 # (which is the output of :func:`~mapie.metrics.regression_ssc`), we want
 # the bins to be as constant as possible around the global coverage (here 0.9).
+
+# As the previous metrics show, gamma score does not perform well in terms of
+# size stratified coverage. It either over-covers or under-covers too much.
+# For CRF and CQR, while the first one has several bins with over-coverage,
+# the second one has more under-coverage. These results are confirmed by the
+# visualisation of the data: CQR is better when the data are more spread out,
+# whereas CRF is better with small intervals.
