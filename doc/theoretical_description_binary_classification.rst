@@ -14,9 +14,14 @@ have established a tripod of theorems that connect these three notions for
 score-based classifier [1]. We will use their notation to present these different concepts.
 
 In MAPIE, we focus specifically on set prediction for multi-class classification
-and on calibration for binary classification.
+and on calibration for binary classification (via scikit-learn).
 
 Although set prediction is possible for binary classification, we don't recommend using this setting.
+Instead, we recommend the use of calibration (see more details in the
+Calibration section or by using the
+:class:`~sklearn.calibration.CalibratedClassifierCV` proposed by scikit-learn
+or :class:`~mapie.calibration.MapieCalibrator` proposed in MAPIE
+even if top-Label calibration is actually not really binary use-cases).
 Here is an argument from Gupta et al [1]:
 
     PSs and CIs are only ‘informative’ if the sets or intervals produced by them are small. To quantify
