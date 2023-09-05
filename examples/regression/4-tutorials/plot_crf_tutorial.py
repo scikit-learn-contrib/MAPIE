@@ -286,6 +286,8 @@ plt.show()
 ##############################################################################
 # The results show that all the setups reach the global coverage guaranteed of
 # 1-alpha.
-# It is interesting to note that the second and first models are the give
-# exactly the same results because they are the same models : one prefitted
-# and one fitted directly in the class.
+# It is interesting to note that the "base model prefit" and the "wrapped
+# residual model" give exactly the same results. And this is because they are
+# the same models : one prefitted and one fitted directly in the class.
+
+
