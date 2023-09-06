@@ -95,8 +95,6 @@ plt.show()
 ##############################################################################
 # 2 Recall control risk with CRC and RCPS
 # ---------------------------------------
-##############################################################################
-
 # 2.1 Fitting MapieMultiLabelClassifier
 # ------------------------------------
 # MapieMultiLabelClassifier will be fitted with RCPS and CRC methods. For the
@@ -219,11 +217,10 @@ plt.show()
 ##############################################################################
 # 3. Precision control risk with LTT
 # ------------------
-##############################################################################
 # 3.1 Fitting MapieMultilabelClassifier
 # -------------------------------------
 #
-# In this part, we will use LTT precision.
+# In this part, we will use LTT to control precision.
 # At the opposite of the 2 previous method, LTT can handle non-monotonous loss.
 # The procedure consist in multiple hypothesis testing. This is why the output
 # of this procedure isn't reduce to one value of :math:`\lambda`.
