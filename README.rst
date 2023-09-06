@@ -106,6 +106,7 @@ and a variety of conformal risk control methods [10-12].
 Here we propose two basic uncertainty quantification problems for regression and classification tasks with scikit-learn.
 
 As **MAPIE** is compatible with the standard scikit-learn API, you can see that with just these few lines of code:
+
 - how easy it is **to wrap your favorite scikit-learn-compatible model** around your model.
 - how easy it is **to follow the standard sequential** ``fit`` and ``predict`` process like any scikit-learn estimator.
 
