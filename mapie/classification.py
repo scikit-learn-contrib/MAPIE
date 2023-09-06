@@ -232,10 +232,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         check_random_state(self.random_state)
         self._check_raps()
 
-    def _check_binary_target(self, y: ArrayLike) -> None:
+    def _check_target(self, y: ArrayLike) -> None:
         """
-        Check that if the type of target is binary (not multi-class),
-        then the method have to be "score".
+        Check that if the type of target is binary,
+        (then the method have to be "score"), or multi-class.
 
         Parameters
         ----------
@@ -245,8 +245,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-            If type of target is binary and method is not "score".
+            If type of target is binary and method is not "score"
+            or if type of target is not multi-class.
         """
+        check_classification_targets(y)
         self._target_type = type_of_target(y)
         if self._target_type == "binary" and \
                 self.method not in ["score"]:
@@ -1061,8 +1063,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_enc = enc.transform(y)
 
         self.label_encoder_ = enc
-        check_classification_targets(y)
-        self._check_binary_target(y)
+        self._check_target(y)
 
         # Initialization
         self.estimators_: List[ClassifierMixin] = []
