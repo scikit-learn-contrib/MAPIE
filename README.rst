@@ -58,13 +58,22 @@ Here's a quick instantiation of MAPIE models for regression and classification p
 
 .. code:: python
 
+    # Uncertainty quantification for regression problem
     from mapie.regression import MapieRegressor
     mapie_regressor = MapieRegressor(estimator=regressor, method='plus', cv=5)
 
 .. code:: python
 
+    # Uncertainty quantification for classification problem
     from mapie.classification import MapieClassifier
     mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
+
+.. code:: python
+
+    # Control risks for multi-label classification problem
+    from mapie.multi_label_classification import MapieMultiLabelClassifier
+    mapie_classifier = MapieMultiLabelClassifier(estimator=classifier, method='crc', metric_control='recall')
+    mapie_classifier = MapieMultiLabelClassifier(estimator=classifier, method='ltt', metric_control='precision')
 
 **MAPIE** has been designed to respect three fundamental pillars:
 
@@ -112,6 +121,7 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
 
 .. code:: python
 
+    # Uncertainty quantification for regression problem
     import numpy as np
     from sklearn.linear_model import LinearRegression
     from sklearn.datasets import make_regression
@@ -132,6 +142,7 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
 
 .. code:: python
 
+    # Uncertainty quantification for classification problem
     import numpy as np
     from sklearn.linear_model import LogisticRegression
     from sklearn.datasets import make_blobs
@@ -146,6 +157,28 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
     classifier = LogisticRegression()
 
     mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
+
+    mapie_classifier = mapie_classifier.fit(X_train, y_train)
+    y_pred, y_pis = mapie_classifier.predict(X_test, alpha=[0.05, 0.32])
+
+.. code:: python
+
+    # Control risks for multi-label classification problem
+    import numpy as np
+    from sklearn.multioutput import MultiOutputClassifier
+    from sklearn.naive_bayes import GaussianNB
+    from sklearn.datasets import make_multilabel_classification
+    from sklearn.model_selection import train_test_split
+
+    from mapie.multi_label_classification import MapieMultiLabelClassifier
+
+
+    X, y = make_multilabel_classification(n_samples=500, n_features=2, allow_unlabeled=False)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+
+    classifier = MultiOutputClassifier(GaussianNB()).fit(X_train, y_train)
+
+    mapie_classifier = MapieMultiLabelClassifier(estimator=classifier, method='crc', metric_control='recall')
 
     mapie_classifier = mapie_classifier.fit(X_train, y_train)
     y_pred, y_pis = mapie_classifier.predict(X_test, alpha=[0.05, 0.32])
