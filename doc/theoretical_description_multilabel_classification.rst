@@ -191,7 +191,7 @@ In order to find all the parameters :math:`\lambda` that satisfy the above condi
 :math:`\mathbb{H}_j: R(\lambda_j) > \alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
 is controlled.
 
-3: For each null hypothesis, we compute a valid p-value using a concentration inequality :math: `p_\lambda_j`. Here we choose to compute the Hoeffding-Bentkus p-value
+3: For each null hypothesis, we compute a valid p-value using a concentration inequality :math:`p_\lambda_j`. Here we choose to compute the Hoeffding-Bentkus p-value
 introduced in the paper [3].
 
 4: Return :math:`\hat{\Lambda} =  \mathcal{A}(\{p_j\}_{j\in\{1,\dots,\lvert \Lambda \rvert})`, where :math:`\mathcal{A}`, is an algorithm

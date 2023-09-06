@@ -232,7 +232,7 @@ plt.show()
 # each :math:`\lambda`` should satisfy FWER control.
 # :math:`\alpha` is the desired risk.
 #
-# Notice that the procedure will diligently examine each :math: `\lambda`
+# Notice that the procedure will diligently examine each :math:`\lambda`
 # such that the risk remains below level :math:`\alpha`, meaning not
 # every :math:`\lambda` will be considered.
 # This means that a for a :math:`\lambda` such that risk is below
