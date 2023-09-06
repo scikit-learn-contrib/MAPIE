@@ -249,8 +249,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             or if type of target is not multi-class.
         """
         check_classification_targets(y)
-        self._target_type = type_of_target(y)
-        if self._target_type == "binary" and \
+        if type_of_target(y) == "binary" and \
                 self.method not in ["score"]:
             raise ValueError(
                 "Invalid method for binary target. "
