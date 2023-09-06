@@ -5,6 +5,7 @@ History
 ##### (##########)
 ------------------
 
+* Add documentation and notebooks for LTT.
 * Add more notebooks and examples.
 * Add Learn-Then-Test method for multilabel-classification.
 * Add a new conformity score, ConformalizedResidualFitting, that takes X into account and allows to compute adaptive intervals.
