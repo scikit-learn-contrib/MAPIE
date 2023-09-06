@@ -19,7 +19,7 @@ y_toy = np.array([5, 7, 9, 11, 13, 15])
 y_pred_list = [4, 7, 10, 12, 13, 12]
 conf_scores_list = [1, 0, -1, -1, 0, 3]
 conf_scores_gamma_list = [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]
-conf_scores_residualnorm_list = [0.2, 0., 0.11111111, 0.09090909, 0., 0.2]
+conf_scores_residual_norm_list = [0.2, 0., 0.11111111, 0.09090909, 0., 0.2]
 random_state = 42
 
 
@@ -223,7 +223,7 @@ def test_check_consistency() -> None:
 
 
 @pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
-def test_residualnormalised_prefit_conformity_score_get_conformity_scores(
+def test_residual_normalised_prefit_conformity_score_get_conformity_scores(
     y_pred: NDArray
 ) -> None:
     """
@@ -231,28 +231,28 @@ def test_residualnormalised_prefit_conformity_score_get_conformity_scores(
     when prefit is True.
     """
     residual_estimator = LinearRegression().fit(X_toy, y_toy)
-    residualnorm_conf_score = ResidualNormalisedScore(
+    residual_norm_conf_score = ResidualNormalisedScore(
         residual_estimator=residual_estimator,
         prefit=True,
         random_state=random_state
     )
-    conf_scores = residualnorm_conf_score.get_conformity_scores(
+    conf_scores = residual_norm_conf_score.get_conformity_scores(
         X_toy, y_toy, y_pred
     )
-    expected_signed_conf_scores = np.array(conf_scores_residualnorm_list)
+    expected_signed_conf_scores = np.array(conf_scores_residual_norm_list)
     np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
 
 
 @pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
-def test_residualnorm_conformity_score_get_conformity_scores(
+def test_residual_normalised_conformity_score_get_conformity_scores(
     y_pred: NDArray
 ) -> None:
     """
     Test conformity score computation for ResidualNormalisedScore
     when prefit is False.
     """
-    residualnorm_score = ResidualNormalisedScore(random_state=random_state)
-    conf_scores = residualnorm_score.get_conformity_scores(
+    residual_norm_score = ResidualNormalisedScore(random_state=random_state)
+    conf_scores = residual_norm_score.get_conformity_scores(
         X_toy, y_toy, y_pred
     )
     expected_signed_conf_scores = np.array(
@@ -261,24 +261,24 @@ def test_residualnorm_conformity_score_get_conformity_scores(
     np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
 
 
-def test_residualnormalised_score_prefit_with_notfitted_estim() -> None:
+def test_residual_normalised_score_prefit_with_notfitted_estim() -> None:
     """Test that a not fitted estimator and prefit=True raises an error."""
-    residualnorm_conf_score = ResidualNormalisedScore(
+    residual_norm_conf_score = ResidualNormalisedScore(
         residual_estimator=LinearRegression(), prefit=True
     )
     with pytest.raises(ValueError):
-        residualnorm_conf_score.get_conformity_scores(
+        residual_norm_conf_score.get_conformity_scores(
             X_toy, y_toy, y_pred_list
         )
 
 
-def test_residualnormalised_score_with_default_params() -> None:
+def test_residual_normalised_score_with_default_params() -> None:
     """Test that no error is raised with default parameters."""
-    residualnorm_score = ResidualNormalisedScore()
-    conf_scores = residualnorm_score.get_conformity_scores(
+    residual_norm_score = ResidualNormalisedScore()
+    conf_scores = residual_norm_score.get_conformity_scores(
         X_toy, y_toy, y_pred_list
     )
-    residualnorm_score.get_estimation_distribution(X_toy, y_toy, conf_scores)
+    residual_norm_score.get_estimation_distribution(X_toy, y_toy, conf_scores)
 
 
 def test_invalid_estimator() -> None:
@@ -287,16 +287,16 @@ def test_invalid_estimator() -> None:
         def __init__(self):
             pass
 
-    residualnorm_conf_score = ResidualNormalisedScore(
+    residual_norm_conf_score = ResidualNormalisedScore(
         residual_estimator=DumbEstimator()
     )
     with pytest.raises(ValueError):
-        residualnorm_conf_score.get_conformity_scores(
+        residual_norm_conf_score.get_conformity_scores(
             X_toy, y_toy, y_pred_list
         )
 
 
-def test_cross_residualnormalised() -> None:
+def test_cross_residual_normalised() -> None:
     """
     Test that residual normalised score with cross method raises an error.
     """
@@ -306,7 +306,7 @@ def test_cross_residualnormalised() -> None:
         )
 
 
-def test_residualnormalised_score_pipe() -> None:
+def test_residual_normalised_score_pipe() -> None:
     """
     Test that residual normalised score function raises no error
     with a pipeline estimator.
@@ -326,7 +326,7 @@ def test_residualnormalised_score_pipe() -> None:
                   np.concatenate((y_toy, y_toy)))
 
 
-def test_residualnormalised_score_pipe_prefit() -> None:
+def test_residual_normalised_score_pipe_prefit() -> None:
     """
     Test that residual normalised score function raises no error with a
     pipeline estimator prefitted.
@@ -346,7 +346,7 @@ def test_residualnormalised_score_pipe_prefit() -> None:
     mapie_reg.fit(X_toy, y_toy)
 
 
-def test_residualnormalised_prefit_estimator_with_neg_values() -> None:
+def test_residual_normalised_prefit_estimator_with_neg_values() -> None:
     """
     Test that a prefit estimator for the residual estimator of the residual
     normalised score that predicts negative values raises a warning.
@@ -355,28 +355,28 @@ def test_residualnormalised_prefit_estimator_with_neg_values() -> None:
         def predict(self, X):
             return np.full(X.shape[0], fill_value=-1.)
     estim = NegativeRegresssor().fit(X_toy, y_toy)
-    residualnorm_conf_score = ResidualNormalisedScore(
+    residual_norm_conf_score = ResidualNormalisedScore(
         residual_estimator=estim, prefit=True
     )
     with pytest.warns(UserWarning):
-        residualnorm_conf_score.get_conformity_scores(
+        residual_norm_conf_score.get_conformity_scores(
             X_toy, y_toy, y_pred_list
         )
 
 
-def test_residualnormalised_prefit_get_estimation_distribution() -> None:
+def test_residual_normalised_prefit_get_estimation_distribution() -> None:
     """
     Test that get_estimation_distribution with prefitted estimator in residual
     normalised score raises no error.
     """
     estim = LinearRegression().fit(X_toy, y_toy)
-    residualnormalised_conf_score = ResidualNormalisedScore(
+    residual_normalised_conf_score = ResidualNormalisedScore(
         residual_estimator=estim, prefit=True
     )
-    conf_scores = residualnormalised_conf_score.get_conformity_scores(
+    conf_scores = residual_normalised_conf_score.get_conformity_scores(
         X_toy, y_toy, y_pred_list
     )
-    residualnormalised_conf_score.get_estimation_distribution(
+    residual_normalised_conf_score.get_estimation_distribution(
         X_toy, y_pred_list, conf_scores
     )
 
