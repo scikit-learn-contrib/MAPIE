@@ -111,6 +111,7 @@ References
 
 [1] Angelopoulos, A. N., & Bates, S. (2021). A gentle introduction to conformal
 prediction and distribution-free uncertainty quantification. arXiv preprint arXiv:2107.07511.
+
 [2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. &amp; Brunel, N.. (2023).
 Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library.
 Available from https://proceedings.mlr.press/v204/cordier23a.html.
