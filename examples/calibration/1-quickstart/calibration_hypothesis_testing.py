@@ -2,10 +2,10 @@
 =========================================================
 Testing for calibration in binary classification settings
 =========================================================
-This example uses :function:`~mapie.metrics.kolmogorov_smirnov_pvalue`
+This example uses :func:`~mapie.metrics.kolmogorov_smirnov_pvalue`
 to test for calibration of scores output by binary classifiers.
-Other alternatives are :function:`~mapie.metrics.kuiper_pvalue` and
-:function:`~mapie.metrics.spieglehalter_pvalue`.
+Other alternatives are :func:`~mapie.metrics.kuiper_pvalue` and
+:func:`~mapie.metrics.spieglehalter_pvalue`.
 
 These statistical tests are based on the following references:
 
@@ -100,7 +100,7 @@ plt.show()
 # ------------------------------------------------------------------
 #
 # We leverage the Kolomogorov-Smirnov statistical test
-# :function:`~mapie.metrics.kolmogorov_smirnov_pvalue`. It is based
+# :func:`~mapie.metrics.kolmogorov_smirnov_pvalue`. It is based
 # on the cumulative difference between sorted scores and labels.
 # If the null hypothesis holds (i.e., the scores are well calibrated),
 # the curve of the cumulative differences share some nice properties

@@ -315,7 +315,8 @@ sphinx_gallery_conf = {
         "../examples/regression",
         "../examples/classification",
         "../examples/multilabel_classification",
-        "../examples/calibration"],
+        "../examples/calibration"
+    ],
     "gallery_dirs": [
         "examples_regression",
         "examples_classification",
