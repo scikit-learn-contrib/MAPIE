@@ -314,11 +314,13 @@ sphinx_gallery_conf = {
     "examples_dirs": [
         "../examples/regression",
         "../examples/classification",
-        "../examples/multilabel_classification"],
+        "../examples/multilabel_classification",
+        "../examples/calibration"],
     "gallery_dirs": [
         "examples_regression",
         "examples_classification",
-        "examples_multilabel_classification"
+        "examples_multilabel_classification",
+        "examples_calibration"
     ],
     "doc_module": "mapie",
     "backreferences_dir": os.path.join("generated"),

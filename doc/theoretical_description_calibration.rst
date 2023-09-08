@@ -97,7 +97,7 @@ We also introduce a typical normalization scale :math:`\sigma`:
 Tho Kolmogorov-Smirnov statisitc is then defined as : 
 
 .. math::
-   G = \max|C_k|/sigma
+   G = \max|C_k|/\sigma
 
 It can be shown [2] that, under the null hypothesis of well calibrated scores, this quantity asymptotically (i.e. when N goes to infinity)
 converges to the maximum absolute value of a standard Brownian motion over the unit interval :math:`[0, 1]`. [3, 4] also provide closed-form 
@@ -112,7 +112,7 @@ So we state the p-value associated to the statistical test of well calibration a
 Kuiper test was derived in [2, 3, 4] and is very similar to Kolmogorov-Smirnov. This time, the statistic is defined as:
 
 .. math::
-   H = (\max_k|C_k| - \min_k|C_k|)/sigma
+   H = (\max_k|C_k| - \min_k|C_k|)/\sigma
 
 It can be shown [2] that, under the null hypothesis of well calibrated scores, this quantity asymptotically (i.e. when N goes to infinity)
 converges to the range of a standard Brownian motion over the unit interval :math:`[0, 1]`. [3, 4] also provide closed-form 

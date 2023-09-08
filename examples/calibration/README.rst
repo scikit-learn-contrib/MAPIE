@@ -1,4 +1,4 @@
-.. _calibration_examples_1:
+.. _calibration_examples:
 
 1. Quickstart examples
 ----------------------
