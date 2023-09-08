@@ -170,6 +170,7 @@ With :
 
 3.1. General settings
 ---------------------
+We are going to present the Learn Then Test framework
 The settings here are the same as RCPS and CRC, we just need to introduce some new parameters:
 
 - Let :math:`\Lambda` be a discretized for our :math:`\lambda`, meaning that :math:`\Lambda = \{\lambda_1, ..., \lambda_n\}`.
@@ -185,17 +186,17 @@ hypothesis testing. We can express the goal of the procedure as follows:
 In order to find all the parameters :math:`\lambda` that satisfy the above condition, the Learn Then Test framework proposes to do the following:
 
 - First across the collections of functions :math:`(T_\lambda)_{\lambda\in\Lambda}`, we estimate the risk on the calibration data
-:math:`\{(x_1, y_1), \dots, (x_n, y_n)\}`.
+  :math:`\{(x_1, y_1), \dots, (x_n, y_n)\}`.
 
 - For each :math:`\lambda_j` in a discrete set :math:`\Lambda = \{\lambda_1, \lambda_2,\dots, \lambda_n\}`, we associate the null hypothesis
-:math:`\mathbb{H}_j: R(\lambda_j) > \alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
+  :math:`\mathcal{H}_j: R(\lambda_j) > \alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
 is controlled.
 
 - For each null hypothesis, we compute a valid p-value using a concentration inequality :math:`p_{\lambda_j}`. Here we choose to compute the Hoeffding-Bentkus p-value
-introduced in the paper [3].
+  introduced in the paper [3].
 
 - Return :math:`\hat{\Lambda} =  \mathcal{A}(\{p_j\}_{j\in\{1,\dots,\lvert \Lambda \rvert})`, where :math:`\mathcal{A}`, is an algorithm
-that controls the family-wise-error-rate (FWER), for example bonferonni correction.
+  that controls the family-wise-error-rate (FWER), for example bonferonni correction.
 
 
 4. References
