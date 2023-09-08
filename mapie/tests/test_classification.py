@@ -382,6 +382,57 @@ STRATEGIES = {
     ),
 }
 
+STRATEGIES_BINARY = {
+    "score": (
+        Params(
+            method="score",
+            cv="prefit",
+            test_size=None,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=False,
+            agg_scores="mean"
+        )
+    ),
+    "score_split": (
+        Params(
+            method="score",
+            cv="split",
+            test_size=0.5,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=False,
+            agg_scores="mean"
+        )
+    ),
+    "score_cv_mean": (
+        Params(
+            method="score",
+            cv=3,
+            test_size=None,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=False,
+            agg_scores="mean"
+        )
+    ),
+    "score_cv_crossval": (
+        Params(
+            method="score",
+            cv=3,
+            test_size=None,
+            random_state=42
+        ),
+        ParamsPredict(
+            include_last_label=False,
+            agg_scores="crossval"
+        )
+    )
+}
+
 COVERAGES = {
     "score": 6/9,
     "score_split": 8/9,
@@ -407,6 +458,13 @@ COVERAGES = {
     "raps_split": 7/9,
     "raps_randomized": 8/9,
     "raps_randomized_split": 1.0
+}
+
+COVERAGES_BINARY = {
+    "score": 6/9,
+    "score_split": 8/9,
+    "score_cv_mean": 6/9,
+    "score_cv_crossval": 6/9
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -680,6 +738,56 @@ y_toy_mapie = {
     ]
 }
 
+X_toy_binary = np.arange(9).reshape(-1, 1)
+y_toy_binary = np.array([0, 0, 1, 0, 1, 1, 0, 1, 1])
+
+y_toy_binary_mapie = {
+    "score": [
+        [True, False],
+        [True, False],
+        [True, False],
+        [False, False],
+        [False, True],
+        [False, True],
+        [False, True],
+        [False, True],
+        [False, True]
+    ],
+    "score_split": [
+        [True, True],
+        [True, True],
+        [True, True],
+        [True, True],
+        [True, True],
+        [True, True],
+        [True, True],
+        [True, True],
+        [True, False]
+    ],
+    "score_cv_mean": [
+        [True, False],
+        [True, False],
+        [True, False],
+        [False, False],
+        [False, True],
+        [False, True],
+        [False, True],
+        [False, True],
+        [False, True]
+    ],
+    "score_cv_crossval": [
+        [True, False],
+        [True, False],
+        [True, False],
+        [False, False],
+        [False, True],
+        [False, True],
+        [False, True],
+        [False, True],
+        [False, True]
+    ]
+}
+
 REGULARIZATION_PARAMETERS = [
     [.001, [1]],
     [[.01, .2], [1, 3]],
@@ -847,9 +955,12 @@ def test_default_parameters() -> None:
 
 
 @pytest.mark.parametrize("cv", ["prefit", "split"])
-def test_warning_binary_classif(cv: str) -> None:
+@pytest.mark.parametrize("method", ["cumulated_score", "raps"])
+def test_warning_binary_classif(cv: str, method: str) -> None:
     """Test that a warning is raised y is binary."""
-    mapie_clf = MapieClassifier(cv=cv, random_state=random_state)
+    mapie_clf = MapieClassifier(
+      cv=cv, method=method, random_state=random_state
+    )
     X, y = make_classification(
         n_samples=500,
         n_features=10,
@@ -857,7 +968,9 @@ def test_warning_binary_classif(cv: str) -> None:
         n_classes=2,
         random_state=random_state,
     )
-    with pytest.warns(UserWarning, match=r"not of type multiclass*"):
+    with pytest.raises(
+        ValueError, match=r".*Invalid method for binary target.*"
+    ):
         mapie_clf.fit(X, y)
 
 
@@ -1271,6 +1384,31 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     np.testing.assert_allclose(
         classification_coverage_score(y_toy, y_ps[:, :, 0]),
         COVERAGES[strategy],
+    )
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES_BINARY])
+def test_toy_binary_dataset_predictions(strategy: str) -> None:
+    """
+    Test prediction sets estimated by MapieClassifier on a toy binary dataset
+    """
+    args_init, args_predict = STRATEGIES_BINARY[strategy]
+    if "split" not in strategy:
+        clf = LogisticRegression().fit(X_toy_binary, y_toy_binary)
+    else:
+        clf = LogisticRegression()
+    mapie_clf = MapieClassifier(estimator=clf, **args_init)
+    mapie_clf.fit(X_toy_binary, y_toy_binary)
+    _, y_ps = mapie_clf.predict(
+        X_toy,
+        alpha=0.5,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(y_ps[:, :, 0], y_toy_binary_mapie[strategy])
+    np.testing.assert_allclose(
+        classification_coverage_score(y_toy_binary, y_ps[:, :, 0]),
+        COVERAGES_BINARY[strategy],
     )
 
 

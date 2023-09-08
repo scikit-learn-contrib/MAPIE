@@ -6,6 +6,7 @@ History
 ------------------
 
 * Add more notebooks and examples.
+* Add prediction set estimation for binary classification.
 * Add Learn-Then-Test method for multilabel-classification.
 * Add a new conformity score, ResidualNormalisedScore, that takes X into account and allows to compute adaptive intervals.
 * Refactor MapieRegressor and ConformityScore to add the possibility to use X in ConformityScore.
