@@ -23,7 +23,7 @@ from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import (AbsoluteConformityScore,
                                      ConformityScore,
                                      GammaConformityScore,
-                                     ConformalResidualFittingScore)
+                                     ResidualNormalisedScore)
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.estimator.estimator import EnsembleRegressor
@@ -593,7 +593,7 @@ def test_conformity_score(
 
 
 @pytest.mark.parametrize(
-    "conformity_score", [ConformalResidualFittingScore()]
+    "conformity_score", [ResidualNormalisedScore()]
 )
 def test_conformity_score_with_split_strategies(
    conformity_score: ConformityScore

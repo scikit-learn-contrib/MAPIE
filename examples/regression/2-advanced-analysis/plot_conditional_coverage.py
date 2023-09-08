@@ -5,7 +5,7 @@ Estimating conditional coverage
 This example uses :func:`~mapie.regression.MapieRegressor` with conformal
 scores that returns adaptive intervals i.e.
 (:class:`~mapie.conformity_scores.GammaConformityScore` and
-:class:`~mapie.conformity_scores.ConformalResidualFittingScore`) as well as
+:class:`~mapie.conformity_scores.ResidualNormalisedScore`) as well as
 :func:`~mapie.regression.MapieQuantileRegressor`.
 The conditional coverage is computed with the three
 functions that allows to estimate the conditional coverage in regression
@@ -24,7 +24,7 @@ from lightgbm import LGBMRegressor
 from mapie._typing import NDArray
 from mapie.regression import MapieQuantileRegressor, MapieRegressor
 from mapie.conformity_scores import (GammaConformityScore,
-                                     ConformalResidualFittingScore)
+                                     ResidualNormalisedScore)
 from mapie.metrics import (regression_coverage_score_v2,
                            regression_ssc_score,
                            hsic, regression_ssc)
@@ -107,9 +107,9 @@ STRATEGIES = {
         "cv": Subsample(n_resamplings=100),
         "conformity_score": GammaConformityScore()
     },
-    "CRF": {
+    "ResidualNormalised": {
         "cv": "split",
-        "conformity_score": ConformalResidualFittingScore(
+        "conformity_score": ResidualNormalisedScore(
             residual_estimator=LGBMRegressor(
                 alpha=0.5,
                 random_state=random_state),
@@ -192,9 +192,10 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
 #
 # In this example, with the hsic correlation coefficient, none of the methods
 # stand out from the others. However, the SSC score for the method using the
-# gamma score is significantly worse than for CQR and CRF, even though their
-# global coverage is similar. CRF and CQR are very close here, with CRF being
-# slightly more conservative.
+# gamma score is significantly worse than for CQR and ResidualNormalisedScore,
+# even though their global coverage is similar. ResidualNormalisedScore and CQR
+# are very close here, with ResidualNormalisedScore being slightly more
+# conservative.
 
 
 # Visualition of the data and predictions
@@ -330,7 +331,8 @@ plt.show()
 
 # As the previous metrics show, gamma score does not perform well in terms of
 # size stratified coverage. It either over-covers or under-covers too much.
-# For CRF and CQR, while the first one has several bins with over-coverage,
-# the second one has more under-coverage. These results are confirmed by the
-# visualisation of the data: CQR is better when the data are more spread out,
-# whereas CRF is better with small intervals.
+# For ResidualNormalisedScore and CQR, while the first one has several bins
+# with over-coverage, the second one has more under-coverage. These results
+# are confirmed by the visualisation of the data: CQR is better when the data
+# are more spread out, whereas ResidualNormalisedScore is better with small
+# intervals.

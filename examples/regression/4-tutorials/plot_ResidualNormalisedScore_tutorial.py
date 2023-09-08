@@ -1,9 +1,9 @@
 """
-=======================================================
-Tutorial for conformal residual fitting score (CRF)
-=======================================================
+======================================
+Tutorial for residual normalised score
+======================================
 We will use the sklearn california housing dataset to understand how the
-conformal residual fitting score works and show the multiple ways of using it.
+residual normalised score works and show the multiple ways of using it.
 
 We will explicit the experimental setup below.
 """
@@ -19,7 +19,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 
-from mapie.conformity_scores import ConformalResidualFittingScore
+from mapie.conformity_scores import ResidualNormalisedScore
 from mapie.metrics import regression_coverage_score_v2, regression_ssc_score
 from mapie.regression import MapieRegressor
 
@@ -61,7 +61,7 @@ plt.show()
 # calibration, residual and test set. Recall that the calibration set is used
 # for calibrating the prediction intervals and the residual set is used to fit
 # the residual estimator used by the
-# :class:`~mapie.conformity_scores.ConformalResidualFittingScore`.
+# :class:`~mapie.conformity_scores.ResidualNormalisedScore`.
 
 np.array(X)
 np.array(y)
@@ -87,9 +87,9 @@ X_calib_prefit, X_res, y_calib_prefit, y_res = train_test_split(
 ##############################################################################
 # 2. Models
 # --------------------------------------------------------------------------
-# We will now define 4 different ways of using the CRF score. Remember that the
-# CRF score is only available in the split setup. First, the simplest one
-# with all the default parameters :
+# We will now define 4 different ways of using the residual normalised score.
+# Remember that this score is only available in the split setup. First, the
+# simplest one with all the default parameters :
 # a :class:`~sklearn.linear_model.LinearRegression` is used for the residual
 # estimator. (Note that to avoid negative values it is trained with the log
 # of the features and the exponential of the predictions are used).
@@ -135,19 +135,19 @@ wrapped_residual_estimator = PosEstim().fit(
 STRATEGIES = {
     "Default": {
         "cv": "split",
-        "conformity_score": ConformalResidualFittingScore()
+        "conformity_score": ResidualNormalisedScore()
     },
     "Base model prefit": {
         "cv": "prefit",
         "estimator": base_model,
-        "conformity_score": ConformalResidualFittingScore(
+        "conformity_score": ResidualNormalisedScore(
             split_size=0.5, random_state=random_state
         )
     },
     "Base and residual model prefit": {
         "cv": "prefit",
         "estimator": base_model,
-        "conformity_score": ConformalResidualFittingScore(
+        "conformity_score": ResidualNormalisedScore(
             residual_estimator=residual_estimator,
             random_state=random_state,
             prefit=True
@@ -156,7 +156,7 @@ STRATEGIES = {
     "Wrapped residual model": {
         "cv": "prefit",
         "estimator": base_model,
-        "conformity_score": ConformalResidualFittingScore(
+        "conformity_score": ResidualNormalisedScore(
             residual_estimator=wrapped_residual_estimator,
             random_state=random_state,
             prefit=True

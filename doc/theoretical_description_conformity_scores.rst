@@ -68,11 +68,11 @@ order of magnitude of the predictions. Therefore, the uncertainty is proportiona
 the order of magitude of the predictions, implying that this score should be used
 in use cases where we want greater uncertainty when the prediction is high.
 
-3. The conformal residual fitting score
+3. The residual normalised score
 =======================================
 
-The conformal residual fitting score [1] (:class:`mapie.conformity_scores.ConformalResidualFittingScore`)
-(CRF) is slightly more complex than the previous scores.
+The residual normalised score [1] (:class:`mapie.conformity_scores.ResidualNormalisedScore`)
+is slightly more complex than the previous scores.
 The normalization of the residual is now done by the predictions of an additional model
 :math:`\hat\sigma` which learns to predict the base model residuals from :math:`X`.
 :math:`\hat\sigma` is trained on :math:`(X, |Y-\hat{\mu}(X)|)` and the formula of the score is:
@@ -102,7 +102,7 @@ Key takeaways
 - The absolute residual score is the basic conformity score and gives constant intervals. It is the one used by default by :class:`mapie.regression.MapieRegressor`.
 - The gamma conformity score adds a notion of adaptivity by giving intervals of different sizes,
   and is proportional to the uncertainty.
-- The conformal residual fitting score is a conformity score that requires an additional model
+- The residual normalised score is a conformity score that requires an additional model
   to learn the residuals of the model from :math:`X`. It gives very adaptive intervals
   without specific asumptions on the data.
 
@@ -111,6 +111,7 @@ References
 
 [1] Angelopoulos, A. N., & Bates, S. (2021). A gentle introduction to conformal
 prediction and distribution-free uncertainty quantification. arXiv preprint arXiv:2107.07511.
+
 [2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. &amp; Brunel, N.. (2023).
 Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library.
 Available from https://proceedings.mlr.press/v204/cordier23a.html.

@@ -82,7 +82,7 @@ Conformity scores
 
    conformity_scores.AbsoluteConformityScore
    conformity_scores.GammaConformityScore
-   conformity_scores.ConformalResidualFittingScore
+   conformity_scores.ResidualNormalisedScore
 
 Resampling
 ==========
