@@ -170,7 +170,8 @@ With :
 
 3.1. General settings
 ---------------------
-We are going to present the Learn Then Test framework
+We are going to present the Learn Then Test framework that allow the user to control non monotonic risk such as precision score.
+This method has been introduced in article [3].
 The settings here are the same as RCPS and CRC, we just need to introduce some new parameters:
 
 - Let :math:`\Lambda` be a discretized for our :math:`\lambda`, meaning that :math:`\Lambda = \{\lambda_1, ..., \lambda_n\}`.
