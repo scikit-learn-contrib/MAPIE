@@ -182,19 +182,19 @@ hypothesis testing. We can express the goal of the procedure as follows:
 .. math::
     \mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha ) \geq 1 - \delta
 
-In order to find all the parameters :math:`\lambda` that satisfy the above condition, Learn Then Test propose to do the following:
+In order to find all the parameters :math:`\lambda` that satisfy the above condition, the Learn Then Test framework proposes to do the following:
 
-1: First across the collections of functions :math:`(T_\lambda)_{\lambda\in\Lambda}`, we estimate the risk on the calibration data
+- First across the collections of functions :math:`(T_\lambda)_{\lambda\in\Lambda}`, we estimate the risk on the calibration data
 :math:`\{(x_1, y_1), \dots, (x_n, y_n)\}`.
 
-2: For each :math:`\lambda_j` in a discrete set :math:`\Lambda = \{\lambda_1, \lambda_2,\dots, \lambda_n\}`, we associate the null hypothesis
+- For each :math:`\lambda_j` in a discrete set :math:`\Lambda = \{\lambda_1, \lambda_2,\dots, \lambda_n\}`, we associate the null hypothesis
 :math:`\mathbb{H}_j: R(\lambda_j) > \alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
 is controlled.
 
-3: For each null hypothesis, we compute a valid p-value using a concentration inequality :math:`p_\lambda_j`. Here we choose to compute the Hoeffding-Bentkus p-value
+- For each null hypothesis, we compute a valid p-value using a concentration inequality :math:`p_{\lambda_j}`. Here we choose to compute the Hoeffding-Bentkus p-value
 introduced in the paper [3].
 
-4: Return :math:`\hat{\Lambda} =  \mathcal{A}(\{p_j\}_{j\in\{1,\dots,\lvert \Lambda \rvert})`, where :math:`\mathcal{A}`, is an algorithm
+- Return :math:`\hat{\Lambda} =  \mathcal{A}(\{p_j\}_{j\in\{1,\dots,\lvert \Lambda \rvert})`, where :math:`\mathcal{A}`, is an algorithm
 that controls the family-wise-error-rate (FWER), for example bonferonni correction.
 
 

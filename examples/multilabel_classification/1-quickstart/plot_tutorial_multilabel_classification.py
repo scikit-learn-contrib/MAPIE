@@ -265,13 +265,14 @@ r_hat = mapie_clf.r_hat
 idx_max = np.argmin(r_hat[valid_index])
 
 ##############################################################################
-# 3.2 Results
-# -----------
+# 3.2 Valid parameters for precision control
+# ------------------------------------------
 # We can see that not all :math:`\lambda` such that risk is below the orange
 # line are choosen by the procedure. Otherwise, all the lambdas that are
-# in the red rectangle verify fwer control and allow to control precision
-# at the desired level with a high probability.
+# in the red rectangle verify family wise error rate control and allow to
+# control precision at the desired level with a high probability.
 
+plt.figure(figsize=(8, 8))
 plt.plot(mapie_clf.lambdas, r_hat, label=r"$\hat{R}_\lambda$")
 plt.plot([0, 1], [alpha, alpha], label=r"$\alpha$")
 plt.axvspan(mini, maxi, facecolor='red', alpha=0.3, label=r"LTT-$\lambda$")
@@ -283,3 +284,4 @@ plt.xlabel(r"Threshold $\lambda$")
 plt.ylabel(r"Empirical risk: $\hat{R}_\lambda$")
 plt.title("Precision risk curve", fontsize=20)
 plt.legend()
+plt.show()
