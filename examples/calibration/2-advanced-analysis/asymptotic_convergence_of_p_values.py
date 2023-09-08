@@ -2,9 +2,9 @@
 =================================================
 Evaluating the asymptotic convergence of p-values
 =================================================
-This example uses :function:`~mapie.metrics.kolmogorov_smirnov_pvalue`,
-:function:`~mapie.metrics.kuiper_pvalue` and
-:function:`~mapie.metrics.spieglehalter_pvalue`. We investigate
+This example uses :func:`~mapie.metrics.kolmogorov_smirnov_pvalue`,
+:func:`~mapie.metrics.kuiper_pvalue` and
+:func:`~mapie.metrics.spieglehalter_pvalue`. We investigate
 the asymptotic convergence of these functions toward real p-values.
 Indeed, these quantities are only asymptotic p-values, i.e. when
 the number of observations is infinite. However, they can be safely
