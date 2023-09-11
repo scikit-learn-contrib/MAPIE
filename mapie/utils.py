@@ -1208,3 +1208,27 @@ def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
                 "The number of bins should be less than the number of \
                 different set sizes."
             )
+
+def check_array_nan(array: NDArray) -> None:
+    """
+    Checks if the array contain NaNs. If NaNs are found, we throw an error
+
+    Parameters
+    ----------
+    array: an array with non-numerical or non-categorical values
+
+    Raises
+    ------
+    ValueError
+        If the array contains a non-numerical values, NaN, +inf or -inf
+    """
+
+    if np.isnan(array):    
+        raise ValueError(
+            "Array contains NaN values."
+        )
+
+    if np.isinf(array):    
+        raise ValueError(
+            "Array contains +inf or -inf values."
+        )
