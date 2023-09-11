@@ -1223,12 +1223,12 @@ def check_array_nan(array: NDArray) -> None:
         If the array contains a non-numerical values, NaN, +inf or -inf
     """
 
-    if np.isnan(array):    
+    if np.isnan(array).any():    
         raise ValueError(
             "Array contains NaN values."
         )
 
-    if np.isinf(array):    
+    if np.isinf(array).any():    
         raise ValueError(
             "Array contains +inf or -inf values."
         )
