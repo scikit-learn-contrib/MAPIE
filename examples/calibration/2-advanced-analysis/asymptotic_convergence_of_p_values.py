@@ -44,7 +44,7 @@ from mapie.metrics import (
     spiegelhalter_p_value
 )
 
-####################################################################
+##############################################################################
 # First we need to generate scores that are perfecty calibrated. To do so,
 # we simply start from a given array of probabilities between 0 and 1,
 # and draw random labels 0 or 1 according to these probabilities.
@@ -55,7 +55,7 @@ def generate_y_true(y_prob: np.ndarray) -> np.ndarray:
     y_true = (uniform <= y_prob).astype(float)
     return y_true
 
-####################################################################
+##############################################################################
 # Then, we draw many different calibrated datasets, each with a fixed
 # dataset size. For each of these datasets, we compute the available p-values
 # implemented in MAPIE.
@@ -79,7 +79,7 @@ ks_p_values = np.sort(ks_p_values)
 ku_p_values = np.sort(ku_p_values)
 sp_p_values = np.sort(sp_p_values)
 
-####################################################################
+##############################################################################
 # Finally, we plot the empirical cumulative distribution function of
 # the p-values computed on these many datasets. We see that even for
 # moderately sized datasets, the p-values computed closely follow the
@@ -87,7 +87,7 @@ sp_p_values = np.sort(sp_p_values)
 # Kuiper p-value is the slowest to converge compared to Spiegelhalter
 # and Kolmogorov-Smirnov.
 
-
+plt.figure(figsize=(8, 8))
 plt.hist(
     ks_p_values, 100,
     cumulative=True, density=True, histtype="step", label="Kolmogorov-Smirnov"
