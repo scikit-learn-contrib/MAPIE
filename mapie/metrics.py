@@ -9,6 +9,7 @@ from ._typing import ArrayLike, NDArray
 from .utils import (calc_bins,
                     check_array_shape_classification,
                     check_array_shape_regression,
+                    check_array_nan,
                     check_binary_zero_one,
                     check_lower_upper_bounds,
                     check_nb_intervals_sizes,
@@ -56,6 +57,10 @@ def regression_coverage_score(
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
+
+    check_array_nan(y_true)
+    check_array_nan(y_pred_low)
+    check_array_nan(y_pred_up)
 
     try:
         check_lower_upper_bounds(y_true, y_pred_low, y_pred_up)
@@ -112,6 +117,9 @@ def classification_coverage_score(
             y_pred_set, force_all_finite=True, dtype=["bool"]
         )
     )
+    check_array_nan(y_true)
+    check_array_nan(y_pred_set)
+
     coverage = np.take_along_axis(
         y_pred_set, y_true.reshape(-1, 1), axis=1
     ).mean()
@@ -148,6 +156,9 @@ def regression_mean_width_score(
     """
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
+    check_array_nan(y_pred_low)
+    check_array_nan(y_pred_up)
+
     mean_width = np.abs(y_pred_up - y_pred_low).mean()
     return float(mean_width)
 
@@ -181,6 +192,8 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     >>> print(classification_mean_width_score(y_pred_set))
     2.0
     """
+
+    check_array_nan(y_pred_set)
     y_pred_set = cast(
         NDArray,
         check_array(
@@ -228,6 +241,9 @@ def expected_calibration_error(
     y_true_ = check_binary_zero_one(y_true)
     y_scores = cast(NDArray, y_scores)
 
+    check_array_nan(y_true_)
+    check_array_nan(y_scores)
+    
     if np.size(y_scores.shape) == 2:
         y_score = cast(
             NDArray, column_or_1d(np.nanmax(y_scores, axis=1))
@@ -290,6 +306,10 @@ def top_label_ece(
     float
         The ECE score adapted in the top label setting.
     """
+
+    check_array_nan(y_true)
+    check_array_nan(y_scores)
+
     ece = float(0.)
     split_strategy = check_split_strategy(split_strategy)
     num_bins = check_number_bins(num_bins)
@@ -352,6 +372,10 @@ def regression_coverage_score_v2(
     NDArray of shape (n_alpha,)
         Effective coverage obtained by the prediction intervals.
     """
+    
+    check_array_nan(y_true)
+    check_array_nan(y_intervals)
+
     y_intervals = check_array_shape_regression(y_true, y_intervals)
     if len(y_true.shape) != 2:
         y_true = cast(NDArray, column_or_1d(y_true))
@@ -392,6 +416,10 @@ def classification_coverage_score_v2(
     NDArray of shape (n_alpha,)
         Effective coverage obtained by the prediction sets.
     """
+
+    check_array_nan(y_true)
+    check_array_nan(y_pred_set)
+
     y_pred_set = check_array_shape_classification(y_true, y_pred_set)
     if len(y_true.shape) != 2:
         y_true = cast(NDArray, column_or_1d(y_true))
@@ -451,6 +479,8 @@ def regression_ssc(
     >>> print(regression_ssc(y_true, y_intervals, num_bins=2))
     [[1. 1.]]
     """
+    check_array_nan(y_true)
+    check_array_nan(y_intervals)
     y_true = cast(NDArray, column_or_1d(y_true))
     y_intervals = check_array_shape_regression(y_true, y_intervals)
     check_number_bins(num_bins)
@@ -512,6 +542,8 @@ def regression_ssc_score(
     >>> print(regression_ssc_score(y_true, y_intervals, num_bins=2))
     [1.  0.5]
     """
+    check_array_nan(y_true)
+    check_array_nan(y_intervals)
     return np.min(regression_ssc(y_true, y_intervals, num_bins), axis=1)
 
 
@@ -561,8 +593,12 @@ def classification_ssc(
     >>> print(classification_ssc(y_true, y_pred_set, num_bins=2))
     [[1.         0.66666667]]
     """
+    
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_set = check_array_shape_classification(y_true, y_pred_set)
+
+    check_array_nan(y_true)
+    check_array_nan(y_pred_set)
 
     sizes = np.sum(y_pred_set, axis=1)
     n_classes = y_pred_set.shape[1]
@@ -635,6 +671,9 @@ def classification_ssc_score(
     >>> print(classification_ssc_score(y_true, y_pred_set, num_bins=2))
     [0.66666667]
     """
+    
+    check_array_nan(y_true)
+    check_array_nan(y_pred_set)
     return np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
 
 
@@ -716,6 +755,10 @@ def hsic(
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     y_intervals = check_array_shape_regression(y_true, y_intervals)
+
+    check_array_nan(y_true)
+    check_array_nan(y_intervals)
+
     kernel_sizes = cast(NDArray, column_or_1d(kernel_sizes))
     if len(kernel_sizes) != 2:
         raise ValueError(
@@ -879,6 +922,10 @@ def cumulative_differences(
     >>> cum_diff
     array([-0.1, -0.3, -0.2])
     """
+
+    check_array_nan(y_true)
+    check_array_nan(y_score)
+
     n = len(y_true)
     y_score_jittered = add_jitter(
         y_score,
@@ -967,8 +1014,12 @@ def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(kolmogorov_smirnov_statistic(y_true, y_score), 3))
     0.978
     """
+    check_array_nan(y_true)
+    check_array_nan(y_score)
+
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
+
     cum_diff = cumulative_differences(y_true, y_score)
     sigma = length_scale(y_score)
     ks_stat = np.max(np.abs(cum_diff)) / sigma
@@ -1068,6 +1119,9 @@ def kolmogorov_smirnov_p_value(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(ks_p_value, 4))
     0.7857
     """
+
+    check_array_nan(y_true)
+    check_array_nan(y_score)
     ks_stat = kolmogorov_smirnov_statistic(y_true, y_score)
     ks_p_value = 1 - kolmogorov_smirnov_cdf(ks_stat)
     return ks_p_value
@@ -1112,6 +1166,8 @@ def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(kuiper_statistic(y_true, y_score), 3))
     0.857
     """
+    check_array_nan(y_true)
+    check_array_nan(y_score)
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
     cum_diff = cumulative_differences(y_true, y_score)
@@ -1223,6 +1279,8 @@ def kuiper_p_value(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(ku_p_value, 4))
     0.9684
     """
+    check_array_nan(y_true)
+    check_array_nan(y_score)
     ku_stat = kuiper_statistic(y_true, y_score)
     ku_p_value = 1 - kuiper_cdf(ku_stat)
     return ku_p_value
@@ -1266,6 +1324,8 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(spiegelhalter_statistic(y_true, y_score), 3))
     -0.757
     """
+    check_array_nan(y_true)
+    check_array_nan(y_score)
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
     numerator = np.sum(
@@ -1318,6 +1378,8 @@ def spiegelhalter_p_value(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(sp_p_value, 4))
     0.8486
     """
+    check_array_nan(y_true)
+    check_array_nan(y_score)
     sp_stat = spiegelhalter_statistic(y_true, y_score)
     sp_p_value = 1 - scipy.stats.norm.cdf(sp_stat)
     return sp_p_value
