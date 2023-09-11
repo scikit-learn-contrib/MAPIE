@@ -55,7 +55,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
           See [2] for more details.
 
         - ``"raps"``, Regularized Adaptive Prediction Sets method. It uses the
-          same technique as cumulated_score method but with a penalty term
+          same technique as ``"aps"`` method but with a penalty term
           to reduce the size of prediction sets. See [3] for more
           details. For now, this method only works with ``"prefit"`` and
           ``"split"`` strategies.
@@ -116,7 +116,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random uniform sampling
-        for evaluation quantiles and prediction sets in cumulated_score.
+        for evaluation quantiles and prediction sets.
         Pass an int for reproducible output across multiple function calls.
 
         By default ``None``.
