@@ -5,6 +5,7 @@ History
 ##### (##########)
 ------------------
 
+* Rename the LABEL and APS methods in MapieClassifier.
 * Add more notebooks and examples.
 * Add prediction set estimation for binary classification.
 * Add Learn-Then-Test method for multilabel-classification.
