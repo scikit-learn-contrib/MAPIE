@@ -38,6 +38,7 @@ Ann. Math. Statist. 24 (4) 624 - 639, December,
 import numpy as np
 from matplotlib import pyplot as plt
 
+from mapie._typing import NDArray
 from mapie.metrics import (
     kolmogorov_smirnov_p_value,
     kuiper_p_value,
@@ -50,7 +51,7 @@ from mapie.metrics import (
 # and draw random labels 0 or 1 according to these probabilities.
 
 
-def generate_y_true(y_prob: np.ndarray) -> np.ndarray:
+def generate_y_true(y_prob: NDArray) -> NDArray:
     uniform = np.random.uniform(size=len(y_prob))
     y_true = (uniform <= y_prob).astype(float)
     return y_true

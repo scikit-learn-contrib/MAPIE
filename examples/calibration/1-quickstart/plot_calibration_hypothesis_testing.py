@@ -28,6 +28,7 @@ Ann. Math. Statist. 24 (4) 624 - 639, December,
 import numpy as np
 from matplotlib import pyplot as plt
 
+from mapie._typing import NDArray
 from mapie.metrics import (
     cumulative_differences,
     length_scale,
@@ -43,12 +44,12 @@ from mapie.metrics import (
 # and we generate label according to this probability distribution.
 
 
-def sigmoid(x):
+def sigmoid(x: NDArray):
     y = 1 / (1 + np.exp(-x))
     return y
 
 
-def generate_y_true(y_prob: np.ndarray) -> np.ndarray:
+def generate_y_true(y_prob: NDArray) -> NDArray:
     uniform = np.random.uniform(size=len(y_prob))
     y_true = (uniform <= y_prob).astype(float)
     return y_true
