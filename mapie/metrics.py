@@ -10,6 +10,7 @@ from .utils import (calc_bins,
                     check_array_shape_classification,
                     check_array_shape_regression,
                     check_binary_zero_one,
+                    check_lower_upper_bounds,
                     check_nb_intervals_sizes,
                     check_nb_sets_sizes,
                     check_number_bins,
@@ -55,6 +56,12 @@ def regression_coverage_score(
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
+
+    try:
+        check_lower_upper_bounds(y_true, y_pred_low, y_pred_up)
+    except Exception as exception:
+        print(exception)
+
     coverage = np.mean(
         ((y_pred_low <= y_true) & (y_pred_up >= y_true))
     )
