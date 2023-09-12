@@ -1209,6 +1209,7 @@ def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
                 different set sizes."
             )
 
+
 def check_array_nan(array: NDArray) -> None:
     """
     Checks if the array contain NaNs. If NaNs are found, we throw an error
@@ -1230,5 +1231,14 @@ def check_array_nan(array: NDArray) -> None:
 
     if np.isinf(array).any():    
         raise ValueError(
-            "Array contains +inf or -inf values."
+            "Array contains infinite values."
         )
+
+
+def check_arrays_length(*arrays: NDArray) -> None:
+    
+    res = [len(array) for array in arrays]
+    if len(set(res)) > 1:
+        raise ValueError(
+                "There are arrays with different length"
+            )
