@@ -1,6 +1,6 @@
-#########################################
-Split/Cross-Conformal Prediction in MAPIE
-#########################################
+################################
+Split/Cross-Conformal Prediction
+################################
 
 **MAPIE** is basically based on two types of techniques:
 

@@ -65,7 +65,7 @@ Here's a quick instantiation of MAPIE models for regression and classification p
     from mapie.classification import MapieClassifier
     mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
 
-Implemented methods in **MAPIE** respect three fundamental pillars.
+Implemented methods in **MAPIE** respect three fundamental pillars:
 
 - they are **model and use case agnostic**, 
 - they possess **theoretical guarantees** under minimal assumptions on the data and the model,
@@ -192,8 +192,6 @@ and with the financial support from Région Ile de France and Confiance.ai.
 
 🔍  References
 ==============
-
-MAPIE methods belong to the field of conformal inference.
 
 [1] Vovk, Vladimir, Alexander Gammerman, and Glenn Shafer. Algorithmic Learning in a Random World. Springer Nature, 2022.
 
