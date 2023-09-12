@@ -233,7 +233,7 @@ def test_regression_valid_input_shape() -> None:
 
 def test_regression_same_length() -> None:
     """Test when y_true and y_preds have different lengths."""
-    with pytest.raises(ValueError, match=r"There are arrays with different len*"):
+    with pytest.raises(ValueError, match=r".*arrays with different len*"):
         regression_coverage_score(y_toy, y_preds[:-1, 1], y_preds[:-1, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])

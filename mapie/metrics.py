@@ -63,12 +63,12 @@ def regression_coverage_score(
         check_lower_upper_bounds(y_true, y_pred_low, y_pred_up)
     except Exception as exception:
         print(exception)
-    
+
     check_arrays_length(y_true, y_pred_low, y_pred_up)
     check_array_nan(y_true)
     check_array_nan(y_pred_low)
     check_array_nan(y_pred_up)
-    
+
     coverage = np.mean(
         ((y_pred_low <= y_true) & (y_pred_up >= y_true))
     )
@@ -160,7 +160,7 @@ def regression_mean_width_score(
     """
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
-    
+
     check_arrays_length(y_pred_low, y_pred_up)
     check_array_nan(y_pred_low)
     check_array_nan(y_pred_up)
@@ -250,7 +250,7 @@ def expected_calibration_error(
     check_arrays_length(y_true_, y_scores)
     check_array_nan(y_true_)
     check_array_nan(y_scores)
-    
+
     if np.size(y_scores.shape) == 2:
         y_score = cast(
             NDArray, column_or_1d(np.nanmax(y_scores, axis=1))
@@ -602,7 +602,7 @@ def classification_ssc(
     >>> print(classification_ssc(y_true, y_pred_set, num_bins=2))
     [[1.         0.66666667]]
     """
-    
+
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_set = check_array_shape_classification(y_true, y_pred_set)
 

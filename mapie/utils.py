@@ -1224,19 +1224,19 @@ def check_array_nan(array: NDArray) -> None:
         If the array contains a non-numerical values, NaN, +inf or -inf
     """
 
-    if np.isnan(array).any():    
+    if np.isnan(array).any():
         raise ValueError(
             "Array contains NaN values."
         )
 
-    if np.isinf(array).any():    
+    if np.isinf(array).any():
         raise ValueError(
             "Array contains infinite values."
         )
 
 
 def check_arrays_length(*arrays: NDArray) -> None:
-    
+
     res = [len(array) for array in arrays]
     if len(set(res)) > 1:
         raise ValueError(

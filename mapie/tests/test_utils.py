@@ -12,7 +12,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.regression import MapieQuantileRegressor
-from mapie.utils import (check_alpha, check_alpha_and_n_samples, 
+from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_array_nan, check_arrays_length,
                          check_binary_zero_one, check_cv,
                          check_lower_upper_bounds, check_n_features_in,
@@ -415,7 +415,7 @@ def test_nan_values() -> None:
         ValueError,
         match=r"Array contains NaN val*"
     ):
-        check_array_nan(np.array([1,2, np.nan, 4]))
+        check_array_nan(np.array([1, 2, np.nan, 4]))
 
 
 def test_inf_values() -> None:
@@ -426,7 +426,7 @@ def test_inf_values() -> None:
         ValueError,
         match=r"Array contains infinite va*"
     ):
-        check_array_nan(np.array([1,2, -np.inf, 4]))
+        check_array_nan(np.array([1, 2, -np.inf, 4]))
 
 
 def test_length() -> None:
@@ -437,7 +437,7 @@ def test_length() -> None:
         ValueError,
         match=r"There are arrays with different len*"
     ):
-        check_arrays_length(np.array([1,2,3]), np.array([4,5,6,7]))
+        check_arrays_length(np.array([1, 2, 3]), np.array([4, 5, 6, 7]))
 
 
 def test_change_values_zero_one() -> None:
