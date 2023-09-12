@@ -313,9 +313,17 @@ def top_label_ece(
     float
         The ECE score adapted in the top label setting.
     """
-    check_arrays_length(y_true, y_scores)
+
+    y_scores = cast(NDArray, y_scores)
+    y_true = cast(NDArray, y_true)
     check_array_nan(y_true)
     check_array_nan(y_scores)
+    if y_score_arg is None:
+        check_arrays_length(y_true, y_scores)
+    else:
+        y_score_arg = cast(NDArray, y_score_arg)
+        check_array_nan(y_score_arg)
+        check_arrays_length(y_true, y_scores, y_score_arg)
 
     ece = float(0.)
     split_strategy = check_split_strategy(split_strategy)

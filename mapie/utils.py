@@ -1210,7 +1210,7 @@ def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
             )
 
 
-def check_array_nan(array: NDArray) -> None:
+def check_array_nan(array: Union[NDArray, ArrayLike]) -> None:
     """
     Checks if the array contain NaNs. If NaNs are found, we throw an error
 
@@ -1236,8 +1236,20 @@ def check_array_nan(array: NDArray) -> None:
 
 
 def check_arrays_length(*arrays: NDArray) -> None:
+    """
+    Checks if the length of all arrays given in this function are the same
 
-    res = [len(array) for array in arrays]
+    Parameters
+    ----------
+    *arrays: NDArray or ArrayLike
+        Arrays expected to have the same length
+
+    Raises
+    ------
+    ValueError
+        If the length of the arrays are different
+    """
+    res = [array.shape[0] for array in arrays]
     if len(set(res)) > 1:
         raise ValueError(
                 "There are arrays with different length"
