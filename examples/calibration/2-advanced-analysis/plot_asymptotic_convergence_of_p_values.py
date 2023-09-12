@@ -90,7 +90,6 @@ sp_p_values = np.sort(sp_p_values)
 # Kuiper p-value is the slowest to converge compared to Spiegelhalter
 # and Kolmogorov-Smirnov.
 
-plt.figure(figsize=(8, 8))
 plt.hist(
     ks_p_values, 100,
     cumulative=True, density=True, histtype="step", label="Kolmogorov-Smirnov"
