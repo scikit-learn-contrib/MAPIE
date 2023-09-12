@@ -22,6 +22,7 @@ In all cases, the training/calibration process can be broken down as follows:
 - Calibration of the conformity score on a calibration set not seen by the model during training.
 
 **MAPIE** then uses the calibrated conformity scores to estimate sets associated with the desired coverage on new data with strong theoretical guarantees.
+
 .. image:: images/cp_split.png
     :width: 300
     :align: center

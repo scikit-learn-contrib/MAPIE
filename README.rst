@@ -44,11 +44,12 @@ MAPIE - Model Agnostic Prediction Interval Estimator
 **MAPIE** is an open-source Python library for quantifying uncertainties and controlling the risks of machine learning models.
 It is a scikit-learn-contrib project that allows you to:
 
-- easily **compute conformal prediction intervals** (or prediction sets) with controlled (ou guaranteed) marginal coverage rate
+- Easily **compute conformal prediction intervals** (or prediction sets) with controlled (or guaranteed) marginal coverage rate
   for regression [3,4,8], classification (binary and multi-class) [5-7] and time series [9].
-- easily **control risks** of more complex tasks such as multi-label classification,
-  segmentation in computer vision (probabilistic guarantees on recall, precision, ...) [10-12].
-- easily **wrap your favorite scikit-learn-compatible model** for the purposes just mentioned.
+- Easily **control risks** of more complex tasks such as multi-label classification,
+  semantic segmentation in computer vision (probabilistic guarantees on recall, precision, ...) [10-12].
+- Easily **wrap your favorite scikit-learn-compatible model or any model wrapped with a scikit-learn-compatible class**
+  for the purposes just mentioned.
 
 Here's a quick instantiation of MAPIE models for regression and classification problems related to uncertainty quantification
 (more details in the Quickstart section):
@@ -67,9 +68,9 @@ Here's a quick instantiation of MAPIE models for regression and classification p
 
 Implemented methods in **MAPIE** respect three fundamental pillars:
 
-- they are **model and use case agnostic**, 
-- they possess **theoretical guarantees** under minimal assumptions on the data and the model,
-- they are based on **peer-reviewed algorithms** and respect programming standards.
+- They are **model and use case agnostic**, 
+- They possess **theoretical guarantees** under minimal assumptions on the data and the model,
+- They are based on **peer-reviewed algorithms** and respect programming standards.
 
 **MAPIE** relies notably on the field of *Conformal Prediction* and *Distribution-Free Inference*.
 
@@ -100,8 +101,8 @@ Here we propose two basic uncertainty quantification problems for regression and
 
 As **MAPIE** is compatible with the standard scikit-learn API, you can see that with just these few lines of code:
 
-- how easy it is **to wrap your favorite scikit-learn-compatible model** around your model.
-- how easy it is **to follow the standard sequential** ``fit`` and ``predict`` process like any scikit-learn estimator.
+- How easy it is **to wrap your favorite scikit-learn-compatible model** around your model.
+- How easy it is **to follow the standard sequential** ``fit`` and ``predict`` process like any scikit-learn estimator.
 
 .. code:: python
 
