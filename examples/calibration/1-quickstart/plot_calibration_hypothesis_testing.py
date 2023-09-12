@@ -50,7 +50,10 @@ def sigmoid(x: NDArray):
     return y
 
 
-def generate_y_true_calibrated(y_prob: NDArray, random_state: int = 1) -> NDArray:
+def generate_y_true_calibrated(
+    y_prob: NDArray,
+    random_state: int = 1
+) -> NDArray:
     generator = check_random_state(random_state)
     uniform = generator.uniform(size=len(y_prob))
     y_true = (uniform <= y_prob).astype(float)
