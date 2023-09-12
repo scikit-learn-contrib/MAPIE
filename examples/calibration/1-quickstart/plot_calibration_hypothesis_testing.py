@@ -27,7 +27,9 @@ Ann. Math. Statist. 24 (4) 624 - 639, December,
 """
 import numpy as np
 from matplotlib import pyplot as plt
+from sklearn.utils import check_random_state
 
+from mapie._typing import NDArray
 from mapie.metrics import (
     cumulative_differences,
     length_scale,
@@ -43,20 +45,24 @@ from mapie.metrics import (
 # and we generate label according to this probability distribution.
 
 
-def sigmoid(x):
+def sigmoid(x: NDArray):
     y = 1 / (1 + np.exp(-x))
     return y
 
 
-def generate_y_true(y_prob: np.ndarray) -> np.ndarray:
-    uniform = np.random.uniform(size=len(y_prob))
+def generate_y_true_calibrated(
+    y_prob: NDArray,
+    random_state: int = 1
+) -> NDArray:
+    generator = check_random_state(random_state)
+    uniform = generator.uniform(size=len(y_prob))
     y_true = (uniform <= y_prob).astype(float)
     return y_true
 
 
 X = np.linspace(-5, 5, 2000)
 y_prob = sigmoid(X)
-y_true = generate_y_true(y_prob)
+y_true = generate_y_true_calibrated(y_prob)
 
 ####################################################################
 # Next we provide two additional miscalibrated scores (on purpose).
