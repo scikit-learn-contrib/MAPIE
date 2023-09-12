@@ -6,6 +6,7 @@
    :caption: Getting Started
 
    quick_start
+   split_cross_conformal
 
 .. toctree::
    :maxdepth: 2
