@@ -59,16 +59,16 @@ def regression_coverage_score(
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
-    check_arrays_length(y_true, y_pred_low, y_pred_up)
-    check_array_nan(y_true)
-    check_array_nan(y_pred_low)
-    check_array_nan(y_pred_up)
-
     try:
         check_lower_upper_bounds(y_true, y_pred_low, y_pred_up)
     except Exception as exception:
         print(exception)
-
+    
+    check_arrays_length(y_true, y_pred_low, y_pred_up)
+    check_array_nan(y_true)
+    check_array_nan(y_pred_low)
+    check_array_nan(y_pred_up)
+    
     coverage = np.mean(
         ((y_pred_low <= y_true) & (y_pred_up >= y_true))
     )
@@ -486,15 +486,16 @@ def regression_ssc(
     >>> print(regression_ssc(y_true, y_intervals, num_bins=2))
     [[1. 1.]]
     """
-    check_arrays_length(y_true, y_intervals)
-    check_array_nan(y_true)
-    check_array_nan(y_intervals)
 
     y_true = cast(NDArray, column_or_1d(y_true))
     y_intervals = check_array_shape_regression(y_true, y_intervals)
     check_number_bins(num_bins)
     widths = np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :])
     check_nb_intervals_sizes(widths, num_bins)
+
+    check_arrays_length(y_true, y_intervals)
+    check_array_nan(y_true)
+    check_array_nan(y_intervals)
 
     indexes_sorted = np.argsort(widths, axis=0)
     indexes_bybins = np.array_split(indexes_sorted, num_bins, axis=0)
@@ -551,9 +552,6 @@ def regression_ssc_score(
     >>> print(regression_ssc_score(y_true, y_intervals, num_bins=2))
     [1.  0.5]
     """
-    check_arrays_length(y_true, y_intervals)
-    check_array_nan(y_true)
-    check_array_nan(y_intervals)
 
     return np.min(regression_ssc(y_true, y_intervals, num_bins), axis=1)
 
