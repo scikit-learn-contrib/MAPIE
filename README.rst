@@ -48,7 +48,7 @@ It is a scikit-learn-contrib project that allows you to:
   for regression [3,4,8], classification (binary and multi-class) [5-7] and time series [9].
 - Easily **control risks** of more complex tasks such as multi-label classification,
   semantic segmentation in computer vision (probabilistic guarantees on recall, precision, ...) [10-12].
-- Easily **wrap your favorite scikit-learn-compatible model or any model wrapped with a scikit-learn-compatible class**
+- Easily **wrap any model (scikit-learn, tensorflow, pytorch, ...) with, if needed, a scikit-learn-compatible wrapper**
   for the purposes just mentioned.
 
 Here's a quick instantiation of MAPIE models for regression and classification problems related to uncertainty quantification
