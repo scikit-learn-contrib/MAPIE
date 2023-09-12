@@ -27,6 +27,7 @@ Ann. Math. Statist. 24 (4) 624 - 639, December,
 """
 import numpy as np
 from matplotlib import pyplot as plt
+from sklearn.utils import check_random_state
 
 from mapie._typing import NDArray
 from mapie.metrics import (
@@ -49,15 +50,16 @@ def sigmoid(x: NDArray):
     return y
 
 
-def generate_y_true(y_prob: NDArray) -> NDArray:
-    uniform = np.random.uniform(size=len(y_prob))
+def generate_y_true_calibrated(y_prob: NDArray, random_state: int = 1) -> NDArray:
+    generator = check_random_state(random_state)
+    uniform = generator.uniform(size=len(y_prob))
     y_true = (uniform <= y_prob).astype(float)
     return y_true
 
 
 X = np.linspace(-5, 5, 2000)
 y_prob = sigmoid(X)
-y_true = generate_y_true(y_prob)
+y_true = generate_y_true_calibrated(y_prob)
 
 ####################################################################
 # Next we provide two additional miscalibrated scores (on purpose).

@@ -37,6 +37,7 @@ Ann. Math. Statist. 24 (4) 624 - 639, December,
 
 import numpy as np
 from matplotlib import pyplot as plt
+from sklearn.utils import check_random_state
 
 from mapie._typing import NDArray
 from mapie.metrics import (
@@ -51,8 +52,9 @@ from mapie.metrics import (
 # and draw random labels 0 or 1 according to these probabilities.
 
 
-def generate_y_true(y_prob: NDArray) -> NDArray:
-    uniform = np.random.uniform(size=len(y_prob))
+def generate_y_true_calibrated(y_prob: NDArray, random_state: int = 1) -> NDArray:
+    generator = check_random_state(random_state)
+    uniform = generator.uniform(size=len(y_prob))
     y_true = (uniform <= y_prob).astype(float)
     return y_true
 
@@ -69,7 +71,7 @@ ku_p_values = []
 sp_p_values = []
 for i in range(n_sets):
     y_score = np.linspace(0, 1, n_points)
-    y_true = generate_y_true(y_score)
+    y_true = generate_y_true_calibrated(y_score)
     ks_p_value = kolmogorov_smirnov_p_value(y_true, y_score)
     ku_p_value = kuiper_p_value(y_true, y_score)
     sp_p_value = spiegelhalter_p_value(y_true, y_score)
