@@ -74,7 +74,7 @@ ku_p_values = []
 sp_p_values = []
 for i in range(n_sets):
     y_score = np.linspace(0, 1, n_points)
-    y_true = generate_y_true_calibrated(y_score)
+    y_true = generate_y_true_calibrated(y_score, random_state=i)
     ks_p_value = kolmogorov_smirnov_p_value(y_true, y_score)
     ku_p_value = kuiper_p_value(y_true, y_score)
     sp_p_value = spiegelhalter_p_value(y_true, y_score)
