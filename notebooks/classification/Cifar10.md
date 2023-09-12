@@ -175,7 +175,7 @@ def load_data() -> Tuple[
         as_supervised=True,
         with_info=True
     )
-    label_names = info.features['label'].names
+    label_names = info.features['lac'].names
 
     dataset = tfds.as_numpy(dataset)
     X_train, y_train = dataset['train']
@@ -446,9 +446,9 @@ We will now estimate the prediction sets with the five conformal methods impleme
 ```python
 method_params = {
     "naive": ("naive", False),
-    "label": ("label", False),
+    "lac": ("lac", False),
     "aps": ("aps", True),
-    "random_caps": ("aps", "randomized"),
+    "random_aps": ("aps", "randomized"),
     "top_k": ("top_k", False)
 }
 
@@ -745,7 +745,7 @@ for i, var in enumerate(vars_y):
         axs[i].legend(fontsize=10, loc=[1, 0])
 ```
 
-The two only methods which are perfectly calibrated for the entire range of alpha values are the "label" and "random_caps". However, these accurate marginal coverages can only be obtained thanks to the generation of null prediction sets. The compromise between estimating null prediction sets with calibrated coverages or non-empty prediction sets but with larger marginal coverages is entirely up to the user.
+The two only methods which are perfectly calibrated for the entire range of alpha values are the "lac" and "random_aps". However, these accurate marginal coverages can only be obtained thanks to the generation of null prediction sets. The compromise between estimating null prediction sets with calibrated coverages or non-empty prediction sets but with larger marginal coverages is entirely up to the user.
 
 
 ## 7. Prediction set sizes

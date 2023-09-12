@@ -68,13 +68,13 @@ X_train, X_cal, y_train, y_cal = train_test_split(
 # Let’s see our data.
 
 colors = {
-    (0, 0, 1): {"color": "#1f77b4", "label": "0-0-1"},
-    (0, 1, 1): {"color": "#ff7f0e", "label": "0-1-1"},
-    (1, 0, 1): {"color": "#2ca02c", "label": "1-0-1"},
-    (0, 1, 0): {"color": "#d62728", "label": "0-1-0"},
-    (1, 1, 0): {"color": "#ffd700", "label": "1-1-0"},
-    (1, 0, 0): {"color": "#c20078", "label": "1-0-0"},
-    (1, 1, 1): {"color": "#06C2AC", "label": "1-1-1"}
+    (0, 0, 1): {"color": "#1f77b4", "lac": "0-0-1"},
+    (0, 1, 1): {"color": "#ff7f0e", "lac": "0-1-1"},
+    (1, 0, 1): {"color": "#2ca02c", "lac": "1-0-1"},
+    (0, 1, 0): {"color": "#d62728", "lac": "0-1-0"},
+    (1, 1, 0): {"color": "#ffd700", "lac": "1-1-0"},
+    (1, 0, 0): {"color": "#c20078", "lac": "1-0-0"},
+    (1, 1, 1): {"color": "#06C2AC", "lac": "1-1-1"}
 }
 
 for i in range(7):
@@ -86,7 +86,7 @@ for i in range(7):
         s=10,
         edgecolor='k'
     )
-plt.legend([c["label"] for c in colors.values()])
+plt.legend([c["lac"] for c in colors.values()])
 plt.show()
 
 ##############################################################################

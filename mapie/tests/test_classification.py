@@ -26,7 +26,7 @@ from mapie.utils import check_alpha
 
 random_state = 42
 
-METHODS = ["label", "aps", "raps"]
+METHODS = ["lac", "aps", "raps"]
 WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "other", 1, 2.5, (1, 2)]
 Y_PRED_PROBA_WRONG = [
@@ -92,9 +92,9 @@ ParamsPredict = TypedDict(
 )
 
 STRATEGIES = {
-    "label": (
+    "lac": (
         Params(
-            method="label",
+            method="lac",
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -104,9 +104,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "label_split": (
+    "lac_split": (
         Params(
-            method="label",
+            method="lac",
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -116,9 +116,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "label_cv_mean": (
+    "lac_cv_mean": (
         Params(
-            method="label",
+            method="lac",
             cv=3,
             test_size=None,
             random_state=random_state
@@ -128,9 +128,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "label_cv_crossval": (
+    "lac_cv_crossval": (
         Params(
-            method="label",
+            method="lac",
             cv=3,
             test_size=None,
             random_state=random_state
@@ -383,9 +383,9 @@ STRATEGIES = {
 }
 
 STRATEGIES_BINARY = {
-    "label": (
+    "lac": (
         Params(
-            method="label",
+            method="lac",
             cv="prefit",
             test_size=None,
             random_state=42
@@ -395,9 +395,9 @@ STRATEGIES_BINARY = {
             agg_scores="mean"
         )
     ),
-    "label_split": (
+    "lac_split": (
         Params(
-            method="label",
+            method="lac",
             cv="split",
             test_size=0.5,
             random_state=42
@@ -407,9 +407,9 @@ STRATEGIES_BINARY = {
             agg_scores="mean"
         )
     ),
-    "label_cv_mean": (
+    "lac_cv_mean": (
         Params(
-            method="label",
+            method="lac",
             cv=3,
             test_size=None,
             random_state=42
@@ -419,9 +419,9 @@ STRATEGIES_BINARY = {
             agg_scores="mean"
         )
     ),
-    "label_cv_crossval": (
+    "lac_cv_crossval": (
         Params(
-            method="label",
+            method="lac",
             cv=3,
             test_size=None,
             random_state=42
@@ -434,10 +434,10 @@ STRATEGIES_BINARY = {
 }
 
 COVERAGES = {
-    "label": 6/9,
-    "label_split": 8/9,
-    "label_cv_mean": 1.0,
-    "label_cv_crossval": 1.0,
+    "lac": 6/9,
+    "lac_split": 8/9,
+    "lac_cv_mean": 1.0,
+    "lac_cv_crossval": 1.0,
     "aps_include": 1.0,
     "aps_not_include": 5/9,
     "aps_randomized": 6/9,
@@ -461,10 +461,10 @@ COVERAGES = {
 }
 
 COVERAGES_BINARY = {
-    "label": 6/9,
-    "label_split": 8/9,
-    "label_cv_mean": 6/9,
-    "label_cv_crossval": 6/9
+    "lac": 6/9,
+    "lac_split": 8/9,
+    "lac_cv_mean": 6/9,
+    "lac_cv_crossval": 6/9
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -472,7 +472,7 @@ y_toy = np.array([0, 0, 1, 0, 1, 1, 2, 1, 2])
 y_toy_string = np.array(["0", "0", "1", "0", "1", "1", "2", "1", "2"])
 
 y_toy_mapie = {
-    "label": [
+    "lac": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -483,7 +483,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True]
     ],
-    "label_split": [
+    "lac_split": [
         [True, True, False],
         [True, True, False],
         [True, True, False],
@@ -494,7 +494,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True],
     ],
-    "label_cv_mean": [
+    "lac_cv_mean": [
         [True, False, False],
         [True, False, False],
         [True, True, False],
@@ -505,7 +505,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    "label_cv_crossval": [
+    "lac_cv_crossval": [
         [True, False, False],
         [True, False, False],
         [True, True, False],
@@ -742,7 +742,7 @@ X_toy_binary = np.arange(9).reshape(-1, 1)
 y_toy_binary = np.array([0, 0, 1, 0, 1, 1, 0, 1, 1])
 
 y_toy_binary_mapie = {
-    "label": [
+    "lac": [
         [True, False],
         [True, False],
         [True, False],
@@ -753,7 +753,7 @@ y_toy_binary_mapie = {
         [False, True],
         [False, True]
     ],
-    "label_split": [
+    "lac_split": [
         [True, True],
         [True, True],
         [True, True],
@@ -764,7 +764,7 @@ y_toy_binary_mapie = {
         [True, True],
         [True, False]
     ],
-    "label_cv_mean": [
+    "lac_cv_mean": [
         [True, False],
         [True, False],
         [True, False],
@@ -775,7 +775,7 @@ y_toy_binary_mapie = {
         [False, True],
         [False, True]
     ],
-    "label_cv_crossval": [
+    "lac_cv_crossval": [
         [True, False],
         [True, False],
         [True, False],
@@ -951,7 +951,7 @@ def test_initialized() -> None:
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_clf = MapieClassifier()
-    assert mapie_clf.method == "label"
+    assert mapie_clf.method == "lac"
 
 
 @pytest.mark.parametrize("cv", ["prefit", "split"])
@@ -1028,7 +1028,7 @@ def test_valid_cv(cv: Any) -> None:
 def test_agg_scores_argument(agg_scores: str) -> None:
     """Test that predict passes with all valid 'agg_scores' arguments."""
     mapie_clf = MapieClassifier(
-        cv=3, method="label", random_state=random_state
+        cv=3, method="lac", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
@@ -1038,7 +1038,7 @@ def test_agg_scores_argument(agg_scores: str) -> None:
 def test_invalid_agg_scores_argument(agg_scores: str) -> None:
     """Test that invalid 'agg_scores' raise errors."""
     mapie_clf = MapieClassifier(
-        cv=3, method="label", random_state=random_state
+        cv=3, method="lac", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(
@@ -1117,7 +1117,7 @@ def test_y_is_list_of_string(
 
 
 @pytest.mark.parametrize(
-    "strategy", ["naive", "top_k", "label", "aps_include"]
+    "strategy", ["naive", "top_k", "lac", "aps_include"]
 )
 def test_same_results_prefit_split(strategy: str) -> None:
     """
@@ -1542,7 +1542,7 @@ def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
 def test_method_error_in_predict(method: Any, alpha: float) -> None:
     """Test else condition for the method in .predict"""
     mapie_clf = MapieClassifier(
-        method="label", random_state=random_state
+        method="lac", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.method = method

@@ -4,7 +4,7 @@ Comparing prediction sets on a two-dimensional dataset
 ======================================================
 
 In this tutorial, we compare the prediction sets estimated by
-:class:`~mapie.classification.MapieClassifier` with the "label"
+:class:`~mapie.classification.MapieClassifier` with the "lac"
 and "aps" on the two-dimensional dataset presented
 by Sadinle et al. (2019).
 """
@@ -101,7 +101,7 @@ plt.show()
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator.
 # Then we apply :class:`~mapie.classification.MapieClassifier` in the
-# calibration data with the methods ``"label"`` and ``"aps"```
+# calibration data with the methods ``"lac"`` and ``"aps"```
 # to the estimator indicating that it has already been fitted with
 # `cv="prefit"`.
 # We then estimate the prediction sets with differents alpha values with a
@@ -112,7 +112,7 @@ y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
 
-methods = ["label", "aps"]
+methods = ["lac", "aps"]
 mapie, y_pred_mapie, y_ps_mapie = {}, {}, {}
 alpha = [0.2, 0.1, 0.05]
 for method in methods:
@@ -231,7 +231,7 @@ for method in methods:
 
 
 ##############################################################################
-# For the "label" method, when the class coverage is not large enough, the
+# For the "lac" method, when the class coverage is not large enough, the
 # prediction sets can be empty when the model is uncertain at the border
 # between two labels. These null regions disappear for larger class coverages
 # but ambiguous classification regions arise with several labels included in

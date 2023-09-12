@@ -45,7 +45,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         - ``"naive"``, sum of the probabilities until the 1-alpha thresold.
 
-        - ``"label"`` (formerly called ``"score"``), based on the the scores
+        - ``"lac"`` (formerly called ``"score"``), Least Ambiguous set-valued
+          Classifier. It is based on the the scores
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set. See [1] for more details.
 
@@ -66,7 +67,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
           prediction sets may be different from the others. See [3] for
           more details.
 
-        By default ``"label"``.
+        By default ``"lac"``.
 
     cv: Optional[str]
         The cross-validation strategy for computing scores.
@@ -186,7 +187,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     raps_valid_cv_ = ["prefit", "split"]
     valid_methods_ = [
-        "naive", "score", "label", "cumulated_score", "aps", "top_k", "raps"
+        "naive", "score", "lac", "cumulated_score", "aps", "top_k", "raps"
     ]
     fit_attributes = [
         "single_estimator_",
@@ -201,7 +202,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
-        method: str = "label",
+        method: str = "lac",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
         test_size: Optional[Union[int, float]] = None,
         n_jobs: Optional[int] = None,
@@ -243,14 +244,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         Raises
         ------
         Warning
-            If method is ``"score"`` (not ``"label"``) or
+            If method is ``"score"`` (not ``"lac"``) or
             if method is ``"cumulated_score"`` (not ``"aps"``).
         """
         if self.method == "score":
             warnings.warn(
                 "WARNING: Deprecated method. "
                 + "The method \"score\" is outdated. "
-                + "Prefer to use \"label\" instead to keep "
+                + "Prefer to use \"lac\" instead to keep "
                 + "the same behavior in the next release.",
                 DeprecationWarning
             )
@@ -266,7 +267,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     def _check_target(self, y: ArrayLike) -> None:
         """
         Check that if the type of target is binary,
-        (then the method have to be ``"label"``), or multi-class.
+        (then the method have to be ``"lac"``), or multi-class.
 
         Parameters
         ----------
@@ -276,17 +277,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-            If type of target is binary and method is not ``"label"``
+            If type of target is binary and method is not ``"lac"``
             or ``"score"`` or if type of target is not multi-class.
         """
         check_classification_targets(y)
         if type_of_target(y) == "binary" and \
-                self.method not in ["score", "label"]:
+                self.method not in ["score", "lac"]:
             raise ValueError(
                 "Invalid method for binary target. "
                 "Your target is not of type multiclass and "
                 "allowed values for binary type are "
-                f"{['score', 'label']}."
+                f"{['score', 'lac']}."
             )
 
     def _check_raps(self):
@@ -1204,7 +1205,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 y_pred_proba.shape,
                 dtype="float"
             )
-        elif self.method in ["score", "label"]:
+        elif self.method in ["score", "lac"]:
             self.conformity_scores_ = np.take_along_axis(
                 1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1
             )
@@ -1252,7 +1253,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         interval.
         Prediction sets for a given ``alpha`` are deduced from:
 
-        - quantiles of softmax scores (``"label"`` method)
+        - quantiles of softmax scores (``"lac"`` method)
         - quantiles of cumulated scores (``"aps"`` method)
 
         Parameters
@@ -1406,7 +1407,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 self.quantiles_ = (n + 1) * (1 - alpha_np)
 
         # Build prediction sets
-        if self.method in ["score", "label"]:
+        if self.method in ["score", "lac"]:
             if (cv == "prefit") or (agg_scores == "mean"):
                 prediction_sets = np.greater_equal(
                     y_pred_proba - (1 - self.quantiles_), -EPSILON
