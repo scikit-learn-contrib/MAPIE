@@ -144,9 +144,9 @@ class GammaConformityScore(ConformityScore):
         return np.multiply(y_pred, np.add(1, conformity_scores))
 
 
-class ConformalResidualFittingScore(ConformityScore):
+class ResidualNormalisedScore(ConformityScore):
     """
-    ConformalResidualFittingScore (CRF) score.
+    Residual Normalised score.
 
     The signed conformity score = (|y - y_pred|) / r_pred. r_pred being the
     predicted residual (|y - y_pred|) of the base estimator.

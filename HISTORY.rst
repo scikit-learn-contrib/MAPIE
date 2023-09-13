@@ -5,13 +5,16 @@ History
 ##### (##########)
 ------------------
 
-* Add documentation and notebooks for LTT.
-* Add more notebooks and examples.
+* Add prediction set estimation for binary classification.
 * Add Learn-Then-Test method for multilabel-classification.
-* Add a new conformity score, ConformalizedResidualFitting, that takes X into account and allows to compute adaptive intervals.
+* Add documentation and notebooks for LTT.
+* Add a new conformity score, ResidualNormalisedScore, that takes X into account and allows to compute adaptive intervals.
 * Refactor MapieRegressor and ConformityScore to add the possibility to use X in ConformityScore.
 * Separate the handling of the estimator from MapieRegressor into a new class called EnsembleEstimator.
+* Rename methods (score to lac and cumulated_score to aps) in MapieClassifier.
+* Add more notebooks and examples.
 * Fix an unfixed random state in one of the classification tests.
+* Add statistical calibration tests in binary classification.
 * Fix and preserve the split behavior of the check_cv method with and without random state.
 
 0.6.5 (2023-06-06)

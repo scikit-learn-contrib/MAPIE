@@ -100,14 +100,14 @@ clf = GaussianNB().fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
-mapie_score = MapieClassifier(estimator=clf, cv="prefit", method="score")
+mapie_score = MapieClassifier(estimator=clf, cv="prefit", method="lac")
 mapie_score.fit(X_cal, y_cal)
 alpha = [0.2, 0.1, 0.05]
 y_pred_score, y_ps_score = mapie_score.predict(X_test_mesh, alpha=alpha)
 ```
 
 * ``y_pred_score``: represents the prediction in the test set by the base estimator.
-* ``y_ps_score``: the prediction sets estimated by MAPIE with the "score" method.
+* ``y_ps_score``: the prediction sets estimated by MAPIE with the "lac" method.
 
 ```python
 def plot_scores(n, alphas, scores, quantiles):
@@ -216,19 +216,19 @@ def plot_coverages_widths(alpha, coverage, width, method):
 ```
 
 ```python
-plot_coverages_widths(alpha2, coverages_score, widths_score, "Score")
+plot_coverages_widths(alpha2, coverages_score, widths_score, "lac")
 ```
 
 ## 2. Conformal Prediction method using the cumulative softmax score
 
 
-We saw in the previous section that the "score" method is well calibrated by providing accurate coverage levels. However, it tends to give null prediction sets for uncertain regions, especially when the $\alpha$ value is high. MAPIE includes another method, called Adaptive Prediction Set (APS), whose conformity score is the cumulated score of the softmax output until the true label is reached (see the theoretical description for more details). We will see in this Section that this method no longer estimates null prediction sets but by giving slightly bigger prediction sets. 
+We saw in the previous section that the "lac" method is well calibrated by providing accurate coverage levels. However, it tends to give null prediction sets for uncertain regions, especially when the $\alpha$ value is high. MAPIE includes another method, called Adaptive Prediction Set (APS), whose conformity score is the cumulated score of the softmax output until the true label is reached (see the theoretical description for more details). We will see in this Section that this method no longer estimates null prediction sets but by giving slightly bigger prediction sets. 
 
 
 Let's visualize the prediction sets obtained with the APS method on the test set after fitting MAPIE on the calibration set.
 
 ```python
-mapie_aps = MapieClassifier(estimator=clf, cv="prefit", method="cumulated_score")
+mapie_aps = MapieClassifier(estimator=clf, cv="prefit", method="aps")
 mapie_aps.fit(X_cal, y_cal)
 alpha = [0.2, 0.1, 0.05]
 y_pred_aps, y_ps_aps = mapie_aps.predict(X_test_mesh, alpha=alpha, include_last_label=True)
@@ -238,7 +238,7 @@ y_pred_aps, y_ps_aps = mapie_aps.predict(X_test_mesh, alpha=alpha, include_last_
 plot_results(alpha, X_test_mesh, y_pred_aps, y_ps_aps)
 ```
 
-One can notice that the uncertain regions are emphasized by wider boundaries, but without null prediction sets with respect to the first "score" method. 
+One can notice that the uncertain regions are emphasized by wider boundaries, but without null prediction sets with respect to the first "lac" method. 
 
 ```python
 _, y_ps_aps2 = mapie_aps.predict(X_test, alpha=alpha2, include_last_label="randomized")
@@ -253,7 +253,7 @@ widths_aps = [
 ```
 
 ```python
-plot_coverages_widths(alpha2, coverages_aps, widths_aps, "Score")
+plot_coverages_widths(alpha2, coverages_aps, widths_aps, "lac")
 ```
 
 This method also gives accurate calibration plots, meaning that the effective coverage level is always very close to the target coverage, sometimes at the expense of slightly bigger prediction sets. 
