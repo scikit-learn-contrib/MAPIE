@@ -752,10 +752,9 @@ def cwc(
     The effective coverage score is a criterion used to evaluate the quality
     of prediction intervals (PIs) based on their coverage and width.
 
-    Lower Upper Bound Estimation Method for Construction of Neural
-    Network-Based Prediction Intervals
-    Abbas Khosravi, Member, IEEE, Saeid Nahavandi, Senior Member, IEEE,
-    Doug Creighton, and Amir F. Atiya, Senior Member, IEEE
+    Construction of Optimal Prediction Intervals for Load Forecasting
+    Problems
+    Abbas Khosravi; Saeid Nahavandi; Doug Creighton
 
     Parameters
     ----------
