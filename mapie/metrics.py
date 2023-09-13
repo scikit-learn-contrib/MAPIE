@@ -752,7 +752,6 @@ def cwc(
     The effective coverage score is a criterion used to evaluate the quality
     of prediction intervals (PIs) based on their coverage and width.
 
-
     Lower Upper Bound Estimation Method for Construction of Neural
     Network-Based Prediction Intervals
     Abbas Khosravi, Member, IEEE, Saeid Nahavandi, Senior Member, IEEE,
@@ -851,7 +850,8 @@ def cwc(
                                                    y_pred_up)
         mean_width = regression_mean_width_score(y_pred_low,
                                                        y_pred_up)
-        ref_length = np.subtract(float(y_true.max()), float(y_true.min()))
+        ref_length = np.subtract(float(y_true.max()), 
+                                 float(y_true.min()))
         avg_length = mean_width / ref_length
 
         cwc = (1-avg_length)*np.exp(-eta*(coverage_score-mu)**2)
