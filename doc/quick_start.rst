@@ -111,7 +111,7 @@ The title of the plot compares the target coverages with the effective coverages
 The target coverage, or the confidence interval, is the fraction of true labels lying in the
 prediction intervals that we aim to obtain for a given dataset.
 It is given by the alpha parameter defined in ``MapieRegressor``, here equal to ``0.05`` and ``0.32``,
-thus giving target coverages of 0.95 and 0.68.
+thus giving target coverages of ``0.95`` and ``0.68``.
 The effective coverage is the actual fraction of true labels lying in the prediction intervals.
 
 2. Run MapieClassifier

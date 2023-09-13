@@ -24,7 +24,7 @@ In all cases, the training/calibration process can be broken down as follows:
 **MAPIE** then uses the calibrated conformity scores to estimate sets associated with the desired coverage on new data with strong theoretical guarantees.
 
 .. image:: images/cp_split.png
-    :width: 300
+    :width: 600
     :align: center
 
 
@@ -32,7 +32,7 @@ Prefit mode of split conformal predictions
 ------------------------------------------
 
 .. image:: images/cp_prefit.png
-    :width: 300
+    :width: 600
     :align: center
 
 
@@ -45,5 +45,5 @@ Prefit mode of split conformal predictions
 **MAPIE** then combines all these elements in a way that provides prediction intervals on new data with strong theoretical guarantees.
 
 .. image:: images/cp_cross.png
-    :width: 300
+    :width: 600
     :align: center
