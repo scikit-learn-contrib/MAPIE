@@ -6,24 +6,16 @@
 Theoretical Description
 =======================
 
-For binary classification in the distribution-free setting, there are
-different ways of handling uncertainty quantification: calibration,
-probabilistic prediction (consisting in estimating confidence intervals or CIs) 
-and set prediction (consisting in estimating prediction sets or PSs). Gupta et al.
-have established a tripod of theorems that connect these three notions for
-score-based classifier [1]. We will use their notation to present these different concepts.
+There are mainly three different ways to handle uncertainty quantification in binary classification:
+calibration (see :doc:`theoretical_description_calibration`), confidence interval (CI) for the probability
+:math:`P(Y \vert f(X))` and prediction sets (see :doc:`theoretical_description_classification`).
+These 3 notions are tightly related for score-based classifier, as it is shown in [1]. 
 
-In MAPIE, we focus specifically on set prediction for multi-class classification
-and on calibration for binary classification (via scikit-learn).
+Prediction sets can be computed in the same way for multiclass and binary classification with
+:class:`~mapie.calibration.MapieClassifier`, and there is the same theoretical guarantees.
+Nevertheless, prediction sets are often much less informative in the binary case than in the multiclass case [#]_.
 
-Although set prediction is possible for binary classification, we don't recommend using this setting.
-Instead, we recommend the use of calibration (see more details in the
-Calibration section or by using the
-:class:`~sklearn.calibration.CalibratedClassifierCV` proposed by scikit-learn
-or :class:`~mapie.calibration.MapieCalibrator` proposed in MAPIE
-even if top-Label calibration is actually not really binary use-cases).
-Here is an argument from Gupta et al [1]:
-
+.. [#] From Gupta et al [1]:
     PSs and CIs are only ‘informative’ if the sets or intervals produced by them are small. To quantify
     this, we measure CIs using their width (denoted as :math:`|C(.)|)`, and PSs using their diameter (defined as
     the width of the convex hull of the PS). For example, in the case of binary classification, the diameter
@@ -33,15 +25,13 @@ Here is an argument from Gupta et al [1]:
 
 In a few words, what you need to remember about these concepts :
 
-* *Calibration* is useful when we want to transform a score (typically given by an ML model)
-  that is not a probability into a probability. The algorithms that are used for calibration
-  can be interpreted as estimators of the confidence level.
-* *Set Prediction* is based on the estimation not of a single prediction,
-  but of a range of more or less precise predictions, each with a degree of confidence.
-* In contrast, *Probabilistic Prediction* is based on the estimation not of a single probability
-  of occurrence of a target or class, but of a range of more or less precise probabilities of occurrence,
-  each with a degree of confidence.
+* *Calibration* is useful for transforming a score (typically given by an ML model)
+  into the probability of making a good prediction.
+* *Set Prediction* gives the set of likely predictions with a probabilisic guarantee that the true label is in this set.
+* In contrast, *Probabilistic Prediction* gives a confidence interval for the predictive distribution
+  (or the probability of positive class).
 
+Probabilistic prediction 
 
 1. Set Prediction
 -----------------
@@ -76,6 +66,9 @@ In the framework of conformal prediction, the Venn predictor has this property.
 
 3. Calibration
 --------------
+
+Usually, calibration is understood as perfect calibration meaning (see :doc:`theoretical_description_calibration`).
+In practice, it is more reasonable to consider approximate calibration.
 
 Definition 3 (Approximate calibration) [1].
     Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
