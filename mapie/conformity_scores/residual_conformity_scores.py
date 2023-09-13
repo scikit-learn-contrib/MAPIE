@@ -404,7 +404,7 @@ class ResidualNormalisedScore(ConformityScore):
             )
 
         signed_conformity_scores = np.divide(
-            np.abs(np.subtract(y[cal_indexes], y_pred[cal_indexes])),
+            np.subtract(y[cal_indexes], y_pred[cal_indexes]),
             residuals_pred
         )
 
