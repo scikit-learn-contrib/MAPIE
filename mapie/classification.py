@@ -34,7 +34,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     Parameters
     ----------
-    estimator : Optional[ClassifierMixin]
+    estimator: Optional[ClassifierMixin]
         Any classifier with scikit-learn API
         (i.e. with fit, predict, and predict_proba methods), by default None.
         If ``None``, estimator defaults to a ``LogisticRegression`` instance.
@@ -43,29 +43,31 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         Method to choose for prediction interval estimates.
         Choose among:
 
-        - "naive", sum of the probabilities until the 1-alpha thresold.
+        - ``"naive"``, sum of the probabilities until the 1-alpha thresold.
 
-        - "score", based on the the scores
+        - ``"lac"`` (formerly called ``"score"``), Least Ambiguous set-valued
+          Classifier. It is based on the the scores
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set. See [1] for more details.
 
-        - "cumulated_score", based on the sum of the softmax outputs of the
+        - ``"aps"`` (formerly called "cumulated_score"), Adaptive Prediction
+          Sets method. It is based on the sum of the softmax outputs of the
           labels until the true label is reached, on the calibration set.
           See [2] for more details.
 
-        - "raps", Regularized Adaptive Prediction Sets method. It uses the
-          same technique as cumulated_score method but with a penalty term
+        - ``"raps"``, Regularized Adaptive Prediction Sets method. It uses the
+          same technique as ``"aps"`` method but with a penalty term
           to reduce the size of prediction sets. See [3] for more
-          details. For now, this method only works with "prefit" and "split"
-          strategies.
+          details. For now, this method only works with ``"prefit"`` and
+          ``"split"`` strategies.
 
-        - "top_k", based on the sorted index of the probability of the true
+        - ``"top_k"``, based on the sorted index of the probability of the true
           label in the softmax outputs, on the calibration set. In case two
           probabilities are equal, both are taken, thus, the size of some
           prediction sets may be different from the others. See [3] for
           more details.
 
-        By default "score".
+        By default ``"lac"``.
 
     cv: Optional[str]
         The cross-validation strategy for computing scores.
@@ -115,12 +117,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random uniform sampling
-        for evaluation quantiles and prediction sets in cumulated_score.
+        for evaluation quantiles and prediction sets.
         Pass an int for reproducible output across multiple function calls.
 
         By default ``None``.
 
-    verbose : int, optional
+    verbose: int, optional
         The verbosity level, used with joblib for multiprocessing.
         At this moment, parallel processing is disabled.
         The frequency of the messages increases with the verbosity level.
@@ -134,16 +136,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     valid_methods: List[str]
         List of all valid methods.
 
-    single_estimator_ : sklearn.ClassifierMixin
+    single_estimator_: sklearn.ClassifierMixin
         Estimator fitted on the whole training set.
 
     n_features_in_: int
         Number of features passed to the fit method.
 
-    conformity_scores_ : ArrayLike of shape (n_samples_train)
+    conformity_scores_: ArrayLike of shape (n_samples_train)
         The conformity scores used to calibrate the prediction sets.
 
-    quantiles_ : ArrayLike of shape (n_alpha)
+    quantiles_: ArrayLike of shape (n_alpha)
         The quantiles estimated from ``conformity_scores_`` and alpha values.
 
     References
@@ -184,7 +186,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     """
 
     raps_valid_cv_ = ["prefit", "split"]
-    valid_methods_ = ["naive", "score", "cumulated_score", "top_k", "raps"]
+    valid_methods_ = [
+        "naive", "score", "lac", "cumulated_score", "aps", "top_k", "raps"
+    ]
     fit_attributes = [
         "single_estimator_",
         "estimators_",
@@ -198,7 +202,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
-        method: str = "score",
+        method: str = "lac",
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
         test_size: Optional[Union[int, float]] = None,
         n_jobs: Optional[int] = None,
@@ -230,12 +234,40 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
         check_random_state(self.random_state)
+        self._check_depreciated()
         self._check_raps()
+
+    def _check_depreciated(self) -> None:
+        """
+        Check if the chosen method is outdated.
+
+        Raises
+        ------
+        Warning
+            If method is ``"score"`` (not ``"lac"``) or
+            if method is ``"cumulated_score"`` (not ``"aps"``).
+        """
+        if self.method == "score":
+            warnings.warn(
+                "WARNING: Deprecated method. "
+                + "The method \"score\" is outdated. "
+                + "Prefer to use \"lac\" instead to keep "
+                + "the same behavior in the next release.",
+                DeprecationWarning
+            )
+        if self.method == "cumulated_score":
+            warnings.warn(
+                "WARNING: Deprecated method. "
+                + "The method \"cumulated_score\" is outdated. "
+                + "Prefer to use \"aps\" instead to keep "
+                + "the same behavior in the next release.",
+                DeprecationWarning
+            )
 
     def _check_target(self, y: ArrayLike) -> None:
         """
         Check that if the type of target is binary,
-        (then the method have to be "score"), or multi-class.
+        (then the method have to be ``"lac"``), or multi-class.
 
         Parameters
         ----------
@@ -245,28 +277,28 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-            If type of target is binary and method is not "score"
-            or if type of target is not multi-class.
+            If type of target is binary and method is not ``"lac"``
+            or ``"score"`` or if type of target is not multi-class.
         """
         check_classification_targets(y)
         if type_of_target(y) == "binary" and \
-                self.method not in ["score"]:
+                self.method not in ["score", "lac"]:
             raise ValueError(
                 "Invalid method for binary target. "
                 "Your target is not of type multiclass and "
                 "allowed values for binary type are "
-                f"{['score']}."
+                f"{['score', 'lac']}."
             )
 
     def _check_raps(self):
         """
-        Check that if the method used is RAPS, then
-        the cross validation strategy is "prefit".
+        Check that if the method used is ``"raps"``, then
+        the cross validation strategy is ``"prefit"``.
 
         Raises
         ------
         ValueError
-            If method is "raps" and cv is not "prefit".
+            If ``method`` is ``"raps"`` and ``cv`` is not ``"prefit"``.
         """
         if (self.method == "raps") and (
             (self.cv not in self.raps_valid_cv_)
@@ -282,23 +314,23 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         include_last_label: Optional[Union[bool, str]]
     ) -> Optional[Union[bool, str]]:
         """
-        Check if include_last_label is a boolean or a string.
+        Check if ``include_last_label`` is a boolean or a string.
         Else raise error.
 
         Parameters
         ----------
-        include_last_label : Optional[Union[bool, str]]
+        include_last_label: Optional[Union[bool, str]]
             Whether or not to include last label in
-            prediction sets for the "cumulated_score" method. Choose among:
+            prediction sets for the ``"aps"`` method. Choose among:
 
-            - False, does not include label whose cumulated score is just over
-             the quantile.
-            - True, includes label whose cumulated score is just over the
+            - ``False``, does not include label whose cumulated score is just
+            over the quantile.
+            - ``True``, includes label whose cumulated score is just over the
             quantile, unless there is only one label in the prediction set.
-            - "randomized", randomly includes label whose cumulated score is
-            just over the quantile based on the comparison of a uniform number
-            and the difference between the cumulated score of the last label
-            and the quantile.
+            - ``"randomized"``, randomly includes label whose cumulated score
+            is just over the quantile based on the comparison of a uniform
+            number and the difference between the cumulated score of the last
+            label and the quantile.
 
         Returns
         -------
@@ -332,7 +364,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        y_pred_proba : ArrayLike of shape
+        y_pred_proba: ArrayLike of shape
             (n_samples, n_classes) or
             (n_samples, n_train_samples, n_classes)
             Softmax output of a model.
@@ -370,10 +402,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        y_pred_proba_cumsum : NDArray of shape (n_samples, n_classes)
+        y_pred_proba_cumsum: NDArray of shape (n_samples, n_classes)
             Cumsumed probabilities in the original order.
 
-        threshold : NDArray of shape (n_alpha,) or shape (n_samples_train,)
+        threshold: NDArray of shape (n_alpha,) or shape (n_samples_train,)
             Threshold to compare with y_proba_last_cumsum, can be either:
 
             - the quantiles associated with alpha values when
@@ -383,7 +415,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
               (i.e., when ``cv`` is a CV splitter and
               ``agg_scores`` is "crossval")
 
-        include_last_label : Union[bool, str]
+        include_last_label: Union[bool, str]
             Whether or not include the last label. If 'randomized',
             the last label is included.
 
@@ -438,20 +470,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        prediction_sets : NDArray of shape
+        prediction_sets: NDArray of shape
             (n_samples, n_classes, n_threshold)
             Prediction set for each observation and each alpha.
 
-        y_pred_index_last : NDArray of shape (n_samples, threshold)
+        y_pred_index_last: NDArray of shape (n_samples, threshold)
             Index of the last included label.
 
-        y_pred_proba_cumsum : NDArray of shape (n_samples, n_classes)
+        y_pred_proba_cumsum: NDArray of shape (n_samples, n_classes)
             Cumsumed probability of the model in the original order.
 
-        y_pred_proba_last : NDArray of shape (n_samples, 1, threshold)
+        y_pred_proba_last: NDArray of shape (n_samples, 1, threshold)
             Last included probability.
 
-        threshold : NDArray of shape (n_alpha,) or shape (n_samples_train,)
+        threshold: NDArray of shape (n_alpha,) or shape (n_samples_train,)
             Threshold to compare with y_proba_last_cumsum, can be either:
 
             - the quantiles associated with alpha values when
@@ -482,7 +514,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             ), axis=1
         )
 
-        if self.method == "cumulated_score":
+        if self.method in ["cumulated_score", "aps"]:
             # compute V parameter from Romano+(2020)
             vs = (
                 (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
@@ -523,9 +555,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        estimator : ClassifierMixin
+        estimator: ClassifierMixin
             Fitted estimator.
-        X : ArrayLike
+
+        X: ArrayLike
             Test set.
 
         Returns
@@ -560,25 +593,25 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        estimator : ClassifierMixin
+        estimator: ClassifierMixin
             Estimator to train.
 
-        X : ArrayLike of shape (n_samples, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Input data.
 
-        y : ArrayLike of shape (n_samples,)
+        y: ArrayLike of shape (n_samples,)
             Input labels.
 
-        train_index : np.ndarray of shape (n_samples_train)
+        train_index: np.ndarray of shape (n_samples_train)
             Training data indices.
 
-        val_index : np.ndarray of shape (n_samples_val)
+        val_index: np.ndarray of shape (n_samples_val)
             Validation data indices.
 
-        k : int
+        k: int
             Split identification number.
 
-        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
             By default None.
 
@@ -623,9 +656,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        y : NDArray of shape (n_samples, )
+        y: NDArray of shape (n_samples, )
             Array with the labels.
-        y_pred_proba : NDArray of shape (n_samples, n_classes)
+        y_pred_proba: NDArray of shape (n_samples, n_classes)
             Predictions of the model.
 
         Returns
@@ -659,19 +692,22 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         cutoff: NDArray
     ) -> NDArray:
         """
-        Regularize the conformity scores with the RAPS
+        Regularize the conformity scores with the ``"raps"``
         method. See algo. 2 in [3].
 
         Parameters
         ----------
-        k_star : NDArray of shape (n_alphas, )
+        k_star: NDArray of shape (n_alphas, )
             Optimal value of k (called k_reg in the paper). There
             is one value per alpha.
-        lambda_ : Union[NDArray, float] of shape (n_alphas, )
+
+        lambda_: Union[NDArray, float] of shape (n_alphas, )
             One value of lambda for each alpha.
-        conf_score : NDArray of shape (n_samples, 1)
+
+        conf_score: NDArray of shape (n_samples, 1)
             Conformity scores.
-        cutoff : NDArray of shape (n_samples, 1)
+
+        cutoff: NDArray of shape (n_samples, 1)
             Position of the true label.
 
         Returns
@@ -706,9 +742,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        y_pred_proba : NDArray of shape (n_samples, n_calsses)
+        y_pred_proba: NDArray of shape (n_samples, n_calsses)
             Model prediction.
-        y : NDArray of shape (n_samples)
+
+        y: NDArray of shape (n_samples)
             Labels.
 
         Returns
@@ -741,16 +778,20 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        y_pred_proba : NDArray of shape (n_samples, n_classes)
+        y_pred_proba: NDArray of shape (n_samples, n_classes)
             Predictions of the model.
-        thresholds : NDArray of shape (n_alphas, )
+
+        thresholds: NDArray of shape (n_alphas, )
             Quantiles that have been computed from the conformity
             scores.
-        include_last_label : Union[bool, str, None]
+
+        include_last_label: Union[bool, str, None]
             Whether to include or not the label whose score
             exceeds the threshold.
-        lambda_ : Union[NDArray, float, None] of shape (n_alphas)
+
+        lambda_: Union[NDArray, float, None] of shape (n_alphas)
             Values of lambda for the regularization.
+
         k_star: Union[NDArray, Any]
             Values of k for the regularization.
 
@@ -835,17 +876,21 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        best_sizes : NDArray of shape (n_alphas, )
+        best_sizes: NDArray of shape (n_alphas, )
             Smallest average prediciton set size before testing
             for the new value of lambda_
-        alpha_np : NDArray of shape (n_alphas)
+
+        alpha_np: NDArray of shape (n_alphas)
             Level of confidences.
-        y_ps : NDArray of shape (n_samples, n_classes, n_alphas)
+
+        y_ps: NDArray of shape (n_samples, n_classes, n_alphas)
             Prediction sets computed with the RAPS method and the
             new value of lambda_
-        lambda_ : NDArray of shape (n_alphas, )
+
+        lambda_: NDArray of shape (n_alphas, )
             New value of lambda_star to test
-        lambda_star : NDArray of shape (n_alphas, )
+
+        lambda_star: NDArray of shape (n_alphas, )
             Actual optimal lambda values for each alpha.
 
         Returns
@@ -884,11 +929,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_pred_proba_raps: NDArray of shape (n_samples, n_labels, n_alphas)
             Predictions of the model repeated on the last axis as many times
             as the number of alphas
-        alpha_np : NDArray of shape (n_alphas, )
+
+        alpha_np: NDArray of shape (n_alphas, )
             Levels of confidences.
-        include_last_label : bool
+
+        include_last_label: bool
             Whether to include or not last label in
             the prediction sets
+
         k_star: NDArray of shape (n_alphas, )
             Values of k for the regularization.
 
@@ -948,9 +996,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        estimator : ClassifierMixin
+        estimator: ClassifierMixin
             Estimator pre-fitted or not.
-        y : NDArray
+
+        y: NDArray
             Values to predict.
 
         Returns
@@ -1004,26 +1053,26 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Training data.
 
-        y : NDArray of shape (n_samples,)
+        y: NDArray of shape (n_samples,)
             Training labels.
 
-        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
             If None, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
             before the fitting process and hence have no prediction sets.
 
-            By default None.
+            By default ``None``.
 
         size_raps: Optional[float]
             Percentage of the data to be used for choosing lambda_star and
             k_star for the RAPS method.
 
-            By default .2.
+            By default ``.2``.
 
 
         Returns
@@ -1074,10 +1123,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 1, test_size=size_raps, random_state=self.random_state
             )
             train_raps_index, val_raps_index = next(raps_split.split(X))
-            X, self.X_raps, y_enc, self.y_raps =\
-                _safe_indexing(X, train_raps_index),\
-                _safe_indexing(X, val_raps_index),\
-                _safe_indexing(y_enc, train_raps_index),\
+            X, self.X_raps, y_enc, self.y_raps = \
+                _safe_indexing(X, train_raps_index), \
+                _safe_indexing(X, val_raps_index), \
+                _safe_indexing(y_enc, train_raps_index), \
                 _safe_indexing(y_enc, val_raps_index)
             self.y_raps_no_enc = self.label_encoder_.inverse_transform(
                 self.y_raps
@@ -1156,11 +1205,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 y_pred_proba.shape,
                 dtype="float"
             )
-        elif self.method == "score":
+        elif self.method in ["score", "lac"]:
             self.conformity_scores_ = np.take_along_axis(
                 1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1
             )
-        elif self.method in ["cumulated_score", "raps"]:
+        elif self.method in ["cumulated_score", "aps", "raps"]:
             self.conformity_scores_, self.cutoff = (
                 self._get_true_label_cumsum_proba(
                     y,
@@ -1202,14 +1251,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         Prediction prediction sets on new samples based on target confidence
         interval.
-        Prediction sets for a given ``alpha`` are deduced from :
+        Prediction sets for a given ``alpha`` are deduced from:
 
-        - quantiles of softmax scores ("score" method)
-        - quantiles of cumulated scores ("cumulated_score" method)
+        - quantiles of softmax scores (``"lac"`` method)
+        - quantiles of cumulated scores (``"aps"`` method)
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
+        X: ArrayLike of shape (n_samples, n_features)
             Test data.
 
         alpha: Optional[Union[float, Iterable[float]]]
@@ -1219,11 +1268,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Lower ``alpha`` produce larger (more conservative) prediction
             sets.
             ``alpha`` is the complement of the target coverage level.
+
             By default ``None``.
 
         include_last_label: Optional[Union[bool, str]]
             Whether or not to include last label in
-            prediction sets for the "cumulated_score" method. Choose among:
+            prediction sets for the "aps" method. Choose among:
 
             - False, does not include label whose cumulated score is just over
               the quantile.
@@ -1282,7 +1332,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         n = len(self.conformity_scores_)
 
         # Estimate of probabilities from estimator(s)
-        # In all cases : len(y_pred_proba.shape) == 3
+        # In all cases: len(y_pred_proba.shape) == 3
         # with  (n_test, n_classes, n_alpha or n_train_samples)
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
@@ -1357,7 +1407,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 self.quantiles_ = (n + 1) * (1 - alpha_np)
 
         # Build prediction sets
-        if self.method == "score":
+        if self.method in ["score", "lac"]:
             if (cv == "prefit") or (agg_scores == "mean"):
                 prediction_sets = np.greater_equal(
                     y_pred_proba - (1 - self.quantiles_), -EPSILON
@@ -1376,7 +1426,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     ], axis=2
                 )
 
-        elif self.method in ["cumulated_score", "naive", "raps"]:
+        elif self.method in ["naive", "cumulated_score", "aps", "raps"]:
             # specify which thresholds will be used
             if (cv == "prefit") or (agg_scores in ["mean"]):
                 thresholds = self.quantiles_

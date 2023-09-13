@@ -8,7 +8,7 @@ Theoretical Description
 
 
 Three methods for multi-class uncertainty-quantification have been implemented in MAPIE so far :
-LABEL [1], Adaptive Prediction Sets [2, 3] and Top-K [3].
+LAC (that stands for Least Ambiguous set-valued Classifier) [1], Adaptive Prediction Sets [2, 3] and Top-K [3].
 The difference between these methods is the way the conformity scores are computed. 
 The figure below illustrates the three methods implemented in MAPIE:
 
@@ -32,10 +32,10 @@ for at least :math:`90 \%` of the new test data points.
 Note that the guarantee is possible only on the marginal coverage, and not on the conditional coverage
 :math:`P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) | X_{n+1} = x_{n+1} \}` which depends on the location of the new test point in the distribution. 
 
-1. LABEL
---------
+1. LAC
+------
 
-In the LABEL method, the conformity score is defined as as one minus the score of the true label. For each point :math:`i` of the calibration set : 
+In the LAC method, the conformity score is defined as as one minus the score of the true label. For each point :math:`i` of the calibration set : 
 
 .. math:: 
     s_i(X_i, Y_i) = 1 - \hat{\mu}(X_i)_{Y_i}
@@ -82,7 +82,7 @@ As the other methods, this procedure allows the user to build prediction sets wi
 3. Adaptive Prediction Sets (APS)
 ---------------------------------
 
-The so-called Adaptive Prediction Set (APS) method overcomes the problem encountered by the LABEL method through the construction of
+The so-called Adaptive Prediction Set (APS) method overcomes the problem encountered by the LAC method through the construction of
 prediction sets which are by definition non-empty.
 The conformity scores are computed by summing the ranked scores of each label, from the higher to the lower until reaching the true
 label of the observation :
@@ -91,7 +91,7 @@ label of the observation :
    s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)_{\pi_j} \quad \text{where} \quad Y_i = \pi_k 
 
 
-The quantile :math:`\hat{q}` is then computed the same way as the LABEL method.
+The quantile :math:`\hat{q}` is then computed the same way as the LAC method.
 For the construction of the prediction sets for a new test point, the same procedure of ranked summing is applied until reaching the quantile,
 as described in the following equation : 
 
@@ -150,7 +150,7 @@ of the last label in the prediction set. This randomization is done as follows:
 5. Split- and cross-conformal methods
 -------------------------------------
 
-It should be noted that MAPIE includes split- and cross-conformal strategies for the LABEL and APS methods,
+It should be noted that MAPIE includes split- and cross-conformal strategies for the LAC and APS methods,
 but only the split-conformal one for Top-K.
 The implementation of the cross-conformal method follows algorithm 2 of [2].
 In short, conformity scores are calculated for all training instances in a cross-validation fashion from their corresponding out-of-fold models.

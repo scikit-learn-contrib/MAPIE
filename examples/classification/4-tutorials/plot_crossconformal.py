@@ -108,7 +108,7 @@ plt.show()
 
 kf = KFold(n_splits=5, shuffle=True)
 clfs, mapies, y_preds, y_ps_mapies = {}, {}, {}, {}
-methods = ["score", "cumulated_score"]
+methods = ["lac", "aps"]
 alpha = np.arange(0.01, 1, 0.01)
 for method in methods:
     clfs_, mapies_, y_preds_, y_ps_mapies_ = {}, {}, {}, {}
@@ -132,8 +132,8 @@ for method in methods:
 # set and the estimated quantile for ``alpha`` = 0.1.
 
 
-fig, axs = plt.subplots(1, len(mapies["score"]), figsize=(20, 4))
-for i, (key, mapie) in enumerate(mapies["score"].items()):
+fig, axs = plt.subplots(1, len(mapies["lac"]), figsize=(20, 4))
+for i, (key, mapie) in enumerate(mapies["lac"].items()):
     axs[i].set_xlabel("Conformity scores")
     axs[i].hist(mapie.conformity_scores_)
     axs[i].axvline(mapie.quantiles_[9], ls="--", color="k")
@@ -199,21 +199,21 @@ def plot_results(
 
 
 plot_results(
-    mapies["score"],
+    mapies["lac"],
     X_test,
     X_test_distrib,
     y_test_distrib,
     alpha[9],
-    "score"
+    "lac"
 )
 
 plot_results(
-    mapies["cumulated_score"],
+    mapies["aps"],
     X_test,
     X_test_distrib,
     y_test_distrib,
     alpha[9],
-    "cumulated_score"
+    "aps"
 )
 
 
@@ -277,11 +277,11 @@ split_widths = np.array(
 )
 
 plot_coverage_width(
-    alpha, split_coverages[0], split_widths[0], "score"
+    alpha, split_coverages[0], split_widths[0], "lac"
 )
 
 plot_coverage_width(
-    alpha, split_coverages[1], split_widths[1], "cumulated_score"
+    alpha, split_coverages[1], split_widths[1], "aps"
 )
 
 
@@ -308,9 +308,9 @@ plot_coverage_width(
 #
 # 2. Comparing individually the conformity scores of the training points with
 #    the conformity scores from the associated model for a new test point
-#    (as presented in Romano et al. 2020 for the "cumulated_score" method)
+#    (as presented in Romano et al. 2020 for the "aps" method)
 #
-# Let's explore the two possibilites with the "score" method using
+# Let's explore the two possibilites with the "lac" method using
 # :class:`~mapie.classification.MapieClassifier`.
 #
 # All we need to do is to provide with the `cv` argument a cross-validation
@@ -338,19 +338,19 @@ kf = KFold(n_splits=5, shuffle=True)
 
 STRATEGIES = {
     "score_cv_mean": (
-        Params(method="score", cv=kf, random_state=42),
+        Params(method="lac", cv=kf, random_state=42),
         ParamsPredict(include_last_label=False, agg_scores="mean")
     ),
     "score_cv_crossval": (
-        Params(method="score", cv=kf, random_state=42),
+        Params(method="lac", cv=kf, random_state=42),
         ParamsPredict(include_last_label=False, agg_scores="crossval")
     ),
     "cum_score_cv_mean": (
-        Params(method="cumulated_score", cv=kf, random_state=42),
+        Params(method="aps", cv=kf, random_state=42),
         ParamsPredict(include_last_label="randomized", agg_scores="mean")
     ),
     "cum_score_cv_crossval": (
-        Params(method="cumulated_score", cv=kf, random_state=42),
+        Params(method="aps", cv=kf, random_state=42),
         ParamsPredict(include_last_label='randomized', agg_scores="crossval")
     )
 }
@@ -402,7 +402,7 @@ plot_coverage_width(
     alpha,
     [coverages["score_cv_mean"], coverages["score_cv_crossval"]],
     [widths["score_cv_mean"], widths["score_cv_crossval"]],
-    "score",
+    "lac",
     comp="mean"
 )
 
@@ -410,7 +410,7 @@ plot_coverage_width(
     alpha,
     [coverages["cum_score_cv_mean"], coverages["cum_score_cv_mean"]],
     [widths["cum_score_cv_crossval"], widths["cum_score_cv_crossval"]],
-    "cumulated_score",
+    "aps",
     comp="mean"
 )
 
@@ -426,24 +426,24 @@ plot_coverage_width(
 # target coverage between the cross-conformal and split-conformal methods.
 
 violations_df = pd.DataFrame(
-    index=["score", "cumulated_score"],
+    index=["lac", "aps"],
     columns=["cv_mean", "cv_crossval", "splits"]
 )
-violations_df.loc["score", "cv_mean"] = violations["score_cv_mean"]
-violations_df.loc["score", "cv_crossval"] = violations["score_cv_crossval"]
-violations_df.loc["score", "splits"] = np.stack(
+violations_df.loc["lac", "cv_mean"] = violations["score_cv_mean"]
+violations_df.loc["lac", "cv_crossval"] = violations["score_cv_crossval"]
+violations_df.loc["lac", "splits"] = np.stack(
     [
         np.abs(cov - (1 - alpha)).mean()
         for cov in split_coverages[0]
     ]
 ).mean()
-violations_df.loc["cumulated_score", "cv_mean"] = (
+violations_df.loc["aps", "cv_mean"] = (
     violations["cum_score_cv_mean"]
 )
-violations_df.loc["cumulated_score", "cv_crossval"] = (
+violations_df.loc["aps", "cv_crossval"] = (
     violations["cum_score_cv_crossval"]
 )
-violations_df.loc["cumulated_score", "splits"] = np.stack(
+violations_df.loc["aps", "splits"] = np.stack(
     [
         np.abs(cov - (1 - alpha)).mean()
         for cov in split_coverages[1]

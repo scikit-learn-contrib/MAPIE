@@ -5,6 +5,7 @@ History
 ##### (##########)
 ------------------
 
+* Rename methods (score to lac and cumulated_score to aps) in MapieClassifier.
 * Add more notebooks and examples.
 * Add prediction set estimation for binary classification.
 * Add Learn-Then-Test method for multilabel-classification.

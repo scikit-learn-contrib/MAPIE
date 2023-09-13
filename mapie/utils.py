@@ -157,7 +157,7 @@ def check_cv(
 
     random_state: Optional[Union[int, np.random.RandomState]], optional
         Pseudo random number generator state used for random uniform sampling
-        for evaluation quantiles and prediction sets in cumulated_score.
+        for evaluation quantiles and prediction sets.
         Pass an int for reproducible output across multiple function calls.
         By default ```None``.
 

@@ -59,7 +59,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random uniform sampling
-        to evaluate quantiles and prediction sets in cumulated_score method.
+        to evaluate quantiles and prediction sets.
         Pass an int for reproducible output across multiple function calls.
 
         By default ``1``.

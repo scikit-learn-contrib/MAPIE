@@ -26,7 +26,7 @@ from mapie.utils import check_alpha
 
 random_state = 42
 
-METHODS = ["score", "cumulated_score", "raps"]
+METHODS = ["lac", "aps", "raps"]
 WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "other", 1, 2.5, (1, 2)]
 Y_PRED_PROBA_WRONG = [
@@ -92,9 +92,9 @@ ParamsPredict = TypedDict(
 )
 
 STRATEGIES = {
-    "score": (
+    "lac": (
         Params(
-            method="score",
+            method="lac",
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -104,9 +104,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "score_split": (
+    "lac_split": (
         Params(
-            method="score",
+            method="lac",
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -116,9 +116,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "score_cv_mean": (
+    "lac_cv_mean": (
         Params(
-            method="score",
+            method="lac",
             cv=3,
             test_size=None,
             random_state=random_state
@@ -128,9 +128,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "score_cv_crossval": (
+    "lac_cv_crossval": (
         Params(
-            method="score",
+            method="lac",
             cv=3,
             test_size=None,
             random_state=random_state
@@ -140,9 +140,9 @@ STRATEGIES = {
             agg_scores="crossval"
         )
     ),
-    "cumulated_score_include": (
+    "aps_include": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -152,9 +152,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "cumulated_score_not_include": (
+    "aps_not_include": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -164,9 +164,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "cumulated_score_randomized": (
+    "aps_randomized": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -176,9 +176,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "cumulated_score_include_split": (
+    "aps_include_split": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -188,9 +188,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "cumulated_score_not_include_split": (
+    "aps_not_include_split": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -200,9 +200,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "cumulated_score_randomized_split": (
+    "aps_randomized_split": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -212,9 +212,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "cumulated_score_include_cv_mean": (
+    "aps_include_cv_mean": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv=3,
             test_size=None,
             random_state=random_state
@@ -224,9 +224,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "cumulated_score_not_include_cv_mean": (
+    "aps_not_include_cv_mean": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv=3,
             test_size=None,
             random_state=random_state
@@ -236,9 +236,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "cumulated_score_randomized_cv_mean": (
+    "aps_randomized_cv_mean": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv=3,
             test_size=None,
             random_state=random_state
@@ -248,9 +248,9 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
-    "cumulated_score_include_cv_crossval": (
+    "aps_include_cv_crossval": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv=3,
             test_size=None,
             random_state=random_state
@@ -260,9 +260,9 @@ STRATEGIES = {
             agg_scores="crossval"
         )
     ),
-    "cumulated_score_not_include_cv_crossval": (
+    "aps_not_include_cv_crossval": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv=3,
             test_size=None,
             random_state=random_state
@@ -272,9 +272,9 @@ STRATEGIES = {
             agg_scores="crossval"
         )
     ),
-    "cumulated_score_randomized_cv_crossval": (
+    "aps_randomized_cv_crossval": (
         Params(
-            method="cumulated_score",
+            method="aps",
             cv=3,
             test_size=None,
             random_state=random_state
@@ -383,9 +383,9 @@ STRATEGIES = {
 }
 
 STRATEGIES_BINARY = {
-    "score": (
+    "lac": (
         Params(
-            method="score",
+            method="lac",
             cv="prefit",
             test_size=None,
             random_state=42
@@ -395,9 +395,9 @@ STRATEGIES_BINARY = {
             agg_scores="mean"
         )
     ),
-    "score_split": (
+    "lac_split": (
         Params(
-            method="score",
+            method="lac",
             cv="split",
             test_size=0.5,
             random_state=42
@@ -407,9 +407,9 @@ STRATEGIES_BINARY = {
             agg_scores="mean"
         )
     ),
-    "score_cv_mean": (
+    "lac_cv_mean": (
         Params(
-            method="score",
+            method="lac",
             cv=3,
             test_size=None,
             random_state=42
@@ -419,9 +419,9 @@ STRATEGIES_BINARY = {
             agg_scores="mean"
         )
     ),
-    "score_cv_crossval": (
+    "lac_cv_crossval": (
         Params(
-            method="score",
+            method="lac",
             cv=3,
             test_size=None,
             random_state=42
@@ -434,22 +434,22 @@ STRATEGIES_BINARY = {
 }
 
 COVERAGES = {
-    "score": 6/9,
-    "score_split": 8/9,
-    "score_cv_mean": 1.0,
-    "score_cv_crossval": 1.0,
-    "cumulated_score_include": 1.0,
-    "cumulated_score_not_include": 5/9,
-    "cumulated_score_randomized": 6/9,
-    "cumulated_score_include_split": 8/9,
-    "cumulated_score_not_include_split": 5/9,
-    "cumulated_score_randomized_split": 7/9,
-    "cumulated_score_include_cv_mean": 1.0,
-    "cumulated_score_not_include_cv_mean": 5/9,
-    "cumulated_score_randomized_cv_mean": 8/9,
-    "cumulated_score_include_cv_crossval": 4/9,
-    "cumulated_score_not_include_cv_crossval": 1/9,
-    "cumulated_score_randomized_cv_crossval": 7/9,
+    "lac": 6/9,
+    "lac_split": 8/9,
+    "lac_cv_mean": 1.0,
+    "lac_cv_crossval": 1.0,
+    "aps_include": 1.0,
+    "aps_not_include": 5/9,
+    "aps_randomized": 6/9,
+    "aps_include_split": 8/9,
+    "aps_not_include_split": 5/9,
+    "aps_randomized_split": 7/9,
+    "aps_include_cv_mean": 1.0,
+    "aps_not_include_cv_mean": 5/9,
+    "aps_randomized_cv_mean": 8/9,
+    "aps_include_cv_crossval": 4/9,
+    "aps_not_include_cv_crossval": 1/9,
+    "aps_randomized_cv_crossval": 7/9,
     "naive": 5/9,
     "naive_split": 5/9,
     "top_k": 1.0,
@@ -461,10 +461,10 @@ COVERAGES = {
 }
 
 COVERAGES_BINARY = {
-    "score": 6/9,
-    "score_split": 8/9,
-    "score_cv_mean": 6/9,
-    "score_cv_crossval": 6/9
+    "lac": 6/9,
+    "lac_split": 8/9,
+    "lac_cv_mean": 6/9,
+    "lac_cv_crossval": 6/9
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -472,7 +472,7 @@ y_toy = np.array([0, 0, 1, 0, 1, 1, 2, 1, 2])
 y_toy_string = np.array(["0", "0", "1", "0", "1", "1", "2", "1", "2"])
 
 y_toy_mapie = {
-    "score": [
+    "lac": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -483,7 +483,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True]
     ],
-    "score_split": [
+    "lac_split": [
         [True, True, False],
         [True, True, False],
         [True, True, False],
@@ -494,7 +494,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True],
     ],
-    "score_cv_mean": [
+    "lac_cv_mean": [
         [True, False, False],
         [True, False, False],
         [True, True, False],
@@ -505,7 +505,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    "score_cv_crossval": [
+    "lac_cv_crossval": [
         [True, False, False],
         [True, False, False],
         [True, True, False],
@@ -516,7 +516,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    "cumulated_score_include": [
+    "aps_include": [
         [True, False, False],
         [True, False, False],
         [True, True, False],
@@ -527,7 +527,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True]
     ],
-    "cumulated_score_not_include": [
+    "aps_not_include": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -538,7 +538,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True]
     ],
-    "cumulated_score_randomized": [
+    "aps_randomized": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -549,7 +549,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, False, True]
     ],
-    "cumulated_score_include_split": [
+    "aps_include_split": [
         [True, True, False],
         [True, True, False],
         [True, True, False],
@@ -560,7 +560,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True]
     ],
-    "cumulated_score_not_include_split": [
+    "aps_not_include_split": [
         [False, True, False],
         [False, True, False],
         [False, True, False],
@@ -571,7 +571,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True]
     ],
-    "cumulated_score_randomized_split": [
+    "aps_randomized_split": [
         [False, True, False],
         [True, True, False],
         [True, True, False],
@@ -582,7 +582,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True]
     ],
-    "cumulated_score_include_cv_mean": [
+    "aps_include_cv_mean": [
         [True, False, False],
         [True, True, False],
         [True, True, False],
@@ -593,7 +593,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    "cumulated_score_not_include_cv_mean": [
+    "aps_not_include_cv_mean": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -604,7 +604,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True]
     ],
-    "cumulated_score_randomized_cv_mean": [
+    "aps_randomized_cv_mean": [
         [True, False, False],
         [True, True, False],
         [True, True, False],
@@ -615,7 +615,7 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    "cumulated_score_include_cv_crossval": [
+    "aps_include_cv_crossval": [
         [False, False, False],
         [True, False, False],
         [False, False, False],
@@ -626,7 +626,7 @@ y_toy_mapie = {
         [False, True, False],
         [False, False, False]
     ],
-    "cumulated_score_not_include_cv_crossval": [
+    "aps_not_include_cv_crossval": [
         [False, False, False],
         [False, False, False],
         [False, False, False],
@@ -637,7 +637,7 @@ y_toy_mapie = {
         [False, False, False],
         [False, False, False]
     ],
-    "cumulated_score_randomized_cv_crossval": [
+    "aps_randomized_cv_crossval": [
         [True, False, False],
         [True, False, False],
         [True, False, False],
@@ -742,7 +742,7 @@ X_toy_binary = np.arange(9).reshape(-1, 1)
 y_toy_binary = np.array([0, 0, 1, 0, 1, 1, 0, 1, 1])
 
 y_toy_binary_mapie = {
-    "score": [
+    "lac": [
         [True, False],
         [True, False],
         [True, False],
@@ -753,7 +753,7 @@ y_toy_binary_mapie = {
         [False, True],
         [False, True]
     ],
-    "score_split": [
+    "lac_split": [
         [True, True],
         [True, True],
         [True, True],
@@ -764,7 +764,7 @@ y_toy_binary_mapie = {
         [True, True],
         [True, False]
     ],
-    "score_cv_mean": [
+    "lac_cv_mean": [
         [True, False],
         [True, False],
         [True, False],
@@ -775,7 +775,7 @@ y_toy_binary_mapie = {
         [False, True],
         [False, True]
     ],
-    "score_cv_crossval": [
+    "lac_cv_crossval": [
         [True, False],
         [True, False],
         [True, False],
@@ -951,11 +951,11 @@ def test_initialized() -> None:
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_clf = MapieClassifier()
-    assert mapie_clf.method == "score"
+    assert mapie_clf.method == "lac"
 
 
 @pytest.mark.parametrize("cv", ["prefit", "split"])
-@pytest.mark.parametrize("method", ["cumulated_score", "raps"])
+@pytest.mark.parametrize("method", ["aps", "raps"])
 def test_warning_binary_classif(cv: str, method: str) -> None:
     """Test that a warning is raised y is binary."""
     mapie_clf = MapieClassifier(
@@ -1028,7 +1028,7 @@ def test_valid_cv(cv: Any) -> None:
 def test_agg_scores_argument(agg_scores: str) -> None:
     """Test that predict passes with all valid 'agg_scores' arguments."""
     mapie_clf = MapieClassifier(
-        cv=3, method="score", random_state=random_state
+        cv=3, method="lac", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
@@ -1038,7 +1038,7 @@ def test_agg_scores_argument(agg_scores: str) -> None:
 def test_invalid_agg_scores_argument(agg_scores: str) -> None:
     """Test that invalid 'agg_scores' raise errors."""
     mapie_clf = MapieClassifier(
-        cv=3, method="score", random_state=random_state
+        cv=3, method="lac", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(
@@ -1117,7 +1117,7 @@ def test_y_is_list_of_string(
 
 
 @pytest.mark.parametrize(
-    "strategy", ["naive", "top_k", "score", "cumulated_score_include"]
+    "strategy", ["naive", "top_k", "lac", "aps_include"]
 )
 def test_same_results_prefit_split(strategy: str) -> None:
     """
@@ -1421,7 +1421,7 @@ def test_cumulated_scores() -> None:
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
     mapie_clf = MapieClassifier(
         cumclf,
-        method="cumulated_score",
+        method="aps",
         cv="prefit",
         random_state=random_state
     )
@@ -1441,7 +1441,7 @@ def test_cumulated_scores() -> None:
 
 @pytest.mark.parametrize("X", IMAGE_INPUT)
 def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
-    """Test image as input for cumulated_score method."""
+    """Test image as input for "aps" method."""
     alpha = [0.65]
     quantile = [0.750183952461055]
     # fit
@@ -1451,7 +1451,7 @@ def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
     mapie = MapieClassifier(
         cumclf,
-        method="cumulated_score",
+        method="aps",
         cv="prefit",
         random_state=random_state
     )
@@ -1542,7 +1542,7 @@ def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
 def test_method_error_in_predict(method: Any, alpha: float) -> None:
     """Test else condition for the method in .predict"""
     mapie_clf = MapieClassifier(
-        method="score", random_state=random_state
+        method="lac", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.method = method
@@ -1562,7 +1562,7 @@ def test_include_label_error_in_predict(
         do_nothing
     )
     mapie_clf = MapieClassifier(
-        method="cumulated_score", random_state=random_state
+        method="aps", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid include.*"):
@@ -1810,7 +1810,7 @@ def test_not_all_label_in_calib() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
-        estimator=clf, method="cumulated_score",
+        estimator=clf, method="aps",
         cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
@@ -1829,7 +1829,7 @@ def test_warning_not_all_label_in_calib() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
-        estimator=clf, method="cumulated_score",
+        estimator=clf, method="aps",
         cv="prefit", random_state=random_state
     )
     with pytest.warns(
@@ -1849,7 +1849,7 @@ def test_n_classes_prefit() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
-        estimator=clf, method="cumulated_score",
+        estimator=clf, method="aps",
         cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
@@ -1867,7 +1867,7 @@ def test_classes_prefit() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
-        estimator=clf, method="cumulated_score",
+        estimator=clf, method="aps",
         cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
@@ -1885,7 +1885,7 @@ def test_classes_encoder_same_than_model() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
-        estimator=clf, method="cumulated_score",
+        estimator=clf, method="aps",
         cv="prefit"
     )
     mapie_clf.fit(X_mapie, y_mapie)
@@ -1900,7 +1900,7 @@ def test_n_classes_cv() -> None:
     clf = LogisticRegression()
 
     mapie_clf = MapieClassifier(
-        estimator=clf, method="cumulated_score",
+        estimator=clf, method="aps",
         cv=5, random_state=random_state
     )
     mapie_clf.fit(X, y)
@@ -1915,7 +1915,7 @@ def test_classes_cv() -> None:
     clf = LogisticRegression()
 
     mapie_clf = MapieClassifier(
-        estimator=clf, method="cumulated_score",
+        estimator=clf, method="aps",
         cv=5, random_state=random_state
     )
     mapie_clf.fit(X, y)
@@ -1931,10 +1931,27 @@ def test_raise_error_new_class() -> None:
     clf.fit(X, y)
     y[-1] = 10
     mapie_clf = MapieClassifier(
-        estimator=clf, method="cumulated_score",
+        estimator=clf, method="aps",
         cv="prefit", random_state=random_state
     )
     with pytest.raises(
         ValueError, match=r".*Values in y do not matched values.*"
     ):
         mapie_clf.fit(X, y)
+
+
+@pytest.mark.parametrize("method", ["score", "cumulated_score"])
+def test_deprecated_method_warning(method: str) -> None:
+    """
+    Test that a warning is raised if choose a deprecated method.
+    """
+    clf = LogisticRegression()
+    clf.fit(X_toy, y_toy)
+    mapie_clf = MapieClassifier(
+        estimator=clf, method=method,
+        cv="prefit", random_state=random_state
+    )
+    with pytest.warns(
+        DeprecationWarning, match=r".*WARNING: Deprecated method.*"
+    ):
+        mapie_clf.fit(X_toy, y_toy)
