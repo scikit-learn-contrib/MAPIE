@@ -22,8 +22,6 @@ from mapie.metrics import (classification_coverage_score,
                            regression_ssc,
                            regression_ssc_score,
                            top_label_ece,
-                           _picp,
-                           _pinaw,
                            cwc)
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
@@ -632,18 +630,4 @@ def test_valid_eta() -> None:
     )
     np.testing.assert_allclose(
         cwc(y, y_low, y_up, eta=0, mu=0.9), 0.65, rtol=1e-2
-    )
-
-
-def test_picp_score() -> None:
-    """Test the validity of picp score."""
-    np.testing.assert_allclose(
-        _picp(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]), 1, rtol=1e-2
-    )
-
-
-def test_pinaw_score() -> None:
-    """Test the validity of pinaw score."""
-    np.testing.assert_allclose(
-        _pinaw(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]), 0.35385, rtol=1e-2
     )
