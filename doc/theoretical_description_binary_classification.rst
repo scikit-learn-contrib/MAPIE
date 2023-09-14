@@ -36,9 +36,9 @@ In a few words, what you need to remember about these concepts :
 -----------------
 
 Definition 1 (Prediction Set (PS) w.r.t :math:`f`) [1].
-    Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
+    Fix a predictor :math:`\hat{\mu}:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
     Define the set of all subsets of :math:`\mathcal{Y}`, :math:`L = \{\{0\}, \{1\}, \{0, 1\}, \emptyset\}`.
-    A function :math:`S:[0,1]\to\mathcal{L}` is said to be :math:`(1-\alpha)`-PS with respect to :math:`f` if:
+    A function :math:`S:[0,1]\to\mathcal{L}` is said to be :math:`(1-\alpha)`-PS with respect to :math:`\hat{\mu}` if:
 
 .. math:: 
     P(Y\in S(\hat{\mu}(X))) \geq 1 - \alpha
@@ -52,10 +52,10 @@ See :class:`~mapie.classification.MapieClassifier` to use a set predictor.
 2. Probabilistic Prediction
 ---------------------------
 
-Definition 2 (Confidence Interval (CI) w.r.t :math:`f`) [1].
-    Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
+Definition 2 (Confidence Interval (CI) w.r.t :math:`\hat{\mu}`) [1].
+    Fix a predictor :math:`\hat{\mu}:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
     Let :math:`I` denote the set of all subintervals of :math:`[0,1]`.
-    A function :math:`C:[0,1]\to\mathcal{I}` is said to be :math:`(1-\alpha)`-CI with respect to :math:`f` if:
+    A function :math:`C:[0,1]\to\mathcal{I}` is said to be :math:`(1-\alpha)`-CI with respect to :math:`\hat{\mu}` if:
 
 .. math:: 
     P(\mathbb{E}[Y|\hat{\mu}(X)]\in C(\hat{\mu}(X))) \geq 1 - \alpha
@@ -70,8 +70,8 @@ Usually, calibration is understood as perfect calibration meaning (see :doc:`the
 In practice, it is more reasonable to consider approximate calibration.
 
 Definition 3 (Approximate calibration) [1].
-    Fix a predictor :math:`f:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
-    The predictor :math:`f:\mathcal{X} \to [0, 1]` is :math:`(\epsilon,\alpha)`-calibrated
+    Fix a predictor :math:`\hat{\mu}:\mathcal{X} \to [0, 1]` and let :math:`(\mathcal{X}, \mathcal{Y}) \sim P`.
+    The predictor :math:`\hat{\mu}:\mathcal{X} \to [0, 1]` is :math:`(\epsilon,\alpha)`-calibrated
     for some :math:`\epsilon,\alpha\in[0, 1]` if with probability at least :math:`1-\alpha`:
 
 .. math:: 
