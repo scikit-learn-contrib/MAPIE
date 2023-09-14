@@ -1,12 +1,19 @@
 """
-===========================================
-Make Conformal Predictive System with MAPIE
-===========================================
+=================================================
+Make Conformal Predictive Distribution with MAPIE
+=================================================
 """
 
 ##############################################################################
 # In this advanced analysis, we propose to use MAPIE for Conformal Predictive
-# System in few steps.
+# Distribution in few steps.
+#
+# [1] Schweder, T., & Hjort, N. L. (2016). Confidence, likelihood, probability
+# (Vol. 41). Cambridge University Press.
+#
+# [2] Vovk, V., Shen, J., Manokhin, V., & Xie, M. G. (2017, May). Nonparametric
+# predictive distributions based on conformal prediction. In Conformal and
+# probabilistic prediction and applications (pp. 82-102). PMLR.
 
 import warnings
 
@@ -45,7 +52,7 @@ plt.show()
 
 
 ##############################################################################
-# 2. Defining a Conformal Predictive System class with MAPIE
+# 2. Defining a Conformal Predictive Distribution class with MAPIE
 # ----------------------------------------------------------
 #
 # To be able to obtain the cumulative distribution function of
@@ -53,7 +60,7 @@ plt.show()
 # :class:`~mapie.regression.MapieRegressor` to add a new method named
 # `get_cumulative_distribution_function`.
 
-class MapieConformalPredictiveSystem(MapieRegressor):
+class MapieConformalPredictiveDistribution(MapieRegressor):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -74,7 +81,7 @@ class MapieConformalPredictiveSystem(MapieRegressor):
 # :class:`~mapie.conformity_score.ResidualNormalisedScore` - in split-conformal
 # inference.
 
-mapie_regressor_1 = MapieConformalPredictiveSystem(
+mapie_regressor_1 = MapieConformalPredictiveDistribution(
     estimator=LinearRegression(),
     conformity_score=AbsoluteConformityScore(),
     cv='split',
@@ -85,7 +92,7 @@ mapie_regressor_1.fit(X_train, y_train)
 y_pred_1 = mapie_regressor_1.predict(X_test)
 y_cdf_1 = mapie_regressor_1.get_cumulative_distribution_function(X_test)
 
-mapie_regressor_2 = MapieConformalPredictiveSystem(
+mapie_regressor_2 = MapieConformalPredictiveDistribution(
     estimator=LinearRegression(),
     conformity_score=ResidualNormalisedScore(),
     cv='split',
