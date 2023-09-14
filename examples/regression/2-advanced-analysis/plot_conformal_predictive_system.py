@@ -129,10 +129,7 @@ plt.hist(
     label='Normalized Residual Score', histtype='step', alpha=0.8
 )
 plt.vlines(
-    y_pred_1[0], 0, 1, label='Prediction', color="C0", linestyles='dashed'
-)
-plt.vlines(
-    y_pred_2[0], 0, 1, label='Prediction', color="C1", linestyles='dashed'
+    y_pred_1[0], 0, 1, label='Prediction', color="C2", linestyles='dashed'
 )
 plt.legend(loc=2)
 plt.show()
