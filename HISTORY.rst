@@ -5,6 +5,11 @@ History
 ##### (##########)
 ------------------
 
+
+
+0.7.0 (2023-09-14)
+------------------
+
 * Add prediction set estimation for binary classification.
 * Add Learn-Then-Test method for multilabel-classification.
 * Add documentation and notebooks for LTT.
