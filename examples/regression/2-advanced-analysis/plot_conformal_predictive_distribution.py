@@ -121,13 +121,22 @@ plt.show()
 
 nb_bins = 100
 
-plt.hist(
-    y_cdf_1[0], cumulative=True, density=True, bins=nb_bins,
-    label='Absolute Residual Score', histtype='step', alpha=0.8
+
+def plot_cdf(data, bins, **kwargs):
+    counts, bins = np.histogram(data, bins=bins)
+    cdf = np.cumsum(counts)/np.sum(counts)
+
+    plt.plot(
+        np.vstack((bins, np.roll(bins, -1))).T.flatten()[:-2],
+        np.vstack((cdf, cdf)).T.flatten(),
+        **kwargs
+    )
+
+plot_cdf(
+    y_cdf_1[0], bins=nb_bins, label='Absolute Residual Score', alpha=0.8
 )
-plt.hist(
-    y_cdf_2[0], cumulative=True, density=True, bins=nb_bins,
-    label='Normalized Residual Score', histtype='step', alpha=0.8
+plot_cdf(
+    y_cdf_2[0], bins=nb_bins, label='Normalized Residual Score', alpha=0.8
 )
 plt.vlines(
     y_pred_1[0], 0, 1, label='Prediction', color="C2", linestyles='dashed'
