@@ -13,9 +13,9 @@ These 3 notions are tightly related for score-based classifier, as it is shown i
 
 Prediction sets can be computed in the same way for multiclass and binary classification with
 :class:`~mapie.calibration.MapieClassifier`, and there are the same theoretical guarantees.
-Nevertheless, prediction sets are often much less informative in the binary case than in the multiclass case [#]_.
+Nevertheless, prediction sets are often much less informative in the binary case than in the multiclass case.
 
-.. [#] From Gupta et al [1]:
+From Gupta et al [1]:
 
     PSs and CIs are only ‘informative’ if the sets or intervals produced by them are small. To quantify
     this, we measure CIs using their width (denoted as :math:`|C(.)|)`, and PSs using their diameter (defined as
