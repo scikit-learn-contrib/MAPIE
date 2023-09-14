@@ -12,7 +12,7 @@ calibration (see :doc:`theoretical_description_calibration`), confidence interva
 These 3 notions are tightly related for score-based classifier, as it is shown in [1]. 
 
 Prediction sets can be computed in the same way for multiclass and binary classification with
-:class:`~mapie.calibration.MapieClassifier`, and there is the same theoretical guarantees.
+:class:`~mapie.calibration.MapieClassifier`, and there are the same theoretical guarantees.
 Nevertheless, prediction sets are often much less informative in the binary case than in the multiclass case[#]_.
 
 In a few words, what you need to remember about these concepts :
@@ -20,8 +20,7 @@ In a few words, what you need to remember about these concepts :
 * *Calibration* is useful for transforming a score (typically given by an ML model)
   into the probability of making a good prediction.
 * *Set Prediction* gives the set of likely predictions with a probabilisic guarantee that the true label is in this set.
-* In contrast, *Probabilistic Prediction* gives a confidence interval for the predictive distribution
-  (or the probability of positive class).
+* In contrast, *Probabilistic Prediction* gives a confidence interval for the predictive distribution.
 
 
 1. Set Prediction
