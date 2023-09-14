@@ -132,6 +132,7 @@ def plot_cdf(data, bins, **kwargs):
         **kwargs
     )
 
+
 plot_cdf(
     y_cdf_1[0], bins=nb_bins, label='Absolute Residual Score', alpha=0.8
 )
