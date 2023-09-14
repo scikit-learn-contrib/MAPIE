@@ -20,7 +20,7 @@ In a few words, what you need to remember about these concepts :
 * *Calibration* is useful for transforming a score (typically given by an ML model)
   into the probability of making a good prediction.
 * *Set Prediction* gives the set of likely predictions with a probabilisic guarantee that the true label is in this set.
-* In contrast, *Probabilistic Prediction* gives a confidence interval for the predictive distribution.
+* *Probabilistic Prediction* gives a confidence interval for the predictive distribution.
 
 
 1. Set Prediction
