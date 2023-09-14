@@ -13,15 +13,7 @@ These 3 notions are tightly related for score-based classifier, as it is shown i
 
 Prediction sets can be computed in the same way for multiclass and binary classification with
 :class:`~mapie.calibration.MapieClassifier`, and there is the same theoretical guarantees.
-Nevertheless, prediction sets are often much less informative in the binary case than in the multiclass case [#]_.
-
-.. [#] From Gupta et al [1]:
-    PSs and CIs are only ‘informative’ if the sets or intervals produced by them are small. To quantify
-    this, we measure CIs using their width (denoted as :math:`|C(.)|)`, and PSs using their diameter (defined as
-    the width of the convex hull of the PS). For example, in the case of binary classification, the diameter
-    of a PS is :math:`1` if the prediction set is :math:`\{0,1\}`, and :math:`0` otherwise (since :math:`Y\in\{0,1\}`
-    always holds, the set :math:`\{0,1\}` is ‘uninformative’). A short CI such as :math:`[0.39, 0.41]`
-    is more informative than a wider one such as :math:`[0.3, 0.5]`.
+Nevertheless, prediction sets are often much less informative in the binary case than in the multiclass case[#]_.
 
 In a few words, what you need to remember about these concepts :
 
@@ -31,7 +23,6 @@ In a few words, what you need to remember about these concepts :
 * In contrast, *Probabilistic Prediction* gives a confidence interval for the predictive distribution
   (or the probability of positive class).
 
-Probabilistic prediction 
 
 1. Set Prediction
 -----------------
@@ -80,6 +71,15 @@ Definition 3 (Approximate calibration) [1].
 
 See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calibration.MapieCalibrator`
 to use a calibrator.
+
+
+.. [#] From Gupta et al [1]:
+    PSs and CIs are only ‘informative’ if the sets or intervals produced by them are small. To quantify
+    this, we measure CIs using their width (denoted as :math:`|C(.)|)`, and PSs using their diameter (defined as
+    the width of the convex hull of the PS). For example, in the case of binary classification, the diameter
+    of a PS is :math:`1` if the prediction set is :math:`\{0,1\}`, and :math:`0` otherwise (since :math:`Y\in\{0,1\}`
+    always holds, the set :math:`\{0,1\}` is ‘uninformative’). A short CI such as :math:`[0.39, 0.41]`
+    is more informative than a wider one such as :math:`[0.3, 0.5]`.
 
 
 4. References
