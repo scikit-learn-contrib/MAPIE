@@ -8,7 +8,7 @@ Theoretical Description
 
 There are mainly three different ways to handle uncertainty quantification in binary classification:
 calibration (see :doc:`theoretical_description_calibration`), confidence interval (CI) for the probability
-:math:`P(Y \vert f(X))` and prediction sets (see :doc:`theoretical_description_classification`).
+:math:`P(Y \vert \hat{\mu}(X))` and prediction sets (see :doc:`theoretical_description_classification`).
 These 3 notions are tightly related for score-based classifier, as it is shown in [1]. 
 
 Prediction sets can be computed in the same way for multiclass and binary classification with
@@ -41,7 +41,7 @@ Definition 1 (Prediction Set (PS) w.r.t :math:`f`) [1].
     A function :math:`S:[0,1]\to\mathcal{L}` is said to be :math:`(1-\alpha)`-PS with respect to :math:`f` if:
 
 .. math:: 
-    P(Y\in S(f(X))) \geq 1 - \alpha
+    P(Y\in S(\hat{\mu}(X))) \geq 1 - \alpha
 
 PSs are typically studied for larger output sets, such as :math:`\mathcal{Y}_{regression}=\mathbb{R}` or
 :math:`\mathcal{Y}_{multiclass}=\{1, 2, ..., L > 2\}`.
@@ -58,7 +58,7 @@ Definition 2 (Confidence Interval (CI) w.r.t :math:`f`) [1].
     A function :math:`C:[0,1]\to\mathcal{I}` is said to be :math:`(1-\alpha)`-CI with respect to :math:`f` if:
 
 .. math:: 
-    P(\mathbb{E}[Y|f(X)]\in C(f(X))) \geq 1 - \alpha
+    P(\mathbb{E}[Y|\hat{\mu}(X)]\in C(\hat{\mu}(X))) \geq 1 - \alpha
 
 In the framework of conformal prediction, the Venn predictor has this property.
 
@@ -75,7 +75,7 @@ Definition 3 (Approximate calibration) [1].
     for some :math:`\epsilon,\alpha\in[0, 1]` if with probability at least :math:`1-\alpha`:
 
 .. math:: 
-    |\mathbb{E}[Y|f(X)] - f(X)| \leq \epsilon
+    |\mathbb{E}[Y|\hat{\mu}(X)] - \hat{\mu}(X)| \leq \epsilon
 
 See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calibration.MapieCalibrator`
 to use a calibrator.
