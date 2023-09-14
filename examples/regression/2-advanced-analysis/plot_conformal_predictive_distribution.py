@@ -6,7 +6,8 @@ Make Conformal Predictive Distribution with MAPIE
 
 ##############################################################################
 # In this advanced analysis, we propose to use MAPIE for Conformal Predictive
-# Distribution in few steps.
+# Distribution (CPD) in few steps. Here are some reference papers for more
+# information about CPD:
 #
 # [1] Schweder, T., & Hjort, N. L. (2016). Confidence, likelihood, probability
 # (Vol. 41). Cambridge University Press.
