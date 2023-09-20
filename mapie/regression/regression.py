@@ -13,7 +13,7 @@ from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import (
     ConformityScore,
-    ConformalResidualFittingScore,
+    ResidualNormalisedScore,
 )
 from mapie.estimator.estimator import EnsembleRegressor
 from mapie.utils import (
@@ -432,10 +432,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         agg_function = self._check_agg_function(self.agg_function)
         cs_estimator = check_conformity_score(self.conformity_score)
         if isinstance(
-            cs_estimator, ConformalResidualFittingScore
+            cs_estimator, ResidualNormalisedScore
         ) and self.cv not in ["split", "prefit"]:
             raise ValueError(
-                "The ConformalResidualFittingScore can be used only with "
+                "The ResidualNormalisedScore can be used only with "
                 "``cv='split'`` and ``cv='prefit'``"
             )
 

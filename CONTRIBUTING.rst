@@ -36,7 +36,7 @@ Alternatively, you can install dependencies with `pip`:
 
 .. code:: sh
 
-    $ pip install requirements.dev.txt
+    $ pip install -r requirements.dev.txt
 
 Finally install `mapie` in development mode:
 
@@ -55,8 +55,8 @@ In order to build the documentation locally, run :
 .. code:: sh
 
     $ cd doc
-    $ make clean
-    $ make html
+    $ make clean-doc
+    $ make doc
 
 
 Updating changelog

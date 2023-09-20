@@ -28,7 +28,7 @@ from mapie.conformity_scores import (
     AbsoluteConformityScore,
     ConformityScore,
     GammaConformityScore,
-    ConformalResidualFittingScore,
+    ResidualNormalisedScore,
 )
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
@@ -604,7 +604,7 @@ def test_conformity_score(
     mapie_reg.predict(X, alpha=0.05)
 
 
-@pytest.mark.parametrize("conformity_score", [ConformalResidualFittingScore()])
+@pytest.mark.parametrize("conformity_score", [ResidualNormalisedScore()])
 def test_conformity_score_with_split_strategies(
     conformity_score: ConformityScore,
 ) -> None:
