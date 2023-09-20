@@ -205,21 +205,11 @@ def plot_results(
 
 
 plot_results(
-    mapies["lac"],
-    X_test,
-    X_test_distrib,
-    y_test_distrib,
-    alpha[9],
-    "lac"
+    mapies["lac"], X_test, X_test_distrib, y_test_distrib, alpha[9], "lac"
 )
 
 plot_results(
-    mapies["aps"],
-    X_test,
-    X_test_distrib,
-    y_test_distrib,
-    alpha[9],
-    "aps"
+    mapies["aps"], X_test, X_test_distrib, y_test_distrib, alpha[9], "aps"
 )
 
 
@@ -284,13 +274,9 @@ split_widths = np.array(
     ]
 )
 
-plot_coverage_width(
-    alpha, split_coverages[0], split_widths[0], "lac"
-)
+plot_coverage_width(alpha, split_coverages[0], split_widths[0], "lac")
 
-plot_coverage_width(
-    alpha, split_coverages[1], split_widths[1], "aps"
-)
+plot_coverage_width(alpha, split_coverages[1], split_widths[1], "aps")
 
 
 ##############################################################################
@@ -344,20 +330,20 @@ kf = KFold(n_splits=5, shuffle=True)
 STRATEGIES = {
     "score_cv_mean": (
         Params(method="lac", cv=kf, random_state=42),
-        ParamsPredict(include_last_label=False, agg_scores="mean")
+        ParamsPredict(include_last_label=False, agg_scores="mean"),
     ),
     "score_cv_crossval": (
         Params(method="lac", cv=kf, random_state=42),
-        ParamsPredict(include_last_label=False, agg_scores="crossval")
+        ParamsPredict(include_last_label=False, agg_scores="crossval"),
     ),
     "cum_score_cv_mean": (
         Params(method="aps", cv=kf, random_state=42),
-        ParamsPredict(include_last_label="randomized", agg_scores="mean")
+        ParamsPredict(include_last_label="randomized", agg_scores="mean"),
     ),
     "cum_score_cv_crossval": (
         Params(method="aps", cv=kf, random_state=42),
-        ParamsPredict(include_last_label='randomized', agg_scores="crossval")
-    )
+        ParamsPredict(include_last_label="randomized", agg_scores="crossval"),
+    ),
 }
 
 y_ps = {}
@@ -404,7 +390,7 @@ plot_coverage_width(
     [coverages["score_cv_mean"], coverages["score_cv_crossval"]],
     [widths["score_cv_mean"], widths["score_cv_crossval"]],
     "lac",
-    comp="mean"
+    comp="mean",
 )
 
 plot_coverage_width(
@@ -412,7 +398,7 @@ plot_coverage_width(
     [coverages["cum_score_cv_mean"], coverages["cum_score_cv_mean"]],
     [widths["cum_score_cv_crossval"], widths["cum_score_cv_crossval"]],
     "aps",
-    comp="mean"
+    comp="mean",
 )
 
 
@@ -427,28 +413,17 @@ plot_coverage_width(
 # target coverage between the cross-conformal and split-conformal methods.
 
 violations_df = pd.DataFrame(
-    index=["lac", "aps"],
-    columns=["cv_mean", "cv_crossval", "splits"]
+    index=["lac", "aps"], columns=["cv_mean", "cv_crossval", "splits"]
 )
 violations_df.loc["lac", "cv_mean"] = violations["score_cv_mean"]
 violations_df.loc["lac", "cv_crossval"] = violations["score_cv_crossval"]
 violations_df.loc["lac", "splits"] = np.stack(
-    [
-        np.abs(cov - (1 - alpha)).mean()
-        for cov in split_coverages[0]
-    ]
+    [np.abs(cov - (1 - alpha)).mean() for cov in split_coverages[0]]
 ).mean()
-violations_df.loc["aps", "cv_mean"] = (
-    violations["cum_score_cv_mean"]
-)
-violations_df.loc["aps", "cv_crossval"] = (
-    violations["cum_score_cv_crossval"]
-)
+violations_df.loc["aps", "cv_mean"] = violations["cum_score_cv_mean"]
+violations_df.loc["aps", "cv_crossval"] = violations["cum_score_cv_crossval"]
 violations_df.loc["aps", "splits"] = np.stack(
-    [
-        np.abs(cov - (1 - alpha)).mean()
-        for cov in split_coverages[1]
-    ]
+    [np.abs(cov - (1 - alpha)).mean() for cov in split_coverages[1]]
 ).mean()
 
 print(violations_df)

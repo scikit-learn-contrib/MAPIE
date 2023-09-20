@@ -9,7 +9,7 @@ Theoretical Description
 
 Three methods for multi-class uncertainty-quantification have been implemented in MAPIE so far :
 LAC (that stands for Least Ambiguous set-valued Classifier) [1], Adaptive Prediction Sets [2, 3] and Top-K [3].
-The difference between these methods is the way the conformity scores are computed. 
+The difference between these methods is the way the conformity scores are computed.
 The figure below illustrates the three methods implemented in MAPIE:
 
 .. image:: images/classification_methods.png
@@ -35,7 +35,7 @@ Note that the guarantee is possible only on the marginal coverage, and not on th
 1. LAC
 ------
 
-In the LAC method, the conformity score is defined as as one minus the score of the true label. For each point :math:`i` of the calibration set : 
+In the LAC method, the conformity score is defined as as one minus the score of the true label. For each point :math:`i` of the calibration set :
 
 .. math::
     s_i(X_i, Y_i) = 1 - \hat{\mu}(X_i)_{Y_i}

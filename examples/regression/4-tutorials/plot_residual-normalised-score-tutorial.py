@@ -52,7 +52,7 @@ fig, axs = plt.subplots(1, 1, figsize=(5, 5))
 axs.hist(y, bins=50)
 axs.set_xlabel("Median price of houses")
 axs.set_title("Histogram of house prices")
-axs.xaxis.set_major_formatter(FormatStrFormatter('%.0f' + "k"))
+axs.xaxis.set_major_formatter(FormatStrFormatter("%.0f" + "k"))
 plt.show()
 
 
@@ -66,21 +66,13 @@ plt.show()
 np.array(X)
 np.array(y)
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    random_state=random_state,
-    test_size=0.02
+    X, y, random_state=random_state, test_size=0.02
 )
 X_train, X_calib, y_train, y_calib = train_test_split(
-    X_train,
-    y_train,
-    random_state=random_state
+    X_train, y_train, random_state=random_state
 )
 X_calib_prefit, X_res, y_calib_prefit, y_res = train_test_split(
-    X_calib,
-    y_calib,
-    random_state=random_state,
-    test_size=0.5
+    X_calib, y_calib, random_state=random_state, test_size=0.5
 )
 
 
@@ -100,6 +92,7 @@ X_calib_prefit, X_res, y_calib_prefit, y_res = train_test_split(
 # example of the exotic parameterisation we can do : we use as a residual
 # estimator a :class:`~sklearn.linear_model.LinearRegression` wrapped to avoid
 # negative values like it is done by default in the class.
+
 
 class PosEstim(LinearRegression):
     def __init__(self):
@@ -123,7 +116,7 @@ residual_estimator = RandomForestRegressor(
     n_estimators=20,
     max_leaf_nodes=70,
     min_samples_leaf=7,
-    random_state=random_state
+    random_state=random_state,
 )
 residual_estimator = residual_estimator.fit(
     X_res, np.abs(np.subtract(y_res, base_model.predict(X_res)))
@@ -133,16 +126,13 @@ wrapped_residual_estimator = PosEstim().fit(
 )
 # Estimating prediction intervals
 STRATEGIES = {
-    "Default": {
-        "cv": "split",
-        "conformity_score": ResidualNormalisedScore()
-    },
+    "Default": {"cv": "split", "conformity_score": ResidualNormalisedScore()},
     "Base model prefit": {
         "cv": "prefit",
         "estimator": base_model,
         "conformity_score": ResidualNormalisedScore(
             split_size=0.5, random_state=random_state
-        )
+        ),
     },
     "Base and residual model prefit": {
         "cv": "prefit",
@@ -150,8 +140,8 @@ STRATEGIES = {
         "conformity_score": ResidualNormalisedScore(
             residual_estimator=residual_estimator,
             random_state=random_state,
-            prefit=True
-        )
+            prefit=True,
+        ),
     },
     "Wrapped residual model": {
         "cv": "prefit",
@@ -159,8 +149,8 @@ STRATEGIES = {
         "conformity_score": ResidualNormalisedScore(
             residual_estimator=wrapped_residual_estimator,
             random_state=random_state,
-            prefit=True
-        )
+            prefit=True,
+        ),
     },
 }
 
@@ -169,7 +159,10 @@ num_bins = 10
 alpha = 0.1
 for strategy, params in STRATEGIES.items():
     mapie = MapieRegressor(**params, random_state=random_state)
-    if mapie.conformity_score.prefit:
+    if (
+        isinstance(mapie.conformity_score, ResidualNormalisedScore)
+        and mapie.conformity_score.prefit
+    ):
         mapie.fit(X_calib_prefit, y_calib_prefit)
     else:
         mapie.fit(X_calib, y_calib)
@@ -199,13 +192,15 @@ def yerr(y_pred, intervals) -> ArrayLike:
     ArrayLike
         Error bars.
     """
-    return np.abs(np.concatenate(
-        [
-            np.expand_dims(y_pred, 0) - intervals[:, 0, 0].T,
-            intervals[:, 1, 0].T - np.expand_dims(y_pred, 0),
-        ],
-        axis=0,
-    ))
+    return np.abs(
+        np.concatenate(
+            [
+                np.expand_dims(y_pred, 0) - intervals[:, 0, 0].T,
+                intervals[:, 1, 0].T - np.expand_dims(y_pred, 0),
+            ],
+            axis=0,
+        )
+    )
 
 
 def plot_predictions(y, y_pred, intervals, coverage, cond_coverage, ax=None):
@@ -244,7 +239,7 @@ def plot_predictions(y, y_pred, intervals, coverage, cond_coverage, ax=None):
         color="g",
         alpha=0.2,
         linestyle="None",
-        label="Inside prediction interval"
+        label="Inside prediction interval",
     )
     ax.errorbar(
         y[warnings],
@@ -253,14 +248,14 @@ def plot_predictions(y, y_pred, intervals, coverage, cond_coverage, ax=None):
         color="r",
         alpha=0.3,
         linestyle="None",
-        label="Outside prediction interval"
+        label="Outside prediction interval",
     )
 
     ax.scatter(y, y_pred, s=3, color="black")
     ax.plot([0, max(max(y), max(y_pred))], [0, max(max(y), max(y_pred))], "-r")
     ax.set_title(
-        f"{strategy} - coverage={coverage:.0%} " +
-        f"- max violation={cond_coverage:.0%}"
+        f"{strategy} - coverage={coverage:.0%} "
+        + f"- max violation={cond_coverage:.0%}"
     )
     ax.set_xlabel("y true")
     ax.set_ylabel("y pred")
@@ -276,7 +271,7 @@ for ax, strategy in zip(axs.flat, STRATEGIES.keys()):
         intervals[strategy],
         coverage[strategy][0],
         cond_coverage[strategy][0],
-        ax=ax
+        ax=ax,
     )
 
 fig.suptitle(f"Predicted values and intervals of level {alpha}")

@@ -399,8 +399,7 @@ class ResidualNormalisedScore(ConformityScore):
             )
 
         signed_conformity_scores = np.divide(
-            np.subtract(y[cal_indexes], y_pred[cal_indexes]),
-            residuals_pred
+            np.subtract(y[cal_indexes], y_pred[cal_indexes]), residuals_pred
         )
 
         # reconstruct array with nan and conformity scores

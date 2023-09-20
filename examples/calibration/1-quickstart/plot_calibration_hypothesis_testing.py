@@ -33,7 +33,7 @@ from mapie._typing import NDArray
 from mapie.metrics import (
     cumulative_differences,
     length_scale,
-    kolmogorov_smirnov_p_value
+    kolmogorov_smirnov_p_value,
 )
 
 ####################################################################
@@ -51,8 +51,7 @@ def sigmoid(x: NDArray):
 
 
 def generate_y_true_calibrated(
-    y_prob: NDArray,
-    random_state: int = 1
+    y_prob: NDArray, random_state: int = 1
 ) -> NDArray:
     generator = check_random_state(random_state)
     uniform = generator.uniform(size=len(y_prob))
@@ -70,8 +69,8 @@ y_true = generate_y_true_calibrated(y_prob)
 
 y = {
     "y_prob": y_prob,
-    "y_pred_1": sigmoid(1.3*X),
-    "y_pred_2": sigmoid(0.7*X)
+    "y_pred_1": sigmoid(1.3 * X),
+    "y_pred_2": sigmoid(0.7 * X),
 }
 
 ####################################################################
@@ -127,7 +126,7 @@ cum_diffs = {
 # We want to plot is along the proportion of scores taken into account.
 
 
-k = np.arange(len(y_true))/len(y_true)
+k = np.arange(len(y_true)) / len(y_true)
 
 ####################################################################
 # We also want to compare the extension of the curve to that of a typical
@@ -161,8 +160,8 @@ p_values = {
 
 for name, cum_diff in cum_diffs.items():
     plt.plot(k, cum_diff, label=f"name (p-value = {p_values[name]:.5f})")
-plt.axhline(y=2*sigma, color="r", linestyle="--")
-plt.axhline(y=-2*sigma, color="r", linestyle="--")
+plt.axhline(y=2 * sigma, color="r", linestyle="--")
+plt.axhline(y=-2 * sigma, color="r", linestyle="--")
 plt.title("Probability curves")
 plt.xlabel("Proportion of scores considered")
 plt.ylabel("Cumulative differences with the ground truth")

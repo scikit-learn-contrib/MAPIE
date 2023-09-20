@@ -24,11 +24,13 @@ from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
-from mapie.conformity_scores import (AbsoluteConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import (
+    AbsoluteConformityScore,
+    ResidualNormalisedScore,
+)
 from mapie.regression import MapieRegressor
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 random_state = 15
 
@@ -61,11 +63,12 @@ plt.show()
 # :class:`~mapie.regression.MapieRegressor` to add a new method named
 # `get_cumulative_distribution_function`.
 
-class MapieConformalPredictiveDistribution(MapieRegressor):
 
+class MapieConformalPredictiveDistribution(MapieRegressor):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.conformity_score.sym = False
+        if self.conformity_score:
+            self.conformity_score.sym = False
 
     def get_cumulative_distribution_function(self, X):
         y_pred = self.predict(X)
@@ -85,8 +88,8 @@ class MapieConformalPredictiveDistribution(MapieRegressor):
 mapie_regressor_1 = MapieConformalPredictiveDistribution(
     estimator=LinearRegression(),
     conformity_score=AbsoluteConformityScore(),
-    cv='split',
-    random_state=random_state
+    cv="split",
+    random_state=random_state,
 )
 
 mapie_regressor_1.fit(X_train, y_train)
@@ -96,8 +99,8 @@ y_cdf_1 = mapie_regressor_1.get_cumulative_distribution_function(X_test)
 mapie_regressor_2 = MapieConformalPredictiveDistribution(
     estimator=LinearRegression(),
     conformity_score=ResidualNormalisedScore(),
-    cv='split',
-    random_state=random_state
+    cv="split",
+    random_state=random_state,
 )
 
 mapie_regressor_2.fit(X_train, y_train)
@@ -124,7 +127,7 @@ nb_bins = 100
 
 def plot_cdf(data, bins, **kwargs):
     counts, bins = np.histogram(data, bins=bins)
-    cdf = np.cumsum(counts)/np.sum(counts)
+    cdf = np.cumsum(counts) / np.sum(counts)
 
     plt.plot(
         np.vstack((bins, np.roll(bins, -1))).T.flatten()[:-2],
@@ -133,14 +136,12 @@ def plot_cdf(data, bins, **kwargs):
     )
 
 
+plot_cdf(y_cdf_1[0], bins=nb_bins, label="Absolute Residual Score", alpha=0.8)
 plot_cdf(
-    y_cdf_1[0], bins=nb_bins, label='Absolute Residual Score', alpha=0.8
-)
-plot_cdf(
-    y_cdf_2[0], bins=nb_bins, label='Normalized Residual Score', alpha=0.8
+    y_cdf_2[0], bins=nb_bins, label="Normalized Residual Score", alpha=0.8
 )
 plt.vlines(
-    y_pred_1[0], 0, 1, label='Prediction', color="C2", linestyles='dashed'
+    y_pred_1[0], 0, 1, label="Prediction", color="C2", linestyles="dashed"
 )
 plt.legend(loc=2)
 plt.show()

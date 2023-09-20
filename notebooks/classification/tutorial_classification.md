@@ -221,7 +221,7 @@ plot_coverages_widths(alpha2, coverages_score, widths_score, "lac")
 ## 2. Conformal Prediction method using the cumulative softmax score
 
 
-We saw in the previous section that the "lac" method is well calibrated by providing accurate coverage levels. However, it tends to give null prediction sets for uncertain regions, especially when the $\alpha$ value is high. MAPIE includes another method, called Adaptive Prediction Set (APS), whose conformity score is the cumulated score of the softmax output until the true label is reached (see the theoretical description for more details). We will see in this Section that this method no longer estimates null prediction sets but by giving slightly bigger prediction sets. 
+We saw in the previous section that the "lac" method is well calibrated by providing accurate coverage levels. However, it tends to give null prediction sets for uncertain regions, especially when the $\alpha$ value is high. MAPIE includes another method, called Adaptive Prediction Set (APS), whose conformity score is the cumulated score of the softmax output until the true label is reached (see the theoretical description for more details). We will see in this Section that this method no longer estimates null prediction sets but by giving slightly bigger prediction sets.
 
 
 Let's visualize the prediction sets obtained with the APS method on the test set after fitting MAPIE on the calibration set.
@@ -237,7 +237,7 @@ y_pred_aps, y_ps_aps = mapie_aps.predict(X_test_mesh, alpha=alpha, include_last_
 plot_results(alpha, X_test_mesh, y_pred_aps, y_ps_aps)
 ```
 
-One can notice that the uncertain regions are emphasized by wider boundaries, but without null prediction sets with respect to the first "lac" method. 
+One can notice that the uncertain regions are emphasized by wider boundaries, but without null prediction sets with respect to the first "lac" method.
 
 ```python
 _, y_ps_aps2 = mapie_aps.predict(X_test, alpha=alpha2, include_last_label="randomized")

@@ -9,7 +9,7 @@ Theoretical Description
 There are mainly three different ways to handle uncertainty quantification in binary classification:
 calibration (see :doc:`theoretical_description_calibration`), confidence interval (CI) for the probability
 :math:`P(Y \vert \hat{\mu}(X))` and prediction sets (see :doc:`theoretical_description_classification`).
-These 3 notions are tightly related for score-based classifier, as it is shown in [1]. 
+These 3 notions are tightly related for score-based classifier, as it is shown in [1].
 
 Prediction sets can be computed in the same way for multiclass and binary classification with
 :class:`~mapie.calibration.MapieClassifier`, and there are the same theoretical guarantees.
@@ -40,7 +40,7 @@ Definition 1 (Prediction Set (PS) w.r.t :math:`f`) [1].
     Define the set of all subsets of :math:`\mathcal{Y}`, :math:`L = \{\{0\}, \{1\}, \{0, 1\}, \emptyset\}`.
     A function :math:`S:[0,1]\to\mathcal{L}` is said to be :math:`(1-\alpha)`-PS with respect to :math:`\hat{\mu}` if:
 
-.. math:: 
+.. math::
     P(Y\in S(\hat{\mu}(X))) \geq 1 - \alpha
 
 PSs are typically studied for larger output sets, such as :math:`\mathcal{Y}_{regression}=\mathbb{R}` or
@@ -57,7 +57,7 @@ Definition 2 (Confidence Interval (CI) w.r.t :math:`\hat{\mu}`) [1].
     Let :math:`I` denote the set of all subintervals of :math:`[0,1]`.
     A function :math:`C:[0,1]\to\mathcal{I}` is said to be :math:`(1-\alpha)`-CI with respect to :math:`\hat{\mu}` if:
 
-.. math:: 
+.. math::
     P(\mathbb{E}[Y|\hat{\mu}(X)]\in C(\hat{\mu}(X))) \geq 1 - \alpha
 
 In the framework of conformal prediction, the Venn predictor has this property.
@@ -74,7 +74,7 @@ Definition 3 (Approximate calibration) [1].
     The predictor :math:`\hat{\mu}:\mathcal{X} \to [0, 1]` is :math:`(\epsilon,\alpha)`-calibrated
     for some :math:`\epsilon,\alpha\in[0, 1]` if with probability at least :math:`1-\alpha`:
 
-.. math:: 
+.. math::
     |\mathbb{E}[Y|\hat{\mu}(X)] - \hat{\mu}(X)| \leq \epsilon
 
 See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calibration.MapieCalibrator`

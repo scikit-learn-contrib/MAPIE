@@ -253,9 +253,7 @@ plot_coverages_widths(alpha2, coverages_score, widths_score, "lac")
 # Let's visualize the prediction sets obtained with the APS method on the test
 # set after fitting MAPIE on the calibration set.
 
-mapie_aps = MapieClassifier(
-    estimator=clf, cv="prefit", method="aps"
-)
+mapie_aps = MapieClassifier(estimator=clf, cv="prefit", method="aps")
 mapie_aps.fit(X_cal, y_cal)
 alpha = [0.2, 0.1, 0.05]
 y_pred_aps, y_ps_aps = mapie_aps.predict(

@@ -21,7 +21,7 @@ y_toy = np.array([5, 7, 9, 11, 13, 15])
 y_pred_list = [4, 7, 10, 12, 13, 12]
 conf_scores_list = [1, 0, -1, -1, 0, 3]
 conf_scores_gamma_list = [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]
-conf_scores_residual_norm_list = [0.2, 0., 0.11111111, 0.09090909, 0., 0.2]
+conf_scores_residual_norm_list = [0.2, 0.0, 0.11111111, 0.09090909, 0.0, 0.2]
 random_state = 42
 
 
@@ -220,7 +220,7 @@ def test_check_consistency() -> None:
 
 @pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
 def test_residual_normalised_prefit_conformity_score_get_conformity_scores(
-    y_pred: NDArray
+    y_pred: NDArray,
 ) -> None:
     """
     Test conformity score computation for ResidualNormalisedScore
@@ -230,7 +230,7 @@ def test_residual_normalised_prefit_conformity_score_get_conformity_scores(
     residual_norm_conf_score = ResidualNormalisedScore(
         residual_estimator=residual_estimator,
         prefit=True,
-        random_state=random_state
+        random_state=random_state,
     )
     conf_scores = residual_norm_conf_score.get_conformity_scores(
         X_toy, y_toy, y_pred
@@ -241,7 +241,7 @@ def test_residual_normalised_prefit_conformity_score_get_conformity_scores(
 
 @pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
 def test_residual_normalised_conformity_score_get_conformity_scores(
-    y_pred: NDArray
+    y_pred: NDArray,
 ) -> None:
     """
     Test conformity score computation for ResidualNormalisedScore
@@ -385,9 +385,14 @@ def test_residual_normalised_prefit_get_estimation_distribution() -> None:
     )
 
 
-@pytest.mark.parametrize("score", [AbsoluteConformityScore(),
-                                   GammaConformityScore(),
-                                   ResidualNormalisedScore()])
+@pytest.mark.parametrize(
+    "score",
+    [
+        AbsoluteConformityScore(),
+        GammaConformityScore(),
+        ResidualNormalisedScore(),
+    ],
+)
 @pytest.mark.parametrize("alpha", [[0.3], [0.5, 0.4]])
 def test_intervals_shape_with_every_score(
     score: ConformityScore, alpha: Any

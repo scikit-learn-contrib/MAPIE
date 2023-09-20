@@ -7,14 +7,16 @@ from sklearn.utils.validation import check_array, column_or_1d
 
 from ._typing import ArrayLike, NDArray
 
-from .utils import (calc_bins,
-                    check_array_shape_classification,
-                    check_array_shape_regression,
-                    check_binary_zero_one,
-                    check_nb_intervals_sizes,
-                    check_nb_sets_sizes,
-                    check_number_bins,
-                    check_split_strategy)
+from .utils import (
+    calc_bins,
+    check_array_shape_classification,
+    check_array_shape_regression,
+    check_binary_zero_one,
+    check_nb_intervals_sizes,
+    check_nb_sets_sizes,
+    check_number_bins,
+    check_split_strategy,
+)
 from ._machine_precision import EPSILON
 
 
@@ -714,7 +716,7 @@ def hsic(
 def add_jitter(
     x: NDArray,
     noise_amplitude: float = 1e-8,
-    random_state: Optional[Union[int, np.random.RandomState]] = None
+    random_state: Optional[Union[int, np.random.RandomState]] = None,
 ) -> NDArray:
     """
     Add a tiny normal distributed perturbation to an array x.
@@ -792,7 +794,7 @@ def cumulative_differences(
     y_true: NDArray,
     y_score: NDArray,
     noise_amplitude: float = 1e-8,
-    random_state: Optional[Union[int, np.random.RandomState]] = 1
+    random_state: Optional[Union[int, np.random.RandomState]] = 1,
 ) -> NDArray:
     """
     Compute the cumulative difference between y_true and y_score, both ordered
@@ -843,12 +845,10 @@ def cumulative_differences(
     """
     n = len(y_true)
     y_score_jittered = add_jitter(
-        y_score,
-        noise_amplitude=noise_amplitude,
-        random_state=random_state
+        y_score, noise_amplitude=noise_amplitude, random_state=random_state
     )
     y_true_sorted, y_score_sorted = sort_xy_by_y(y_true, y_score_jittered)
-    cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted)/n
+    cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted) / n
     return cumulative_differences
 
 
@@ -885,7 +885,7 @@ def length_scale(s: NDArray) -> float:
     0.16
     """
     n = len(s)
-    length_scale = np.sqrt(np.sum(s * (1 - s)))/n
+    length_scale = np.sqrt(np.sum(s * (1 - s))) / n
     return length_scale
 
 
@@ -977,12 +977,16 @@ def kolmogorov_smirnov_cdf(x: float) -> float:
     0.3708
     """
     kmax = np.ceil(
-        0.5 + x * np.sqrt(2) / np.pi * np.sqrt(np.log(4 / (np.pi*EPSILON)))
+        0.5 + x * np.sqrt(2) / np.pi * np.sqrt(np.log(4 / (np.pi * EPSILON)))
     )
     c = 0.0
     for k in range(int(kmax)):
         kplus = k + 1 / 2
-        c += (-1)**k / kplus * np.exp(-kplus**2 * np.pi**2 / (2 * x**2))
+        c += (
+            (-1) ** k
+            / kplus
+            * np.exp(-(kplus**2) * np.pi**2 / (2 * x**2))
+        )
     c *= 2 / np.pi
     return c
 
@@ -1123,10 +1127,14 @@ def kuiper_cdf(x: float) -> float:
     """
     kmax = np.ceil(
         (
-            0.5 + x / (np.pi * np.sqrt(2)) *
-            np.sqrt(
+            0.5
+            + x
+            / (np.pi * np.sqrt(2))
+            * np.sqrt(
                 np.log(
-                    4 / (np.sqrt(2 * np.pi) * EPSILON) * (1 / x + x / np.pi**2)
+                    4
+                    / (np.sqrt(2 * np.pi) * EPSILON)
+                    * (1 / x + x / np.pi**2)
                 )
             )
         )
@@ -1134,9 +1142,8 @@ def kuiper_cdf(x: float) -> float:
     c = 0.0
     for k in range(int(kmax)):
         kplus = k + 1 / 2
-        c += (
-            (8 / x**2 + 2 / kplus**2 / np.pi**2) *
-            np.exp(-2 * kplus**2 * np.pi**2 / x**2)
+        c += (8 / x**2 + 2 / kplus**2 / np.pi**2) * np.exp(
+            -2 * kplus**2 * np.pi**2 / x**2
         )
     return c
 
@@ -1230,15 +1237,11 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     """
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
-    numerator = np.sum(
-        (y_true - y_score) * (1 - 2 * y_score)
-    )
+    numerator = np.sum((y_true - y_score) * (1 - 2 * y_score))
     denominator = np.sqrt(
-        np.sum(
-            (1 - 2 * y_score) ** 2 * y_score * (1 - y_score)
-        )
+        np.sum((1 - 2 * y_score) ** 2 * y_score * (1 - y_score))
     )
-    sp_stat = numerator/denominator
+    sp_stat = numerator / denominator
     return sp_stat
 
 

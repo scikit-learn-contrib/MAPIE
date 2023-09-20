@@ -43,7 +43,7 @@ from mapie._typing import NDArray
 from mapie.metrics import (
     kolmogorov_smirnov_p_value,
     kuiper_p_value,
-    spiegelhalter_p_value
+    spiegelhalter_p_value,
 )
 
 ##############################################################################
@@ -53,13 +53,13 @@ from mapie.metrics import (
 
 
 def generate_y_true_calibrated(
-    y_prob: NDArray,
-    random_state: int = 1
+    y_prob: NDArray, random_state: int = 1
 ) -> NDArray:
     generator = check_random_state(random_state)
     uniform = generator.uniform(size=len(y_prob))
     y_true = (uniform <= y_prob).astype(float)
     return y_true
+
 
 ##############################################################################
 # Then, we draw many different calibrated datasets, each with a fixed
@@ -94,16 +94,28 @@ sp_p_values = np.sort(sp_p_values)
 # and Kolmogorov-Smirnov.
 
 plt.hist(
-    ks_p_values, 100,
-    cumulative=True, density=True, histtype="step", label="Kolmogorov-Smirnov"
+    ks_p_values,
+    100,
+    cumulative=True,
+    density=True,
+    histtype="step",
+    label="Kolmogorov-Smirnov",
 )
 plt.hist(
-    ku_p_values, 100,
-    cumulative=True, density=True, histtype="step", label="Kuiper"
+    ku_p_values,
+    100,
+    cumulative=True,
+    density=True,
+    histtype="step",
+    label="Kuiper",
 )
 plt.hist(
-    sp_p_values, 100,
-    cumulative=True, density=True, histtype="step", label="Spiegelhalter"
+    sp_p_values,
+    100,
+    cumulative=True,
+    density=True,
+    histtype="step",
+    label="Spiegelhalter",
 )
 plt.plot([0, 1], [0, 1], "--", color="black")
 plt.title("Distribution of p-values for calibrated datasets")

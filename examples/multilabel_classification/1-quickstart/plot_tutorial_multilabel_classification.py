@@ -83,7 +83,7 @@ colors = {
     (0, 1, 0): {"color": "#d62728", "lac": "0-1-0"},
     (1, 1, 0): {"color": "#ffd700", "lac": "1-1-0"},
     (1, 0, 0): {"color": "#c20078", "lac": "1-0-0"},
-    (1, 1, 1): {"color": "#06C2AC", "lac": "1-1-1"}
+    (1, 1, 1): {"color": "#06C2AC", "lac": "1-1-1"},
 }
 
 for i in range(7):
@@ -239,18 +239,12 @@ plt.show()
 # explore.
 
 mapie_clf = MapieMultiLabelClassifier(
-    estimator=clf,
-    method='ltt',
-    metric_control='precision'
+    estimator=clf, method="ltt", metric_control="precision"
 )
 mapie_clf.fit(X_cal, y_cal)
 
 alpha = 0.1
-_, y_ps = mapie_clf.predict(
-    X_test,
-    alpha=alpha,
-    delta=0.1
-)
+_, y_ps = mapie_clf.predict(X_test, alpha=alpha, delta=0.1)
 
 valid_index = mapie_clf.valid_index[0]  # valid_index is a list of list
 
@@ -273,10 +267,11 @@ idx_max = np.argmin(r_hat[valid_index])
 plt.figure(figsize=(8, 8))
 plt.plot(mapie_clf.lambdas, r_hat, label=r"$\hat{R}_\lambda$")
 plt.plot([0, 1], [alpha, alpha], label=r"$\alpha$")
-plt.axvspan(mini, maxi, facecolor='red', alpha=0.3, label=r"LTT-$\lambda$")
+plt.axvspan(mini, maxi, facecolor="red", alpha=0.3, label=r"LTT-$\lambda$")
 plt.plot(
-    [lambdas[idx_max], lambdas[idx_max]], [0, 1],
-    label=r"$\lambda^* =" + f"{lambdas[idx_max]}$"
+    [lambdas[idx_max], lambdas[idx_max]],
+    [0, 1],
+    label=r"$\lambda^* =" + f"{lambdas[idx_max]}$",
 )
 plt.xlabel(r"Threshold $\lambda$")
 plt.ylabel(r"Empirical risk: $\hat{R}_\lambda$")

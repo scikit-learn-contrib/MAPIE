@@ -202,7 +202,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     raps_valid_cv_ = ["prefit", "split"]
     valid_methods_ = [
-        "naive", "score", "lac", "cumulated_score", "aps", "top_k", "raps"
+        "naive",
+        "score",
+        "lac",
+        "cumulated_score",
+        "aps",
+        "top_k",
+        "raps",
     ]
     fit_attributes = [
         "single_estimator_",
@@ -264,18 +270,18 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.method == "score":
             warnings.warn(
                 "WARNING: Deprecated method. "
-                + "The method \"score\" is outdated. "
-                + "Prefer to use \"lac\" instead to keep "
+                + 'The method "score" is outdated. '
+                + 'Prefer to use "lac" instead to keep '
                 + "the same behavior in the next release.",
-                DeprecationWarning
+                DeprecationWarning,
             )
         if self.method == "cumulated_score":
             warnings.warn(
                 "WARNING: Deprecated method. "
-                + "The method \"cumulated_score\" is outdated. "
-                + "Prefer to use \"aps\" instead to keep "
+                + 'The method "cumulated_score" is outdated. '
+                + 'Prefer to use "aps" instead to keep '
                 + "the same behavior in the next release.",
-                DeprecationWarning
+                DeprecationWarning,
             )
 
     def _check_target(self, y: ArrayLike) -> None:
@@ -295,8 +301,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             or ``"score"`` or if type of target is not multi-class.
         """
         check_classification_targets(y)
-        if type_of_target(y) == "binary" and \
-                self.method not in ["score", "lac"]:
+        if type_of_target(y) == "binary" and self.method not in [
+            "score",
+            "lac",
+        ]:
             raise ValueError(
                 "Invalid method for binary target. "
                 "Your target is not of type multiclass and "
@@ -1084,11 +1092,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 1, test_size=size_raps, random_state=self.random_state
             )
             train_raps_index, val_raps_index = next(raps_split.split(X))
-            X, self.X_raps, y_enc, self.y_raps = \
-                _safe_indexing(X, train_raps_index), \
-                _safe_indexing(X, val_raps_index), \
-                _safe_indexing(y_enc, train_raps_index), \
-                _safe_indexing(y_enc, val_raps_index)
+            X, self.X_raps, y_enc, self.y_raps = (
+                _safe_indexing(X, train_raps_index),
+                _safe_indexing(X, val_raps_index),
+                _safe_indexing(y_enc, train_raps_index),
+                _safe_indexing(y_enc, val_raps_index),
+            )
             self.y_raps_no_enc = self.label_encoder_.inverse_transform(
                 self.y_raps
             )
@@ -1110,10 +1119,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             self.single_estimator_ = fit_estimator(
                 clone(estimator), X, y, sample_weight
             )
-            y_pred_proba = np.empty(
-                (n_samples, self.n_classes_),
-                dtype=float
-            )
+            y_pred_proba = np.empty((n_samples, self.n_classes_), dtype=float)
             outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self._fit_and_predict_oof_model)(
                     clone(estimator),
@@ -1130,15 +1136,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 self.estimators_,
                 predictions_list,
                 val_ids_list,
-                val_indices_list
+                val_indices_list,
             ) = map(list, zip(*outputs))
-            predictions = np.concatenate(
-                cast(List[NDArray], predictions_list)
-            )
+            predictions = np.concatenate(cast(List[NDArray], predictions_list))
             val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
-            val_indices = np.concatenate(
-                cast(List[NDArray], val_indices_list)
-            )
+            val_indices = np.concatenate(cast(List[NDArray], val_indices_list))
             self.k_[val_indices] = val_ids
             y_pred_proba[val_indices] = predictions
 
@@ -1156,27 +1158,23 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 self.X_raps
             )
             self.position_raps = self._get_true_label_position(
-                self.y_pred_proba_raps,
-                self.y_raps
+                self.y_pred_proba_raps, self.y_raps
             )
 
         # Conformity scores
         if self.method == "naive":
             self.conformity_scores_ = np.empty(
-                y_pred_proba.shape,
-                dtype="float"
+                y_pred_proba.shape, dtype="float"
             )
         elif self.method in ["score", "lac"]:
             self.conformity_scores_ = np.take_along_axis(
                 1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1
             )
         elif self.method in ["cumulated_score", "aps", "raps"]:
-            self.conformity_scores_, self.cutoff = (
-                self._get_true_label_cumsum_proba(
-                    y,
-                    y_pred_proba
-                )
-            )
+            (
+                self.conformity_scores_,
+                self.cutoff,
+            ) = self._get_true_label_cumsum_proba(y, y_pred_proba)
             y_proba_true = np.take_along_axis(
                 y_pred_proba, y_enc.reshape(-1, 1), axis=1
             )
@@ -1188,13 +1186,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             # and get the position of each label from decreasing
             # probability
             self.conformity_scores_ = self._get_true_label_position(
-                y_pred_proba,
-                y_enc
+                y_pred_proba, y_enc
             )
         else:
             raise ValueError(
-                "Invalid method. "
-                f"Allowed values are {self.valid_methods_}."
+                "Invalid method. " f"Allowed values are {self.valid_methods_}."
             )
 
         if isinstance(cv, ShuffleSplit):

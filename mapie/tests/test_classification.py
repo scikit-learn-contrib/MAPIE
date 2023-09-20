@@ -83,21 +83,11 @@ STRATEGIES = {
         ParamsPredict(include_last_label=False, agg_scores="mean"),
     ),
     "lac_cv_mean": (
-        Params(
-            method="lac",
-            cv=3,
-            test_size=None,
-            random_state=random_state
-        ),
+        Params(method="lac", cv=3, test_size=None, random_state=random_state),
         ParamsPredict(include_last_label=False, agg_scores="mean"),
     ),
     "lac_cv_crossval": (
-        Params(
-            method="lac",
-            cv=3,
-            test_size=None,
-            random_state=random_state
-        ),
+        Params(method="lac", cv=3, test_size=None, random_state=random_state),
         ParamsPredict(include_last_label=False, agg_scores="crossval"),
     ),
     "aps_include": (
@@ -278,72 +268,40 @@ STRATEGIES = {
 
 STRATEGIES_BINARY = {
     "lac": (
-        Params(
-            method="lac",
-            cv="prefit",
-            test_size=None,
-            random_state=42
-        ),
-        ParamsPredict(
-            include_last_label=False,
-            agg_scores="mean"
-        )
+        Params(method="lac", cv="prefit", test_size=None, random_state=42),
+        ParamsPredict(include_last_label=False, agg_scores="mean"),
     ),
     "lac_split": (
-        Params(
-            method="lac",
-            cv="split",
-            test_size=0.5,
-            random_state=42
-        ),
-        ParamsPredict(
-            include_last_label=False,
-            agg_scores="mean"
-        )
+        Params(method="lac", cv="split", test_size=0.5, random_state=42),
+        ParamsPredict(include_last_label=False, agg_scores="mean"),
     ),
     "lac_cv_mean": (
-        Params(
-            method="lac",
-            cv=3,
-            test_size=None,
-            random_state=42
-        ),
-        ParamsPredict(
-            include_last_label=False,
-            agg_scores="mean"
-        )
+        Params(method="lac", cv=3, test_size=None, random_state=42),
+        ParamsPredict(include_last_label=False, agg_scores="mean"),
     ),
     "lac_cv_crossval": (
-        Params(
-            method="lac",
-            cv=3,
-            test_size=None,
-            random_state=42
-        ),
-        ParamsPredict(
-            include_last_label=False,
-            agg_scores="crossval"
-        )
-    )
+        Params(method="lac", cv=3, test_size=None, random_state=42),
+        ParamsPredict(include_last_label=False, agg_scores="crossval"),
+    ),
 }
 
 COVERAGES = {
-    "score": 6 / 9,
-    "score_split": 8 / 9,
-    "score_cv_mean": 1.0,
-    "score_cv_crossval": 1.0,
-    "cumulated_score_include": 1.0,
-    "cumulated_score_not_include": 5 / 9,
-    "cumulated_score_randomized": 6 / 9,
-    "cumulated_score_include_split": 8 / 9,
-    "cumulated_score_not_include_split": 5 / 9,
-    "cumulated_score_randomized_split": 7 / 9,
-    "cumulated_score_include_cv_mean": 1.0,
-    "cumulated_score_not_include_cv_mean": 5 / 9,
-    "cumulated_score_randomized_cv_mean": 8 / 9,
-    "cumulated_score_include_cv_crossval": 4 / 9,
-    "cumulated_score_not_include_cv_crossval": 1 / 9,
-    "cumulated_score_randomized_cv_crossval": 7 / 9,
+    "lac": 6 / 9,
+    "lac_split": 8 / 9,
+    "lac_cv_mean": 1.0,
+    "lac_cv_crossval": 1.0,
+    "aps_include": 1.0,
+    "aps_not_include": 5 / 9,
+    "aps_randomized": 6 / 9,
+    "aps_include_split": 8 / 9,
+    "aps_not_include_split": 5 / 9,
+    "aps_randomized_split": 7 / 9,
+    "aps_include_cv_mean": 1.0,
+    "aps_not_include_cv_mean": 5 / 9,
+    "aps_randomized_cv_mean": 8 / 9,
+    "aps_include_cv_crossval": 4 / 9,
+    "aps_not_include_cv_crossval": 1 / 9,
+    "aps_randomized_cv_crossval": 7 / 9,
     "naive": 5 / 9,
     "naive_split": 5 / 9,
     "top_k": 1.0,
@@ -355,10 +313,10 @@ COVERAGES = {
 }
 
 COVERAGES_BINARY = {
-    "lac": 6/9,
-    "lac_split": 8/9,
-    "lac_cv_mean": 6/9,
-    "lac_cv_crossval": 6/9
+    "lac": 6 / 9,
+    "lac_split": 8 / 9,
+    "lac_cv_mean": 6 / 9,
+    "lac_cv_crossval": 6 / 9,
 }
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -645,7 +603,7 @@ y_toy_binary_mapie = {
         [False, True],
         [False, True],
         [False, True],
-        [False, True]
+        [False, True],
     ],
     "lac_split": [
         [True, True],
@@ -656,7 +614,7 @@ y_toy_binary_mapie = {
         [True, True],
         [True, True],
         [True, True],
-        [True, False]
+        [True, False],
     ],
     "lac_cv_mean": [
         [True, False],
@@ -667,7 +625,7 @@ y_toy_binary_mapie = {
         [False, True],
         [False, True],
         [False, True],
-        [False, True]
+        [False, True],
     ],
     "lac_cv_crossval": [
         [True, False],
@@ -678,8 +636,8 @@ y_toy_binary_mapie = {
         [False, True],
         [False, True],
         [False, True],
-        [False, True]
-    ]
+        [False, True],
+    ],
 }
 
 REGULARIZATION_PARAMETERS = [
@@ -854,7 +812,7 @@ def test_default_parameters() -> None:
 def test_warning_binary_classif(cv: str, method: str) -> None:
     """Test that a warning is raised y is binary."""
     mapie_clf = MapieClassifier(
-      cv=cv, method=method, random_state=random_state
+        cv=cv, method=method, random_state=random_state
     )
     X, y = make_classification(
         n_samples=500,
@@ -930,9 +888,7 @@ def test_valid_cv(cv: Any) -> None:
 @pytest.mark.parametrize("agg_scores", ["mean", "crossval"])
 def test_agg_scores_argument(agg_scores: str) -> None:
     """Test that predict passes with all valid 'agg_scores' arguments."""
-    mapie_clf = MapieClassifier(
-        cv=3, method="lac", random_state=random_state
-    )
+    mapie_clf = MapieClassifier(cv=3, method="lac", random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
 
@@ -940,9 +896,7 @@ def test_agg_scores_argument(agg_scores: str) -> None:
 @pytest.mark.parametrize("agg_scores", ["median", 1, None])
 def test_invalid_agg_scores_argument(agg_scores: str) -> None:
     """Test that invalid 'agg_scores' raise errors."""
-    mapie_clf = MapieClassifier(
-        cv=3, method="lac", random_state=random_state
-    )
+    mapie_clf = MapieClassifier(cv=3, method="lac", random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid 'agg_scores' argument.*"):
         mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
@@ -1015,9 +969,7 @@ def test_y_is_list_of_string(
     assert y_ps.shape == (X.shape[0], len(np.unique(y)), n_alpha)
 
 
-@pytest.mark.parametrize(
-    "strategy", ["naive", "top_k", "lac", "aps_include"]
-)
+@pytest.mark.parametrize("strategy", ["naive", "top_k", "lac", "aps_include"])
 def test_same_results_prefit_split(strategy: str) -> None:
     """
     Test checking that if split and prefit method have exactly
@@ -1303,7 +1255,7 @@ def test_toy_binary_dataset_predictions(strategy: str) -> None:
         X_toy,
         alpha=0.5,
         include_last_label=args_predict["include_last_label"],
-        agg_scores=args_predict["agg_scores"]
+        agg_scores=args_predict["agg_scores"],
     )
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_binary_mapie[strategy])
     np.testing.assert_allclose(
@@ -1432,9 +1384,7 @@ def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_method_error_in_predict(method: Any, alpha: float) -> None:
     """Test else condition for the method in .predict"""
-    mapie_clf = MapieClassifier(
-        method="lac", random_state=random_state
-    )
+    mapie_clf = MapieClassifier(method="lac", random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.method = method
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
@@ -1450,9 +1400,7 @@ def test_include_label_error_in_predict(
     monkeypatch.setattr(
         MapieClassifier, "_check_include_last_label", do_nothing
     )
-    mapie_clf = MapieClassifier(
-        method="aps", random_state=random_state
-    )
+    mapie_clf = MapieClassifier(method="aps", random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid include.*"):
         mapie_clf.predict(
@@ -1689,8 +1637,7 @@ def test_not_all_label_in_calib() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
-        estimator=clf, method="aps",
-        cv="prefit", random_state=random_state
+        estimator=clf, method="aps", cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
     y_pred, y_pss = mapie_clf.predict(X, alpha=0.5)
@@ -1708,8 +1655,7 @@ def test_warning_not_all_label_in_calib() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
-        estimator=clf, method="aps",
-        cv="prefit", random_state=random_state
+        estimator=clf, method="aps", cv="prefit", random_state=random_state
     )
     with pytest.warns(
         UserWarning, match=r".*WARNING: your calibration dataset.*"
@@ -1728,8 +1674,7 @@ def test_n_classes_prefit() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
-        estimator=clf, method="aps",
-        cv="prefit", random_state=random_state
+        estimator=clf, method="aps", cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
     assert mapie_clf.n_classes_ == len(np.unique(y))
@@ -1746,8 +1691,7 @@ def test_classes_prefit() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = MapieClassifier(
-        estimator=clf, method="aps",
-        cv="prefit", random_state=random_state
+        estimator=clf, method="aps", cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
     assert (mapie_clf.classes_ == np.unique(y)).all()
@@ -1763,10 +1707,7 @@ def test_classes_encoder_same_than_model() -> None:
     indices_remove = np.where(y != 2)
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
-    mapie_clf = MapieClassifier(
-        estimator=clf, method="aps",
-        cv="prefit"
-    )
+    mapie_clf = MapieClassifier(estimator=clf, method="aps", cv="prefit")
     mapie_clf.fit(X_mapie, y_mapie)
     assert (mapie_clf.label_encoder_.classes_ == np.unique(y)).all()
 
@@ -1779,8 +1720,7 @@ def test_n_classes_cv() -> None:
     clf = LogisticRegression()
 
     mapie_clf = MapieClassifier(
-        estimator=clf, method="aps",
-        cv=5, random_state=random_state
+        estimator=clf, method="aps", cv=5, random_state=random_state
     )
     mapie_clf.fit(X, y)
     assert mapie_clf.n_classes_ == len(np.unique(y))
@@ -1794,8 +1734,7 @@ def test_classes_cv() -> None:
     clf = LogisticRegression()
 
     mapie_clf = MapieClassifier(
-        estimator=clf, method="aps",
-        cv=5, random_state=random_state
+        estimator=clf, method="aps", cv=5, random_state=random_state
     )
     mapie_clf.fit(X, y)
     assert (mapie_clf.classes_ == np.unique(y)).all()
@@ -1810,8 +1749,7 @@ def test_raise_error_new_class() -> None:
     clf.fit(X, y)
     y[-1] = 10
     mapie_clf = MapieClassifier(
-        estimator=clf, method="aps",
-        cv="prefit", random_state=random_state
+        estimator=clf, method="aps", cv="prefit", random_state=random_state
     )
     with pytest.raises(
         ValueError, match=r".*Values in y do not matched values.*"
@@ -1827,8 +1765,7 @@ def test_deprecated_method_warning(method: str) -> None:
     clf = LogisticRegression()
     clf.fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(
-        estimator=clf, method=method,
-        cv="prefit", random_state=random_state
+        estimator=clf, method=method, cv="prefit", random_state=random_state
     )
     with pytest.warns(
         DeprecationWarning, match=r".*WARNING: Deprecated method.*"

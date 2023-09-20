@@ -132,7 +132,7 @@ optim_model = RandomizedSearchCV(
     n_iter=10,
     cv=KFold(n_splits=5, shuffle=True),
     verbose=0,
-    random_state=random_state
+    random_state=random_state,
 )
 optim_model.fit(X_train, y_train)
 estimator = optim_model.best_estimator_
@@ -195,16 +195,23 @@ def plot_prediction_intervals(
         y_test_sorted_[~warnings],
         y_pred_sorted_[~warnings],
         yerr=np.abs(error[~warnings]),
-        capsize=5, marker="o", elinewidth=2, linewidth=0,
-        label="Inside prediction interval"
-        )
+        capsize=5,
+        marker="o",
+        elinewidth=2,
+        linewidth=0,
+        label="Inside prediction interval",
+    )
     axs.errorbar(
         y_test_sorted_[warnings],
         y_pred_sorted_[warnings],
         yerr=np.abs(error[warnings]),
-        capsize=5, marker="o", elinewidth=2, linewidth=0, color="red",
-        label="Outside prediction interval"
-        )
+        capsize=5,
+        marker="o",
+        elinewidth=2,
+        linewidth=0,
+        color="red",
+        label="Outside prediction interval",
+    )
     axs.scatter(
         y_test_sorted_[warnings],
         y_test_sorted_[warnings],
@@ -264,9 +271,11 @@ for strategy, params in STRATEGIES.items():
     if strategy == "cqr":
         mapie = MapieQuantileRegressor(estimator, **params)
         mapie.fit(
-            X_train, y_train,
-            X_calib=X_calib, y_calib=y_calib,
-            random_state=random_state
+            X_train,
+            y_train,
+            X_calib=X_calib,
+            y_calib=y_calib,
+            random_state=random_state,
         )
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:

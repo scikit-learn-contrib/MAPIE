@@ -9,5 +9,5 @@ __all__ = [
     "ConformityScore",
     "AbsoluteConformityScore",
     "GammaConformityScore",
-    "ResidualNormalisedScore"
+    "ResidualNormalisedScore",
 ]
