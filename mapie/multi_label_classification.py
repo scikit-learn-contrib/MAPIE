@@ -225,9 +225,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             has no label.
         """
         if not (y.sum(axis=1) > 0).all():
-            raise ValueError(
-                "Invalid y. All observations should contain at least one label."
-            )
+            raise ValueError("Invalid y. All observations should contain at least one label.")
 
     def _check_delta(self, delta: Optional[float]):
         """

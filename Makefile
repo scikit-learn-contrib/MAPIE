@@ -4,7 +4,7 @@ lint:
 	flake8 . --exclude=doc,build
 
 black:
-	black -l 99 --check .
+	python -m black -l 99 --check .
 
 type-check:
 	mypy mapie

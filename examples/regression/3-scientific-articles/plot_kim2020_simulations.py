@@ -474,7 +474,6 @@ def plot_results(results: pd.DataFrame, score: str) -> None:
 
 
 if __name__ == "__main__":
-
     results_coverages_widths = comparison_JAB(
         model=Ridge2(),
         alpha=0.1,

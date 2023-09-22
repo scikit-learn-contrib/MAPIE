@@ -197,26 +197,11 @@ def test_regression_same_length() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
-        regression_ssc(
-            y_toy,
-            intervals[
-                :-1,
-            ],
-        )
+        regression_ssc(y_toy, intervals[:-1])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
-        regression_ssc_score(
-            y_toy,
-            intervals[
-                :-1,
-            ],
-        )
+        regression_ssc_score(y_toy, intervals[:-1])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
-        hsic(
-            y_toy,
-            intervals[
-                :-1,
-            ],
-        )
+        hsic(y_toy, intervals[:-1])
 
 
 def test_regression_toydata_coverage_score() -> None:
