@@ -191,7 +191,7 @@ def check_cv(
         elif cv >= 2:
             return KFold(n_splits=cv, shuffle=True, random_state=random_state)
         else:
-            raise ValueError("Invalid cv argument. " "Allowed integer values are -1 or int >= 2.")
+            raise ValueError("Invalid cv argument. Allowed integer values are -1 or int >= 2.")
     elif isinstance(cv, BaseCrossValidator):
         return cv
     elif isinstance(cv, BaseShuffleSplit):
@@ -246,7 +246,7 @@ def check_alpha(alpha: Optional[Union[float, Iterable[float]]] = None) -> Option
     else:
         raise ValueError("Invalid alpha. Allowed values are float or Iterable.")
     if len(alpha_np.shape) != 1:
-        raise ValueError("Invalid alpha." "Please provide a one-dimensional list of values.")
+        raise ValueError("Invalid alpha.Please provide a one-dimensional list of values.")
     if alpha_np.dtype.type not in [np.float64, np.float32]:
         raise ValueError("Invalid alpha. Allowed values are Iterable of floats.")
     if np.any(np.logical_or(alpha_np <= 0, alpha_np >= 1)):
@@ -553,7 +553,7 @@ def check_conformity_score(
         return conformity_score
     else:
         raise ValueError(
-            "Invalid conformity_score argument.\n" "Must be None or a ConformityScore instance."
+            "Invalid conformity_score argument.\nMust be None or a ConformityScore instance."
         )
 
 
@@ -620,7 +620,7 @@ def check_estimator_fit_predict(estimator: Union[RegressorMixin, ClassifierMixin
     """
     if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
         raise ValueError(
-            "Invalid estimator. " "Please provide a regressor with fit and predict methods."
+            "Invalid estimator. Please provide a regressor with fit and predict methods."
         )
 
 

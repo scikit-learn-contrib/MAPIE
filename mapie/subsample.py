@@ -171,7 +171,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         """
         if (self.n_blocks is not None) + (self.length is not None) != 1:
             raise ValueError(
-                "Exactly one argument between ``length`` or " "``n_blocks`` has to be not None"
+                "Exactly one argument between ``length`` or ``n_blocks`` has to be not None"
             )
 
         n = len(X)
@@ -186,7 +186,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         indices = np.arange(n)
         if (length <= 0) or (length > n):
             raise ValueError(
-                "The length of blocks is <= 0 or greater than the length" "of training set."
+                "The length of blocks is <= 0 or greater than the lengthof training set."
             )
 
         if self.overlapping:

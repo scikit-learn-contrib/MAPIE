@@ -122,13 +122,13 @@ coverage_nested = regression_coverage_score(y_test, y_pis_nested[:, 0, 0], y_pis
 score_nested = mean_squared_error(y_test, y_pred_nested, squared=False)
 
 # Print scores and effective coverages.
-print("Scores and effective coverages for the CV+ strategy using the " "Random Forest model.")
+print("Scores and effective coverages for the CV+ strategy using the Random Forest model.")
 print(
     "Score on the test set for the non-nested and nested CV approaches: ",
     f"{score_non_nested: .3f}, {score_nested: .3f}",
 )
 print(
-    "Effective coverage on the test set for the non-nested " "and nested CV approaches: ",
+    "Effective coverage on the test set for the non-nested and nested CV approaches: ",
     f"{coverage_non_nested: .3f}, {coverage_nested: .3f}",
 )
 

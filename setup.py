@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 DISTNAME = "MAPIE"
 VERSION = "0.7.0"
-DESCRIPTION = "A scikit-learn-compatible module " "for estimating prediction intervals."
+DESCRIPTION = "A scikit-learn-compatible module for estimating prediction intervals."
 with codecs.open("README.rst", encoding="utf-8-sig") as f:
     LONG_DESCRIPTION = f.read()
 LONG_DESCRIPTION_CONTENT_TYPE = "text/x-rst"
@@ -17,7 +17,7 @@ PROJECT_URLS = {
 }
 LICENSE = "new BSD"
 MAINTAINER = "T. Cordier, V. Blot, L. Lacombe"
-MAINTAINER_EMAIL = "tcordier@quantmetry.com, " "vblot@quantmetry.com, " "llacombe@quantmetry.com"
+MAINTAINER_EMAIL = "tcordier@quantmetry.com, vblot@quantmetry.com, llacombe@quantmetry.com"
 PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
 INSTALL_REQUIRES = ["scikit-learn", "packaging"]

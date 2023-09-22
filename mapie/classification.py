@@ -340,7 +340,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         """
         if (not isinstance(include_last_label, bool)) and (not include_last_label == "randomized"):
             raise ValueError(
-                "Invalid include_last_label argument. " "Should be a boolean or 'randomized'."
+                "Invalid include_last_label argument. Should be a boolean or 'randomized'."
             )
         else:
             return include_last_label
@@ -428,7 +428,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
         else:
             raise ValueError(
-                "Invalid include_last_label argument. " "Should be a boolean or 'randomized'."
+                "Invalid include_last_label argument. Should be a boolean or 'randomized'."
             )
         return y_pred_index_last[:, np.newaxis, :]
 

@@ -226,7 +226,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         """
         if not (y.sum(axis=1) > 0).all():
             raise ValueError(
-                "Invalid y. " "All observations should contain at " "least one label."
+                "Invalid y. All observations should contain at least one label."
             )
 
     def _check_delta(self, delta: Optional[float]):
@@ -259,7 +259,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
                     "Recall with RCPS or Precision with LTT"
                 )
             elif (delta <= 0) or (delta >= 1):
-                raise ValueError("Invalid delta. " "delta must be in ]0, 1[")
+                raise ValueError("Invalid delta. delta must be in ]0, 1[")
         if (self.method == "crc") and (delta is not None):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
