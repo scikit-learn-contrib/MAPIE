@@ -69,20 +69,10 @@ y_pred_set = np.array(
 )
 y_pred_set_2alphas = np.array(
     [
-        [
-            [False, False],
-            [False, True],
-            [False, True],
-            [False, False],
-        ],
+        [[False, False], [False, True], [False, True], [False, False]],
         [[False, False], [True, True], [True, True], [True, True]],
         [[False, False], [True, False], [True, False], [False, False]],
-        [
-            [True, False],
-            [True, False],
-            [True, True],
-            [True, False],
-        ],
+        [[True, False], [True, False], [True, True], [True, False]],
         [[False, False], [True, True], [False, True], [True, True]],
     ]
 )
@@ -105,10 +95,7 @@ SSC_CLASSIF = {
     "1alpha_base": Params_ssc_classif(y_pred_set=y_pred_set_2alphas[:, :, 0], num_bins=2),
     "1alpha_3sp": Params_ssc_classif(y_pred_set=y_pred_set_2alphas[:, :, 0], num_bins=3),
     "1alpha_None": Params_ssc_classif(y_pred_set=y_pred_set_2alphas[:, :, 0], num_bins=None),
-    "2alpha_base": Params_ssc_classif(
-        y_pred_set=y_pred_set_2alphas,
-        num_bins=2,
-    ),
+    "2alpha_base": Params_ssc_classif(y_pred_set=y_pred_set_2alphas, num_bins=2),
     "2alpha_3sp": Params_ssc_classif(y_pred_set=y_pred_set_2alphas, num_bins=3),
     "2alpha_None": Params_ssc_classif(y_pred_set=y_pred_set_2alphas, num_bins=None),
 }
@@ -349,12 +336,7 @@ def test_top_label_same_result() -> None:
     scr2 = top_label_ece(y_true_, pred_max_, y_score_arg=pred_argmax_)
 
     classes = np.unique([y_true_ + 1])
-    scr3 = top_label_ece(
-        y_true_ + 1,
-        pred_proba_,
-        classes=classes,
-    )
-
+    scr3 = top_label_ece(y_true_ + 1, pred_proba_, classes=classes)
     scr4 = top_label_ece(
         y_true_ + 1, np.max(pred_proba_, axis=1), classes[np.argmax(pred_proba_, axis=1)]
     )
