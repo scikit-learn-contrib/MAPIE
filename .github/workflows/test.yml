@@ -51,6 +51,8 @@ jobs:
         run: make lint
       - name: Check static typing
         run: make type-check
+      - name: Check code style check
+        run: make black
       - name: Test with pytest
         run: make coverage
       - name: Code coverage

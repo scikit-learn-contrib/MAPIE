@@ -97,6 +97,16 @@ These tests absolutely have to pass.
     $ make type-check
 
 
+Style code check
+^^^^^^^^^^^^^^^^
+
+These tests absolutely have to pass.
+
+.. code:: sh
+
+    $ make black
+
+
 Unit tests
 ^^^^^^^^^^
 
