@@ -12,3 +12,5 @@ dependencies:
     - twine
     - wheel
     - pandas
+    - pip:
+        - -e .

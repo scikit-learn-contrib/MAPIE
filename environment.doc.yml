@@ -11,3 +11,5 @@ dependencies:
     - pandas
     - matplotlib
     - lightgbm
+    - pip:
+        - -e .
