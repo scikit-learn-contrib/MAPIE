@@ -1,4 +1,5 @@
 from __future__ import annotations
+from abc import ABCMeta, abstractmethod
 
 from typing import Optional, Tuple, Union
 
@@ -7,13 +8,14 @@ from sklearn.base import RegressorMixin
 from mapie._typing import ArrayLike, NDArray
 
 
-class EnsembleEstimator(RegressorMixin):
+class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
     """
     This class implements methods to handle the training and usage of the
     estimator. This estimator can be unique or composed by cross validated
     estimators.
     """
 
+    @abstractmethod
     def fit(
         self,
         X: ArrayLike,
@@ -45,6 +47,7 @@ class EnsembleEstimator(RegressorMixin):
             The estimator fitted.
         """
 
+    @abstractmethod
     def predict(
         self,
         X: ArrayLike,
