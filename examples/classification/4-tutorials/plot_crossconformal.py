@@ -37,8 +37,7 @@ from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.classification import MapieClassifier
-from mapie.metrics import (classification_coverage_score,
-                           classification_mean_width_score)
+from mapie.metrics import classification_coverage_score, classification_mean_width_score
 
 ##############################################################################
 # 1. Estimating the impact of train/calibration split on the prediction sets
@@ -59,23 +58,20 @@ n_classes = 3
 n_cv = 5
 np.random.seed(42)
 
-X_train = np.vstack([
-    np.random.multivariate_normal(center, cov, n_samples)
-    for center, cov in zip(centers, covs)
-])
+X_train = np.vstack(
+    [np.random.multivariate_normal(center, cov, n_samples) for center, cov in zip(centers, covs)]
+)
 y_train = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 
-X_test_distrib = np.vstack([
-    np.random.multivariate_normal(center, cov, 10*n_samples)
-    for center, cov in zip(centers, covs)
-])
-y_test_distrib = np.hstack(
-    [np.full(10*n_samples, i) for i in range(n_classes)]
+X_test_distrib = np.vstack(
+    [
+        np.random.multivariate_normal(center, cov, 10 * n_samples)
+        for center, cov in zip(centers, covs)
+    ]
 )
+y_test_distrib = np.hstack([np.full(10 * n_samples, i) for i in range(n_classes)])
 
-xx, yy = np.meshgrid(
-    np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
-)
+xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(x_min, x_max, step))
 X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
 
@@ -123,7 +119,10 @@ for method in methods:
         )
         y_preds_[fold], y_ps_mapies_[fold] = y_pred_mapie, y_ps_mapie
     clfs[method], mapies[method], y_preds[method], y_ps_mapies[method] = (
-        clfs_, mapies_, y_preds_, y_ps_mapies_
+        clfs_,
+        mapies_,
+        y_preds_,
+        y_ps_mapies_,
     )
 
 
@@ -138,10 +137,7 @@ for i, (key, mapie) in enumerate(mapies["lac"].items()):
     axs[i].hist(mapie.conformity_scores_)
     axs[i].axvline(mapie.quantiles_[9], ls="--", color="k")
     axs[i].set_title(f"split={key}\nquantile={mapie.quantiles_[9]:.3f}")
-plt.suptitle(
-    "Distribution of scores on each calibration fold for the "
-    f"{methods[0]} method"
-)
+plt.suptitle("Distribution of scores on each calibration fold for the " f"{methods[0]} method")
 plt.show()
 
 
@@ -160,35 +156,30 @@ def plot_results(
     X_test2: NDArray,
     y_test2: NDArray,
     alpha: float,
-    method: str
+    method: str,
 ) -> None:
-    tab10 = plt.cm.get_cmap('Purples', 4)
+    tab10 = plt.cm.get_cmap("Purples", 4)
     fig, axs = plt.subplots(1, len(mapies), figsize=(20, 4))
     for i, (_, mapie) in enumerate(mapies.items()):
-        y_pi_sums = mapie.predict(
-            X_test,
-            alpha=alpha,
-            include_last_label=True
-        )[1][:, :, 0].sum(axis=1)
+        y_pi_sums = mapie.predict(X_test, alpha=alpha, include_last_label=True)[1][:, :, 0].sum(
+            axis=1
+        )
         axs[i].scatter(
             X_test[:, 0],
             X_test[:, 1],
             c=y_pi_sums,
-            marker='.',
+            marker=".",
             s=10,
             alpha=1,
             cmap=tab10,
             vmin=0,
-            vmax=3
+            vmax=3,
         )
         coverage = classification_coverage_score(
             y_test2, mapie.predict(X_test2, alpha=alpha)[1][:, :, 0]
         )
         axs[i].set_title(f"coverage = {coverage:.3f}")
-    plt.suptitle(
-        "Number of labels in prediction sets "
-        f"for the {method} method"
-    )
+    plt.suptitle("Number of labels in prediction sets " f"for the {method} method")
     plt.show()
 
 
@@ -198,23 +189,9 @@ def plot_results(
 # prediction set size as function of the ``alpha`` parameter.
 
 
-plot_results(
-    mapies["lac"],
-    X_test,
-    X_test_distrib,
-    y_test_distrib,
-    alpha[9],
-    "lac"
-)
+plot_results(mapies["lac"], X_test, X_test_distrib, y_test_distrib, alpha[9], "lac")
 
-plot_results(
-    mapies["aps"],
-    X_test,
-    X_test_distrib,
-    y_test_distrib,
-    alpha[9],
-    "aps"
-)
+plot_results(mapies["aps"], X_test, X_test_distrib, y_test_distrib, alpha[9], "aps")
 
 
 ##############################################################################
@@ -227,7 +204,7 @@ def plot_coverage_width(
     coverages: List[NDArray],
     widths: List[NDArray],
     method: str,
-    comp: str = "split"
+    comp: str = "split",
 ) -> None:
     if comp == "split":
         legends = [f"Split {i + 1}" for i, _ in enumerate(coverages)]
@@ -245,10 +222,7 @@ def plot_coverage_width(
     for i, width in enumerate(widths):
         axes[1].plot(1 - alpha, width, label=legends[i])
     axes[1].legend()
-    plt.suptitle(
-        "Effective coverage and prediction set size "
-        f"for the {method} method"
-    )
+    plt.suptitle("Effective coverage and prediction set size " f"for the {method} method")
     plt.show()
 
 
@@ -256,33 +230,28 @@ split_coverages = np.array(
     [
         [
             [
-                classification_coverage_score(
-                    y_test_distrib, y_ps[:, :, ia]
-                ) for ia, _ in enumerate(alpha)]
+                classification_coverage_score(y_test_distrib, y_ps[:, :, ia])
+                for ia, _ in enumerate(alpha)
+            ]
             for _, y_ps in y_ps2.items()
-        ] for _, y_ps2 in y_ps_mapies.items()
+        ]
+        for _, y_ps2 in y_ps_mapies.items()
     ]
 )
 
 split_widths = np.array(
     [
         [
-            [
-                classification_mean_width_score(y_ps[:, :, ia])
-                for ia, _ in enumerate(alpha)
-            ]
+            [classification_mean_width_score(y_ps[:, :, ia]) for ia, _ in enumerate(alpha)]
             for _, y_ps in y_ps2.items()
-        ] for _, y_ps2 in y_ps_mapies.items()
+        ]
+        for _, y_ps2 in y_ps_mapies.items()
     ]
 )
 
-plot_coverage_width(
-    alpha, split_coverages[0], split_widths[0], "lac"
-)
+plot_coverage_width(alpha, split_coverages[0], split_widths[0], "lac")
 
-plot_coverage_width(
-    alpha, split_coverages[1], split_widths[1], "aps"
-)
+plot_coverage_width(alpha, split_coverages[1], split_widths[1], "aps")
 
 
 ##############################################################################
@@ -319,19 +288,10 @@ plot_coverage_width(
 # with the ``agg_scores`` attribute.
 
 Params = TypedDict(
-    "Params",
-    {
-        "method": str,
-        "cv": Optional[Union[int, str]],
-        "random_state": Optional[int]
-    }
+    "Params", {"method": str, "cv": Optional[Union[int, str]], "random_state": Optional[int]}
 )
 ParamsPredict = TypedDict(
-    "ParamsPredict",
-    {
-        "include_last_label": Union[bool, str],
-        "agg_scores": str
-    }
+    "ParamsPredict", {"include_last_label": Union[bool, str], "agg_scores": str}
 )
 
 kf = KFold(n_splits=5, shuffle=True)
@@ -339,20 +299,20 @@ kf = KFold(n_splits=5, shuffle=True)
 STRATEGIES = {
     "score_cv_mean": (
         Params(method="lac", cv=kf, random_state=42),
-        ParamsPredict(include_last_label=False, agg_scores="mean")
+        ParamsPredict(include_last_label=False, agg_scores="mean"),
     ),
     "score_cv_crossval": (
         Params(method="lac", cv=kf, random_state=42),
-        ParamsPredict(include_last_label=False, agg_scores="crossval")
+        ParamsPredict(include_last_label=False, agg_scores="crossval"),
     ),
     "cum_score_cv_mean": (
         Params(method="aps", cv=kf, random_state=42),
-        ParamsPredict(include_last_label="randomized", agg_scores="mean")
+        ParamsPredict(include_last_label="randomized", agg_scores="mean"),
     ),
     "cum_score_cv_crossval": (
         Params(method="aps", cv=kf, random_state=42),
-        ParamsPredict(include_last_label='randomized', agg_scores="crossval")
-    )
+        ParamsPredict(include_last_label="randomized", agg_scores="crossval"),
+    ),
 }
 
 y_ps = {}
@@ -360,11 +320,7 @@ for strategy, params in STRATEGIES.items():
     args_init, args_predict = STRATEGIES[strategy]
     mapie_clf = MapieClassifier(**args_init)
     mapie_clf.fit(X_train, y_train)
-    _, y_ps[strategy] = mapie_clf.predict(
-        X_test_distrib,
-        alpha=alpha,
-        **args_predict
-    )
+    _, y_ps[strategy] = mapie_clf.predict(X_test_distrib, alpha=alpha, **args_predict)
 
 
 ##############################################################################
@@ -379,17 +335,12 @@ coverages, widths, violations = {}, {}, {}
 for strategy, y_ps_ in y_ps.items():
     coverages[strategy] = np.array(
         [
-            classification_coverage_score(
-                y_test_distrib,
-                y_ps_[:, :, ia]
-            ) for ia, _ in enumerate(alpha)
+            classification_coverage_score(y_test_distrib, y_ps_[:, :, ia])
+            for ia, _ in enumerate(alpha)
         ]
     )
     widths[strategy] = np.array(
-        [
-            classification_mean_width_score(y_ps_[:, :, ia])
-            for ia, _ in enumerate(alpha)
-        ]
+        [classification_mean_width_score(y_ps_[:, :, ia]) for ia, _ in enumerate(alpha)]
     )
     violations[strategy] = np.abs(coverages[strategy] - (1 - alpha)).mean()
 
@@ -403,7 +354,7 @@ plot_coverage_width(
     [coverages["score_cv_mean"], coverages["score_cv_crossval"]],
     [widths["score_cv_mean"], widths["score_cv_crossval"]],
     "lac",
-    comp="mean"
+    comp="mean",
 )
 
 plot_coverage_width(
@@ -411,7 +362,7 @@ plot_coverage_width(
     [coverages["cum_score_cv_mean"], coverages["cum_score_cv_mean"]],
     [widths["cum_score_cv_crossval"], widths["cum_score_cv_crossval"]],
     "aps",
-    comp="mean"
+    comp="mean",
 )
 
 
@@ -425,29 +376,16 @@ plot_coverage_width(
 # impression by comparing the violation of the effective coverage from the
 # target coverage between the cross-conformal and split-conformal methods.
 
-violations_df = pd.DataFrame(
-    index=["lac", "aps"],
-    columns=["cv_mean", "cv_crossval", "splits"]
-)
+violations_df = pd.DataFrame(index=["lac", "aps"], columns=["cv_mean", "cv_crossval", "splits"])
 violations_df.loc["lac", "cv_mean"] = violations["score_cv_mean"]
 violations_df.loc["lac", "cv_crossval"] = violations["score_cv_crossval"]
 violations_df.loc["lac", "splits"] = np.stack(
-    [
-        np.abs(cov - (1 - alpha)).mean()
-        for cov in split_coverages[0]
-    ]
+    [np.abs(cov - (1 - alpha)).mean() for cov in split_coverages[0]]
 ).mean()
-violations_df.loc["aps", "cv_mean"] = (
-    violations["cum_score_cv_mean"]
-)
-violations_df.loc["aps", "cv_crossval"] = (
-    violations["cum_score_cv_crossval"]
-)
+violations_df.loc["aps", "cv_mean"] = violations["cum_score_cv_mean"]
+violations_df.loc["aps", "cv_crossval"] = violations["cum_score_cv_crossval"]
 violations_df.loc["aps", "splits"] = np.stack(
-    [
-        np.abs(cov - (1 - alpha)).mean()
-        for cov in split_coverages[1]
-    ]
+    [np.abs(cov - (1 - alpha)).mean() for cov in split_coverages[1]]
 ).mean()
 
 print(violations_df)

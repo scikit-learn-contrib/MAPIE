@@ -44,8 +44,7 @@ from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics import regression_coverage_score, regression_mean_width_score
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
 
@@ -204,21 +203,13 @@ def get_coverage_width(PIs: pd.DataFrame, y: NDArray) -> Tuple[float, float]:
     (coverage, width) : Tuple[float, float]
         The mean coverage and width of the PIs.
     """
-    coverage = regression_coverage_score(
-        y_true=y, y_pred_low=PIs["lower"], y_pred_up=PIs["upper"]
-    )
-    width = regression_mean_width_score(
-        y_pred_low=PIs["lower"], y_pred_up=PIs["upper"]
-    )
+    coverage = regression_coverage_score(y_true=y, y_pred_low=PIs["lower"], y_pred_up=PIs["upper"])
+    width = regression_mean_width_score(y_pred_low=PIs["lower"], y_pred_up=PIs["upper"])
     return (coverage, width)
 
 
 def B_random_from_B_fixed(
-    B: int,
-    train_size: int,
-    m: int,
-    itrial: int = 0,
-    random_state: int = 98765
+    B: int, train_size: int, m: int, itrial: int = 0, random_state: int = 98765
 ) -> int:
     """
     Generates a random number from a binomial distribution.
@@ -310,9 +301,7 @@ def comparison_JAB(
     )
 
     (X, y) = get_X_y()
-    m_vals = np.round(
-        train_size * np.linspace(0.1, 1, num=boostrap_size)
-    ).astype(int)
+    m_vals = np.round(train_size * np.linspace(0.1, 1, num=boostrap_size)).astype(int)
 
     result_index = 0
     for itrial in range(trials):
@@ -342,9 +331,7 @@ def comparison_JAB(
 
         for i_m, m in enumerate(m_vals):
             # J+aB, random B
-            B_random = B_random_from_B_fixed(
-                B_fixed, train_size, m, itrial=i_m
-            )
+            B_random = B_random_from_B_fixed(B_fixed, train_size, m, itrial=i_m)
             subsample_B_random = Subsample(
                 n_resamplings=B_random,
                 n_samples=m,

@@ -22,7 +22,7 @@ Throughout this tutorial, we will answer the following questions:
 
 - How does the number of classes in the prediction sets vary according to the significance level ?
 
-- Is the chosen conformal method well calibrated ? 
+- Is the chosen conformal method well calibrated ?
 
 - What are the pros and cons of the conformal methods included in MAPIE ?
 
@@ -39,11 +39,11 @@ We estimate the prediction sets as follows :
 * First we generate a dataset with train, calibration and test, the model is fitted on the training set.
 * We set the conformal score $S_i = \hat{f}(X_{i})_{y_i}$ the softmax output of the true class for each sample in the calibration set.
 * Then we define $\hat{q}$ as being the $(n + 1) (\alpha) / n$ previous quantile of $S_{1}, ..., S_{n}$
-(this is essentially the quantile $\alpha$, but with a small sample correction). 
+(this is essentially the quantile $\alpha$, but with a small sample correction).
 * Finally, for a new test data point (where $X_{n + 1}$ is known but $Y_{n + 1}$ is not), create a prediction set
 $C(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}$ which includes all the classes with a sufficiently high softmax output.
 
-We use a two-dimensional toy dataset with three labels. The distribution of the data is a bivariate normal with diagonal covariance matrices for each label. 
+We use a two-dimensional toy dataset with three labels. The distribution of the data is a bivariate normal with diagonal covariance matrices for each label.
 
 ```python
 import numpy as np
@@ -90,7 +90,7 @@ plt.show()
 
 We fit our training data with a Gaussian Naive Base estimator. And then we apply MAPIE in the calibration data with the method ``score`` to the estimator indicating that it has already been fitted with `cv="prefit"`.
 We then estimate the prediction sets with differents alpha values with a
-``fit`` and ``predict`` process. 
+``fit`` and ``predict`` process.
 
 ```python
 from sklearn.naive_bayes import GaussianNB
@@ -222,7 +222,7 @@ plot_coverages_widths(alpha2, coverages_score, widths_score, "lac")
 ## 2. Conformal Prediction method using the cumulative softmax score
 
 
-We saw in the previous section that the "lac" method is well calibrated by providing accurate coverage levels. However, it tends to give null prediction sets for uncertain regions, especially when the $\alpha$ value is high. MAPIE includes another method, called Adaptive Prediction Set (APS), whose conformity score is the cumulated score of the softmax output until the true label is reached (see the theoretical description for more details). We will see in this Section that this method no longer estimates null prediction sets but by giving slightly bigger prediction sets. 
+We saw in the previous section that the "lac" method is well calibrated by providing accurate coverage levels. However, it tends to give null prediction sets for uncertain regions, especially when the $\alpha$ value is high. MAPIE includes another method, called Adaptive Prediction Set (APS), whose conformity score is the cumulated score of the softmax output until the true label is reached (see the theoretical description for more details). We will see in this Section that this method no longer estimates null prediction sets but by giving slightly bigger prediction sets.
 
 
 Let's visualize the prediction sets obtained with the APS method on the test set after fitting MAPIE on the calibration set.
@@ -238,7 +238,7 @@ y_pred_aps, y_ps_aps = mapie_aps.predict(X_test_mesh, alpha=alpha, include_last_
 plot_results(alpha, X_test_mesh, y_pred_aps, y_ps_aps)
 ```
 
-One can notice that the uncertain regions are emphasized by wider boundaries, but without null prediction sets with respect to the first "lac" method. 
+One can notice that the uncertain regions are emphasized by wider boundaries, but without null prediction sets with respect to the first "lac" method.
 
 ```python
 _, y_ps_aps2 = mapie_aps.predict(X_test, alpha=alpha2, include_last_label="randomized")
@@ -256,4 +256,4 @@ widths_aps = [
 plot_coverages_widths(alpha2, coverages_aps, widths_aps, "lac")
 ```
 
-This method also gives accurate calibration plots, meaning that the effective coverage level is always very close to the target coverage, sometimes at the expense of slightly bigger prediction sets. 
+This method also gives accurate calibration plots, meaning that the effective coverage level is always very close to the target coverage, sometimes at the expense of slightly bigger prediction sets.

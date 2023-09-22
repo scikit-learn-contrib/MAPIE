@@ -51,8 +51,7 @@ from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics import regression_coverage_score, regression_mean_width_score
 from mapie.subsample import BlockBootstrap
 from mapie.regression import MapieTimeSeriesRegressor
 
@@ -74,9 +73,7 @@ url_file = (
     "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
     "examples/data/demand_temperature.csv"
 )
-demand_df = pd.read_csv(
-    url_file, parse_dates=True, index_col=0
-)
+demand_df = pd.read_csv(url_file, parse_dates=True, index_col=0)
 demand_df["Date"] = pd.to_datetime(demand_df.index)
 demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype("int64")
 demand_df["Weekday"] = demand_df.Date.dt.isocalendar().day.astype("int64")
@@ -91,7 +88,7 @@ for hour in range(1, n_lags):
 # It aims at simulating an effect, such as blackout or lockdown due to a
 # pandemic, that was not taken into account by the model during its training.
 
-demand_df.Demand.iloc[-int(num_test_steps/2):] -= 2
+demand_df.Demand.iloc[-int(num_test_steps / 2) :] -= 2
 
 ##############################################################################
 # The last week of the dataset is considered as test set, the remaining data
@@ -102,9 +99,7 @@ demand_test = demand_df.iloc[-num_test_steps:, :].copy()
 features = ["Weekofyear", "Weekday", "Hour", "Temperature"]
 features += [f"Lag_{hour}" for hour in range(1, n_lags)]
 
-X_train = demand_train.loc[
-    ~np.any(demand_train[features].isnull(), axis=1), features
-]
+X_train = demand_train.loc[~np.any(demand_train[features].isnull(), axis=1), features]
 y_train = demand_train.loc[X_train.index, "Demand"]
 X_test = demand_test.loc[:, features]
 y_test = demand_test["Demand"]
@@ -152,9 +147,7 @@ if model_params_fit_not_done:
     model = cv_obj.best_estimator_
 else:
     # Model: Random Forest previously optimized with a cross-validation
-    model = RandomForestRegressor(
-        max_depth=10, n_estimators=50, random_state=59
-    )
+    model = RandomForestRegressor(max_depth=10, n_estimators=50, random_state=59)
 
 ##############################################################################
 # 3. Estimate prediction intervals on the test set
@@ -184,9 +177,7 @@ else:
 
 alpha = 0.05
 gap = 1
-cv_mapiets = BlockBootstrap(
-    n_resamplings=10, n_blocks=10, overlapping=False, random_state=59
-)
+cv_mapiets = BlockBootstrap(n_resamplings=10, n_blocks=10, overlapping=False, random_state=59)
 mapie_enbpi = MapieTimeSeriesRegressor(
     model, method="enbpi", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
@@ -198,12 +189,8 @@ mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 y_pred_npfit, y_pis_npfit = mapie_enbpi.predict(
     X_test, alpha=alpha, ensemble=True, optimize_beta=True
 )
-coverage_npfit = regression_coverage_score(
-    y_test, y_pis_npfit[:, 0, 0], y_pis_npfit[:, 1, 0]
-)
-width_npfit = regression_mean_width_score(
-    y_pis_npfit[:, 0, 0], y_pis_npfit[:, 1, 0]
-)
+coverage_npfit = regression_coverage_score(y_test, y_pis_npfit[:, 0, 0], y_pis_npfit[:, 1, 0])
+width_npfit = regression_mean_width_score(y_pis_npfit[:, 0, 0], y_pis_npfit[:, 1, 0])
 
 
 ##############################################################################
@@ -223,27 +210,17 @@ y_pred_pfit[:gap], y_pis_pfit[:gap, :, :] = mapie_enbpi.predict(
 )
 for step in range(gap, len(X_test), gap):
     mapie_enbpi.partial_fit(
-        X_test.iloc[(step - gap):step, :],
-        y_test.iloc[(step - gap):step],
+        X_test.iloc[(step - gap) : step, :],
+        y_test.iloc[(step - gap) : step],
     )
-    (
-        y_pred_pfit[step:step + gap],
-        y_pis_pfit[step:step + gap, :, :],
-    ) = mapie_enbpi.predict(
-        X_test.iloc[step:(step + gap), :],
-        alpha=alpha,
-        ensemble=True,
-        optimize_beta=True
+    (y_pred_pfit[step : step + gap], y_pis_pfit[step : step + gap, :, :],) = mapie_enbpi.predict(
+        X_test.iloc[step : (step + gap), :], alpha=alpha, ensemble=True, optimize_beta=True
     )
     conformity_scores_pfit.append(mapie_enbpi.conformity_scores_)
     lower_quantiles_pfit.append(mapie_enbpi.lower_quantiles_)
     higher_quantiles_pfit.append(mapie_enbpi.higher_quantiles_)
-coverage_pfit = regression_coverage_score(
-    y_test, y_pis_pfit[:, 0, 0], y_pis_pfit[:, 1, 0]
-)
-width_pfit = regression_mean_width_score(
-    y_pis_pfit[:, 0, 0], y_pis_pfit[:, 1, 0]
-)
+coverage_pfit = regression_coverage_score(y_test, y_pis_pfit[:, 0, 0], y_pis_pfit[:, 1, 0])
+width_pfit = regression_mean_width_score(y_pis_pfit[:, 0, 0], y_pis_pfit[:, 1, 0])
 
 ##############################################################################
 # 4. Plot estimated prediction intervals on one-step ahead forecast
@@ -257,21 +234,13 @@ y_pis = [y_pis_npfit, y_pis_pfit]
 coverages = [coverage_npfit, coverage_pfit]
 widths = [width_npfit, width_pfit]
 
-fig, axs = plt.subplots(
-    nrows=2, ncols=1, figsize=(14, 8), sharey="row", sharex="col"
-)
+fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(14, 8), sharey="row", sharex="col")
 for i, (ax, w) in enumerate(zip(axs, ["without", "with"])):
     ax.set_ylabel("Hourly demand (GW)")
-    ax.plot(
-        y_train[int(-len(y_test)/2):],
-        lw=2,
-        label="Training data", c="C0"
-    )
+    ax.plot(y_train[int(-len(y_test) / 2) :], lw=2, label="Training data", c="C0")
     ax.plot(y_test, lw=2, label="Test data", c="C1")
 
-    ax.plot(
-        y_test.index, y_preds[i], lw=2, c="C2", label="Predictions"
-    )
+    ax.plot(y_test.index, y_preds[i], lw=2, c="C2", label="Predictions")
     ax.fill_between(
         y_test.index,
         y_pis[i][:, 0, 0],
@@ -297,29 +266,23 @@ rolling_coverage_pfit, rolling_coverage_npfit = [], []
 for i in range(window, len(y_test), 1):
     rolling_coverage_pfit.append(
         regression_coverage_score(
-            y_test[i-window:i], y_pis_pfit[i-window:i, 0, 0],
-            y_pis_pfit[i-window:i, 1, 0]
+            y_test[i - window : i],
+            y_pis_pfit[i - window : i, 0, 0],
+            y_pis_pfit[i - window : i, 1, 0],
         )
     )
     rolling_coverage_npfit.append(
         regression_coverage_score(
-            y_test[i-window:i], y_pis_npfit[i-window:i, 0, 0],
-            y_pis_npfit[i-window:i, 1, 0]
+            y_test[i - window : i],
+            y_pis_npfit[i - window : i, 0, 0],
+            y_pis_npfit[i - window : i, 1, 0],
         )
     )
 
 plt.figure(figsize=(10, 5))
 plt.ylabel(f"Rolling coverage [{window} hours]")
-plt.plot(
-    y_test[window:].index,
-    rolling_coverage_npfit,
-    label="Without update of residuals"
-)
-plt.plot(
-    y_test[window:].index,
-    rolling_coverage_pfit,
-    label="With update of residuals"
-)
+plt.plot(y_test[window:].index, rolling_coverage_npfit, label="Without update of residuals")
+plt.plot(y_test[window:].index, rolling_coverage_pfit, label="With update of residuals")
 plt.show()
 
 ##############################################################################

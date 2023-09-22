@@ -1,6 +1,6 @@
 .PHONY: tests doc build
 
-lint:	
+lint:
 	flake8 . --exclude=doc,build
 
 type-check:

@@ -56,7 +56,7 @@ from mapie.regression import MapieRegressor
 
 # Load the Boston data
 data_url = "http://lib.stat.cmu.edu/datasets/boston"
-raw_df = pd.read_csv(data_url, sep=r'\s+', skiprows=22, header=None)
+raw_df = pd.read_csv(data_url, sep=r"\s+", skiprows=22, header=None)
 X_boston = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
 y_boston = raw_df.values[1::2, 2]
 
@@ -90,13 +90,10 @@ cv_obj = RandomizedSearchCV(
 cv_obj.fit(X_train, y_train)
 best_est = cv_obj.best_estimator_
 mapie_non_nested = MapieRegressor(
-    best_est, method="plus", cv=cv, agg_function="median", n_jobs=-1,
-    random_state=random_state
+    best_est, method="plus", cv=cv, agg_function="median", n_jobs=-1, random_state=random_state
 )
 mapie_non_nested.fit(X_train, y_train)
-y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict(
-    X_test, alpha=alpha
-)
+y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict(X_test, alpha=alpha)
 widths_non_nested = y_pis_non_nested[:, 1, 0] - y_pis_non_nested[:, 0, 0]
 coverage_non_nested = regression_coverage_score(
     y_test, y_pis_non_nested[:, 0, 0], y_pis_non_nested[:, 1, 0]
@@ -116,29 +113,22 @@ cv_obj = RandomizedSearchCV(
     n_jobs=-1,
 )
 mapie_nested = MapieRegressor(
-    cv_obj, method="plus", cv=cv, agg_function="median",
-    random_state=random_state
+    cv_obj, method="plus", cv=cv, agg_function="median", random_state=random_state
 )
 mapie_nested.fit(X_train, y_train)
 y_pred_nested, y_pis_nested = mapie_nested.predict(X_test, alpha=alpha)
 widths_nested = y_pis_nested[:, 1, 0] - y_pis_nested[:, 0, 0]
-coverage_nested = regression_coverage_score(
-    y_test, y_pis_nested[:, 0, 0], y_pis_nested[:, 1, 0]
-)
+coverage_nested = regression_coverage_score(y_test, y_pis_nested[:, 0, 0], y_pis_nested[:, 1, 0])
 score_nested = mean_squared_error(y_test, y_pred_nested, squared=False)
 
 # Print scores and effective coverages.
-print(
-    "Scores and effective coverages for the CV+ strategy using the "
-    "Random Forest model."
-)
+print("Scores and effective coverages for the CV+ strategy using the " "Random Forest model.")
 print(
     "Score on the test set for the non-nested and nested CV approaches: ",
     f"{score_non_nested: .3f}, {score_nested: .3f}",
 )
 print(
-    "Effective coverage on the test set for the non-nested "
-    "and nested CV approaches: ",
+    "Effective coverage on the test set for the non-nested " "and nested CV approaches: ",
     f"{coverage_non_nested: .3f}, {coverage_nested: .3f}",
 )
 
@@ -153,9 +143,7 @@ ax1.set_ylim([min_x, max_x])
 ax1.scatter(widths_nested, widths_non_nested)
 ax1.plot([min_x, max_x], [min_x, max_x], ls="--", color="k")
 ax2.axvline(x=0, color="r", lw=2)
-ax2.set_xlabel(
-    "[width(non-nested CV) - width(nested CV)] / width(non-nested CV)"
-)
+ax2.set_xlabel("[width(non-nested CV) - width(nested CV)] / width(non-nested CV)")
 ax2.set_ylabel("Counts")
 ax2.hist(
     (widths_non_nested - widths_nested) / widths_non_nested,

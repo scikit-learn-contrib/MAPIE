@@ -6,11 +6,7 @@ import numpy as np
 from sklearn.utils.validation import column_or_1d
 
 
-def compute_risk_recall(
-    lambdas: NDArray,
-    y_pred_proba: NDArray,
-    y: NDArray
-) -> NDArray:
+def compute_risk_recall(lambdas: NDArray, y_pred_proba: NDArray, y: NDArray) -> NDArray:
     """
     In `MapieMultiLabelClassifier` when `metric_control=recall`,
     compute the recall per observation for each different
@@ -43,32 +39,19 @@ def compute_risk_recall(
             "{} instead.".format(y_pred_proba.shape)
         )
     if not np.array_equal(y_pred_proba.shape[:-1], y.shape):
-        raise ValueError(
-            "y and y_pred_proba could not be broadcast."
-        )
+        raise ValueError("y and y_pred_proba could not be broadcast.")
     lambdas = cast(NDArray, column_or_1d(lambdas))
 
     n_lambdas = len(lambdas)
-    y_pred_proba_repeat = np.repeat(
-        y_pred_proba,
-        n_lambdas,
-        axis=2
-    )
+    y_pred_proba_repeat = np.repeat(y_pred_proba, n_lambdas, axis=2)
     y_pred_th = (y_pred_proba_repeat > lambdas).astype(int)
 
     y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
-    risks = 1 - (
-        _true_positive(y_pred_th, y_repeat) /
-        y.sum(axis=1)[:, np.newaxis]
-    )
+    risks = 1 - (_true_positive(y_pred_th, y_repeat) / y.sum(axis=1)[:, np.newaxis])
     return risks
 
 
-def compute_risk_precision(
-    lambdas: NDArray,
-    y_pred_proba: NDArray,
-    y: NDArray
-) -> NDArray:
+def compute_risk_precision(lambdas: NDArray, y_pred_proba: NDArray, y: NDArray) -> NDArray:
     """
     In `MapieMultiLabelClassifier` when `metric_control=precision`,
     compute the precision per observation for each different
@@ -101,31 +84,22 @@ def compute_risk_precision(
             "{} instead.".format(y_pred_proba.shape)
         )
     if not np.array_equal(y_pred_proba.shape[:-1], y.shape):
-        raise ValueError(
-            "y and y_pred_proba could not be broadcast."
-        )
+        raise ValueError("y and y_pred_proba could not be broadcast.")
     lambdas = cast(NDArray, column_or_1d(lambdas))
 
     n_lambdas = len(lambdas)
-    y_pred_proba_repeat = np.repeat(
-        y_pred_proba,
-        n_lambdas,
-        axis=2
-    )
+    y_pred_proba_repeat = np.repeat(y_pred_proba, n_lambdas, axis=2)
     y_pred_th = (y_pred_proba_repeat > lambdas).astype(int)
 
     y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
-    with np.errstate(divide='ignore', invalid="ignore"):
-        risks = 1 - _true_positive(y_pred_th, y_repeat)/y_pred_th.sum(axis=1)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        risks = 1 - _true_positive(y_pred_th, y_repeat) / y_pred_th.sum(axis=1)
     risks[np.isnan(risks)] = 1  # nan value indicate high risks.
 
     return risks
 
 
-def _true_positive(
-    y_pred_th: NDArray,
-    y_repeat: NDArray
-) -> NDArray:
+def _true_positive(y_pred_th: NDArray, y_repeat: NDArray) -> NDArray:
     """
     Compute the number of true positive.
 

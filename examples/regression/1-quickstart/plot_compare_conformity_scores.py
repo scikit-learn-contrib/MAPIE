@@ -89,9 +89,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 # :class:`~mapie.conformity_scores.AbsoluteConformityScore`.
 mapie = MapieRegressor(model, random_state=random_state)
 mapie.fit(X_train, y_train)
-y_pred_absconfscore, y_pis_absconfscore = mapie.predict(
-    X_test, alpha=alpha, ensemble=True
-)
+y_pred_absconfscore, y_pis_absconfscore = mapie.predict(X_test, alpha=alpha, ensemble=True)
 
 coverage_absconfscore = regression_coverage_score(
     y_test, y_pis_absconfscore[:, 0, 0], y_pis_absconfscore[:, 1, 0]
@@ -113,29 +111,21 @@ def get_yerr(y_pred, y_pis):
 
 
 yerr_absconfscore = get_yerr(y_pred_absconfscore, y_pis_absconfscore)
-pred_int_width_absconfscore = (
-    y_pis_absconfscore[:, 1, 0] - y_pis_absconfscore[:, 0, 0]
-)
+pred_int_width_absconfscore = y_pis_absconfscore[:, 1, 0] - y_pis_absconfscore[:, 0, 0]
 
 ##############################################################################
 # Then, train the model with
 # :class:`~mapie.conformity_scores.GammaConformityScore`.
-mapie = MapieRegressor(
-    model, conformity_score=GammaConformityScore(), random_state=random_state
-)
+mapie = MapieRegressor(model, conformity_score=GammaConformityScore(), random_state=random_state)
 mapie.fit(X_train, y_train)
-y_pred_gammaconfscore, y_pis_gammaconfscore = mapie.predict(
-    X_test, alpha=[alpha], ensemble=True
-)
+y_pred_gammaconfscore, y_pis_gammaconfscore = mapie.predict(X_test, alpha=[alpha], ensemble=True)
 
 coverage_gammaconfscore = regression_coverage_score(
     y_test, y_pis_gammaconfscore[:, 0, 0], y_pis_gammaconfscore[:, 1, 0]
 )
 
 yerr_gammaconfscore = get_yerr(y_pred_gammaconfscore, y_pis_gammaconfscore)
-pred_int_width_gammaconfscore = (
-    y_pis_gammaconfscore[:, 1, 0] - y_pis_gammaconfscore[:, 0, 0]
-)
+pred_int_width_gammaconfscore = y_pis_gammaconfscore[:, 1, 0] - y_pis_gammaconfscore[:, 0, 0]
 
 
 ##############################################################################
@@ -188,8 +178,6 @@ for img_id, y_pred, y_err, cov, class_name, int_width in zip(
     axs[1, img_id].set_xlim([xmin, xmax])
     axs[1, img_id].set_ylim([ymin, ymax])
 
-fig.suptitle(
-    f"Predicted values with the prediction intervals of level {alpha}"
-)
+fig.suptitle(f"Predicted values with the prediction intervals of level {alpha}")
 plt.subplots_adjust(wspace=0.3, hspace=0.3)
 plt.show()

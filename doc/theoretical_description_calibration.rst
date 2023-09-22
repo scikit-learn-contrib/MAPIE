@@ -25,7 +25,7 @@ true probability compared to the original output.
 Firstly, we introduce binary calibration, we denote the :math:`(h(X), y)` pair as the score and ground truth for the object. Hence, :math:`y`
 values are in :math:`{0, 1}`. The model is calibrated if for every output :math:`q \in [0, 1]`, we have:
 
-.. math:: 
+.. math::
     Pr(Y = 1 \mid h(X) = q) = q
 
 where :math:`h()` is the score predictor.
@@ -46,7 +46,7 @@ highest score and the corresponding class, whereas confidence calibration only c
 Let :math:`c` be the classifier and :math:`h` be the maximum score from the classifier. The couple :math:`(c, h)` is calibrated
 according to Top-Label calibration if:
 
-.. math:: 
+.. math::
     Pr(Y = c(X) \mid h(X), c(X)) = h(X)
 
 
@@ -70,7 +70,7 @@ The ECE is the combination of these two metrics combined together.
     \text{ECE} = \sum_{m=1}^M \frac{\left| B_m \right|}{n} \left| acc(B_m) - conf(B_m) \right|
 
 In simple terms, once all the different bins from the confidence scores have been created, we check the mean accuracy of each bin.
-The absolute mean difference between the two is the ECE. Hence, the lower the ECE, the better the calibration was performed. 
+The absolute mean difference between the two is the ECE. Hence, the lower the ECE, the better the calibration was performed.
 
 **Top-Label ECE**
 
@@ -84,7 +84,7 @@ of the accuracy and confidence based on the top label and take the average ECE f
 
 Kolmogorov-Smirnov test was derived in [2, 3, 4]. The idea is to consider the cumulative differences between sorted scores :math:`s_i`
 and their corresponding labels :math:`y_i` and to compare its properties to that of a standard Brownian motion. Let us consider the
-cumulative differences on sorted scores: 
+cumulative differences on sorted scores:
 
 .. math::
     C_k = \frac{1}{N}\sum_{i=1}^k (s_i - y_i)
@@ -94,13 +94,13 @@ We also introduce a typical normalization scale :math:`\sigma`:
 .. math::
     \sigma = \frac{1}{N}\sqrt{\sum_{i=1}^N s_i(1 - s_i)}
 
-Tho Kolmogorov-Smirnov statisitc is then defined as : 
+Tho Kolmogorov-Smirnov statisitc is then defined as :
 
 .. math::
    G = \max|C_k|/\sigma
 
 It can be shown [2] that, under the null hypothesis of well calibrated scores, this quantity asymptotically (i.e. when N goes to infinity)
-converges to the maximum absolute value of a standard Brownian motion over the unit interval :math:`[0, 1]`. [3, 4] also provide closed-form 
+converges to the maximum absolute value of a standard Brownian motion over the unit interval :math:`[0, 1]`. [3, 4] also provide closed-form
 formulas for the cumulative distribution function (CDF) of the maximum absolute value of such a standard Brownian motion.
 So we state the p-value associated to the statistical test of well calibration as:
 
@@ -115,7 +115,7 @@ Kuiper test was derived in [2, 3, 4] and is very similar to Kolmogorov-Smirnov. 
    H = (\max_k|C_k| - \min_k|C_k|)/\sigma
 
 It can be shown [2] that, under the null hypothesis of well calibrated scores, this quantity asymptotically (i.e. when N goes to infinity)
-converges to the range of a standard Brownian motion over the unit interval :math:`[0, 1]`. [3, 4] also provide closed-form 
+converges to the range of a standard Brownian motion over the unit interval :math:`[0, 1]`. [3, 4] also provide closed-form
 formulas for the cumulative distribution function (CDF) of the range of such a standard Brownian motion.
 So we state the p-value associated to the statistical test of well calibration as:
 
@@ -124,7 +124,7 @@ So we state the p-value associated to the statistical test of well calibration a
 
 **Spiegelhalter test**
 
-Spiegelhalter test was derived in [6]. It is basically based on a decomposition of the Brier score: 
+Spiegelhalter test was derived in [6]. It is basically based on a decomposition of the Brier score:
 
 .. math::
    B = \frac{1}{N}\sum_{i=1}^N(y_i - s_i)^2
@@ -141,7 +141,7 @@ computed as:
 .. math::
    Var(B) = \frac{1}{N^2}\sum_{i=1}^N(1 - 2s_i)^2 s_i(1 - s_i)
 
-So we can build a Z-score as follows: 
+So we can build a Z-score as follows:
 
 .. math::
    Z = \frac{B - E(B)}{\sqrt{Var(B)}} = \frac{\sum_{i=1}^N(y_i - s_i)(1 - 2s_i)}{\sqrt{\sum_{i=1}^N(1 - 2s_i)^2 s_i(1 - s_i)}}

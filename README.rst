@@ -68,7 +68,7 @@ Here's a quick instantiation of MAPIE models for regression and classification p
 
 Implemented methods in **MAPIE** respect three fundamental pillars:
 
-- They are **model and use case agnostic**, 
+- They are **model and use case agnostic**,
 - They possess **theoretical guarantees** under minimal assumptions on the data and the model,
 - They are based on **peer-reviewed algorithms** and respect programming standards.
 
@@ -168,7 +168,7 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 MAPIE has been developed through a collaboration between Quantmetry, Michelin, ENS Paris-Saclay,
 and with the financial support from Région Ile de France and Confiance.ai.
 
-|Quantmetry|_ |Michelin|_ |ENS|_ |Confiance.ai|_  |IledeFrance|_ 
+|Quantmetry|_ |Michelin|_ |ENS|_ |Confiance.ai|_  |IledeFrance|_
 
 .. |Quantmetry| image:: https://www.quantmetry.com/wp-content/uploads/2020/08/08-Logo-quant-Texte-noir.svg
     :width: 150
