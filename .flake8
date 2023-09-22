@@ -1,7 +1,7 @@
 [flake8]
 exclude = .git, .github, __pycache__ , .vscode, build
 max-line-length = 99
-ignore = E302,E305,W503,E203,E731,E402,E266,E712,F401,F821
+ignore = E203, W503
 indent-size = 4
 per-file-ignores =
     */__init__.py:F401
