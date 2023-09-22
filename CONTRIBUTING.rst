@@ -16,7 +16,7 @@ The typical workflow for contributing to `mapie` is:
 
 1. Fork the `master` branch from the `GitHub repository <https://github.com/simai-ml/MAPIE>`_.
 2. Clone your fork locally.
-3. Commit changes.
+3. Commit changes. (Optional) Install pre-commit to run code style checks before each commit.
 4. Push the changes to your fork.
 5. Send a pull request from your fork back to the original `master` branch.
 
@@ -42,7 +42,14 @@ Finally install `mapie` in development mode:
 
 .. code:: sh
 
-    pip install -e .
+    $ pip install -e .
+
+(Optional) Install pre-commit to run code style checks before each commit.
+
+.. code:: sh
+
+    $ pip install pre-commit
+    $ pre-commit install
 
 
 Documenting your change
