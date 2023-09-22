@@ -1,5 +1,6 @@
 codecov
 flake8==4.0.1
+black==22.8.0
 mypy
 pytest
 pytest-cov
