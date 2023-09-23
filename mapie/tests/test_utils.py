@@ -409,13 +409,13 @@ def test_binary_target() -> None:
 
 def test_nan_values() -> None:
     """
-    Test if array has non-numerical values like NaNs
+    Test if array has only non-numerical values like NaNs
     """
     with pytest.raises(
         ValueError,
         match=r"Array contains NaN val*"
     ):
-        check_array_nan(np.array([1, 2, np.nan, 4]))
+        check_array_nan(np.array([np.nan, np.nan, np.nan, np.nan]))
 
 
 def test_inf_values() -> None:
