@@ -13,7 +13,7 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._typing import ArrayLike, NDArray
 from mapie.regression import MapieQuantileRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_array_nan, check_arrays_length,
+                         check_array_nan, check_array_inf, check_arrays_length,
                          check_binary_zero_one, check_cv,
                          check_lower_upper_bounds, check_n_features_in,
                          check_n_jobs, check_null_weight, check_number_bins,
@@ -426,7 +426,7 @@ def test_inf_values() -> None:
         ValueError,
         match=r"Array contains infinite va*"
     ):
-        check_array_nan(np.array([1, 2, -np.inf, 4]))
+        check_array_inf(np.array([1, 2, -np.inf, 4]))
 
 
 def test_length() -> None:
