@@ -1210,9 +1210,9 @@ def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
             )
 
 
-def check_array_nan(array: Union[NDArray, ArrayLike]) -> None:
+def check_array_nan(array: ArrayLike) -> None:
     """
-    Checks if the array contain NaNs. If NaNs are found, we throw an error
+    Checks if the array have only NaN values. If it has we throw an error.
 
     Parameters
     ----------
@@ -1221,13 +1221,29 @@ def check_array_nan(array: Union[NDArray, ArrayLike]) -> None:
     Raises
     ------
     ValueError
-        If the array contains a non-numerical values, NaN, +inf or -inf
+        If all elements of the array are NaNs
     """
 
-    if np.isnan(array).any():
+    if np.isnan(array).all() and len(np.unique(array)) > 0:
         raise ValueError(
-            "Array contains NaN values."
+            "Array contains NaN values only."
         )
+
+
+def check_array_inf(array: ArrayLike) -> None:
+    """
+    Checks if the array have inf.
+    If a value is infinite, we throw an error.
+
+    Parameters
+    ----------
+    array: an array with non-numerical or non-categorical values
+
+    Raises
+    ------
+    ValueError
+        If any elements of the array is +inf or -inf.
+    """
 
     if np.isinf(array).any():
         raise ValueError(
