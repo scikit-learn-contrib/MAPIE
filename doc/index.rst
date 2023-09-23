@@ -6,6 +6,7 @@
    :caption: Getting Started
 
    quick_start
+   split_cross_conformal
 
 .. toctree::
    :maxdepth: 2
@@ -46,7 +47,6 @@
 
    theoretical_description_multilabel_classification
    examples_multilabel_classification/1-quickstart/plot_tutorial_multilabel_classification
-   notebooks_multilabel_classification
 
 .. toctree::
    :maxdepth: 2

@@ -4,7 +4,7 @@ Tutorial for set prediction
 ===========================
 
 In this tutorial, we propose set prediction for binary classification
-estimated by :class:`~mapie.classification.MapieClassifier` with the "score"
+estimated by :class:`~mapie.classification.MapieClassifier` with the "lac"
 method on two-dimensional dataset.
 
 Throughout this tutorial, we will answer the following questions:
@@ -138,7 +138,7 @@ calib = CalibratedClassifierCV(
 calib.fit(X_c1, y_c1)
 
 mapie_clf = MapieClassifier(
-    estimator=calib, method='score', cv='prefit', random_state=42
+    estimator=calib, method='lac', cv='prefit', random_state=42
 )
 mapie_clf.fit(X_c2, y_c2)
 
@@ -154,7 +154,7 @@ y_pred_mapie, y_ps_mapie = mapie_clf.predict(
 # - ``y_pred_mapie``: the prediction in the test set given by the
 #   base estimator.
 #
-# - ``y_ps_mapie``: the prediction sets estimated by MAPIE using the "score"
+# - ``y_ps_mapie``: the prediction sets estimated by MAPIE using the "lac"
 #   method.
 #
 # Let's now visualize the distribution of the conformity scores with the two
@@ -190,7 +190,7 @@ def plot_scores(
 fig, axs = plt.subplots(1, 1, figsize=(10, 5))
 conformity_scores = mapie_clf.conformity_scores_
 quantiles = mapie_clf.quantiles_
-plot_scores(alpha, conformity_scores, quantiles, 'score', axs)
+plot_scores(alpha, conformity_scores, quantiles, 'lac', axs)
 plt.show()
 
 
@@ -260,7 +260,7 @@ plot_results(alpha, y_pred_mapie, y_ps_mapie)
 
 
 ##############################################################################
-# For the "score" method, when the class coverage is not large enough, the
+# For the "lac" method, when the class coverage is not large enough, the
 # prediction sets can be empty when the model is uncertain at the border
 # between two classes. These null regions disappear for larger class coverages
 # but ambiguous classification regions arise with both classes included in
@@ -275,7 +275,7 @@ plot_results(alpha, y_pred_mapie, y_ps_mapie)
 # this later. Therefore, the accuracy of the model is similar to its coverage.
 
 print(
-    f"Accuracy of the model with 'score' method: "
+    f"Accuracy of the model with 'lac' method: "
     f"{100*np.mean(mapie_clf.predict(X_val) == y_val)}%"
 )
 
@@ -292,7 +292,7 @@ calib = CalibratedClassifierCV(
 calib.fit(X_c1, y_c1)
 
 mapie_clf = MapieClassifier(
-    estimator=calib, method='score', cv='prefit', random_state=42
+    estimator=calib, method='lac', cv='prefit', random_state=42
 )
 mapie_clf.fit(X_c2, y_c2)
 _, y_ps_mapie = mapie_clf.predict(
@@ -327,7 +327,7 @@ def plot_coverages_widths(alpha, coverage, width, method):
     plt.show()
 
 
-plot_coverages_widths(alpha_, coverage, mean_width, 'score')
+plot_coverages_widths(alpha_, coverage, mean_width, 'lac')
 
 
 ##############################################################################
@@ -342,7 +342,7 @@ calib = CalibratedClassifierCV(
 calib.fit(X_c1, y_c1)
 
 mapie_clf = MapieClassifier(
-    estimator=calib, method='score', cv='prefit', random_state=42
+    estimator=calib, method='lac', cv='prefit', random_state=42
 )
 mapie_clf.fit(X_c2, y_c2)
 _, y_ps_mapie = mapie_clf.predict(
