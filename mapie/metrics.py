@@ -60,11 +60,7 @@ def regression_coverage_score(
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
-    try:
-        check_lower_upper_bounds(y_true, y_pred_low, y_pred_up)
-    except Exception as exception:
-        print(exception)
-
+    check_lower_upper_bounds(y_true, y_pred_low, y_pred_up)
     check_arrays_length(y_true, y_pred_low, y_pred_up)
     check_array_nan(y_true)
     check_array_inf(y_true)
