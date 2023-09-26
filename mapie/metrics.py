@@ -787,7 +787,7 @@ def cwc(
 
     High Eta (Large Positive Value):
 
-    When eta is a high positive value, such as 10 or 100, it will strongly
+    When eta is a high positive value, it will strongly
     emphasize the contribution of (1-pinaw). This means that the algorithm
     will prioritize reducing the average width of the prediction intervals
     (pinaw) over achieving a high coverage probability (picp).
@@ -799,7 +799,7 @@ def cwc(
 
     Low Eta (Small Positive Value):
 
-    When eta is a low positive value, such as 0.01 or 0.1, it will still
+    When eta is a low positive value, it will still
     prioritize reducing the average width of the prediction intervals (pinaw)
     but with less emphasis compared to higher eta values.
     The exponential term will be less steep, meaning that deviations of picp
@@ -833,10 +833,10 @@ def cwc(
     >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
     >>> y_preds_low = np.array([4, 6, 9, 8.5, 10.5])
     >>> y_preds_up = np.array([6, 9, 10, 12.5, 12])
-    >>> eta = 30
+    >>> eta = 0.01
     >>> mu = 0.9
     >>> print(np.round(cwc(y_true, y_preds_low, y_preds_up, eta, mu),2))
-    0.51
+    0.69
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))

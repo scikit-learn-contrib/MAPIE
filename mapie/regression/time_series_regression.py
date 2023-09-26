@@ -13,7 +13,7 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import ConformityScore
 from mapie.regression import MapieRegressor
-from mapie.utils import check_alpha, check_alpha_and_n_samples, check_gamma
+from mapie.utils import check_alpha, check_alpha_and_n_samples, check_gamma, convert_to_numpy_arrays
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
@@ -317,24 +317,23 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         X = cast(NDArray, X)
         y_true = cast(NDArray, y_true)
 
-        for x, y in zip(X, y_true):
-            x = np.expand_dims(x, axis=0)
-            _, y_pred_bounds = self.predict(
-                x,
-                alpha=list(self.current_alpha.keys())
-            )
+        X, y_true = convert_to_numpy_arrays(X, y_true)
 
-            for alpha_t_ix, alpha_t in enumerate(self.current_alpha.values()):
-                is_true_in_quantile = float(
-                    y_pred_bounds[:, 0, alpha_t_ix]
-                    < y
-                    < y_pred_bounds[:, 1, alpha_t_ix]
+        for x_row, y_row in zip(X, y_true):
+            x = np.expand_dims(x_row, axis=0)
+            _, y_pred_bounds = self.predict(x, alpha=list(self.current_alpha.keys()))
+
+            for alpha_ix, alpha_0 in enumerate(self.current_alpha):
+                alpha_t = self.current_alpha[alpha_0]
+                is_true_in_quantile = 1 - float(
+                    y_pred_bounds[:, 0, alpha_ix] < y_row < y_pred_bounds[:, 1, alpha_ix]
                 )
-
-                alpha_t = alpha_t + gamma * (alpha_t - is_true_in_quantile)
+                
+                new_alpha_t = np.clip(alpha_t + gamma * (alpha_0 - is_true_in_quantile),0,1)
+                self.current_alpha[alpha_0] = new_alpha_t
 
         return self
-
+    
     def predict(
         self,
         X: ArrayLike,

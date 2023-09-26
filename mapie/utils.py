@@ -1227,3 +1227,20 @@ def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
                 "The number of bins should be less than the number of \
                 different set sizes."
             )
+
+
+def convert_to_numpy_arrays(X, y_true):
+    """
+    Convert the input Pandas DataFrame/Series to NumPy arrays.
+
+    Parameters:
+        X (pd.DataFrame or pd.Series): The input data to be converted.
+        y_true (pd.DataFrame or pd.Series): The target variable to be converted.
+
+    Returns:
+        tuple: A tuple containing the converted NumPy arrays (X, y_true).
+    """
+    # Convert X and y_true to NumPy arrays
+    X = X.values
+    y_true = y_true.values
+    return X, y_true
