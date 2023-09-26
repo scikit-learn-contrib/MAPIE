@@ -60,8 +60,6 @@ Definition 2 (Confidence Interval (CI) w.r.t :math:`\hat{\mu}`) [1].
 .. math:: 
     P(\mathbb{E}[Y|\hat{\mu}(X)]\in C(\hat{\mu}(X))) \geq 1 - \alpha
 
-In the framework of conformal prediction, the Venn predictor has this property.
-
 
 3. Calibration
 --------------
@@ -80,6 +78,10 @@ Definition 3 (Approximate calibration) [1].
 See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calibration.MapieCalibrator`
 to use a calibrator.
 
+In the CP framework, it is worth noting that Venn predictors produce probability-type predictions
+for the labels of test objects which are guaranteed to be well calibrated under the standard assumption
+that the observations are generated independently from the same distribution [2].
+
 
 4. References
 -------------
@@ -87,3 +89,7 @@ to use a calibrator.
 [1] Gupta, Chirag, Aleksandr Podkopaev, and Aaditya Ramdas.
 "Distribution-free binary classification: prediction sets, confidence intervals and calibration."
 Advances in Neural Information Processing Systems 33 (2020): 3711-3723.
+
+[2] Vovk, Vladimir, Alexander Gammerman, and Glenn Shafer.
+"Algorithmic Learning in a Random World."
+Springer Nature, 2022.
