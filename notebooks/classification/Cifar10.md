@@ -175,7 +175,7 @@ def load_data() -> Tuple[
         as_supervised=True,
         with_info=True
     )
-    label_names = info.features['label'].names
+    label_names = info.features['lac'].names
 
     dataset = tfds.as_numpy(dataset)
     X_train, y_train = dataset['train']
@@ -446,9 +446,9 @@ We will now estimate the prediction sets with the five conformal methods impleme
 ```python
 method_params = {
     "naive": ("naive", False),
-    "score": ("score", False),
-    "cumulated_score": ("cumulated_score", True),
-    "random_cumulated_score": ("cumulated_score", "randomized"),
+    "lac": ("lac", False),
+    "aps": ("aps", True),
+    "random_aps": ("aps", "randomized"),
     "top_k": ("top_k", False)
 }
 
@@ -530,7 +530,7 @@ summary_df = pd.concat(
 summary_df
 ```
 
-As expected, the "naive" method, which directly uses the alpha value as a threshold for selecting the prediction sets, does not give guarantees on the marginal coverage since this method is not calibrated. Other methods give a marginal coverage close to the desired one, i.e. 90\%. Notice that the "cumulated_score" method, which always includes the last label whose cumulated score is above the given quantile, tends to give slightly higher marginal coverages since the prediction sets are slightly too big.
+As expected, the "naive" method, which directly uses the alpha value as a threshold for selecting the prediction sets, does not give guarantees on the marginal coverage since this method is not calibrated. Other methods give a marginal coverage close to the desired one, i.e. 90\%. Notice that the "aps" method, which always includes the last label whose cumulated score is above the given quantile, tends to give slightly higher marginal coverages since the prediction sets are slightly too big.
 
 
 ## 5. Visualization of the prediction sets
@@ -745,7 +745,7 @@ for i, var in enumerate(vars_y):
         axs[i].legend(fontsize=10, loc=[1, 0])
 ```
 
-The two only methods which are perfectly calibrated for the entire range of alpha values are the "score" and "random_cumulated_score". However, these accurate marginal coverages can only be obtained thanks to the generation of null prediction sets. The compromise between estimating null prediction sets with calibrated coverages or non-empty prediction sets but with larger marginal coverages is entirely up to the user.
+The two only methods which are perfectly calibrated for the entire range of alpha values are the "lac" and "random_aps". However, these accurate marginal coverages can only be obtained thanks to the generation of null prediction sets. The compromise between estimating null prediction sets with calibrated coverages or non-empty prediction sets but with larger marginal coverages is entirely up to the user.
 
 
 ## 7. Prediction set sizes
@@ -909,7 +909,7 @@ def plot_confusion_matrix(method: str, y_ps: Dict[str, np.ndarray], label_names:
 ```
 
 ```python
-plot_confusion_matrix("cumulated_score", y_ps_90, label_names)
+plot_confusion_matrix("aps", y_ps_90, label_names)
 ```
 
 Thanks to this confusion matrix we can see that, for some labels (as cat, deer and dog) the distribution of the labels in the prediction set is not uniform. Indeed, when the image is a cat, there are almost as many predictions sets with the true label as with the "cat" label. In this case, the reverse is also true. However, for the deer, the cat label is often included within the prediction set while the deer is not.

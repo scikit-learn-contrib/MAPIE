@@ -22,6 +22,9 @@ coverage:
 doc:
 	$(MAKE) html -C doc
 
+clean-doc:
+	$(MAKE) clean -C doc
+
 build:
 	python setup.py sdist bdist_wheel
 
@@ -32,4 +35,4 @@ clean:
 	rm -rf .mypy_cache .pytest_cache .coverage*
 	rm -rf **__pycache__
 	$(MAKE) clean-build
-	$(MAKE) clean -C doc
+	$(MAKE) clean-doc

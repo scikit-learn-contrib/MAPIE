@@ -3,7 +3,10 @@
 Tutorial for multilabel-classification
 ======================================
 In this tutorial, we compare the prediction sets estimated by the
-RCPS and RCR methods implemented in MAPIE on a two-dimensional toy dataset.
+RCPS and CRC methods implemented in MAPIE, for recall control purpose,
+on a two-dimensional toy dataset.
+We will also look at the Learn Then Test (LTT) procedure. It allows to
+create prediction sets for precision control.
 
 Throughout this tutorial, we will answer the following questions:
 
@@ -68,13 +71,13 @@ X_train, X_cal, y_train, y_cal = train_test_split(
 # Let’s see our data.
 
 colors = {
-    (0, 0, 1): {"color": "#1f77b4", "label": "0-0-1"},
-    (0, 1, 1): {"color": "#ff7f0e", "label": "0-1-1"},
-    (1, 0, 1): {"color": "#2ca02c", "label": "1-0-1"},
-    (0, 1, 0): {"color": "#d62728", "label": "0-1-0"},
-    (1, 1, 0): {"color": "#ffd700", "label": "1-1-0"},
-    (1, 0, 0): {"color": "#c20078", "label": "1-0-0"},
-    (1, 1, 1): {"color": "#06C2AC", "label": "1-1-1"}
+    (0, 0, 1): {"color": "#1f77b4", "lac": "0-0-1"},
+    (0, 1, 1): {"color": "#ff7f0e", "lac": "0-1-1"},
+    (1, 0, 1): {"color": "#2ca02c", "lac": "1-0-1"},
+    (0, 1, 0): {"color": "#d62728", "lac": "0-1-0"},
+    (1, 1, 0): {"color": "#ffd700", "lac": "1-1-0"},
+    (1, 0, 0): {"color": "#c20078", "lac": "1-0-0"},
+    (1, 1, 1): {"color": "#06C2AC", "lac": "1-1-1"}
 }
 
 for i in range(7):
@@ -86,11 +89,13 @@ for i in range(7):
         s=10,
         edgecolor='k'
     )
-plt.legend([c["label"] for c in colors.values()])
+plt.legend([c["lac"] for c in colors.values()])
 plt.show()
 
 ##############################################################################
-# 2. Fitting MapieMultiLabelClassifier
+# 2 Recall control risk with CRC and RCPS
+# ---------------------------------------
+# 2.1 Fitting MapieMultiLabelClassifier
 # ------------------------------------
 # MapieMultiLabelClassifier will be fitted with RCPS and CRC methods. For the
 # RCPS method, we will test all three Upper Confidence Bounds (Hoeffding,
@@ -142,7 +147,7 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 
 
 ##############################################################################
-# 3. Results
+# 2.2. Results
 # ----------
 # To check the results of the methods, we propose two types of plots:
 #
@@ -207,4 +212,76 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
         f"{name} - Recall = {round(recalls[name][9], 2)}",
         fontsize=20
     )
+plt.show()
+
+##############################################################################
+# 3. Precision control risk with LTT
+# ------------------
+# 3.1 Fitting MapieMultilabelClassifier
+# -------------------------------------
+#
+# In this part, we will use LTT to control precision.
+# At the opposite of the 2 previous method, LTT can handle non-monotonous loss.
+# The procedure consist in multiple hypothesis testing. This is why the output
+# of this procedure isn't reduce to one value of :math:`\lambda`.
+#
+# More precisely, we look after all the :math:`\lambda` that sastisfy the
+# following:
+# :math:`\mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha ) \geq 1 - \delta`,
+# where :math:`R(\mathcal{T}_{\lambda})` is the risk we want to control and
+# each :math:`\lambda`` should satisfy FWER control.
+# :math:`\alpha` is the desired risk.
+#
+# Notice that the procedure will diligently examine each :math:`\lambda`
+# such that the risk remains below level :math:`\alpha`, meaning not
+# every :math:`\lambda` will be considered.
+# This means that a for a :math:`\lambda` such that risk is below
+# :math:`\alpha`
+# doesn't necessarly pass the FWER control! This is what we are going to
+# explore.
+
+mapie_clf = MapieMultiLabelClassifier(
+    estimator=clf,
+    method='ltt',
+    metric_control='precision'
+)
+mapie_clf.fit(X_cal, y_cal)
+
+alpha = 0.1
+_, y_ps = mapie_clf.predict(
+    X_test,
+    alpha=alpha,
+    delta=0.1
+)
+
+valid_index = mapie_clf.valid_index[0]  # valid_index is a list of list
+
+lambdas = mapie_clf.lambdas[valid_index]
+
+mini = lambdas[np.argmin(lambdas)]
+maxi = lambdas[np.argmax(lambdas)]
+
+r_hat = mapie_clf.r_hat
+idx_max = np.argmin(r_hat[valid_index])
+
+##############################################################################
+# 3.2 Valid parameters for precision control
+# ------------------------------------------
+# We can see that not all :math:`\lambda` such that risk is below the orange
+# line are choosen by the procedure. Otherwise, all the lambdas that are
+# in the red rectangle verify family wise error rate control and allow to
+# control precision at the desired level with a high probability.
+
+plt.figure(figsize=(8, 8))
+plt.plot(mapie_clf.lambdas, r_hat, label=r"$\hat{R}_\lambda$")
+plt.plot([0, 1], [alpha, alpha], label=r"$\alpha$")
+plt.axvspan(mini, maxi, facecolor='red', alpha=0.3, label=r"LTT-$\lambda$")
+plt.plot(
+    [lambdas[idx_max], lambdas[idx_max]], [0, 1],
+    label=r"$\lambda^* =" + f"{lambdas[idx_max]}$"
+)
+plt.xlabel(r"Threshold $\lambda$")
+plt.ylabel(r"Empirical risk: $\hat{R}_\lambda$")
+plt.title("Precision risk curve", fontsize=20)
+plt.legend()
 plt.show()

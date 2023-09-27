@@ -51,6 +51,7 @@ clean:
 	-rm -rf examples_regression/
 	-rm -rf examples_classification/
 	-rm -rf examples_multilabel_classification/
+	-rm -rf examples_calibration/
 	-rm -rf generated/*
 	-rm -rf modules/generated/*
 

@@ -157,7 +157,7 @@ def check_cv(
 
     random_state: Optional[Union[int, np.random.RandomState]], optional
         Pseudo random number generator state used for random uniform sampling
-        for evaluation quantiles and prediction sets in cumulated_score.
+        for evaluation quantiles and prediction sets.
         Pass an int for reproducible output across multiple function calls.
         By default ```None``.
 
@@ -171,6 +171,9 @@ def check_cv(
     ValueError
         If the cross-validator is not valid.
     """
+    if random_state is None:
+        random_seeds = cast(list, np.random.get_state())[1]
+        random_state = np.random.choice(random_seeds)
     if cv is None:
         return KFold(
             n_splits=5, shuffle=True, random_state=random_state

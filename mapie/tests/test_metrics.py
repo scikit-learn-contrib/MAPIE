@@ -9,20 +9,33 @@ from numpy.random import RandomState
 from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.metrics import (classification_coverage_score,
+from mapie.metrics import (add_jitter,
+                           classification_coverage_score,
                            classification_coverage_score_v2,
                            classification_mean_width_score,
                            classification_ssc,
                            classification_ssc_score,
+                           cumulative_differences,
+                           cwc,
                            expected_calibration_error,
                            hsic,
+                           kolmogorov_smirnov_cdf,
+                           kolmogorov_smirnov_p_value,
+                           kolmogorov_smirnov_statistic,
+                           kuiper_cdf,
+                           kuiper_p_value,
+                           kuiper_statistic,
+                           length_scale,
                            regression_coverage_score,
                            regression_coverage_score_v2,
                            regression_mean_width_score,
                            regression_ssc,
                            regression_ssc_score,
-                           top_label_ece,
-                           cwc)
+                           sort_xy_by_y,
+                           spiegelhalter_p_value,
+                           spiegelhalter_statistic,
+                           top_label_ece)
+
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
 y_preds = np.array([
@@ -631,3 +644,158 @@ def test_valid_eta() -> None:
     np.testing.assert_allclose(
         cwc(y, y_low, y_up, eta=0, alpha=0.1), 0.65, rtol=1e-2
     )
+
+
+@pytest.mark.parametrize("amplitude", [0.1, 0.01, 0.001])
+def test_add_jitter_amplitude(amplitude: float) -> None:
+    """Test that noise perturbation is consistent with required amplitude"""
+    x = np.array([0, 1, 2, 3, 4])
+    x_jittered = add_jitter(x, noise_amplitude=amplitude, random_state=1)
+    np.testing.assert_allclose(x, x_jittered, rtol=5*amplitude)
+
+
+def test_sort_xy_by_y() -> None:
+    """
+    Test that sorting two reversed arrays by one of them
+    does reverse the arrays
+    """
+    x = np.linspace(-3, 3, 20)
+    y = np.linspace(3, -3, 20)
+    x_sorted, y_sorted = sort_xy_by_y(x, y)
+    np.testing.assert_allclose(x_sorted, y)
+    np.testing.assert_allclose(y_sorted, x)
+
+
+@pytest.mark.parametrize("random_state", [1, 2, 3])
+def test_cumulative_differences(random_state: int) -> None:
+    """Test that cumulative differences are always between -1 and 1"""
+    generator = RandomState(random_state)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    cum_diff = cumulative_differences(y_true, y_score)
+    assert np.max(cum_diff) <= 1
+    assert np.min(cum_diff) >= -1
+
+
+def test_length_scale() -> None:
+    """Test that length scale are well computed"""
+    generator = RandomState(1)
+    y_score = generator.uniform(size=100)
+    scale = length_scale(y_score)
+    np.testing.assert_allclose(scale, 0.040389, atol=1e-6)
+
+
+def test_kolmogorov_smirnov_statistic() -> None:
+    """Test that Kolmogorov-Smirnov's statistics are well computed"""
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    ks_stat = kolmogorov_smirnov_statistic(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 5.607741, atol=1e-6)
+
+
+def test_kolmogorov_smirnov_cdf() -> None:
+    """Test that Kolmogorov-Smirnov's statistics are well computed"""
+    np.testing.assert_allclose(kolmogorov_smirnov_cdf(1), 0.370777, atol=1e-6)
+    np.testing.assert_allclose(kolmogorov_smirnov_cdf(2), 0.908999, atol=1e-6)
+    np.testing.assert_allclose(kolmogorov_smirnov_cdf(3), 0.9946, atol=1e-6)
+
+
+def test_kolmogorov_smirnov_p_value_non_calibrated() -> None:
+    """
+    Test that Kolmogorov-Smirnov's p-values are well computed
+    for uncalibrated data.
+    """
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    ks_stat = kolmogorov_smirnov_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.0, atol=1e-6)
+
+
+def test_kolmogorov_smirnov_p_value_calibrated() -> None:
+    """
+    Test that Kolmogorov-Smirnov's p-values are well computed
+    for calibrated data.
+    """
+    generator = RandomState(1)
+    y_score = generator.uniform(size=100)
+    uniform = generator.uniform(size=len(y_score))
+    y_true = (uniform <= y_score).astype(float)
+    ks_stat = kolmogorov_smirnov_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.2148, atol=1e-6)
+
+
+def test_kuiper_statistic() -> None:
+    """Test that Kuiper's statistics are well computed"""
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    ku_stat = kuiper_statistic(y_true, y_score)
+    np.testing.assert_allclose(ku_stat, 5.354395, atol=1e-6)
+
+
+def test_kuiper_cdf() -> None:
+    """Test that Kuiper's statistics are well computed"""
+    np.testing.assert_allclose(kuiper_cdf(1), 0.063365, atol=1e-6)
+    np.testing.assert_allclose(kuiper_cdf(2), 0.818506, atol=1e-6)
+    np.testing.assert_allclose(kuiper_cdf(3), 0.989201, atol=1e-6)
+
+
+def test_kuiper_p_value_non_calibrated() -> None:
+    """
+    Test that Kuiper's p-values are well computed
+    for uncalibrated data
+    """
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    ks_stat = kuiper_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.0, atol=1e-6)
+
+
+def test_kuiper_p_value_calibrated() -> None:
+    """
+    Test that Kuiper's p-values are well computed
+    for calibrated data.
+    """
+    generator = RandomState(1)
+    y_score = generator.uniform(size=100)
+    uniform = generator.uniform(size=len(y_score))
+    y_true = (uniform <= y_score).astype(float)
+    ks_stat = kuiper_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.313006, atol=1e-6)
+
+
+def test_spiegelhalter_statistic() -> None:
+    """Test that Spiegelhalter's statistics are well computed"""
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    sp_stat = spiegelhalter_statistic(y_true, y_score)
+    np.testing.assert_allclose(sp_stat, 13.906833, atol=1e-6)
+
+
+def test_spiegelhalter_p_value_non_calibrated() -> None:
+    """
+    Test that Spiegelhalter's p-values are well computed
+    for uncalibrated data
+    """
+    generator = RandomState(1)
+    y_true = generator.choice([0, 1], size=100)
+    y_score = generator.uniform(size=100)
+    ks_stat = spiegelhalter_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.0, atol=1e-6)
+
+
+def test_spiegelhalter_p_value_calibrated() -> None:
+    """
+    Test that Spiegelhalter's p-values are well computed
+    for calibrated data.
+    """
+    generator = RandomState(1)
+    y_score = generator.uniform(size=100)
+    uniform = generator.uniform(size=len(y_score))
+    y_true = (uniform <= y_score).astype(float)
+    ks_stat = spiegelhalter_p_value(y_true, y_score)
+    np.testing.assert_allclose(ks_stat, 0.174832, atol=1e-6)

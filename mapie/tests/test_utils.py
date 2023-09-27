@@ -7,12 +7,14 @@ import pytest
 from numpy.random import RandomState
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.regression import MapieQuantileRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_binary_zero_one, check_lower_upper_bounds,
+                         check_binary_zero_one, check_cv,
+                         check_gamma, check_lower_upper_bounds,
                          check_n_features_in, check_n_jobs, check_null_weight,
                          check_number_bins, check_split_strategy,
                          check_verbose, compute_quantiles, fit_estimator,
@@ -32,8 +34,8 @@ ALPHAS = [
     np.array([0.05, 0.1, 0.2]),
 ]
 
-
-prng = RandomState(1234567890)
+random_state = 1234567890
+prng = RandomState(random_state)
 y_score = prng.random(51)
 y_scores = prng.random((51, 5))
 y_true = prng.randint(0, 2, 51)
@@ -412,6 +414,7 @@ def test_change_values_zero_one() -> None:
     assert (np.unique(array_) == np.array([0, 1])).all()
 
 
+
 @pytest.mark.parametrize("gamma", [0.1, 0.5, 0.9])
 def test_valid_gamma(gamma: float) -> None:
     """Test a valid gamma parameter."""
@@ -423,3 +426,33 @@ def test_invalid_large_gamma(gamma: float) -> None:
     """Test a non-valid gamma parameter."""
     with pytest.raises(ValueError, match="Gamma must be between 0 and 1."):
         check_gamma(gamma)
+
+
+@pytest.mark.parametrize("cv", [5, "split"])
+def test_check_cv_same_split_with_random_state(cv: BaseCrossValidator) -> None:
+    """Test that cv generate same split with fixed random_state."""
+    cv = check_cv(cv, random_state=random_state)
+
+    train_indices_1, train_indices_2 = [], []
+    for train_index, _ in cv.split(X):
+        train_indices_1.append(train_index)
+    for train_index, _ in cv.split(X):
+        train_indices_2.append(train_index)
+
+    for i in range(cv.get_n_splits()):
+        np.testing.assert_allclose(train_indices_1[i], train_indices_2[i])
+
+
+@pytest.mark.parametrize("cv", [5, "split"])
+def test_check_cv_same_split_no_random_state(cv: BaseCrossValidator) -> None:
+    """Test that cv generate same split with no random_state."""
+    cv = check_cv(cv, random_state=None)
+
+    train_indices_1, train_indices_2 = [], []
+    for train_index, _ in cv.split(X):
+        train_indices_1.append(train_index)
+    for train_index, _ in cv.split(X):
+        train_indices_2.append(train_index)
+
+    for i in range(cv.get_n_splits()):
+        np.testing.assert_allclose(train_indices_1[i], train_indices_2[i])
