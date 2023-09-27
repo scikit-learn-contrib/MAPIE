@@ -184,7 +184,7 @@ def test_regression_ypredlow_shape() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError):
-        cwc(y_toy, y_preds[:1], y_preds[:, 2], eta=30, mu=0.9)
+        cwc(y_toy, y_preds[:1], y_preds[:, 2], eta=30, alpha=0.1)
 
 
 def test_regression_ypredup_shape() -> None:
@@ -194,7 +194,7 @@ def test_regression_ypredup_shape() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError):
-        cwc(y_toy, y_preds[:, 1], y_preds[:1], eta=30, mu=0.9)
+        cwc(y_toy, y_preds[:, 1], y_preds[:1], eta=30, alpha=0.1)
 
 
 def test_regression_intervals_invalid_shape() -> None:
@@ -217,7 +217,7 @@ def test_regression_ytrue_invalid_shape() -> None:
         hsic(np.tile(y_toy, 2).reshape(5, 2), y_preds)
     with pytest.raises(ValueError):
         cwc(np.tile(y_toy, 2).reshape(5, 2), y_preds[:, 1], y_preds[:, 2],
-            eta=30, mu=0.9)
+            eta=30, alpha=0.1)
 
 
 def test_regression_valid_input_shape() -> None:
@@ -225,7 +225,7 @@ def test_regression_valid_input_shape() -> None:
     regression_ssc(y_toy, intervals)
     regression_ssc_score(y_toy, intervals)
     hsic(y_toy, intervals)
-    cwc(y_toy, y_preds[:, 1], y_preds[:, 2], eta=0, mu=0.9)
+    cwc(y_toy, y_preds[:, 1], y_preds[:, 2], eta=0, alpha=0.1)
 
 
 def test_regression_same_length() -> None:
@@ -241,7 +241,7 @@ def test_regression_same_length() -> None:
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         hsic(y_toy, intervals[:-1, ])
     with pytest.raises(ValueError):
-        cwc(y_toy, y_preds[:-1, 1], y_preds[:, 2], eta=0, mu=0.9)
+        cwc(y_toy, y_preds[:-1, 1], y_preds[:, 2], eta=0, alpha=0.1)
 
 
 def test_regression_toydata_coverage_score() -> None:
@@ -613,21 +613,21 @@ def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
 def test_mu_invalid_cwc_score() -> None:
     """Test a non-valid value of mu in cwc score."""
     with pytest.raises(ValueError):
-        cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, mu=-1)
+        cwc(y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, alpha=-1)
 
 
 def test_valid_eta() -> None:
     """Test different values of eta in cwc metric."""
     y, y_low, y_up = y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]
     np.testing.assert_allclose(
-        cwc(y, y_low, y_up, eta=30, mu=0.9), 0.48, rtol=1e-2
+        cwc(y, y_low, y_up, eta=30, alpha=0.1), 0.48, rtol=1e-2
     )
     np.testing.assert_allclose(
-        cwc(y, y_low, y_up, eta=0.01, mu=0.9), 0.65, rtol=1e-2
+        cwc(y, y_low, y_up, eta=0.01, alpha=0.1), 0.65, rtol=1e-2
     )
     np.testing.assert_allclose(
-        cwc(y, y_low, y_up, eta=-1, mu=0.9), 0.65, rtol=1e-2
+        cwc(y, y_low, y_up, eta=-1, alpha=0.1), 0.65, rtol=1e-2
     )
     np.testing.assert_allclose(
-        cwc(y, y_low, y_up, eta=0, mu=0.9), 0.65, rtol=1e-2
+        cwc(y, y_low, y_up, eta=0, alpha=0.1), 0.65, rtol=1e-2
     )
