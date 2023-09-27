@@ -3,6 +3,7 @@ from inspect import signature
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from pandas import DataFrame, Series
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
@@ -1230,3 +1231,34 @@ def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
                 "The number of bins should be less than the number of \
                 different set sizes."
             )
+
+
+def convert_to_numpy(X: DataFrame, y_true: Series) -> Tuple[NDArray,
+                                                            NDArray]:
+    """
+    Converts pandas DataFrame and Series to NumPy arrays.
+
+    Parameters:
+        X (pd.DataFrame): The input DataFrame to be converted.
+        y_true (pd.Series): The input Series to be converted.
+
+    Returns:
+        Tuple[NDArray, NDArray]: A tuple containing two NumPy arrays.
+            The first element is the NumPy array corresponding to X,
+            and the second element is the NumPy array corresponding to y_true.
+    """
+    if isinstance(X, DataFrame):
+        X_values = X.values
+    elif isinstance(X, np.ndarray):
+        X_values = X
+    else:
+        raise ValueError("X must be a pandas DataFrame or a NumPy array")
+
+    if isinstance(y_true, Series):
+        y_true_values = y_true.values
+    elif isinstance(y_true, np.ndarray):
+        y_true_values = y_true
+    else:
+        raise ValueError("y_true must be a pandas Series or a NumPy array")
+
+    return X_values, y_true_values
