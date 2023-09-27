@@ -320,6 +320,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         X = cast(NDArray, X)
         y_true = cast(NDArray, y_true)
 
+        X = X.values
+        y_true = y_true.values
+
         for x_row, y_row in zip(X, y_true):
             x = np.expand_dims(x_row, axis=0)
             _, y_pred_bounds = self.predict(x, alpha=list(

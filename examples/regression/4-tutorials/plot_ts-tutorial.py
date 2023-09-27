@@ -181,9 +181,9 @@ else:
 #
 # We now use :class:`~MapieTimeSeriesRegressor` to build prediction intervals
 # associated with one-step ahead forecasts. As explained in the introduction,
-# we use the EnbPI method [1].
+# we use the EnbPI method [1] and the ACI method [2] .
 #
-# Estimating prediction intervals can be possible in two ways:
+# Estimating prediction intervals can be possible in three ways:
 #
 # - with a regular ``.fit`` and ``.predict`` process, limiting the use of
 #   trainining set residuals to build prediction intervals
@@ -191,6 +191,10 @@ else:
 # - using ``.partial_fit`` in addition to ``.fit`` and ``.predict`` allowing
 #   MAPIE to use new residuals from the test points as new data are becoming
 #   available.
+#
+# - using ``.partial_fit`` and ``.adapt_conformal_inference`` in addition to
+#   ``.fit`` and ``.predict`` allowing MAPIE to use new residuals from the
+#   test points as new data are becoming available.
 #
 # The latter method is particularly useful to adjust prediction intervals to
 # sudden change points on test sets that have not been seen by the model
@@ -252,6 +256,8 @@ cwc_aci_npfit = cwc(
     eta=10,
     alpha=0.05
 )
+
+
 ##############################################################################
 # Let's now estimate prediction intervals with partial fit. As discussed
 # previously, the update of the residuals and the one-step ahead predictions
@@ -290,6 +296,12 @@ cwc_enbpi_pfit = cwc(
     alpha=0.05
 )
 
+
+##############################################################################
+# Let's now estimate prediction intervals with partial fit and adapt conformal
+# inference. As discussed previously, the update of the residuals and the
+# one-step ahead predictions are performed sequentially in a loop.
+
 mapie_aci = mapie_aci.fit(X_train, y_train)
 
 y_pred_aci_pfit = np.zeros(y_pred_aci_npfit.shape)
@@ -327,7 +339,7 @@ width_aci_pfit = regression_mean_width_score(
 cwc_aci_pfit = cwc(
     y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0],
     eta=0.01,
-    mu=0.05
+    alpha=0.05
 )
 
 ##############################################################################
@@ -413,65 +425,68 @@ plt.show()
 # Let's now compare the coverages obtained by MAPIE with and without update
 # of the residuals on a 24-hour rolling window of prediction intervals.
 
-window = 24
-rolling_coverage_pfit, rolling_coverage_npfit = [], []
-for i in range(window, len(y_test), 1):
-    rolling_coverage_pfit.append(
-        regression_coverage_score(
-            y_test[i-window:i], y_pis_enbpi_pfit[i-window:i, 0, 0],
-            y_pis_enbpi_pfit[i-window:i, 1, 0]
-        )
-    )
-    rolling_coverage_npfit.append(
-        regression_coverage_score(
-            y_test[i-window:i], y_pis_enbpi_npfit[i-window:i, 0, 0],
-            y_pis_enbpi_npfit[i-window:i, 1, 0]
-        )
-    )
-
-plt.figure(figsize=(10, 5))
-plt.ylabel(f"Rolling coverage [{window} hours]")
-plt.plot(
-    y_test[window:].index,
-    rolling_coverage_npfit,
-    label="Without update of residuals"
-)
-plt.plot(
-    y_test[window:].index,
-    rolling_coverage_pfit,
-    label="With update of residuals"
-)
-plt.show()
-
+rolling_coverage_aci_pfit, rolling_coverage_aci_npfit = [], []
+rolling_coverage_enbpi_pfit, rolling_coverage_enbpi_npfit = [], []
 
 window = 24
-rolling_coverage_pfit, rolling_coverage_npfit = [], []
+
 for i in range(window, len(y_test), 1):
-    rolling_coverage_pfit.append(
-        regression_coverage_score(
-            y_test[i-window:i], y_pis_aci_pfit[i-window:i, 0, 0],
-            y_pis_aci_pfit[i-window:i, 1, 0]
-        )
-    )
-    rolling_coverage_npfit.append(
+    rolling_coverage_aci_npfit.append(
         regression_coverage_score(
             y_test[i-window:i], y_pis_aci_npfit[i-window:i, 0, 0],
             y_pis_aci_npfit[i-window:i, 1, 0]
         )
     )
+    rolling_coverage_aci_pfit.append(
+        regression_coverage_score(
+            y_test[i-window:i], y_pis_aci_pfit[i-window:i, 0, 0],
+            y_pis_aci_pfit[i-window:i, 1, 0]
+        )
+    )
+
+    rolling_coverage_enbpi_npfit.append(
+        regression_coverage_score(
+            y_test[i-window:i], y_pis_enbpi_npfit[i-window:i, 0, 0],
+            y_pis_enbpi_npfit[i-window:i, 1, 0]
+        )
+    )
+    rolling_coverage_enbpi_pfit.append(
+        regression_coverage_score(
+            y_test[i-window:i], y_pis_enbpi_pfit[i-window:i, 0, 0],
+            y_pis_enbpi_pfit[i-window:i, 1, 0]
+        )
+    )
 
 plt.figure(figsize=(10, 5))
 plt.ylabel(f"Rolling coverage [{window} hours]")
+
 plt.plot(
     y_test[window:].index,
-    rolling_coverage_npfit,
-    label="Without update of residuals"
+    rolling_coverage_aci_npfit,
+    label="ACI Without update of residuals (NPfit)",
+    linestyle='--',
 )
 plt.plot(
     y_test[window:].index,
-    rolling_coverage_pfit,
-    label="With update of residuals"
+    rolling_coverage_aci_pfit,
+    label="ACI With update of residuals (Pfit)",
+    linestyle=':',
 )
+
+plt.plot(
+    y_test[window:].index,
+    rolling_coverage_enbpi_npfit,
+    label="ENBPI Without update of residuals (NPfit)",
+    linestyle='-.',
+)
+plt.plot(
+    y_test[window:].index,
+    rolling_coverage_enbpi_pfit,
+    label="ENBPI With update of residuals (Pfit)",
+    linestyle='-',
+)
+
+plt.legend()
 plt.show()
 
 ##############################################################################
