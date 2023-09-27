@@ -228,7 +228,10 @@ width_enbpi_npfit = regression_mean_width_score(
     y_pis_enbpi_npfit[:, 0, 0], y_pis_enbpi_npfit[:, 1, 0]
 )
 cwc_enbpi_npfit = cwc(
-    y_test, y_pis_enbpi_npfit[:, 0, 0], y_pis_enbpi_npfit[:, 1, 0], eta = 10, alpha = 0.05
+    y_test, y_pis_enbpi_npfit[:, 0, 0],
+    y_pis_enbpi_npfit[:, 1, 0],
+    eta=10,
+    alpha=0.05
 )
 
 mapie_aci = mapie_aci.fit(X_train, y_train)
@@ -243,7 +246,11 @@ width_aci_npfit = regression_mean_width_score(
     y_pis_aci_npfit[:, 0, 0], y_pis_aci_npfit[:, 1, 0]
 )
 cwc_aci_npfit = cwc(
-    y_test, y_pis_aci_npfit[:, 0, 0], y_pis_aci_npfit[:, 1, 0], eta = 10, alpha = 0.05
+    y_test,
+    y_pis_aci_npfit[:, 0, 0],
+    y_pis_aci_npfit[:, 1, 0],
+    eta=10,
+    alpha=0.05
 )
 ##############################################################################
 # Let's now estimate prediction intervals with partial fit. As discussed
@@ -278,7 +285,9 @@ width_enbpi_pfit = regression_mean_width_score(
     y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0]
 )
 cwc_enbpi_pfit = cwc(
-    y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0], eta = 10, alpha = 0.05
+    y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0],
+    eta=10,
+    alpha=0.05
 )
 
 mapie_aci = mapie_aci.fit(X_train, y_train)
@@ -297,7 +306,7 @@ for step in range(gap, len(X_test), gap):
     mapie_aci.adapt_conformal_inference(
         X_test.iloc[(step - gap):step, :],
         y_test.iloc[(step - gap):step],
-        gamma = 0.05
+        gamma=0.05
     )
     (
         y_pred_aci_pfit[step:step + gap],
@@ -308,7 +317,7 @@ for step in range(gap, len(X_test), gap):
         ensemble=True,
         optimize_beta=True
     )
-    
+
 coverage_aci_pfit = regression_coverage_score(
     y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0]
 )
@@ -316,7 +325,9 @@ width_aci_pfit = regression_mean_width_score(
     y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0]
 )
 cwc_aci_pfit = cwc(
-    y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0], eta = 0.01, mu = 0.05
+    y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0],
+    eta=0.01,
+    mu=0.05
 )
 
 ##############################################################################
@@ -360,7 +371,8 @@ for i, (ax, w) in enumerate(zip(axs, ["without", "with"])):
         label="Prediction intervals",
     )
     title = f"EnbPI, {w} update of residuals. "
-    title += f"Coverage:{coverages_enbpi[i]:.3f} and Width:{widths_enbpi[i]:.3f}"
+    title += (f"Coverage:{coverages_enbpi[i]:.3f} and "
+              f"Width:{widths_enbpi[i]:.3f}")
     ax.set_title(title)
     ax.legend()
 fig.tight_layout()
