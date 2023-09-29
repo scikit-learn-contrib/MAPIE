@@ -755,9 +755,9 @@ def cwc(
     The effective coverage score is a criterion used to evaluate the quality
     of prediction intervals (PIs) based on their coverage and width.
 
-    Construction of Optimal Prediction Intervals for Load Forecasting
-    Problems
-    Abbas Khosravi; Saeid Nahavandi; Doug Creighton
+    Khosravi, Abbas, Saeid Nahavandi, and Doug Creighton.
+    "Construction of optimal prediction intervals for load forecasting problems."
+    IEEE Transactions on Power Systems 25.3 (2010): 1496-1503.
 
     Parameters
     ----------
