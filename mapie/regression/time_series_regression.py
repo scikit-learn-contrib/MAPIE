@@ -337,10 +337,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                     < y_pred_bounds[:, 1, alpha_ix]
                 )
 
-                new_alpha_t = np.clip(alpha_t +
-                                      gamma*(alpha_0-is_true_in_quantile),
-                                      0,
-                                      1)
+                new_alpha_t = np.clip(
+                    alpha_t + gamma*(alpha_0-is_true_in_quantile),
+                    0, 1
+                )
                 self.current_alpha[alpha_0] = new_alpha_t
 
         return self
