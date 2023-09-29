@@ -30,7 +30,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     on single-output time series.
 
 
-    EnbPI allows you to update conformal scores using the partial_fit function.
+    EnbPI allows you to update conformal scores using the ``partial_fit`` function.
     It will replace the oldest one with the newest scores.
     It will keep the same amount of total scores
 
