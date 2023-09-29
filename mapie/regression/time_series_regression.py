@@ -325,8 +325,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         for x_row, y_row in zip(X, y_true):
             x = np.expand_dims(x_row, axis=0)
-            _, y_pred_bounds = self.predict(x, alpha=list(
-                                            self.current_alpha.keys()))
+            _, y_pred_bounds = self.predict(
+                x, alpha=list(self.current_alpha.keys())
+            )
 
             for alpha_ix, alpha_0 in enumerate(self.current_alpha):
                 alpha_t = self.current_alpha[alpha_0]
