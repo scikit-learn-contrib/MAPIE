@@ -756,7 +756,8 @@ def cwc(
     of prediction intervals (PIs) based on their coverage and width.
 
     Khosravi, Abbas, Saeid Nahavandi, and Doug Creighton.
-    "Construction of optimal prediction intervals for load forecasting problems."
+    "Construction of optimal prediction intervals for load forecasting
+    problems."
     IEEE Transactions on Power Systems 25.3 (2010): 1496-1503.
 
     Parameters

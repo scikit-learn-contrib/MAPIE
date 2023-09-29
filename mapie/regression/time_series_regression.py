@@ -29,8 +29,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     Both strategies are estimating prediction intervals
     on single-output time series.
 
-    EnbPI allows you to update conformal scores using the ``partial_fit`` function.
-    It will replace the oldest one with the newest scores.
+    EnbPI allows you to update conformal scores using the ``partial_fit``
+    function. It will replace the oldest one with the newest scores.
     It will keep the same amount of total scores
 
     Actually, EnbPI only corresponds to ``MapieTimeSeriesRegressor`` if the
@@ -44,9 +44,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     the size of the intervals will decrease.
 
     You can use a gamma coefficient to adjust the strength of the correction.
-    The correction formula is: :math:`\alpha_{t+1} = \alpha_{t} + \gamma
-    (\alpha - 1_{y_t \notin C_{\alpha_t}(X_t)})`. Where :math:`C_{\alpha_t}` is the
-    coverage given :math:`\alpha` at time :math:`t`. If :math:`\gamma=0`,
+    The correction formula is: alpha_{t+1} = alpha_{t} + gamma
+    (alpha - 1_{y_t notin C_{alpha_t}(X_t)}). Where C_{alpha_t} is the
+    coverage given alpha at time t. If gamma=0,
     it means we don't adapt the conformal inference.
 
     References
