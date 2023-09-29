@@ -270,7 +270,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         )
         self.conformity_scores_[
             -len(new_conformity_scores_):
-            ] = new_conformity_scores_
+        ] = new_conformity_scores_
         return self
 
     def adapt_conformal_inference(
