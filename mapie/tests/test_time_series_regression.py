@@ -417,14 +417,19 @@ def test_consistent_class() -> None:
 
 
 def test_aci_method() -> None:
-    """TODO"""
+    """
+    Test function for the "aci" (Adapted Conformal Inference) method
+    in a MapieTimeSeriesRegressor.
+    Additionally, it attempts to test the regressor with the "enbpi"
+    method, but this part is expected to raise an exception,
+    and it captures the exception without taking any action.
+    """
     mapie_regressor = MapieTimeSeriesRegressor(method="aci")
     mapie_regressor.fit(X, y)
     mapie_regressor.predict(X, alpha=0.05)
     mapie_regressor.adapt_conformal_inference(X, y)
-    try:
+    with pytest.raises(ValueError,
+                       match=r".*is only documented for the aci*."):
         mapie_regressor = MapieTimeSeriesRegressor(method="enbpi")
         mapie_regressor.fit(X, y)
         mapie_regressor.adapt_conformal_inference(X, y)
-    except Exception:
-        ()

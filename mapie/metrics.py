@@ -756,20 +756,22 @@ def cwc(
     of prediction intervals (PIs) based on their coverage and width.
 
     Khosravi, Abbas, Saeid Nahavandi, and Doug Creighton.
-    "Construction of optimal prediction intervals for load forecasting problems."
+    "Construction of optimal prediction intervals for load forecasting
+    problems."
     IEEE Transactions on Power Systems 25.3 (2010): 1496-1503.
 
     Parameters
     ----------
-    picp : float
-        Prediction interval coverage probability (PICP), which is the estimated
-        fraction of true labels that lie within the prediction intervals.
-    pinaw : float
-        Prediction interval normalized average width (PINAW), calculated as
-        the average width of the prediction intervals.
+    Coverage score : float
+        Prediction interval coverage probability (Coverage score), which is
+        the estimated fraction of true labels that lie within the prediction
+        intervals.
+    Mean Width Score : float
+        Prediction interval normalized average width (Mean Width Score),
+        calculated as the average width of the prediction intervals.
     eta : int
-        A user-defined parameter that balances the contributions of PINAW and
-        PICP in the CWC calculation.
+        A user-defined parameter that balances the contributions of
+        Mean Width Score and Coverage score in the CWC calculation.
     alpha : float
         A user-defined parameter representing the designed confidence level of
         the PI.
@@ -783,7 +785,7 @@ def cwc(
     -----
     The effective coverage score (CWC) is calculated using the following
     formula:
-    CWC = (1 - PINAW) * exp(-eta * (PICP - (1-alpha))**2)
+    CWC = (1 - Mean Width Score) * exp(-eta * (Coverage score - (1-alpha))**2)
 
     The CWC penalizes under- and overcoverage in the same way and summarizes
     the quality of the prediction intervals in a single value.
@@ -791,22 +793,24 @@ def cwc(
     High Eta (Large Positive Value):
 
     When eta is a high positive value, it will strongly
-    emphasize the contribution of (1-pinaw). This means that the algorithm
-    will prioritize reducing the average width of the prediction intervals
-    (pinaw) over achieving a high coverage probability (picp).
-    The exponential term np.exp(-eta*(picp-mu)**2) will have a sharp decline
-    as picp deviates from mu. So, achieving a high picp becomes less important
-    compared to minimizing pinaw.
+    emphasize the contribution of (1-Mean Width Score). This means that the
+    algorithm will prioritize reducing the average width of the prediction
+    intervals (Mean Width Score) over achieving a high coverage probability
+    (Coverage score). The exponential term np.exp(-eta*(Coverage score-mu)**2)
+    will have a sharp decline as Coverage score deviates from mu. So, achieving
+    a high Coverage score becomes less important compared to minimizing
+    Mean Width Score.
     The impact will be narrower prediction intervals on average, which may
     result in more precise but less conservative predictions.
 
     Low Eta (Small Positive Value):
 
     When eta is a low positive value, it will still
-    prioritize reducing the average width of the prediction intervals (pinaw)
-    but with less emphasis compared to higher eta values.
-    The exponential term will be less steep, meaning that deviations of picp
-    from mu will have a moderate impact.
+    prioritize reducing the average width of the prediction intervals
+    (Mean Width Score) but with less emphasis compared to higher
+    eta values.
+    The exponential term will be less steep, meaning that deviations of
+    Coverage score from mu will have a moderate impact.
     You'll get a balance between prediction precision and coverage, but the
     exact balance will depend on the specific value of eta.
 
@@ -814,10 +818,10 @@ def cwc(
 
     When eta is negative, it will have a different effect on the formula.
     Negative values of eta will cause the exponential term
-    np.exp(-eta*(picp-mu)**2)
-    to become larger as picp deviates from mu. This means that a negative eta
-    prioritizes achieving a high coverage probability (picp) over minimizing
-    pinaw.
+    np.exp(-eta*(Coverage score-mu)**2)
+    to become larger as Coverage score deviates from mu. This means that
+    a negative eta prioritizes achieving a high coverage probability
+    (Coverage score) over minimizing Mean Width Score.
     In this case, the algorithm will aim to produce wider prediction intervals
     to ensure a higher likelihood of capturing the true values within those
     intervals, even if it sacrifices precision.
@@ -826,8 +830,9 @@ def cwc(
 
     Null Eta (Eta = 0):
 
-    Specifically, when eta is zero, the CWC score becomes equal to 1 - pinaw,
-    which is equivalent to 1 - (average width of the prediction intervals).
+    Specifically, when eta is zero, the CWC score becomes equal to
+    1 - Mean Width Score, which is equivalent to
+    1 - (average width of the prediction intervals).
     Therefore, in this case, the CWC score is primarily based on the size of
     the prediction interval.
 
