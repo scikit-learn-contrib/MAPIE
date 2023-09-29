@@ -36,7 +36,6 @@ from mapie.metrics import (add_jitter,
                            spiegelhalter_statistic,
                            top_label_ece)
 
-
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
 y_preds = np.array([
     [5, 4, 6],
