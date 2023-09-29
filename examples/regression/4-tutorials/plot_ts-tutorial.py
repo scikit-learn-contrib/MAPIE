@@ -58,6 +58,7 @@ International Conference on Machine Learning (ICML, 2021).
 
 [2] Isaac Gibbs, Emmanuel Candes
 "Adaptive conformal inference under distribution shift"
+Advances in Neural Information Processing Systems, (NeurIPS, 2021).
 
 """
 
