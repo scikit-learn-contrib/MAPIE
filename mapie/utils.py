@@ -1233,8 +1233,9 @@ def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
             )
 
 
-def convert_to_numpy(X: DataFrame, y_true: Series) -> Tuple[NDArray,
-                                                            NDArray]:
+def convert_to_numpy(
+    X: DataFrame, y_true: Series
+) -> Tuple[NDArray, NDArray]:
     """
     Converts pandas DataFrame and Series to NumPy arrays.
 
