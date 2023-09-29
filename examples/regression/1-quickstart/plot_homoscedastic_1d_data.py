@@ -26,7 +26,7 @@ random_state = 42
 
 def f(x: NDArray) -> NDArray:
     """Polynomial function used to generate one-dimensional data"""
-    return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
+    return np.array(5 * x + 5 * x**4 - 9 * x**2)
 
 
 def get_homoscedastic_data(
@@ -131,10 +131,13 @@ polyn_model = Pipeline(
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
-        ("linear", QuantileRegressor(
-            solver="highs-ds",
-            alpha=0,
-        )),
+        (
+            "linear",
+            QuantileRegressor(
+                solver="highs-ds",
+                alpha=0,
+            ),
+        ),
     ]
 )
 
@@ -146,24 +149,16 @@ STRATEGIES = {
     "jackknife_plus_ab": {"method": "plus", "cv": Subsample(n_resamplings=50)},
     "conformalized_quantile_regression": {"method": "quantile", "cv": "split"},
 }
-fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(
-    2, 3, figsize=(3 * 6, 12)
-)
+fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(3 * 6, 12))
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
 for i, (strategy, params) in enumerate(STRATEGIES.items()):
     if strategy == "conformalized_quantile_regression":
-        mapie = MapieQuantileRegressor(  # type: ignore
-            polyn_model_quant,
-            **params
-        )
+        mapie = MapieQuantileRegressor(polyn_model_quant, **params)  # type: ignore
         mapie.fit(X_train.reshape(-1, 1), y_train, random_state=random_state)
         y_pred, y_pis = mapie.predict(X_test.reshape(-1, 1))
     else:
         mapie = MapieRegressor(  # type: ignore
-            polyn_model,
-            agg_function="median",
-            n_jobs=-1,
-            **params
+            polyn_model, agg_function="median", n_jobs=-1, **params
         )
         mapie.fit(X_train.reshape(-1, 1), y_train)
         y_pred, y_pis = mapie.predict(

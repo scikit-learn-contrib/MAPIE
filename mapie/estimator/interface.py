@@ -49,10 +49,7 @@ class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
 
     @abstractmethod
     def predict(
-        self,
-        X: ArrayLike,
-        ensemble: bool = False,
-        return_multi_pred: bool = True
+        self, X: ArrayLike, ensemble: bool = False, return_multi_pred: bool = True
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample

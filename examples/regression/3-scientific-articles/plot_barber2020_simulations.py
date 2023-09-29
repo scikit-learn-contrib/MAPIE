@@ -35,8 +35,7 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from mapie._typing import NDArray
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics import regression_coverage_score, regression_mean_width_score
 from mapie.regression import MapieRegressor
 
 
@@ -111,27 +110,18 @@ def PIs_vs_dimensions(
 
             for strategy, params in strategies.items():
                 mapie = MapieRegressor(
-                    LinearRegression(),
-                    agg_function="median",
-                    n_jobs=-1,
-                    **params
+                    LinearRegression(), agg_function="median", n_jobs=-1, **params
                 )
                 mapie.fit(X_train, y_train)
                 _, y_pis = mapie.predict(X_test, alpha=alpha)
-                coverage = regression_coverage_score(
-                    y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
-                )
+                coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
                 results[strategy][dimension]["coverage"][trial] = coverage
-                width_mean = regression_mean_width_score(
-                    y_pis[:, 0, 0], y_pis[:, 1, 0]
-                )
+                width_mean = regression_mean_width_score(y_pis[:, 0, 0], y_pis[:, 1, 0])
                 results[strategy][dimension]["width_mean"][trial] = width_mean
     return results
 
 
-def plot_simulation_results(
-    results: Dict[str, Dict[int, Dict[str, NDArray]]], title: str
-) -> None:
+def plot_simulation_results(results: Dict[str, Dict[int, Dict[str, NDArray]]], title: str) -> None:
     """
     Show the prediction interval coverages and widths as a function
     of dimension values for selected strategies with standard error

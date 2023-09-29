@@ -8,17 +8,22 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import (_check_y, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import (ConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import ConformityScore, ResidualNormalisedScore
 from mapie.estimator.estimator import EnsembleRegressor
-from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_conformity_score, check_cv,
-                         check_estimator_fit_predict, check_n_features_in,
-                         check_n_jobs, check_null_weight, check_verbose)
+from mapie.utils import (
+    check_alpha,
+    check_alpha_and_n_samples,
+    check_conformity_score,
+    check_cv,
+    check_estimator_fit_predict,
+    check_n_features_in,
+    check_n_jobs,
+    check_null_weight,
+    check_verbose,
+)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
@@ -252,9 +257,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         check_verbose(self.verbose)
         check_random_state(self.random_state)
 
-    def _check_method(
-        self, method: str
-    ) -> str:
+    def _check_method(self, method: str) -> str:
         """
         Check if ``method`` is correct.
 
@@ -274,15 +277,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             If ``method`` is not in ``self.valid_methods_``.
         """
         if method not in self.valid_methods_:
-            raise ValueError(
-                f"Invalid method. Allowed values are {self.valid_methods_}."
-            )
+            raise ValueError(f"Invalid method. Allowed values are {self.valid_methods_}.")
         else:
             return method
 
-    def _check_agg_function(
-        self, agg_function: Optional[str] = None
-    ) -> Optional[str]:
+    def _check_agg_function(self, agg_function: Optional[str] = None) -> Optional[str]:
         """
         Check if ``agg_function`` is correct, and consistent with other
         arguments.
@@ -308,9 +307,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 "Invalid aggregation function "
                 f"Allowed values are '{self.valid_agg_functions_}'."
             )
-        elif (agg_function is None) and (
-            type(self.cv).__name__ in self.cv_need_agg_function_
-        ):
+        elif (agg_function is None) and (type(self.cv).__name__ in self.cv_need_agg_function_):
             raise ValueError(
                 "You need to specify an aggregation function when "
                 f"cv's type is in {self.cv_need_agg_function_}."
@@ -320,9 +317,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         else:
             return "mean"
 
-    def _check_estimator(
-        self, estimator: Optional[RegressorMixin] = None
-    ) -> RegressorMixin:
+    def _check_estimator(self, estimator: Optional[RegressorMixin] = None) -> RegressorMixin:
         """
         Check if estimator is ``None``,
         and returns a ``LinearRegression`` instance if necessary.
@@ -361,7 +356,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             return estimator
 
     def _check_ensemble(
-        self, ensemble: bool,
+        self,
+        ensemble: bool,
     ) -> None:
         """
         Check if ``ensemble`` is ``False`` and if ``self.agg_function``
@@ -416,18 +412,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         # Checking
         self._check_parameters()
-        cv = check_cv(
-            self.cv, test_size=self.test_size, random_state=self.random_state
-        )
+        cv = check_cv(self.cv, test_size=self.test_size, random_state=self.random_state)
         if self.cv in ["split", "prefit"] and self.method != "base":
             self.method = "base"
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
-        cs_estimator = check_conformity_score(
-            self.conformity_score
-        )
-        if isinstance(cs_estimator, ResidualNormalisedScore) and \
-           self.cv not in ["split", "prefit"]:
+        cs_estimator = check_conformity_score(self.conformity_score)
+        if isinstance(cs_estimator, ResidualNormalisedScore) and self.cv not in [
+            "split",
+            "prefit",
+        ]:
             raise ValueError(
                 "The ResidualNormalisedScore can be used only with "
                 "``cv='split'`` and ``cv='prefit'``"
@@ -487,13 +481,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             The model itself.
         """
         # Checks
-        (estimator,
-         self.conformity_score_function_,
-         agg_function,
-         cv,
-         X,
-         y,
-         sample_weight) = self._check_fit_parameters(X, y, sample_weight)
+        (
+            estimator,
+            self.conformity_score_function_,
+            agg_function,
+            cv,
+            X,
+            y,
+            sample_weight,
+        ) = self._check_fit_parameters(X, y, sample_weight)
 
         self.estimator_ = EnsembleRegressor(
             estimator,
@@ -503,17 +499,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.n_jobs,
             self.random_state,
             self.test_size,
-            self.verbose
+            self.verbose,
         )
         # Fit the prediction function
         self.estimator_ = self.estimator_.fit(X, y, sample_weight)
         y_pred = self.estimator_.predict_calib(X)
 
         # Compute the conformity scores (manage jk-ab case)
-        self.conformity_scores_ = \
-            self.conformity_score_function_.get_conformity_scores(
-                X, y, y_pred
-            )
+        self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
+            X, y, y_pred
+        )
 
         return self
 
@@ -576,9 +571,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha = cast(Optional[NDArray], check_alpha(alpha))
 
         if alpha is None:
-            y_pred = self.estimator_.predict(
-                X, ensemble, return_multi_pred=False
-            )
+            y_pred = self.estimator_.predict(X, ensemble, return_multi_pred=False)
             return np.array(y_pred)
 
         else:
@@ -586,13 +579,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             alpha_np = cast(NDArray, alpha)
             check_alpha_and_n_samples(alpha_np, n)
 
-            y_pred, y_pred_low, y_pred_up = \
-                self.conformity_score_function_.get_bounds(
-                    X,
-                    self.estimator_,
-                    self.conformity_scores_,
-                    alpha_np,
-                    ensemble,
-                    self.method
-                )
+            y_pred, y_pred_low, y_pred_up = self.conformity_score_function_.get_bounds(
+                X, self.estimator_, self.conformity_scores_, alpha_np, ensemble, self.method
+            )
             return np.array(y_pred), np.stack([y_pred_low, y_pred_up], axis=1)

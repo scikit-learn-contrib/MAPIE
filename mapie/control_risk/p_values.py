@@ -8,9 +8,7 @@ from scipy.stats import binom
 
 
 def compute_hoeffdding_bentkus_p_value(
-    r_hat: NDArray,
-    n_obs: int,
-    alpha: Union[float, NDArray]
+    r_hat: NDArray, n_obs: int, alpha: Union[float, NDArray]
 ) -> NDArray:
     """
     The method computes the p_values according to
@@ -51,41 +49,18 @@ def compute_hoeffdding_bentkus_p_value(
     """
     alpha_np = cast(NDArray, check_alpha(alpha))
     alpha_np = alpha_np[:, np.newaxis]
-    r_hat_repeat = np.repeat(
-        np.expand_dims(r_hat, axis=1),
-        len(alpha_np),
-        axis=1
-    )
-    alpha_repeat = np.repeat(
-        alpha_np.reshape(1, -1),
-        len(r_hat),
-        axis=0
-    )
+    r_hat_repeat = np.repeat(np.expand_dims(r_hat, axis=1), len(alpha_np), axis=1)
+    alpha_repeat = np.repeat(alpha_np.reshape(1, -1), len(r_hat), axis=0)
     hoeffding_p_value = np.exp(
-        -n_obs * _h1(
-            np.where(
-                r_hat_repeat > alpha_repeat,
-                alpha_repeat,
-                r_hat_repeat
-            ),
-            alpha_repeat
-        )
+        -n_obs
+        * _h1(np.where(r_hat_repeat > alpha_repeat, alpha_repeat, r_hat_repeat), alpha_repeat)
     )
-    bentkus_p_value = np.e * binom.cdf(
-        np.ceil(n_obs * r_hat_repeat), n_obs, alpha_repeat
-    )
-    hb_p_value = np.where(
-        bentkus_p_value > hoeffding_p_value,
-        hoeffding_p_value,
-        bentkus_p_value
-    )
+    bentkus_p_value = np.e * binom.cdf(np.ceil(n_obs * r_hat_repeat), n_obs, alpha_repeat)
+    hb_p_value = np.where(bentkus_p_value > hoeffding_p_value, hoeffding_p_value, bentkus_p_value)
     return hb_p_value
 
 
-def _h1(
-    r_hats: NDArray,
-    alphas: NDArray
-) -> NDArray:
+def _h1(r_hats: NDArray, alphas: NDArray) -> NDArray:
     """
     This function allow us to compute
     the tighter version of hoeffding inequality.
@@ -114,6 +89,6 @@ def _h1(
     -------
     NDArray of shape a(n_lambdas, n_alpha).
     """
-    elt1 = r_hats * np.log(r_hats/alphas)
-    elt2 = (1-r_hats) * np.log((1-r_hats)/(1-alphas))
+    elt1 = r_hats * np.log(r_hats / alphas)
+    elt2 = (1 - r_hats) * np.log((1 - r_hats) / (1 - alphas))
     return elt1 + elt2

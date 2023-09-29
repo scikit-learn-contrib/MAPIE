@@ -22,8 +22,7 @@ mapie.fit(X, y)
 y_pred, y_pis = mapie.predict(X, alpha=alpha)
 
 coverage_scores = [
-    regression_coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
-    for i, _ in enumerate(alpha)
+    regression_coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i]) for i, _ in enumerate(alpha)
 ]
 
 plt.xlabel("x")

@@ -51,9 +51,7 @@ def test_get_n_splits_BlockBootstrap() -> None:
 def test_split_BlockBootstrap() -> None:
     """Test outputs of subsamplings."""
     X = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    cv = BlockBootstrap(
-        n_resamplings=1, length=2, overlapping=False, random_state=1
-    )
+    cv = BlockBootstrap(n_resamplings=1, length=2, overlapping=False, random_state=1)
     trains = np.concatenate([x[0] for x in cv.split(X)])
     tests = np.concatenate([x[1] for x in cv.split(X)])
     trains_expected = np.array([7, 8, 9, 10, 1, 2, 3, 4, 7, 8, 1, 2])
@@ -62,9 +60,7 @@ def test_split_BlockBootstrap() -> None:
     np.testing.assert_equal(tests, tests_expected)
 
     X = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    cv = BlockBootstrap(
-        n_resamplings=1, length=2, overlapping=True, random_state=1
-    )
+    cv = BlockBootstrap(n_resamplings=1, length=2, overlapping=True, random_state=1)
     trains = np.concatenate([x[0] for x in cv.split(X)])
     tests = np.concatenate([x[1] for x in cv.split(X)])
     trains_expected = np.array([5, 6, 8, 9, 9, 10, 5, 6, 0, 1, 0, 1])

@@ -55,8 +55,7 @@ from sklearn.naive_bayes import GaussianNB
 
 from mapie._typing import NDArray
 from mapie.classification import MapieClassifier
-from mapie.metrics import (classification_coverage_score,
-                           classification_mean_width_score)
+from mapie.metrics import classification_coverage_score, classification_mean_width_score
 
 centers = [(0, 3.5), (-2, 0), (2, 0)]
 covs = [np.eye(2), np.eye(2) * 2, np.diag([5, 1])]
@@ -65,17 +64,12 @@ n_samples = 500
 n_classes = 3
 np.random.seed(42)
 X = np.vstack(
-    [
-        np.random.multivariate_normal(center, cov, n_samples)
-        for center, cov in zip(centers, covs)
-    ]
+    [np.random.multivariate_normal(center, cov, n_samples) for center, cov in zip(centers, covs)]
 )
 y = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 X_train, X_cal, y_train, y_cal = train_test_split(X, y, test_size=0.3)
 
-xx, yy = np.meshgrid(
-    np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
-)
+xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(x_min, x_max, step))
 X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
 
@@ -124,7 +118,9 @@ for method in methods:
     )
     mapie[method].fit(X_cal, y_cal)
     y_pred_mapie[method], y_ps_mapie[method] = mapie[method].predict(
-        X_test, alpha=alpha, include_last_label=True,
+        X_test,
+        alpha=alpha,
+        include_last_label=True,
     )
 
 
@@ -180,9 +176,7 @@ plt.show()
 # different values ​​of alpha.
 
 
-def plot_results(
-    alphas: List[float], y_pred_mapie: NDArray, y_ps_mapie: NDArray
-) -> None:
+def plot_results(alphas: List[float], y_pred_mapie: NDArray, y_ps_mapie: NDArray) -> None:
     tab10 = plt.cm.get_cmap("Purples", 4)
     colors = {
         0: "#1f77b4",
@@ -254,16 +248,12 @@ for method in methods:
         random_state=42,
     )
     mapie[method].fit(X_cal, y_cal)
-    _, y_ps_mapie[method] = mapie[method].predict(
-        X, alpha=alpha_, include_last_label="randomized"
-    )
+    _, y_ps_mapie[method] = mapie[method].predict(X, alpha=alpha_, include_last_label="randomized")
     coverage[method] = [
-        classification_coverage_score(y, y_ps_mapie[method][:, :, i])
-        for i, _ in enumerate(alpha_)
+        classification_coverage_score(y, y_ps_mapie[method][:, :, i]) for i, _ in enumerate(alpha_)
     ]
     mean_width[method] = [
-        classification_mean_width_score(y_ps_mapie[method][:, :, i])
-        for i, _ in enumerate(alpha_)
+        classification_mean_width_score(y_ps_mapie[method][:, :, i]) for i, _ in enumerate(alpha_)
     ]
 
 fig, axs = plt.subplots(1, 3, figsize=(15, 5))

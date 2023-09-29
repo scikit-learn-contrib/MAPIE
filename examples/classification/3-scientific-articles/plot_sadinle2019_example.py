@@ -37,18 +37,13 @@ n_classes = 3
 alpha = [0.2, 0.1, 0.05]
 np.random.seed(42)
 X_train = np.vstack(
-    [
-        np.random.multivariate_normal(center, cov, n_samples)
-        for center, cov in zip(centers, covs)
-    ]
+    [np.random.multivariate_normal(center, cov, n_samples) for center, cov in zip(centers, covs)]
 )
 y_train = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 
 
 # Create test from (x, y) coordinates
-xx, yy = np.meshgrid(
-    np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
-)
+xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(x_min, x_max, step))
 X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
 # Apply MapieClassifier on the dataset to get prediction sets
@@ -67,9 +62,7 @@ y_pred_col = list(map(colors.get, y_pred_mapie))
 y_train_col = list(map(colors.get, y_train))
 y_train_col = [colors[int(i)] for _, i in enumerate(y_train)]
 fig, axs = plt.subplots(1, 4, figsize=(20, 4))
-axs[0].scatter(
-    X_test[:, 0], X_test[:, 1], color=y_pred_col, marker=".", s=10, alpha=0.4
-)
+axs[0].scatter(X_test[:, 0], X_test[:, 1], color=y_pred_col, marker=".", s=10, alpha=0.4)
 axs[0].scatter(
     X_train[:, 0],
     X_train[:, 1],

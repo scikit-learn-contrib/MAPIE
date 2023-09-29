@@ -12,7 +12,7 @@ python:
 
 conda:
   environment: environment.doc.yml
-  
+
 sphinx:
   builder: html
   configuration: doc/conf.py

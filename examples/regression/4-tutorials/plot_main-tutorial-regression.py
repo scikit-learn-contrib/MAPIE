@@ -31,6 +31,8 @@ Tutorial for tabular regression
 import os
 import warnings
 
+from typing import Dict
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -57,7 +59,7 @@ warnings.filterwarnings("ignore")
 
 def x_sinx(x):
     """One-dimensional x*sin(x) function."""
-    return x*np.sin(x)
+    return x * np.sin(x)
 
 
 def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, noise):
@@ -68,13 +70,11 @@ def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, noise):
     np.random.seed(59)
     X_train = np.linspace(min_x, max_x, n_samples)
     np.random.shuffle(X_train)
-    X_test = np.linspace(min_x, max_x, n_samples*5)
+    X_test = np.linspace(min_x, max_x, n_samples * 5)
     y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
     y_train += np.random.normal(0, noise, y_train.shape[0])
     y_test += np.random.normal(0, noise, y_test.shape[0])
-    return (
-        X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
-    )
+    return (X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh)
 
 
 ##############################################################################
@@ -104,18 +104,18 @@ plt.show()
 
 degree_polyn = 10
 polyn_model = Pipeline(
-    [
-        ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", LinearRegression())
-    ]
+    [("poly", PolynomialFeatures(degree=degree_polyn)), ("linear", LinearRegression())]
 )
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", QuantileRegressor(
+        (
+            "linear",
+            QuantileRegressor(
                 solver="highs",
                 alpha=0,
-        ))
+            ),
+        ),
     ]
 )
 
@@ -126,7 +126,7 @@ polyn_model_quant = Pipeline(
 # are then saved in a DataFrame. Here, we set an alpha value of 0.05
 # in order to obtain a 95% confidence for our prediction intervals.
 
-STRATEGIES = {
+STRATEGIES: Dict[str, dict] = {
     "naive": dict(method="naive"),
     "jackknife": dict(method="base", cv=-1),
     "jackknife_plus": dict(method="plus", cv=-1),
@@ -135,12 +135,8 @@ STRATEGIES = {
     "cv_plus": dict(method="plus", cv=10),
     "cv_minmax": dict(method="minmax", cv=10),
     "jackknife_plus_ab": dict(method="plus", cv=Subsample(n_resamplings=50)),
-    "jackknife_minmax_ab": dict(
-        method="minmax", cv=Subsample(n_resamplings=50)
-    ),
-    "conformalized_quantile_regression": dict(
-        method="quantile", cv="split", alpha=0.05
-    )
+    "jackknife_minmax_ab": dict(method="minmax", cv=Subsample(n_resamplings=50)),
+    "conformalized_quantile_regression": dict(method="quantile", cv="split", alpha=0.05),
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
@@ -166,16 +162,7 @@ for strategy, params in STRATEGIES.items():
 
 
 def plot_1d_data(
-    X_train,
-    y_train,
-    X_test,
-    y_test,
-    y_sigma,
-    y_pred,
-    y_pred_low,
-    y_pred_up,
-    ax=None,
-    title=None
+    X_train, y_train, X_test, y_test, y_sigma, y_pred, y_pred_low, y_pred_up, ax=None, title=None
 ):
     ax.set_xlabel("x")
     ax.set_ylabel("y")
@@ -184,9 +171,7 @@ def plot_1d_data(
     ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
     ax.plot(X_test, y_test - y_sigma, color="gray", ls="--")
     ax.plot(X_test, y_test + y_sigma, color="gray", ls="--")
-    ax.plot(
-        X_test, y_pred, color="blue", alpha=0.5, label="Prediction intervals"
-    )
+    ax.plot(X_test, y_pred, color="blue", alpha=0.5, label="Prediction intervals")
     if title is not None:
         ax.set_title(title)
     ax.legend()
@@ -198,7 +183,7 @@ strategies = [
     "cv_plus",
     "cv_minmax",
     "jackknife_plus_ab",
-    "conformalized_quantile_regression"
+    "conformalized_quantile_regression",
 ]
 n_figs = len(strategies)
 fig, axs = plt.subplots(3, 2, figsize=(9, 13))
@@ -209,12 +194,12 @@ for strategy, coord in zip(strategies, coords):
         y_train.ravel(),
         X_test.ravel(),
         y_mesh.ravel(),
-        np.full((X_test.shape[0]), 1.96*noise).ravel(),
+        np.full((X_test.shape[0]), 1.96 * noise).ravel(),
         y_pred[strategy].ravel(),
         y_pis[strategy][:, 0, 0].ravel(),
         y_pis[strategy][:, 1, 0].ravel(),
         ax=coord,
-        title=strategy
+        title=strategy,
     )
 plt.show()
 
@@ -226,13 +211,9 @@ plt.show()
 
 
 fig, ax = plt.subplots(1, 1, figsize=(9, 5))
-ax.axhline(1.96*2*noise, ls="--", color="k", label="True width")
+ax.axhline(1.96 * 2 * noise, ls="--", color="k", label="True width")
 for strategy in STRATEGIES:
-    ax.plot(
-        X_test,
-        y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0],
-        label=strategy
-    )
+    ax.plot(X_test, y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0], label=strategy)
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 ax.legend(fontsize=8)
@@ -259,16 +240,17 @@ plt.show()
 # the different strategies.
 
 
-pd.DataFrame([
+pd.DataFrame(
     [
-        regression_coverage_score(
-            y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
-        ),
-        (
-            y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]
-        ).mean()
-    ] for strategy in STRATEGIES
-], index=STRATEGIES, columns=["Coverage", "Width average"]).round(2)
+        [
+            regression_coverage_score(y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]),
+            (y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]).mean(),
+        ]
+        for strategy in STRATEGIES
+    ],
+    index=STRATEGIES,
+    columns=["Coverage", "Width average"],
+).round(2)
 
 
 ##############################################################################
@@ -285,9 +267,8 @@ pd.DataFrame([
 # function that generates one-dimensional data with normal noise uniformely
 # in a given interval.
 
-def get_1d_data_with_heteroscedastic_noise(
-    funct, min_x, max_x, n_samples, noise
-):
+
+def get_1d_data_with_heteroscedastic_noise(funct, min_x, max_x, n_samples, noise):
     """
     Generate 1D noisy data uniformely from the given function
     and standard deviation for the noise.
@@ -295,19 +276,11 @@ def get_1d_data_with_heteroscedastic_noise(
     np.random.seed(59)
     X_train = np.linspace(min_x, max_x, n_samples)
     np.random.shuffle(X_train)
-    X_test = np.linspace(min_x, max_x, n_samples*5)
-    y_train = (
-        funct(X_train) +
-        (np.random.normal(0, noise, len(X_train)) * X_train)
-    )
-    y_test = (
-        funct(X_test) +
-        (np.random.normal(0, noise, len(X_test)) * X_test)
-    )
+    X_test = np.linspace(min_x, max_x, n_samples * 5)
+    y_train = funct(X_train) + (np.random.normal(0, noise, len(X_train)) * X_train)
+    y_test = funct(X_test) + (np.random.normal(0, noise, len(X_test)) * X_test)
     y_mesh = funct(X_test)
-    return (
-        X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
-    )
+    return (X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh)
 
 
 ##############################################################################
@@ -317,9 +290,7 @@ def get_1d_data_with_heteroscedastic_noise(
 
 
 min_x, max_x, n_samples, noise = 0, 5, 300, 0.5
-(
-    X_train, y_train, X_test, y_test, y_mesh
-) = get_1d_data_with_heteroscedastic_noise(
+(X_train, y_train, X_test, y_test, y_mesh) = get_1d_data_with_heteroscedastic_noise(
     x_sinx, min_x, max_x, n_samples, noise
 )
 
@@ -341,18 +312,18 @@ plt.show()
 
 degree_polyn = 10
 polyn_model = Pipeline(
-    [
-        ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", LinearRegression())
-    ]
+    [("poly", PolynomialFeatures(degree=degree_polyn)), ("linear", LinearRegression())]
 )
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", QuantileRegressor(
+        (
+            "linear",
+            QuantileRegressor(
                 solver="highs",
                 alpha=0,
-        ))
+            ),
+        ),
     ]
 )
 
@@ -372,9 +343,7 @@ STRATEGIES = {
     "cv_plus": dict(method="plus", cv=10),
     "cv_minmax": dict(method="minmax", cv=10),
     "jackknife_plus_ab": dict(method="plus", cv=Subsample(n_resamplings=50)),
-    "conformalized_quantile_regression": dict(
-        method="quantile", cv="split", alpha=0.05
-    )
+    "conformalized_quantile_regression": dict(method="quantile", cv="split", alpha=0.05),
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
@@ -399,7 +368,7 @@ strategies = [
     "cv_plus",
     "cv_minmax",
     "jackknife_plus_ab",
-    "conformalized_quantile_regression"
+    "conformalized_quantile_regression",
 ]
 n_figs = len(strategies)
 fig, axs = plt.subplots(3, 2, figsize=(9, 13))
@@ -410,12 +379,12 @@ for strategy, coord in zip(strategies, coords):
         y_train.ravel(),
         X_test.ravel(),
         y_mesh.ravel(),
-        (1.96*noise*X_test).ravel(),
+        (1.96 * noise * X_test).ravel(),
         y_pred[strategy].ravel(),
         y_pis[strategy][:, 0, 0].ravel(),
         y_pis[strategy][:, 1, 0].ravel(),
         ax=coord,
-        title=strategy
+        title=strategy,
     )
 plt.show()
 
@@ -426,13 +395,9 @@ plt.show()
 # prediction intervals to the local noise.
 
 fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-ax.plot(X_test, 1.96*2*noise*X_test, ls="--", color="k", label="True width")
+ax.plot(X_test, 1.96 * 2 * noise * X_test, ls="--", color="k", label="True width")
 for strategy in STRATEGIES:
-    ax.plot(
-        X_test,
-        y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0],
-        label=strategy
-    )
+    ax.plot(X_test, y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0], label=strategy)
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 ax.legend(fontsize=8)
@@ -452,29 +417,26 @@ plt.show()
 # these methods, the conditional coverage is likely not guaranteed as we will
 # observe in the next figure.
 
+
 def get_heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins):
     recap = {}
-    for i in range(len(bins)-1):
-        bin1, bin2 = bins[i], bins[i+1]
+    for i in range(len(bins) - 1):
+        bin1, bin2 = bins[i], bins[i + 1]
         name = f"[{bin1}, {bin2}]"
         recap[name] = []
         for strategy in STRATEGIES:
-            indices = np.where((X_test >= bins[i]) * (X_test <= bins[i+1]))
+            indices = np.where((X_test >= bins[i]) * (X_test <= bins[i + 1]))
             y_test_trunc = np.take(y_test, indices)
             y_low_ = np.take(y_pis[strategy][:, 0, 0], indices)
             y_high_ = np.take(y_pis[strategy][:, 1, 0], indices)
-            score_coverage = regression_coverage_score(
-                y_test_trunc[0], y_low_[0], y_high_[0]
-            )
+            score_coverage = regression_coverage_score(y_test_trunc[0], y_low_[0], y_high_[0])
             recap[name].append(score_coverage)
     recap_df = pd.DataFrame(recap, index=STRATEGIES)
     return recap_df
 
 
 bins = [0, 1, 2, 3, 4, 5]
-heteroscedastic_coverage = get_heteroscedastic_coverage(
-    y_test, y_pis, STRATEGIES, bins
-)
+heteroscedastic_coverage = get_heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins)
 
 # fig = plt.figure()
 heteroscedastic_coverage.T.plot.bar(figsize=(12, 5), alpha=0.7)
@@ -492,16 +454,17 @@ plt.show()
 # points whose true values lie within the prediction intervals, given by
 # the different strategies.
 
-pd.DataFrame([
+pd.DataFrame(
     [
-        regression_coverage_score(
-            y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
-        ),
-        (
-            y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]
-        ).mean()
-    ] for strategy in STRATEGIES
-], index=STRATEGIES, columns=["Coverage", "Width average"]).round(2)
+        [
+            regression_coverage_score(y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]),
+            (y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]).mean(),
+        ]
+        for strategy in STRATEGIES
+    ],
+    index=STRATEGIES,
+    columns=["Coverage", "Width average"],
+).round(2)
 
 
 ##############################################################################
@@ -525,6 +488,7 @@ pd.DataFrame([
 #
 # Let's start by generating and showing the data.
 
+
 def get_1d_data_with_normal_distrib(funct, mu, sigma, n_samples, noise):
     """
     Generate noisy 1D data with normal distribution from given function
@@ -532,16 +496,14 @@ def get_1d_data_with_normal_distrib(funct, mu, sigma, n_samples, noise):
     """
     np.random.seed(59)
     X_train = np.random.normal(mu, sigma, n_samples)
-    X_test = np.arange(mu-4*sigma, mu+4*sigma, sigma/20.)
+    X_test = np.arange(mu - 4 * sigma, mu + 4 * sigma, sigma / 20.0)
     y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
     y_train += np.random.normal(0, noise, y_train.shape[0])
     y_test += np.random.normal(0, noise, y_test.shape[0])
-    return (
-        X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
-    )
+    return (X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh)
 
 
-mu, sigma, n_samples, noise = 0, 2, 1000, 0.
+mu, sigma, n_samples, noise = 0, 2, 1000, 0.0
 X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_normal_distrib(
     x_sinx, mu, sigma, n_samples, noise
 )
@@ -559,10 +521,13 @@ plt.show()
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", QuantileRegressor(
+        (
+            "linear",
+            QuantileRegressor(
                 solver="highs-ds",
                 alpha=0,
-        ))
+            ),
+        ),
     ]
 )
 STRATEGIES = {
@@ -574,12 +539,8 @@ STRATEGIES = {
     "cv_plus": dict(method="plus", cv=10),
     "cv_minmax": dict(method="minmax", cv=10),
     "jackknife_plus_ab": dict(method="plus", cv=Subsample(n_resamplings=50)),
-    "jackknife_minmax_ab": dict(
-        method="minmax", cv=Subsample(n_resamplings=50)
-    ),
-    "conformalized_quantile_regression": dict(
-        method="quantile", cv="split", alpha=0.05
-    )
+    "jackknife_minmax_ab": dict(method="minmax", cv=Subsample(n_resamplings=50)),
+    "conformalized_quantile_regression": dict(method="quantile", cv="split", alpha=0.05),
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
@@ -598,7 +559,7 @@ strategies = [
     "cv_plus",
     "cv_minmax",
     "jackknife_plus_ab",
-    "conformalized_quantile_regression"
+    "conformalized_quantile_regression",
 ]
 n_figs = len(strategies)
 fig, axs = plt.subplots(3, 2, figsize=(9, 13))
@@ -609,12 +570,12 @@ for strategy, coord in zip(strategies, coords):
         y_train.ravel(),
         X_test.ravel(),
         y_mesh.ravel(),
-        1.96*noise,
+        1.96 * noise,
         y_pred[strategy].ravel(),
         y_pis[strategy][:, 0, :].ravel(),
         y_pis[strategy][:, 1, :].ravel(),
         ax=coord,
-        title=strategy
+        title=strategy,
     )
 plt.show()
 
@@ -631,11 +592,7 @@ plt.show()
 fig, ax = plt.subplots(1, 1, figsize=(7, 5))
 ax.set_yscale("log")
 for strategy in STRATEGIES:
-    ax.plot(
-        X_test,
-        y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0],
-        label=strategy
-    )
+    ax.plot(X_test, y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0], label=strategy)
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 ax.legend(fontsize=8)
@@ -655,16 +612,17 @@ plt.show()
 # quantile regressor with quantile :math:`\alpha/2`. Note that a warning will
 # be issued when this occurs.
 
-pd.DataFrame([
+pd.DataFrame(
     [
-        regression_coverage_score(
-            y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
-        ),
-        (
-            y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]
-        ).mean()
-    ] for strategy in STRATEGIES
-], index=STRATEGIES, columns=["Coverage", "Width average"]).round(3)
+        [
+            regression_coverage_score(y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]),
+            (y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]).mean(),
+        ]
+        for strategy in STRATEGIES
+    ],
+    index=STRATEGIES,
+    columns=["Coverage", "Width average"],
+).round(3)
 
 ##############################################################################
 # In conclusion, the Jackknife-minmax, CV+, CV-minmax, or Jackknife-minmax-ab

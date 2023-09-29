@@ -1,7 +1,10 @@
 codecov
-flake8
+flake8==4.0.1
+black==22.8.0
 mypy
-pandas
 pytest
 pytest-cov
-typed-ast
+pytest-mock
+pre-commit
+twine
+wheel

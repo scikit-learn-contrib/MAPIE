@@ -15,7 +15,7 @@ in which the training set is prior to the validation set.
 The best model is then feeded into
 `mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate the
 associated prediction intervals. We compare four approaches: with or without
-``partial_fit`` called at every step. 
+``partial_fit`` called at every step.
 
 
 ```python
@@ -70,7 +70,7 @@ for hour in range(1, n_lags):
 num_test_steps = 24 * 7
 demand_train = demand_df.iloc[:-num_test_steps, :].copy()
 demand_test = demand_df.iloc[-num_test_steps:, :].copy()
-features = ["Weekofyear", "Weekday", "Hour", "Temperature"] 
+features = ["Weekofyear", "Weekday", "Hour", "Temperature"]
 features += [f"Lag_{hour}" for hour in range(1, n_lags)]
 
 X_train = demand_train.loc[
@@ -97,9 +97,9 @@ plt.ylabel("Hourly demand (GW)")
 
 
 
-    
+
 ![png](output_9_1.png)
-    
+
 
 
 ## 3. Optimize the base estimator
@@ -253,12 +253,12 @@ plot_forecast(y_train, y_test, y_preds, y_pis, coverages, widths)
 
 
 ![png](output_21_0.png)
-    
+
 
 
 ## VI. Forecast on test dataset with change point
 
-We will now see how MAPIE adapts its prediction intervals when a brutal changepoint arises in the test set. To simulate this, we will artificially decrease the electricity demand by 2 GW in the test set, aiming at simulating an effect, such as blackout or lockdown due to a pandemic, that was not taken into account by the model during its training. 
+We will now see how MAPIE adapts its prediction intervals when a brutal changepoint arises in the test set. To simulate this, we will artificially decrease the electricity demand by 2 GW in the test set, aiming at simulating an effect, such as blackout or lockdown due to a pandemic, that was not taken into account by the model during its training.
 
 ### Corrupt the dataset
 
@@ -300,9 +300,9 @@ plt.plot(y_test)
 
 
 
-    
+
 ![png](output_27_1.png)
-    
+
 
 
 ### Prediction intervals without partial fit
@@ -349,7 +349,7 @@ for step in range(gap, len(X_test), gap):
     ) = mapie_enbpi.predict(
         X_test.iloc[step:(step + gap), :],
         alpha=alpha,
-        ensemble=True, 
+        ensemble=True,
         optimize_beta=True
     )
     conformity_scores_pfit.append(mapie_enbpi.conformity_scores_)
@@ -384,7 +384,7 @@ plot_forecast(y_train, y_test, y_preds, y_pis, coverages, widths, plot_coverage=
 
 
 ![png](output_34_0.png)
-    
+
 
 
 
@@ -422,9 +422,9 @@ plt.plot(y_test[window:].index, rolling_coverage_pfit, label="With update of res
 
 
 
-    
+
 ![png](output_37_1.png)
-    
+
 
 
 ### Temporal evolution of the distribution of residuals used for estimating prediction intervals
@@ -447,7 +447,5 @@ plt.legend(loc=[1, 0])
 
 
 
-    
-![png](output_39_1.png)
-    
 
+![png](output_39_1.png)

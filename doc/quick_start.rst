@@ -35,7 +35,7 @@ To install directly from the github repository :
 2. Run MapieRegressor
 ---------------------
 
-Let us start with a basic regression problem. 
+Let us start with a basic regression problem.
 Here, we generate one-dimensional noisy data that we fit with a linear model.
 
 .. code:: python
@@ -71,12 +71,12 @@ for each desired alpha value.
 You can compute the coverage of your prediction intervals.
 
 .. code:: python
-    
+
     from mapie.metrics import regression_coverage_score_v2
 
     coverage_scores = regression_coverage_score_v2(y_test, y_pis)
 
-The estimated prediction intervals can then be plotted as follows. 
+The estimated prediction intervals can then be plotted as follows.
 
 .. code:: python
 

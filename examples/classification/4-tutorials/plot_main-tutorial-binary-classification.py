@@ -35,8 +35,7 @@ from sklearn.naive_bayes import GaussianNB
 from mapie._typing import NDArray
 from mapie.classification import MapieClassifier
 from sklearn.calibration import CalibratedClassifierCV
-from mapie.metrics import (classification_coverage_score,
-                           classification_mean_width_score)
+from mapie.metrics import classification_coverage_score, classification_mean_width_score
 
 
 ##############################################################################
@@ -79,19 +78,14 @@ n_samples = 2000
 n_classes = 2
 np.random.seed(42)
 X = np.vstack(
-    [
-        np.random.multivariate_normal(center, cov, n_samples)
-        for center, cov in zip(centers, covs)
-    ]
+    [np.random.multivariate_normal(center, cov, n_samples) for center, cov in zip(centers, covs)]
 )
 y = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 X, X_val, y, y_val = train_test_split(X, y, test_size=0.5)
 X_train, X_cal, y_train, y_cal = train_test_split(X, y, test_size=0.3)
 X_c1, X_c2, y_c1, y_c2 = train_test_split(X_cal, y_cal, test_size=0.5)
 
-xx, yy = np.meshgrid(
-    np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
-)
+xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(x_min, x_max, step))
 X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
 
@@ -132,19 +126,16 @@ y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
 
-calib = CalibratedClassifierCV(
-    estimator=clf, method='sigmoid', cv='prefit'
-)
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
 calib.fit(X_c1, y_c1)
 
-mapie_clf = MapieClassifier(
-    estimator=calib, method='lac', cv='prefit', random_state=42
-)
+mapie_clf = MapieClassifier(estimator=calib, method="lac", cv="prefit", random_state=42)
 mapie_clf.fit(X_c2, y_c2)
 
 alpha = [0.2, 0.1, 0.05]
 y_pred_mapie, y_ps_mapie = mapie_clf.predict(
-    X_test, alpha=alpha,
+    X_test,
+    alpha=alpha,
 )
 
 
@@ -190,13 +181,14 @@ def plot_scores(
 fig, axs = plt.subplots(1, 1, figsize=(10, 5))
 conformity_scores = mapie_clf.conformity_scores_
 quantiles = mapie_clf.quantiles_
-plot_scores(alpha, conformity_scores, quantiles, 'lac', axs)
+plot_scores(alpha, conformity_scores, quantiles, "lac", axs)
 plt.show()
 
 
 ##############################################################################
 # We will now compare the differences between the prediction sets of the
 # different values ​​of alpha.
+
 
 def plot_prediction_decision(y_pred_mapie: NDArray, ax) -> None:
     y_pred_col = list(map(colors.get, y_pred_mapie))
@@ -245,14 +237,12 @@ def plot_prediction_set(y_ps: NDArray, alpha_: float, ax) -> None:
     plt.colorbar(num_labels, ax=ax)
 
 
-def plot_results(
-    alphas: List[float], y_pred_mapie: NDArray, y_ps_mapie: NDArray
-) -> None:
+def plot_results(alphas: List[float], y_pred_mapie: NDArray, y_ps_mapie: NDArray) -> None:
     _, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
     axs = {0: ax1, 1: ax2, 2: ax3, 3: ax4}
     plot_prediction_decision(y_pred_mapie, axs[0])
     for i, alpha_ in enumerate(alphas):
-        plot_prediction_set(y_ps_mapie[:, :, i], alpha_, axs[i+1])
+        plot_prediction_set(y_ps_mapie[:, :, i], alpha_, axs[i + 1])
     plt.show()
 
 
@@ -286,27 +276,17 @@ print(
 
 alpha_ = np.arange(0.02, 0.98, 0.02)
 
-calib = CalibratedClassifierCV(
-    estimator=clf, method='sigmoid', cv='prefit'
-)
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
 calib.fit(X_c1, y_c1)
 
-mapie_clf = MapieClassifier(
-    estimator=calib, method='lac', cv='prefit', random_state=42
-)
+mapie_clf = MapieClassifier(estimator=calib, method="lac", cv="prefit", random_state=42)
 mapie_clf.fit(X_c2, y_c2)
-_, y_ps_mapie = mapie_clf.predict(
-    X, alpha=alpha_
-)
+_, y_ps_mapie = mapie_clf.predict(X, alpha=alpha_)
 
-coverage = np.array([
-    classification_coverage_score(y, y_ps_mapie[:, :, i])
-    for i, _ in enumerate(alpha_)
-])
-mean_width = [
-    classification_mean_width_score(y_ps_mapie[:, :, i])
-    for i, _ in enumerate(alpha_)
-]
+coverage = np.array(
+    [classification_coverage_score(y, y_ps_mapie[:, :, i]) for i, _ in enumerate(alpha_)]
+)
+mean_width = [classification_mean_width_score(y_ps_mapie[:, :, i]) for i, _ in enumerate(alpha_)]
 
 
 def plot_coverages_widths(alpha, coverage, width, method):
@@ -327,7 +307,7 @@ def plot_coverages_widths(alpha, coverage, width, method):
     plt.show()
 
 
-plot_coverages_widths(alpha_, coverage, mean_width, 'lac')
+plot_coverages_widths(alpha_, coverage, mean_width, "lac")
 
 
 ##############################################################################
@@ -336,29 +316,21 @@ plot_coverages_widths(alpha_, coverage, mean_width, 'lac')
 
 alpha_ = np.arange(0.02, 0.16, 0.01)
 
-calib = CalibratedClassifierCV(
-    estimator=clf, method='sigmoid', cv='prefit'
-)
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
 calib.fit(X_c1, y_c1)
 
-mapie_clf = MapieClassifier(
-    estimator=calib, method='lac', cv='prefit', random_state=42
-)
+mapie_clf = MapieClassifier(estimator=calib, method="lac", cv="prefit", random_state=42)
 mapie_clf.fit(X_c2, y_c2)
-_, y_ps_mapie = mapie_clf.predict(
-    X, alpha=alpha_
-)
+_, y_ps_mapie = mapie_clf.predict(X, alpha=alpha_)
 
-non_empty = np.mean(
-    np.any(mapie_clf.predict(X_test, alpha=alpha_)[1], axis=1), axis=0
-)
+non_empty = np.mean(np.any(mapie_clf.predict(X_test, alpha=alpha_)[1], axis=1), axis=0)
 idx = np.argwhere(non_empty < 1)[0, 0]
 
 _, axs = plt.subplots(1, 3, figsize=(15, 5))
 plot_prediction_decision(y_pred_mapie, axs[0])
-_, y_ps = mapie_clf.predict(X_test, alpha=alpha_[idx-1])
-plot_prediction_set(y_ps[:, :, 0], np.round(alpha_[idx-1], 3), axs[1])
-_, y_ps = mapie_clf.predict(X_test, alpha=alpha_[idx+1])
-plot_prediction_set(y_ps[:, :, 0], np.round(alpha_[idx+1], 3), axs[2])
+_, y_ps = mapie_clf.predict(X_test, alpha=alpha_[idx - 1])
+plot_prediction_set(y_ps[:, :, 0], np.round(alpha_[idx - 1], 3), axs[1])
+_, y_ps = mapie_clf.predict(X_test, alpha=alpha_[idx + 1])
+plot_prediction_set(y_ps[:, :, 0], np.round(alpha_[idx + 1], 3), axs[2])
 
 plt.show()

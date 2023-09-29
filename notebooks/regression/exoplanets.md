@@ -247,7 +247,7 @@ def plot_predictionintervals(
     suptitle: str,
 ) -> None:
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20, 6))
-    
+
     ax1.errorbar(
         x=y_train,
         y=y_train_pred,
@@ -273,7 +273,7 @@ def plot_predictionintervals(
     ax1.set_xlabel("True values", fontsize=12)
     ax1.set_ylabel("Predicted values", fontsize=12)
     ax1.legend()
-    
+
     ax2.scatter(
         x=y_train, y=y_train_pred_high - y_train_pred_low, alpha=0.8, label="train", marker="."
     )

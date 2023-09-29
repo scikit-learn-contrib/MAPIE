@@ -15,9 +15,7 @@ from mapie.classification import MapieClassifier
 from mapie.regression import MapieQuantileRegressor, MapieRegressor
 
 X_toy = np.arange(18).reshape(-1, 1)
-y_toy = np.array(
-    [0, 0, 1, 0, 1, 2, 1, 2, 2, 0, 0, 1, 0, 1, 2, 1, 2, 2]
-    )
+y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2, 0, 0, 1, 0, 1, 2, 1, 2, 2])
 
 
 def MapieSimpleEstimators() -> List[BaseEstimator]:
@@ -87,19 +85,14 @@ def test_no_fit_predict(MapieEstimator: BaseEstimator) -> None:
 def test_default_sample_weight(MapieEstimator: BaseEstimator) -> None:
     """Test default sample weights."""
     mapie_estimator = MapieEstimator()
-    assert (
-        signature(mapie_estimator.fit).parameters["sample_weight"].default
-        is None
-    )
+    assert signature(mapie_estimator.fit).parameters["sample_weight"].default is None
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 def test_default_alpha(MapieEstimator: BaseEstimator) -> None:
     """Test default alpha."""
     mapie_estimator = MapieEstimator()
-    assert (
-        signature(mapie_estimator.predict).parameters["alpha"].default is None
-    )
+    assert signature(mapie_estimator.predict).parameters["alpha"].default is None
 
 
 @pytest.mark.parametrize("pack", MapieDefaultEstimators())
@@ -111,16 +104,12 @@ def test_none_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     if isinstance(mapie_estimator, MapieClassifier):
         assert isinstance(mapie_estimator.single_estimator_, DefaultEstimator)
     if isinstance(mapie_estimator, MapieRegressor):
-        assert isinstance(
-            mapie_estimator.estimator_.single_estimator_, DefaultEstimator
-        )
+        assert isinstance(mapie_estimator.estimator_.single_estimator_, DefaultEstimator)
 
 
 @pytest.mark.parametrize("estimator", [0, "a", KFold(), ["a", "b"]])
 @pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
-def test_invalid_estimator(
-    MapieEstimator: BaseEstimator, estimator: Any
-) -> None:
+def test_invalid_estimator(MapieEstimator: BaseEstimator, estimator: Any) -> None:
     """Test that invalid estimators raise errors."""
     mapie_estimator = MapieEstimator(estimator=estimator)
     with pytest.raises(ValueError, match=r".*Invalid estimator.*"):
@@ -128,9 +117,7 @@ def test_invalid_estimator(
 
 
 @pytest.mark.parametrize("pack", MapieTestEstimators())
-def test_invalid_prefit_estimator(
-    pack: Tuple[BaseEstimator, BaseEstimator]
-) -> None:
+def test_invalid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     """Test that non-fitted estimator with prefit cv raise errors."""
     MapieEstimator, estimator = pack
     mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
@@ -139,9 +126,7 @@ def test_invalid_prefit_estimator(
 
 
 @pytest.mark.parametrize("pack", MapieTestEstimators())
-def test_valid_prefit_estimator(
-    pack: Tuple[BaseEstimator, BaseEstimator]
-) -> None:
+def test_valid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     """Test that fitted estimators with prefit cv raise no errors."""
     MapieEstimator, estimator = pack
     estimator.fit(X_toy, y_toy)
@@ -161,9 +146,7 @@ def test_invalid_method(MapieEstimator: BaseEstimator, method: str) -> None:
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
-@pytest.mark.parametrize(
-    "cv", [-3.14, -2, 0, 1, "cv", LinearRegression(), [1, 2]]
-)
+@pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, "cv", LinearRegression(), [1, 2]])
 def test_invalid_cv(MapieEstimator: BaseEstimator, cv: Any) -> None:
     """Test that invalid cv raise errors."""
     mapie_estimator = MapieEstimator(cv=cv)
@@ -188,8 +171,6 @@ def test_none_alpha_results(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
 
 
 @parametrize_with_checks([MapieRegressor()])
-def test_sklearn_compatible_estimator(
-    estimator: BaseEstimator, check: Any
-) -> None:
+def test_sklearn_compatible_estimator(estimator: BaseEstimator, check: Any) -> None:
     """Check compatibility with sklearn, using sklearn estimator checks API."""
     check(estimator)

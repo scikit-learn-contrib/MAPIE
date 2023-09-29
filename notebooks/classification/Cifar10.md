@@ -25,7 +25,7 @@ The goal of this notebook is to present how to use :class:`mapie.classification.
 
 > - **Cifar10 dataset** : 10 classes (horse, dog, cat, frog, deer, bird, airplane, truck, ship, automobile)
 
-> - Use :class:`mapie.classification.MapieClassifier` to compare the prediction sets estimated by several conformal methods on the Cifar10 dataset. 
+> - Use :class:`mapie.classification.MapieClassifier` to compare the prediction sets estimated by several conformal methods on the Cifar10 dataset.
 
 > - Train a small CNN to predict the image class
 
@@ -101,38 +101,38 @@ def train_valid_calib_split(
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Create calib and valid datasets from the train dataset.
-    
+
     Parameters
     ----------
     X: np.ndarray of shape (n_samples, width, height, n_channels)
         Images of the dataset.
-    
+
     y: np.ndarray of shape (n_samples, 1):
         Label of each image.
-    
+
     calib_size: float
         Percentage of the dataset X to use as calibration set.
-    
+
     val_size: float
         Percentage of the dataset X (minus the calibration set)
         to use as validation set.
-    
+
     random_state: int
         Random state to use to split the dataset.
-        
+
         By default 42.
-    
+
     Returns
     -------
     Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
-    of shapes: 
+    of shapes:
     (n_samples * (1 - calib_size) * (1 - val_size), width, height, n_channels),
     (n_samples * calib_size, width, height, n_channels),
     (n_samples * (1 - calib_size) * val_size, width, height, n_channels),
     (n_samples * (1 - calib_size) * (1 - val_size), 1),
     (n_samples * calib_size, 1),
     (n_samples * (1 - calib_size) * val_size, 1).
-    
+
     """
     X_train, X_calib, y_train, y_calib = train_test_split(
         X, y,
@@ -158,8 +158,8 @@ def load_data() -> Tuple[
     """
     Load cifar10 Dataset and return train, valid, calib, test datasets
     and the names of the labels
-    
-    
+
+
     Returns
     -------
     Tuple[
@@ -209,27 +209,27 @@ def load_data() -> Tuple[
 def inspect_images(
     X: np.ndarray,
     y: np.ndarray,
-    num_images: int, 
+    num_images: int,
     label_names: List
 ) -> None:
     """
     Load a sample of the images to check that images
     are well loaded.
-    
+
     Parameters
     ----------
     X: np.ndarray of shape (n_samples, width, height, n_channels)
         Set of images from which the sample will be taken.
-    
+
     y: np.ndarray of shape (n_samples, 1)
         Labels of the iamges of X.
-    
+
     num_images: int
         Number of images to plot.
-        
+
     label_names: List
         Names of the different labels
-    
+
     """
 
     _, ax = plt.subplots(
@@ -250,17 +250,17 @@ def inspect_images(
 
 ```python
 train_set, val_set, calib_set, test_set, label_names = load_data()
-(X_train, y_train, y_train_cat) = train_set 
-(X_val, y_val, y_val_cat) = val_set 
-(X_calib, y_calib, y_calib_cat) = calib_set 
-(X_test, y_test, y_test_cat) = test_set 
+(X_train, y_train, y_train_cat) = train_set
+(X_val, y_val, y_val_cat) = val_set
+(X_calib, y_calib, y_calib_cat) = calib_set
+(X_test, y_test, y_test_cat) = test_set
 inspect_images(X=X_train, y=y_train, num_images=8, label_names=label_names)
 ```
 
 ## 2. Definition and training of the the neural network
 
 
-We define a simple convolutional neural network with the following architecture : 
+We define a simple convolutional neural network with the following architecture :
 
 > - 2 blocks of Convolution/Maxpooling
 > - Flatten the images
@@ -277,21 +277,21 @@ def get_model(
 ) -> Sequential:
     """
     Compile CNN model.
-    
+
     Parameters
     ----------
     input_shape: Tuple
         Size of th input images.
-    
+
     loss: tfk.losses
         Loss to use to train the model.
-    
+
     optimizer: tfk.optimizer
         Optimizer to use to train the model.
-    
+
     metrics: List[str]
         Metrics to use evaluate model training.
-    
+
     Returns
     -------
     Sequential
@@ -323,13 +323,13 @@ class TensorflowToMapie():
     Class that aimes to make compatible a tensorflow model
     with MAPIE. To do so, this class create fit, predict,
     predict_proba and _sklearn_is_fitted_ attributes to the model.
-    
+
     """
 
     def __init__(self) -> None:
         self.pred_proba = None
         self.trained_ = False
-        
+
 
     def fit(
         self, model: Sequential,
@@ -338,26 +338,26 @@ class TensorflowToMapie():
     ) -> None:
         """
         Train the keras model.
-        
+
         Parameters
         ----------
         model: Sequential
             Model to train.
-            
+
         X_train: np.ndarray of shape (n_sample_train, width, height, n_channels)
             Training images.
-        
+
         y_train: np.ndarray of shape (n_samples_train, n_labels)
             Training labels.
-        
+
         X_val: np.ndarray of shape (n_sample_val, width, height, n_channels)
             Validation images.
-        
+
         y_val: np.ndarray of shape (n_samples_val, n_labels)
             Validation labels.
-        
+
         """
-        
+
         early_stopping_monitor = EarlyStopping(
                     monitor='val_loss',
                     min_delta=0,
@@ -368,12 +368,12 @@ class TensorflowToMapie():
                     restore_best_weights=True
                     )
         model.fit(
-                    X_train, y_train, 
-                    batch_size=64, 
-                    validation_data=(X_val, y_val), 
+                    X_train, y_train,
+                    batch_size=64,
+                    validation_data=(X_val, y_val),
                     epochs=20, callbacks=[early_stopping_monitor]
                 )
-        
+
         self.model = model
         self.trained_ = True
         self.classes_ = np.arange(model.layers[-1].units)
@@ -381,27 +381,27 @@ class TensorflowToMapie():
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """
         Returns the predicted probabilities of the images in X.
-        
+
         Paramters:
         X: np.ndarray of shape (n_sample, width, height, n_channels)
             Images to predict.
-        
+
         Returns:
         np.ndarray of shape (n_samples, n_labels)
         """
         preds = self.model.predict(X)
-          
+
         return preds
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Give the label with the maximum softmax for each image.
-        
+
         Parameters
         ---------
         X: np.ndarray of shape (n_sample, width, height, n_channels)
             Images to predict
-            
+
         Returns:
         --------
         np.ndarray of shape (n_samples, 1)
@@ -419,9 +419,9 @@ class TensorflowToMapie():
 
 ```python tags=[]
 model = get_model(
-    input_shape=(32, 32, 3), 
-    loss=CategoricalCrossentropy(), 
-    optimizer=Adam(), 
+    input_shape=(32, 32, 3),
+    loss=CategoricalCrossentropy(),
+    optimizer=Adam(),
     metrics=['accuracy']
 )
 ```
@@ -441,7 +441,7 @@ y_pred = cirfar10_model.predict(X_test)
 ## 4. Prediction of the prediction sets
 
 
-We will now estimate the prediction sets with the five conformal methods implemented in :class:`mapie.classification.MapieClassifier` for a range of confidence levels between 0 and 1. 
+We will now estimate the prediction sets with the five conformal methods implemented in :class:`mapie.classification.MapieClassifier` for a range of confidence levels between 0 and 1.
 
 ```python
 method_params = {
@@ -459,7 +459,7 @@ y_preds, y_pss = {}, {}
 alphas = np.arange(0.01, 1, 0.01)
 
 for name, (method, include_last_label) in method_params.items():
-    mapie = MapieClassifier(estimator=cirfar10_model, method=method, cv="prefit", random_state=42) 
+    mapie = MapieClassifier(estimator=cirfar10_model, method=method, cv="prefit", random_state=42)
     mapie.fit(X_calib, y_calib)
     y_preds[name], y_pss[name] = mapie.predict(X_test, alpha=alphas, include_last_label=include_last_label)
 ```
@@ -470,11 +470,11 @@ Let's now estimate the number of null prediction sets, marginal coverages, and a
 def count_null_set(y: np.ndarray) -> int:
     """
     Count the number of empty prediction sets.
-    
+
     Parameters
     ----------
     y: np.ndarray of shape (n_sample, )
-    
+
     Returns
     -------
     int
@@ -512,7 +512,7 @@ width_90 = {method: width[9] for method, width in sizes.items()}
 y_ps_90 = {method: y_ps[:, :, 9] for method, y_ps in y_pss.items()}
 ```
 
-Let's now look at the marginal coverages, number of null prediction sets, and the averaged size of prediction sets for a confidence level of 90 \%. 
+Let's now look at the marginal coverages, number of null prediction sets, and the averaged size of prediction sets for a confidence level of 90 \%.
 
 ```python
 summary_df = pd.concat(
@@ -540,14 +540,14 @@ def prepare_plot(y_methods: Dict[str, Tuple], n_images: int) -> np.ndarray:
     """
     Prepare the number and the disposition of the plots according to
     the number of images.
-    
+
     Paramters:
     y_methods: Dict[str, Tuple]
         Methods we want to compare.
-    
+
     n_images: int
         Number of images to plot.
-        
+
     Returns
     -------
     np.ndarray
@@ -559,7 +559,7 @@ def prepare_plot(y_methods: Dict[str, Tuple], n_images: int) -> np.ndarray:
     f, ax = plt.subplots(ncol, nrow, figsize=(s*nrow, s*ncol))
     f.tight_layout(pad=SPACE_IN_SUBPLOTS)
     rows = [i for i in y_methods.keys()]
-    
+
     for x, row in zip(ax[:,0], rows):
         x.set_ylabel(row, rotation=90, size='large')
 
@@ -571,21 +571,21 @@ def prepare_plot(y_methods: Dict[str, Tuple], n_images: int) -> np.ndarray:
 def get_position(y_set: List, label: str, count: int, count_true: int) -> float:
     """
     Return the position of each label according to the number of labels to plot.
-    
+
     Paramters
     ---------
     y_set: List
         Set of predicted labels for one image.
-    
+
     label: str
         Indice of the true label.
-        
+
     count: int
         Index of the label.
-    
+
     count_true: int
         Total number of labels in the prediction set.
-        
+
     Returns
     -------
     float
@@ -605,34 +605,34 @@ def add_text(
 ) -> None:
     """
     Add the text to the corresponding image.
-    
+
     Parameters
     ----------
     ax: np.ndarray
         Matrix of the images to plot.
-    
+
     indices: Tuple
         Tuple indicating the indices of the image to put
         the text on.
-    
+
     position: float
         Position of the text on the image.
-    
+
     label_name: str
         Name of the label to plot.
-    
+
     proba: float
         Proba associated to this label.
-    
+
     color: str
         Color of the text.
-    
+
     missing: bool
         Whether or not the true label is missing in the
         prediction set.
-        
+
         By default False.
-    
+
     """
     if not missing :
         text = f"{label_name} : {proba:.4f}"
@@ -642,8 +642,8 @@ def add_text(
     ax[i, j].text(
         15,
         position,
-        text, 
-        ha="center", va="top", 
+        text,
+        ha="center", va="top",
         color=color,
         font="courier new"
     )
@@ -662,28 +662,28 @@ def plot_prediction_sets(
     """
     Plot random images with their associated prediction
     set for all the required methods.
-    
+
     Parameters
     ----------
     X: np.ndarray of shape (n_sample, width, height, n_channels)
         Array containing images.
-    
+
     y: np.ndarray of shape (n_samples, )
         Labels of the images.
-        
+
     y_pred_proba: np.ndarray of shape (n_samples, n_labels)
         Softmax output of the model.
-    
+
     y_methods: Dict[str, np.ndarray]
         Outputs of the MapieClassifier with the different
         choosen methods.
-    
+
     n_images: int
         Number of images to plot
-    
+
     random_state: Union[int, None]
         Random state to use to choose the images.
-        
+
         By default None.
     """
     random.seed(random_state)
@@ -728,7 +728,7 @@ plot_prediction_sets(X_test, y_test, y_pred_proba, y_ps_90, 5, label_names)
 ## 6. Calibration of the methods
 
 
-In this section, we plot the number of null sets, the marginal coverages, and the prediction set sizes as function of the target coverage level for all conformal methods. 
+In this section, we plot the number of null sets, the marginal coverages, and the prediction set sizes as function of the target coverage level for all conformal methods.
 
 ```python
 vars_y = [nulls, coverages, sizes]
@@ -775,15 +775,15 @@ def get_class_coverage(
     Compute the coverage for each class. As MAPIE is looking for a
     global coverage of 1-alpha, it is important to check that their
     is not major coverage difference between classes.
-    
+
     Parameters
     ----------
     y_test: np.ndarray of shape (n_samples,)
         Labels of the predictions.
-    
+
     y_method: Dict[str, np.ndarray]
         Prediction sets for each method.
-    
+
     label_names: List[str]
         Names of the labels.
     """
@@ -799,7 +799,7 @@ def get_class_coverage(
             recap[method].append(score_coverage)
     recap_df = pd.DataFrame(recap, index = label_names)
     return recap_df
-            
+
 ```
 
 ```python
@@ -822,15 +822,15 @@ def create_confusion_matrix(y_ps: np.ndarray, y_true: np.ndarray) -> np.ndarray:
     Create a confusion matrix to visualize, for each class, which
     classes are which are the most present classes in the prediction
     sets.
-    
+
     Parameters
     ----------
     y_ps: np.ndarray of shape (n_samples, n_labels)
         Prediction sets of a specific method.
-    
+
     y_true: np.ndarray of shape (n_samples, )
         Labels of the sample
-    
+
     Returns
     -------
     np.ndarray of shape (n_labels, n_labels)
@@ -839,27 +839,27 @@ def create_confusion_matrix(y_ps: np.ndarray, y_true: np.ndarray) -> np.ndarray:
     confusion_matrix = np.zeros((number_of_classes, number_of_classes))
     for i, ps in enumerate(y_ps):
         confusion_matrix[y_true[i]] += ps
-    
+
     return confusion_matrix
-    
+
 ```
 
 ```python
 def reorder_labels(ordered_labels: List, labels: List, cm: np.ndarray) -> np.ndarray:
     """
     Used to order the labels in the confusion matrix
-    
+
     Parameters
     ----------
     ordered_labels: List
         Order you want to have in your confusion matrix
-    
+
     labels: List
         Initial order of the confusion matrix
-    
+
     cm: np.ndarray of shape (n_labels, n_labels)
         Original confusion matrix
-    
+
     Returns
     -------
     np.ndarray of shape (n_labels, n_labels)
@@ -868,7 +868,7 @@ def reorder_labels(ordered_labels: List, labels: List, cm: np.ndarray) -> np.nda
     index_order = [labels.index(label) for label in ordered_labels]
     for i, label in enumerate(ordered_labels):
         old_index = labels.index(label)
-        
+
         cm_ordered[i] = cm[old_index, index_order]
     return cm_ordered
 ```
@@ -877,15 +877,15 @@ def reorder_labels(ordered_labels: List, labels: List, cm: np.ndarray) -> np.nda
 def plot_confusion_matrix(method: str, y_ps: Dict[str, np.ndarray], label_names: List) -> None:
     """
     Plot the confusion matrix for a specific method.
-    
+
     Parameters
     ----------
     method: str
         Name of the method to plot.
-    
+
     y_ps: Dict[str, np.ndarray]
         Prediction sets for each of the fitted method
-    
+
     label_names: List
         Name of the labels
     """

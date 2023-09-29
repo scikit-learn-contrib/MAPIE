@@ -9,45 +9,30 @@ from mapie._typing import NDArray
 
 import numpy as np
 
-from mapie.control_risk.risks import (compute_risk_precision,
-                                      compute_risk_recall)
+from mapie.control_risk.risks import compute_risk_precision, compute_risk_recall
 
 from mapie.control_risk.p_values import compute_hoeffdding_bentkus_p_value
 
-from mapie.control_risk.ltt import (ltt_procedure,
-                                    find_lambda_control_star)
+from mapie.control_risk.ltt import ltt_procedure, find_lambda_control_star
 
 lambdas = np.array([0.5, 0.9])
 
-y_toy = np.stack([
-    [1, 0, 1],
-    [0, 1, 0],
-    [1, 1, 0],
-    [1, 1, 1],
-])
+y_toy = np.stack(
+    [
+        [1, 0, 1],
+        [0, 1, 0],
+        [1, 1, 0],
+        [1, 1, 1],
+    ]
+)
 
-y_preds_proba = np.stack([
-    [0.2, 0.6, 0.9],
-    [0.8, 0.2, 0.6],
-    [0.4, 0.8, 0.1],
-    [0.6, 0.8, 0.7]
-])
+y_preds_proba = np.stack([[0.2, 0.6, 0.9], [0.8, 0.2, 0.6], [0.4, 0.8, 0.1], [0.6, 0.8, 0.7]])
 
 y_preds_proba = np.expand_dims(y_preds_proba, axis=2)
 
-test_recall = np.array([
-    [1/2, 1.],
-    [1., 1.],
-    [1/2, 1.],
-    [0., 1.]
-])
+test_recall = np.array([[1 / 2, 1.0], [1.0, 1.0], [1 / 2, 1.0], [0.0, 1.0]])
 
-test_precision = np.array([
-    [1/2, 1.],
-    [1., 1.],
-    [0., 1.],
-    [0., 1.]
-])
+test_precision = np.array([[1 / 2, 1.0], [1.0, 1.0], [0.0, 1.0], [0.0, 1.0]])
 
 r_hat = np.array([0.5, 0.8])
 
@@ -59,10 +44,7 @@ valid_index = [[0, 1]]
 
 wrong_alpha = 0
 
-wrong_alpha_shape = np.array([
-    [0.1, 0.2],
-    [0.3, 0.4]
-])
+wrong_alpha_shape = np.array([[0.1, 0.2], [0.3, 0.4]])
 
 random_state = 42
 prng = np.random.RandomState(random_state)
@@ -123,9 +105,7 @@ def test_compute_precision_with_wrong_shape() -> None:
     with pytest.raises(ValueError, match=r".*y_pred_proba should be a 3d*"):
         compute_risk_precision(lambdas, y_preds_proba.squeeze(), y_toy)
     with pytest.raises(ValueError, match=r".*y should be a 2d*"):
-        compute_risk_precision(
-            lambdas, y_preds_proba, np.expand_dims(y_toy, 2)
-        )
+        compute_risk_precision(lambdas, y_preds_proba, np.expand_dims(y_toy, 2))
     with pytest.raises(ValueError, match=r".*could not be broadcast*"):
         compute_risk_precision(lambdas, y_preds_proba, y_toy[:-1])
 
@@ -150,10 +130,7 @@ def test_find_lambda_control_star() -> None:
 
 @pytest.mark.parametrize("delta", [0.1, 0.8])
 @pytest.mark.parametrize("alpha", [[0.5], [0.6, 0.8]])
-def test_ltt_type_output_alpha_delta(
-    alpha: NDArray,
-    delta: float
-) -> None:
+def test_ltt_type_output_alpha_delta(alpha: NDArray, delta: float) -> None:
     """Test type output _ltt_procedure"""
     valid_index, p_values = ltt_procedure(r_hat, alpha, delta, n)
     assert isinstance(valid_index, list)
@@ -169,9 +146,7 @@ def test_find_lambda_control_star_output(valid_index: List[List[int]]) -> None:
 def test_warning_valid_index_empty() -> None:
     """Test warning sent when empty list"""
     valid_index = [[]]  # type: List[List[int]]
-    with pytest.warns(
-        UserWarning, match=r".*At least one sequence is empty*"
-    ):
+    with pytest.warns(UserWarning, match=r".*At least one sequence is empty*"):
         find_lambda_control_star(r_hat, valid_index, lambdas)
 
 

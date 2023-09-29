@@ -6,14 +6,16 @@ from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_array, column_or_1d
 
 from ._typing import ArrayLike, NDArray
-from .utils import (calc_bins,
-                    check_array_shape_classification,
-                    check_array_shape_regression,
-                    check_binary_zero_one,
-                    check_nb_intervals_sizes,
-                    check_nb_sets_sizes,
-                    check_number_bins,
-                    check_split_strategy)
+from .utils import (
+    calc_bins,
+    check_array_shape_classification,
+    check_array_shape_regression,
+    check_binary_zero_one,
+    check_nb_intervals_sizes,
+    check_nb_sets_sizes,
+    check_number_bins,
+    check_split_strategy,
+)
 from ._machine_precision import EPSILON
 
 
@@ -55,16 +57,11 @@ def regression_coverage_score(
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
-    coverage = np.mean(
-        ((y_pred_low <= y_true) & (y_pred_up >= y_true))
-    )
+    coverage = np.mean(((y_pred_low <= y_true) & (y_pred_up >= y_true)))
     return float(coverage)
 
 
-def classification_coverage_score(
-    y_true: ArrayLike,
-    y_pred_set: ArrayLike
-) -> float:
+def classification_coverage_score(y_true: ArrayLike, y_pred_set: ArrayLike) -> float:
     """
     Effective coverage score obtained by the prediction sets.
 
@@ -99,22 +96,12 @@ def classification_coverage_score(
     0.8
     """
     y_true = cast(NDArray, column_or_1d(y_true))
-    y_pred_set = cast(
-        NDArray,
-        check_array(
-            y_pred_set, force_all_finite=True, dtype=["bool"]
-        )
-    )
-    coverage = np.take_along_axis(
-        y_pred_set, y_true.reshape(-1, 1), axis=1
-    ).mean()
+    y_pred_set = cast(NDArray, check_array(y_pred_set, force_all_finite=True, dtype=["bool"]))
+    coverage = np.take_along_axis(y_pred_set, y_true.reshape(-1, 1), axis=1).mean()
     return float(coverage)
 
 
-def regression_mean_width_score(
-    y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike
-) -> float:
+def regression_mean_width_score(y_pred_low: ArrayLike, y_pred_up: ArrayLike) -> float:
     """
     Effective mean width score obtained by the prediction intervals.
 
@@ -174,12 +161,7 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     >>> print(classification_mean_width_score(y_pred_set))
     2.0
     """
-    y_pred_set = cast(
-        NDArray,
-        check_array(
-            y_pred_set, force_all_finite=True, dtype=["bool"]
-        )
-    )
+    y_pred_set = cast(NDArray, check_array(y_pred_set, force_all_finite=True, dtype=["bool"]))
     mean_width = y_pred_set.sum(axis=1).mean()
     return float(mean_width)
 
@@ -222,20 +204,13 @@ def expected_calibration_error(
     y_scores = cast(NDArray, y_scores)
 
     if np.size(y_scores.shape) == 2:
-        y_score = cast(
-            NDArray, column_or_1d(np.nanmax(y_scores, axis=1))
-        )
+        y_score = cast(NDArray, column_or_1d(np.nanmax(y_scores, axis=1)))
     else:
         y_score = cast(NDArray, column_or_1d(y_scores))
 
-    _, bin_accs, bin_confs, bin_sizes = calc_bins(
-        y_true_, y_score, num_bins, split_strategy
-    )
+    _, bin_accs, bin_confs, bin_sizes = calc_bins(y_true_, y_score, num_bins, split_strategy)
 
-    return np.divide(
-        np.sum(bin_sizes * np.abs(bin_accs - bin_confs)),
-        np.sum(bin_sizes)
-    )
+    return np.divide(np.sum(bin_sizes * np.abs(bin_accs - bin_confs)), np.sum(bin_sizes))
 
 
 def top_label_ece(
@@ -283,23 +258,17 @@ def top_label_ece(
     float
         The ECE score adapted in the top label setting.
     """
-    ece = float(0.)
+    ece = float(0.0)
     split_strategy = check_split_strategy(split_strategy)
     num_bins = check_number_bins(num_bins)
     y_true = cast(NDArray, column_or_1d(y_true))
     if y_score_arg is None:
-        y_score = cast(
-            NDArray, column_or_1d(np.nanmax(y_scores, axis=1))
-        )
+        y_score = cast(NDArray, column_or_1d(np.nanmax(y_scores, axis=1)))
         if classes is None:
-            y_score_arg = cast(
-                NDArray, column_or_1d(np.nanargmax(y_scores, axis=1))
-            )
+            y_score_arg = cast(NDArray, column_or_1d(np.nanargmax(y_scores, axis=1)))
         else:
             classes = cast(NDArray, classes)
-            y_score_arg = cast(
-                NDArray, column_or_1d(classes[np.nanargmax(y_scores, axis=1)])
-            )
+            y_score_arg = cast(NDArray, column_or_1d(classes[np.nanargmax(y_scores, axis=1)]))
     else:
         y_score = cast(NDArray, column_or_1d(y_scores))
         y_score_arg = cast(NDArray, column_or_1d(y_score_arg))
@@ -309,10 +278,7 @@ def top_label_ece(
         label_ind = np.where(label == y_score_arg)[0]
         y_true_ = np.array(y_true[label_ind] == label, dtype=int)
         ece += expected_calibration_error(
-            y_true_,
-            y_scores=y_score[label_ind],
-            num_bins=num_bins,
-            split_strategy=split_strategy
+            y_true_, y_scores=y_score[label_ind], num_bins=num_bins, split_strategy=split_strategy
         )
     ece /= len(labels)
     return ece
@@ -352,17 +318,14 @@ def regression_coverage_score_v2(
     coverages = np.mean(
         np.logical_and(
             np.less_equal(y_intervals[:, 0, :], y_true),
-            np.greater_equal(y_intervals[:, 1, :], y_true)
+            np.greater_equal(y_intervals[:, 1, :], y_true),
         ),
-        axis=0
+        axis=0,
     )
     return coverages
 
 
-def classification_coverage_score_v2(
-    y_true: NDArray,
-    y_pred_set: NDArray
-) -> NDArray:
+def classification_coverage_score_v2(y_true: NDArray, y_pred_set: NDArray) -> NDArray:
     """
     Effective coverage score obtained by the prediction sets.
 
@@ -390,18 +353,11 @@ def classification_coverage_score_v2(
         y_true = cast(NDArray, column_or_1d(y_true))
         y_true = np.expand_dims(y_true, axis=1)
     y_true = np.expand_dims(y_true, axis=1)
-    coverage = np.nanmean(
-        np.take_along_axis(y_pred_set, y_true, axis=1),
-        axis=0
-    )
+    coverage = np.nanmean(np.take_along_axis(y_pred_set, y_true, axis=1), axis=0)
     return coverage[0]
 
 
-def regression_ssc(
-    y_true: NDArray,
-    y_intervals: NDArray,
-    num_bins: int = 3
-) -> NDArray:
+def regression_ssc(y_true: NDArray, y_intervals: NDArray, num_bins: int = 3) -> NDArray:
     """
     Compute Size-Stratified Coverage metrics proposed in [3] that is
     the conditional coverage conditioned by the size of the intervals.
@@ -454,21 +410,19 @@ def regression_ssc(
     indexes_bybins = np.array_split(indexes_sorted, num_bins, axis=0)
     coverages = np.zeros((y_intervals.shape[2], num_bins))
     for i, indexes in enumerate(indexes_bybins):
-        intervals_binned = np.stack([
-            np.take_along_axis(y_intervals[:, 0, :], indexes, axis=0),
-            np.take_along_axis(y_intervals[:, 1, :], indexes, axis=0)
-        ], axis=1)
-        coverages[:, i] = regression_coverage_score_v2(y_true[indexes],
-                                                       intervals_binned)
+        intervals_binned = np.stack(
+            [
+                np.take_along_axis(y_intervals[:, 0, :], indexes, axis=0),
+                np.take_along_axis(y_intervals[:, 1, :], indexes, axis=0),
+            ],
+            axis=1,
+        )
+        coverages[:, i] = regression_coverage_score_v2(y_true[indexes], intervals_binned)
 
     return coverages
 
 
-def regression_ssc_score(
-    y_true: NDArray,
-    y_intervals: NDArray,
-    num_bins: int = 3
-) -> NDArray:
+def regression_ssc_score(y_true: NDArray, y_intervals: NDArray, num_bins: int = 3) -> NDArray:
     """
     Aggregate by the minimum for each alpha the Size-Stratified Coverage [3]:
     returns the maximum violation of the conditional coverage
@@ -509,9 +463,7 @@ def regression_ssc_score(
 
 
 def classification_ssc(
-    y_true: NDArray,
-    y_pred_set: NDArray,
-    num_bins: Union[int, None] = None
+    y_true: NDArray, y_pred_set: NDArray, num_bins: Union[int, None] = None
 ) -> NDArray:
     """
     Compute Size-Stratified Coverage metrics proposed in [3] that is
@@ -564,34 +516,24 @@ def classification_ssc(
     else:
         check_nb_sets_sizes(sizes, num_bins)
         check_number_bins(num_bins)
-        bins = [
-            b[0] for b in np.array_split(range(n_classes + 1), num_bins)
-        ]
+        bins = [b[0] for b in np.array_split(range(n_classes + 1), num_bins)]
 
     digitized_sizes = np.digitize(sizes, bins)
     coverages = np.zeros((y_pred_set.shape[2], len(bins)))
     for alpha in range(y_pred_set.shape[2]):
         indexes_bybins = [
-            np.argwhere(digitized_sizes[:, alpha] == i)
-            for i in range(1, len(bins)+1)
+            np.argwhere(digitized_sizes[:, alpha] == i) for i in range(1, len(bins) + 1)
         ]
 
         for i, indexes in enumerate(indexes_bybins):
             coverages[alpha, i] = classification_coverage_score_v2(
-                y_true[indexes],
-                np.take_along_axis(
-                    y_pred_set[:, :, alpha],
-                    indexes,
-                    axis=0
-                )
+                y_true[indexes], np.take_along_axis(y_pred_set[:, :, alpha], indexes, axis=0)
             )
     return coverages
 
 
 def classification_ssc_score(
-    y_true: NDArray,
-    y_pred_set: NDArray,
-    num_bins: Union[int, None] = None
+    y_true: NDArray, y_pred_set: NDArray, num_bins: Union[int, None] = None
 ) -> NDArray:
     """
     Aggregate by the minimum for each alpha the Size-Stratified Coverage [3]:
@@ -631,10 +573,7 @@ def classification_ssc_score(
     return np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
 
 
-def _gaussian_kernel(
-    x: NDArray,
-    kernel_size: int
-) -> NDArray:
+def _gaussian_kernel(x: NDArray, kernel_size: int) -> NDArray:
     """
     Computes the gaussian kernel of x. (Used in hsic function)
 
@@ -645,17 +584,12 @@ def _gaussian_kernel(
     kernel_size: int
         The variance (sigma), this coefficient controls the width of the curve.
     """
-    norm_x = x ** 2
-    dist = -2 * np.matmul(x, x.transpose((0, 2, 1))) \
-        + norm_x + norm_x.transpose((0, 2, 1))
+    norm_x = x**2
+    dist = -2 * np.matmul(x, x.transpose((0, 2, 1))) + norm_x + norm_x.transpose((0, 2, 1))
     return np.exp(-dist / kernel_size)
 
 
-def hsic(
-    y_true: NDArray,
-    y_intervals: NDArray,
-    kernel_sizes: ArrayLike = (1, 1)
-) -> NDArray:
+def hsic(y_true: NDArray, y_intervals: NDArray, kernel_sizes: ArrayLike = (1, 1)) -> NDArray:
     """
     Compute the square root of the hsic coefficient. HSIC is Hilbert-Schmidt
     independence criterion that is a correlation measure. Here we use it as
@@ -711,32 +645,29 @@ def hsic(
     y_intervals = check_array_shape_regression(y_true, y_intervals)
     kernel_sizes = cast(NDArray, column_or_1d(kernel_sizes))
     if len(kernel_sizes) != 2:
-        raise ValueError(
-            "kernel_sizes should be an ArrayLike of length 2"
-        )
+        raise ValueError("kernel_sizes should be an ArrayLike of length 2")
     if (kernel_sizes <= 0).any():
-        raise ValueError(
-            "kernel_size should be positive"
-        )
+        raise ValueError("kernel_size should be positive")
     n_samples, _, n_alpha = y_intervals.shape
     y_true_per_alpha = np.tile(y_true, (n_alpha, 1)).transpose()
     widths = np.expand_dims(
-        np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :]).transpose(),
-        axis=2
+        np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :]).transpose(), axis=2
     )
     cov_ind = np.expand_dims(
         np.int_(
-            ((y_intervals[:, 0, :] <= y_true_per_alpha) &
-             (y_intervals[:, 1, :] >= y_true_per_alpha))
+            (
+                (y_intervals[:, 0, :] <= y_true_per_alpha)
+                & (y_intervals[:, 1, :] >= y_true_per_alpha)
+            )
         ).transpose(),
-        axis=2
+        axis=2,
     )
 
     k_mat = _gaussian_kernel(widths, kernel_sizes[0])
     l_mat = _gaussian_kernel(cov_ind, kernel_sizes[1])
     h_mat = np.eye(n_samples) - 1 / n_samples * np.ones((n_samples, n_samples))
     hsic_mat = np.matmul(l_mat, np.matmul(h_mat, np.matmul(k_mat, h_mat)))
-    hsic_mat /= ((n_samples - 1) ** 2)
+    hsic_mat /= (n_samples - 1) ** 2
     coef_hsic = np.sqrt(np.matrix.trace(hsic_mat, axis1=1, axis2=2))
 
     return coef_hsic
@@ -745,7 +676,7 @@ def hsic(
 def add_jitter(
     x: NDArray,
     noise_amplitude: float = 1e-8,
-    random_state: Optional[Union[int, np.random.RandomState]] = None
+    random_state: Optional[Union[int, np.random.RandomState]] = None,
 ) -> NDArray:
     """
     Add a tiny normal distributed perturbation to an array x.
@@ -823,7 +754,7 @@ def cumulative_differences(
     y_true: NDArray,
     y_score: NDArray,
     noise_amplitude: float = 1e-8,
-    random_state: Optional[Union[int, np.random.RandomState]] = 1
+    random_state: Optional[Union[int, np.random.RandomState]] = 1,
 ) -> NDArray:
     """
     Compute the cumulative difference between y_true and y_score, both ordered
@@ -874,12 +805,10 @@ def cumulative_differences(
     """
     n = len(y_true)
     y_score_jittered = add_jitter(
-        y_score,
-        noise_amplitude=noise_amplitude,
-        random_state=random_state
+        y_score, noise_amplitude=noise_amplitude, random_state=random_state
     )
     y_true_sorted, y_score_sorted = sort_xy_by_y(y_true, y_score_jittered)
-    cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted)/n
+    cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted) / n
     return cumulative_differences
 
 
@@ -916,7 +845,7 @@ def length_scale(s: NDArray) -> float:
     0.16
     """
     n = len(s)
-    length_scale = np.sqrt(np.sum(s * (1 - s)))/n
+    length_scale = np.sqrt(np.sum(s * (1 - s))) / n
     return length_scale
 
 
@@ -1007,13 +936,11 @@ def kolmogorov_smirnov_cdf(x: float) -> float:
     >>> print(np.round(kolmogorov_smirnov_cdf(1), 4))
     0.3708
     """
-    kmax = np.ceil(
-        0.5 + x * np.sqrt(2) / np.pi * np.sqrt(np.log(4 / (np.pi*EPSILON)))
-    )
+    kmax = np.ceil(0.5 + x * np.sqrt(2) / np.pi * np.sqrt(np.log(4 / (np.pi * EPSILON))))
     c = 0.0
     for k in range(int(kmax)):
         kplus = k + 1 / 2
-        c += (-1)**k / kplus * np.exp(-kplus**2 * np.pi**2 / (2 * x**2))
+        c += (-1) ** k / kplus * np.exp(-(kplus**2) * np.pi**2 / (2 * x**2))
     c *= 2 / np.pi
     return c
 
@@ -1154,20 +1081,17 @@ def kuiper_cdf(x: float) -> float:
     """
     kmax = np.ceil(
         (
-            0.5 + x / (np.pi * np.sqrt(2)) *
-            np.sqrt(
-                np.log(
-                    4 / (np.sqrt(2 * np.pi) * EPSILON) * (1 / x + x / np.pi**2)
-                )
-            )
+            0.5
+            + x
+            / (np.pi * np.sqrt(2))
+            * np.sqrt(np.log(4 / (np.sqrt(2 * np.pi) * EPSILON) * (1 / x + x / np.pi**2)))
         )
     )
     c = 0.0
     for k in range(int(kmax)):
         kplus = k + 1 / 2
-        c += (
-            (8 / x**2 + 2 / kplus**2 / np.pi**2) *
-            np.exp(-2 * kplus**2 * np.pi**2 / x**2)
+        c += (8 / x**2 + 2 / kplus**2 / np.pi**2) * np.exp(
+            -2 * kplus**2 * np.pi**2 / x**2
         )
     return c
 
@@ -1261,15 +1185,9 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     """
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
-    numerator = np.sum(
-        (y_true - y_score) * (1 - 2 * y_score)
-    )
-    denominator = np.sqrt(
-        np.sum(
-            (1 - 2 * y_score) ** 2 * y_score * (1 - y_score)
-        )
-    )
-    sp_stat = numerator/denominator
+    numerator = np.sum((y_true - y_score) * (1 - 2 * y_score))
+    denominator = np.sqrt(np.sum((1 - 2 * y_score) ** 2 * y_score * (1 - y_score)))
+    sp_stat = numerator / denominator
     return sp_stat
 
 

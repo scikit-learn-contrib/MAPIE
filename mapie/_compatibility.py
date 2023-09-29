@@ -7,30 +7,21 @@ from ._typing import ArrayLike, NDArray
 
 
 def np_quantile_version_below_122(
-    a: ArrayLike,
-    q: ArrayLike,
-    method: str = "linear",
-    **kwargs: Any
+    a: ArrayLike, q: ArrayLike, method: str = "linear", **kwargs: Any
 ) -> NDArray:
     """Wrapper of np.quantile function for numpy version < 1.22."""
     return np.quantile(a, q, interpolation=method, **kwargs)  # type: ignore
 
 
 def np_quantile_version_above_122(
-    a: ArrayLike,
-    q: ArrayLike,
-    method: str = "linear",
-    **kwargs: Any
+    a: ArrayLike, q: ArrayLike, method: str = "linear", **kwargs: Any
 ) -> NDArray:
     """Wrapper of np.quantile function for numpy version >= 1.22."""
     return np.quantile(a, q, method=method, **kwargs)  # type: ignore
 
 
 def np_nanquantile_version_below_122(
-    a: ArrayLike,
-    q: ArrayLike,
-    method: str = "linear",
-    **kwargs: Any
+    a: ArrayLike, q: ArrayLike, method: str = "linear", **kwargs: Any
 ) -> NDArray:
     """Wrapper of np.quantile function for numpy version < 1.22."""
     # Does not work if `a` is of dtype object. Converting `a` to a float array
@@ -39,10 +30,7 @@ def np_nanquantile_version_below_122(
 
 
 def np_nanquantile_version_above_122(
-    a: ArrayLike,
-    q: ArrayLike,
-    method: str = "linear",
-    **kwargs: Any
+    a: ArrayLike, q: ArrayLike, method: str = "linear", **kwargs: Any
 ) -> NDArray:
     """Wrapper of np.quantile function for numpy version >= 1.22."""
     return np.nanquantile(a, q, method=method, **kwargs)  # type: ignore

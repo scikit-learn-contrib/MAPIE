@@ -1,6 +1,12 @@
 name: Unit tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      -dev
+      -main
+      -master
+  pull_request:
 
 jobs:
   build:
@@ -23,6 +29,9 @@ jobs:
           - os: windows-latest
             python-version: "3.10"
             numpy-version: 1.22.3
+          - os: macos-latest
+            python-version: "3.10"
+            numpy-version: 1.22.3
     defaults:
       run:
         shell: bash -l {0}
@@ -42,6 +51,8 @@ jobs:
         run: make lint
       - name: Check static typing
         run: make type-check
+      - name: Check code style check
+        run: make black
       - name: Test with pytest
         run: make coverage
       - name: Code coverage

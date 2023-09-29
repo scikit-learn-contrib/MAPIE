@@ -16,7 +16,7 @@ jupyter:
 # Tutorial for regression
 
 
-In this tutorial, we compare the prediction intervals estimated by MAPIE on a 
+In this tutorial, we compare the prediction intervals estimated by MAPIE on a
 simple, one-dimensional, ground truth function
 
 $$
@@ -28,15 +28,15 @@ Throughout this tutorial, we will answer the following questions:
 - How well do the MAPIE strategies capture the aleatoric uncertainty existing in the data?
 
 - How do the prediction intervals estimated by the resampling strategies
-  evolve for new *out-of-distribution* data? 
+  evolve for new *out-of-distribution* data?
 
 - How do the prediction intervals vary between regressor models?
 
-Throughout this tutorial, we estimate the prediction intervals first using 
-a polynomial function, and then using a boosting model, and a simple neural network. 
+Throughout this tutorial, we estimate the prediction intervals first using
+a polynomial function, and then using a boosting model, and a simple neural network.
 
-**For practical problems, we advise using the faster CV+ strategies. 
-For conservative prediction interval estimates, you can alternatively 
+**For practical problems, we advise using the faster CV+ strategies.
+For conservative prediction interval estimates, you can alternatively
 use the CV-minmax strategies.**
 
 
@@ -63,7 +63,7 @@ def x_sinx(x):
 ```python
 def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, noise):
     """
-    Generate 1D noisy data uniformely from the given function 
+    Generate 1D noisy data uniformely from the given function
     and standard deviation for the noise.
     """
     np.random.seed(59)
@@ -76,8 +76,8 @@ def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, noise):
     return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
 ```
 
-We first generate noisy one-dimensional data uniformely on an interval. 
-Here, the noise is considered as *homoscedastic*, since it remains constant 
+We first generate noisy one-dimensional data uniformely on an interval.
+Here, the noise is considered as *homoscedastic*, since it remains constant
 over $x$.
 
 ```python
@@ -87,7 +87,7 @@ X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
 )
 ```
 
-Let's visualize our noisy function. 
+Let's visualize our noisy function.
 
 ```python
 import matplotlib.pyplot as plt
@@ -97,7 +97,7 @@ _ = plt.plot(X_test, y_mesh, color="C1")
 ```
 
 As mentioned previously, we fit our training data with a simple
-polynomial function. Here, we choose a degree equal to 10 so the function 
+polynomial function. Here, we choose a degree equal to 10 so the function
 is able to perfectly fit $x \times \sin(x)$.
 
 ```python
@@ -133,7 +133,7 @@ from typing import Union, Optional
 from typing_extensions import TypedDict
 from mapie.regression import MapieRegressor
 from mapie.quantile_regression import MapieQuantileRegressor
-from mapie.subsample import Subsample 
+from mapie.subsample import Subsample
 from sklearn.model_selection import train_test_split
 Params = TypedDict("Params", {"method": str, "cv": Union[int, str, Subsample], "alpha": Optional[float]})
 STRATEGIES = {
@@ -154,24 +154,24 @@ for strategy, params in STRATEGIES.items():
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
         mapie.fit(X_train, y_train, random_state=1)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
-    else:  
+    else:
         mapie = MapieRegressor(polyn_model, **params)
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 ```
 
-Let’s now compare the target confidence intervals with the predicted intervals obtained 
+Let’s now compare the target confidence intervals with the predicted intervals obtained
 with the Jackknife+, Jackknife-minmax, CV+, CV-minmax, Jackknife+-after-Boostrap, and conformalized quantile regression (CQR) strategies. Note that for the Jackknife-after-Bootstrap method, we call the :class:`mapie.subsample.Subsample` object that allows us to train bootstrapped models. Note also that the CQR method is called with :class:`MapieQuantileRegressor` with a "split" strategy.
 
 ```python
 def plot_1d_data(
     X_train,
-    y_train, 
+    y_train,
     X_test,
     y_test,
     y_sigma,
-    y_pred, 
-    y_pred_low, 
+    y_pred,
+    y_pred_low,
     y_pred_up,
     ax=None,
     title=None
@@ -238,7 +238,7 @@ with homoscedastic noise, CQR would not be the preferred method.
 
 Let’s now compare the *effective* coverage, namely the fraction of test
 points whose true values lie within the prediction intervals, given by
-the different strategies. 
+the different strategies.
 
 ```python
 import pandas as pd
@@ -255,7 +255,7 @@ pd.DataFrame([
 ], index=STRATEGIES, columns=["Coverage", "Width average"]).round(2)
 ```
 
-All strategies except the Naive one give effective coverage close to the expected 
+All strategies except the Naive one give effective coverage close to the expected
 0.95 value (recall that alpha = 0.05), confirming the theoretical garantees.
 
 
@@ -274,7 +274,7 @@ def x_sinx(x):
 ```python
 def get_1d_data_with_heteroscedastic_noise(funct, min_x, max_x, n_samples, noise):
     """
-    Generate 1D noisy data uniformely from the given function 
+    Generate 1D noisy data uniformely from the given function
     and standard deviation for the noise.
     """
     np.random.seed(59)
@@ -287,7 +287,7 @@ def get_1d_data_with_heteroscedastic_noise(funct, min_x, max_x, n_samples, noise
     return X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
 ```
 
-We first generate noisy one-dimensional data uniformely on an interval. 
+We first generate noisy one-dimensional data uniformely on an interval.
 Here, the noise is considered as *heteroscedastic*, since it will increase linearly with $x$.
 
 ```python
@@ -307,7 +307,7 @@ _ = plt.plot(X_test, y_mesh, color="C1")
 ```
 
 As mentioned previously, we fit our training data with a simple
-polynomial function. Here, we choose a degree equal to 10 so the function 
+polynomial function. Here, we choose a degree equal to 10 so the function
 is able to perfectly fit $x \times \sin(x)$.
 
 ```python
@@ -357,7 +357,7 @@ for strategy, params in STRATEGIES.items():
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
         mapie.fit(X_train, y_train, random_state=1)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
-    else:  
+    else:
         mapie = MapieRegressor(polyn_model, **params)
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
@@ -368,12 +368,12 @@ Once again, let’s compare the target confidence intervals with prediction inte
 ```python
 def plot_1d_data(
     X_train,
-    y_train, 
+    y_train,
     X_test,
     y_test,
     y_sigma,
-    y_pred, 
-    y_pred_low, 
+    y_pred,
+    y_pred_low,
     y_pred_up,
     ax=None,
     title=None
@@ -410,7 +410,7 @@ for strategy, coord in zip(strategies, coords):
     )
 ```
 
-We can observe that all of the strategies except CQR seem to have similar constant prediction intervals. 
+We can observe that all of the strategies except CQR seem to have similar constant prediction intervals.
 On the other hand, the CQR strategy offers a solution that adapts the prediction
 intervals to the local noise.
 
@@ -462,7 +462,7 @@ plt.legend(loc=[1, 0])
 
 Let’s now conclude by summarizing the *effective* coverage, namely the fraction of test
 points whose true values lie within the prediction intervals, given by
-the different strategies. 
+the different strategies.
 
 ```python
 import pandas as pd
@@ -486,19 +486,19 @@ All the strategies have the wanted coverage, however, we notice that the CQR str
 
 
 Let’s now consider one-dimensional data without noise, but normally distributed.
-The goal is to explore how the prediction intervals evolve for new data 
+The goal is to explore how the prediction intervals evolve for new data
 that lie outside the distribution of the training data in order to see how the strategies
-can capture the *epistemic* uncertainty. 
+can capture the *epistemic* uncertainty.
 For a comparison of the epistemic and aleatoric uncertainties, please have a look at this
 [source](https://en.wikipedia.org/wiki/Uncertainty_quantification).
 
 
-Lets" start by generating and showing the data. 
+Lets" start by generating and showing the data.
 
 ```python
 def get_1d_data_with_normal_distrib(funct, mu, sigma, n_samples, noise):
     """
-    Generate noisy 1D data with normal distribution from given function 
+    Generate noisy 1D data with normal distribution from given function
     and noise standard deviation.
     """
     np.random.seed(59)
@@ -556,7 +556,7 @@ for strategy, params in STRATEGIES.items():
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
         mapie.fit(X_train, y_train, random_state=1)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
-    else:  
+    else:
         mapie = MapieRegressor(polyn_model, **params)
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
@@ -567,29 +567,29 @@ strategies = ["jackknife_plus", "jackknife_minmax", "cv_plus", "cv_minmax", "jac
 n_figs = len(strategies)
 fig, axs = plt.subplots(3, 2, figsize=(9, 13))
 coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1], axs[2, 0], axs[2, 1]]
-for strategy, coord in zip(strategies, coords): 
+for strategy, coord in zip(strategies, coords):
     plot_1d_data(
         X_train.ravel(),
-        y_train.ravel(), 
+        y_train.ravel(),
         X_test.ravel(),
         y_mesh.ravel(),
-        1.96*noise, 
+        1.96*noise,
         y_pred[strategy].ravel(),
         y_pis[strategy][:, 0, :].ravel(),
-        y_pis[strategy][:, 1, :].ravel(), 
+        y_pis[strategy][:, 1, :].ravel(),
         ax=coord,
         title=strategy
     )
 ```
 
 At first glance, our polynomial function does not give accurate
-predictions with respect to the true function when $|x > 6|$. 
-The prediction intervals estimated with the Jackknife+ do not seem to 
+predictions with respect to the true function when $|x > 6|$.
+The prediction intervals estimated with the Jackknife+ do not seem to
 increase significantly, unlike the CV+ method whose prediction intervals
 capture a high uncertainty when $x > 6$.
 
 
-Let's now compare the prediction interval widths between all strategies. 
+Let's now compare the prediction interval widths between all strategies.
 
 
 ```python
@@ -609,8 +609,8 @@ Jackknife+ remain roughly constant until $|x| \sim 5$ before
 increasing.
 The CQR strategy seems to perform well, however, on the extreme values
 of the data the quantile regression fails to give reliable results as it outputs
-negative value for the prediction intervals. This occurs because the quantile 
-regressor with quantile $1 - \alpha/2$ gives higher values than the quantile 
+negative value for the prediction intervals. This occurs because the quantile
+regressor with quantile $1 - \alpha/2$ gives higher values than the quantile
 regressor with quantile $\alpha/2$. Note that a warning will be issued when
 this occurs.
 
@@ -632,7 +632,7 @@ conservative than the Jackknife+ strategy, and tend to result in more
 reliable coverages for *out-of-distribution* data. It is therefore
 advised to use the three former strategies for predictions with new
 out-of-distribution data.
-Note however that there are no theoretical guarantees on the coverage level 
+Note however that there are no theoretical guarantees on the coverage level
 for out-of-distribution data.
 Here it's important to note that the CQR strategy should not be taken into account for
 width prediction, and it is abundantly clear from the negative width coverage that
@@ -647,7 +647,7 @@ illustrate this by comparing the prediction intervals estimated by the CV+ metho
 different models:
 
 - the same polynomial function as before.
- 
+
 - a XGBoost model using the Scikit-learn API.
 
 - a simple neural network, a Multilayer Perceptron with three dense layers, using the KerasRegressor wrapper.
@@ -712,13 +712,13 @@ xgb_model = XGBRegressor(
     nthread=-1
 )
 mlp_model = KerasRegressor(
-    build_fn=mlp, 
-    epochs=500, 
+    build_fn=mlp,
+    epochs=500,
     verbose=0
 )
 ```
 
-Let's now use MAPIE to estimate the prediction intervals using the CV+ method 
+Let's now use MAPIE to estimate the prediction intervals using the CV+ method
 and compare their prediction interval.
 
 ```python
@@ -758,7 +758,7 @@ ax.set_ylabel("Prediction Interval Width")
 ax.legend(model_names + ["True width"], fontsize=8);
 ```
 
-As expected with the CV+ method, the prediction intervals are a bit 
+As expected with the CV+ method, the prediction intervals are a bit
 conservative since they are slightly wider than the true intervals.
-However, the CV+ method on the three models gives very promising results 
-since the prediction intervals closely follow the true intervals with $x$. 
+However, the CV+ method on the three models gives very promising results
+since the prediction intervals closely follow the true intervals with $x$.

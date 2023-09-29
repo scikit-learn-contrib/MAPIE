@@ -32,8 +32,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/abs/2010.09107
     """
 
-    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ \
-        + ["BlockBootstrap"]
+    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ + ["BlockBootstrap"]
     valid_methods_ = ["enbpi"]
 
     def __init__(
@@ -53,7 +52,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             n_jobs=n_jobs,
             agg_function=agg_function,
             verbose=verbose,
-            random_state=random_state
+            random_state=random_state,
         )
 
     def _relative_conformity_scores(
@@ -109,9 +108,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             If lower and upper bounds arrays don't have the same shape.
         """
         if lower_bounds.shape != upper_bounds.shape:
-            raise ValueError(
-                "Lower and upper bounds arrays should have the same shape."
-            )
+            raise ValueError("Lower and upper bounds arrays should have the same shape.")
         alpha = cast(NDArray, alpha)
         betas_0 = np.full(
             shape=(len(lower_bounds), len(alpha)),
@@ -138,9 +135,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 axis=1,
                 method="lower",
             )
-            betas_0[:, ind_alpha] = betas[
-                np.argmin(one_alpha_beta - beta, axis=0)
-            ]
+            betas_0[:, ind_alpha] = betas[np.argmin(one_alpha_beta - beta, axis=0)]
 
         return betas_0
 
@@ -222,12 +217,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 "number of training instances."
             )
         new_conformity_scores_ = self._relative_conformity_scores(X, y)
-        self.conformity_scores_ = np.roll(
-            self.conformity_scores_, -len(new_conformity_scores_)
-        )
-        self.conformity_scores_[
-            -len(new_conformity_scores_):
-        ] = new_conformity_scores_
+        self.conformity_scores_ = np.roll(self.conformity_scores_, -len(new_conformity_scores_))
+        self.conformity_scores_[-len(new_conformity_scores_) :] = new_conformity_scores_
         return self
 
     def predict(
@@ -316,8 +307,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.lower_quantiles_ = lower_quantiles
         self.higher_quantiles_ = higher_quantiles
 
-        if self.method in self.no_agg_methods_ \
-                or self.cv in self.no_agg_cv_:
+        if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
             y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
             y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
         else:
@@ -335,9 +325,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     def _more_tags(self):
         return {
-            "_xfail_checks":
-            {
-                "check_estimators_partial_fit_n_features":
-                "partial_fit can only be called on fitted models"
+            "_xfail_checks": {
+                "check_estimators_partial_fit_n_features": "partial_fit can "
+                "only be called on fitted models"
             }
         }

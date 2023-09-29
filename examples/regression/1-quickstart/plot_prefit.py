@@ -55,12 +55,8 @@ X = np.linspace(0, 1, n_samples)
 y = f(X) + np.random.normal(0, sigma, n_samples)
 
 # Train/validation/test split
-X_train_cal, X_test, y_train_cal, y_test = train_test_split(
-    X, y, test_size=1 / 10
-)
-X_train, X_cal, y_train, y_cal = train_test_split(
-    X_train_cal, y_train_cal, test_size=1 / 9
-)
+X_train_cal, X_test, y_train_cal, y_test = train_test_split(X, y, test_size=1 / 10)
+X_train, X_cal, y_train, y_cal = train_test_split(X_train_cal, y_train_cal, test_size=1 / 9)
 
 
 ##############################################################################
@@ -85,7 +81,7 @@ est_mlp.fit(X_train.reshape(-1, 1), y_train)
 list_estimators_cqr = []
 for alpha_ in [alpha / 2, (1 - (alpha / 2)), 0.5]:
     estimator_ = LGBMRegressor(
-        objective='quantile',
+        objective="quantile",
         alpha=alpha_,
     )
     estimator_.fit(X_train.reshape(-1, 1), y_train)
@@ -115,11 +111,7 @@ mapie_cqr.fit(X_cal.reshape(-1, 1), y_cal)
 
 # Evaluate prediction and coverage level on testing set
 y_pred_cqr, y_pis_cqr = mapie_cqr.predict(X_test.reshape(-1, 1))
-coverage_cqr = regression_coverage_score(
-    y_test,
-    y_pis_cqr[:, 0, 0],
-    y_pis_cqr[:, 1, 0]
-)
+coverage_cqr = regression_coverage_score(y_test, y_pis_cqr[:, 0, 0], y_pis_cqr[:, 1, 0])
 
 
 ##############################################################################
@@ -137,40 +129,28 @@ y_test_theoretical = f(X_test)
 order = np.argsort(X_test)
 
 plt.figure(figsize=(8, 8))
-plt.plot(
-    X_test[order],
-    y_pred[order],
-    label="Predictions MLP",
-    color="green"
-)
+plt.plot(X_test[order], y_pred[order], label="Predictions MLP", color="green")
 plt.fill_between(
     X_test[order],
     y_pis[:, 0, 0][order],
     y_pis[:, 1, 0][order],
     alpha=0.4,
     label="prediction intervals MP",
-    color="green"
+    color="green",
 )
-plt.plot(
-    X_test[order],
-    y_pred_cqr[order],
-    label="Predictions LGBM",
-    color="blue"
-)
+plt.plot(X_test[order], y_pred_cqr[order], label="Predictions LGBM", color="blue")
 plt.fill_between(
     X_test[order],
     y_pis_cqr[:, 0, 0][order],
     y_pis_cqr[:, 1, 0][order],
     alpha=0.4,
     label="prediction intervals MQP",
-    color="blue"
+    color="blue",
 )
 plt.title(
     f"Target and effective coverages for:\n "
-    f"MLP with MapieRegressor alpha={alpha}: "
-    + f"({1 - alpha:.3f}, {coverage:.3f})\n"
-    f"LGBM with MapieQuantileRegressor alpha={alpha}: "
-    + f"({1 - alpha:.3f}, {coverage_cqr:.3f})"
+    f"MLP with MapieRegressor alpha={alpha}: " + f"({1 - alpha:.3f}, {coverage:.3f})\n"
+    f"LGBM with MapieQuantileRegressor alpha={alpha}: " + f"({1 - alpha:.3f}, {coverage_cqr:.3f})"
 )
 plt.scatter(X_test, y_test, color="red", alpha=0.7, label="testing", s=2)
 plt.plot(
@@ -193,11 +173,5 @@ plt.plot(
 )
 plt.xlabel("x")
 plt.ylabel("y")
-plt.legend(
-    loc='upper center',
-    bbox_to_anchor=(0.5, -0.05),
-    fancybox=True,
-    shadow=True,
-    ncol=3
-)
+plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=3)
 plt.show()

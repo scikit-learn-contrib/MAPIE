@@ -35,14 +35,11 @@ from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics import regression_coverage_score, regression_mean_width_score
 from mapie.regression import MapieRegressor
 
 # Load input data and feature engineering
-demand_df = pd.read_csv(
-    "../../data/demand_temperature.csv", parse_dates=True, index_col=0
-)
+demand_df = pd.read_csv("../../data/demand_temperature.csv", parse_dates=True, index_col=0)
 demand_df["Date"] = pd.to_datetime(demand_df.index)
 demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype("int64")
 demand_df["Weekday"] = demand_df.Date.dt.isocalendar().day.astype("int64")
@@ -82,19 +79,14 @@ best_est = cv_obj.best_estimator_
 # time, but a nested CV approach is preferred.
 # See the dedicated example in the gallery for more information.
 alpha = 0.1
-mapie = MapieRegressor(
-    best_est, method="plus", cv=n_splits, agg_function="median", n_jobs=-1
-)
+mapie = MapieRegressor(best_est, method="plus", cv=n_splits, agg_function="median", n_jobs=-1)
 mapie.fit(X_train, y_train)
 y_pred, y_pis = mapie.predict(X_test, alpha=alpha)
 coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
 width = regression_mean_width_score(y_pis[:, 0, 0], y_pis[:, 1, 0])
 
 # Print results
-print(
-    "Coverage and prediction interval width mean for CV+: "
-    f"{coverage:.3f}, {width:.3f}"
-)
+print("Coverage and prediction interval width mean for CV+: " f"{coverage:.3f}, {width:.3f}")
 
 # Plot estimated prediction intervals on test set
 fig = plt.figure(figsize=(15, 5))
