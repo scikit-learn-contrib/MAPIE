@@ -228,8 +228,10 @@ def test_regression_ytrue_invalid_shape() -> None:
     with pytest.raises(ValueError):
         hsic(np.tile(y_toy, 2).reshape(5, 2), y_preds)
     with pytest.raises(ValueError):
-        cwc(np.tile(y_toy, 2).reshape(5, 2), y_preds[:, 1], y_preds[:, 2],
-            eta=30, alpha=0.1)
+        cwc(
+            np.tile(y_toy, 2).reshape(5, 2), y_preds[:, 1], y_preds[:, 2],
+            eta=30, alpha=0.1
+        )
 
 
 def test_regression_valid_input_shape() -> None:
