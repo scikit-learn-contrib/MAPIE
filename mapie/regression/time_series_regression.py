@@ -270,7 +270,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         )
         self.conformity_scores_[
             -len(new_conformity_scores_):
-            ] = new_conformity_scores_
+        ] = new_conformity_scores_
         return self
 
     def adapt_conformal_inference(
@@ -325,8 +325,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         for x_row, y_row in zip(X, y_true):
             x = np.expand_dims(x_row, axis=0)
-            _, y_pred_bounds = self.predict(x, alpha=list(
-                                            self.current_alpha.keys()))
+            _, y_pred_bounds = self.predict(
+                x, alpha=list(self.current_alpha.keys())
+            )
 
             for alpha_ix, alpha_0 in enumerate(self.current_alpha):
                 alpha_t = self.current_alpha[alpha_0]
@@ -336,10 +337,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                     < y_pred_bounds[:, 1, alpha_ix]
                 )
 
-                new_alpha_t = np.clip(alpha_t +
-                                      gamma*(alpha_0-is_true_in_quantile),
-                                      0,
-                                      1)
+                new_alpha_t = np.clip(
+                    alpha_t + gamma*(alpha_0-is_true_in_quantile),
+                    0, 1
+                )
                 self.current_alpha[alpha_0] = new_alpha_t
 
         return self
