@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -313,9 +312,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         check_gamma(gamma)
 
         if self.method != "aci":
-            warnings.warn(
-                f"WARNING : This method is only documented"
-                f"for the aci method, not for {self.method}!"
+            raise AttributeError(
+                "This method is only "
+                f"Allowed value is aci method, "
+                f"not for {self.method}!"
             )
 
         X = cast(NDArray, X)
