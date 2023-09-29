@@ -207,25 +207,41 @@ plt.show()
 # points whose true values lie within the prediction intervals, given by
 # the different strategies.
 
-pd.DataFrame([
+coverage_score = {}
+width_mean_score = {}
+cwc_score = {}
+
+for strategy in STRATEGIES:
+    coverage_score[strategy] = regression_coverage_score(
+        y_test,
+        y_pis[strategy][:, 0, 0],
+        y_pis[strategy][:, 1, 0]
+    )
+    width_mean_score[strategy] = regression_mean_width_score(
+        y_pis[strategy][:, 0, 0],
+        y_pis[strategy][:, 1, 0]
+    )
+    cwc_score[strategy] = cwc(
+        y_test,
+        y_pis[strategy][:, 0, 0],
+        y_pis[strategy][:, 1, 0],
+        eta=0.001,
+        alpha=0.05
+    )
+
+results = pd.DataFrame(
     [
-        regression_coverage_score(
-            y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
-        ),
-        (
-            y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]
-        ).mean(),
-        cwc(
-            y_test,
-            y_pis[strategy][:, 0, 0],
-            y_pis[strategy][:, 1, 0],
-            eta=0.001,
-            alpha=0.05
-        ),
-    ] for strategy in STRATEGIES
-], index=STRATEGIES, columns=["Coverage",
-                              "Width average",
-                              "Coverage Width-based Criterion (CWC)"]).round(2)
+        [
+            coverage_score[strategy],
+            width_mean_score[strategy],
+            cwc_score[strategy]
+        ] for strategy in STRATEGIES
+    ],
+    index=STRATEGIES,
+    columns=["Coverage", "Width average", "Coverage Width-based Criterion"]
+).round(2)
+
+print(results)
 
 
 ##############################################################################
