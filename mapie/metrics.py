@@ -847,13 +847,19 @@ def cwc(
 
     if 0 <= (1-alpha) <= 1:
         # Mu is within the valid range
-        coverage_score = regression_coverage_score(y_true,
-                                                   y_pred_low,
-                                                   y_pred_up)
-        mean_width = regression_mean_width_score(y_pred_low,
-                                                 y_pred_up)
-        ref_length = np.subtract(float(y_true.max()),
-                                 float(y_true.min()))
+        coverage_score = regression_coverage_score(
+            y_true,
+            y_pred_low,
+            y_pred_up
+        )
+        mean_width = regression_mean_width_score(
+            y_pred_low,
+            y_pred_up
+        )
+        ref_length = np.subtract(
+            float(y_true.max()),
+            float(y_true.min())
+        )
         avg_length = mean_width / ref_length
 
         cwc = (1-avg_length)*np.exp(-eta*(coverage_score-(1-alpha))**2)
