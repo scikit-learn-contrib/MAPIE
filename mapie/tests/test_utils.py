@@ -413,7 +413,7 @@ def test_nan_values() -> None:
     """
     with pytest.raises(
         ValueError,
-        match=r"Array contains NaN val*"
+        match=r"Array contains only NaN*"
     ):
         check_array_nan(np.array([np.nan, np.nan, np.nan, np.nan]))
 
