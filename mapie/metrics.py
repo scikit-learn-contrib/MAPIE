@@ -123,7 +123,6 @@ def classification_coverage_score(
     check_arrays_length(y_true, y_pred_set)
     check_array_nan(y_true)
     check_array_inf(y_true)
-
     check_array_nan(y_pred_set)
     check_array_inf(y_pred_set)
 
@@ -167,7 +166,6 @@ def regression_mean_width_score(
     check_arrays_length(y_pred_low, y_pred_up)
     check_array_nan(y_pred_low)
     check_array_inf(y_pred_low)
-
     check_array_nan(y_pred_up)
     check_array_inf(y_pred_up)
 
@@ -204,7 +202,6 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     >>> print(classification_mean_width_score(y_pred_set))
     2.0
     """
-
     check_array_nan(y_pred_set)
     check_array_inf(y_pred_set)
     y_pred_set = cast(
@@ -323,7 +320,6 @@ def top_label_ece(
     float
         The ECE score adapted in the top label setting.
     """
-
     y_scores = cast(NDArray, y_scores)
     y_true = cast(NDArray, y_true)
     check_array_nan(y_true)
@@ -512,7 +508,6 @@ def regression_ssc(
     >>> print(regression_ssc(y_true, y_intervals, num_bins=2))
     [[1. 1.]]
     """
-
     y_true = cast(NDArray, column_or_1d(y_true))
     y_intervals = check_array_shape_regression(y_true, y_intervals)
     check_number_bins(num_bins)
@@ -580,7 +575,6 @@ def regression_ssc_score(
     >>> print(regression_ssc_score(y_true, y_intervals, num_bins=2))
     [1.  0.5]
     """
-
     return np.min(regression_ssc(y_true, y_intervals, num_bins), axis=1)
 
 
@@ -630,7 +624,6 @@ def classification_ssc(
     >>> print(classification_ssc(y_true, y_pred_set, num_bins=2))
     [[1.         0.66666667]]
     """
-
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_set = check_array_shape_classification(y_true, y_pred_set)
 
@@ -716,6 +709,7 @@ def classification_ssc_score(
     check_array_inf(y_true)
     check_array_nan(y_pred_set)
     check_array_inf(y_pred_set)
+
     return np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
 
 
