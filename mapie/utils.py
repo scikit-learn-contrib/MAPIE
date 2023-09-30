@@ -1226,7 +1226,7 @@ def check_array_nan(array: ArrayLike) -> None:
 
     if np.isnan(array).all() and len(np.unique(array)) > 0:
         raise ValueError(
-            "Array contains NaN values only."
+            "Array contains only NaN values."
         )
 
 
@@ -1265,8 +1265,9 @@ def check_arrays_length(*arrays: NDArray) -> None:
     ValueError
         If the length of the arrays are different
     """
-    res = [array.shape[0] for array in arrays]
-    if len(set(res)) > 1:
+
+    res = [len(array) for array in arrays]
+    if np.unique(res).size > 1:
         raise ValueError(
-                "There are arrays with different length"
-            )
+            "There are arrays with different length"
+        )
