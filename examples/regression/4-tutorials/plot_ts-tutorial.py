@@ -45,8 +45,8 @@ Conversely, if the real values are in the coverage,
 the size of the intervals will decrease.
 
 You can use a gamma coefficient to adjust the strength of the correction.
-The correction formula is: alpha_{t+1} = alpha_{t} + gamma
-(alpha - 1_{y_t notin C_{alpha_t}(X_t)}). Where C_{alpha_t} is the
+The correction formula is: :math:`alpha {t+1} = alpha_{t} + gamma
+(alpha - 1 {y_t notin C{alpha_t}(X_t)})`. Where :math:`C{alpha_t}` is the
 coverage given alpha at time t. If gamma=0,
 it means we don't adapt the conformal inference.
 
