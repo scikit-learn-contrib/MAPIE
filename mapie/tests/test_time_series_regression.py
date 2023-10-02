@@ -429,8 +429,8 @@ def test_aci_method() -> None:
     mapie_regressor.predict(X, alpha=0.05)
     mapie_regressor.adapt_conformal_inference(X, y)
     with pytest.raises(AttributeError,
-                       match=r"This method is only Allowed "
-                             r"value is aci method, not for .*"):
+                       match=r"This method can be called "
+                             r"only with method='aci' *"):
         mapie_regressor_enbpi = MapieTimeSeriesRegressor(method="enbpi")
         mapie_regressor_enbpi.fit(X, y)
         mapie_regressor_enbpi.adapt_conformal_inference(X, y)
