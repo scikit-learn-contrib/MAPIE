@@ -313,9 +313,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         if self.method != "aci":
             raise AttributeError(
-                "This method is only "
-                f"Allowed value is aci method, "
-                f"not for {self.method}!"
+                "This method can be called "
+                f"only with method='aci', "
+                f"not with '{self.method}'."
             )
 
         X = cast(NDArray, X)
