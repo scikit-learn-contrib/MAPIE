@@ -1210,20 +1210,20 @@ def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
             )
 
 
-def check_array_nan(array: ArrayLike) -> None:
+def check_array_nan(array: NDArray) -> None:
     """
     Checks if the array have only NaN values. If it has we throw an error.
 
     Parameters
     ----------
-    array: an array with non-numerical or non-categorical values
+    array: NDArray
+        an array with non-numerical or non-categorical values
 
     Raises
     ------
     ValueError
         If all elements of the array are NaNs
     """
-
     if np.isnan(array).all() and len(np.unique(array)) > 0:
         raise ValueError(
             "Array contains only NaN values."
