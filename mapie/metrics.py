@@ -254,7 +254,6 @@ def expected_calibration_error(
     check_arrays_length(y_true_, y_scores)
     check_array_nan(y_true_)
     check_array_inf(y_true_)
-
     check_array_nan(y_scores)
     check_array_inf(y_scores)
 
