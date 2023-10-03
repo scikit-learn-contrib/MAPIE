@@ -1230,21 +1230,21 @@ def check_array_nan(array: NDArray) -> None:
         )
 
 
-def check_array_inf(array: ArrayLike) -> None:
+def check_array_inf(array: NDArray) -> None:
     """
     Checks if the array have inf.
     If a value is infinite, we throw an error.
 
     Parameters
     ----------
-    array: an array with non-numerical or non-categorical values
+    array: NDArray
+        an array with non-numerical or non-categorical values
 
     Raises
     ------
     ValueError
         If any elements of the array is +inf or -inf.
     """
-
     if np.isinf(array).any():
         raise ValueError(
             "Array contains infinite values."
