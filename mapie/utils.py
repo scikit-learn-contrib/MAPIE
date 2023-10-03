@@ -1257,7 +1257,7 @@ def check_arrays_length(*arrays: NDArray) -> None:
 
     Parameters
     ----------
-    *arrays: NDArray or ArrayLike
+    *arrays: NDArray
         Arrays expected to have the same length
 
     Raises
@@ -1265,9 +1265,8 @@ def check_arrays_length(*arrays: NDArray) -> None:
     ValueError
         If the length of the arrays are different
     """
-
     res = [len(array) for array in arrays]
-    if np.unique(res).size > 1:
+    if len(np.unique(res)) > 1:
         raise ValueError(
             "There are arrays with different length"
         )
