@@ -202,14 +202,15 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     >>> print(classification_mean_width_score(y_pred_set))
     2.0
     """
-    check_array_nan(y_pred_set)
-    check_array_inf(y_pred_set)
     y_pred_set = cast(
         NDArray,
         check_array(
             y_pred_set, force_all_finite=True, dtype=["bool"]
         )
     )
+    check_array_nan(y_pred_set)
+    check_array_inf(y_pred_set)
+
     mean_width = y_pred_set.sum(axis=1).mean()
     return float(mean_width)
 
