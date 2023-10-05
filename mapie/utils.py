@@ -1265,8 +1265,8 @@ def check_arrays_length(*arrays: NDArray) -> None:
     ValueError
         If the length of the arrays are different
     """
-    res = [len(array) for array in arrays]
+    res = [array.shape[0] for array in arrays]
     if len(np.unique(res)) > 1:
         raise ValueError(
-            "There are arrays with different length"
-        )
+                "There are arrays with different length"
+            )
