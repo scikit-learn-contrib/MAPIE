@@ -4,7 +4,7 @@ History
 
 ##### (##########)
 ------------------
-
+* Add new checks for metrics calculations
 
 
 0.7.0 (2023-09-14)
