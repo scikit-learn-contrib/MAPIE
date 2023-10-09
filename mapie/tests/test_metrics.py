@@ -233,7 +233,7 @@ def test_regression_valid_input_shape() -> None:
 
 def test_regression_same_length() -> None:
     """Test when y_true and y_preds have different lengths."""
-    with pytest.raises(ValueError, match=r".*could not be broadcast*"):
+    with pytest.raises(ValueError, match=r".*arrays with different len*"):
         regression_coverage_score(y_toy, y_preds[:-1, 1], y_preds[:-1, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
@@ -277,7 +277,7 @@ def test_classification_y_true_shape() -> None:
         )
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         classification_ssc(np.tile(y_true_class, (2, 1)), y_pred_set_2alphas)
-    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
+    with pytest.raises(ValueError, match=r".*are arrays with different len*"):
         classification_ssc_score(np.tile(y_true_class, (2, 1)),
                                  y_pred_set_2alphas)
 
@@ -294,11 +294,11 @@ def test_classification_y_pred_set_shape() -> None:
 
 def test_classification_same_length() -> None:
     """Test when y_true and y_pred_set have different lengths."""
-    with pytest.raises(IndexError, match=r".*shape mismatch*"):
+    with pytest.raises(ValueError, match=r".*are arrays with different len*"):
         classification_coverage_score(y_true_class, y_pred_set[:-1, :])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         classification_ssc(y_true_class, y_pred_set_2alphas[:-1, :, :])
-    with pytest.raises(ValueError, match=r".*shape mismatch*"):
+    with pytest.raises(ValueError, match=r".*are arrays with different len*"):
         classification_ssc_score(y_true_class, y_pred_set_2alphas[:-1, :, :])
 
 

@@ -32,5 +32,5 @@ Contributors
 * Daniel Herbst <daniel.herbst@tum.de>
 * Candice Moyet <cmoyet@quantmetry.com>
 * Sofiane Ziane <sziane@quantmetry.com>
-
+* Rafael Saraiva <rafael.saraiva.de@gmail.com>
 To be continued ...
