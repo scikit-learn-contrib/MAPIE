@@ -6,7 +6,7 @@ dependencies:
     - codecov
     - flake8
     - mypy
-    - pandas=1.5.3
+    - pandas=1.4.4
     - pytest-cov
     - scikit-learn
     - typed-ast
