@@ -7,7 +7,7 @@ This example uses :class:`~mapie.regression.MapieRegressor`,
 :class:`~mapie.metrics` is used to estimate the coverage width
 based criterion of 1D homoscedastic data using different strategies.
 The coverage width based criterion is computed with the function
-:func:`~mapie.metrics.cwc()`
+:func:`~mapie.metrics.coverage_width_based()`
 """
 
 import os
@@ -19,7 +19,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-from mapie.metrics import (cwc, regression_coverage_score,
+from mapie.metrics import (coverage_width_based, regression_coverage_score,
                            regression_mean_width_score)
 from mapie.regression import MapieQuantileRegressor, MapieRegressor
 from mapie.subsample import Subsample
@@ -222,7 +222,7 @@ for strategy in STRATEGIES:
         y_pis[strategy][:, 0, 0],
         y_pis[strategy][:, 1, 0]
     )
-    cwc_score[strategy] = cwc(
+    cwc_score[strategy] = coverage_width_based(
         y_test,
         y_pis[strategy][:, 0, 0],
         y_pis[strategy][:, 1, 0],

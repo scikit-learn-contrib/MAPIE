@@ -427,10 +427,10 @@ def test_aci_method() -> None:
     mapie_regressor = MapieTimeSeriesRegressor(method="aci")
     mapie_regressor.fit(X, y)
     mapie_regressor.predict(X, alpha=0.05)
-    mapie_regressor.adapt_conformal_inference(X, y)
+    mapie_regressor.adapt_conformal_inference(X, y,gamma=0.01)
     with pytest.raises(AttributeError,
                        match=r"This method can be called "
                              r"only with method='aci' *"):
         mapie_regressor_enbpi = MapieTimeSeriesRegressor(method="enbpi")
         mapie_regressor_enbpi.fit(X, y)
-        mapie_regressor_enbpi.adapt_conformal_inference(X, y)
+        mapie_regressor_enbpi.adapt_conformal_inference(X, y,gamma=0.01)

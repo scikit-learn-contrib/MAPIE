@@ -6,7 +6,7 @@ from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_array, column_or_1d
 
 from ._typing import ArrayLike, NDArray
-from .utils import (calc_bins,
+from .utils import (calc_bins, check_alpha,
                     check_array_shape_classification,
                     check_array_shape_regression,
                     check_binary_zero_one,
@@ -742,7 +742,7 @@ def hsic(
     return coef_hsic
 
 
-def cwc(
+def coverage_width_based(
     y_true: ArrayLike,
     y_pred_low: ArrayLike,
     y_pred_up: ArrayLike,
@@ -843,14 +843,14 @@ def cwc(
     >>> y_preds_up = np.array([6, 9, 10, 12.5, 12])
     >>> eta = 0.01
     >>> alpha = 0.1
-    >>> print(np.round(cwc(y_true, y_preds_low, y_preds_up, eta, alpha),2))
+    >>> print(np.round(coverage_width_based(y_true, y_preds_low, y_preds_up, eta, alpha) ,2))
     0.69
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
-    if 0 <= (1-alpha) <= 1:
+    if check_alpha(1-alpha):
         # Mu is within the valid range
         coverage_score = regression_coverage_score(
             y_true,

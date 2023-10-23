@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
-from sklearn.base import RegressorMixin
+from sklearn.base import RegressorMixin, check_array
+from sklearn.calibration import column_or_1d
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.validation import check_is_fitted
 
@@ -15,7 +16,6 @@ from mapie.regression import MapieRegressor
 from mapie.utils import (check_alpha,
                          check_alpha_and_n_samples,
                          check_gamma,
-                         convert_to_numpy
                          )
 
 
@@ -276,7 +276,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self,
         X: ArrayLike,
         y_true: ArrayLike,
-        gamma: float = 0.01,
+        gamma: float,
     ) -> MapieTimeSeriesRegressor:
         """
         Adapt the ``alpha_t`` attribute when new data with known
@@ -321,7 +321,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         X = cast(NDArray, X)
         y_true = cast(NDArray, y_true)
 
-        X, y_true = convert_to_numpy(X, y_true)
+        X = check_array(X)
+        y_true = column_or_1d(y_true)
 
         for x_row, y_row in zip(X, y_true):
             x = np.expand_dims(x_row, axis=0)

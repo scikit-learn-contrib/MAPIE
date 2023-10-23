@@ -59,6 +59,10 @@ International Conference on Machine Learning (ICML, 2021).
 [2] Isaac Gibbs, Emmanuel Candes
 "Adaptive conformal inference under distribution shift"
 Advances in Neural Information Processing Systems, (NeurIPS, 2021).
+
+[3] Margaux Zaffran et al.
+"Adaptive Conformal Predictions for Time Series"
+https://arxiv.org/pdf/2202.07282.pdf
 """
 
 import warnings
@@ -72,7 +76,7 @@ from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie.metrics import (regression_coverage_score,
                            regression_mean_width_score,
-                           cwc)
+                           coverage_width_based)
 from mapie.subsample import BlockBootstrap
 from mapie.regression import MapieTimeSeriesRegressor
 
@@ -232,7 +236,7 @@ coverage_enbpi_npfit = regression_coverage_score(
 width_enbpi_npfit = regression_mean_width_score(
     y_pis_enbpi_npfit[:, 0, 0], y_pis_enbpi_npfit[:, 1, 0]
 )
-cwc_enbpi_npfit = cwc(
+cwc_enbpi_npfit = coverage_width_based(
     y_test, y_pis_enbpi_npfit[:, 0, 0],
     y_pis_enbpi_npfit[:, 1, 0],
     eta=10,
@@ -250,7 +254,7 @@ coverage_aci_npfit = regression_coverage_score(
 width_aci_npfit = regression_mean_width_score(
     y_pis_aci_npfit[:, 0, 0], y_pis_aci_npfit[:, 1, 0]
 )
-cwc_aci_npfit = cwc(
+cwc_aci_npfit = coverage_width_based(
     y_test,
     y_pis_aci_npfit[:, 0, 0],
     y_pis_aci_npfit[:, 1, 0],
@@ -291,7 +295,7 @@ coverage_enbpi_pfit = regression_coverage_score(
 width_enbpi_pfit = regression_mean_width_score(
     y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0]
 )
-cwc_enbpi_pfit = cwc(
+cwc_enbpi_pfit = coverage_width_based(
     y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0],
     eta=10,
     alpha=0.05
@@ -337,7 +341,7 @@ coverage_aci_pfit = regression_coverage_score(
 width_aci_pfit = regression_mean_width_score(
     y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0]
 )
-cwc_aci_pfit = cwc(
+cwc_aci_pfit = coverage_width_based(
     y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0],
     eta=0.01,
     alpha=0.05
