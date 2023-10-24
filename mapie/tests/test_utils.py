@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-import pandas as pd
 import numpy as np
 import pytest
 from numpy.random import RandomState
