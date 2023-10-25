@@ -15,7 +15,7 @@ from mapie.conformity_scores import ConformityScore
 from mapie.regression import MapieRegressor
 from mapie.utils import (check_alpha,
                          check_alpha_and_n_samples,
-                         check_gamma,
+                         check_gamma, convert_to_numpy,
                          )
 
 
@@ -321,8 +321,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         X = cast(NDArray, X)
         y_true = cast(NDArray, y_true)
 
-        X = check_array(X)
-        y_true = column_or_1d(y_true)
+        X, y_true = convert_to_numpy(X, y_true)
 
         for x_row, y_row in zip(X, y_true):
             x = np.expand_dims(x_row, axis=0)

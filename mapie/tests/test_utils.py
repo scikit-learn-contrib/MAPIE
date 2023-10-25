@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 import numpy as np
+import pandas as pd
 import pytest
 from numpy.random import RandomState
 from sklearn.datasets import make_regression
@@ -17,7 +18,7 @@ from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_gamma, check_lower_upper_bounds,
                          check_n_features_in, check_n_jobs, check_null_weight,
                          check_number_bins, check_split_strategy,
-                         check_verbose, compute_quantiles, fit_estimator,
+                         check_verbose, compute_quantiles, convert_to_numpy, fit_estimator,
                          get_binning_groups)
 
 
@@ -455,3 +456,36 @@ def test_check_cv_same_split_no_random_state(cv: BaseCrossValidator) -> None:
 
     for i in range(cv.get_n_splits()):
         np.testing.assert_allclose(train_indices_1[i], train_indices_2[i])
+
+
+def test_convert_to_numpy_dataframe_and_series():
+    X_df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
+    y_series = pd.Series([7, 8, 9])
+    X_array, y_array = convert_to_numpy(X_df, y_series)
+    assert isinstance(X_array, np.ndarray)
+    assert isinstance(y_array, np.ndarray)
+    assert np.array_equal(X_array, X_df.values)
+    assert np.array_equal(y_array, y_series.values)
+
+
+def test_convert_to_numpy_numpy_arrays():
+    X_array = np.array([[1, 2], [3, 4]])
+    y_array = np.array([5, 6])
+    X_result, y_result = convert_to_numpy(X_array, y_array)
+    assert isinstance(X_result, np.ndarray)
+    assert isinstance(y_result, np.ndarray)
+    assert np.array_equal(X_result, X_array)
+    assert np.array_equal(y_result, y_array)
+
+
+def test_convert_to_numpy_invalid_input_df():
+    with pytest.raises(ValueError):
+        invalid_input = "Invalid Input"
+        convert_to_numpy(invalid_input, [1, 2, 3])
+
+
+def test_convert_to_numpy_invalid_input_series():
+    with pytest.raises(ValueError):
+        invalid_input = "Invalid Input"
+        convert_to_numpy(pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}),
+                         invalid_input)
