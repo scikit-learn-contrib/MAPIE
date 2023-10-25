@@ -18,8 +18,8 @@ from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_gamma, check_lower_upper_bounds,
                          check_n_features_in, check_n_jobs, check_null_weight,
                          check_number_bins, check_split_strategy,
-                         check_verbose, compute_quantiles, convert_to_numpy, fit_estimator,
-                         get_binning_groups)
+                         check_verbose, compute_quantiles, convert_to_numpy,
+                         fit_estimator, get_binning_groups)
 
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)

@@ -3,8 +3,7 @@ from __future__ import annotations
 from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
-from sklearn.base import RegressorMixin, check_array
-from sklearn.calibration import column_or_1d
+from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.validation import check_is_fitted
 
