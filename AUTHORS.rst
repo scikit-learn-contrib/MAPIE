@@ -34,5 +34,6 @@ Contributors
 * Sofiane Ziane <sziane@quantmetry.com>
 * Remi Colliaux <rcolliaux@quantmetry.com>
 * Arthur Phan <aphan@quantmetry.com>
+* Rafael Saraiva <rafael.saraiva.de@gmail.com>
 
 To be continued ...
