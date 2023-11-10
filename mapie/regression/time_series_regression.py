@@ -34,18 +34,12 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     Actually, EnbPI only corresponds to ``MapieTimeSeriesRegressor`` if the
     ``cv`` argument is of type ``BlockBootstrap``.
 
-
     The ACI strategy allows you to adapt the conformal inference
     (i.e the quantile). If the real values are not in the coverage,
     the size of the intervals will grow.
     Conversely, if the real values are in the coverage,
     the size of the intervals will decrease.
-
     You can use a gamma coefficient to adjust the strength of the correction.
-    The correction formula is: :math:`\alpha_{t} = \alpha_{t-1} + \gamma
-    (\alpha - 1_{y_t \notin C_{alpha_{t-1}}(X_t)})`. Where :math:`C_{alpha_t}`
-    is the coverage given :math:`alpha` at time t. If :math:`\gamma=0`,
-    it means we don't adapt the conformal inference.
 
     References
     ----------
