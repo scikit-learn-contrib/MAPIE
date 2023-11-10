@@ -42,9 +42,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     the size of the intervals will decrease.
 
     You can use a gamma coefficient to adjust the strength of the correction.
-    The correction formula is: :math:`alpha {t+1} = alpha_{t} + gamma
-    (alpha - 1 {y_t notin C{alpha_t}(X_t)})`. Where :math:`C{alpha_t}` is the
-    coverage given alpha at time t. If gamma=0,
+    The correction formula is: :math:`\alpha_{t} = \alpha_{t-1} + \gamma
+    (\alpha - 1_{y_t \notin C_{alpha_{t-1}}(X_t)})`. Where :math:`C_{alpha_t}`
+    is the coverage given :math:`alpha` at time t. If :math:`\gamma=0`,
     it means we don't adapt the conformal inference.
 
     References
