@@ -1238,13 +1238,20 @@ def convert_to_numpy(
 ) -> Tuple[NDArray, NDArray]:
     """
     Converts pandas DataFrame and Series to NumPy arrays.
-    Parameters:
-        X (pd.DataFrame): The input DataFrame to be converted.
-        y_true (pd.Series): The input Series to be converted.
-    Returns:
-        Tuple[NDArray, NDArray]: A tuple containing two NumPy arrays.
-            The first element is the NumPy array corresponding to X,
-            and the second element is the NumPy array corresponding to y_true.
+
+    Parameters
+    ----------
+    X: panda.DataFrame
+        The input DataFrame to be converted.
+    y_true: panda.Series)
+        The input Series to be converted.
+
+    Returns
+    -------
+    Tuple[NDArray, NDArray]
+        A tuple containing two NumPy arrays.
+        The first element is the NumPy array corresponding to X,
+        and the second element is the NumPy array corresponding to y_true.
     """
     if isinstance(X, DataFrame):
         X_values = X.values
