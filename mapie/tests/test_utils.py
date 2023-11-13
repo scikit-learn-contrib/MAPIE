@@ -521,5 +521,7 @@ def test_convert_to_numpy_invalid_input_df():
 def test_convert_to_numpy_invalid_input_series():
     with pytest.raises(ValueError):
         invalid_input = "Invalid Input"
-        convert_to_numpy(pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}),
-                         invalid_input)
+        convert_to_numpy(
+            pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}),
+            invalid_input
+        )
