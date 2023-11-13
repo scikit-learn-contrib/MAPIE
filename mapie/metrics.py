@@ -931,11 +931,8 @@ def coverage_width_based(
     >>> y_preds_up = np.array([6, 9, 10, 12.5, 12])
     >>> eta = 0.01
     >>> alpha = 0.1
-    >>> print(np.round(coverage_width_based(y_true, \
-                                            y_preds_low, \
-                                            y_preds_up, \
-                                            eta, alpha) \
-              ,2))
+    >>> cwb = coverage_width_based(y_true, y_preds_low, y_preds_up, eta, alpha)
+    >>> print(np.round(cwb ,2))
     0.69
     """
     y_true = cast(NDArray, column_or_1d(y_true))
