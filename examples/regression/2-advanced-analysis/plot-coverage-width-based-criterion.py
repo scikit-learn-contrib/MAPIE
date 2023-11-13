@@ -71,7 +71,6 @@ def get_1d_data_with_heteroscedastic_noise(
 # Here, the noise is considered as *heteroscedastic*, since it will increase
 # linearly with :math:`x`.
 
-
 min_x, max_x, n_samples, noise = 0, 5, 300, 0.5
 (
     X_train, y_train, X_test, y_test, y_mesh
@@ -113,10 +112,9 @@ polyn_model_quant = Pipeline(
 
 ##############################################################################
 # We then estimate the prediction intervals for all the strategies very easily
-# with a
-# `fit` and `predict` process. The prediction interval's lower and upper bounds
-# are then saved in a DataFrame. Here, we set an alpha value of 0.05
-# in order to obtain a 95% confidence for our prediction intervals.
+# with a `fit` and `predict` process. The prediction interval's lower and
+# upper bounds are then saved in a DataFrame. Here, we set an alpha value of
+# 0.05 in order to obtain a 95% confidence for our prediction intervals.
 
 STRATEGIES = {
     "naive": dict(method="naive"),
