@@ -942,28 +942,26 @@ def coverage_width_based(
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
-    if check_alpha(1-alpha):
-        # Mu is within the valid range
-        coverage_score = regression_coverage_score(
-            y_true,
-            y_pred_low,
-            y_pred_up
-        )
-        mean_width = regression_mean_width_score(
-            y_pred_low,
-            y_pred_up
-        )
-        ref_length = np.subtract(
-            float(y_true.max()),
-            float(y_true.min())
-        )
-        avg_length = mean_width / ref_length
+    check_alpha(1-alpha)
 
-        cwc = (1-avg_length)*np.exp(-eta*(coverage_score-(1-alpha))**2)
+    coverage_score = regression_coverage_score(
+        y_true,
+        y_pred_low,
+        y_pred_up
+    )
+    mean_width = regression_mean_width_score(
+        y_pred_low,
+        y_pred_up
+    )
+    ref_length = np.subtract(
+        float(y_true.max()),
+        float(y_true.min())
+    )
+    avg_length = mean_width / ref_length
 
-        return float(cwc)
-    else:
-        raise ValueError("mu must be between 0 and 1")
+    cwc = (1-avg_length)*np.exp(-eta*(coverage_score-(1-alpha))**2)
+
+    return float(cwc)
 
 
 def add_jitter(

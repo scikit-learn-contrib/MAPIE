@@ -630,7 +630,7 @@ def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
         )
 
 
-def test_mu_invalid_cwc_score() -> None:
+def test_alpha_invalid_cwc_score() -> None:
     """Test a non-valid value of mu in cwc score."""
     with pytest.raises(ValueError):
         coverage_width_based(
