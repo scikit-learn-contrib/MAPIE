@@ -5,6 +5,7 @@ History
 ##### (##########)
 ------------------
 * Add new checks for metrics calculations
+* Add the Sequential Predictive Conformal Inference (SPCI) method for MapieTimeSeriesRegressor.
 
 
 0.7.0 (2023-09-14)
