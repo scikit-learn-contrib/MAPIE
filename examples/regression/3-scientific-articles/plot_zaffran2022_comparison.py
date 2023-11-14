@@ -7,7 +7,7 @@ Reproduction of part of the paper experiments of Zaffran et al. (2022)
 part of the paper experiments of Zaffran et al. (2022) in their article [1]
 which we argue that Adaptive Conformal Inference (ACI, Gibbs & Candès, 2021)
 [2], developed for distribution-shift time series, is a good procedure for
-time series with general dependency. 
+time series with general dependency.
 
 For a given model, the simulation adjusts the MAPIE regressors using aci
 method, on a dataset taken from the article and available on the github
