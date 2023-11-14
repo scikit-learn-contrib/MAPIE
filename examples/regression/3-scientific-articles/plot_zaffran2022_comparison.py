@@ -1,10 +1,8 @@
 import warnings
 
-from io import BytesIO
-from typing import Any, Optional, Tuple
+from typing import Tuple
 from urllib.request import urlopen
 import ssl
-from zipfile import ZipFile
 import pickle
 
 import datetime
@@ -80,7 +78,7 @@ plt.figure(figsize=(10, 5))
 plt.plot(date_data, data.Spot, color='black', linewidth=0.6)
 
 locs, labels = plt.xticks()
-new_labels = ['2016', '2017', '2018', '2019',' 2020']
+new_labels = ['2016', '2017', '2018', '2019', '2020']
 plt.xticks(locs[0:len(locs):2], labels=new_labels)
 
 plt.xlabel('Date')
@@ -96,12 +94,12 @@ limit = datetime.datetime(2019, 1, 1, tzinfo=datetime.timezone.utc)
 id_train = data.index[pd.to_datetime(data['Date'], utc=True) < limit].tolist()
 id_test = data.index[pd.to_datetime(data['Date'], utc=True) >= limit].tolist()
 
-data_train = data.iloc[id_train,:]
-data_test = data.iloc[id_test,:]
+data_train = data.iloc[id_train, :]
+data_test = data.iloc[id_test, :]
 
-features = ['hour'] + ['dow_%d'%i for i in range(7)] \
-    + ['lag_24_%d'%i for i in range(24)] \
-    + ['lag_168_%d'%i for i in range(24)] + ['conso']
+features = ['hour'] + ['dow_%d' % i for i in range(7)] \
+    + ['lag_24_%d' % i for i in range(24)] \
+    + ['lag_168_%d' % i for i in range(24)] + ['conso']
 X_train = data_train.loc[:, features]
 y_train = data_train.Spot
 
@@ -174,8 +172,9 @@ for step in range(1, min(len(X_test_0), iteration_max+1), gap):
     mapie_aci.adapt_conformal_inference(
         X_test_0.iloc[(step - gap):step, :],
         y_test_0.iloc[(step - gap):step],
-        gamma = gamma
+        gamma=gamma
     )
+
     (
         y_pred_aci_pfit[step:step + gap],
         y_pis_aci_pfit[step:step + gap, :, :],
@@ -185,7 +184,7 @@ for step in range(1, min(len(X_test_0), iteration_max+1), gap):
         ensemble=True,
         optimize_beta=True
     )
-    
+
 results = y_pis_aci_pfit.copy()
 
 
@@ -226,8 +225,8 @@ data_ref = get_pickle()
 
 # Flatten the array to shape (n, 2)
 results_ref = np.concatenate(
-    [data_ref['Y_inf'], data_ref['Y_sup']], axis=-1
-).reshape(-1, 2)
+    [data_ref['Y_inf'], data_ref['Y_sup']], axis=0
+).T
 results = np.array(results.reshape(-1, 2))
 
 # Compare the NumPy array with the corresponding DataFrame columns
