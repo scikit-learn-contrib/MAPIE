@@ -884,10 +884,10 @@ def coverage_width_based(
     emphasize the contribution of (1-Mean Width Score). This means that the
     algorithm will prioritize reducing the average width of the prediction
     intervals (Mean Width Score) over achieving a high coverage probability
-    (Coverage score). The exponential term np.exp(-eta*(Coverage score-mu)**2)
-    will have a sharp decline as Coverage score deviates from mu. So, achieving
-    a high Coverage score becomes less important compared to minimizing
-    Mean Width Score.
+    (Coverage score). The exponential term np.exp(-eta*(Coverage score -
+    (1-alpha))**2) will have a sharp decline as Coverage score deviates
+    from (1-alpha). So, achieving a high Coverage score becomes less important
+    compared to minimizing Mean Width Score.
     The impact will be narrower prediction intervals on average, which may
     result in more precise but less conservative predictions.
 
@@ -898,7 +898,7 @@ def coverage_width_based(
     (Mean Width Score) but with less emphasis compared to higher
     eta values.
     The exponential term will be less steep, meaning that deviations of
-    Coverage score from mu will have a moderate impact.
+    Coverage score from (1-alpha) will have a moderate impact.
     You'll get a balance between prediction precision and coverage, but the
     exact balance will depend on the specific value of eta.
 
@@ -906,8 +906,8 @@ def coverage_width_based(
 
     When eta is negative, it will have a different effect on the formula.
     Negative values of eta will cause the exponential term
-    np.exp(-eta*(Coverage score-mu)**2)
-    to become larger as Coverage score deviates from mu. This means that
+    np.exp(-eta*(Coverage score - (1-alpha))**2) to become larger as
+    Coverage score deviates from (1-alpha). This means that
     a negative eta prioritizes achieving a high coverage probability
     (Coverage score) over minimizing Mean Width Score.
     In this case, the algorithm will aim to produce wider prediction intervals
@@ -919,8 +919,8 @@ def coverage_width_based(
     Null Eta (Eta = 0):
 
     Specifically, when eta is zero, the CWC score becomes equal to
-    1 - Mean Width Score, which is equivalent to
-    1 - (average width of the prediction intervals).
+    (1 - Mean Width Score), which is equivalent to
+    (1 - average width of the prediction intervals).
     Therefore, in this case, the CWC score is primarily based on the size of
     the prediction interval.
 
