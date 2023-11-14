@@ -1,3 +1,37 @@
+"""
+======================================================================
+Reproduction of part of the paper experiments of Zaffran et al. (2022)
+======================================================================
+
+:class:`~mapie.regression.MapieTimeSeriesRegressor` is used to reproduce a
+part of the paper experiments of Zaffran et al. (2022) in their article [1]
+which we argue that Adaptive Conformal Inference (ACI, Gibbs & Candès, 2021)
+[2], developed for distribution-shift time series, is a good procedure for
+time series with general dependency. 
+
+For a given model, the simulation adjusts the MAPIE regressors using aci
+method, on a dataset taken from the article and available on the github
+repository 'https://github.com/mzaffran/AdaptiveConformalPredictionsTimeSeries'
+and compares the bounds of the PIs.
+
+In order to reproduce the results of the github repository, we reuse the
+``RandomForestRegressor`` regression model and follow the same conformal
+prediction procedure (see 'https://github.com/mzaffran/\
+AdaptiveConformalPredictionsTimeSeries/blob/\
+131656fe4c25251bad745f52db3c2d7cb1c24bbb/models.py').
+
+This simulation is carried out to check that the aci method implemented in
+MAPIE gives the same results as [1], and that the bounds of the PIs are
+obtained.
+
+[1] Zaffran, M., Féron, O., Goude, Y., Josse, J., & Dieuleveut, A. (2022).
+Adaptive conformal predictions for time series.
+In International Conference on Machine Learning (pp. 25834-25866). PMLR.
+
+[2] Gibbs, I., & Candes, E. (2021). Adaptive conformal inference under
+distribution shift.
+Advances in Neural Information Processing Systems, 34, 1660-1672.
+"""
 import warnings
 
 from typing import Tuple
