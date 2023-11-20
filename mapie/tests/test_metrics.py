@@ -196,10 +196,9 @@ def test_regression_ypredlow_shape() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError):
-        coverage_width_based(y_toy, y_preds[:1],
-                             y_preds[:, 2],
-                             eta=30,
-                             alpha=0.1)
+        coverage_width_based(
+            y_toy, y_preds[:1], y_preds[:, 2], eta=30, alpha=0.1
+        )
 
 
 def test_regression_ypredup_shape() -> None:
@@ -209,11 +208,9 @@ def test_regression_ypredup_shape() -> None:
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError):
-        coverage_width_based(y_toy,
-                             y_preds[:, 1],
-                             y_preds[:1],
-                             eta=30,
-                             alpha=0.1)
+        coverage_width_based(
+            y_toy, y_preds[:, 1], y_preds[:1], eta=30, alpha=0.1
+        )
 
 
 def test_regression_intervals_invalid_shape() -> None:
@@ -251,7 +248,7 @@ def test_regression_valid_input_shape() -> None:
 
 def test_regression_same_length() -> None:
     """Test when y_true and y_preds have different lengths."""
-    with pytest.raises(ValueError, match=r".*could not be broadcast*"):
+    with pytest.raises(ValueError, match=r".*arrays with different len*"):
         regression_coverage_score(y_toy, y_preds[:-1, 1], y_preds[:-1, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
@@ -262,11 +259,9 @@ def test_regression_same_length() -> None:
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         hsic(y_toy, intervals[:-1, ])
     with pytest.raises(ValueError):
-        coverage_width_based(y_toy,
-                             y_preds[:-1, 1],
-                             y_preds[:, 2],
-                             eta=0,
-                             alpha=0.1)
+        coverage_width_based(
+            y_toy, y_preds[:-1, 1], y_preds[:, 2], eta=0, alpha=0.1
+        )
 
 
 def test_regression_toydata_coverage_score() -> None:
@@ -301,7 +296,7 @@ def test_classification_y_true_shape() -> None:
         )
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         classification_ssc(np.tile(y_true_class, (2, 1)), y_pred_set_2alphas)
-    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
+    with pytest.raises(ValueError, match=r".*are arrays with different len*"):
         classification_ssc_score(np.tile(y_true_class, (2, 1)),
                                  y_pred_set_2alphas)
 
@@ -318,11 +313,11 @@ def test_classification_y_pred_set_shape() -> None:
 
 def test_classification_same_length() -> None:
     """Test when y_true and y_pred_set have different lengths."""
-    with pytest.raises(IndexError, match=r".*shape mismatch*"):
+    with pytest.raises(ValueError, match=r".*are arrays with different len*"):
         classification_coverage_score(y_true_class, y_pred_set[:-1, :])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         classification_ssc(y_true_class, y_pred_set_2alphas[:-1, :, :])
-    with pytest.raises(ValueError, match=r".*shape mismatch*"):
+    with pytest.raises(ValueError, match=r".*are arrays with different len*"):
         classification_ssc_score(y_true_class, y_pred_set_2alphas[:-1, :, :])
 
 
@@ -635,55 +630,28 @@ def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
         )
 
 
-def test_mu_invalid_cwc_score() -> None:
+def test_alpha_invalid_cwc_score() -> None:
     """Test a non-valid value of mu in cwc score."""
     with pytest.raises(ValueError):
-        coverage_width_based(y_preds[:, 0],
-                             y_preds[:, 1],
-                             y_preds[:, 2],
-                             eta=30,
-                             alpha=-1)
+        coverage_width_based(
+            y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, alpha=-1
+        )
 
 
 def test_valid_eta() -> None:
     """Test different values of eta in cwc metric."""
     y, y_low, y_up = y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]
-    np.testing.assert_allclose(
-                               coverage_width_based(y,
-                                                    y_low,
-                                                    y_up,
-                                                    eta=30,
-                                                    alpha=0.1),
-                               0.48,
-                               rtol=1e-2
-                            )
-    np.testing.assert_allclose(
-                               coverage_width_based(y,
-                                                    y_low,
-                                                    y_up,
-                                                    eta=0.01,
-                                                    alpha=0.1),
-                               0.65,
-                               rtol=1e-2
-                            )
-    np.testing.assert_allclose(
-                               coverage_width_based(y,
-                                                    y_low,
-                                                    y_up,
-                                                    eta=-1,
-                                                    alpha=0.1),
-                               0.65,
-                               rtol=1e-2
-                            )
-    np.testing.assert_allclose(
-                               coverage_width_based(y,
-                                                    y_low,
-                                                    y_up,
-                                                    eta=0,
-                                                    alpha=0.1),
-                               0.65,
-                               rtol=1e-2
-                            )
+    cwb = coverage_width_based(y, y_low, y_up, eta=30, alpha=0.1)
+    np.testing.assert_allclose(cwb, 0.48, rtol=1e-2)
+
+    cwb = coverage_width_based(y, y_low, y_up, eta=0.01, alpha=0.1)
+    np.testing.assert_allclose(cwb, 0.65, rtol=1e-2)
+
+    cwb = coverage_width_based(y, y_low, y_up, eta=-1, alpha=0.1)
+    np.testing.assert_allclose(cwb, 0.65, rtol=1e-2)
+
+    cwb = coverage_width_based(y, y_low, y_up, eta=0, alpha=0.1)
+    np.testing.assert_allclose(cwb, 0.65, rtol=1e-2)
 
 
 @pytest.mark.parametrize("amplitude", [0.1, 0.01, 0.001])

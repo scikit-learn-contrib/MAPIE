@@ -14,6 +14,7 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._typing import ArrayLike, NDArray
 from mapie.regression import MapieQuantileRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
+                         check_array_nan, check_array_inf, check_arrays_length,
                          check_binary_zero_one, check_cv,
                          check_gamma, check_lower_upper_bounds,
                          check_n_features_in, check_n_jobs, check_null_weight,
@@ -409,6 +410,39 @@ def test_binary_target() -> None:
         check_binary_zero_one(np.array([0, 5, 4]))
 
 
+def test_nan_values() -> None:
+    """
+    Test if array has only non-numerical values like NaNs
+    """
+    with pytest.raises(
+        ValueError,
+        match=r"Array contains only NaN*"
+    ):
+        check_array_nan(np.array([np.nan, np.nan, np.nan, np.nan]))
+
+
+def test_inf_values() -> None:
+    """
+    Test if array has infinite values like +inf or -inf
+    """
+    with pytest.raises(
+        ValueError,
+        match=r"Array contains infinite va*"
+    ):
+        check_array_inf(np.array([1, 2, -np.inf, 4]))
+
+
+def test_length() -> None:
+    """
+    Test if the arrays have the same size (length)
+    """
+    with pytest.raises(
+        ValueError,
+        match=r"There are arrays with different len*"
+    ):
+        check_arrays_length(np.array([1, 2, 3]), np.array([4, 5, 6, 7]))
+
+
 def test_change_values_zero_one() -> None:
     """Test that binary output are changed to zero one outputs."""
     array_ = check_binary_zero_one(np.array([0, 4, 4]))
@@ -487,5 +521,7 @@ def test_convert_to_numpy_invalid_input_df():
 def test_convert_to_numpy_invalid_input_series():
     with pytest.raises(ValueError):
         invalid_input = "Invalid Input"
-        convert_to_numpy(pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}),
-                         invalid_input)
+        convert_to_numpy(
+            pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}),
+            invalid_input
+        )

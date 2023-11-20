@@ -9,7 +9,11 @@ from ._typing import ArrayLike, NDArray
 from .utils import (calc_bins, check_alpha,
                     check_array_shape_classification,
                     check_array_shape_regression,
+                    check_array_inf,
+                    check_array_nan,
+                    check_arrays_length,
                     check_binary_zero_one,
+                    check_lower_upper_bounds,
                     check_nb_intervals_sizes,
                     check_nb_sets_sizes,
                     check_number_bins,
@@ -55,6 +59,16 @@ def regression_coverage_score(
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
+
+    check_arrays_length(y_true, y_pred_low, y_pred_up)
+    check_lower_upper_bounds(y_true, y_pred_low, y_pred_up)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_pred_low)
+    check_array_inf(y_pred_low)
+    check_array_nan(y_pred_up)
+    check_array_inf(y_pred_up)
+
     coverage = np.mean(
         ((y_pred_low <= y_true) & (y_pred_up >= y_true))
     )
@@ -105,6 +119,13 @@ def classification_coverage_score(
             y_pred_set, force_all_finite=True, dtype=["bool"]
         )
     )
+
+    check_arrays_length(y_true, y_pred_set)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_pred_set)
+    check_array_inf(y_pred_set)
+
     coverage = np.take_along_axis(
         y_pred_set, y_true.reshape(-1, 1), axis=1
     ).mean()
@@ -141,6 +162,13 @@ def regression_mean_width_score(
     """
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
+
+    check_arrays_length(y_pred_low, y_pred_up)
+    check_array_nan(y_pred_low)
+    check_array_inf(y_pred_low)
+    check_array_nan(y_pred_up)
+    check_array_inf(y_pred_up)
+
     mean_width = np.abs(y_pred_up - y_pred_low).mean()
     return float(mean_width)
 
@@ -180,6 +208,8 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
             y_pred_set, force_all_finite=True, dtype=["bool"]
         )
     )
+    check_array_nan(y_pred_set)
+    check_array_inf(y_pred_set)
     mean_width = y_pred_set.sum(axis=1).mean()
     return float(mean_width)
 
@@ -220,6 +250,12 @@ def expected_calibration_error(
     num_bins = check_number_bins(num_bins)
     y_true_ = check_binary_zero_one(y_true)
     y_scores = cast(NDArray, y_scores)
+
+    check_arrays_length(y_true_, y_scores)
+    check_array_nan(y_true_)
+    check_array_inf(y_true_)
+    check_array_nan(y_scores)
+    check_array_inf(y_scores)
 
     if np.size(y_scores.shape) == 2:
         y_score = cast(
@@ -283,6 +319,21 @@ def top_label_ece(
     float
         The ECE score adapted in the top label setting.
     """
+    y_scores = cast(NDArray, y_scores)
+    y_true = cast(NDArray, y_true)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_scores)
+    check_array_inf(y_scores)
+
+    if y_score_arg is None:
+        check_arrays_length(y_true, y_scores)
+    else:
+        y_score_arg = cast(NDArray, y_score_arg)
+        check_array_nan(y_score_arg)
+        check_array_inf(y_score_arg)
+        check_arrays_length(y_true, y_scores, y_score_arg)
+
     ece = float(0.)
     split_strategy = check_split_strategy(split_strategy)
     num_bins = check_number_bins(num_bins)
@@ -345,6 +396,12 @@ def regression_coverage_score_v2(
     NDArray of shape (n_alpha,)
         Effective coverage obtained by the prediction intervals.
     """
+    check_arrays_length(y_true, y_intervals)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_intervals)
+    check_array_inf(y_intervals)
+
     y_intervals = check_array_shape_regression(y_true, y_intervals)
     if len(y_true.shape) != 2:
         y_true = cast(NDArray, column_or_1d(y_true))
@@ -385,6 +442,12 @@ def classification_coverage_score_v2(
     NDArray of shape (n_alpha,)
         Effective coverage obtained by the prediction sets.
     """
+    check_arrays_length(y_true, y_pred_set)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_pred_set)
+    check_array_inf(y_pred_set)
+
     y_pred_set = check_array_shape_classification(y_true, y_pred_set)
     if len(y_true.shape) != 2:
         y_true = cast(NDArray, column_or_1d(y_true))
@@ -449,6 +512,12 @@ def regression_ssc(
     check_number_bins(num_bins)
     widths = np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :])
     check_nb_intervals_sizes(widths, num_bins)
+
+    check_arrays_length(y_true, y_intervals)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_intervals)
+    check_array_inf(y_intervals)
 
     indexes_sorted = np.argsort(widths, axis=0)
     indexes_bybins = np.array_split(indexes_sorted, num_bins, axis=0)
@@ -557,6 +626,12 @@ def classification_ssc(
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_set = check_array_shape_classification(y_true, y_pred_set)
 
+    check_arrays_length(y_true, y_pred_set)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_pred_set)
+    check_array_inf(y_pred_set)
+
     sizes = np.sum(y_pred_set, axis=1)
     n_classes = y_pred_set.shape[1]
     if num_bins is None:
@@ -628,6 +703,12 @@ def classification_ssc_score(
     >>> print(classification_ssc_score(y_true, y_pred_set, num_bins=2))
     [0.66666667]
     """
+    check_arrays_length(y_true, y_pred_set)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_pred_set)
+    check_array_inf(y_pred_set)
+
     return np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
 
 
@@ -709,6 +790,13 @@ def hsic(
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     y_intervals = check_array_shape_regression(y_true, y_intervals)
+
+    check_arrays_length(y_true, y_intervals)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_intervals)
+    check_array_inf(y_intervals)
+
     kernel_sizes = cast(NDArray, column_or_1d(kernel_sizes))
     if len(kernel_sizes) != 2:
         raise ValueError(
@@ -796,10 +884,10 @@ def coverage_width_based(
     emphasize the contribution of (1-Mean Width Score). This means that the
     algorithm will prioritize reducing the average width of the prediction
     intervals (Mean Width Score) over achieving a high coverage probability
-    (Coverage score). The exponential term np.exp(-eta*(Coverage score-mu)**2)
-    will have a sharp decline as Coverage score deviates from mu. So, achieving
-    a high Coverage score becomes less important compared to minimizing
-    Mean Width Score.
+    (Coverage score). The exponential term np.exp(-eta*(Coverage score -
+    (1-alpha))**2) will have a sharp decline as Coverage score deviates
+    from (1-alpha). So, achieving a high Coverage score becomes less important
+    compared to minimizing Mean Width Score.
     The impact will be narrower prediction intervals on average, which may
     result in more precise but less conservative predictions.
 
@@ -810,7 +898,7 @@ def coverage_width_based(
     (Mean Width Score) but with less emphasis compared to higher
     eta values.
     The exponential term will be less steep, meaning that deviations of
-    Coverage score from mu will have a moderate impact.
+    Coverage score from (1-alpha) will have a moderate impact.
     You'll get a balance between prediction precision and coverage, but the
     exact balance will depend on the specific value of eta.
 
@@ -818,8 +906,8 @@ def coverage_width_based(
 
     When eta is negative, it will have a different effect on the formula.
     Negative values of eta will cause the exponential term
-    np.exp(-eta*(Coverage score-mu)**2)
-    to become larger as Coverage score deviates from mu. This means that
+    np.exp(-eta*(Coverage score - (1-alpha))**2) to become larger as
+    Coverage score deviates from (1-alpha). This means that
     a negative eta prioritizes achieving a high coverage probability
     (Coverage score) over minimizing Mean Width Score.
     In this case, the algorithm will aim to produce wider prediction intervals
@@ -831,8 +919,8 @@ def coverage_width_based(
     Null Eta (Eta = 0):
 
     Specifically, when eta is zero, the CWC score becomes equal to
-    1 - Mean Width Score, which is equivalent to
-    1 - (average width of the prediction intervals).
+    (1 - Mean Width Score), which is equivalent to
+    (1 - average width of the prediction intervals).
     Therefore, in this case, the CWC score is primarily based on the size of
     the prediction interval.
 
@@ -843,39 +931,34 @@ def coverage_width_based(
     >>> y_preds_up = np.array([6, 9, 10, 12.5, 12])
     >>> eta = 0.01
     >>> alpha = 0.1
-    >>> print(np.round(coverage_width_based(y_true, \
-                                            y_preds_low, \
-                                            y_preds_up, \
-                                            eta, alpha) \
-              ,2))
+    >>> cwb = coverage_width_based(y_true, y_preds_low, y_preds_up, eta, alpha)
+    >>> print(np.round(cwb ,2))
     0.69
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
-    if check_alpha(1-alpha):
-        # Mu is within the valid range
-        coverage_score = regression_coverage_score(
-            y_true,
-            y_pred_low,
-            y_pred_up
-        )
-        mean_width = regression_mean_width_score(
-            y_pred_low,
-            y_pred_up
-        )
-        ref_length = np.subtract(
-            float(y_true.max()),
-            float(y_true.min())
-        )
-        avg_length = mean_width / ref_length
+    check_alpha(1-alpha)
 
-        cwc = (1-avg_length)*np.exp(-eta*(coverage_score-(1-alpha))**2)
+    coverage_score = regression_coverage_score(
+        y_true,
+        y_pred_low,
+        y_pred_up
+    )
+    mean_width = regression_mean_width_score(
+        y_pred_low,
+        y_pred_up
+    )
+    ref_length = np.subtract(
+        float(y_true.max()),
+        float(y_true.min())
+    )
+    avg_length = mean_width / ref_length
 
-        return float(cwc)
-    else:
-        raise ValueError("mu must be between 0 and 1")
+    cwc = (1-avg_length)*np.exp(-eta*(coverage_score-(1-alpha))**2)
+
+    return float(cwc)
 
 
 def add_jitter(
@@ -1008,6 +1091,12 @@ def cumulative_differences(
     >>> cum_diff
     array([-0.1, -0.3, -0.2])
     """
+    check_arrays_length(y_true, y_score)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_score)
+    check_array_inf(y_score)
+
     n = len(y_true)
     y_score_jittered = add_jitter(
         y_score,
@@ -1096,8 +1185,15 @@ def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(kolmogorov_smirnov_statistic(y_true, y_score), 3))
     0.978
     """
+    check_arrays_length(y_true, y_score)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_score)
+    check_array_inf(y_score)
+
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
+
     cum_diff = cumulative_differences(y_true, y_score)
     sigma = length_scale(y_score)
     ks_stat = np.max(np.abs(cum_diff)) / sigma
@@ -1197,6 +1293,12 @@ def kolmogorov_smirnov_p_value(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(ks_p_value, 4))
     0.7857
     """
+    check_arrays_length(y_true, y_score)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_score)
+    check_array_inf(y_score)
+
     ks_stat = kolmogorov_smirnov_statistic(y_true, y_score)
     ks_p_value = 1 - kolmogorov_smirnov_cdf(ks_stat)
     return ks_p_value
@@ -1241,6 +1343,12 @@ def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(kuiper_statistic(y_true, y_score), 3))
     0.857
     """
+    check_arrays_length(y_true, y_score)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_score)
+    check_array_inf(y_score)
+
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
     cum_diff = cumulative_differences(y_true, y_score)
@@ -1352,6 +1460,12 @@ def kuiper_p_value(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(ku_p_value, 4))
     0.9684
     """
+    check_arrays_length(y_true, y_score)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_score)
+    check_array_inf(y_score)
+
     ku_stat = kuiper_statistic(y_true, y_score)
     ku_p_value = 1 - kuiper_cdf(ku_stat)
     return ku_p_value
@@ -1395,6 +1509,12 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(spiegelhalter_statistic(y_true, y_score), 3))
     -0.757
     """
+    check_arrays_length(y_true, y_score)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_score)
+    check_array_inf(y_score)
+
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
     numerator = np.sum(
@@ -1447,6 +1567,11 @@ def spiegelhalter_p_value(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(sp_p_value, 4))
     0.8486
     """
+    check_arrays_length(y_true, y_score)
+    check_array_nan(y_true)
+    check_array_inf(y_true)
+    check_array_nan(y_score)
+    check_array_inf(y_score)
     sp_stat = spiegelhalter_statistic(y_true, y_score)
     sp_p_value = 1 - scipy.stats.norm.cdf(sp_stat)
     return sp_p_value

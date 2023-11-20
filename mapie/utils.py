@@ -1238,13 +1238,20 @@ def convert_to_numpy(
 ) -> Tuple[NDArray, NDArray]:
     """
     Converts pandas DataFrame and Series to NumPy arrays.
-    Parameters:
-        X (pd.DataFrame): The input DataFrame to be converted.
-        y_true (pd.Series): The input Series to be converted.
-    Returns:
-        Tuple[NDArray, NDArray]: A tuple containing two NumPy arrays.
-            The first element is the NumPy array corresponding to X,
-            and the second element is the NumPy array corresponding to y_true.
+
+    Parameters
+    ----------
+    X: panda.DataFrame
+        The input DataFrame to be converted.
+    y_true: panda.Series)
+        The input Series to be converted.
+
+    Returns
+    -------
+    Tuple[NDArray, NDArray]
+        A tuple containing two NumPy arrays.
+        The first element is the NumPy array corresponding to X,
+        and the second element is the NumPy array corresponding to y_true.
     """
     if isinstance(X, DataFrame):
         X_values = X.values
@@ -1261,3 +1268,65 @@ def convert_to_numpy(
         raise ValueError("y_true must be a pandas Series or a NumPy array")
 
     return X_values, y_true_values
+
+
+def check_array_nan(array: NDArray) -> None:
+    """
+    Checks if the array have only NaN values. If it has we throw an error.
+
+    Parameters
+    ----------
+    array: NDArray
+        an array with non-numerical or non-categorical values
+
+    Raises
+    ------
+    ValueError
+        If all elements of the array are NaNs
+    """
+    if np.isnan(array).all() and len(np.unique(array)) > 0:
+        raise ValueError(
+            "Array contains only NaN values."
+        )
+
+
+def check_array_inf(array: NDArray) -> None:
+    """
+    Checks if the array have inf.
+    If a value is infinite, we throw an error.
+
+    Parameters
+    ----------
+    array: NDArray
+        an array with non-numerical or non-categorical values
+
+    Raises
+    ------
+    ValueError
+        If any elements of the array is +inf or -inf.
+    """
+    if np.isinf(array).any():
+        raise ValueError(
+            "Array contains infinite values."
+        )
+
+
+def check_arrays_length(*arrays: NDArray) -> None:
+    """
+    Checks if the length of all arrays given in this function are the same
+
+    Parameters
+    ----------
+    *arrays: NDArray
+        Arrays expected to have the same length
+
+    Raises
+    ------
+    ValueError
+        If the length of the arrays are different
+    """
+    res = [array.shape[0] for array in arrays]
+    if len(np.unique(res)) > 1:
+        raise ValueError(
+                "There are arrays with different length"
+            )

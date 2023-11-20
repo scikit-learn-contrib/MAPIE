@@ -4,8 +4,10 @@ History
 
 ##### (##########)
 ------------------
+
 * Add the Adaptative Conformal Inference (ACI) method for MapieTimeSeriesRegressor.
 * Add the Coverage Width-based Criterion (CWC) metric.
+* Add new checks for metrics calculations
 
 0.7.0 (2023-09-14)
 ------------------
