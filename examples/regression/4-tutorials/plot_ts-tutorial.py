@@ -37,9 +37,27 @@ predictions, or the increase of noise level, can be dynamically taken into
 account. It can be done with :class:`~MapieTimeSeriesRegressor` through
 the ``partial_fit`` class method called at every step.
 
+
+The ACI [2] strategy allows you to adapt the conformal inference
+(i.e the quantile). If the real values are not in the coverage,
+the size of the intervals will grow.
+Conversely, if the real values are in the coverage,
+the size of the intervals will decrease.
+You can use a gamma coefficient to adjust the strength of the correction.
+
+References
+----------
 [1] Chen Xu and Yao Xie.
 “Conformal Prediction Interval for Dynamic Time-Series.”
 International Conference on Machine Learning (ICML, 2021).
+
+[2] Isaac Gibbs, Emmanuel Candes
+"Adaptive conformal inference under distribution shift"
+Advances in Neural Information Processing Systems, (NeurIPS, 2021).
+
+[3] Margaux Zaffran et al.
+"Adaptive Conformal Predictions for Time Series"
+https://arxiv.org/pdf/2202.07282.pdf
 """
 
 import warnings
@@ -52,7 +70,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+                           regression_mean_width_score,
+                           coverage_width_based)
 from mapie.subsample import BlockBootstrap
 from mapie.regression import MapieTimeSeriesRegressor
 
@@ -162,9 +181,9 @@ else:
 #
 # We now use :class:`~MapieTimeSeriesRegressor` to build prediction intervals
 # associated with one-step ahead forecasts. As explained in the introduction,
-# we use the EnbPI method [1].
+# we use the EnbPI method [1] and the ACI method [2] .
 #
-# Estimating prediction intervals can be possible in two ways:
+# Estimating prediction intervals can be possible in three ways:
 #
 # - with a regular ``.fit`` and ``.predict`` process, limiting the use of
 #   trainining set residuals to build prediction intervals
@@ -172,6 +191,10 @@ else:
 # - using ``.partial_fit`` in addition to ``.fit`` and ``.predict`` allowing
 #   MAPIE to use new residuals from the test points as new data are becoming
 #   available.
+#
+# - using ``.partial_fit`` and ``.adapt_conformal_inference`` in addition to
+#   ``.fit`` and ``.predict`` allowing MAPIE to use new residuals from the
+#   test points as new data are becoming available.
 #
 # The latter method is particularly useful to adjust prediction intervals to
 # sudden change points on test sets that have not been seen by the model
@@ -190,19 +213,48 @@ cv_mapiets = BlockBootstrap(
 mapie_enbpi = MapieTimeSeriesRegressor(
     model, method="enbpi", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
+mapie_aci = MapieTimeSeriesRegressor(
+    model, method="aci", cv=cv_mapiets, agg_function="mean", n_jobs=-1
+)
+
 
 ##############################################################################
 # Let's start by estimating prediction intervals without partial fit.
 
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
-y_pred_npfit, y_pis_npfit = mapie_enbpi.predict(
+y_pred_enbpi_npfit, y_pis_enbpi_npfit = mapie_enbpi.predict(
     X_test, alpha=alpha, ensemble=True, optimize_beta=True
 )
-coverage_npfit = regression_coverage_score(
-    y_test, y_pis_npfit[:, 0, 0], y_pis_npfit[:, 1, 0]
+coverage_enbpi_npfit = regression_coverage_score(
+    y_test, y_pis_enbpi_npfit[:, 0, 0], y_pis_enbpi_npfit[:, 1, 0]
 )
-width_npfit = regression_mean_width_score(
-    y_pis_npfit[:, 0, 0], y_pis_npfit[:, 1, 0]
+width_enbpi_npfit = regression_mean_width_score(
+    y_pis_enbpi_npfit[:, 0, 0], y_pis_enbpi_npfit[:, 1, 0]
+)
+cwc_enbpi_npfit = coverage_width_based(
+    y_test, y_pis_enbpi_npfit[:, 0, 0],
+    y_pis_enbpi_npfit[:, 1, 0],
+    eta=10,
+    alpha=0.05
+)
+
+mapie_aci = mapie_aci.fit(X_train, y_train)
+
+y_pred_aci_npfit, y_pis_aci_npfit = mapie_aci.predict(
+    X_test, alpha=alpha, ensemble=True, optimize_beta=True
+)
+coverage_aci_npfit = regression_coverage_score(
+    y_test, y_pis_aci_npfit[:, 0, 0], y_pis_aci_npfit[:, 1, 0]
+)
+width_aci_npfit = regression_mean_width_score(
+    y_pis_aci_npfit[:, 0, 0], y_pis_aci_npfit[:, 1, 0]
+)
+cwc_aci_npfit = coverage_width_based(
+    y_test,
+    y_pis_aci_npfit[:, 0, 0],
+    y_pis_aci_npfit[:, 1, 0],
+    eta=10,
+    alpha=0.05
 )
 
 
@@ -213,12 +265,9 @@ width_npfit = regression_mean_width_score(
 
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 
-y_pred_pfit = np.zeros(y_pred_npfit.shape)
-y_pis_pfit = np.zeros(y_pis_npfit.shape)
-conformity_scores_pfit = []
-lower_quantiles_pfit = []
-higher_quantiles_pfit = []
-y_pred_pfit[:gap], y_pis_pfit[:gap, :, :] = mapie_enbpi.predict(
+y_pred_enbpi_pfit = np.zeros(y_pred_enbpi_npfit.shape)
+y_pis_enbpi_pfit = np.zeros(y_pis_enbpi_npfit.shape)
+y_pred_enbpi_pfit[:gap], y_pis_enbpi_pfit[:gap, :, :] = mapie_enbpi.predict(
     X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True
 )
 for step in range(gap, len(X_test), gap):
@@ -227,22 +276,70 @@ for step in range(gap, len(X_test), gap):
         y_test.iloc[(step - gap):step],
     )
     (
-        y_pred_pfit[step:step + gap],
-        y_pis_pfit[step:step + gap, :, :],
+        y_pred_enbpi_pfit[step:step + gap],
+        y_pis_enbpi_pfit[step:step + gap, :, :],
     ) = mapie_enbpi.predict(
         X_test.iloc[step:(step + gap), :],
         alpha=alpha,
         ensemble=True,
         optimize_beta=True
     )
-    conformity_scores_pfit.append(mapie_enbpi.conformity_scores_)
-    lower_quantiles_pfit.append(mapie_enbpi.lower_quantiles_)
-    higher_quantiles_pfit.append(mapie_enbpi.higher_quantiles_)
-coverage_pfit = regression_coverage_score(
-    y_test, y_pis_pfit[:, 0, 0], y_pis_pfit[:, 1, 0]
+coverage_enbpi_pfit = regression_coverage_score(
+    y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0]
 )
-width_pfit = regression_mean_width_score(
-    y_pis_pfit[:, 0, 0], y_pis_pfit[:, 1, 0]
+width_enbpi_pfit = regression_mean_width_score(
+    y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0]
+)
+cwc_enbpi_pfit = coverage_width_based(
+    y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0],
+    eta=10,
+    alpha=0.05
+)
+
+
+##############################################################################
+# Let's now estimate prediction intervals with partial fit and adapt conformal
+# inference. As discussed previously, the update of the residuals and the
+# one-step ahead predictions are performed sequentially in a loop.
+
+mapie_aci = mapie_aci.fit(X_train, y_train)
+
+y_pred_aci_pfit = np.zeros(y_pred_aci_npfit.shape)
+y_pis_aci_pfit = np.zeros(y_pis_aci_npfit.shape)
+y_pred_aci_pfit[:gap], y_pis_aci_pfit[:gap, :, :] = mapie_aci.predict(
+    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True
+)
+
+for step in range(gap, len(X_test), gap):
+    mapie_aci.partial_fit(
+        X_test.iloc[(step - gap):step, :],
+        y_test.iloc[(step - gap):step],
+    )
+    mapie_aci.adapt_conformal_inference(
+        X_test.iloc[(step - gap):step, :],
+        y_test.iloc[(step - gap):step],
+        gamma=0.05
+    )
+    (
+        y_pred_aci_pfit[step:step + gap],
+        y_pis_aci_pfit[step:step + gap, :, :],
+    ) = mapie_aci.predict(
+        X_test.iloc[step:(step + gap), :],
+        alpha=alpha,
+        ensemble=True,
+        optimize_beta=True
+    )
+
+coverage_aci_pfit = regression_coverage_score(
+    y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0]
+)
+width_aci_pfit = regression_mean_width_score(
+    y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0]
+)
+cwc_aci_pfit = coverage_width_based(
+    y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0],
+    eta=0.01,
+    alpha=0.05
 )
 
 ##############################################################################
@@ -252,10 +349,15 @@ width_pfit = regression_mean_width_score(
 # Let's now compare the prediction intervals estimated by MAPIE with and
 # without update of the residuals.
 
-y_preds = [y_pred_npfit, y_pred_pfit]
-y_pis = [y_pis_npfit, y_pis_pfit]
-coverages = [coverage_npfit, coverage_pfit]
-widths = [width_npfit, width_pfit]
+y_enbpi_preds = [y_pred_enbpi_npfit, y_pred_enbpi_pfit]
+y_enbpi_pis = [y_pis_enbpi_npfit, y_pis_enbpi_pfit]
+coverages_enbpi = [coverage_enbpi_npfit, coverage_enbpi_pfit]
+widths_enbpi = [width_enbpi_npfit, width_enbpi_pfit]
+
+y_aci_preds = [y_pred_aci_npfit, y_pred_aci_pfit]
+y_aci_pis = [y_pis_aci_npfit, y_pis_aci_pfit]
+coverages_aci = [coverage_aci_npfit, coverage_aci_pfit]
+widths_aci = [width_aci_npfit, width_aci_pfit]
 
 fig, axs = plt.subplots(
     nrows=2, ncols=1, figsize=(14, 8), sharey="row", sharex="col"
@@ -270,18 +372,49 @@ for i, (ax, w) in enumerate(zip(axs, ["without", "with"])):
     ax.plot(y_test, lw=2, label="Test data", c="C1")
 
     ax.plot(
-        y_test.index, y_preds[i], lw=2, c="C2", label="Predictions"
+        y_test.index, y_enbpi_preds[i], lw=2, c="C2", label="Predictions"
     )
     ax.fill_between(
         y_test.index,
-        y_pis[i][:, 0, 0],
-        y_pis[i][:, 1, 0],
+        y_enbpi_pis[i][:, 0, 0],
+        y_enbpi_pis[i][:, 1, 0],
         color="C2",
         alpha=0.2,
         label="Prediction intervals",
     )
     title = f"EnbPI, {w} update of residuals. "
-    title += f"Coverage:{coverages[i]:.3f} and Width:{widths[i]:.3f}"
+    title += (f"Coverage:{coverages_enbpi[i]:.3f} and "
+              f"Width:{widths_enbpi[i]:.3f}")
+    ax.set_title(title)
+    ax.legend()
+fig.tight_layout()
+plt.show()
+
+fig, axs = plt.subplots(
+    nrows=2, ncols=1, figsize=(14, 8), sharey="row", sharex="col"
+)
+for i, (ax, w) in enumerate(zip(axs, ["without", "with"])):
+    ax.set_ylabel("Hourly demand (GW)")
+    ax.plot(
+        y_train[int(-len(y_test)/2):],
+        lw=2,
+        label="Training data", c="C0"
+    )
+    ax.plot(y_test, lw=2, label="Test data", c="C1")
+
+    ax.plot(
+        y_test.index, y_aci_preds[i], lw=2, c="C2", label="Predictions"
+    )
+    ax.fill_between(
+        y_test.index,
+        y_aci_pis[i][:, 0, 0],
+        y_aci_pis[i][:, 1, 0],
+        color="C2",
+        alpha=0.2,
+        label="Prediction intervals",
+    )
+    title = f"ACI, {w} update of residuals. "
+    title += f"Coverage:{coverages_aci[i]:.3f} and Width:{widths_aci[i]:.3f}"
     ax.set_title(title)
     ax.legend()
 fig.tight_layout()
@@ -292,34 +425,68 @@ plt.show()
 # Let's now compare the coverages obtained by MAPIE with and without update
 # of the residuals on a 24-hour rolling window of prediction intervals.
 
+rolling_coverage_aci_pfit, rolling_coverage_aci_npfit = [], []
+rolling_coverage_enbpi_pfit, rolling_coverage_enbpi_npfit = [], []
+
 window = 24
-rolling_coverage_pfit, rolling_coverage_npfit = [], []
+
 for i in range(window, len(y_test), 1):
-    rolling_coverage_pfit.append(
+    rolling_coverage_aci_npfit.append(
         regression_coverage_score(
-            y_test[i-window:i], y_pis_pfit[i-window:i, 0, 0],
-            y_pis_pfit[i-window:i, 1, 0]
+            y_test[i-window:i], y_pis_aci_npfit[i-window:i, 0, 0],
+            y_pis_aci_npfit[i-window:i, 1, 0]
         )
     )
-    rolling_coverage_npfit.append(
+    rolling_coverage_aci_pfit.append(
         regression_coverage_score(
-            y_test[i-window:i], y_pis_npfit[i-window:i, 0, 0],
-            y_pis_npfit[i-window:i, 1, 0]
+            y_test[i-window:i], y_pis_aci_pfit[i-window:i, 0, 0],
+            y_pis_aci_pfit[i-window:i, 1, 0]
+        )
+    )
+
+    rolling_coverage_enbpi_npfit.append(
+        regression_coverage_score(
+            y_test[i-window:i], y_pis_enbpi_npfit[i-window:i, 0, 0],
+            y_pis_enbpi_npfit[i-window:i, 1, 0]
+        )
+    )
+    rolling_coverage_enbpi_pfit.append(
+        regression_coverage_score(
+            y_test[i-window:i], y_pis_enbpi_pfit[i-window:i, 0, 0],
+            y_pis_enbpi_pfit[i-window:i, 1, 0]
         )
     )
 
 plt.figure(figsize=(10, 5))
 plt.ylabel(f"Rolling coverage [{window} hours]")
+
 plt.plot(
     y_test[window:].index,
-    rolling_coverage_npfit,
-    label="Without update of residuals"
+    rolling_coverage_aci_npfit,
+    label="ACI Without update of residuals (NPfit)",
+    linestyle='--',
 )
 plt.plot(
     y_test[window:].index,
-    rolling_coverage_pfit,
-    label="With update of residuals"
+    rolling_coverage_aci_pfit,
+    label="ACI With update of residuals (Pfit)",
+    linestyle=':',
 )
+
+plt.plot(
+    y_test[window:].index,
+    rolling_coverage_enbpi_npfit,
+    label="ENBPI Without update of residuals (NPfit)",
+    linestyle='-.',
+)
+plt.plot(
+    y_test[window:].index,
+    rolling_coverage_enbpi_pfit,
+    label="ENBPI With update of residuals (Pfit)",
+    linestyle='-',
+)
+
+plt.legend()
 plt.show()
 
 ##############################################################################

@@ -33,6 +33,7 @@ from __future__ import annotations
 from io import BytesIO
 from typing import Any, Optional, Tuple
 from urllib.request import urlopen
+import ssl
 from zipfile import ZipFile
 
 import matplotlib.pyplot as plt
@@ -68,6 +69,7 @@ def get_X_y() -> Tuple[NDArray, NDArray]:
     zip_folder = "BlogFeedback.zip"
     csv_file = "blogData_train.csv"
     url = website + page + folder + zip_folder
+    ssl._create_default_https_context = ssl._create_unverified_context
     resp = urlopen(url)
     zipfile = ZipFile(BytesIO(resp.read()))
     df = pd.read_csv(zipfile.open(csv_file)).to_numpy()
