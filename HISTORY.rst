@@ -4,8 +4,8 @@ History
 
 ##### (##########)
 ------------------
-
-* Add the Adaptative Conformal Inference (ACI) method for MapieTimeSeriesRegressor.
+* Add new checks for metrics calculations
+* Add the Sequential Predictive Conformal Inference (SPCI) method for MapieTimeSeriesRegressor.
 * Add the Coverage Width-based Criterion (CWC) metric.
 * Add new checks for metrics calculations
 
