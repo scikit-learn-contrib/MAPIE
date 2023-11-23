@@ -33,4 +33,5 @@ Contributors
 * Candice Moyet <cmoyet@quantmetry.com>
 * Sofiane Ziane <sziane@quantmetry.com>
 * Rafael Saraiva <rafael.saraiva.de@gmail.com>
+* Mehdi Elion <mehdi.elion@gmail.com>
 To be continued ...
