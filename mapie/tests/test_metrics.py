@@ -16,6 +16,7 @@ from mapie.metrics import (add_jitter,
                            classification_ssc,
                            classification_ssc_score,
                            cumulative_differences,
+                           coverage_width_based,
                            expected_calibration_error,
                            hsic,
                            kolmogorov_smirnov_cdf,
@@ -194,6 +195,10 @@ def test_regression_ypredlow_shape() -> None:
         regression_coverage_score(y_toy, y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
+    with pytest.raises(ValueError):
+        coverage_width_based(
+            y_toy, y_preds[:1], y_preds[:, 2], eta=30, alpha=0.1
+        )
 
 
 def test_regression_ypredup_shape() -> None:
@@ -202,6 +207,10 @@ def test_regression_ypredup_shape() -> None:
         regression_coverage_score(y_toy, y_preds[:, 1], y_preds[:, 1:])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
+    with pytest.raises(ValueError):
+        coverage_width_based(
+            y_toy, y_preds[:, 1], y_preds[:1], eta=30, alpha=0.1
+        )
 
 
 def test_regression_intervals_invalid_shape() -> None:
@@ -222,6 +231,11 @@ def test_regression_ytrue_invalid_shape() -> None:
         regression_ssc_score(np.tile(y_toy, 2).reshape(5, 2), y_preds)
     with pytest.raises(ValueError):
         hsic(np.tile(y_toy, 2).reshape(5, 2), y_preds)
+    with pytest.raises(ValueError):
+        coverage_width_based(
+            np.tile(y_toy, 2).reshape(5, 2), y_preds[:, 1], y_preds[:, 2],
+            eta=30, alpha=0.1
+        )
 
 
 def test_regression_valid_input_shape() -> None:
@@ -229,6 +243,7 @@ def test_regression_valid_input_shape() -> None:
     regression_ssc(y_toy, intervals)
     regression_ssc_score(y_toy, intervals)
     hsic(y_toy, intervals)
+    coverage_width_based(y_toy, y_preds[:, 1], y_preds[:, 2], eta=0, alpha=0.1)
 
 
 def test_regression_same_length() -> None:
@@ -243,6 +258,10 @@ def test_regression_same_length() -> None:
         regression_ssc_score(y_toy, intervals[:-1, ])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         hsic(y_toy, intervals[:-1, ])
+    with pytest.raises(ValueError):
+        coverage_width_based(
+            y_toy, y_preds[:-1, 1], y_preds[:, 2], eta=0, alpha=0.1
+        )
 
 
 def test_regression_toydata_coverage_score() -> None:
@@ -609,6 +628,30 @@ def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
         classification_coverage_score_v2(
             np.expand_dims(y_true_class, axis=1), y_pred_set[:, 0]
         )
+
+
+def test_alpha_invalid_cwc_score() -> None:
+    """Test a non-valid value of mu in cwc score."""
+    with pytest.raises(ValueError):
+        coverage_width_based(
+            y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, alpha=-1
+        )
+
+
+def test_valid_eta() -> None:
+    """Test different values of eta in cwc metric."""
+    y, y_low, y_up = y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]
+    cwb = coverage_width_based(y, y_low, y_up, eta=30, alpha=0.1)
+    np.testing.assert_allclose(cwb, 0.48, rtol=1e-2)
+
+    cwb = coverage_width_based(y, y_low, y_up, eta=0.01, alpha=0.1)
+    np.testing.assert_allclose(cwb, 0.65, rtol=1e-2)
+
+    cwb = coverage_width_based(y, y_low, y_up, eta=-1, alpha=0.1)
+    np.testing.assert_allclose(cwb, 0.65, rtol=1e-2)
+
+    cwb = coverage_width_based(y, y_low, y_up, eta=0, alpha=0.1)
+    np.testing.assert_allclose(cwb, 0.65, rtol=1e-2)
 
 
 @pytest.mark.parametrize("amplitude", [0.1, 0.01, 0.001])

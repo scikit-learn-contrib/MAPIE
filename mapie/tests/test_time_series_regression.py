@@ -23,7 +23,7 @@ X, y = make_regression(
     n_samples=500, n_features=10, noise=1.0, random_state=random_state
 )
 k = np.ones(shape=(5, X.shape[1]))
-METHODS = ["enbpi"]
+METHODS = ["enbpi", "aci"]
 UPDATE_DATA = ([6], 17.5)
 CONFORMITY_SCORES = [14.189 - 14.038, 17.5 - 18.665]
 
@@ -36,56 +36,80 @@ Params = TypedDict(
     },
 )
 STRATEGIES = {
-    "jackknife_enbpi_mean_ab_wopt": Params(
+    "blockbootstrap_enbpi_mean_wopt": Params(
         method="enbpi",
         agg_function="mean",
         cv=BlockBootstrap(
-            n_resamplings=30, n_blocks=5, random_state=random_state
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
         ),
     ),
-    "jackknife_enbpi_median_ab_wopt": Params(
+    "blockbootstrap_enbpi_median_wopt": Params(
         method="enbpi",
         agg_function="median",
         cv=BlockBootstrap(
             n_resamplings=30,
             n_blocks=5,
-            random_state=random_state,
+            random_state=random_state
         ),
     ),
-    "jackknife_enbpi_mean_ab": Params(
+    "blockbootstrap_enbpi_mean": Params(
         method="enbpi",
         agg_function="mean",
         cv=BlockBootstrap(
-            n_resamplings=30, n_blocks=5, random_state=random_state
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
         ),
     ),
-    "jackknife_enbpi_median_ab": Params(
+    "blockbootstrap_enbpi_median": Params(
         method="enbpi",
         agg_function="median",
         cv=BlockBootstrap(
             n_resamplings=30,
             n_blocks=5,
-            random_state=random_state,
+            random_state=random_state
+        ),
+    ),
+    "blockbootstrap_aci_mean": Params(
+        method="aci",
+        agg_function="mean",
+        cv=BlockBootstrap(
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
+        ),
+    ),
+    "blockbootstrap_aci_median": Params(
+        method="aci",
+        agg_function="median",
+        cv=BlockBootstrap(
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
         ),
     ),
 }
 
 WIDTHS = {
-    "jackknife_enbpi_mean_ab_wopt": 3.76,
-    "jackknife_enbpi_median_ab_wopt": 3.76,
-    "jackknife_enbpi_mean_ab": 3.76,
-    "jackknife_enbpi_median_ab": 3.76,
+    "blockbootstrap_enbpi_mean_wopt": 3.76,
+    "blockbootstrap_enbpi_median_wopt": 3.76,
+    "blockbootstrap_enbpi_mean": 3.76,
+    "blockbootstrap_enbpi_median": 3.76,
+    "blockbootstrap_aci_mean": 3.76,
+    "blockbootstrap_aci_median": 3.76,
     "prefit": 4.79,
-
 }
 
 COVERAGES = {
-    "jackknife_enbpi_mean_ab_wopt": 0.952,
-    "jackknife_enbpi_median_ab_wopt": 0.946,
-    "jackknife_enbpi_mean_ab": 0.952,
-    "jackknife_enbpi_median_ab": 0.946,
+    "blockbootstrap_enbpi_mean_wopt": 0.952,
+    "blockbootstrap_enbpi_median_wopt": 0.946,
+    "blockbootstrap_enbpi_mean": 0.952,
+    "blockbootstrap_enbpi_median": 0.946,
+    "blockbootstrap_aci_mean": 0.95,
+    "blockbootstrap_aci_median": 0.95,
     "prefit": 0.98,
-
 }
 
 
@@ -103,7 +127,6 @@ def test_sklearn_checks() -> None:
 @pytest.mark.parametrize("agg_function", ["dummy", 0, 1, 2.5, [1, 2]])
 def test_invalid_agg_function(agg_function: Any) -> None:
     """Test that invalid agg_functions raise errors."""
-
     mapie_ts_reg = MapieTimeSeriesRegressor(agg_function=None)
     with pytest.raises(ValueError, match=r".*If ensemble is True*"):
         mapie_ts_reg.fit(X_toy, y_toy)
@@ -210,7 +233,7 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     np.testing.assert_allclose(y_pis1, y_pis2)
 
 
-@pytest.mark.parametrize("method", ["enbpi"])
+@pytest.mark.parametrize("method", ["enbpi", "aci"])
 @pytest.mark.parametrize("cv", [-1, 2, 3, 5])
 @pytest.mark.parametrize("agg_function", ["mean", "median"])
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2])
@@ -240,7 +263,6 @@ def test_linear_regression_results(strategy: str) -> None:
     a multivariate linear regression problem
     with fixed random state.
     """
-
     mapie_ts = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts.fit(X, y)
     if "opt" in strategy:
@@ -355,7 +377,7 @@ def test_MapieTimeSeriesRegressor_partial_fit_too_big() -> None:
         mapie_ts_reg = mapie_ts_reg.partial_fit(X=X, y=y)
 
 
-def test_MapieTimeSeriesRegressor_beta_optimize_eeror() -> None:
+def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
     """Test ``beta_optimize`` raised error."""
     mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1)
     with pytest.raises(ValueError, match=r".*Lower and upper bounds arrays*"):
@@ -392,3 +414,23 @@ def test_consistent_class() -> None:
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     np.testing.assert_allclose(y_pred_1, y_pred_2)
+
+
+def test_aci_method() -> None:
+    """
+    Test function for the "aci" (Adapted Conformal Inference) method
+    in a MapieTimeSeriesRegressor.
+    Additionally, it attempts to test the regressor with the "enbpi"
+    method, but this part is expected to raise an exception,
+    and it captures the exception without taking any action.
+    """
+    mapie_regressor = MapieTimeSeriesRegressor(method="aci")
+    mapie_regressor.fit(X, y)
+    mapie_regressor.predict(X, alpha=0.05)
+    mapie_regressor.adapt_conformal_inference(X, y, gamma=0.01)
+    with pytest.raises(AttributeError,
+                       match=r"This method can be called "
+                             r"only with method='aci' *"):
+        mapie_regressor_enbpi = MapieTimeSeriesRegressor(method="enbpi")
+        mapie_regressor_enbpi.fit(X, y)
+        mapie_regressor_enbpi.adapt_conformal_inference(X, y, gamma=0.01)

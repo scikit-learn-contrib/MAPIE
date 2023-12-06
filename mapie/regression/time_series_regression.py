@@ -10,31 +10,57 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all
-from .regression import MapieRegressor
-from mapie.utils import check_alpha, check_alpha_and_n_samples
+from mapie.conformity_scores import ConformityScore
+from mapie.regression import MapieRegressor
+from mapie.utils import (check_alpha,
+                         check_alpha_and_n_samples,
+                         check_gamma, convert_to_numpy,
+                         )
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
     """
     Prediction intervals with out-of-fold residuals for time series.
+    This class only has two valid ``method`` : ``"enbpi"`` or ``"aci"``
 
-    This class implements the EnbPI strategy for estimating
-    prediction intervals on single-output time series. The only valid
-    ``method`` is ``"enbpi"``.
+    The prediction intervals are calibrated on a split of the trained data.
+    Both strategies are estimating prediction intervals
+    on single-output time series.
+
+    EnbPI allows you to update conformal scores using the ``partial_fit``
+    function. It will replace the oldest one with the newest scores.
+    It will keep the same amount of total scores
 
     Actually, EnbPI only corresponds to ``MapieTimeSeriesRegressor`` if the
     ``cv`` argument is of type ``BlockBootstrap``.
+
+    The ACI strategy allows you to adapt the conformal inference
+    (i.e the quantile). If the real values are not in the coverage,
+    the size of the intervals will grow.
+    Conversely, if the real values are in the coverage,
+    the size of the intervals will decrease.
+    You can use a gamma coefficient to adjust the strength of the correction.
 
     References
     ----------
     Chen Xu, and Yao Xie.
     "Conformal prediction for dynamic time-series."
     https://arxiv.org/abs/2010.09107
+
+    Isaac Gibbs, Emmanuel Candes
+    "Adaptive conformal inference under distribution shift"
+    https://proceedings.neurips.cc/paper/2021/file/\
+    0d441de75945e5acbc865406fc9a2559-Paper.pdf
+
+    Margaux Zaffran et al.
+    "Adaptive Conformal Predictions for Time Series"
+    https://arxiv.org/pdf/2202.07282.pdf
     """
 
-    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ \
-        + ["BlockBootstrap"]
-    valid_methods_ = ["enbpi"]
+    cv_need_agg_function_ = (
+        MapieRegressor.cv_need_agg_function_ + ["BlockBootstrap"]
+    )
+    valid_methods_ = ["enbpi", "aci"]
 
     def __init__(
         self,
@@ -44,6 +70,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
+        conformity_score: Optional[ConformityScore] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         super().__init__(
@@ -53,6 +80,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             n_jobs=n_jobs,
             agg_function=agg_function,
             verbose=verbose,
+            conformity_score=conformity_score,
             random_state=random_state
         )
 
@@ -76,8 +104,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         -------
             The conformity scores corresponding to the input data set.
         """
-        y_pred, _ = super().predict(X, alpha=0.5, ensemble=True)
-        return np.asarray(y) - np.asarray(y_pred)
+        y_pred = super().predict(X, ensemble=True)
+        scores = np.array(
+            self.conformity_score_function_.get_signed_conformity_scores(
+                X, y, y_pred
+            )
+        )
+        return scores
 
     def _beta_optimize(
         self,
@@ -181,6 +214,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         """
         self = super().fit(X=X, y=y, sample_weight=sample_weight)
         self.conformity_scores_ = self._relative_conformity_scores(X, y)
+        if self.method == "aci":
+            self.current_alpha: dict[float, float] = {}
         return self
 
     def partial_fit(
@@ -228,6 +263,79 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.conformity_scores_[
             -len(new_conformity_scores_):
         ] = new_conformity_scores_
+        return self
+
+    def adapt_conformal_inference(
+        self,
+        X: ArrayLike,
+        y_true: ArrayLike,
+        gamma: float,
+    ) -> MapieTimeSeriesRegressor:
+        """
+        Adapt the ``alpha_t`` attribute when new data with known
+        labels are available.
+        Note: Don't use ``adapt_conformal_inference``
+        with samples of the training set.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Test data.
+
+        y_true: ArrayLike of shape (n_samples_test,)
+            Input labels.
+
+        gamma: float
+            Coefficient that decides the correction of the conformal inference.
+            If it equals 0, there are no corrections.
+
+        Returns
+        -------
+        MapieTimeSeriesRegressor
+            The model itself.
+
+        Raises
+        ------
+        ValueError
+            If the length of ``y`` is greater than
+            the length of the training set.
+        """
+
+        check_is_fitted(self, self.fit_attributes)
+        check_gamma(gamma)
+
+        if self.method != "aci":
+            raise AttributeError(
+                "This method can be called "
+                f"only with method='aci', "
+                f"not with '{self.method}'."
+            )
+
+        X = cast(NDArray, X)
+        y_true = cast(NDArray, y_true)
+
+        X, y_true = convert_to_numpy(X, y_true)
+
+        for x_row, y_row in zip(X, y_true):
+            x = np.expand_dims(x_row, axis=0)
+            _, y_pred_bounds = self.predict(
+                x, alpha=list(self.current_alpha.keys())
+            )
+
+            for alpha_ix, alpha_0 in enumerate(self.current_alpha):
+                alpha_t = self.current_alpha[alpha_0]
+                is_true_in_quantile = 1 - float(
+                    y_pred_bounds[:, 0, alpha_ix] <
+                    y_row
+                    < y_pred_bounds[:, 1, alpha_ix]
+                )
+
+                new_alpha_t = np.clip(
+                    alpha_t + gamma*(alpha_0-is_true_in_quantile),
+                    0, 1
+                )
+                self.current_alpha[alpha_0] = new_alpha_t
+
         return self
 
     def predict(
@@ -291,6 +399,19 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
+        alpha_np = np.round(alpha_np, 2)
+
+        if self.method == "aci":
+            for ix, alpha_checked in enumerate(alpha_np):
+                # This code snippet in the "aci" method ensures that when
+                # the same confidence level (alpha) is encountered more
+                # than once, it is mapped to a consistent value.
+                # This helps maintain reliability and predictability in
+                # the algorithm's computations specific to the "aci" method.
+                if alpha_checked not in self.current_alpha:
+                    self.current_alpha[alpha_checked] = alpha_checked
+                else:
+                    alpha_np[ix] = self.current_alpha[alpha_checked]
 
         if optimize_beta:
             betas_0 = self._beta_optimize(
@@ -316,8 +437,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.lower_quantiles_ = lower_quantiles
         self.higher_quantiles_ = higher_quantiles
 
-        if self.method in self.no_agg_methods_ \
-                or self.cv in self.no_agg_cv_:
+        if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
             y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
             y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
         else:

@@ -32,5 +32,10 @@ Contributors
 * Daniel Herbst <daniel.herbst@tum.de>
 * Candice Moyet <cmoyet@quantmetry.com>
 * Sofiane Ziane <sziane@quantmetry.com>
+* Remi Colliaux <rcolliaux@quantmetry.com>
+* Arthur Phan <aphan@quantmetry.com>
 * Rafael Saraiva <rafael.saraiva.de@gmail.com>
+* Kevin R. Chen <kevin@tempor.ai>
+* Tianhao Guan <tg2825@columbia.edu>
+
 To be continued ...

@@ -6,7 +6,7 @@ from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_array, column_or_1d
 
 from ._typing import ArrayLike, NDArray
-from .utils import (calc_bins,
+from .utils import (calc_bins, check_alpha,
                     check_array_shape_classification,
                     check_array_shape_regression,
                     check_array_inf,
@@ -828,6 +828,137 @@ def hsic(
     coef_hsic = np.sqrt(np.matrix.trace(hsic_mat, axis1=1, axis2=2))
 
     return coef_hsic
+
+
+def coverage_width_based(
+    y_true: ArrayLike,
+    y_pred_low: ArrayLike,
+    y_pred_up: ArrayLike,
+    eta: float,
+    alpha: float
+) -> float:
+    """
+    Coverage Width-based Criterion (CWC) obtained by the prediction intervals.
+
+    The effective coverage score is a criterion used to evaluate the quality
+    of prediction intervals (PIs) based on their coverage and width.
+
+    Khosravi, Abbas, Saeid Nahavandi, and Doug Creighton.
+    "Construction of optimal prediction intervals for load forecasting
+    problems."
+    IEEE Transactions on Power Systems 25.3 (2010): 1496-1503.
+
+    Parameters
+    ----------
+    Coverage score : float
+        Prediction interval coverage probability (Coverage score), which is
+        the estimated fraction of true labels that lie within the prediction
+        intervals.
+    Mean Width Score : float
+        Prediction interval normalized average width (Mean Width Score),
+        calculated as the average width of the prediction intervals.
+    eta : int
+        A user-defined parameter that balances the contributions of
+        Mean Width Score and Coverage score in the CWC calculation.
+    alpha : float
+        A user-defined parameter representing the designed confidence level of
+        the PI.
+
+    Returns
+    -------
+    float
+        Effective coverage score (CWC) obtained by the prediction intervals.
+
+    Notes
+    -----
+    The effective coverage score (CWC) is calculated using the following
+    formula:
+    CWC = (1 - Mean Width Score) * exp(-eta * (Coverage score - (1-alpha))**2)
+
+    The CWC penalizes under- and overcoverage in the same way and summarizes
+    the quality of the prediction intervals in a single value.
+
+    High Eta (Large Positive Value):
+
+    When eta is a high positive value, it will strongly
+    emphasize the contribution of (1-Mean Width Score). This means that the
+    algorithm will prioritize reducing the average width of the prediction
+    intervals (Mean Width Score) over achieving a high coverage probability
+    (Coverage score). The exponential term np.exp(-eta*(Coverage score -
+    (1-alpha))**2) will have a sharp decline as Coverage score deviates
+    from (1-alpha). So, achieving a high Coverage score becomes less important
+    compared to minimizing Mean Width Score.
+    The impact will be narrower prediction intervals on average, which may
+    result in more precise but less conservative predictions.
+
+    Low Eta (Small Positive Value):
+
+    When eta is a low positive value, it will still
+    prioritize reducing the average width of the prediction intervals
+    (Mean Width Score) but with less emphasis compared to higher
+    eta values.
+    The exponential term will be less steep, meaning that deviations of
+    Coverage score from (1-alpha) will have a moderate impact.
+    You'll get a balance between prediction precision and coverage, but the
+    exact balance will depend on the specific value of eta.
+
+    Negative Eta (Any Negative Value):
+
+    When eta is negative, it will have a different effect on the formula.
+    Negative values of eta will cause the exponential term
+    np.exp(-eta*(Coverage score - (1-alpha))**2) to become larger as
+    Coverage score deviates from (1-alpha). This means that
+    a negative eta prioritizes achieving a high coverage probability
+    (Coverage score) over minimizing Mean Width Score.
+    In this case, the algorithm will aim to produce wider prediction intervals
+    to ensure a higher likelihood of capturing the true values within those
+    intervals, even if it sacrifices precision.
+    Negative eta values might be used in scenarios where avoiding errors or
+    outliers is critical.
+
+    Null Eta (Eta = 0):
+
+    Specifically, when eta is zero, the CWC score becomes equal to
+    (1 - Mean Width Score), which is equivalent to
+    (1 - average width of the prediction intervals).
+    Therefore, in this case, the CWC score is primarily based on the size of
+    the prediction interval.
+
+    Examples
+    --------
+    >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
+    >>> y_preds_low = np.array([4, 6, 9, 8.5, 10.5])
+    >>> y_preds_up = np.array([6, 9, 10, 12.5, 12])
+    >>> eta = 0.01
+    >>> alpha = 0.1
+    >>> cwb = coverage_width_based(y_true, y_preds_low, y_preds_up, eta, alpha)
+    >>> print(np.round(cwb ,2))
+    0.69
+    """
+    y_true = cast(NDArray, column_or_1d(y_true))
+    y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
+    y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
+
+    check_alpha(1-alpha)
+
+    coverage_score = regression_coverage_score(
+        y_true,
+        y_pred_low,
+        y_pred_up
+    )
+    mean_width = regression_mean_width_score(
+        y_pred_low,
+        y_pred_up
+    )
+    ref_length = np.subtract(
+        float(y_true.max()),
+        float(y_true.min())
+    )
+    avg_length = mean_width / ref_length
+
+    cwc = (1-avg_length)*np.exp(-eta*(coverage_score-(1-alpha))**2)
+
+    return float(cwc)
 
 
 def add_jitter(

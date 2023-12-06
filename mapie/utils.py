@@ -3,6 +3,7 @@ from inspect import signature
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from pandas import DataFrame, Series
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
@@ -321,6 +322,28 @@ def check_n_features_in(
                 "X.shape and estimator.n_features_in_."
             )
     return n_features_in
+
+
+def check_gamma(
+    gamma: float
+) -> None:
+    """
+    Check if gamma is between 0 and 1
+
+    Parameters
+    ----------
+    gamma: float
+
+    Raises
+    ------
+    ValueError
+        If gamma is lower than 0 or higher than 1.
+    """
+
+    if (gamma < 0) or (gamma > 1):
+        raise ValueError(
+            "Gamma must be between 0 and 1."
+        )
 
 
 def check_alpha_and_n_samples(
@@ -1208,6 +1231,43 @@ def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
                 "The number of bins should be less than the number of \
                 different set sizes."
             )
+
+
+def convert_to_numpy(
+    X: DataFrame, y_true: Series
+) -> Tuple[NDArray, NDArray]:
+    """
+    Converts pandas DataFrame and Series to NumPy arrays.
+
+    Parameters
+    ----------
+    X: panda.DataFrame
+        The input DataFrame to be converted.
+    y_true: panda.Series)
+        The input Series to be converted.
+
+    Returns
+    -------
+    Tuple[NDArray, NDArray]
+        A tuple containing two NumPy arrays.
+        The first element is the NumPy array corresponding to X,
+        and the second element is the NumPy array corresponding to y_true.
+    """
+    if isinstance(X, DataFrame):
+        X_values = X.values
+    elif isinstance(X, np.ndarray):
+        X_values = X
+    else:
+        raise ValueError("X must be a pandas DataFrame or a NumPy array")
+
+    if isinstance(y_true, Series):
+        y_true_values = y_true.values
+    elif isinstance(y_true, np.ndarray):
+        y_true_values = y_true
+    else:
+        raise ValueError("y_true must be a pandas Series or a NumPy array")
+
+    return X_values, y_true_values
 
 
 def check_array_nan(array: NDArray) -> None:
