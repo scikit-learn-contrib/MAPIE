@@ -35,5 +35,7 @@ Contributors
 * Remi Colliaux <rcolliaux@quantmetry.com>
 * Arthur Phan <aphan@quantmetry.com>
 * Rafael Saraiva <rafael.saraiva.de@gmail.com>
+* Kevin R. Chen <kevin@tempor.ai>
+* Tianhao Guan <tg2825@columbia.edu>
 
 To be continued ...
