@@ -109,8 +109,9 @@ Key takeaways
 References
 ==========
 
-[1] Angelopoulos, A. N., & Bates, S. (2021). A gentle introduction to conformal
-prediction and distribution-free uncertainty quantification. arXiv preprint arXiv:2107.07511.
+[1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J., & Wasserman, L. (2018). Distribution-Free 
+Predictive Inference for Regression. Journal of the American Statistical Association, 113(523), 1094–1111. 
+Available from https://doi.org/10.1080/01621459.2017.1307116
 
 [2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. &amp; Brunel, N.. (2023).
 Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library.
