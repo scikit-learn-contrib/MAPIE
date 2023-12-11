@@ -12,10 +12,13 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import ConformityScore
 from mapie.regression import MapieRegressor
-from mapie.utils import (check_alpha,
-                         check_alpha_and_n_samples,
-                         check_gamma, convert_to_numpy,
-                         )
+from mapie.estimator.estimator import EnsembleRegressor
+from mapie.utils import (
+    check_alpha,
+    check_alpha_and_n_samples,
+    check_gamma,
+    convert_to_numpy,
+)
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
@@ -57,9 +60,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/pdf/2202.07282.pdf
     """
 
-    cv_need_agg_function_ = (
-        MapieRegressor.cv_need_agg_function_ + ["BlockBootstrap"]
-    )
+    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ + ["BlockBootstrap"]
     valid_methods_ = ["enbpi", "aci"]
 
     def __init__(
@@ -81,7 +82,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             agg_function=agg_function,
             verbose=verbose,
             conformity_score=conformity_score,
-            random_state=random_state
+            random_state=random_state,
         )
 
     def _relative_conformity_scores(
@@ -106,9 +107,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         """
         y_pred = super().predict(X, ensemble=True)
         scores = np.array(
-            self.conformity_score_function_.get_signed_conformity_scores(
-                X, y, y_pred
-            )
+            self.conformity_score_function_.get_signed_conformity_scores(X, y, y_pred)
         )
         return scores
 
@@ -171,11 +170,58 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 axis=1,
                 method="lower",
             )
-            betas_0[:, ind_alpha] = betas[
-                np.argmin(one_alpha_beta - beta, axis=0)
-            ]
+            betas_0[:, ind_alpha] = betas[np.argmin(one_alpha_beta - beta, axis=0)]
 
         return betas_0
+
+    def init_alpha(self) -> None:
+        if self.method == "aci":
+            self.current_alpha: dict[float, float] = {}
+        return None
+
+    def pre_fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+    ) -> MapieTimeSeriesRegressor:
+        """
+        Prefit to only fit the model
+        """
+        (
+            estimator,
+            self.conformity_score_function_,
+            agg_function,
+            cv,
+            X,
+            y,
+            sample_weight,
+        ) = self._check_fit_parameters(X, y, sample_weight)
+
+        self.estimator_ = EnsembleRegressor(
+            estimator,
+            self.method,
+            cv,
+            agg_function,
+            self.n_jobs,
+            self.random_state,
+            self.test_size,
+            self.verbose,
+        )
+        # Fit the prediction function
+        self.estimator_ = self.estimator_.fit(X, y, sample_weight)
+
+        return self
+
+    def update(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+    ) -> MapieTimeSeriesRegressor:
+        self = super().fit(X=X, y=y, sample_weight=sample_weight)
+        self.conformity_scores_ = self._relative_conformity_scores(X, y)
+        return self
 
     def fit(
         self,
@@ -260,9 +306,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.conformity_scores_ = np.roll(
             self.conformity_scores_, -len(new_conformity_scores_)
         )
-        self.conformity_scores_[
-            -len(new_conformity_scores_):
-        ] = new_conformity_scores_
+        self.conformity_scores_[-len(new_conformity_scores_) :] = new_conformity_scores_
         return self
 
     def adapt_conformal_inference(
@@ -318,21 +362,18 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         for x_row, y_row in zip(X, y_true):
             x = np.expand_dims(x_row, axis=0)
-            _, y_pred_bounds = self.predict(
-                x, alpha=list(self.current_alpha.keys())
-            )
+            _, y_pred_bounds = self.predict(x, alpha=list(self.current_alpha.keys()))
 
             for alpha_ix, alpha_0 in enumerate(self.current_alpha):
                 alpha_t = self.current_alpha[alpha_0]
                 is_true_in_quantile = 1 - float(
-                    y_pred_bounds[:, 0, alpha_ix] <
-                    y_row
+                    y_pred_bounds[:, 0, alpha_ix]
+                    < y_row
                     < y_pred_bounds[:, 1, alpha_ix]
                 )
 
                 new_alpha_t = np.clip(
-                    alpha_t + gamma*(alpha_0-is_true_in_quantile),
-                    0, 1
+                    alpha_t + gamma * (alpha_0 - is_true_in_quantile), 0, 1
                 )
                 self.current_alpha[alpha_0] = new_alpha_t
 
@@ -455,9 +496,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     def _more_tags(self):
         return {
-            "_xfail_checks":
-            {
-                "check_estimators_partial_fit_n_features":
-                "partial_fit can only be called on fitted models"
+            "_xfail_checks": {
+                "check_estimators_partial_fit_n_features": "partial_fit can only be called on fitted models"
             }
         }
