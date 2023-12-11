@@ -93,8 +93,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             The conformity scores corresponding to the input data set.
         """
         y_pred, _ = super().predict(X, alpha=0.5, ensemble=ensemble)
-        scores = self.conformity_score_function_.get_conformity_scores(
-            X, y, y_pred
+        scores = np.array(
+            self.conformity_score_function_.get_conformity_scores(X, y, y_pred)
         )
         return scores
 
