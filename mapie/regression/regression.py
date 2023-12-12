@@ -522,6 +522,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         X: ArrayLike,
         ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
+        optimize_beta: bool = False,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -561,6 +562,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             By default ``None``.
 
+        optimize_beta: bool
+            Whether to optimize the PIs' width or not.
+
+            By default ``False``.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -592,7 +598,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     self.estimator_,
                     self.conformity_scores_,
                     alpha_np,
-                    ensemble,
-                    self.method
+                    ensemble=ensemble,
+                    method=self.method,
+                    optimize_beta=optimize_beta
                 )
             return np.array(y_pred), np.stack([y_pred_low, y_pred_up], axis=1)

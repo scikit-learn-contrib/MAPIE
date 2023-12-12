@@ -254,14 +254,82 @@ class ConformityScore(metaclass=ABCMeta):
         ])
         return quantile
 
+    @staticmethod
+    def _beta_optimize(
+        alpha_np: NDArray,
+        upper_bounds: NDArray,
+        lower_bounds: NDArray,
+    ) -> NDArray:
+        """
+        Minimize the width of the PIs, for a given difference of quantiles.
+
+        Parameters
+        ----------
+        alpha_np: NDArray
+            The quantiles to compute.
+
+        upper_bounds: NDArray
+            The array of upper values.
+
+        lower_bounds: NDArray
+            The array of lower values.
+
+        Returns
+        -------
+        NDArray
+            Array of betas minimizing the differences
+            ``(1-alpa+beta)-quantile - beta-quantile``.
+
+        # Raises  # TODO
+        # ------
+        # ValueError
+        #     If lower and upper bounds arrays don't have the same shape.
+        """
+        # TODO
+        # if lower_bounds.shape != upper_bounds.shape:
+        #     raise ValueError(
+        #         "Lower and upper bounds arrays should have the same shape."
+        #     )
+        beta_np = np.full(
+            shape=(len(lower_bounds), len(alpha_np)),
+            fill_value=np.nan,
+            dtype=float,
+        )
+
+        for ind_alpha, _alpha in enumerate(alpha_np):
+            betas = np.linspace(
+                _alpha / (len(lower_bounds) + 1),
+                _alpha,
+                num=len(lower_bounds),
+                endpoint=True,
+            )
+            one_alpha_beta = np_nanquantile(
+                upper_bounds.astype(float),
+                1 - _alpha + betas,
+                axis=1,
+                method="higher",
+            )
+            beta = np_nanquantile(
+                lower_bounds.astype(float),
+                betas,
+                axis=1,
+                method="lower",
+            )
+            beta_np[:, ind_alpha] = betas[
+                np.argmin(one_alpha_beta - beta, axis=0)
+            ]
+
+        return beta_np
+
     def get_bounds(
         self,
         X: ArrayLike,
         estimator: EnsembleEstimator,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        ensemble: bool,
-        method: str
+        ensemble: bool = False,
+        method: str = 'base',
+        optimize_beta: bool = False,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
@@ -285,12 +353,21 @@ class ConformityScore(metaclass=ABCMeta):
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
 
+            By default ``False``.
+
         method: str
             Method to choose for prediction interval estimates.
             The ``"plus"`` method implies that the quantile is calculated
             after estimating the bounds, whereas the other methods
             (among the ``"naive"``, ``"base"`` or ``"minmax"`` methods,
             for example) do the opposite.
+
+            By default ``base``.
+
+        optimize_beta: bool
+            Whether to optimize the PIs' width or not.
+
+            By default ``False``.
 
         Returns
         -------
@@ -301,12 +378,23 @@ class ConformityScore(metaclass=ABCMeta):
             - The upper bounds of the prediction intervals of shape
             (n_samples, n_alpha).
         """
+        assert not (self.sym and optimize_beta)  # TODO
+
         y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble)
         signed = -1 if self.sym else 1
 
+        if optimize_beta:
+            beta_np = self._beta_optimize(
+                alpha_np,
+                conformity_scores.reshape(1, -1),
+                conformity_scores.reshape(1, -1),
+            )
+        else:
+            beta_np = alpha_np / 2
+
         if method == "plus":
-            alpha_low = alpha_np if self.sym else alpha_np / 2
-            alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
+            alpha_low = alpha_np if self.sym else beta_np
+            alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np + beta_np
 
             conformity_scores_low = self.get_estimation_distribution(
                 X, y_pred_low, signed * conformity_scores
@@ -322,8 +410,8 @@ class ConformityScore(metaclass=ABCMeta):
             )
         else:
             quantile_search = "higher" if self.sym else "lower"
-            alpha_low = 1 - alpha_np if self.sym else alpha_np / 2
-            alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
+            alpha_low = 1 - alpha_np if self.sym else beta_np
+            alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np + beta_np
 
             quantile_low = self.get_quantile(
                 conformity_scores, alpha_low, axis=0, method=quantile_search
