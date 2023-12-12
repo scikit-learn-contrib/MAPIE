@@ -279,17 +279,7 @@ class ConformityScore(metaclass=ABCMeta):
         NDArray
             Array of betas minimizing the differences
             ``(1-alpa+beta)-quantile - beta-quantile``.
-
-        # Raises  # TODO
-        # ------
-        # ValueError
-        #     If lower and upper bounds arrays don't have the same shape.
         """
-        # TODO
-        # if lower_bounds.shape != upper_bounds.shape:
-        #     raise ValueError(
-        #         "Lower and upper bounds arrays should have the same shape."
-        #     )
         beta_np = np.full(
             shape=(len(lower_bounds), len(alpha_np)),
             fill_value=np.nan,
@@ -377,8 +367,17 @@ class ConformityScore(metaclass=ABCMeta):
             (n_samples, n_alpha).
             - The upper bounds of the prediction intervals of shape
             (n_samples, n_alpha).
+
+        Raises
+        ------
+        ValueError
+            If beta optimisation with symmetrical conformity score function.
         """
-        assert not (self.sym and optimize_beta)  # TODO
+        if self.sym and optimize_beta:
+            raise ValueError(
+                "Beta optimisation cannot be used with "
+                + "symmetrical conformity score function."
+            )
 
         y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble)
         signed = -1 if self.sym else 1
