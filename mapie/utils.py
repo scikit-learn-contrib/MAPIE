@@ -129,13 +129,14 @@ def fit_estimator(
 
 
 def check_cv(
-    cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+    cv: Optional[Union[int, str, BaseCrossValidator, BaseShuffleSplit]] = None,
     test_size: Optional[Union[int, float]] = None,
     random_state: Optional[Union[int, np.random.RandomState]] = None,
-) -> Union[str, BaseCrossValidator]:
+) -> Union[str, BaseCrossValidator, BaseShuffleSplit]:
     """
     Check if cross-validator is
-    ``None``, ``int``, ``"prefit"``, ``"split"``or ``BaseCrossValidator``.
+    ``None``, ``int``, ``"prefit"``, ``"split"``, ``BaseCrossValidator`` or 
+    ``BaseShuffleSplit``.
     Return a ``LeaveOneOut`` instance if integer equal to -1.
     Return a ``KFold`` instance if integer superior or equal to 2.
     Return a ``KFold`` instance if ``None``.
@@ -143,7 +144,7 @@ def check_cv(
 
     Parameters
     ----------
-    cv: Optional[Union[int, str, BaseCrossValidator]], optional
+    cv: Optional[Union[int, str, BaseCrossValidator, BaseShuffleSplit]]
         Cross-validator to check, by default ``None``.
 
     test_size: Optional[Union[int, float]]
@@ -163,8 +164,8 @@ def check_cv(
 
     Returns
     -------
-    Optional[Union[float, str]]
-        'prefit' or None.
+    Union[str, BaseCrossValidator, BaseShuffleSplit]
+        The cast `cv` parameter.
 
     Raises
     ------
