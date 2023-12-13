@@ -135,7 +135,7 @@ def check_cv(
 ) -> Union[str, BaseCrossValidator, BaseShuffleSplit]:
     """
     Check if cross-validator is
-    ``None``, ``int``, ``"prefit"``, ``"split"``, ``BaseCrossValidator`` or 
+    ``None``, ``int``, ``"prefit"``, ``"split"``, ``BaseCrossValidator`` or
     ``BaseShuffleSplit``.
     Return a ``LeaveOneOut`` instance if integer equal to -1.
     Return a ``KFold`` instance if integer superior or equal to 2.
