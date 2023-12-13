@@ -208,6 +208,37 @@ def check_cv(
         )
 
 
+def check_no_agg_cv(
+    cv: Union[int, str, BaseCrossValidator, BaseShuffleSplit],
+    no_agg_cv_array: list,
+) -> bool:
+    """
+    Check if cross-validator is ``"prefit"``, ``"split"`` or any split
+    equivalent `BaseCrossValidator` or `BaseShuffleSplit`.
+
+    Parameters
+    ----------
+    cv: Union[int, str, BaseCrossValidator, BaseShuffleSplit]
+        Cross-validator to check.
+
+    no_agg_cv_array: list
+        List of all non-aggregated cv methods.
+
+    Returns
+    -------
+    bool
+        True if `cv` is a split equivalent / non-aggregated cv method.
+    """
+    if isinstance(cv, str):
+        return cv in no_agg_cv_array
+    elif isinstance(cv, int):
+        return cv == 1
+    try:
+        return cv.get_n_splits() == 1
+    except Exception:
+        return False
+
+
 def check_alpha(
     alpha: Optional[Union[float, Iterable[float]]] = None
 ) -> Optional[ArrayLike]:

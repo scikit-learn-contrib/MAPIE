@@ -11,7 +11,8 @@ from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all
 from .regression import MapieRegressor
-from mapie.utils import check_alpha, check_alpha_and_n_samples
+from mapie.utils import (check_alpha, check_alpha_and_n_samples,
+                         check_no_agg_cv)
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
@@ -316,8 +317,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.lower_quantiles_ = lower_quantiles
         self.higher_quantiles_ = higher_quantiles
 
-        if self.method in self.no_agg_methods_ \
-                or self.cv in self.no_agg_cv_:
+        if self.method in self.no_agg_methods_ or (
+            check_no_agg_cv(self.cv, self.no_agg_cv_)
+        ):
             y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
             y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
         else:
