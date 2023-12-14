@@ -5,8 +5,7 @@ History
 ##### (##########)
 ------------------
 * Integrate ConformityScore into MapieTimeSeriesRegressor.
-* Adapt MapieTimeSeriesRegressor to use any ConformityScore
-* Add new checks for metrics calculations
+* Add new checks for metrics calculations.
 
 
 0.7.0 (2023-09-14)
