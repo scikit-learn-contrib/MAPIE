@@ -306,7 +306,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         if agg_function not in self.valid_agg_functions_:
             raise ValueError(
-                "Invalid aggregation function "
+                "Invalid aggregation function. "
                 f"Allowed values are '{self.valid_agg_functions_}'."
             )
         elif (agg_function is None) and (

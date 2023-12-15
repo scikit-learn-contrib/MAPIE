@@ -5,6 +5,7 @@ History
 ##### (##########)
 ------------------
 * Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit).
+* Integrate ConformityScore into MapieTimeSeriesRegressor.
 * Add new checks for metrics calculations.
 * Fix reference for residual normalised score in documentation.
 
