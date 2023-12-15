@@ -51,6 +51,7 @@ from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
+from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.metrics import (regression_coverage_score,
                            regression_mean_width_score)
 from mapie.subsample import BlockBootstrap
@@ -187,8 +188,10 @@ gap = 1
 cv_mapiets = BlockBootstrap(
     n_resamplings=10, n_blocks=10, overlapping=False, random_state=59
 )
+cs = AbsoluteConformityScore(sym=False)
 mapie_enbpi = MapieTimeSeriesRegressor(
-    model, method="enbpi", cv=cv_mapiets, agg_function="mean", n_jobs=-1
+    model, method="enbpi", cv=cv_mapiets, conformity_score=cs,
+    agg_function="mean", n_jobs=-1
 )
 
 ##############################################################################
@@ -216,8 +219,6 @@ mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 y_pred_pfit = np.zeros(y_pred_npfit.shape)
 y_pis_pfit = np.zeros(y_pis_npfit.shape)
 conformity_scores_pfit = []
-lower_quantiles_pfit = []
-higher_quantiles_pfit = []
 y_pred_pfit[:gap], y_pis_pfit[:gap, :, :] = mapie_enbpi.predict(
     X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True
 )
@@ -236,8 +237,6 @@ for step in range(gap, len(X_test), gap):
         optimize_beta=True
     )
     conformity_scores_pfit.append(mapie_enbpi.conformity_scores_)
-    lower_quantiles_pfit.append(mapie_enbpi.lower_quantiles_)
-    higher_quantiles_pfit.append(mapie_enbpi.higher_quantiles_)
 coverage_pfit = regression_coverage_score(
     y_test, y_pis_pfit[:, 0, 0], y_pis_pfit[:, 1, 0]
 )
