@@ -4,8 +4,9 @@ History
 
 ##### (##########)
 ------------------
-* Add new checks for metrics calculations
-* Fix reference for residual normalised score in documentation
+* Integrate ConformityScore into MapieTimeSeriesRegressor.
+* Add new checks for metrics calculations.
+* Fix reference for residual normalised score in documentation.
 
 
 0.7.0 (2023-09-14)

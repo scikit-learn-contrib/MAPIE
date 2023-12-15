@@ -29,8 +29,9 @@ class AbsoluteConformityScore(ConformityScore):
 
     def __init__(
         self,
+        sym: bool = True,
     ) -> None:
-        super().__init__(sym=True, consistency_check=True)
+        super().__init__(sym=sym, consistency_check=True)
 
     def get_signed_conformity_scores(
         self,
@@ -77,8 +78,9 @@ class GammaConformityScore(ConformityScore):
 
     def __init__(
         self,
+        sym: bool = False,
     ) -> None:
-        super().__init__(sym=False, consistency_check=False, eps=EPSILON)
+        super().__init__(sym=sym, consistency_check=False, eps=EPSILON)
 
     def _check_observed_data(
         self,
