@@ -347,38 +347,6 @@ def test_results_for_same_alpha(
     np.testing.assert_allclose(y_pis[:, 1, 0], y_pis_clone[:, 1, 0])
 
 
-def test_ensemble_in_predict() -> None:
-    """Checking for ensemble defined in predict of CQR"""
-    mapie_reg = MapieQuantileRegressor()
-    mapie_reg.fit(X, y)
-    with pytest.warns(
-        UserWarning, match=r"WARNING: Alpha should not be spec.*"
-    ):
-        mapie_reg.predict(X, alpha=0.2)
-
-
-def test_alpha_in_predict() -> None:
-    """Checking for alpha defined in predict of CQR"""
-    mapie_reg = MapieQuantileRegressor()
-    mapie_reg.fit(X, y)
-    with pytest.warns(UserWarning, match=r"WARNING: ensemble is not util*"):
-        mapie_reg.predict(X, ensemble=True)
-
-
-@pytest.mark.parametrize("estimator", [-1, 3, 0.2])
-def test_quantile_prefit_non_iterable(estimator: Any) -> None:
-    """
-    Test that there is a list of estimators provided when cv='prefit'
-    is called for MapieQuantileRegressor.
-    """
-    with pytest.raises(
-        ValueError,
-        match=r".*Estimator for prefit must be an iterable object.*",
-    ):
-        mapie_reg = MapieQuantileRegressor(estimator=estimator, cv="prefit")
-        mapie_reg.fit([1, 2, 3], [4, 5, 6])
-
-
 @pytest.mark.parametrize("alphas", ["hello", MapieQuantileRegressor, [2], 1])
 def test_wrong_alphas_types(alphas: float) -> None:
     """Checking for wrong type of alphas"""

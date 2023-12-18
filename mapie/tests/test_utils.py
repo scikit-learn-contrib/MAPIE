@@ -11,6 +11,7 @@ from sklearn.model_selection import BaseCrossValidator, KFold, ShuffleSplit
 from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
+from mapie.regression import MapieQuantileRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_array_nan, check_array_inf, check_arrays_length,
                          check_binary_zero_one, check_cv,
@@ -254,6 +255,24 @@ def test_final1D_low_high_pred() -> None:
         check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
 
 
+def test_ensemble_in_predict() -> None:
+    """Checking for ensemble defined in predict of CQR"""
+    mapie_reg = MapieQuantileRegressor()
+    mapie_reg.fit(X, y)
+    with pytest.warns(
+        UserWarning, match=r"WARNING: Alpha should not be spec.*"
+    ):
+        mapie_reg.predict(X, alpha=0.2)
+
+
+def test_alpha_in_predict() -> None:
+    """Checking for alpha defined in predict of CQR"""
+    mapie_reg = MapieQuantileRegressor()
+    mapie_reg.fit(X, y)
+    with pytest.warns(UserWarning, match=r"WARNING: ensemble is not util*"):
+        mapie_reg.predict(X, ensemble=True)
+
+
 def test_compute_quantiles_value_error():
     """Test that if the size of the last axis of vector
     is different from the number of aphas an error is raised.
@@ -305,6 +324,20 @@ def test_compute_quantiles_2D_and_3D(alphas: NDArray):
     quantiles2 = compute_quantiles(vector2, alphas)
 
     assert (quantiles1 == quantiles2).all()
+
+
+@pytest.mark.parametrize("estimator", [-1, 3, 0.2])
+def test_quantile_prefit_non_iterable(estimator: Any) -> None:
+    """
+    Test that there is a list of estimators provided when cv='prefit'
+    is called for MapieQuantileRegressor.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r".*Estimator for prefit must be an iterable object.*",
+    ):
+        mapie_reg = MapieQuantileRegressor(estimator=estimator, cv="prefit")
+        mapie_reg.fit([1, 2, 3], [4, 5, 6])
 
 
 # def test_calib_set_no_Xy_but_sample_weight() -> None:
