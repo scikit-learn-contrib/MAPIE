@@ -588,6 +588,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             return np.array(y_pred)
 
         else:
+            if optimize_beta and self.method != 'enbpi':
+                raise UserWarning(
+                    "Beta optimisation should only be used for "
+                    "the method='enbpi'."
+                )
+
             n = len(self.conformity_scores_)
             alpha_np = cast(NDArray, alpha)
             check_alpha_and_n_samples(alpha_np, n)

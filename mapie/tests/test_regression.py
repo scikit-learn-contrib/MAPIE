@@ -632,3 +632,14 @@ def test_return_multi_pred(ensemble: bool) -> None:
         X_toy, ensemble=ensemble, return_multi_pred=True
     )
     assert len(output) == 3
+
+
+def test_beta_optimize_user_warning() -> None:
+    """
+    Test that a UserWarning is displayed when optimize_beta is used.
+    """
+    mapie_reg = MapieRegressor().fit(X, y)
+    with pytest.raises(
+        UserWarning, match=r"Beta optimisation should only be used for*",
+    ):
+        mapie_reg.predict(X, alpha=0.05, optimize_beta=True)
