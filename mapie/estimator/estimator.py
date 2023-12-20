@@ -496,9 +496,12 @@ class EnsembleRegressor(EnsembleEstimator):
             if self.method == "minmax":
                 y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
                 y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
-            else:
+            elif self.method == "plus":
                 y_pred_multi_low = y_pred_multi
                 y_pred_multi_up = y_pred_multi
+            else:
+                y_pred_multi_low = y_pred[:, np.newaxis]
+                y_pred_multi_up = y_pred[:, np.newaxis]
 
             if ensemble:
                 y_pred = aggregate_all(self.agg_function, y_pred_multi)

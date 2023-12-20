@@ -5,6 +5,7 @@ History
 ##### (##########)
 ------------------
 * Integrate ConformityScore into MapieTimeSeriesRegressor.
+* Add (extend) the optimal estimation strategy for the bounds of the prediction intervals for regression via ConformityScore.
 * Add new checks for metrics calculations.
 * Fix reference for residual normalised score in documentation.
 
