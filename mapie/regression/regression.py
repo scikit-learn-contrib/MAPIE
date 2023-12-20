@@ -591,7 +591,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             if optimize_beta and self.method != 'enbpi':
                 raise UserWarning(
                     "Beta optimisation should only be used for "
-                    "the method='enbpi'."
+                    "method='enbpi'."
                 )
 
             n = len(self.conformity_scores_)
