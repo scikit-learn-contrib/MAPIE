@@ -5,13 +5,13 @@ from typing import List, Optional, Tuple, Union, cast
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, clone
-from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import (_num_samples, check_is_fitted)
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
-from mapie.utils import (check_nan_in_aposteriori_prediction,
+from mapie.utils import (check_nan_in_aposteriori_prediction, check_no_agg_cv,
                          fit_estimator)
 from mapie.estimator.interface import EnsembleEstimator
 
@@ -152,6 +152,7 @@ class EnsembleRegressor(EnsembleEstimator):
         "single_estimator_",
         "estimators_",
         "k_",
+        "use_split_method_",
     ]
 
     def __init__(
@@ -278,10 +279,10 @@ class EnsembleRegressor(EnsembleEstimator):
         ArrayLike of shape (n_samples_test,)
             Array of aggregated predictions for each testing sample.
         """
-        if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
+        if self.method in self.no_agg_methods_ or self.use_split_method_:
             raise ValueError(
                 "There should not be aggregation of predictions "
-                f"if cv is in '{self.no_agg_cv_}' "
+                f"if cv is in '{self.no_agg_cv_}', if cv >=2 "
                 f"or if method is in '{self.no_agg_methods_}'."
             )
         elif self.agg_function == "median":
@@ -406,6 +407,7 @@ class EnsembleRegressor(EnsembleEstimator):
         estimators_: List[RegressorMixin] = []
         full_indexes = np.arange(_num_samples(X))
         cv = self.cv
+        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
         estimator = self.estimator
         n_samples = _num_samples(y)
 
@@ -434,8 +436,9 @@ class EnsembleRegressor(EnsembleEstimator):
                     )
                     for train_index, _ in cv.split(X)
                 )
-            if isinstance(cv, ShuffleSplit):
-                single_estimator_ = estimators_[0]
+                # In split-CP, we keep only the model fitted on train dataset
+                if self.use_split_method_:
+                    single_estimator_ = estimators_[0]
 
         self.single_estimator_ = single_estimator_
         self.estimators_ = estimators_
@@ -487,7 +490,7 @@ class EnsembleRegressor(EnsembleEstimator):
         if not return_multi_pred and not ensemble:
             return y_pred
 
-        if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
+        if self.method in self.no_agg_methods_ or self.use_split_method_:
             y_pred_multi_low = y_pred[:, np.newaxis]
             y_pred_multi_up = y_pred[:, np.newaxis]
         else:

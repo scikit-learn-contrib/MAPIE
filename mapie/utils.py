@@ -129,13 +129,14 @@ def fit_estimator(
 
 
 def check_cv(
-    cv: Optional[Union[int, str, BaseCrossValidator]] = None,
+    cv: Optional[Union[int, str, BaseCrossValidator, BaseShuffleSplit]] = None,
     test_size: Optional[Union[int, float]] = None,
     random_state: Optional[Union[int, np.random.RandomState]] = None,
-) -> Union[str, BaseCrossValidator]:
+) -> Union[str, BaseCrossValidator, BaseShuffleSplit]:
     """
     Check if cross-validator is
-    ``None``, ``int``, ``"prefit"``, ``"split"``or ``BaseCrossValidator``.
+    ``None``, ``int``, ``"prefit"``, ``"split"``, ``BaseCrossValidator`` or
+    ``BaseShuffleSplit``.
     Return a ``LeaveOneOut`` instance if integer equal to -1.
     Return a ``KFold`` instance if integer superior or equal to 2.
     Return a ``KFold`` instance if ``None``.
@@ -143,7 +144,7 @@ def check_cv(
 
     Parameters
     ----------
-    cv: Optional[Union[int, str, BaseCrossValidator]], optional
+    cv: Optional[Union[int, str, BaseCrossValidator, BaseShuffleSplit]]
         Cross-validator to check, by default ``None``.
 
     test_size: Optional[Union[int, float]]
@@ -163,8 +164,8 @@ def check_cv(
 
     Returns
     -------
-    Optional[Union[float, str]]
-        'prefit' or None.
+    Union[str, BaseCrossValidator, BaseShuffleSplit]
+        The cast `cv` parameter.
 
     Raises
     ------
@@ -205,6 +206,45 @@ def check_cv(
             "Invalid cv argument. "
             "Allowed values are None, -1, int >= 2, 'prefit', 'split', "
             "or a BaseCrossValidator object (Kfold, LeaveOneOut)."
+        )
+
+
+def check_no_agg_cv(
+    X: ArrayLike,
+    cv: Union[int, str, BaseCrossValidator, BaseShuffleSplit],
+    no_agg_cv_array: list,
+) -> bool:
+    """
+    Check if cross-validator is ``"prefit"``, ``"split"`` or any split
+    equivalent `BaseCrossValidator` or `BaseShuffleSplit`.
+
+    Parameters
+    ----------
+    X: ArrayLike of shape (n_samples, n_features)
+        Training data.
+
+    cv: Union[int, str, BaseCrossValidator, BaseShuffleSplit]
+        Cross-validator to check.
+
+    no_agg_cv_array: list
+        List of all non-aggregated cv methods.
+
+    Returns
+    -------
+    bool
+        True if `cv` is a split equivalent / non-aggregated cv method.
+    """
+    if isinstance(cv, str):
+        return cv in no_agg_cv_array
+    elif isinstance(cv, int):
+        return cv == 1
+    elif hasattr(cv, "get_n_splits"):
+        return cv.get_n_splits(X) == 1
+    else:
+        raise ValueError(
+            "Invalid cv argument. "
+            "Allowed values must have the `get_n_splits` method "
+            "with zero or one parameter (X)."
         )
 
 

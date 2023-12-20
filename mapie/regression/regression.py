@@ -316,7 +316,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 "You need to specify an aggregation function when "
                 f"cv's type is in {self.cv_need_agg_function_}."
             )
-        elif (agg_function is not None) or (self.cv in self.no_agg_cv_):
+        elif agg_function is not None:
             return agg_function
         else:
             return "mean"
@@ -508,6 +508,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         )
         # Fit the prediction function
         self.estimator_ = self.estimator_.fit(X, y, sample_weight)
+
+        # Predict on calibration data
         y_pred = self.estimator_.predict_calib(X)
 
         # Compute the conformity scores (manage jk-ab case)
