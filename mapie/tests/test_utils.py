@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 import numpy as np
 import pytest
@@ -477,15 +477,15 @@ def test_check_cv_same_split_no_random_state(cv: BaseCrossValidator) -> None:
         np.testing.assert_allclose(train_indices_1[i], train_indices_2[i])
 
 
-def test_check_no_agg_cv() -> None:
+@pytest.mark.parametrize(
+    "cv_result", [
+        (1, True), (2, False),
+        ("split", True), (KFold(5), False),
+        (ShuffleSplit(1), True),
+        (ShuffleSplit(2), False)
+    ]
+)
+def test_check_no_agg_cv(cv_result: Tuple) -> None:
     array = ["prefit", "split"]
-    np.testing.assert_almost_equal(check_no_agg_cv(1, array), True)
-    np.testing.assert_almost_equal(check_no_agg_cv(2, array), False)
-    cv = "split"
-    np.testing.assert_almost_equal(check_no_agg_cv(cv, array), True)
-    cv = KFold(5)
-    np.testing.assert_almost_equal(check_no_agg_cv(cv, array), False)
-    cv = ShuffleSplit(1)
-    np.testing.assert_almost_equal(check_no_agg_cv(cv, array), True)
-    cv = ShuffleSplit(2)
-    np.testing.assert_almost_equal(check_no_agg_cv(cv, array), False)
+    cv, result = cv_result
+    np.testing.assert_almost_equal(check_no_agg_cv(cv, array), result)
