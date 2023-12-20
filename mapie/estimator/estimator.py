@@ -152,7 +152,7 @@ class EnsembleRegressor(EnsembleEstimator):
         "single_estimator_",
         "estimators_",
         "k_",
-        "use_split_method",
+        "use_split_method_",
     ]
 
     def __init__(
@@ -279,7 +279,7 @@ class EnsembleRegressor(EnsembleEstimator):
         ArrayLike of shape (n_samples_test,)
             Array of aggregated predictions for each testing sample.
         """
-        if self.method in self.no_agg_methods_ or self.use_split_method:
+        if self.method in self.no_agg_methods_ or self.use_split_method_:
             raise ValueError(
                 "There should not be aggregation of predictions "
                 f"if cv is in '{self.no_agg_cv_}', if cv >=2 "
@@ -407,7 +407,7 @@ class EnsembleRegressor(EnsembleEstimator):
         estimators_: List[RegressorMixin] = []
         full_indexes = np.arange(_num_samples(X))
         cv = self.cv
-        self.use_split_method = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
         estimator = self.estimator
         n_samples = _num_samples(y)
 
@@ -437,7 +437,7 @@ class EnsembleRegressor(EnsembleEstimator):
                     for train_index, _ in cv.split(X)
                 )
                 # In split-CP, we keep only the model fitted on train dataset
-                if self.use_split_method:
+                if self.use_split_method_:
                     single_estimator_ = estimators_[0]
 
         self.single_estimator_ = single_estimator_
@@ -490,7 +490,7 @@ class EnsembleRegressor(EnsembleEstimator):
         if not return_multi_pred and not ensemble:
             return y_pred
 
-        if self.method in self.no_agg_methods_ or self.use_split_method:
+        if self.method in self.no_agg_methods_ or self.use_split_method_:
             y_pred_multi_low = y_pred[:, np.newaxis]
             y_pred_multi_up = y_pred[:, np.newaxis]
         else:
