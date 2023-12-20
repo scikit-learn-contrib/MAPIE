@@ -12,8 +12,7 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import ConformityScore
 from .regression import MapieRegressor
-from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_no_agg_cv)
+from mapie.utils import check_alpha, check_alpha_and_n_samples
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
@@ -369,7 +368,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.higher_quantiles_ = higher_quantiles
 
         if self.method in self.no_agg_methods_ or (
-            check_no_agg_cv(self.cv, self.no_agg_cv_)
+            self.estimator_.use_split_method
         ):
             y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
             y_pred_up = y_pred[:, np.newaxis] + higher_quantiles

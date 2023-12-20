@@ -210,6 +210,7 @@ def check_cv(
 
 
 def check_no_agg_cv(
+    X: ArrayLike,
     cv: Union[int, str, BaseCrossValidator, BaseShuffleSplit],
     no_agg_cv_array: list,
 ) -> bool:
@@ -219,6 +220,9 @@ def check_no_agg_cv(
 
     Parameters
     ----------
+    X: ArrayLike of shape (n_samples, n_features)
+        Training data.
+
     cv: Union[int, str, BaseCrossValidator, BaseShuffleSplit]
         Cross-validator to check.
 
@@ -234,9 +238,9 @@ def check_no_agg_cv(
         return cv in no_agg_cv_array
     elif isinstance(cv, int):
         return cv == 1
-    try:
-        return cv.get_n_splits() == 1
-    except Exception:
+    if hasattr(cv, "get_n_splits"):
+        return cv.get_n_splits(X) == 1
+    else:
         return False
 
 

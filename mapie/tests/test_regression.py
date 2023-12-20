@@ -528,6 +528,7 @@ def test_aggregate_with_mask_with_invalid_agg_function() -> None:
         0.20,
         False
     )
+    ens_reg.use_split_method = False
     with pytest.raises(
         ValueError,
         match=r".*The value of self.agg_function is not correct*",

@@ -18,8 +18,7 @@ from mapie.estimator.estimator import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_conformity_score, check_cv,
                          check_estimator_fit_predict, check_n_features_in,
-                         check_n_jobs, check_no_agg_cv, check_null_weight,
-                         check_verbose)
+                         check_n_jobs, check_null_weight, check_verbose)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
@@ -316,9 +315,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 "You need to specify an aggregation function when "
                 f"cv's type is in {self.cv_need_agg_function_}."
             )
-        elif (agg_function is not None) or (
-            check_no_agg_cv(self.cv, self.no_agg_cv_)
-        ):
+        elif agg_function is not None:
             return agg_function
         else:
             return "mean"

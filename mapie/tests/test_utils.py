@@ -488,4 +488,4 @@ def test_check_cv_same_split_no_random_state(cv: BaseCrossValidator) -> None:
 def test_check_no_agg_cv(cv_result: Tuple) -> None:
     array = ["prefit", "split"]
     cv, result = cv_result
-    np.testing.assert_almost_equal(check_no_agg_cv(cv, array), result)
+    np.testing.assert_almost_equal(check_no_agg_cv(X_toy, cv, array), result)
