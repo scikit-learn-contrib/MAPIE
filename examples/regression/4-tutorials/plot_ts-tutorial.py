@@ -51,7 +51,6 @@ from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
-from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.metrics import (regression_coverage_score,
                            regression_mean_width_score)
 from mapie.subsample import BlockBootstrap
@@ -188,10 +187,8 @@ gap = 1
 cv_mapiets = BlockBootstrap(
     n_resamplings=10, n_blocks=10, overlapping=False, random_state=59
 )
-cs = AbsoluteConformityScore(sym=False)
 mapie_enbpi = MapieTimeSeriesRegressor(
-    model, method="enbpi", cv=cv_mapiets, conformity_score=cs,
-    agg_function="mean", n_jobs=-1
+    model, method="enbpi", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
 
 ##############################################################################

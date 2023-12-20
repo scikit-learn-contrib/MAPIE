@@ -209,6 +209,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     no_agg_methods_ = ["naive", "base"]
     valid_agg_functions_ = [None, "median", "mean"]
     ensemble_agg_functions_ = ["median", "mean"]
+    default_sym_ = True
     fit_attributes = [
         "estimator_",
         "conformity_scores_",
@@ -424,7 +425,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
         cs_estimator = check_conformity_score(
-            self.conformity_score
+            self.conformity_score, self.default_sym_
         )
         if isinstance(cs_estimator, ResidualNormalisedScore) and \
            self.cv not in ["split", "prefit"]:

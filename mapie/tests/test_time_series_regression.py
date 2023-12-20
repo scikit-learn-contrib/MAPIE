@@ -12,7 +12,7 @@ from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
-from mapie.conformity_scores import ConformityScore, AbsoluteConformityScore
+from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieTimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
@@ -34,7 +34,6 @@ Params = TypedDict(
         "method": str,
         "agg_function": str,
         "cv": Optional[Union[int, KFold, BlockBootstrap]],
-        "conformity_score": ConformityScore
     },
 )
 STRATEGIES = {
@@ -44,7 +43,6 @@ STRATEGIES = {
         cv=BlockBootstrap(
             n_resamplings=30, n_blocks=5, random_state=random_state
         ),
-        conformity_score=AbsoluteConformityScore(sym=False),
     ),
     "jackknife_enbpi_median_ab_wopt": Params(
         method="enbpi",
@@ -54,7 +52,6 @@ STRATEGIES = {
             n_blocks=5,
             random_state=random_state,
         ),
-        conformity_score=AbsoluteConformityScore(sym=False),
     ),
     "jackknife_enbpi_mean_ab": Params(
         method="enbpi",
@@ -62,7 +59,6 @@ STRATEGIES = {
         cv=BlockBootstrap(
             n_resamplings=30, n_blocks=5, random_state=random_state
         ),
-        conformity_score=AbsoluteConformityScore(sym=False),
     ),
     "jackknife_enbpi_median_ab": Params(
         method="enbpi",
@@ -72,7 +68,6 @@ STRATEGIES = {
             n_blocks=5,
             random_state=random_state,
         ),
-        conformity_score=AbsoluteConformityScore(sym=False),
     ),
 }
 
@@ -275,8 +270,7 @@ def test_results_prefit() -> None:
     )
     estimator = LinearRegression().fit(X_train, y_train)
     mapie_ts_reg = MapieTimeSeriesRegressor(
-        estimator=estimator, cv="prefit",
-        conformity_score=AbsoluteConformityScore(sym=False)
+        estimator=estimator, cv="prefit"
     )
     mapie_ts_reg.fit(X_val, y_val)
     _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05)
@@ -348,9 +342,7 @@ def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
 
 def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
     """Test ``partial_fit``."""
-    mapie_ts_reg = MapieTimeSeriesRegressor(
-        cv=-1, conformity_score=AbsoluteConformityScore(sym=False)
-    )
+    mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1)
     mapie_ts_reg = mapie_ts_reg.fit(X_toy, y_toy, ensemble=True)
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
         np.abs(CONFORMITY_SCORES[0]), 2
@@ -395,8 +387,7 @@ def test_interval_prediction_with_beta_optimize() -> None:
         estimator=estimator,
         cv=BlockBootstrap(
             n_resamplings=30, n_blocks=5, random_state=random_state
-        ),
-        conformity_score=AbsoluteConformityScore(sym=False)
+        )
     )
     mapie_ts_reg.fit(X_val, y_val)
     _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05, optimize_beta=True)

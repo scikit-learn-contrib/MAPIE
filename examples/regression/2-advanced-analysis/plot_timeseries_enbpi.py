@@ -36,7 +36,6 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie._typing import NDArray
-from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.metrics import (regression_coverage_score,
                            regression_mean_width_score)
 from mapie.subsample import BlockBootstrap
@@ -112,7 +111,6 @@ mapie_enpbi = MapieTimeSeriesRegressor(
     model,
     method="enbpi",
     cv=cv_mapietimeseries,
-    conformity_score=AbsoluteConformityScore(sym=False),
     agg_function="mean",
     n_jobs=-1,
 )

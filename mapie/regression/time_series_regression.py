@@ -33,6 +33,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ \
         + ["BlockBootstrap"]
     valid_methods_ = ["enbpi"]
+    default_sym_ = False
 
     def __init__(
         self,
