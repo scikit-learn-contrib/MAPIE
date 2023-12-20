@@ -579,13 +579,16 @@ def check_lower_upper_bounds(
 
 def check_conformity_score(
     conformity_score: Optional[ConformityScore],
+    sym: bool = True,
 ) -> ConformityScore:
     """
     Check parameter ``conformity_score``.
+
     Raises
     ------
     ValueError
         If parameter is not valid.
+
     Examples
     --------
     >>> from mapie.utils import check_conformity_score
@@ -598,7 +601,7 @@ def check_conformity_score(
     Must be None or a ConformityScore instance.
     """
     if conformity_score is None:
-        return AbsoluteConformityScore()
+        return AbsoluteConformityScore(sym=sym)
     elif isinstance(conformity_score, ConformityScore):
         return conformity_score
     else:
