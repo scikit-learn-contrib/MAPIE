@@ -482,7 +482,8 @@ def test_check_cv_same_split_no_random_state(cv: BaseCrossValidator) -> None:
         (1, True), (2, False),
         ("split", True), (KFold(5), False),
         (ShuffleSplit(1), True),
-        (ShuffleSplit(2), False)
+        (ShuffleSplit(2), False),
+        (object(), False)
     ]
 )
 def test_check_no_agg_cv(cv_result: Tuple) -> None:
