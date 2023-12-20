@@ -367,9 +367,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.lower_quantiles_ = lower_quantiles
         self.higher_quantiles_ = higher_quantiles
 
-        if self.method in self.no_agg_methods_ or (
-            self.estimator_.use_split_method
-        ):
+        if self.method in self.no_agg_methods_ or \
+            self.estimator_.use_split_method:
             y_pred_low = y_pred[:, np.newaxis] + lower_quantiles
             y_pred_up = y_pred[:, np.newaxis] + higher_quantiles
         else:
