@@ -283,7 +283,7 @@ class EnsembleRegressor(EnsembleEstimator):
         ):
             raise ValueError(
                 "There should not be aggregation of predictions "
-                f"if cv is in '{self.no_agg_cv_}' "
+                f"if cv is in '{self.no_agg_cv_}', if cv >=2 "
                 f"or if method is in '{self.no_agg_methods_}'."
             )
         elif self.agg_function == "median":
