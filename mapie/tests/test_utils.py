@@ -7,7 +7,8 @@ import pytest
 from numpy.random import RandomState
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator, KFold, ShuffleSplit
+from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
+                                     ShuffleSplit)
 from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
@@ -483,10 +484,22 @@ def test_check_cv_same_split_no_random_state(cv: BaseCrossValidator) -> None:
         ("split", True), (KFold(5), False),
         (ShuffleSplit(1), True),
         (ShuffleSplit(2), False),
-        (object(), False)
+        (LeaveOneOut(), False),
     ]
 )
 def test_check_no_agg_cv(cv_result: Tuple) -> None:
+    """Test that if `check_no_agg_cv` function returns the expected result."""
     array = ["prefit", "split"]
     cv, result = cv_result
     np.testing.assert_almost_equal(check_no_agg_cv(X_toy, cv, array), result)
+
+
+@pytest.mark.parametrize("cv", [object()])
+def test_check_no_agg_cv_value_error(cv: Any) -> None:
+    """Test that if `check_no_agg_cv` function raises value error."""
+    array = ["prefit", "split"]
+    with pytest.raises(
+        ValueError,
+        match=r"Allowed values must have the `get_n_splits` method"
+    ):
+        check_no_agg_cv(X_toy, cv, array)

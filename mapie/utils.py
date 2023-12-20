@@ -238,10 +238,14 @@ def check_no_agg_cv(
         return cv in no_agg_cv_array
     elif isinstance(cv, int):
         return cv == 1
-    if hasattr(cv, "get_n_splits"):
+    elif hasattr(cv, "get_n_splits"):
         return cv.get_n_splits(X) == 1
     else:
-        return False
+        raise ValueError(
+            "Invalid cv argument. "
+            "Allowed values must have the `get_n_splits` method "
+            "with zero or one parameter (X)."
+        )
 
 
 def check_alpha(
