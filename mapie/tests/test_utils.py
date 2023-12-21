@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -8,19 +8,20 @@ import pytest
 from numpy.random import RandomState
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
+                                     ShuffleSplit)
 from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.regression import MapieQuantileRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_array_nan, check_array_inf, check_arrays_length,
-                         check_binary_zero_one, check_cv,
-                         check_gamma, check_lower_upper_bounds,
-                         check_n_features_in, check_n_jobs, check_null_weight,
-                         check_number_bins, check_split_strategy,
-                         check_verbose, compute_quantiles, convert_to_numpy,
-                         fit_estimator, get_binning_groups)
+                         check_binary_zero_one, check_cv, check_gamma,
+                         check_lower_upper_bounds, check_n_features_in,
+                         check_n_jobs, check_no_agg_cv, check_null_weight,
+                         check_number_bins, check_split_strategy, check_verbose,
+                         compute_quantiles, convert_to_numpy, fit_estimator,
+                         get_binning_groups)
 
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -490,6 +491,33 @@ def test_check_cv_same_split_no_random_state(cv: BaseCrossValidator) -> None:
 
     for i in range(cv.get_n_splits()):
         np.testing.assert_allclose(train_indices_1[i], train_indices_2[i])
+
+
+@pytest.mark.parametrize(
+    "cv_result", [
+        (1, True), (2, False),
+        ("split", True), (KFold(5), False),
+        (ShuffleSplit(1), True),
+        (ShuffleSplit(2), False),
+        (LeaveOneOut(), False),
+    ]
+)
+def test_check_no_agg_cv(cv_result: Tuple) -> None:
+    """Test that if `check_no_agg_cv` function returns the expected result."""
+    array = ["prefit", "split"]
+    cv, result = cv_result
+    np.testing.assert_almost_equal(check_no_agg_cv(X_toy, cv, array), result)
+
+
+@pytest.mark.parametrize("cv", [object()])
+def test_check_no_agg_cv_value_error(cv: Any) -> None:
+    """Test that if `check_no_agg_cv` function raises value error."""
+    array = ["prefit", "split"]
+    with pytest.raises(
+        ValueError,
+        match=r"Allowed values must have the `get_n_splits` method"
+    ):
+        check_no_agg_cv(X_toy, cv, array)
 
 
 def test_convert_to_numpy_dataframe_and_series():

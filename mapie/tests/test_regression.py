@@ -11,8 +11,8 @@ from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (KFold, LeaveOneOut, ShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import (KFold, LeaveOneOut, PredefinedSplit,
+                                     ShuffleSplit, train_test_split)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -211,7 +211,9 @@ def test_valid_agg_function(agg_function: str) -> None:
 
 @pytest.mark.parametrize(
     "cv", [None, -1, 2, KFold(), LeaveOneOut(),
-           ShuffleSplit(n_splits=1), "prefit", "split"]
+           ShuffleSplit(n_splits=1),
+           PredefinedSplit(test_fold=[-1]*3+[0]*3),
+           "prefit", "split"]
 )
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
@@ -526,6 +528,7 @@ def test_aggregate_with_mask_with_invalid_agg_function() -> None:
         0.20,
         False
     )
+    ens_reg.use_split_method_ = False
     with pytest.raises(
         ValueError,
         match=r".*The value of self.agg_function is not correct*",
@@ -632,3 +635,14 @@ def test_return_multi_pred(ensemble: bool) -> None:
         X_toy, ensemble=ensemble, return_multi_pred=True
     )
     assert len(output) == 3
+
+
+def test_beta_optimize_user_warning() -> None:
+    """
+    Test that a UserWarning is displayed when optimize_beta is used.
+    """
+    mapie_reg = MapieRegressor().fit(X, y)
+    with pytest.raises(
+        UserWarning, match=r"Beta optimisation should only be used for*",
+    ):
+        mapie_reg.predict(X, alpha=0.05, optimize_beta=True)

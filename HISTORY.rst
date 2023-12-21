@@ -4,10 +4,14 @@ History
 
 ##### (##########)
 ------------------
-
 * Add the Adaptative Conformal Inference (ACI) method for MapieTimeSeriesRegressor.
 * Add the Coverage Width-based Criterion (CWC) metric.
-* Add new checks for metrics calculations
+* Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit).
+* Integrate ConformityScore into MapieTimeSeriesRegressor.
+* Add (extend) the optimal estimation strategy for the bounds of the prediction intervals for regression via ConformityScore.
+* Add new checks for metrics calculations.
+* Fix reference for residual normalised score in documentation.
+
 
 0.7.0 (2023-09-14)
 ------------------

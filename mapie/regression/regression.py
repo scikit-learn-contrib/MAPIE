@@ -209,6 +209,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     no_agg_methods_ = ["naive", "base"]
     valid_agg_functions_ = [None, "median", "mean"]
     ensemble_agg_functions_ = ["median", "mean"]
+    default_sym_ = True
     fit_attributes = [
         "estimator_",
         "conformity_scores_",
@@ -305,7 +306,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         if agg_function not in self.valid_agg_functions_:
             raise ValueError(
-                "Invalid aggregation function "
+                "Invalid aggregation function. "
                 f"Allowed values are '{self.valid_agg_functions_}'."
             )
         elif (agg_function is None) and (
@@ -315,7 +316,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 "You need to specify an aggregation function when "
                 f"cv's type is in {self.cv_need_agg_function_}."
             )
-        elif (agg_function is not None) or (self.cv in self.no_agg_cv_):
+        elif agg_function is not None:
             return agg_function
         else:
             return "mean"
@@ -424,7 +425,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
         cs_estimator = check_conformity_score(
-            self.conformity_score
+            self.conformity_score, self.default_sym_
         )
         if isinstance(cs_estimator, ResidualNormalisedScore) and \
            self.cv not in ["split", "prefit"]:
@@ -507,6 +508,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         )
         # Fit the prediction function
         self.estimator_ = self.estimator_.fit(X, y, sample_weight)
+
+        # Predict on calibration data
         y_pred = self.estimator_.predict_calib(X)
 
         # Compute the conformity scores (manage jk-ab case)
@@ -522,6 +525,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         X: ArrayLike,
         ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
+        optimize_beta: bool = False,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -561,6 +565,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             By default ``None``.
 
+        optimize_beta: bool
+            Whether to optimize the PIs' width or not.
+
+            By default ``False``.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -582,6 +591,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             return np.array(y_pred)
 
         else:
+            if optimize_beta and self.method != 'enbpi':
+                raise UserWarning(
+                    "Beta optimisation should only be used for "
+                    "method='enbpi'."
+                )
+
             n = len(self.conformity_scores_)
             alpha_np = cast(NDArray, alpha)
             check_alpha_and_n_samples(alpha_np, n)
@@ -592,7 +607,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     self.estimator_,
                     self.conformity_scores_,
                     alpha_np,
-                    ensemble,
-                    self.method
+                    ensemble=ensemble,
+                    method=self.method,
+                    optimize_beta=optimize_beta
                 )
             return np.array(y_pred), np.stack([y_pred_low, y_pred_up], axis=1)

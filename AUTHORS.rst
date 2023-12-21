@@ -35,5 +35,6 @@ Contributors
 * Remi Colliaux <rcolliaux@quantmetry.com>
 * Arthur Phan <aphan@quantmetry.com>
 * Rafael Saraiva <rafael.saraiva.de@gmail.com>
+* Mehdi Elion <mehdi.elion@gmail.com>
 
 To be continued ...

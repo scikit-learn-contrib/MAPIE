@@ -12,6 +12,7 @@ from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
+from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieTimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
@@ -127,9 +128,14 @@ def test_sklearn_checks() -> None:
 @pytest.mark.parametrize("agg_function", ["dummy", 0, 1, 2.5, [1, 2]])
 def test_invalid_agg_function(agg_function: Any) -> None:
     """Test that invalid agg_functions raise errors."""
-    mapie_ts_reg = MapieTimeSeriesRegressor(agg_function=None)
+    mapie_reg = MapieTimeSeriesRegressor(agg_function=agg_function)
+    with pytest.raises(ValueError, match=r".*Invalid aggregation function.*"):
+        mapie_reg.fit(X_toy, y_toy)
+
+    mapie_reg = MapieTimeSeriesRegressor(agg_function=None)
     with pytest.raises(ValueError, match=r".*If ensemble is True*"):
-        mapie_ts_reg.fit(X_toy, y_toy)
+        mapie_reg.fit(X_toy, y_toy)
+        mapie_reg.predict(X_toy, ensemble=True)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -264,12 +270,11 @@ def test_linear_regression_results(strategy: str) -> None:
     with fixed random state.
     """
     mapie_ts = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
-    mapie_ts.fit(X, y)
-    if "opt" in strategy:
-        optimize_beta = True
-    else:
-        optimize_beta = False
-    _, y_pis = mapie_ts.predict(X, alpha=0.05, optimize_beta=optimize_beta)
+    mapie_ts.fit(X, y, ensemble=True)
+    optimize_beta = "opt" in strategy
+    _, y_pis = mapie_ts.predict(
+        X, alpha=0.05, optimize_beta=optimize_beta, ensemble=True
+    )
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
 
@@ -287,7 +292,9 @@ def test_results_prefit() -> None:
         X_train_val, y_train_val, test_size=1 / 9, random_state=random_state
     )
     estimator = LinearRegression().fit(X_train, y_train)
-    mapie_ts_reg = MapieTimeSeriesRegressor(estimator=estimator, cv="prefit")
+    mapie_ts_reg = MapieTimeSeriesRegressor(
+        estimator=estimator, cv="prefit"
+    )
     mapie_ts_reg.fit(X_val, y_val)
     _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
@@ -358,12 +365,14 @@ def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
 
 def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
     """Test ``partial_fit``."""
-    mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
+    mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1)
+    mapie_ts_reg = mapie_ts_reg.fit(X_toy, y_toy, ensemble=True)
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
         np.abs(CONFORMITY_SCORES[0]), 2
     )
     mapie_ts_reg = mapie_ts_reg.partial_fit(
-        X=np.array([UPDATE_DATA[0]]), y=np.array([UPDATE_DATA[1]])
+        X=np.array([UPDATE_DATA[0]]), y=np.array([UPDATE_DATA[1]]),
+        ensemble=True
     )
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
         CONFORMITY_SCORES[1], 2
@@ -379,11 +388,38 @@ def test_MapieTimeSeriesRegressor_partial_fit_too_big() -> None:
 
 def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
     """Test ``beta_optimize`` raised error."""
-    mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1)
-    with pytest.raises(ValueError, match=r".*Lower and upper bounds arrays*"):
-        mapie_ts_reg._beta_optimize(
-            alpha=0.1, upper_bounds=X, lower_bounds=X_toy
+    mapie_ts_reg = MapieTimeSeriesRegressor(
+        cv=-1, conformity_score=AbsoluteConformityScore(sym=True)
+    ).fit(X_toy, y_toy)
+    with pytest.raises(
+        ValueError, match=r"Beta optimisation cannot be used*"
+    ):
+        mapie_ts_reg.predict(X_toy, alpha=0.4, optimize_beta=True)
+
+
+def test_interval_prediction_with_beta_optimize() -> None:
+    """Test use of ``beta_optimize`` in prediction."""
+    X_train_val, X_test, y_train_val, y_test = train_test_split(
+        X, y, test_size=1 / 10, random_state=random_state
+    )
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train_val, y_train_val, test_size=1 / 9, random_state=random_state
+    )
+    estimator = LinearRegression().fit(X_train, y_train)
+    mapie_ts_reg = MapieTimeSeriesRegressor(
+        estimator=estimator,
+        cv=BlockBootstrap(
+            n_resamplings=30, n_blocks=5, random_state=random_state
         )
+    )
+    mapie_ts_reg.fit(X_val, y_val)
+    _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05, optimize_beta=True)
+    width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
+    coverage = regression_coverage_score(
+        y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
+    )
+    np.testing.assert_allclose(width_mean, 4.22, rtol=1e-2)
+    np.testing.assert_allclose(coverage, 0.9, rtol=1e-2)
 
 
 def test_deprecated_path_warning() -> None:
