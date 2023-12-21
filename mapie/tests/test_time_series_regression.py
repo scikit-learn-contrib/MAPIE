@@ -498,7 +498,7 @@ def test_aci__get_alpha_with_unknown_alpha() -> None:
     np.testing.assert_allclose(mapie_ts_reg.current_alpha[0.2], 0.3, rtol=1e-3)
 
 
-def test_deprecated_partial_fit_warning(method: str) -> None:
+def test_deprecated_partial_fit_warning() -> None:
     """Test that a warning is raised if use partial_fit"""
     mapie_ts_reg = MapieTimeSeriesRegressor(method='enbpi', cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
