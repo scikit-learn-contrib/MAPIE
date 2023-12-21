@@ -167,7 +167,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         ] = new_conformity_scores_
         return self
 
-    def init_alpha(
+    def _get_alpha(
         self,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         reset: bool = False
@@ -251,7 +251,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         X, y = cast(NDArray, X), cast(NDArray, y)
         X, y = convert_to_numpy(X, y)
 
-        self.init_alpha()
+        self._get_alpha()
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         if alpha is None:
             alpha = np.array(list(self.current_alpha.keys()))
@@ -387,7 +387,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             super().predict(X, ensemble, alpha, optimize_beta)
 
         if self.method == "aci":
-            alpha = self.init_alpha(alpha)
+            alpha = self._get_alpha(alpha)
 
         return super().predict(X, ensemble, alpha, optimize_beta)
 

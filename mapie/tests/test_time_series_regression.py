@@ -477,17 +477,17 @@ def test_aci_method() -> None:
 
 
 def test_aci_init_and_reset_alpha_dict() -> None:
-    """Test that `init_alpha` resets all the values in the dictionary."""
+    """Test that `_get_alpha` resets all the values in the dictionary."""
     mapie_ts_reg = MapieTimeSeriesRegressor(method="aci")
-    mapie_ts_reg.init_alpha()
+    mapie_ts_reg._get_alpha()
     np.testing.assert_equal(isinstance(mapie_ts_reg.current_alpha, dict), True)
 
     mapie_ts_reg.current_alpha[0.05] = 0.45
-    mapie_ts_reg.init_alpha(reset=True)
+    mapie_ts_reg._get_alpha(reset=True)
     np.testing.assert_equal(bool(mapie_ts_reg.current_alpha), False)
 
 
-def test_aci_init_alpha_with_unknown_alpha() -> None:
+def test_aci__get_alpha_with_unknown_alpha() -> None:
     """
     Test that the `adapt_conformal_inference` method initializes
     a new value if alpha is seen for the first time.
