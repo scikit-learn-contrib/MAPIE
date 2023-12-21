@@ -498,6 +498,16 @@ def test_aci__get_alpha_with_unknown_alpha() -> None:
     np.testing.assert_allclose(mapie_ts_reg.current_alpha[0.2], 0.3, rtol=1e-3)
 
 
+def test_deprecated_partial_fit_warning(method: str) -> None:
+    """Test that a warning is raised if use partial_fit"""
+    mapie_ts_reg = MapieTimeSeriesRegressor(method='enbpi', cv=-1)
+    mapie_ts_reg.fit(X_toy, y_toy)
+    with pytest.warns(
+        DeprecationWarning, match=r".*WARNING: Deprecated method.*"
+    ):
+        mapie_ts_reg = mapie_ts_reg.partial_fit(X_toy, y_toy)
+
+
 @pytest.mark.parametrize("method", ["wrong_method"])
 def test_method_error_in_update(monkeypatch: Any, method: str) -> None:
     """Test else condition for the method in .update"""

@@ -158,6 +158,13 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             If the length of ``y`` is greater than
             the length of the training set.
         """
+        warnings.warn(
+                "WARNING: Deprecated method. "
+                + "The method \"partial_fit\" is outdated. "
+                + "Prefer to use \"update\" instead to keep "
+                + "the same behavior in the future.",
+                DeprecationWarning
+            )
         check_is_fitted(self, self.fit_attributes)
         X, y = cast(NDArray, X), cast(NDArray, y)
         m, n = len(X), len(self.conformity_scores_)
