@@ -330,14 +330,17 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             the length of the training set.
         """
         self._check_method(self.method)
-        update_methods = {
-            'enbpi': lambda: self.partial_fit(X, y, ensemble=ensemble),
-            'aci': lambda: self.adapt_conformal_inference(
+        if self.method == 'enbpi':
+            return self.partial_fit(X, y, ensemble=ensemble)
+        elif self.method == 'aci':
+            return self.adapt_conformal_inference(
                 X, y, ensemble=ensemble, alpha=alpha,
                 gamma=gamma, optimize_beta=optimize_beta
             )
-        }
-        return update_methods[self.method]()
+        else:
+            raise ValueError(
+                f"Invalid method. Allowed values are {self.valid_methods_}."
+            )
 
     def predict(
         self,

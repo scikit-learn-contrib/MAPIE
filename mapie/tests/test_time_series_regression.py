@@ -496,3 +496,15 @@ def test_aci_init_alpha_with_unknown_alpha() -> None:
     mapie_ts_reg.fit(X_toy, y_toy)
     mapie_ts_reg.adapt_conformal_inference(X_toy, y_toy, gamma=0.1, alpha=0.2)
     np.testing.assert_allclose(mapie_ts_reg.current_alpha[0.2], 0.3, rtol=1e-3)
+
+
+@pytest.mark.parametrize("method", ["wrong_method"])
+def test_method_error_in_update(monkeypatch: Any, method: str) -> None:
+    """Test else condition for the method in .update"""
+    monkeypatch.setattr(
+        MapieTimeSeriesRegressor, "_check_method", lambda *args: ()
+    )
+    mapie_ts_reg = MapieTimeSeriesRegressor(method=method)
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
+        mapie_ts_reg.fit(X_toy, y_toy)
+        mapie_ts_reg.update(X_toy, y_toy)
