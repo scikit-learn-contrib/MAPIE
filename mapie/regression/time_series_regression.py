@@ -98,6 +98,11 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
+            If ``False``, predictions are those of the model trained on the
+            whole training set.
+            If ``True``, predictions from perturbed models are aggregated by
+            the aggregation function specified in the ``agg_function``
+            attribute.
             If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
@@ -133,6 +138,11 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
+            If ``False``, predictions are those of the model trained on the
+            whole training set.
+            If ``True``, predictions from perturbed models are aggregated by
+            the aggregation function specified in the ``agg_function``
+            attribute.
             If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
@@ -172,15 +182,34 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         reset: bool = False
     ) -> Optional[Union[float, Iterable[float]]]:
+        """
+        Get and set the current alpha value(s) given the initial alpha value(s)
+        for ACI method.
+
+        This method retrieves the alpha value(s) used for confidence intervals.
+        If the alpha value(s) is provided, it returns the current alpha
+        value(s) stored in the object. Else, nothing. If the reset flag is set
+        to True, it resets the current alpha value(s).
+
+        Parameters
+        ----------
+        alpha: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the uncertainty of the
+            confidence interval.
+
+            By default ``None``.
+
+        reset: bool
+            Flag indicating whether to reset the current alpha value(s).
+
+        Returns
+        -------
+        Optional[Union[float, Iterable[float]]]
+            The current alpha value(s) for confidence intervals.
+        """
         if 'current_alpha' not in self.__dict__ or reset:
             self.current_alpha: dict[float, float] = {}
 
-        # ACI preprocessing (select virtual current alpha)
-        # This code snippet in the "aci" method ensures that when
-        # the same confidence level (alpha) is encountered more
-        # than once, it is mapped to a consistent value.
-        # This helps maintain reliability and predictability in
-        # the algorithm's computations specific to the "aci" method.
         if alpha is not None:
             alpha_np = cast(NDArray, check_alpha(alpha))
             alpha_np = np.round(alpha_np, 2)
@@ -214,6 +243,11 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
+            If ``False``, predictions are those of the model trained on the
+            whole training set.
+            If ``True``, predictions from perturbed models are aggregated by
+            the aggregation function specified in the ``agg_function``
+            attribute.
             If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
@@ -223,6 +257,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             If it equals 0, there are no corrections.
 
         alpha: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the uncertainty of the
+            confidence interval.
+
+            By default ``None``.
 
         optimize_beta: bool
             Whether to optimize the PIs' width or not.
@@ -301,11 +339,20 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
+            If ``False``, predictions are those of the model trained on the
+            whole training set.
+            If ``True``, predictions from perturbed models are aggregated by
+            the aggregation function specified in the ``agg_function``
+            attribute.
             If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
 
         alpha: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the uncertainty of the
+            confidence interval.
+
+            By default ``None``.
 
         gamma: float
             Coefficient that decides the correction of the conformal inference.
@@ -359,6 +406,11 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
+            If ``False``, predictions are those of the model trained on the
+            whole training set.
+            If ``True``, predictions from perturbed models are aggregated by
+            the aggregation function specified in the ``agg_function``
+            attribute.
             If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
