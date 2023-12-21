@@ -528,6 +528,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
+        allow_infinite_bounds: bool = False,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -572,6 +573,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             By default ``False``.
 
+        allow_infinite_bounds: bool
+            Allow infinite prediction intervals to be produced.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -600,9 +604,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     UserWarning
                 )
 
-            n = len(self.conformity_scores_)
             alpha_np = cast(NDArray, alpha)
-            check_alpha_and_n_samples(alpha_np, n)
+            if not allow_infinite_bounds:
+                n = len(self.conformity_scores_)
+                check_alpha_and_n_samples(alpha_np, n)
 
             y_pred, y_pred_low, y_pred_up = \
                 self.conformity_score_function_.get_bounds(

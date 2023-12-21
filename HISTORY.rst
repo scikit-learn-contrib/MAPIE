@@ -4,9 +4,10 @@ History
 
 ##### (##########)
 ------------------
-* Add the Adaptative Conformal Inference (ACI) method for MapieTimeSeriesRegressor.
-* Add the Coverage Width-based Criterion (CWC) metric.
+* Add Adaptative Conformal Inference (ACI) method for MapieTimeSeriesRegressor.
+* Add Coverage Width-based Criterion (CWC) metric.
 * Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit).
+* Allow infinite prediction intervals to be produced in regressor classes.
 * Integrate ConformityScore into MapieTimeSeriesRegressor.
 * Add (extend) the optimal estimation strategy for the bounds of the prediction intervals for regression via ConformityScore.
 * Add new checks for metrics calculations.

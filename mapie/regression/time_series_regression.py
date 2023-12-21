@@ -310,17 +310,19 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 x,
                 ensemble=ensemble,
                 alpha=alpha_np,
-                optimize_beta=optimize_beta
+                optimize_beta=optimize_beta,
+                allow_infinite_bounds=True
             )
 
             for alpha_ix, alpha_0 in enumerate(alpha_np):
                 alpha_t = self.current_alpha[alpha_0]
+
                 is_lower_bounded = y_row > y_pred_bounds[:, 0, alpha_ix]
-                is_lower_bounded = y_row < y_pred_bounds[:, 1, alpha_ix]
-                is_not_bounded = not (is_lower_bounded and is_lower_bounded)
+                is_upper_bounded = y_row < y_pred_bounds[:, 1, alpha_ix]
+                is_not_bounded = not (is_lower_bounded and is_upper_bounded)
+
                 new_alpha_t = alpha_t + gamma * (alpha_0 - is_not_bounded)
-                new_alpha_t = np.clip(new_alpha_t, 0, 1)
-                self.current_alpha[alpha_0] = new_alpha_t
+                self.current_alpha[alpha_0] = np.clip(new_alpha_t, 0, 1)
 
         return self
 
@@ -404,6 +406,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
+        allow_infinite_bounds: bool = False,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -435,6 +438,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
             By default ``False``.
 
+        allow_infinite_bounds: bool
+            Allow infinite prediction intervals to be produced.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -445,12 +451,17 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
         if alpha is None:
-            super().predict(X, ensemble, alpha, optimize_beta)
+            super().predict(
+                X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta
+            )
 
         if self.method == "aci":
             alpha = self._get_alpha(alpha)
 
-        return super().predict(X, ensemble, alpha, optimize_beta)
+        return super().predict(
+            X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
+            allow_infinite_bounds=allow_infinite_bounds
+        )
 
     def _more_tags(self):
         return {

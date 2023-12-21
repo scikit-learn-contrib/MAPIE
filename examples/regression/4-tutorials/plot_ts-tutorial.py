@@ -221,10 +221,14 @@ mapie_aci = MapieTimeSeriesRegressor(
 ##############################################################################
 # Let's start by estimating prediction intervals without partial fit.
 
+# For EnbPI
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
+
 y_pred_enbpi_npfit, y_pis_enbpi_npfit = mapie_enbpi.predict(
-    X_test, alpha=alpha, ensemble=True, optimize_beta=True
+    X_test, alpha=alpha, ensemble=True, optimize_beta=True,
+    allow_infinite_bounds=True
 )
+y_pis_enbpi_npfit = np.clip(y_pis_enbpi_npfit, 1, 10)
 coverage_enbpi_npfit = regression_coverage_score(
     y_test, y_pis_enbpi_npfit[:, 0, 0], y_pis_enbpi_npfit[:, 1, 0]
 )
@@ -238,11 +242,35 @@ cwc_enbpi_npfit = coverage_width_based(
     alpha=0.05
 )
 
+# For ACI
 mapie_aci = mapie_aci.fit(X_train, y_train)
 
-y_pred_aci_npfit, y_pis_aci_npfit = mapie_aci.predict(
-    X_test, alpha=alpha, ensemble=True, optimize_beta=True
+y_pred_aci_npfit = np.zeros(y_pred_enbpi_npfit.shape)
+y_pis_aci_npfit = np.zeros(y_pis_enbpi_npfit.shape)
+y_pred_aci_npfit[:gap], y_pis_aci_npfit[:gap, :, :] = mapie_aci.predict(
+    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True,
+    allow_infinite_bounds=True
 )
+for step in range(gap, len(X_test), gap):
+    mapie_aci.adapt_conformal_inference(
+        X_test.iloc[(step - gap):step, :],
+        y_test.iloc[(step - gap):step],
+        gamma=0.05
+    )
+    (
+        y_pred_aci_npfit[step:step + gap],
+        y_pis_aci_npfit[step:step + gap, :, :],
+    ) = mapie_aci.predict(
+        X_test.iloc[step:(step + gap), :],
+        alpha=alpha,
+        ensemble=True,
+        optimize_beta=True,
+        allow_infinite_bounds=True
+    )
+    y_pis_aci_npfit[step:step + gap, :, :] = np.clip(
+        y_pis_aci_npfit[step:step + gap, :, :], 1, 10
+    )
+
 coverage_aci_npfit = regression_coverage_score(
     y_test, y_pis_aci_npfit[:, 0, 0], y_pis_aci_npfit[:, 1, 0]
 )
@@ -263,13 +291,18 @@ cwc_aci_npfit = coverage_width_based(
 # previously, the update of the residuals and the one-step ahead predictions
 # are performed sequentially in a loop.
 
+mapie_enbpi = MapieTimeSeriesRegressor(
+    model, method="enbpi", cv=cv_mapiets, agg_function="mean", n_jobs=-1
+)
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 
 y_pred_enbpi_pfit = np.zeros(y_pred_enbpi_npfit.shape)
 y_pis_enbpi_pfit = np.zeros(y_pis_enbpi_npfit.shape)
 y_pred_enbpi_pfit[:gap], y_pis_enbpi_pfit[:gap, :, :] = mapie_enbpi.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True
+    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True,
+    allow_infinite_bounds=True
 )
+
 for step in range(gap, len(X_test), gap):
     mapie_enbpi.partial_fit(
         X_test.iloc[(step - gap):step, :],
@@ -282,7 +315,11 @@ for step in range(gap, len(X_test), gap):
         X_test.iloc[step:(step + gap), :],
         alpha=alpha,
         ensemble=True,
-        optimize_beta=True
+        optimize_beta=True,
+        allow_infinite_bounds=True
+    )
+    y_pis_enbpi_pfit[step:step + gap, :, :] = np.clip(
+        y_pis_enbpi_pfit[step:step + gap, :, :], 1, 10
     )
 coverage_enbpi_pfit = regression_coverage_score(
     y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0]
@@ -298,16 +335,20 @@ cwc_enbpi_pfit = coverage_width_based(
 
 
 ##############################################################################
-# Let's now estimate prediction intervals with partial fit and adapt conformal
-# inference. As discussed previously, the update of the residuals and the
-# one-step ahead predictions are performed sequentially in a loop.
+# Let's now estimate prediction intervals with adapt_conformal_inference.
+# As discussed previously, the update of the current alpha and the one-step
+# ahead predictions are performed sequentially in a loop.
 
+mapie_aci = MapieTimeSeriesRegressor(
+    model, method="aci", cv=cv_mapiets, agg_function="mean", n_jobs=-1
+)
 mapie_aci = mapie_aci.fit(X_train, y_train)
 
 y_pred_aci_pfit = np.zeros(y_pred_aci_npfit.shape)
 y_pis_aci_pfit = np.zeros(y_pis_aci_npfit.shape)
 y_pred_aci_pfit[:gap], y_pis_aci_pfit[:gap, :, :] = mapie_aci.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True
+    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True,
+    allow_infinite_bounds=True
 )
 
 for step in range(gap, len(X_test), gap):
@@ -327,7 +368,11 @@ for step in range(gap, len(X_test), gap):
         X_test.iloc[step:(step + gap), :],
         alpha=alpha,
         ensemble=True,
-        optimize_beta=True
+        optimize_beta=True,
+        allow_infinite_bounds=True
+    )
+    y_pis_aci_pfit[step:step + gap, :, :] = np.clip(
+        y_pis_aci_pfit[step:step + gap, :, :], 1, 10
     )
 
 coverage_aci_pfit = regression_coverage_score(
@@ -464,26 +509,26 @@ plt.plot(
     y_test[window:].index,
     rolling_coverage_aci_npfit,
     label="ACI Without update of residuals (NPfit)",
-    linestyle='--',
+    linestyle='--', color='r', alpha=0.5
 )
 plt.plot(
     y_test[window:].index,
     rolling_coverage_aci_pfit,
     label="ACI With update of residuals (Pfit)",
-    linestyle=':',
+    linestyle='-', color='r', alpha=0.5
 )
 
 plt.plot(
     y_test[window:].index,
     rolling_coverage_enbpi_npfit,
     label="ENBPI Without update of residuals (NPfit)",
-    linestyle='-.',
+    linestyle='--', color='b', alpha=0.5
 )
 plt.plot(
     y_test[window:].index,
     rolling_coverage_enbpi_pfit,
     label="ENBPI With update of residuals (Pfit)",
-    linestyle='-',
+    linestyle='-', color='b', alpha=0.5
 )
 
 plt.legend()
