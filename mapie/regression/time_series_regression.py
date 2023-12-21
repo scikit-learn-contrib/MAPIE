@@ -167,11 +167,29 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         ] = new_conformity_scores_
         return self
 
-    def init_alpha(self, reset: bool = False) -> None:
-        if self.method == "aci":
-            if 'current_alpha' not in self.__dict__ or reset:
-                self.current_alpha: dict[float, float] = {}
-        return None
+    def init_alpha(
+        self,
+        alpha: Optional[Union[float, Iterable[float]]] = None,
+        reset: bool = False
+    ) -> Optional[Union[float, Iterable[float]]]:
+        if 'current_alpha' not in self.__dict__ or reset:
+            self.current_alpha: dict[float, float] = {}
+
+        # ACI preprocessing (select virtual current alpha)
+        # This code snippet in the "aci" method ensures that when
+        # the same confidence level (alpha) is encountered more
+        # than once, it is mapped to a consistent value.
+        # This helps maintain reliability and predictability in
+        # the algorithm's computations specific to the "aci" method.
+        if alpha is not None:
+            alpha_np = cast(NDArray, check_alpha(alpha))
+            alpha_np = np.round(alpha_np, 2)
+            for ix, alpha_checked in enumerate(alpha_np):
+                alpha_np[ix] = self.current_alpha.setdefault(
+                    alpha_checked, alpha_checked
+                )
+            alpha = alpha_np
+        return alpha
 
     def adapt_conformal_inference(
         self,
@@ -230,10 +248,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         check_is_fitted(self, self.fit_attributes)
         check_gamma(gamma)
-        self.init_alpha()
         X, y = cast(NDArray, X), cast(NDArray, y)
         X, y = convert_to_numpy(X, y)
 
+        self.init_alpha()
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         if alpha is None:
             alpha = np.array(list(self.current_alpha.keys()))
@@ -249,10 +267,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             )
 
             for alpha_ix, alpha_0 in enumerate(alpha_np):
-                if alpha_0 in self.current_alpha:
-                    alpha_t = self.current_alpha[alpha_0]
-                else:
-                    alpha_t = alpha_0
+                alpha_t = self.current_alpha[alpha_0]
                 is_lower_bounded = y_row > y_pred_bounds[:, 0, alpha_ix]
                 is_lower_bounded = y_row < y_pred_bounds[:, 1, alpha_ix]
                 is_not_bounded = not (is_lower_bounded and is_lower_bounded)
@@ -315,18 +330,14 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             the length of the training set.
         """
         self._check_method(self.method)
-        if self.method == 'enbpi':
-            return self.partial_fit(X, y, ensemble=ensemble)
-        elif self.method == 'aci':
-            return self.adapt_conformal_inference(
+        update_methods = {
+            'enbpi': lambda: self.partial_fit(X, y, ensemble=ensemble),
+            'aci': lambda: self.adapt_conformal_inference(
                 X, y, ensemble=ensemble, alpha=alpha,
                 gamma=gamma, optimize_beta=optimize_beta
             )
-        else:
-            raise ValueError(
-                "Predefined methods should be used for time series: "
-                f"{self.valid_methods_}."
-            )
+        }
+        return update_methods[self.method]()
 
     def predict(
         self,
@@ -373,20 +384,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             super().predict(X, ensemble, alpha, optimize_beta)
 
         if self.method == "aci":
-            # ACI preprocessing (select virtual current alpha)
-            # This code snippet in the "aci" method ensures that when
-            # the same confidence level (alpha) is encountered more
-            # than once, it is mapped to a consistent value.
-            # This helps maintain reliability and predictability in
-            # the algorithm's computations specific to the "aci" method.
-            self.init_alpha()
-            alpha_np = cast(NDArray, check_alpha(alpha))
-            alpha_np = np.round(alpha_np, 2)
-            for ix, alpha_checked in enumerate(alpha_np):
-                alpha_np[ix] = self.current_alpha.setdefault(
-                    alpha_checked, alpha_checked
-                )
-            alpha = alpha_np
+            alpha = self.init_alpha(alpha)
 
         return super().predict(X, ensemble, alpha, optimize_beta)
 

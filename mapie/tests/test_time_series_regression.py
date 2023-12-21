@@ -337,9 +337,7 @@ def test_no_agg_fx_specified_with_subsample() -> None:
 
 
 def test_invalid_aggregate_all() -> None:
-    """
-    Test that wrong aggregation in MAPIE raise errors.
-    """
+    """Test that wrong aggregation in MAPIE raise errors."""
     with pytest.raises(
         ValueError,
         match=r".*Aggregation function called but not defined.*",
@@ -430,9 +428,7 @@ def test_interval_prediction_with_beta_optimize() -> None:
 
 
 def test_deprecated_path_warning() -> None:
-    """
-    Test that a warning is raised if import with deprecated path.
-    """
+    """Test that a warning is raised if import with deprecated path."""
     with pytest.warns(
         FutureWarning,
         match=r".*WARNING: Deprecated path*"
@@ -471,9 +467,32 @@ def test_aci_method() -> None:
     mapie_regressor.fit(X, y)
     mapie_regressor.predict(X, alpha=0.05)
     mapie_regressor.adapt_conformal_inference(X, y, gamma=0.01)
-    with pytest.raises(AttributeError,
-                       match=r"This method can be called "
-                             r"only with method='aci' *"):
+    with pytest.raises(
+        AttributeError,
+        match=r"This method can be called only with method='aci' *"
+    ):
         mapie_regressor_enbpi = MapieTimeSeriesRegressor(method="enbpi")
         mapie_regressor_enbpi.fit(X, y)
         mapie_regressor_enbpi.adapt_conformal_inference(X, y, gamma=0.01)
+
+
+def test_aci_init_and_reset_alpha_dict() -> None:
+    """Test that `init_alpha` resets all the values in the dictionary."""
+    mapie_ts_reg = MapieTimeSeriesRegressor(method="aci")
+    mapie_ts_reg.init_alpha()
+    np.testing.assert_equal(isinstance(mapie_ts_reg.current_alpha, dict), True)
+
+    mapie_ts_reg.current_alpha[0.05] = 0.45
+    mapie_ts_reg.init_alpha(reset=True)
+    np.testing.assert_equal(bool(mapie_ts_reg.current_alpha), False)
+
+
+def test_aci_init_alpha_with_unknown_alpha() -> None:
+    """
+    Test that the `adapt_conformal_inference` method initializes
+    a new value if alpha is seen for the first time.
+    """
+    mapie_ts_reg = MapieTimeSeriesRegressor(method="aci")
+    mapie_ts_reg.fit(X_toy, y_toy)
+    mapie_ts_reg.adapt_conformal_inference(X_toy, y_toy, gamma=0.1, alpha=0.2)
+    np.testing.assert_allclose(mapie_ts_reg.current_alpha[0.2], 0.3, rtol=1e-3)
