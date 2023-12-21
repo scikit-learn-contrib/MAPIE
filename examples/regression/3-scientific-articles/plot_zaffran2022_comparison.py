@@ -117,7 +117,7 @@ plt.plot(date_data, data.Spot, color="black", linewidth=0.6)
 
 locs, labels = plt.xticks()
 new_labels = ["2016", "2017", "2018", "2019", "2020"]
-plt.xticks(locs[0 : len(locs) : 2], labels=new_labels)
+plt.xticks(locs[0:len(locs):2], labels=new_labels)
 
 plt.xlabel("Date")
 plt.ylabel("Spot price (\u20AC/MWh)")
@@ -160,7 +160,6 @@ print(X_train_0.shape)
 # Reproduce experiment and results
 #########################################################
 
-# all_x_train = [np.array(data_train.loc[data_train.hour == h]) for h in range(24)]
 all_x_train = [np.array(X_train.loc[X_train.hour == h]) for h in range(24)]
 
 print(X_train_0.shape)
@@ -173,7 +172,8 @@ X_train_0 = X_train_0[:n_half]
 y_train_0 = y_train_0[:n_half]
 
 
-# Ici, on veut pas X_train & X_test, on veut X filtré avec vérification que la taille originale du train fait 1089 lignes
+# Ici, on veut pas X_train & X_test, on veut X filtré avec vérification que
+# la taille originale du train fait 1089 lignes
 
 data_0 = data[data.hour == 0].reset_index(drop=True)
 
@@ -243,7 +243,8 @@ mapie_aci = MapieTimeSeriesRegressor(
 #########################################################
 
 # Ici, on veut pour chaque pas, entrainer puis obtenir les pred conformes.
-# Partial fit ou pas? Pour moi partial fit sert quand il y a plusieurs pred. Ce qui n'est pas notre cas
+# Partial fit ou pas? Pour moi partial fit sert quand il y a plusieurs pred.
+# Ce qui n'est pas notre cas
 
 for step in tqdm(range(min(test_size, iteration_max + 1))):
     idx = np.array(range(train_size))
@@ -270,7 +271,6 @@ for step in tqdm(range(min(test_size, iteration_max + 1))):
         # Ajout d'une ligne :
         # mapie_aci.init_alpha()
 
-        # Initialise le nombre de predictions qu'on veut faire grâce à la taille de x_test
         y_pred_aci_npfit, y_pis_aci_npfit = mapie_aci.predict(
             X.iloc[train_size:,], alpha=alpha, ensemble=True, optimize_beta=False
         )
@@ -285,7 +285,8 @@ for step in tqdm(range(min(test_size, iteration_max + 1))):
 
         mapie_aci = mapie_aci.update(x_train, y_train)
         # alpha_t = mapie_aci.current_alpha[0.1] # Va disparaitre
-        # mapie_aci.fit(x_train.iloc[idx_train], y_train.iloc[idx_train]) # Va sortir du if + prefit (idem step == 0)
+        # mapie_aci.fit(x_train.iloc[idx_train], y_train.iloc[idx_train])
+        # Va sortir du if + prefit (idem step == 0)
         # mapie_aci.current_alpha[0.1] = alpha_t # Va disparaitre
 
     # Ensuite, on update les pred conforme
@@ -418,9 +419,7 @@ print(f"Comparison for ACP_0.04 (Y_inf): {comparison_result_Y_inf}")
 print(f"Comparison for ACP_0.04 (Y_sup): {comparison_result_Y_sup}")
 
 print(f"Predictions: {y_pred_aci_pfit[:iteration_max]}")
-print(
-    f"Predictions ref: {[results_ref[iteration, 0]/2 + results_ref[iteration, 1]/2 for iteration in range(iteration_max)]}"
-)
+print(f"Predictions ref: {np.sum(results_ref, -1)[:iteration_max]/2}")
 
 print()
 # print(data_ref["alpha_t"][:iteration_max])

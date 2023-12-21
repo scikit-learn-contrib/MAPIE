@@ -8,16 +8,10 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import ConformityScore
 from mapie.regression import MapieRegressor
 from mapie.estimator.estimator import EnsembleRegressor
-from mapie.utils import (
-    check_alpha,
-    check_alpha_and_n_samples,
-    check_gamma,
-    convert_to_numpy,
-)
+from mapie.utils import (check_gamma, convert_to_numpy)
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
@@ -59,7 +53,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/pdf/2202.07282.pdf
     """
 
-    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ + ["BlockBootstrap"]
+    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ + \
+        ["BlockBootstrap"]
     valid_methods_ = ["enbpi", "aci"]
     default_sym_ = False
 
@@ -286,7 +281,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.conformity_scores_ = np.roll(
             self.conformity_scores_, -len(new_conformity_scores_)
         )
-        self.conformity_scores_[-len(new_conformity_scores_) :] = new_conformity_scores_
+        self.conformity_scores_[-len(new_conformity_scores_):] = \
+            new_conformity_scores_
         return self
 
     def adapt_conformal_inference(
@@ -342,7 +338,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         for x_row, y_row in zip(X, y_true):
             x = np.expand_dims(x_row, axis=0)
-            _, y_pred_bounds = self.predict(x, alpha=list(self.current_alpha.keys()))
+            _, y_pred_bounds = self.predict(
+                x, alpha=list(self.current_alpha.keys())
+            )
 
             for alpha_ix, alpha_0 in enumerate(self.current_alpha):
                 alpha_t = self.current_alpha[alpha_0]
@@ -362,6 +360,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     def _more_tags(self):
         return {
             "_xfail_checks": {
-                "check_estimators_partial_fit_n_features": "partial_fit can only be called on fitted models"
+                "check_estimators_partial_fit_n_features":
+                "partial_fit can only be called on fitted models"
             }
         }
