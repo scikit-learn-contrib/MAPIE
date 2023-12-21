@@ -299,7 +299,7 @@ def check_alpha(
         raise ValueError(
             "Invalid alpha. Allowed values are Iterable of floats."
         )
-    if np.any(np.logical_or(alpha_np <= 0, alpha_np >= 1)):
+    if np.any(np.logical_or(alpha_np < 0, alpha_np > 1)):
         raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
     return alpha_np
 

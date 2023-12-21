@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Union, cast
+from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import RegressorMixin
@@ -10,8 +10,7 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
 from mapie.regression import MapieRegressor
-from mapie.estimator.estimator import EnsembleRegressor
-from mapie.utils import (check_gamma, convert_to_numpy)
+from mapie.utils import (check_alpha, check_gamma, convert_to_numpy)
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
@@ -53,8 +52,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/pdf/2202.07282.pdf
     """
 
-    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ + \
-        ["BlockBootstrap"]
+    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ \
+        + ["BlockBootstrap"]
     valid_methods_ = ["enbpi", "aci"]
     default_sym_ = False
 
@@ -99,12 +98,6 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
-            If ``False``, predictions are those of the model trained on the
-            whole training set.
-            If ``True``, predictions from perturbed models are aggregated by
-            the aggregation function specified in the ``agg_function``
-            attribute.
-
             If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
@@ -118,111 +111,6 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             self.conformity_score_function_.get_conformity_scores(X, y, y_pred)
         )
         return scores
-
-    def init_alpha(self) -> None:
-        if self.method == "aci":
-            self.current_alpha: dict[float, float] = {}
-        return None
-
-    def pre_fit(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
-    ) -> MapieTimeSeriesRegressor:
-        """
-        Prefit to only fit the model
-        """
-        (
-            estimator,
-            self.conformity_score_function_,
-            agg_function,
-            cv,
-            X,
-            y,
-            sample_weight,
-        ) = self._check_fit_parameters(X, y, sample_weight)
-
-        self.estimator_ = EnsembleRegressor(
-            estimator,
-            self.method,
-            cv,
-            agg_function,
-            self.n_jobs,
-            self.random_state,
-            self.test_size,
-            self.verbose,
-        )
-        # Fit the prediction function
-        self.estimator_ = self.estimator_.fit(X, y, sample_weight)
-
-        return self
-
-    def update(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
-    ) -> MapieTimeSeriesRegressor:
-        self = super().fit(X=X, y=y, sample_weight=sample_weight)
-        self.conformity_scores_ = self._relative_conformity_scores(X, y)
-        return self
-
-    def fit(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
-        ensemble: bool = False,
-    ) -> MapieTimeSeriesRegressor:
-        """
-        Compared to the method ``fit`` of ``MapieRegressor``, the ``fit``
-        method of ``MapieTimeSeriesRegressor`` computes the
-        ``conformity_scores_`` with relative values.
-
-        Parameters
-        ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Training data.
-
-        y: ArrayLike of shape (n_samples,)
-            Training labels.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no conformity scores.
-            If weights are non-uniform,
-            conformity scores are still uniformly weighted.
-
-            By default ``None``.
-
-        ensemble: bool
-            Boolean determining whether the predictions are ensembled or not.
-            If ``False``, predictions are those of the model trained on the
-            whole training set.
-            If ``True``, predictions from perturbed models are aggregated by
-            the aggregation function specified in the ``agg_function``
-            attribute.
-
-            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
-
-            By default ``False``.
-
-        Returns
-        -------
-        MapieTimeSeriesRegressor
-            The model itself.
-        """
-        self = super().fit(X=X, y=y, sample_weight=sample_weight)
-        self.conformity_scores_ = self._relative_conformity_scores(
-            X, y, ensemble=ensemble
-        )
-        if self.method == "aci":
-            self.current_alpha: dict[float, float] = {}
-        return self
 
     def partial_fit(
         self,
@@ -245,12 +133,6 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
-            If ``False``, predictions are those of the model trained on the
-            whole training set.
-            If ``True``, predictions from perturbed models are aggregated by
-            the aggregation function specified in the ``agg_function``
-            attribute.
-
             If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
@@ -267,10 +149,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             the length of the training set.
         """
         check_is_fitted(self, self.fit_attributes)
-        X = cast(NDArray, X)
-        y = cast(NDArray, y)
-        n = len(self.conformity_scores_)
-        if len(X) > n:
+        X, y = cast(NDArray, X), cast(NDArray, y)
+        m, n = len(X), len(self.conformity_scores_)
+        if m > n:
             raise ValueError(
                 "The number of observations to update is higher than the"
                 "number of training instances."
@@ -281,33 +162,54 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.conformity_scores_ = np.roll(
             self.conformity_scores_, -len(new_conformity_scores_)
         )
-        self.conformity_scores_[-len(new_conformity_scores_):] = \
-            new_conformity_scores_
+        self.conformity_scores_[
+            -len(new_conformity_scores_):
+        ] = new_conformity_scores_
         return self
+
+    def init_alpha(self, reset: bool = False) -> None:
+        if self.method == "aci":
+            if 'current_alpha' not in self.__dict__ or reset:
+                self.current_alpha: dict[float, float] = {}
+        return None
 
     def adapt_conformal_inference(
         self,
         X: ArrayLike,
-        y_true: ArrayLike,
+        y: ArrayLike,
         gamma: float,
+        alpha: Optional[Union[float, Iterable[float]]] = None,
+        ensemble: bool = False,
+        optimize_beta: bool = False,
     ) -> MapieTimeSeriesRegressor:
         """
         Adapt the ``alpha_t`` attribute when new data with known
         labels are available.
-        Note: Don't use ``adapt_conformal_inference``
-        with samples of the training set.
 
         Parameters
         ----------
         X: ArrayLike of shape (n_samples, n_features)
-            Test data.
+            Input data.
 
-        y_true: ArrayLike of shape (n_samples_test,)
+        y: ArrayLike of shape (n_samples_test,)
             Input labels.
+
+        ensemble: bool
+            Boolean determining whether the predictions are ensembled or not.
+            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
+
+            By default ``False``.
 
         gamma: float
             Coefficient that decides the correction of the conformal inference.
             If it equals 0, there are no corrections.
+
+        alpha: Optional[Union[float, Iterable[float]]]
+
+        optimize_beta: bool
+            Whether to optimize the PIs' width or not.
+
+            By default ``False``.
 
         Returns
         -------
@@ -320,42 +222,173 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             If the length of ``y`` is greater than
             the length of the training set.
         """
-
-        check_is_fitted(self, self.fit_attributes)
-        check_gamma(gamma)
-
         if self.method != "aci":
             raise AttributeError(
-                "This method can be called "
-                f"only with method='aci', "
+                "This method can be called only with method='aci', "
                 f"not with '{self.method}'."
             )
 
-        X = cast(NDArray, X)
-        y_true = cast(NDArray, y_true)
+        check_is_fitted(self, self.fit_attributes)
+        check_gamma(gamma)
+        self.init_alpha()
+        X, y = cast(NDArray, X), cast(NDArray, y)
+        X, y = convert_to_numpy(X, y)
 
-        X, y_true = convert_to_numpy(X, y_true)
+        alpha = cast(Optional[NDArray], check_alpha(alpha))
+        if alpha is None:
+            alpha = np.array(list(self.current_alpha.keys()))
+        alpha_np = cast(NDArray, alpha)
 
-        for x_row, y_row in zip(X, y_true):
+        for x_row, y_row in zip(X, y):
             x = np.expand_dims(x_row, axis=0)
             _, y_pred_bounds = self.predict(
-                x, alpha=list(self.current_alpha.keys())
+                x,
+                ensemble=ensemble,
+                alpha=alpha_np,
+                optimize_beta=optimize_beta
             )
 
-            for alpha_ix, alpha_0 in enumerate(self.current_alpha):
-                alpha_t = self.current_alpha[alpha_0]
-                is_true_in_quantile = 1 - float(
-                    y_pred_bounds[:, 0, alpha_ix]
-                    < y_row
-                    < y_pred_bounds[:, 1, alpha_ix]
-                )
-
-                new_alpha_t = np.clip(
-                    alpha_t + gamma * (alpha_0 - is_true_in_quantile), 0, 1
-                )
+            for alpha_ix, alpha_0 in enumerate(alpha_np):
+                if alpha_0 in self.current_alpha:
+                    alpha_t = self.current_alpha[alpha_0]
+                else:
+                    alpha_t = alpha_0
+                is_lower_bounded = y_row > y_pred_bounds[:, 0, alpha_ix]
+                is_lower_bounded = y_row < y_pred_bounds[:, 1, alpha_ix]
+                is_not_bounded = not (is_lower_bounded and is_lower_bounded)
+                new_alpha_t = alpha_t + gamma * (alpha_0 - is_not_bounded)
+                new_alpha_t = np.clip(new_alpha_t, 0, 1)
                 self.current_alpha[alpha_0] = new_alpha_t
 
         return self
+
+    def update(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        ensemble: bool = False,
+        alpha: Optional[Union[float, Iterable[float]]] = None,
+        gamma: float = 0.,
+        optimize_beta: bool = False,
+    ) -> MapieTimeSeriesRegressor:
+        """
+        Update with respect to the used ``method``.
+        ``method="enbpi"`` will call ``partial_fit`` method and
+        ``method="aci"`` will call ``adapt_conformal_inference`` method.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        y: ArrayLike of shape (n_samples_test,)
+            Input labels.
+
+        ensemble: bool
+            Boolean determining whether the predictions are ensembled or not.
+            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
+
+            By default ``False``.
+
+        alpha: Optional[Union[float, Iterable[float]]]
+
+        gamma: float
+            Coefficient that decides the correction of the conformal inference.
+            If it equals 0, there are no corrections.
+
+            By default ``0.``.
+
+        optimize_beta: bool
+            Whether to optimize the PIs' width or not.
+
+            By default ``False``.
+
+        Returns
+        -------
+        MapieTimeSeriesRegressor
+            The model itself.
+
+        Raises
+        ------
+        ValueError
+            If the length of ``y`` is greater than
+            the length of the training set.
+        """
+        self._check_method(self.method)
+        if self.method == 'enbpi':
+            return self.partial_fit(X, y, ensemble=ensemble)
+        elif self.method == 'aci':
+            return self.adapt_conformal_inference(
+                X, y, ensemble=ensemble, alpha=alpha,
+                gamma=gamma, optimize_beta=optimize_beta
+            )
+        else:
+            raise ValueError(
+                "Predefined methods should be used for time series: "
+                f"{self.valid_methods_}."
+            )
+
+    def predict(
+        self,
+        X: ArrayLike,
+        ensemble: bool = False,
+        alpha: Optional[Union[float, Iterable[float]]] = None,
+        optimize_beta: bool = False,
+    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
+        """
+        Predict target on new samples with confidence intervals.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Test data.
+
+        ensemble: bool
+            Boolean determining whether the predictions are ensembled or not.
+            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
+
+            By default ``False``.
+
+        alpha: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the uncertainty of the
+            confidence interval.
+
+            By default ``None``.
+
+        optimize_beta: bool
+            Whether to optimize the PIs' width or not.
+
+            By default ``False``.
+
+        Returns
+        -------
+        Union[NDArray, Tuple[NDArray, NDArray]]
+            - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
+            - Tuple[NDArray, NDArray] of shapes (n_samples,) and
+              (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
+                - [:, 0, :]: Lower bound of the prediction interval.
+                - [:, 1, :]: Upper bound of the prediction interval.
+        """
+        if alpha is None:
+            super().predict(X, ensemble, alpha, optimize_beta)
+
+        if self.method == "aci":
+            # ACI preprocessing (select virtual current alpha)
+            # This code snippet in the "aci" method ensures that when
+            # the same confidence level (alpha) is encountered more
+            # than once, it is mapped to a consistent value.
+            # This helps maintain reliability and predictability in
+            # the algorithm's computations specific to the "aci" method.
+            self.init_alpha()
+            alpha_np = cast(NDArray, check_alpha(alpha))
+            alpha_np = np.round(alpha_np, 2)
+            for ix, alpha_checked in enumerate(alpha_np):
+                alpha_np[ix] = self.current_alpha.setdefault(
+                    alpha_checked, alpha_checked
+                )
+            alpha = alpha_np
+
+        return super().predict(X, ensemble, alpha, optimize_beta)
 
     def _more_tags(self):
         return {

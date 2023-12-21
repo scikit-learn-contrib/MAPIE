@@ -38,15 +38,15 @@ from typing import Tuple
 from urllib.request import urlopen
 import ssl
 import pickle
-from tqdm import tqdm
 
 import datetime
 import numpy as np
 import pandas as pd
 from matplotlib import pylab as plt
+
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import PredefinedSplit
-
+from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.time_series_regression import MapieTimeSeriesRegressor
 
 from mapie._typing import NDArray
@@ -124,242 +124,103 @@ plt.ylabel("Spot price (\u20AC/MWh)")
 
 # plt.show()
 
+
 #########################################################
 # Prepare data
 #########################################################
 
 limit = datetime.datetime(2019, 1, 1, tzinfo=datetime.timezone.utc)
-id_train = data.index[pd.to_datetime(data["Date"], utc=True) < limit].tolist()
-id_test = data.index[pd.to_datetime(data["Date"], utc=True) >= limit].tolist()
+id_train = data.index[pd.to_datetime(data['Date'], utc=True) < limit].tolist()
 
 data_train = data.iloc[id_train, :]
-data_test = data.iloc[id_test, :]
+sub_data_train = data_train.loc[:, [
+    'hour', 'dow_0', 'dow_1', 'dow_2', 'dow_3', 'dow_4', 'dow_5', 'dow_6'
+    ] + ['lag_24_%d' % i for i in range(24)] +
+    ['lag_168_%d' % i for i in range(24)] + ['conso']
+]
+all_x_train = [
+    np.array(sub_data_train.loc[sub_data_train.hour == h]) for h in range(24)
+]
 
-features = (
-    ["hour"]
-    + ["dow_%d" % i for i in range(7)]
-    + ["lag_24_%d" % i for i in range(24)]
-    + ["lag_168_%d" % i for i in range(24)]
-    + ["conso"]
-)
-X_train = data_train.loc[:, features]
-y_train = data_train.Spot
+sub_data = data.loc[:, [
+    'hour', 'dow_0', 'dow_1', 'dow_2', 'dow_3', 'dow_4', 'dow_5', 'dow_6'
+    ] + ['lag_24_%d' % i for i in range(24)] +
+    ['lag_168_%d' % i for i in range(24)] + ['conso']
+]
 
-X_train_0 = X_train.loc[X_train.hour == 0]
-y_train_0 = data_train.loc[data_train.hour == 0, "Spot"]
+all_x = [np.array(sub_data.loc[sub_data.hour == h]) for h in range(24)]
+all_y = [np.array(data.loc[data.hour == h, 'Spot']) for h in range(24)]
 
-X_test = data_test.loc[:, features]
-y_test = data_test.Spot
-
-X_test_0 = X_test.loc[X_test.hour == 0]
-y_test_0 = data_test.loc[data_test.hour == 0, "Spot"]
-
-print(X_train_0.shape)
 
 #########################################################
 # Reproduce experiment and results
 #########################################################
 
-all_x_train = [np.array(X_train.loc[X_train.hour == h]) for h in range(24)]
+h = 0  # Let define hour = 0
 
-print(X_train_0.shape)
+X = all_x[h]
+Y = all_y[h]
 
-train_size = X_train_0.shape[0]
+n = len(Y)
+train_size = all_x_train[0].shape[0]
+test_size = n - train_size
+
 idx = np.array(range(train_size))
 n_half = int(np.floor(train_size / 2))
-
-X_train_0 = X_train_0[:n_half]
-y_train_0 = y_train_0[:n_half]
-
-
-# Ici, on veut pas X_train & X_test, on veut X filtré avec vérification que
-# la taille originale du train fait 1089 lignes
-
-data_0 = data[data.hour == 0].reset_index(drop=True)
-
-# Nous sert juste à obtenir la taille du train _size souhaitée
-limit = datetime.datetime(2019, 1, 1, tzinfo=datetime.timezone.utc)
-id_train_0 = data_0.index[pd.to_datetime(data_0["Date"], utc=True) < limit].tolist()
-id_test_0 = data_0.index[pd.to_datetime(data_0["Date"], utc=True) >= limit].tolist()
-
-data_train = data_0.iloc[id_train_0, :]
-data_test = data_0.iloc[id_test_0, :]
-
-train_size = data_train.shape[0]
-test_size = data_test.shape[0]
-print(train_size)
-
-features = (
-    ["hour"]
-    + ["dow_%d" % i for i in range(7)]
-    + ["lag_24_%d" % i for i in range(24)]
-    + ["lag_168_%d" % i for i in range(24)]
-    + ["conso"]
-)
-
-X = data_0.loc[:, features]
-Y = data_0.Spot
-print(X.shape)
+idx_train, idx_cal = idx[:n_half], idx[n_half:2*n_half]
 
 
 #########################################################
 # Prepare model
 #########################################################
 
-n_estimators = 1000
-min_samples_leaf = 1
-max_features = 6
-
-model = RandomForestRegressor(
-    n_estimators=n_estimators,
-    min_samples_leaf=min_samples_leaf,
-    max_features=max_features,
-    random_state=1,
-)
-
+iteration_max = 3
 alpha = 0.1
-gap = 1
-iteration_max = 2
 gamma = 0.04
 
-# model = init_model()
-
-test_fold = [0] * n_half + [-1] * n_half
-
-print(n_half)
-print(len(test_fold))
+model = init_model()
 
 mapie_aci = MapieTimeSeriesRegressor(
     model,
     method="aci",
     agg_function="mean",
-    n_jobs=-1,
+    conformity_score=AbsoluteConformityScore(sym=True),
+    cv=PredefinedSplit(test_fold=[-1] * n_half + [0] * n_half),
     random_state=1,
-    cv=PredefinedSplit(test_fold),
 )
 
 #########################################################
-# Boucle entrainement
+# Reproduce experiment and results
 #########################################################
 
 # Ici, on veut pour chaque pas, entrainer puis obtenir les pred conformes.
 # Partial fit ou pas? Pour moi partial fit sert quand il y a plusieurs pred.
 # Ce qui n'est pas notre cas
 
-for step in tqdm(range(min(test_size, iteration_max + 1))):
-    idx = np.array(range(train_size))
-    n_half = int(np.floor(train_size / 2))
-    idx_train, idx_cal = idx[:n_half], idx[n_half : 2 * n_half]
+y_pred_aci_pfit = np.zeros(((365, )))
+y_pis_aci_pfit = np.zeros(((365, 2, 1)))
 
-    x_train = X.iloc[step : (train_size + step),]
-    x_test = np.array(X.iloc[(train_size + step),]).reshape((1, -1))
-    y_train = Y[step : (train_size + step)]
-    y_test = np.array([Y[(train_size + step)]])
+for i in range(min(test_size, iteration_max + 1)):
+    x_train = np.array(X[i:(train_size+i), ])
+    x_test = np.array(X[(train_size+i), ]).reshape(1, -1)
+    y_train = np.array(Y[i:(train_size+i)])
+    y_test = np.array(Y[(train_size+i)]).reshape(1, -1)
 
-    print(x_train.iloc[idx_train].shape)
-    print(step)
-    # print(y_test)
+    # Fit the model with new tran/calib dataset
+    mapie_aci = mapie_aci.fit(x_train, y_train)
 
-    print(len(idx_train))
-
-    if step == 0:
-        # D'abord on fit sur la première moitiée
-        mapie_aci = mapie_aci.fit(x_train, y_train)  # Va sortir du if + prefit
-
-        mapie_aci = mapie_aci.update(x_train, y_train)
-
-        # Ajout d'une ligne :
-        # mapie_aci.init_alpha()
-
-        y_pred_aci_npfit, y_pis_aci_npfit = mapie_aci.predict(
-            X.iloc[train_size:,], alpha=alpha, ensemble=True, optimize_beta=False
-        )
-
-        y_pred_aci_pfit = np.zeros(y_pred_aci_npfit.shape)
-        y_pis_aci_pfit = np.zeros(y_pis_aci_npfit.shape)
-
-        print("MAPIE estimator fitted!")
-
-    else:
-        print(step)
-
-        mapie_aci = mapie_aci.update(x_train, y_train)
-        # alpha_t = mapie_aci.current_alpha[0.1] # Va disparaitre
-        # mapie_aci.fit(x_train.iloc[idx_train], y_train.iloc[idx_train])
-        # Va sortir du if + prefit (idem step == 0)
-        # mapie_aci.current_alpha[0.1] = alpha_t # Va disparaitre
-
-    # Ensuite, on update les pred conforme
-    # mapie_aci.partial_fit(x_train.iloc[idx_cal], y_train.iloc[idx_cal])
-
-    print("Update alpha")
-    print(mapie_aci.current_alpha)
-    print(y_test)
-
-    (
-        y_pred_aci_pfit[step : step + gap],
-        y_pis_aci_pfit[step : step + gap, :, :],
-    ) = mapie_aci.predict(
-        x_test,
-        alpha=alpha,
-        ensemble=True,
-        optimize_beta=False,
+    # Predict on test dataset
+    y_pred_aci_pfit[i:i+1], y_pis_aci_pfit[i:i+1] = mapie_aci.predict(
+        x_test, alpha=alpha, ensemble=False, optimize_beta=False
     )
 
-    mapie_aci.adapt_conformal_inference(
-        x_test,
-        y_test,
-        gamma=gamma,
+    # Update the current_alpha_t (hidden for the user)
+    mapie_aci.update(
+        x_test, y_test, gamma=gamma, ensemble=False, optimize_beta=False
     )
 
 results = y_pis_aci_pfit.copy()
 
-###
-
-"""
-mapie_aci = mapie_aci.fit(X_train_0, y_train_0)
-y_pred_aci_npfit, y_pis_aci_npfit = mapie_aci.predict(
-    X_test_0, alpha=alpha, ensemble=True, optimize_beta=False
-)
-print("MAPIE estimator fitted!")
-
-# step 0
-y_pred_aci_pfit = np.zeros(y_pred_aci_npfit.shape)
-y_pis_aci_pfit = np.zeros(y_pis_aci_npfit.shape)
-y_pred_aci_pfit[:gap], y_pis_aci_pfit[:gap, :, :] = mapie_aci.predict(
-    X_test_0.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=False
-)
-
-
-# step t
-for step in range(1, min(len(X_test_0), iteration_max + 1)):
-    mapie_aci.estimator_.single_estimator_.fit(
-        X_train_0.iloc[(step - gap) : step, :], y_train_0.iloc[(step - gap) : step]
-    )
-
-    mapie_aci.partial_fit(
-        X_train_0.iloc[(step - gap) : step, :],
-        y_train_0.iloc[(step - gap) : step],
-    )
-
-    mapie_aci.adapt_conformal_inference(
-        X_train_0.iloc[(step - gap) : step, :],
-        y_train_0.iloc[(step - gap) : step],
-        gamma=gamma,
-    )
-
-    (
-        y_pred_aci_pfit[step : step + gap],
-        y_pis_aci_pfit[step : step + gap, :, :],
-    ) = mapie_aci.predict(
-        X_test_0.iloc[step : (step + gap), :],
-        alpha=alpha,
-        ensemble=True,
-        optimize_beta=True,
-    )
-
-results = y_pis_aci_pfit.copy()
-"""
 
 #########################################################
 # Get referenced result to reproduce
@@ -390,7 +251,6 @@ def get_pickle() -> Tuple[NDArray, NDArray]:
 
 
 data_ref = get_pickle()
-print(data_ref.keys())
 
 
 #########################################################
@@ -402,24 +262,27 @@ results_ref = np.concatenate([data_ref["Y_inf"], data_ref["Y_sup"]], axis=0).T
 results = np.array(results.reshape(-1, 2))
 
 # Compare the NumPy array with the corresponding DataFrame columns
-comparison_result_Y_inf = np.array_equal(
-    results[:iteration_max, 0], results_ref[:iteration_max, 0]
+comparison_result_Y_inf = np.allclose(
+    results[:iteration_max, 0], results_ref[:iteration_max, 0], rtol=1e-2
 )
-comparison_result_Y_sup = np.array_equal(
-    results[:iteration_max, 1], results_ref[:iteration_max, 1]
+comparison_result_Y_sup = np.allclose(
+    results[:iteration_max, 1], results_ref[:iteration_max, 1], rtol=1e-2
+)
+comparison_result_Y_pred = np.allclose(
+    y_pred_aci_pfit[:iteration_max], np.sum(results_ref, -1)[:iteration_max]/2,
+    rtol=1e-2
 )
 
 # Print the comparison results
+# The results are very closed but not exactly the same because of the quantile
+# calculation. In MAPIE, we use method="higher" when in the code of Zaffran,
+# it use method="midpoint".
 print(f"Comparison (Y_inf): {results[:iteration_max, 0]}")
 print(f"Comparison (Y_inf ref): {results_ref[:iteration_max, 0]}")
 print(f"Comparison (Y_sup): {results[:iteration_max, 1]}")
 print(f"Comparison (Y_sup ref): {results_ref[:iteration_max, 1]}")
-print(f"Vraies valeures y: {list(Y[train_size:(train_size+iteration_max)])}")
-print(f"Comparison for ACP_0.04 (Y_inf): {comparison_result_Y_inf}")
-print(f"Comparison for ACP_0.04 (Y_sup): {comparison_result_Y_sup}")
-
 print(f"Predictions: {y_pred_aci_pfit[:iteration_max]}")
 print(f"Predictions ref: {np.sum(results_ref, -1)[:iteration_max]/2}")
-
-print()
-# print(data_ref["alpha_t"][:iteration_max])
+print(f"Comparison for ACP_0.04 (Y_inf): {comparison_result_Y_inf}")
+print(f"Comparison for ACP_0.04 (Y_sup): {comparison_result_Y_sup}")
+print(f"Comparison for ACP_0.04 (Y_pred): {comparison_result_Y_pred}")

@@ -98,8 +98,8 @@ WIDTHS = {
     "blockbootstrap_enbpi_median_wopt": 3.76,
     "blockbootstrap_enbpi_mean": 3.76,
     "blockbootstrap_enbpi_median": 3.76,
-    "blockbootstrap_aci_mean": 3.76,
-    "blockbootstrap_aci_median": 3.76,
+    "blockbootstrap_aci_mean": 3.87,
+    "blockbootstrap_aci_median": 3.90,
     "prefit": 4.79,
 }
 
@@ -270,7 +270,11 @@ def test_linear_regression_results(strategy: str) -> None:
     with fixed random state.
     """
     mapie_ts = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
-    mapie_ts.fit(X, y, ensemble=True)
+    mapie_ts.fit(X, y)
+    if 'enbpi' in strategy:
+        mapie_ts.update(X, y, ensemble=True)
+    if 'aci' in strategy:
+        mapie_ts.update(X, y, alpha=0.05, ensemble=True)
     optimize_beta = "opt" in strategy
     _, y_pis = mapie_ts.predict(
         X, alpha=0.05, optimize_beta=optimize_beta, ensemble=True
@@ -365,12 +369,13 @@ def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
 
 def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
     """Test ``partial_fit``."""
-    mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1)
-    mapie_ts_reg = mapie_ts_reg.fit(X_toy, y_toy, ensemble=True)
+    mapie_ts_reg = MapieTimeSeriesRegressor(method='enbpi', cv=-1)
+    mapie_ts_reg.fit(X_toy, y_toy)
+    mapie_ts_reg.partial_fit(X_toy, y_toy, ensemble=True)
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
         np.abs(CONFORMITY_SCORES[0]), 2
     )
-    mapie_ts_reg = mapie_ts_reg.partial_fit(
+    mapie_ts_reg.partial_fit(
         X=np.array([UPDATE_DATA[0]]), y=np.array([UPDATE_DATA[1]]),
         ensemble=True
     )
@@ -381,7 +386,8 @@ def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
 
 def test_MapieTimeSeriesRegressor_partial_fit_too_big() -> None:
     """Test ``partial_fit`` raised error."""
-    mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
+    mapie_ts_reg = MapieTimeSeriesRegressor(method='enbpi', cv=-1)
+    mapie_ts_reg.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*The number of observations*"):
         mapie_ts_reg = mapie_ts_reg.partial_fit(X=X, y=y)
 
@@ -413,6 +419,7 @@ def test_interval_prediction_with_beta_optimize() -> None:
         )
     )
     mapie_ts_reg.fit(X_val, y_val)
+    mapie_ts_reg.update(X_val, y_val)
     _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05, optimize_beta=True)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
     coverage = regression_coverage_score(
