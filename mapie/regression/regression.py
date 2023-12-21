@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Iterable, Optional, Tuple, Union, cast
 
+import warnings
+
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LinearRegression
@@ -592,9 +594,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         else:
             if optimize_beta and self.method != 'enbpi':
-                raise UserWarning(
-                    "Beta optimisation should only be used for "
-                    "method='enbpi'."
+                warnings.warn(
+                    "WARNING: Beta optimisation should only be used for "
+                    "method='enbpi'.",
+                    UserWarning
                 )
 
             n = len(self.conformity_scores_)
