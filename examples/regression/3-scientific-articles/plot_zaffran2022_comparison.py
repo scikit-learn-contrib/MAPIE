@@ -87,11 +87,12 @@ def init_model():
 
 def get_data() -> pd.DataFrame:
     """
-    TODO
+    Get the data from a CSV file containing prices from 2016 to 2019.
 
     Returns
     -------
-    TODO
+    pd.DataFrame
+        The DataFrame containing the price data.
     """
     website = "https://raw.githubusercontent.com/"
     page = "mzaffran/AdaptiveConformalPredictionsTimeSeries/"
@@ -121,7 +122,7 @@ plt.xticks(locs[0:len(locs):2], labels=new_labels)
 plt.xlabel("Date")
 plt.ylabel("Spot price (\u20AC/MWh)")
 
-# plt.show()
+plt.show()
 
 
 #########################################################
@@ -152,7 +153,7 @@ all_y = [np.array(data.loc[data.hour == h, 'Spot']) for h in range(24)]
 
 
 #########################################################
-# Reproduce experiment and results
+# Select Data (hour 0)
 #########################################################
 
 h = 0  # Let define hour = 0
@@ -192,10 +193,6 @@ mapie_aci = MapieTimeSeriesRegressor(
 # Reproduce experiment and results
 #########################################################
 
-# Ici, on veut pour chaque pas, entrainer puis obtenir les pred conformes.
-# Partial fit ou pas? Pour moi partial fit sert quand il y a plusieurs pred.
-# Ce qui n'est pas notre cas
-
 y_pred_aci_pfit = np.zeros(((365, )))
 y_pis_aci_pfit = np.zeros(((365, 2, 1)))
 
@@ -228,11 +225,13 @@ results = y_pis_aci_pfit.copy()
 
 def get_pickle() -> Tuple[NDArray, NDArray]:
     """
-    # TODO
+    Get the pickle file containing the loaded data.
 
-    # Returns
-    # -------
-    # TODO"""
+    Returns
+    -------
+    Tuple[NDArray, NDArray]
+        A tuple containing the loaded data.
+    """
     website = "https://github.com/"
     page = "mzaffran/AdaptiveConformalPredictionsTimeSeries/raw/"
     folder = "131656fe4c25251bad745f52db3c2d7cb1c24bbb/results/"
