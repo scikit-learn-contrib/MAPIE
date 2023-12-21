@@ -459,7 +459,10 @@ def test_valid_gamma(gamma: float) -> None:
 @pytest.mark.parametrize("gamma", [1.5, -0.1])
 def test_invalid_large_gamma(gamma: float) -> None:
     """Test a non-valid gamma parameter."""
-    with pytest.raises(ValueError, match="Gamma must be between 0 and 1."):
+    with pytest.raises(
+        ValueError,
+        match="Invalid gamma. Allowed values are between 0 and 1."
+    ):
         check_gamma(gamma)
 
 

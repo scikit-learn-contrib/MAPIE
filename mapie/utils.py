@@ -368,7 +368,7 @@ def check_gamma(
     gamma: float
 ) -> None:
     """
-    Check if gamma is between 0 and 1
+    Check if gamma is between 0 and 1.
 
     Parameters
     ----------
@@ -379,10 +379,9 @@ def check_gamma(
     ValueError
         If gamma is lower than 0 or higher than 1.
     """
-
     if (gamma < 0) or (gamma > 1):
         raise ValueError(
-            "Gamma must be between 0 and 1."
+            "Invalid gamma. Allowed values are between 0 and 1."
         )
 
 
