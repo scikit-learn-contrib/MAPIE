@@ -33,10 +33,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
     The ACI strategy allows you to adapt the conformal inference
     (i.e the quantile). If the real values are not in the coverage,
-    the size of the intervals will grow.
-    Conversely, if the real values are in the coverage,
-    the size of the intervals will decrease.
-    You can use a gamma coefficient to adjust the strength of the correction.
+    the size of the intervals will grow. Conversely, if the real values are in
+    the coverage, the size of the intervals will decrease. You can use a gamma
+    coefficient to adjust the strength of the correction. If the quantile is
+    equal to zero, the method will produce an infinite set size.
 
     References
     ----------
