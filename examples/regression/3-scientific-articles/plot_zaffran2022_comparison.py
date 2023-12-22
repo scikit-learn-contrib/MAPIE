@@ -174,7 +174,7 @@ idx_train, idx_cal = idx[:n_half], idx[n_half:2*n_half]
 # Prepare model
 #########################################################
 
-iteration_max = 3
+iteration_max = 10
 alpha = 0.1
 gamma = 0.04
 
@@ -275,12 +275,32 @@ comparison_result_Y_pred = np.allclose(
 # The results are very closed but not exactly the same because of the quantile
 # calculation. In MAPIE, we use method="higher" when in the code of Zaffran,
 # it use method="midpoint".
-print(f"Comparison (Y_inf): {results[:iteration_max, 0]}")
-print(f"Comparison (Y_inf ref): {results_ref[:iteration_max, 0]}")
-print(f"Comparison (Y_sup): {results[:iteration_max, 1]}")
-print(f"Comparison (Y_sup ref): {results_ref[:iteration_max, 1]}")
-print(f"Predictions: {y_pred_aci_pfit[:iteration_max]}")
-print(f"Predictions ref: {np.sum(results_ref, -1)[:iteration_max]/2}")
+final_results = pd.DataFrame({
+    "y_inf": results[:iteration_max, 0],
+    "y_inf (ref)": results_ref[:iteration_max, 0],
+    "y_sup": results[:iteration_max, 1],
+    "y_sup (ref)": results_ref[:iteration_max, 1],
+    "y_pred": y_pred_aci_pfit[:iteration_max],
+    "y_pred (ref)": np.sum(results_ref, -1)[:iteration_max]/2,
+}).round(2)
+
+idx = np.arange(iteration_max)
+fig, axs = plt.subplots(1, 2)
+axs[0].fill_between(
+    idx, final_results["y_inf"], final_results["y_sup"],
+    alpha=0.2
+)
+axs[0].plot(final_results["y_pred"])
+axs[0].set_title("MAPIE results")
+axs[1].fill_between(
+    idx, final_results["y_inf (ref)"], final_results["y_sup (ref)"],
+    alpha=0.2
+)
+axs[1].plot(final_results["y_pred (ref)"])
+axs[1].set_title("Reference results")
+plt.show()
+
+print(final_results)
 print(f"Comparison for ACP_0.04 (Y_inf): {comparison_result_Y_inf}")
 print(f"Comparison for ACP_0.04 (Y_sup): {comparison_result_Y_sup}")
 print(f"Comparison for ACP_0.04 (Y_pred): {comparison_result_Y_pred}")
