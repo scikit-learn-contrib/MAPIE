@@ -102,6 +102,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         ensemble: bool = False,
+        **fit_params,
     ) -> MapieTimeSeriesRegressor:
         """
         Compared to the method ``fit`` of ``MapieRegressor``, the ``fit``
@@ -138,13 +139,16 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
+        
+        **fit_params : dict
+            Additional fit parameters.
 
         Returns
         -------
         MapieTimeSeriesRegressor
             The model itself.
         """
-        self = super().fit(X=X, y=y, sample_weight=sample_weight)
+        self = super().fit(X=X, y=y, sample_weight=sample_weight, **fit_params)
         self.conformity_scores_ = self._relative_conformity_scores(
             X, y, ensemble=ensemble
         )
