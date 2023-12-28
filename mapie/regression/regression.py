@@ -455,6 +455,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        **fit_params,
     ) -> MapieRegressor:
         """
         Fit estimator and compute conformity scores used for
@@ -481,6 +482,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             conformity scores are still uniformly weighted.
 
             By default ``None``.
+        
+        **fit_params : dict
+            Additional fit parameters.
 
         Returns
         -------
@@ -507,7 +511,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.verbose
         )
         # Fit the prediction function
-        self.estimator_ = self.estimator_.fit(X, y, sample_weight)
+        self.estimator_ = self.estimator_.fit(X, y, sample_weight, **fit_params)
 
         # Predict on calibration data
         y_pred = self.estimator_.predict_calib(X)
