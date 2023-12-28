@@ -81,6 +81,7 @@ def fit_estimator(
     X: ArrayLike,
     y: ArrayLike,
     sample_weight: Optional[NDArray] = None,
+    **fit_params,
 ) -> Union[RegressorMixin, ClassifierMixin]:
     """
     Fit an estimator on training data by distinguishing two cases:
@@ -103,6 +104,9 @@ def fit_estimator(
         Sample weights. If None, then samples are equally weighted.
         By default None.
 
+    **fit_params : dict
+            Additional fit parameters.
+
     Returns
     -------
     RegressorMixin
@@ -122,9 +126,9 @@ def fit_estimator(
     fit_parameters = signature(estimator.fit).parameters
     supports_sw = "sample_weight" in fit_parameters
     if supports_sw and sample_weight is not None:
-        estimator.fit(X, y, sample_weight=sample_weight)
+        estimator.fit(X, y, sample_weight=sample_weight, **fit_params)
     else:
-        estimator.fit(X, y)
+        estimator.fit(X, y, **fit_params)
     return estimator
 
 
