@@ -533,7 +533,7 @@ class MapieQuantileRegressor(MapieRegressor):
             Read more in the :ref:`User Guide <stratification>`.
 
             By default ``None``.
-        
+
         **fit_params : dict
             Additional fit parameters.
 
@@ -613,8 +613,12 @@ class MapieQuantileRegressor(MapieRegressor):
                 else:
                     cloned_estimator_.set_params(**params)
                 self.estimators_.append(fit_estimator(
-                    cloned_estimator_, X_train, y_train, sample_weight_train, **fit_params,
-                ))
+                    cloned_estimator_,
+                    X_train,
+                    y_train,
+                    sample_weight_train,
+                    **fit_params,
+                    ))
                 y_calib_preds[i] = self.estimators_[-1].predict(X_calib)
             self.single_estimator_ = self.estimators_[2]
 

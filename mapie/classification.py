@@ -615,7 +615,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
             By default None.
-        
+
         **fit_params : dict
             Additional fit parameters.
 
@@ -637,7 +637,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_val = _safe_indexing(y, val_index)
 
         if sample_weight is None:
-            estimator = fit_estimator(estimator, X_train, y_train, **fit_params)
+            estimator = fit_estimator(
+                estimator, X_train, y_train, **fit_params
+                )
         else:
             sample_weight_train = _safe_indexing(sample_weight, train_index)
             estimator = fit_estimator(
@@ -1078,7 +1080,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             k_star for the RAPS method.
 
             By default ``.2``.
-        
+
         **fit_params : dict
             Additional fit parameters.
 

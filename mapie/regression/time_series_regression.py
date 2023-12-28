@@ -139,7 +139,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
-        
+
         **fit_params : dict
             Additional fit parameters.
 
