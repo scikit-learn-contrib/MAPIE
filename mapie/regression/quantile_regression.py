@@ -469,6 +469,7 @@ class MapieQuantileRegressor(MapieRegressor):
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
+        **fit_params,
     ) -> MapieQuantileRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
@@ -532,6 +533,9 @@ class MapieQuantileRegressor(MapieRegressor):
             Read more in the :ref:`User Guide <stratification>`.
 
             By default ``None``.
+        
+        **fit_params : dict
+            Additional fit parameters.
 
         Returns
         -------
@@ -609,7 +613,7 @@ class MapieQuantileRegressor(MapieRegressor):
                 else:
                     cloned_estimator_.set_params(**params)
                 self.estimators_.append(fit_estimator(
-                    cloned_estimator_, X_train, y_train, sample_weight_train
+                    cloned_estimator_, X_train, y_train, sample_weight_train, **fit_params,
                 ))
                 y_calib_preds[i] = self.estimators_[-1].predict(X_calib)
             self.single_estimator_ = self.estimators_[2]
