@@ -793,4 +793,6 @@ def test_fit_parameters_passing(
         sample_weight=None,
         monitor=early_stopping_monitor
         )
-    assert mapie.estimators_[0].estimators_.shape[0] == 3
+
+    for estimator in mapie.estimators_:
+        assert estimator.estimators_.shape[0] == 3
