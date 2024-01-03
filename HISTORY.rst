@@ -4,7 +4,7 @@ History
 
 ##### (##########)
 ------------------
-* Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit).
+* Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit, GroupKFold).
 * Integrate ConformityScore into MapieTimeSeriesRegressor.
 * Add (extend) the optimal estimation strategy for the bounds of the prediction intervals for regression via ConformityScore.
 * Add new checks for metrics calculations.
