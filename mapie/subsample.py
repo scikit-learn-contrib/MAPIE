@@ -56,7 +56,7 @@ class Subsample(BaseCrossValidator):
         self.random_state = random_state
 
     def split(
-        self, X: NDArray
+        self, X: NDArray, *args: Any, **kargs: Any
     ) -> Generator[Tuple[NDArray, NDArray], None, None]:
         """
         Generate indices to split data into training and test sets.
@@ -89,7 +89,8 @@ class Subsample(BaseCrossValidator):
             test_index = np.setdiff1d(indices, train_index)
             yield train_index, test_index
 
-    def get_n_splits(self, *args: Any, **kargs: Any) -> int:
+    def get_n_splits(
+            self, *args: Any, **kargs: Any) -> int:
         """
         Returns the number of splitting iterations in the cross-validator.
 
@@ -154,7 +155,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         self.random_state = random_state
 
     def split(
-        self, X: NDArray
+        self, X: NDArray, *args: Any, **kargs: Any
     ) -> Generator[Tuple[NDArray, NDArray], None, None]:
         """
         Generate indices to split data into training and test sets.
