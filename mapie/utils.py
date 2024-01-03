@@ -589,7 +589,7 @@ def check_lower_upper_bounds(
     if any_final_inversion:
         warnings.warn(
             "WARNING: The predictions have issues.\n"
-            + "The upper predictions are lower than"
+            + "The upper predictions are lower than "
             + "the lower predictions at some points."
         )
 
