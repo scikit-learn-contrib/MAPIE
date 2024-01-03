@@ -322,7 +322,11 @@ class EnsembleRegressor(EnsembleEstimator):
         y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
         return y_pred_multi
 
-    def predict_calib(self, X: ArrayLike) -> NDArray:
+    def predict_calib(
+            self,
+            X: ArrayLike,
+            y: Optional[ArrayLike] = None,
+            groups: Optional[ArrayLike] = None) -> NDArray:
         """
         Perform predictions on X : the calibration set.
 
@@ -349,15 +353,17 @@ class EnsembleRegressor(EnsembleEstimator):
                     delayed(self._predict_oof_estimator)(
                         estimator, X, calib_index,
                     )
-                    for (_, calib_index), estimator in zip(cv.split(X),
-                                                           self.estimators_)
+                    for (_, calib_index), estimator in zip(
+                        cv.split(X, y, groups),
+                        self.estimators_
+                    )
                 )
                 predictions, indices = map(
                     list, zip(*outputs)
                 )
                 n_samples = _num_samples(X)
                 pred_matrix = np.full(
-                    shape=(n_samples, cv.get_n_splits(X)),
+                    shape=(n_samples, cv.get_n_splits(X, y, groups)),
                     fill_value=np.nan,
                     dtype=float,
                 )
@@ -376,6 +382,7 @@ class EnsembleRegressor(EnsembleEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
+        groups: Optional[ArrayLike] = None,
         sample_weight: Optional[ArrayLike] = None,
     ) -> EnsembleRegressor:
         """
@@ -392,6 +399,12 @@ class EnsembleRegressor(EnsembleEstimator):
 
         y: ArrayLike of shape (n_samples,)
             Input labels.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
@@ -423,7 +436,7 @@ class EnsembleRegressor(EnsembleEstimator):
             )
             cv = cast(BaseCrossValidator, cv)
             self.k_ = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y)),
+                shape=(n_samples, cv.get_n_splits(X, y, groups)),
                 fill_value=np.nan,
                 dtype=float,
             )
@@ -434,7 +447,7 @@ class EnsembleRegressor(EnsembleEstimator):
                     delayed(self._fit_oof_estimator)(
                         clone(estimator), X, y, train_index, sample_weight
                     )
-                    for train_index, _ in cv.split(X)
+                    for train_index, _ in cv.split(X, y, groups)
                 )
                 # In split-CP, we keep only the model fitted on train dataset
                 if self.use_split_method_:
