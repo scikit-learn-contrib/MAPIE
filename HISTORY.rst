@@ -4,9 +4,12 @@ History
 
 ##### (##########)
 ------------------
-* Allow the use of `y` and `groups` arguments in cross validator methods :meth:`get_n_splits`
-  and :meth:`split` to enable more cv-split variants for :class:`MapieRegressor`
+* Allow the use of `y` and `groups` arguments in cross validator methods `get_n_splits`
+  and `split` to enable more cv-split variants for :class:`MapieRegressor`
   (e.g. :class:`GroupKFold`, stratified continuous split).
+
+0.8.0 (2024-01-03)
+------------------
 * Add Adaptative Conformal Inference (ACI) method for MapieTimeSeriesRegressor.
 * Add Coverage Width-based Criterion (CWC) metric.
 * Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit).
@@ -15,7 +18,6 @@ History
 * Add (extend) the optimal estimation strategy for the bounds of the prediction intervals for regression via ConformityScore.
 * Add new checks for metrics calculations.
 * Fix reference for residual normalised score in documentation.
-
 
 0.7.0 (2023-09-14)
 ------------------

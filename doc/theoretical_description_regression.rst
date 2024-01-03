@@ -272,7 +272,7 @@ regressions when using :class:`mapie.quantile_regression.MapieQuantileRegressor`
 
 
 10. The ensemble batch prediction intervals (EnbPI) method
-=========================================================
+==========================================================
 
 The coverage guarantee offered by the various resampling methods based on the
 jackknife strategy, and implemented in MAPIE, are only valid under the "exchangeability
