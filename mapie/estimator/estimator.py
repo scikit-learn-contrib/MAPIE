@@ -393,8 +393,8 @@ class EnsembleRegressor(EnsembleEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        groups: Optional[ArrayLike] = None,
         sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None
     ) -> EnsembleRegressor:
         """
         Fit the base estimator under the ``single_estimator_`` attribute.
@@ -411,14 +411,13 @@ class EnsembleRegressor(EnsembleEstimator):
         y: ArrayLike of shape (n_samples,)
             Input labels.
 
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights. If None, then samples are equally weighted.
+            By default ``None``.
+
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
-
-            By default ``None``.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights. If None, then samples are equally weighted.
             By default ``None``.
 
         Returns

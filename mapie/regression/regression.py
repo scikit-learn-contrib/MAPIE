@@ -390,6 +390,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None
     ):
         """
         Perform several checks on class parameters.
@@ -404,6 +405,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         sample_weight: Optional[NDArray] of shape (n_samples,)
             Non-null sample weights.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+            By default ``None``.
 
         Raises
         ------
@@ -447,14 +453,21 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         X = cast(NDArray, X)
         y = cast(NDArray, y)
         sample_weight = cast(Optional[NDArray], sample_weight)
+        groups = cast(Optional[NDArray], groups)
 
-        return estimator, cs_estimator, agg_function, cv, X, y, sample_weight
+        return (
+            estimator, cs_estimator,
+            agg_function, cv,
+            X, y,
+            sample_weight, groups
+        )
 
     def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None
     ) -> MapieRegressor:
         """
         Fit estimator and compute conformity scores used for
@@ -482,6 +495,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             By default ``None``.
 
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+            By default ``None``.
+
         Returns
         -------
         MapieRegressor
@@ -494,7 +512,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
          cv,
          X,
          y,
-         sample_weight) = self._check_fit_parameters(X, y, sample_weight)
+         sample_weight,
+         groups) = self._check_fit_parameters(X, y, sample_weight, groups)
 
         self.estimator_ = EnsembleRegressor(
             estimator,
@@ -507,10 +526,12 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.verbose
         )
         # Fit the prediction function
-        self.estimator_ = self.estimator_.fit(X, y, sample_weight)
+        self.estimator_ = self.estimator_.fit(
+            X, y, sample_weight=sample_weight, groups=groups
+        )
 
         # Predict on calibration data
-        y_pred = self.estimator_.predict_calib(X)
+        y_pred = self.estimator_.predict_calib(X, y=y, groups=groups)
 
         # Compute the conformity scores (manage jk-ab case)
         self.conformity_scores_ = \
