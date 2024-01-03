@@ -17,7 +17,7 @@ and compares the bounds of the PIs.
 In order to reproduce the results of the github repository, we reuse the
 ``RandomForestRegressor`` regression model and follow the same conformal
 prediction procedure
-(see https://github.com/mzaffran/AdaptiveConformalPredictionsTimeSeries/blob/131656fe4c25251bad745f52db3c2d7cb1c24bbb/models.py). # noqa
+(see [models.py file](https://github.com/mzaffran/AdaptiveConformalPredictionsTimeSeries/blob/131656fe4c25251bad745f52db3c2d7cb1c24bbb/models.py)). # noqa
 
 This simulation is carried out to check that the aci method implemented in
 MAPIE gives the same results as [1], and that the bounds of the PIs are
