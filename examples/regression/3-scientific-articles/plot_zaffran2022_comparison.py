@@ -16,7 +16,7 @@ and compares the bounds of the PIs.
 
 In order to reproduce the results of the github repository, we reuse the
 ``RandomForestRegressor`` regression model and follow the same conformal
-prediction procedure (see in in AdaptiveConformalPredictionsTimeSeries
+prediction procedure (see in AdaptiveConformalPredictionsTimeSeries
 project the `models.py` file).
 
 This simulation is carried out to check that the aci method implemented in
