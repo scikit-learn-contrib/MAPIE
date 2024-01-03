@@ -243,13 +243,16 @@ class ConformityScore(metaclass=ABCMeta):
         NDArray of shape (1, n_alpha) or (n_samples, n_alpha)
             The quantile of the conformity scores.
         """
+        n_ref = conformity_scores.shape[-1]
         quantile = np.column_stack([
             np_nanquantile(
                 conformity_scores.astype(float),
                 _alpha,
                 axis=axis,
                 method=method
-            )
+            ) if 0 < _alpha < 1
+            else np.inf * np.ones(n_ref) if method == "higher"
+            else - np.inf * np.ones(n_ref)
             for _alpha in alpha_np
         ])
         return quantile
@@ -413,10 +416,12 @@ class ConformityScore(metaclass=ABCMeta):
             alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np + beta_np
 
             quantile_low = self.get_quantile(
-                conformity_scores, alpha_low, axis=0, method=quantile_search
+                conformity_scores[..., np.newaxis],
+                alpha_low, axis=0, method=quantile_search
             )
             quantile_up = self.get_quantile(
-                conformity_scores, alpha_up, axis=0, method="higher"
+                conformity_scores[..., np.newaxis],
+                alpha_up, axis=0, method="higher"
             )
             bound_low = self.get_estimation_distribution(
                 X, y_pred_low, signed * quantile_low
