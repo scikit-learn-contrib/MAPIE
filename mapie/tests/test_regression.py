@@ -9,6 +9,7 @@ import pytest
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import (KFold, LeaveOneOut, PredefinedSplit,
@@ -38,6 +39,19 @@ k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
 
 random_state = 1
+
+gb = GradientBoostingRegressor(
+            random_state=random_state
+            )
+
+
+def early_stopping_monitor(i, est, locals):
+    """Returns True on the 3rd iteration."""
+    if i == 2:
+        return True
+    else:
+        return False
+
 
 Params = TypedDict(
     "Params",
@@ -646,3 +660,23 @@ def test_beta_optimize_user_warning() -> None:
         UserWarning, match=r"Beta optimisation should only be used for*",
     ):
         mapie_reg.predict(X, alpha=0.05, optimize_beta=True)
+
+
+def test_fit_parameters_passing() -> None:
+    """
+    Test passing fit parameters, here early stopping at iteration 3.
+    """
+    mapie = MapieRegressor(
+                estimator=gb,
+            )
+
+    mapie.fit(
+        X,
+        y,
+        monitor=early_stopping_monitor
+        )
+
+    assert mapie.estimator_.single_estimator_.estimators_.shape[0] == 3
+
+    for estimator in mapie.estimator_.estimators_:
+        assert estimator.estimators_.shape[0] == 3
