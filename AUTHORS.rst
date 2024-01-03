@@ -34,5 +34,5 @@ Contributors
 * Sofiane Ziane <sziane@quantmetry.com>
 * Rafael Saraiva <rafael.saraiva.de@gmail.com>
 * Mehdi Elion <mehdi.elion@gmail.com>
-* :user:`Pierre de Fréminville <pidefrem>`
+* Pierre de Fréminville <6165084+pidefrem@users.noreply.github.com>
 To be continued ...
