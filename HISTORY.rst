@@ -4,7 +4,7 @@ History
 
 ##### (##########)
 ------------------
-* Allow to use of `y` and `groups` arguments in cross validator methods :meth:`get_n_splits`
+* Allow the use of `y` and `groups` arguments in cross validator methods :meth:`get_n_splits`
   and :meth:`split` to enable more cv-split variants for :class:`MapieRegressor`
   (e.g. :class:`GroupKFold`, stratified continuous split).
 * Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit).
