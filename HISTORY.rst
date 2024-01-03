@@ -4,7 +4,9 @@ History
 
 ##### (##########)
 ------------------
-* Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit, GroupKFold).
+* Allow to use of `y` and `groups` arguments in cross validator :method: `get_n_splits` and `split`
+  to enable more split methods for MapieRegressor (e.g. GroupKFold, stratified continuous split).
+* Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit).
 * Integrate ConformityScore into MapieTimeSeriesRegressor.
 * Add (extend) the optimal estimation strategy for the bounds of the prediction intervals for regression via ConformityScore.
 * Add new checks for metrics calculations.
