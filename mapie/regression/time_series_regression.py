@@ -47,7 +47,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     Isaac Gibbs, Emmanuel Candes
     "Adaptive conformal inference under distribution shift"
     https://proceedings.neurips.cc/paper/2021/file/\
-    0d441de75945e5acbc865406fc9a2559-Paper.pdf
+0d441de75945e5acbc865406fc9a2559-Paper.pdf
 
     Margaux Zaffran et al.
     "Adaptive Conformal Predictions for Time Series"
