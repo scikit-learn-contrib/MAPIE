@@ -24,7 +24,7 @@ X, y = make_regression(
     n_samples=500, n_features=10, noise=1.0, random_state=random_state
 )
 k = np.ones(shape=(5, X.shape[1]))
-METHODS = ["enbpi"]
+METHODS = ["enbpi", "aci"]
 UPDATE_DATA = ([6], 17.5)
 CONFORMITY_SCORES = [14.189 - 14.038, 17.5 - 18.665]
 
@@ -37,56 +37,80 @@ Params = TypedDict(
     },
 )
 STRATEGIES = {
-    "jackknife_enbpi_mean_ab_wopt": Params(
+    "blockbootstrap_enbpi_mean_wopt": Params(
         method="enbpi",
         agg_function="mean",
         cv=BlockBootstrap(
-            n_resamplings=30, n_blocks=5, random_state=random_state
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
         ),
     ),
-    "jackknife_enbpi_median_ab_wopt": Params(
+    "blockbootstrap_enbpi_median_wopt": Params(
         method="enbpi",
         agg_function="median",
         cv=BlockBootstrap(
             n_resamplings=30,
             n_blocks=5,
-            random_state=random_state,
+            random_state=random_state
         ),
     ),
-    "jackknife_enbpi_mean_ab": Params(
+    "blockbootstrap_enbpi_mean": Params(
         method="enbpi",
         agg_function="mean",
         cv=BlockBootstrap(
-            n_resamplings=30, n_blocks=5, random_state=random_state
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
         ),
     ),
-    "jackknife_enbpi_median_ab": Params(
+    "blockbootstrap_enbpi_median": Params(
         method="enbpi",
         agg_function="median",
         cv=BlockBootstrap(
             n_resamplings=30,
             n_blocks=5,
-            random_state=random_state,
+            random_state=random_state
+        ),
+    ),
+    "blockbootstrap_aci_mean": Params(
+        method="aci",
+        agg_function="mean",
+        cv=BlockBootstrap(
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
+        ),
+    ),
+    "blockbootstrap_aci_median": Params(
+        method="aci",
+        agg_function="median",
+        cv=BlockBootstrap(
+            n_resamplings=30,
+            n_blocks=5,
+            random_state=random_state
         ),
     ),
 }
 
 WIDTHS = {
-    "jackknife_enbpi_mean_ab_wopt": 3.76,
-    "jackknife_enbpi_median_ab_wopt": 3.76,
-    "jackknife_enbpi_mean_ab": 3.76,
-    "jackknife_enbpi_median_ab": 3.76,
+    "blockbootstrap_enbpi_mean_wopt": 3.76,
+    "blockbootstrap_enbpi_median_wopt": 3.76,
+    "blockbootstrap_enbpi_mean": 3.76,
+    "blockbootstrap_enbpi_median": 3.76,
+    "blockbootstrap_aci_mean": 3.87,
+    "blockbootstrap_aci_median": 3.90,
     "prefit": 4.79,
-
 }
 
 COVERAGES = {
-    "jackknife_enbpi_mean_ab_wopt": 0.952,
-    "jackknife_enbpi_median_ab_wopt": 0.946,
-    "jackknife_enbpi_mean_ab": 0.952,
-    "jackknife_enbpi_median_ab": 0.946,
+    "blockbootstrap_enbpi_mean_wopt": 0.952,
+    "blockbootstrap_enbpi_median_wopt": 0.946,
+    "blockbootstrap_enbpi_mean": 0.952,
+    "blockbootstrap_enbpi_median": 0.946,
+    "blockbootstrap_aci_mean": 0.95,
+    "blockbootstrap_aci_median": 0.95,
     "prefit": 0.98,
-
 }
 
 
@@ -215,7 +239,7 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     np.testing.assert_allclose(y_pis1, y_pis2)
 
 
-@pytest.mark.parametrize("method", ["enbpi"])
+@pytest.mark.parametrize("method", ["enbpi", "aci"])
 @pytest.mark.parametrize("cv", [-1, 2, 3, 5])
 @pytest.mark.parametrize("agg_function", ["mean", "median"])
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2])
@@ -245,9 +269,12 @@ def test_linear_regression_results(strategy: str) -> None:
     a multivariate linear regression problem
     with fixed random state.
     """
-
     mapie_ts = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
-    mapie_ts.fit(X, y, ensemble=True)
+    mapie_ts.fit(X, y)
+    if 'enbpi' in strategy:
+        mapie_ts.update(X, y, ensemble=True)
+    if 'aci' in strategy:
+        mapie_ts.update(X, y, alpha=0.05, ensemble=True)
     optimize_beta = "opt" in strategy
     _, y_pis = mapie_ts.predict(
         X, alpha=0.05, optimize_beta=optimize_beta, ensemble=True
@@ -310,9 +337,7 @@ def test_no_agg_fx_specified_with_subsample() -> None:
 
 
 def test_invalid_aggregate_all() -> None:
-    """
-    Test that wrong aggregation in MAPIE raise errors.
-    """
+    """Test that wrong aggregation in MAPIE raise errors."""
     with pytest.raises(
         ValueError,
         match=r".*Aggregation function called but not defined.*",
@@ -342,12 +367,13 @@ def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
 
 def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
     """Test ``partial_fit``."""
-    mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1)
-    mapie_ts_reg = mapie_ts_reg.fit(X_toy, y_toy, ensemble=True)
+    mapie_ts_reg = MapieTimeSeriesRegressor(method='enbpi', cv=-1)
+    mapie_ts_reg.fit(X_toy, y_toy)
+    mapie_ts_reg.partial_fit(X_toy, y_toy, ensemble=True)
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
         np.abs(CONFORMITY_SCORES[0]), 2
     )
-    mapie_ts_reg = mapie_ts_reg.partial_fit(
+    mapie_ts_reg.partial_fit(
         X=np.array([UPDATE_DATA[0]]), y=np.array([UPDATE_DATA[1]]),
         ensemble=True
     )
@@ -358,7 +384,8 @@ def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
 
 def test_MapieTimeSeriesRegressor_partial_fit_too_big() -> None:
     """Test ``partial_fit`` raised error."""
-    mapie_ts_reg = MapieTimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
+    mapie_ts_reg = MapieTimeSeriesRegressor(method='enbpi', cv=-1)
+    mapie_ts_reg.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*The number of observations*"):
         mapie_ts_reg = mapie_ts_reg.partial_fit(X=X, y=y)
 
@@ -390,6 +417,7 @@ def test_interval_prediction_with_beta_optimize() -> None:
         )
     )
     mapie_ts_reg.fit(X_val, y_val)
+    mapie_ts_reg.update(X_val, y_val)
     _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05, optimize_beta=True)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
     coverage = regression_coverage_score(
@@ -400,9 +428,7 @@ def test_interval_prediction_with_beta_optimize() -> None:
 
 
 def test_deprecated_path_warning() -> None:
-    """
-    Test that a warning is raised if import with deprecated path.
-    """
+    """Test that a warning is raised if import with deprecated path."""
     with pytest.warns(
         FutureWarning,
         match=r".*WARNING: Deprecated path*"
@@ -427,3 +453,68 @@ def test_consistent_class() -> None:
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     np.testing.assert_allclose(y_pred_1, y_pred_2)
+
+
+def test_aci_method() -> None:
+    """
+    Test function for the "aci" (Adapted Conformal Inference) method
+    in a MapieTimeSeriesRegressor.
+    Additionally, it attempts to test the regressor with the "enbpi"
+    method, but this part is expected to raise an exception,
+    and it captures the exception without taking any action.
+    """
+    mapie_regressor = MapieTimeSeriesRegressor(method="aci")
+    mapie_regressor.fit(X, y)
+    mapie_regressor.predict(X, alpha=0.05)
+    mapie_regressor.adapt_conformal_inference(X, y, gamma=0.01)
+    with pytest.raises(
+        AttributeError,
+        match=r"This method can be called only with method='aci' *"
+    ):
+        mapie_regressor_enbpi = MapieTimeSeriesRegressor(method="enbpi")
+        mapie_regressor_enbpi.fit(X, y)
+        mapie_regressor_enbpi.adapt_conformal_inference(X, y, gamma=0.01)
+
+
+def test_aci_init_and_reset_alpha_dict() -> None:
+    """Test that `_get_alpha` resets all the values in the dictionary."""
+    mapie_ts_reg = MapieTimeSeriesRegressor(method="aci")
+    mapie_ts_reg._get_alpha()
+    np.testing.assert_equal(isinstance(mapie_ts_reg.current_alpha, dict), True)
+
+    mapie_ts_reg.current_alpha[0.05] = 0.45
+    mapie_ts_reg._get_alpha(reset=True)
+    np.testing.assert_equal(bool(mapie_ts_reg.current_alpha), False)
+
+
+def test_aci__get_alpha_with_unknown_alpha() -> None:
+    """
+    Test that the `adapt_conformal_inference` method initializes
+    a new value if alpha is seen for the first time.
+    """
+    mapie_ts_reg = MapieTimeSeriesRegressor(method="aci")
+    mapie_ts_reg.fit(X_toy, y_toy)
+    mapie_ts_reg.adapt_conformal_inference(X_toy, y_toy, gamma=0.1, alpha=0.2)
+    np.testing.assert_allclose(mapie_ts_reg.current_alpha[0.2], 0.3, rtol=1e-3)
+
+
+def test_deprecated_partial_fit_warning() -> None:
+    """Test that a warning is raised if use partial_fit"""
+    mapie_ts_reg = MapieTimeSeriesRegressor(method='enbpi', cv=-1)
+    mapie_ts_reg.fit(X_toy, y_toy)
+    with pytest.warns(
+        DeprecationWarning, match=r".*WARNING: Deprecated method.*"
+    ):
+        mapie_ts_reg = mapie_ts_reg.partial_fit(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("method", ["wrong_method"])
+def test_method_error_in_update(monkeypatch: Any, method: str) -> None:
+    """Test else condition for the method in .update"""
+    monkeypatch.setattr(
+        MapieTimeSeriesRegressor, "_check_method", lambda *args: ()
+    )
+    mapie_ts_reg = MapieTimeSeriesRegressor(method=method)
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
+        mapie_ts_reg.fit(X_toy, y_toy)
+        mapie_ts_reg.update(X_toy, y_toy)
