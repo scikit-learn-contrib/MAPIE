@@ -362,6 +362,28 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_results_with_constant_groups(strategy: str) -> None:
+    """
+    Test predictions when groups are None
+    or constant with different values.
+    """
+    n_samples = len(X)
+    mapie0 = MapieRegressor(**STRATEGIES[strategy])
+    mapie1 = MapieRegressor(**STRATEGIES[strategy])
+    mapie2 = MapieRegressor(**STRATEGIES[strategy])
+    mapie0.fit(X, y, groups=None)
+    mapie1.fit(X, y, groups=np.ones(shape=n_samples))
+    mapie2.fit(X, y, groups=np.ones(shape=n_samples) * 5)
+    y_pred0, y_pis0 = mapie0.predict(X, alpha=0.05)
+    y_pred1, y_pis1 = mapie1.predict(X, alpha=0.05)
+    y_pred2, y_pis2 = mapie2.predict(X, alpha=0.05)
+    np.testing.assert_allclose(y_pred0, y_pred1)
+    np.testing.assert_allclose(y_pred1, y_pred2)
+    np.testing.assert_allclose(y_pis0, y_pis1)
+    np.testing.assert_allclose(y_pis1, y_pis2)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_prediction_between_low_up(strategy: str) -> None:
     """Test that prediction lies between low and up prediction intervals."""
     mapie = MapieRegressor(**STRATEGIES[strategy])
