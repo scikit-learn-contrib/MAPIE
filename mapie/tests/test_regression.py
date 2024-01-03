@@ -665,6 +665,8 @@ def test_beta_optimize_user_warning() -> None:
 def test_fit_parameters_passing() -> None:
     """
     Test passing fit parameters, here early stopping at iteration 3.
+    Checks that underlying GradientBoosting estimators have used 3 iterations
+    only during boosting, instead of default value for n_estimators (=100).
     """
     mapie = MapieRegressor(
                 estimator=gb,
