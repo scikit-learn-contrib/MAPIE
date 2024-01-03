@@ -639,7 +639,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if sample_weight is None:
             estimator = fit_estimator(
                 estimator, X_train, y_train, **fit_params
-                )
+            )
         else:
             sample_weight_train = _safe_indexing(sample_weight, train_index)
             estimator = fit_estimator(

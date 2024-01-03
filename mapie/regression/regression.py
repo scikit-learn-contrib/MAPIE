@@ -513,7 +513,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         # Fit the prediction function
         self.estimator_ = self.estimator_.fit(
             X, y, sample_weight, **fit_params
-            )
+        )
 
         # Predict on calibration data
         y_pred = self.estimator_.predict_calib(X)
