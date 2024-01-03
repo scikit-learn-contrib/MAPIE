@@ -73,7 +73,6 @@ def check_null_weight(
         y = _safe_indexing(y, non_null_weight)
         sample_weight = _safe_indexing(sample_weight, non_null_weight)
         sample_weight = cast(NDArray, sample_weight)
-
     return sample_weight, X, y
 
 

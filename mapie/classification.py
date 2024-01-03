@@ -1045,9 +1045,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        groups: Optional[ArrayLike] = None,
         sample_weight: Optional[ArrayLike] = None,
         size_raps: Optional[float] = .2,
+        groups: Optional[ArrayLike] = None,
     ) -> MapieClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -1059,12 +1059,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         y: NDArray of shape (n_samples,)
             Training labels.
-
-        groups: Optional[ArrayLike] of shape (n_samples,)
-            Group labels for the samples used while splitting the dataset into
-            train/test set.
-
-            By default ``None``.
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
@@ -1081,6 +1075,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
             By default ``.2``.
 
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
 
         Returns
         -------
