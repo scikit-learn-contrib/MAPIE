@@ -106,18 +106,6 @@ X_train, X_calib, y_train, y_calib = train_test_split(
     X_, y_, test_size=0.33, random_state=random_state
 )
 
-gb = GradientBoostingClassifier(
-            random_state=random_state
-            )
-
-
-def early_stopping_monitor(i, est, locals):
-    """Returns True on the 3rd iteration."""
-    if i == 2:
-        return True
-    else:
-        return False
-
 
 def test_initialized() -> None:
     """Test that initialization does not crash."""
@@ -481,12 +469,17 @@ def test_fit_parameters_passing() -> None:
     Checks that underlying GradientBoosting estimators have used 3 iterations
     only during boosting, instead of default value for n_estimators (=100).
     """
+    gb = GradientBoostingClassifier(random_state=random_state)
+
     mapie = MapieCalibrator(estimator=gb)
 
-    mapie.fit(
-        X,
-        y,
-        monitor=early_stopping_monitor
-        )
+    def early_stopping_monitor(i, est, locals):
+        """Returns True on the 3rd iteration."""
+        if i == 2:
+            return True
+        else:
+            return False
+
+    mapie.fit(X, y, monitor=early_stopping_monitor)
 
     assert mapie.single_estimator_.estimators_.shape[0] == 3

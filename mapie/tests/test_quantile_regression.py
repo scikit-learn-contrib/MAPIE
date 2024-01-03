@@ -46,15 +46,6 @@ gb = GradientBoostingRegressor(
             random_state=random_state
             )
 
-
-def early_stopping_monitor(i, est, locals):
-    """Returns True on the 3rd iteration."""
-    if i == 2:
-        return True
-    else:
-        return False
-
-
 X, y = make_regression(
     n_samples=500,
     n_features=10,
@@ -782,10 +773,14 @@ def test_fit_parameters_passing(
     Checks that underlying GradientBoosting estimators have used 3 iterations
     only during boosting, instead of default value for n_estimators (=100).
     """
-    mapie = MapieQuantileRegressor(
-        estimator=gb,
-        **STRATEGIES[strategy]
-        )
+    mapie = MapieQuantileRegressor(estimator=gb, **STRATEGIES[strategy])
+
+    def early_stopping_monitor(i, est, locals):
+        """Returns True on the 3rd iteration."""
+        if i == 2:
+            return True
+        else:
+            return False
 
     mapie.fit(
         X_train,
@@ -794,7 +789,7 @@ def test_fit_parameters_passing(
         y_calib=y_calib,
         sample_weight=None,
         monitor=early_stopping_monitor
-        )
+    )
 
     for estimator in mapie.estimators_:
         assert estimator.estimators_.shape[0] == 3

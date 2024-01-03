@@ -822,18 +822,6 @@ X, y = make_classification(
     random_state=random_state,
 )
 
-gb = GradientBoostingClassifier(
-            random_state=random_state
-            )
-
-
-def early_stopping_monitor(i, est, locals):
-    """Returns True on the 3rd iteration."""
-    if i == 2:
-        return True
-    else:
-        return False
-
 
 class CumulatedScoreClassifier:
 
@@ -1978,16 +1966,20 @@ def test_fit_parameters_passing() -> None:
     Checks that underlying GradientBoosting estimators have used 3 iterations
     only during boosting, instead of default value for n_estimators (=100).
     """
-    mapie = MapieClassifier(
-        estimator=gb,
-        method="aps"
-        )
+    gb = GradientBoostingClassifier(random_state=random_state)
 
-    mapie.fit(
-        X,
-        y,
-        monitor=early_stopping_monitor
-        )
+    mapie = MapieClassifier(
+        estimator=gb, method="aps", random_state=random_state
+    )
+
+    def early_stopping_monitor(i, est, locals):
+        """Returns True on the 3rd iteration."""
+        if i == 2:
+            return True
+        else:
+            return False
+
+    mapie.fit(X, y, monitor=early_stopping_monitor)
 
     assert mapie.single_estimator_.estimators_.shape[0] == 3
 

@@ -40,19 +40,6 @@ METHODS = ["naive", "base", "plus", "minmax"]
 
 random_state = 1
 
-gb = GradientBoostingRegressor(
-            random_state=random_state
-            )
-
-
-def early_stopping_monitor(i, est, locals):
-    """Returns True on the 3rd iteration."""
-    if i == 2:
-        return True
-    else:
-        return False
-
-
 Params = TypedDict(
     "Params",
     {
@@ -668,15 +655,18 @@ def test_fit_parameters_passing() -> None:
     Checks that underlying GradientBoosting estimators have used 3 iterations
     only during boosting, instead of default value for n_estimators (=100).
     """
-    mapie = MapieRegressor(
-                estimator=gb,
-            )
+    gb = GradientBoostingRegressor(random_state=random_state)
 
-    mapie.fit(
-        X,
-        y,
-        monitor=early_stopping_monitor
-        )
+    mapie = MapieRegressor(estimator=gb, random_state=random_state)
+
+    def early_stopping_monitor(i, est, locals):
+        """Returns True on the 3rd iteration."""
+        if i == 2:
+            return True
+        else:
+            return False
+
+    mapie.fit(X, y, monitor=early_stopping_monitor)
 
     assert mapie.estimator_.single_estimator_.estimators_.shape[0] == 3
 
