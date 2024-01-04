@@ -675,6 +675,7 @@ def test_fit_parameters_passing() -> None:
     for estimator in mapie.estimator_.estimators_:
         assert estimator.estimators_.shape[0] == 3
 
+
 def test_predict_infinite_intervals() -> None:
     """Test that MapieRegressor produces infinite bounds with alpha=0"""
     mapie_reg = MapieRegressor().fit(X, y)

@@ -124,7 +124,6 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         ensemble: bool = False,
-        **fit_params,
     ) -> MapieTimeSeriesRegressor:
         """
         Update the ``conformity_scores_`` attribute when new data with known
@@ -149,9 +148,6 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
 
             By default ``False``.
-
-        **fit_params : dict
-            Additional fit parameters.
 
         Returns
         -------
