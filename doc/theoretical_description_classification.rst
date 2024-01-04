@@ -142,7 +142,7 @@ of the last label in the prediction set. This randomization is done as follows:
 
 - First : define the :math:`V` parameter:
 .. math::
-        V_i = (s_i(X_i, Y_i) - \hat{q}_{1-\alpha}) / \left(\hat{\mu}(X_i)_{\pi_k} + \lambda \mathbb{1} (k > k_{reg})\right)
+   V_i = (s_i(X_i, Y_i) - \hat{q}_{1-\alpha}) / \left(\hat{\mu}(X_i)_{\pi_k} + \lambda \mathbb{1} (k > k_{reg})\right)
 - Compare each :math:`V_i` to :math:`U \sim` Unif(0, 1)
 - If :math:`V_i \leq U`, the last included label is removed, else we keep the prediction set as it is.
 

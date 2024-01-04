@@ -642,8 +642,10 @@ def test_beta_optimize_user_warning() -> None:
     """
     Test that a UserWarning is displayed when optimize_beta is used.
     """
-    mapie_reg = MapieRegressor().fit(X, y)
-    with pytest.raises(
+    mapie_reg = MapieRegressor(
+        conformity_score=AbsoluteConformityScore(sym=False)
+    ).fit(X, y)
+    with pytest.warns(
         UserWarning, match=r"Beta optimisation should only be used for*",
     ):
         mapie_reg.predict(X, alpha=0.05, optimize_beta=True)
@@ -672,3 +674,10 @@ def test_fit_parameters_passing() -> None:
 
     for estimator in mapie.estimator_.estimators_:
         assert estimator.estimators_.shape[0] == 3
+
+def test_predict_infinite_intervals() -> None:
+    """Test that MapieRegressor produces infinite bounds with alpha=0"""
+    mapie_reg = MapieRegressor().fit(X, y)
+    _, y_pis = mapie_reg.predict(X, alpha=0., allow_infinite_bounds=True)
+    np.testing.assert_allclose(y_pis[:, 0, 0], -np.inf)
+    np.testing.assert_allclose(y_pis[:, 1, 0], np.inf)

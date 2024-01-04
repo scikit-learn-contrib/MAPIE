@@ -32,6 +32,8 @@ Contributors
 * Daniel Herbst <daniel.herbst@tum.de>
 * Candice Moyet <cmoyet@quantmetry.com>
 * Sofiane Ziane <sziane@quantmetry.com>
+* Remi Colliaux <rcolliaux@quantmetry.com>
+* Arthur Phan <aphan@quantmetry.com>
 * Rafael Saraiva <rafael.saraiva.de@gmail.com>
 * Mehdi Elion <mehdi.elion@gmail.com>
 * Sami Kaddani <sami.kaddani@gmail.com>

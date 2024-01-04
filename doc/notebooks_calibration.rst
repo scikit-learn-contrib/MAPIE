@@ -1,5 +1,5 @@
 Calibration notebooks
-========================
+=====================
 
 The following examples present advanced analyses on multi-class calibration.
 

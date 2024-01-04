@@ -642,6 +642,8 @@ class MapieQuantileRegressor(MapieRegressor):
         X: ArrayLike,
         ensemble: bool = False,
         alpha: Optional[Union[float, Iterable[float]]] = None,
+        optimize_beta: bool = False,
+        allow_infinite_bounds: bool = False,
         symmetry: Optional[bool] = True,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
