@@ -12,7 +12,7 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
 from mapie.regression import MapieRegressor
-from mapie.utils import (check_alpha, check_gamma, convert_to_numpy)
+from mapie.utils import (check_alpha, check_gamma)
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):
@@ -296,7 +296,6 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         check_is_fitted(self, self.fit_attributes)
         check_gamma(gamma)
         X, y = cast(NDArray, X), cast(NDArray, y)
-        X, y = convert_to_numpy(X, y)
 
         self._get_alpha()
         alpha = cast(Optional[NDArray], check_alpha(alpha))
