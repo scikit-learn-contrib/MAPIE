@@ -765,9 +765,7 @@ def test_consistent_class() -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_fit_parameters_passing(
-    strategy: str,
-) -> None:
+def test_fit_parameters_passing(strategy: str) -> None:
     """
     Test passing fit parameters, here early stopping at iteration 3.
     Checks that underlying GradientBoosting estimators have used 3 iterations
