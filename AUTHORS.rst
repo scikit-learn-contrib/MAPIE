@@ -36,6 +36,6 @@ Contributors
 * Arthur Phan <aphan@quantmetry.com>
 * Rafael Saraiva <rafael.saraiva.de@gmail.com>
 * Mehdi Elion <mehdi.elion@gmail.com>
-* Pierre de Fréminville <6165084+pidefrem@users.noreply.github.com>
+* Pierre de Fréminville <pidefrem>
 
 To be continued ...
