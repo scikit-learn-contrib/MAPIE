@@ -323,10 +323,11 @@ class EnsembleRegressor(EnsembleEstimator):
         return y_pred_multi
 
     def predict_calib(
-            self,
-            X: ArrayLike,
-            y: Optional[ArrayLike] = None,
-            groups: Optional[ArrayLike] = None) -> NDArray:
+        self,
+        X: ArrayLike,
+        y: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None
+    ) -> NDArray:
         """
         Perform predictions on X : the calibration set.
 
