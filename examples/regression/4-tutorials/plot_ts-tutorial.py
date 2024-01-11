@@ -253,8 +253,8 @@ y_pred_aci_npfit[:gap], y_pis_aci_npfit[:gap, :, :] = mapie_aci.predict(
 )
 for step in range(gap, len(X_test), gap):
     mapie_aci.adapt_conformal_inference(
-        X_test.iloc[(step - gap):step, :],
-        y_test.iloc[(step - gap):step],
+        X_test.iloc[(step - gap):step, :].to_numpy(),
+        y_test.iloc[(step - gap):step].to_numpy(),
         gamma=0.05
     )
     (
@@ -357,8 +357,8 @@ for step in range(gap, len(X_test), gap):
         y_test.iloc[(step - gap):step],
     )
     mapie_aci.adapt_conformal_inference(
-        X_test.iloc[(step - gap):step, :],
-        y_test.iloc[(step - gap):step],
+        X_test.iloc[(step - gap):step, :].to_numpy(),
+        y_test.iloc[(step - gap):step].to_numpy(),
         gamma=0.05
     )
     (
