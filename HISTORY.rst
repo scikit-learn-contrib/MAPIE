@@ -10,7 +10,7 @@ History
   This change adds the `groups` argument to the following methods:
   :meth:`~estimator.interface.EnsembleEstimator.fit()`,
   :meth:`~estimator.estimator.EnsembleRegressor.predict_calib()`, :meth:`~estimator.estimator.EnsembleRegressor.fit()`,
-   :meth:`~regression.regression.MapieRegressor.fit()`,
+  :meth:`~regression.regression.MapieRegressor.fit()`,
   :meth:`~classification.MapieClassifier.fit()`.
 
 0.8.0 (2024-01-03)
