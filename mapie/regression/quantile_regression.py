@@ -458,7 +458,7 @@ class MapieQuantileRegressor(MapieRegressor):
                 " order [alpha/2, 1 - alpha/2, 0.5]."
             )
 
-    def fit(
+    def fit(  # type: ignore
         self,
         X: ArrayLike,
         y: ArrayLike,

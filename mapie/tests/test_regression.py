@@ -12,8 +12,9 @@ from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (KFold, LeaveOneOut, PredefinedSplit,
-                                     ShuffleSplit, train_test_split)
+from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
+                                     PredefinedSplit, ShuffleSplit,
+                                     train_test_split)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -382,6 +383,36 @@ def test_results_with_constant_groups(strategy: str) -> None:
     np.testing.assert_allclose(y_pred1, y_pred2)
     np.testing.assert_allclose(y_pis0, y_pis1)
     np.testing.assert_allclose(y_pis1, y_pis2)
+
+
+def test_results_with_groups() -> None:
+    """
+    Test predictions when groups specified (not None and
+    not constant).
+    """
+    strategy_no_group = dict(
+        method="plus",
+        agg_function="mean",
+        cv=KFold(n_splits=3, shuffle=False),
+    )
+    strategy_group = dict(
+        method="plus",
+        agg_function="mean",
+        cv=GroupKFold(n_splits=3),
+    )
+    # FIXME: in progress
+    # X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
+    # y_toy = np.array([5, 7, 9, 11, 13, 15])
+    groups = np.array([1, 1, 2, 2, 3, 3])
+    # n_samples = len(X_toy)
+    mapie0 = MapieRegressor(**strategy_no_group)
+    mapie1 = MapieRegressor(**strategy_group)
+    mapie0.fit(X_toy, y_toy, groups=None)
+    mapie1.fit(X_toy, y_toy, groups=groups)
+    # y_pred0, y_pis0 = mapie0.predict(X, alpha=0.05)
+    # y_pred1, y_pis1 = mapie1.predict(X, alpha=0.05)
+    # np.testing.assert_allclose(y_pred0, y_pred1)
+    # np.testing.assert_allclose(y_pis0, y_pis1)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])

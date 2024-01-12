@@ -1087,7 +1087,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             train/test set.
 
             By default ``None``.
-            
+
         **fit_params : dict
             Additional fit parameters.
 

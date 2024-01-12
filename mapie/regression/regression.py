@@ -469,7 +469,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        groups: Optional[ArrayLike] = None
+        groups: Optional[ArrayLike] = None,
         **fit_params,
     ) -> MapieRegressor:
         """

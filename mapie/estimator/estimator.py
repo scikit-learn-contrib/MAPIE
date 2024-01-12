@@ -403,7 +403,7 @@ class EnsembleRegressor(EnsembleEstimator):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        groups: Optional[ArrayLike] = None
+        groups: Optional[ArrayLike] = None,
         **fit_params,
     ) -> EnsembleRegressor:
         """
