@@ -458,11 +458,12 @@ class MapieQuantileRegressor(MapieRegressor):
                 " order [alpha/2, 1 - alpha/2, 0.5]."
             )
 
-    def fit(  # type: ignore
+    def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
         X_calib: Optional[ArrayLike] = None,
         y_calib: Optional[ArrayLike] = None,
         calib_size: Optional[float] = 0.3,
@@ -498,6 +499,9 @@ class MapieQuantileRegressor(MapieRegressor):
             for the calibration procedure.
 
             By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Always ignored, exists for compatibility.
 
         X_calib: Optional[ArrayLike] of shape (n_calib_samples, n_features)
             Calibration data.
