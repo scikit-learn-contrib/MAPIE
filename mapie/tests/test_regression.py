@@ -413,6 +413,9 @@ def test_results_with_groups() -> None:
     # y_pred1, y_pis1 = mapie1.predict(X, alpha=0.05)
     # np.testing.assert_allclose(y_pred0, y_pred1)
     # np.testing.assert_allclose(y_pis0, y_pis1)
+    # TODO:
+    # use dummy predictor
+    # check class member conformity_scores_
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
