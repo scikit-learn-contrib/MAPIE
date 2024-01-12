@@ -12,6 +12,7 @@ History
   :meth:`~estimator.estimator.EnsembleRegressor.predict_calib()`, :meth:`~estimator.estimator.EnsembleRegressor.fit()`,
   :meth:`~regression.regression.MapieRegressor.fit()`,
   :meth:`~classification.MapieClassifier.fit()`.
+* Add possibility of passing fit parameters used by estimators.
 
 0.8.0 (2024-01-03)
 ------------------

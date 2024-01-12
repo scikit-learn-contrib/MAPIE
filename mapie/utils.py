@@ -3,7 +3,6 @@ from inspect import signature
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
-from pandas import DataFrame, Series
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
@@ -82,6 +81,7 @@ def fit_estimator(
     X: ArrayLike,
     y: ArrayLike,
     sample_weight: Optional[NDArray] = None,
+    **fit_params,
 ) -> Union[RegressorMixin, ClassifierMixin]:
     """
     Fit an estimator on training data by distinguishing two cases:
@@ -104,6 +104,9 @@ def fit_estimator(
         Sample weights. If None, then samples are equally weighted.
         By default None.
 
+    **fit_params : dict
+            Additional fit parameters.
+
     Returns
     -------
     RegressorMixin
@@ -123,9 +126,9 @@ def fit_estimator(
     fit_parameters = signature(estimator.fit).parameters
     supports_sw = "sample_weight" in fit_parameters
     if supports_sw and sample_weight is not None:
-        estimator.fit(X, y, sample_weight=sample_weight)
+        estimator.fit(X, y, sample_weight=sample_weight, **fit_params)
     else:
-        estimator.fit(X, y)
+        estimator.fit(X, y, **fit_params)
     return estimator
 
 
@@ -1286,43 +1289,6 @@ def check_nb_sets_sizes(sizes: NDArray, num_bins: int) -> None:
                 "The number of bins should be less than the number of \
                 different set sizes."
             )
-
-
-def convert_to_numpy(
-    X: DataFrame, y_true: Series
-) -> Tuple[NDArray, NDArray]:
-    """
-    Converts pandas DataFrame and Series to NumPy arrays.
-
-    Parameters
-    ----------
-    X: panda.DataFrame
-        The input DataFrame to be converted.
-    y_true: panda.Series)
-        The input Series to be converted.
-
-    Returns
-    -------
-    Tuple[NDArray, NDArray]
-        A tuple containing two NumPy arrays.
-        The first element is the NumPy array corresponding to X,
-        and the second element is the NumPy array corresponding to y_true.
-    """
-    if isinstance(X, DataFrame):
-        X_values = X.values
-    elif isinstance(X, np.ndarray):
-        X_values = X
-    else:
-        raise ValueError("X must be a pandas DataFrame or a NumPy array")
-
-    if isinstance(y_true, Series):
-        y_true_values = y_true.values
-    elif isinstance(y_true, np.ndarray):
-        y_true_values = y_true
-    else:
-        raise ValueError("y_true must be a pandas Series or a NumPy array")
-
-    return X_values, y_true_values
 
 
 def check_array_nan(array: NDArray) -> None:

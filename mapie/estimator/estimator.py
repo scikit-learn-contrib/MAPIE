@@ -182,6 +182,7 @@ class EnsembleRegressor(EnsembleEstimator):
         y: ArrayLike,
         train_index: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        **fit_params,
     ) -> RegressorMixin:
         """
         Fit a single out-of-fold model on a given training set.
@@ -204,6 +205,9 @@ class EnsembleRegressor(EnsembleEstimator):
             Sample weights. If None, then samples are equally weighted.
             By default ``None``.
 
+        **fit_params : dict
+            Additional fit parameters.
+
         Returns
         -------
         RegressorMixin
@@ -216,7 +220,11 @@ class EnsembleRegressor(EnsembleEstimator):
             sample_weight = cast(NDArray, sample_weight)
 
         estimator = fit_estimator(
-            estimator, X_train, y_train, sample_weight=sample_weight
+            estimator,
+            X_train,
+            y_train,
+            sample_weight=sample_weight,
+            **fit_params
         )
         return estimator
 
@@ -396,6 +404,7 @@ class EnsembleRegressor(EnsembleEstimator):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None
+        **fit_params,
     ) -> EnsembleRegressor:
         """
         Fit the base estimator under the ``single_estimator_`` attribute.
@@ -421,6 +430,9 @@ class EnsembleRegressor(EnsembleEstimator):
             train/test set.
             By default ``None``.
 
+        **fit_params : dict
+            Additional fit parameters.
+
         Returns
         -------
         EnsembleRegressor
@@ -443,7 +455,12 @@ class EnsembleRegressor(EnsembleEstimator):
             )
         else:
             single_estimator_ = self._fit_oof_estimator(
-                clone(estimator), X, y, full_indexes, sample_weight
+                clone(estimator),
+                X,
+                y,
+                full_indexes,
+                sample_weight,
+                **fit_params
             )
             cv = cast(BaseCrossValidator, cv)
             self.k_ = np.full(
@@ -456,7 +473,12 @@ class EnsembleRegressor(EnsembleEstimator):
             else:
                 estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
                     delayed(self._fit_oof_estimator)(
-                        clone(estimator), X, y, train_index, sample_weight
+                        clone(estimator),
+                        X,
+                        y,
+                        train_index,
+                        sample_weight,
+                        **fit_params
                     )
                     for train_index, _ in cv.split(X, y, groups)
                 )

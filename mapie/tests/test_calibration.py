@@ -8,7 +8,7 @@ from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.calibration import _SigmoidCalibration
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_classification
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -461,3 +461,25 @@ def test_pipeline_compatibility() -> None:
     mapie = MapieCalibrator(estimator=pipe)
     mapie.fit(X, y)
     mapie.predict(X)
+
+
+def test_fit_parameters_passing() -> None:
+    """
+    Test passing fit parameters, here early stopping at iteration 3.
+    Checks that underlying GradientBoosting estimators have used 3 iterations
+    only during boosting, instead of default value for n_estimators (=100).
+    """
+    gb = GradientBoostingClassifier(random_state=random_state)
+
+    mapie = MapieCalibrator(estimator=gb)
+
+    def early_stopping_monitor(i, est, locals):
+        """Returns True on the 3rd iteration."""
+        if i == 2:
+            return True
+        else:
+            return False
+
+    mapie.fit(X, y, monitor=early_stopping_monitor)
+
+    assert mapie.single_estimator_.estimators_.shape[0] == 3

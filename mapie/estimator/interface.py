@@ -22,6 +22,7 @@ class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
+        **fit_params
     ) -> EnsembleEstimator:
         """
         Fit the base estimator under the ``single_estimator_`` attribute.
@@ -46,6 +47,9 @@ class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
             Group labels for the samples used while splitting the dataset into
             train/test set.
             By default ``None``.
+            
+        **fit_params : dict
+            Additional fit parameters.
 
         Returns
         -------

@@ -9,6 +9,7 @@ import pytest
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import (KFold, LeaveOneOut, PredefinedSplit,
@@ -670,6 +671,31 @@ def test_beta_optimize_user_warning() -> None:
         UserWarning, match=r"Beta optimisation should only be used for*",
     ):
         mapie_reg.predict(X, alpha=0.05, optimize_beta=True)
+
+
+def test_fit_parameters_passing() -> None:
+    """
+    Test passing fit parameters, here early stopping at iteration 3.
+    Checks that underlying GradientBoosting estimators have used 3 iterations
+    only during boosting, instead of default value for n_estimators (=100).
+    """
+    gb = GradientBoostingRegressor(random_state=random_state)
+
+    mapie = MapieRegressor(estimator=gb, random_state=random_state)
+
+    def early_stopping_monitor(i, est, locals):
+        """Returns True on the 3rd iteration."""
+        if i == 2:
+            return True
+        else:
+            return False
+
+    mapie.fit(X, y, monitor=early_stopping_monitor)
+
+    assert mapie.estimator_.single_estimator_.estimators_.shape[0] == 3
+
+    for estimator in mapie.estimator_.estimators_:
+        assert estimator.estimators_.shape[0] == 3
 
 
 def test_predict_infinite_intervals() -> None:

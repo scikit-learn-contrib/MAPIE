@@ -470,6 +470,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None
+        **fit_params,
     ) -> MapieRegressor:
         """
         Fit estimator and compute conformity scores used for
@@ -502,6 +503,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             train/test set.
             By default ``None``.
 
+        **fit_params : dict
+            Additional fit parameters.
+
         Returns
         -------
         MapieRegressor
@@ -529,7 +533,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         )
         # Fit the prediction function
         self.estimator_ = self.estimator_.fit(
-            X, y, sample_weight=sample_weight, groups=groups
+            X, y, sample_weight=sample_weight, groups=groups, **fit_params
         )
 
         # Predict on calibration data

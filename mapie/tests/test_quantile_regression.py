@@ -762,3 +762,32 @@ def test_consistent_class() -> None:
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     np.testing.assert_allclose(y_pred_1, y_pred_2)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_fit_parameters_passing(strategy: str) -> None:
+    """
+    Test passing fit parameters, here early stopping at iteration 3.
+    Checks that underlying GradientBoosting estimators have used 3 iterations
+    only during boosting, instead of default value for n_estimators (=100).
+    """
+    mapie = MapieQuantileRegressor(estimator=gb, **STRATEGIES[strategy])
+
+    def early_stopping_monitor(i, est, locals):
+        """Returns True on the 3rd iteration."""
+        if i == 2:
+            return True
+        else:
+            return False
+
+    mapie.fit(
+        X_train,
+        y_train,
+        X_calib=X_calib,
+        y_calib=y_calib,
+        sample_weight=None,
+        monitor=early_stopping_monitor
+    )
+
+    for estimator in mapie.estimators_:
+        assert estimator.estimators_.shape[0] == 3
