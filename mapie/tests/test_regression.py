@@ -390,32 +390,35 @@ def test_results_with_groups() -> None:
     Test predictions when groups specified (not None and
     not constant).
     """
+    X = np.array([0, 10, 20, 0, 10, 20]).reshape(-1, 1)
+    y = np.array([0, 10, 20, 0, 10, 20])
+    groups = np.array([1, 2, 3, 1, 2, 3])
+    estimator = DummyRegressor(strategy="mean")
+
     strategy_no_group = dict(
+        estimator=estimator,
         method="plus",
         agg_function="mean",
         cv=KFold(n_splits=3, shuffle=False),
     )
     strategy_group = dict(
+        estimator=estimator,
         method="plus",
         agg_function="mean",
         cv=GroupKFold(n_splits=3),
     )
-    # FIXME: in progress
-    # X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
-    # y_toy = np.array([5, 7, 9, 11, 13, 15])
-    groups = np.array([1, 1, 2, 2, 3, 3])
-    # n_samples = len(X_toy)
+
     mapie0 = MapieRegressor(**strategy_no_group)
     mapie1 = MapieRegressor(**strategy_group)
-    mapie0.fit(X_toy, y_toy, groups=None)
-    mapie1.fit(X_toy, y_toy, groups=groups)
-    # y_pred0, y_pis0 = mapie0.predict(X, alpha=0.05)
-    # y_pred1, y_pis1 = mapie1.predict(X, alpha=0.05)
-    # np.testing.assert_allclose(y_pred0, y_pred1)
-    # np.testing.assert_allclose(y_pis0, y_pis1)
-    # TODO:
-    # use dummy predictor
+    mapie0.fit(X, y, groups=None)
+    mapie1.fit(X, y, groups=groups)
     # check class member conformity_scores_ (abs(y - y_pred))
+    y_pred_0 = [12.5, 12.5, 10, 10, 7.5, 7.5]
+    y_pred_1 = [15, 10, 5, 15, 10, 5]
+    conformity_scores_0 = np.abs(y - y_pred_0)
+    conformity_scores_1 = np.abs(y - y_pred_1)
+    assert np.array_equal(mapie0.conformity_scores_, conformity_scores_0)
+    assert np.array_equal(mapie1.conformity_scores_, conformity_scores_1)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
