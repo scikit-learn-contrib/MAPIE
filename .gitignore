@@ -77,6 +77,7 @@ doc/generated/
 target/
 
 # VSCode
+.venv
 .vscode
 .idea/
 
