@@ -21,6 +21,7 @@ class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        **fit_params
     ) -> EnsembleEstimator:
         """
         Fit the base estimator under the ``single_estimator_`` attribute.
@@ -40,6 +41,9 @@ class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
             By default ``None``.
+
+        **fit_params : dict
+            Additional fit parameters.
 
         Returns
         -------

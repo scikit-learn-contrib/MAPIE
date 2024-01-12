@@ -586,6 +586,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         val_index: ArrayLike,
         k: int,
         sample_weight: Optional[ArrayLike] = None,
+        **fit_params,
     ) -> Tuple[ClassifierMixin, NDArray, NDArray, ArrayLike]:
         """
         Fit a single out-of-fold model on a given training set and
@@ -615,6 +616,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Sample weights. If None, then samples are equally weighted.
             By default None.
 
+        **fit_params : dict
+            Additional fit parameters.
+
         Returns
         -------
         Tuple[ClassifierMixin, NDArray, NDArray, ArrayLike]
@@ -633,11 +637,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_val = _safe_indexing(y, val_index)
 
         if sample_weight is None:
-            estimator = fit_estimator(estimator, X_train, y_train)
+            estimator = fit_estimator(
+                estimator, X_train, y_train, **fit_params
+            )
         else:
             sample_weight_train = _safe_indexing(sample_weight, train_index)
             estimator = fit_estimator(
-                estimator, X_train, y_train, sample_weight_train
+                estimator, X_train, y_train, sample_weight_train, **fit_params
             )
         if _num_samples(X_val) > 0:
             y_pred_proba = self._predict_oof_model(estimator, X_val)
@@ -1047,6 +1053,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         size_raps: Optional[float] = .2,
+        **fit_params,
     ) -> MapieClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -1073,6 +1080,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             k_star for the RAPS method.
 
             By default ``.2``.
+
+        **fit_params : dict
+            Additional fit parameters.
 
 
         Returns
@@ -1147,7 +1157,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         else:
             cv = cast(BaseCrossValidator, cv)
             self.single_estimator_ = fit_estimator(
-                clone(estimator), X, y, sample_weight
+                clone(estimator), X, y, sample_weight, **fit_params
             )
             y_pred_proba = np.empty(
                 (n_samples, self.n_classes_),
@@ -1162,6 +1172,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     val_index,
                     k,
                     sample_weight,
+                    **fit_params,
                 )
                 for k, (train_index, val_index) in enumerate(cv.split(X))
             )

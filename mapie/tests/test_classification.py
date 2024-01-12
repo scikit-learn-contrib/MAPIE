@@ -10,6 +10,7 @@ from sklearn.base import ClassifierMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import KFold, LeaveOneOut, ShuffleSplit
@@ -1957,3 +1958,30 @@ def test_deprecated_method_warning(method: str) -> None:
         DeprecationWarning, match=r".*WARNING: Deprecated method.*"
     ):
         mapie_clf.fit(X_toy, y_toy)
+
+
+def test_fit_parameters_passing() -> None:
+    """
+    Test passing fit parameters, here early stopping at iteration 3.
+    Checks that underlying GradientBoosting estimators have used 3 iterations
+    only during boosting, instead of default value for n_estimators (=100).
+    """
+    gb = GradientBoostingClassifier(random_state=random_state)
+
+    mapie = MapieClassifier(
+        estimator=gb, method="aps", random_state=random_state
+    )
+
+    def early_stopping_monitor(i, est, locals):
+        """Returns True on the 3rd iteration."""
+        if i == 2:
+            return True
+        else:
+            return False
+
+    mapie.fit(X, y, monitor=early_stopping_monitor)
+
+    assert mapie.single_estimator_.estimators_.shape[0] == 3
+
+    for estimator in mapie.estimators_:
+        assert estimator.estimators_.shape[0] == 3

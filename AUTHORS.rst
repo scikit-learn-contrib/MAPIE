@@ -36,5 +36,5 @@ Contributors
 * Arthur Phan <aphan@quantmetry.com>
 * Rafael Saraiva <rafael.saraiva.de@gmail.com>
 * Mehdi Elion <mehdi.elion@gmail.com>
-
+* Sami Kaddani <sami.kaddani@gmail.com>
 To be continued ...

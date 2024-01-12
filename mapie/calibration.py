@@ -431,6 +431,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
+        **fit_params,
     ) -> MapieCalibrator:
         """
         Calibrate the estimator on given datasets, according to the chosen
@@ -466,6 +467,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             See ``sklearn.model_selection.train_test_split`` documentation.
             If not ``None``, data is split in a stratified fashion, using this
             as the class label.
+        **fit_params : dict
+            Additional fit parameters.
 
         Returns
         -------
@@ -509,7 +512,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 y_train
             )
             estimator = fit_estimator(
-                clone(estimator), X_train, y_train, sw_train,
+                clone(estimator), X_train, y_train, sw_train, **fit_params,
             )
             self.single_estimator_ = estimator
             self.classes_ = self.single_estimator_.classes_

@@ -4,6 +4,7 @@ History
 
 ##### (##########)
 ------------------
+* Add possibility of passing fit parameters used by estimators.
 
 0.8.0 (2024-01-03)
 ------------------
