@@ -415,7 +415,7 @@ def test_results_with_groups() -> None:
     # np.testing.assert_allclose(y_pis0, y_pis1)
     # TODO:
     # use dummy predictor
-    # check class member conformity_scores_
+    # check class member conformity_scores_ (abs(y - y_pred))
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
