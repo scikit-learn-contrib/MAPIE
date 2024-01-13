@@ -1402,15 +1402,15 @@ def test_results_with_groups() -> None:
     X = np.array([0, 10, 20, 0, 10, 20]).reshape(-1, 1)
     y = np.array([0, 1, 2, 0, 1, 2])
     groups = np.array([1, 2, 3, 1, 2, 3])
-    # estimator = DummyRegressor(strategy="mean")
+    estimator = DummyClassifier(strategy="most_frequent")
 
     strategy_no_group = dict(
-        # estimator=estimator,
+        estimator=estimator,
         method="lac",
         cv=KFold(n_splits=3, shuffle=False),
     )
     strategy_group = dict(
-        # estimator=estimator,
+        estimator=estimator,
         method="lac",
         cv=GroupKFold(n_splits=3),
     )
@@ -1420,7 +1420,15 @@ def test_results_with_groups() -> None:
     mapie0.fit(X, y, groups=None)
     mapie1.fit(X, y, groups=groups)
     # check class member conformity_scores_ (abs(y - y_pred))
+    # cv folds with KFold:
+    # [(array([2, 3, 4, 5]), array([0, 1])),
+    #  (array([0, 1, 4, 5]), array([2, 3])),
+    #  (array([0, 1, 2, 3]), array([4, 5]))]
     # y_pred_0 = [12.5, 12.5, 10, 10, 7.5, 7.5]
+    # cv folds with GroupKFold:
+    # [(array([0, 1, 3, 4]), array([2, 5])),
+    #  (array([0, 2, 3, 5]), array([1, 4])),
+    #  (array([1, 2, 4, 5]), array([0, 3]))]
     # y_pred_1 = [15, 10, 5, 15, 10, 5]
     # conformity_scores_0 = np.abs(y - y_pred_0)
     # conformity_scores_1 = np.abs(y - y_pred_1)
