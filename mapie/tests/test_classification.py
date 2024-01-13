@@ -1399,7 +1399,7 @@ def test_results_with_groups() -> None:
     not constant).
     """
     X = np.array([0, 10, 20, 0, 10, 20]).reshape(-1, 1)
-    y = np.array([0, 1, 2, 0, 1, 2])
+    y = np.array([0, 1, 1, 0, 1, 1])
     groups = np.array([1, 2, 3, 1, 2, 3])
     estimator = DummyClassifier(strategy="most_frequent")
 
@@ -1428,7 +1428,7 @@ def test_results_with_groups() -> None:
     # [(array([0, 1, 3, 4]), array([2, 5])),
     #  (array([0, 2, 3, 5]), array([1, 4])),
     #  (array([1, 2, 4, 5]), array([0, 3]))]
-    conformity_scores_0 = np.array([[1.], [1.], [1.], [1.], [1.], [1.]])
+    conformity_scores_0 = np.array([[1.], [0.], [0.], [1.], [1.], [1.]])
     conformity_scores_1 = np.array([[1.], [1.], [1.], [1.], [1.], [1.]])
     assert np.array_equal(mapie0.conformity_scores_, conformity_scores_0)
     assert np.array_equal(mapie1.conformity_scores_, conformity_scores_1)
