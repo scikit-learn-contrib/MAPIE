@@ -344,12 +344,12 @@ class EnsembleRegressor(EnsembleEstimator):
         X: ArrayLike of shape (n_samples_test, n_features)
             Input data
 
-        y: ArrayLike of shape (n_samples,)
+        y: Optional[ArrayLike] of shape (n_samples_test,)
             Input labels.
 
             By default ``None``.
 
-        groups: Optional[ArrayLike] of shape (n_samples,)
+        groups: Optional[ArrayLike] of shape (n_samples_test,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
 
