@@ -47,7 +47,7 @@ class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
             Group labels for the samples used while splitting the dataset into
             train/test set.
             By default ``None``.
-            
+
         **fit_params : dict
             Additional fit parameters.
 
