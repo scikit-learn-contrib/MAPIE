@@ -1105,6 +1105,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y = _check_y(y)
 
         sample_weight = cast(Optional[NDArray], sample_weight)
+        groups = cast(Optional[NDArray], groups)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
         y = cast(NDArray, y)
