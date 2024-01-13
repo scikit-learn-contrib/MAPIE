@@ -346,11 +346,13 @@ class EnsembleRegressor(EnsembleEstimator):
 
         y: Optional[ArrayLike] of shape (n_samples_test,)
             Input labels.
+
             By default ``None``.
 
         groups: Optional[ArrayLike] of shape (n_samples_test,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
+
             By default ``None``.
 
         Returns
@@ -421,11 +423,13 @@ class EnsembleRegressor(EnsembleEstimator):
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
+
             By default ``None``.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
+
             By default ``None``.
 
         **fit_params : dict
