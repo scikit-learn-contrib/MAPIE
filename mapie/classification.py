@@ -1153,6 +1153,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             if sample_weight is not None:
                 sample_weight = sample_weight[train_raps_index]
                 sample_weight = cast(NDArray, sample_weight)
+            if groups is not None:
+                groups = groups[train_raps_index]
+                groups = cast(NDArray, groups)
 
         # Work
         if cv == "prefit":

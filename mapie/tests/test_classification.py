@@ -1359,7 +1359,6 @@ def test_results_with_constant_groups(strategy: str) -> None:
     Test predictions when groups are None
     or constant with different values.
     """
-    # FIXME: to be fixed for raps_split and raps_randomized_split
     args_init, args_predict = STRATEGIES[strategy]
     lr = LogisticRegression(C=1e-99)
     lr.fit(X, y)
