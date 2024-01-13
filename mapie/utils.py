@@ -235,7 +235,7 @@ def check_no_agg_cv(
     no_agg_cv_array: list
         List of all non-aggregated cv methods.
 
-    y: Opional[ArrayLike] of shape (n_samples,)
+    y: Optional[ArrayLike] of shape (n_samples,)
         Input labels.
 
         By default ``None``.
