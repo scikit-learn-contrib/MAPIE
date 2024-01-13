@@ -6,6 +6,7 @@ History
 ------------------
 * Allow the use of `y` and `groups` arguments in cross validator methods `get_n_splits`
   and `split` to enable more cv-split variants for :class:`~regression.regression.MapieRegressor`
+  and :class:`~classification.MapieClassifier`
   (e.g. :class:`sklearn.model_selection.GroupKFold`, stratified continuous split).
   This change adds the `groups` argument to the following methods:
   :meth:`~estimator.interface.EnsembleEstimator.fit()`,
