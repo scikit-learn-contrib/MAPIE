@@ -1419,17 +1419,18 @@ def test_results_with_groups() -> None:
     mapie1 = MapieClassifier(**strategy_group)
     mapie0.fit(X, y, groups=None)
     mapie1.fit(X, y, groups=groups)
-    # check class member conformity_scores_ (abs(y - y_pred))
+    # check class member conformity_scores_:
+    # np.take_along_axis(1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1)
     # cv folds with KFold:
     # [(array([2, 3, 4, 5]), array([0, 1])),
     #  (array([0, 1, 4, 5]), array([2, 3])),
     #  (array([0, 1, 2, 3]), array([4, 5]))]
-    # y_pred_0 = [12.5, 12.5, 10, 10, 7.5, 7.5]
+    # y_pred_proba_0 = [12.5, 12.5, 10, 10, 7.5, 7.5]
     # cv folds with GroupKFold:
     # [(array([0, 1, 3, 4]), array([2, 5])),
     #  (array([0, 2, 3, 5]), array([1, 4])),
     #  (array([1, 2, 4, 5]), array([0, 3]))]
-    # y_pred_1 = [15, 10, 5, 15, 10, 5]
+    # y_pred_proba_1 = [15, 10, 5, 15, 10, 5]
     # conformity_scores_0 = np.abs(y - y_pred_0)
     # conformity_scores_1 = np.abs(y - y_pred_1)
     # assert np.array_equal(mapie0.conformity_scores_, conformity_scores_0)
