@@ -417,11 +417,11 @@ def test_results_with_groups() -> None:
     # [(array([2, 3, 4, 5]), array([0, 1])),
     #  (array([0, 1, 4, 5]), array([2, 3])),
     #  (array([0, 1, 2, 3]), array([4, 5]))]
-    y_pred_0 = [12.5, 12.5, 10, 10, 7.5, 7.5]
     # cv folds with GroupKFold:
     # [(array([0, 1, 3, 4]), array([2, 5])),
     #  (array([0, 2, 3, 5]), array([1, 4])),
     #  (array([1, 2, 4, 5]), array([0, 3]))]
+    y_pred_0 = [12.5, 12.5, 10, 10, 7.5, 7.5]
     y_pred_1 = [15, 10, 5, 15, 10, 5]
     conformity_scores_0 = np.abs(y - y_pred_0)
     conformity_scores_1 = np.abs(y - y_pred_1)
