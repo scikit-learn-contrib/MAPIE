@@ -111,8 +111,8 @@ where
 is the *leave-one-out* conformity score.
 
 This method avoids the overfitting problem but can lose its predictive 
-cover when :math:`\hat{\mu}` becomes unstable, for example when the 
-sample size is closed to the number of features
+cover when :math:`\hat{\mu}` becomes unstable, for example, when the 
+sample size is close to the number of features
 (as seen in the "Reproducing the simulations from Foygel-Barber et al. (2020)" example). 
 
 
@@ -127,7 +127,7 @@ The resulting confidence interval can therefore be summarized as follows
 
 .. math:: \hat{C}_{n, \alpha}^{\rm jackknife+}(X_{n+1}) = [ \hat{q}_{n, \alpha}^-\{\hat{\mu}_{-i}(X_{n+1}) - R_i^{\rm LOO} \}, \hat{q}_{n, \alpha}^+\{\hat{\mu}_{-i}(X_{n+1}) + R_i^{\rm LOO} \}] 
 
-As described in [1], this method garantees a higher stability 
+As described in [1], this method guarantees a higher stability 
 with a coverage level of :math:`1-2\alpha` for a target coverage level of :math:`1-\alpha`,
 without any *a priori* assumption on the distribution of the data :math:`(X, Y)`
 nor on the predictive model.
@@ -145,7 +145,7 @@ The estimated prediction intervals can be defined as follows
     [\min \hat{\mu}_{-i}(X_{n+1}) - \hat{q}_{n, \alpha}^+\{R_I^{\rm LOO} \}, 
     \max \hat{\mu}_{-i}(X_{n+1}) + \hat{q}_{n, \alpha}^+\{R_I^{\rm LOO} \}] 
 
-As justified by [1], this method garantees a coverage level of 
+As justified by [1], this method guarantees a coverage level of 
 :math:`1-\alpha` for a target coverage level of :math:`1-\alpha`.
 
 The figure below, adapted from Fig. 1 of [1], illustrates the three jackknife
@@ -179,7 +179,7 @@ is performed in four main steps:
 - Similar to the jackknife+, the regression functions :math:`\hat{\mu}_{-S_{k(i)}}(X_i)` 
   are used to estimate the prediction intervals. 
 
-As for jackknife+, this method garantees a coverage level higher than :math:`1-2\alpha` 
+As for jackknife+, this method guarantees a coverage level higher than :math:`1-2\alpha` 
 for a target coverage level of :math:`1-\alpha`, without any *a priori* assumption on 
 the distribution of the data.
 As noted by [1], the jackknife+ can be viewed as a special case of the CV+ 
@@ -278,13 +278,13 @@ The coverage guarantee offered by the various resampling methods based on the
 jackknife strategy, and implemented in MAPIE, are only valid under the "exchangeability
 hypothesis". It means that the probability law of data should not change up to
 reordering.
-This hypothesis is not revelant in many cases, notably for dynamical times series.
+This hypothesis is not relevant in many cases, notably for dynamical times series.
 That is why a specific class is needed, namely
 :class:`mapie.time_series_regression.MapieTimeSeriesRegressor`.
 
 Its implementation looks like the jackknife+-after-bootstrap method. The
 leave-one-out (LOO) estimators are approximated thanks to a few boostraps.
-However the confidence intervals are like those of the jackknife method.
+However, the confidence intervals are like those of the jackknife method.
 
 .. math::
   \hat{C}_{n, \alpha}^{\rm EnbPI}(X_{n+1}) = [\hat{\mu}_{agg}(X_{n+1}) + \hat{q}_{n, \beta}\{ R_i^{\rm LOO} \}, \hat{\mu}_{agg}(X_{n+1}) + \hat{q}_{n, (1 - \alpha + \beta)}\{ R_i^{\rm LOO} \}]
