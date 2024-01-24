@@ -47,7 +47,7 @@ or
 where :math:`\hat{q}_{n, \alpha}^+` is the :math:`(1-\alpha)` quantile of the distribution.
 
 Since this method estimates the conformity scores only on the training set, it tends to be too 
-optimistic and under-estimates the width of prediction intervals because of a potential overfit. 
+optimistic and underestimates the width of prediction intervals because of a potential overfit. 
 As a result, the probability that a new point lies in the interval given by the 
 naive method would be lower than the target level :math:`(1-\alpha)`.
 
@@ -218,8 +218,8 @@ aggregated prediction and residual by only taking subsets in which the
 By analogy with the CV+ method, estimating the prediction intervals with 
 jackknife+-after-bootstrap is performed in four main steps:
 
-- We resample the training set with replacement (boostrap) :math:`K` times,
-  and thus we get the (non disjoint) bootstraps :math:`B_{1},..., B_{K}` of equal size.
+- We resample the training set with replacement (bootstrap) :math:`K` times,
+  and thus we get the (non-disjoint) bootstraps :math:`B_{1},..., B_{K}` of equal size.
 
 
 - :math:`K` regressions functions :math:`\hat{\mu}_{B_{k}}` are then fitted on 
@@ -241,7 +241,7 @@ As for jackknife+, this method guarantees a coverage level higher than
 :math:`1 - 2\alpha` for a target coverage level of :math:`1 - \alpha`, without 
 any a priori assumption on the distribution of the data. 
 In practice, this method results in wider prediction intervals, when the 
-uncertainty is higher, than :math:`CV+`, because the models' prediction spread 
+uncertainty is higher than :math:`CV+`, because the models' prediction spread 
 is then higher.
 
 
@@ -250,7 +250,7 @@ is then higher.
 
 The conformalized quantile method allows for better interval widths with
 heteroscedastic data. It uses quantile regressors with different quantile
-values to estimate the prediction bounds and the residuals of these methods is
+values to estimate the prediction bounds and the residuals of these methods are
 used to create the guaranteed coverage value.
 
 .. math:: 
