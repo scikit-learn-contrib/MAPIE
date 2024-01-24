@@ -3,7 +3,7 @@
 .. _theoretical_description_conformity_scores:
 
 =============================================
-Theoretical Description for conformity scores
+Theoretical Description for Conformity Scores
 =============================================
 
 The :class:`mapie.conformity_scores.ConformityScore` class implements various
@@ -13,7 +13,7 @@ Note that it is possible for the user to create any conformal scores that are no
 already included in MAPIE by inheriting this class.
 
 Before describing the methods, let's briefly present the mathematical setting.
-With conformal predictions we want to transform an heuristic notion of uncertainty
+With conformal predictions, we want to transform a heuristic notion of uncertainty
 from a model into a rigorous one, and the first step to do it is to choose a conformal score.
 The only requirement for the score function :math:`s(X, Y) \in \mathbb{R}` is
 that larger scores should encode worse agreement between :math:`X` and :math:`Y`. [1]
@@ -29,7 +29,7 @@ and the other on the left side.
 
 The absolute residual score (:class:`mapie.conformity_scores.AbsoluteConformityScore`)
 is the simplest and most commonly used conformal score, it translates the error
-of the model : in regression it is called the residual.
+of the model : in regression, it is called the residual.
 
 .. math:: |Y-\hat{\mu}(X)|
 
@@ -40,7 +40,7 @@ The intervals of prediction's bounds are then computed from the following formul
 Where :math:`q(s)` is the :math:`(1-\alpha)` quantile of the conformity scores.
 (see :doc:`theoretical_description_regression` for more details).
 
-With this score the intervals of predictions will be constant over the whole dataset.
+With this score, the intervals of predictions will be constant over the whole dataset.
 This score is by default symmetric (*see above for definition*).
 
 2. The gamma score
@@ -61,17 +61,17 @@ Where :math:`q(s)` is the :math:`(1-\alpha)` quantile of the conformity scores.
 
 This score is by default asymmetric (*see definition above*).
 
-Compared to the absolute residual score, it allows to see regions with smaller intervals
+Compared to the absolute residual score, it allows us to see regions with smaller intervals
 than others which are interpreted as regions with more certainty than others.
 It is important to note that, this conformity score is inversely proportional to the
 order of magnitude of the predictions. Therefore, the uncertainty is proportional to
-the order of magitude of the predictions, implying that this score should be used
+the order of magnitude of the predictions, implying that this score should be used
 in use cases where we want greater uncertainty when the prediction is high.
 
-3. The residual normalised score
+3. The residual normalized score
 =======================================
 
-The residual normalised score [1] (:class:`mapie.conformity_scores.ResidualNormalisedScore`)
+The residual normalized score [1] (:class:`mapie.conformity_scores.ResidualNormalisedScore`)
 is slightly more complex than the previous scores.
 The normalization of the residual is now done by the predictions of an additional model
 :math:`\hat\sigma` which learns to predict the base model residuals from :math:`X`.
@@ -88,9 +88,9 @@ Where :math:`q(s)` is the :math:`(1-\alpha)` quantile of the conformity scores.
 (see :doc:`theoretical_description_regression` for more details).
 
 This score is by default symmetric (*see definition above*). Unlike the scores above,
-and due to the additionnal model required this score can only be used with split methods.
+and due to the additional model required this score can only be used with split methods.
 
-Normalisation by the learned residuals from :math:`X` adds to the score a knowledge of
+Normalization by the learned residuals from :math:`X` adds to the score a knowledge of
 :math:`X` and its similarity to the other examples in the dataset.
 Compared to the gamma score, the other adaptive score implemented in MAPIE,
 it is not proportional to the uncertainty.
@@ -100,11 +100,11 @@ Key takeaways
 =============
 
 - The absolute residual score is the basic conformity score and gives constant intervals. It is the one used by default by :class:`mapie.regression.MapieRegressor`.
-- The gamma conformity score adds a notion of adaptivity by giving intervals of different sizes,
+- The gamma conformity score adds a notion of adaptivity by giving intervals of different sizes
   and is proportional to the uncertainty.
-- The residual normalised score is a conformity score that requires an additional model
+- The residual normalized score is a conformity score that requires an additional model
   to learn the residuals of the model from :math:`X`. It gives very adaptive intervals
-  without specific asumptions on the data.
+  without specific assumptions on the data.
 
 References
 ==========
