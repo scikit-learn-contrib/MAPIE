@@ -2,7 +2,7 @@
 Split/Cross-Conformal Prediction
 ################################
 
-**MAPIE** is basically based on two types of techniques:
+**MAPIE** is based on two types of techniques:
 
 - the split-conformal predictions,
 - the cross-conformal predictions.
