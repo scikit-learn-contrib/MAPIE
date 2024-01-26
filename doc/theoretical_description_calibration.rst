@@ -14,7 +14,7 @@ The goal of binary calibration is to transform a score (typically given by an ML
 probability. The algorithms that are used for calibration can be interpreted as estimators of the confidence level. Hence,
 they need independent and dependent variables to be fitted.
 
-The figure below illustrates what we would expect as a result from a calibration, with the scores predicted being closer to the
+The figure below illustrates what we would expect as a result of a calibration, with the scores predicted being closer to the
 true probability compared to the original output.
 
 .. image:: images/calibration_basic.png
@@ -56,7 +56,7 @@ according to Top-Label calibration if:
 **Expected calibration error**
 
 The main metric to check if the calibration is correct is the Expected Calibration Error (ECE). It is based on two
-components, accuracy and confidence per bin. The number of bins is an hyperparamater :math:`M`, and we refer to a specific bin by
+components, accuracy and confidence per bin. The number of bins is a hyperparamater :math:`M`, and we refer to a specific bin by
 :math:`B_m`.
 
 .. math::
@@ -64,7 +64,7 @@ components, accuracy and confidence per bin. The number of bins is an hyperparam
     \text{conf}(B_m) &= \frac{1}{\left| B_m \right|} \sum_{i \in B_m} \hat{f}(x)_i
 
 
-The ECE is the combination of these two metrics combined together.
+The ECE is the combination of these two metrics combined.
 
 .. math::
     \text{ECE} = \sum_{m=1}^M \frac{\left| B_m \right|}{n} \left| acc(B_m) - conf(B_m) \right|
@@ -94,12 +94,12 @@ We also introduce a typical normalization scale :math:`\sigma`:
 .. math::
     \sigma = \frac{1}{N}\sqrt{\sum_{i=1}^N s_i(1 - s_i)}
 
-Tho Kolmogorov-Smirnov statisitc is then defined as : 
+The Kolmogorov-Smirnov statistic is then defined as : 
 
 .. math::
    G = \max|C_k|/\sigma
 
-It can be shown [2] that, under the null hypothesis of well calibrated scores, this quantity asymptotically (i.e. when N goes to infinity)
+It can be shown [2] that, under the null hypothesis of well-calibrated scores, this quantity asymptotically (i.e. when N goes to infinity)
 converges to the maximum absolute value of a standard Brownian motion over the unit interval :math:`[0, 1]`. [3, 4] also provide closed-form 
 formulas for the cumulative distribution function (CDF) of the maximum absolute value of such a standard Brownian motion.
 So we state the p-value associated to the statistical test of well calibration as:
@@ -114,7 +114,7 @@ Kuiper test was derived in [2, 3, 4] and is very similar to Kolmogorov-Smirnov. 
 .. math::
    H = (\max_k|C_k| - \min_k|C_k|)/\sigma
 
-It can be shown [2] that, under the null hypothesis of well calibrated scores, this quantity asymptotically (i.e. when N goes to infinity)
+It can be shown [2] that, under the null hypothesis of well-calibrated scores, this quantity asymptotically (i.e. when N goes to infinity)
 converges to the range of a standard Brownian motion over the unit interval :math:`[0, 1]`. [3, 4] also provide closed-form 
 formulas for the cumulative distribution function (CDF) of the range of such a standard Brownian motion.
 So we state the p-value associated to the statistical test of well calibration as:
@@ -124,7 +124,7 @@ So we state the p-value associated to the statistical test of well calibration a
 
 **Spiegelhalter test**
 
-Spiegelhalter test was derived in [6]. It is basically based on a decomposition of the Brier score: 
+Spiegelhalter test was derived in [6]. It is based on a decomposition of the Brier score: 
 
 .. math::
    B = \frac{1}{N}\sum_{i=1}^N(y_i - s_i)^2
@@ -146,7 +146,7 @@ So we can build a Z-score as follows:
 .. math::
    Z = \frac{B - E(B)}{\sqrt{Var(B)}} = \frac{\sum_{i=1}^N(y_i - s_i)(1 - 2s_i)}{\sqrt{\sum_{i=1}^N(1 - 2s_i)^2 s_i(1 - s_i)}}
 
-This statistic follows a normal distribution of cumulative distribution CDF, so that we state the associated p-value:
+This statistic follows a normal distribution of cumulative distribution CDF so that we state the associated p-value:
 
 .. math::
    p = 1 - CDF(Z)

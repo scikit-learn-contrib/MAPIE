@@ -7,7 +7,7 @@ Theoretical Description
 =======================
 
 
-Three methods for multi-label uncertainty-quantification have been implemented in MAPIE so far :
+Three methods for multi-label uncertainty quantification have been implemented in MAPIE so far :
 Risk-Controlling Prediction Sets (RCPS) [1], Conformal Risk Control (CRC) [2] and Learn Then Test (LTT) [3].
 The difference between these methods is the way the conformity scores are computed. 
 
@@ -16,7 +16,7 @@ our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`` has an un
 
 For any risk level :math:`\alpha` between 0 and 1, the methods implemented in MAPIE allow the user to construct a prediction
 set :math:`\hat{C}_{n, \alpha}(X_{n+1})` for a new observation :math:`\left( X_{n+1},Y_{n+1} \right)` with a guarantee
-on the recall. RCPS, LTT and CRC give three slightly different guarantees:
+on the recall. RCPS, LTT, and CRC give three slightly different guarantees:
 
 - RCPS:
 
@@ -66,7 +66,7 @@ The goal of the method is to compute an Upper Confidence Bound (UCB) :math:`\hat
 .. math::
     \hat{\lambda} = \inf\{\lambda \in \Lambda: \hat{R}^+(\lambda ') < \alpha, \forall \lambda ' \geq \lambda \}
 
-The figure bellow explains this procedure:
+The figure below explains this procedure:
 
 .. image:: images/r_hat_plus.png
    :width: 600
@@ -82,7 +82,7 @@ Following those settings, the RCPS method gives the following guarantee on the r
 -----------------------
 
 In this section, we will consider only bounded losses (as for now, only the :math:`1-recall` loss is implemented).
-We will show three different Upper Calibration Bounds (UCB) (Hoeffding, Bernstein and Waudby-Smith–Ramdas) of :math:`R(\lambda)`
+We will show three different Upper Calibration Bounds (UCB) (Hoeffding, Bernstein, and Waudby-Smith–Ramdas) of :math:`R(\lambda)`
 based on the empirical risk which is defined as follows:
 
 .. math::
@@ -106,8 +106,8 @@ Which implies the following UCB:
 1.2.2. Bernstein Bound
 ----------------------
 
-Contrary to the Hoeffding bound, which can sometimes be too simple, the Bernstein UCB is taking into account the variance
-and gives smaller prediction set size:
+Contrary to the Hoeffding bound, which can sometimes be too simple, the Bernstein UCB takes into account the variance
+and gives a smaller prediction set size:
 
 .. math::
     \hat{R}_{Bernstein}^+(\lambda) = \hat{R}(\lambda) + \hat{\sigma}(\lambda)\sqrt{\frac{2\log(2/\delta)}{n}} + \frac{7\log (2/\delta)}{3(n-1)}
@@ -121,7 +121,7 @@ Where:
 1.2.3. Waudby-Smith–Ramdas
 --------------------------
 
-This last UCB is the one recommended by the authors of [1] to use when using a bounded loss as this is the one which gives
+This last UCB is the one recommended by the authors of [1] to use when using a bounded loss as this is the one that gives
 the smallest prediction sets size while having the same risk guarantees. This UCB is defined as follows:
 
 Let :math:`L_i (\lambda) = L(Y_i, T_{\lambda}(X_i))` and
@@ -170,7 +170,7 @@ With :
 
 3.1. General settings
 ---------------------
-We are going to present the Learn Then Test framework that allow the user to control non monotonic risk such as precision score.
+We are going to present the Learn Then Test framework that allows the user to control non-monotonic risk such as precision score.
 This method has been introduced in article [3].
 The settings here are the same as RCPS and CRC, we just need to introduce some new parameters:
 
@@ -178,7 +178,7 @@ The settings here are the same as RCPS and CRC, we just need to introduce some n
 
 - Let :math:`p_\lambda` be a valid p-value for the null hypothesis :math:`\mathbb{H}_j: R(\lambda_j)>\alpha`.
 
-The goal of this method is to control any loss whether monotonic, bounded or not, by performing risk control through multiple
+The goal of this method is to control any loss whether monotonic, bounded, or not, by performing risk control through multiple
 hypothesis testing. We can express the goal of the procedure as follows:
 
 .. math::
@@ -197,13 +197,13 @@ In order to find all the parameters :math:`\lambda` that satisfy the above condi
   introduced in the paper [3].
 
 - Return :math:`\hat{\Lambda} =  \mathcal{A}(\{p_j\}_{j\in\{1,\dots,\lvert \Lambda \rvert})`, where :math:`\mathcal{A}`, is an algorithm
-  that controls the family-wise-error-rate (FWER), for example bonferonni correction.
+  that controls the family-wise error rate (FWER), for example, Bonferonni correction.
 
 
 4. References
 -------------
 
-[1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
+[1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos,
 and Michael I. Jordan. Distribution-free, risk-controlling prediction
 sets. CoRR, abs/2101.02703, 2021. URL https://arxiv.org/abs/2101.02703.39
 

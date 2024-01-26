@@ -28,7 +28,7 @@ In a few words, what you need to remember about these concepts :
 
 * *Calibration* is useful for transforming a score (typically given by an ML model)
   into the probability of making a good prediction.
-* *Set Prediction* gives the set of likely predictions with a probabilisic guarantee that the true label is in this set.
+* *Set Prediction* gives the set of likely predictions with a probabilistic guarantee that the true label is in this set.
 * *Probabilistic Prediction* gives a confidence interval for the predictive distribution.
 
 
@@ -79,7 +79,7 @@ See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calib
 to use a calibrator.
 
 In the CP framework, it is worth noting that Venn predictors produce probability-type predictions
-for the labels of test objects which are guaranteed to be well calibrated under the standard assumption
+for the labels of test objects which are guaranteed to be well-calibrated under the standard assumption
 that the observations are generated independently from the same distribution [2].
 
 
@@ -87,7 +87,7 @@ that the observations are generated independently from the same distribution [2]
 -------------
 
 [1] Gupta, Chirag, Aleksandr Podkopaev, and Aaditya Ramdas.
-"Distribution-free binary classification: prediction sets, confidence intervals and calibration."
+"Distribution-free binary classification: prediction sets, confidence intervals, and calibration."
 Advances in Neural Information Processing Systems 33 (2020): 3711-3723.
 
 [2] Vovk, Vladimir, Alexander Gammerman, and Glenn Shafer.
