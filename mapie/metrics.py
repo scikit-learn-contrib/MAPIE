@@ -1575,3 +1575,52 @@ def spiegelhalter_p_value(y_true: NDArray, y_score: NDArray) -> float:
     sp_stat = spiegelhalter_statistic(y_true, y_score)
     sp_p_value = 1 - scipy.stats.norm.cdf(sp_stat)
     return sp_p_value
+
+
+def regression_MWI_score(y_true, y_pis, alpha):
+    """
+    This is an implementation of the Winkler interval score
+    (https://otexts.com/fpp3/distaccuracy.html#winkler-score).
+
+    Parameters
+    ----------
+    y_true: ArrayLike of shape (n_samples,)
+        Ground truth values
+    y_pis: ArrayLike of shape (n_samples, 2, 1)
+        Lower and upper bounds of prediction intervals
+        output from a MAPIE regressor
+    alpha: float
+        The value of alpha
+
+    Returns
+    -------
+    float
+        The mean Winkler interval score
+
+    References
+    ----------
+    [1] Robert L. Winkler
+    "A Decision-Theoretic Approach to Interval Estimation",
+    Journal of the American Statistical Association,
+    volume 67, pages 187-191 (1972)
+    (https://doi.org/10.1080/01621459.1972.10481224)
+    [2] Tilmann Gneiting and Adrian E Raftery
+    "Strictly Proper Scoring Rules, Prediction, and Estimation",
+    Journal of the American Statistical Association,
+    volume 102, pages 359-378 (2007)
+    (https://doi.org/10.1198/016214506000001437) (Section 6.2)
+    """
+
+    # undo any possible quantile crossing
+    low_tmp = y_pis[:, 0, 0]
+    up_tmp = y_pis[:, 1, 0]
+    y_pred_low = np.minimum(low_tmp, up_tmp)
+    y_pred_up = np.maximum(low_tmp, up_tmp)
+
+    width = y_pred_up.sum() - y_pred_low.sum()
+    error_above = (y_true - y_pred_up)[y_true > y_pred_up].sum()
+    error_below = (y_pred_low - y_true)[y_true < y_pred_low].sum()
+    total_error = error_above + error_below
+    MWIs = (width + total_error*2/alpha)/len(y_true)
+
+    return MWIs
