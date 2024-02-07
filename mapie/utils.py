@@ -5,8 +5,8 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
-                                     BaseShuffleSplit, ShuffleSplit,
+from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
+                                     KFold, LeaveOneOut, ShuffleSplit,
                                      train_test_split)
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
@@ -523,28 +523,28 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
 
 
 def check_lower_upper_bounds(
-    y_preds: NDArray, y_pred_low: NDArray, y_pred_up: NDArray
+    lower_bound: NDArray,
+    upper_bound: NDArray,
+    prediction: NDArray
 ) -> None:
     """
-    Check if the lower or upper bounds are consistent.
-    If check for MapieQuantileRegressor's outputs, then also check
-    initial quantile predictions.
+    Check if lower or upper bounds and prediction are consistent.
 
     Parameters
     ----------
-    y_preds: NDArray of shape (n_samples, 3) or (n_samples,)
-        All the predictions at quantile:
-        alpha/2, (1 - alpha/2), 0.5 or only the predictions
-    y_pred_low: NDArray of shape (n_samples,)
-        Final lower bound prediction
-    y_pred_up: NDArray of shape (n_samples,)
-        Final upper bound prediction
+    lower_bound: NDArray of shape (n_samples,)
+        Lower bound prediction.
+
+    upper_bound: NDArray of shape (n_samples,)
+        Upper bound prediction.
+
+    prediction: NDArray of shape (n_samples,)
+        Prediction.
 
     Raises
     ------
     Warning
-        If y_preds, y_pred_low and y_pred_up are ill sorted
-        at anay rank.
+        If any of the predictions are ill-sorted.
 
     Examples
     --------
@@ -553,56 +553,26 @@ def check_lower_upper_bounds(
     >>> import numpy as np
     >>> from mapie.utils import check_lower_upper_bounds
     >>> y_preds = np.array([[4, 3, 2], [4, 4, 4], [2, 3, 4]])
-    >>> y_pred_low = np.array([4, 3, 2])
-    >>> y_pred_up = np.array([4, 4, 4])
     >>> try:
-    ...     check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
+    ...     check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
     ... except Exception as exception:
     ...     print(exception)
     ...
-    WARNING: The predictions of the quantile regression have issues.
-    The upper quantile predictions are lower
-    than the lower quantile predictions
-    at some points.
+    WARNING: The predictions are ill-sorted.
     """
-    if y_preds.ndim == 1:
-        init_pred = y_preds
-    else:
-        init_lower_bound, init_upper_bound, init_pred = y_preds
+    lower_bound = column_or_1d(lower_bound)
+    upper_bound = column_or_1d(upper_bound)
+    prediction = column_or_1d(prediction)
 
-        any_init_inversion = np.any(
-            np.logical_or(
-                np.logical_or(
-                    init_lower_bound > init_upper_bound,
-                    init_pred < init_lower_bound,
-                ),
-                init_pred > init_upper_bound,
-            )
-        )
-
-    if (y_preds.ndim != 1) and any_init_inversion:
-        warnings.warn(
-            "WARNING: The predictions of the quantile regression "
-            + "have issues.\nThe upper quantile predictions are lower\n"
-            + "than the lower quantile predictions\n"
-            + "at some points."
-        )
-
-    any_final_inversion = np.any(
-        np.logical_or(
-            np.logical_or(
-                y_pred_low > y_pred_up,
-                init_pred < y_pred_low,
-            ),
-            init_pred > y_pred_up,
-        )
+    any_inversion = np.any(
+        (lower_bound > upper_bound) |
+        (prediction < lower_bound) |
+        (prediction > upper_bound)
     )
 
-    if any_final_inversion:
+    if any_inversion:
         warnings.warn(
-            "WARNING: The predictions have issues.\n"
-            + "The upper predictions are lower than"
-            + "the lower predictions at some points."
+            "WARNING: The predictions are ill-sorted."
         )
 
 
