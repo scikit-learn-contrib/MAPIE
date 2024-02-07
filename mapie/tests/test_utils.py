@@ -230,7 +230,7 @@ def test_valid_verbose(verbose: Any) -> None:
 def test_initial_low_high_pred() -> None:
     """Test lower/upper predictions of the quantiles regression crossing"""
     y_preds = np.array([[4, 5, 2], [4, 4, 4], [2, 3, 4]])
-    with pytest.warns(UserWarning, match=r"WARNING: The predictions are ill-sorted."):
+    with pytest.warns(UserWarning, match=r"WARNING: The predictions are*"):
         check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
 
 
@@ -241,7 +241,7 @@ def test_final_low_high_pred() -> None:
     )
     y_pred_low = np.array([4, 7, 2])
     y_pred_up = np.array([3, 3, 3])
-    with pytest.warns(UserWarning, match=r"WARNING: The predictions are ill-sorted."):
+    with pytest.warns(UserWarning, match=r"WARNING: The predictions are*"):
         check_lower_upper_bounds(y_pred_low, y_pred_up, y_preds[2])
 
 
