@@ -14,14 +14,13 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._typing import ArrayLike, NDArray
 from mapie.regression import MapieQuantileRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_array_nan, check_array_inf, check_arrays_length,
+                         check_array_inf, check_array_nan, check_arrays_length,
                          check_binary_zero_one, check_cv, check_gamma,
                          check_lower_upper_bounds, check_n_features_in,
                          check_n_jobs, check_no_agg_cv, check_null_weight,
                          check_number_bins, check_split_strategy,
                          check_verbose, compute_quantiles, fit_estimator,
                          get_binning_groups)
-
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -230,11 +229,9 @@ def test_valid_verbose(verbose: Any) -> None:
 
 def test_initial_low_high_pred() -> None:
     """Test lower/upper predictions of the quantiles regression crossing"""
-    y_preds = np.array([[4, 3, 2], [4, 4, 4], [2, 3, 4]])
-    y_pred_low = np.array([4, 3, 2])
-    y_pred_up = np.array([4, 4, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: The prediction.*"):
-        check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
+    y_preds = np.array([[4, 5, 2], [4, 4, 4], [2, 3, 4]])
+    with pytest.warns(UserWarning, match=r"WARNING: The predictions are ill-sorted."):
+        check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
 
 
 def test_final_low_high_pred() -> None:
@@ -242,19 +239,10 @@ def test_final_low_high_pred() -> None:
     y_preds = np.array(
         [[4, 3, 2], [3, 3, 3], [2, 3, 4]]
     )
-    y_pred_low = np.array([4, 3, 2])
+    y_pred_low = np.array([4, 7, 2])
     y_pred_up = np.array([3, 3, 3])
-    with pytest.warns(UserWarning, match=r"WARNING: The predictions of .*"):
-        check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
-
-
-def test_final1D_low_high_pred() -> None:
-    """Test lower/upper predictions crossing when y_preds is 1D"""
-    y_preds = np.array([4, 3, 4])
-    y_pred_low = np.array([7, 3, 2])
-    y_pred_up = np.array([3, 4, 4])
-    with pytest.warns(UserWarning, match=r"WARNING: The predictions .*"):
-        check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
+    with pytest.warns(UserWarning, match=r"WARNING: The predictions are ill-sorted."):
+        check_lower_upper_bounds(y_pred_low, y_pred_up, y_preds[2])
 
 
 def test_ensemble_in_predict() -> None:
