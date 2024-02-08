@@ -1,7 +1,7 @@
 .PHONY: tests doc build
 
 lint:
-	flake8 . --exclude=doc,.venv
+	flake8 . --exclude=doc
 
 type-check:
 	mypy mapie
