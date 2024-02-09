@@ -330,7 +330,12 @@ class EnsembleRegressor(EnsembleEstimator):
         y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
         return y_pred_multi
 
-    def predict_calib(self, X: ArrayLike) -> NDArray:
+    def predict_calib(
+        self,
+        X: ArrayLike,
+        y: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None
+    ) -> NDArray:
         """
         Perform predictions on X : the calibration set.
 
@@ -338,6 +343,17 @@ class EnsembleRegressor(EnsembleEstimator):
         ----------
         X: ArrayLike of shape (n_samples_test, n_features)
             Input data
+
+        y: Optional[ArrayLike] of shape (n_samples_test,)
+            Input labels.
+
+            By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples_test,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
 
         Returns
         -------
@@ -357,15 +373,17 @@ class EnsembleRegressor(EnsembleEstimator):
                     delayed(self._predict_oof_estimator)(
                         estimator, X, calib_index,
                     )
-                    for (_, calib_index), estimator in zip(cv.split(X),
-                                                           self.estimators_)
+                    for (_, calib_index), estimator in zip(
+                        cv.split(X, y, groups),
+                        self.estimators_
+                    )
                 )
                 predictions, indices = map(
                     list, zip(*outputs)
                 )
                 n_samples = _num_samples(X)
                 pred_matrix = np.full(
-                    shape=(n_samples, cv.get_n_splits(X)),
+                    shape=(n_samples, cv.get_n_splits(X, y, groups)),
                     fill_value=np.nan,
                     dtype=float,
                 )
@@ -385,6 +403,7 @@ class EnsembleRegressor(EnsembleEstimator):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
         **fit_params,
     ) -> EnsembleRegressor:
         """
@@ -404,6 +423,13 @@ class EnsembleRegressor(EnsembleEstimator):
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
+
+            By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
             By default ``None``.
 
         **fit_params : dict
@@ -440,7 +466,7 @@ class EnsembleRegressor(EnsembleEstimator):
             )
             cv = cast(BaseCrossValidator, cv)
             self.k_ = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y)),
+                shape=(n_samples, cv.get_n_splits(X, y, groups)),
                 fill_value=np.nan,
                 dtype=float,
             )
@@ -456,7 +482,7 @@ class EnsembleRegressor(EnsembleEstimator):
                         sample_weight,
                         **fit_params
                     )
-                    for train_index, _ in cv.split(X)
+                    for train_index, _ in cv.split(X, y, groups)
                 )
                 # In split-CP, we keep only the model fitted on train dataset
                 if self.use_split_method_:

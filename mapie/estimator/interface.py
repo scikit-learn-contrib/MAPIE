@@ -21,6 +21,7 @@ class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
         **fit_params
     ) -> EnsembleEstimator:
         """
@@ -40,6 +41,11 @@ class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
+            By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
             By default ``None``.
 
         **fit_params : dict

@@ -463,6 +463,7 @@ class MapieQuantileRegressor(MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
         X_calib: Optional[ArrayLike] = None,
         y_calib: Optional[ArrayLike] = None,
         calib_size: Optional[float] = 0.3,
@@ -498,6 +499,9 @@ class MapieQuantileRegressor(MapieRegressor):
             for the calibration procedure.
 
             By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Always ignored, exists for compatibility.
 
         X_calib: Optional[ArrayLike] of shape (n_calib_samples, n_features)
             Calibration data.
