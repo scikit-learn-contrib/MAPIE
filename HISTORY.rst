@@ -5,6 +5,7 @@ History
 ##### (##########)
 ------------------
 * Add possibility of passing fit parameters used by estimators.
+* Fix memory issue CQR when testing for upper and lower bounds.
 
 0.8.0 (2024-01-03)
 ------------------
