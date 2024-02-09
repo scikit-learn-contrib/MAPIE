@@ -523,9 +523,9 @@ def check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
 
 
 def check_lower_upper_bounds(
-    lower_bound: NDArray,
-    upper_bound: NDArray,
-    prediction: NDArray
+    y_pred_low: NDArray,
+    y_pred_up: NDArray,
+    y_preds: NDArray
 ) -> None:
     """
     Check if lower or upper bounds and prediction are consistent.
