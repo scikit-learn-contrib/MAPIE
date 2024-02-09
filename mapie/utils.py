@@ -532,13 +532,13 @@ def check_lower_upper_bounds(
 
     Parameters
     ----------
-    lower_bound: NDArray of shape (n_samples,)
+    y_pred_low: NDArray of shape (n_samples,)
         Lower bound prediction.
 
-    upper_bound: NDArray of shape (n_samples,)
+    y_pred_up: NDArray of shape (n_samples,)
         Upper bound prediction.
 
-    prediction: NDArray of shape (n_samples,)
+    y_preds: NDArray of shape (n_samples,)
         Prediction.
 
     Raises
@@ -560,14 +560,14 @@ def check_lower_upper_bounds(
     ...
     WARNING: The predictions are ill-sorted.
     """
-    lower_bound = column_or_1d(lower_bound)
-    upper_bound = column_or_1d(upper_bound)
-    prediction = column_or_1d(prediction)
+    y_pred_low = column_or_1d(y_pred_low)
+    y_pred_up = column_or_1d(y_pred_up)
+    y_preds = column_or_1d(y_preds)
 
     any_inversion = np.any(
-        (lower_bound > upper_bound) |
-        (prediction < lower_bound) |
-        (prediction > upper_bound)
+        (y_pred_low > y_pred_up) |
+        (y_preds < y_pred_low) |
+        (y_preds > y_pred_up)
     )
 
     if any_inversion:
