@@ -217,6 +217,8 @@ def check_no_agg_cv(
     X: ArrayLike,
     cv: Union[int, str, BaseCrossValidator, BaseShuffleSplit],
     no_agg_cv_array: list,
+    y: Optional[ArrayLike] = None,
+    groups: Optional[ArrayLike] = None
 ) -> bool:
     """
     Check if cross-validator is ``"prefit"``, ``"split"`` or any split
@@ -233,6 +235,17 @@ def check_no_agg_cv(
     no_agg_cv_array: list
         List of all non-aggregated cv methods.
 
+    y: Optional[ArrayLike] of shape (n_samples,)
+        Input labels.
+
+        By default ``None``.
+
+    groups: Optional[ArrayLike] of shape (n_samples,)
+        Group labels for the samples used while splitting the dataset into
+        train/test set.
+
+        By default ``None``.
+
     Returns
     -------
     bool
@@ -243,7 +256,7 @@ def check_no_agg_cv(
     elif isinstance(cv, int):
         return cv == 1
     elif hasattr(cv, "get_n_splits"):
-        return cv.get_n_splits(X) == 1
+        return cv.get_n_splits(X, y, groups) == 1
     else:
         raise ValueError(
             "Invalid cv argument. "
@@ -601,7 +614,7 @@ def check_lower_upper_bounds(
     if any_final_inversion:
         warnings.warn(
             "WARNING: The predictions have issues.\n"
-            + "The upper predictions are lower than"
+            + "The upper predictions are lower than "
             + "the lower predictions at some points."
         )
 

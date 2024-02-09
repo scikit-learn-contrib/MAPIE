@@ -13,7 +13,9 @@ from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import KFold, LeaveOneOut, ShuffleSplit
+from sklearn.model_selection import (
+    GroupKFold, KFold, LeaveOneOut, ShuffleSplit
+)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.estimator_checks import check_estimator
@@ -1349,6 +1351,87 @@ def test_results_with_constant_sample_weights(
     np.testing.assert_allclose(y_pred0, y_pred2)
     np.testing.assert_allclose(y_ps0, y_ps1)
     np.testing.assert_allclose(y_ps0, y_ps2)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_results_with_constant_groups(strategy: str) -> None:
+    """
+    Test predictions when groups are None
+    or constant with different values.
+    """
+    args_init, args_predict = STRATEGIES[strategy]
+    lr = LogisticRegression(C=1e-99)
+    lr.fit(X, y)
+    n_samples = len(X)
+    mapie_clf0 = MapieClassifier(lr, **args_init)
+    mapie_clf1 = MapieClassifier(lr, **args_init)
+    mapie_clf2 = MapieClassifier(lr, **args_init)
+    mapie_clf0.fit(X, y, groups=None)
+    mapie_clf1.fit(X, y, groups=np.ones(shape=n_samples))
+    mapie_clf2.fit(X, y, groups=np.ones(shape=n_samples) * 5)
+    y_pred0, y_ps0 = mapie_clf0.predict(
+        X,
+        alpha=0.2,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    y_pred1, y_ps1 = mapie_clf1.predict(
+        X,
+        alpha=0.2,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    y_pred2, y_ps2 = mapie_clf2.predict(
+        X,
+        alpha=0.2,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(y_pred0, y_pred1)
+    np.testing.assert_allclose(y_pred0, y_pred2)
+    np.testing.assert_allclose(y_ps0, y_ps1)
+    np.testing.assert_allclose(y_ps0, y_ps2)
+
+
+def test_results_with_groups() -> None:
+    """
+    Test predictions when groups specified (not None and
+    not constant).
+    """
+    X = np.array([0, 10, 20, 0, 10, 20]).reshape(-1, 1)
+    y = np.array([0, 1, 1, 0, 1, 1])
+    groups = np.array([1, 2, 3, 1, 2, 3])
+    estimator = DummyClassifier(strategy="most_frequent")
+
+    strategy_no_group = dict(
+        estimator=estimator,
+        method="lac",
+        cv=KFold(n_splits=3, shuffle=False),
+    )
+    strategy_group = dict(
+        estimator=estimator,
+        method="lac",
+        cv=GroupKFold(n_splits=3),
+    )
+
+    mapie0 = MapieClassifier(**strategy_no_group)
+    mapie1 = MapieClassifier(**strategy_group)
+    mapie0.fit(X, y, groups=None)
+    mapie1.fit(X, y, groups=groups)
+    # check class member conformity_scores_:
+    # np.take_along_axis(1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1)
+    # cv folds with KFold:
+    # [(array([2, 3, 4, 5]), array([0, 1])),
+    #  (array([0, 1, 4, 5]), array([2, 3])),
+    #  (array([0, 1, 2, 3]), array([4, 5]))]
+    # cv folds with GroupKFold:
+    # [(array([0, 1, 3, 4]), array([2, 5])),
+    #  (array([0, 2, 3, 5]), array([1, 4])),
+    #  (array([1, 2, 4, 5]), array([0, 3]))]
+    conformity_scores_0 = np.array([[1.], [0.], [0.], [1.], [1.], [1.]])
+    conformity_scores_1 = np.array([[1.], [1.], [1.], [1.], [1.], [1.]])
+    assert np.array_equal(mapie0.conformity_scores_, conformity_scores_0)
+    assert np.array_equal(mapie1.conformity_scores_, conformity_scores_1)
 
 
 @pytest.mark.parametrize(

@@ -1053,6 +1053,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         size_raps: Optional[float] = .2,
+        groups: Optional[ArrayLike] = None,
         **fit_params,
     ) -> MapieClassifier:
         """
@@ -1081,9 +1082,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
             By default ``.2``.
 
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
+
         **fit_params : dict
             Additional fit parameters.
-
 
         Returns
         -------
@@ -1099,6 +1105,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y = _check_y(y)
 
         sample_weight = cast(Optional[NDArray], sample_weight)
+        groups = cast(Optional[NDArray], groups)
         sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
         y = cast(NDArray, y)
@@ -1147,6 +1154,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             if sample_weight is not None:
                 sample_weight = sample_weight[train_raps_index]
                 sample_weight = cast(NDArray, sample_weight)
+            if groups is not None:
+                groups = groups[train_raps_index]
+                groups = cast(NDArray, groups)
 
         # Work
         if cv == "prefit":
@@ -1174,7 +1184,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                     sample_weight,
                     **fit_params,
                 )
-                for k, (train_index, val_index) in enumerate(cv.split(X))
+                for k, (train_index, val_index) in enumerate(
+                    cv.split(X, y_enc, groups)
+                )
             )
             (
                 self.estimators_,
