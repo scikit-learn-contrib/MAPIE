@@ -56,7 +56,7 @@ class Subsample(BaseCrossValidator):
         self.random_state = random_state
 
     def split(
-        self, X: NDArray
+        self, X: NDArray, *args: Any, **kargs: Any
     ) -> Generator[Tuple[NDArray, NDArray], None, None]:
         """
         Generate indices to split data into training and test sets.
@@ -154,7 +154,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         self.random_state = random_state
 
     def split(
-        self, X: NDArray
+        self, X: NDArray, *args: Any, **kargs: Any
     ) -> Generator[Tuple[NDArray, NDArray], None, None]:
         """
         Generate indices to split data into training and test sets.
