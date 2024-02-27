@@ -26,6 +26,7 @@ from mapie.metrics import (add_jitter,
                            kuiper_p_value,
                            kuiper_statistic,
                            length_scale,
+                           regression_MWI_score,
                            regression_coverage_score,
                            regression_coverage_score_v2,
                            regression_mean_width_score,
@@ -807,3 +808,32 @@ def test_spiegelhalter_p_value_calibrated() -> None:
     y_true = (uniform <= y_score).astype(float)
     ks_stat = spiegelhalter_p_value(y_true, y_score)
     np.testing.assert_allclose(ks_stat, 0.174832, atol=1e-6)
+
+
+def test_regression_MWI_score() -> None:
+    """
+    Test the mean Winkler interval score.
+    There are four predictions in y_pis.
+    For each the ground truth value is 10.0.
+    The first interval covers the true value.
+    The second interval is above the true value.
+    The third interval has lower > upper, i.e.
+    quantile crossing.
+    The fourth interval is below the true value.
+    """
+
+    y_true = np.array([10.0, 10.0, 10.0, 10.0])
+    y_pis = np.array([
+        [[5.0],
+            [15.0]],
+        [[15.0],
+            [25.0]],
+        [[12.0],
+            [8.0]],
+        [[-5.0],
+            [0.0]]])
+
+    alpha = 0.1
+
+    MWI_score = regression_MWI_score(y_true, y_pis, alpha)
+    np.testing.assert_allclose(MWI_score, 82.25, rtol=1e-2)
