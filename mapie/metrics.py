@@ -1577,7 +1577,11 @@ def spiegelhalter_p_value(y_true: NDArray, y_score: NDArray) -> float:
     return sp_p_value
 
 
-def regression_MWI_score(y_true, y_pis, alpha):
+def regression_MWI_score(
+        y_true: NDArray,
+        y_pis: NDArray,
+        alpha: float
+) -> float:
     """
     This is an implementation of the Winkler interval score
     (https://otexts.com/fpp3/distaccuracy.html#winkler-score).
@@ -1611,16 +1615,20 @@ def regression_MWI_score(y_true, y_pis, alpha):
     (https://doi.org/10.1198/016214506000001437) (Section 6.2)
     """
 
-    # undo any possible quantile crossing
-    low_tmp = y_pis[:, 0, 0]
-    up_tmp = y_pis[:, 1, 0]
-    y_pred_low = np.minimum(low_tmp, up_tmp)
-    y_pred_up = np.maximum(low_tmp, up_tmp)
+    # Undo any possible quantile crossing
+    y_pred_low = np.minimum(y_pis[:, 0, 0], y_pis[:, 1, 0])
+    y_pred_up = np.maximum(y_pis[:, 0, 0], y_pis[:, 1, 0])
 
-    width = y_pred_up.sum() - y_pred_low.sum()
-    error_above = (y_true - y_pred_up)[y_true > y_pred_up].sum()
-    error_below = (y_pred_low - y_true)[y_true < y_pred_low].sum()
+    check_arrays_length(y_true, y_pred_low, y_pred_up)
+
+    # Checking for NaN and inf values
+    for array in (y_true, y_pred_low, y_pred_up):
+        check_array_nan(array)
+        check_array_inf(array)
+
+    width = np.sum(y_pred_up) - np.sum(y_pred_low)
+    error_above = np.sum((y_true - y_pred_up)[y_true > y_pred_up])
+    error_below = np.sum((y_pred_low - y_true)[y_true < y_pred_low])
     total_error = error_above + error_below
-    MWIs = (width + total_error*2/alpha)/len(y_true)
-
+    MWIs = (width + total_error * 2 / alpha) / len(y_true)
     return MWIs

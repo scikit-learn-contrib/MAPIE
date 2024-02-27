@@ -463,6 +463,7 @@ class MapieQuantileRegressor(MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
         X_calib: Optional[ArrayLike] = None,
         y_calib: Optional[ArrayLike] = None,
         calib_size: Optional[float] = 0.3,
@@ -498,6 +499,9 @@ class MapieQuantileRegressor(MapieRegressor):
             for the calibration procedure.
 
             By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Always ignored, exists for compatibility.
 
         X_calib: Optional[ArrayLike] of shape (n_calib_samples, n_features)
             Calibration data.
@@ -696,6 +700,7 @@ class MapieQuantileRegressor(MapieRegressor):
         )
         for i, est in enumerate(self.estimators_):
             y_preds[i] = est.predict(X)
+        check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
         if symmetry:
             quantile = np.full(
                 2,
@@ -716,5 +721,5 @@ class MapieQuantileRegressor(MapieRegressor):
             )
         y_pred_low = y_preds[0][:, np.newaxis] - quantile[0]
         y_pred_up = y_preds[1][:, np.newaxis] + quantile[1]
-        check_lower_upper_bounds(y_preds, y_pred_low, y_pred_up)
+        check_lower_upper_bounds(y_pred_low, y_pred_up, y_preds[2])
         return y_preds[2], np.stack([y_pred_low, y_pred_up], axis=1)
