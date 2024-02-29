@@ -38,4 +38,6 @@ Contributors
 * Mehdi Elion <mehdi.elion@gmail.com>
 * Sami Kaddani <sami.kaddani@gmail.com>
 * Pierre de Fréminville <pidefrem>
+* Ambros Marzetta <ambrosm>
+* Carl McBride Ellis <Carl-McBride-Ellis>
 To be continued ...
