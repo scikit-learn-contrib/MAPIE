@@ -26,7 +26,7 @@ from mapie.metrics import (add_jitter,
                            kuiper_p_value,
                            kuiper_statistic,
                            length_scale,
-                           regression_MWI_score,
+                           regression_mwi_score,
                            regression_coverage_score,
                            regression_coverage_score_v2,
                            regression_mean_width_score,
@@ -810,7 +810,7 @@ def test_spiegelhalter_p_value_calibrated() -> None:
     np.testing.assert_allclose(ks_stat, 0.174832, atol=1e-6)
 
 
-def test_regression_MWI_score() -> None:
+def test_regression_mwi_score() -> None:
     """
     Test the mean Winkler interval score.
     There are four predictions in y_pis.
@@ -835,5 +835,5 @@ def test_regression_MWI_score() -> None:
 
     alpha = 0.1
 
-    MWI_score = regression_MWI_score(y_true, y_pis, alpha)
-    np.testing.assert_allclose(MWI_score, 82.25, rtol=1e-2)
+    mwi_score = regression_mwi_score(y_true, y_pis, alpha)
+    np.testing.assert_allclose(mwi_score, 82.25, rtol=1e-2)

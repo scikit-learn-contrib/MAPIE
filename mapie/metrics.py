@@ -1577,14 +1577,16 @@ def spiegelhalter_p_value(y_true: NDArray, y_score: NDArray) -> float:
     return sp_p_value
 
 
-def regression_MWI_score(
+def regression_mwi_score(
         y_true: NDArray,
         y_pis: NDArray,
         alpha: float
 ) -> float:
     """
-    This is an implementation of the Winkler interval score
-    (https://otexts.com/fpp3/distaccuracy.html#winkler-score).
+    The Winkler score, proposed by Winkler (1972), is a measure used to
+    evaluate prediction intervals, combining the length of the interval
+    with a penalty that increases proportionally to the distance of an
+    observation outside the interval.
 
     Parameters
     ----------
@@ -1630,5 +1632,5 @@ def regression_MWI_score(
     error_above = np.sum((y_true - y_pred_up)[y_true > y_pred_up])
     error_below = np.sum((y_pred_low - y_true)[y_true < y_pred_low])
     total_error = error_above + error_below
-    MWIs = (width + total_error * 2 / alpha) / len(y_true)
-    return MWIs
+    mwi = (width + total_error * 2 / alpha) / len(y_true)
+    return mwi
