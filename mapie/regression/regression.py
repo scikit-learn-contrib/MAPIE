@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, Tuple, Union, cast
-
 import warnings
+from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -10,12 +9,10 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import (_check_y, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import (ConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import ConformityScore, ResidualNormalisedScore
 from mapie.estimator.estimator import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_conformity_score, check_cv,

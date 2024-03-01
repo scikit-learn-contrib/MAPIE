@@ -30,11 +30,8 @@ from matplotlib import pyplot as plt
 from sklearn.utils import check_random_state
 
 from mapie._typing import NDArray
-from mapie.metrics import (
-    cumulative_differences,
-    length_scale,
-    kolmogorov_smirnov_p_value
-)
+from mapie.metrics import (cumulative_differences, kolmogorov_smirnov_p_value,
+                           length_scale)
 
 ####################################################################
 # 1. Create 1-dimensional dataset and scores to test for calibration

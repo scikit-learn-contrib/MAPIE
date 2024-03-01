@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
+from typing import Tuple
 
 import numpy as np
-from typing import Tuple
 
 from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray

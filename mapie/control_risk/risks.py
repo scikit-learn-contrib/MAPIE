@@ -1,9 +1,9 @@
 from typing import cast
 
-from mapie._typing import NDArray
-
 import numpy as np
 from sklearn.utils.validation import column_or_1d
+
+from mapie._typing import NDArray
 
 
 def compute_risk_recall(
