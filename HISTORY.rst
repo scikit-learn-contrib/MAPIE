@@ -12,10 +12,12 @@ History
 
 0.8.2 (2024-01-11)
 ------------------
-* Resolve issue still present in 0.8.1 by updating numpy.
+
+* * Resolve issue still present in 0.8.1 by updating pandas.
 
 0.8.1 (2024-01-11)
 ------------------
+
 * First attemps at fixing library conda issue.
 
 0.8.0 (2024-01-03)
