@@ -2,23 +2,27 @@
 History
 =======
 
-##### (##########)
+0.8.3 (2024-03-01)
 ------------------
-* Allow the use of `y` and `groups` arguments in cross validator methods `get_n_splits`
-  and `split` to enable more cv-split variants for :class:`~regression.regression.MapieRegressor`
-  and :class:`~classification.MapieClassifier`
-  (e.g. :class:`sklearn.model_selection.GroupKFold`, stratified continuous split).
-  This change adds the `groups` argument to the following methods:
-  :meth:`~estimator.interface.EnsembleEstimator.fit()`,
-  :meth:`~estimator.estimator.EnsembleRegressor.predict_calib()`, :meth:`~estimator.estimator.EnsembleRegressor.fit()`,
-  :meth:`~regression.regression.MapieRegressor.fit()`,
-  :meth:`~classification.MapieClassifier.fit()`.
+
+* Allow the use of `y` and `groups` arguments MapieRegressor and MapieClassifier.
 * Add possibility of passing fit parameters used by estimators.
 * Fix memory issue CQR when testing for upper and lower bounds.
-* Add Winkler Interval Score
+* Add Winkler Interval Score.
+
+0.8.2 (2024-01-11)
+------------------
+
+* * Resolve issue still present in 0.8.1 by updating pandas.
+
+0.8.1 (2024-01-11)
+------------------
+
+* First attemps at fixing library conda issue.
 
 0.8.0 (2024-01-03)
 ------------------
+
 * Add Adaptative Conformal Inference (ACI) method for MapieTimeSeriesRegressor.
 * Add Coverage Width-based Criterion (CWC) metric.
 * Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit).
