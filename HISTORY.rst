@@ -15,6 +15,7 @@ History
   :meth:`~classification.MapieClassifier.fit()`.
 * Add possibility of passing fit parameters used by estimators.
 * Fix memory issue CQR when testing for upper and lower bounds.
+* Add Winkler Interval Score
 
 0.8.0 (2024-01-03)
 ------------------
