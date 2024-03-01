@@ -5,9 +5,9 @@ Credits
 Development Lead
 ----------------
 
-* Thibault Cordier <tcordier@quantmetry.com>
-* Vincent Blot <vblot@quantmetry.com>
-* Louis Lacombe <llacombe@quantmetry.com>
+* Thibault Cordier <thibault.a.cordier@capgemini.com>
+* Vincent Blot <vincent.blot@capgemini.com>
+* Louis Lacombe <louis.lacombe@capgemini.com>
 
 Emeritus Core Developers
 ------------------------
@@ -30,7 +30,7 @@ Contributors
 * Arnaud Capitaine <arnaud.gc.capitaine@gmail.com>
 * Tarik Tazi <ttazi@quantmetry.com>
 * Daniel Herbst <daniel.herbst@tum.de>
-* Candice Moyet <cmoyet@quantmetry.com>
+* Candice Moyet <candice.moyet@capgemini.com>
 * Sofiane Ziane <sziane@quantmetry.com>
 * Remi Colliaux <rcolliaux@quantmetry.com>
 * Arthur Phan <aphan@quantmetry.com>
