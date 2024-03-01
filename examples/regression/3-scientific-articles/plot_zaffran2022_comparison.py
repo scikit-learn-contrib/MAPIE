@@ -31,24 +31,22 @@ In International Conference on Machine Learning (pp. 25834-25866). PMLR.
 distribution shift.
 Advances in Neural Information Processing Systems, 34, 1660-1672.
 """
+import datetime
+import pickle
+import ssl
 import warnings
-
 from typing import Tuple
 from urllib.request import urlopen
-import ssl
-import pickle
 
-import datetime
 import numpy as np
 import pandas as pd
 from matplotlib import pylab as plt
-
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import PredefinedSplit
-from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.time_series_regression import MapieTimeSeriesRegressor
 
 from mapie._typing import NDArray
+from mapie.conformity_scores import AbsoluteConformityScore
+from mapie.time_series_regression import MapieTimeSeriesRegressor
 
 warnings.simplefilter("ignore")
 

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, Tuple, Union, cast
-
 import warnings
+from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import RegressorMixin
@@ -12,7 +11,7 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
 from mapie.regression import MapieRegressor
-from mapie.utils import (check_alpha, check_gamma)
+from mapie.utils import check_alpha, check_gamma
 
 
 class MapieTimeSeriesRegressor(MapieRegressor):

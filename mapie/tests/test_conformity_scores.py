@@ -2,14 +2,12 @@ from typing import Any
 
 import numpy as np
 import pytest
-
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import (AbsoluteConformityScore,
-                                     ConformityScore,
+from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore,
                                      ResidualNormalisedScore)
 from mapie.regression import MapieRegressor

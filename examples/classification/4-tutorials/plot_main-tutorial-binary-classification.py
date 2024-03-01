@@ -29,15 +29,14 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
 from mapie._typing import NDArray
 from mapie.classification import MapieClassifier
-from sklearn.calibration import CalibratedClassifierCV
 from mapie.metrics import (classification_coverage_score,
                            classification_mean_width_score)
-
 
 ##############################################################################
 # 1. Conformal Prediction method using the softmax score of the true label

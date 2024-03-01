@@ -30,10 +30,10 @@ results than [1], and that the targeted coverage level is obtained.
 """
 from __future__ import annotations
 
+import ssl
 from io import BytesIO
 from typing import Any, Optional, Tuple
 from urllib.request import urlopen
-import ssl
 from zipfile import ZipFile
 
 import matplotlib.pyplot as plt

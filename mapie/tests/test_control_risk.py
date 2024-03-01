@@ -2,20 +2,16 @@
 Testing for control_risk module.
 Testing for now risks for multilabel classification
 """
-from typing import Union, List, Optional
-
-import pytest
-from mapie._typing import NDArray
+from typing import List, Optional, Union
 
 import numpy as np
+import pytest
 
+from mapie._typing import NDArray
+from mapie.control_risk.ltt import find_lambda_control_star, ltt_procedure
+from mapie.control_risk.p_values import compute_hoeffdding_bentkus_p_value
 from mapie.control_risk.risks import (compute_risk_precision,
                                       compute_risk_recall)
-
-from mapie.control_risk.p_values import compute_hoeffdding_bentkus_p_value
-
-from mapie.control_risk.ltt import (ltt_procedure,
-                                    find_lambda_control_star)
 
 lambdas = np.array([0.5, 0.9])
 

@@ -1,10 +1,10 @@
 from typing import Union, cast
 
-from mapie._typing import NDArray
-from mapie.utils import check_alpha
-
 import numpy as np
 from scipy.stats import binom
+
+from mapie._typing import NDArray
+from mapie.utils import check_alpha
 
 
 def compute_hoeffdding_bentkus_p_value(

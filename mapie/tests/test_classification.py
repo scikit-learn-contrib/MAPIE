@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Optional, Union, cast
 from copy import deepcopy
+from typing import Any, Dict, Iterable, List, Optional, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -13,9 +13,8 @@ from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import (
-    GroupKFold, KFold, LeaveOneOut, ShuffleSplit
-)
+from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
+                                     ShuffleSplit)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.estimator_checks import check_estimator
