@@ -18,7 +18,7 @@ Emeritus Core Developers
 Contributors
 ------------
 
-* Nicolas Brunel <nbrunel@quantmetry.com>
+* Nicolas Brunel <nicolas.brunel@capgemini.com>
 * Issam Ibnouhsein <iibnouhsein@quantmetry.com>
 * François Deheeger <francois.deheeger@michelin.com>
 * Rémi Adon <remi.adon@protonmail.com>
