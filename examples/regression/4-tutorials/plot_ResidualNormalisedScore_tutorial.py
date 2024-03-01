@@ -9,15 +9,14 @@ We will explicit the experimental setup below.
 """
 import warnings
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.ticker import FormatStrFormatter
 from numpy.typing import ArrayLike
-
 from sklearn.datasets import fetch_california_housing
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
 
 from mapie.conformity_scores import ResidualNormalisedScore
 from mapie.metrics import regression_coverage_score_v2, regression_ssc_score

@@ -1,6 +1,6 @@
 from __future__ import annotations
-from abc import ABCMeta, abstractmethod
 
+from abc import ABCMeta, abstractmethod
 from typing import Optional, Tuple, Union
 
 from sklearn.base import RegressorMixin

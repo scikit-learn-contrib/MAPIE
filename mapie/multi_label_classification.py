@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import warnings
+from itertools import chain
 from typing import Iterable, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
@@ -14,14 +15,10 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
 from ._typing import ArrayLike, NDArray
-from .utils import check_alpha, check_n_jobs, check_verbose
-
-from itertools import chain
-
+from .control_risk.crc_rcps import find_lambda_star, get_r_hat_plus
 from .control_risk.ltt import find_lambda_control_star, ltt_procedure
 from .control_risk.risks import compute_risk_precision, compute_risk_recall
-from .control_risk.crc_rcps import get_r_hat_plus
-from .control_risk.crc_rcps import find_lambda_star
+from .utils import check_alpha, check_n_jobs, check_verbose
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):

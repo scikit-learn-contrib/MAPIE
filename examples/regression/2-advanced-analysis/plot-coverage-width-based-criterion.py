@@ -19,6 +19,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
+
 from mapie.metrics import (coverage_width_based, regression_coverage_score,
                            regression_mean_width_score)
 from mapie.regression import MapieQuantileRegressor, MapieRegressor

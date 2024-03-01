@@ -1,24 +1,18 @@
-from typing import Optional, cast, Union, Tuple
+from typing import Optional, Tuple, Union, cast
 
-import scipy
 import numpy as np
+import scipy
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_array, column_or_1d
 
-from ._typing import ArrayLike, NDArray
-from .utils import (calc_bins, check_alpha,
-                    check_array_shape_classification,
-                    check_array_shape_regression,
-                    check_array_inf,
-                    check_array_nan,
-                    check_arrays_length,
-                    check_binary_zero_one,
-                    check_lower_upper_bounds,
-                    check_nb_intervals_sizes,
-                    check_nb_sets_sizes,
-                    check_number_bins,
-                    check_split_strategy)
 from ._machine_precision import EPSILON
+from ._typing import ArrayLike, NDArray
+from .utils import (calc_bins, check_alpha, check_array_inf, check_array_nan,
+                    check_array_shape_classification,
+                    check_array_shape_regression, check_arrays_length,
+                    check_binary_zero_one, check_lower_upper_bounds,
+                    check_nb_intervals_sizes, check_nb_sets_sizes,
+                    check_number_bins, check_split_strategy)
 
 
 def regression_coverage_score(
