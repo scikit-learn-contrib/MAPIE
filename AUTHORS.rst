@@ -12,7 +12,7 @@ Development Lead
 Emeritus Core Developers
 ------------------------
 
-* Grégoire Martinon <gmartinon@quantmetry.com>
+* Grégoire Martinon <gregoire.martinon@capgemini.com>
 * Vianney Taquet <vianney.taquet@gmail.com>
 
 Contributors
@@ -26,14 +26,14 @@ Contributors
 * Abdou Akim Goumbala <aagoumbala@quantmetry.com>
 * Adirtha Borgohain <adirthaborgohain@gmail.com>
 * Thomas Morzadec <tmorzadec@quantmetry.com>
-* Julien Roussel <jroussel@quantmetry.com>
+* Julien Roussel <julien.a.roussel@capgemini.com>
 * Arnaud Capitaine <arnaud.gc.capitaine@gmail.com>
 * Tarik Tazi <ttazi@quantmetry.com>
 * Daniel Herbst <daniel.herbst@tum.de>
 * Candice Moyet <candice.moyet@capgemini.com>
 * Sofiane Ziane <sziane@quantmetry.com>
-* Remi Colliaux <rcolliaux@quantmetry.com>
-* Arthur Phan <aphan@quantmetry.com>
+* Remi Colliaux <remi.colliaux@capgemini.com>
+* Arthur Phan <arthur.phan@capgemini.com>
 * Rafael Saraiva <rafael.saraiva.de@gmail.com>
 * Mehdi Elion <mehdi.elion@gmail.com>
 * Sami Kaddani <sami.kaddani@gmail.com>
