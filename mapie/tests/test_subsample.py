@@ -5,6 +5,8 @@ import pytest
 
 from mapie.subsample import BlockBootstrap, Subsample
 
+random_state = 42
+rng = np.random.default_rng(seed=random_state)
 
 def test_default_parameters_SubSample() -> None:
     """Test default values of Subsample."""
@@ -87,3 +89,38 @@ def test_split_BlockBootstrap_error() -> None:
     cv = BlockBootstrap()
     with pytest.raises(ValueError, match=r".*Exactly one argument*"):
         next(cv.split(X))
+      
+def test_split_samples_are_different()->None:
+    """Test that subsamples are different """
+
+    X = rng.random(100)
+    cv = Subsample(n_resamplings=3, random_state=random_state)
+    trains = [x[0] for x in cv.split(X)]
+    tests = [x[1] for x in cv.split(X)]
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(trains[0], trains[1])
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(trains[1], trains[2])
+
+
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(tests[0], tests[1])
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(tests[1], tests[2])
+
+
+def test_split_blockbootstraps_are_different()->None:
+    """Test that BlockBootstrap outputs are different """
+    X = rng.random(100)
+    cv = BlockBootstrap(n_resamplings=3, length=5, random_state=random_state)
+    trains = [x[0] for x in cv.split(X)]
+    tests = [x[1] for x in cv.split(X)]
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(trains[0], trains[1])
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(trains[1], trains[2])
+
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(tests[0], tests[1])
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_equal(tests[1], tests[2])  
