@@ -40,4 +40,5 @@ Contributors
 * Pierre de Fréminville <pidefrem>
 * Ambros Marzetta <ambrosm>
 * Carl McBride Ellis <Carl-McBride-Ellis>
+* Tiago Leon Melo <tleonmelo@hotmail.com>
 To be continued ...
