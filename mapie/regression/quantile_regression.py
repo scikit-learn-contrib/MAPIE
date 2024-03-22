@@ -154,10 +154,12 @@ class MapieQuantileRegressor(MapieRegressor):
         method: str = "quantile",
         cv: Optional[str] = None,
         alpha: float = 0.1,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         super().__init__(
             estimator=estimator,
             method=method,
+            random_state=random_state
         )
         self.cv = cv
         self.alpha = alpha
@@ -519,6 +521,7 @@ class MapieQuantileRegressor(MapieRegressor):
             Controls the shuffling applied to the data before applying the
             split.
             Pass an int for reproducible output across multiple function calls.
+            Overrides random state used in constructor.
             See :term:`Glossary <random_state>`.
 
             By default ``None``.
@@ -571,7 +574,9 @@ class MapieQuantileRegressor(MapieRegressor):
             checked_estimator = self._check_estimator(self.estimator)
             alpha = self._check_alpha(self.alpha)
             X, y = indexable(X, y)
-            random_state = check_random_state(random_state)
+            random_state = check_random_state(
+                random_state if random_state is not None else self.random_state
+            )
             results = self._check_calib_set(
                 X,
                 y,
