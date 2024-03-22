@@ -574,9 +574,7 @@ class MapieQuantileRegressor(MapieRegressor):
             checked_estimator = self._check_estimator(self.estimator)
             alpha = self._check_alpha(self.alpha)
             X, y = indexable(X, y)
-            random_state = check_random_state(
-                random_state if random_state is not None else self.random_state
-            )
+            random_state = check_random_state(random_state or self.random_state)
             results = self._check_calib_set(
                 X,
                 y,
