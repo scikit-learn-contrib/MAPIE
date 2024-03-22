@@ -791,3 +791,17 @@ def test_fit_parameters_passing(strategy: str) -> None:
 
     for estimator in mapie.estimators_:
         assert estimator.estimators_.shape[0] == 3
+
+def test_random_state_is_set() -> None:
+    """
+    Test that the same result is obtained if the random state
+    is provided through constructor or through fit()
+    """
+    mapie = MapieQuantileRegressor()
+    mapie_rand = MapieQuantileRegressor(random_state=random_state)
+    mapie.fit(X, y, calib_size=0.5, random_state=random_state)
+    mapie_rand.fit(X, y, calib_size=0.5)
+    y_pred, y_pis = mapie.predict(X)
+    y_pred_rand, y_pis_rand = mapie_rand.predict(X)
+    np.testing.assert_allclose(y_pred, y_pred_rand, rtol=1e-2)
+    np.testing.assert_allclose(y_pis, y_pis_rand, rtol=1e-2)
