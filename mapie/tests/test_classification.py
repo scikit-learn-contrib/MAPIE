@@ -25,6 +25,7 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
 from mapie.utils import check_alpha
+from mapie.conformity_scores.utils_classification_conformity_scores import get_true_label_position
 
 random_state = 42
 
@@ -1865,8 +1866,7 @@ def test_get_true_label_position(
     y_pred_proba = y_true_proba_place[1]
     place = y_true_proba_place[2]
 
-    mapie = MapieClassifier(random_state=random_state)
-    found_place = mapie._get_true_label_position(y_pred_proba, y_true)
+    found_place = get_true_label_position(y_pred_proba, y_true)
 
     assert (found_place == place).all()
 
