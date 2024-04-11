@@ -25,7 +25,11 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
 from mapie.utils import check_alpha
-from mapie.conformity_scores.utils_classification_conformity_scores import get_true_label_position
+
+from mapie.conformity_scores.utils_classification_conformity_scores import (
+
+    get_true_label_position
+    )
 
 random_state = 42
 
