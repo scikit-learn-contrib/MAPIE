@@ -936,7 +936,9 @@ class Float32OuputModel:
 
 
 def do_nothing(*args: Any) -> None:
-    "Mock function that does nothing. Add this sentence in order to make a change without any impact on code"
+    """Mock function that does nothing.
+    Add this sentence in order to make
+    a change without any impact on code"""
     pass
 
 
