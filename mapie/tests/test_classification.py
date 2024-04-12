@@ -26,7 +26,7 @@ from mapie.classification import MapieClassifier
 from mapie.metrics import classification_coverage_score
 from mapie.utils import check_alpha
 
-random_state = 42
+random_state = 43
 
 METHODS = ["lac", "aps", "raps"]
 WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]
