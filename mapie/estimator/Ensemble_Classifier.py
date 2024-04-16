@@ -15,11 +15,17 @@ from sklearn.utils.multiclass import (check_classification_targets,
                                       type_of_target)
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
+from mapie._machine_precision import EPSILON
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
+from mapie.metrics import classification_mean_width_score
 from mapie.estimator.interface import EnsembleEstimator
 from mapie.utils import (check_nan_in_aposteriori_prediction, check_no_agg_cv,
                          fit_estimator)
+from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
+                    check_estimator_classification, check_n_features_in,
+                    check_n_jobs, check_null_weight, check_verbose,
+                    compute_quantiles, fit_estimator, fix_number_of_classes)
 
 
 class EnsembleClassifier(EnsembleEstimator):
@@ -38,7 +44,7 @@ class EnsembleClassifier(EnsembleEstimator):
         "label_encoder_"
     ]
 
-    #TODO : dans le paragraphe init, pas sûr de garder les "None" par défaut
+    #TODO : dans le paragraphe init, pas sûr de garder les "None" par défaut présent dans MapieClassifier
     def __init__(
         self,
         estimator: Optional[ClassifierMixin]= None,
@@ -53,7 +59,6 @@ class EnsembleClassifier(EnsembleEstimator):
         self.estimator = estimator
         self.method = method
         self.cv = cv
-        self.agg_function = agg_function # TODO : à voir si je garde l'argument (pas présent dans MapieClassifier)
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.test_size = test_size
@@ -76,51 +81,55 @@ class EnsembleClassifier(EnsembleEstimator):
         y_train = _safe_indexing(y, train_index)
         X_val = _safe_indexing(X, val_index)
         y_val = _safe_indexing(y, val_index)
-        #TODO : reprendre ici
-        if not (sample_weight is None):
-            sample_weight = _safe_indexing(sample_weight, train_index)
-            sample_weight = cast(NDArray, sample_weight)
 
-        estimator = fit_estimator(
-            estimator,
-            X_train,
-            y_train,
-            sample_weight=sample_weight,
-            **fit_params
-        )
-        return estimator
+        if sample_weight is None:
+            estimator = fit_estimator(
+                estimator, X_train, y_train, **fit_params
+            )
+        else:
+            sample_weight_train = _safe_indexing(sample_weight, train_index)
+            estimator = fit_estimator(
+                estimator, X_train, y_train, sample_weight_train, **fit_params
+            )
+        if _num_samples(X_val) > 0:
+            y_pred_proba = self._predict_oof_model(estimator, X_val)
+        else:
+            y_pred_proba = np.array([])
+        val_id = np.full_like(y_val, k, dtype=int)
+        return estimator, y_pred_proba, val_id, val_index
 
     @staticmethod
-    def _predict_oof_estimator(
-        estimator: RegressorMixin,
+    def _predict_oof_model(
+        self,
+        estimator: ClassifierMixin,
         X: ArrayLike,
-        val_index: ArrayLike,
-    ) -> Tuple[NDArray, ArrayLike]:
+    ) -> NDArray:
         """
-        Perform predictions on a single out-of-fold model on a validation set.
+        Predict probabilities of a test set from a fitted estimator.
 
         Parameters
         ----------
-        estimator: RegressorMixin
-            Estimator to train.
+        estimator: ClassifierMixin
+            Fitted estimator.
 
-        X: ArrayLike of shape (n_samples, n_features)
-            Input data.
-
-        val_index: ArrayLike of shape (n_samples_val)
-            Validation data indices.
+        X: ArrayLike
+            Test set.
 
         Returns
         -------
-        Tuple[NDArray, ArrayLike]
-            Predictions of estimator from val_index of X.
+        ArrayLike
+            Predicted probabilities.
         """
-        X_val = _safe_indexing(X, val_index)
-        if _num_samples(X_val) > 0:
-            y_pred = estimator.predict(X_val)
-        else:
-            y_pred = np.array([])
-        return y_pred, val_index
+        y_pred_proba = estimator.predict_proba(X)
+        # we enforce y_pred_proba to contain all labels included in y
+        if len(estimator.classes_) != self.n_classes_:
+            y_pred_proba = fix_number_of_classes(
+                self.n_classes_,
+                estimator.classes_,
+                y_pred_proba
+            )
+        y_pred_proba = self._check_proba_normalized(y_pred_proba)
+        return y_pred_proba
 
     def _aggregate_with_mask(
         self,
@@ -265,161 +274,375 @@ class EnsembleClassifier(EnsembleEstimator):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
+        size_raps: Optional[float] = .2,
         groups: Optional[ArrayLike] = None,
         **fit_params,
-    ) -> EnsembleRegressor:
-        """
-        Fit the base estimator under the ``single_estimator_`` attribute.
-        Fit all cross-validated estimator clones
-        and rearrange them into a list, the ``estimators_`` attribute.
-        Out-of-fold conformity scores are stored under
-        the ``conformity_scores_`` attribute.
+    ) -> EnsembleClassifier:
+        # Checks
 
-        Parameters
-        ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Input data.
+        self._check_parameters()
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
+        X, y = indexable(X, y)
+        y = _check_y(y)
 
-        y: ArrayLike of shape (n_samples,)
-            Input labels.
+        sample_weight = cast(Optional[NDArray], sample_weight)
+        groups = cast(Optional[NDArray], groups)
+        sample_weight, X, y = check_null_weight(sample_weight, X, y)
 
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights. If None, then samples are equally weighted.
+        y = cast(NDArray, y)
 
-            By default ``None``.
+        estimator = check_estimator_classification(
+            X,
+            y,
+            cv,
+            self.estimator
+        )
+        self.n_features_in_ = check_n_features_in(X, cv, estimator)
 
-        groups: Optional[ArrayLike] of shape (n_samples,)
-            Group labels for the samples used while splitting the dataset into
-            train/test set.
-
-            By default ``None``.
-
-        **fit_params : dict
-            Additional fit parameters.
-
-        Returns
-        -------
-        EnsembleRegressor
-            The estimator fitted.
-        """
-        # Initialization
-        single_estimator_: RegressorMixin
-        estimators_: List[RegressorMixin] = []
-        full_indexes = np.arange(_num_samples(X))
-        cv = self.cv
-        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
-        estimator = self.estimator
         n_samples = _num_samples(y)
 
-        # Computation
+        self.n_classes_, self.classes_ = self._get_classes_info(
+            estimator, y
+        )
+        enc = LabelEncoder()
+        enc.fit(self.classes_)
+        y_enc = enc.transform(y)
+
+        self.label_encoder_ = enc
+        self._check_target(y)
+
+        # Initialization
+        self.estimators_: List[ClassifierMixin] = []
+        self.k_ = np.empty_like(y, dtype=int)
+        self.n_samples_ = _num_samples(X)
+
+        if self.method == "raps":
+            raps_split = ShuffleSplit(
+                1, test_size=size_raps, random_state=self.random_state
+            )
+            train_raps_index, val_raps_index = next(raps_split.split(X))
+            X, self.X_raps, y_enc, self.y_raps = \
+                _safe_indexing(X, train_raps_index), \
+                _safe_indexing(X, val_raps_index), \
+                _safe_indexing(y_enc, train_raps_index), \
+                _safe_indexing(y_enc, val_raps_index)
+            self.y_raps_no_enc = self.label_encoder_.inverse_transform(
+                self.y_raps
+            )
+            y = self.label_encoder_.inverse_transform(y_enc)
+            y_enc = cast(NDArray, y_enc)
+            n_samples = _num_samples(y_enc)
+            if sample_weight is not None:
+                sample_weight = sample_weight[train_raps_index]
+                sample_weight = cast(NDArray, sample_weight)
+            if groups is not None:
+                groups = groups[train_raps_index]
+                groups = cast(NDArray, groups)
+
+        # Work
         if cv == "prefit":
-            single_estimator_ = estimator
-            self.k_ = np.full(
-                shape=(n_samples, 1), fill_value=np.nan, dtype=float
+            self.single_estimator_ = estimator
+            y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba = self._check_proba_normalized(y_pred_proba)
+
+        else:
+            cv = cast(BaseCrossValidator, cv)
+            self.single_estimator_ = fit_estimator(
+                clone(estimator), X, y, sample_weight, **fit_params
+            )
+            y_pred_proba = np.empty(
+                (n_samples, self.n_classes_),
+                dtype=float
+            )
+            outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                delayed(self._fit_and_predict_oof_model)(
+                    clone(estimator),
+                    X,
+                    y,
+                    train_index,
+                    val_index,
+                    k,
+                    sample_weight,
+                    **fit_params,
+                )
+                for k, (train_index, val_index) in enumerate(
+                    cv.split(X, y_enc, groups)
+                )
+            )
+            (
+                self.estimators_,
+                predictions_list,
+                val_ids_list,
+                val_indices_list
+            ) = map(list, zip(*outputs))
+            predictions = np.concatenate(
+                cast(List[NDArray], predictions_list)
+            )
+            val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
+            val_indices = np.concatenate(
+                cast(List[NDArray], val_indices_list)
+            )
+            self.k_[val_indices] = val_ids
+            y_pred_proba[val_indices] = predictions
+
+            if isinstance(cv, ShuffleSplit):
+                # Should delete values indices that
+                # are not used during calibration
+                self.k_ = self.k_[val_indices]
+                y_pred_proba = y_pred_proba[val_indices]
+                y_enc = y_enc[val_indices]
+                y = cast(NDArray, y)[val_indices]
+
+        # RAPS: compute y_pred and position on the RAPS validation dataset
+        if self.method == "raps":
+            self.y_pred_proba_raps = self.single_estimator_.predict_proba(
+                self.X_raps
+            )
+            self.position_raps = self._get_true_label_position(
+                self.y_pred_proba_raps,
+                self.y_raps
+            )
+
+        # Conformity scores
+        if self.method == "naive":
+            self.conformity_scores_ = np.empty(
+                y_pred_proba.shape,
+                dtype="float"
+            )
+        elif self.method in ["score", "lac"]:
+            self.conformity_scores_ = np.take_along_axis(
+                1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1
+            )
+        elif self.method in ["cumulated_score", "aps", "raps"]:
+            self.conformity_scores_, self.cutoff = (
+                self._get_true_label_cumsum_proba(
+                    y,
+                    y_pred_proba
+                )
+            )
+            y_proba_true = np.take_along_axis(
+                y_pred_proba, y_enc.reshape(-1, 1), axis=1
+            )
+            random_state = check_random_state(self.random_state)
+            u = random_state.uniform(size=len(y_pred_proba)).reshape(-1, 1)
+            self.conformity_scores_ -= u * y_proba_true
+        elif self.method == "top_k":
+            # Here we reorder the labels by decreasing probability
+            # and get the position of each label from decreasing
+            # probability
+            self.conformity_scores_ = self._get_true_label_position(
+                y_pred_proba,
+                y_enc
             )
         else:
-            single_estimator_ = self._fit_oof_estimator(
-                clone(estimator),
-                X,
-                y,
-                full_indexes,
-                sample_weight,
-                **fit_params
+            raise ValueError(
+                "Invalid method. "
+                f"Allowed values are {self.valid_methods_}."
             )
-            cv = cast(BaseCrossValidator, cv)
-            self.k_ = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y, groups)),
-                fill_value=np.nan,
-                dtype=float,
-            )
-            if self.method == "naive":
-                estimators_ = [single_estimator_]
-            else:
-                estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
-                    delayed(self._fit_oof_estimator)(
-                        clone(estimator),
-                        X,
-                        y,
-                        train_index,
-                        sample_weight,
-                        **fit_params
-                    )
-                    for train_index, _ in cv.split(X, y, groups)
-                )
-                # In split-CP, we keep only the model fitted on train dataset
-                if self.use_split_method_:
-                    single_estimator_ = estimators_[0]
 
-        self.single_estimator_ = single_estimator_
-        self.estimators_ = estimators_
+        if isinstance(cv, ShuffleSplit):
+            self.single_estimator_ = self.estimators_[0]
 
         return self
 
     def predict(
         self,
         X: ArrayLike,
-        ensemble: bool = False,
-        return_multi_pred: bool = True
-    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
-        """
-        Predict target from X. It also computes the prediction per train sample
-        for each test sample according to ``self.method``.
+        alpha: Optional[Union[float, Iterable[float]]] = None,
+        include_last_label: Optional[Union[bool, str]] = True,
+        agg_scores: Optional[str] = "mean"
+    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
 
-        Parameters
-        ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Test data.
-
-        ensemble: bool
-            Boolean determining whether the predictions are ensembled or not.
-            If ``False``, predictions are those of the model trained on the
-            whole training set.
-            If ``True``, predictions from perturbed models are aggregated by
-            the aggregation function specified in the ``agg_function``
-            attribute.
-
-            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
-
-            By default ``False``.
-
-        return_multi_pred: bool
-            If ``True`` the method returns the predictions and the multiple
-            predictions (3 arrays). If ``False`` the method return the
-            simple predictions only.
-
-        Returns
-        -------
-        Tuple[NDArray, NDArray, NDArray]
-            - Predictions
-            - The multiple predictions for the lower bound of the intervals.
-            - The multiple predictions for the upper bound of the intervals.
-        """
+        if self.method == "top_k":
+            agg_scores = "mean"
+        # Checks
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
+        include_last_label = self._check_include_last_label(include_last_label)
+        alpha = cast(Optional[NDArray], check_alpha(alpha))
         check_is_fitted(self, self.fit_attributes)
-
+        lambda_star, k_star = None, None
+        # Estimate prediction sets
         y_pred = self.single_estimator_.predict(X)
-        if not return_multi_pred and not ensemble:
+
+        if alpha is None:
             return y_pred
 
-        if self.method in self.no_agg_methods_ or self.use_split_method_:
-            y_pred_multi_low = y_pred[:, np.newaxis]
-            y_pred_multi_up = y_pred[:, np.newaxis]
-        else:
-            y_pred_multi = self._pred_multi(X)
+        n = len(self.conformity_scores_)
 
-            if self.method == "minmax":
-                y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
-                y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
-            elif self.method == "plus":
-                y_pred_multi_low = y_pred_multi
-                y_pred_multi_up = y_pred_multi
+        # Estimate of probabilities from estimator(s)
+        # In all cases: len(y_pred_proba.shape) == 3
+        # with  (n_test, n_classes, n_alpha or n_train_samples)
+        alpha_np = cast(NDArray, alpha)
+        check_alpha_and_n_samples(alpha_np, n)
+        if cv == "prefit":
+            y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba = np.repeat(
+                y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
+            )
+        else:
+            y_pred_proba_k = np.asarray(
+                Parallel(
+                    n_jobs=self.n_jobs, verbose=self.verbose
+                )(
+                    delayed(self._predict_oof_model)(estimator, X)
+                    for estimator in self.estimators_
+                )
+            )
+            if agg_scores == "crossval":
+                y_pred_proba = np.moveaxis(y_pred_proba_k[self.k_], 0, 2)
+            elif agg_scores == "mean":
+                y_pred_proba = np.mean(y_pred_proba_k, axis=0)
+                y_pred_proba = np.repeat(
+                    y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
+                )
             else:
-                y_pred_multi_low = y_pred[:, np.newaxis]
-                y_pred_multi_up = y_pred[:, np.newaxis]
+                raise ValueError("Invalid 'agg_scores' argument.")
+        # Check that sum of probas is equal to 1
+        y_pred_proba = self._check_proba_normalized(y_pred_proba, axis=1)
 
-            if ensemble:
-                y_pred = aggregate_all(self.agg_function, y_pred_multi)
+        # Choice of the quantile
+        check_alpha_and_n_samples(alpha_np, n)
 
-        if return_multi_pred:
-            return y_pred, y_pred_multi_low, y_pred_multi_up
+        if self.method == "naive":
+            self.quantiles_ = 1 - alpha_np
         else:
-            return y_pred
+            if (cv == "prefit") or (agg_scores in ["mean"]):
+                if self.method == "raps":
+                    check_alpha_and_n_samples(alpha_np, len(self.X_raps))
+                    k_star = compute_quantiles(
+                        self.position_raps,
+                        alpha_np
+                    ) + 1
+                    y_pred_proba_raps = np.repeat(
+                        self.y_pred_proba_raps[:, :, np.newaxis],
+                        len(alpha_np),
+                        axis=2
+                    )
+                    lambda_star = self._find_lambda_star(
+                        y_pred_proba_raps,
+                        alpha_np,
+                        include_last_label,
+                        k_star
+                    )
+                    self.conformity_scores_regularized = (
+                        self._regularize_conformity_score(
+                                    k_star,
+                                    lambda_star,
+                                    self.conformity_scores_,
+                                    self.cutoff
+                        )
+                    )
+                    self.quantiles_ = compute_quantiles(
+                        self.conformity_scores_regularized,
+                        alpha_np
+                    )
+                else:
+                    self.quantiles_ = compute_quantiles(
+                        self.conformity_scores_,
+                        alpha_np
+                    )
+            else:
+                self.quantiles_ = (n + 1) * (1 - alpha_np)
+
+        # Build prediction sets
+        if self.method in ["score", "lac"]:
+            if (cv == "prefit") or (agg_scores == "mean"):
+                prediction_sets = np.greater_equal(
+                    y_pred_proba - (1 - self.quantiles_), -EPSILON
+                )
+            else:
+                y_pred_included = np.less_equal(
+                    (1 - y_pred_proba) - self.conformity_scores_.ravel(),
+                    EPSILON
+                ).sum(axis=2)
+                prediction_sets = np.stack(
+                    [
+                        np.greater_equal(
+                            y_pred_included - _alpha * (n - 1), -EPSILON
+                        )
+                        for _alpha in alpha_np
+                    ], axis=2
+                )
+
+        elif self.method in ["naive", "cumulated_score", "aps", "raps"]:
+            # specify which thresholds will be used
+            if (cv == "prefit") or (agg_scores in ["mean"]):
+                thresholds = self.quantiles_
+            else:
+                thresholds = self.conformity_scores_.ravel()
+            # sort labels by decreasing probability
+            y_pred_proba_cumsum, y_pred_index_last, y_pred_proba_last = (
+                self._get_last_included_proba(
+                    y_pred_proba,
+                    thresholds,
+                    include_last_label,
+                    lambda_star,
+                    k_star,
+                )
+            )
+            # get the prediction set by taking all probabilities
+            # above the last one
+            if (cv == "prefit") or (agg_scores in ["mean"]):
+                y_pred_included = np.greater_equal(
+                    y_pred_proba - y_pred_proba_last, -EPSILON
+                )
+            else:
+                y_pred_included = np.less_equal(
+                    y_pred_proba - y_pred_proba_last, EPSILON
+                )
+            # remove last label randomly
+            if include_last_label == "randomized":
+                y_pred_included = self._add_random_tie_breaking(
+                    y_pred_included,
+                    y_pred_index_last,
+                    y_pred_proba_cumsum,
+                    y_pred_proba_last,
+                    thresholds,
+                    lambda_star,
+                    k_star
+                )
+            if (cv == "prefit") or (agg_scores in ["mean"]):
+                prediction_sets = y_pred_included
+            else:
+                # compute the number of times the inequality is verified
+                prediction_sets_summed = y_pred_included.sum(axis=2)
+                prediction_sets = np.less_equal(
+                    prediction_sets_summed[:, :, np.newaxis]
+                    - self.quantiles_[np.newaxis, np.newaxis, :],
+                    EPSILON
+                )
+        elif self.method == "top_k":
+            y_pred_proba = y_pred_proba[:, :, 0]
+            index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
+            y_pred_index_last = np.stack(
+                [
+                    index_sorted[:, quantile]
+                    for quantile in self.quantiles_
+                ], axis=1
+            )
+            y_pred_proba_last = np.stack(
+                [
+                    np.take_along_axis(
+                        y_pred_proba,
+                        y_pred_index_last[:, iq].reshape(-1, 1),
+                        axis=1
+                    )
+                    for iq, _ in enumerate(self.quantiles_)
+                ], axis=2
+            )
+            prediction_sets = np.greater_equal(
+                y_pred_proba[:, :, np.newaxis]
+                - y_pred_proba_last,
+                -EPSILON
+            )
+        else:
+            raise ValueError(
+                "Invalid method. "
+                f"Allowed values are {self.valid_methods_}."
+            )
+        return y_pred, prediction_sets
+
