@@ -5,3 +5,4 @@ pandas
 pytest
 pytest-cov
 typed-ast
+joblib == 1.3.2
