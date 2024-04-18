@@ -1047,6 +1047,46 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         return n_classes, classes
 
+    def _check_fit_parameter(self, X, y, sample_weight, groups):
+        self._check_parameters()
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
+        X, y = indexable(X, y)
+        y = _check_y(y)
+
+        sample_weight = cast(Optional[NDArray], sample_weight)
+        groups = cast(Optional[NDArray], groups)
+        sample_weight, X, y = check_null_weight(sample_weight, X, y)
+
+        y = cast(NDArray, y)
+
+        estimator = check_estimator_classification(
+            X,
+            y,
+            cv,
+            self.estimator
+        )
+        self.n_features_in_ = check_n_features_in(X, cv, estimator)
+
+        n_samples = _num_samples(y)
+
+        self.n_classes_, self.classes_ = self._get_classes_info(
+            estimator, y
+        )
+        enc = LabelEncoder()
+        enc.fit(self.classes_)
+        y_enc = enc.transform(y)
+
+        self.label_encoder_ = enc
+        self._check_target(y)
+
+        return (
+            estimator, cv, X, y, y_enc,
+            sample_weight, groups,
+            n_samples
+        )
+
     def fit(
         self,
         X: ArrayLike,
@@ -1097,38 +1137,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             The model itself.
         """
         # Checks
-        self._check_parameters()
-        cv = check_cv(
-            self.cv, test_size=self.test_size, random_state=self.random_state
+        (
+            estimator, cv, X, y, y_enc,
+            sample_weight, groups,
+            n_samples
+        ) = self._check_fit_parameter(
+            X, y, sample_weight, groups
         )
-        X, y = indexable(X, y)
-        y = _check_y(y)
-
-        sample_weight = cast(Optional[NDArray], sample_weight)
-        groups = cast(Optional[NDArray], groups)
-        sample_weight, X, y = check_null_weight(sample_weight, X, y)
-
-        y = cast(NDArray, y)
-
-        estimator = check_estimator_classification(
-            X,
-            y,
-            cv,
-            self.estimator
-        )
-        self.n_features_in_ = check_n_features_in(X, cv, estimator)
-
-        n_samples = _num_samples(y)
-
-        self.n_classes_, self.classes_ = self._get_classes_info(
-            estimator, y
-        )
-        enc = LabelEncoder()
-        enc.fit(self.classes_)
-        y_enc = enc.transform(y)
-
-        self.label_encoder_ = enc
-        self._check_target(y)
 
         # Initialization
         self.estimators_: List[ClassifierMixin] = []
