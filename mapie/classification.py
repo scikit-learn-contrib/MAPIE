@@ -1087,6 +1087,31 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             n_samples
         )
 
+    def _split_raps_data(self, X, y_enc, sample_weight, groups, size_raps):
+        raps_split = ShuffleSplit(
+                1, test_size=size_raps, random_state=self.random_state
+            )
+        train_raps_index, val_raps_index = next(raps_split.split(X))
+        X, self.X_raps, y_enc, self.y_raps = \
+            _safe_indexing(X, train_raps_index), \
+            _safe_indexing(X, val_raps_index), \
+            _safe_indexing(y_enc, train_raps_index), \
+            _safe_indexing(y_enc, val_raps_index)
+        self.y_raps_no_enc = self.label_encoder_.inverse_transform(
+            self.y_raps
+        )
+        y = self.label_encoder_.inverse_transform(y_enc)
+        y_enc = cast(NDArray, y_enc)
+        n_samples = _num_samples(y_enc)
+        if sample_weight is not None:
+            sample_weight = sample_weight[train_raps_index]
+            sample_weight = cast(NDArray, sample_weight)
+        if groups is not None:
+            groups = groups[train_raps_index]
+            groups = cast(NDArray, groups)
+
+        return X, y_enc, y, n_samples, sample_weight, groups
+
     def fit(
         self,
         X: ArrayLike,
@@ -1151,27 +1176,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self.n_samples_ = _num_samples(X)
 
         if self.method == "raps":
-            raps_split = ShuffleSplit(
-                1, test_size=size_raps, random_state=self.random_state
+            (
+                X, y_enc, y, n_samples,
+                sample_weight, groups
+            ) = self._split_raps_data(
+                X, y_enc, sample_weight,
+                groups, size_raps
             )
-            train_raps_index, val_raps_index = next(raps_split.split(X))
-            X, self.X_raps, y_enc, self.y_raps = \
-                _safe_indexing(X, train_raps_index), \
-                _safe_indexing(X, val_raps_index), \
-                _safe_indexing(y_enc, train_raps_index), \
-                _safe_indexing(y_enc, val_raps_index)
-            self.y_raps_no_enc = self.label_encoder_.inverse_transform(
-                self.y_raps
-            )
-            y = self.label_encoder_.inverse_transform(y_enc)
-            y_enc = cast(NDArray, y_enc)
-            n_samples = _num_samples(y_enc)
-            if sample_weight is not None:
-                sample_weight = sample_weight[train_raps_index]
-                sample_weight = cast(NDArray, sample_weight)
-            if groups is not None:
-                groups = groups[train_raps_index]
-                groups = cast(NDArray, groups)
 
         # Work
         if cv == "prefit":
