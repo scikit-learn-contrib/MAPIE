@@ -347,7 +347,7 @@ def test_correct_results_binary(cv: str) -> None:
     np.testing.assert_array_almost_equal(  # type:ignore
         results_binary[cv]["y_score"],
         pred_,
-        decimal=1e-2
+        decimal=2
     )
     np.testing.assert_allclose(  # type:ignore
         results_binary[cv]["top_label_ece"],
