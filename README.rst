@@ -8,8 +8,9 @@
 .. |Codecov| image:: https://codecov.io/gh/scikit-learn-contrib/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
    :target: https://codecov.io/gh/scikit-learn-contrib/MAPIE
 
-.. |ReadTheDocs| image:: https://readthedocs.org/projects/mapie/badge
-   :target: https://mapie.readthedocs.io/en/latest
+.. |ReadTheDocs| image:: https://readthedocs.org/projects/mapie/badge/?version=stable
+    :target: https://mapie.readthedocs.io/en/stable/?badge=stable
+    :alt: Documentation Status
 
 .. |License| image:: https://img.shields.io/github/license/simai-ml/MAPIE
    :target: https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE
