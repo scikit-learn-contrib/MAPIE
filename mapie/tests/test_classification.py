@@ -935,6 +935,11 @@ class Float32OuputModel:
         return {"prefit": False}
 
 
+def do_nothing(*args: Any) -> None:
+    "Mock function that does nothing."
+    pass
+
+
 def test_mapie_classifier_sklearn_estim() -> None:
     """Test that MapieClassifier is an sklearn estimator"""
     check_estimator(MapieClassifier())
