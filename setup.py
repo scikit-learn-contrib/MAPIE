@@ -21,9 +21,9 @@ PROJECT_URLS = {
 LICENSE = "new BSD"
 MAINTAINER = "T. Cordier, V. Blot, L. Lacombe"
 MAINTAINER_EMAIL = (
-    "tcordier@quantmetry.com, "
-    "vblot@quantmetry.com, "
-    "llacombe@quantmetry.com"
+    "thibault.a.cordier@capgemini.com, "
+    "vincent.blot@capgemini.com, "
+    "louis.lacombe@capgemini.com"
 )
 PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
