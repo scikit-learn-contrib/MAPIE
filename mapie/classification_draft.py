@@ -1194,6 +1194,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             self.conformity_scores_ = np.take_along_axis(
                 1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1
             )
+
+            print()
+            print("conformity_scores",self.conformity_scores_ )
+            print()
+            print("y_enc", y_enc)
+
         elif self.method in ["cumulated_score", "aps", "raps"]:
             self.conformity_scores_, self.cutoff = (
                 self._get_true_label_cumsum_proba(
@@ -1296,30 +1302,52 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
         print()
-        print("use of predict")
+        print("USE OF PREDICT")
         if self.method == "top_k":
             agg_scores = "mean"
         # Checks
         cv = check_cv(
             self.cv, test_size=self.test_size, random_state=self.random_state
         )
+        print()
+        print("cv",cv)
         include_last_label = self._check_include_last_label(include_last_label)
+        print()
+        print("include_last_label",include_last_label)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
+        print()
+        print("alpha", alpha)
         check_is_fitted(self, self.fit_attributes)
         lambda_star, k_star = None, None
         # Estimate prediction sets
+
+        print()
+        print(self.estimator_.single_estimator_)
         y_pred = self.estimator_.single_estimator_.predict(X)
+        print()
+        print("y_pred", y_pred)
 
         if alpha is None:
             return y_pred
 
         n = len(self.conformity_scores_)
+        
+        print()
+        print("n",n)
+
+        print()
+        print("alpha",alpha)
 
         # Estimate of probabilities from estimator(s)
         # In all cases: len(y_pred_proba.shape) == 3
         # with  (n_test, n_classes, n_alpha or n_train_samples)
         alpha_np = cast(NDArray, alpha)
+
+        print()
+        print("alpha_np",alpha_np)
+
         check_alpha_and_n_samples(alpha_np, n)
+        
         y_pred_proba = self.estimator_.predict(
             X, agg_scores
         )

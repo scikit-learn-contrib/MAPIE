@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
+import inspect
 from joblib import Parallel, delayed
 from sklearn.base import ClassifierMixin, RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
@@ -223,6 +224,7 @@ class EnsembleClassifier(EnsembleEstimator):
                 y_pred_proba
             )
         return y_pred_proba
+        
 
     def _predict_proba_calib_oof_estimator(
         self,
@@ -253,13 +255,19 @@ class EnsembleClassifier(EnsembleEstimator):
         print()
         print("EC : use of _predict_proba_calib_oof_estimator")
         X_val = _safe_indexing(X, val_index)
+        print()
+        print("X_val:", X_val, "shape", X_val.shape)
         if _num_samples(X_val) > 0:
             y_pred_proba = self._predict_proba_oof_estimator(
                 estimator, X_val
             )
+            print()
+            print("y_pred_proba", y_pred_proba, "shape:", y_pred_proba.shape)
         else:
             y_pred_proba = np.array([])
         val_id = np.full(len(X_val), k, dtype=int)
+        print()
+        print("val_id :", val_id, "val_index: ", val_index)
         return y_pred_proba, val_id, val_index
 
     def _aggregate_with_mask(
@@ -368,26 +376,35 @@ class EnsembleClassifier(EnsembleEstimator):
             The predictions.
         """
         print()
-        print("EC : use of predict_proba_calib")
+        print("EC : USE OF PREDICT_PROBA_CALIB")
         check_is_fitted(self, self.fit_attributes)
 
         if self.cv == "prefit":
             y_pred_proba = self.single_estimator_.predict_proba(X)
+            print()
+            print("dans le cas prefit: ", y_pred_proba)
         else:
             y_pred_proba = np.empty(
                 (len(X), self.n_classes),
                 dtype=float
             )
+            print()
+            print("y_pred_proba", y_pred_proba,"y_pred_proba_shape", y_pred_proba.shape, "y_pred_proba_max :", np.max(y_pred_proba), "y_pred_proba_min :", np.min(y_pred_proba))
             cv = cast(BaseCrossValidator, self.cv)
+            print()
+            print("cv", cv)
             outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                delayed(self._predict_proba_calib_oof_estimator)(
+                delayed( 
+                    self._predict_proba_calib_oof_estimator)(
                     estimator, X, calib_index, k
                 )
+
                 for k, ((_, calib_index), estimator) in enumerate(zip(
                     cv.split(X, y, groups),
                     self.estimators_
                 ))
             )
+
             (
                 predictions_list,
                 val_ids_list,
@@ -397,20 +414,38 @@ class EnsembleClassifier(EnsembleEstimator):
             predictions = np.concatenate(
                 cast(List[NDArray], predictions_list)
             )
+            print()
+            print("predictions",predictions, "shape", predictions.shape)
             val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
+            print()
+            print("val_ids", val_ids)
             val_indices = np.concatenate(
                 cast(List[NDArray], val_indices_list)
             )
+            print()
+            print("val_indices", val_indices)
             self.k_[val_indices] = val_ids
+            print()
+            print("self.k_[val_indices]", self.k_[val_indices])
             y_pred_proba[val_indices] = predictions
+            print()
+            print("y_pred_proba[val_indices]: ", y_pred_proba[val_indices])
 
             if isinstance(cv, ShuffleSplit):
                 # Should delete values indices that
                 # are not used during calibration
+                print()
+                print("on est dans le cas cv = shuffle split")
                 self.k_ = self.k_[val_indices]
+                print()
+                print("self.k_ :", self.k_)
                 y_pred_proba = y_pred_proba[val_indices]
+                print()
+                print("y_pred_proba", y_pred_proba)
                 y_enc = y_enc[val_indices]
+                print("y_enc", y_enc)
                 y = cast(NDArray, y)[val_indices]
+                print("y", y)
 
         return y_pred_proba, y, y_enc
 
@@ -514,7 +549,6 @@ class EnsembleClassifier(EnsembleEstimator):
             # In split-CP, we keep only the model fitted on train dataset
             if self.use_split_method_:
                 single_estimator_ = estimators_[0]
-
         self.single_estimator_ = single_estimator_
         print()
         print("self.single_estimator_", self.single_estimator_)
@@ -577,6 +611,7 @@ class EnsembleClassifier(EnsembleEstimator):
                     for estimator in self.estimators_
                 )
             )
+
             if agg_scores == "crossval":
                 y_pred_proba = np.moveaxis(y_pred_proba_k[self.k_], 0, 2)
             elif agg_scores == "mean":
@@ -584,4 +619,5 @@ class EnsembleClassifier(EnsembleEstimator):
             else:
                 raise ValueError("Invalid 'agg_scores' argument.")
         # y_pred_proba = self._check_proba_normalized(y_pred_proba, axis=1)
+
         return y_pred_proba
