@@ -344,6 +344,17 @@ class EnsembleClassifier(EnsembleEstimator):
         y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
         return y_pred_multi
 
+
+    def process_estimator(self, k, calib_index, estimator, X):
+        print()
+        print("USE OF PROCESS ESTIMATOR")
+        print()
+        print("k:", k, "calib_index:", calib_index, "estimator:",estimator)  # Affichage des valeurs
+        return self._predict_proba_calib_oof_estimator(estimator, X, calib_index, k)
+
+
+
+
     def predict_proba_calib(
         self,
         X: ArrayLike,
@@ -393,6 +404,12 @@ class EnsembleClassifier(EnsembleEstimator):
             cv = cast(BaseCrossValidator, self.cv)
             print()
             print("cv", cv)
+
+            # outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+            # delayed(self.process_estimator)(k, calib_index, estimator, X)
+            # for k, ((_, calib_index), estimator) in enumerate(zip(cv.split(X, y, groups), self.estimators_))
+            # )
+
             outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed( 
                     self._predict_proba_calib_oof_estimator)(
@@ -548,13 +565,15 @@ class EnsembleClassifier(EnsembleEstimator):
             )
             # In split-CP, we keep only the model fitted on train dataset
             if self.use_split_method_:
+                print()
+                print("estimators_", estimators_)
                 single_estimator_ = estimators_[0]
         self.single_estimator_ = single_estimator_
         print()
         print("self.single_estimator_", self.single_estimator_)
         self.estimators_ = estimators_
         print()
-        print("self.estimators_", self.estimators_)
+        print("estimators_", estimators_)
 
         return self
 

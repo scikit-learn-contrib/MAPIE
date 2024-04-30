@@ -1169,6 +1169,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         )
 
         self.estimator_.fit(X, y, y_enc, sample_weight, groups, **fit_params)
+        print()
+        print("self.estimator_", self.estimator_)
         
         y_pred_proba, y, y_enc = self.estimator_.predict_proba_calib(
             X, y, y_enc, groups
@@ -1196,7 +1198,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
 
             print()
-            print("conformity_scores",self.conformity_scores_ )
+            print("conformity_scores",self.conformity_scores_, "shape", self.conformity_scores_.shape)
             print()
             print("y_enc", y_enc)
 
@@ -1356,7 +1358,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             y_pred_proba = np.repeat(
                 y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
             )
-
         # Choice of the quantile
         check_alpha_and_n_samples(alpha_np, n)
 
@@ -1407,6 +1408,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 prediction_sets = np.greater_equal(
                     y_pred_proba - (1 - self.quantiles_), -EPSILON
                 )
+
+                print()
+                print("self.quantiles_", self.quantiles_)
+                print()
+                print("prediction_sets", prediction_sets)
+
             else:
                 y_pred_included = np.less_equal(
                     (1 - y_pred_proba) - self.conformity_scores_.ravel(),
