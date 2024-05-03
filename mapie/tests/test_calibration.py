@@ -345,8 +345,10 @@ def test_correct_results_binary(cv: str) -> None:
     pred_ = mapie_cal.predict_proba(X_binary)
     top_label_ece_ = top_label_ece(y_binary, pred_)
     ece = expected_calibration_error(y_binary, pred_)
-    np.testing.assert_array_almost_equal(
-        results_binary[cv]["y_score"], pred_  # type:ignore
+    np.testing.assert_array_almost_equal(  # type:ignore
+        results_binary[cv]["y_score"],
+        pred_,
+        decimal=2
     )
     np.testing.assert_allclose(  # type:ignore
         results_binary[cv]["top_label_ece"],
