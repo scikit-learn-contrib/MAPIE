@@ -96,7 +96,7 @@ plt.show()
 # 2 Recall control risk with CRC and RCPS
 # ---------------------------------------
 # 2.1 Fitting MapieMultiLabelClassifier
-# ------------------------------------
+# -------------------------------------
 # MapieMultiLabelClassifier will be fitted with RCPS and CRC methods. For the
 # RCPS method, we will test all three Upper Confidence Bounds (Hoeffding,
 # Bernstein and Waudby-Smith–Ramdas).

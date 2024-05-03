@@ -26,10 +26,15 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
+    # "sphinx.ext.autosectionlabel",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.mathjax",
     "sphinx-prompt",
     "sphinx_gallery.gen_gallery",
     "numpydoc",
 ]
+mathjax_path = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "_templates", "Thumbs.db", ".DS_Store"]
@@ -102,12 +107,18 @@ intersphinx_mapping = {
 # -- Options for sphinx-gallery -----------------------------------------------
 
 # Generate the plot for the gallery
-plot_gallery = True
+plot_gallery = "True"
 
 sphinx_gallery_conf = {
+    "examples_dirs": ["../examples"],
+    "gallery_dirs": [
+        "examples_regression",
+        "examples_classification",
+        "examples_multilabel_classification",
+        "examples_calibration",
+    ],
     "doc_module": "mapie",
+    "filename_pattern": "**/plot_*.py",
     "backreferences_dir": os.path.join("generated"),
-    "examples_dirs": "../examples",
-    "gallery_dirs": "auto_examples",
     "reference_url": {"mapie": None},
 }

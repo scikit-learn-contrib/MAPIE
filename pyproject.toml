@@ -69,6 +69,7 @@ setuptools-scm = ">=8"  # needed for the versioning
 sphinx = "*"
 sphinx-gallery = "*"
 sphinx-prompt = "*"
+pandas = "*"
 
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }

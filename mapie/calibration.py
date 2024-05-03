@@ -31,10 +31,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     Parameters
     ----------
-    estimator : Optional[ClassifierMixin]
+    estimator: Optional[ClassifierMixin]
         Any classifier with scikit-learn API
-        (i.e. with fit, predict, and predict_proba methods), by default
-        ``None``.
+        (i.e. with fit, predict, and predict_proba methods), by default ``None``.
         If ``None``, estimator defaults to a ``LogisticRegression`` instance.
 
     method: Optional[str]
@@ -46,7 +45,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
         By default "top_label".
 
-    calibrator : Optional[Union[str, RegressorMixin]]
+    calibrator: Optional[Union[str, RegressorMixin]]
         Any calibrator with scikit-learn API
         (i.e. with fit, predict, and predict_proba methods), by default
         ``None``.
@@ -90,6 +89,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     [1] Gupta, Chirag, and Aaditya K. Ramdas. "Top-label calibration
     and multiclass-to-binary reductions." arXiv preprint
     arXiv:2107.08353 (2021).
+
     """
 
     fit_attributes = [
