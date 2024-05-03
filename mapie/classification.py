@@ -9,18 +9,25 @@ from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
 from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
-from sklearn.utils.multiclass import (check_classification_targets,
-                                      type_of_target)
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.multiclass import check_classification_targets, type_of_target
+from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
 
 from ._machine_precision import EPSILON
 from ._typing import ArrayLike, NDArray
 from .metrics import classification_mean_width_score
-from .utils import (check_alpha, check_alpha_and_n_samples, check_cv,
-                    check_estimator_classification, check_n_features_in,
-                    check_n_jobs, check_null_weight, check_verbose,
-                    compute_quantiles, fit_estimator, fix_number_of_classes)
+from .utils import (
+    check_alpha,
+    check_alpha_and_n_samples,
+    check_cv,
+    check_estimator_classification,
+    check_n_features_in,
+    check_n_jobs,
+    check_null_weight,
+    check_verbose,
+    compute_quantiles,
+    fit_estimator,
+    fix_number_of_classes,
+)
 
 
 class MapieClassifier(BaseEstimator, ClassifierMixin):

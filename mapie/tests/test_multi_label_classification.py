@@ -2,13 +2,9 @@ from typing import Any, Optional
 
 import numpy as np
 import pytest
-from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_multilabel_classification
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.multioutput import MultiOutputClassifier
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 

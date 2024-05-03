@@ -5,25 +5,29 @@ from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 import pytest
-from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
-                                     PredefinedSplit, ShuffleSplit,
-                                     train_test_split)
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import (
+    GroupKFold,
+    KFold,
+    LeaveOneOut,
+    PredefinedSplit,
+    ShuffleSplit,
+    train_test_split,
+)
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
-from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
-                                     GammaConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import (
+    AbsoluteConformityScore,
+    ConformityScore,
+    GammaConformityScore,
+    ResidualNormalisedScore,
+)
 from mapie.estimator.estimator import EnsembleRegressor
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor

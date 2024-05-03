@@ -5,14 +5,10 @@ import numpy as np
 import pytest
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.calibration import _SigmoidCalibration
-from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_classification
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import OneHotEncoder
 
 from mapie.calibration import MapieCalibrator
 from mapie.metrics import expected_calibration_error, top_label_ece

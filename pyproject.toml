@@ -47,13 +47,11 @@ mapie = { path=".", editable=true }
 
 [tool.pixi.feature.lint.dependencies]
 # The version below should be aligned with the one of `.pre-commit-config.yaml`
-black = "23.3.0"
 ruff = "0.4.2"
 
 [tool.pixi.feature.lint.tasks]
-black = { cmd = "black --check --diff mapie && black --check --diff examples" }
 ruff = { cmd = "ruff check --output-format=full mapie && ruff check --output-format=full examples" }
-lint = { depends_on = ["black", "ruff"]}
+lint = { depends_on = ["ruff"]}
 
 [tool.pixi.feature.test.dependencies]
 pytest = "*"
@@ -80,19 +78,6 @@ clean-doc = { cmd = "rm -rf _build", cwd = "doc" }
 doc = ["doc"]
 lint = ["lint"]
 test = ["test"]
-
-[tool.black]
-line-length = 88
-target_version = ['py38', 'py39', 'py310']
-preview = true
-exclude = '''
-/(
-    \.eggs         # exclude a few common directories in the
-  | \.git          # root of the project
-  | \.vscode
-)/
-'''
-force-exclude = "mapie/_version.py"
 
 [tool.ruff]
 # max line length for black

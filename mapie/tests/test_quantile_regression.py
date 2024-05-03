@@ -6,14 +6,10 @@ from typing import Any, Tuple
 import numpy as np
 import pytest
 from sklearn.base import BaseEstimator, RegressorMixin, clone
-from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestClassifier
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 

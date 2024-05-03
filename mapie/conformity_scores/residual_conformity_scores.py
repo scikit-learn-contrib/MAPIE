@@ -6,8 +6,7 @@ from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.utils.validation import (check_is_fitted, check_random_state,
-                                      indexable)
+from sklearn.utils.validation import check_is_fitted, check_random_state, indexable
 
 from mapie._machine_precision import EPSILON
 from mapie._typing import ArrayLike, NDArray

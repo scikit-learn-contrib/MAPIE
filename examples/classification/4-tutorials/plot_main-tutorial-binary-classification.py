@@ -35,8 +35,7 @@ from sklearn.naive_bayes import GaussianNB
 
 from mapie._typing import NDArray
 from mapie.classification import MapieClassifier
-from mapie.metrics import (classification_coverage_score,
-                           classification_mean_width_score)
+from mapie.metrics import classification_coverage_score, classification_mean_width_score
 
 ##############################################################################
 # 1. Conformal Prediction method using the softmax score of the true label
