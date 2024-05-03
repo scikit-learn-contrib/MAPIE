@@ -29,9 +29,6 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.11"
             numpy-version: 1.25.2
-          - os: ubuntu-latest
-            python-version: "3.12"
-            numpy-version: 1.25.2
           - os: windows-latest
             python-version: "3.11"
             numpy-version: 1.25.2
