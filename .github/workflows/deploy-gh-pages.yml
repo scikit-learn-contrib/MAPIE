@@ -1,0 +1,34 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  deploy-gh-pages:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: prefix-dev/setup-pixi@v0.6.0
+      with:
+        pixi-version: v0.20.1
+        environments: doc
+        frozen: true
+
+    - name: Build documentation
+      run: pixi run build-doc
+
+    - name: Update the main gh-page website
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      uses: peaceiris/actions-gh-pages@v3.6.1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./doc/_build/html
+        commit_message: "[ci skip] ${{ github.event.head_commit.message }}"
