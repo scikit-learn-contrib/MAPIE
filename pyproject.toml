@@ -1,0 +1,132 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "MAPIE"
+dynamic = ["version"]
+authors = [
+  { name="Louis Lacombe", email="louis.lacombe@capgemini.com" },
+]
+description = "A scikit-learn-compatible module for estimating prediction intervals."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "scikit-learn>=1.4.2",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+]
+
+[project.urls]
+Homepage = "https://github.com/scikit-learn-contrib/MAPIE"
+Issues = "https://github.com/scikit-learn-contrib/MAPIE/issues"
+
+[tool.setuptools_scm]
+version_file = "mapie/_version.py"
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
+
+[tool.pixi.dependencies]
+python = ">=3.9"
+scikit-learn = ">=1.4.2"
+
+[tool.pixi.pypi-dependencies]
+mapie = { path=".", editable=true }
+
+[tool.pixi.feature.lint.dependencies]
+# The version below should be aligned with the one of `.pre-commit-config.yaml`
+black = "23.3.0"
+ruff = "0.4.2"
+
+[tool.pixi.feature.lint.tasks]
+black = { cmd = "black --check --diff mapie && black --check --diff examples" }
+ruff = { cmd = "ruff check --output-format=full mapie && ruff check --output-format=full examples" }
+lint = { depends_on = ["black", "ruff"]}
+
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+pytest-cov = "*"
+typing_extensions = "*"
+
+[tool.pixi.feature.test.tasks]
+test = { cmd = "pytest -vsl --cov=mapie --cov-report=xml mapie" }
+
+[tool.pixi.feature.doc.dependencies]
+matplotlib = "*"
+numpydoc = "*"
+pydata-sphinx-theme = "*"
+setuptools-scm = ">=8"  # needed for the versioning
+sphinx = "*"
+sphinx-gallery = "*"
+sphinx-prompt = "*"
+
+[tool.pixi.feature.doc.tasks]
+build-doc = { cmd = "make html", cwd = "doc" }
+clean-doc = { cmd = "rm -rf _build", cwd = "doc" }
+
+[tool.pixi.environments]
+doc = ["doc"]
+lint = ["lint"]
+test = ["test"]
+
+[tool.black]
+line-length = 88
+target_version = ['py38', 'py39', 'py310']
+preview = true
+exclude = '''
+/(
+    \.eggs         # exclude a few common directories in the
+  | \.git          # root of the project
+  | \.vscode
+)/
+'''
+force-exclude = "mapie/_version.py"
+
+[tool.ruff]
+# max line length for black
+line-length = 88
+target-version = "py38"
+exclude=[
+    ".git",
+    "__pycache__",
+    "dist",
+    "doc/_build",
+    "doc/auto_examples",
+    "build",
+    "mapie/_version.py",
+]
+
+[tool.ruff.lint]
+# all rules can be found here: https://beta.ruff.rs/docs/rules/
+select = ["E", "F", "W", "I"]
+ignore=[
+    # space before : (needed for how black formats slicing)
+    "E203",
+    # do not assign a lambda expression, use a def
+    "E731",
+    # do not use variables named 'l', 'O', or 'I'
+    "E741",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# It's fine not to put the import at the top of the file in the examples
+# folder.
+"examples/*"=["E402"]
+"doc/conf.py"=["E402"]
+"doc/_templates/numpydoc_docstring.py"=["F821", "W292"]
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules --color=yes"
+doctest_optionflags = "NORMALIZE_WHITESPACE"

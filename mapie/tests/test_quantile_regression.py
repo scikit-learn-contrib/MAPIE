@@ -4,7 +4,6 @@ from inspect import signature
 from typing import Any, Tuple
 
 import numpy as np
-import pandas as pd
 import pytest
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.compose import ColumnTransformer
@@ -688,50 +687,6 @@ def test_prefit_different_type_list_tuple_array(alpha: float) -> None:
 
     np.testing.assert_allclose(y_pred_prefit_list, y_pred_prefit_array)
     np.testing.assert_allclose(y_pis_prefit_list, y_pis_prefit_array)
-
-
-@pytest.mark.parametrize("estimator", ESTIMATOR)
-def test_pipeline_compatibility(estimator: RegressorMixin) -> None:
-    """Check that MAPIE works on pipeline based on pandas dataframes"""
-    X = pd.DataFrame(
-        {
-            "x_cat": ["A", "A", "B", "A", "A", "B", "A", "B", "B", "B"],
-            "x_num": [0, 1, 1, 4, np.nan, 5, 4, 3, np.nan, 3],
-            "y": [5, 7, 3, 9, 10, 8, 9, 7, 9, 8]
-        }
-    )
-    y = pd.Series([5, 7, 3, 9, 10, 8, 9, 7, 10, 5])
-    X_train_toy, X_calib_toy, y_train_toy, y_calib_toy = train_test_split(
-        X,
-        y,
-        test_size=0.5,
-        random_state=random_state
-    )
-    numeric_preprocessor = Pipeline(
-        [
-            ("imputer", SimpleImputer(strategy="mean")),
-        ]
-    )
-    categorical_preprocessor = Pipeline(
-        steps=[
-            ("encoding", OneHotEncoder(handle_unknown="ignore"))
-        ]
-    )
-    preprocessor = ColumnTransformer(
-        [
-            ("cat", categorical_preprocessor, ["x_cat"]),
-            ("num", numeric_preprocessor, ["x_num"])
-        ]
-    )
-    pipe = make_pipeline(preprocessor, estimator)
-    mapie = MapieQuantileRegressor(pipe, alpha=0.4)
-    mapie.fit(
-        X_train_toy,
-        y_train_toy,
-        X_calib=X_calib_toy,
-        y_calib=y_calib_toy
-    )
-    mapie.predict(X)
 
 
 def test_deprecated_path_warning() -> None:

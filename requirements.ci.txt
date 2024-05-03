@@ -1,7 +1,0 @@
-codecov
-flake8
-mypy
-pandas
-pytest
-pytest-cov
-typed-ast

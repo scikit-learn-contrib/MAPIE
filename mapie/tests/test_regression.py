@@ -4,7 +4,6 @@ from itertools import combinations
 from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
-import pandas as pd
 import pytest
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
@@ -614,36 +613,6 @@ def test_pred_loof_isnan() -> None:
         val_index=[],
     )
     assert len(y_pred) == 0
-
-
-def test_pipeline_compatibility() -> None:
-    """Check that MAPIE works on pipeline based on pandas dataframes"""
-    X = pd.DataFrame(
-        {
-            "x_cat": ["A", "A", "B", "A", "A", "B"],
-            "x_num": [0, 1, 1, 4, np.nan, 5],
-            "y": [5, 7, 3, 9, 10, 8],
-        }
-    )
-    y = pd.Series([5, 7, 3, 9, 10, 8])
-    numeric_preprocessor = Pipeline(
-        [
-            ("imputer", SimpleImputer(strategy="mean")),
-        ]
-    )
-    categorical_preprocessor = Pipeline(
-        steps=[("encoding", OneHotEncoder(handle_unknown="ignore"))]
-    )
-    preprocessor = ColumnTransformer(
-        [
-            ("cat", categorical_preprocessor, ["x_cat"]),
-            ("num", numeric_preprocessor, ["x_num"]),
-        ]
-    )
-    pipe = make_pipeline(preprocessor, LinearRegression())
-    mapie = MapieRegressor(pipe)
-    mapie.fit(X, y)
-    mapie.predict(X)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])

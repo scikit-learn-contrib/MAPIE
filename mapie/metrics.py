@@ -1279,7 +1279,6 @@ def kolmogorov_smirnov_p_value(y_true: NDArray, y_score: NDArray) -> float:
 
     Example
     -------
-    >>> import pandas as pd
     >>> from mapie.metrics import kolmogorov_smirnov_p_value
     >>> y_true = np.array([1, 0, 1, 0, 1, 0])
     >>> y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])
@@ -1446,7 +1445,6 @@ def kuiper_p_value(y_true: NDArray, y_score: NDArray) -> float:
 
     Example
     -------
-    >>> import pandas as pd
     >>> from mapie.metrics import kuiper_p_value
     >>> y_true = np.array([1, 0, 1, 0, 1, 0])
     >>> y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])

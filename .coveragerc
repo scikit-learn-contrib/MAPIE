@@ -1,5 +1,6 @@
-[run]
-omit = mapie/_compatibility.py
+# Configuration for coverage.py
 
-[report]
-omit = mapie/_compatibility.py
+[run]
+branch = True
+source = mapie
+include = */mapie/*
