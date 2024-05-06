@@ -96,6 +96,16 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
     >>> mapie = MapieCalibrator().fit(X_toy, y_toy, random_state=20)
     >>> y_calib = mapie.predict_proba(X_toy)
+    >>> print(y_calib)
+    [[0.84......        nan        nan]
+     [0.75......        nan        nan]
+     [0.62......        nan        nan]
+     [       nan 0.33......        nan]
+     [       nan 0.33......        nan]
+     [       nan 0.33......        nan]
+     [       nan        nan 0.33......]
+     [       nan        nan 0.54......]
+     [       nan        nan 0.66......]]
     """
 
     fit_attributes = [
