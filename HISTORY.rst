@@ -2,6 +2,12 @@
 History
 =======
 
+0.8.3 (2024-**-**)
+------------------
+
+* Fix conda versionning.
+* Reduce precision for test in `MapieCalibrator`.
+
 0.8.3 (2024-03-01)
 ------------------
 
@@ -13,7 +19,7 @@ History
 0.8.2 (2024-01-11)
 ------------------
 
-* * Resolve issue still present in 0.8.1 by updating pandas.
+* Resolve issue still present in 0.8.1 by updating pandas.
 
 0.8.1 (2024-01-11)
 ------------------
