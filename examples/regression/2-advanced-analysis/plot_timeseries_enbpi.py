@@ -164,7 +164,7 @@ width_pfit_enbpi = regression_mean_width_score(
 print(
     "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
     "\nEnbPI without any partial_fit:"
-    f"{coverage_npfit_enbpi :.3f}, {width_npfit_enbpi:.3f}"
+    f"{coverage_npfit_enbpi:.3f}, {width_npfit_enbpi:.3f}"
 )
 print(
     "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
