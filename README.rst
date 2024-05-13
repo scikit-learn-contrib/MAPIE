@@ -172,23 +172,23 @@ and with the financial support from Région Ile de France and Confiance.ai.
 |Quantmetry| |Michelin| |ENS| |Confiance.ai| |IledeFrance|
 
 .. |Quantmetry| image:: https://www.quantmetry.com/wp-content/uploads/2020/08/08-Logo-quant-Texte-noir.svg
-    :height: 25
+    :height: 35
     :target: https://www.quantmetry.com/
 
 .. |Michelin| image:: https://agngnconpm.cloudimg.io/v7/https://dgaddcosprod.blob.core.windows.net/corporate-production/attachments/cls05tqdd9e0o0tkdghwi9m7n-clooe1x0c3k3x0tlu4cxi6dpn-bibendum-salut.full.png
-    :height: 25
+    :height: 35
     :target: https://www.michelin.com/en/
 
 .. |ENS| image:: https://file.diplomeo-static.com/file/00/00/01/34/13434.svg
-    :height: 25
+    :height: 35
     :target: https://ens-paris-saclay.fr/en
 
 .. |Confiance.ai| image:: https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg
-    :height: 25
+    :height: 35
     :target: https://www.confiance.ai/
 
 .. |IledeFrance| image:: https://www.iledefrance.fr/sites/default/files/logo/2024-02/logoGagnerok.svg
-    :height: 25
+    :height: 35
     :target: https://www.iledefrance.fr/
 
 
