@@ -118,7 +118,7 @@ sphinx_gallery_conf = {
         "examples_calibration",
     ],
     "doc_module": "mapie",
-    "filename_pattern": "**/plot_*.py",
+    "filename_pattern": "**/**/plot_*.py",
     "backreferences_dir": os.path.join("generated"),
     "reference_url": {"mapie": None},
 }
