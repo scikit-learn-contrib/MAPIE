@@ -33,7 +33,7 @@ jobs:
             python-version: "3.11"
             numpy-version: 1.25.2
           - os: macos-latest
-            python-version: "3.11"
+            python-version: "3.10"
             numpy-version: 1.25.2
     defaults:
       run:
@@ -48,6 +48,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           environment-file: environment.ci.yml
           channels: defaults, conda-forge
+          miniconda-version: "latest"
       - name: Install numpy
         run: conda install numpy=${{ matrix.numpy-version }}
       - name: Check linting
