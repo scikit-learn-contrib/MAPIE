@@ -23,6 +23,11 @@ from .utils import (check_alpha, check_alpha_and_n_samples, check_cv,
                     compute_quantiles, fit_estimator, fix_number_of_classes)
 
 
+from mapie.conformity_scores.utils_classification_conformity_scores import (
+    get_true_label_position,
+)
+
+
 class MapieClassifier(BaseEstimator, ClassifierMixin):
     """
     Prediction sets for classification.
@@ -737,39 +742,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         )
         return conf_score
 
-    def _get_true_label_position(
-        self,
-        y_pred_proba: NDArray,
-        y: NDArray
-    ) -> NDArray:
-        """
-        Return the sorted position of the true label in the
-        prediction
-
-        Parameters
-        ----------
-        y_pred_proba: NDArray of shape (n_samples, n_calsses)
-            Model prediction.
-
-        y: NDArray of shape (n_samples)
-            Labels.
-
-        Returns
-        -------
-        NDArray of shape (n_samples, 1)
-            Position of the true label in the prediction.
-        """
-        index = np.argsort(
-                np.fliplr(np.argsort(y_pred_proba, axis=1))
-            )
-        position = np.take_along_axis(
-            index,
-            y.reshape(-1, 1),
-            axis=1
-        )
-
-        return position
-
     def _get_last_included_proba(
         self,
         y_pred_proba: NDArray,
@@ -1217,7 +1189,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             self.y_pred_proba_raps = self.single_estimator_.predict_proba(
                 self.X_raps
             )
-            self.position_raps = self._get_true_label_position(
+            self.position_raps = get_true_label_position(
                 self.y_pred_proba_raps,
                 self.y_raps
             )
@@ -1249,7 +1221,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             # Here we reorder the labels by decreasing probability
             # and get the position of each label from decreasing
             # probability
-            self.conformity_scores_ = self._get_true_label_position(
+            self.conformity_scores_ = get_true_label_position(
                 y_pred_proba,
                 y_enc
             )
