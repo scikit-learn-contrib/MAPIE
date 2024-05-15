@@ -27,7 +27,7 @@ class EnsembleClassifier(EnsembleEstimator):
 
      Parameters
      ----------
-     estimator: Optional[RegressorMixin]
+     estimator: Optional[ClaMixin]
          Any regressor with scikit-learn API
          (i.e. with ``fit`` and ``predict`` methods).
          If ``None``, estimator defaults to a ``LinearRegression`` instance.
@@ -98,7 +98,7 @@ class EnsembleClassifier(EnsembleEstimator):
 
      Attributes
      ----------
-     single_estimator_: sklearn.RegressorMixin
+     single_estimator_: sklearn.ClassifierMixin
          Estimator fitted on the whole training set.
 
      estimators_: list
@@ -151,7 +151,7 @@ class EnsembleClassifier(EnsembleEstimator):
 
         Parameters
         ----------
-        estimator: RegressorMixin
+        estimator: ClassifierMixin
             Estimator to train.
 
         X: ArrayLike of shape (n_samples, n_features)
@@ -172,7 +172,7 @@ class EnsembleClassifier(EnsembleEstimator):
 
         Returns
         -------
-        RegressorMixin
+        ClassifierMixin
             Fitted estimator.
         """
         X_train = _safe_indexing(X, train_index)
@@ -223,7 +223,7 @@ class EnsembleClassifier(EnsembleEstimator):
 
         Parameters
         ----------
-        estimator: RegressorMixin
+        estimator: ClassifierMixin
             Estimator to train.
 
         X: ArrayLike of shape (n_samples, n_features)
