@@ -9,13 +9,17 @@ from sklearn.calibration import _SigmoidCalibration
 from sklearn.isotonic import IsotonicRegression
 from sklearn.utils import check_random_state
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
 
 from ._typing import ArrayLike, NDArray
-from .utils import (check_estimator_classification,
-                    check_estimator_fit_predict, check_n_features_in,
-                    check_null_weight, fit_estimator, get_calib_set)
+from .utils import (
+    check_estimator_classification,
+    check_estimator_fit_predict,
+    check_n_features_in,
+    check_null_weight,
+    fit_estimator,
+    get_calib_set,
+)
 
 
 class MapieCalibrator(BaseEstimator, ClassifierMixin):
@@ -27,10 +31,9 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
     Parameters
     ----------
-    estimator : Optional[ClassifierMixin]
+    estimator: Optional[ClassifierMixin]
         Any classifier with scikit-learn API
-        (i.e. with fit, predict, and predict_proba methods), by default
-        ``None``.
+        (i.e. with fit, predict, and predict_proba methods), by default ``None``.
         If ``None``, estimator defaults to a ``LogisticRegression`` instance.
 
     method: Optional[str]
@@ -42,7 +45,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
         By default "top_label".
 
-    calibrator : Optional[Union[str, RegressorMixin]]
+    calibrator: Optional[Union[str, RegressorMixin]]
         Any calibrator with scikit-learn API
         (i.e. with fit, predict, and predict_proba methods), by default
         ``None``.

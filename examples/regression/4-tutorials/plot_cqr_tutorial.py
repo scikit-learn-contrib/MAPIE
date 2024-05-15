@@ -41,8 +41,7 @@ from scipy.stats import randint, uniform
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import KFold, RandomizedSearchCV, train_test_split
 
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics import regression_coverage_score, regression_mean_width_score
 from mapie.regression import MapieQuantileRegressor, MapieRegressor
 from mapie.subsample import Subsample
 

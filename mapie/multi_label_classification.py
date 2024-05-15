@@ -11,8 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
 
 from ._typing import ArrayLike, NDArray
 from .control_risk.crc_rcps import find_lambda_star, get_r_hat_plus

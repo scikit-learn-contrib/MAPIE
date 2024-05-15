@@ -7,12 +7,21 @@ from sklearn.utils.validation import check_array, column_or_1d
 
 from ._machine_precision import EPSILON
 from ._typing import ArrayLike, NDArray
-from .utils import (calc_bins, check_alpha, check_array_inf, check_array_nan,
-                    check_array_shape_classification,
-                    check_array_shape_regression, check_arrays_length,
-                    check_binary_zero_one, check_lower_upper_bounds,
-                    check_nb_intervals_sizes, check_nb_sets_sizes,
-                    check_number_bins, check_split_strategy)
+from .utils import (
+    calc_bins,
+    check_alpha,
+    check_array_inf,
+    check_array_nan,
+    check_array_shape_classification,
+    check_array_shape_regression,
+    check_arrays_length,
+    check_binary_zero_one,
+    check_lower_upper_bounds,
+    check_nb_intervals_sizes,
+    check_nb_sets_sizes,
+    check_number_bins,
+    check_split_strategy,
+)
 
 
 def regression_coverage_score(
@@ -1279,7 +1288,6 @@ def kolmogorov_smirnov_p_value(y_true: NDArray, y_score: NDArray) -> float:
 
     Example
     -------
-    >>> import pandas as pd
     >>> from mapie.metrics import kolmogorov_smirnov_p_value
     >>> y_true = np.array([1, 0, 1, 0, 1, 0])
     >>> y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])
@@ -1446,7 +1454,6 @@ def kuiper_p_value(y_true: NDArray, y_score: NDArray) -> float:
 
     Example
     -------
-    >>> import pandas as pd
     >>> from mapie.metrics import kuiper_p_value
     >>> y_true = np.array([1, 0, 1, 0, 1, 0])
     >>> y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])

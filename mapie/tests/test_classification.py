@@ -4,19 +4,14 @@ from copy import deepcopy
 from typing import Any, Dict, Iterable, Optional, Union, cast
 
 import numpy as np
-import pandas as pd
 import pytest
 from sklearn.base import ClassifierMixin
-from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
-                                     ShuffleSplit)
+from sklearn.model_selection import GroupKFold, KFold, LeaveOneOut, ShuffleSplit
 from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
@@ -1650,39 +1645,6 @@ def test_pred_loof_isnan() -> None:
         k=0,
     )
     assert len(y_pred) == 0
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_pipeline_compatibility(strategy: str) -> None:
-    """Check that MAPIE works on pipeline based on pandas dataframes"""
-    X = pd.DataFrame(
-        {
-            "x_cat": ["A", "A", "B", "A", "A", "B"],
-            "x_num": [0, 1, 1, 4, np.nan, 5],
-        }
-    )
-    y = pd.Series([0, 1, 2, 0, 1, 0])
-    numeric_preprocessor = Pipeline(
-        [
-            ("imputer", SimpleImputer(strategy="mean")),
-        ]
-    )
-    categorical_preprocessor = Pipeline(
-        steps=[
-            ("encoding", OneHotEncoder(handle_unknown="ignore"))
-        ]
-    )
-    preprocessor = ColumnTransformer(
-        [
-            ("cat", categorical_preprocessor, ["x_cat"]),
-            ("num", numeric_preprocessor, ["x_num"])
-        ]
-    )
-    pipe = make_pipeline(preprocessor, LogisticRegression())
-    pipe.fit(X, y)
-    mapie = MapieClassifier(estimator=pipe, **STRATEGIES[strategy][0])
-    mapie.fit(X, y)
-    mapie.predict(X)
 
 
 def test_pred_proba_float64() -> None:

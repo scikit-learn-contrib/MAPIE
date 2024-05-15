@@ -2,13 +2,11 @@
 __pycache__/
 *.py[cod]
 *$py.class
-.DS_Store
-.mypy*
 
 # C extensions
 *.so
 
-# documentation specific
+# scikit-learn specific
 doc/_build/
 doc/examples_classification/
 doc/examples_regression/
@@ -17,7 +15,6 @@ doc/examples_multilabel_classification/
 doc/auto_examples/
 doc/modules/generated/
 doc/datasets/generated/
-doc/generated/
 
 # Distribution / packaging
 
@@ -69,19 +66,17 @@ coverage.xml
 # Sphinx documentation
 doc/_build/
 doc/generated/
-
-# Notebooks checkpoints
-**.ipynb_checkpoints
+doc/sg_execution_times.rst
 
 # PyBuilder
 target/
 
-# VSCode
-.vscode
-.idea/
+.pixi
 
-# Images
-*.jpeg
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
 
-# ZIP files
-*.zip
+# auto-generated files
+mapie/_version.py

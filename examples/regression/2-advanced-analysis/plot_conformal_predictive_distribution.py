@@ -24,8 +24,7 @@ from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
-from mapie.conformity_scores import (AbsoluteConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import AbsoluteConformityScore, ResidualNormalisedScore
 from mapie.regression import MapieRegressor
 
 warnings.filterwarnings('ignore')

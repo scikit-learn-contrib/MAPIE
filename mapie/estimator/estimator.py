@@ -12,8 +12,11 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
 from mapie.estimator.interface import EnsembleEstimator
-from mapie.utils import (check_nan_in_aposteriori_prediction, check_no_agg_cv,
-                         fit_estimator)
+from mapie.utils import (
+    check_nan_in_aposteriori_prediction,
+    check_no_agg_cv,
+    fit_estimator,
+)
 
 
 class EnsembleRegressor(EnsembleEstimator):
@@ -215,7 +218,7 @@ class EnsembleRegressor(EnsembleEstimator):
         """
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)
-        if not (sample_weight is None):
+        if sample_weight is not None:
             sample_weight = _safe_indexing(sample_weight, train_index)
             sample_weight = cast(NDArray, sample_weight)
 

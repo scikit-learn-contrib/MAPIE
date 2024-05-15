@@ -7,9 +7,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
-                                     GammaConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import (
+    AbsoluteConformityScore,
+    ConformityScore,
+    GammaConformityScore,
+    ResidualNormalisedScore,
+)
 from mapie.regression import MapieRegressor
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)

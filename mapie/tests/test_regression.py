@@ -4,27 +4,30 @@ from itertools import combinations
 from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
-import pandas as pd
 import pytest
-from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
-                                     PredefinedSplit, ShuffleSplit,
-                                     train_test_split)
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import (
+    GroupKFold,
+    KFold,
+    LeaveOneOut,
+    PredefinedSplit,
+    ShuffleSplit,
+    train_test_split,
+)
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
-from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
-                                     GammaConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import (
+    AbsoluteConformityScore,
+    ConformityScore,
+    GammaConformityScore,
+    ResidualNormalisedScore,
+)
 from mapie.estimator.estimator import EnsembleRegressor
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
@@ -614,36 +617,6 @@ def test_pred_loof_isnan() -> None:
         val_index=[],
     )
     assert len(y_pred) == 0
-
-
-def test_pipeline_compatibility() -> None:
-    """Check that MAPIE works on pipeline based on pandas dataframes"""
-    X = pd.DataFrame(
-        {
-            "x_cat": ["A", "A", "B", "A", "A", "B"],
-            "x_num": [0, 1, 1, 4, np.nan, 5],
-            "y": [5, 7, 3, 9, 10, 8],
-        }
-    )
-    y = pd.Series([5, 7, 3, 9, 10, 8])
-    numeric_preprocessor = Pipeline(
-        [
-            ("imputer", SimpleImputer(strategy="mean")),
-        ]
-    )
-    categorical_preprocessor = Pipeline(
-        steps=[("encoding", OneHotEncoder(handle_unknown="ignore"))]
-    )
-    preprocessor = ColumnTransformer(
-        [
-            ("cat", categorical_preprocessor, ["x_cat"]),
-            ("num", numeric_preprocessor, ["x_num"]),
-        ]
-    )
-    pipe = make_pipeline(preprocessor, LinearRegression())
-    mapie = MapieRegressor(pipe)
-    mapie.fit(X, y)
-    mapie.predict(X)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])

@@ -1,4 +1,4 @@
-.. _general_examples:
+.. _multilabel_classification_examples:
 
-General examples
-================
+Multilabel Classification examples
+==================================

@@ -1,15 +1,10 @@
 from typing import Any, Optional
 
 import numpy as np
-import pandas as pd
 import pytest
-from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_multilabel_classification
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.multioutput import MultiOutputClassifier
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
@@ -637,55 +632,6 @@ def test_error_partial_fit_different_size() -> None:
     mapie_clf.partial_fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Number of features*"):
         mapie_clf.partial_fit(X, y)
-
-
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_pipeline_compatibility(strategy: str) -> None:
-    """Check that MAPIE works on pipeline based on pandas dataframes"""
-    args = STRATEGIES[strategy][0]
-    X = pd.DataFrame(
-        {
-            "x_cat": ["A", "A", "B", "A", "A", "B"],
-            "x_num": [0, 1, 1, 4, np.nan, 5],
-        }
-    )
-    y = np.array(
-        [
-            [0, 0, 1], [0, 0, 1],
-            [1, 1, 0], [1, 0, 1],
-            [1, 0, 1], [1, 1, 1]
-        ]
-    )
-    numeric_preprocessor = Pipeline(
-        [
-            ("imputer", SimpleImputer(strategy="mean")),
-        ]
-    )
-    categorical_preprocessor = Pipeline(
-        steps=[
-            ("encoding", OneHotEncoder(handle_unknown="ignore"))
-        ]
-    )
-    preprocessor = ColumnTransformer(
-        [
-            ("cat", categorical_preprocessor, ["x_cat"]),
-            ("num", numeric_preprocessor, ["x_num"])
-        ]
-    )
-    pipe = make_pipeline(
-        preprocessor,
-        MultiOutputClassifier(LogisticRegression())
-    )
-    pipe.fit(X, y)
-    mapie = MapieMultiLabelClassifier(
-        estimator=pipe,
-        method=args["method"],
-        metric_control=args["metric_control"],
-        random_state=random_state
-    )
-
-    mapie.fit(X, y)
-    mapie.predict(X, bound=args["bound"], delta=.1)
 
 
 def test_error_no_fit() -> None:

@@ -5,14 +5,23 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
-                                     KFold, LeaveOneOut, ShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import (
+    BaseCrossValidator,
+    BaseShuffleSplit,
+    KFold,
+    LeaveOneOut,
+    ShuffleSplit,
+    train_test_split,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (_check_sample_weight, _num_features,
-                                      check_is_fitted, column_or_1d)
+from sklearn.utils.validation import (
+    _check_sample_weight,
+    _num_features,
+    check_is_fitted,
+    column_or_1d,
+)
 
 from ._compatibility import np_quantile
 from ._typing import ArrayLike, NDArray

@@ -21,10 +21,13 @@ import pandas as pd
 from lightgbm import LGBMRegressor
 
 from mapie._typing import NDArray
-from mapie.conformity_scores import (GammaConformityScore,
-                                     ResidualNormalisedScore)
-from mapie.metrics import (hsic, regression_coverage_score_v2, regression_ssc,
-                           regression_ssc_score)
+from mapie.conformity_scores import GammaConformityScore, ResidualNormalisedScore
+from mapie.metrics import (
+    hsic,
+    regression_coverage_score_v2,
+    regression_ssc,
+    regression_ssc_score,
+)
 from mapie.regression import MapieQuantileRegressor, MapieRegressor
 from mapie.subsample import Subsample
 

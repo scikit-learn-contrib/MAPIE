@@ -9,15 +9,18 @@ from sklearn.linear_model import QuantileRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
 
 from mapie._compatibility import np_quantile
 from mapie._typing import ArrayLike, NDArray
-from mapie.utils import (check_alpha_and_n_samples,
-                         check_defined_variables_predict_cqr,
-                         check_estimator_fit_predict, check_lower_upper_bounds,
-                         check_null_weight, fit_estimator)
+from mapie.utils import (
+    check_alpha_and_n_samples,
+    check_defined_variables_predict_cqr,
+    check_estimator_fit_predict,
+    check_lower_upper_bounds,
+    check_null_weight,
+    fit_estimator,
+)
 
 from .regression import MapieRegressor
 
