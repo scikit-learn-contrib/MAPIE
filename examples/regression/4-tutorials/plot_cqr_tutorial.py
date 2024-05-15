@@ -121,7 +121,8 @@ X_train, X_calib, y_train, y_calib = train_test_split(
 estimator = LGBMRegressor(
     objective='quantile',
     alpha=0.5,
-    random_state=random_state
+    random_state=random_state,
+    verbose=-1
 )
 params_distributions = dict(
     num_leaves=randint(low=10, high=50),
@@ -135,7 +136,6 @@ optim_model = RandomizedSearchCV(
     n_jobs=-1,
     n_iter=10,
     cv=KFold(n_splits=5, shuffle=True),
-    verbose=0,
     random_state=random_state
 )
 optim_model.fit(X_train, y_train)
