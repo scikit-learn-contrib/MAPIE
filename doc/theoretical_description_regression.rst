@@ -1,4 +1,4 @@
-.. title:: Theoretical Description : contents
+.. title:: Theoretical Description Regression : contents
 
 .. _theoretical_description_regression:
 

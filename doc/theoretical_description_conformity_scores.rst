@@ -1,4 +1,4 @@
-.. title:: Theoretical Description : contents
+.. title:: Theoretical Description Conformity Scores : contents
 
 .. _theoretical_description_conformity_scores:
 

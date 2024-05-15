@@ -1,4 +1,4 @@
-.. title:: Theoretical Description : contents
+.. title:: Theoretical Description Multi label Classification : contents
 
 .. _theoretical_description_multilabel_classification:
 
