@@ -716,7 +716,7 @@ def test_valid_estimator(strategy: str) -> None:
     clf = LogisticRegression().fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
     mapie_clf.fit(X_toy, y_toy)
-    assert isinstance(mapie_clf.single_estimator_, LogisticRegression)
+    assert isinstance(mapie_clf.estimator_.single_estimator_, LogisticRegression)
 
 
 @pytest.mark.parametrize("method", METHODS)
