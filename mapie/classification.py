@@ -535,36 +535,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         )
         return prediction_sets
 
-    def _predict_oof_model(
-        self,
-        estimator: ClassifierMixin,
-        X: ArrayLike,
-    ) -> NDArray:
-        """
-        Predict probabilities of a test set from a fitted estimator.
-
-        Parameters
-        ----------
-        estimator: ClassifierMixin
-            Fitted estimator.
-
-        X: ArrayLike
-            Test set.
-
-        Returns
-        -------
-        ArrayLike
-            Predicted probabilities.
-        """
-        y_pred_proba = estimator.predict_proba(X)
-        # we enforce y_pred_proba to contain all labels included in y
-        if len(estimator.classes_) != self.n_classes_:
-            y_pred_proba = fix_number_of_classes(
-                self.n_classes_, estimator.classes_, y_pred_proba
-            )
-        y_pred_proba = self._check_proba_normalized(y_pred_proba)
-        return y_pred_proba
-
     def _get_true_label_cumsum_proba(
         self, y: ArrayLike, y_pred_proba: NDArray
     ) -> Tuple[NDArray, NDArray]:
@@ -634,32 +604,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         conf_score += np.maximum(np.expand_dims(lambda_ * (cutoff - k_star), axis=1), 0)
         return conf_score
 
-<<<<<<< Updated upstream
-=======
-    def _get_true_label_position(self, y_pred_proba: NDArray, y: NDArray) -> NDArray:
-        """
-        Return the sorted position of the true label in the
-        prediction
-
-        Parameters
-        ----------
-        y_pred_proba: NDArray of shape (n_samples, n_calsses)
-            Model prediction.
-
-        y: NDArray of shape (n_samples)
-            Labels.
-
-        Returns
-        -------
-        NDArray of shape (n_samples, 1)
-            Position of the true label in the prediction.
-        """
-        index = np.argsort(np.fliplr(np.argsort(y_pred_proba, axis=1)))
-        position = np.take_along_axis(index, y.reshape(-1, 1), axis=1)
-
-        return position
-
->>>>>>> Stashed changes
     def _get_last_included_proba(
         self,
         y_pred_proba: NDArray,
@@ -1030,14 +974,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             self.y_pred_proba_raps = self.estimator_.single_estimator_.predict_proba(
                 self.X_raps
             )
-<<<<<<< Updated upstream
             self.position_raps = get_true_label_position(
-                self.y_pred_proba_raps,
-                self.y_raps
-=======
-            self.position_raps = self._get_true_label_position(
                 self.y_pred_proba_raps, self.y_raps
->>>>>>> Stashed changes
             )
 
         # Conformity scores
@@ -1069,14 +1007,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             # Here we reorder the labels by decreasing probability
             # and get the position of each label from decreasing
             # probability
-<<<<<<< Updated upstream
-            self.conformity_scores_ = get_true_label_position(
-                y_pred_proba,
-                y_enc
-            )
-=======
-            self.conformity_scores_ = self._get_true_label_position(y_pred_proba, y_enc)
->>>>>>> Stashed changes
+            self.conformity_scores_ = get_true_label_position(y_pred_proba, y_enc)
         else:
             raise ValueError(
                 "Invalid method. " f"Allowed values are {self.valid_methods_}."

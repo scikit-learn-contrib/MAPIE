@@ -186,8 +186,29 @@ class EnsembleClassifier(EnsembleEstimator):
         )
         return estimator
 
-    def _predict_proba_oof_estimator(self, estimator, X):
+    def _predict_proba_oof_estimator(
+        self,
+        estimator: ClassifierMixin,
+        X: ArrayLike,
+    ) -> NDArray:
+        """
+        Predict probabilities of a test set from a fitted estimator.
+
+        Parameters
+        ----------
+        estimator: ClassifierMixin
+            Fitted estimator.
+
+        X: ArrayLike
+            Test set.
+
+        Returns
+        -------
+        ArrayLike
+            Predicted probabilities.
+        """
         y_pred_proba = estimator.predict_proba(X)
+        # we enforce y_pred_proba to contain all labels included in y
         if len(estimator.classes_) != self.n_classes:
             y_pred_proba = fix_number_of_classes(
                 self.n_classes, estimator.classes_, y_pred_proba
