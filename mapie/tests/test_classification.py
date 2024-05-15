@@ -1324,14 +1324,13 @@ def test_include_label_error_in_predict(
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
     mapie_clf = MapieClassifier(random_state=random_state)
-    _, y_pred, _, _ = mapie_clf._fit_and_predict_oof_model(
-        estimator=LogisticRegression(),
-        X=X_toy,
-        y=y_toy,
-        train_index=[0, 1, 2, 3, 4],
-        val_index=[],
-        k=0,
+
+    y_pred: NDArray
+    mapie_clf = mapie_clf.fit(X, y)
+    y_pred, _, _ = mapie_clf.estimator_._predict_proba_calib_oof_estimator(
+        estimator=LogisticRegression(), X=X_toy, val_index=[], k=0
     )
+
     assert len(y_pred) == 0
 
 
