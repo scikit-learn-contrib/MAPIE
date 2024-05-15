@@ -842,8 +842,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         return n_classes, classes
 
-    def _check_fit_parameter(self, X: ArrayLike, : ArrayLike, sample_weight: Optional[ArrayLike] = None, groups: : Optional[ArrayLike] = None):
-        
+    def _check_fit_parameter(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+    ):
         """
         Perform several checks on class parameters.
 
@@ -996,7 +1001,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         self.estimator_.fit(X, y, y_enc, sample_weight, groups, **fit_params)
 
-        
         y_pred_proba, y, y_enc = self.estimator_.predict_proba_calib(
             X, y, y_enc, groups
         )
