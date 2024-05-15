@@ -384,7 +384,7 @@ class EnsembleClassifier(EnsembleEstimator):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params,
-    ) -> EnsembleRegressor:
+    ) -> EnsembleClassifier:
         """
         Fit the base estimator under the ``single_estimator_`` attribute.
         Fit all cross-validated estimator clones
