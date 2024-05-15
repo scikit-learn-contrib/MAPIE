@@ -13,7 +13,7 @@ from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, in
 
 from ._machine_precision import EPSILON
 from ._typing import ArrayLike, NDArray
-from .estimator.estimator_classification import EnsembleClassifier
+from .estimator.estimator_classifier import EnsembleClassifier
 from .metrics import classification_mean_width_score
 from .utils import (
     check_alpha,
@@ -25,7 +25,6 @@ from .utils import (
     check_null_weight,
     check_verbose,
     compute_quantiles,
-    fix_number_of_classes,
 )
 
 
@@ -843,7 +842,38 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         return n_classes, classes
 
-    def _check_fit_parameter(self, X, y, sample_weight, groups):
+    def _check_fit_parameter(self, X: ArrayLike, : ArrayLike, sample_weight: Optional[ArrayLike] = None, groups: : Optional[ArrayLike] = None):
+        
+        """
+        Perform several checks on class parameters.
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed values.
+
+        y: ArrayLike
+            Target values.
+
+        sample_weight: Optional[NDArray] of shape (n_samples,)
+            Non-null sample weights.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+            By default ``None``.
+
+        Raises
+        ------
+        ValueError
+            If conformity score is FittedResidualNormalizing score and method
+            is neither ``"prefit"`` or ``"split"``.
+
+        ValueError
+            If ``cv`` is `"prefit"`` or ``"split"`` and ``method`` is not
+            ``"base"``.
+        """
+
         self._check_parameters()
         cv = check_cv(self.cv, test_size=self.test_size, random_state=self.random_state)
         X, y = indexable(X, y)
@@ -965,6 +995,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         )
 
         self.estimator_.fit(X, y, y_enc, sample_weight, groups, **fit_params)
+
+        
         y_pred_proba, y, y_enc = self.estimator_.predict_proba_calib(
             X, y, y_enc, groups
         )
