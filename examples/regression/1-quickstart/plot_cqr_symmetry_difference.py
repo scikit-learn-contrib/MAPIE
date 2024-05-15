@@ -35,8 +35,12 @@ mapie_qr_asym.fit(X, y)
 y_pred_asym, y_pis_asym = mapie_qr_asym.predict(X, symmetry=False)
 
 # Calculate coverage scores
-coverage_score_sym = regression_coverage_score(y, y_pis_sym[:, 0], y_pis_sym[:, 1])
-coverage_score_asym = regression_coverage_score(y, y_pis_asym[:, 0], y_pis_asym[:, 1])
+coverage_score_sym = regression_coverage_score(
+    y, y_pis_sym[:, 0], y_pis_sym[:, 1]
+)
+coverage_score_asym = regression_coverage_score(
+    y, y_pis_asym[:, 0], y_pis_asym[:, 1]
+)
 
 # Sort the values for plotting
 order = np.argsort(X[:, 0])
@@ -93,8 +97,8 @@ plt.show()
 
 # Explanation of the results
 """
-The symmetric intervals (`symmetry=True`) are easier to interpret and tend to have higher 
-coverage but might not adapt well to varying noise levels. The asymmetric intervals 
-(`symmetry=False`) are more flexible and better capture heteroscedasticity but can appear 
-more jagged.
+The symmetric intervals (`symmetry=True`) are easier to interpret and
+tend to have higher coverage but might not adapt well to varying
+noise levels. The asymmetric intervals (`symmetry=False`) are more
+flexible and better capture heteroscedasticity but can appear more jagged.
 """
