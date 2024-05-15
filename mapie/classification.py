@@ -13,7 +13,7 @@ from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, in
 
 from ._machine_precision import EPSILON
 from ._typing import ArrayLike, NDArray
-from .estimator.estimator import EnsembleClassifier
+from .estimator.estimator_classification import EnsembleClassifier
 from .metrics import classification_mean_width_score
 from .utils import (
     check_alpha,
