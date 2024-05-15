@@ -982,14 +982,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         if self.method == "naive":
             self.conformity_scores_ = np.empty(y_pred_proba.shape, dtype="float")
         elif self.method in ["score", "lac"]:
-            print()
-            print("TEST ICI")
-            print()
-            print(
-                "y_pred_proba:", y_pred_proba, "y_pred_proba_shape", y_pred_proba.shape
-            )
-            print()
-            print("y_enc", y_enc, "y_enc_shape", y_enc.shape)
             self.conformity_scores_ = np.take_along_axis(
                 1 - y_pred_proba, y_enc.reshape(-1, 1), axis=1
             )
