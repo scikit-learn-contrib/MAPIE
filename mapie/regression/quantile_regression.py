@@ -457,6 +457,26 @@ class MapieQuantileRegressor(MapieRegressor):
                 " need to be preset with alpha values in the following"
                 " order [alpha/2, 1 - alpha/2, 0.5]."
             )
+    
+    def _set_alpha_to_model(self, estimator_, alpha_):
+        if isinstance(estimator_, Pipeline):
+            estimator = estimator_[-1]
+        else:
+            estimator = estimator_
+        name_estimator = estimator.__class__.__name__
+        alpha_name = self.quantile_estimator_params[
+            name_estimator
+        ]["alpha_name"]
+        if estimator.__class__.__name__ == "CatBoostRegressor":
+            params = {alpha_name: f"Quantile:alpha={alpha_}"}
+
+        cloned_estimator_ = clone(estimator)
+        params = {alpha_name: alpha_}
+        if isinstance(cloned_estimator_, Pipeline):
+            cloned_estimator_[-1].set_params(**params)
+        else:
+            cloned_estimator_.set_params(**params)
+        return cloned_estimator_
 
     def fit(
         self,
@@ -600,22 +620,8 @@ class MapieQuantileRegressor(MapieRegressor):
                 shape=(3, self.n_calib_samples),
                 fill_value=np.nan
             )
-
-            if isinstance(checked_estimator, Pipeline):
-                estimator = checked_estimator[-1]
-            else:
-                estimator = checked_estimator
-            name_estimator = estimator.__class__.__name__
-            alpha_name = self.quantile_estimator_params[
-                name_estimator
-            ]["alpha_name"]
             for i, alpha_ in enumerate(alpha):
-                cloned_estimator_ = clone(checked_estimator)
-                params = {alpha_name: alpha_}
-                if isinstance(checked_estimator, Pipeline):
-                    cloned_estimator_[-1].set_params(**params)
-                else:
-                    cloned_estimator_.set_params(**params)
+                cloned_estimator_ = self._set_alpha_to_model(checked_estimator, alpha_)
                 self.estimators_.append(fit_estimator(
                     cloned_estimator_,
                     X_train,
