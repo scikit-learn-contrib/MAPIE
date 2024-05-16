@@ -204,7 +204,7 @@ Spiegelhalter’s Test
 
 .. math::
 
-   \text{Spiegelhalter's Statistic} = \frac{\sum (y_{\text{true}} - y_{\text{score}})(1 - 2y_{\text{score}})}{\sqrt{\sum (1 - 2y_{\text{score}})^2 y_{\text{score}} (1 - y_{\text{score}})}}
+   \text{Spiegelhalter's Statistic} = \frac{\sum_{i=1}^n (y_i - \hat y_i)(1 - 2\hat y_i)}{\sqrt{\sum_{i=1}^n (1 - 2 \hat y_i)^2 \hat y_i (1 - \hat y_i)}}
 
 
 
