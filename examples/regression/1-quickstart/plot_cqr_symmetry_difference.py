@@ -38,10 +38,10 @@ y_pred_asym, y_pis_asym = mapie_qr_asym.predict(X, symmetry=False)
 
 # Calculate coverage scores
 coverage_score_sym = regression_coverage_score(
-y, y_pis_sym[:, 0], y_pis_sym[:, 1]
+    y, y_pis_sym[:, 0], y_pis_sym[:, 1]
 )
 coverage_score_asym = regression_coverage_score(
-y, y_pis_asym[:, 0], y_pis_asym[:, 1]
+    y, y_pis_asym[:, 0], y_pis_asym[:, 1]
 )
 
 # Sort the values for plotting
@@ -68,15 +68,15 @@ plt.plot(X_sorted, y_pred_sym_sorted, color="C1")
 plt.plot(X_sorted, y_pis_sym_sorted[:, 0], color="C1", ls="--")
 plt.plot(X_sorted, y_pis_sym_sorted[:, 1], color="C1", ls="--")
 plt.fill_between(
-X_sorted.ravel(),
-y_pis_sym_sorted[:, 0].ravel(),
-y_pis_sym_sorted[:, 1].ravel(),
-alpha=0.2,
+    X_sorted.ravel(),
+    y_pis_sym_sorted[:, 0].ravel(),
+    y_pis_sym_sorted[:, 1].ravel(),
+    alpha=0.2,
 )
 plt.title(
-f"Symmetric Intervals\n"
-f"Target and effective coverages for "
-f"alpha={alpha:.2f}: ({1-alpha:.3f}, {coverage_score_sym:.3f})"
+    f"Symmetric Intervals\n"
+    f"Target and effective coverages for "
+    f"alpha={alpha:.2f}: ({1-alpha:.3f}, {coverage_score_sym:.3f})"
 )
 
 # Plot asymmetric prediction intervals
@@ -88,15 +88,15 @@ plt.plot(X_sorted, y_pred_asym_sorted, color="C2")
 plt.plot(X_sorted, y_pis_asym_sorted[:, 0], color="C2", ls="--")
 plt.plot(X_sorted, y_pis_asym_sorted[:, 1], color="C2", ls="--")
 plt.fill_between(
-X_sorted.ravel(),
-y_pis_asym_sorted[:, 0].ravel(),
-y_pis_asym_sorted[:, 1].ravel(),
-alpha=0.2,
+    X_sorted.ravel(),
+    y_pis_asym_sorted[:, 0].ravel(),
+    y_pis_asym_sorted[:, 1].ravel(),
+    alpha=0.2,
 )
 plt.title(
-f"Asymmetric Intervals\n"
-f"Target and effective coverages for "
-f"alpha={alpha:.2f}: ({1-alpha:.3f}, {coverage_score_asym:.3f})"
+    f"Asymmetric Intervals\n"
+    f"Target and effective coverages for "
+    f"alpha={alpha:.2f}: ({1-alpha:.3f}, {coverage_score_asym:.3f})"
 )
 plt.tight_layout()
 plt.show()
