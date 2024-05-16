@@ -120,9 +120,9 @@ The **MWI (Mean Winkler Interval) Score** evaluates prediction intervals by comb
 
 .. math::
 
-   \text{MWI Score} = \frac{1}{n} \sum_{i=1}^{n} (y_{\text{pred, up}}^{(i)} - y_{\text{pred, low}}^{(i)}) + \frac{2}{\alpha} \sum_{i=1}^{n} \max(0, |y_{\text{true}}^{(i)} - y_{\text{pred, boundary}}^{(i)}|)
+   \text{MWI Score} = \frac{1}{n} \sum_{i=1}^{n} (\hat y^{\text{up}}_{i} - \hat y^{\text{low}}_{i}) + \frac{2}{\alpha} \sum_{i=1}^{n} \max(0, |y_{i} - \hat y^{\text{boundary}}_{i}|)
 
-where :math:`y_{\text{pred, boundary}}^{(i)}` is the nearest interval boundary not containing :math:`y_{\text{true}}^{(i)}`, and :math:`\alpha` is the significance level.
+where :math:`\hat y^{\text{boundary}}_{i}` is the nearest interval boundary not containing :math:`y_{i}`, and :math:`\alpha` is the significance level.
 
 
 
