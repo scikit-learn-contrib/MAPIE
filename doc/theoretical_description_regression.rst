@@ -246,7 +246,7 @@ is then higher.
 
 
 9. The Conformalized Quantile Regression (CQR) Method
-==================================================
+=====================================================
 
 The conformalized quantile regression (CQR) method allows for better interval widths with
 heteroscedastic data. It uses quantile regressors with different quantile values to estimate
@@ -275,6 +275,7 @@ The prediction interval :math:`\hat{C}_{n, \alpha}^{\text{CQR}}(X_{n+1})` for a 
     \hat{q}_{\alpha_{\text{hi}}}(X_{n+1}) + Q_{1-\alpha}(E_{\text{high}}, \mathcal{I}_2)]
 
 Where:
+
 - :math:`\hat{q}_{\alpha_{\text{lo}}}(X_{n+1})` is the predicted lower quantile for the new sample.
 - :math:`\hat{q}_{\alpha_{\text{hi}}}(X_{n+1})` is the predicted upper quantile for the new sample.
 
