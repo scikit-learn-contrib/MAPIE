@@ -172,7 +172,12 @@ Cumulative Differences
 
 .. math::
 
-   \text{Cumulative Differences} = \frac{1}{n} \sum_{i=1}^{n} (y_{\text{true,sorted}}^{(i)} - y_{\text{score,sorted}}^{(i)})
+   \text{Cumulative Differences} = \frac{1}{n} \sum_{i=1}^{n} (y_{\sigma_1(i)} - \hat y_{\sigma_2(i)})
+
+where:
+
+- :math:`\sigma_1` is the permutation which sorts all the true values.
+- :math:`\sigma_2` is the permutation which sorts all the predicted values.
 
 
 Kolmogorov-Smirnov Statistic for Calibration
