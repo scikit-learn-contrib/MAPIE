@@ -177,7 +177,7 @@ and with the financial support from Région Ile de France and Confiance.ai.
     :target: https://www.quantmetry.com/
 
 .. |Michelin| image:: https://agngnconpm.cloudimg.io/v7/https://dgaddcosprod.blob.core.windows.net/corporate-production/attachments/cls05tqdd9e0o0tkdghwi9m7n-clooe1x0c3k3x0tlu4cxi6dpn-bibendum-salut.full.png
-    :height: 45px
+    :height: 50px
     :width: 45px
     :target: https://www.michelin.com/en/
 
