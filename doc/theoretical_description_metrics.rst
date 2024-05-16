@@ -2,9 +2,9 @@
 
 .. _theoretical_description_metrics:
 
-==================================
-Theoretical Description of Metrics
-==================================
+=======================
+Theoretical Description
+=======================
 
 This document provides detailed descriptions of various metrics used to evaluate the performance of predictive models, particularly focusing on their ability to estimate uncertainties and calibrate predictions accurately.
 
