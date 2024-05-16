@@ -71,7 +71,7 @@ Size-Stratified Coverage (SSC)
 
 .. math::
 
-   \text{SSC}_{\text{regression}} = \sum_{k=1}^{K} \left( \frac{1}{|I_k|} \sum_{i \in I_k} \mathbf{1}(y_{\text{pred, low}}^{(i)} \leq y_{\text{true}}^{(i)} \leq y_{\text{pred, up}}^{(i)}) \right)
+   \text{SSC}_{\text{regression}} = \sum_{k=1}^{K} \left( \frac{1}{|I_k|} \sum_{i \in I_k} \mathbf{1}(\hat y^{\text{low}}_{i} \leq y_{i} \leq \hat y^{\text{up}}_{i}) \right)
 
 **Classification:**
 
