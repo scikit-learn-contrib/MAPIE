@@ -255,10 +255,14 @@ coverage value.
 
 Notations and Definitions
 -------------------------
+- :math:`\mathcal{I}_1` is the set of indices of the data in the training set.
+- :math:`\mathcal{I}_2` is the set of indices of the data in the calibration set.
+- :math:`\hat{q}_{\alpha_{\text{low}}}`: Lower quantile model trained on :math:`{(X_i, Y_i) : i \in \mathcal{I}_1}`.
+- :math:`\hat{q}_{\alpha_{\text{high}}}`: Upper quantile model trained on :math:`{(X_i, Y_i) : i \in \mathcal{I}_1}`.
 - :math:`E_i`: Residuals for the i-th sample in the calibration set.
 - :math:`E_{\text{low}}`: Residuals from the lower quantile model.
 - :math:`E_{\text{high}}`: Residuals from the upper quantile model.
-- :math:`Q_{1-\alpha}(E, \mathcal{I}_2)`: The :math:`(1-\alpha)(1+1/|\mathcal{I}_2|)`-th empirical quantile of the set :math:`{E_i : i \in \mathcal{I}_2}`, where :math:`\mathcal{I}_2` is the set of indices of the residuals in the calibration set.
+- :math:`Q_{1-\alpha}(E, \mathcal{I}_2)`: The :math:`(1-\alpha)(1+1/|\mathcal{I}_2|)`-th empirical quantile of the set :math:`{E_i : i \in \mathcal{I}_2}`.
 
 Mathematical Formulation
 ------------------------
