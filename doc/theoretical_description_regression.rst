@@ -278,7 +278,7 @@ Where:
 - :math:`\hat{q}_{\alpha_{\text{lo}}}(X_{n+1})` is the predicted lower quantile for the new sample.
 - :math:`\hat{q}_{\alpha_{\text{hi}}}(X_{n+1})` is the predicted upper quantile for the new sample.
 
-Note: In the symmetric method, :math:`E_{\text{low}}` and :math:`E_{\text{high}}` are considered equal.
+Note: In the symmetric method, :math:`E_{\text{low}}` and :math:`E_{\text{high}}` sets are no longer distinct. We consider directly the union set :math:`E_{\text{all}} = E_{\text{low}} \cup E_{\text{high}}` and the empirical quantile is then calculated on all the absolute (positive) residuals.
 
 As justified by the literature, this method offers a theoretical guarantee of the target coverage level :math:`1-\alpha`.
 
