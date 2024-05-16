@@ -77,7 +77,7 @@ Size-Stratified Coverage (SSC)
 
 .. math::
 
-   \text{SSC}_{\text{classification}} = \sum_{k=1}^{K} \left( \frac{1}{|S_k|} \sum_{i \in S_k} \mathbf{1}(y_{\text{true}}^{(i)} \in \text{Set}_{\text{pred}}^{(i)}) \right)
+   \text{SSC}_{\text{classification}} = \sum_{k=1}^{K} \left( \frac{1}{|S_k|} \sum_{i \in S_k} \mathbf{1}(y_{i} \in \hat C(x_i)) \right)
 
 where:
 
