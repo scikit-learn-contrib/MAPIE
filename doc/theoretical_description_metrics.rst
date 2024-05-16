@@ -129,40 +129,47 @@ where :math:`\hat y^{\text{boundary}}_{i}` is the nearest interval boundary not 
 2. Calibration metrics
 ======================
 
+
 Expected Calibration Error (ECE)
 --------------------------------
 
-**Expected Calibration Error (ECE)** measures the difference between predicted probabilities of a model and the actual outcomes, across different bins of predicted probabilities [7].
+The **Expected Calibration Error** (ECE) is a metric used to evaluate how well the predicted probabilities of a model align with the actual outcomes. The ECE provides a measure of the difference between predicted confidence levels and actual accuracy. The idea is to divide the predictions into bins based on confidence scores and then compare the accuracy within each bin to the average confidence level of the predictions in that bin.
+The ECE is calculated as follows:
 
 .. math::
-
-   \text{ECE} = \sum_{b=1}^{B} \frac{n_b}{n} | \text{acc}(b) - \text{conf}(b) |
+    \text{ECE} = \sum_{i=1}^B \frac{|B_i|}{n} \left| \text{acc}(B_i) - \text{conf}(B_i) \right|
 
 where:
+- :math:`B_i` is the set of indices of samples that fall into the i-th bin.
+- :math:`|B_i|` is the number of samples in the i-th bin.
+- :math:`n` is the total number of samples.
+- :math:`\text{acc}(B_i)` is the accuracy within the i-th bin.
+- :math:`\text{conf}(B_i)` is the average confidence score within the i-th bin.
+- :math:`B` is the total number of bins.
 
-- :math:`B` is the total number of bins,
-- :math:`n_b` is the number of samples in bin :math:`b`,
-- :math:`\text{acc}(b)` is the accuracy within bin :math:`b`,
-- :math:`\text{conf}(b)` is the mean predicted probability in bin :math:`b`.
+The difference between the average confidence and the actual accuracy within each bin is weighted by the proportion of samples in that bin, ensuring that bins with more samples have a larger influence on the final ECE value.
 
 
 Top-Label Expected Calibration Error (Top-Label ECE)
 ----------------------------------------------------
 
-**Top-Label ECE** focuses on the class predicted with the highest confidence for each sample, assessing whether these top-predicted confidences align well with actual outcomes. It is calculated by dividing the confidence score range into bins and comparing the mean confidence against empirical accuracy within these bins [5].
+The **Top-Label Expected Calibration Error** (Top-Label ECE) extends the concept of ECE to the multi-class setting. Instead of evaluating calibration over all predicted probabilities, Top-Label ECE focuses on the calibration of the most confident prediction (top-label) for each sample.
+
+The Top-Label ECE is calculated as follows:
 
 .. math::
-
-   \text{Top-Label ECE} = \sum_{b=1}^{B} \frac{n_b}{n} \left| \text{acc}_b - \text{conf}_b \right|
+    \text{Top-Label ECE} = \frac{1}{L} \sum_{j=1}^L \sum_{i=1}^B \frac{|B_{i,j}|}{n_j} \left| \text{acc}(B_{i,j}) - \text{conf}(B_{i,j}) \right|
 
 where:
+- :math:`L` is the number of unique labels.
+- :math:`B_{i,j}` is the set of indices of samples that fall into the i-th bin for label j.
+- :math:`|B_{i,j}|` is the number of samples in the i-th bin for label j.
+- :math:`n_j` is the total number of samples for label j.
+- :math:`\text{acc}(B_{i,j})` is the accuracy within the i-th bin for label j.
+- :math:`\text{conf}(B_{i,j})` is the average confidence score within the i-th bin for label j.
+- :math:`B` is the total number of bins.
 
-- :math:`n` is the total number of samples,
-- :math:`n_b` is the number of samples in bin :math:`b`,
-- :math:`\text{acc}_b` is the empirical accuracy in bin :math:`b`,
-- :math:`\text{conf}_b` is the average confidence of the top label in bin :math:`b`.
-
-This metric is especially useful in multi-class classification to ensure that the model is neither overconfident nor underconfident in its predictions.
+For each label, the predictions are binned according to their confidence scores for that label. The calibration error is then calculated for each label separately and averaged across all labels to obtain the final Top-Label ECE value. This ensures that the calibration is measured specifically for the most confident prediction, which is often the most critical for decision-making in multi-class problems.
 
 
 Cumulative Differences
