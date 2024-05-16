@@ -113,7 +113,7 @@ The **Coverage Width-Based Criterion (CWC)** evaluates prediction intervals by b
 
 
 
-Regression MWI Score
+Mean Winkler Interval Score
 --------------------
 
 The **MWI (Mean Winkler Interval) Score** evaluates prediction intervals by combining their width with a penalty for intervals that do not contain the observation [8, 10].
