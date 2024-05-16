@@ -47,7 +47,7 @@ The **Classification Coverage Score** measures how often the true class labels f
 
    CCS = \frac{1}{n} \sum_{i=1}^{n} \mathbf{1}(y_{i} \in \hat C(x_{i}))
 
-Here, :math:`\text{Set}_{\text{pred}}^{(i)}` represents the set of predicted labels that could possibly contain the true label.
+Here, :math:`\hat C(x_{i})` represents the set of predicted labels that could possibly contain the true label for the :math:`i`-th observation :math:`x_{i}`.
 
 
 Classification Mean Width Score
