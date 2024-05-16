@@ -19,7 +19,7 @@ The **Regression Coverage Score** calculates the fraction of true outcomes that 
 
 .. math::
 
-   C = \frac{1}{n} \sum_{i=1}^{n} \mathbf{1}(y_{\text{pred, low}}^{(i)} \leq y_{\text{true}}^{(i)} \leq y_{\text{pred, up}}^{(i)})
+   RCS = \frac{1}{n} \sum_{i=1}^{n} \mathbf{1}(\hat y^{\text{low}}_{i} \leq y_{i} \leq \hat y^{\text{up}}_{i})
 
 where:
 
