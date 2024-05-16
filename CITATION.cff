@@ -9,6 +9,26 @@ version: 0.8.3
 date-released: 2019-04-30
 url: "https://github.com/scikit-learn-contrib/MAPIE"
 preferred-citation:
+  type: conference-paper
+  authors:
+  - family-names: "Cordier"
+    given-names: "Thibault"
+  - family-names: "Blot"
+    given-names: "Vincent"
+  - family-names: "Lacombe"
+    given-names: "Louis"
+  - family-names: "Morzadec"
+    given-names: "Thomas"
+  - family-names: "Capitaine"
+    given-names: "Arnaud"
+  - family-names: "Brunel"
+    given-names: "Nicolas"
+  title: "Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library"
+  booktitle: "Conformal and Probabilistic Prediction with Applications"
+  pages: "549--581"
+  year: 2023
+  organization: "PMLR"
+old-citation:
   type: article
   authors:
   - family-names: "Taquet"
