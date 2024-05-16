@@ -2,20 +2,18 @@
 
 .. _theoretical_description_metrics:
 
-=======================
 Theoretical Description
 =======================
 
 This document provides detailed descriptions of various metrics used to evaluate the performance of predictive models, particularly focusing on their ability to estimate uncertainties and calibrate predictions accurately.
 
-
-1. General metrics
+1. General Metrics
 ==================
 
 Regression Coverage Score
 -------------------------
 
-The **Regression Coverage Score** calculates the fraction of true outcomes that fall within the provided prediction intervals. 
+The **Regression Coverage Score** calculates the fraction of true outcomes that fall within the provided prediction intervals.
 
 .. math::
 
@@ -27,7 +25,6 @@ where:
 - :math:`y_{i}` is the true value for the :math:`i`-th sample,
 - :math:`\hat y^{\text{low}}_{i}` and :math:`\hat y^{\text{up}}_{i}` are the lower and upper bounds of the prediction intervals, respectively.
 
-
 Regression Mean Width Score
 ---------------------------
 
@@ -36,7 +33,6 @@ The **Regression Mean Width Score** assesses the average width of the prediction
 .. math::
 
    \text{Mean Width} = \frac{1}{n} \sum_{i=1}^{n} (\hat y^{\text{up}}_{i} - \hat y^{\text{low}}_{i})
-
 
 Classification Coverage Score
 -----------------------------
@@ -49,7 +45,6 @@ The **Classification Coverage Score** measures how often the true class labels f
 
 Here, :math:`\hat C(x_{i})` represents the set of predicted labels that could possibly contain the true label for the :math:`i`-th observation :math:`x_{i}`.
 
-
 Classification Mean Width Score
 -------------------------------
 
@@ -60,7 +55,6 @@ For classification tasks, the **Classification Mean Width Score** calculates the
    \text{Mean Width} = \frac{1}{n} \sum_{i=1}^{n} |\hat C_{x_i}|
 
 where :math:`|\hat C_{x_i}|` denotes the number of classes included in the prediction set for sample :math:`i`.
-
 
 Size-Stratified Coverage (SSC)
 -------------------------------
@@ -84,11 +78,10 @@ where:
 - :math:`K` is the number of distinct size groups,
 - :math:`I_k` and :math:`S_k` are the indices of samples whose prediction intervals or sets belong to the :math:`k`-th size group.
 
-
 Hilbert-Schmidt Independence Criterion (HSIC)
 ----------------------------------------------
 
-**Hilbert-Schmidt Independence Criterion (HSIC)** is a non-parametric measure of independence between two variables, applied here to test the independence of interval sizes from their coverage indicators [4].
+The **Hilbert-Schmidt Independence Criterion (HSIC)** is a non-parametric measure of independence between two variables, applied here to test the independence of interval sizes from their coverage indicators [4].
 
 .. math::
 
@@ -101,7 +94,6 @@ where:
 
 This measure is crucial for determining whether certain sizes of prediction intervals are systematically more or less likely to contain the true values, which can highlight biases in interval-based predictions.
 
-
 Coverage Width-Based Criterion (CWC)
 ------------------------------------
 
@@ -111,12 +103,10 @@ The **Coverage Width-Based Criterion (CWC)** evaluates prediction intervals by b
 
    \text{CWC} = (1 - \text{Mean Width Score}) \times \exp\left(-\eta \times (\text{Coverage Score} - (1-\alpha))^2\right)
 
-
-
 Mean Winkler Interval Score
---------------------
+---------------------------
 
-The **MWI (Mean Winkler Interval) Score** evaluates prediction intervals by combining their width with a penalty for intervals that do not contain the observation [8, 10].
+The **Mean Winkler Interval (MWI) Score** evaluates prediction intervals by combining their width with a penalty for intervals that do not contain the observation [8, 10].
 
 .. math::
 
@@ -124,17 +114,13 @@ The **MWI (Mean Winkler Interval) Score** evaluates prediction intervals by comb
 
 where :math:`\hat y^{\text{boundary}}_{i}` is the nearest interval boundary not containing :math:`y_{i}`, and :math:`\alpha` is the significance level.
 
-
-
-2. Calibration metrics
+2. Calibration Metrics
 ======================
-
 
 Expected Calibration Error (ECE)
 --------------------------------
 
 The **Expected Calibration Error** (ECE) is a metric used to evaluate how well the predicted probabilities of a model align with the actual outcomes. The ECE provides a measure of the difference between predicted confidence levels and actual accuracy. The idea is to divide the predictions into bins based on confidence scores and then compare the accuracy within each bin to the average confidence level of the predictions in that bin.
-The ECE is calculated as follows:
 
 .. math::
     \text{ECE} = \sum_{i=1}^B \frac{|B_i|}{n} \left| \text{acc}(B_i) - \text{conf}(B_i) \right|
@@ -148,7 +134,6 @@ where:
 - :math:`B` is the total number of bins.
 
 The difference between the average confidence and the actual accuracy within each bin is weighted by the proportion of samples in that bin, ensuring that bins with more samples have a larger influence on the final ECE value.
-
 
 Top-Label Expected Calibration Error (Top-Label ECE)
 ----------------------------------------------------
@@ -171,7 +156,6 @@ where:
 
 For each label, the predictions are binned according to their confidence scores for that label. The calibration error is then calculated for each label separately and averaged across all labels to obtain the final Top-Label ECE value. This ensures that the calibration is measured specifically for the most confident prediction, which is often the most critical for decision-making in multi-class problems.
 
-
 Cumulative Differences
 ----------------------
 
@@ -186,7 +170,6 @@ where:
 - :math:`\sigma_1` is the permutation which sorts all the true values.
 - :math:`\sigma_2` is the permutation which sorts all the predicted values.
 
-
 Kolmogorov-Smirnov Statistic for Calibration
 --------------------------------------------
 
@@ -198,7 +181,6 @@ This statistic measures the maximum absolute deviation between the empirical cum
 
 where :math:`F_n(x)` is the ECDF of the predicted probabilities and :math:`S_n(x)` is the ECDF of the observed outcomes.
 
-
 Kuiper's Statistic
 ------------------
 
@@ -208,7 +190,6 @@ Kuiper's Statistic
 
    \text{Kuiper's Statistic} = \max(F_n(x) - S_n(x)) + \max(S_n(x) - F_n(x))
 
-
 Spiegelhalter’s Test
 --------------------
 
@@ -217,8 +198,6 @@ Spiegelhalter’s Test
 .. math::
 
    \text{Spiegelhalter's Statistic} = \frac{\sum_{i=1}^n (y_i - \hat y_i)(1 - 2\hat y_i)}{\sqrt{\sum_{i=1}^n (1 - 2 \hat y_i)^2 \hat y_i (1 - \hat y_i)}}
-
-
 
 References
 ==========
