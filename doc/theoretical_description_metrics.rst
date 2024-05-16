@@ -1,4 +1,4 @@
-.. title:: Theoretical Description : contents
+.. title:: Theoretical Description Metrics : contents
 
 .. _theoretical_description_metrics:
 
