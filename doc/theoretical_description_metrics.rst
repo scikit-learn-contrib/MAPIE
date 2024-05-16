@@ -24,8 +24,8 @@ The **Regression Coverage Score** calculates the fraction of true outcomes that 
 where:
 
 - :math:`n` is the number of samples,
-- :math:`y_{\text{true}}^{(i)}` is the true value for the :math:`i`-th sample,
-- :math:`y_{\text{pred, low}}^{(i)}` and :math:`y_{\text{pred, up}}^{(i)}` are the lower and upper bounds of the prediction intervals, respectively.
+- :math:`y_{i}` is the true value for the :math:`i`-th sample,
+- :math:`\hat y^{\text{low}}_{i}` and :math:`\hat y^{\text{up}}_{i}` are the lower and upper bounds of the prediction intervals, respectively.
 
 
 Regression Mean Width Score
