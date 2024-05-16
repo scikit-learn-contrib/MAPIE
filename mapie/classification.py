@@ -15,7 +15,7 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 
 from ._machine_precision import EPSILON
 from ._typing import ArrayLike, NDArray
-from .estimator.estimator_classifier import EnsembleClassifier
+from .estimator.classification.estimator import EnsembleClassifier
 from .metrics import classification_mean_width_score
 from .utils import (check_alpha, check_alpha_and_n_samples, check_cv,
                     check_estimator_classification, check_n_features_in,

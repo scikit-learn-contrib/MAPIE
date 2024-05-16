@@ -5,7 +5,7 @@ import numpy as np
 
 from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
-from mapie.estimator.interface import EnsembleEstimator
+from mapie.estimator.regression.interface import EnsembleEstimator
 
 
 class ConformityScore(metaclass=ABCMeta):

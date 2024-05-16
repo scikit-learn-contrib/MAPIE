@@ -11,7 +11,7 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
-from mapie.estimator.interface import EnsembleEstimator
+from mapie.estimator.regression.interface import EnsembleEstimator
 from mapie.utils import (check_nan_in_aposteriori_prediction, check_no_agg_cv,
                          fit_estimator)
 

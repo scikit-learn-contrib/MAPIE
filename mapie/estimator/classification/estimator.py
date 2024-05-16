@@ -11,7 +11,7 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import phi2D
-from mapie.estimator.interface import EnsembleEstimator
+from mapie.estimator.classification.interface import EnsembleEstimator
 from mapie.utils import (
     check_no_agg_cv,
     fit_estimator,
@@ -189,6 +189,42 @@ class EnsembleClassifier(EnsembleEstimator):
             **fit_params
         )
         return estimator
+
+    @staticmethod
+    def _check_proba_normalized(
+        y_pred_proba: ArrayLike,
+        axis: int = 1
+    ) -> NDArray:
+        """
+        Check if, for all the observations, the sum of
+        the probabilities is equal to one.
+
+        Parameters
+        ----------
+        y_pred_proba: ArrayLike of shape
+            (n_samples, n_classes) or
+            (n_samples, n_train_samples, n_classes)
+            Softmax output of a model.
+
+        Returns
+        -------
+        ArrayLike of shape (n_samples, n_classes)
+            Softmax output of a model if the scores all sum
+            to one.
+
+        Raises
+        ------
+            ValueError
+            If the sum of the scores is not equal to one.
+        """
+        np.testing.assert_allclose(
+            np.sum(y_pred_proba, axis=axis),
+            1,
+            err_msg="The sum of the scores is not equal to one.",
+            rtol=1e-5
+        )
+        y_pred_proba = cast(NDArray, y_pred_proba).astype(np.float64)
+        return y_pred_proba
 
     def _predict_proba_oof_estimator(
         self,
@@ -469,8 +505,10 @@ class EnsembleClassifier(EnsembleEstimator):
                 for train_index, _ in cv.split(X, y, groups)
             )
             # In split-CP, we keep only the model fitted on train dataset
-            if self.use_split_method_:
-                single_estimator_ = estimators_[0]
+            # TODO: copay/paste from EnsembleRegressor
+            # but not work here for EnsembleClassifier
+            # if self.use_split_method_:
+            #     single_estimator_ = estimators_[0]
 
         self.single_estimator_ = single_estimator_
         self.estimators_ = estimators_
@@ -480,8 +518,6 @@ class EnsembleClassifier(EnsembleEstimator):
     def predict(
         self,
         X: ArrayLike,
-        ensemble: bool = False,
-        return_multi_pred: bool = True,
         alpha_np: ArrayLike = [],
         agg_scores: Any = None
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
@@ -494,24 +530,9 @@ class EnsembleClassifier(EnsembleEstimator):
         X: ArrayLike of shape (n_samples, n_features)
             Test data.
 
-        ensemble: bool
-            Boolean determining whether the predictions are ensembled or not.
-            If ``False``, predictions are those of the model trained on the
-            whole training set.
-            If ``True``, predictions from perturbed models are aggregated by
-            the aggregation function specified in the ``agg_function``
-            attribute.
+        TODO
 
-            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
-
-            By default ``False``.
-
-        return_multi_pred: bool
-            If ``True`` the method returns the predictions and the multiple
-            predictions (3 arrays). If ``False`` the method return the
-            simple predictions only.
-
-        Returns
+        Returns TODO
         -------
         Tuple[NDArray, NDArray, NDArray]
             - Predictions
@@ -530,7 +551,7 @@ class EnsembleClassifier(EnsembleEstimator):
                 Parallel(
                     n_jobs=self.n_jobs, verbose=self.verbose
                 )(
-                    delayed(self._predict_oof_model)(estimator, X)
+                    delayed(self._predict_proba_oof_estimator)(estimator, X)
                     for estimator in self.estimators_
                 )
             )

@@ -979,7 +979,9 @@ def test_valid_estimator(strategy: str) -> None:
     clf = LogisticRegression().fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
     mapie_clf.fit(X_toy, y_toy)
-    assert isinstance(mapie_clf.single_estimator_, LogisticRegression)
+    assert (
+        isinstance(mapie_clf.estimator_.single_estimator_, LogisticRegression)
+    )
 
 
 @pytest.mark.parametrize("method", METHODS)
@@ -1641,13 +1643,12 @@ def test_include_label_error_in_predict(
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
     mapie_clf = MapieClassifier(random_state=random_state)
-    _, y_pred, _, _ = mapie_clf._fit_and_predict_oof_model(
-        estimator=LogisticRegression(),
+    mapie_clf.fit(X_toy, y_toy)
+    y_pred, _, _ = mapie_clf.estimator_._predict_proba_calib_oof_estimator(
+        estimator=LogisticRegression().fit(X_toy, y_toy),
         X=X_toy,
-        y=y_toy,
-        train_index=[0, 1, 2, 3, 4],
         val_index=[],
-        k=0,
+        k=0
     )
     assert len(y_pred) == 0
 
@@ -2027,7 +2028,7 @@ def test_fit_parameters_passing() -> None:
 
     mapie.fit(X, y, monitor=early_stopping_monitor)
 
-    assert mapie.single_estimator_.estimators_.shape[0] == 3
+    assert mapie.estimator_.single_estimator_.estimators_.shape[0] == 3
 
-    for estimator in mapie.estimators_:
+    for estimator in mapie.estimator_.estimators_:
         assert estimator.estimators_.shape[0] == 3
