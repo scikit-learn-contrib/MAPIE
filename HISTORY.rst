@@ -7,6 +7,7 @@ History
 
 * Fix conda versionning.
 * Reduce precision for test in `MapieCalibrator`.
+* Add documentation for metrics.
 
 0.8.3 (2024-03-01)
 ------------------
