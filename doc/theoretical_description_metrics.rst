@@ -35,7 +35,7 @@ The **Regression Mean Width Score** assesses the average width of the prediction
 
 .. math::
 
-   \text{Mean Width} = \frac{1}{n} \sum_{i=1}^{n} (y_{\text{pred, up}}^{(i)} - y_{\text{pred, low}}^{(i)})
+   \text{Mean Width} = \frac{1}{n} \sum_{i=1}^{n} (\hat y^{\text{up}}_{i} - \hat y^{\text{low}}_{i})
 
 
 Classification Coverage Score
