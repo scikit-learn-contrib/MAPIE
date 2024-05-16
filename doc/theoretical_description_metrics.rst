@@ -45,7 +45,7 @@ The **Classification Coverage Score** measures how often the true class labels f
 
 .. math::
 
-   C = \frac{1}{n} \sum_{i=1}^{n} \mathbf{1}(y_{\text{true}}^{(i)} \in \text{Set}_{\text{pred}}^{(i)})
+   CCS = \frac{1}{n} \sum_{i=1}^{n} \mathbf{1}(y_{i} \in \hat C(x_{i}))
 
 Here, :math:`\text{Set}_{\text{pred}}^{(i)}` represents the set of predicted labels that could possibly contain the true label.
 
