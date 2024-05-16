@@ -12,14 +12,9 @@ from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (
-    GroupKFold,
-    KFold,
-    LeaveOneOut,
-    PredefinedSplit,
-    ShuffleSplit,
-    train_test_split,
-)
+from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
+                                     PredefinedSplit, ShuffleSplit,
+                                     train_test_split)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -27,20 +22,19 @@ from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
-from mapie.conformity_scores import (
-    AbsoluteConformityScore,
-    ConformityScore,
-    GammaConformityScore,
-    ResidualNormalisedScore,
-)
-from mapie.estimator.estimator_regressor import EnsembleRegressor
+from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
+                                     GammaConformityScore,
+                                     ResidualNormalisedScore)
+from mapie.estimator.estimator import EnsembleRegressor
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
-X, y = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
+X, y = make_regression(
+    n_samples=500, n_features=10, noise=1.0, random_state=1
+)
 k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
 
@@ -62,77 +56,77 @@ STRATEGIES = {
         agg_function="median",
         cv=None,
         test_size=None,
-        random_state=random_state,
+        random_state=random_state
     ),
     "split": Params(
         method="base",
         agg_function="median",
         cv="split",
         test_size=0.5,
-        random_state=random_state,
+        random_state=random_state
     ),
     "jackknife": Params(
         method="base",
         agg_function="mean",
         cv=-1,
         test_size=None,
-        random_state=random_state,
+        random_state=random_state
     ),
     "jackknife_plus": Params(
         method="plus",
         agg_function="mean",
         cv=-1,
         test_size=None,
-        random_state=random_state,
+        random_state=random_state
     ),
     "jackknife_minmax": Params(
         method="minmax",
         agg_function="mean",
         cv=-1,
         test_size=None,
-        random_state=random_state,
+        random_state=random_state
     ),
     "cv": Params(
         method="base",
         agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
         test_size=None,
-        random_state=random_state,
+        random_state=random_state
     ),
     "cv_plus": Params(
         method="plus",
         agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
         test_size=None,
-        random_state=random_state,
+        random_state=random_state
     ),
     "cv_minmax": Params(
         method="minmax",
         agg_function="mean",
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
         test_size=None,
-        random_state=random_state,
+        random_state=random_state
     ),
     "jackknife_plus_ab": Params(
         method="plus",
         agg_function="mean",
         cv=Subsample(n_resamplings=30, random_state=random_state),
         test_size=None,
-        random_state=random_state,
+        random_state=random_state
     ),
     "jackknife_minmax_ab": Params(
         method="minmax",
         agg_function="mean",
         cv=Subsample(n_resamplings=30, random_state=random_state),
         test_size=None,
-        random_state=random_state,
+        random_state=random_state
     ),
     "jackknife_plus_median_ab": Params(
         method="plus",
         agg_function="median",
         cv=Subsample(n_resamplings=30, random_state=random_state),
         test_size=None,
-        random_state=random_state,
+        random_state=random_state
     ),
 }
 
@@ -179,7 +173,9 @@ def test_default_parameters() -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
-    mapie_reg = MapieRegressor(estimator=DummyRegressor(), **STRATEGIES[strategy])
+    mapie_reg = MapieRegressor(
+        estimator=DummyRegressor(), **STRATEGIES[strategy]
+    )
     mapie_reg.fit(X_toy, y_toy)
     assert isinstance(mapie_reg.estimator_.single_estimator_, DummyRegressor)
     for estimator in mapie_reg.estimator_.estimators_:
@@ -215,18 +211,10 @@ def test_valid_agg_function(agg_function: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "cv",
-    [
-        None,
-        -1,
-        2,
-        KFold(),
-        LeaveOneOut(),
-        ShuffleSplit(n_splits=1),
-        PredefinedSplit(test_fold=[-1] * 3 + [0] * 3),
-        "prefit",
-        "split",
-    ],
+    "cv", [None, -1, 2, KFold(), LeaveOneOut(),
+           ShuffleSplit(n_splits=1),
+           PredefinedSplit(test_fold=[-1]*3+[0]*3),
+           "prefit", "split"]
 )
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
@@ -269,7 +257,9 @@ def test_same_results_prefit_split() -> None:
     Test checking that if split and prefit method have exactly
     the same data split, then we have exactly the same results.
     """
-    X, y = make_regression(n_samples=500, n_features=10, noise=1.0, random_state=1)
+    X, y = make_regression(
+        n_samples=500, n_features=10, noise=1.0, random_state=1
+    )
     cv = ShuffleSplit(n_splits=1, test_size=0.1, random_state=random_state)
     train_index, val_index = list(cv.split(X))[0]
     X_train, X_calib = X[train_index], X[val_index]
@@ -303,8 +293,12 @@ def test_results_for_same_alpha(strategy: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)])
-def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> None:
+@pytest.mark.parametrize(
+    "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
+)
+def test_results_for_alpha_as_float_and_arraylike(
+    strategy: str, alpha: Any
+) -> None:
     """Test that output values do not depend on type of alpha."""
     mapie_reg = MapieRegressor(**STRATEGIES[strategy])
     mapie_reg.fit(X, y)
@@ -496,7 +490,9 @@ def test_results_prefit_ignore_method() -> None:
     estimator = LinearRegression().fit(X, y)
     all_y_pis: List[NDArray] = []
     for method in METHODS:
-        mapie_reg = MapieRegressor(estimator=estimator, cv="prefit", method=method)
+        mapie_reg = MapieRegressor(
+            estimator=estimator, cv="prefit", method=method
+        )
         mapie_reg.fit(X, y)
         _, y_pis = mapie_reg.predict(X, alpha=0.1)
         all_y_pis.append(y_pis)
@@ -532,7 +528,9 @@ def test_results_prefit() -> None:
     mapie_reg.fit(X_val, y_val)
     _, y_pis = mapie_reg.predict(X_test, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
+    coverage = regression_coverage_score(
+        y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
+    )
     np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
 
@@ -542,7 +540,9 @@ def test_not_enough_resamplings() -> None:
     Test that a warning is raised if at least one conformity score is nan.
     """
     with pytest.warns(UserWarning, match=r"WARNING: at least one point of*"):
-        mapie_reg = MapieRegressor(cv=Subsample(n_resamplings=1), agg_function="mean")
+        mapie_reg = MapieRegressor(
+            cv=Subsample(n_resamplings=1), agg_function="mean"
+        )
         mapie_reg.fit(X, y)
 
 
@@ -550,8 +550,12 @@ def test_no_agg_fx_specified_with_subsample() -> None:
     """
     Test that a warning is raised if at least one conformity score is nan.
     """
-    with pytest.raises(ValueError, match=r"You need to specify an aggregation*"):
-        mapie_reg = MapieRegressor(cv=Subsample(n_resamplings=1), agg_function=None)
+    with pytest.raises(
+        ValueError, match=r"You need to specify an aggregation*"
+    ):
+        mapie_reg = MapieRegressor(
+            cv=Subsample(n_resamplings=1), agg_function=None
+        )
         mapie_reg.fit(X, y)
 
 
@@ -589,7 +593,7 @@ def test_aggregate_with_mask_with_invalid_agg_function() -> None:
         None,
         random_state,
         0.20,
-        False,
+        False
     )
     ens_reg.use_split_method_ = False
     with pytest.raises(
@@ -646,24 +650,32 @@ def test_pipeline_compatibility() -> None:
 @pytest.mark.parametrize(
     "conformity_score", [AbsoluteConformityScore(), GammaConformityScore()]
 )
-def test_conformity_score(strategy: str, conformity_score: ConformityScore) -> None:
+def test_conformity_score(
+    strategy: str, conformity_score: ConformityScore
+) -> None:
     """Test that any conformity score function with MAPIE raises no error."""
     mapie_reg = MapieRegressor(
-        conformity_score=conformity_score, **STRATEGIES[strategy]
+        conformity_score=conformity_score,
+        **STRATEGIES[strategy]
     )
     mapie_reg.fit(X, y + 1e3)
     mapie_reg.predict(X, alpha=0.05)
 
 
-@pytest.mark.parametrize("conformity_score", [ResidualNormalisedScore()])
+@pytest.mark.parametrize(
+    "conformity_score", [ResidualNormalisedScore()]
+)
 def test_conformity_score_with_split_strategies(
-    conformity_score: ConformityScore,
+   conformity_score: ConformityScore
 ) -> None:
     """
     Test that any conformity score function that handle only split strategies
     with MAPIE raises no error.
     """
-    mapie_reg = MapieRegressor(conformity_score=conformity_score, **STRATEGIES["split"])
+    mapie_reg = MapieRegressor(
+        conformity_score=conformity_score,
+        **STRATEGIES["split"]
+    )
     mapie_reg.fit(X, y + 1e3)
     mapie_reg.predict(X, alpha=0.05)
 
@@ -696,12 +708,11 @@ def test_beta_optimize_user_warning() -> None:
     """
     Test that a UserWarning is displayed when optimize_beta is used.
     """
-    mapie_reg = MapieRegressor(conformity_score=AbsoluteConformityScore(sym=False)).fit(
-        X, y
-    )
+    mapie_reg = MapieRegressor(
+        conformity_score=AbsoluteConformityScore(sym=False)
+    ).fit(X, y)
     with pytest.warns(
-        UserWarning,
-        match=r"Beta optimisation should only be used for*",
+        UserWarning, match=r"Beta optimisation should only be used for*",
     ):
         mapie_reg.predict(X, alpha=0.05, optimize_beta=True)
 
@@ -734,6 +745,6 @@ def test_fit_parameters_passing() -> None:
 def test_predict_infinite_intervals() -> None:
     """Test that MapieRegressor produces infinite bounds with alpha=0"""
     mapie_reg = MapieRegressor().fit(X, y)
-    _, y_pis = mapie_reg.predict(X, alpha=0.0, allow_infinite_bounds=True)
+    _, y_pis = mapie_reg.predict(X, alpha=0., allow_infinite_bounds=True)
     np.testing.assert_allclose(y_pis[:, 0, 0], -np.inf)
     np.testing.assert_allclose(y_pis[:, 1, 0], np.inf)

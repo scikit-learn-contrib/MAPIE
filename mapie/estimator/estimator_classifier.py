@@ -182,7 +182,11 @@ class EnsembleClassifier(EnsembleEstimator):
             sample_weight = cast(NDArray, sample_weight)
 
         estimator = fit_estimator(
-            estimator, X_train, y_train, sample_weight=sample_weight, **fit_params
+            estimator,
+            X_train,
+            y_train,
+            sample_weight=sample_weight,
+            **fit_params
         )
         return estimator
 
@@ -216,7 +220,11 @@ class EnsembleClassifier(EnsembleEstimator):
         return y_pred_proba
 
     def _predict_proba_calib_oof_estimator(
-        self, estimator: ClassifierMixin, X: ArrayLike, val_index: ArrayLike, k: int
+        self,
+        estimator: ClassifierMixin,
+        X: ArrayLike,
+        val_index: ArrayLike,
+        k: int
     ) -> Tuple[NDArray, ArrayLike]:
         """
         Perform predictions on a single out-of-fold model on a validation set.
@@ -244,6 +252,7 @@ class EnsembleClassifier(EnsembleEstimator):
         else:
             y_pred_proba = np.array([])
         val_id = np.full(len(X_val), k, dtype=int)
+
         return y_pred_proba, val_id, val_index
 
     def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
@@ -302,7 +311,9 @@ class EnsembleClassifier(EnsembleEstimator):
         -------
         NDArray of shape (n_samples_test, n_samples_train)
         """
-        y_pred_multi = np.column_stack([e.predict(X) for e in self.estimators_])
+        y_pred_multi = np.column_stack(
+            [e.predict(X) for e in self.estimators_]
+        )
         # At this point, y_pred_multi is of shape
         # (n_samples_test, n_estimators_). The method
         # ``_aggregate_with_mask`` fits it to the right size
@@ -431,17 +442,29 @@ class EnsembleClassifier(EnsembleEstimator):
         # Computation
         if cv == "prefit":
             single_estimator_ = estimator
-            self.k_ = np.full(shape=(n_samples, 1), fill_value=np.nan, dtype=float)
+            self.k_ = (
+                np.full(shape=(n_samples, 1), fill_value=np.nan, dtype=float)
+            )
         else:
             single_estimator_ = self._fit_oof_estimator(
-                clone(estimator), X, y, full_indexes, sample_weight, **fit_params
+                clone(estimator),
+                X,
+                y,
+                full_indexes,
+                sample_weight,
+                **fit_params
             )
             cv = cast(BaseCrossValidator, cv)
             self.k_ = np.empty_like(y, dtype=int)
 
             estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
                 delayed(self._fit_oof_estimator)(
-                    clone(estimator), X, y_enc, train_index, sample_weight, **fit_params
+                    clone(estimator),
+                    X,
+                    y_enc,
+                    train_index,
+                    sample_weight,
+                    **fit_params
                 )
                 for train_index, _ in cv.split(X, y, groups)
             )
@@ -455,7 +478,12 @@ class EnsembleClassifier(EnsembleEstimator):
         return self
 
     def predict(
-        self, X: ArrayLike, agg_scores
+        self,
+        X: ArrayLike,
+        ensemble: bool = False,
+        return_multi_pred: bool = True,
+        alpha_np: ArrayLike = [],
+        agg_scores: Any = None
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample
@@ -494,10 +522,15 @@ class EnsembleClassifier(EnsembleEstimator):
 
         if self.cv == "prefit":
             y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba = np.repeat(
+                y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
+            )
         else:
             y_pred_proba_k = np.asarray(
-                Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                    delayed(self._predict_proba_oof_estimator)(estimator, X)
+                Parallel(
+                    n_jobs=self.n_jobs, verbose=self.verbose
+                )(
+                    delayed(self._predict_oof_model)(estimator, X)
                     for estimator in self.estimators_
                 )
             )
@@ -505,6 +538,10 @@ class EnsembleClassifier(EnsembleEstimator):
                 y_pred_proba = np.moveaxis(y_pred_proba_k[self.k_], 0, 2)
             elif agg_scores == "mean":
                 y_pred_proba = np.mean(y_pred_proba_k, axis=0)
+                y_pred_proba = np.repeat(
+                    y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
+                )
             else:
                 raise ValueError("Invalid 'agg_scores' argument.")
+
         return y_pred_proba
