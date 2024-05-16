@@ -224,3 +224,9 @@ and with the financial support from Région Ile de France and Confiance.ai.
 ==========
 
 MAPIE is free and open-source software licensed under the `3-clause BSD license <https://github.com/simai-ml/MAPIE/blob/master/LICENSE>`_.
+
+
+📚 Citation
+===========
+
+If you use MAPIE in your research, please cite using `citations file <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-citation-files>`_ on our repository.
