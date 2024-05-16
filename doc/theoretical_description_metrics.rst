@@ -57,9 +57,9 @@ For classification tasks, the **Classification Mean Width Score** calculates the
 
 .. math::
 
-   \text{Mean Width} = \frac{1}{n} \sum_{i=1}^{n} |\text{Set}_{\text{pred}}^{(i)}|
+   \text{Mean Width} = \frac{1}{n} \sum_{i=1}^{n} |\hat C_{x_i}|
 
-where :math:`|\text{Set}_{\text{pred}}^{(i)}|` denotes the number of classes included in the prediction set for sample :math:`i`.
+where :math:`|\hat C_{x_i}|` denotes the number of classes included in the prediction set for sample :math:`i`.
 
 
 Size-Stratified Coverage (SSC)
