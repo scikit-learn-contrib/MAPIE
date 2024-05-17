@@ -1562,7 +1562,7 @@ def test_sum_proba_to_one_predict(
     wrong_model = WrongOutputModel(y_pred_proba)
     mapie_clf = MapieClassifier(cv="prefit", random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
-    mapie_clf.single_estimator_ = wrong_model
+    mapie_clf.estimator_.single_estimator_ = wrong_model
     with pytest.raises(
         AssertionError, match=r".*The sum of the scores is not equal to one.*"
     ):

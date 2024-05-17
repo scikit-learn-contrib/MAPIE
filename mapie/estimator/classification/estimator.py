@@ -392,6 +392,7 @@ class EnsembleClassifier(EnsembleEstimator):
 
         if self.cv == "prefit":
             y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba = self._check_proba_normalized(y_pred_proba)
         else:
             y_pred_proba = np.empty((len(X), self.n_classes), dtype=float)
             cv = cast(BaseCrossValidator, self.cv)
@@ -505,10 +506,8 @@ class EnsembleClassifier(EnsembleEstimator):
                 for train_index, _ in cv.split(X, y, groups)
             )
             # In split-CP, we keep only the model fitted on train dataset
-            # TODO: copay/paste from EnsembleRegressor
-            # but not work here for EnsembleClassifier
-            # if self.use_split_method_:
-            #     single_estimator_ = estimators_[0]
+            if isinstance(cv, ShuffleSplit):
+                single_estimator_ = estimators_[0]
 
         self.single_estimator_ = single_estimator_
         self.estimators_ = estimators_
