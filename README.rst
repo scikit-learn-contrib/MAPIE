@@ -229,4 +229,4 @@ MAPIE is free and open-source software licensed under the `3-clause BSD license 
 📚 Citation
 ===========
 
-If you use MAPIE in your research, please cite using `citations file <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-citation-files>`_ on our repository.
+If you use MAPIE in your research, please cite using `citations file <CITATION.CFF>`_ on our repository.
