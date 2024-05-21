@@ -126,6 +126,7 @@ The **Expected Calibration Error** (ECE) is a metric used to evaluate how well t
     \text{ECE} = \sum_{i=1}^B \frac{|B_i|}{n} \left| \text{acc}(B_i) - \text{conf}(B_i) \right|
 
 where:
+
 - :math:`B_i` is the set of indices of samples that fall into the i-th bin.
 - :math:`|B_i|` is the number of samples in the i-th bin.
 - :math:`n` is the total number of samples.
@@ -146,6 +147,7 @@ The Top-Label ECE is calculated as follows:
     \text{Top-Label ECE} = \frac{1}{L} \sum_{j=1}^L \sum_{i=1}^B \frac{|B_{i,j}|}{n_j} \left| \text{acc}(B_{i,j}) - \text{conf}(B_{i,j}) \right|
 
 where:
+
 - :math:`L` is the number of unique labels.
 - :math:`B_{i,j}` is the set of indices of samples that fall into the i-th bin for label j.
 - :math:`|B_{i,j}|` is the number of samples in the i-th bin for label j.
