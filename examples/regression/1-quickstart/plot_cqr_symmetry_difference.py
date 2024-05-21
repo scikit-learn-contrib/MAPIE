@@ -26,15 +26,13 @@ quantiles = [0.1, 0.9]
 gb_reg = GradientBoostingRegressor(loss="quantile", alpha=quantiles[1])
 gb_reg.fit(X, y)
 
-# MAPIE Quantile Regressor with symmetry=True
-mapie_qr_sym = MapieQuantileRegressor(estimator=gb_reg, alpha=alpha)
-mapie_qr_sym.fit(X, y)
-y_pred_sym, y_pis_sym = mapie_qr_sym.predict(X, symmetry=True)
-
-# MAPIE Quantile Regressor with symmetry=False
-mapie_qr_asym = MapieQuantileRegressor(estimator=gb_reg, alpha=alpha)
-mapie_qr_asym.fit(X, y)
-y_pred_asym, y_pis_asym = mapie_qr_asym.predict(X, symmetry=False)
+# MAPIE Quantile Regressor
+mapie_qr = MapieQuantileRegressor(estimator=gb_reg, alpha=alpha)
+mapie_qr.fit(X, y)
+y_pred_sym, y_pis_sym = mapie_qr.predict(X, symmetry=True)
+y_pred_asym, y_pis_asym = mapie_qr.predict(X, symmetry=False)
+y_qlow = mapie_qr.estimators_[0].predict(X)
+y_qup = mapie_qr.estimators_[1].predict(X)
 
 # Calculate coverage scores
 coverage_score_sym = regression_coverage_score(
@@ -51,6 +49,8 @@ y_pred_sym_sorted = y_pred_sym[order]
 y_pis_sym_sorted = y_pis_sym[order]
 y_pred_asym_sorted = y_pred_asym[order]
 y_pis_asym_sorted = y_pis_asym[order]
+y_qlow = y_qlow[order]
+y_qup = y_qup[order]
 
 ##############################################################################
 # We will plot the predictions and prediction intervals for both symmetric
@@ -64,7 +64,9 @@ plt.subplot(1, 2, 1)
 plt.xlabel("x")
 plt.ylabel("y")
 plt.scatter(X, y, alpha=0.3)
-plt.plot(X_sorted, y_pred_sym_sorted, color="C1")
+#plt.plot(X_sorted, y_pred_sym_sorted, color="C1")
+plt.plot(X_sorted, y_qlow, color="C1")
+plt.plot(X_sorted, y_qup, color="C1")
 plt.plot(X_sorted, y_pis_sym_sorted[:, 0], color="C1", ls="--")
 plt.plot(X_sorted, y_pis_sym_sorted[:, 1], color="C1", ls="--")
 plt.fill_between(
@@ -84,7 +86,9 @@ plt.subplot(1, 2, 2)
 plt.xlabel("x")
 plt.ylabel("y")
 plt.scatter(X, y, alpha=0.3)
-plt.plot(X_sorted, y_pred_asym_sorted, color="C2")
+#plt.plot(X_sorted, y_pred_asym_sorted, color="C2")
+plt.plot(X_sorted, y_qlow, color="C2")
+plt.plot(X_sorted, y_qup, color="C2")
 plt.plot(X_sorted, y_pis_asym_sorted[:, 0], color="C2", ls="--")
 plt.plot(X_sorted, y_pis_asym_sorted[:, 1], color="C2", ls="--")
 plt.fill_between(
