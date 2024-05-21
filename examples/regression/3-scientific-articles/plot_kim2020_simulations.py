@@ -30,10 +30,9 @@ results than [1], and that the targeted coverage level is obtained.
 """
 from __future__ import annotations
 
-import ssl
+import requests
 from io import BytesIO
 from typing import Any, Optional, Tuple
-from urllib.request import urlopen
 from zipfile import ZipFile
 
 import matplotlib.pyplot as plt
@@ -69,9 +68,8 @@ def get_X_y() -> Tuple[NDArray, NDArray]:
     zip_folder = "BlogFeedback.zip"
     csv_file = "blogData_train.csv"
     url = website + page + folder + zip_folder
-    ssl._create_default_https_context = ssl._create_unverified_context
-    resp = urlopen(url)
-    zipfile = ZipFile(BytesIO(resp.read()))
+    response = requests.get(url)
+    zipfile = ZipFile(BytesIO(response.content))
     df = pd.read_csv(zipfile.open(csv_file)).to_numpy()
     X = df[:, :-1]
     y = np.log(1 + df[:, -1])
