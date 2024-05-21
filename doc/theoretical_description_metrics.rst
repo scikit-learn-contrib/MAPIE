@@ -13,7 +13,7 @@ This document provides detailed descriptions of various metrics used to evaluate
 Regression Coverage Score
 -------------------------
 
-The **Regression Coverage Score** calculates the fraction of true outcomes that fall within the provided prediction intervals.
+The **Regression Coverage Score (RCS)** calculates the fraction of true outcomes that fall within the provided prediction intervals.
 
 .. math::
 
@@ -28,16 +28,16 @@ where:
 Regression Mean Width Score
 ---------------------------
 
-The **Regression Mean Width Score** assesses the average width of the prediction intervals provided by the model.
+The **Regression Mean Width Score (RMWS)** assesses the average width of the prediction intervals provided by the model.
 
 .. math::
 
-   \text{Mean Width} = \frac{1}{n} \sum_{i=1}^{n} (\hat y^{\text{up}}_{i} - \hat y^{\text{low}}_{i})
+   \text{RMWS} = \frac{1}{n} \sum_{i=1}^{n} (\hat y^{\text{up}}_{i} - \hat y^{\text{low}}_{i})
 
 Classification Coverage Score
 -----------------------------
 
-The **Classification Coverage Score** measures how often the true class labels fall within the predicted sets.
+The **Classification Coverage Score (CCS)** measures how often the true class labels fall within the predicted sets.
 
 .. math::
 
@@ -48,16 +48,16 @@ Here, :math:`\hat C(x_{i})` represents the set of predicted labels that could po
 Classification Mean Width Score
 -------------------------------
 
-For classification tasks, the **Classification Mean Width Score** calculates the average size of the prediction sets across all samples.
+For classification tasks, the **Classification Mean Width Score (CMWS)** calculates the average size of the prediction sets across all samples.
 
 .. math::
 
-   \text{Mean Width} = \frac{1}{n} \sum_{i=1}^{n} |\hat C_{x_i}|
+   \text{CMWS} = \frac{1}{n} \sum_{i=1}^{n} |\hat C(x_i)|
 
-where :math:`|\hat C_{x_i}|` denotes the number of classes included in the prediction set for sample :math:`i`.
+where :math:`|\hat C(x_i)|` denotes the number of classes included in the prediction set for sample :math:`i`.
 
-Size-Stratified Coverage (SSC)
--------------------------------
+Size-Stratified Coverage
+-------------------------
 
 **Size-Stratified Coverage (SSC)** evaluates how the size of prediction sets or intervals affects their ability to cover the true outcomes [1]. It's calculated separately for classification and regression:
 
@@ -78,8 +78,8 @@ where:
 - :math:`K` is the number of distinct size groups,
 - :math:`I_k` and :math:`S_k` are the indices of samples whose prediction intervals or sets belong to the :math:`k`-th size group.
 
-Hilbert-Schmidt Independence Criterion (HSIC)
-----------------------------------------------
+Hilbert-Schmidt Independence Criterion
+---------------------------------------
 
 The **Hilbert-Schmidt Independence Criterion (HSIC)** is a non-parametric measure of independence between two variables, applied here to test the independence of interval sizes from their coverage indicators [4].
 
@@ -94,8 +94,8 @@ where:
 
 This measure is crucial for determining whether certain sizes of prediction intervals are systematically more or less likely to contain the true values, which can highlight biases in interval-based predictions.
 
-Coverage Width-Based Criterion (CWC)
-------------------------------------
+Coverage Width-Based Criterion
+------------------------------
 
 The **Coverage Width-Based Criterion (CWC)** evaluates prediction intervals by balancing their empirical coverage and width. It is designed to both reward narrow intervals and penalize those that do not achieve a specified coverage probability [6].
 
@@ -117,8 +117,8 @@ where :math:`\hat y^{\text{boundary}}_{i}` is the nearest interval boundary not 
 2. Calibration Metrics
 ======================
 
-Expected Calibration Error (ECE)
---------------------------------
+Expected Calibration Error
+--------------------------
 
 The **Expected Calibration Error** (ECE) is a metric used to evaluate how well the predicted probabilities of a model align with the actual outcomes. The ECE provides a measure of the difference between predicted confidence levels and actual accuracy. The idea is to divide the predictions into bins based on confidence scores and then compare the accuracy within each bin to the average confidence level of the predictions in that bin.
 
