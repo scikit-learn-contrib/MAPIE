@@ -223,7 +223,7 @@ and with the financial support from Région Ile de France and Confiance.ai.
 📝 License
 ==========
 
-MAPIE is free and open-source software licensed under the `3-clause BSD license <https://github.com/simai-ml/MAPIE/blob/master/LICENSE>`_.
+MAPIE is free and open-source software licensed under the `3-clause BSD license <LICENSE>`_.
 
 
 📚 Citation
