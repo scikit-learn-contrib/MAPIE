@@ -13,6 +13,8 @@ from sklearn.ensemble import GradientBoostingRegressor
 from mapie.metrics import regression_coverage_score
 from mapie.quantile_regression import MapieQuantileRegressor
 
+random_state = 2
+
 ##############################################################################
 # We generate a synthetic data.
 
@@ -22,13 +24,13 @@ X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
 alpha = 0.2
 
 # Fit a Gradient Boosting Regressor for quantile regression
-quantiles = [0.1, 0.9]
-gb_reg = GradientBoostingRegressor(loss="quantile", alpha=quantiles[1])
-gb_reg.fit(X, y)
+gb_reg = GradientBoostingRegressor(
+    loss="quantile", alpha=0.5, random_state=random_state
+)
 
 # MAPIE Quantile Regressor
 mapie_qr = MapieQuantileRegressor(estimator=gb_reg, alpha=alpha)
-mapie_qr.fit(X, y)
+mapie_qr.fit(X, y, random_state=random_state)
 y_pred_sym, y_pis_sym = mapie_qr.predict(X, symmetry=True)
 y_pred_asym, y_pis_asym = mapie_qr.predict(X, symmetry=False)
 y_qlow = mapie_qr.estimators_[0].predict(X)
@@ -64,7 +66,6 @@ plt.subplot(1, 2, 1)
 plt.xlabel("x")
 plt.ylabel("y")
 plt.scatter(X, y, alpha=0.3)
-#plt.plot(X_sorted, y_pred_sym_sorted, color="C1")
 plt.plot(X_sorted, y_qlow, color="C1")
 plt.plot(X_sorted, y_qup, color="C1")
 plt.plot(X_sorted, y_pis_sym_sorted[:, 0], color="C1", ls="--")
@@ -86,7 +87,6 @@ plt.subplot(1, 2, 2)
 plt.xlabel("x")
 plt.ylabel("y")
 plt.scatter(X, y, alpha=0.3)
-#plt.plot(X_sorted, y_pred_asym_sorted, color="C2")
 plt.plot(X_sorted, y_qlow, color="C2")
 plt.plot(X_sorted, y_qup, color="C2")
 plt.plot(X_sorted, y_pis_asym_sorted[:, 0], color="C2", ls="--")
@@ -106,7 +106,9 @@ plt.tight_layout()
 plt.show()
 
 ##############################################################################
-# The symmetric intervals (`symmetry=True`) are easier to interpret and
-# tend to have higher coverage but might not adapt well to varying
-# noise levels. The asymmetric intervals (`symmetry=False`) are more
-# flexible and better capture heteroscedasticity but can appear more jagged.
+# The symmetric intervals (`symmetry=True`) use a combined set of residuals
+# for both bounds, while the asymmetric intervals use distinct residuals for
+# each bound, allowing for more flexible and accurate intervals that reflect
+# the heteroscedastic nature of the data. The resulting effective coverages
+# demonstrate the theoretical guarantee of the target coverage level
+# $(1−\alpha)$.
