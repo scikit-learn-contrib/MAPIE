@@ -1,7 +1,7 @@
 """
-======================================================
-Plotting MAPIE Quantile Regressor prediction intervals
-======================================================
+====================================
+Plotting CQR with symmetric argument
+====================================
 An example plot of :class:`~mapie.quantile_regression.MapieQuantileRegressor`
 illustrating the impact of the symmetry parameter.
 """
