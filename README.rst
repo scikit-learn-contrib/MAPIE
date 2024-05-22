@@ -12,7 +12,7 @@
     :target: https://mapie.readthedocs.io/en/stable/?badge=stable
     :alt: Documentation Status
 
-.. |License| image:: https://img.shields.io/github/license/simai-ml/MAPIE
+.. |License| image:: https://img.shields.io/github/license/scikit-learn-contrib/MAPIE
    :target: https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE
 
 .. |PythonVersion| image:: https://img.shields.io/pypi/pyversions/mapie
@@ -33,7 +33,7 @@
 .. |DOI| image:: https://img.shields.io/badge/10.48550/arXiv.2207.12274-B31B1B.svg
    :target: https://arxiv.org/abs/2207.12274
 
-.. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
+.. image:: https://github.com/scikit-learn-contrib/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
     :align: center
 
@@ -158,7 +158,7 @@ The full documentation can be found `on this link <https://mapie.readthedocs.io/
 ===============
 
 You are welcome to propose and contribute new ideas.
-We encourage you to `open an issue <https://github.com/simai-ml/MAPIE/issues>`_ so that we can align on the work to be done.
+We encourage you to `open an issue <https://github.com/scikit-learn-contrib/MAPIE/issues>`_ so that we can align on the work to be done.
 It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
 For more information on the contribution process, please go `here <CONTRIBUTING.rst>`_.
 
@@ -228,4 +228,10 @@ and with the financial support from Région Ile de France and Confiance.ai.
 📝 License
 ==========
 
-MAPIE is free and open-source software licensed under the `3-clause BSD license <https://github.com/simai-ml/MAPIE/blob/master/LICENSE>`_.
+MAPIE is free and open-source software licensed under the `3-clause BSD license <LICENSE>`_.
+
+
+📚 Citation
+===========
+
+If you use MAPIE in your research, please cite using `citations file <CITATION.cff>`_ on our repository.
