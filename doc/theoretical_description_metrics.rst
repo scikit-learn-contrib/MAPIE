@@ -8,7 +8,7 @@ Theoretical Description
 This document provides detailed descriptions of various metrics used to evaluate the performance of predictive models, particularly focusing on their ability to estimate uncertainties and calibrate predictions accurately.
 
 1. General Metrics
-==================
+------------------
 
 Regression Coverage Score
 -------------------------
@@ -115,7 +115,7 @@ The **Mean Winkler Interval (MWI) Score** evaluates prediction intervals by comb
 where :math:`\hat y^{\text{boundary}}_{i}` is the nearest interval boundary not containing :math:`y_{i}`, and :math:`\alpha` is the significance level.
 
 2. Calibration Metrics
-======================
+----------------------
 
 Expected Calibration Error
 --------------------------
@@ -201,8 +201,8 @@ Spiegelhalter’s Test
 
    \text{Spiegelhalter's Statistic} = \frac{\sum_{i=1}^n (y_i - \hat y_i)(1 - 2\hat y_i)}{\sqrt{\sum_{i=1}^n (1 - 2 \hat y_i)^2 \hat y_i (1 - \hat y_i)}}
 
-References
-==========
+3. References
+-------------
 
 [1] Angelopoulos, A. N., & Bates, S. (2021).
 A gentle introduction to conformal prediction and
