@@ -59,7 +59,7 @@
    notebooks_calibration
 
 .. toctree::
-   :maxdepth: 0
+   :maxdepth: 2
    :hidden:
    :caption: METRICS
 
