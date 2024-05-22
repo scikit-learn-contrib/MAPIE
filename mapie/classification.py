@@ -1112,6 +1112,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 "Invalid method. " f"Allowed values are {self.valid_methods_}."
             )
 
+        # In split-CP, we keep only the model fitted on train dataset
+        if isinstance(cv, ShuffleSplit):
+            self.estimator_.single_estimator_ = self.estimator_.estimators_[0]
+
         return self
 
     def predict(

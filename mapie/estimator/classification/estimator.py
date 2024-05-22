@@ -10,7 +10,6 @@ from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.aggregation_functions import phi2D
 from mapie.estimator.classification.interface import EnsembleEstimator
 from mapie.utils import (
     check_no_agg_cv,
@@ -439,9 +438,6 @@ class EnsembleClassifier(EnsembleEstimator):
                 )
                 for train_index, _ in cv.split(X, y, groups)
             )
-            # In split-CP, we keep only the model fitted on train dataset
-            if isinstance(cv, ShuffleSplit):
-                single_estimator_ = estimators_[0]
 
         self.single_estimator_ = single_estimator_
         self.estimators_ = estimators_
