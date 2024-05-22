@@ -114,7 +114,7 @@ It is given by the alpha parameter defined in ``MapieRegressor``, here equal to 
 thus giving target coverages of ``0.95`` and ``0.68``.
 The effective coverage is the actual fraction of true labels lying in the prediction intervals.
 
-2. Run MapieClassifier
+3. Run MapieClassifier
 ----------------------
 
 Similarly, it's possible to do the same for a basic classification problem.

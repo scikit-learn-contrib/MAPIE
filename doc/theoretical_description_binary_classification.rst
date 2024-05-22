@@ -2,9 +2,9 @@
 
 .. _theoretical_description_binay_classification:
 
-=======================
+#######################
 Theoretical Description
-=======================
+#######################
 
 There are mainly three different ways to handle uncertainty quantification in binary classification:
 calibration (see :doc:`theoretical_description_calibration`), confidence interval (CI) for the probability
@@ -83,8 +83,8 @@ for the labels of test objects which are guaranteed to be well-calibrated under 
 that the observations are generated independently from the same distribution [2].
 
 
-4. References
--------------
+References
+----------
 
 [1] Gupta, Chirag, Aleksandr Podkopaev, and Aaditya Ramdas.
 "Distribution-free binary classification: prediction sets, confidence intervals, and calibration."
