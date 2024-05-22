@@ -2,13 +2,14 @@
 
 .. _theoretical_description_metrics:
 
+#######################
 Theoretical Description
-=======================
+#######################
 
 This document provides detailed descriptions of various metrics used to evaluate the performance of predictive models, particularly focusing on their ability to estimate uncertainties and calibrate predictions accurately.
 
 1. General Metrics
-------------------
+==================
 
 Regression Coverage Score
 -------------------------
@@ -115,45 +116,57 @@ The **Mean Winkler Interval (MWI) Score** evaluates prediction intervals by comb
 where :math:`\hat y^{\text{boundary}}_{i}` is the nearest interval boundary not containing :math:`y_{i}`, and :math:`\alpha` is the significance level.
 
 2. Calibration Metrics
-----------------------
+======================
+
 
 Expected Calibration Error
---------------------------
+==========================
 
-The **Expected Calibration Error** (ECE) is a metric used to evaluate how well the predicted probabilities of a model align with the actual outcomes. The ECE provides a measure of the difference between predicted confidence levels and actual accuracy. The idea is to divide the predictions into bins based on confidence scores and then compare the accuracy within each bin to the average confidence level of the predictions in that bin.
+The **Expected Calibration Error** (ECE) is a metric used to evaluate how well the predicted probabilities of a model align with the actual outcomes. It measures the difference between predicted confidence levels and actual accuracy. The process involves dividing the predictions into bins based on confidence scores and then comparing the accuracy within each bin to the average confidence level of the predictions in that bin. The number of bins is a hyperparameter :math:`M`, and we refer to a specific bin by :math:`B_m`.
+
+For each bin :math:`B_m`, the accuracy and confidence are defined as follows:
 
 .. math::
-    \text{ECE} = \sum_{i=1}^B \frac{|B_i|}{n} \left| \text{acc}(B_i) - \text{conf}(B_i) \right|
+
+    \text{acc}(B_m) = \frac{1}{\left| B_m \right|} \sum_{i \in B_m} y_i
+
+.. math::
+
+    \text{conf}(B_m) = \frac{1}{\left| B_m \right|} \sum_{i \in B_m} \hat{f}(x_i)
+
+The ECE is then calculated using the following formula:
+
+.. math::
+
+    \text{ECE} = \sum_{m=1}^M \frac{\left| B_m \right|}{n} \left| \text{acc}(B_m) - \text{conf}(B_m) \right|
 
 where:
-
-- :math:`B_i` is the set of indices of samples that fall into the i-th bin.
-- :math:`|B_i|` is the number of samples in the i-th bin.
+- :math:`B_m` is the set of indices of samples that fall into the :math:`m`-th bin.
+- :math:`\left| B_m \right|` is the number of samples in the :math:`m`-th bin.
 - :math:`n` is the total number of samples.
-- :math:`\text{acc}(B_i)` is the accuracy within the i-th bin.
-- :math:`\text{conf}(B_i)` is the average confidence score within the i-th bin.
-- :math:`B` is the total number of bins.
+- :math:`\text{acc}(B_m)` is the accuracy within the :math:`m`-th bin.
+- :math:`\text{conf}(B_m)` is the average confidence score within the :math:`m`-th bin.
 
-The difference between the average confidence and the actual accuracy within each bin is weighted by the proportion of samples in that bin, ensuring that bins with more samples have a larger influence on the final ECE value.
+In simple terms, once the different bins from the confidence scores have been created, we check the mean accuracy of each bin. The absolute mean difference between the two is the ECE. Hence, the lower the ECE, the better the calibration was performed. The difference between the average confidence and the actual accuracy within each bin is weighted by the proportion of samples in that bin, ensuring that bins with more samples have a larger influence on the final ECE value.
 
 Top-Label Expected Calibration Error (Top-Label ECE)
-----------------------------------------------------
+====================================================
 
-The **Top-Label Expected Calibration Error** (Top-Label ECE) extends the concept of ECE to the multi-class setting. Instead of evaluating calibration over all predicted probabilities, Top-Label ECE focuses on the calibration of the most confident prediction (top-label) for each sample.
+The **Top-Label Expected Calibration Error** (Top-Label ECE) extends the concept of ECE to the multi-class setting. Instead of evaluating calibration over all predicted probabilities, Top-Label ECE focuses on the calibration of the most confident prediction (top-label) for each sample. For the top-label class, the calculation of the accuracy and confidence is conditioned on the top label, and the average ECE is taken for each top-label.
 
 The Top-Label ECE is calculated as follows:
 
 .. math::
+
     \text{Top-Label ECE} = \frac{1}{L} \sum_{j=1}^L \sum_{i=1}^B \frac{|B_{i,j}|}{n_j} \left| \text{acc}(B_{i,j}) - \text{conf}(B_{i,j}) \right|
 
 where:
-
 - :math:`L` is the number of unique labels.
-- :math:`B_{i,j}` is the set of indices of samples that fall into the i-th bin for label j.
-- :math:`|B_{i,j}|` is the number of samples in the i-th bin for label j.
-- :math:`n_j` is the total number of samples for label j.
-- :math:`\text{acc}(B_{i,j})` is the accuracy within the i-th bin for label j.
-- :math:`\text{conf}(B_{i,j})` is the average confidence score within the i-th bin for label j.
+- :math:`B_{i,j}` is the set of indices of samples that fall into the :math:`i`-th bin for label :math:`j`.
+- :math:`\left| B_{i,j} \right|` is the number of samples in the :math:`i`-th bin for label :math:`j`.
+- :math:`n_j` is the total number of samples for label :math:`j`.
+- :math:`\text{acc}(B_{i,j})` is the accuracy within the :math:`i`-th bin for label :math:`j`.
+- :math:`\text{conf}(B_{i,j})` is the average confidence score within the :math:`i`-th bin for label :math:`j`.
 - :math:`B` is the total number of bins.
 
 For each label, the predictions are binned according to their confidence scores for that label. The calibration error is then calculated for each label separately and averaged across all labels to obtain the final Top-Label ECE value. This ensures that the calibration is measured specifically for the most confident prediction, which is often the most critical for decision-making in multi-class problems.
@@ -175,34 +188,80 @@ where:
 Kolmogorov-Smirnov Statistic for Calibration
 --------------------------------------------
 
-This statistic measures the maximum absolute deviation between the empirical cumulative distribution function (ECDF) of observed outcomes and predicted probabilities [2, 3, 11].
+The **Kolmogorov-Smirnov test** was derived in [2, 3, 11]. The idea is to consider the cumulative differences between sorted scores :math:`s_i`
+and their corresponding labels :math:`y_i` and to compare its properties to that of a standard Brownian motion. Let us consider the
+cumulative differences on sorted scores: 
 
 .. math::
+    C_k = \frac{1}{N}\sum_{i=1}^k (s_i - y_i)
 
-   \text{KS Statistic} = \sup_x |F_n(x) - S_n(x)|
-
-where :math:`F_n(x)` is the ECDF of the predicted probabilities and :math:`S_n(x)` is the ECDF of the observed outcomes.
-
-Kuiper's Statistic
-------------------
-
-**Kuiper's Statistic** considers both the maximum deviation above and below the mean cumulative difference, making it more sensitive to deviations at the tails of the distribution [2, 3, 11].
+We also introduce a typical normalization scale :math:`\sigma`:
 
 .. math::
+    \sigma = \frac{1}{N}\sqrt{\sum_{i=1}^N s_i(1 - s_i)}
 
-   \text{Kuiper's Statistic} = \max(F_n(x) - S_n(x)) + \max(S_n(x) - F_n(x))
+The Kolmogorov-Smirnov statistic is then defined as : 
+
+.. math::
+   G = \max|C_k|/\sigma
+
+It can be shown [2] that, under the null hypothesis of well-calibrated scores, this quantity asymptotically (i.e. when N goes to infinity)
+converges to the maximum absolute value of a standard Brownian motion over the unit interval :math:`[0, 1]`. [3, 11] also provide closed-form 
+formulas for the cumulative distribution function (CDF) of the maximum absolute value of such a standard Brownian motion.
+So we state the p-value associated to the statistical test of well calibration as:
+
+.. math::
+   p = 1 - CDF(G)
+
+Kuiper's Test
+-------------
+
+The **Kuiper test** was derived in [2, 3, 11] and is very similar to Kolmogorov-Smirnov. This time, the statistic is defined as:
+
+.. math::
+   H = (\max_k|C_k| - \min_k|C_k|)/\sigma
+
+It can be shown [2] that, under the null hypothesis of well-calibrated scores, this quantity asymptotically (i.e. when N goes to infinity)
+converges to the range of a standard Brownian motion over the unit interval :math:`[0, 1]`. [3, 11] also provide closed-form 
+formulas for the cumulative distribution function (CDF) of the range of such a standard Brownian motion.
+So we state the p-value associated to the statistical test of well calibration as:
+
+.. math::
+   p = 1 - CDF(H)
 
 Spiegelhalter’s Test
 --------------------
 
-**Spiegelhalter’s Test** assesses the calibration of binary predictions based on a transformation of the Brier score [9].
+The **Spiegelhalter test** was derived in [9]. It is based on a decomposition of the Brier score: 
 
 .. math::
+   B = \frac{1}{N}\sum_{i=1}^N(y_i - s_i)^2
 
-   \text{Spiegelhalter's Statistic} = \frac{\sum_{i=1}^n (y_i - \hat y_i)(1 - 2\hat y_i)}{\sqrt{\sum_{i=1}^n (1 - 2 \hat y_i)^2 \hat y_i (1 - \hat y_i)}}
+where scores are denoted :math:`s_i` and their corresponding labels :math:`y_i`. This can be decomposed in two terms:
 
-3. References
--------------
+.. math::
+   B = \frac{1}{N}\sum_{i=1}^N(y_i - s_i)(1 - 2s_i) + \frac{1}{N}\sum_{i=1}^N s_i(1 - s_i)
+
+It can be shown that the first term has an expected value of zero under the null hypothesis of well calibration. So we interpret
+the second term as the Brier score expected value :math:`E(B)` under the null hypothesis. As for the variance of the Brier score, it can be
+computed as:
+
+.. math::
+   Var(B) = \frac{1}{N^2}\sum_{i=1}^N(1 - 2s_i)^2 s_i(1 - s_i)
+
+So we can build a Z-score as follows: 
+
+.. math::
+   Z = \frac{B - E(B)}{\sqrt{Var(B)}} = \frac{\sum_{i=1}^N(y_i - s_i)(1 - 2s_i)}{\sqrt{\sum_{i=1}^N(1 - 2s_i)^2 s_i(1 - s_i)}}
+
+This statistic follows a normal distribution of cumulative distribution CDF so that we state the associated p-value:
+
+.. math::
+   p = 1 - CDF(Z)
+
+
+References
+==========
 
 [1] Angelopoulos, A. N., & Bates, S. (2021).
 A gentle introduction to conformal prediction and
