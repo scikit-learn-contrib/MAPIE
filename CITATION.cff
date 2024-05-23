@@ -1,0 +1,48 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Cordier"
+  given-names: "Thibault"
+  orcid: "https://orcid.org/0000-0000-0000-0000"
+title: "MAPIE - Model Agnostic Prediction Interval Estimator"
+version: 0.8.3
+date-released: 2019-04-30
+url: "https://github.com/scikit-learn-contrib/MAPIE"
+preferred-citation:
+  type: conference-paper
+  title: "Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library"
+  authors:
+  - family-names: "Cordier"
+    given-names: "Thibault"
+  - family-names: "Blot"
+    given-names: "Vincent"
+  - family-names: "Lacombe"
+    given-names: "Louis"
+  - family-names: "Morzadec"
+    given-names: "Thomas"
+  - family-names: "Capitaine"
+    given-names: "Arnaud"
+  - family-names: "Brunel"
+    given-names: "Nicolas"
+  collection-title: "Conformal and Probabilistic Prediction with Applications"
+  collection-type: proceedings
+  pages: "549--581"
+  year: 2023
+  organization: "PMLR"
+old-citation:
+  type: article
+  authors:
+  - family-names: "Taquet"
+    given-names: "Vianney"
+  - family-names: "Blot"
+    given-names: "Vincent"
+  - family-names: "Morzadec"
+    given-names: "Thomas"
+  - family-names: "Lacombe"
+    given-names: "Louis"
+  - family-names: "Brunel"
+    given-names: "Nicolas"
+  doi: "10.48550/arXiv.2207.12274"
+  journal: "arXiv preprint arXiv:2207.12274"
+  title: "MAPIE: an open-source library for distribution-free uncertainty quantification"
+  year: 2021
