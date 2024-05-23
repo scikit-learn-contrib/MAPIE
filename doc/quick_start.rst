@@ -7,11 +7,9 @@ In regression settings, **MAPIE** provides prediction intervals on single-output
 In classification settings, **MAPIE** provides prediction sets on multi-class data.
 In any case, **MAPIE** is compatible with any scikit-learn-compatible estimator.
 
-Estimate your prediction intervals
-==================================
 
 1. Download and install the module
-----------------------------------
+==================================
 
 Install via ``pip``:
 
@@ -33,7 +31,7 @@ To install directly from the github repository :
 
 
 2. Run MapieRegressor
----------------------
+=====================
 
 Let us start with a basic regression problem. 
 Here, we generate one-dimensional noisy data that we fit with a linear model.
@@ -115,7 +113,7 @@ thus giving target coverages of ``0.95`` and ``0.68``.
 The effective coverage is the actual fraction of true labels lying in the prediction intervals.
 
 3. Run MapieClassifier
-----------------------
+=======================
 
 Similarly, it's possible to do the same for a basic classification problem.
 

@@ -167,8 +167,6 @@ With :
 3. Learn Then Test
 ==================
 
-3.1. General settings
----------------------
 We are going to present the Learn Then Test framework that allows the user to control non-monotonic risk such as precision score.
 This method has been introduced in article [3].
 The settings here are the same as RCPS and CRC, we just need to introduce some new parameters:

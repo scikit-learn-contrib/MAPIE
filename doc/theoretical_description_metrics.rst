@@ -120,7 +120,7 @@ where :math:`\hat y^{\text{boundary}}_{i}` is the nearest interval boundary not 
 
 
 Expected Calibration Error
-==========================
+--------------------------
 
 The **Expected Calibration Error** (ECE) is a metric used to evaluate how well the predicted probabilities of a model align with the actual outcomes. It measures the difference between predicted confidence levels and actual accuracy. The process involves dividing the predictions into bins based on confidence scores and then comparing the accuracy within each bin to the average confidence level of the predictions in that bin. The number of bins is a hyperparameter :math:`M`, and we refer to a specific bin by :math:`B_m`.
 
@@ -150,7 +150,7 @@ where:
 In simple terms, once the different bins from the confidence scores have been created, we check the mean accuracy of each bin. The absolute mean difference between the two is the ECE. Hence, the lower the ECE, the better the calibration was performed. The difference between the average confidence and the actual accuracy within each bin is weighted by the proportion of samples in that bin, ensuring that bins with more samples have a larger influence on the final ECE value.
 
 Top-Label Expected Calibration Error (Top-Label ECE)
-====================================================
+----------------------------------------------------
 
 The **Top-Label Expected Calibration Error** (Top-Label ECE) extends the concept of ECE to the multi-class setting. Instead of evaluating calibration over all predicted probabilities, Top-Label ECE focuses on the calibration of the most confident prediction (top-label) for each sample. For the top-label class, the calculation of the accuracy and confidence is conditioned on the top label, and the average ECE is taken for each top-label.
 
