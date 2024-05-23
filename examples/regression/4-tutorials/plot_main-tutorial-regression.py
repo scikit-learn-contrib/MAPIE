@@ -1,11 +1,10 @@
-"""
+r"""
 ===============================
 Tutorial for tabular regression
 ===============================
 
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a
-simple, one-dimensional, ground truth function
-:math:`f(x) = x \times \sin(x)`.
+simple, one-dimensional, ground truth function :math:`f(x) = x \times \sin(x)`.
 Throughout this tutorial, we will answer the following questions:
 - How well do the MAPIE strategies capture the aleatoric uncertainty
   existing in the data?
@@ -20,6 +19,7 @@ Jackknife+-after-Bootstrap strategies.
 For conservative prediction interval estimates, you can alternatively
 use the CV-minmax strategies.**
 """
+
 
 import os
 import warnings
