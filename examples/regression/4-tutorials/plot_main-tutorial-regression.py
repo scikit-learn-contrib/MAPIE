@@ -2,31 +2,24 @@
 ===============================
 Tutorial for tabular regression
 ===============================
-"""
 
-##############################################################################
-# In this tutorial, we compare the prediction intervals estimated by MAPIE on a
-# simple, one-dimensional, ground truth function
-# :math:`f(x) = x \times \sin(x)`.
-#
-# Throughout this tutorial, we will answer the following questions:
-#
-# - How well do the MAPIE strategies capture the aleatoric uncertainty
-#   existing in the data?
-#
-# - How do the prediction intervals estimated by the resampling strategies
-#   evolve for new *out-of-distribution* data ?
-#
-# - How do the prediction intervals vary between regressor models ?
-#
-# Throughout this tutorial, we estimate the prediction intervals first using
-# a polynomial function, and then using a boosting model, and a simple neural
-# network.
-#
-# **For practical problems, we advise using the faster CV+ or
-# Jackknife+-after-Bootstrap strategies.
-# For conservative prediction interval estimates, you can alternatively
-# use the CV-minmax strategies.**
+In this tutorial, we compare the prediction intervals estimated by MAPIE on a
+simple, one-dimensional, ground truth function
+:math:`f(x) = x \times \sin(x)`.
+Throughout this tutorial, we will answer the following questions:
+- How well do the MAPIE strategies capture the aleatoric uncertainty
+  existing in the data?
+- How do the prediction intervals estimated by the resampling strategies
+  evolve for new *out-of-distribution* data ?
+- How do the prediction intervals vary between regressor models ?
+Throughout this tutorial, we estimate the prediction intervals first using
+a polynomial function, and then using a boosting model, and a simple neural
+network.
+**For practical problems, we advise using the faster CV+ or
+Jackknife+-after-Bootstrap strategies.
+For conservative prediction interval estimates, you can alternatively
+use the CV-minmax strategies.**
+"""
 
 import os
 import warnings
