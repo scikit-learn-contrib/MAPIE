@@ -1,10 +1,10 @@
-.. title:: Theoretical Description : contents
+.. title:: Theoretical Description Regression : contents
 
 .. _theoretical_description_regression:
 
-=======================
+#######################
 Theoretical Description
-=======================
+#######################
 
 The :class:`mapie.regression.MapieRegressor` class uses various
 resampling methods based on the jackknife strategy
@@ -58,7 +58,7 @@ The figure below illustrates the naive method.
    :align: center
 
 2. The split method
-=====================
+===================
 
 The so-called split method computes the residuals of a calibration dataset to estimate the 
 typical error obtained on a new test data point. 

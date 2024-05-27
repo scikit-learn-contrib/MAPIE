@@ -61,6 +61,13 @@
 .. toctree::
    :maxdepth: 2
    :hidden:
+   :caption: METRICS
+
+   theoretical_description_metrics
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
    :caption: API
 
    api
