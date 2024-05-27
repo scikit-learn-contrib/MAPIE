@@ -244,13 +244,16 @@ class ConformityScore(metaclass=ABCMeta):
             The quantile of the conformity scores.
         """
         n_ref = conformity_scores.shape[-1]
+        # TODO: assume that each group has same n_calib when using plus method
+        n_calib = np.min(np.sum(~np.isnan(conformity_scores), axis=0))
         quantile = np.column_stack([
             np_nanquantile(
                 conformity_scores.astype(float),
-                _alpha,
+                np.ceil(_alpha*(n_calib + 1))/n_calib,
                 axis=axis,
                 method=method
-            ) if 0 < _alpha < 1
+            ) if n_calib and 0 < np.ceil(_alpha*(n_calib + 1))/n_calib < 1
+            else np.nan * np.ones(n_ref) if not n_calib
             else np.inf * np.ones(n_ref) if method == "higher"
             else - np.inf * np.ones(n_ref)
             for _alpha in alpha_np
