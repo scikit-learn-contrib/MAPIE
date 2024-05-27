@@ -141,6 +141,7 @@ The ECE is then calculated using the following formula:
     \text{ECE} = \sum_{m=1}^M \frac{\left| B_m \right|}{n} \left| \text{acc}(B_m) - \text{conf}(B_m) \right|
 
 where:
+
 - :math:`B_m` is the set of indices of samples that fall into the :math:`m`-th bin.
 - :math:`\left| B_m \right|` is the number of samples in the :math:`m`-th bin.
 - :math:`n` is the total number of samples.
@@ -161,6 +162,7 @@ The Top-Label ECE is calculated as follows:
     \text{Top-Label ECE} = \frac{1}{L} \sum_{j=1}^L \sum_{i=1}^B \frac{|B_{i,j}|}{n_j} \left| \text{acc}(B_{i,j}) - \text{conf}(B_{i,j}) \right|
 
 where:
+
 - :math:`L` is the number of unique labels.
 - :math:`B_{i,j}` is the set of indices of samples that fall into the :math:`i`-th bin for label :math:`j`.
 - :math:`\left| B_{i,j} \right|` is the number of samples in the :math:`i`-th bin for label :math:`j`.
