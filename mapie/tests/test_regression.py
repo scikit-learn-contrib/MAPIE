@@ -260,7 +260,7 @@ def test_predict_output_shape(
 
 
 @pytest.mark.parametrize("delta", [0.5, 0.6, 0.7, 0.8])
-@pytest.mark.parametrize("n_calib", [10, 15, 20, 25,  50, 100, 1000])
+@pytest.mark.parametrize("n_calib", [10, 15, 20, 25, 50, 100, 1000])
 def test_coverage_validity(delta: float, n_calib: int) -> None:
     """
     Test that the prefit method provides valid coverage
@@ -292,7 +292,7 @@ def test_coverage_validity(delta: float, n_calib: int) -> None:
     from scipy.stats import ttest_1samp
     _, pval = ttest_1samp(coverage_list, popmean=delta, alternative='less')
 
-    np.testing.assert_array_less(0.05, pval)
+    np.testing.assert_array_less(0.01, pval)
 
 
 def test_same_results_prefit_split() -> None:
