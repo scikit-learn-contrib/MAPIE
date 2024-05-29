@@ -138,15 +138,15 @@ STRATEGIES = {
 }
 
 WIDTHS = {
-    "naive": 3.87,
-    "split": 3.96,
-    "jackknife": 3.97,
+    "naive": 3.80,
+    "split": 3.89,
+    "jackknife": 3.89,
     "jackknife_plus": 3.90,
-    "jackknife_minmax": 4.03,
+    "jackknife_minmax": 3.96,
     "cv": 3.88,
     "cv_plus": 3.91,
     "cv_minmax": 4.07,
-    "prefit": 3.96,
+    "prefit": 3.89,
     "cv_plus_median": 3.91,
     "jackknife_plus_ab": 3.90,
     "jackknife_minmax_ab": 4.14,

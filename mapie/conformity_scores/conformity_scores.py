@@ -214,7 +214,7 @@ class ConformityScore(metaclass=ABCMeta):
         conformity_scores: NDArray,
         alpha_np: NDArray,
         axis: int,
-        method: str
+        reversed: bool = False
     ) -> NDArray:
         """
         Compute the alpha quantile of the conformity scores or the conformity
@@ -235,28 +235,29 @@ class ConformityScore(metaclass=ABCMeta):
         axis: int
             The axis from which to compute the quantile.
 
-        method: str
-            ``"higher"`` or ``"lower"`` the method to compute the quantile.
+        reversed: bool
+            Boolean specifying whether we take the upper or lower quantile,
+            if False, the alpha quantile, otherwise the (1-alpha) quantile.
 
         Returns
         -------
         NDArray of shape (1, n_alpha) or (n_samples, n_alpha)
             The quantile of the conformity scores.
         """
-        n_ref = conformity_scores.shape[-1]
-        # TODO: assume that each group has same n_calib when using plus method
-        n_calib = np.min(np.sum(~np.isnan(conformity_scores), axis=0))
-        quantile = np.column_stack([
+        n_ref = conformity_scores.shape[1-axis]
+        n_calib = np.min(np.sum(~np.isnan(conformity_scores), axis=axis))
+        signed = 1-2*reversed
+        alpha_ref = (1-2*alpha_np)*reversed + alpha_np
+
+        quantile = signed * np.column_stack([
             np_nanquantile(
-                conformity_scores.astype(float),
-                np.ceil(_alpha*(n_calib + 1))/n_calib,
+                signed * conformity_scores.astype(float),
+                np.ceil(_alpha*(n_calib+1))/n_calib,
                 axis=axis,
-                method=method
-            ) if n_calib and 0 < np.ceil(_alpha*(n_calib + 1))/n_calib < 1
-            else np.nan * np.ones(n_ref) if not n_calib
-            else np.inf * np.ones(n_ref) if method == "higher"
-            else - np.inf * np.ones(n_ref)
-            for _alpha in alpha_np
+                method="lower"
+            ) if 0 < np.ceil(_alpha*(n_calib+1))/n_calib < 1
+            else np.inf * np.ones(n_ref)
+            for _alpha in alpha_ref
         ])
         return quantile
 
@@ -284,7 +285,7 @@ class ConformityScore(metaclass=ABCMeta):
         -------
         NDArray
             Array of betas minimizing the differences
-            ``(1-alpa+beta)-quantile - beta-quantile``.
+            ``(1-alpha+beta)-quantile - beta-quantile``.
         """
         beta_np = np.full(
             shape=(len(lower_bounds), len(alpha_np)),
@@ -408,26 +409,34 @@ class ConformityScore(metaclass=ABCMeta):
                 X, y_pred_up, conformity_scores
             )
             bound_low = self.get_quantile(
-                conformity_scores_low, alpha_low, axis=1, method="lower"
+                conformity_scores_low, alpha_low, axis=1, reversed=True
             )
             bound_up = self.get_quantile(
-                conformity_scores_up, alpha_up, axis=1, method="higher"
+                conformity_scores_up, alpha_up, axis=1
             )
-        else:
-            quantile_search = "higher" if self.sym else "lower"
-            alpha_low = 1 - alpha_np if self.sym else beta_np
-            alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np + beta_np
 
-            quantile_low = self.get_quantile(
-                conformity_scores[..., np.newaxis],
-                alpha_low, axis=0, method=quantile_search
-            )
-            quantile_up = self.get_quantile(
-                conformity_scores[..., np.newaxis],
-                alpha_up, axis=0, method="higher"
-            )
+        else:
+            if self.sym:
+                alpha_ref = 1-alpha_np
+                quantile_ref = self.get_quantile(
+                    conformity_scores[..., np.newaxis], alpha_ref, axis=0
+                )
+                quantile_low, quantile_up = -quantile_ref, quantile_ref
+
+            else:
+                alpha_low, alpha_up = beta_np, 1 - alpha_np + beta_np
+
+                quantile_low = self.get_quantile(
+                    conformity_scores[..., np.newaxis],
+                    alpha_low, axis=0, reversed=True
+                )
+                quantile_up = self.get_quantile(
+                    conformity_scores[..., np.newaxis],
+                    alpha_up, axis=0
+                )
+
             bound_low = self.get_estimation_distribution(
-                X, y_pred_low, signed * quantile_low
+                X, y_pred_low, quantile_low
             )
             bound_up = self.get_estimation_distribution(
                 X, y_pred_up, quantile_up

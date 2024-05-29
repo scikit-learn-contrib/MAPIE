@@ -95,12 +95,12 @@ STRATEGIES = {
 
 WIDTHS = {
     "blockbootstrap_enbpi_mean_wopt": 3.86,
-    "blockbootstrap_enbpi_median_wopt": 3.76,
+    "blockbootstrap_enbpi_median_wopt": 3.85,
     "blockbootstrap_enbpi_mean": 3.86,
-    "blockbootstrap_enbpi_median": 3.76,
-    "blockbootstrap_aci_mean": 4.03,
-    "blockbootstrap_aci_median": 4.03,
-    "prefit": 4.79,
+    "blockbootstrap_enbpi_median": 3.85,
+    "blockbootstrap_aci_mean": 3.96,
+    "blockbootstrap_aci_median": 3.95,
+    "prefit": 4.86,
 }
 
 COVERAGES = {
@@ -110,7 +110,7 @@ COVERAGES = {
     "blockbootstrap_enbpi_median": 0.946,
     "blockbootstrap_aci_mean": 0.96,
     "blockbootstrap_aci_median": 0.96,
-    "prefit": 0.96,
+    "prefit": 0.97,
 }
 
 
@@ -423,8 +423,8 @@ def test_interval_prediction_with_beta_optimize() -> None:
     coverage = regression_coverage_score(
         y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
     )
-    np.testing.assert_allclose(width_mean, 4.27, rtol=1e-2)
-    np.testing.assert_allclose(coverage, 0.93, rtol=1e-2)
+    np.testing.assert_allclose(width_mean, 3.67, rtol=1e-2)
+    np.testing.assert_allclose(coverage, 0.916, rtol=1e-2)
 
 
 def test_deprecated_path_warning() -> None:
