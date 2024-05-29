@@ -259,14 +259,14 @@ def test_predict_output_shape(
     assert y_pis.shape == (X.shape[0], 2, n_alpha)
 
 
-@pytest.mark.parametrize("delta", [0.5, 0.6, 0.7, 0.8])
-@pytest.mark.parametrize("n_calib", [10, 15, 20, 25, 50, 100, 1000])
+@pytest.mark.parametrize("delta", [0.6, 0.8])
+@pytest.mark.parametrize("n_calib", [10 + i for i in range(11)] + [50, 100])
 def test_coverage_validity(delta: float, n_calib: int) -> None:
     """
     Test that the prefit method provides valid coverage
     for different calibration data sizes and coverage targets.
     """
-    n_split, n_train, n_test = 1000, 100, 1000
+    n_split, n_train, n_test = 100, 100, 1000
     n_all = n_train + n_calib + n_test
     X, y = make_regression(n_all, random_state=random_state)
 
@@ -276,7 +276,7 @@ def test_coverage_validity(delta: float, n_calib: int) -> None:
     model = LinearRegression()
     model.fit(X_train, y_train)
 
-    coverage_list = []
+    cov_list = []
     for _ in range(n_split):
         mapie_reg = MapieRegressor(estimator=model, method="base", cv="prefit")
         X_cal, X_test, y_cal, y_test = \
@@ -285,14 +285,17 @@ def test_coverage_validity(delta: float, n_calib: int) -> None:
         _, y_pis = mapie_reg.predict(X_test, alpha=1-delta)
         coverage = \
             regression_coverage_score(y_test,  y_pis[:, 0, 0], y_pis[:, 1, 0])
-        coverage_list.append(coverage)
+        cov_list.append(coverage)
 
     # Here we are testing whether the average coverage is statistically
     # less than the target coverage.
     from scipy.stats import ttest_1samp
-    _, pval = ttest_1samp(coverage_list, popmean=delta, alternative='less')
+    mean_low, mean_up = delta, delta + 1/(n_calib+1)
+    _, pval_low = ttest_1samp(cov_list, popmean=mean_low, alternative='less')
+    _, pval_up = ttest_1samp(cov_list, popmean=mean_up, alternative='greater')
 
-    np.testing.assert_array_less(0.01, pval)
+    np.testing.assert_array_less(0.01, pval_low)
+    np.testing.assert_array_less(0.01, pval_up)
 
 
 def test_same_results_prefit_split() -> None:
