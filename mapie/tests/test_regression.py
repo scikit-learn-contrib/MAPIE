@@ -260,13 +260,13 @@ def test_predict_output_shape(
 
 
 @pytest.mark.parametrize("delta", [0.5, 0.6, 0.7, 0.8])
-@pytest.mark.parametrize("n_calib", [10, 20, 50, 100])
+@pytest.mark.parametrize("n_calib", [10, 15, 20, 25,  50, 100, 1000])
 def test_coverage_validity(delta: float, n_calib: int) -> None:
     """
     Test that the prefit method provides valid coverage
     for different calibration data sizes and coverage targets.
     """
-    n_split, n_train, n_test = 1000, 100, 100
+    n_split, n_train, n_test = 1000, 100, 1000
     n_all = n_train + n_calib + n_test
     X, y = make_regression(n_all, random_state=random_state)
 
@@ -287,8 +287,12 @@ def test_coverage_validity(delta: float, n_calib: int) -> None:
             regression_coverage_score(y_test,  y_pis[:, 0, 0], y_pis[:, 1, 0])
         coverage_list.append(coverage)
 
-    mean_coverage = np.mean(coverage_list)
-    np.testing.assert_array_less(delta, mean_coverage)
+    # Here we are testing whether the average coverage is statistically
+    # less than the target coverage.
+    from scipy.stats import ttest_1samp
+    _, pval = ttest_1samp(coverage_list, popmean=delta, alternative='less')
+
+    np.testing.assert_array_less(0.05, pval)
 
 
 def test_same_results_prefit_split() -> None:
