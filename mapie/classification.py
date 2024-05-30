@@ -193,6 +193,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         "naive", "score", "lac", "cumulated_score", "aps", "top_k", "raps"
     ]
     fit_attributes = [
+        "estimator_",
         "n_features_in_",
         "conformity_scores_",
         "classes_",
@@ -1066,7 +1067,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             self.verbose,
         )
 
-        self.estimator_.fit(X, y, y_enc, sample_weight, groups, **fit_params)
+        self.estimator_ = self.estimator_.fit(
+            X, y, y_enc, sample_weight, groups, 
+            **fit_params
+        )
 
         y_pred_proba, y, y_enc = self.estimator_.predict_proba_calib(
             X, y, y_enc, groups
