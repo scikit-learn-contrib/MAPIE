@@ -290,13 +290,99 @@ class EnsembleClassifier(EnsembleEstimator):
 
         return y_pred_proba, val_id, val_index
 
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        y_enc: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params,
+    ) -> EnsembleClassifier:
+        """
+        Fit the base estimator under the ``single_estimator_`` attribute.
+        Fit all cross-validated estimator clones
+        and rearrange them into a list, the ``estimators_`` attribute.
+        Out-of-fold conformity scores are stored under
+        the ``conformity_scores_`` attribute.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        y: ArrayLike of shape (n_samples,)
+            Input labels.
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights. If None, then samples are equally weighted.
+
+            By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
+
+        **fit_params : dict
+            Additional fit parameters.
+
+        Returns
+        -------
+        EnsembleRegressor
+            The estimator fitted.
+        """
+        # Initialization
+        single_estimator_: ClassifierMixin
+        estimators_: List[ClassifierMixin] = []
+        full_indexes = np.arange(_num_samples(X))
+        cv = self.cv
+        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+        estimator = self.estimator
+        n_samples = _num_samples(y)
+
+        # Computation
+        if cv == "prefit":
+            single_estimator_ = estimator
+            k_ = (
+                np.full(shape=(n_samples, 1), fill_value=np.nan, dtype=float)
+            )
+        else:
+            single_estimator_ = self._fit_oof_estimator(
+                clone(estimator),
+                X,
+                y,
+                full_indexes,
+                sample_weight,
+                **fit_params
+            )
+            cv = cast(BaseCrossValidator, cv)
+            k_ = np.empty_like(y, dtype=int)
+
+            estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
+                delayed(self._fit_oof_estimator)(
+                    clone(estimator),
+                    X,
+                    y_enc,
+                    train_index,
+                    sample_weight,
+                    **fit_params
+                )
+                for train_index, _ in cv.split(X, y, groups)
+            )
+        self.single_estimator_: ClassifierMixin = single_estimator_
+        self.estimators_: List[ClassifierMixin] = estimators_
+        self.k_: NDArray = k_
+        return self
+
     def predict_proba_calib(
         self,
         X: ArrayLike,
-        y: Optional[ArrayLike] = None,
-        y_enc=None,
+        y: ArrayLike,
+        y_enc: ArrayLike,
         groups: Optional[ArrayLike] = None,
-    ) -> Tuple[NDArray, ArrayLike, Optional[NDArray]]:
+    ) -> Tuple[NDArray, ArrayLike, ArrayLike]:
         """
         Perform predictions on X : the calibration set.
 
@@ -353,97 +439,10 @@ class EnsembleClassifier(EnsembleEstimator):
                 # are not used during calibration
                 self.k_ = self.k_[val_indices]
                 y_pred_proba = y_pred_proba[val_indices]
-                y_enc = y_enc[val_indices]
+                # y_enc = y_enc[val_indices]
                 y = cast(NDArray, y)[val_indices]
 
         return y_pred_proba, y, y_enc
-
-    def fit(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        y_enc: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
-        groups: Optional[ArrayLike] = None,
-        **fit_params,
-    ) -> EnsembleClassifier:
-        """
-        Fit the base estimator under the ``single_estimator_`` attribute.
-        Fit all cross-validated estimator clones
-        and rearrange them into a list, the ``estimators_`` attribute.
-        Out-of-fold conformity scores are stored under
-        the ``conformity_scores_`` attribute.
-
-        Parameters
-        ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Input data.
-
-        y: ArrayLike of shape (n_samples,)
-            Input labels.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights. If None, then samples are equally weighted.
-
-            By default ``None``.
-
-        groups: Optional[ArrayLike] of shape (n_samples,)
-            Group labels for the samples used while splitting the dataset into
-            train/test set.
-
-            By default ``None``.
-
-        **fit_params : dict
-            Additional fit parameters.
-
-        Returns
-        -------
-        EnsembleRegressor
-            The estimator fitted.
-        """
-        # Initialization
-        single_estimator_: ClassifierMixin
-        estimators_: List[ClassifierMixin] = []
-        full_indexes = np.arange(_num_samples(X))
-        cv = self.cv
-        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
-        estimator = self.estimator
-        n_samples = _num_samples(y)
-
-        # Computation
-        if cv == "prefit":
-            single_estimator_ = estimator
-            self.k_ = (
-                np.full(shape=(n_samples, 1), fill_value=np.nan, dtype=float)
-            )
-        else:
-            single_estimator_ = self._fit_oof_estimator(
-                clone(estimator),
-                X,
-                y,
-                full_indexes,
-                sample_weight,
-                **fit_params
-            )
-            cv = cast(BaseCrossValidator, cv)
-            self.k_ = np.empty_like(y, dtype=int)
-
-            estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
-                delayed(self._fit_oof_estimator)(
-                    clone(estimator),
-                    X,
-                    y_enc,
-                    train_index,
-                    sample_weight,
-                    **fit_params
-                )
-                for train_index, _ in cv.split(X, y, groups)
-            )
-
-        self.single_estimator_ = single_estimator_
-        self.estimators_ = estimators_
-
-        return self
 
     def predict(
         self,

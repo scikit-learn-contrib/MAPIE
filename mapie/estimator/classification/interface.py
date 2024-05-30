@@ -20,6 +20,7 @@ class EnsembleEstimator(ClassifierMixin, metaclass=ABCMeta):
         self,
         X: ArrayLike,
         y: ArrayLike,
+        y_enc: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params
@@ -38,6 +39,8 @@ class EnsembleEstimator(ClassifierMixin, metaclass=ABCMeta):
 
         y: ArrayLike of shape (n_samples,)
             Input labels.
+        
+        # TODO document this
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
