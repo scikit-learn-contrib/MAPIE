@@ -1,0 +1,2 @@
+Looking in indexes: https://pypi.org/simple, https://pypi.ngc.nvidia.com
+Requirement already satisfied: scikit-learn in /opt/homebrew/anaconda3/envs/mapie-dev/lib/python3.10/site-packages (1.3.0)

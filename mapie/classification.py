@@ -1068,7 +1068,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         )
 
         self.estimator_ = self.estimator_.fit(
-            X, y, y_enc, sample_weight, groups, 
+            X, y, y_enc, sample_weight, groups,
             **fit_params
         )
 

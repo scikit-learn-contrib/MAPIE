@@ -39,7 +39,7 @@ class EnsembleEstimator(ClassifierMixin, metaclass=ABCMeta):
 
         y: ArrayLike of shape (n_samples,)
             Input labels.
-        
+
         # TODO document this
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
