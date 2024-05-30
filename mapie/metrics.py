@@ -541,6 +541,11 @@ def regression_ssc_score(
     (intervals of different sizes), with constant intervals the result
     may be misinterpreted.
 
+    [3] Angelopoulos, A. N., & Bates, S. (2021).
+    A gentle introduction to conformal prediction and
+    distribution-free uncertainty quantification.
+    arXiv preprint arXiv:2107.07511.
+
     Parameters
     ----------
     y_true: NDArray of shape (n_samples,)

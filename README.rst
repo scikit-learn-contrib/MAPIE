@@ -12,7 +12,7 @@
     :target: https://mapie.readthedocs.io/en/stable/?badge=stable
     :alt: Documentation Status
 
-.. |License| image:: https://img.shields.io/github/license/simai-ml/MAPIE
+.. |License| image:: https://img.shields.io/github/license/scikit-learn-contrib/MAPIE
    :target: https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE
 
 .. |PythonVersion| image:: https://img.shields.io/pypi/pyversions/mapie
@@ -33,7 +33,7 @@
 .. |DOI| image:: https://img.shields.io/badge/10.48550/arXiv.2207.12274-B31B1B.svg
    :target: https://arxiv.org/abs/2207.12274
 
-.. image:: https://github.com/simai-ml/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
+.. image:: https://github.com/scikit-learn-contrib/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
     :align: center
 
@@ -158,7 +158,7 @@ The full documentation can be found `on this link <https://mapie.readthedocs.io/
 ===============
 
 You are welcome to propose and contribute new ideas.
-We encourage you to `open an issue <https://github.com/simai-ml/MAPIE/issues>`_ so that we can align on the work to be done.
+We encourage you to `open an issue <https://github.com/scikit-learn-contrib/MAPIE/issues>`_ so that we can align on the work to be done.
 It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
 For more information on the contribution process, please go `here <CONTRIBUTING.rst>`_.
 
@@ -172,23 +172,28 @@ and with the financial support from Région Ile de France and Confiance.ai.
 |Quantmetry| |Michelin| |ENS| |Confiance.ai| |IledeFrance|
 
 .. |Quantmetry| image:: https://www.quantmetry.com/wp-content/uploads/2020/08/08-Logo-quant-Texte-noir.svg
-    :height: 35
+    :height: 35px
+    :width: 140px
     :target: https://www.quantmetry.com/
 
 .. |Michelin| image:: https://agngnconpm.cloudimg.io/v7/https://dgaddcosprod.blob.core.windows.net/corporate-production/attachments/cls05tqdd9e0o0tkdghwi9m7n-clooe1x0c3k3x0tlu4cxi6dpn-bibendum-salut.full.png
-    :height: 35
+    :height: 50px
+    :width: 45px
     :target: https://www.michelin.com/en/
 
 .. |ENS| image:: https://file.diplomeo-static.com/file/00/00/01/34/13434.svg
-    :height: 35
+    :height: 35px
+    :width: 140px
     :target: https://ens-paris-saclay.fr/en
 
 .. |Confiance.ai| image:: https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg
-    :height: 35
+    :height: 45px
+    :width: 45px
     :target: https://www.confiance.ai/
 
 .. |IledeFrance| image:: https://www.iledefrance.fr/sites/default/files/logo/2024-02/logoGagnerok.svg
-    :height: 35
+    :height: 35px
+    :width: 140px
     :target: https://www.iledefrance.fr/
 
 
@@ -223,4 +228,10 @@ and with the financial support from Région Ile de France and Confiance.ai.
 📝 License
 ==========
 
-MAPIE is free and open-source software licensed under the `3-clause BSD license <https://github.com/simai-ml/MAPIE/blob/master/LICENSE>`_.
+MAPIE is free and open-source software licensed under the `3-clause BSD license <LICENSE>`_.
+
+
+📚 Citation
+===========
+
+If you use MAPIE in your research, please cite using `citations file <CITATION.cff>`_ on our repository.

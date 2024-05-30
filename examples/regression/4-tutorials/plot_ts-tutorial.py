@@ -21,14 +21,14 @@ in which the training set is prior to the validation set.
 Once the base model is optimized, we can use
 :class:`~MapieTimeSeriesRegressor` to estimate
 the prediction intervals associated with one-step ahead forecasts through
-the EnbPI method [1].
+the EnbPI method.
 
 As its parent class :class:`~MapieRegressor`,
 :class:`~MapieTimeSeriesRegressor` has two main arguments : "cv", and "method".
 In order to implement EnbPI, "method" must be set to "enbpi" (the default
 value) while "cv" must be set to the :class:`~mapie.subsample.BlockBootstrap`
 class that block bootstraps the training set.
-This sampling method is used in [1] instead of the traditional bootstrap
+This sampling method is used instead of the traditional bootstrap
 strategy as it is more suited for time series data.
 
 The EnbPI method allows you update the residuals during the prediction,
@@ -38,26 +38,12 @@ account. It can be done with :class:`~MapieTimeSeriesRegressor` through
 the ``partial_fit`` class method called at every step.
 
 
-The ACI [2] strategy allows you to adapt the conformal inference
+The ACI strategy allows you to adapt the conformal inference
 (i.e the quantile). If the real values are not in the coverage,
 the size of the intervals will grow.
 Conversely, if the real values are in the coverage,
 the size of the intervals will decrease.
 You can use a gamma coefficient to adjust the strength of the correction.
-
-References
-----------
-[1] Chen Xu and Yao Xie.
-“Conformal Prediction Interval for Dynamic Time-Series.”
-International Conference on Machine Learning (ICML, 2021).
-
-[2] Isaac Gibbs, Emmanuel Candes
-"Adaptive conformal inference under distribution shift"
-Advances in Neural Information Processing Systems, (NeurIPS, 2021).
-
-[3] Margaux Zaffran et al.
-"Adaptive Conformal Predictions for Time Series"
-https://arxiv.org/pdf/2202.07282.pdf
 """
 
 import warnings
@@ -180,7 +166,7 @@ else:
 #
 # We now use :class:`~MapieTimeSeriesRegressor` to build prediction intervals
 # associated with one-step ahead forecasts. As explained in the introduction,
-# we use the EnbPI method [1] and the ACI method [2] .
+# we use the EnbPI method and the ACI method.
 #
 # Estimating prediction intervals can be possible in three ways:
 #
@@ -199,7 +185,7 @@ else:
 # sudden change points on test sets that have not been seen by the model
 # during training.
 #
-# Following [1], we use the :class:`~BlockBootstrap` sampling
+# We use the :class:`~BlockBootstrap` sampling
 # method instead of the traditional bootstrap strategy for training the model
 # since the former is more suited for time series data.
 # Here, we choose to perform 10 resamplings with 10 blocks.
