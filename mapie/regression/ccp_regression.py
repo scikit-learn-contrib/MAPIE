@@ -455,6 +455,8 @@ class MapieCCPRegressor():
             fit_estimator(self.estimator, X_train, y_train,
                           sample_weight=sample_weight_train, **fit_params)
 
+            self.phi._check_need_calib(X_train)
+
         else:
             warnings.warn("WARNING: As cv='prefit', the estimator will not "
                           "be fitted again. You can directly call the"
@@ -539,6 +541,8 @@ class MapieCCPRegressor():
                 warnings.warn(f"WARNING: The old value of alpha "
                               f"({self.alpha}) has been overwritten "
                               f"by the new one ({alpha}).")
+
+        self.phi._check_need_calib(X_calib)
 
         y_pred_calib = self.estimator.predict(X_calib)
 
