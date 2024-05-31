@@ -96,8 +96,14 @@ class MapieCCPRegressor():
 
 
     random_state: Optional[int]
-        Pseudo random number generator state used for random sampling.
-        Pass an int for reproducible output across multiple function calls.
+        Integer used to set the numpy seed, to get reproducible calibration
+        results.
+        If ``None``, the prediction intervals will be stochastics, and will
+        change if you refit the calibration (even if no arguments have change).
+
+        WARNING: If ``random_state``is not ``None``, ``np.random.seed`` will
+        be changed, which will reset the seed for all the other random
+        number generators.
 
         By default ``None``.
 
@@ -124,21 +130,21 @@ class MapieCCPRegressor():
     >>> from mapie.regression import MapieCCPRegressor
     >>> X_train = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_train = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> mapie_reg = MapieCCPRegressor(alpha=0.1, random_state=42)
-    >>> mapie_reg.fit_calibrate(
+    >>> mapie_reg = MapieCCPRegressor(alpha=0.1, random_state=1)
+    >>> mapie_reg = mapie_reg.fit_calibrate(
     ...     X_train,
     ...     y_train,
     ... )
     >>> y_pred, y_pis = mapie_reg.predict(X_train)
-    >>> print(y_pis[:,:, 0])
-    [[ 5.    5.8 ]
-     [ 6.85  7.65]
-     [ 8.7   9.5 ]
-     [10.55 11.35]
-     [12.4  13.2 ]
-     [14.25 15.05]]
-    >>> print(y_pred)
-    [ 5.4   7.25  9.1  10.95 12.8  14.65]
+    >>> print(np.round(y_pis[:,:, 0], 2))
+    [[ 4.14  5.57]
+     [ 6.11  7.54]
+     [ 8.07  9.5 ]
+     [10.04 11.46]
+     [12.   13.43]
+     [13.96 15.39]]
+    >>> print(np.round(y_pred, 2))
+    [ 4.86  6.82  8.79 10.75 12.71 14.68]
     """
 
     default_sym_ = True
@@ -398,7 +404,7 @@ class MapieCCPRegressor():
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params,
-    ) -> None:
+    ) -> MapieCCPRegressor:
         """
         Fit the estimator.
 
@@ -431,6 +437,11 @@ class MapieCCPRegressor():
         **fit_params: dict
             Additional fit parameters for the estimator.
 
+        Returns
+        -------
+        MapieCCPRegressor
+            self
+
         """
 
         if self.cv != 'prefit':
@@ -461,6 +472,7 @@ class MapieCCPRegressor():
             warnings.warn("WARNING: As cv='prefit', the estimator will not "
                           "be fitted again. You can directly call the"
                           "calibrate method.")
+        return self
 
     def calibrate(
         self,
@@ -469,7 +481,7 @@ class MapieCCPRegressor():
         groups: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
         alpha: Optional[float] = None,
-    ) -> None:
+    ) -> MapieCCPRegressor:
         """
         Calibrate with (``X``, ``y`` and ``z``)
         and the new value ``alpha`` value, if not ``None``
@@ -505,6 +517,11 @@ class MapieCCPRegressor():
             old one.
 
             By default ``None``
+
+        Returns
+        -------
+        MapieCCPRegressor
+            self
 
         """
         if self.cv != 'prefit':
@@ -631,6 +648,7 @@ class MapieCCPRegressor():
                         cast(bool, optimal_beta_up.success))
         self.beta_low = (cast(NDArray, optimal_beta_low.x),
                          cast(bool, optimal_beta_low.success))
+        return self
 
     def fit_calibrate(
         self,
@@ -641,7 +659,7 @@ class MapieCCPRegressor():
         z: Optional[ArrayLike] = None,
         alpha: Optional[float] = None,
         **fit_params,
-    ) -> None:
+    ) -> MapieCCPRegressor:
         """
         Fit the estimator and the calibration.
 
@@ -692,9 +710,15 @@ class MapieCCPRegressor():
         **fit_params: dict
             Additional fit parameters for the estimator.
 
+        Returns
+        -------
+        MapieCCPRegressor
+            self
+
         """
         self.fit(X, y, sample_weight, groups, **fit_params)
         self.calibrate(X, y, groups, z, alpha)
+        return self
 
     def predict(
         self,
@@ -736,7 +760,7 @@ class MapieCCPRegressor():
 
         phi_x = self.phi(X, y_pred, z)
         if np.any(np.all(phi_x == 0, axis=1)):
-            warnings.warn("WARNING: At least one row of the transformation"
+            warnings.warn("WARNING: At least one row of the transformation "
                           "phi(X, y_pred, z) is full of zeros."
                           "It will result in a prediction interval of zero"
                           "width. Consider changing the PhiFunction"
