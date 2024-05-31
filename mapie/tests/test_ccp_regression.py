@@ -120,7 +120,7 @@ def test_no_fit_calibrate() -> None:
 
 def test_calib_not_complete_phi() -> None:
     """Test that a not complete phi definition raises a warning"""
-    with pytest.warns(UserWarning):
+    with pytest.warns(UserWarning, match="WARNING: At least one row of the"):
         mapie_reg = MapieCCPRegressor(
             phi=PhiFunction([lambda X: (X < 5).astype(int)],
                             marginal_guarantee=False))
@@ -129,7 +129,7 @@ def test_calib_not_complete_phi() -> None:
 
 def test_predict_not_complete_phi() -> None:
     """Test that a not complete phi definition raises a warning"""
-    with pytest.warns(UserWarning):
+    with pytest.warns(UserWarning, match="WARNING: At least one row of the"):
         mapie_reg = MapieCCPRegressor(
             phi=PhiFunction([lambda X: (X < 5).astype(int)],
                             marginal_guarantee=False))
@@ -309,7 +309,7 @@ def test_recalibrate_warning():
     """
     mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit_calibrate(X_toy, y_toy)
-    with pytest.warns(UserWarning):
+    with pytest.warns(UserWarning, match="WARNING: The old value of alpha"):
         mapie_reg.calibrate(X_toy, y_toy, alpha=0.2)
 
 
@@ -451,10 +451,16 @@ def test_results_for_ordered_alpha(
 @pytest.mark.parametrize("dataset", [(X, y, z), (X_toy, y_toy, z_toy)])
 @pytest.mark.parametrize("phi", PHI)
 @pytest.mark.parametrize("cv", CV)
-@pytest.mark.parametrize("estimator1, estimator2, estimator3", zip(*([[
+@pytest.mark.parametrize("estimator1, estimator2, estimator3", zip([
     LinearRegression(),
     make_pipeline(LinearRegression()),
-]]*3)))
+], [
+    LinearRegression(),
+    make_pipeline(LinearRegression()),
+], [
+    LinearRegression(),
+    make_pipeline(LinearRegression()),
+]))
 def test_results_with_constant_sample_weights(
     dataset: Tuple[NDArray, NDArray, NDArray],
     cv: Any,
