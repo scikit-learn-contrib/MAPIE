@@ -19,6 +19,7 @@ History
 * Add possibility of passing fit parameters used by estimators.
 * Fix memory issue CQR when testing for upper and lower bounds.
 * Add Winkler Interval Score.
+* Allow `random_state` to be passed when instancing a MapieQuantileRegressor
 
 0.8.2 (2024-01-11)
 ------------------
