@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Callable, Dict, List, Literal, Optional, Tuple, Union, cast
+from typing import Callable, Dict, List, Optional, Tuple, Union, cast
 import numbers
 import warnings
 
@@ -380,7 +380,7 @@ class PolynomialPhiFunction(PhiFunction):
     def __init__(
             self,
             degree: Union[int, List[int]] = 1,
-            variable: Literal["X", "y_pred", "z"] = "X",
+            variable: str = "X",
             marginal_guarantee: bool = True,
             normalized: bool = False,
     ) -> None:
