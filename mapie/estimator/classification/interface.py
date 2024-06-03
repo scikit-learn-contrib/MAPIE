@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional
 
 from sklearn.base import ClassifierMixin
 
@@ -40,7 +40,8 @@ class EnsembleEstimator(ClassifierMixin, metaclass=ABCMeta):
         y: ArrayLike of shape (n_samples,)
             Input labels.
 
-        # TODO document this
+        y_enc: ArrayLike
+            Target values as normalized encodings.
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
@@ -66,7 +67,7 @@ class EnsembleEstimator(ClassifierMixin, metaclass=ABCMeta):
         X: ArrayLike,
         alpha_np: ArrayLike = [],
         agg_scores: Any = None
-    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+    ) -> NDArray:
         """
         Predict target from X. It also computes the prediction per train sample
         for each test sample according to ``self.method``.
@@ -76,12 +77,16 @@ class EnsembleEstimator(ClassifierMixin, metaclass=ABCMeta):
         X: ArrayLike of shape (n_samples, n_features)
             Test data.
 
-        TODO
+        alpha_np: ArrayLike of shape (n_alphas)
+            Level of confidences.
 
-        Returns TODO
+        agg_scores: Optional[str]
+            How to aggregate the scores output by the estimators on test data
+            if a cross-validation strategy is used
+
+        Returns
         -------
-        Tuple[NDArray, NDArray, NDArray]
-            - Predictions
-            - The multiple predictions for the lower bound of the intervals.
-            - The multiple predictions for the upper bound of the intervals.
+        NDArray
+            Predictions of shape
+            (n_samples, n_classes)
         """

@@ -449,7 +449,7 @@ class EnsembleClassifier(EnsembleEstimator):
         X: ArrayLike,
         alpha_np: ArrayLike = [],
         agg_scores: Any = None
-    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+    ) -> NDArray:
         """
         Predict target from X. It also computes the prediction per train sample
         for each test sample according to ``self.method``.
@@ -459,14 +459,19 @@ class EnsembleClassifier(EnsembleEstimator):
         X: ArrayLike of shape (n_samples, n_features)
             Test data.
 
-        TODO
+        alpha_np: ArrayLike of shape (n_alphas)
+            Level of confidences.
 
-        Returns TODO
+        agg_scores: Optional[str]
+            How to aggregate the scores output by the estimators on test data
+            if a cross-validation strategy is used
+
+        Returns
         -------
-        Tuple[NDArray, NDArray, NDArray]
-            - Predictions
-            - The multiple predictions for the lower bound of the intervals.
-            - The multiple predictions for the upper bound of the intervals.
+        NDArray
+            Predictions of shape
+            (n_samples, n_classes)
+
         """
         check_is_fitted(self, self.fit_attributes)
         alpha_np = cast(NDArray, alpha_np)

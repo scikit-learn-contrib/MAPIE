@@ -914,7 +914,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-    ):
+    ) -> Tuple[
+        Optional[ClassifierMixin],
+        Optional[Union[int, str, BaseCrossValidator]],
+        ArrayLike,
+        NDArray,
+        NDArray,
+        Optional[NDArray],
+        Optional[NDArray],
+        ArrayLike
+    ]:
         """
         Perform several checks on class parameters.
 
@@ -934,6 +943,14 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             train/test set.
             By default ``None``.
 
+        Returns
+        -------
+        Tuple[Optional[ClassifierMixin],
+        Optional[Union[int, str, BaseCrossValidator]],
+        ArrayLike, NDArray, NDArray, Optional[NDArray],
+        Optional[NDArray], ArrayLike]
+
+            Parameters checked
         Raises
         ------
         ValueError
@@ -973,7 +990,48 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         return (estimator, cv, X, y, y_enc, sample_weight, groups, n_samples)
 
-    def _split_data(self, X, y_enc, sample_weight, groups, size_raps):
+    def _split_data(
+        self,
+        X,
+        y_enc,
+        sample_weight,
+        groups,
+        size_raps
+    ) -> Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, NDArray, ArrayLike]:
+
+        """Split data for raps method
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed values.
+
+        y_enc: ArrayLike
+            Target values as normalized encodings.
+
+        sample_weight: Optional[NDArray] of shape (n_samples,)
+            Non-null sample weights.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+            By default ``None``.
+
+        size_raps: : Optional[float]
+            Percentage of the data to be used for choosing lambda_star and
+            k_star for the RAPS method.
+
+        Returns
+        -------
+        Tuple[ArrayLike, ArrayLike, ArrayLike, NDArray, Optional[NDArray],
+        Optional[ArrayLike]]
+
+            - ArrayLike of shape (n_samples, n_features)
+            - ArrayLike of shape (n_samples,)
+            - ArrayLike of shape (n_samples,)
+            - ArrayLike of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+            - ArrayLike of shape (n_samples,)
+        """
         raps_split = ShuffleSplit(
             1, test_size=size_raps, random_state=self.random_state
         )
