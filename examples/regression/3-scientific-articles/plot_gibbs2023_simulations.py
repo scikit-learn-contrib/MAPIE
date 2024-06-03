@@ -324,11 +324,12 @@ def plot_results(X_test, y_test, n_trials=10,
 
     ranges = coverageData['Range'].unique()
     methods = coverageData['Method'].unique()
-    bar_width = 0.8/len(methods)
+    bar_width = 0.8 / len(methods)
     for i, method in enumerate(methods):
         method_data = coverageData[coverageData['Method'] == method]
         x = np.arange(len(ranges)) + i * bar_width
-        ax3.bar(x, method_data.groupby("Range")['Miscoverage'].mean(), width=bar_width, label=method, color=cp[i])
+        ax3.bar(x, method_data.groupby("Range")['Miscoverage'].mean(),
+                width=bar_width, label=method, color=cp[i])
 
     ax3.set_xticks(np.arange(len(ranges)) + bar_width * (len(methods) - 1) / 2)
     ax3.set_xticklabels(ranges)
@@ -337,7 +338,7 @@ def plot_results(X_test, y_test, n_trials=10,
     ax3.legend()
     ax3.set_ylabel("Miscoverage", fontsize=18, labelpad=10)
     ax3.set_xlabel(experiment, fontsize=18, labelpad=10)
-    ax3.set_ylim(0.,0.2)
+    ax3.set_ylim(0., 0.2)
     ax3.tick_params(axis='both', which='major', labelsize=14)
 
     plt.tight_layout(pad=2)
