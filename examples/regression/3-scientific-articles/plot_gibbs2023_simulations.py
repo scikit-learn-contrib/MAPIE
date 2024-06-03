@@ -266,7 +266,6 @@ def plot_results(X_test, y_test, n_trials=10,
 
     # Set font and style
     plt.rcParams['font.family'] = 'DejaVu Sans'
-    plt.style.use('seaborn-whitegrid')
     plt.rcParams['axes.grid'] = False
 
     fig = plt.figure()
