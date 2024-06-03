@@ -62,7 +62,7 @@ class PhiFunction():
         new samples. On the opposite, it is not recommended if the conformity
         scores can vary a lot.
 
-        By default ``True``
+        By default ``False``
 
     Attributes
     ----------
@@ -122,7 +122,7 @@ class PhiFunction():
                 List[Union[Callable, "PhiFunction"]]
             ]] = None,
             marginal_guarantee: bool = True,
-            normalized: bool = True,
+            normalized: bool = False,
     ) -> None:
         if isinstance(functions, list):
             self.functions = list(functions)
@@ -278,15 +278,16 @@ class PhiFunction():
         result = np.hstack(res)
         if self.normalized:
             norm = np.linalg.norm(result, axis=1).reshape(-1, 1)
-            norm[abs(norm)<1e-8] = 1
+            result[(abs(norm) == 0)[:, 0], :] = np.ones(result.shape[1])
+
+            norm[abs(norm) == 0] = 1
             result /= norm
         return result
 
     def _check_need_calib(self, X: NDArray) -> None:
         for f in self.functions:
-            if isinstance(f, PhiFunction):
-                if f._need_x_calib:
-                    f._check_need_calib(X)
+            if isinstance(f, PhiFunction) and f._need_x_calib:
+                f._check_need_calib(X)
 
 
 class PolynomialPhiFunction(PhiFunction):
@@ -386,21 +387,20 @@ class PolynomialPhiFunction(PhiFunction):
         if isinstance(degree, int):
             degree = list(range(degree+1))
 
-        if variable not in ["X", "y_pred", "z"]:
-            raise ValueError("variable must be 'X', 'y_pred' or 'z'")
-
         self.degree = degree
 
         functions: List[Callable] = []
         if 0 in degree and not marginal_guarantee:
-            functions.append(lambda X: np.ones(len(X)))
+            functions.append(lambda X: np.ones((len(X), 1)))
         if variable == "X":
             functions += [lambda X, d=d: X**d for d in degree if d != 0]
-        if variable == "y_pred":
+        elif variable == "y_pred":
             functions += [lambda y_pred, d=d: y_pred**d
                           for d in degree if d != 0]
-        if variable == "z":
+        elif variable == "z":
             functions += [lambda z, d=d: z**d for d in degree if d != 0]
+        else:
+            raise ValueError("variable must be 'X', 'y_pred' or 'z'")
 
         super().__init__(functions, marginal_guarantee, normalized)
 
@@ -409,18 +409,17 @@ class GaussianPhiFunction(PhiFunction):
     """
     This class is used to define the transformation phi,
     used in the Gibbs et al. method to model the conformity scores.
-    This class build a ``PhiFunction`` object with polynomial features of
-    X, y_pred or z.
+    This class build a ``PhiFunction`` object with features been the gaussian
+    distances between X and some defined points.
 
     Parameters
     ----------
     points : Union[int, NDArray, Tuple[NDArray, NDArray]]
         If Array: List of data points, used as centers to compute
-        gaussian distances.
+        gaussian distances. Should be an array of shape (n_points, n_in).
 
-        If integer, the points will be sampled randomly from the training
-        set. The points will be sampled in the ``X`` argument if it
-        is not ``None``. If ``X`` is ``None``, it will use the
+        If integer, the points will be sampled randomly from the ``X``
+        set if it is not ``None``. If ``X`` is ``None``, it will use the
         training or calibration sets used in the ``fit`` or ``calibrate``
         methods of the ``MapieCCPRegressor`` object.
 
@@ -500,10 +499,12 @@ class GaussianPhiFunction(PhiFunction):
         to obtain marginal coverage.
         In this case, you can set this argument to ``False``.
 
-        Note: Even if it is not always necessary to guarantee the marginal
-        coverage, it can't degrade the prediction intervals.
+        Note: In this case, with ``GaussianPhiFunction``, if ``normalized`` is
+        ``True`` (it is, by default), the ``phi(X, y_pred, z)`` will never
+        be all zeros, so this ``marginal_guarantee`` is not required
+        sto have coverage guarantee.
 
-        By default ``True``.
+        By default ``False``.
 
     normalized: bool
         Whether or not to normalized ``phi(X, y_pred, z)``. Normalization
@@ -551,27 +552,27 @@ class GaussianPhiFunction(PhiFunction):
     >>> print(phi.sigmas)
     [[0.8892586 ]
      [0.74118567]]
-    >>> phi = GaussianPhiFunction(points=([[3],[3]], [1,2]))
+    >>> phi = GaussianPhiFunction([[3],[4]], 0.5)
     >>> print(np.round(phi(X), 2))
-    [[0.11 0.52 0.85]
-     [0.41 0.6  0.68]
-     [0.58 0.58 0.58]
-     [0.41 0.6  0.68]
-     [0.11 0.52 0.85]]
+    [[1.   0.  ]
+     [1.   0.  ]
+     [0.99 0.13]
+     [0.13 0.99]
+     [0.   1.  ]]
     >>> print(phi.points)
     [[3]
-     [3]]
+     [4]]
     >>> print(phi.sigmas)
-    [[1]
-     [2]]
+    [[0.5]
+     [0.5]]
     """
     def __init__(
             self,
-            points: Union[int, NDArray, Tuple[NDArray, NDArray]] = 10,
+            points: Union[int, NDArray, Tuple[NDArray, NDArray]] = 20,
             sigma: Optional[Union[float, NDArray]] = None,
             random_sigma: Optional[bool] = None,
             X: Optional[NDArray] = None,
-            marginal_guarantee: bool = True,
+            marginal_guarantee: bool = False,
             normalized: bool = True,
     ) -> None:
         self.points = points
@@ -643,10 +644,11 @@ class GaussianPhiFunction(PhiFunction):
     def _init_sigma(
             self,
             sigma: Optional[Union[float, NDArray]],
-            n: int,
+            n_points: int,
     ) -> Optional[NDArray]:
         """
-        Return a standard deviation 2D array
+        Take a sigma value, and return a standard deviation 2D array of shape
+        (n_points, n_sigma), n_sigma being 1 or the number of dimensions of X.
 
         Parameters
         ----------
@@ -654,7 +656,7 @@ class GaussianPhiFunction(PhiFunction):
             standard deviation, as float or 1D array of length n_in
             (number of dimensins of the dataset)
 
-        n : int
+        n_points : int
             Number of points user for gaussian distances calculation
 
         Returns
@@ -668,12 +670,12 @@ class GaussianPhiFunction(PhiFunction):
             If ``sigma`` is not None, a float or a 1D array
         """
         if isinstance(sigma, numbers.Number):
-            sigmas = np.ones((n, 1))*sigma
+            sigmas = np.ones((n_points, 1))*sigma
         elif sigma is not None:
             if len(np.array(sigma).shape) != 1:
                 raise ValueError("sigma argument should be a float "
                                  "or a 1D array of floats.")
-            sigmas = np.ones((n, 1))*np.array(sigma)
+            sigmas = np.ones((n_points, 1))*np.array(sigma)
         else:
             sigmas = None
         return sigmas
@@ -714,26 +716,28 @@ class GaussianPhiFunction(PhiFunction):
         X : NDArray
             Some samples (training or calibration data)
         """
-        if isinstance(self.points, int):
-            points_index = np.random.choice(_num_samples(X),
-                                            size=self.points, replace=False)
-            self.points = cast(NDArray, _safe_indexing(X, points_index))
-        if self.sigmas is None:
-            self.sigmas = np.ones((len(self.points), 1))*np.std(
-                X, axis=0)/(len(self.points)**0.5)
+        if self._need_x_calib:
+            if isinstance(self.points, int):
+                points_index = np.random.choice(
+                    _num_samples(X), size=self.points, replace=False
+                )
+                self.points = cast(NDArray, _safe_indexing(X, points_index))
+            if self.sigmas is None:
+                self.sigmas = np.ones((len(self.points), 1))*np.std(
+                    X, axis=0)/(len(self.points)**0.5)
 
-        if self.random_sigma:
-            n = len(self.points)
-            self.sigmas = self.sigmas * (
-                2**np.random.normal(0, 1*2**(-2+np.log10(n)), n)
-                .reshape(-1, 1)
-            )
+            if self.random_sigma:
+                n = len(self.points)
+                self.sigmas = self.sigmas * (
+                    2**np.random.normal(0, 1*2**(-2+np.log10(n)), n)
+                    .reshape(-1, 1)
+                )
 
-        self._need_x_calib = False
+            self.functions = [
+                    lambda X, mu=_safe_indexing(self.points, i),
+                    sigma=_safe_indexing(self.sigmas, i):
+                    np.exp(-0.5 * ((X - mu) / sigma) ** 2)
+                    for i in range(len(self.points))
+                ]
 
-        self.functions = [
-                lambda X, mu=_safe_indexing(self.points, i),
-                sigma=_safe_indexing(self.sigmas, i):
-                np.exp(-0.5 * ((X - mu) / sigma) ** 2)
-                for i in range(len(self.points))
-            ]
+            self._need_x_calib = False

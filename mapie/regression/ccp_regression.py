@@ -552,12 +552,11 @@ class MapieCCPRegressor():
             else:
                 z_calib = None
 
-        if alpha is not None:
-            if self.alpha != alpha:
-                self.alpha = self._check_alpha(alpha)
-                warnings.warn(f"WARNING: The old value of alpha "
-                              f"({self.alpha}) has been overwritten "
-                              f"by the new one ({alpha}).")
+        if alpha is not None and self.alpha != alpha:
+            self.alpha = self._check_alpha(alpha)
+            warnings.warn(f"WARNING: The old value of alpha "
+                          f"({self.alpha}) has been overwritten "
+                          f"by the new one ({alpha}).")
 
         self.phi._check_need_calib(X_calib)
 

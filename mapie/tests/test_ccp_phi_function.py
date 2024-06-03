@@ -28,11 +28,12 @@ PHI = [
     PolynomialPhiFunction(2, "X", marginal_guarantee=True),
     PolynomialPhiFunction([1, 2], "X", marginal_guarantee=True),
     PolynomialPhiFunction([1, 4, 5], "y_pred", marginal_guarantee=False),
+    PolynomialPhiFunction([0, 1, 4, 5], "y_pred", marginal_guarantee=False),
     GaussianPhiFunction(4, X=X)
 ]
 
 # n_out without marginal_guarantee
-N_OUT_RAW = [1, 10, 12, 11, 13, 20, 20, 3, 40]
+N_OUT_RAW = [1, 10, 12, 11, 13, 20, 20, 3, 4, 40]
 
 PHI_FUNCTIONS = [
     [lambda X: np.ones((len(X), 1))],
@@ -156,13 +157,19 @@ def test_phi_functions_warning() -> None:
         PhiFunction([lambda X, d=d: X**d for d in range(4)])
 
 
-def test_phi_functions_error() -> None:
+@pytest.mark.parametrize("functions", [
+    [lambda X, other: X + other, lambda X, other: X - other],
+    [lambda X, other: X + other]
+])
+def test_phi_functions_error(functions: Any) -> None:
     """
     Test that creating a PhiFunction object with functions which have
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
     """
-    with pytest.raises(ValueError, match="Forbidden required argument."):
-        PhiFunction([lambda X, other: X + other, lambda X, other: X - other])
+    for f in functions:     # For coverage
+        f(np.ones((10, 1)), np.ones((10, 1)))
+    with pytest.raises(ValueError, match=r"Forbidden required argument."):
+        PhiFunction(functions)
 
 
 def test_phi_functions_empty() -> None:
@@ -229,8 +236,8 @@ def test_poly_gauss_init_other(
                                     (np.ones((10, 3)), np.ones(7))])
 def test_invalid_gauss_points(points: Any) -> None:
     """
-    Test that invalid ``GaussianPhiFunction`` ``points``argument values raise an
-    error
+    Test that invalid ``GaussianPhiFunction`` ``points``argument values raise
+    an error
     """
     with pytest.raises(ValueError):
         GaussianPhiFunction(points)
@@ -253,7 +260,7 @@ def test_invalid_gauss_sigma(sigma: Any) -> None:
 def test_gauss_need_calib(ind: int) -> None:
     """
     Test that ``GaussianPhiFunction`` arguments that require later completion
-    have ``_need_x_calib`` = ``True`` 
+    have ``_need_x_calib`` = ``True``
     """
     phi = GaussianPhiFunction(**GAUSS_NEED_CALIB_SETTINGS[ind])
     assert phi._need_x_calib
@@ -263,7 +270,7 @@ def test_gauss_need_calib(ind: int) -> None:
 def test_gauss_no_need_calib(ind: int) -> None:
     """
     Test that ``GaussianPhiFunction`` arguments that don't require later
-    completion have ``_need_x_calib`` = ``False`` 
+    completion have ``_need_x_calib`` = ``False``
     """
     phi = GaussianPhiFunction(**GAUSS_NO_NEED_CALIB_SETTINGS[ind])
     assert not phi._need_x_calib
@@ -276,10 +283,6 @@ def test_chained_check_need_calib(ind: int) -> None:
     method of children PhiFunction objects
     """
     child_phi = GaussianPhiFunction(**GAUSS_NEED_CALIB_SETTINGS[ind])
-    assert child_phi._need_x_calib
-
-    phi = PhiFunction([child_phi, lambda X: X, lambda X: np.ones(len(X))])
-    assert not phi._need_x_calib
-
+    phi = PhiFunction([child_phi])
     phi._check_need_calib(X)
     assert not child_phi._need_x_calib

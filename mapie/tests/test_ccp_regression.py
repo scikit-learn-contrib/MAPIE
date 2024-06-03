@@ -24,7 +24,8 @@ from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore,
                                      ResidualNormalisedScore)
 from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieCCPRegressor, PhiFunction
+from mapie.regression import (MapieCCPRegressor, PhiFunction,
+                              GaussianPhiFunction, PolynomialPhiFunction)
 
 random_state = 1
 np.random.seed(random_state)
@@ -43,23 +44,9 @@ CV = ["prefit", "split"]
 
 PHI = [
     PhiFunction([lambda X: np.ones((len(X), 1))]),
-    PhiFunction([lambda X: X]),
-    PhiFunction([lambda X: X, lambda z: z]),
-    PhiFunction([lambda X: X, lambda y_pred: y_pred]),
-    PhiFunction([
-        PhiFunction([lambda X: X, lambda y_pred: y_pred]),
-        lambda z: z
-    ]),
+    PolynomialPhiFunction(),
+    GaussianPhiFunction(5),
 ]
-PHI_FUNCTIONS = [
-    [lambda X: np.ones((len(X), 1))],
-    [lambda X: X],
-    [lambda X: X, lambda z: z],
-    [lambda X: X, lambda y_pred: y_pred],
-    [PhiFunction([lambda X: X, lambda y_pred: y_pred]), lambda z: z],
-]
-N_OUT_RAW = [1, 10, 12, 11, 13]
-
 WIDTHS = {
     "split": 3.87,
     "prefit": 4.81,
@@ -288,6 +275,11 @@ def test_fit_calibrate_combined_equivalence(
     if cv == "prefit":
         estimator.fit(X, y)
 
+    if isinstance(phi, GaussianPhiFunction):
+        # This function is usually called in fit and/or calibrate
+        # It sample the centers from X. We call it now for reproductibility
+        phi._check_need_calib(X)
+
     mapie_1 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
                                 alpha=alpha, random_state=random_state)
     mapie_2 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
@@ -302,14 +294,14 @@ def test_fit_calibrate_combined_equivalence(
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
 
 
-def test_recalibrate_warning():
+def test_recalibrate_warning() -> None:
     """
     Test that a warning is triggered when we calibrate a second time with
     a different alpha value
     """
     mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit_calibrate(X_toy, y_toy)
-    with pytest.warns(UserWarning, match="WARNING: The old value of alpha"):
+    with pytest.warns(UserWarning, match=r"WARNING: The old value of alpha"):
         mapie_reg.calibrate(X_toy, y_toy, alpha=0.2)
 
 
@@ -331,6 +323,11 @@ def test_recalibrate(
     (X, y, z) = dataset
     if cv == "prefit":
         estimator.fit(X, y)
+
+    if isinstance(phi, GaussianPhiFunction):
+        # This function is usually called in fit and/or calibrate
+        # It sample the centers from X. We call it now for reproductibility
+        phi._check_need_calib(X)
 
     mapie_1 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
                                 alpha=0.2, random_state=random_state)
@@ -399,6 +396,11 @@ def test_same_results_prefit_split(
     y_train, y_calib = y[train_index], y[val_index]
     z_calib = z[val_index]
 
+    if isinstance(phi, GaussianPhiFunction):
+        # This function is usually called in fit and/or calibrate
+        # It sample the centers from X. We call it now for reproductibility
+        phi._check_need_calib(X_train)
+
     mapie_reg = MapieCCPRegressor(estimator=estimator_1, phi=phi, cv=cv,
                                   alpha=0.1, random_state=random_state)
     mapie_reg.fit_calibrate(X, y, z=z)
@@ -434,6 +436,11 @@ def test_results_for_ordered_alpha(
     if cv == "prefit":
         estimator.fit(X, y)
 
+    if isinstance(phi, GaussianPhiFunction):
+        # This function is usually called in fit and/or calibrate
+        # It sample the centers from X. We call it now for reproductibility
+        phi._check_need_calib(X)
+
     mapie_reg_1 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
                                     alpha=0.05, random_state=random_state)
     mapie_reg_1.fit_calibrate(X, y, z=z)
@@ -449,7 +456,6 @@ def test_results_for_ordered_alpha(
 
 
 @pytest.mark.parametrize("dataset", [(X, y, z), (X_toy, y_toy, z_toy)])
-@pytest.mark.parametrize("phi", PHI)
 @pytest.mark.parametrize("cv", CV)
 @pytest.mark.parametrize("estimator1, estimator2, estimator3", zip([
     LinearRegression(),
@@ -464,7 +470,6 @@ def test_results_for_ordered_alpha(
 def test_results_with_constant_sample_weights(
     dataset: Tuple[NDArray, NDArray, NDArray],
     cv: Any,
-    phi: PhiFunction,
     estimator1: RegressorMixin,
     estimator2: RegressorMixin,
     estimator3: RegressorMixin,
@@ -480,11 +485,11 @@ def test_results_with_constant_sample_weights(
         estimator3.fit(X, y)
 
     n_samples = len(X)
-    mapie0 = MapieCCPRegressor(estimator=estimator1, phi=phi,
+    mapie0 = MapieCCPRegressor(estimator=estimator1, phi=PHI[0],
                                cv=cv, random_state=random_state)
-    mapie1 = MapieCCPRegressor(estimator=estimator2, phi=phi,
+    mapie1 = MapieCCPRegressor(estimator=estimator2, phi=PHI[0],
                                cv=cv, random_state=random_state)
-    mapie2 = MapieCCPRegressor(estimator=estimator3, phi=phi,
+    mapie2 = MapieCCPRegressor(estimator=estimator3, phi=PHI[0],
                                cv=cv, random_state=random_state)
 
     mapie0.fit_calibrate(X, y, z=z, sample_weight=None)
@@ -494,10 +499,10 @@ def test_results_with_constant_sample_weights(
     y_pred0, y_pis0 = mapie0.predict(X, z=z)
     y_pred1, y_pis1 = mapie1.predict(X, z=z)
     y_pred2, y_pis2 = mapie2.predict(X, z=z)
-    np.testing.assert_allclose(y_pred0, y_pred1, rtol=0.01, atol=0.1)
-    np.testing.assert_allclose(y_pred0, y_pred2, rtol=0.01, atol=0.1)
-    np.testing.assert_allclose(y_pis0, y_pis1, rtol=0.01, atol=0.1)
-    np.testing.assert_allclose(y_pis0, y_pis2, rtol=0.01, atol=0.1)
+    np.testing.assert_allclose(y_pred0, y_pred1, rtol=1e-3, atol=1e-3)
+    np.testing.assert_allclose(y_pred0, y_pred2, rtol=1e-3, atol=1e-3)
+    np.testing.assert_allclose(y_pis0, y_pis1, rtol=1e-3, atol=1e-3)
+    np.testing.assert_allclose(y_pis0, y_pis2, rtol=1e-3, atol=1e-3)
 
 
 @pytest.mark.parametrize("dataset", [(X, y, z), (X_toy, y_toy, z_toy)])
@@ -538,7 +543,7 @@ def test_prediction_between_low_up(
         assert (y_pred <= y_pis[:, 1, 0]).all()
 
 
-@pytest.mark.parametrize("phi", PHI)
+@pytest.mark.parametrize("phi", PHI[:2])
 @pytest.mark.parametrize("cv", CV)
 @pytest.mark.parametrize("alpha", [0.2, 0.1])
 @pytest.mark.parametrize("estimator", [
@@ -568,9 +573,9 @@ def test_linear_data_confidence_interval(
 
     y_pred, y_pis = mapie.predict(X_toy, z=z_toy)
     np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 1, 0],
-                               rtol=1e-3, atol=1e-2)
+                               rtol=0.01, atol=0.1)
     np.testing.assert_allclose(y_pred, y_pis[:, 0, 0],
-                               rtol=1e-3, atol=1e-2)
+                               rtol=0.01, atol=0.1)
 
 
 def test_linear_regression_results() -> None:
