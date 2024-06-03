@@ -72,8 +72,8 @@ def generate_data(n_train=2000, n_calib=2000, n_test=500):
     def f(x):
         ax = 0*x
         for i in range(len(x)):
-            ax[i] = np.random.poisson(np.sin(x[i])**2 + 0.1)
-            + 0.03*x[i]*np.random.randn(1)
+            ax[i] = (np.random.poisson(np.sin(x[i])**2 + 0.1)
+                     + 0.03*x[i]*np.random.randn(1))
             ax[i] += 25*(np.random.uniform(0, 1, 1) < 0.01)*np.random.randn(1)
         return ax.astype(np.float32)
 
@@ -213,7 +213,7 @@ def plot_results(X_test, y_test, n_trials=10,
 
         phi_shifts = GaussianPhiFunction(
             points=(
-                np.array(eval_locs+other_locs).reshape(-1,1),
+                np.array(eval_locs+other_locs).reshape(-1, 1),
                 [eval_scale]*len(eval_locs) + [other_scale]*len(other_locs),
             ),
             marginal_guarantee=True,
@@ -341,9 +341,9 @@ def plot_results(X_test, y_test, n_trials=10,
 # 5. Reproduce experiment and results
 # -----------------------------------------------------------------------------
 
-plot_results(X_test, y_test, n_trials=500, experiment="Groups")
+plot_results(X_test, y_test, 500, experiment="Groups")
 
-plot_results(X_test, y_test, n_trials=500, experiment="Shifts")
+plot_results(X_test, y_test, 500, experiment="Shifts")
 
 
 ##############################################################################
@@ -357,7 +357,6 @@ plot_results(X_test, y_test, n_trials=500, experiment="Shifts")
 # to the split method with symetrical PI. Let's compare it to the split CP with
 # unsymetrical PI, to have a fair comparison.
 
-plot_results(X_test, y_test, n_trials=500, experiment="Groups")
+plot_results(X_test, y_test, 500, experiment="Groups")
 
-plot_results(X_test, y_test, n_trials=500,
-             experiment="Shifts", split_sym=False)
+plot_results(X_test, y_test, 500, experiment="Shifts", split_sym=False)
