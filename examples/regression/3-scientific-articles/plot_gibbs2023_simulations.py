@@ -32,7 +32,6 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.regression import (MapieCCPRegressor, MapieRegressor,
                               PhiFunction, GaussianPhiFunction)
@@ -263,9 +262,13 @@ def plot_results(X_test, y_test, n_trials=10,
             )
 
     # ================== results plotting ==================
-    sns.set_theme(font="DejaVu Sans")
-    sns.set_style("whitegrid", {'axes.grid': False})
-    cp = sns.color_palette()
+    cp = plt.get_cmap('tab10').colors
+
+    # Set font and style
+    plt.rcParams['font.family'] = 'DejaVu Sans'
+    plt.style.use('seaborn-whitegrid')
+    plt.rcParams['axes.grid'] = False
+
     fig = plt.figure()
     fig.set_size_inches(17, 6)
 
@@ -318,19 +321,23 @@ def plot_results(X_test, y_test, n_trials=10,
                      color='grey', ls='--', lw=3)
 
     ax3 = fig.add_subplot(1, 3, 3)
-    f = sns.barplot(
-        coverageData,
-        x='Range',
-        y='Miscoverage',
-        hue='Method',
-        palette=cp,
-        ax=ax3,
-        ci=0.8,
-    )
-    f.axhline(0.1, color='red')
+
+    ranges = coverageData['Range'].unique()
+    methods = coverageData['Method'].unique()
+    bar_width = 0.8/len(methods)
+    for i, method in enumerate(methods):
+        method_data = coverageData[coverageData['Method'] == method]
+        x = np.arange(len(ranges)) + i * bar_width
+        ax3.bar(x, method_data.groupby("Range")['Miscoverage'].mean(), width=bar_width, label=method, color=cp[i])
+
+    ax3.set_xticks(np.arange(len(ranges)) + bar_width * (len(methods) - 1) / 2)
+    ax3.set_xticklabels(ranges)
+
+    ax3.axhline(0.1, color='red')
+    ax3.legend()
     ax3.set_ylabel("Miscoverage", fontsize=18, labelpad=10)
     ax3.set_xlabel(experiment, fontsize=18, labelpad=10)
-    ax3.set_ylim(0., 0.2)
+    ax3.set_ylim(0.,0.2)
     ax3.tick_params(axis='both', which='major', labelsize=14)
 
     plt.tight_layout(pad=2)
