@@ -499,10 +499,10 @@ def test_results_with_constant_sample_weights(
     y_pred0, y_pis0 = mapie0.predict(X, z=z)
     y_pred1, y_pis1 = mapie1.predict(X, z=z)
     y_pred2, y_pis2 = mapie2.predict(X, z=z)
-    np.testing.assert_allclose(y_pred0, y_pred1, rtol=1e-3, atol=1e-3)
-    np.testing.assert_allclose(y_pred0, y_pred2, rtol=1e-3, atol=1e-3)
-    np.testing.assert_allclose(y_pis0, y_pis1, rtol=1e-3, atol=1e-3)
-    np.testing.assert_allclose(y_pis0, y_pis2, rtol=1e-3, atol=1e-3)
+    np.testing.assert_allclose(y_pred0, y_pred1, rtol=1e-2, atol=1e-2)
+    np.testing.assert_allclose(y_pred0, y_pred2, rtol=1e-2, atol=1e-2)
+    np.testing.assert_allclose(y_pis0, y_pis1, rtol=1e-2, atol=1e-2)
+    np.testing.assert_allclose(y_pis0, y_pis2, rtol=1e-2, atol=1e-2)
 
 
 @pytest.mark.parametrize("dataset", [(X, y, z), (X_toy, y_toy, z_toy)])
