@@ -168,22 +168,36 @@ class MapieCCPRegressor():
     ) -> None:
 
         self.random_state = random_state
-        self.cv = self._check_cv(
-            cv, random_state=self.random_state
-        )
-        self.estimator = self._check_estimator(estimator)
-        self.conformity_score_ = check_conformity_score(
-            conformity_score, self.default_sym_
-        )
+        self.cv = cv
+        self.estimator = estimator
+        self.conformity_score_ = conformity_score
 
         if phi is None:
             self.phi = PhiFunction(lambda X: np.ones(len(X)))
         else:
             self.phi = cast(PhiFunction, phi)
 
-        self.alpha = cast(float, self._check_alpha(alpha))
+        self.alpha = alpha
         self.beta_up: Optional[Tuple[NDArray, bool]] = None
         self.beta_low: Optional[Tuple[NDArray, bool]] = None
+
+    def _check_fit_parameters(self) -> None:
+        """
+        Check and replace default ``cv`` and ``estimator`` arguments
+        """
+        self.cv = self._check_cv(
+            self.cv, random_state=self.random_state
+        )
+        self.estimator = self._check_estimator(self.estimator)
+
+    def _check_calibrate_parameters(self) -> None:
+        """
+        Check and replace default ``conformity_score`` and ``alpha`` arguments
+        """
+        self.conformity_score_ = check_conformity_score(
+            self.conformity_score_, self.default_sym_
+        )
+        self.alpha = cast(float, self._check_alpha(self.alpha))
 
     def _check_cv(
         self,
@@ -350,7 +364,7 @@ class MapieCCPRegressor():
                     ) from exc
             return estimator
 
-    def _check_fit_parameters(
+    def _check_sample_weights(
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -443,7 +457,7 @@ class MapieCCPRegressor():
             self
 
         """
-
+        self._check_fit_parameters()
         if self.cv != 'prefit':
             train_index = list(
                 cast(BaseCrossValidator, self.cv).split(X, y, groups)
@@ -460,7 +474,7 @@ class MapieCCPRegressor():
 
             (X_train,
                 y_train,
-                sample_weight_train) = self._check_fit_parameters(
+                sample_weight_train) = self._check_sample_weights(
                 X_train, y_train, sample_weight_train
             )
             fit_estimator(self.estimator, X_train, y_train,
@@ -524,6 +538,13 @@ class MapieCCPRegressor():
             self
 
         """
+        self._check_fit_parameters()
+        self._check_calibrate_parameters()
+
+        self.estimator = cast(RegressorMixin, self.estimator)
+        self.cv = cast(Union[str, BaseCrossValidator], self.cv)
+        self.conformity_score_ = cast(ConformityScore, self.conformity_score_)
+
         if self.cv != 'prefit':
             try:
                 if isinstance(self.estimator, Pipeline):
@@ -744,6 +765,9 @@ class MapieCCPRegressor():
               - [:, 0, 0]: Lower bound of the prediction interval.
               - [:, 1, 0]: Upper bound of the prediction interval.
         """
+
+        self.estimator = cast(RegressorMixin, self.estimator)
+        self.conformity_score_ = cast(ConformityScore, self.conformity_score_)
 
         if self.beta_low is None or self.beta_up is None:
             raise NotFittedError(

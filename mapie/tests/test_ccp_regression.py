@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from inspect import signature
-from typing import Any, Tuple
+from typing import Any, Tuple, cast
 
 import numpy as np
 import pytest
@@ -129,7 +129,7 @@ def test_predict_not_complete_phi() -> None:
     make_pipeline(LinearRegression()),
 ])
 def test_no_fit_prefit_calibrate(estimator: Any) -> None:
-    """Test that calibrate before without fit, if prefit, raises no errors."""
+    """Test that calibrate without fit, if prefit, raises no errors."""
     estimator.fit(X_toy, y_toy)
     mapie_reg = MapieCCPRegressor(estimator, cv="prefit")
     mapie_reg.calibrate(X_toy, y_toy)
@@ -165,19 +165,36 @@ def test_invalid_estimator(
 ) -> None:
     """Test that invalid estimators raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid estimator.*"):
-        MapieCCPRegressor(estimator=estimator)
+        mapie = MapieCCPRegressor(estimator=estimator)
+        mapie.fit(X, y)
 
 
 @pytest.mark.parametrize("estimator", [
     LinearRegression(),
     make_pipeline(LinearRegression()),
 ])
-def test_invalid_prefit_estimator(
+def test_invalid_prefit_estimator_calibrate(
     estimator: RegressorMixin,
 ) -> None:
-    """Test that non-fitted estimator with prefit cv raise errors."""
+    """Test that non-fitted estimator with prefit cv raise errors when
+    calibrate is called"""
     with pytest.raises(NotFittedError):
-        MapieCCPRegressor(estimator=estimator, cv="prefit")
+        mapie = MapieCCPRegressor(estimator=estimator, cv="prefit")
+        mapie.calibrate(X, y)
+
+
+@pytest.mark.parametrize("estimator", [
+    LinearRegression(),
+    make_pipeline(LinearRegression()),
+])
+def test_invalid_prefit_estimator_fit(
+    estimator: RegressorMixin,
+) -> None:
+    """Test that non-fitted estimator with prefit cv raise errors when fit
+    is called."""
+    with pytest.raises(NotFittedError):
+        mapie = MapieCCPRegressor(estimator=estimator, cv="prefit")
+        mapie.fit(X, y)
 
 
 @pytest.mark.parametrize("estimator", [
@@ -198,6 +215,7 @@ def test_valid_prefit_estimator(
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
     mapie_reg = MapieCCPRegressor(random_state=random_state)
+    mapie_reg.fit_calibrate(X, y)
     assert isinstance(mapie_reg.estimator, RegressorMixin)
     assert isinstance(mapie_reg.phi, PhiFunction)
     assert isinstance(mapie_reg.cv, ShuffleSplit)
@@ -211,7 +229,8 @@ def test_default_parameters() -> None:
 )
 def test_invalid_alpha(alpha: Any) -> None:
     with pytest.raises(ValueError):
-        MapieCCPRegressor(alpha=alpha)
+        mapie = MapieCCPRegressor(alpha=alpha)
+        mapie.fit_calibrate(X, y)
 
 
 def test_valid_estimator() -> None:
@@ -255,7 +274,8 @@ def test_valid_cv(cv: Any, estimator: RegressorMixin) -> None:
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid agg_functions raise errors."""
     with pytest.raises(ValueError, match="Invalid cv argument."):
-        MapieCCPRegressor(cv=cv, random_state=random_state)
+        mapie = MapieCCPRegressor(cv=cv, random_state=random_state)
+        mapie.fit(X, y)
 
 
 @pytest.mark.parametrize("dataset", [(X, y, z), (X_toy, y_toy, z_toy)])
@@ -678,4 +698,4 @@ def test_fit_parameters_passing() -> None:
 
     mapie_reg.fit_calibrate(X, y, monitor=early_stopping_monitor)
 
-    assert mapie_reg.estimator.estimators_.shape[0] == 3
+    assert cast(RegressorMixin, mapie_reg.estimator).estimators_.shape[0] == 3
