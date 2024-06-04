@@ -1,8 +1,6 @@
 from .quantile_regression import MapieQuantileRegressor
 from .regression import MapieRegressor
 from .ccp_regression import MapieCCPRegressor
-from .utils.ccp_phi_function import (PhiFunction, PolynomialPhiFunction,
-                                     GaussianPhiFunction)
 from .time_series_regression import MapieTimeSeriesRegressor
 
 __all__ = [
@@ -10,7 +8,4 @@ __all__ = [
     "MapieQuantileRegressor",
     "MapieTimeSeriesRegressor",
     "MapieCCPRegressor",
-    "PhiFunction",
-    "PolynomialPhiFunction",
-    "GaussianPhiFunction",
 ]
