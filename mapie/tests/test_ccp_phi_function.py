@@ -33,7 +33,7 @@ PHI = [
 ]
 
 # n_out without marginal_guarantee
-N_OUT_RAW = [1, 10, 12, 11, 13, 20, 20, 3, 4, 40]
+N_OUT_RAW = [1, 10, 12, 11, 13, 20, 20, 3, 4, 4]
 
 PHI_FUNCTIONS = [
     [lambda X: np.ones((len(X), 1))],
