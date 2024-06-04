@@ -518,3 +518,23 @@ def test_method_error_in_update(monkeypatch: Any, method: str) -> None:
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         mapie_ts_reg.fit(X_toy, y_toy)
         mapie_ts_reg.update(X_toy, y_toy)
+
+
+def test_aci_method() -> None:
+    
+    """Test of aci method in fit"""
+    X_train_val, X_test, y_train_val, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=random_state
+    )
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train_val, y_train_val, test_size=0.5, random_state=random_state
+    )
+    estimator = LinearRegression().fit(X_train, y_train)
+    mapie_ts_reg = MapieTimeSeriesRegressor(
+        estimator=estimator,
+        cv="prefit", method = "aci"
+    )
+    mapie_ts_reg.fit(X_val, y_val)
+    mapie_ts_reg.update(X_test, y_test, gamma=0.1, alpha=0.1)
+
+    assert mapie_ts_reg.method == "base"
