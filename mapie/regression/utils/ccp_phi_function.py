@@ -636,7 +636,7 @@ class GaussianPhiFunction(PhiFunction):
             functions = [
                 lambda X, mu=_safe_indexing(self.points, i),
                 sigma=_safe_indexing(self.sigmas, i):
-                np.exp(-0.5 * ((X - mu) / sigma) ** 2)
+                np.exp(-0.5 * np.sum(((X - mu) / sigma) ** 2, axis=1))
                 for i in range(len(self.points))
             ]
         super().__init__(functions, marginal_guarantee, normalized)
@@ -736,7 +736,7 @@ class GaussianPhiFunction(PhiFunction):
             self.functions = [
                     lambda X, mu=_safe_indexing(self.points, i),
                     sigma=_safe_indexing(self.sigmas, i):
-                    np.exp(-0.5 * ((X - mu) / sigma) ** 2)
+                    np.exp(-0.5 * np.sum(((X - mu) / sigma) ** 2, axis=1))
                     for i in range(len(self.points))
                 ]
 
