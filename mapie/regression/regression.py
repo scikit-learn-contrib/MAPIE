@@ -425,7 +425,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         cv = check_cv(
             self.cv, test_size=self.test_size, random_state=self.random_state
         )
-        if self.cv in ["split", "prefit"] and (self.method == "naive" or self.method == "plus"):
+        if self.cv in ["split", "prefit"] and (self.method == "naive" or
+                                               self.method == "plus"):
             self.method = "base"
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
