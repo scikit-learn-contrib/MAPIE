@@ -255,10 +255,112 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
                           "in the `PhiFunction` definition.")
         return result
 
-    def _check_need_calib(self, X: NDArray) -> None:
-        for f in self.functions:
-            if isinstance(f, PhiFunction) and f._need_x_calib:
-                f._check_need_calib(X)
+
+class CustomPhiFunction(PhiFunction):
+    """
+    This class is used to define the transformation phi,
+    used in the Gibbs et al. method to model the conformity scores.
+    This class build a ``PhiFunction`` object with custom features of
+    X, y_pred or z, defined as a list of functions in ``functions`` argument.
+
+    Parameters
+    ----------
+    functions: Optional[Union[Callable, Iterable]]
+        List of functions (or PhiFunction objects) or single function.
+        Each function can take a combinaison of the following arguments:
+        - ``X``: Input dataset, of shape (n_samples, ``n_in``)
+        - ``y_pred``: estimator prediction, of shape (n_samples,)
+        - ``z``: exogenous variable, of shape (n_samples, n_features).
+            It should be given in the ``fit`` and ``predict`` methods.
+        The results of each functions will be concatenated to build the final
+        result of the phi function, of shape (n_samples, ``n_out``).
+        If ``None``, the resulting phi object will return a column of ones,
+        when called. It will result, in the MapieCCPRegressor, in a basic
+        split CP approach.
+
+        By default ``None``.
+
+    marginal_guarantee: bool
+        Add a column of ones to the features, for safety reason
+        (to garanty the marginal coverage, no matter how the other features
+        the ``PhiFunction``object were built).
+        If the ``PhiFunction``object definition covers all the dataset
+        (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
+        is never all zeros), this column of ones is not necessary
+        to obtain marginal coverage.
+        In this case, you can set this argument to ``False``.
+
+        Note: Even if it is not always necessary to guarantee the marginal
+        coverage, it can't degrade the prediction intervals.
+
+        By default ``True``.
+
+    normalized: bool
+        Whether or not to normalized ``phi(X, y_pred, z)``. Normalization
+        will result in a bounded interval prediction width, avoiding the width
+        to explode to +inf or crash to zero. It is particularly intersting when
+        you know that the conformity scores are bounded. It also prevent the
+        interval to have a interval of zero width for out-of-distribution or
+        new samples. On the opposite, it is not recommended if the conformity
+        scores can vary a lot.
+
+        By default ``False``
+
+    Attributes
+    ----------
+    fit_attributes: List[str]
+        Name of attributes set during the ``fit`` method, and required to call
+        ``transform``.
+
+    n_in: int
+        Number of features of ``X``
+
+    n_out: int
+        Number of features of phi(``X``, ``y_pred``, ``z``)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.regression.utils import CustomPhiFunction
+    >>> X = np.array([[1, 2], [3, 4], [5, 6]])
+    >>> y_pred = np.array([0, 0, 1])
+    >>> phi = CustomPhiFunction(
+    ...     functions=[
+    ...         lambda X: X * (y_pred[:, np.newaxis] == 0), # X, if y_pred is 0
+    ...         lambda y_pred: y_pred,                     # y_pred
+    ...     ],
+    ...     normalized=False,
+    ... )
+    >>> print(phi.transform(X, y_pred))
+    [[1. 2. 0. 1.]
+     [3. 4. 0. 1.]
+     [0. 0. 1. 1.]]
+    >>> print(phi.n_out)
+    4
+    """
+    fit_attributes = []
+
+    def __init__(
+        self,
+        functions: Optional[Union[Callable, Iterable]] = None,
+        marginal_guarantee: bool = True,
+        normalized: bool = False,
+    ) -> None:
+        super().__init__(functions, marginal_guarantee, normalized)
+
+    def fit(
+        self,
+        X: ArrayLike,
+    ) -> None:
+        """
+        ``PolynomialPhiFunction`` don't need to be fitted.
+
+        Parameters
+        ----------
+        X : Optional[ArrayLike]
+            Samples
+        """
+        return
 
 
 class PolynomialPhiFunction(PhiFunction):

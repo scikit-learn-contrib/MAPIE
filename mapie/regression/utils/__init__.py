@@ -1,8 +1,9 @@
 from .ccp_phi_function import (PhiFunction, PolynomialPhiFunction,
-                               GaussianPhiFunction)
+                               GaussianPhiFunction, CustomPhiFunction)
 
 __all__ = [
     "PhiFunction",
     "PolynomialPhiFunction",
     "GaussianPhiFunction",
+    "CustomPhiFunction",
 ]
