@@ -512,17 +512,11 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         )
 
         if self.conformity_score_.sym:
-            alpha_low = 1 - self.alpha
-            alpha_up = 1 - self.alpha
+            q_low = 1 - self.alpha
+            q_up = 1 - self.alpha
         else:
-            alpha_low = self.alpha / 2
-            alpha_up = 1 - self.alpha / 2
-
-        def l_alpha(alpha, X, S):
-            return np.where(S >= X, (1 - alpha) * (S - X), alpha * (X - S))
-
-        def sum_of_losses(beta, phi_x, S, alpha):
-            return np.sum(l_alpha(alpha, phi_x.dot(beta), S))
+            q_low = self.alpha / 2
+            q_up = 1 - self.alpha / 2
 
         phi_x = self.phi(
             X_calib,
@@ -538,9 +532,6 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
                           "definintion.\n"
                           "Fix: Use `marginal_guarantee`=True in PhiFunction")
 
-        not_nan_index = np.where(~np.isnan(calib_conformity_scores))[0]
-        # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
-
         if self.random_state is None:
             warnings.warn("WARNING: The method implemented in "
                           "MapieCCPRegressor has a stochastic behavior. "
@@ -550,22 +541,77 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         else:
             np.random.seed(self.random_state)
 
+        def pinball_loss(alpha: float, q_pred: NDArray, q: NDArray) -> NDArray:
+            """
+            Apply the pinball loss between ``q_pred`` and ``q``
+            considering the target quantile ``1-alpha``.
+
+            Parameters
+            ----------
+            alpha : float
+                Between ``0.0`` and ``1.0``, represents the risk level of the
+                confidence interval.
+            q_pred : NDArray
+                Predicted quantile
+            q : NDArray
+                True quantile
+
+            Returns
+            -------
+            NDArray
+                Pinball loss between ``q_pred`` and ``q``
+            """
+            return np.where(q >= q_pred, (1 - alpha) * (q - q_pred),
+                            alpha * (q_pred - q))
+
+        def objective(
+            beta: NDArray,
+            phi_x: NDArray, conformity_scores: NDArray, alpha: float
+        ) -> float:
+            """
+            Objective funtcion to minimize to get the estimation of
+            the conformity scores ``1-alpha`` quantile, caracterized by
+            the scalar parameters in the ``beta`` vector.
+
+            Parameters
+            ----------
+            beta : NDArray
+                Parameters to optimize to minimize the objective function
+            phi_x : NDArray
+                Transformation of the data X using the ``PhiFunction``.
+            conformity_scores : NDArray
+                Conformity scores of X
+            alpha : float
+                Between ``0.0`` and ``1.0``, represents the risk level of the
+                confidence interval.
+
+            Returns
+            -------
+            float
+                Scalar value to minimize, being the sum of the pinball losses.
+            """
+            return np.sum(
+                pinball_loss(alpha, phi_x.dot(beta), conformity_scores))
+
+        not_nan_index = np.where(~np.isnan(calib_conformity_scores))[0]
+        # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
+
         optimal_beta_up = minimize(
-            sum_of_losses, np.random.normal(0, 1, self.phi.n_out),
+            objective, self.phi.init_value,
             args=(
                 phi_x[not_nan_index, :],
                 calib_conformity_scores[not_nan_index],
-                1-alpha_up
+                1-q_up
                 )
             )
 
         if not self.conformity_score_.sym:
             optimal_beta_low = minimize(
-                sum_of_losses, np.random.normal(0, 1, self.phi.n_out),
+                objective, self.phi.init_value,
                 args=(
                     phi_x[not_nan_index, :],
                     calib_conformity_scores[not_nan_index],
-                    1-alpha_low
+                    1-q_low
                 )
             )
         else:
