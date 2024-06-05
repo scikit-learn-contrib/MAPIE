@@ -33,8 +33,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.regression import (MapieCCPRegressor, MapieRegressor,
-                              PhiFunction, GaussianPhiFunction)
+from mapie.regression import MapieCCPRegressor, MapieRegressor
+from mapie.regression.utils import CustomPhiFunction, GaussianPhiFunction
 from scipy.stats import norm
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
@@ -191,7 +191,7 @@ def plot_results(X_test, y_test, n_trials=10,
 
     if experiment == "Groups":
         # CCP Groups
-        phi_groups = PhiFunction([
+        phi_groups = CustomPhiFunction([
             lambda X, t=t: np.logical_and(X >= t, X < t + 0.5).astype(int)
             for t in np.arange(0, 5.5, 0.5)
         ])
@@ -200,7 +200,7 @@ def plot_results(X_test, y_test, n_trials=10,
             conformity_score=AbsoluteConformityScore(sym=False),
             random_state=None
         )
-        mapie_ccp.conformity_score_.eps = 1e-5
+        mapie_ccp.conformity_score.eps = 1e-5
         mapie_ccp.calibrate(X_calib, y_calib)
         _, y_pi_ccp = mapie_ccp.predict(X_test)
     else:
@@ -223,7 +223,7 @@ def plot_results(X_test, y_test, n_trials=10,
             conformity_score=AbsoluteConformityScore(sym=False),
             random_state=None
         )
-        mapie_ccp.conformity_score_.eps = 1e-5
+        mapie_ccp.conformity_score.eps = 1e-5
         mapie_ccp.calibrate(X_calib, y_calib)
         _, y_pi_ccp = mapie_ccp.predict(X_test)
 

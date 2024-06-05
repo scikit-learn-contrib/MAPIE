@@ -14,7 +14,7 @@ from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
-from .utils.ccp_phi_function import PhiFunction
+from .utils.ccp_phi_function import PhiFunction, GaussianPhiFunction
 from mapie.utils import (check_conformity_score, check_estimator,
                          check_lower_upper_bounds, check_null_weight,
                          fit_estimator)
@@ -121,23 +121,23 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
     --------
     >>> import numpy as np
     >>> from mapie.regression import MapieCCPRegressor
-    >>> X_train = np.array([[0], [1], [2], [3], [4], [5]])
-    >>> y_train = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
+    >>> np.random.seed(1)
+    >>> X_train = np.arange(0,100,2).reshape(-1, 1)
+    >>> y_train = 2*X_train[:,0] + np.random.rand(len(X_train))
     >>> mapie_reg = MapieCCPRegressor(alpha=0.1, random_state=1)
     >>> mapie_reg = mapie_reg.fit_calibrate(
     ...     X_train,
     ...     y_train,
     ... )
     >>> y_pred, y_pis = mapie_reg.predict(X_train)
-    >>> print(np.round(y_pis[:,:, 0], 2))
-    [[ 4.14  5.57]
-     [ 6.11  7.54]
-     [ 8.07  9.5 ]
-     [10.04 11.46]
-     [12.   13.43]
-     [13.96 15.39]]
-    >>> print(np.round(y_pred, 2))
-    [ 4.86  6.82  8.79 10.75 12.71 14.68]
+    >>> print(np.round(y_pred[:5], 2))
+    [ 0.43  4.43  8.43 12.43 16.43]
+    >>> print(np.round(y_pis[:5,:, 0], 2))
+    [[ 0.07  0.79]
+     [ 4.03  4.83]
+     [ 8.    8.86]
+     [11.98 12.89]
+     [15.97 16.9 ]]
     """
 
     default_sym_ = True
@@ -480,9 +480,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         check_is_fitted(self, self.fit_attributes)
         self.phi = cast(PhiFunction, self.phi)
 
-        self.estimator = cast(RegressorMixin, self.estimator)
-        self.cv = cast(Union[str, BaseCrossValidator], self.cv)
-        self.conformity_score_ = cast(ConformityScore, self.conformity_score_)
+        self.phi.fit(X)
 
         if self.cv != 'prefit':
             self.cv = cast(BaseCrossValidator, self.cv)
@@ -742,6 +740,10 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             return y_pred
 
         check_is_fitted(self, self.calib_attributes)
+
+        self.phi = cast(PhiFunction, self.phi)
+
+        phi_x = self.phi.transform(X, y_pred, z)
 
         signed = -1 if self.conformity_score_.sym else 1
 

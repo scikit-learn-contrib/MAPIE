@@ -1,29 +1,26 @@
 from __future__ import annotations
 
+from abc import ABCMeta, abstractmethod
 import inspect
-from typing import Callable, Dict, List, Optional, Tuple, Union, cast
+from typing import Callable, Dict, List, Optional, Tuple, Union, cast, Iterable
 import numbers
 import warnings
 
 import numpy as np
-from mapie._typing import NDArray
+from mapie._typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _num_samples
+from sklearn.utils.validation import _num_samples, check_is_fitted, _is_fitted
+from sklearn.base import BaseEstimator
 
 
-class PhiFunction():
+class PhiFunction(BaseEstimator, metaclass=ABCMeta):
     """
-    This class is used to define the transformation phi,
+    Base class for the phi functions,
     used in the Gibbs et al. method to model the conformity scores.
-    Phi takes as input X (and can take y_pred and any exogenous variables z)
-    and return an array of shape (n_samples, d), for any integer d.
 
     Parameters
     ----------
-    functions: Optional[Union[
-                Union[Callable, "PhiFunction"],
-                List[Union[Callable, "PhiFunction"]]
-            ]]
+    functions: Optional[Union[Callable, Iterable]]
         List of functions (or PhiFunction objects) or single function.
         Each function can take a combinaison of the following arguments:
         - ``X``: Input dataset, of shape (n_samples, ``n_in``)
@@ -66,100 +63,42 @@ class PhiFunction():
 
     Attributes
     ----------
+    fit_attributes: List[str]
+        Name of attributes set during the ``fit`` method, and required to call
+        ``transform``.
 
     n_in: int
         Number of features of ``X``
 
     n_out: int
         Number of features of phi(``X``, ``y_pred``, ``z``)
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mapie.regression import PhiFunction
-    >>> X = np.array([[1, 2], [3, 4], [5, 6]])
-    >>> y_pred = np.array([0, 0, 1])
-    >>> z = np.array([[10], [20], [30]])
-    >>> def not_lambda_function(y_pred, z):
-    ...     result = np.zeros((y_pred.shape[0], z.shape[1]))
-    ...     cnd = (y_pred == 1)
-    ...     result[cnd] = z[cnd]
-    ...     return result
-    >>> phi = PhiFunction(
-    ...     functions=[
-    ...         lambda X: X * (y_pred[:, np.newaxis] == 0), # X, if y_pred is 0
-    ...         lambda y_pred: y_pred,                     # y_pred
-    ...         not_lambda_function,                       # z, if y_pred is 1
-    ...     ],
-    ...     normalized=False,
-    ... )
-    >>> print(phi(X, y_pred, z))
-    [[ 1.  2.  0.  0.  1.]
-     [ 3.  4.  0.  0.  1.]
-     [ 0.  0.  1. 30.  1.]]
-    >>> print(phi.n_out)
-    5
-    >>> # We can also combine PhiFunction objects with other functions
-    >>> compound_phi = PhiFunction(
-    ...     functions=[
-    ...         phi,
-    ...         lambda X: 4 * np.ones((X.shape[0], 1)),
-    ...     ],
-    ...     normalized=False,
-    ... )
-    >>> print(compound_phi(X, y_pred, z))
-    [[ 1.  2.  0.  0.  4.  1.]
-     [ 3.  4.  0.  0.  4.  1.]
-     [ 0.  0.  1. 30.  4.  1.]]
     """
 
-    _need_x_calib = False
+    fit_attributes: List[str] = []
+    output_attributes = ["n_in", "n_out", "init_value"]
 
     def __init__(
-            self,
-            functions: Optional[Union[
-                Union[Callable, "PhiFunction"],
-                List[Union[Callable, "PhiFunction"]]
-            ]] = None,
-            marginal_guarantee: bool = True,
-            normalized: bool = False,
+        self,
+        functions: Optional[Union[Callable, Iterable]] = None,
+        marginal_guarantee: bool = True,
+        normalized: bool = False,
     ) -> None:
-        if isinstance(functions, list):
-            self.functions = list(functions)
-        elif functions is not None:
-            self.functions = [functions]
-        else:
-            self.functions = []
-
+        self.functions = functions
         self.marginal_guarantee = marginal_guarantee
         self.normalized = normalized
 
-        self.marginal_guarantee = self.marginal_guarantee or any(
-            phi.marginal_guarantee for phi in self.functions
-            if isinstance(phi, PhiFunction)
-            )
-
-        if not self._need_x_calib:
-            self._check_functions(self.functions, self.marginal_guarantee)
-
-        self.n_in: Optional[int] = None
-        self.n_out: Optional[int] = None
+    def _check_transform_parameters(self) -> None:
+        """
+        Check that ``functions_`` are functions that take as input
+        allowed arguments
+        """
+        self.functions_ = self._check_functions()
 
     def _check_functions(
             self,
-            functions: List[Union[Callable, "PhiFunction"]],
-            marginal_guarantee: bool,
-    ) -> None:
+    ) -> NDArray:
         """
         Validate functions for required and optional arguments.
-
-        Parameters
-        ----------
-        functions : List[Union[Callable, "PhiFunction"]]
-            List of functions or PhiFunction instances to be checked.
-
-        marginal_guarantee : bool
-            Flag indicating whether marginal guarantee is enabled.
 
         Raises
         ------
@@ -178,14 +117,22 @@ class PhiFunction():
         arguments ('X', 'y_pred', 'z'). Unknown optional arguments are allowed,
         but will always use their default values.
         """
-        if len(functions) == 0 and not marginal_guarantee:
+        if self.functions is None:
+            self.functions = cast(NDArray, [])
+        elif isinstance(self.functions, Iterable):
+            self.functions = cast(NDArray, self.functions)
+        else:
+            self.functions = cast(NDArray, [self.functions])
+
+        if (len(self.functions) == 0) and not self.marginal_guarantee:
             raise ValueError("You need to define the `functions` argument "
                              "with a function or a list of functions, "
                              "or keep marginal_guarantee argument to True.")
 
         warn_ind: Dict[str, List[int]] = {}
         error_ind: Dict[str, List[int]] = {}
-        for i, funct in enumerate(functions):
+        for i, funct in enumerate(self.functions):
+            assert callable(funct)
             params = inspect.signature(funct).parameters
 
             for param, arg in params.items():
@@ -237,21 +184,39 @@ class PhiFunction():
                 "to. They will act as parameters, as it is always "
                 "their default value which will be used."
             )
+        return cast(NDArray, self.functions)
 
-    def __call__(
+    @abstractmethod
+    def fit(
+        self,
+        X: ArrayLike,
+    ) -> None:
+        """
+        Fit function : Set all the necessary attributes to be able to transform
+        ``(X, y_pred, z)`` into the expected transformation.
+
+        It should set all the attributes of ``fit_attributes``
+
+        Parameters
+        ----------
+        X : Optional[ArrayLike]
+            Samples
+        """
+
+    def transform(
             self,
-            X: Optional[NDArray] = None,
-            y_pred: Optional[NDArray] = None,
-            z: Optional[NDArray] = None,
+            X: Optional[ArrayLike] = None,
+            y_pred: Optional[ArrayLike] = None,
+            z: Optional[ArrayLike] = None,
             disable_marginal_guarantee: bool = False,
     ) -> NDArray:
-        self.n_in = len(_safe_indexing(X, 0))
-        self.n_out = 0
+        check_is_fitted(self, self.fit_attributes)
+        self._check_transform_parameters()
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
         res = []
 
-        funct_list = list(self.functions)
+        funct_list = list(self.functions_)
         if not disable_marginal_guarantee and self.marginal_guarantee:
             funct_list.append(lambda X: np.ones((len(X), 1)))
 
@@ -262,18 +227,11 @@ class PhiFunction():
                 p: params_mapping[p] for p in params
                 if p in params_mapping and params_mapping[p] is not None
             }
-            if isinstance(f, PhiFunction):
-                # We only consider marginal_guaranty with the main PhiFunction
-                res.append(np.array(
-                    f(disable_marginal_guarantee=True, **used_params),
-                    dtype=float))
-            else:
-                res.append(np.array(f(**used_params), dtype=float))
+
+            res.append(np.array(f(**used_params), dtype=float))
 
             if len(res[-1].shape) == 1:
                 res[-1] = np.expand_dims(res[-1], axis=1)
-
-            self.n_out += res[-1].shape[1]
 
         result = np.hstack(res)
         if self.normalized:
@@ -282,6 +240,19 @@ class PhiFunction():
 
             norm[abs(norm) == 0] = 1
             result /= norm
+
+        if not _is_fitted(self, self.output_attributes):
+            self.n_in = len(_safe_indexing(X, 0))
+            self.n_out = len(_safe_indexing(result, 0))
+            self.init_value = np.random.normal(0, 1, self.n_out)
+
+        if np.any(np.all(result == 0, axis=1)):
+            warnings.warn("WARNING: At least one row of the transformation "
+                          "phi(X, y_pred, z) is full of zeros. "
+                          "It will result in a prediction interval of zero "
+                          "width. Consider changing the PhiFunction "
+                          "definintion.\nFix: Use `marginal_guarantee=True` "
+                          "in the `PhiFunction` definition.")
         return result
 
     def _check_need_calib(self, X: NDArray) -> None:
@@ -346,8 +317,9 @@ class PolynomialPhiFunction(PhiFunction):
 
     Attributes
     ----------
-    degree: List[int]
-        List of degrees of the built polynomial features
+    fit_attributes: List[str]
+        Name of attributes set during the ``fit`` method, and required to call
+        ``transform``.
 
     n_in: int
         Number of features of ``X``
@@ -355,54 +327,76 @@ class PolynomialPhiFunction(PhiFunction):
     n_out: int
         Number of features of phi(``X``, ``y_pred``, ``z``)
 
+    degrees: List[int]
+        List of degrees of the built polynomial features
+
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.regression import PolynomialPhiFunction
+    >>> from mapie.regression.utils import PolynomialPhiFunction
     >>> X = np.array([[1, 2], [3, 4], [5, 6]])
     >>> y_pred = np.array([1, 2, 3])
     >>> phi = PolynomialPhiFunction(3)
-    >>> print(phi(X, y_pred))
+    >>> print(phi.transform(X, y_pred))
     [[  1.   2.   1.   4.   1.   8.   1.]
      [  3.   4.   9.  16.  27.  64.   1.]
      [  5.   6.  25.  36. 125. 216.   1.]]
-    >>> print(phi.degree)
+    >>> print(phi.degrees)
     [0, 1, 2, 3]
     >>> phi = PolynomialPhiFunction([1, 2, 5], "y_pred",
     ...                             marginal_guarantee=False)
-    >>> print(phi(X, y_pred))
+    >>> print(phi.transform(X, y_pred))
     [[  1.   1.   1.]
      [  2.   4.  32.]
      [  3.   9. 243.]]
     >>> print(phi.degree)
     [1, 2, 5]
     """
-    def __init__(
-            self,
-            degree: Union[int, List[int]] = 1,
-            variable: str = "X",
-            marginal_guarantee: bool = True,
-            normalized: bool = False,
-    ) -> None:
-        if isinstance(degree, int):
-            degree = list(range(degree+1))
+    fit_attributes = []
 
+    def __init__(
+        self,
+        degree: Union[int, List[int]] = 1,
+        variable: str = "X",
+        marginal_guarantee: bool = True,
+        normalized: bool = False,
+    ) -> None:
         self.degree = degree
+        self.variable = variable
+
+        if isinstance(degree, int):
+            self.degrees = list(range(degree+1))
+        else:
+            self.degrees = degree
 
         functions: List[Callable] = []
-        if 0 in degree and not marginal_guarantee:
+        if 0 in self.degrees and not marginal_guarantee:
             functions.append(lambda X: np.ones((len(X), 1)))
         if variable == "X":
-            functions += [lambda X, d=d: X**d for d in degree if d != 0]
+            functions += [lambda X, d=d: X**d for d in self.degrees if d != 0]
         elif variable == "y_pred":
             functions += [lambda y_pred, d=d: y_pred**d
-                          for d in degree if d != 0]
+                          for d in self.degrees if d != 0]
         elif variable == "z":
-            functions += [lambda z, d=d: z**d for d in degree if d != 0]
+            functions += [lambda z, d=d: z**d for d in self.degrees if d != 0]
         else:
             raise ValueError("variable must be 'X', 'y_pred' or 'z'")
 
         super().__init__(functions, marginal_guarantee, normalized)
+
+    def fit(
+        self,
+        X: ArrayLike,
+    ) -> None:
+        """
+        ``PolynomialPhiFunction`` don't need to be fitted.
+
+        Parameters
+        ----------
+        X : Optional[ArrayLike]
+            Samples
+        """
+        return
 
 
 class GaussianPhiFunction(PhiFunction):
@@ -414,16 +408,17 @@ class GaussianPhiFunction(PhiFunction):
 
     Parameters
     ----------
-    points : Union[int, NDArray, Tuple[NDArray, NDArray]]
+    points : Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]]
         If Array: List of data points, used as centers to compute
         gaussian distances. Should be an array of shape (n_points, n_in).
 
         If integer, the points will be sampled randomly from the ``X``
-        set if it is not ``None``. If ``X`` is ``None``, it will use the
-        training or calibration sets used in the ``fit`` or ``calibrate``
-        methods of the ``MapieCCPRegressor`` object.
+        set, where ``X`` is the data give to the
+        ``GaussianPhiFunction.fit`` method, which usually correspond to
+        the ``X`` argument of the ``MapieCCPRegressor.calibrate`` method
+        (unless you call ``GaussianPhiFunction.fit(X)`` yourself).
 
-        You can pass a Tuple[NDArray, NDArray], to have a different
+        You can pass a Tuple[ArrayLike, ArrayLike], to have a different
         ``sigma`` value for each point. The two elements of the
         tuple should be:
          - Data points: 2D array of shape (n_points, n_in)
@@ -433,7 +428,7 @@ class GaussianPhiFunction(PhiFunction):
 
         By default, ``10``
 
-    sigma : Optional[Union[float, NDArray]]
+    sigma : Optional[Union[float, ArrayLike]]
         Standard deviation value used to compute the guassian distances,
         with the formula:
         np.exp(-0.5 * ((X - point) / ``sigma``) ** 2)
@@ -446,10 +441,10 @@ class GaussianPhiFunction(PhiFunction):
         argument.
 
         If ``None``, ``sigma`` will default to a float equal to
-        np.std(X)/(n**0.5).
-        If ``X`` is ``None``, we will wait for the ``calibrate`` method of the
-        ``MapieCCPRegressor`` object to be called, and sample points from
-        the calibration data.
+        ``np.std(X)/(n**0.5)``, where ``X`` is the data give to the
+        ``GaussianPhiFunction.fit`` method, which correspond to the ``X``
+        argument of the ``MapieCCPRegressor.calibrate`` method
+        (unless you call ``GaussianPhiFunction.fit(X)`` yourself).
 
         By default, ``None``
 
@@ -474,18 +469,6 @@ class GaussianPhiFunction(PhiFunction):
 
         If ``None``, it is enabled if ``sigma`` is not defined (``None``, and
         ``points`` is not a Tuple of (points, sigmas)), disabled otherwise.
-
-        By default, ``None``
-
-    X : Optional[NDArray]
-        Dataset, used to sample points, if ``points`` is an
-        integer, and compute the default standard deviation, if
-        ``sigma``=``None``. It should not overlap with the
-        calibration or testing datasets.
-
-        If ``X`` is ``None``, it will use the
-        training or calibration sets used in the ``fit`` or ``calibrate``
-        methods of the ``MapieCCPRegressor`` object.
 
         By default, ``None``
 
@@ -519,12 +502,9 @@ class GaussianPhiFunction(PhiFunction):
 
     Attributes
     ----------
-    points: NDArray
-        Array of shape (n_points, n_in), corresponding to the points used to
-        compute the gaussian distanes.
-
-    sigmas: NDArray of shape (len(points), 1) or (len(points), n_in)
-        Standard deviation values
+    fit_attributes: List[str]
+        Name of attributes set during the ``fit`` method, and required to call
+        ``transform``.
 
     n_in: int
         Number of features of ``X``
@@ -532,137 +512,159 @@ class GaussianPhiFunction(PhiFunction):
     n_out: int
         Number of features of phi(``X``, ``y_pred``, ``z``)
 
+    points_: NDArray
+        Array of shape (n_points, n_in), corresponding to the points used to
+        compute the gaussian distanes.
+
+    sigmas_: NDArray of shape (len(points), 1) or (len(points), n_in)
+        Standard deviation values
+
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.regression import PolynomialPhiFunction
+    >>> from mapie.regression.utils import GaussianPhiFunction
     >>> np.random.seed(1)
     >>> X = np.array([[1], [2], [3], [4], [5]])
-    >>> phi = GaussianPhiFunction(2, X=X, marginal_guarantee=False,
+    >>> phi = GaussianPhiFunction(2, marginal_guarantee=False,
     ...                           normalized=False)
-    >>> print(np.round(phi(X), 2))
-    [[0.08 0.4 ]
-     [0.53 1.  ]
-     [1.   0.4 ]
-     [0.53 0.03]
-     [0.08 0.  ]]
-    >>> print(phi.points)
+    >>> phi.fit(X)
+    >>> print(np.round(phi.transform(X), 2))
+    [[0.14 0.61]
+     [0.61 1.  ]
+     [1.   0.61]
+     [0.61 0.14]
+     [0.14 0.01]]
+    >>> print(phi.points_)
     [[3]
      [2]]
-    >>> print(phi.sigmas)
-    [[0.8892586 ]
-     [0.74118567]]
+    >>> print(phi.sigmas_)
+    [[1.]
+     [1.]]
     >>> phi = GaussianPhiFunction([[3],[4]], 0.5)
-    >>> print(np.round(phi(X), 2))
+    >>> print(np.round(phi.transform(X), 2))
     [[1.   0.  ]
      [1.   0.  ]
      [0.99 0.13]
      [0.13 0.99]
      [0.   1.  ]]
-    >>> print(phi.points)
+    >>> print(phi.points_)
     [[3]
      [4]]
-    >>> print(phi.sigmas)
+    >>> print(phi.sigmas_)
     [[0.5]
      [0.5]]
     """
+    fit_attributes = ["points_", "sigmas_"]
+
     def __init__(
-            self,
-            points: Union[int, NDArray, Tuple[NDArray, NDArray]] = 20,
-            sigma: Optional[Union[float, NDArray]] = None,
-            random_sigma: Optional[bool] = None,
-            X: Optional[NDArray] = None,
-            marginal_guarantee: bool = False,
-            normalized: bool = True,
+        self,
+        points: Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]] = 20,
+        sigma: Optional[Union[float, ArrayLike]] = None,
+        random_sigma: Optional[bool] = None,
+        marginal_guarantee: bool = False,
+        normalized: bool = True,
     ) -> None:
         self.points = points
-        self.sigmas: Optional[NDArray] = None
+        self.sigma = sigma
         self.random_sigma = random_sigma
-        if random_sigma is None and sigma is None:
-            self.random_sigma = True
+
+        self.points_: Optional[NDArray]
+        self.sigmas_: Optional[NDArray]
 
         if isinstance(points, int):
-            self.sigmas = self._init_sigma(sigma, points)
-            if X is None:
-                self._need_x_calib = True
-            else:
-                points_index = np.random.choice(_num_samples(X), size=points,
-                                                replace=False)
-                self.points = cast(NDArray, _safe_indexing(X, points_index))
-
-                if self.sigmas is None:
-                    self.sigmas = np.ones((len(self.points), 1))*np.std(
-                        X, axis=0)/(len(self.points)**0.5)
+            self._init_sigmas(sigma, points)
 
         elif isinstance(points, tuple):
-            self.points = np.array(points[0])
-            self.sigmas = np.array(points[1])
-            if len(self.sigmas.shape) == 1:
-                self.sigmas = self.sigmas.reshape(-1, 1)
-
-            self._check_points_sigma(self.points, self.sigmas)
-            if random_sigma is None and sigma is None:
-                self.random_sigma = False
+            self.points_ = np.array(points[0])
+            self.sigmas_ = np.array(points[1])
+            if len(self.sigmas_.shape) == 1:
+                self.sigmas_ = self.sigmas_.reshape(-1, 1)
 
         elif len(np.array(points).shape) == 2:
-            self.sigmas = self._init_sigma(sigma, len(points))
-            self.points = np.array(points)
-
-            if self.sigmas is None:
-                if X is None:
-                    self._need_x_calib = True
-                else:
-                    self.sigmas = np.ones((len(self.points), 1))*np.std(
-                        X, axis=0)/(len(self.points)**0.5)
+            self._init_sigmas(sigma, _num_samples(points))
+            self.points_ = cast(NDArray, np.array(points))
 
         else:
-            raise ValueError("The points argument should be an integer, "
+            raise ValueError("Invalid `points` argument. The points argument"
+                             "should be an integer, "
                              "a 2D array or a tuple of two 2D arrays.")
 
-        if self._need_x_calib:
-            functions = []
-        else:
-            self.points = cast(NDArray, self.points)
-            self.sigmas = cast(NDArray, np.array(self.sigmas))
-            self._check_points_sigma(self.points, self.sigmas)
-
+        if (
+            _is_fitted(self, self.fit_attributes)
+            and self.points_ is not None and self.sigmas_ is not None
+        ):
+            self._check_parameters(self.points_, self.sigmas_)
             if self.random_sigma:
-                n = len(self.points)
-                self.sigmas = self.sigmas * (
+                n = _num_samples(self.points_)
+                self.sigmas_ = self.sigmas_ * (
                     2**np.random.normal(0, 1*2**(-2+np.log10(n)), n)
                     .reshape(-1, 1)
                 )
 
             functions = [
-                lambda X, mu=_safe_indexing(self.points, i),
-                sigma=_safe_indexing(self.sigmas, i):
+                lambda X, mu=_safe_indexing(self.points_, i),
+                sigma=_safe_indexing(self.sigmas_, i):
                 np.exp(-0.5 * np.sum(((X - mu) / sigma) ** 2, axis=1))
-                for i in range(len(self.points))
+                for i in range(_num_samples(self.points_))
             ]
+        else:
+            functions = []
         super().__init__(functions, marginal_guarantee, normalized)
 
-    def _init_sigma(
-            self,
-            sigma: Optional[Union[float, NDArray]],
-            n_points: int,
-    ) -> Optional[NDArray]:
+    def _check_transform_parameters(self) -> None:
         """
-        Take a sigma value, and return a standard deviation 2D array of shape
-        (n_points, n_sigma), n_sigma being 1 or the number of dimensions of X.
+        Check that ``functions_`` are functions that take as input
+        allowed arguments
+        """
+        self.sigmas_ = cast(NDArray, self.sigmas_)
+        self.points_ = cast(NDArray, self.points_)
+
+        self._check_parameters(self.points_, self.sigmas_)
+        self.functions_ = self._check_functions()
+
+    def _check_parameters(self, points: NDArray, sigmas: NDArray) -> None:
+        """
+        Check that ``points`` and ``sigmas`` have compatible shapes
 
         Parameters
         ----------
-        sigma : Optional[Union[float, NDArray]]
+        points : ArrayLike
+            2D array of shape (n_points, n_in)
+        sigmas : ArrayLike
+            2D array of shape (n_points, 1) or (n_points, n_in)
+        """
+        self._check_points_sigma(points, sigmas)
+        self.random_sigma = self._check_random_sigma()
+
+    def _check_random_sigma(self) -> bool:
+        if self.random_sigma is None and self.sigma is None:
+            if isinstance(self.points, tuple):
+                return False
+            else:
+                return True
+        if self.random_sigma is None:
+            return False
+        else:
+            return self.random_sigma
+
+    def _init_sigmas(
+        self,
+        sigma: Optional[Union[float, ArrayLike]],
+        n_points: int,
+    ) -> None:
+        """
+        If ``sigma`` is not ``None``, take a sigma value, and set ``sigmas_``
+        to a standard deviation 2D array of shape (n_points, n_sigma),
+        n_sigma being 1 or the number of dimensions of X.
+
+        Parameters
+        ----------
+        sigma : Optional[Union[float, ArrayLike]]
             standard deviation, as float or 1D array of length n_in
             (number of dimensins of the dataset)
 
         n_points : int
             Number of points user for gaussian distances calculation
-
-        Returns
-        -------
-        Optional[NDArray]
-            2D array Standard deviation
 
         Raises
         ------
@@ -670,26 +672,25 @@ class GaussianPhiFunction(PhiFunction):
             If ``sigma`` is not None, a float or a 1D array
         """
         if isinstance(sigma, numbers.Number):
-            sigmas = np.ones((n_points, 1))*sigma
+            self.sigmas_ = np.ones((n_points, 1))*sigma
         elif sigma is not None:
             if len(np.array(sigma).shape) != 1:
                 raise ValueError("sigma argument should be a float "
                                  "or a 1D array of floats.")
-            sigmas = np.ones((n_points, 1))*np.array(sigma)
-        else:
-            sigmas = None
-        return sigmas
+            self.sigmas_ = np.ones((n_points, 1))*np.array(sigma)
 
-    def _check_points_sigma(self, points: NDArray, sigmas: NDArray) -> None:
+    def _check_points_sigma(
+        self, points: ArrayLike, sigmas: ArrayLike
+    ) -> None:
         """
         Take 2D arrays of points and standard deviations and check
         compatibility
 
         Parameters
         ----------
-        points : NDArray
+        points : ArrayLike
             2D array of shape (n_points, n_in)
-        sigmas : NDArray
+        sigmas : ArrayLike
             2D array of shape (n_points, 1) or (n_points, n_in)
 
         Raises
@@ -697,47 +698,50 @@ class GaussianPhiFunction(PhiFunction):
         ValueError
             If ``sigmas``is not of shape (n_points, 1) or (n_points, n_in)
         """
-        if points.shape[0] != sigmas.shape[0]:
+        if _num_samples(points) != _num_samples(sigmas):
             raise ValueError("There should have as many points as "
                              "standard deviation values")
-        if sigmas.shape[1] not in [1, points.shape[1]]:
+        if len(_safe_indexing(sigmas, 0)) not in [
+            1, len(_safe_indexing(points, 0))
+        ]:
             raise ValueError("The standard deviation 2D array should be of "
                              "shape (n_points, 1) or (n_points, n_in).\n"
-                             f"Got sigma of shape: {sigmas.shape}")
+                             f"Got sigma of shape: ({_num_samples(sigmas)}, "
+                             f"{len(_safe_indexing(points, 0))}).")
 
-    def _check_need_calib(self, X: NDArray) -> None:
+    def fit(
+        self,
+        X: ArrayLike,
+    ) -> None:
         """
-        Complete the definition of the phi function using the X training or
-        calibration data, if the ``X`` argument was ``None`` during the
-        ``GaussianPhiFunction``` initialisation.
+        ``GaussianPhiFunction`` fit method is used to sample points and compute
+        the standard deviation values if needed.
 
         Parameters
         ----------
-        X : NDArray
-            Some samples (training or calibration data)
+        X : Optional[ArrayLike]
+            Samples
         """
-        if self._need_x_calib:
+        if not _is_fitted(self, self.fit_attributes):
             if isinstance(self.points, int):
                 points_index = np.random.choice(
                     _num_samples(X), size=self.points, replace=False
                 )
-                self.points = cast(NDArray, _safe_indexing(X, points_index))
-            if self.sigmas is None:
-                self.sigmas = np.ones((len(self.points), 1))*np.std(
-                    X, axis=0)/(len(self.points)**0.5)
+                self.points_ = cast(NDArray, _safe_indexing(X, points_index))
+            if self.sigma is None:
+                self.sigmas_ = np.ones((_num_samples(self.points_), 1))*np.std(
+                    X, axis=0)/(_num_samples(self.points_)**0.5)
 
             if self.random_sigma:
-                n = len(self.points)
-                self.sigmas = self.sigmas * (
+                n = _num_samples(self.points_)
+                self.sigmas_ *= (
                     2**np.random.normal(0, 1*2**(-2+np.log10(n)), n)
                     .reshape(-1, 1)
                 )
 
             self.functions = [
-                    lambda X, mu=_safe_indexing(self.points, i),
-                    sigma=_safe_indexing(self.sigmas, i):
+                    lambda X, mu=_safe_indexing(self.points_, i),
+                    sigma=_safe_indexing(self.sigmas_, i):
                     np.exp(-0.5 * np.sum(((X - mu) / sigma) ** 2, axis=1))
-                    for i in range(len(self.points))
-                ]
-
-            self._need_x_calib = False
+                    for i in range(_num_samples(self.points_))
+            ]
