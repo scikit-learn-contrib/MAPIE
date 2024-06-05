@@ -426,7 +426,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.cv, test_size=self.test_size, random_state=self.random_state
         )
         if self.cv in ["split", "prefit"] and \
-            self.method in ["naive", "plus", "minmax]:
+                self.method in ["naive", "plus", "minmax"]:
             self.method = "base"
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
