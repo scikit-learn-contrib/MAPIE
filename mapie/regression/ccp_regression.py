@@ -5,9 +5,7 @@ from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
 from scipy.optimize import minimize
-from sklearn.base import RegressorMixin
-from sklearn.exceptions import NotFittedError
-from sklearn.linear_model import LinearRegression
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
                                      ShuffleSplit)
 from sklearn.pipeline import Pipeline
@@ -22,7 +20,7 @@ from mapie.utils import (check_conformity_score, check_estimator_fit_predict,
                          fit_estimator)
 
 
-class MapieCCPRegressor():
+class MapieCCPRegressor(BaseEstimator, RegressorMixin):
     """
     This class implements Conformal Prediction With Conditional Guarantees
     method as proposed by Gibbs et al. (2023) to make conformal predictions.
@@ -109,14 +107,14 @@ class MapieCCPRegressor():
 
     Attributes
     ----------
-    beta_up: Tuple[NDArray, bool]
+    beta_up_: Tuple[NDArray, bool]
         Calibration fitting results, used to build the upper bound of the
         prediction intervals.
         beta_up[0]: Array of shape (phi.n_out, )
         beta_up[1]: Whether the optimization process converged or not
                     (the coverage is not garantied if the optimization fail)
 
-    beta_low: Tuple[NDArray, bool]
+    beta_low_: Tuple[NDArray, bool]
         Same as beta_up, but for the lower bound
 
     References
@@ -148,6 +146,8 @@ class MapieCCPRegressor():
     """
 
     default_sym_ = True
+    fit_attributes = ["estimator_"]
+    calib_attributes = ["beta_up_", "beta_low_"]
 
     def __init__(
         self,
@@ -540,6 +540,7 @@ class MapieCCPRegressor():
         """
         self._check_fit_parameters()
         self._check_calibrate_parameters()
+        check_is_fitted(self, self.fit_attributes)
 
         self.estimator = cast(RegressorMixin, self.estimator)
         self.cv = cast(Union[str, BaseCrossValidator], self.cv)
@@ -769,36 +770,17 @@ class MapieCCPRegressor():
         self.estimator = cast(RegressorMixin, self.estimator)
         self.conformity_score_ = cast(ConformityScore, self.conformity_score_)
 
-        if self.beta_low is None or self.beta_up is None:
-            raise NotFittedError(
-                "The calibration method has not been fitted yet.\n"
-                "You must call the calibrate method before predict."
-            )
-
-        y_pred = self.estimator.predict(X)
-
-        X = cast(NDArray, X)
-        y_pred = cast(NDArray, y_pred)
-        z = cast(NDArray, z)
-
-        phi_x = self.phi(X, y_pred, z)
-        if np.any(np.all(phi_x == 0, axis=1)):
-            warnings.warn("WARNING: At least one row of the transformation "
-                          "phi(X, y_pred, z) is full of zeros."
-                          "It will result in a prediction interval of zero"
-                          "width. Consider changing the PhiFunction"
-                          "definintion. \n"
-                          "Fix: Use `marginal_guarantee`=True in PhiFunction")
+        check_is_fitted(self, self.calib_attributes)
 
         signed = -1 if self.conformity_score_.sym else 1
 
         y_pred_low = self.conformity_score_.get_estimation_distribution(
             X, y_pred[:, np.newaxis],
-            phi_x.dot(signed * self.beta_low[0][:, np.newaxis])
+            phi_x.dot(signed * self.beta_low_[0][:, np.newaxis])
         )
         y_pred_up = self.conformity_score_.get_estimation_distribution(
             X, y_pred[:, np.newaxis],
-            phi_x.dot(self.beta_up[0][:, np.newaxis])
+            phi_x.dot(self.beta_up_[0][:, np.newaxis])
         )
 
         check_lower_upper_bounds(y_pred_low, y_pred_up, y_pred)
