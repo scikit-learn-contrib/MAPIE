@@ -6,7 +6,7 @@ from typing import Any, Tuple, cast
 
 import numpy as np
 import pytest
-from sklearn.base import RegressorMixin
+from sklearn.base import RegressorMixin, clone
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor
@@ -17,15 +17,15 @@ from sklearn.model_selection import (KFold, LeaveOneOut, LeavePOut,
                                      ShuffleSplit, TimeSeriesSplit,
                                      train_test_split)
 from sklearn.pipeline import make_pipeline
-from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import NDArray
 from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore,
                                      ResidualNormalisedScore)
 from mapie.metrics import regression_coverage_score
-from mapie.regression import (MapieCCPRegressor, PhiFunction,
-                              GaussianPhiFunction, PolynomialPhiFunction)
+from mapie.regression import MapieCCPRegressor
+from mapie.regression.utils import (PhiFunction, CustomPhiFunction,
+                                    GaussianPhiFunction, PolynomialPhiFunction)
 
 random_state = 1
 np.random.seed(random_state)
@@ -43,7 +43,7 @@ z = X[:, -2:]
 CV = ["prefit", "split"]
 
 PHI = [
-    PhiFunction([lambda X: np.ones((len(X), 1))]),
+    CustomPhiFunction([lambda X: np.ones((len(X), 1))]),
     PolynomialPhiFunction(),
     GaussianPhiFunction(5),
 ]
@@ -61,46 +61,50 @@ COVERAGES = {
 # ======== MapieCCPRegressor =========
 def test_initialized() -> None:
     """Test that initialization does not crash."""
-    MapieCCPRegressor()
+    MapieCCPRegressor(alpha=0.1)
 
 
 def test_fit() -> None:
     """Test that fit raises no errors."""
-    mapie_reg = MapieCCPRegressor()
+    mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit(X_toy, y_toy)
 
 
-def test_fit_calibrate() -> None:
+@pytest.mark.parametrize("z", [None, z_toy])
+def test_fit_calibrate(z: Any) -> None:
     """Test that fit-calibrate raises no errors."""
-    mapie_reg = MapieCCPRegressor()
+    mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit(X_toy, y_toy)
-    mapie_reg.calibrate(X_toy, y_toy)
+    mapie_reg.calibrate(X_toy, y_toy, z=z)
 
 
-def test_fit_calibrate_combined() -> None:
+@pytest.mark.parametrize("z", [None, z_toy])
+def test_fit_calibrate_combined(z: Any) -> None:
     """Test that fit_calibrate raises no errors."""
-    mapie_reg = MapieCCPRegressor()
-    mapie_reg.fit_calibrate(X_toy, y_toy)
+    mapie_reg = MapieCCPRegressor(alpha=0.1)
+    mapie_reg.fit_calibrate(X_toy, y_toy, z=z)
 
 
-def test_fit_calibrate_predict() -> None:
+@pytest.mark.parametrize("z", [None, z_toy])
+def test_fit_calibrate_predict(z: Any) -> None:
     """Test that fit-calibrate-predict raises no errors."""
-    mapie_reg = MapieCCPRegressor()
+    mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit(X_toy, y_toy)
-    mapie_reg.calibrate(X_toy, y_toy)
-    mapie_reg.predict(X_toy)
+    mapie_reg.calibrate(X_toy, y_toy, z=z)
+    mapie_reg.predict(X_toy, z=z)
 
 
-def test_fit_calibrate_combined_predict() -> None:
+@pytest.mark.parametrize("z", [None, z_toy])
+def test_fit_calibrate_combined_predict(z: Any) -> None:
     """Test that fit_calibrate-predict raises no errors."""
-    mapie_reg = MapieCCPRegressor()
-    mapie_reg.fit_calibrate(X_toy, y_toy)
-    mapie_reg.predict(X_toy)
+    mapie_reg = MapieCCPRegressor(alpha=0.1)
+    mapie_reg.fit_calibrate(X_toy, y_toy, z=z)
+    mapie_reg.predict(X_toy, z=z)
 
 
 def test_no_fit_calibrate() -> None:
     """Test that calibrate before fit raises errors."""
-    mapie_reg = MapieCCPRegressor()
+    mapie_reg = MapieCCPRegressor(alpha=0.1)
     with pytest.raises(NotFittedError):
         mapie_reg.calibrate(X_toy, y_toy)
 
@@ -109,8 +113,10 @@ def test_calib_not_complete_phi() -> None:
     """Test that a not complete phi definition raises a warning"""
     with pytest.warns(UserWarning, match="WARNING: At least one row of the"):
         mapie_reg = MapieCCPRegressor(
-            phi=PhiFunction([lambda X: (X < 5).astype(int)],
-                            marginal_guarantee=False))
+            alpha=0.1,
+            phi=CustomPhiFunction([lambda X: (X < 5).astype(int)],
+                                  marginal_guarantee=False)
+        )
         mapie_reg.fit_calibrate(X_toy, y_toy)
 
 
@@ -118,8 +124,10 @@ def test_predict_not_complete_phi() -> None:
     """Test that a not complete phi definition raises a warning"""
     with pytest.warns(UserWarning, match="WARNING: At least one row of the"):
         mapie_reg = MapieCCPRegressor(
-            phi=PhiFunction([lambda X: (X < 5).astype(int)],
-                            marginal_guarantee=False))
+            alpha=0.1,
+            phi=CustomPhiFunction([lambda X: (X < 5).astype(int)],
+                                  marginal_guarantee=False)
+        )
         mapie_reg.fit_calibrate(X_toy[X_toy[:, 0] < 5], y_toy[X_toy[:, 0] < 5])
         mapie_reg.predict(X_toy)
 
@@ -131,20 +139,20 @@ def test_predict_not_complete_phi() -> None:
 def test_no_fit_prefit_calibrate(estimator: Any) -> None:
     """Test that calibrate without fit, if prefit, raises no errors."""
     estimator.fit(X_toy, y_toy)
-    mapie_reg = MapieCCPRegressor(estimator, cv="prefit")
+    mapie_reg = MapieCCPRegressor(estimator, cv="prefit", alpha=0.1)
     mapie_reg.calibrate(X_toy, y_toy)
 
 
 def test_no_fit_predict() -> None:
     """Test that predict before fit raises errors."""
-    mapie_reg = MapieCCPRegressor()
+    mapie_reg = MapieCCPRegressor(alpha=0.1)
     with pytest.raises(NotFittedError):
         mapie_reg.predict(X_toy)
 
 
 def test_no_calibrate_predict() -> None:
     """Test that predict before fit raises errors."""
-    mapie_reg = MapieCCPRegressor()
+    mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit(X_toy, y_toy)
     with pytest.raises(NotFittedError):
         mapie_reg.predict(X_toy)
@@ -152,7 +160,7 @@ def test_no_calibrate_predict() -> None:
 
 def test_default_sample_weight() -> None:
     """Test default sample weights."""
-    mapie_reg = MapieCCPRegressor()
+    mapie_reg = MapieCCPRegressor(alpha=0.1)
     assert (
         signature(mapie_reg.fit).parameters["sample_weight"].default
         is None
@@ -165,7 +173,7 @@ def test_invalid_estimator(
 ) -> None:
     """Test that invalid estimators raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid estimator.*"):
-        mapie = MapieCCPRegressor(estimator=estimator)
+        mapie = MapieCCPRegressor(estimator=estimator, alpha=0.1)
         mapie.fit(X, y)
 
 
@@ -179,7 +187,7 @@ def test_invalid_prefit_estimator_calibrate(
     """Test that non-fitted estimator with prefit cv raise errors when
     calibrate is called"""
     with pytest.raises(NotFittedError):
-        mapie = MapieCCPRegressor(estimator=estimator, cv="prefit")
+        mapie = MapieCCPRegressor(estimator=estimator, cv="prefit", alpha=0.1)
         mapie.calibrate(X, y)
 
 
@@ -193,31 +201,16 @@ def test_invalid_prefit_estimator_fit(
     """Test that non-fitted estimator with prefit cv raise errors when fit
     is called."""
     with pytest.raises(NotFittedError):
-        mapie = MapieCCPRegressor(estimator=estimator, cv="prefit")
+        mapie = MapieCCPRegressor(estimator=estimator, cv="prefit", alpha=0.1)
         mapie.fit(X, y)
-
-
-@pytest.mark.parametrize("estimator", [
-    LinearRegression(),
-    make_pipeline(LinearRegression()),
-])
-def test_valid_prefit_estimator(
-    estimator: RegressorMixin,
-) -> None:
-    """Test that fitted estimators with prefit cv raise warning but no error"""
-    estimator.fit(X_toy, y_toy)
-    mapie_reg = MapieCCPRegressor(estimator=estimator, cv="prefit")
-    with pytest.warns(UserWarning):
-        mapie_reg.fit(X_toy, y_toy)
-    check_is_fitted(mapie_reg.estimator)
 
 
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
-    mapie_reg = MapieCCPRegressor(random_state=random_state)
+    mapie_reg = MapieCCPRegressor(random_state=random_state, alpha=0.1)
     mapie_reg.fit_calibrate(X, y)
     assert isinstance(mapie_reg.estimator, RegressorMixin)
-    assert isinstance(mapie_reg.phi, PhiFunction)
+    assert isinstance(mapie_reg.phi, GaussianPhiFunction)
     assert isinstance(mapie_reg.cv, ShuffleSplit)
     assert mapie_reg.alpha == 0.1
     assert isinstance(mapie_reg.conformity_score_, ConformityScore)
@@ -233,11 +226,21 @@ def test_invalid_alpha(alpha: Any) -> None:
         mapie.fit_calibrate(X, y)
 
 
+@pytest.mark.parametrize(
+    "phi", [1, "some_string"]
+)
+def test_invalid_phi(phi: Any) -> None:
+    with pytest.raises(ValueError):
+        mapie = MapieCCPRegressor(phi=phi)
+        mapie.fit_calibrate(X, y)
+
+
 def test_valid_estimator() -> None:
     """Test that valid estimators are not corrupted"""
     mapie_reg = MapieCCPRegressor(
         estimator=DummyRegressor(),
-        random_state=random_state
+        random_state=random_state,
+        alpha=0.1,
     )
     mapie_reg.fit(X_toy, y_toy)
     assert isinstance(mapie_reg.estimator, DummyRegressor)
@@ -256,7 +259,7 @@ def test_valid_estimator() -> None:
 def test_valid_cv(cv: Any, estimator: RegressorMixin) -> None:
     """Test that valid cv raise no errors."""
     estimator.fit(X_toy, y_toy)
-    mapie_reg = MapieCCPRegressor(estimator=estimator, cv=cv,
+    mapie_reg = MapieCCPRegressor(estimator=estimator, cv=cv, alpha=0.1,
                                   random_state=random_state)
     mapie_reg.fit_calibrate(X_toy, y_toy)
     mapie_reg.predict(X_toy)
@@ -274,7 +277,7 @@ def test_valid_cv(cv: Any, estimator: RegressorMixin) -> None:
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid agg_functions raise errors."""
     with pytest.raises(ValueError, match="Invalid cv argument."):
-        mapie = MapieCCPRegressor(cv=cv, random_state=random_state)
+        mapie = MapieCCPRegressor(cv=cv, alpha=0.1, random_state=random_state)
         mapie.fit(X, y)
 
 
@@ -292,17 +295,18 @@ def test_fit_calibrate_combined_equivalence(
 ) -> None:
     """Test predict output shape."""
     (X, y, z) = dataset
+
+    cloned_phi = clone(phi)
+    cloned_phi.fit(X)
+    estimator_1 = clone(estimator)
+    estimator_2 = clone(estimator)
     if cv == "prefit":
-        estimator.fit(X, y)
+        estimator_1.fit(X, y)
+        estimator_2.fit(X, y)
 
-    if isinstance(phi, GaussianPhiFunction):
-        # This function is usually called in fit and/or calibrate
-        # It sample the centers from X. We call it now for reproductibility
-        phi._check_need_calib(X)
-
-    mapie_1 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
+    mapie_1 = MapieCCPRegressor(estimator=estimator_1, phi=cloned_phi, cv=cv,
                                 alpha=alpha, random_state=random_state)
-    mapie_2 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
+    mapie_2 = MapieCCPRegressor(estimator=estimator_2, phi=cloned_phi, cv=cv,
                                 alpha=alpha, random_state=random_state)
     mapie_1.fit_calibrate(X, y, z=z)
     mapie_2.fit(X, y)
@@ -344,14 +348,12 @@ def test_recalibrate(
     if cv == "prefit":
         estimator.fit(X, y)
 
-    if isinstance(phi, GaussianPhiFunction):
-        # This function is usually called in fit and/or calibrate
-        # It sample the centers from X. We call it now for reproductibility
-        phi._check_need_calib(X)
+    cloned_phi = clone(phi)
+    cloned_phi.fit(X)
 
-    mapie_1 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
+    mapie_1 = MapieCCPRegressor(estimator=estimator, phi=cloned_phi, cv=cv,
                                 alpha=0.2, random_state=random_state)
-    mapie_2 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
+    mapie_2 = MapieCCPRegressor(estimator=estimator, phi=cloned_phi, cv=cv,
                                 alpha=0.1, random_state=random_state)
     mapie_1.fit_calibrate(X, y, z=z)
     mapie_2.fit_calibrate(X, y, z=z)
@@ -370,15 +372,14 @@ def test_recalibrate(
 
 
 @pytest.mark.parametrize("dataset", [(X, y, z), (X_toy, y_toy, z_toy)])
-@pytest.mark.parametrize("alpha", [0.2])
 @pytest.mark.parametrize("phi", PHI)
 @pytest.mark.parametrize("cv", CV)
 @pytest.mark.parametrize("estimator", [
     LinearRegression(),
     make_pipeline(LinearRegression()),
 ])
-def test_predict_output_shape(
-    alpha: Any, dataset: Tuple[NDArray, NDArray, NDArray],
+def test_predict_output_shape_alpha(
+    dataset: Tuple[NDArray, NDArray, NDArray],
     cv: Any, phi: PhiFunction, estimator: RegressorMixin
 ) -> None:
     """Test predict output shape."""
@@ -386,12 +387,35 @@ def test_predict_output_shape(
     if cv == "prefit":
         estimator.fit(X, y)
 
-    mapie_reg = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
-                                  alpha=alpha, random_state=random_state)
+    mapie_reg = MapieCCPRegressor(estimator=estimator, phi=clone(phi), cv=cv,
+                                  alpha=0.1, random_state=random_state)
     mapie_reg.fit_calibrate(X, y, z=z)
     y_pred, y_pis = mapie_reg.predict(X, z)
     assert y_pred.shape == (X.shape[0],)
     assert y_pis.shape == (X.shape[0], 2, 1)
+
+
+@pytest.mark.parametrize("dataset", [(X, y, z), (X_toy, y_toy, z_toy)])
+@pytest.mark.parametrize("phi", PHI)
+@pytest.mark.parametrize("cv", CV)
+@pytest.mark.parametrize("estimator", [
+    LinearRegression(),
+    make_pipeline(LinearRegression()),
+])
+def test_predict_output_shape_no_alpha(
+    dataset: Tuple[NDArray, NDArray, NDArray],
+    cv: Any, phi: PhiFunction, estimator: RegressorMixin
+) -> None:
+    """Test predict output shape."""
+    (X, y, z) = dataset
+    if cv == "prefit":
+        estimator.fit(X, y)
+
+    mapie_reg = MapieCCPRegressor(estimator=estimator, phi=clone(phi), cv=cv,
+                                  alpha=None, random_state=random_state)
+    mapie_reg.fit_calibrate(X, y, z=z)
+    y_pred = mapie_reg.predict(X, z)
+    assert np.array(y_pred).shape == (X.shape[0],)
 
 
 @pytest.mark.parametrize("dataset", [(X, y, z), (X_toy, y_toy, z_toy)])
@@ -416,19 +440,19 @@ def test_same_results_prefit_split(
     y_train, y_calib = y[train_index], y[val_index]
     z_calib = z[val_index]
 
-    if isinstance(phi, GaussianPhiFunction):
-        # This function is usually called in fit and/or calibrate
-        # It sample the centers from X. We call it now for reproductibility
-        phi._check_need_calib(X_train)
+    cloned_phi = clone(phi)
+    cloned_phi.fit(X)
 
-    mapie_reg = MapieCCPRegressor(estimator=estimator_1, phi=phi, cv=cv,
+    mapie_reg = MapieCCPRegressor(estimator=estimator_1, phi=cloned_phi, cv=cv,
                                   alpha=0.1, random_state=random_state)
     mapie_reg.fit_calibrate(X, y, z=z)
     y_pred_1, y_pis_1 = mapie_reg.predict(X, z)
 
     estimator_2.fit(X_train, y_train)
-    mapie_reg = MapieCCPRegressor(estimator=estimator_2, phi=phi, cv="prefit",
-                                  alpha=0.1, random_state=random_state)
+    mapie_reg = MapieCCPRegressor(
+        estimator=estimator_2, phi=cloned_phi, cv="prefit", alpha=0.1,
+        random_state=random_state
+    )
     mapie_reg.calibrate(X_calib, y_calib, z=z_calib)
     y_pred_2, y_pis_2 = mapie_reg.predict(X, z)
 
@@ -455,18 +479,15 @@ def test_results_for_ordered_alpha(
     (X, y, z) = dataset
     if cv == "prefit":
         estimator.fit(X, y)
+    cloned_phi = clone(phi)
+    cloned_phi.fit(X)
 
-    if isinstance(phi, GaussianPhiFunction):
-        # This function is usually called in fit and/or calibrate
-        # It sample the centers from X. We call it now for reproductibility
-        phi._check_need_calib(X)
-
-    mapie_reg_1 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
+    mapie_reg_1 = MapieCCPRegressor(estimator=estimator, phi=cloned_phi, cv=cv,
                                     alpha=0.05, random_state=random_state)
     mapie_reg_1.fit_calibrate(X, y, z=z)
     _, y_pis_1 = mapie_reg_1.predict(X, z)
 
-    mapie_reg_2 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
+    mapie_reg_2 = MapieCCPRegressor(estimator=estimator, phi=cloned_phi, cv=cv,
                                     alpha=0.1, random_state=random_state)
     mapie_reg_2.fit_calibrate(X, y, z=z)
     _, y_pis_2 = mapie_reg_1.predict(X, z)
@@ -504,13 +525,16 @@ def test_results_with_constant_sample_weights(
         estimator2.fit(X, y)
         estimator3.fit(X, y)
 
+    cloned_phi = clone(PHI[0])
+    cloned_phi.fit(X)
+
     n_samples = len(X)
-    mapie0 = MapieCCPRegressor(estimator=estimator1, phi=PHI[0],
-                               cv=cv, random_state=random_state)
-    mapie1 = MapieCCPRegressor(estimator=estimator2, phi=PHI[0],
-                               cv=cv, random_state=random_state)
-    mapie2 = MapieCCPRegressor(estimator=estimator3, phi=PHI[0],
-                               cv=cv, random_state=random_state)
+    mapie0 = MapieCCPRegressor(estimator=estimator1, phi=cloned_phi,
+                               cv=cv, alpha=0.1, random_state=random_state)
+    mapie1 = MapieCCPRegressor(estimator=estimator2, phi=cloned_phi,
+                               cv=cv, alpha=0.1, random_state=random_state)
+    mapie2 = MapieCCPRegressor(estimator=estimator3, phi=cloned_phi,
+                               cv=cv, alpha=0.1, random_state=random_state)
 
     mapie0.fit_calibrate(X, y, z=z, sample_weight=None)
     mapie1.fit_calibrate(X, y, z=z, sample_weight=np.ones(shape=n_samples))
@@ -546,7 +570,7 @@ def test_prediction_between_low_up(
     if cv == "prefit":
         estimator.fit(X, y)
 
-    mapie = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
+    mapie = MapieCCPRegressor(estimator=estimator, phi=clone(phi), cv=cv,
                               alpha=alpha, random_state=random_state)
     mapie.fit_calibrate(X, y, z=z)
 
@@ -587,7 +611,7 @@ def test_linear_data_confidence_interval(
     if cv == "prefit":
         estimator.fit(X_toy, y_toy)
 
-    mapie = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,
+    mapie = MapieCCPRegressor(estimator=estimator, phi=clone(phi), cv=cv,
                               alpha=alpha, random_state=random_state)
     mapie.fit_calibrate(X_toy, y_toy, z=z_toy)
 
@@ -607,7 +631,7 @@ def test_linear_regression_results() -> None:
     """
 
     mapie = MapieCCPRegressor(
-        phi=PHI[0],
+        phi=clone(PHI[0]),
         cv=ShuffleSplit(n_splits=1, test_size=0.5, random_state=random_state),
         alpha=0.05,
         random_state=random_state
@@ -634,8 +658,10 @@ def test_results_prefit(estimator: RegressorMixin) -> None:
         X_train_val, y_train_val, test_size=1 / 9, random_state=1
     )
     estimator.fit(X_train, y_train)
-    mapie_reg = MapieCCPRegressor(estimator=estimator, phi=PHI[0], cv="prefit",
-                                  alpha=0.05, random_state=random_state)
+    mapie_reg = MapieCCPRegressor(
+        estimator=estimator, phi=clone(PHI[0]), cv="prefit", alpha=0.05,
+        random_state=random_state
+    )
     mapie_reg.fit_calibrate(X_val, y_val)
     _, y_pis = mapie_reg.predict(X_test)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
@@ -669,7 +695,7 @@ def test_conformity_score(
 
     mapie_reg = MapieCCPRegressor(
         estimator=estimator,
-        phi=phi,
+        phi=clone(phi),
         cv=cv,
         alpha=0.1,
         conformity_score=conformity_score,
@@ -687,7 +713,8 @@ def test_fit_parameters_passing() -> None:
     """
     gb = GradientBoostingRegressor(random_state=random_state)
 
-    mapie_reg = MapieCCPRegressor(estimator=gb, random_state=random_state)
+    mapie_reg = MapieCCPRegressor(estimator=gb, alpha=0.1,
+                                  random_state=random_state)
 
     def early_stopping_monitor(i, est, locals):
         """Returns True on the 3rd iteration."""

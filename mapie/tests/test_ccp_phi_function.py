@@ -4,9 +4,10 @@ from typing import Any, List, Dict
 
 import numpy as np
 import pytest
+from sklearn.utils.validation import check_is_fitted
 from sklearn.datasets import make_regression
-from mapie.regression import (PhiFunction, PolynomialPhiFunction,
-                              GaussianPhiFunction)
+from mapie.regression.utils import (CustomPhiFunction, GaussianPhiFunction,
+                                    PolynomialPhiFunction, PhiFunction)
 
 random_state = 1
 np.random.seed(random_state)
@@ -17,100 +18,69 @@ X, y = make_regression(
 z = X[:, -2:]
 
 PHI = [
-    PhiFunction([lambda X: np.ones((len(X), 1))]),
-    PhiFunction([lambda X: X]),
-    PhiFunction([lambda X: X, lambda z: z]),
-    PhiFunction([lambda X: X, lambda y_pred: y_pred]),
-    PhiFunction([
-        PhiFunction([lambda X: X, lambda y_pred: y_pred]),
-        lambda z: z
-    ]),
+    CustomPhiFunction([lambda X: np.ones((len(X), 1))]),
+    CustomPhiFunction([lambda X: X]),
+    CustomPhiFunction([lambda X: X, lambda z: z]),
+    CustomPhiFunction([lambda X: X, lambda y_pred: y_pred]),
     PolynomialPhiFunction(2, "X", marginal_guarantee=True),
     PolynomialPhiFunction([1, 2], "X", marginal_guarantee=True),
     PolynomialPhiFunction([1, 4, 5], "y_pred", marginal_guarantee=False),
     PolynomialPhiFunction([0, 1, 4, 5], "y_pred", marginal_guarantee=False),
-    GaussianPhiFunction(4, X=X)
+    GaussianPhiFunction(4)
 ]
 
 # n_out without marginal_guarantee
-N_OUT_RAW = [1, 10, 12, 11, 13, 20, 20, 3, 4, 4]
+N_OUT_RAW = [1, 10, 12, 11, 20, 20, 3, 4, 4]
 
-PHI_FUNCTIONS = [
-    [lambda X: np.ones((len(X), 1))],
-    [lambda X: X],
-    [lambda X: X, lambda z: z],
-    [lambda X: X, lambda y_pred: y_pred],
-    [PhiFunction([lambda X: X, lambda y_pred: y_pred]), lambda z: z],
-]
-
-GAUSS_NEED_CALIB_SETTINGS: List[Dict[str, Any]] = [
+GAUSS_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
     {
         "points": 10,
         "sigma": 1,
-        "X": None,
     },
     {
         "points": 10,
         "sigma": None,
-        "X": None,
+    },
+    {
+        "points": 10,
+        "sigma": None,
+        "random_sigma": True,
+    },
+    {
+        "points": 10,
+        "sigma": None,
+        "random_sigma": False,
     },
     {
         "points": np.ones((2, X.shape[1])),
         "sigma": None,
-        "X": None,
     },
 ]
 
-GAUSS_NO_NEED_CALIB_SETTINGS: List[Dict[str, Any]] = [
-    {
-        "points": 10,
-        "sigma": 1,
-        "X": X,
-    },
-    {
-        "points": 10,
-        "sigma": None,
-        "X": X,
-    },
-    {
-        "points": np.ones((2, X.shape[1])),
-        "sigma": None,
-        "X": X,
-    },
+GAUSS_NO_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
     {
         "points": np.ones((2, X.shape[1])),
         "sigma": np.ones(X.shape[1]),
-        "X": X,
     },
     {
         "points": (np.ones((2, X.shape[1])), [1, 2]),
         "sigma": None,
-        "X": None,
     },
     {
         "points": (np.ones((2, X.shape[1])), np.ones((2, X.shape[1]))),
         "sigma": None,
-        "X": None,
     },
 ]
 
 
-# ======== PhiFunction =========
-def test_phi_initialized() -> None:
+# ======== CustomPhiFunction =========
+@pytest.mark.parametrize("functions", [
+    None, lambda X: X, [lambda X: X]
+])
+def test_custom_phi_functions(functions: Any) -> None:
     """Test that initialization does not crash."""
-    PhiFunction()
-
-
-def test_phi_default_parameters() -> None:
-    """
-    Test default values of input parameters of PhiFunction.
-      - ``marginal_guarantee`` should be ``True``
-      -  ``functions``should be a list with a unique callable element
-    """
-    phi = PhiFunction()
-    assert phi.marginal_guarantee
-    assert isinstance(phi.functions, list)
-    assert len(phi.functions) == 0
+    phi = CustomPhiFunction(functions)
+    phi.transform(X)
 
 
 @pytest.mark.parametrize("phi, n_out_raw", zip(PHI, N_OUT_RAW))
@@ -118,33 +88,10 @@ def test_phi_n_attributes(phi: PhiFunction, n_out_raw: int) -> None:
     """
     Test that the n_in and n_out attributes are corrects
     """
-    phi(X=X, y_pred=y, z=z)
+    phi.fit(X)
+    phi.transform(X, y_pred=y, z=z)
     assert phi.n_in == 10
     assert phi.n_out == n_out_raw + int(phi.marginal_guarantee)
-
-
-@pytest.mark.parametrize("phi_function_1, n_out_raw_1, m_g_1",
-                         zip(PHI_FUNCTIONS, N_OUT_RAW, [True, False]))
-@pytest.mark.parametrize("phi_function_2, n_out_raw_2, m_g_2",
-                         zip(PHI_FUNCTIONS, N_OUT_RAW, [True, False]))
-@pytest.mark.parametrize("m_g_0", [True, False])
-def test_phi_compound_and_guarantee(
-    phi_function_1: PhiFunction, n_out_raw_1: int, m_g_1: bool,
-    phi_function_2: PhiFunction, n_out_raw_2: int, m_g_2: bool,
-    m_g_0: bool,
-) -> None:
-    """
-    Test that when phi is defined using a compound of other PhiFunctions,
-    the column of ones, added of marginal_guarantee, is added only once
-    """
-    phi_1 = PhiFunction(phi_function_1, marginal_guarantee=m_g_1)
-    phi_2 = PhiFunction(phi_function_2, marginal_guarantee=m_g_2)
-    phi_0 = PhiFunction([phi_1, phi_2], marginal_guarantee=m_g_0)
-    phi_0(X=X, y_pred=y, z=z)
-
-    assert phi_0.n_out == n_out_raw_1 + n_out_raw_2 + int(any(
-        [m_g_0, m_g_1, m_g_2]
-    ))
 
 
 def test_phi_functions_warning() -> None:
@@ -154,7 +101,8 @@ def test_phi_functions_warning() -> None:
     """
     with pytest.warns(UserWarning,
                       match="WARNING: Unknown optional arguments."):
-        PhiFunction([lambda X, d=d: X**d for d in range(4)])
+        phi = CustomPhiFunction([lambda X, d=d: X**d for d in range(4)])
+        phi.transform(X)
 
 
 @pytest.mark.parametrize("functions", [
@@ -169,7 +117,8 @@ def test_phi_functions_error(functions: Any) -> None:
     for f in functions:     # For coverage
         f(np.ones((10, 1)), np.ones((10, 1)))
     with pytest.raises(ValueError, match=r"Forbidden required argument."):
-        PhiFunction(functions)
+        phi = CustomPhiFunction(functions)
+        phi.transform(X)
 
 
 def test_phi_functions_empty() -> None:
@@ -178,7 +127,8 @@ def test_phi_functions_empty() -> None:
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
     """
     with pytest.raises(ValueError):
-        PhiFunction([], marginal_guarantee=False)
+        phi = CustomPhiFunction([], marginal_guarantee=False)
+        phi.transform(X)
 
 
 # ======== PolynomialPhiFunction =========
@@ -225,22 +175,37 @@ def test_poly_gauss_init_other(
     marginal_guarantee: bool, normalized: bool
 ) -> None:
     """Test that initialization does not crash."""
-    GaussianPhiFunction(points, sigma, random_sigma, X,
+    GaussianPhiFunction(points, sigma, random_sigma,
                         marginal_guarantee, normalized)
 
 
 @pytest.mark.parametrize("points", [np.ones((10)),
-                                    np.ones((10, 2, 2)),
-                                    (np.ones((10, 3)), np.ones((10, 2))),
-                                    (np.ones((10, 3)), np.ones((8, 1))),
-                                    (np.ones((10, 3)), np.ones(7))])
+                                    np.ones((10, 2, 2))])
 def test_invalid_gauss_points(points: Any) -> None:
     """
     Test that invalid ``GaussianPhiFunction`` ``points``argument values raise
     an error
     """
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid `points` argument."):
         GaussianPhiFunction(points)
+
+
+def test_invalid_gauss_points_2() -> None:
+    """
+    Test that invalid ``GaussianPhiFunction`` ``points``argument values raise
+    an error
+    """
+    with pytest.raises(ValueError, match="There should have as many points"):
+        GaussianPhiFunction(points=(np.ones((10, 3)), np.ones((8, 3))))
+
+
+def test_invalid_gauss_points_3() -> None:
+    """
+    Test that invalid ``GaussianPhiFunction`` ``points``argument values raise
+    an error
+    """
+    with pytest.raises(ValueError, match="The standard deviation 2D array"):
+        GaussianPhiFunction(points=(np.ones((10, 3)), np.ones((10, 2))))
 
 
 @pytest.mark.parametrize("sigma", ["1",
@@ -253,36 +218,27 @@ def test_invalid_gauss_sigma(sigma: Any) -> None:
     error
     """
     with pytest.raises(ValueError):
-        GaussianPhiFunction(3, sigma, X=X)
+        phi = GaussianPhiFunction(3, sigma)
+        phi.fit(X)
+        phi.transform(X)
 
 
-@pytest.mark.parametrize("ind", range(len(GAUSS_NEED_CALIB_SETTINGS)))
+@pytest.mark.parametrize("ind", range(len(GAUSS_NEED_FIT_SETTINGS)))
 def test_gauss_need_calib(ind: int) -> None:
     """
     Test that ``GaussianPhiFunction`` arguments that require later completion
     have ``_need_x_calib`` = ``True``
     """
-    phi = GaussianPhiFunction(**GAUSS_NEED_CALIB_SETTINGS[ind])
-    assert phi._need_x_calib
+    phi = GaussianPhiFunction(**GAUSS_NEED_FIT_SETTINGS[ind])
+    phi.fit(X)
+    check_is_fitted(phi, phi.fit_attributes)
 
 
-@pytest.mark.parametrize("ind", range(len(GAUSS_NO_NEED_CALIB_SETTINGS)))
+@pytest.mark.parametrize("ind", range(len(GAUSS_NO_NEED_FIT_SETTINGS)))
 def test_gauss_no_need_calib(ind: int) -> None:
     """
     Test that ``GaussianPhiFunction`` arguments that don't require later
     completion have ``_need_x_calib`` = ``False``
     """
-    phi = GaussianPhiFunction(**GAUSS_NO_NEED_CALIB_SETTINGS[ind])
-    assert not phi._need_x_calib
-
-
-@pytest.mark.parametrize("ind", range(len(GAUSS_NEED_CALIB_SETTINGS)))
-def test_chained_check_need_calib(ind: int) -> None:
-    """
-    Test that a PhiFunction object _check_need_calib call the _check_need_calib
-    method of children PhiFunction objects
-    """
-    child_phi = GaussianPhiFunction(**GAUSS_NEED_CALIB_SETTINGS[ind])
-    phi = PhiFunction([child_phi])
-    phi._check_need_calib(X)
-    assert not child_phi._need_x_calib
+    phi = GaussianPhiFunction(**GAUSS_NO_NEED_FIT_SETTINGS[ind])
+    check_is_fitted(phi, phi.fit_attributes)
