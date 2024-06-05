@@ -201,7 +201,7 @@ def plot_results(X_test, y_test, n_trials=10,
             random_state=None
         )
         mapie_ccp.conformity_score.eps = 1e-5
-        mapie_ccp.calibrate(X_calib, y_calib)
+        mapie_ccp.fit_calibrator(X_calib, y_calib)
         _, y_pi_ccp = mapie_ccp.predict(X_test)
     else:
         # CCP Shifts
@@ -224,7 +224,7 @@ def plot_results(X_test, y_test, n_trials=10,
             random_state=None
         )
         mapie_ccp.conformity_score.eps = 1e-5
-        mapie_ccp.calibrate(X_calib, y_calib)
+        mapie_ccp.fit_calibrator(X_calib, y_calib)
         _, y_pi_ccp = mapie_ccp.predict(X_test)
 
     # =========== n_trials run to get average marginal coverage ============

@@ -364,7 +364,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
                              "Allowed values are between 0 and 1.")
         return alpha
 
-    def fit(
+    def fit_estimator(
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -426,7 +426,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             )
         return self
 
-    def calibrate(
+    def fit_calibrator(
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -637,7 +637,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
                               (optimal_beta_low.x, optimal_beta_low.success))
         return self
 
-    def fit_calibrate(
+    def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -703,8 +703,8 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         MapieCCPRegressor
             self
         """
-        self.fit(X, y, sample_weight, groups, **fit_params)
-        self.calibrate(X, y, groups, z, alpha)
+        self.fit_estimator(X, y, sample_weight, groups, **fit_params)
+        self.fit_calibrator(X, y, groups, z, alpha)
         return self
 
     def predict(
