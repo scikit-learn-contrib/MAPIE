@@ -7,7 +7,7 @@ import numpy as np
 from scipy.optimize import minimize
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
-                                     ShuffleSplit)
+                                     ShuffleSplit, PredefinedSplit)
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _check_y, check_is_fitted, indexable
@@ -15,7 +15,7 @@ from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
 from .utils.ccp_phi_function import PhiFunction
-from mapie.utils import (check_conformity_score, check_estimator_fit_predict,
+from mapie.utils import (check_conformity_score, check_estimator,
                          check_lower_upper_bounds, check_null_weight,
                          fit_estimator)
 
@@ -161,49 +161,129 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         phi: Optional[PhiFunction] = None,
         cv: Optional[
             Union[str, BaseCrossValidator, BaseShuffleSplit]
-        ] = "split",
-        alpha: float = 0.1,
+        ] = None,
+        alpha: Optional[float] = None,
         conformity_score: Optional[ConformityScore] = None,
         random_state: Optional[int] = None,
     ) -> None:
-
         self.random_state = random_state
         self.cv = cv
         self.estimator = estimator
-        self.conformity_score_ = conformity_score
-
-        if phi is None:
-            self.phi = PhiFunction(lambda X: np.ones(len(X)))
-        else:
-            self.phi = cast(PhiFunction, phi)
-
+        self.conformity_score = conformity_score
+        self.phi = phi
         self.alpha = alpha
-        self.beta_up: Optional[Tuple[NDArray, bool]] = None
-        self.beta_low: Optional[Tuple[NDArray, bool]] = None
 
-    def _check_fit_parameters(self) -> None:
+    def _check_parameters(self) -> None:
         """
-        Check and replace default ``cv`` and ``estimator`` arguments
+        Check and replace default value of ``estimator`` and ``cv`` arguments.
+        Copy the ``estimator`` in ``estimator_`` attribute if ``cv="prefit"``.
         """
-        self.cv = self._check_cv(
-            self.cv, random_state=self.random_state
-        )
-        self.estimator = self._check_estimator(self.estimator)
+        self.cv = self._check_cv(self.cv)
+        self.estimator = check_estimator(self.estimator, self.cv)
+
+        if self.cv == "prefit":
+            self.estimator_ = self.estimator
+
+    def _check_fit_parameters(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike],
+        train_index: ArrayLike,
+    ) -> Tuple[NDArray, NDArray, Optional[NDArray]]:
+        """
+        Perform several checks on class parameters.
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed values.
+
+        y: ArrayLike
+            Target values.
+
+        sample_weight: Optional[NDArray] of shape (n_samples,)
+            Non-null sample weights.
+
+        train_index: ArrayLike
+            Indexes of the training set.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, Optional[NDArray]]
+            - NDArray of training observed values
+            - NDArray of training target values
+            - Optional[NDArray] of training sample_weight
+        """
+        X_train = _safe_indexing(X, train_index)
+        y_train = _safe_indexing(y, train_index)
+
+        if sample_weight is not None:
+            sample_weight_train = _safe_indexing(
+                sample_weight, train_index)
+        else:
+            sample_weight_train = None
+
+        X_train, y_train = indexable(X_train, y_train)
+        y_train = _check_y(y_train)
+        sample_weight_train, X_train, y_train = check_null_weight(
+            sample_weight_train, X_train, y_train)
+
+        X_train = cast(NDArray, X_train)
+        y_train = cast(NDArray, y_train)
+        sample_weight_train = cast(Optional[NDArray], sample_weight_train)
+
+        return X_train, y_train, sample_weight_train
 
     def _check_calibrate_parameters(self) -> None:
         """
-        Check and replace default ``conformity_score`` and ``alpha`` arguments
+        Check and replace default ``conformity_score``, ``alpha`` and
+        ``phi`` arguments.
         """
         self.conformity_score_ = check_conformity_score(
-            self.conformity_score_, self.default_sym_
+            self.conformity_score, self.default_sym_
         )
-        self.alpha = cast(float, self._check_alpha(self.alpha))
+        self.alpha = self._check_alpha(self.alpha)
+        self.phi = self._check_phi(self.phi)
+
+    def _check_phi(
+        self,
+        phi: Optional[PhiFunction],
+    ) -> PhiFunction:
+        """
+        Check if ``phi`` is a ``PhiFunction`` instance.
+
+        Parameters
+        ----------
+        phi: Optional[PhiFunction]
+            A ``PhiFunction`` instance used to estimate the conformity scores.
+
+            If ``None``, use as default a ``GaussianPhiFunction`` instance.
+            See the examples and the documentation to build a ``PhiFunction``
+            adaptated to your dataset and constraints.
+
+        Returns
+        -------
+        PhiFunction
+            ``phi`` if defined, a ``GaussianPhiFunction`` instance otherwise.
+
+        Raises
+        ------
+        ValueError
+            If ``phi`` is not ``None`` nor a ``PhiFunction`` instance.
+        """
+        if phi is None:
+            return GaussianPhiFunction()
+        elif isinstance(phi, PhiFunction):
+            return phi
+        else:
+            raise ValueError("Invalid `phi` argument. It must be `None` or a "
+                             "`PhiFunction` instance.")
 
     def _check_cv(
         self,
         cv: Optional[Union[str, BaseCrossValidator, BaseShuffleSplit]] = None,
         test_size: float = 0.3,
-        random_state: Optional[int] = None,
     ) -> Union[str, BaseCrossValidator, BaseShuffleSplit]:
         """
         Check if ``cv`` is ``None``, ``"prefit"``, ``"split"``,
@@ -224,16 +304,9 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
             By default ``None``.
 
-        random_state: Optional[int]
-            Pseudo random number generator state used for random uniform
-            sampling for evaluation quantiles and prediction sets.
-            Pass an int for reproducible output across multiple function calls.
-
-            By default ```None``.
-
         Returns
         -------
-        Union[str, BaseCrossValidator, BaseShuffleSplit]
+        Union[str, PredefinedSplit, ShuffleSplit]
             The cast `cv` parameter.
 
         Raises
@@ -241,53 +314,32 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         ValueError
             If the cross-validator is not valid.
         """
-        if random_state is None:
-            random_seeds = cast(list, np.random.get_state())[1]
-            random_state = np.random.choice(random_seeds)
-        if cv is None:
+        if cv is None or cv == "split":
             return ShuffleSplit(
-                n_splits=1, test_size=test_size, random_state=random_state
+                n_splits=1, test_size=test_size, random_state=self.random_state
             )
-        elif isinstance(cv, (BaseCrossValidator, BaseShuffleSplit)):
-            try:
-                if hasattr(cv, "get_n_splits") and cv.get_n_splits() != 1:
-                    raise ValueError(
-                        "Invalid cv argument. "
-                        "Allowed values are a BaseCrossValidator or "
-                        "BaseShuffleSplit object with ``n_splits``=1. "
-                        f"Got `n_splits`={cv.get_n_splits()}."
-                    )
-                return cv
-            except (ValueError, TypeError):
-                raise ValueError(
-                        "Invalid cv argument. "
-                        "Allowed values are a BaseCrossValidator or "
-                        "BaseShuffleSplit object with ``n_splits``=1."
-                    )
+        elif (isinstance(cv, (PredefinedSplit, ShuffleSplit))
+              and cv.get_n_splits() == 1):
+            return cv
         elif cv == "prefit":
             return cv
-        elif cv == "split":
-            return ShuffleSplit(
-                n_splits=1, test_size=test_size, random_state=random_state
-            )
         else:
             raise ValueError(
-                "Invalid cv argument. "
-                "Allowed values are None, 'prefit', 'split' "
-                "or a BaseCrossValidator/BaseShuffleSplit "
-                "object with ``n_splits``=1."
+                "Invalid cv argument.  Allowed values are None, 'prefit', "
+                "'split' or a ShuffleSplit/PredefinedSplit object with "
+                "``n_splits=1``."
             )
 
     def _check_alpha(
         self,
         alpha: Optional[float] = None
-    ) -> float:
+    ) -> Optional[float]:
         """
         Check alpha
 
         Parameters
         ----------
-        alpha: float
+        alpha: Optional[float]
             Can be a float between 0 and 1, represent the uncertainty
             of the confidence interval. Lower alpha produce
             larger (more conservative) prediction intervals.
@@ -295,15 +347,16 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         Returns
         -------
-        float
+        Optional[float]
             Valid alpha.
 
         Raises
         ------
         ValueError
-            If alpha is not a float between 0 and 1.
-
+            If alpha is not ``None`` or a float between 0 and 1.
         """
+        if alpha is None:
+            return alpha
         if isinstance(alpha, float):
             alpha = alpha
         else:
@@ -455,37 +508,22 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         -------
         MapieCCPRegressor
             self
-
         """
-        self._check_fit_parameters()
+        self._check_parameters()
+
         if self.cv != 'prefit':
-            train_index = list(
-                cast(BaseCrossValidator, self.cv).split(X, y, groups)
-            )[0][0]
-            X_train = cast(NDArray, _safe_indexing(X, train_index))
-            y_train = cast(NDArray, _safe_indexing(y, train_index))
+            self.cv = cast(BaseCrossValidator, self.cv)
 
-            if sample_weight is not None:
-                sample_weight_train = cast(
-                    NDArray, _safe_indexing(sample_weight, train_index)
-                )
-            else:
-                sample_weight_train = None
+            train_index, _ = list(self.cv.split(X, y, groups))[0]
 
-            (X_train,
-                y_train,
-                sample_weight_train) = self._check_sample_weights(
+            (
                 X_train, y_train, sample_weight_train
+            ) = self._check_fit_parameters(X, y, sample_weight, train_index)
+
+            self.estimator_ = fit_estimator(
+                self.estimator, X_train, y_train,
+                sample_weight=sample_weight_train, **fit_params
             )
-            fit_estimator(self.estimator, X_train, y_train,
-                          sample_weight=sample_weight_train, **fit_params)
-
-            self.phi._check_need_calib(X_train)
-
-        else:
-            warnings.warn("WARNING: As cv='prefit', the estimator will not "
-                          "be fitted again. You can directly call the"
-                          "calibrate method.")
         return self
 
     def calibrate(
@@ -536,58 +574,42 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         -------
         MapieCCPRegressor
             self
-
         """
-        self._check_fit_parameters()
+        self._check_parameters()
         self._check_calibrate_parameters()
         check_is_fitted(self, self.fit_attributes)
+        self.phi = cast(PhiFunction, self.phi)
 
         self.estimator = cast(RegressorMixin, self.estimator)
         self.cv = cast(Union[str, BaseCrossValidator], self.cv)
         self.conformity_score_ = cast(ConformityScore, self.conformity_score_)
 
         if self.cv != 'prefit':
-            try:
-                if isinstance(self.estimator, Pipeline):
-                    check_is_fitted(self.estimator[-1])
-                else:
-                    check_is_fitted(self.estimator)
-            except NotFittedError as exc:
-                raise NotFittedError("As you are using an estimator which is "
-                                     "not fitted yet, you need to call the "
-                                     "fit method before calibrate.") from exc
+            self.cv = cast(BaseCrossValidator, self.cv)
 
-            calib_index = list(
-                cast(BaseCrossValidator, self.cv).split(X, y, groups)
-            )[0][1]
-            X_calib = cast(NDArray, _safe_indexing(X, calib_index))
-            y_calib = cast(NDArray, _safe_indexing(y, calib_index))
+            _, calib_index = list(self.cv.split(X, y, groups))[0]
+            X_calib = _safe_indexing(X, calib_index)
+            y_calib = _safe_indexing(y, calib_index)
             if z is not None:
-                z_calib = cast(NDArray, _safe_indexing(z, calib_index))
+                z_calib = _safe_indexing(z, calib_index)
             else:
                 z_calib = None
         else:
-            X_calib = cast(NDArray, X)
-            y_calib = cast(NDArray, y)
-            if z is not None:
-                z_calib = cast(NDArray, z)
-            else:
-                z_calib = None
+            X_calib, y_calib, z_calib = X, y, z
 
         if alpha is not None and self.alpha != alpha:
             self.alpha = self._check_alpha(alpha)
-            warnings.warn(f"WARNING: The old value of alpha "
-                          f"({self.alpha}) has been overwritten "
-                          f"by the new one ({alpha}).")
+            warnings.warn(f"WARNING: The old value of alpha ({self.alpha}) "
+                          f"has been overwritten by the new one ({alpha}).")
 
-        self.phi._check_need_calib(X_calib)
+        if self.alpha is None:
+            return self
 
-        y_pred_calib = self.estimator.predict(X_calib)
+        y_pred_calib = self.estimator_.predict(X_calib)
 
-        calib_conformity_scores = \
-            self.conformity_score_.get_conformity_scores(
-                X_calib, y_calib, y_pred_calib
-            )
+        calib_conformity_scores = self.conformity_score_.get_conformity_scores(
+            X_calib, y_calib, y_pred_calib
+        )
 
         if self.conformity_score_.sym:
             alpha_low = 1 - self.alpha
@@ -665,10 +687,10 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
                 "The returned prediction interval may be inaccurate."
             )
 
-        self.beta_up = (cast(NDArray, optimal_beta_up.x),
-                        cast(bool, optimal_beta_up.success))
-        self.beta_low = (cast(NDArray, optimal_beta_low.x),
-                         cast(bool, optimal_beta_low.success))
+        self.beta_up_ = cast(Tuple[NDArray, bool],
+                             (optimal_beta_up.x, optimal_beta_up.success))
+        self.beta_low_ = cast(Tuple[NDArray, bool],
+                              (optimal_beta_low.x, optimal_beta_low.success))
         return self
 
     def fit_calibrate(
