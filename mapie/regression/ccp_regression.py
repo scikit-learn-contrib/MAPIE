@@ -667,7 +667,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         self,
         X: ArrayLike,
         z: Optional[ArrayLike] = None,
-    ) -> Tuple[NDArray, NDArray]:
+    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
         The prediction interval is computed
@@ -682,15 +682,18 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         Returns
         -------
-        Tuple[NDArray, NDArray]
-            Tuple[NDArray, NDArray] of shapes (n_samples,)
-            and (n_samples, 2, 1).
-              - [:, 0, 0]: Lower bound of the prediction interval.
-              - [:, 1, 0]: Upper bound of the prediction interval.
+        Union[NDArray, Tuple[NDArray, NDArray]]
+            - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
+            - Tuple[NDArray, NDArray] of shapes (n_samples,) and
+              (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
+                - [:, 0, :]: Lower bound of the prediction interval.
+                - [:, 1, :]: Upper bound of the prediction interval.
         """
+        check_is_fitted(self, self.fit_attributes)
+        y_pred = self.estimator_.predict(X)
 
-        self.estimator = cast(RegressorMixin, self.estimator)
-        self.conformity_score_ = cast(ConformityScore, self.conformity_score_)
+        if self.alpha is None:
+            return y_pred
 
         check_is_fitted(self, self.calib_attributes)
 
