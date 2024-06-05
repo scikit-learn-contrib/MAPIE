@@ -520,8 +520,11 @@ def test_method_error_in_update(monkeypatch: Any, method: str) -> None:
         mapie_ts_reg.update(X_toy, y_toy)
 
 
-def test_aci_method_in_fit() -> None:
-    """Test of aci method in fit"""
+@pytest.mark.parametrize("method", ["enbpi", "aci"])
+@pytest.mark.parametrize("cv", ["split", "prefit"])
+def test_methods_preservation_in_fit(method: str, cv: str) -> None:
+    """Test of enbpi and aci method preservation in the fit MapieRegressor"""
+
     X_train_val, X_test, y_train_val, y_test = train_test_split(
         X, y, test_size=0.33, random_state=random_state
     )
@@ -531,8 +534,9 @@ def test_aci_method_in_fit() -> None:
     estimator = LinearRegression().fit(X_train, y_train)
     mapie_ts_reg = MapieTimeSeriesRegressor(
         estimator=estimator,
-        cv="prefit", method="aci"
+        cv=cv, method=method
     )
     mapie_ts_reg.fit(X_val, y_val)
     mapie_ts_reg.update(X_test, y_test, gamma=0.1, alpha=0.1)
-    assert mapie_ts_reg.method == "aci"
+    assert mapie_ts_reg.method == method, \
+        f"Expected method {method}, but got {mapie_ts_reg.method}"
