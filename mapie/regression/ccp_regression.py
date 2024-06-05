@@ -516,19 +516,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             q_low = self.alpha / 2
             q_up = 1 - self.alpha / 2
 
-        phi_x = self.phi(
-            X_calib,
-            cast(NDArray, y_pred_calib),
-            cast(NDArray, z_calib),
-        )
-
-        if np.any(np.all(phi_x == 0, axis=1)):
-            warnings.warn("WARNING: At least one row of the transformation "
-                          "phi(X, y_pred, z) is full of zeros. "
-                          "It will result in a prediction interval of zero "
-                          "width. Consider changing the PhiFunction "
-                          "definintion.\n"
-                          "Fix: Use `marginal_guarantee`=True in PhiFunction")
+        phi_x = self.phi.transform(X_calib, y_pred_calib, z_calib)
 
         if self.random_state is None:
             warnings.warn("WARNING: The method implemented in "
