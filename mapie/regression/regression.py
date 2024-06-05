@@ -5,9 +5,7 @@ from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
@@ -16,7 +14,7 @@ from mapie.conformity_scores import ConformityScore, ResidualNormalisedScore
 from mapie.estimator.estimator import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_conformity_score, check_cv,
-                         check_estimator_fit_predict, check_n_features_in,
+                         check_estimator, check_n_features_in,
                          check_n_jobs, check_null_weight, check_verbose)
 
 
@@ -320,46 +318,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         else:
             return "mean"
 
-    def _check_estimator(
-        self, estimator: Optional[RegressorMixin] = None
-    ) -> RegressorMixin:
-        """
-        Check if estimator is ``None``,
-        and returns a ``LinearRegression`` instance if necessary.
-        If the ``cv`` attribute is ``"prefit"``,
-        check if estimator is indeed already fitted.
-
-        Parameters
-        ----------
-        estimator: Optional[RegressorMixin]
-            Estimator to check, by default ``None``.
-
-        Returns
-        -------
-        RegressorMixin
-            The estimator itself or a default ``LinearRegression`` instance.
-
-        Raises
-        ------
-        ValueError
-            If the estimator is not ``None``
-            and has no ``fit`` nor ``predict`` methods.
-
-        NotFittedError
-            If the estimator is not fitted
-            and ``cv`` attribute is ``"prefit"``.
-        """
-        if estimator is None:
-            return LinearRegression()
-        else:
-            check_estimator_fit_predict(estimator)
-            if self.cv == "prefit":
-                if isinstance(estimator, Pipeline):
-                    check_is_fitted(estimator[-1])
-                else:
-                    check_is_fitted(estimator)
-            return estimator
-
     def _check_ensemble(
         self, ensemble: bool,
     ) -> None:
@@ -427,7 +385,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         )
         if self.cv in ["split", "prefit"] and self.method != "base":
             self.method = "base"
-        estimator = self._check_estimator(self.estimator)
+        estimator = check_estimator(self.estimator, cv)
         agg_function = self._check_agg_function(self.agg_function)
         cs_estimator = check_conformity_score(
             self.conformity_score, self.default_sym_
