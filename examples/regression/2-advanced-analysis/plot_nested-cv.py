@@ -45,35 +45,34 @@ coverages of both nested and non-nested methods are the same.
 """
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
+from sklearn.datasets import make_sparse_uncorrelated
 
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 
-# Load the Boston data
-data_url = "http://lib.stat.cmu.edu/datasets/boston"
-raw_df = pd.read_csv(data_url, sep=r'\s+', skiprows=22, header=None)
-X_boston = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
-y_boston = raw_df.values[1::2, 2]
+
+random_state = 42
+
+# Load the toy data
+X, y = make_sparse_uncorrelated(500, random_state=random_state)
 
 # Split the data into training and test sets.
 X_train, X_test, y_train, y_test = train_test_split(
-    X_boston, y_boston, test_size=0.2, random_state=42
+    X, y, test_size=0.2, random_state=random_state
 )
 
 # Define the Random Forest model as base regressor with parameter ranges.
-rf_model = RandomForestRegressor(random_state=59, verbose=0)
+rf_model = RandomForestRegressor(random_state=random_state, verbose=0)
 rf_params = {"max_depth": randint(2, 10), "n_estimators": randint(10, 100)}
 
 # Cross-validation and prediction-interval parameters.
 cv = 10
 n_iter = 5
 alpha = 0.05
-random_state = 59
 
 # Non-nested approach with the CV+ strategy using the Random Forest model.
 cv_obj = RandomizedSearchCV(
@@ -144,12 +143,10 @@ print(
 
 # Compare prediction interval widths.
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 6))
-min_x = 14.0
-max_x = 17.0
+min_x = np.min([np.min(widths_nested), np.min(widths_non_nested)])
+max_x = np.max([np.max(widths_nested), np.max(widths_non_nested)])
 ax1.set_xlabel("Prediction interval width using the nested CV approach")
 ax1.set_ylabel("Prediction interval width using the non-nested CV approach")
-ax1.set_xlim([min_x, max_x])
-ax1.set_ylim([min_x, max_x])
 ax1.scatter(widths_nested, widths_non_nested)
 ax1.plot([min_x, max_x], [min_x, max_x], ls="--", color="k")
 ax2.axvline(x=0, color="r", lw=2)
