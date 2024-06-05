@@ -24,49 +24,45 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
     """
     This class implements Conformal Prediction With Conditional Guarantees
     method as proposed by Gibbs et al. (2023) to make conformal predictions.
-    The only valid cross-val strategy is the "split" approach.
+    This method works with a ``"split"`` approach which requires a separate
+    calibration phase. The ``calibrate`` method is used on a calibration set
+    that must be disjoint from the estimator's training set to guarantee
+    the expected ``1-alpha`` coverage.
 
     Parameters
     ----------
     estimator: Optional[RegressorMixin]
-        Any regressor with scikit-learn API
+        Any regressor from scikit-learn API.
         (i.e. with ``fit`` and ``predict`` methods).
-        If ``None``, estimator defaults to a ``QuantileRegressor`` instance.
+        If ``None``, ``estimator`` defaults to a ``LinearRegressor`` instance.
 
         By default ``"None"``.
 
     phi: Optional[PhiFunction]
-        The phi function used to estimate the conformity scores
+        A ``PhiFunction`` instance used to estimate the conformity scores.
 
-        If ``None``, use the default PhiFunction(lambda X: np.ones(len(X))).
-        It will result in a constant interval prediction (basic split method).
-        See the examples and the documentation to build a PhiFunction
+        If ``None``, use as default a ``GaussianPhiFunction`` instance.
+        See the examples and the documentation to build a ``PhiFunction``
         adaptated to your dataset and constraints.
 
         By default ``None``.
 
-    cv: Optional[Union[int, str, BaseCrossValidator, BaseShuffleSplit]]
-        The cross-validation strategy for computing conformity scores.
-        The method only works with a "split" approach.
+    cv: Optional[Union[int, str, ShuffleSplit, PredefinedSplit]]
+        The splitting strategy for computing conformity scores.
         Choose among:
 
-        - Any ``sklearn.model_selection.BaseCrossValidator``
-          with ``n_splits``=1.
-        - ``"split"`` or ``None``, divide the data into training and
+        - Any splitter (``ShuffleSplit`` or ``PredefinedSplit``)
+        with ``n_splits=1``.
+        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
+          All data provided in the ``calibrate`` method is then used
+          for the calibration.
+          The user has to take care manually that data used for model fitting
+          and calibration (the data given in the ``calibrate`` method)
+          are disjoint.
+        - ``"split"`` or ``None``: divide the data into training and
           calibration subsets (using the default ``calib_size``=0.3).
           The splitter used is the following:
-            ``sklearn.model_selection.ShuffleSplit`` with ``n_splits``=1.
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
-          All data provided in the ``fit`` method is then used
-          for the calibration.
-          The user has to take care manually that data for model fitting and
-          calibration (the data given in the ``fit`` method) are disjoint.
-
-        Note: You can choose the calibration indexes
-        with sklearn.model_selection.PredefinedSplit(test_fold),
-        where test_fold[i] = 1 (or any not negative integer)
-        if the row should be in the calibration set,
-        -1 otherwise (if it should be used for training).
+            ``sklearn.model_selection.ShuffleSplit`` with ``n_splits=1``.
 
         By default ``None``.
 
@@ -77,21 +73,20 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         correspondonds to a conformity score which assumes
         y_obs = y_pred + conformity_score.
 
-        - ``None``, to use the default ``AbsoluteConformityScore`` conformity
-          score
+        - ``None``, to use the default ``AbsoluteConformityScore`` symetrical
+        conformity score
         - Any ``ConformityScore`` class
 
         By default ``None``.
 
-    alpha: float
+    alpha: Optional[float]
         Between ``0.0`` and ``1.0``, represents the risk level of the
         confidence interval.
         Lower ``alpha`` produce larger (more conservative) prediction
         intervals.
         ``alpha`` is the complement of the target coverage level.
 
-        By default 0.1
-
+        By default ``None``
 
     random_state: Optional[int]
         Integer used to set the numpy seed, to get reproducible calibration
@@ -101,7 +96,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         WARNING: If ``random_state``is not ``None``, ``np.random.seed`` will
         be changed, which will reset the seed for all the other random
-        number generators.
+        number generators. It may have an impact on the rest of your code.
 
         By default ``None``.
 
@@ -378,7 +373,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         **fit_params,
     ) -> MapieCCPRegressor:
         """
-        Fit the estimator.
+        Fit the estimator if ``cv`` argument is not ``"prefit"``
 
         Parameters
         ----------
@@ -550,7 +545,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             warnings.warn("WARNING: The method implemented in "
                           "MapieCCPRegressor has a stochastic behavior. "
                           "To have reproductible results, use a integer "
-                          "`random_state` value in the MapieCCPRegressor "
+                          "`random_state` value in the `MapieCCPRegressor` "
                           "initialisation.")
         else:
             np.random.seed(self.random_state)
@@ -578,16 +573,16 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         if not optimal_beta_up.success:
             warnings.warn(
-                "WARNING: The optimization process for the upper bound with "
-                f"alpha={self.alpha} failed with the following error: \n"
+                "WARNING: The optimization process for the upper bound "
+                f"failed with the following error: \n"
                 f"{optimal_beta_low.message}\n"
                 "The returned prediction interval may be inaccurate."
             )
         if (not self.conformity_score_.sym
            and not optimal_beta_low.success):
             warnings.warn(
-                "WARNING: The optimization process for the lower bound with "
-                f"alpha={self.alpha} failed with the following error: \n"
+                "WARNING: The optimization process for the lower bound "
+                f"failed with the following error: \n"
                 f"{optimal_beta_low.message}\n"
                 "The returned prediction interval may be inaccurate."
             )
@@ -609,7 +604,8 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         **fit_params,
     ) -> MapieCCPRegressor:
         """
-        Fit the estimator and the calibration.
+        Fit the estimator (if ``cv`` is not ``"prefit"``)
+        and fit the calibration.
 
         Parameters
         ----------
@@ -662,7 +658,6 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         -------
         MapieCCPRegressor
             self
-
         """
         self.fit(X, y, sample_weight, groups, **fit_params)
         self.calibrate(X, y, groups, z, alpha)
