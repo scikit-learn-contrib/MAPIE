@@ -832,7 +832,7 @@ class GaussianPhiFunction(PhiFunction):
                 self.points_ = cast(NDArray, _safe_indexing(X, points_index))
             if self.sigma is None:
                 self.sigmas_ = np.ones((_num_samples(self.points_), 1))*np.std(
-                    X, axis=0)/(_num_samples(self.points_)**0.5)
+                    np.array(X), axis=0)/(_num_samples(self.points_)**0.5)
 
             if self.random_sigma:
                 n = _num_samples(self.points_)
