@@ -14,7 +14,7 @@ from mapie.conformity_scores import ConformityScore, ResidualNormalisedScore
 from mapie.estimator.estimator import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_conformity_score, check_cv,
-                         check_estimator, check_n_features_in,
+                         check_estimator_regression, check_n_features_in,
                          check_n_jobs, check_null_weight, check_verbose)
 
 
@@ -385,7 +385,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         )
         if self.cv in ["split", "prefit"] and self.method != "base":
             self.method = "base"
-        estimator = check_estimator(self.estimator, cv)
+        estimator = check_estimator_regression(self.estimator, cv)
         agg_function = self._check_agg_function(self.agg_function)
         cs_estimator = check_conformity_score(
             self.conformity_score, self.default_sym_

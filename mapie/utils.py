@@ -706,7 +706,7 @@ def check_estimator_fit_predict(
         )
 
 
-def check_estimator(
+def check_estimator_regression(
     estimator: Optional[RegressorMixin] = None,
     cv: Optional[Union[str, BaseCrossValidator, BaseShuffleSplit]] = None,
 ) -> RegressorMixin:

@@ -15,7 +15,7 @@ from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
 from .utils.ccp_phi_function import PhiFunction, GaussianPhiFunction
-from mapie.utils import (check_conformity_score, check_estimator,
+from mapie.utils import (check_conformity_score, check_estimator_regression,
                          check_lower_upper_bounds, check_null_weight,
                          fit_estimator)
 
@@ -177,7 +177,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         Copy the ``estimator`` in ``estimator_`` attribute if ``cv="prefit"``.
         """
         self.cv = self._check_cv(self.cv)
-        self.estimator = check_estimator(self.estimator, self.cv)
+        self.estimator = check_estimator_regression(self.estimator, self.cv)
 
         if self.cv == "prefit":
             self.estimator_ = self.estimator
