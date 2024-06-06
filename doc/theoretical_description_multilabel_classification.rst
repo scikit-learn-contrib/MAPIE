@@ -1,11 +1,10 @@
-.. title:: Theoretical Description : contents
+.. title:: Theoretical Description Multi label Classification : contents
 
 .. _theoretical_description_multilabel_classification:
 
-=======================
+#######################
 Theoretical Description
-=======================
-
+#######################
 
 Three methods for multi-label uncertainty quantification have been implemented in MAPIE so far :
 Risk-Controlling Prediction Sets (RCPS) [1], Conformal Risk Control (CRC) [2] and Learn Then Test (LTT) [3].
@@ -38,7 +37,7 @@ Notice that at the opposite of the other two methods, LTT allows to control any 
 we use CRC and RCPS for recall control and LTT for precision control.
 
 1. Risk-Controlling Prediction Sets
------------------------------------
+===================================
 1.1. General settings
 ---------------------
 
@@ -143,7 +142,7 @@ Then:
 
 
 2. Conformal Risk Control
--------------------------
+=========================
 
 The goal of this method is to control any monotone and bounded loss. The result of this method can be expressed as follows:
 
@@ -166,10 +165,8 @@ With :
 
 
 3. Learn Then Test
-------------------
+==================
 
-3.1. General settings
----------------------
 We are going to present the Learn Then Test framework that allows the user to control non-monotonic risk such as precision score.
 This method has been introduced in article [3].
 The settings here are the same as RCPS and CRC, we just need to introduce some new parameters:
@@ -200,8 +197,8 @@ In order to find all the parameters :math:`\lambda` that satisfy the above condi
   that controls the family-wise error rate (FWER), for example, Bonferonni correction.
 
 
-4. References
--------------
+References
+==========
 
 [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos,
 and Michael I. Jordan. Distribution-free, risk-controlling prediction

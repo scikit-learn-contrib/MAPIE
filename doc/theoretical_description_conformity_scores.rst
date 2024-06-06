@@ -1,10 +1,10 @@
-.. title:: Theoretical Description : contents
+.. title:: Theoretical Description Conformity Scores : contents
 
 .. _theoretical_description_conformity_scores:
 
-=============================================
+#############################################
 Theoretical Description for Conformity Scores
-=============================================
+#############################################
 
 The :class:`mapie.conformity_scores.ConformityScore` class implements various
 methods to compute conformity scores for regression.
@@ -25,7 +25,7 @@ quantiles will be computed : one on the right side of the distribution
 and the other on the left side.
 
 1. The absolute residual score
-==============================
+------------------------------
 
 The absolute residual score (:class:`mapie.conformity_scores.AbsoluteConformityScore`)
 is the simplest and most commonly used conformal score, it translates the error
@@ -44,7 +44,7 @@ With this score, the intervals of predictions will be constant over the whole da
 This score is by default symmetric (*see above for definition*).
 
 2. The gamma score
-==================
+------------------
 
 The gamma score [2] (:class:`mapie.conformity_scores.GammaConformityScore`) adds a
 notion of adaptivity with the normalization of the residuals by the predictions.
@@ -69,7 +69,7 @@ the order of magnitude of the predictions, implying that this score should be us
 in use cases where we want greater uncertainty when the prediction is high.
 
 3. The residual normalized score
-=======================================
+--------------------------------
 
 The residual normalized score [1] (:class:`mapie.conformity_scores.ResidualNormalisedScore`)
 is slightly more complex than the previous scores.
@@ -97,7 +97,7 @@ it is not proportional to the uncertainty.
 
 
 Key takeaways
-=============
+-------------
 
 - The absolute residual score is the basic conformity score and gives constant intervals. It is the one used by default by :class:`mapie.regression.MapieRegressor`.
 - The gamma conformity score adds a notion of adaptivity by giving intervals of different sizes
@@ -107,7 +107,7 @@ Key takeaways
   without specific assumptions on the data.
 
 References
-==========
+----------
 
 [1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J., & Wasserman, L. (2018). Distribution-Free 
 Predictive Inference for Regression. Journal of the American Statistical Association, 113(523), 1094–1111. 
