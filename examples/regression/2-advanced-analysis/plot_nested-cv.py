@@ -26,7 +26,7 @@ it results in :math:`N * P` calculations, where *N* is the number of
 *out-of-fold* models and *P* the number of parameter search cross-validations,
 versus :math:`N + P` for the non-nested approach.
 
-Here, we compare the two strategies on the Boston dataset. We use the Random
+Here, we compare the two strategies on a toy dataset. We use the Random
 Forest Regressor as a base regressor for the CV+ strategy. For the sake of
 light computation, we adopt a RandomizedSearchCV parameter search strategy
 with a low number of iterations and with a reproducible random state.
