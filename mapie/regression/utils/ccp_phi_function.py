@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 import inspect
-from typing import Callable, Dict, List, Optional, Tuple, Union, cast, Iterable
+from typing import (Iterable, Callable, Optional, Tuple, Union,
+                    cast, Dict, List, Any)
 import numbers
 import warnings
 
@@ -13,7 +14,11 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 from sklearn.base import BaseEstimator
 
 
-def _is_fitted(estimator, attributes=None, all_or_any=all):
+def _is_fitted(
+    estimator: Any,
+    attributes: Optional[Union[List[str], str]] = None,
+    all_or_any: Callable = all,
+):
     """Determine if an estimator is fitted
 
     Parameters
@@ -21,7 +26,7 @@ def _is_fitted(estimator, attributes=None, all_or_any=all):
     estimator : estimator instance
         Estimator instance for which the check is performed.
 
-    attributes : str, list or tuple of str, default=None
+    attributes : Optional[Union[List[str], str]]
         Attribute name(s) given as string or a list/tuple of strings
         Eg.: ``["coef_", "estimator_", ...], "coef_"``
 
@@ -29,8 +34,12 @@ def _is_fitted(estimator, attributes=None, all_or_any=all):
         attribute that ends with a underscore and does not start with double
         underscore.
 
-    all_or_any : callable, {all, any}, default=all
+        By default ``None``
+
+    all_or_any : Callable
         Specify whether all or any of the given attributes must exist.
+
+        By default ``all``
 
     Returns
     -------

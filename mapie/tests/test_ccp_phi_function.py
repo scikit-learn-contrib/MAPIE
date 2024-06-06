@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional, Union
 
 import numpy as np
 import pytest
@@ -246,7 +246,11 @@ def test_gauss_no_need_calib(ind: int) -> None:
 
 
 class ToyClass:
-    def __init__(self, fit_attributes, **kwargs) -> None:
+    def __init__(
+        self,
+        fit_attributes: Optional[Union[List[str], str]] = None,
+        **kwargs
+    ) -> None:
         self.fit_attributes = fit_attributes
         for key, value in kwargs.items():
             setattr(self, key, value)
