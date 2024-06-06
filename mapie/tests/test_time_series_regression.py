@@ -538,5 +538,4 @@ def test_methods_preservation_in_fit(method: str, cv: str) -> None:
     )
     mapie_ts_reg.fit(X_val, y_val)
     mapie_ts_reg.update(X_test, y_test, gamma=0.1, alpha=0.1)
-    assert mapie_ts_reg.method == method, \
-        f"Expected method {method}, but got {mapie_ts_reg.method}"
+    assert mapie_ts_reg.method == method

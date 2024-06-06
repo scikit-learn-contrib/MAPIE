@@ -750,7 +750,7 @@ def test_predict_infinite_intervals() -> None:
     np.testing.assert_allclose(y_pis[:, 1, 0], np.inf)
 
 
-@pytest.mark.parametrize("method", ["minmax", "naive", "plus"])
+@pytest.mark.parametrize("method", ["minmax", "naive", "plus", "base"])
 @pytest.mark.parametrize("cv", ["split", "prefit"])
 def test_check_change_method_to_base(method: str, cv: str) -> None:
     """Test of shift in power from one method to base method in fit"""
@@ -763,5 +763,4 @@ def test_check_change_method_to_base(method: str, cv: str) -> None:
         cv=cv, method=method, estimator=estimator
     )
     mapie_reg.fit(X_val, y_val)
-    assert mapie_reg.method == "base", \
-        f"Expected method base, but got {mapie_reg.method}"
+    assert mapie_reg.method == "base"
