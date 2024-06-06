@@ -390,7 +390,7 @@ class CustomPhiFunction(PhiFunction):
     >>> print(phi.n_out)
     4
     """
-    fit_attributes = []
+    fit_attributes: List[str] = []
 
     def __init__(
         self,
@@ -506,7 +506,7 @@ class PolynomialPhiFunction(PhiFunction):
     >>> print(phi.degree)
     [1, 2, 5]
     """
-    fit_attributes = []
+    fit_attributes: List[str] = []
 
     def __init__(
         self,
