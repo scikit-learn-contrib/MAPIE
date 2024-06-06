@@ -753,7 +753,7 @@ def test_predict_infinite_intervals() -> None:
 @pytest.mark.parametrize("method", ["minmax", "naive", "plus", "base"])
 @pytest.mark.parametrize("cv", ["split", "prefit"])
 def test_check_change_method_to_base(method: str, cv: str) -> None:
-    """Test of shift in power from one method to base method in fit"""
+    """Test of the overloading of method attribute to `base` method in fit"""
 
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=0.5, random_state=random_state

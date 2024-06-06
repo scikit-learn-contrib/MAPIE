@@ -4,7 +4,7 @@ History
 
 0.8.3 (2024-**-**)
 ------------------
-* Fix shift in power from one method to base method when use MapieRegressor fit : issue 447
+* Fixed overloading of the value of the ‘method’ attribute when using MapieRegressor and MapieTimeSeriesRegressor
 * Fix conda versionning.
 * Reduce precision for test in `MapieCalibrator`.
 * Fix invalid certificate when downloading data.
