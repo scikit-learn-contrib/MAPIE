@@ -8,6 +8,7 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.datasets import make_regression
 from mapie.regression.utils import (CustomPhiFunction, GaussianPhiFunction,
                                     PolynomialPhiFunction, PhiFunction)
+from ..regression.utils.ccp_phi_function import _is_fitted
 
 random_state = 1
 np.random.seed(random_state)
@@ -242,3 +243,37 @@ def test_gauss_no_need_calib(ind: int) -> None:
     """
     phi = GaussianPhiFunction(**GAUSS_NO_NEED_FIT_SETTINGS[ind])
     check_is_fitted(phi, phi.fit_attributes)
+
+
+class ToyClass:
+    def __init__(self, fit_attributes, **kwargs) -> None:
+        self.fit_attributes = fit_attributes
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+@pytest.mark.parametrize("cls", [
+    ToyClass(fit_attributes=None, __sklearn_is_fitted__=lambda: True),
+    ToyClass(fit_attributes=None, tested_attr_=1),
+    ToyClass(fit_attributes=["fit_attr"], fit_attr=1),
+    ToyClass(fit_attributes="fit_attr", fit_attr=1),
+])
+def test_is_fitted(cls: ToyClass) -> None:
+    """
+    Test the _is_fitted function
+    """
+    assert _is_fitted(cls, cls.fit_attributes)
+
+
+@pytest.mark.parametrize("cls", [
+    ToyClass(fit_attributes=None, __sklearn_is_fitted__=lambda: False),
+    ToyClass(fit_attributes=None, tested_attr_=None),
+    ToyClass(fit_attributes=None, __ignored_attr_=1),
+    ToyClass(fit_attributes=["fit_attr"], tested_attr_=1),
+    ToyClass(fit_attributes="fit_attr", fit_attr=None),
+])
+def test_not_is_fitted(cls: ToyClass) -> None:
+    """
+    Test the _is_fitted function
+    """
+    assert not _is_fitted(cls, cls.fit_attributes)

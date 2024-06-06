@@ -9,8 +9,51 @@ import warnings
 import numpy as np
 from mapie._typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _num_samples, check_is_fitted, _is_fitted
+from sklearn.utils.validation import _num_samples, check_is_fitted
 from sklearn.base import BaseEstimator
+
+
+def _is_fitted(estimator, attributes=None, all_or_any=all):
+    """Determine if an estimator is fitted
+
+    Parameters
+    ----------
+    estimator : estimator instance
+        Estimator instance for which the check is performed.
+
+    attributes : str, list or tuple of str, default=None
+        Attribute name(s) given as string or a list/tuple of strings
+        Eg.: ``["coef_", "estimator_", ...], "coef_"``
+
+        If `None`, `estimator` is considered fitted if there exist an
+        attribute that ends with a underscore and does not start with double
+        underscore.
+
+    all_or_any : callable, {all, any}, default=all
+        Specify whether all or any of the given attributes must exist.
+
+    Returns
+    -------
+    fitted : bool
+        Whether the estimator is fitted.
+    """
+    if attributes is not None:
+        if not isinstance(attributes, (list, tuple)):
+            attributes = [attributes]
+        return all_or_any([
+            hasattr(estimator, attr) and getattr(estimator, attr) is not None
+            for attr in attributes
+        ])
+
+    if hasattr(estimator, "__sklearn_is_fitted__"):
+        return estimator.__sklearn_is_fitted__()
+
+    fitted_attrs = [
+        v for v in vars(estimator)
+        if v.endswith("_") and not v.startswith("__")
+        and getattr(estimator, v) is not None
+    ]
+    return len(fitted_attrs) > 0
 
 
 class PhiFunction(BaseEstimator, metaclass=ABCMeta):
@@ -691,10 +734,9 @@ class GaussianPhiFunction(PhiFunction):
                              "should be an integer, "
                              "a 2D array or a tuple of two 2D arrays.")
 
-        if (
-            _is_fitted(self, self.fit_attributes)
-            and self.points_ is not None and self.sigmas_ is not None
-        ):
+        if _is_fitted(self, self.fit_attributes):
+            self.sigmas_ = cast(NDArray, self.sigmas_)
+            self.points_ = cast(NDArray, self.points_)
             self._check_parameters(self.points_, self.sigmas_)
             if self.random_sigma:
                 n = _num_samples(self.points_)
@@ -724,7 +766,7 @@ class GaussianPhiFunction(PhiFunction):
         self._check_parameters(self.points_, self.sigmas_)
         self.functions_ = self._check_functions()
 
-    def _check_parameters(self, points: NDArray, sigmas: NDArray) -> None:
+    def _check_parameters(self, points: ArrayLike, sigmas: ArrayLike) -> None:
         """
         Check that ``points`` and ``sigmas`` have compatible shapes
 
