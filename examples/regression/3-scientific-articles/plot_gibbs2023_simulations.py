@@ -158,7 +158,7 @@ def estimate_coverage(mapie_split, mapie_ccp, group_functs=[]):
     mapie_split.fit(X_calib, y_calib)
     _, y_pi_split = mapie_split.predict(X_test, alpha=ALPHA)
 
-    mapie_ccp.calibrate(X_calib, y_calib)
+    mapie_ccp.fit_calibrator(X_calib, y_calib)
     _, y_pi_ccp = mapie_ccp.predict(X_test)
 
     cover_split = np.logical_or(y_test < y_pi_split[:, 0, 0],

@@ -22,12 +22,15 @@ from mapie.utils import (check_conformity_score, check_estimator,
 
 class MapieCCPRegressor(BaseEstimator, RegressorMixin):
     """
-    This class implements Conformal Prediction With Conditional Guarantees
-    method as proposed by Gibbs et al. (2023) to make conformal predictions.
+    This class implements an adaptative conformal prediction method proposed by
+    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
     This method works with a ``"split"`` approach which requires a separate
-    calibration phase. The ``calibrate`` method is used on a calibration set
-    that must be disjoint from the estimator's training set to guarantee
-    the expected ``1-alpha`` coverage.
+    calibration phase. The ``fit`` method automatically split the data into
+    two disjoint sets to train the estimator and the calibrator. You can call
+    ``fit_estimator`` and ``fit_calibrator`` to do the two step one after the
+    other. You will have to make sure that data used in the two methods,
+    for training and calibration are disjoint, to guarantee the expected
+    ``1-alpha`` coverage.
 
     Parameters
     ----------
@@ -125,7 +128,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
     >>> X_train = np.arange(0,100,2).reshape(-1, 1)
     >>> y_train = 2*X_train[:,0] + np.random.rand(len(X_train))
     >>> mapie_reg = MapieCCPRegressor(alpha=0.1, random_state=1)
-    >>> mapie_reg = mapie_reg.fit_calibrate(
+    >>> mapie_reg = mapie_reg.fit(
     ...     X_train,
     ...     y_train,
     ... )

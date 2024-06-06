@@ -64,29 +64,29 @@ def test_initialized() -> None:
     MapieCCPRegressor(alpha=0.1)
 
 
-def test_fit() -> None:
-    """Test that fit raises no errors."""
+def test_fit_estimator() -> None:
+    """Test that fit_estimator raises no errors."""
     mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit_estimator(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("z", [None, z_toy])
-def test_fit_calibrate(z: Any) -> None:
-    """Test that fit-calibrate raises no errors."""
+def test_fit_calibrator(z: Any) -> None:
+    """Test that fit_calibrator raises no errors."""
     mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit_estimator(X_toy, y_toy)
     mapie_reg.fit_calibrator(X_toy, y_toy, z=z)
 
 
 @pytest.mark.parametrize("z", [None, z_toy])
-def test_fit_calibrate_combined(z: Any) -> None:
-    """Test that fit_calibrate raises no errors."""
+def test_fit(z: Any) -> None:
+    """Test that fit raises no errors."""
     mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit(X_toy, y_toy, z=z)
 
 
 @pytest.mark.parametrize("z", [None, z_toy])
-def test_fit_calibrate_predict(z: Any) -> None:
+def test_fit_estimator_fit_calibrator_predict(z: Any) -> None:
     """Test that fit-calibrate-predict raises no errors."""
     mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit_estimator(X_toy, y_toy)
@@ -95,14 +95,14 @@ def test_fit_calibrate_predict(z: Any) -> None:
 
 
 @pytest.mark.parametrize("z", [None, z_toy])
-def test_fit_calibrate_combined_predict(z: Any) -> None:
-    """Test that fit_calibrate-predict raises no errors."""
+def test_fit_predict(z: Any) -> None:
+    """Test that fit-predict raises no errors."""
     mapie_reg = MapieCCPRegressor(alpha=0.1)
     mapie_reg.fit(X_toy, y_toy, z=z)
     mapie_reg.predict(X_toy, z=z)
 
 
-def test_no_fit_calibrate() -> None:
+def test_not_fitted_estimator_fit_calibrator() -> None:
     """Test that calibrate before fit raises errors."""
     mapie_reg = MapieCCPRegressor(alpha=0.1)
     with pytest.raises(NotFittedError):
