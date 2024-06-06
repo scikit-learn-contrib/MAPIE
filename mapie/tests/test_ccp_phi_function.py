@@ -27,11 +27,16 @@ PHI = [
     PolynomialPhiFunction([1, 2], "X", marginal_guarantee=True),
     PolynomialPhiFunction([1, 4, 5], "y_pred", marginal_guarantee=False),
     PolynomialPhiFunction([0, 1, 4, 5], "y_pred", marginal_guarantee=False),
-    GaussianPhiFunction(4)
+    GaussianPhiFunction(4),
+    CustomPhiFunction([lambda X: X, PolynomialPhiFunction(2)]),
+    CustomPhiFunction([lambda X: X, GaussianPhiFunction(2)]),
+    CustomPhiFunction([
+        lambda X: X, PolynomialPhiFunction([1, 2], marginal_guarantee=False)
+    ]),
 ]
 
 # n_out without marginal_guarantee
-N_OUT_RAW = [1, 10, 12, 11, 20, 20, 3, 4, 4]
+N_OUT_RAW = [1, 10, 12, 11, 20, 20, 3, 4, 4, 30, 12, 30]
 
 GAUSS_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
     {
@@ -76,11 +81,22 @@ GAUSS_NO_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
 
 # ======== CustomPhiFunction =========
 @pytest.mark.parametrize("functions", [
-    None, lambda X: X, [lambda X: X]
+    None, lambda X: X, [lambda X: X],
+    [lambda X: X, PolynomialPhiFunction(2)],
+    [lambda X: X, PolynomialPhiFunction(2), GaussianPhiFunction(2)],
 ])
 def test_custom_phi_functions(functions: Any) -> None:
     """Test that initialization does not crash."""
     phi = CustomPhiFunction(functions)
+    phi.fit(X)
+    phi.transform(X)
+
+
+def test_compound_phi_fitted() -> None:
+    phi_gauss = GaussianPhiFunction(2)
+    phi_gauss.fit(X)
+    phi = CustomPhiFunction([lambda X: X, phi_gauss])
+    check_is_fitted(phi, phi.fit_attributes)
     phi.transform(X)
 
 
@@ -118,8 +134,7 @@ def test_phi_functions_error(functions: Any) -> None:
     for f in functions:     # For coverage
         f(np.ones((10, 1)), np.ones((10, 1)))
     with pytest.raises(ValueError, match=r"Forbidden required argument."):
-        phi = CustomPhiFunction(functions)
-        phi.transform(X)
+        CustomPhiFunction(functions)
 
 
 def test_phi_functions_empty() -> None:
@@ -128,8 +143,7 @@ def test_phi_functions_empty() -> None:
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
     """
     with pytest.raises(ValueError):
-        phi = CustomPhiFunction([], marginal_guarantee=False)
-        phi.transform(X)
+        CustomPhiFunction([], marginal_guarantee=False)
 
 
 # ======== PolynomialPhiFunction =========

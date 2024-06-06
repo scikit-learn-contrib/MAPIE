@@ -72,7 +72,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
 
     Parameters
     ----------
-    functions: Optional[Union[Callable, Iterable]]
+    functions: Optional[Union[Callable, Iterable[Callable]]]
         List of functions (or PhiFunction objects) or single function.
         Each function can take a combinaison of the following arguments:
         - ``X``: Input dataset, of shape (n_samples, ``n_in``)
@@ -115,9 +115,12 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
 
     Attributes
     ----------
-    fit_attributes: List[str]
+    fit_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
-        ``transform``.
+        ``transform``. Empty list will result in a ``PhiFunction`` class which
+        is always fittedd (doesn't need to be fitted). If ``None``, it will
+        check for a method ``__sklearn_is_fitted__()`` or arguments which ends
+        with ``'_'``, to check if it is fitted or not.
 
     n_in: int
         Number of features of ``X``
@@ -126,12 +129,12 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         Number of features of phi(``X``, ``y_pred``, ``z``)
     """
 
-    fit_attributes: List[str] = []
+    fit_attributes: Optional[List[str]] = []
     output_attributes = ["n_in", "n_out", "init_value"]
 
     def __init__(
         self,
-        functions: Optional[Union[Callable, Iterable]] = None,
+        functions: Optional[Union[Callable, Iterable[Callable]]] = None,
         marginal_guarantee: bool = True,
         normalized: bool = False,
     ) -> None:
@@ -256,11 +259,11 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         """
 
     def transform(
-            self,
-            X: Optional[ArrayLike] = None,
-            y_pred: Optional[ArrayLike] = None,
-            z: Optional[ArrayLike] = None,
-            disable_marginal_guarantee: bool = False,
+        self,
+        X: Optional[ArrayLike] = None,
+        y_pred: Optional[ArrayLike] = None,
+        z: Optional[ArrayLike] = None,
+        disable_marginal_guarantee: bool = False,
     ) -> NDArray:
         check_is_fitted(self, self.fit_attributes)
         self._check_transform_parameters()
@@ -279,6 +282,9 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
                 p: params_mapping[p] for p in params
                 if p in params_mapping and params_mapping[p] is not None
             }
+
+            if isinstance(f, PhiFunction) and not f.normalized:
+                used_params["disable_marginal_guarantee"] = True
 
             res.append(np.array(f(**used_params), dtype=float))
 
@@ -307,6 +313,15 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
                           "in the `PhiFunction` definition.")
         return result
 
+    def __call__(
+        self,
+        X: Optional[ArrayLike] = None,
+        y_pred: Optional[ArrayLike] = None,
+        z: Optional[ArrayLike] = None,
+        disable_marginal_guarantee: bool = False,
+    ) -> NDArray:
+        return self.transform(X, y_pred, z, disable_marginal_guarantee)
+
 
 class CustomPhiFunction(PhiFunction):
     """
@@ -315,10 +330,13 @@ class CustomPhiFunction(PhiFunction):
     This class build a ``PhiFunction`` object with custom features of
     X, y_pred or z, defined as a list of functions in ``functions`` argument.
 
+    This class can be used to concatenate ``PhiFunction`` instances.
+
     Parameters
     ----------
-    functions: Optional[Union[Callable, Iterable]]
+    functions: Optional[Union[Callable, Iterable[Callable]]]
         List of functions (or PhiFunction objects) or single function.
+
         Each function can take a combinaison of the following arguments:
         - ``X``: Input dataset, of shape (n_samples, ``n_in``)
         - ``y_pred``: estimator prediction, of shape (n_samples,)
@@ -348,7 +366,7 @@ class CustomPhiFunction(PhiFunction):
         By default ``True``.
 
     normalized: bool
-        Whether or not to normalized ``phi(X, y_pred, z)``. Normalization
+        Whether or not to normalized the output result. Normalization
         will result in a bounded interval prediction width, avoiding the width
         to explode to +inf or crash to zero. It is particularly intersting when
         you know that the conformity scores are bounded. It also prevent the
@@ -360,15 +378,18 @@ class CustomPhiFunction(PhiFunction):
 
     Attributes
     ----------
-    fit_attributes: List[str]
+    fit_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
-        ``transform``.
+        ``transform``. Empty list will result in a ``PhiFunction`` class which
+        is always fittedd (doesn't need to be fitted). If ``None``, it will
+        check for a method ``__sklearn_is_fitted__()`` or arguments which ends
+        with ``'_'``, to check if it is fitted or not.
 
     n_in: int
         Number of features of ``X``
 
     n_out: int
-        Number of features of phi(``X``, ``y_pred``, ``z``)
+        Number of features of phi(``X``, ``y_pred``, ``z``).
 
     Examples
     --------
@@ -390,29 +411,76 @@ class CustomPhiFunction(PhiFunction):
     >>> print(phi.n_out)
     4
     """
-    fit_attributes: List[str] = []
+    fit_attributes: Optional[List[str]] = None
 
     def __init__(
         self,
-        functions: Optional[Union[Callable, Iterable]] = None,
+        functions: Optional[Union[Callable, Iterable[Callable]]] = None,
         marginal_guarantee: bool = True,
         normalized: bool = False,
     ) -> None:
-        super().__init__(functions, marginal_guarantee, normalized)
+        self.functions = functions
+        self.marginal_guarantee = marginal_guarantee
+        self.normalized = normalized
+
+        self.functions_ = self._check_functions()
+
+    def __sklearn_is_fitted__(self) -> bool:
+        """
+        Check if all the concatenated ``PhiFunction`` instances are fitted
+
+        Returns
+        -------
+        bool
+            Whether the ``ConcatenatePhiFunction`` is fitted
+        """
+        for phi in self.functions_:
+            if isinstance(phi, PhiFunction):
+                if not _is_fitted(phi, phi.fit_attributes):
+                    return False
+        return True
 
     def fit(
         self,
         X: ArrayLike,
     ) -> None:
         """
-        ``PolynomialPhiFunction`` don't need to be fitted.
+        Call the fit method of all ``PhiFunction`` in the list of ``functions``
 
         Parameters
         ----------
         X : Optional[ArrayLike]
             Samples
         """
-        return
+        if not _is_fitted(self, self.fit_attributes):
+            for phi in self.functions_:
+                if isinstance(phi, PhiFunction):
+                    phi.fit(X)
+
+    def _check_marginal_guarantee(self) -> bool:
+        """
+        Check marginal guarantee
+
+        Returns
+        -------
+        bool
+            marginal_guarantee value, overwritten to ``True`` if one of the
+            ``functions`` value is a ``PhiFunction`` instance with
+            ``marginal_guarantee=True``.
+        """
+        for phi in self.functions_:
+            if isinstance(phi, PhiFunction):
+                if phi.marginal_guarantee and not phi.normalized:
+                    return True
+        return self.marginal_guarantee
+
+    def _check_transform_parameters(self) -> None:
+        """
+        Check that ``functions_`` are functions that take as input
+        allowed arguments
+        """
+        self.functions_ = self._check_functions()
+        self.marginal_guarantee = self._check_marginal_guarantee()
 
 
 class PolynomialPhiFunction(PhiFunction):
@@ -471,9 +539,12 @@ class PolynomialPhiFunction(PhiFunction):
 
     Attributes
     ----------
-    fit_attributes: List[str]
+    fit_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
-        ``transform``.
+        ``transform``. Empty list will result in a ``PhiFunction`` class which
+        is always fittedd (doesn't need to be fitted). If ``None``, it will
+        check for a method ``__sklearn_is_fitted__()`` or arguments which ends
+        with ``'_'``, to check if it is fitted or not.
 
     n_in: int
         Number of features of ``X``
@@ -506,7 +577,7 @@ class PolynomialPhiFunction(PhiFunction):
     >>> print(phi.degree)
     [1, 2, 5]
     """
-    fit_attributes: List[str] = []
+    fit_attributes: Optional[List[str]] = []
 
     def __init__(
         self,
@@ -656,9 +727,12 @@ class GaussianPhiFunction(PhiFunction):
 
     Attributes
     ----------
-    fit_attributes: List[str]
+    fit_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
-        ``transform``.
+        ``transform``. Empty list will result in a ``PhiFunction`` class which
+        is always fittedd (doesn't need to be fitted). If ``None``, it will
+        check for a method ``__sklearn_is_fitted__()`` or arguments which ends
+        with ``'_'``, to check if it is fitted or not.
 
     n_in: int
         Number of features of ``X``
@@ -708,7 +782,7 @@ class GaussianPhiFunction(PhiFunction):
     [[0.5]
      [0.5]]
     """
-    fit_attributes = ["points_", "sigmas_"]
+    fit_attributes: Optional[List[str]] = ["points_", "sigmas_"]
 
     def __init__(
         self,
