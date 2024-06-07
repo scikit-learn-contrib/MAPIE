@@ -793,3 +793,19 @@ def test_predict_infinite_intervals() -> None:
     _, y_pis = mapie_reg.predict(X, alpha=0., allow_infinite_bounds=True)
     np.testing.assert_allclose(y_pis[:, 0, 0], -np.inf)
     np.testing.assert_allclose(y_pis[:, 1, 0], np.inf)
+
+
+@pytest.mark.parametrize("method", ["minmax", "naive", "plus", "base"])
+@pytest.mark.parametrize("cv", ["split", "prefit"])
+def test_check_change_method_to_base(method: str, cv: str) -> None:
+    """Test of the overloading of method attribute to `base` method in fit"""
+
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=0.5, random_state=random_state
+    )
+    estimator = LinearRegression().fit(X_train, y_train)
+    mapie_reg = MapieRegressor(
+        cv=cv, method=method, estimator=estimator
+    )
+    mapie_reg.fit(X_val, y_val)
+    assert mapie_reg.method == "base"

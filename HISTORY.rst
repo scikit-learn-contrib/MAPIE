@@ -6,6 +6,7 @@ History
 ------------------
 
 * Fix the quantile formula to ensure valid coverage for any number of calibration data in `ConformityScore`.
+* Fix overloading of the value of the `method` attribute when using `MapieRegressor` and `MapieTimeSeriesRegressor`.
 * Fix conda versionning.
 * Reduce precision for test in `MapieCalibrator`.
 * Fix invalid certificate when downloading data.
