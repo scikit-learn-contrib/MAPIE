@@ -2,9 +2,10 @@
 History
 =======
 
-0.8.3 (2024-**-**)
+0.8.4 (2024-**-**)
 ------------------
 
+* Fix the quantile formula to ensure valid coverage for any number of calibration data in `ConformityScore`.
 * Fix conda versionning.
 * Reduce precision for test in `MapieCalibrator`.
 * Fix invalid certificate when downloading data.

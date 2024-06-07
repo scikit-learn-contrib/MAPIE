@@ -18,6 +18,7 @@ from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
+from scipy.stats import ttest_1samp
 from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
@@ -155,14 +156,14 @@ WIDTHS = {
 
 COVERAGES = {
     "naive": 0.954,
-    "split": 0.962,
+    "split": 0.956,
     "jackknife": 0.956,
     "jackknife_plus": 0.952,
     "jackknife_minmax": 0.962,
     "cv": 0.954,
     "cv_plus": 0.954,
     "cv_minmax": 0.962,
-    "prefit": 0.960,
+    "prefit": 0.956,
     "cv_plus_median": 0.954,
     "jackknife_plus_ab": 0.952,
     "jackknife_minmax_ab": 0.968,
@@ -260,7 +261,7 @@ def test_predict_output_shape(
 
 
 @pytest.mark.parametrize("delta", [0.6, 0.8])
-@pytest.mark.parametrize("n_calib", [10 + i for i in range(11)] + [50, 100])
+@pytest.mark.parametrize("n_calib", [10 + i for i in range(13)] + [50, 100])
 def test_coverage_validity(delta: float, n_calib: int) -> None:
     """
     Test that the prefit method provides valid coverage
@@ -269,33 +270,34 @@ def test_coverage_validity(delta: float, n_calib: int) -> None:
     n_split, n_train, n_test = 100, 100, 1000
     n_all = n_train + n_calib + n_test
     X, y = make_regression(n_all, random_state=random_state)
-
-    X_train, X_cal_test, y_train, y_cal_test = \
-        train_test_split(X, y, train_size=n_train, random_state=random_state)
+    Xtr, Xct, ytr, yct = train_test_split(
+        X, y, train_size=n_train, random_state=random_state
+    )
 
     model = LinearRegression()
-    model.fit(X_train, y_train)
+    model.fit(Xtr, ytr)
 
     cov_list = []
     for _ in range(n_split):
         mapie_reg = MapieRegressor(estimator=model, method="base", cv="prefit")
-        X_cal, X_test, y_cal, y_test = \
-            train_test_split(X_cal_test, y_cal_test, test_size=n_test)
-        mapie_reg.fit(X_cal, y_cal)
-        _, y_pis = mapie_reg.predict(X_test, alpha=1-delta)
-        coverage = \
-            regression_coverage_score(y_test,  y_pis[:, 0, 0], y_pis[:, 1, 0])
+        Xc, Xt, yc, yt = train_test_split(Xct, yct, test_size=n_test)
+        mapie_reg.fit(Xc, yc)
+        _, y_pis = mapie_reg.predict(Xt, alpha=1-delta)
+        y_low, y_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
+        coverage = regression_coverage_score(yt, y_low, y_up)
         cov_list.append(coverage)
 
     # Here we are testing whether the average coverage is statistically
     # less than the target coverage.
-    from scipy.stats import ttest_1samp
     mean_low, mean_up = delta, delta + 1/(n_calib+1)
     _, pval_low = ttest_1samp(cov_list, popmean=mean_low, alternative='less')
     _, pval_up = ttest_1samp(cov_list, popmean=mean_up, alternative='greater')
 
-    np.testing.assert_array_less(0.01, pval_low)
-    np.testing.assert_array_less(0.01, pval_up)
+    # We perform a FWER controlling procedure (Bonferroni)
+    p_fwer = 0.01  # probability of making one or more false discoveries: 1%
+    p_bonf = p_fwer / 30  # because a total of 30 test_coverage_validity
+    np.testing.assert_array_less(p_bonf, pval_low)
+    np.testing.assert_array_less(p_bonf, pval_up)
 
 
 def test_same_results_prefit_split() -> None:
@@ -562,7 +564,7 @@ def test_results_prefit_naive() -> None:
 
 
 def test_results_prefit() -> None:
-    """Test prefit results on a standard train/validation/test split."""
+    """Test prefit results on a standard train/calibration split."""
     X_train, X_calib, y_train, y_calib = train_test_split(
         X, y, test_size=1/2, random_state=1
     )

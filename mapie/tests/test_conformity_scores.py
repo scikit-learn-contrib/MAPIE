@@ -1,5 +1,3 @@
-from typing import Any
-
 import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
@@ -385,7 +383,7 @@ def test_residual_normalised_prefit_get_estimation_distribution() -> None:
 @pytest.mark.parametrize("alpha", [[0.5], [0.5, 0.6]])
 def test_intervals_shape_with_every_score(
     score: ConformityScore,
-    alpha: Any
+    alpha: NDArray
 ) -> None:
     estim = LinearRegression().fit(X_toy, y_toy)
     mapie_reg = MapieRegressor(

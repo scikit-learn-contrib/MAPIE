@@ -247,15 +247,18 @@ class ConformityScore(metaclass=ABCMeta):
         n_ref = conformity_scores.shape[1-axis]
         n_calib = np.min(np.sum(~np.isnan(conformity_scores), axis=axis))
         signed = 1-2*reversed
+
+        # Adapt alpha w.r.t upper/lower : alpha vs. 1-alpha
         alpha_ref = (1-2*alpha_np)*reversed + alpha_np
 
+        # Adjust alpha w.r.t quantile correction
+        alpha_ref = np.ceil(alpha_ref*(n_calib+1))/n_calib
+
+        # Compute the target quantiles
         quantile = signed * np.column_stack([
             np_nanquantile(
-                signed * conformity_scores.astype(float),
-                np.ceil(_alpha*(n_calib+1))/n_calib,
-                axis=axis,
-                method="lower"
-            ) if 0 < np.ceil(_alpha*(n_calib+1))/n_calib < 1
+                signed * conformity_scores, _alpha, axis=axis, method="lower"
+            ) if 0 < _alpha < 1
             else np.inf * np.ones(n_ref)
             for _alpha in alpha_ref
         ])
