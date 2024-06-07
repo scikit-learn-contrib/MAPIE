@@ -2,9 +2,11 @@
 History
 =======
 
-0.8.3 (2024-**-**)
+0.8.4 (2024-**-**)
 ------------------
-* Fixed overloading of the value of the ‘method’ attribute when using MapieRegressor and MapieTimeSeriesRegressor
+
+* Fix the quantile formula to ensure valid coverage for any number of calibration data in `ConformityScore`.
+* Fix overloading of the value of the `method` attribute when using `MapieRegressor` and `MapieTimeSeriesRegressor`.
 * Fix conda versionning.
 * Reduce precision for test in `MapieCalibrator`.
 * Fix invalid certificate when downloading data.

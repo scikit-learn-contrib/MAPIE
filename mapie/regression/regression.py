@@ -629,7 +629,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             alpha_np = cast(NDArray, alpha)
             if not allow_infinite_bounds:
-                n = len(self.conformity_scores_)
+                n = np.sum(~np.isnan(self.conformity_scores_))
                 check_alpha_and_n_samples(alpha_np, n)
 
             y_pred, y_pred_low, y_pred_up = \
