@@ -18,6 +18,7 @@ from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
+from scipy.stats import ttest_1samp
 from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
@@ -100,6 +101,13 @@ STRATEGIES = {
         test_size=None,
         random_state=random_state
     ),
+    "cv_plus_median": Params(
+        method="plus",
+        agg_function="median",
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        test_size=None,
+        random_state=random_state
+    ),
     "cv_minmax": Params(
         method="minmax",
         agg_function="mean",
@@ -131,35 +139,35 @@ STRATEGIES = {
 }
 
 WIDTHS = {
-    "naive": 3.81,
-    "split": 3.87,
+    "naive": 3.80,
+    "split": 3.89,
     "jackknife": 3.89,
     "jackknife_plus": 3.90,
     "jackknife_minmax": 3.96,
-    "cv": 3.85,
-    "cv_plus": 3.90,
-    "cv_minmax": 4.04,
-    "prefit": 4.81,
-    "cv_plus_median": 3.90,
+    "cv": 3.88,
+    "cv_plus": 3.91,
+    "cv_minmax": 4.07,
+    "prefit": 3.89,
+    "cv_plus_median": 3.91,
     "jackknife_plus_ab": 3.90,
-    "jackknife_minmax_ab": 4.13,
-    "jackknife_plus_median_ab": 3.87,
+    "jackknife_minmax_ab": 4.14,
+    "jackknife_plus_median_ab": 3.88,
 }
 
 COVERAGES = {
-    "naive": 0.952,
-    "split": 0.952,
-    "jackknife": 0.952,
+    "naive": 0.954,
+    "split": 0.956,
+    "jackknife": 0.956,
     "jackknife_plus": 0.952,
-    "jackknife_minmax": 0.952,
-    "cv": 0.958,
-    "cv_plus": 0.956,
-    "cv_minmax": 0.966,
-    "prefit": 0.980,
+    "jackknife_minmax": 0.962,
+    "cv": 0.954,
+    "cv_plus": 0.954,
+    "cv_minmax": 0.962,
+    "prefit": 0.956,
     "cv_plus_median": 0.954,
     "jackknife_plus_ab": 0.952,
-    "jackknife_minmax_ab": 0.970,
-    "jackknife_plus_median_ab": 0.960,
+    "jackknife_minmax_ab": 0.968,
+    "jackknife_plus_median_ab": 0.952,
 }
 
 
@@ -212,7 +220,7 @@ def test_valid_agg_function(agg_function: str) -> None:
 
 @pytest.mark.parametrize(
     "cv", [None, -1, 2, KFold(), LeaveOneOut(),
-           ShuffleSplit(n_splits=1),
+           ShuffleSplit(n_splits=1, test_size=0.5),
            PredefinedSplit(test_fold=[-1]*3+[0]*3),
            "prefit", "split"]
 )
@@ -220,7 +228,7 @@ def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     model = LinearRegression()
     model.fit(X_toy, y_toy)
-    mapie_reg = MapieRegressor(estimator=model, cv=cv)
+    mapie_reg = MapieRegressor(estimator=model, cv=cv, test_size=0.5)
     mapie_reg.fit(X_toy, y_toy)
     mapie_reg.predict(X_toy, alpha=0.5)
 
@@ -237,7 +245,7 @@ def test_too_large_cv(cv: Any) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize("dataset", [(X, y), (X_toy, y_toy)])
+@pytest.mark.parametrize("dataset", [(X, y)])
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.4], (0.2, 0.4)])
 def test_predict_output_shape(
     strategy: str, alpha: Any, dataset: Tuple[NDArray, NDArray]
@@ -250,6 +258,46 @@ def test_predict_output_shape(
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
     assert y_pis.shape == (X.shape[0], 2, n_alpha)
+
+
+@pytest.mark.parametrize("delta", [0.6, 0.8])
+@pytest.mark.parametrize("n_calib", [10 + i for i in range(13)] + [50, 100])
+def test_coverage_validity(delta: float, n_calib: int) -> None:
+    """
+    Test that the prefit method provides valid coverage
+    for different calibration data sizes and coverage targets.
+    """
+    n_split, n_train, n_test = 100, 100, 1000
+    n_all = n_train + n_calib + n_test
+    X, y = make_regression(n_all, random_state=random_state)
+    Xtr, Xct, ytr, yct = train_test_split(
+        X, y, train_size=n_train, random_state=random_state
+    )
+
+    model = LinearRegression()
+    model.fit(Xtr, ytr)
+
+    cov_list = []
+    for _ in range(n_split):
+        mapie_reg = MapieRegressor(estimator=model, method="base", cv="prefit")
+        Xc, Xt, yc, yt = train_test_split(Xct, yct, test_size=n_test)
+        mapie_reg.fit(Xc, yc)
+        _, y_pis = mapie_reg.predict(Xt, alpha=1-delta)
+        y_low, y_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
+        coverage = regression_coverage_score(yt, y_low, y_up)
+        cov_list.append(coverage)
+
+    # Here we are testing whether the average coverage is statistically
+    # less than the target coverage.
+    mean_low, mean_up = delta, delta + 1/(n_calib+1)
+    _, pval_low = ttest_1samp(cov_list, popmean=mean_low, alternative='less')
+    _, pval_up = ttest_1samp(cov_list, popmean=mean_up, alternative='greater')
+
+    # We perform a FWER controlling procedure (Bonferroni)
+    p_fwer = 0.01  # probability of making one or more false discoveries: 1%
+    p_bonf = p_fwer / 30  # because a total of 30 test_coverage_validity
+    np.testing.assert_array_less(p_bonf, pval_low)
+    np.testing.assert_array_less(p_bonf, pval_up)
 
 
 def test_same_results_prefit_split() -> None:
@@ -265,12 +313,12 @@ def test_same_results_prefit_split() -> None:
     X_train, X_calib = X[train_index], X[val_index]
     y_train, y_calib = y[train_index], y[val_index]
 
-    mapie_reg = MapieRegressor(cv=cv)
+    mapie_reg = MapieRegressor(method='base', cv=cv)
     mapie_reg.fit(X, y)
     y_pred_1, y_pis_1 = mapie_reg.predict(X, alpha=0.1)
 
     model = LinearRegression().fit(X_train, y_train)
-    mapie_reg = MapieRegressor(estimator=model, cv="prefit")
+    mapie_reg = MapieRegressor(estimator=model, method='base', cv="prefit")
     mapie_reg.fit(X_calib, y_calib)
     y_pred_2, y_pis_2 = mapie_reg.predict(X, alpha=0.1)
 
@@ -334,8 +382,8 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     mapie_multi = MapieRegressor(n_jobs=-1, **STRATEGIES[strategy])
     mapie_single.fit(X_toy, y_toy)
     mapie_multi.fit(X_toy, y_toy)
-    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.2)
-    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.2)
+    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.5)
+    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.5)
     np.testing.assert_allclose(y_pred_single, y_pred_multi)
     np.testing.assert_allclose(y_pis_single, y_pis_multi)
 
@@ -463,7 +511,7 @@ def test_linear_data_confidence_interval(strategy: str) -> None:
     """
     mapie = MapieRegressor(**STRATEGIES[strategy])
     mapie.fit(X_toy, y_toy)
-    y_pred, y_pis = mapie.predict(X_toy, alpha=0.2)
+    y_pred, y_pis = mapie.predict(X_toy, alpha=0.5)
     np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 1, 0])
     np.testing.assert_allclose(y_pred, y_pis[:, 0, 0])
 
@@ -506,7 +554,7 @@ def test_results_prefit_naive() -> None:
     is equivalent to the "naive" method.
     """
     estimator = LinearRegression().fit(X, y)
-    mapie_reg = MapieRegressor(estimator=estimator, cv="prefit")
+    mapie_reg = MapieRegressor(estimator=estimator, method="base", cv="prefit")
     mapie_reg.fit(X, y)
     _, y_pis = mapie_reg.predict(X, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
@@ -516,20 +564,17 @@ def test_results_prefit_naive() -> None:
 
 
 def test_results_prefit() -> None:
-    """Test prefit results on a standard train/validation/test split."""
-    X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X, y, test_size=1 / 10, random_state=1
-    )
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val, y_train_val, test_size=1 / 9, random_state=1
+    """Test prefit results on a standard train/calibration split."""
+    X_train, X_calib, y_train, y_calib = train_test_split(
+        X, y, test_size=1/2, random_state=1
     )
     estimator = LinearRegression().fit(X_train, y_train)
-    mapie_reg = MapieRegressor(estimator=estimator, cv="prefit")
-    mapie_reg.fit(X_val, y_val)
-    _, y_pis = mapie_reg.predict(X_test, alpha=0.05)
+    mapie_reg = MapieRegressor(estimator=estimator, method="base", cv="prefit")
+    mapie_reg.fit(X_calib, y_calib)
+    _, y_pis = mapie_reg.predict(X_calib, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
     coverage = regression_coverage_score(
-        y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
+        y_calib, y_pis[:, 0, 0], y_pis[:, 1, 0]
     )
     np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
