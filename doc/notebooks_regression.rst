@@ -8,11 +8,11 @@ This section lists a series of Jupyter notebooks hosted on the MAPIE Github repo
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-2. Estimating the uncertainties in the exoplanet masses : `notebook <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/regression/exoplanets.ipynb>`_
------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+2. Estimating the uncertainties in the exoplanet masses : `exoplanet_notebook <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/regression/exoplanets.ipynb>`_
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-3. Estimating prediction intervals for time series forecast with EnbPI and ACI : `notebook <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/regression/ts-changepoint.ipynb>`_
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+3. Estimating prediction intervals for time series forecast with EnbPI and ACI : `ts_notebook <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/regression/ts-changepoint.ipynb>`_
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

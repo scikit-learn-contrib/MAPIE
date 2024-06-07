@@ -10,6 +10,7 @@ History
 * Reduce precision for test in `MapieCalibrator`.
 * Fix invalid certificate when downloading data.
 * Add citations utility to the documentation.
+* Add documentation for metrics.
 * Add explanation and example for symmetry argument in CQR.
 
 0.8.3 (2024-03-01)
