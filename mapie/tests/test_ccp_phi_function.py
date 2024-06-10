@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, List, Dict, Optional, Union
+from typing import Any, List, Dict
 
 import numpy as np
 import pytest
 from sklearn.utils.validation import check_is_fitted
 from sklearn.datasets import make_regression
 from mapie.phi_function import (CustomPhiFunction, GaussianPhiFunction,
-                                    PolynomialPhiFunction, PhiFunction)
+                                PolynomialPhiFunction, PhiFunction)
 
 random_state = 1
 np.random.seed(random_state)
@@ -27,6 +27,7 @@ PHI = [
     PolynomialPhiFunction([1, 2], "X", bias=True),
     PolynomialPhiFunction([1, 4, 5], "y_pred", bias=False),
     PolynomialPhiFunction([0, 1, 4, 5], "y_pred", bias=False),
+    PolynomialPhiFunction([0, 1, 3], "z", bias=False),
     GaussianPhiFunction(4),
     CustomPhiFunction([lambda X: X, PolynomialPhiFunction(2)]),
     CustomPhiFunction([lambda X: X, GaussianPhiFunction(2)]),
@@ -36,7 +37,7 @@ PHI = [
 ]
 
 # n_out without bias
-N_OUT = [1, 1, 10, 12, 11, 21, 21, 3, 4, 4, 31, 12, 30]
+N_OUT = [1, 1, 10, 12, 11, 21, 21, 3, 4, 5, 4, 31, 12, 30]
 
 GAUSS_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
     {

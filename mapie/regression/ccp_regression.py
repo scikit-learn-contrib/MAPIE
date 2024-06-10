@@ -135,11 +135,11 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
     >>> print(np.round(y_pred[:5], 2))
     [ 0.43  4.43  8.43 12.43 16.43]
     >>> print(np.round(y_pis[:5,:, 0], 2))
-    [[ 0.07  0.79]
-     [ 4.03  4.83]
+    [[ 0.02  0.83]
+     [ 4.01  4.85]
      [ 8.    8.86]
-     [11.98 12.89]
-     [15.97 16.9 ]]
+     [11.99 12.87]
+     [15.98 16.89]]
     """
 
     default_sym_ = True
@@ -273,7 +273,6 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         )
         self.alpha = self._check_alpha(self.alpha)
         self.phi_ = self._check_phi(self.phi)
-
 
     def _check_cv(
         self,
@@ -501,7 +500,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             (
                 X_calib, y_calib, sample_weight_calib
             ) = self._safe_sample(X, y, sample_weight, calib_index)
-            
+
             if z is not None:
                 (
                     z_calib, _, _
@@ -532,7 +531,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         else:
             q_low = self.alpha / 2
             q_up = 1 - self.alpha / 2
-        
+
         if self.random_state is None:
             warnings.warn("WARNING: The method implemented in "
                           "MapieCCPRegressor has a stochastic behavior. "

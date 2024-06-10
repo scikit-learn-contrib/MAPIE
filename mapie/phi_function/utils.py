@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod
 import inspect
 import numpy as np
 from typing import (Iterable, Callable, Optional, Tuple, Union,
-                    cast, Dict, List, Any)
+                    cast, Dict, List)
 from mapie._typing import ArrayLike, NDArray
 import warnings
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
-from sklearn.metrics import mean_pinball_loss
+
 
 def format_functions(
     functions: Optional[Union[Callable, Iterable[Callable]]],
@@ -62,9 +61,10 @@ def format_functions(
         functions.append(lambda X: np.ones((_num_samples(X), 1)))
     if (len(functions) == 0):
         raise ValueError("You need to define the `functions` argument "
-                            "with a function or a list of functions, "
-                            "or keep bias argument to True.")
+                         "with a function or a list of functions, "
+                         "or keep bias argument to True.")
     return functions
+
 
 def compile_functions_warnings_errors(
     functions: List[Callable]
@@ -90,7 +90,7 @@ def compile_functions_warnings_errors(
     arguments ('X', 'y_pred', 'z'). Unknown optional arguments are allowed,
     but will always use their default values.
     """
-    
+
     warn_ind: Dict[str, List[int]] = {}
     error_ind: Dict[str, List[int]] = {}
     for i, funct in enumerate(functions):
@@ -281,18 +281,20 @@ def compute_sigma(
     sigmas_
         2D NDArray of standard deviation values
     """
+    # If each point has a corresponding sigma value
     if isinstance(points, tuple):
         sigmas_ = np.array(points[1])
         if len(sigmas_.shape) == 1:
             sigmas_ = sigmas_.reshape(-1, 1)
+    # If sigma is not defined
     elif sigma is None:
         sigmas_ = np.ones((_num_samples(points_), 1))*np.std(
                 np.array(X), axis=0)/(_num_samples(points_)**0.5)
+    # If sigma is defined
     elif isinstance(points, int):
         sigmas_ = _init_sigmas(sigma, points)
-    elif len(np.array(points).shape) == 2:
+    else:
         sigmas_ = _init_sigmas(sigma, _num_samples(points))
-    
 
     if random_sigma:
         n = _num_samples(points_)
@@ -331,7 +333,7 @@ def _init_sigmas(
     else:
         if len(np.array(sigma).shape) != 1:
             raise ValueError("sigma argument should be a float "
-                                "or a 1D array of floats.")
+                             "or a 1D array of floats.")
         return np.ones((n_points, 1))*np.array(sigma)
 
 
@@ -366,8 +368,7 @@ def dynamic_arguments_call(f: Callable, params_mapping: Dict) -> NDArray:
 
 
 def concatenate_functions(
-    functions: List[Callable], params_mapping: Dict,
-    multipliers: List[Callable]
+    functions: List[Callable], params_mapping: Dict
 ) -> NDArray:
     """
     Call the function of ``functions``, with the
@@ -387,49 +388,9 @@ def concatenate_functions(
         Concatenated result
     """
     # Compute phi(X, y_pred, z)
-    result = np.hstack([
+    return np.hstack([
         dynamic_arguments_call(f, params_mapping) for f in functions
     ])
-    # Multiply the result by each multiplier function
-    for f in multipliers:
-        result *= dynamic_arguments_call(f, params_mapping)
-    return result
-
-
-
-def check_multiplier(
-    multipliers: List[Callable],
-    X: Optional[ArrayLike] = None,
-    y_pred: Optional[ArrayLike] = None,
-    z: Optional[ArrayLike] = None,
-) -> None:
-    """
-    Check is ``funct`` is a valid ``multiplier`` argument
-
-    Parameters
-    ----------
-    multipliers : List[Callable]
-        function which sould return an array of shape (n_samples, 1) or
-        (n_samples, )
-
-    X : ArrayLike
-            Observed samples
-
-    y_pred : ArrayLike
-        Target prediction
-
-    z : ArrayLike
-        Exogenous variable
-    """
-    if multipliers is None:
-        return
-    params_mapping = {"X": X, "y_pred": y_pred, "z": z}
-    for f in multipliers:
-        res = concatenate_functions([f], params_mapping)
-        if res.shape != (_num_samples(X), 1):
-            raise ValueError("The function used as multiplier should return an"
-                            "array of shape n_samples, 1) or (n_samples, ).\n"
-                            f"Got shape = {res.shape}.")
 
 
 def fast_mean_pinball_loss(
@@ -457,7 +418,7 @@ def fast_mean_pinball_loss(
 
     Returns
     -------
-    loss : float 
+    loss : float
         Weighted average of all output errors.
         The pinball loss output is a non-negative floating point. The best
         value is 0.0.

@@ -25,7 +25,7 @@ from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieCCPRegressor
 from mapie.phi_function import (PhiFunction, CustomPhiFunction,
-                                    GaussianPhiFunction, PolynomialPhiFunction)
+                                GaussianPhiFunction, PolynomialPhiFunction)
 
 random_state = 1
 np.random.seed(random_state)
@@ -473,7 +473,7 @@ def test_results_for_ordered_alpha(
     (X, y, z) = dataset
     if cv == "prefit":
         estimator.fit(X, y)
-    
+
     phi.fit(X)
 
     mapie_reg_1 = MapieCCPRegressor(estimator=estimator, phi=phi, cv=cv,

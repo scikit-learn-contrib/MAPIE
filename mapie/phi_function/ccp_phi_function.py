@@ -1,16 +1,13 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-import inspect
-from typing import (Iterable, Callable, Optional, Tuple, Union,
-                    cast, Dict, List, Any)
+from typing import Iterable, Callable, Optional, Tuple, Union, List
 import warnings
 
 import numpy as np
 from mapie._typing import ArrayLike, NDArray
 from .utils import (compile_functions_warnings_errors, format_functions,
-                    compute_sigma, sample_points, concatenate_functions,
-                    check_multiplier)
+                    compute_sigma, sample_points, concatenate_functions)
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 from sklearn.base import BaseEstimator, clone
@@ -96,7 +93,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         self.bias = bias
         self.normalized = normalized
         self.init_value = init_value
-    
+
     @abstractmethod
     def _check_fit_parameters(
         self,
@@ -152,7 +149,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
-    ) -> None:
+    ) -> PhiFunction:
         """
         Fit function : Set all the necessary attributes to be able to transform
         ``(X, y_pred, z)`` into the expected transformation.
@@ -181,6 +178,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
         self.init_value_ = self._check_init_value(self.init_value, self.n_out)
+        return self
 
     def transform(
         self,
@@ -211,8 +209,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         check_is_fitted(self, self.fit_attributes)
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
-        result = concatenate_functions(self.functions_, params_mapping,
-                                       self.multipliers_)
+        result = concatenate_functions(self.functions_, params_mapping)
         if self.normalized:
             norm = np.linalg.norm(result, axis=1).reshape(-1, 1)
             result[(abs(norm) == 0)[:, 0], :] = np.ones(result.shape[1])
@@ -311,7 +308,7 @@ class CustomPhiFunction(PhiFunction):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.regression.utils import CustomPhiFunction
+    >>> from mapie.phi_function import CustomPhiFunction
     >>> X = np.array([[1, 2], [3, 4], [5, 6]])
     >>> y_pred = np.array([0, 0, 1])
     >>> phi = CustomPhiFunction(
@@ -320,13 +317,13 @@ class CustomPhiFunction(PhiFunction):
     ...         lambda y_pred: y_pred,                     # y_pred
     ...     ],
     ...     normalized=False,
-    ... )
+    ... ).fit(X, y_pred)
     >>> print(phi.transform(X, y_pred))
-    [[1. 2. 0. 1.]
-     [3. 4. 0. 1.]
-     [0. 0. 1. 1.]]
+    [[1. 2. 0.]
+     [3. 4. 0.]
+     [0. 0. 1.]]
     >>> print(phi.n_out)
-    4
+    3
     """
     fit_attributes: List[str] = ["is_fitted_"]
 
@@ -337,10 +334,7 @@ class CustomPhiFunction(PhiFunction):
         normalized: bool = False,
         init_value: Optional[ArrayLike] = None,
     ) -> None:
-        self.functions = functions
-        self.bias = bias
-        self.normalized = normalized
-        self.init_value = init_value
+        super().__init__(functions, bias, normalized, init_value)
 
     def _check_fit_parameters(
         self,
@@ -379,7 +373,7 @@ class CustomPhiFunction(PhiFunction):
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
-    ) -> None:
+    ) -> CustomPhiFunction:
         """
         Fit function : Set all the necessary attributes to be able to transform
         ``(X, y_pred, z)`` into the expected transformation.
@@ -414,6 +408,7 @@ class CustomPhiFunction(PhiFunction):
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
         self.init_value_ = self._check_init_value(self.init_value, self.n_out)
+        return self
 
 
 class PolynomialPhiFunction(PhiFunction):
@@ -496,18 +491,18 @@ class PolynomialPhiFunction(PhiFunction):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.regression.utils import PolynomialPhiFunction
+    >>> from mapie.phi_function import PolynomialPhiFunction
     >>> X = np.array([[1, 2], [3, 4], [5, 6]])
     >>> y_pred = np.array([1, 2, 3])
-    >>> phi = PolynomialPhiFunction(3)
+    >>> phi = PolynomialPhiFunction(3).fit(X, y_pred)
     >>> print(phi.transform(X, y_pred))
     [[  1.   2.   1.   4.   1.   8.   1.]
      [  3.   4.   9.  16.  27.  64.   1.]
      [  5.   6.  25.  36. 125. 216.   1.]]
-    >>> print(phi.degrees)
+    >>> print(phi.exponents)
     [0, 1, 2, 3]
     >>> phi = PolynomialPhiFunction([1, 2, 5], "y_pred",
-    ...                             bias=False)
+    ...                             bias=False).fit(X, y_pred)
     >>> print(phi.transform(X, y_pred))
     [[  1.   1.   1.]
      [  2.   4.  32.]
@@ -542,14 +537,15 @@ class PolynomialPhiFunction(PhiFunction):
         degree: Union[int, List[int]]
             If ``degree``is an integer, it correspond to the degree of the
             polynomial features transformer. It will create the features
-            ``1``, ``variable``, ``variable``**2, ..., ``variable``**``degree``.
+            ``1``, ``variable``, ``variable``**2, ...,
+            ``variable``**``degree``.
 
-            If ``degree``is an iterable of integers, it will create the features
-            ``variable``**d, for all integer d in ``degree``
+            If ``degree``is an iterable of integers, it will create the
+            features ``variable``**d, for all integer d in ``degree``
 
             ``variable`` may be ``X``, ``y_pred`` or ``z``, depending on the
             ``variable``argument value.
-            
+
             If ``None``, it will default to ``degree=1``.
 
             By default ``None``.
@@ -559,9 +555,9 @@ class PolynomialPhiFunction(PhiFunction):
             (to garanty the marginal coverage, no matter how the other features
             the ``PhiFunction``object were built).
             If the ``PhiFunction``object definition covers all the dataset
-            (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
-            is never all zeros), this column of ones is not necessary
-            to obtain marginal coverage.
+            (meaning, for all calibration and test samples,
+            ``phi(X, y_pred, z)`` is never all zeros), this column of ones
+            is not necessary to obtain marginal coverage.
             In this case, you can set this argument to ``False``.
 
             Note: Even if it is not always necessary to guarantee the marginal
@@ -573,7 +569,7 @@ class PolynomialPhiFunction(PhiFunction):
             - List of exponents (the exponent ``0`` will be replaced by
             ``bias=True``, which is equivalent. It is useless to add as many
             columns of ones as dimensions of ``X``. Only one is enough.)
-            - new ``bias`` value. 
+            - new ``bias`` value.
         """
         if degree is None:
             exponents = [0, 1]
@@ -581,8 +577,8 @@ class PolynomialPhiFunction(PhiFunction):
             exponents = list(range(degree+1))
         else:
             exponents = degree
-        
-        return [d for d in exponents if d!= 0], (0 in exponents) or bias
+
+        return exponents, (0 in exponents) or bias
 
     def _create_functions(
         self, exponents: List[int], variable: str
@@ -600,14 +596,13 @@ class PolynomialPhiFunction(PhiFunction):
             Variable on which to apply the exponents.
         """
         if variable == "X":
-            return [lambda X, d=d: X**d for d in exponents]
+            return [lambda X, d=d: X**d for d in exponents if d != 0]
         elif variable == "y_pred":
-            return [lambda y_pred, d=d: y_pred**d for d in exponents]
+            return [lambda y_pred, d=d: y_pred**d for d in exponents if d != 0]
         elif variable == "z":
-            return [lambda z, d=d: z**d for d in exponents]
+            return [lambda z, d=d: z**d for d in exponents if d != 0]
         else:
             raise ValueError("variable must be 'X', 'y_pred' or 'z'")
-
 
     def _check_fit_parameters(
         self,
@@ -774,12 +769,11 @@ class GaussianPhiFunction(PhiFunction):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.regression.utils import GaussianPhiFunction
+    >>> from mapie.phi_function import GaussianPhiFunction
     >>> np.random.seed(1)
     >>> X = np.array([[1], [2], [3], [4], [5]])
     >>> phi = GaussianPhiFunction(2, bias=False,
-    ...                           normalized=False)
-    >>> phi.fit(X)
+    ...                           normalized=False).fit(X)
     >>> print(np.round(phi.transform(X), 2))
     [[0.14 0.61]
      [0.61 1.  ]
@@ -792,7 +786,7 @@ class GaussianPhiFunction(PhiFunction):
     >>> print(phi.sigmas_)
     [[1.]
      [1.]]
-    >>> phi = GaussianPhiFunction([[3],[4]], 0.5)
+    >>> phi = GaussianPhiFunction([[3],[4]], 0.5).fit(X)
     >>> print(np.round(phi.transform(X), 2))
     [[1.   0.  ]
      [1.   0.  ]
@@ -810,7 +804,7 @@ class GaussianPhiFunction(PhiFunction):
 
     def __init__(
         self,
-        points: Optional[Union[int, ArrayLike, 
+        points: Optional[Union[int, ArrayLike,
                                Tuple[ArrayLike, ArrayLike]]] = None,
         sigma: Optional[Union[float, ArrayLike]] = None,
         random_sigma: Optional[bool] = None,
