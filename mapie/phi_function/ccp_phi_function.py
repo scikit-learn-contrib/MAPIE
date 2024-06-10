@@ -7,7 +7,8 @@ import warnings
 import numpy as np
 from mapie._typing import ArrayLike, NDArray
 from .utils import (compile_functions_warnings_errors, format_functions,
-                    compute_sigma, sample_points, concatenate_functions)
+                    compute_sigma, sample_points, concatenate_functions,
+                    check_multiplier)
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 from sklearn.base import BaseEstimator, clone
@@ -88,11 +89,13 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         bias: bool = False,
         normalized: bool = False,
         init_value: Optional[ArrayLike] = None,
+        multipliers: Optional[List[Callable]] = None,
     ) -> None:
         self.functions = functions
         self.bias = bias
         self.normalized = normalized
         self.init_value = init_value
+        self.multipliers = multipliers
 
     @abstractmethod
     def _check_fit_parameters(
@@ -178,6 +181,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
         self.init_value_ = self._check_init_value(self.init_value, self.n_out)
+        check_multiplier(self.multipliers, X, y_pred, z)
         return self
 
     def transform(
@@ -209,7 +213,8 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         check_is_fitted(self, self.fit_attributes)
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
-        result = concatenate_functions(self.functions_, params_mapping)
+        result = concatenate_functions(self.functions_, params_mapping,
+                                       self.multipliers)
         if self.normalized:
             norm = np.linalg.norm(result, axis=1).reshape(-1, 1)
             result[(abs(norm) == 0)[:, 0], :] = np.ones(result.shape[1])
@@ -233,6 +238,38 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         z: Optional[ArrayLike] = None,
     ) -> NDArray:
         return self.transform(X, y_pred, z)
+
+    def __mul__(self, funct: Optional[Callable]):
+        """
+        Multiply a ``PhiFunction`` with another function.
+        This other function should return an array of shape (n_samples, 1)
+        or (n_samples, )
+
+        Parameters
+        ----------
+        funct : Optional[Callable]
+            function which should return an array of shape (n_samples, 1)
+        or (n_samples, )
+
+        Returns
+        -------
+        PhiFunction
+            self, with ``funct`` as a multiplier
+        """
+        if funct is None:
+            return funct
+        else:
+            compile_functions_warnings_errors([funct])
+            new_phi = clone(self)
+            if new_phi.multipliers is None:
+                new_phi.multipliers = [funct]
+            else:
+                new_phi.multipliers.append(funct)
+            return new_phi
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
 
 class CustomPhiFunction(PhiFunction):
     """
@@ -333,8 +370,9 @@ class CustomPhiFunction(PhiFunction):
         bias: bool = False,
         normalized: bool = False,
         init_value: Optional[ArrayLike] = None,
+        multipliers: Optional[List[Callable]] = None,
     ) -> None:
-        super().__init__(functions, bias, normalized, init_value)
+        super().__init__(functions, bias, normalized, init_value, multipliers)
 
     def _check_fit_parameters(
         self,
@@ -519,12 +557,14 @@ class PolynomialPhiFunction(PhiFunction):
         bias: bool = False,
         normalized: bool = False,
         init_value: Optional[ArrayLike] = None,
+        multipliers: Optional[List[Callable]] = None,
     ) -> None:
         self.degree = degree
         self.variable = variable
         self.bias = bias
         self.normalized = normalized
         self.init_value = init_value
+        self.multipliers = multipliers
 
     def _convert_degree(
         self, degree: Optional[Union[int, List[int]]], bias: bool
@@ -811,6 +851,7 @@ class GaussianPhiFunction(PhiFunction):
         bias: bool = False,
         normalized: bool = True,
         init_value: Optional[ArrayLike] = None,
+        multipliers: Optional[List[Callable]] = None,
     ) -> None:
         self.points = points
         self.sigma = sigma
@@ -818,6 +859,7 @@ class GaussianPhiFunction(PhiFunction):
         self.bias = bias
         self.normalized = normalized
         self.init_value = init_value
+        self.multipliers = multipliers
 
     def _check_random_sigma(self) -> bool:
         """

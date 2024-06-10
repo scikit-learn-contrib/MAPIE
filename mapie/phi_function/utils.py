@@ -368,7 +368,8 @@ def dynamic_arguments_call(f: Callable, params_mapping: Dict) -> NDArray:
 
 
 def concatenate_functions(
-    functions: List[Callable], params_mapping: Dict
+    functions: List[Callable], params_mapping: Dict,
+    multipliers: Optional[List[Callable]]
 ) -> NDArray:
     """
     Call the function of ``functions``, with the
@@ -388,9 +389,49 @@ def concatenate_functions(
         Concatenated result
     """
     # Compute phi(X, y_pred, z)
-    return np.hstack([
+    result = np.hstack([
         dynamic_arguments_call(f, params_mapping) for f in functions
     ])
+    # Multiply the result by each multiplier function
+    if multipliers is not None:
+        for f in multipliers:
+            result *= dynamic_arguments_call(f, params_mapping)
+    return result
+
+
+def check_multiplier(
+    multipliers: Optional[List[Callable]],
+    X: Optional[ArrayLike] = None,
+    y_pred: Optional[ArrayLike] = None,
+    z: Optional[ArrayLike] = None,
+) -> None:
+    """
+    Check is ``funct`` is a valid ``multiplier`` argument
+
+    Parameters
+    ----------
+    multipliers : List[Callable]
+        function which sould return an array of shape (n_samples, 1) or
+        (n_samples, )
+
+    X : ArrayLike
+            Observed samples
+
+    y_pred : ArrayLike
+        Target prediction
+
+    z : ArrayLike
+        Exogenous variable
+    """
+    if multipliers is None:
+        return
+    params_mapping = {"X": X, "y_pred": y_pred, "z": z}
+    for f in multipliers:
+        res = dynamic_arguments_call(f, params_mapping)
+        if res.shape != (_num_samples(X), 1):
+            raise ValueError("The function used as multiplier should return an"
+                             "array of shape n_samples, 1) or (n_samples, ).\n"
+                             f"Got shape = {res.shape}.")
 
 
 def fast_mean_pinball_loss(
