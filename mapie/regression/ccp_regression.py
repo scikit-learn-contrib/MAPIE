@@ -14,7 +14,7 @@ from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
-from .utils.ccp_phi_function import PhiFunction, GaussianPhiFunction
+from ..phi_function.utils import calibrator_optim_objective
 from mapie.utils import (check_conformity_score, check_estimator_regression,
                          check_lower_upper_bounds, check_null_weight,
                          fit_estimator)
@@ -119,6 +119,25 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
     ----------
     Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
     "Conformal Prediction With Conditional Guarantees", 2023
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.regression import MapieCCPRegressor
+    >>> np.random.seed(1)
+    >>> X_train = np.arange(0,100,2).reshape(-1, 1)
+    >>> y_train = 2*X_train[:,0] + np.random.rand(len(X_train))
+    >>> mapie_reg = MapieCCPRegressor(alpha=0.1, random_state=1)
+    >>> mapie_reg = mapie_reg.fit(X_train, y_train)
+    >>> y_pred, y_pis = mapie_reg.predict(X_train)
+    >>> print(np.round(y_pred[:5], 2))
+    [ 0.43  4.43  8.43 12.43 16.43]
+    >>> print(np.round(y_pis[:5,:, 0], 2))
+    [[ 0.07  0.79]
+     [ 4.03  4.83]
+     [ 8.    8.86]
+     [11.98 12.89]
+     [15.97 16.9 ]]
     """
 
     default_sym_ = True
@@ -529,21 +548,23 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
 
         optimal_beta_up = minimize(
-            objective, self.phi.init_value,
+            calibrator_optim_objective, self.phi_.init_value_,
             args=(
                 phi_x[not_nan_index, :],
                 calib_conformity_scores[not_nan_index],
-                1-q_up
+                q_up,
+                sample_weight_calib,
                 )
             )
 
         if not self.conformity_score_.sym:
             optimal_beta_low = minimize(
-                objective, self.phi.init_value,
+                calibrator_optim_objective, self.phi_.init_value_,
                 args=(
                     phi_x[not_nan_index, :],
                     calib_conformity_scores[not_nan_index],
-                    1-q_low
+                    q_low,
+                    sample_weight_calib,
                 )
             )
         else:

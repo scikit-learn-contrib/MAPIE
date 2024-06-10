@@ -4,11 +4,13 @@ from abc import ABCMeta, abstractmethod
 import inspect
 from typing import (Iterable, Callable, Optional, Tuple, Union,
                     cast, Dict, List, Any)
-import numbers
 import warnings
 
 import numpy as np
 from mapie._typing import ArrayLike, NDArray
+from .utils import (compile_functions_warnings_errors, format_functions,
+                    compute_sigma, sample_points, concatenate_functions,
+                    check_multiplier)
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 from sklearn.base import BaseEstimator, clone
@@ -16,7 +18,7 @@ from sklearn.base import BaseEstimator, clone
 
 class PhiFunction(BaseEstimator, metaclass=ABCMeta):
     """
-    Base class for the phi functions,
+    Base abstract class for the phi functions,
     used in the Gibbs et al. method to model the conformity scores.
 
     Parameters
@@ -36,7 +38,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
 
         By default ``None``.
 
-    marginal_guarantee: bool
+    bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
         the ``PhiFunction``object were built).
@@ -49,7 +51,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         Note: Even if it is not always necessary to guarantee the marginal
         coverage, it can't degrade the prediction intervals.
 
-        By default ``True``.
+        By default ``False``.
 
     normalized: bool
         Whether or not to normalized ``phi(X, y_pred, z)``. Normalization
@@ -62,14 +64,17 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
 
         By default ``False``
 
+    init_value: Optional[ArrayLike]
+        Optimization initialisation value.
+        If ``None``, is sampled from a normal distribution.
+
+        By default ``None``.
+
     Attributes
     ----------
     fit_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
-        ``transform``. Empty list will result in a ``PhiFunction`` class which
-        is always fittedd (doesn't need to be fitted). If ``None``, it will
-        check for a method ``__sklearn_is_fitted__()`` or arguments which ends
-        with ``'_'``, to check if it is fitted or not.
+        ``transform``.
 
     n_in: int
         Number of features of ``X``
@@ -79,7 +84,6 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
     """
 
     fit_attributes: List[str] = ["functions_"]
-    output_attributes = ["n_in", "n_out", "init_value"]
 
     def __init__(
         self,
@@ -118,6 +122,31 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
 
             By default ``None``
         """
+
+    def _check_init_value(
+        self, init_value: Optional[ArrayLike], n_out: int
+    ) -> ArrayLike:
+        """
+        Set the ``init_value_`` attribute depending on ``init_value`` argument.
+
+        Parameters
+        ----------
+        init_value : Optional[ArrayLike]
+            Optimization initialisation value, set at ``PhiFunction``
+            initialisation.
+        n_out : int
+            Number of dimensions of the ``PhiFunction`` transformation.
+
+        Returns
+        -------
+        ArrayLike
+            Optimization initialisation value
+        """
+        if init_value is None:
+            return np.random.normal(0, 1, n_out)
+        else:
+            return init_value
+
     def fit(
         self,
         X: ArrayLike,
@@ -158,35 +187,32 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         X: Optional[ArrayLike] = None,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
-        disable_marginal_guarantee: bool = False,
     ) -> NDArray:
+        """
+        Transform ``(X, y_pred, z)`` into an array of shape
+        ``(n_samples, n_out)``
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Observed samples
+
+        y_pred : ArrayLike
+            Target prediction
+
+        z : ArrayLike
+            Exogenous variable
+
+        Returns
+        -------
+        NDArray
+            Transformation
+        """
         check_is_fitted(self, self.fit_attributes)
-        self._check_transform_parameters()
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
-        res = []
-
-        funct_list = list(self.functions_)
-        if not disable_marginal_guarantee and self.marginal_guarantee:
-            funct_list.append(lambda X: np.ones((len(X), 1)))
-
-        for f in funct_list:
-            params = inspect.signature(f).parameters
-
-            used_params = {
-                p: params_mapping[p] for p in params
-                if p in params_mapping and params_mapping[p] is not None
-            }
-
-            if isinstance(f, PhiFunction) and not f.normalized:
-                used_params["disable_marginal_guarantee"] = True
-
-            res.append(np.array(f(**used_params), dtype=float))
-
-            if len(res[-1].shape) == 1:
-                res[-1] = np.expand_dims(res[-1], axis=1)
-
-        result = np.hstack(res)
+        result = concatenate_functions(self.functions_, params_mapping,
+                                       self.multipliers_)
         if self.normalized:
             norm = np.linalg.norm(result, axis=1).reshape(-1, 1)
             result[(abs(norm) == 0)[:, 0], :] = np.ones(result.shape[1])
