@@ -239,7 +239,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
     ) -> NDArray:
         return self.transform(X, y_pred, z)
 
-    def __mul__(self, funct: Optional[Callable]):
+    def __mul__(self, funct: Optional[Callable]) -> PhiFunction:
         """
         Multiply a ``PhiFunction`` with another function.
         This other function should return an array of shape (n_samples, 1)
@@ -257,7 +257,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
             self, with ``funct`` as a multiplier
         """
         if funct is None:
-            return funct
+            return self
         else:
             compile_functions_warnings_errors([funct])
             new_phi = clone(self)
@@ -267,7 +267,7 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
                 new_phi.multipliers.append(funct)
             return new_phi
 
-    def __rmul__(self, other):
+    def __rmul__(self, other) -> PhiFunction:
         return self.__mul__(other)
 
 
@@ -440,6 +440,7 @@ class CustomPhiFunction(PhiFunction):
         for phi in self.functions_:
             if isinstance(phi, PhiFunction):
                 phi.fit(X)
+                check_multiplier(phi.multipliers, X, y_pred, z)
         self.is_fitted_ = True
 
         result = self.transform(X, y_pred, z)

@@ -34,10 +34,15 @@ PHI = [
     CustomPhiFunction([
         lambda X: X, PolynomialPhiFunction([1, 2], bias=False)
     ]),
+    (lambda X: (X < 3))*CustomPhiFunction([lambda X: X]),
+    CustomPhiFunction([lambda X: X])*(lambda X: (X < 3)),
+    CustomPhiFunction([lambda X: X])*None,
+    CustomPhiFunction([lambda X: X])*(lambda X: (X < 3))*(
+        lambda X: (X > 0)[:, 0]),
 ]
 
 # n_out without bias
-N_OUT = [1, 1, 10, 12, 11, 21, 21, 3, 4, 5, 4, 31, 12, 30]
+N_OUT = [1, 1, 10, 12, 11, 21, 21, 3, 4, 5, 4, 31, 12, 30, 10, 10, 10, 10]
 
 GAUSS_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
     {
@@ -236,7 +241,6 @@ def test_invalid_gauss_sigma(sigma: Any) -> None:
     with pytest.raises(ValueError):
         phi = GaussianPhiFunction(3, sigma)
         phi.fit(X)
-        phi.transform(X)
 
 
 @pytest.mark.parametrize("ind", range(len(GAUSS_NEED_FIT_SETTINGS)))
