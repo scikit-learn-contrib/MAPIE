@@ -149,24 +149,23 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         self.phi = phi
         self.alpha = alpha
 
-    def _check_parameters(self) -> None:
+    def _check_parameters(self) -> RegressorMixin:
         """
         Check and replace default value of ``estimator`` and ``cv`` arguments.
         Copy the ``estimator`` in ``estimator_`` attribute if ``cv="prefit"``.
         """
         self.cv = self._check_cv(self.cv)
-        self.estimator = check_estimator_regression(self.estimator, self.cv)
+        estimator = check_estimator_regression(self.estimator, self.cv)
 
-        if self.cv == "prefit":
-            self.estimator_ = self.estimator
+        return estimator
 
-    def _check_fit_parameters(
+    def _safe_sample(
         self,
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike],
-        train_index: ArrayLike,
-    ) -> Tuple[NDArray, NDArray, Optional[NDArray]]:
+        index: ArrayLike,
+    ) -> Tuple[ArrayLike, ArrayLike, Optional[NDArray]]:
         """
         Perform several checks on class parameters.
 
@@ -181,7 +180,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         sample_weight: Optional[NDArray] of shape (n_samples,)
             Non-null sample weights.
 
-        train_index: ArrayLike
+        index: ArrayLike
             Indexes of the training set.
 
         Returns
@@ -191,12 +190,12 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             - NDArray of training target values
             - Optional[NDArray] of training sample_weight
         """
-        X_train = _safe_indexing(X, train_index)
-        y_train = _safe_indexing(y, train_index)
+        X_train = _safe_indexing(X, index)
+        y_train = _safe_indexing(y, index)
 
         if sample_weight is not None:
             sample_weight_train = _safe_indexing(
-                sample_weight, train_index)
+                sample_weight, index)
         else:
             sample_weight_train = None
 
@@ -205,22 +204,9 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         sample_weight_train, X_train, y_train = check_null_weight(
             sample_weight_train, X_train, y_train)
 
-        X_train = cast(NDArray, X_train)
-        y_train = cast(NDArray, y_train)
         sample_weight_train = cast(Optional[NDArray], sample_weight_train)
 
         return X_train, y_train, sample_weight_train
-
-    def _check_calibrate_parameters(self) -> None:
-        """
-        Check and replace default ``conformity_score``, ``alpha`` and
-        ``phi`` arguments.
-        """
-        self.conformity_score_ = check_conformity_score(
-            self.conformity_score, self.default_sym_
-        )
-        self.alpha = self._check_alpha(self.alpha)
-        self.phi = self._check_phi(self.phi)
 
     def _check_phi(
         self,
@@ -255,6 +241,18 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         else:
             raise ValueError("Invalid `phi` argument. It must be `None` or a "
                              "`PhiFunction` instance.")
+
+    def _check_calibrate_parameters(self) -> None:
+        """
+        Check and replace default ``conformity_score``, ``alpha`` and
+        ``phi`` arguments.
+        """
+        self.conformity_score_ = check_conformity_score(
+            self.conformity_score, self.default_sym_
+        )
+        self.alpha = self._check_alpha(self.alpha)
+        self.phi_ = self._check_phi(self.phi)
+
 
     def _check_cv(
         self,
@@ -390,7 +388,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         MapieCCPRegressor
             self
         """
-        self._check_parameters()
+        estimator = self._check_parameters()
 
         if self.cv != 'prefit':
             self.cv = cast(BaseCrossValidator, self.cv)
@@ -399,18 +397,21 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
             (
                 X_train, y_train, sample_weight_train
-            ) = self._check_fit_parameters(X, y, sample_weight, train_index)
+            ) = self._safe_sample(X, y, sample_weight, train_index)
 
             self.estimator_ = fit_estimator(
-                self.estimator, X_train, y_train,
+                estimator, X_train, y_train,
                 sample_weight=sample_weight_train, **fit_params
             )
+        else:
+            self.estimator_ = estimator
         return self
 
     def fit_calibrator(
         self,
         X: ArrayLike,
         y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
         alpha: Optional[float] = None,
@@ -426,6 +427,18 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         y: ArrayLike of shape (n_samples,)
             Training labels.
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for fitting the out-of-fold models.
+            If ``None``, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no residuals.
+            If weights are non-uniform, residuals are still uniformly weighted.
+            Note that the sample weight defined are only for the training, not
+            for the calibration procedure.
+
+            By default ``None``.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
@@ -459,22 +472,24 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         self._check_parameters()
         self._check_calibrate_parameters()
         check_is_fitted(self, self.fit_attributes)
-        self.phi = cast(PhiFunction, self.phi)
-
-        self.phi.fit(X)
 
         if self.cv != 'prefit':
             self.cv = cast(BaseCrossValidator, self.cv)
 
             _, calib_index = list(self.cv.split(X, y, groups))[0]
-            X_calib = _safe_indexing(X, calib_index)
-            y_calib = _safe_indexing(y, calib_index)
+            (
+                X_calib, y_calib, sample_weight_calib
+            ) = self._safe_sample(X, y, sample_weight, calib_index)
+            
             if z is not None:
-                z_calib = _safe_indexing(z, calib_index)
+                (
+                    z_calib, _, _
+                ) = self._safe_sample(z, y, sample_weight, calib_index)
             else:
                 z_calib = None
         else:
             X_calib, y_calib, z_calib = X, y, z
+            sample_weight_calib = cast(Optional[NDArray], sample_weight)
 
         if alpha is not None and self.alpha != alpha:
             self.alpha = self._check_alpha(alpha)
@@ -496,9 +511,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         else:
             q_low = self.alpha / 2
             q_up = 1 - self.alpha / 2
-
-        phi_x = self.phi.transform(X_calib, y_pred_calib, z_calib)
-
+        
         if self.random_state is None:
             warnings.warn("WARNING: The method implemented in "
                           "MapieCCPRegressor has a stochastic behavior. "
@@ -508,57 +521,9 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         else:
             np.random.seed(self.random_state)
 
-        def pinball_loss(alpha: float, q_pred: NDArray, q: NDArray) -> NDArray:
-            """
-            Apply the pinball loss between ``q_pred`` and ``q``
-            considering the target quantile ``1-alpha``.
+        self.phi_.fit(X, self.estimator_.predict(X), z)
 
-            Parameters
-            ----------
-            alpha : float
-                Between ``0.0`` and ``1.0``, represents the risk level of the
-                confidence interval.
-            q_pred : NDArray
-                Predicted quantile
-            q : NDArray
-                True quantile
-
-            Returns
-            -------
-            NDArray
-                Pinball loss between ``q_pred`` and ``q``
-            """
-            return np.where(q >= q_pred, (1 - alpha) * (q - q_pred),
-                            alpha * (q_pred - q))
-
-        def objective(
-            beta: NDArray,
-            phi_x: NDArray, conformity_scores: NDArray, alpha: float
-        ) -> float:
-            """
-            Objective funtcion to minimize to get the estimation of
-            the conformity scores ``1-alpha`` quantile, caracterized by
-            the scalar parameters in the ``beta`` vector.
-
-            Parameters
-            ----------
-            beta : NDArray
-                Parameters to optimize to minimize the objective function
-            phi_x : NDArray
-                Transformation of the data X using the ``PhiFunction``.
-            conformity_scores : NDArray
-                Conformity scores of X
-            alpha : float
-                Between ``0.0`` and ``1.0``, represents the risk level of the
-                confidence interval.
-
-            Returns
-            -------
-            float
-                Scalar value to minimize, being the sum of the pinball losses.
-            """
-            return np.sum(
-                pinball_loss(alpha, phi_x.dot(beta), conformity_scores))
+        phi_x = self.phi_.transform(X_calib, y_pred_calib, z_calib)
 
         not_nan_index = np.where(~np.isnan(calib_conformity_scores))[0]
         # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
@@ -673,7 +638,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             self
         """
         self.fit_estimator(X, y, sample_weight, groups, **fit_params)
-        self.fit_calibrator(X, y, groups, z, alpha)
+        self.fit_calibrator(X, y, sample_weight, groups, z, alpha)
         return self
 
     def predict(
@@ -710,9 +675,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         check_is_fitted(self, self.calib_attributes)
 
-        self.phi = cast(PhiFunction, self.phi)
-
-        phi_x = self.phi.transform(X, y_pred, z)
+        phi_x = self.phi_.transform(X, y_pred, z)
 
         signed = -1 if self.conformity_score_.sym else 1
 

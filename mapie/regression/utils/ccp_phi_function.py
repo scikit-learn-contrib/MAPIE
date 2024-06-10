@@ -11,58 +11,7 @@ import numpy as np
 from mapie._typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
-from sklearn.base import BaseEstimator
-
-
-def _is_fitted(
-    estimator: Any,
-    attributes: Optional[Union[List[str], str]] = None,
-    all_or_any: Callable = all,
-):
-    """Determine if an estimator is fitted
-
-    Parameters
-    ----------
-    estimator : estimator instance
-        Estimator instance for which the check is performed.
-
-    attributes : Optional[Union[List[str], str]]
-        Attribute name(s) given as string or a list/tuple of strings
-        Eg.: ``["coef_", "estimator_", ...], "coef_"``
-
-        If `None`, `estimator` is considered fitted if there exist an
-        attribute that ends with a underscore and does not start with double
-        underscore.
-
-        By default ``None``
-
-    all_or_any : Callable
-        Specify whether all or any of the given attributes must exist.
-
-        By default ``all``
-
-    Returns
-    -------
-    fitted : bool
-        Whether the estimator is fitted.
-    """
-    if attributes is not None:
-        if not isinstance(attributes, (list, tuple)):
-            attributes = [attributes]
-        return all_or_any([
-            hasattr(estimator, attr) and getattr(estimator, attr) is not None
-            for attr in attributes
-        ])
-
-    if hasattr(estimator, "__sklearn_is_fitted__"):
-        return estimator.__sklearn_is_fitted__()
-
-    fitted_attrs = [
-        v for v in vars(estimator)
-        if v.endswith("_") and not v.startswith("__")
-        and getattr(estimator, v) is not None
-    ]
-    return len(fitted_attrs) > 0
+from sklearn.base import BaseEstimator, clone
 
 
 class PhiFunction(BaseEstimator, metaclass=ABCMeta):
@@ -129,134 +78,80 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         Number of features of phi(``X``, ``y_pred``, ``z``)
     """
 
-    fit_attributes: Optional[List[str]] = []
+    fit_attributes: List[str] = ["functions_"]
     output_attributes = ["n_in", "n_out", "init_value"]
 
     def __init__(
         self,
         functions: Optional[Union[Callable, Iterable[Callable]]] = None,
-        marginal_guarantee: bool = True,
+        bias: bool = False,
         normalized: bool = False,
+        init_value: Optional[ArrayLike] = None,
     ) -> None:
         self.functions = functions
-        self.marginal_guarantee = marginal_guarantee
+        self.bias = bias
         self.normalized = normalized
-
-    def _check_transform_parameters(self) -> None:
-        """
-        Check that ``functions_`` are functions that take as input
-        allowed arguments
-        """
-        self.functions_ = self._check_functions()
-
-    def _check_functions(
-            self,
-    ) -> NDArray:
-        """
-        Validate functions for required and optional arguments.
-
-        Raises
-        ------
-        ValueError
-            If no functions are provided and `marginal_guarantee` is False.
-            If functions contain unknown required arguments.
-
-        Warns
-        -----
-        UserWarning
-            If functions contain unknown optional arguments.
-
-        Notes
-        -----
-        This method ensures that the provided functions only use recognized
-        arguments ('X', 'y_pred', 'z'). Unknown optional arguments are allowed,
-        but will always use their default values.
-        """
-        if self.functions is None:
-            self.functions = cast(NDArray, [])
-        elif isinstance(self.functions, Iterable):
-            self.functions = cast(NDArray, self.functions)
-        else:
-            self.functions = cast(NDArray, [self.functions])
-
-        if (len(self.functions) == 0) and not self.marginal_guarantee:
-            raise ValueError("You need to define the `functions` argument "
-                             "with a function or a list of functions, "
-                             "or keep marginal_guarantee argument to True.")
-
-        warn_ind: Dict[str, List[int]] = {}
-        error_ind: Dict[str, List[int]] = {}
-        for i, funct in enumerate(self.functions):
-            assert callable(funct)
-            params = inspect.signature(funct).parameters
-
-            for param, arg in params.items():
-                if (
-                    param not in ["X", "y_pred", "z"]
-                    and param != "disable_marginal_guarantee"
-                ):
-                    if arg.default is inspect.Parameter.empty:
-                        if param in error_ind:
-                            error_ind[param].append(i)
-                        else:
-                            error_ind[param] = [i]
-                    elif not isinstance(self, (PolynomialPhiFunction,
-                                               GaussianPhiFunction)):
-                        if param in warn_ind:
-                            warn_ind[param].append(i)
-                        else:
-                            warn_ind[param] = [i]
-
-        if len(warn_ind) > 0:
-            warn_msg = ""
-            for param, inds in warn_ind.items():
-                warn_msg += (
-                    f"The functions at index ({', '.join(map(str, inds))}) "
-                    + "of the 'functions' argument, has an unknown optional "
-                    + f"argument '{param}'.\n"
-                )
-            warnings.warn(
-                "WARNING: Unknown optional arguments.\n"
-                + warn_msg +
-                "The only recognized arguments are : 'X', 'y_pred' and 'z'. "
-                "The other optional arguments will act as parameters, "
-                "as it is always their default value which will be used."
-            )
-        if len(error_ind) > 0:
-            error_msg = ""
-            for param, inds in error_ind.items():
-                error_msg += (
-                    f"The functions at index ({', '.join(map(str, inds))}) "
-                    + "of the 'functions' argument, has an unknown required "
-                    + f"argument '{param}'.\n"
-                )
-            raise ValueError(
-                "Forbidden required argument.\n"
-                f"{error_msg}"
-                "The only allowed required argument are : 'X', "
-                "'y_pred' and 'z'.\n"
-                "Note: You can use optional arguments if you want "
-                "to. They will act as parameters, as it is always "
-                "their default value which will be used."
-            )
-        return cast(NDArray, self.functions)
-
+        self.init_value = init_value
+    
     @abstractmethod
+    def _check_fit_parameters(
+        self,
+        X: ArrayLike,
+        y_pred: Optional[ArrayLike] = None,
+        z: Optional[ArrayLike] = None,
+    ) -> None:
+        """
+        Check fit parameters
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Training data.
+
+        y: ArrayLike of shape (n_samples,)
+            Training labels.
+
+            By default ``None``
+
+        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
+            Exogenous variables
+
+            By default ``None``
+        """
     def fit(
         self,
         X: ArrayLike,
+        y_pred: Optional[ArrayLike] = None,
+        z: Optional[ArrayLike] = None,
     ) -> None:
         """
         Fit function : Set all the necessary attributes to be able to transform
         ``(X, y_pred, z)`` into the expected transformation.
 
-        It should set all the attributes of ``fit_attributes``
+        It should set all the attributes of ``fit_attributes``.
+        It should also set, once fitted, ``n_in``, ``n_out`` and
+        ``init_value``.
 
         Parameters
         ----------
-        X : Optional[ArrayLike]
-            Samples
+        X: ArrayLike of shape (n_samples, n_features)
+            Training data.
+
+        y: ArrayLike of shape (n_samples,)
+            Training labels.
+
+            By default ``None``
+
+        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
+            Exogenous variables
+
+            By default ``None``
         """
+        self._check_fit_parameters(X, y_pred, z)
+        result = self.transform(X, y_pred, z)
+        self.n_in = len(_safe_indexing(X, 0))
+        self.n_out = len(_safe_indexing(result, 0))
+        self.init_value_ = self._check_init_value(self.init_value, self.n_out)
 
     def transform(
         self,
@@ -299,17 +194,12 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
             norm[abs(norm) == 0] = 1
             result /= norm
 
-        if not _is_fitted(self, self.output_attributes):
-            self.n_in = len(_safe_indexing(X, 0))
-            self.n_out = len(_safe_indexing(result, 0))
-            self.init_value = np.random.normal(0, 1, self.n_out)
-
         if np.any(np.all(result == 0, axis=1)):
             warnings.warn("WARNING: At least one row of the transformation "
                           "phi(X, y_pred, z) is full of zeros. "
                           "It will result in a prediction interval of zero "
                           "width. Consider changing the PhiFunction "
-                          "definintion.\nFix: Use `marginal_guarantee=True` "
+                          "definintion.\nFix: Use `bias=True` "
                           "in the `PhiFunction` definition.")
         return result
 
@@ -318,10 +208,8 @@ class PhiFunction(BaseEstimator, metaclass=ABCMeta):
         X: Optional[ArrayLike] = None,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
-        disable_marginal_guarantee: bool = False,
     ) -> NDArray:
-        return self.transform(X, y_pred, z, disable_marginal_guarantee)
-
+        return self.transform(X, y_pred, z)
 
 class CustomPhiFunction(PhiFunction):
     """
@@ -350,7 +238,7 @@ class CustomPhiFunction(PhiFunction):
 
         By default ``None``.
 
-    marginal_guarantee: bool
+    bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
         the ``PhiFunction``object were built).
@@ -363,7 +251,7 @@ class CustomPhiFunction(PhiFunction):
         Note: Even if it is not always necessary to guarantee the marginal
         coverage, it can't degrade the prediction intervals.
 
-        By default ``True``.
+        By default ``False``.
 
     normalized: bool
         Whether or not to normalized the output result. Normalization
@@ -376,14 +264,17 @@ class CustomPhiFunction(PhiFunction):
 
         By default ``False``
 
+    init_value: Optional[ArrayLike]
+        Optimization initialisation value.
+        If ``None``, is sampled from a normal distribution.
+
+        By default ``None``.
+
     Attributes
     ----------
     fit_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
-        ``transform``. Empty list will result in a ``PhiFunction`` class which
-        is always fittedd (doesn't need to be fitted). If ``None``, it will
-        check for a method ``__sklearn_is_fitted__()`` or arguments which ends
-        with ``'_'``, to check if it is fitted or not.
+        ``transform``.
 
     n_in: int
         Number of features of ``X``
@@ -411,76 +302,92 @@ class CustomPhiFunction(PhiFunction):
     >>> print(phi.n_out)
     4
     """
-    fit_attributes: Optional[List[str]] = None
+    fit_attributes: List[str] = ["is_fitted_"]
 
     def __init__(
         self,
         functions: Optional[Union[Callable, Iterable[Callable]]] = None,
-        marginal_guarantee: bool = True,
+        bias: bool = False,
         normalized: bool = False,
+        init_value: Optional[ArrayLike] = None,
     ) -> None:
         self.functions = functions
-        self.marginal_guarantee = marginal_guarantee
+        self.bias = bias
         self.normalized = normalized
+        self.init_value = init_value
 
-        self.functions_ = self._check_functions()
-
-    def __sklearn_is_fitted__(self) -> bool:
+    def _check_fit_parameters(
+        self,
+        X: ArrayLike,
+        y_pred: Optional[ArrayLike] = None,
+        z: Optional[ArrayLike] = None,
+    ) -> None:
         """
-        Check if all the concatenated ``PhiFunction`` instances are fitted
+        Fit function : Set all the necessary attributes to be able to transform
+        ``(X, y_pred, z)`` into the expected transformation.
 
-        Returns
-        -------
-        bool
-            Whether the ``ConcatenatePhiFunction`` is fitted
+        It should set all the attributes of ``fit_attributes``.
+        It should also set, once fitted, ``n_in``, ``n_out`` and
+        ``init_value``.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Training data.
+
+        y: ArrayLike of shape (n_samples,)
+            Training labels.
+
+            By default ``None``
+
+        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
+            Exogenous variables
+
+            By default ``None``
         """
-        for phi in self.functions_:
-            if isinstance(phi, PhiFunction):
-                if not _is_fitted(phi, phi.fit_attributes):
-                    return False
-        return True
+        self.functions_ = format_functions(self.functions, self.bias)
+        compile_functions_warnings_errors(self.functions_)
 
     def fit(
         self,
         X: ArrayLike,
+        y_pred: Optional[ArrayLike] = None,
+        z: Optional[ArrayLike] = None,
     ) -> None:
         """
-        Call the fit method of all ``PhiFunction`` in the list of ``functions``
+        Fit function : Set all the necessary attributes to be able to transform
+        ``(X, y_pred, z)`` into the expected transformation.
+
+        It should set all the attributes of ``fit_attributes``.
+        It should also set, once fitted, ``n_in``, ``n_out`` and
+        ``init_value``.
 
         Parameters
         ----------
-        X : Optional[ArrayLike]
-            Samples
-        """
-        if not _is_fitted(self, self.fit_attributes):
-            for phi in self.functions_:
-                if isinstance(phi, PhiFunction):
-                    phi.fit(X)
+        X: ArrayLike of shape (n_samples, n_features)
+            Training data.
 
-    def _check_marginal_guarantee(self) -> bool:
-        """
-        Check marginal guarantee
+        y: ArrayLike of shape (n_samples,)
+            Training labels.
 
-        Returns
-        -------
-        bool
-            marginal_guarantee value, overwritten to ``True`` if one of the
-            ``functions`` value is a ``PhiFunction`` instance with
-            ``marginal_guarantee=True``.
+            By default ``None``
+
+        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
+            Exogenous variables
+
+            By default ``None``
         """
+        self._check_fit_parameters(X, y_pred, z)
+
         for phi in self.functions_:
             if isinstance(phi, PhiFunction):
-                if phi.marginal_guarantee and not phi.normalized:
-                    return True
-        return self.marginal_guarantee
+                phi.fit(X)
+        self.is_fitted_ = True
 
-    def _check_transform_parameters(self) -> None:
-        """
-        Check that ``functions_`` are functions that take as input
-        allowed arguments
-        """
-        self.functions_ = self._check_functions()
-        self.marginal_guarantee = self._check_marginal_guarantee()
+        result = self.transform(X, y_pred, z)
+        self.n_in = len(_safe_indexing(X, 0))
+        self.n_out = len(_safe_indexing(result, 0))
+        self.init_value_ = self._check_init_value(self.init_value, self.n_out)
 
 
 class PolynomialPhiFunction(PhiFunction):
@@ -503,7 +410,9 @@ class PolynomialPhiFunction(PhiFunction):
         ``variable`` may be ``X``, ``y_pred`` or ``z``, depending on the
         ``variable``argument value.
 
-        By default ``1``.
+        If ``None``, it will default to ``degree=1``.
+
+        By default ``None``.
 
     variable: Literal["X", "y_pred", "z"]
         String, used to choose which argument between ``X``, ``y_pred`` and
@@ -511,7 +420,7 @@ class PolynomialPhiFunction(PhiFunction):
 
         By default ``"X"``
 
-    marginal_guarantee: bool
+    bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
         the ``PhiFunction``object were built).
@@ -524,7 +433,7 @@ class PolynomialPhiFunction(PhiFunction):
         Note: Even if it is not always necessary to guarantee the marginal
         coverage, it can't degrade the prediction intervals.
 
-        By default ``True``.
+        By default ``False``.
 
     normalized: bool
         Whether or not to normalized ``phi(X, y_pred, z)``. Normalization
@@ -537,14 +446,17 @@ class PolynomialPhiFunction(PhiFunction):
 
         By default ``False``
 
+    init_value: Optional[ArrayLike]
+        Optimization initialisation value.
+        If ``None``, is sampled from a normal distribution.
+
+        By default ``None``.
+
     Attributes
     ----------
     fit_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
-        ``transform``. Empty list will result in a ``PhiFunction`` class which
-        is always fittedd (doesn't need to be fitted). If ``None``, it will
-        check for a method ``__sklearn_is_fitted__()`` or arguments which ends
-        with ``'_'``, to check if it is fitted or not.
+        ``transform``.
 
     n_in: int
         Number of features of ``X``
@@ -552,8 +464,8 @@ class PolynomialPhiFunction(PhiFunction):
     n_out: int
         Number of features of phi(``X``, ``y_pred``, ``z``)
 
-    degrees: List[int]
-        List of degrees of the built polynomial features
+    exponents: List[int]
+        List of exponents of the built polynomial features
 
     Examples
     --------
@@ -569,7 +481,7 @@ class PolynomialPhiFunction(PhiFunction):
     >>> print(phi.degrees)
     [0, 1, 2, 3]
     >>> phi = PolynomialPhiFunction([1, 2, 5], "y_pred",
-    ...                             marginal_guarantee=False)
+    ...                             bias=False)
     >>> print(phi.transform(X, y_pred))
     [[  1.   1.   1.]
      [  2.   4.  32.]
@@ -577,51 +489,133 @@ class PolynomialPhiFunction(PhiFunction):
     >>> print(phi.degree)
     [1, 2, 5]
     """
-    fit_attributes: Optional[List[str]] = []
+    fit_attributes: List[str] = []
 
     def __init__(
         self,
-        degree: Union[int, List[int]] = 1,
+        degree: Optional[Union[int, List[int]]] = None,
         variable: str = "X",
-        marginal_guarantee: bool = True,
+        bias: bool = False,
         normalized: bool = False,
+        init_value: Optional[ArrayLike] = None,
     ) -> None:
         self.degree = degree
         self.variable = variable
+        self.bias = bias
+        self.normalized = normalized
+        self.init_value = init_value
 
-        if isinstance(degree, int):
-            self.degrees = list(range(degree+1))
-        else:
-            self.degrees = degree
-
-        functions: List[Callable] = []
-        if 0 in self.degrees and not marginal_guarantee:
-            functions.append(lambda X: np.ones((len(X), 1)))
-        if variable == "X":
-            functions += [lambda X, d=d: X**d for d in self.degrees if d != 0]
-        elif variable == "y_pred":
-            functions += [lambda y_pred, d=d: y_pred**d
-                          for d in self.degrees if d != 0]
-        elif variable == "z":
-            functions += [lambda z, d=d: z**d for d in self.degrees if d != 0]
-        else:
-            raise ValueError("variable must be 'X', 'y_pred' or 'z'")
-
-        super().__init__(functions, marginal_guarantee, normalized)
-
-    def fit(
-        self,
-        X: ArrayLike,
-    ) -> None:
+    def _convert_degree(
+        self, degree: Optional[Union[int, List[int]]], bias: bool
+    ) -> Tuple[List[int], bool]:
         """
-        ``PolynomialPhiFunction`` don't need to be fitted.
+        Convert ``degree`` argument into a list of exponents
 
         Parameters
         ----------
-        X : Optional[ArrayLike]
-            Samples
+        degree: Union[int, List[int]]
+            If ``degree``is an integer, it correspond to the degree of the
+            polynomial features transformer. It will create the features
+            ``1``, ``variable``, ``variable``**2, ..., ``variable``**``degree``.
+
+            If ``degree``is an iterable of integers, it will create the features
+            ``variable``**d, for all integer d in ``degree``
+
+            ``variable`` may be ``X``, ``y_pred`` or ``z``, depending on the
+            ``variable``argument value.
+            
+            If ``None``, it will default to ``degree=1``.
+
+            By default ``None``.
+
+        bias: bool
+            Add a column of ones to the features, for safety reason
+            (to garanty the marginal coverage, no matter how the other features
+            the ``PhiFunction``object were built).
+            If the ``PhiFunction``object definition covers all the dataset
+            (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
+            is never all zeros), this column of ones is not necessary
+            to obtain marginal coverage.
+            In this case, you can set this argument to ``False``.
+
+            Note: Even if it is not always necessary to guarantee the marginal
+            coverage, it can't degrade the prediction intervals.
+
+        Returns
+        -------
+        Tuple[List[int], bool]
+            - List of exponents (the exponent ``0`` will be replaced by
+            ``bias=True``, which is equivalent. It is useless to add as many
+            columns of ones as dimensions of ``X``. Only one is enough.)
+            - new ``bias`` value. 
         """
-        return
+        if degree is None:
+            exponents = [0, 1]
+        elif isinstance(degree, int):
+            exponents = list(range(degree+1))
+        else:
+            exponents = degree
+        
+        return [d for d in exponents if d!= 0], (0 in exponents) or bias
+
+    def _create_functions(
+        self, exponents: List[int], variable: str
+    ) -> List[Callable]:
+        """
+        Create the list of lambda functions, based on the list ``exponents``
+        and the ``variable`` value.
+
+        Parameters
+        ----------
+        exponents: List[int]
+            List of exponents to apply on the ``variable```
+
+        variable: Literal["X", "y_pred", "z"]
+            Variable on which to apply the exponents.
+        """
+        if variable == "X":
+            return [lambda X, d=d: X**d for d in exponents]
+        elif variable == "y_pred":
+            return [lambda y_pred, d=d: y_pred**d for d in exponents]
+        elif variable == "z":
+            return [lambda z, d=d: z**d for d in exponents]
+        else:
+            raise ValueError("variable must be 'X', 'y_pred' or 'z'")
+
+
+    def _check_fit_parameters(
+        self,
+        X: ArrayLike,
+        y_pred: Optional[ArrayLike] = None,
+        z: Optional[ArrayLike] = None,
+    ) -> None:
+        """
+        Fit function : Set all the necessary attributes to be able to transform
+        ``(X, y_pred, z)`` into the expected transformation.
+
+        It should set all the attributes of ``fit_attributes``.
+        It should also set, once fitted, ``n_in``, ``n_out`` and
+        ``init_value``.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Training data.
+
+        y: ArrayLike of shape (n_samples,)
+            Training labels.
+
+            By default ``None``
+
+        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
+            Exogenous variables
+
+            By default ``None``
+        """
+        self.exponents, self.bias = self._convert_degree(
+            self.degree, self.bias)
+        functions = self._create_functions(self.exponents, self.variable)
+        self.functions_ = format_functions(functions, self.bias)
 
 
 class GaussianPhiFunction(PhiFunction):
@@ -651,7 +645,9 @@ class GaussianPhiFunction(PhiFunction):
         In this case, the ``sigma``, ``random_sigma`` and ``X`` argument are
         ignored.
 
-        By default, ``10``
+        If ``None``, default to ``20``.
+
+        By default, ``None``
 
     sigma : Optional[Union[float, ArrayLike]]
         Standard deviation value used to compute the guassian distances,
@@ -692,12 +688,11 @@ class GaussianPhiFunction(PhiFunction):
         You can use fully custom sigma values, buy passing to the
         ``points`` argument, a different sigma value for each point.
 
-        If ``None``, it is enabled if ``sigma`` is not defined (``None``, and
-        ``points`` is not a Tuple of (points, sigmas)), disabled otherwise.
+        If ``None``, default to ``False``.
 
         By default, ``None``
 
-    marginal_guarantee: bool
+    bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
         the ``PhiFunction``object were built).
@@ -709,7 +704,7 @@ class GaussianPhiFunction(PhiFunction):
 
         Note: In this case, with ``GaussianPhiFunction``, if ``normalized`` is
         ``True`` (it is, by default), the ``phi(X, y_pred, z)`` will never
-        be all zeros, so this ``marginal_guarantee`` is not required
+        be all zeros, so this ``bias`` is not required
         sto have coverage guarantee.
 
         By default ``False``.
@@ -725,14 +720,17 @@ class GaussianPhiFunction(PhiFunction):
 
         By default ``True``
 
+    init_value: Optional[ArrayLike]
+        Optimization initialisation value.
+        If ``None``, is sampled from a normal distribution.
+
+        By default ``None``.
+
     Attributes
     ----------
     fit_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
-        ``transform``. Empty list will result in a ``PhiFunction`` class which
-        is always fittedd (doesn't need to be fitted). If ``None``, it will
-        check for a method ``__sklearn_is_fitted__()`` or arguments which ends
-        with ``'_'``, to check if it is fitted or not.
+        ``transform``.
 
     n_in: int
         Number of features of ``X``
@@ -753,7 +751,7 @@ class GaussianPhiFunction(PhiFunction):
     >>> from mapie.regression.utils import GaussianPhiFunction
     >>> np.random.seed(1)
     >>> X = np.array([[1], [2], [3], [4], [5]])
-    >>> phi = GaussianPhiFunction(2, marginal_guarantee=False,
+    >>> phi = GaussianPhiFunction(2, bias=False,
     ...                           normalized=False)
     >>> phi.fit(X)
     >>> print(np.round(phi.transform(X), 2))
@@ -782,129 +780,38 @@ class GaussianPhiFunction(PhiFunction):
     [[0.5]
      [0.5]]
     """
-    fit_attributes: Optional[List[str]] = ["points_", "sigmas_"]
+    fit_attributes: List[str] = ["points_", "sigmas_", "functions_"]
 
     def __init__(
         self,
-        points: Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]] = 20,
+        points: Optional[Union[int, ArrayLike, 
+                               Tuple[ArrayLike, ArrayLike]]] = None,
         sigma: Optional[Union[float, ArrayLike]] = None,
         random_sigma: Optional[bool] = None,
-        marginal_guarantee: bool = False,
+        bias: bool = False,
         normalized: bool = True,
+        init_value: Optional[ArrayLike] = None,
     ) -> None:
         self.points = points
         self.sigma = sigma
         self.random_sigma = random_sigma
-
-        self.points_: Optional[NDArray]
-        self.sigmas_: Optional[NDArray]
-
-        if isinstance(points, int):
-            self._init_sigmas(sigma, points)
-
-        elif isinstance(points, tuple):
-            self.points_ = np.array(points[0])
-            self.sigmas_ = np.array(points[1])
-            if len(self.sigmas_.shape) == 1:
-                self.sigmas_ = self.sigmas_.reshape(-1, 1)
-
-        elif len(np.array(points).shape) == 2:
-            self._init_sigmas(sigma, _num_samples(points))
-            self.points_ = cast(NDArray, np.array(points))
-
-        else:
-            raise ValueError("Invalid `points` argument. The points argument"
-                             "should be an integer, "
-                             "a 2D array or a tuple of two 2D arrays.")
-
-        if _is_fitted(self, self.fit_attributes):
-            self.sigmas_ = cast(NDArray, self.sigmas_)
-            self.points_ = cast(NDArray, self.points_)
-            self._check_parameters(self.points_, self.sigmas_)
-            if self.random_sigma:
-                n = _num_samples(self.points_)
-                self.sigmas_ = self.sigmas_ * (
-                    2**np.random.normal(0, 1*2**(-2+np.log10(n)), n)
-                    .reshape(-1, 1)
-                )
-
-            functions = [
-                lambda X, mu=_safe_indexing(self.points_, i),
-                sigma=_safe_indexing(self.sigmas_, i):
-                np.exp(-0.5 * np.sum(((X - mu) / sigma) ** 2, axis=1))
-                for i in range(_num_samples(self.points_))
-            ]
-        else:
-            functions = []
-        super().__init__(functions, marginal_guarantee, normalized)
-
-    def _check_transform_parameters(self) -> None:
-        """
-        Check that ``functions_`` are functions that take as input
-        allowed arguments
-        """
-        self.sigmas_ = cast(NDArray, self.sigmas_)
-        self.points_ = cast(NDArray, self.points_)
-
-        self._check_parameters(self.points_, self.sigmas_)
-        self.functions_ = self._check_functions()
-
-    def _check_parameters(self, points: ArrayLike, sigmas: ArrayLike) -> None:
-        """
-        Check that ``points`` and ``sigmas`` have compatible shapes
-
-        Parameters
-        ----------
-        points : ArrayLike
-            2D array of shape (n_points, n_in)
-        sigmas : ArrayLike
-            2D array of shape (n_points, 1) or (n_points, n_in)
-        """
-        self._check_points_sigma(points, sigmas)
-        self.random_sigma = self._check_random_sigma()
+        self.bias = bias
+        self.normalized = normalized
+        self.init_value = init_value
 
     def _check_random_sigma(self) -> bool:
-        if self.random_sigma is None and self.sigma is None:
-            if isinstance(self.points, tuple):
-                return False
-            else:
-                return True
+        """
+        Check ``random_sigma``
+
+        Returns
+        -------
+        bool
+            checked ``random_sigma``
+        """
         if self.random_sigma is None:
             return False
         else:
             return self.random_sigma
-
-    def _init_sigmas(
-        self,
-        sigma: Optional[Union[float, ArrayLike]],
-        n_points: int,
-    ) -> None:
-        """
-        If ``sigma`` is not ``None``, take a sigma value, and set ``sigmas_``
-        to a standard deviation 2D array of shape (n_points, n_sigma),
-        n_sigma being 1 or the number of dimensions of X.
-
-        Parameters
-        ----------
-        sigma : Optional[Union[float, ArrayLike]]
-            standard deviation, as float or 1D array of length n_in
-            (number of dimensins of the dataset)
-
-        n_points : int
-            Number of points user for gaussian distances calculation
-
-        Raises
-        ------
-        ValueError
-            If ``sigma`` is not None, a float or a 1D array
-        """
-        if isinstance(sigma, numbers.Number):
-            self.sigmas_ = np.ones((n_points, 1))*sigma
-        elif sigma is not None:
-            if len(np.array(sigma).shape) != 1:
-                raise ValueError("sigma argument should be a float "
-                                 "or a 1D array of floats.")
-            self.sigmas_ = np.ones((n_points, 1))*np.array(sigma)
 
     def _check_points_sigma(
         self, points: ArrayLike, sigmas: ArrayLike
@@ -936,39 +843,45 @@ class GaussianPhiFunction(PhiFunction):
                              f"Got sigma of shape: ({_num_samples(sigmas)}, "
                              f"{len(_safe_indexing(points, 0))}).")
 
-    def fit(
+    def _check_fit_parameters(
         self,
         X: ArrayLike,
+        y_pred: Optional[ArrayLike] = None,
+        z: Optional[ArrayLike] = None,
     ) -> None:
         """
-        ``GaussianPhiFunction`` fit method is used to sample points and compute
-        the standard deviation values if needed.
+        Fit function : Set all the necessary attributes to be able to transform
+        ``(X, y_pred, z)`` into the expected transformation.
+
+        It should set all the attributes of ``fit_attributes``.
+        It should also set, once fitted, ``n_in``, ``n_out`` and
+        ``init_value``.
 
         Parameters
         ----------
-        X : Optional[ArrayLike]
-            Samples
+        X: ArrayLike of shape (n_samples, n_features)
+            Training data.
+
+        y: ArrayLike of shape (n_samples,)
+            Training labels.
+
+            By default ``None``
+
+        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
+            Exogenous variables
+
+            By default ``None``
         """
-        if not _is_fitted(self, self.fit_attributes):
-            if isinstance(self.points, int):
-                points_index = np.random.choice(
-                    _num_samples(X), size=self.points, replace=False
-                )
-                self.points_ = cast(NDArray, _safe_indexing(X, points_index))
-            if self.sigma is None:
-                self.sigmas_ = np.ones((_num_samples(self.points_), 1))*np.std(
-                    np.array(X), axis=0)/(_num_samples(self.points_)**0.5)
+        self.random_sigma = self._check_random_sigma()
+        self.points_ = sample_points(X, self.points)
+        self.sigmas_ = compute_sigma(X, self.points, self.points_,
+                                     self.sigma, self.random_sigma)
+        self._check_points_sigma(self.points_, self.sigmas_)
 
-            if self.random_sigma:
-                n = _num_samples(self.points_)
-                self.sigmas_ *= (
-                    2**np.random.normal(0, 1*2**(-2+np.log10(n)), n)
-                    .reshape(-1, 1)
-                )
-
-            self.functions = [
-                    lambda X, mu=_safe_indexing(self.points_, i),
-                    sigma=_safe_indexing(self.sigmas_, i):
-                    np.exp(-0.5 * np.sum(((X - mu) / sigma) ** 2, axis=1))
-                    for i in range(_num_samples(self.points_))
-            ]
+        functions = [
+            lambda X, mu=_safe_indexing(self.points_, i),
+            sigma=_safe_indexing(self.sigmas_, i):
+            np.exp(-0.5 * np.sum(((X - mu) / sigma) ** 2, axis=1))
+            for i in range(_num_samples(self.points_))
+        ]
+        self.functions_ = format_functions(functions, self.bias)
