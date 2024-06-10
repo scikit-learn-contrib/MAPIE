@@ -34,7 +34,7 @@ import numpy as np
 import pandas as pd
 from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.regression import MapieCCPRegressor, MapieRegressor
-from mapie.regression.utils import CustomPhiFunction, GaussianPhiFunction
+from mapie.phi_function import CustomPhiFunction, GaussianPhiFunction
 from scipy.stats import norm
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
@@ -215,7 +215,7 @@ def plot_results(X_test, y_test, n_trials=10,
                 np.array(eval_locs+other_locs).reshape(-1, 1),
                 [eval_scale]*len(eval_locs) + [other_scale]*len(other_locs),
             ),
-            marginal_guarantee=True,
+            bias=True,
             normalized=False,
         )
         mapie_ccp = MapieCCPRegressor(

@@ -6,9 +6,8 @@ import numpy as np
 import pytest
 from sklearn.utils.validation import check_is_fitted
 from sklearn.datasets import make_regression
-from mapie.regression.utils import (CustomPhiFunction, GaussianPhiFunction,
+from mapie.phi_function import (CustomPhiFunction, GaussianPhiFunction,
                                     PolynomialPhiFunction, PhiFunction)
-from ..regression.utils.ccp_phi_function import _is_fitted
 
 random_state = 1
 np.random.seed(random_state)
@@ -20,23 +19,24 @@ z = X[:, -2:]
 
 PHI = [
     CustomPhiFunction([lambda X: np.ones((len(X), 1))]),
+    CustomPhiFunction(None, bias=True),
     CustomPhiFunction([lambda X: X]),
     CustomPhiFunction([lambda X: X, lambda z: z]),
     CustomPhiFunction([lambda X: X, lambda y_pred: y_pred]),
-    PolynomialPhiFunction(2, "X", marginal_guarantee=True),
-    PolynomialPhiFunction([1, 2], "X", marginal_guarantee=True),
-    PolynomialPhiFunction([1, 4, 5], "y_pred", marginal_guarantee=False),
-    PolynomialPhiFunction([0, 1, 4, 5], "y_pred", marginal_guarantee=False),
+    PolynomialPhiFunction(2, "X", bias=True),
+    PolynomialPhiFunction([1, 2], "X", bias=True),
+    PolynomialPhiFunction([1, 4, 5], "y_pred", bias=False),
+    PolynomialPhiFunction([0, 1, 4, 5], "y_pred", bias=False),
     GaussianPhiFunction(4),
     CustomPhiFunction([lambda X: X, PolynomialPhiFunction(2)]),
     CustomPhiFunction([lambda X: X, GaussianPhiFunction(2)]),
     CustomPhiFunction([
-        lambda X: X, PolynomialPhiFunction([1, 2], marginal_guarantee=False)
+        lambda X: X, PolynomialPhiFunction([1, 2], bias=False)
     ]),
 ]
 
-# n_out without marginal_guarantee
-N_OUT_RAW = [1, 10, 12, 11, 20, 20, 3, 4, 4, 30, 12, 30]
+# n_out without bias
+N_OUT = [1, 1, 10, 12, 11, 21, 21, 3, 4, 4, 31, 12, 30]
 
 GAUSS_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
     {
@@ -81,7 +81,7 @@ GAUSS_NO_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
 
 # ======== CustomPhiFunction =========
 @pytest.mark.parametrize("functions", [
-    None, lambda X: X, [lambda X: X],
+    lambda X: X, [lambda X: X],
     [lambda X: X, PolynomialPhiFunction(2)],
     [lambda X: X, PolynomialPhiFunction(2), GaussianPhiFunction(2)],
 ])
@@ -92,23 +92,15 @@ def test_custom_phi_functions(functions: Any) -> None:
     phi.transform(X)
 
 
-def test_compound_phi_fitted() -> None:
-    phi_gauss = GaussianPhiFunction(2)
-    phi_gauss.fit(X)
-    phi = CustomPhiFunction([lambda X: X, phi_gauss])
-    check_is_fitted(phi, phi.fit_attributes)
-    phi.transform(X)
-
-
-@pytest.mark.parametrize("phi, n_out_raw", zip(PHI, N_OUT_RAW))
+@pytest.mark.parametrize("phi, n_out_raw", zip(PHI, N_OUT))
 def test_phi_n_attributes(phi: PhiFunction, n_out_raw: int) -> None:
     """
     Test that the n_in and n_out attributes are corrects
     """
-    phi.fit(X)
+    phi.fit(X, y_pred=y, z=z)
     phi.transform(X, y_pred=y, z=z)
     assert phi.n_in == 10
-    assert phi.n_out == n_out_raw + int(phi.marginal_guarantee)
+    assert phi.n_out == n_out_raw
 
 
 def test_phi_functions_warning() -> None:
@@ -119,6 +111,7 @@ def test_phi_functions_warning() -> None:
     with pytest.warns(UserWarning,
                       match="WARNING: Unknown optional arguments."):
         phi = CustomPhiFunction([lambda X, d=d: X**d for d in range(4)])
+        phi.fit(X)
         phi.transform(X)
 
 
@@ -134,7 +127,8 @@ def test_phi_functions_error(functions: Any) -> None:
     for f in functions:     # For coverage
         f(np.ones((10, 1)), np.ones((10, 1)))
     with pytest.raises(ValueError, match=r"Forbidden required argument."):
-        CustomPhiFunction(functions)
+        phi = CustomPhiFunction(functions)
+        phi.fit(X)
 
 
 def test_phi_functions_empty() -> None:
@@ -143,24 +137,26 @@ def test_phi_functions_empty() -> None:
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
     """
     with pytest.raises(ValueError):
-        CustomPhiFunction([], marginal_guarantee=False)
+        phi = CustomPhiFunction([], bias=False)
+        phi.fit(X)
 
 
 # ======== PolynomialPhiFunction =========
 def test_poly_phi_init() -> None:
     """Test that initialization does not crash."""
-    PolynomialPhiFunction()
+    phi = PolynomialPhiFunction()
+    phi.fit(X)
 
 
 @pytest.mark.parametrize("degree", [2, [0, 1, 3]])
 @pytest.mark.parametrize("variable", ["X", "y_pred", "z"])
-@pytest.mark.parametrize("marginal_guarantee", [True, False])
+@pytest.mark.parametrize("bias", [True, False])
 @pytest.mark.parametrize("normalized", [True, False])
 def test_poly_phi_init_other(
-    degree: Any, variable: Any, marginal_guarantee: bool, normalized: bool
+    degree: Any, variable: Any, bias: bool, normalized: bool
 ) -> None:
     """Test that initialization does not crash."""
-    PolynomialPhiFunction(degree, variable, marginal_guarantee, normalized)
+    PolynomialPhiFunction(degree, variable, bias, normalized)
 
 
 @pytest.mark.parametrize("var", ["other", 1, np.ones((10, 1))])
@@ -169,7 +165,8 @@ def test_invalid_variable_value(var: Any) -> None:
     Test that invalid variable value raise error
     """
     with pytest.raises(ValueError):
-        PolynomialPhiFunction(variable=var)
+        phi = PolynomialPhiFunction(variable=var)
+        phi.fit(X)
 
 
 # ======== GaussianPhiFunction =========
@@ -183,15 +180,15 @@ def test_gauss_phi_init() -> None:
 @pytest.mark.parametrize("sigma", [None, 1, [1, 2]])
 @pytest.mark.parametrize("random_sigma", [True, False])
 @pytest.mark.parametrize("X", [None, np.ones((30, 2))])
-@pytest.mark.parametrize("marginal_guarantee", [True, False])
+@pytest.mark.parametrize("bias", [True, False])
 @pytest.mark.parametrize("normalized", [True, False])
 def test_poly_gauss_init_other(
     points: Any, sigma: Any, random_sigma: Any, X: Any,
-    marginal_guarantee: bool, normalized: bool
+    bias: bool, normalized: bool
 ) -> None:
     """Test that initialization does not crash."""
     GaussianPhiFunction(points, sigma, random_sigma,
-                        marginal_guarantee, normalized)
+                        bias, normalized)
 
 
 @pytest.mark.parametrize("points", [np.ones((10)),
@@ -202,7 +199,8 @@ def test_invalid_gauss_points(points: Any) -> None:
     an error
     """
     with pytest.raises(ValueError, match="Invalid `points` argument."):
-        GaussianPhiFunction(points)
+        phi = GaussianPhiFunction(points)
+        phi.fit(X)
 
 
 def test_invalid_gauss_points_2() -> None:
@@ -211,7 +209,8 @@ def test_invalid_gauss_points_2() -> None:
     an error
     """
     with pytest.raises(ValueError, match="There should have as many points"):
-        GaussianPhiFunction(points=(np.ones((10, 3)), np.ones((8, 3))))
+        phi = GaussianPhiFunction(points=(np.ones((10, 3)), np.ones((8, 3))))
+        phi.fit(X)
 
 
 def test_invalid_gauss_points_3() -> None:
@@ -220,7 +219,8 @@ def test_invalid_gauss_points_3() -> None:
     an error
     """
     with pytest.raises(ValueError, match="The standard deviation 2D array"):
-        GaussianPhiFunction(points=(np.ones((10, 3)), np.ones((10, 2))))
+        phi = GaussianPhiFunction(points=(np.ones((10, 3)), np.ones((10, 2))))
+        phi.fit(X)
 
 
 @pytest.mark.parametrize("sigma", ["1",
@@ -256,42 +256,5 @@ def test_gauss_no_need_calib(ind: int) -> None:
     completion have ``_need_x_calib`` = ``False``
     """
     phi = GaussianPhiFunction(**GAUSS_NO_NEED_FIT_SETTINGS[ind])
+    phi.fit(X)
     check_is_fitted(phi, phi.fit_attributes)
-
-
-class ToyClass:
-    def __init__(
-        self,
-        fit_attributes: Optional[Union[List[str], str]] = None,
-        **kwargs
-    ) -> None:
-        self.fit_attributes = fit_attributes
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-
-@pytest.mark.parametrize("cls", [
-    ToyClass(fit_attributes=None, __sklearn_is_fitted__=lambda: True),
-    ToyClass(fit_attributes=None, tested_attr_=1),
-    ToyClass(fit_attributes=["fit_attr"], fit_attr=1),
-    ToyClass(fit_attributes="fit_attr", fit_attr=1),
-])
-def test_is_fitted(cls: ToyClass) -> None:
-    """
-    Test the _is_fitted function
-    """
-    assert _is_fitted(cls, cls.fit_attributes)
-
-
-@pytest.mark.parametrize("cls", [
-    ToyClass(fit_attributes=None, __sklearn_is_fitted__=lambda: False),
-    ToyClass(fit_attributes=None, tested_attr_=None),
-    ToyClass(fit_attributes=None, __ignored_attr_=1),
-    ToyClass(fit_attributes=["fit_attr"], tested_attr_=1),
-    ToyClass(fit_attributes="fit_attr", fit_attr=None),
-])
-def test_not_is_fitted(cls: ToyClass) -> None:
-    """
-    Test the _is_fitted function
-    """
-    assert not _is_fitted(cls, cls.fit_attributes)

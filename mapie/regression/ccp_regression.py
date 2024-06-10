@@ -14,6 +14,8 @@ from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
+from ..phi_function.ccp_phi_function import PhiFunction
+from ..phi_function import GaussianPhiFunction
 from ..phi_function.utils import calibrator_optim_objective
 from mapie.utils import (check_conformity_score, check_estimator_regression,
                          check_lower_upper_bounds, check_null_weight,
