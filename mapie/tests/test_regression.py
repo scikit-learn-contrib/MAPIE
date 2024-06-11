@@ -319,7 +319,7 @@ def test_calibration_data_size_symmetric_score(delta: float) -> None:
 
     # Define a symmetric conformity score
     score = AbsoluteConformityScore(sym=True)
-    
+
     # Test when the conformity score is symmetric
     # and the number of calibration data is sufficient
     n_calib_sufficient = int(np.ceil(1/(1-delta)))
@@ -349,7 +349,7 @@ def test_calibration_data_size_asymmetric_score(delta: float) -> None:
     """
     This test function verifies that a ValueError is raised when the number
     of calibration data is lower than the minimum required for the given alpha
-    when the conformity score is asymmetric. The minimum is calculated as 
+    when the conformity score is asymmetric. The minimum is calculated as
     1/alpha or 1/(1-delta).
     """
     # Generate data
@@ -360,7 +360,7 @@ def test_calibration_data_size_asymmetric_score(delta: float) -> None:
     # Train a model
     model = LinearRegression()
     model.fit(Xtr, ytr)
-    
+
     # Define an asymmetric conformity score
     score = AbsoluteConformityScore(sym=False)
 
