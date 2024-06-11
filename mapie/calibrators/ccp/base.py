@@ -8,12 +8,13 @@ import numpy as np
 from mapie._typing import ArrayLike, NDArray
 from .utils import (compile_functions_warnings_errors, concatenate_functions,
                     check_multiplier)
+from mapie.calibrators import Calibrator
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import check_is_fitted
-from sklearn.base import BaseEstimator, clone
+from sklearn.base import clone
 
 
-class CCP(BaseEstimator, metaclass=ABCMeta):
+class CCP(Calibrator, metaclass=ABCMeta):
     """
     Base abstract class for the phi functions,
     used in the Gibbs et al. method to model the conformity scores.
@@ -165,7 +166,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         X: ArrayLike of shape (n_samples, n_features)
             Training data.
 
-        y: ArrayLike of shape (n_samples,)
+        y_pred: ArrayLike of shape (n_samples,)
             Training labels.
 
             By default ``None``
@@ -176,14 +177,14 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
             By default ``None``
         """
         self._check_fit_parameters(X, y_pred, z)
-        result = self.transform(X, y_pred, z)
+        result = self.predict(X, y_pred, z)
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
         self.init_value_ = self._check_init_value(self.init_value, self.n_out)
         check_multiplier(self.multipliers, X, y_pred, z)
         return self
 
-    def transform(
+    def predict(
         self,
         X: Optional[ArrayLike] = None,
         y_pred: Optional[ArrayLike] = None,
@@ -229,14 +230,6 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
                           "definintion.\nFix: Use `bias=True` "
                           "in the `CCP` definition.")
         return result
-
-    def __call__(
-        self,
-        X: Optional[ArrayLike] = None,
-        y_pred: Optional[ArrayLike] = None,
-        z: Optional[ArrayLike] = None,
-    ) -> NDArray:
-        return self.transform(X, y_pred, z)
 
     def __mul__(self, funct: Optional[Callable]) -> CCP:
         """

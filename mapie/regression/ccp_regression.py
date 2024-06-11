@@ -508,7 +508,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         self.phi_.fit(X, self.estimator_.predict(X), z)
 
-        phi_x = self.phi_.transform(X_calib, y_pred_calib, z_calib)
+        phi_x = self.phi_.predict(X_calib, y_pred_calib, z_calib)
 
         not_nan_index = np.where(~np.isnan(calib_conformity_scores))[0]
         # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
@@ -662,7 +662,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         check_is_fitted(self, self.calib_attributes)
 
-        phi_x = self.phi_.transform(X, y_pred, z)
+        phi_x = self.phi_.predict(X, y_pred, z)
 
         signed = -1 if self.conformity_score_.sym else 1
 

@@ -94,7 +94,7 @@ def test_custom_phi_functions(functions: Any) -> None:
     """Test that initialization does not crash."""
     phi = CustomCCP(functions)
     phi.fit(X)
-    phi.transform(X)
+    phi.predict(X)
 
 
 @pytest.mark.parametrize("phi, n_out_raw", zip(PHI, N_OUT))
@@ -103,7 +103,7 @@ def test_phi_n_attributes(phi: CCP, n_out_raw: int) -> None:
     Test that the n_in and n_out attributes are corrects
     """
     phi.fit(X, y_pred=y, z=z)
-    phi.transform(X, y_pred=y, z=z)
+    phi.predict(X, y_pred=y, z=z)
     assert phi.n_in == 10
     assert phi.n_out == n_out_raw
 
@@ -117,7 +117,7 @@ def test_phi_functions_warning() -> None:
                       match="WARNING: Unknown optional arguments."):
         phi = CustomCCP([lambda X, d=d: X**d for d in range(4)])
         phi.fit(X)
-        phi.transform(X)
+        phi.predict(X)
 
 
 @pytest.mark.parametrize("functions", [

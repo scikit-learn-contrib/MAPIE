@@ -93,7 +93,7 @@ class CustomCCP(CCP):
     ...     ],
     ...     normalized=False,
     ... ).fit(X, y_pred)
-    >>> print(phi.transform(X, y_pred))
+    >>> print(phi.predict(X, y_pred))
     [[1. 2. 0.]
      [3. 4. 0.]
      [0. 0. 1.]]
@@ -181,7 +181,7 @@ class CustomCCP(CCP):
                 check_multiplier(phi.multipliers, X, y_pred, z)
         self.is_fitted_ = True
 
-        result = self.transform(X, y_pred, z)
+        result = self.predict(X, y_pred, z)
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
         self.init_value_ = self._check_init_value(self.init_value, self.n_out)

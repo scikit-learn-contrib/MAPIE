@@ -145,7 +145,7 @@ class GaussianCCP(CCP):
     >>> X = np.array([[1], [2], [3], [4], [5]])
     >>> phi = GaussianCCP(2, bias=False,
     ...                           normalized=False).fit(X)
-    >>> print(np.round(phi.transform(X), 2))
+    >>> print(np.round(phi.predict(X), 2))
     [[0.14 0.61]
      [0.61 1.  ]
      [1.   0.61]
@@ -158,7 +158,7 @@ class GaussianCCP(CCP):
     [[1.]
      [1.]]
     >>> phi = GaussianCCP([[3],[4]], 0.5).fit(X)
-    >>> print(np.round(phi.transform(X), 2))
+    >>> print(np.round(phi.predict(X), 2))
     [[1.   0.  ]
      [1.   0.  ]
      [0.99 0.13]

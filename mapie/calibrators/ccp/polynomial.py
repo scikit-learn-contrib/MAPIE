@@ -91,7 +91,7 @@ class PolynomialCCP(CCP):
     >>> X = np.array([[1, 2], [3, 4], [5, 6]])
     >>> y_pred = np.array([1, 2, 3])
     >>> phi = PolynomialCCP(3).fit(X, y_pred)
-    >>> print(phi.transform(X, y_pred))
+    >>> print(phi.predict(X, y_pred))
     [[  1.   2.   1.   4.   1.   8.   1.]
      [  3.   4.   9.  16.  27.  64.   1.]
      [  5.   6.  25.  36. 125. 216.   1.]]
@@ -99,7 +99,7 @@ class PolynomialCCP(CCP):
     [0, 1, 2, 3]
     >>> phi = PolynomialCCP([1, 2, 5], "y_pred",
     ...                             bias=False).fit(X, y_pred)
-    >>> print(phi.transform(X, y_pred))
+    >>> print(phi.predict(X, y_pred))
     [[  1.   1.   1.]
      [  2.   4.  32.]
      [  3.   9. 243.]]
