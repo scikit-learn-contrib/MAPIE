@@ -474,7 +474,7 @@ def check_alpha_and_n_samples(
     for alpha in alphas:
         if n < np.max([1/alpha, 1/(1-alpha)]):
             raise ValueError(
-                "Number of samples of the score is too low, "
+                "Number of samples of the score is too low,\n"
                 "1/alpha (or 1/(1 - alpha)) must be lower "
                 "than the number of samples."
             )
