@@ -300,6 +300,94 @@ def test_coverage_validity(delta: float, n_calib: int) -> None:
     np.testing.assert_array_less(p_bonf, pval_up)
 
 
+@pytest.mark.parametrize("delta", [0.6, 0.8, 0.9, 0.95])
+def test_calibration_data_size_symmetric_score(delta: float) -> None:
+    """
+    This test function verifies that a ValueError is raised when the number
+    of calibration data is lower than the minimum required for the given alpha
+    when the conformity score is symmetric. The minimum is calculated as
+    1/alpha or 1/(1-delta).
+    """
+    # Generate data
+    n_train, n_all = 100, 1000
+    X, y = make_regression(n_all, random_state=42)
+    Xtr, Xct, ytr, yct = train_test_split(X, y, train_size=n_train)
+
+    # Train a linear regression model
+    model = LinearRegression()
+    model.fit(Xtr, ytr)
+
+    # Define a symmetric conformity score
+    score = AbsoluteConformityScore(sym=True)
+    
+    # Test when the conformity score is symmetric
+    # and the number of calibration data is sufficient
+    n_calib_sufficient = int(np.ceil(1/(1-delta)))
+    Xc, Xt, yc, _ = train_test_split(Xct, yct, train_size=n_calib_sufficient)
+    mapie_reg = MapieRegressor(
+        estimator=model, method="base", cv="prefit", conformity_score=score
+    )
+    mapie_reg.fit(Xc, yc)
+    mapie_reg.predict(Xt, alpha=1-delta)
+
+    # Test when the conformity score is symmetric
+    # and the number of calibration data is insufficient
+    with pytest.raises(
+        ValueError, match=r"Number of samples of the score is too low*"
+    ):
+        n_calib_low = int(np.floor(1/(1-delta)))
+        Xc, Xt, yc, _ = train_test_split(Xct, yct, train_size=n_calib_low)
+        mapie_reg = MapieRegressor(
+            estimator=model, method="base", cv="prefit", conformity_score=score
+        )
+        mapie_reg.fit(Xc, yc)
+        mapie_reg.predict(Xt, alpha=1-delta)
+
+
+@pytest.mark.parametrize("delta", [0.6, 0.8, 0.9, 0.95])
+def test_calibration_data_size_asymmetric_score(delta: float) -> None:
+    """
+    This test function verifies that a ValueError is raised when the number
+    of calibration data is lower than the minimum required for the given alpha
+    when the conformity score is asymmetric. The minimum is calculated as 
+    1/alpha or 1/(1-delta).
+    """
+    # Generate data
+    n_train, n_all = 100, 1000
+    X, y = make_regression(n_all, random_state=42)
+    Xtr, Xct, ytr, yct = train_test_split(X, y, train_size=n_train)
+
+    # Train a model
+    model = LinearRegression()
+    model.fit(Xtr, ytr)
+    
+    # Define an asymmetric conformity score
+    score = AbsoluteConformityScore(sym=False)
+
+    # Test when ConformityScore is asymmetric
+    # and calibration data size is sufficient
+    n_calib_sufficient = int(np.ceil(1/(1-delta) * 2)) + 1
+    Xc, Xt, yc, _ = train_test_split(Xct, yct, train_size=n_calib_sufficient)
+    mapie_reg = MapieRegressor(
+        estimator=model, method="base", cv="prefit", conformity_score=score
+    )
+    mapie_reg.fit(Xc, yc)
+    mapie_reg.predict(Xt, alpha=1-delta)
+
+    # Test when ConformityScore is asymmetric
+    # and calibration data size is too low
+    with pytest.raises(
+        ValueError, match=r"Number of samples of the score is too low*"
+    ):
+        n_calib_low = int(np.floor(1/(1-delta) * 2))
+        Xc, Xt, yc, _ = train_test_split(Xct, yct, train_size=n_calib_low)
+        mapie_reg = MapieRegressor(
+            estimator=model, method="base", cv="prefit", conformity_score=score
+        )
+        mapie_reg.fit(Xc, yc)
+        mapie_reg.predict(Xt, alpha=1-delta)
+
+
 def test_same_results_prefit_split() -> None:
     """
     Test checking that if split and prefit method have exactly

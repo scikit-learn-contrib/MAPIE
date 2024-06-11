@@ -214,7 +214,8 @@ class ConformityScore(metaclass=ABCMeta):
         conformity_scores: NDArray,
         alpha_np: NDArray,
         axis: int,
-        reversed: bool = False
+        reversed: bool = False,
+        unbounded: bool = False
     ) -> NDArray:
         """
         Compute the alpha quantile of the conformity scores or the conformity
@@ -239,6 +240,14 @@ class ConformityScore(metaclass=ABCMeta):
             Boolean specifying whether we take the upper or lower quantile,
             if False, the alpha quantile, otherwise the (1-alpha) quantile.
 
+            By default ``False``.
+
+        unbounded: bool
+            Boolean specifying whether infinite prediction intervals
+            could be produced.
+
+            By default ``False``.
+
         Returns
         -------
         NDArray of shape (1, n_alpha) or (n_samples, n_alpha)
@@ -252,15 +261,16 @@ class ConformityScore(metaclass=ABCMeta):
         alpha_ref = (1-2*alpha_np)*reversed + alpha_np
 
         # Adjust alpha w.r.t quantile correction
-        alpha_ref = np.ceil(alpha_ref*(n_calib+1))/n_calib
+        alpha_cor = np.ceil(alpha_ref*(n_calib+1))/n_calib
+        alpha_cor = np.clip(alpha_cor, a_min=0, a_max=1)
 
         # Compute the target quantiles
         quantile = signed * np.column_stack([
             np_nanquantile(
-                signed * conformity_scores, _alpha, axis=axis, method="lower"
-            ) if 0 < _alpha < 1
-            else np.inf * np.ones(n_ref)
-            for _alpha in alpha_ref
+                signed * conformity_scores, _alpha_cor,
+                axis=axis, method="lower"
+            ) if not unbounded or _alpha < 1 else np.inf * np.ones(n_ref)
+            for _alpha, _alpha_cor in zip(alpha_ref, alpha_cor)
         ])
         return quantile
 
@@ -330,6 +340,7 @@ class ConformityScore(metaclass=ABCMeta):
         ensemble: bool = False,
         method: str = 'base',
         optimize_beta: bool = False,
+        allow_infinite_bounds: bool = False
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
@@ -366,6 +377,11 @@ class ConformityScore(metaclass=ABCMeta):
 
         optimize_beta: bool
             Whether to optimize the PIs' width or not.
+
+            By default ``False``.
+
+        allow_infinite_bounds: bool
+            Allow infinite prediction intervals to be produced.
 
             By default ``False``.
 
@@ -412,10 +428,12 @@ class ConformityScore(metaclass=ABCMeta):
                 X, y_pred_up, conformity_scores
             )
             bound_low = self.get_quantile(
-                conformity_scores_low, alpha_low, axis=1, reversed=True
+                conformity_scores_low, alpha_low, axis=1, reversed=True,
+                unbounded=allow_infinite_bounds
             )
             bound_up = self.get_quantile(
-                conformity_scores_up, alpha_up, axis=1
+                conformity_scores_up, alpha_up, axis=1,
+                unbounded=allow_infinite_bounds
             )
 
         else:
@@ -431,11 +449,13 @@ class ConformityScore(metaclass=ABCMeta):
 
                 quantile_low = self.get_quantile(
                     conformity_scores[..., np.newaxis],
-                    alpha_low, axis=0, reversed=True
+                    alpha_low, axis=0, reversed=True,
+                    unbounded=allow_infinite_bounds
                 )
                 quantile_up = self.get_quantile(
                     conformity_scores[..., np.newaxis],
-                    alpha_up, axis=0
+                    alpha_up, axis=0,
+                    unbounded=allow_infinite_bounds
                 )
 
             bound_low = self.get_estimation_distribution(

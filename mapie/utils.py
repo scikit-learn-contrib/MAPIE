@@ -412,6 +412,29 @@ def check_gamma(
         )
 
 
+def get_effective_calibration_samples(scores: NDArray, sym: bool):
+    """
+    Calculates the effective number of calibration samples.
+
+    Parameters
+    ----------
+    scores: NDArray
+        An array of scores.
+
+    sym: bool
+        A boolean indicating whether the scores are symmetric.
+
+    Returns
+    -------
+    n: int
+        The effective number of calibration samples.
+    """
+    n = np.sum(~np.isnan(scores))
+    if not sym:
+        n //= 2
+    return n
+
+
 def check_alpha_and_n_samples(
     alphas: Union[Iterable[float], float],
     n: int,
@@ -449,9 +472,9 @@ def check_alpha_and_n_samples(
     if isinstance(alphas, float):
         alphas = np.array([alphas])
     for alpha in alphas:
-        if n < 1 / alpha or n < 1 / (1 - alpha):
+        if n < np.max([1/alpha, 1/(1-alpha)]):
             raise ValueError(
-                "Number of samples of the score is too low,\n"
+                "Number of samples of the score is too low, "
                 "1/alpha (or 1/(1 - alpha)) must be lower "
                 "than the number of samples."
             )
