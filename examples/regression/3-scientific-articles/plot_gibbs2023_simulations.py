@@ -34,7 +34,7 @@ import numpy as np
 import pandas as pd
 from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.regression import MapieCCPRegressor, MapieRegressor
-from mapie.phi_function import CustomPhiFunction, GaussianPhiFunction
+from mapie.calibrators.ccp import CustomCCP, GaussianCCP
 from scipy.stats import norm
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
@@ -191,7 +191,7 @@ def plot_results(X_test, y_test, n_trials=10,
 
     if experiment == "Groups":
         # CCP Groups
-        phi_groups = CustomPhiFunction([
+        phi_groups = CustomCCP([
             lambda X, t=t: np.logical_and(X >= t, X < t + 0.5).astype(int)
             for t in np.arange(0, 5.5, 0.5)
         ])
@@ -210,7 +210,7 @@ def plot_results(X_test, y_test, n_trials=10,
         other_locs = [0.5, 2.5, 4.5]
         other_scale = 1
 
-        phi_shifts = GaussianPhiFunction(
+        phi_shifts = GaussianCCP(
             points=(
                 np.array(eval_locs+other_locs).reshape(-1, 1),
                 [eval_scale]*len(eval_locs) + [other_scale]*len(other_locs),

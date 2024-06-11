@@ -6,8 +6,7 @@ import numpy as np
 import pytest
 from sklearn.utils.validation import check_is_fitted
 from sklearn.datasets import make_regression
-from mapie.phi_function import (CustomPhiFunction, GaussianPhiFunction,
-                                PolynomialPhiFunction, PhiFunction)
+from mapie.calibrators.ccp import CustomCCP, GaussianCCP, PolynomialCCP, CCP
 
 random_state = 1
 np.random.seed(random_state)
@@ -18,26 +17,26 @@ X, y = make_regression(
 z = X[:, -2:]
 
 PHI = [
-    CustomPhiFunction([lambda X: np.ones((len(X), 1))]),
-    CustomPhiFunction(None, bias=True),
-    CustomPhiFunction([lambda X: X]),
-    CustomPhiFunction([lambda X: X, lambda z: z]),
-    CustomPhiFunction([lambda X: X, lambda y_pred: y_pred]),
-    PolynomialPhiFunction(2, "X", bias=True),
-    PolynomialPhiFunction([1, 2], "X", bias=True),
-    PolynomialPhiFunction([1, 4, 5], "y_pred", bias=False),
-    PolynomialPhiFunction([0, 1, 4, 5], "y_pred", bias=False),
-    PolynomialPhiFunction([0, 1, 3], "z", bias=False),
-    GaussianPhiFunction(4),
-    CustomPhiFunction([lambda X: X, PolynomialPhiFunction(2)]),
-    CustomPhiFunction([lambda X: X, GaussianPhiFunction(2)]),
-    CustomPhiFunction([
-        lambda X: X, PolynomialPhiFunction([1, 2], bias=False)
+    CustomCCP([lambda X: np.ones((len(X), 1))]),
+    CustomCCP(None, bias=True),
+    CustomCCP([lambda X: X]),
+    CustomCCP([lambda X: X, lambda z: z]),
+    CustomCCP([lambda X: X, lambda y_pred: y_pred]),
+    PolynomialCCP(2, "X", bias=True),
+    PolynomialCCP([1, 2], "X", bias=True),
+    PolynomialCCP([1, 4, 5], "y_pred", bias=False),
+    PolynomialCCP([0, 1, 4, 5], "y_pred", bias=False),
+    PolynomialCCP([0, 1, 3], "z", bias=False),
+    GaussianCCP(4),
+    CustomCCP([lambda X: X, PolynomialCCP(2)]),
+    CustomCCP([lambda X: X, GaussianCCP(2)]),
+    CustomCCP([
+        lambda X: X, PolynomialCCP([1, 2], bias=False)
     ]),
-    (lambda X: (X < 3))*CustomPhiFunction([lambda X: X]),
-    CustomPhiFunction([lambda X: X])*(lambda X: (X < 3)),
-    CustomPhiFunction([lambda X: X])*None,
-    CustomPhiFunction([lambda X: X])*(lambda X: (X < 3))*(
+    (lambda X: (X < 3))*CustomCCP([lambda X: X]),
+    CustomCCP([lambda X: X])*(lambda X: (X < 3)),
+    CustomCCP([lambda X: X])*None,
+    CustomCCP([lambda X: X])*(lambda X: (X < 3))*(
         lambda X: (X > 0)[:, 0]),
 ]
 
@@ -85,21 +84,21 @@ GAUSS_NO_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
 ]
 
 
-# ======== CustomPhiFunction =========
+# ======== CustomCCP =========
 @pytest.mark.parametrize("functions", [
     lambda X: X, [lambda X: X],
-    [lambda X: X, PolynomialPhiFunction(2)],
-    [lambda X: X, PolynomialPhiFunction(2), GaussianPhiFunction(2)],
+    [lambda X: X, PolynomialCCP(2)],
+    [lambda X: X, PolynomialCCP(2), GaussianCCP(2)],
 ])
 def test_custom_phi_functions(functions: Any) -> None:
     """Test that initialization does not crash."""
-    phi = CustomPhiFunction(functions)
+    phi = CustomCCP(functions)
     phi.fit(X)
     phi.transform(X)
 
 
 @pytest.mark.parametrize("phi, n_out_raw", zip(PHI, N_OUT))
-def test_phi_n_attributes(phi: PhiFunction, n_out_raw: int) -> None:
+def test_phi_n_attributes(phi: CCP, n_out_raw: int) -> None:
     """
     Test that the n_in and n_out attributes are corrects
     """
@@ -111,12 +110,12 @@ def test_phi_n_attributes(phi: PhiFunction, n_out_raw: int) -> None:
 
 def test_phi_functions_warning() -> None:
     """
-    Test that creating a PhiFunction object with functions which have
+    Test that creating a CCP object with functions which have
     optional arguments different from 'X', 'y_pred' or 'z' raise a warning.
     """
     with pytest.warns(UserWarning,
                       match="WARNING: Unknown optional arguments."):
-        phi = CustomPhiFunction([lambda X, d=d: X**d for d in range(4)])
+        phi = CustomCCP([lambda X, d=d: X**d for d in range(4)])
         phi.fit(X)
         phi.transform(X)
 
@@ -127,30 +126,30 @@ def test_phi_functions_warning() -> None:
 ])
 def test_phi_functions_error(functions: Any) -> None:
     """
-    Test that creating a PhiFunction object with functions which have
+    Test that creating a CCP object with functions which have
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
     """
     for f in functions:     # For coverage
         f(np.ones((10, 1)), np.ones((10, 1)))
     with pytest.raises(ValueError, match=r"Forbidden required argument."):
-        phi = CustomPhiFunction(functions)
+        phi = CustomCCP(functions)
         phi.fit(X)
 
 
 def test_phi_functions_empty() -> None:
     """
-    Test that creating a PhiFunction object with functions which have
+    Test that creating a CCP object with functions which have
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
     """
     with pytest.raises(ValueError):
-        phi = CustomPhiFunction([], bias=False)
+        phi = CustomCCP([], bias=False)
         phi.fit(X)
 
 
-# ======== PolynomialPhiFunction =========
+# ======== PolynomialCCP =========
 def test_poly_phi_init() -> None:
     """Test that initialization does not crash."""
-    phi = PolynomialPhiFunction()
+    phi = PolynomialCCP()
     phi.fit(X)
 
 
@@ -162,7 +161,7 @@ def test_poly_phi_init_other(
     degree: Any, variable: Any, bias: bool, normalized: bool
 ) -> None:
     """Test that initialization does not crash."""
-    PolynomialPhiFunction(degree, variable, bias, normalized)
+    PolynomialCCP(degree, variable, bias, normalized)
 
 
 @pytest.mark.parametrize("var", ["other", 1, np.ones((10, 1))])
@@ -171,14 +170,14 @@ def test_invalid_variable_value(var: Any) -> None:
     Test that invalid variable value raise error
     """
     with pytest.raises(ValueError):
-        phi = PolynomialPhiFunction(variable=var)
+        phi = PolynomialCCP(variable=var)
         phi.fit(X)
 
 
-# ======== GaussianPhiFunction =========
+# ======== GaussianCCP =========
 def test_gauss_phi_init() -> None:
     """Test that initialization does not crash."""
-    GaussianPhiFunction()
+    GaussianCCP()
 
 
 @pytest.mark.parametrize("points", [3, [[10, 20], [2, 39], [2, 3]],
@@ -193,39 +192,38 @@ def test_poly_gauss_init_other(
     bias: bool, normalized: bool
 ) -> None:
     """Test that initialization does not crash."""
-    GaussianPhiFunction(points, sigma, random_sigma,
-                        bias, normalized)
+    GaussianCCP(points, sigma, random_sigma, bias, normalized)
 
 
 @pytest.mark.parametrize("points", [np.ones((10)),
                                     np.ones((10, 2, 2))])
 def test_invalid_gauss_points(points: Any) -> None:
     """
-    Test that invalid ``GaussianPhiFunction`` ``points``argument values raise
+    Test that invalid ``GaussianCCP`` ``points``argument values raise
     an error
     """
     with pytest.raises(ValueError, match="Invalid `points` argument."):
-        phi = GaussianPhiFunction(points)
+        phi = GaussianCCP(points)
         phi.fit(X)
 
 
 def test_invalid_gauss_points_2() -> None:
     """
-    Test that invalid ``GaussianPhiFunction`` ``points``argument values raise
+    Test that invalid ``GaussianCCP`` ``points``argument values raise
     an error
     """
     with pytest.raises(ValueError, match="There should have as many points"):
-        phi = GaussianPhiFunction(points=(np.ones((10, 3)), np.ones((8, 3))))
+        phi = GaussianCCP(points=(np.ones((10, 3)), np.ones((8, 3))))
         phi.fit(X)
 
 
 def test_invalid_gauss_points_3() -> None:
     """
-    Test that invalid ``GaussianPhiFunction`` ``points``argument values raise
+    Test that invalid ``GaussianCCP`` ``points``argument values raise
     an error
     """
     with pytest.raises(ValueError, match="The standard deviation 2D array"):
-        phi = GaussianPhiFunction(points=(np.ones((10, 3)), np.ones((10, 2))))
+        phi = GaussianCCP(points=(np.ones((10, 3)), np.ones((10, 2))))
         phi.fit(X)
 
 
@@ -235,21 +233,21 @@ def test_invalid_gauss_points_3() -> None:
                                    np.ones(8)])
 def test_invalid_gauss_sigma(sigma: Any) -> None:
     """
-    Test that invalid ``GaussianPhiFunction`` ``sigma``argument values raise an
+    Test that invalid ``GaussianCCP`` ``sigma``argument values raise an
     error
     """
     with pytest.raises(ValueError):
-        phi = GaussianPhiFunction(3, sigma)
+        phi = GaussianCCP(3, sigma)
         phi.fit(X)
 
 
 @pytest.mark.parametrize("ind", range(len(GAUSS_NEED_FIT_SETTINGS)))
 def test_gauss_need_calib(ind: int) -> None:
     """
-    Test that ``GaussianPhiFunction`` arguments that require later completion
+    Test that ``GaussianCCP`` arguments that require later completion
     have ``_need_x_calib`` = ``True``
     """
-    phi = GaussianPhiFunction(**GAUSS_NEED_FIT_SETTINGS[ind])
+    phi = GaussianCCP(**GAUSS_NEED_FIT_SETTINGS[ind])
     phi.fit(X)
     check_is_fitted(phi, phi.fit_attributes)
 
@@ -257,9 +255,9 @@ def test_gauss_need_calib(ind: int) -> None:
 @pytest.mark.parametrize("ind", range(len(GAUSS_NO_NEED_FIT_SETTINGS)))
 def test_gauss_no_need_calib(ind: int) -> None:
     """
-    Test that ``GaussianPhiFunction`` arguments that don't require later
+    Test that ``GaussianCCP`` arguments that don't require later
     completion have ``_need_x_calib`` = ``False``
     """
-    phi = GaussianPhiFunction(**GAUSS_NO_NEED_FIT_SETTINGS[ind])
+    phi = GaussianCCP(**GAUSS_NO_NEED_FIT_SETTINGS[ind])
     phi.fit(X)
     check_is_fitted(phi, phi.fit_attributes)

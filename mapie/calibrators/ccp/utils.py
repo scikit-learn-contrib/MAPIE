@@ -20,7 +20,7 @@ def format_functions(
     Parameters
     ----------
     functions: Optional[Union[Callable, Iterable[Callable]]]
-        List of functions (or PhiFunction objects) or single function.
+        List of functions (or CCP objects) or single function.
         Each function can take a combinaison of the following arguments:
         - ``X``: Input dataset, of shape (n_samples, ``n_in``)
         - ``y_pred``: estimator prediction, of shape (n_samples,)
@@ -35,8 +35,8 @@ def format_functions(
     bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
-        the ``PhiFunction``object were built).
-        If the ``PhiFunction``object definition covers all the dataset
+        the ``CCP``object were built).
+        If the ``CCP``object definition covers all the dataset
         (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
         is never all zeros), this column of ones is not necessary
         to obtain marginal coverage.
@@ -164,9 +164,9 @@ def sample_points(
 
         If integer, the points will be sampled randomly from the ``X``
         set, where ``X`` is the data give to the
-        ``GaussianPhiFunction.fit`` method, which usually correspond to
+        ``GaussianCCP.fit`` method, which usually correspond to
         the ``X`` argument of the ``MapieCCPRegressor.calibrate`` method
-        (unless you call ``GaussianPhiFunction.fit(X)`` yourself).
+        (unless you call ``GaussianCCP.fit(X)`` yourself).
 
         You can pass a Tuple[ArrayLike, ArrayLike], to have a different
         ``sigma`` value for each point. The two elements of the
@@ -228,9 +228,9 @@ def compute_sigma(
 
         If integer, the points will be sampled randomly from the ``X``
         set, where ``X`` is the data give to the
-        ``GaussianPhiFunction.fit`` method, which usually correspond to
+        ``GaussianCCP.fit`` method, which usually correspond to
         the ``X`` argument of the ``MapieCCPRegressor.calibrate`` method
-        (unless you call ``GaussianPhiFunction.fit(X)`` yourself).
+        (unless you call ``GaussianCCP.fit(X)`` yourself).
 
         You can pass a Tuple[ArrayLike, ArrayLike], to have a different
         ``sigma`` value for each point. The two elements of the
@@ -259,9 +259,9 @@ def compute_sigma(
 
         If ``None``, ``sigma`` will default to a float equal to
         ``np.std(X)/(n**0.5)``, where ``X`` is the data give to the
-        ``GaussianPhiFunction.fit`` method, which correspond to the ``X``
+        ``GaussianCCP.fit`` method, which correspond to the ``X``
         argument of the ``MapieCCPRegressor.calibrate`` method
-        (unless you call ``GaussianPhiFunction.fit(X)`` yourself).
+        (unless you call ``GaussianCCP.fit(X)`` yourself).
 
     random_sigma : bool
         Whether to apply to the standard deviation values, a random multiplier,
@@ -504,7 +504,7 @@ def calibrator_optim_objective(
         Parameters to optimize to minimize the objective function
 
     phi_x : NDArray
-        Transformation of the data X using the ``PhiFunction``.
+        Transformation of the data X using the ``CCP``.
 
     conformity_scores : NDArray
         Conformity scores of X

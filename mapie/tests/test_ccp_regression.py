@@ -24,8 +24,7 @@ from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      ResidualNormalisedScore)
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieCCPRegressor
-from mapie.phi_function import (PhiFunction, CustomPhiFunction,
-                                GaussianPhiFunction, PolynomialPhiFunction)
+from mapie.calibrators.ccp import CCP, CustomCCP, GaussianCCP, PolynomialCCP
 
 random_state = 1
 np.random.seed(random_state)
@@ -43,9 +42,9 @@ z = X[:, -2:]
 CV = ["prefit", "split"]
 
 PHI = [
-    CustomPhiFunction([lambda X: np.ones((len(X), 1))]),
-    PolynomialPhiFunction(),
-    GaussianPhiFunction(5),
+    CustomCCP([lambda X: np.ones((len(X), 1))]),
+    PolynomialCCP(),
+    GaussianCCP(5),
 ]
 WIDTHS = {
     "split": 3.87,
@@ -114,8 +113,7 @@ def test_calib_not_complete_phi() -> None:
     with pytest.warns(UserWarning, match="WARNING: At least one row of the"):
         mapie_reg = MapieCCPRegressor(
             alpha=0.1,
-            phi=CustomPhiFunction([lambda X: (X < 5).astype(int)],
-                                  bias=False)
+            phi=CustomCCP([lambda X: (X < 5).astype(int)], bias=False)
         )
         mapie_reg.fit(X_toy, y_toy)
 
@@ -125,8 +123,7 @@ def test_predict_not_complete_phi() -> None:
     with pytest.warns(UserWarning, match="WARNING: At least one row of the"):
         mapie_reg = MapieCCPRegressor(
             alpha=0.1,
-            phi=CustomPhiFunction([lambda X: (X < 5).astype(int)],
-                                  bias=False)
+            phi=CustomCCP([lambda X: (X < 5).astype(int)], bias=False)
         )
         mapie_reg.fit(X_toy[X_toy[:, 0] < 5], y_toy[X_toy[:, 0] < 5])
         mapie_reg.predict(X_toy)
@@ -199,7 +196,7 @@ def test_default_parameters() -> None:
     mapie_reg = MapieCCPRegressor(random_state=random_state, alpha=0.1)
     mapie_reg.fit(X, y)
     assert isinstance(mapie_reg.estimator_, RegressorMixin)
-    assert isinstance(mapie_reg.phi_, GaussianPhiFunction)
+    assert isinstance(mapie_reg.phi_, GaussianCCP)
     assert isinstance(mapie_reg.cv, ShuffleSplit)
     assert mapie_reg.alpha == 0.1
     assert isinstance(mapie_reg.conformity_score_, ConformityScore)
@@ -280,7 +277,7 @@ def test_invalid_cv(cv: Any) -> None:
 ])
 def test_fit_calibrate_combined_equivalence(
     alpha: Any, dataset: Tuple[NDArray, NDArray, NDArray],
-    cv: Any, phi: PhiFunction, estimator: RegressorMixin
+    cv: Any, phi: CCP, estimator: RegressorMixin
 ) -> None:
     """Test predict output shape."""
     (X, y, z) = dataset
@@ -328,7 +325,7 @@ def test_recalibrate_warning() -> None:
 ])
 def test_recalibrate(
     dataset: Tuple[NDArray, NDArray, NDArray],
-    cv: Any, phi: PhiFunction, estimator: RegressorMixin
+    cv: Any, phi: CCP, estimator: RegressorMixin
 ) -> None:
     """
     Test that the PI are different for different value of alpha,
@@ -367,7 +364,7 @@ def test_recalibrate(
 ])
 def test_predict_output_shape_alpha(
     dataset: Tuple[NDArray, NDArray, NDArray],
-    cv: Any, phi: PhiFunction, estimator: RegressorMixin
+    cv: Any, phi: CCP, estimator: RegressorMixin
 ) -> None:
     """Test predict output shape."""
     (X, y, z) = dataset
@@ -391,7 +388,7 @@ def test_predict_output_shape_alpha(
 ])
 def test_predict_output_shape_no_alpha(
     dataset: Tuple[NDArray, NDArray, NDArray],
-    cv: Any, phi: PhiFunction, estimator: RegressorMixin
+    cv: Any, phi: CCP, estimator: RegressorMixin
 ) -> None:
     """Test predict output shape."""
     (X, y, z) = dataset
@@ -412,7 +409,7 @@ def test_predict_output_shape_no_alpha(
     make_pipeline(LinearRegression()),
 ])
 def test_same_results_prefit_split(
-    dataset: Tuple[NDArray, NDArray, NDArray], phi_template: PhiFunction,
+    dataset: Tuple[NDArray, NDArray, NDArray], phi_template: CCP,
     estimator: RegressorMixin,
 ) -> None:
     """
@@ -434,7 +431,7 @@ def test_same_results_prefit_split(
     phi = clone(phi_template)
     phi.fit(X)
     phi.init_value = phi.init_value_
-    if isinstance(phi, GaussianPhiFunction):
+    if isinstance(phi, GaussianCCP):
         phi.points = (phi.points_, phi.sigmas_)
 
     mapie_reg = MapieCCPRegressor(estimator=estimator, phi=phi, cv=pred_cv,
@@ -464,7 +461,7 @@ def test_same_results_prefit_split(
 ])
 def test_results_for_ordered_alpha(
     dataset: Tuple[NDArray, NDArray, NDArray], cv: Any,
-    phi: PhiFunction, estimator: RegressorMixin
+    phi: CCP, estimator: RegressorMixin
 ) -> None:
     """
     Test that prediction intervals lower (upper) bounds give
@@ -545,7 +542,7 @@ def test_results_with_constant_sample_weights(
 def test_prediction_between_low_up(
     dataset: Tuple[NDArray, NDArray, NDArray],
     cv: Any,
-    phi: PhiFunction,
+    phi: CCP,
     alpha: float,
     estimator: RegressorMixin
 ) -> None:
@@ -581,7 +578,7 @@ def test_prediction_between_low_up(
 ])
 def test_linear_data_confidence_interval(
     cv: Any,
-    phi: PhiFunction,
+    phi: CCP,
     alpha: float,
     estimator: RegressorMixin
 ) -> None:
@@ -669,7 +666,7 @@ def test_results_prefit(estimator: RegressorMixin) -> None:
 )
 def test_conformity_score(
     cv: Any,
-    phi: PhiFunction,
+    phi: CCP,
     estimator: RegressorMixin,
     conformity_score: ConformityScore
 ) -> None:

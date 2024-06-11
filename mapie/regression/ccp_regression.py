@@ -14,9 +14,8 @@ from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
-from ..phi_function.ccp_phi_function import PhiFunction
-from ..phi_function import GaussianPhiFunction
-from ..phi_function.utils import calibrator_optim_objective
+from mapie.calibrators.ccp import CCP, check_phi
+from mapie.calibrators.ccp.utils import calibrator_optim_objective
 from mapie.utils import (check_conformity_score, check_estimator_regression,
                          check_lower_upper_bounds, check_null_weight,
                          fit_estimator)
@@ -43,11 +42,11 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         By default ``"None"``.
 
-    phi: Optional[PhiFunction]
-        A ``PhiFunction`` instance used to estimate the conformity scores.
+    phi: Optional[CCP]
+        A ``CCP`` instance used to estimate the conformity scores.
 
-        If ``None``, use as default a ``GaussianPhiFunction`` instance.
-        See the examples and the documentation to build a ``PhiFunction``
+        If ``None``, use as default a ``GaussianCCP`` instance.
+        See the examples and the documentation to build a ``CCP``
         adaptated to your dataset and constraints.
 
         By default ``None``.
@@ -155,7 +154,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
                 List[Union[RegressorMixin, Pipeline]]
             ]
         ] = None,
-        phi: Optional[PhiFunction] = None,
+        phi: Optional[CCP] = None,
         cv: Optional[
             Union[str, BaseCrossValidator, BaseShuffleSplit]
         ] = None,
@@ -229,40 +228,6 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         return X_train, y_train, sample_weight_train
 
-    def _check_phi(
-        self,
-        phi: Optional[PhiFunction],
-    ) -> PhiFunction:
-        """
-        Check if ``phi`` is a ``PhiFunction`` instance.
-
-        Parameters
-        ----------
-        phi: Optional[PhiFunction]
-            A ``PhiFunction`` instance used to estimate the conformity scores.
-
-            If ``None``, use as default a ``GaussianPhiFunction`` instance.
-            See the examples and the documentation to build a ``PhiFunction``
-            adaptated to your dataset and constraints.
-
-        Returns
-        -------
-        PhiFunction
-            ``phi`` if defined, a ``GaussianPhiFunction`` instance otherwise.
-
-        Raises
-        ------
-        ValueError
-            If ``phi`` is not ``None`` nor a ``PhiFunction`` instance.
-        """
-        if phi is None:
-            return GaussianPhiFunction()
-        elif isinstance(phi, PhiFunction):
-            return phi
-        else:
-            raise ValueError("Invalid `phi` argument. It must be `None` or a "
-                             "`PhiFunction` instance.")
-
     def _check_calibrate_parameters(self) -> None:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
@@ -272,7 +237,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             self.conformity_score, self.default_sym_
         )
         self.alpha = self._check_alpha(self.alpha)
-        self.phi_ = self._check_phi(self.phi)
+        self.phi_ = check_phi(self.phi)
 
     def _check_cv(
         self,
@@ -431,10 +396,10 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
-        groups: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
         alpha: Optional[float] = None,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
     ) -> MapieCCPRegressor:
         """
         Calibrate with (``X``, ``y`` and ``z``)
@@ -447,24 +412,6 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         y: ArrayLike of shape (n_samples,)
             Training labels.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
-            Note that the sample weight defined are only for the training, not
-            for the calibration procedure.
-
-            By default ``None``.
-
-        groups: Optional[ArrayLike] of shape (n_samples,)
-            Group labels for the samples used while splitting the dataset into
-            train/test set.
-
-            By default ``None``.
 
         z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
             Exogenous variables
@@ -483,6 +430,24 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             old one.
 
             By default ``None``
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for fitting the out-of-fold models.
+            If ``None``, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no residuals.
+            If weights are non-uniform, residuals are still uniformly weighted.
+            Note that the sample weight defined are only for the training, not
+            for the calibration procedure.
+
+            By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
 
         Returns
         -------
@@ -597,10 +562,10 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
-        groups: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
         alpha: Optional[float] = None,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
         **fit_params,
     ) -> MapieCCPRegressor:
         """
@@ -614,24 +579,6 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         y: ArrayLike of shape (n_samples,)
             Training labels.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
-            Note that the sample weight defined are only for the training, not
-            for the calibration procedure.
-
-            By default ``None``.
-
-        groups: Optional[ArrayLike] of shape (n_samples,)
-            Group labels for the samples used while splitting the dataset into
-            train/test set.
-
-            By default ``None``.
 
         z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
             Exogenous variables
@@ -651,6 +598,24 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
             By default ``None``
 
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for fitting the out-of-fold models.
+            If ``None``, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no residuals.
+            If weights are non-uniform, residuals are still uniformly weighted.
+            Note that the sample weight defined are only for the training, not
+            for the calibration procedure.
+
+            By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
+
         **fit_params: dict
             Additional fit parameters for the estimator.
 
@@ -660,7 +625,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             self
         """
         self.fit_estimator(X, y, sample_weight, groups, **fit_params)
-        self.fit_calibrator(X, y, sample_weight, groups, z, alpha)
+        self.fit_calibrator(X, y, z, alpha, sample_weight, groups)
         return self
 
     def predict(
