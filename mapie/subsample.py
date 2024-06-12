@@ -22,9 +22,10 @@ class Subsample(BaseCrossValidator):
     ----------
     n_resamplings : int
         Number of resamplings. By default ``30``.
-    n_samples: int
+    n_samples: float
         Number of samples in each resampling. By default ``None``,
-        the size of the training set.
+        the size of the training set. If it is between 0 and 1,
+        it becomes the fraction of samples
     replace: bool
         Whether to replace samples in resamplings or not. By default ``True``.
     random_state: Optional[Union[int, RandomState]]
@@ -46,7 +47,7 @@ class Subsample(BaseCrossValidator):
     def __init__(
         self,
         n_resamplings: int = 30,
-        n_samples: Optional[int] = None,
+        n_samples: Optional[Union[int, float]] = None,
         replace: bool = True,
         random_state: Optional[Union[int, RandomState]] = None,
     ) -> None:
@@ -74,9 +75,12 @@ class Subsample(BaseCrossValidator):
             The testing set indices for that split.
         """
         indices = np.arange(_num_samples(X))
-        n_samples = (
-            self.n_samples if self.n_samples is not None else len(indices)
-        )
+        if self.n_samples is None:
+            n_samples = len(indices)
+        elif isinstance(self.n_samples, float):
+            n_samples = int(np.floor(self.n_samples * X.shape[0]))
+        else:
+            n_samples = int(self.n_samples)
         random_state = check_random_state(self.random_state)
         for k in range(self.n_resamplings):
             train_index = resample(
