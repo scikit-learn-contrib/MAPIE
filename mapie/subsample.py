@@ -77,7 +77,7 @@ class Subsample(BaseCrossValidator):
         indices = np.arange(_num_samples(X))
         if self.n_samples is None:
             n_samples = len(indices)
-        elif isinstance(self.n_samples, float):
+        elif isinstance(self.n_samples, float) and 0 < self.n_samples < 1:
             n_samples = int(np.floor(self.n_samples * X.shape[0]))
         else:
             n_samples = int(self.n_samples)
