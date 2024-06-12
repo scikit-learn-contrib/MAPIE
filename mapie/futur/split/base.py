@@ -1,48 +1,44 @@
 from __future__ import annotations
 
+from abc import ABCMeta, abstractmethod
+from typing import List, Optional, Tuple, Union, Dict, cast
 import warnings
-from typing import List, Optional, Tuple, Union, cast
 
-import numpy as np
-from scipy.optimize import minimize
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
                                      ShuffleSplit, PredefinedSplit)
 from sklearn.pipeline import Pipeline
-from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _check_y, check_is_fitted, indexable
+from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
-from mapie.calibrators.ccp import CCP, check_phi
-from mapie.calibrators.ccp.utils import calibrator_optim_objective
-from mapie.utils import (check_conformity_score, check_estimator_regression,
-                         check_lower_upper_bounds, check_null_weight,
-                         fit_estimator)
+from mapie.calibrators.ccp import CCP
+from mapie.calibrators import Calibrator
+from mapie.utils import fit_estimator, _safe_sample
 
 
-class MapieCCPRegressor(BaseEstimator, RegressorMixin):
+class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     """
     This class implements an adaptative conformal prediction method proposed by
     Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
     This method works with a ``"split"`` approach which requires a separate
     calibration phase. The ``fit`` method automatically split the data into
-    two disjoint sets to train the estimator and the calibrator. You can call
-    ``fit_estimator`` and ``fit_calibrator`` to do the two step one after the
+    two disjoint sets to train the predictor and the calibrator. You can call
+    ``fit_predictor`` and ``fit_calibrator`` to do the two step one after the
     other. You will have to make sure that data used in the two methods,
     for training and calibration are disjoint, to guarantee the expected
     ``1-alpha`` coverage.
 
     Parameters
     ----------
-    estimator: Optional[RegressorMixin]
+    predictor: Optional[RegressorMixin]
         Any regressor from scikit-learn API.
         (i.e. with ``fit`` and ``predict`` methods).
-        If ``None``, ``estimator`` defaults to a ``LinearRegressor`` instance.
+        If ``None``, ``predictor`` defaults to a ``LinearRegressor`` instance.
 
         By default ``"None"``.
 
-    phi: Optional[CCP]
+    calibrator: Optional[CCP]
         A ``CCP`` instance used to estimate the conformity scores.
 
         If ``None``, use as default a ``GaussianCCP`` instance.
@@ -57,7 +53,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         - Any splitter (``ShuffleSplit`` or ``PredefinedSplit``)
         with ``n_splits=1``.
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
+        - ``"prefit"``, assumes that ``predictor`` has been fitted already.
           All data provided in the ``calibrate`` method is then used
           for the calibration.
           The user has to take care manually that data used for model fitting
@@ -104,57 +100,26 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
         By default ``None``.
 
-    Attributes
-    ----------
-    beta_up_: Tuple[NDArray, bool]
-        Calibration fitting results, used to build the upper bound of the
-        prediction intervals.
-        beta_up[0]: Array of shape (phi.n_out, )
-        beta_up[1]: Whether the optimization process converged or not
-                    (the coverage is not garantied if the optimization fail)
-
-    beta_low_: Tuple[NDArray, bool]
-        Same as beta_up, but for the lower bound
-
     References
     ----------
     Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
     "Conformal Prediction With Conditional Guarantees", 2023
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mapie.regression import MapieCCPRegressor
-    >>> np.random.seed(1)
-    >>> X_train = np.arange(0,100,2).reshape(-1, 1)
-    >>> y_train = 2*X_train[:,0] + np.random.rand(len(X_train))
-    >>> mapie_reg = MapieCCPRegressor(alpha=0.1, random_state=1)
-    >>> mapie_reg = mapie_reg.fit(X_train, y_train)
-    >>> y_pred, y_pis = mapie_reg.predict(X_train)
-    >>> print(np.round(y_pred[:5], 2))
-    [ 0.43  4.43  8.43 12.43 16.43]
-    >>> print(np.round(y_pis[:5,:, 0], 2))
-    [[ 0.02  0.83]
-     [ 4.01  4.85]
-     [ 8.    8.86]
-     [11.99 12.87]
-     [15.98 16.89]]
     """
 
     default_sym_ = True
-    fit_attributes = ["estimator_"]
-    calib_attributes = ["beta_up_", "beta_low_"]
+    fit_attributes = ["predictor_"]
+    calib_attributes = ["calibrator_"]
 
     def __init__(
         self,
-        estimator: Optional[
+        predictor: Optional[
             Union[
                 RegressorMixin,
                 Pipeline,
                 List[Union[RegressorMixin, Pipeline]]
             ]
         ] = None,
-        phi: Optional[CCP] = None,
+        calibrator: Optional[CCP] = None,
         cv: Optional[
             Union[str, BaseCrossValidator, BaseShuffleSplit]
         ] = None,
@@ -164,85 +129,28 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
     ) -> None:
         self.random_state = random_state
         self.cv = cv
-        self.estimator = estimator
+        self.predictor = predictor
         self.conformity_score = conformity_score
-        self.phi = phi
+        self.calibrator = calibrator
         self.alpha = alpha
 
-    def _check_parameters(self) -> RegressorMixin:
+    @abstractmethod
+    def _check_fit_parameters(self) -> RegressorMixin:
         """
-        Check and replace default value of ``estimator`` and ``cv`` arguments.
-        Copy the ``estimator`` in ``estimator_`` attribute if ``cv="prefit"``.
+        Check and replace default value of ``predictor`` and ``cv`` arguments.
         """
-        self.cv = self._check_cv(self.cv)
-        estimator = check_estimator_regression(self.estimator, self.cv)
 
-        return estimator
-
-    def _safe_sample(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        sample_weight: Optional[ArrayLike],
-        index: ArrayLike,
-    ) -> Tuple[ArrayLike, ArrayLike, Optional[NDArray]]:
-        """
-        Perform several checks on class parameters.
-
-        Parameters
-        ----------
-        X: ArrayLike
-            Observed values.
-
-        y: ArrayLike
-            Target values.
-
-        sample_weight: Optional[NDArray] of shape (n_samples,)
-            Non-null sample weights.
-
-        index: ArrayLike
-            Indexes of the training set.
-
-        Returns
-        -------
-        Tuple[NDArray, NDArray, Optional[NDArray]]
-            - NDArray of training observed values
-            - NDArray of training target values
-            - Optional[NDArray] of training sample_weight
-        """
-        X_train = _safe_indexing(X, index)
-        y_train = _safe_indexing(y, index)
-
-        if sample_weight is not None:
-            sample_weight_train = _safe_indexing(
-                sample_weight, index)
-        else:
-            sample_weight_train = None
-
-        X_train, y_train = indexable(X_train, y_train)
-        y_train = _check_y(y_train)
-        sample_weight_train, X_train, y_train = check_null_weight(
-            sample_weight_train, X_train, y_train)
-
-        sample_weight_train = cast(Optional[NDArray], sample_weight_train)
-
-        return X_train, y_train, sample_weight_train
-
-    def _check_calibrate_parameters(self) -> None:
+    @abstractmethod
+    def _check_calibrate_parameters(self) -> Calibrator:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
-        ``phi`` arguments.
+        ``calibrator`` arguments.
         """
-        self.conformity_score_ = check_conformity_score(
-            self.conformity_score, self.default_sym_
-        )
-        self.alpha = self._check_alpha(self.alpha)
-        self.phi_ = check_phi(self.phi)
 
     def _check_cv(
         self,
         cv: Optional[Union[str, BaseCrossValidator, BaseShuffleSplit]] = None,
-        test_size: float = 0.3,
+        test_size: Optional[Union[int, float]] = None,
     ) -> Union[str, BaseCrossValidator, BaseShuffleSplit]:
         """
         Check if ``cv`` is ``None``, ``"prefit"``, ``"split"``,
@@ -289,10 +197,7 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
                 "``n_splits=1``."
             )
 
-    def _check_alpha(
-        self,
-        alpha: Optional[float] = None
-    ) -> Optional[float]:
+    def _check_alpha(self, alpha: Optional[float] = None) -> None:
         """
         Check alpha
 
@@ -304,18 +209,13 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             larger (more conservative) prediction intervals.
             alpha is the complement of the target coverage level.
 
-        Returns
-        -------
-        Optional[float]
-            Valid alpha.
-
         Raises
         ------
         ValueError
             If alpha is not ``None`` or a float between 0 and 1.
         """
         if alpha is None:
-            return alpha
+            return
         if isinstance(alpha, float):
             alpha = alpha
         else:
@@ -326,18 +226,17 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         if alpha < 0 or alpha > 1:
             raise ValueError("Invalid alpha. "
                              "Allowed values are between 0 and 1.")
-        return alpha
 
-    def fit_estimator(
+    def fit_predictor(
         self,
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params,
-    ) -> MapieCCPRegressor:
+    ) -> SplitMapie:
         """
-        Fit the estimator if ``cv`` argument is not ``"prefit"``
+        Fit the predictor if ``cv`` argument is not ``"prefit"``
 
         Parameters
         ----------
@@ -366,14 +265,14 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             By default ``None``.
 
         **fit_params: dict
-            Additional fit parameters for the estimator.
+            Additional fit parameters for the predictor.
 
         Returns
         -------
-        MapieCCPRegressor
+        SplitMapie
             self
         """
-        estimator = self._check_parameters()
+        predictor = self._check_fit_parameters()
 
         if self.cv != 'prefit':
             self.cv = cast(BaseCrossValidator, self.cv)
@@ -382,14 +281,14 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
             (
                 X_train, y_train, sample_weight_train
-            ) = self._safe_sample(X, y, sample_weight, train_index)
+            ) = _safe_sample(X, y, sample_weight, train_index)
 
-            self.estimator_ = fit_estimator(
-                estimator, X_train, y_train,
+            self.predictor_ = fit_estimator(
+                predictor, X_train, y_train,
                 sample_weight=sample_weight_train, **fit_params
             )
         else:
-            self.estimator_ = estimator
+            self.predictor_ = predictor
         return self
 
     def fit_calibrator(
@@ -400,7 +299,8 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         alpha: Optional[float] = None,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-    ) -> MapieCCPRegressor:
+        **optim_kwargs,
+    ) -> SplitMapie:
         """
         Calibrate with (``X``, ``y`` and ``z``)
         and the new value ``alpha`` value, if not ``None``
@@ -449,27 +349,31 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
             By default ``None``.
 
+        optim_kwargs: Dict
+            Other argument, used in sklear.optimize.minimize
+
         Returns
         -------
-        MapieCCPRegressor
+        SplitMapie
             self
         """
-        self._check_parameters()
-        self._check_calibrate_parameters()
+        self._check_fit_parameters()
+        calibrator = self._check_calibrate_parameters()
         check_is_fitted(self, self.fit_attributes)
 
+        # Get calibration set
         if self.cv != 'prefit':
             self.cv = cast(BaseCrossValidator, self.cv)
 
             _, calib_index = list(self.cv.split(X, y, groups))[0]
             (
                 X_calib, y_calib, sample_weight_calib
-            ) = self._safe_sample(X, y, sample_weight, calib_index)
+            ) = _safe_sample(X, y, sample_weight, calib_index)
 
             if z is not None:
                 (
                     z_calib, _, _
-                ) = self._safe_sample(z, y, sample_weight, calib_index)
+                ) = _safe_sample(z, y, sample_weight, calib_index)
             else:
                 z_calib = None
         else:
@@ -477,85 +381,29 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
             sample_weight_calib = cast(Optional[NDArray], sample_weight)
 
         if alpha is not None and self.alpha != alpha:
-            self.alpha = self._check_alpha(alpha)
+            self._check_alpha(alpha)
+            self.alpha = alpha
             warnings.warn(f"WARNING: The old value of alpha ({self.alpha}) "
                           f"has been overwritten by the new one ({alpha}).")
 
         if self.alpha is None:
+            warnings.warn("No calibration is done, because alpha is None.")
             return self
 
-        y_pred_calib = self.estimator_.predict(X_calib)
+        # Compute conformity scores
+        y_pred_calib = self.predict_score(self.predictor_, X_calib)
 
-        calib_conformity_scores = self.conformity_score_.get_conformity_scores(
+        calib_conformity_scores = self.predict_cs(
             X_calib, y_calib, y_pred_calib
         )
 
-        if self.conformity_score_.sym:
-            q_low = 1 - self.alpha
-            q_up = 1 - self.alpha
-        else:
-            q_low = self.alpha / 2
-            q_up = 1 - self.alpha / 2
+        # Fit the calibrator
+        self.calibrator_ = calibrator.fit(
+            X_calib, y_pred_calib, z_calib, calib_conformity_scores,
+            self.alpha, self.conformity_score_.sym, sample_weight_calib,
+            self.random_state, **optim_kwargs,
+        )
 
-        if self.random_state is None:
-            warnings.warn("WARNING: The method implemented in "
-                          "MapieCCPRegressor has a stochastic behavior. "
-                          "To have reproductible results, use a integer "
-                          "`random_state` value in the `MapieCCPRegressor` "
-                          "initialisation.")
-        else:
-            np.random.seed(self.random_state)
-
-        self.phi_.fit(X, self.estimator_.predict(X), z)
-
-        phi_x = self.phi_.predict(X_calib, y_pred_calib, z_calib)
-
-        not_nan_index = np.where(~np.isnan(calib_conformity_scores))[0]
-        # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
-
-        optimal_beta_up = minimize(
-            calibrator_optim_objective, self.phi_.init_value_,
-            args=(
-                phi_x[not_nan_index, :],
-                calib_conformity_scores[not_nan_index],
-                q_up,
-                sample_weight_calib,
-                )
-            )
-
-        if not self.conformity_score_.sym:
-            optimal_beta_low = minimize(
-                calibrator_optim_objective, self.phi_.init_value_,
-                args=(
-                    phi_x[not_nan_index, :],
-                    calib_conformity_scores[not_nan_index],
-                    q_low,
-                    sample_weight_calib,
-                )
-            )
-        else:
-            optimal_beta_low = optimal_beta_up
-
-        if not optimal_beta_up.success:
-            warnings.warn(
-                "WARNING: The optimization process for the upper bound "
-                f"failed with the following error: \n"
-                f"{optimal_beta_low.message}\n"
-                "The returned prediction interval may be inaccurate."
-            )
-        if (not self.conformity_score_.sym
-           and not optimal_beta_low.success):
-            warnings.warn(
-                "WARNING: The optimization process for the lower bound "
-                f"failed with the following error: \n"
-                f"{optimal_beta_low.message}\n"
-                "The returned prediction interval may be inaccurate."
-            )
-
-        self.beta_up_ = cast(Tuple[NDArray, bool],
-                             (optimal_beta_up.x, optimal_beta_up.success))
-        self.beta_low_ = cast(Tuple[NDArray, bool],
-                              (optimal_beta_low.x, optimal_beta_low.success))
         return self
 
     def fit(
@@ -566,10 +414,11 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
         alpha: Optional[float] = None,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **fit_params,
-    ) -> MapieCCPRegressor:
+        fit_params: Optional[Dict] = None,
+        calib_params: Optional[Dict] = None,
+    ) -> SplitMapie:
         """
-        Fit the estimator (if ``cv`` is not ``"prefit"``)
+        Fit the predictor (if ``cv`` is not ``"prefit"``)
         and fit the calibration.
 
         Parameters
@@ -616,16 +465,22 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
 
             By default ``None``.
 
-        **fit_params: dict
-            Additional fit parameters for the estimator.
+        fit_params: dict
+            Additional fit parameters for the predictor, used as kwargs.
+
+        calib_params: dict
+            Additional fit parameters for the calibrator, used as kwargs.
 
         Returns
         -------
-        MapieCCPRegressor
+        SplitMapie
             self
         """
-        self.fit_estimator(X, y, sample_weight, groups, **fit_params)
-        self.fit_calibrator(X, y, z, alpha, sample_weight, groups)
+        self.fit_predictor(X, y, sample_weight, groups,
+                           **(fit_params if fit_params is not None else {}))
+        self.fit_calibrator(X, y, z, alpha, sample_weight, groups,
+                            **(calib_params
+                               if calib_params is not None else {}))
         return self
 
     def predict(
@@ -655,26 +510,104 @@ class MapieCCPRegressor(BaseEstimator, RegressorMixin):
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
         check_is_fitted(self, self.fit_attributes)
-        y_pred = self.estimator_.predict(X)
+        y_pred = self.predict_score(self.predictor_, X)
 
         if self.alpha is None:
             return y_pred
 
         check_is_fitted(self, self.calib_attributes)
 
-        phi_x = self.phi_.predict(X, y_pred, z)
+        y_bounds = self.predict_bounds(X, y_pred, z)
 
-        signed = -1 if self.conformity_score_.sym else 1
+        return self.predict_best(y_pred), y_bounds
 
-        y_pred_low = self.conformity_score_.get_estimation_distribution(
-            X, y_pred[:, np.newaxis],
-            phi_x.dot(signed * self.beta_low_[0][:, np.newaxis])
-        )
-        y_pred_up = self.conformity_score_.get_estimation_distribution(
-            X, y_pred[:, np.newaxis],
-            phi_x.dot(self.beta_up_[0][:, np.newaxis])
-        )
+    @abstractmethod
+    def predict_score(
+        self, predictor: RegressorMixin, X: ArrayLike
+    ) -> NDArray:
+        """
+        Compute conformity scores
 
-        check_lower_upper_bounds(y_pred_low, y_pred_up, y_pred)
+        Parameters
+        ----------
+        predictor : RegressorMixin
+            Prediction
+        X: ArrayLike
+            Observed values.
 
-        return y_pred, np.stack([y_pred_low, y_pred_up], axis=1)
+        Returns
+        -------
+        NDArray
+            Scores (usually ``y_pred`` in regression and ``y_pred_proba``
+            in classification)
+        """
+
+    @abstractmethod
+    def predict_cs(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        y_pred: NDArray,
+    ) -> NDArray:
+        """
+        Compute conformity scores
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed values.
+
+        y: ArrayLike
+            Observed Target
+
+        y_pred: NDArray
+            Predicted target.
+
+        Returns
+        -------
+        NDArray
+            Conformity scores on observed data
+        """
+
+    @abstractmethod
+    def predict_bounds(
+        self,
+        X: ArrayLike,
+        y_pred: NDArray,
+        z: Optional[ArrayLike] = None,
+    ) -> NDArray:
+        """
+        Compute conformity scores
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed values.
+
+        y_pred: 2D NDArray
+            Predicted scores (target)
+
+        z: ArrayLike
+            Exogenous variables
+
+        Returns
+        -------
+        NDArray
+            Bounds (or prediction set in classification), as a 2D array
+        """
+
+    @abstractmethod
+    def predict_best(self, y_pred: NDArray) -> NDArray:
+        """
+        Compute the prediction
+
+        Parameters
+        ----------
+        y_pred: NDArray
+            Prediction scores (can be the prediction, the probas, ...)
+
+        Returns
+        -------
+        NDArray
+            best predictions
+        """

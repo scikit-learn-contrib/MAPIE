@@ -283,13 +283,14 @@ def compute_sigma(
     """
     # If each point has a corresponding sigma value
     if isinstance(points, tuple):
-        sigmas_ = np.array(points[1])
+        sigmas_ = np.array(points[1], dtype=float)
         if len(sigmas_.shape) == 1:
             sigmas_ = sigmas_.reshape(-1, 1)
     # If sigma is not defined
     elif sigma is None:
-        sigmas_ = np.ones((_num_samples(points_), 1))*np.std(
-                np.array(X), axis=0)/(_num_samples(points_)**0.5)
+        points_std = np.std(
+            np.array(X), axis=0)/(_num_samples(points_)**0.5)
+        sigmas_ = np.ones((_num_samples(points_), 1))*points_std
     # If sigma is defined
     elif isinstance(points, int):
         sigmas_ = _init_sigmas(sigma, points)

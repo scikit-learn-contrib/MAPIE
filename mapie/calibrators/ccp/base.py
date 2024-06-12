@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Iterable, Callable, Optional, Union, List
+from typing import Iterable, Callable, Optional, Union, List, Tuple, cast
 import warnings
 
 import numpy as np
+from scipy.optimize import minimize
 from mapie._typing import ArrayLike, NDArray
 from .utils import (compile_functions_warnings_errors, concatenate_functions,
                     check_multiplier)
 from mapie.calibrators import Calibrator
+from mapie.calibrators.ccp.utils import calibrator_optim_objective
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
@@ -79,6 +81,17 @@ class CCP(Calibrator, metaclass=ABCMeta):
 
     n_out: int
         Number of features of phi(``X``, ``y_pred``, ``z``)
+
+    beta_up_: Tuple[NDArray, bool]
+        Calibration fitting results, used to build the upper bound of the
+        prediction intervals.
+        beta_up[0]: Array of shape (calibrator.n_out, )
+        beta_up[1]: Whether the optimization process converged or not
+                    (the coverage is not garantied if the optimization fail)
+
+    beta_low_: Tuple[NDArray, bool]
+        Same as beta_up, but for the lower bound
+
     """
 
     fit_attributes: List[str] = ["functions_"]
@@ -147,7 +160,7 @@ class CCP(Calibrator, metaclass=ABCMeta):
         else:
             return init_value
 
-    def fit(
+    def fit_params(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
@@ -177,14 +190,161 @@ class CCP(Calibrator, metaclass=ABCMeta):
             By default ``None``
         """
         self._check_fit_parameters(X, y_pred, z)
-        result = self.predict(X, y_pred, z)
+        result = self.transform(X, y_pred, z)
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
         self.init_value_ = self._check_init_value(self.init_value, self.n_out)
         check_multiplier(self.multipliers, X, y_pred, z)
         return self
 
-    def predict(
+    def fit(
+        self,
+        X_calib: ArrayLike,
+        y_pred_calib: Optional[ArrayLike],
+        z_calib: Optional[ArrayLike],
+        calib_conformity_scores: NDArray,
+        alpha: float,
+        sym: bool,
+        sample_weight_calib: Optional[ArrayLike] = None,
+        random_state: Optional[int] = None,
+        **optim_kwargs,
+    ) -> CCP:
+        """
+        Fit function : Set all the necessary attributes to be able to transform
+        ``(X, y_pred, z)`` into the expected transformation.
+
+        It should set all the attributes of ``fit_attributes``.
+        It should also set, once fitted, ``n_in``, ``n_out`` and
+        ``init_value``.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Calibration data.
+
+        y_pred: ArrayLike of shape (n_samples,)
+            Calibration target.
+
+        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
+            Exogenous variables
+
+        conformity_scores: ArrayLike of shape (n_samples,)
+            Calibration conformity scores
+
+        alpha: float
+            Between ``0.0`` and ``1.0``, represents the risk level of the
+            confidence interval.
+            Lower ``alpha`` produce larger (more conservative) prediction
+            intervals.
+            ``alpha`` is the complement of the target coverage level.
+
+        sym: bool
+            Weather or not, the prediction interval should be symetrical
+            or not.
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights for fitting the out-of-fold models.
+            If ``None``, then samples are equally weighted.
+            If some weights are null,
+            their corresponding observations are removed
+            before the fitting process and hence have no residuals.
+            If weights are non-uniform, residuals are still uniformly weighted.
+            Note that the sample weight defined are only for the training, not
+            for the calibration procedure.
+
+            By default ``None``.
+
+        random_state: Optional[int]
+            Integer used to set the numpy seed, to get reproducible calibration
+            results.
+            If ``None``, the prediction intervals will be stochastics, and will
+            change if you refit the calibration
+            (even if no arguments have change).
+
+            WARNING: If ``random_state``is not ``None``, ``np.random.seed``
+            will be changed, which will reset the seed for all the other random
+            number generators. It may have an impact on the rest of your code.
+
+            By default ``None``.
+
+        optim_kwargs: Dict
+            Other argument, used in sklear.optimize.minimize
+        """
+        if sym:
+            q_low = 1 - alpha
+            q_up = 1 - alpha
+        else:
+            q_low = alpha / 2
+            q_up = 1 - alpha / 2
+
+        if random_state is None:
+            warnings.warn("WARNING: The method implemented in "
+                          "SplitMapie has a stochastic behavior. "
+                          "To have reproductible results, use a integer "
+                          "`random_state` value in the `SplitMapie` "
+                          "initialisation.")
+        else:
+            np.random.seed(random_state)
+
+        self.fit_params(X_calib, y_pred_calib, z_calib)
+
+        phi_x = self.transform(X_calib, y_pred_calib, z_calib)
+
+        not_nan_index = np.where(~np.isnan(calib_conformity_scores))[0]
+        # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
+
+        optimal_beta_up = minimize(
+            calibrator_optim_objective, self.init_value_,
+            args=(
+                phi_x[not_nan_index, :],
+                calib_conformity_scores[not_nan_index],
+                q_up,
+                sample_weight_calib,
+                ),
+            **optim_kwargs,
+            )
+
+        if not sym:
+            optimal_beta_low = minimize(
+                calibrator_optim_objective, self.init_value_,
+                args=(
+                    phi_x[not_nan_index, :],
+                    calib_conformity_scores[not_nan_index],
+                    q_low,
+                    sample_weight_calib,
+                ),
+                **optim_kwargs,
+            )
+        else:
+            optimal_beta_low = optimal_beta_up
+
+        if not optimal_beta_up.success:
+            warnings.warn(
+                "WARNING: The optimization process for the upper bound "
+                f"failed with the following error: \n"
+                f"{optimal_beta_low.message}\n"
+                "The returned prediction interval may be inaccurate."
+            )
+        if (not sym
+           and not optimal_beta_low.success):
+            warnings.warn(
+                "WARNING: The optimization process for the lower bound "
+                f"failed with the following error: \n"
+                f"{optimal_beta_low.message}\n"
+                "The returned prediction interval may be inaccurate."
+            )
+
+        signed = -1 if sym else 1
+
+        self.beta_up_ = cast(Tuple[NDArray, bool],
+                             (optimal_beta_up.x, optimal_beta_up.success))
+        self.beta_low_ = cast(Tuple[NDArray, bool],
+                              (signed * optimal_beta_low.x,
+                               optimal_beta_low.success))
+
+        return self
+
+    def transform(
         self,
         X: Optional[ArrayLike] = None,
         y_pred: Optional[ArrayLike] = None,
@@ -213,23 +373,66 @@ class CCP(Calibrator, metaclass=ABCMeta):
         check_is_fitted(self, self.fit_attributes)
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
-        result = concatenate_functions(self.functions_, params_mapping,
-                                       self.multipliers)
+        phi_x = concatenate_functions(self.functions_, params_mapping,
+                                      self.multipliers)
         if self.normalized:
-            norm = np.linalg.norm(result, axis=1).reshape(-1, 1)
-            result[(abs(norm) == 0)[:, 0], :] = np.ones(result.shape[1])
+            norm = np.linalg.norm(phi_x, axis=1).reshape(-1, 1)
+            phi_x[(abs(norm) == 0)[:, 0], :] = np.ones(phi_x.shape[1])
 
             norm[abs(norm) == 0] = 1
-            result /= norm
+            phi_x /= norm
 
-        if np.any(np.all(result == 0, axis=1)):
+        if np.any(np.all(phi_x == 0, axis=1)):
             warnings.warn("WARNING: At least one row of the transformation "
                           "phi(X, y_pred, z) is full of zeros. "
                           "It will result in a prediction interval of zero "
                           "width. Consider changing the CCP "
                           "definintion.\nFix: Use `bias=True` "
                           "in the `CCP` definition.")
-        return result
+
+        return phi_x
+
+    def predict(
+        self,
+        X: ArrayLike,
+        y_pred: ArrayLike,
+        z: Optional[ArrayLike] = None,
+    ) -> NDArray:
+        """
+        Transform ``(X, y_pred, z)`` into an array of shape
+        ``(n_samples, n_out)`` and compute the dot product with the
+        optimized beta values, to get the conformity scores estimations.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Observed samples
+
+        y_pred : ArrayLike
+            Target prediction
+
+        z : ArrayLike
+            Exogenous variable
+
+        Returns
+        -------
+        NDArray
+            Transformation
+        """
+        phi_x = self.transform(X, y_pred, z)
+
+        y_pred_low = phi_x.dot(self.beta_low_[0][:, np.newaxis])
+        y_pred_up = phi_x.dot(self.beta_up_[0][:, np.newaxis])
+
+        return np.hstack([y_pred_low, y_pred_up])
+
+    def __call__(
+        self,
+        X: Optional[ArrayLike] = None,
+        y_pred: Optional[ArrayLike] = None,
+        z: Optional[ArrayLike] = None,
+    ) -> NDArray:
+        return self.transform(X, y_pred, z)
 
     def __mul__(self, funct: Optional[Callable]) -> CCP:
         """

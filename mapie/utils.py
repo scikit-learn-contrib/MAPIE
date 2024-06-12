@@ -12,7 +12,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import (_check_sample_weight, _num_features,
-                                      check_is_fitted, column_or_1d)
+                                      _check_y, check_is_fitted,
+                                      column_or_1d, indexable)
 
 from ._compatibility import np_quantile
 from ._typing import ArrayLike, NDArray
@@ -74,6 +75,55 @@ def check_null_weight(
         sample_weight = _safe_indexing(sample_weight, non_null_weight)
         sample_weight = cast(NDArray, sample_weight)
     return sample_weight, X, y
+
+
+def _safe_sample(
+    X: ArrayLike,
+    y: ArrayLike,
+    sample_weight: Optional[ArrayLike],
+    index: ArrayLike,
+) -> Tuple[ArrayLike, ArrayLike, Optional[NDArray]]:
+    """
+    Perform several checks on class parameters.
+
+    Parameters
+    ----------
+    X: ArrayLike
+        Observed values.
+
+    y: ArrayLike
+        Target values.
+
+    sample_weight: Optional[NDArray] of shape (n_samples,)
+        Non-null sample weights.
+
+    index: ArrayLike
+        Indexes of the training set.
+
+    Returns
+    -------
+    Tuple[NDArray, NDArray, Optional[NDArray]]
+        - NDArray of training observed values
+        - NDArray of training target values
+        - Optional[NDArray] of training sample_weight
+    """
+    X_train = _safe_indexing(X, index)
+    y_train = _safe_indexing(y, index)
+
+    if sample_weight is not None:
+        sample_weight_train = _safe_indexing(
+            sample_weight, index)
+    else:
+        sample_weight_train = None
+
+    X_train, y_train = indexable(X_train, y_train)
+    y_train = _check_y(y_train)
+    sample_weight_train, X_train, y_train = check_null_weight(
+        sample_weight_train, X_train, y_train)
+
+    sample_weight_train = cast(Optional[NDArray], sample_weight_train)
+
+    return X_train, y_train, sample_weight_train
 
 
 def fit_estimator(
@@ -858,31 +908,31 @@ def get_calib_set(
         (
             X_train, X_calib, y_train, y_calib
         ) = train_test_split(
-                X,
-                y,
-                test_size=calib_size,
-                random_state=random_state,
-                shuffle=shuffle,
-                stratify=stratify
+            X,
+            y,
+            test_size=calib_size,
+            random_state=random_state,
+            shuffle=shuffle,
+            stratify=stratify
         )
         sample_weight_train = sample_weight
         sample_weight_calib = None
     else:
         (
-                X_train,
-                X_calib,
-                y_train,
-                y_calib,
-                sample_weight_train,
-                sample_weight_calib,
+            X_train,
+            X_calib,
+            y_train,
+            y_calib,
+            sample_weight_train,
+            sample_weight_calib,
         ) = train_test_split(
-                X,
-                y,
-                sample_weight,
-                test_size=calib_size,
-                random_state=random_state,
-                shuffle=shuffle,
-                stratify=stratify
+            X,
+            y,
+            sample_weight,
+            test_size=calib_size,
+            random_state=random_state,
+            shuffle=shuffle,
+            stratify=stratify
         )
     X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
     y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)

@@ -82,23 +82,57 @@ class CustomCCP(CCP):
 
     Examples
     --------
+    # >>> import numpy as np
+    # >>> from mapie.calibrators import CustomCCP
+    # >>> X = np.array([[1, 2], [3, 4], [5, 6]])
+    # >>> y_pred = np.array([0, 0, 1])
+    # >>> phi = CustomCCP(
+    # ...     functions=[
+    # ...         lambda X: X, # X, if y_pred is 0
+    # ...         lambda y_pred: y_pred,                     # y_pred
+    # ...     ],
+    # ...     normalized=False,
+    # ... ).fit(X, y_pred)
+    # >>> print(phi.predict(X, y_pred))
+    # [[1. 2. 0.]
+    #  [3. 4. 0.]
+    #  [0. 0. 1.]]
+    # >>> print(phi.n_out)
+    # 3
+
     >>> import numpy as np
-    >>> from mapie.phi_function import CustomCCP
-    >>> X = np.array([[1, 2], [3, 4], [5, 6]])
-    >>> y_pred = np.array([0, 0, 1])
-    >>> phi = CustomCCP(
+    >>> from mapie.calibrators import GaussianCCP
+    >>> from mapie.regression import SplitMapieRegressor
+    >>> from mapie.conformity_scores import AbsoluteConformityScore
+    >>> np.random.seed(1)
+    >>> X_train = np.linspace(0, 3.14, 1001).reshape(-1, 1)
+    >>> y_train = np.random.rand(len(X_train))*np.sin(X_train[:,0])
+    >>> calibrator = CustomCCP(
     ...     functions=[
-    ...         lambda X: X * (y_pred[:, np.newaxis] == 0), # X, if y_pred is 0
-    ...         lambda y_pred: y_pred,                     # y_pred
+    ...         lambda X: np.sin(X[:,0]),
     ...     ],
-    ...     normalized=False,
-    ... ).fit(X, y_pred)
-    >>> print(phi.predict(X, y_pred))
-    [[1. 2. 0.]
-     [3. 4. 0.]
-     [0. 0. 1.]]
-    >>> print(phi.n_out)
-    3
+    ...     bias=True,
+    ... )
+    >>> mapie = SplitMapieRegressor(
+    ...     calibrator=calibrator, alpha=0.1, random_state=1,
+    ...     conformity_score=AbsoluteConformityScore(sym=False)
+    ... ).fit(X_train, y_train)
+    >>> y_pred, y_pi = mapie.predict(X_train)
+    >>> print(np.round(y_train[50::100], 2))
+    [0.   0.03 0.   0.69 0.19 0.33 0.32 0.34 0.39 0.06]
+    >>> print(np.round(y_pi[50::100, :, 0], 2))
+    [[0.02 0.14]
+     [0.02 0.42]
+     [0.02 0.66]
+     [0.03 0.84]
+     [0.03 0.93]
+     [0.02 0.93]
+     [0.02 0.83]
+     [0.02 0.66]
+     [0.01 0.41]
+     [0.01 0.12]]
+    >>> print(mapie.calibrator_.n_out)
+    2
     """
     fit_attributes: List[str] = ["is_fitted_"]
 
@@ -144,7 +178,7 @@ class CustomCCP(CCP):
         self.functions_ = format_functions(self.functions, self.bias)
         compile_functions_warnings_errors(self.functions_)
 
-    def fit(
+    def fit_params(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
@@ -177,12 +211,13 @@ class CustomCCP(CCP):
 
         for phi in self.functions_:
             if isinstance(phi, CCP):
-                phi.fit(X)
+                phi.fit_params(X, y_pred, z)
                 check_multiplier(phi.multipliers, X, y_pred, z)
         self.is_fitted_ = True
 
-        result = self.predict(X, y_pred, z)
+        result = self.transform(X, y_pred, z)
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
         self.init_value_ = self._check_init_value(self.init_value, self.n_out)
+        check_multiplier(self.multipliers, X, y_pred, z)
         return self

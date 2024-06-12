@@ -4,7 +4,7 @@ from typing import Callable, Optional, Tuple, Union, List
 
 import numpy as np
 from mapie._typing import ArrayLike
-from .base import CCP
+from .base import CCP, Calibrator
 from .utils import format_functions, compute_sigma, sample_points
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
@@ -140,36 +140,31 @@ class GaussianCCP(CCP):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.phi_function import GaussianCCP
+    >>> from mapie.calibrators import GaussianCCP
+    >>> from mapie.regression import SplitMapieRegressor
     >>> np.random.seed(1)
-    >>> X = np.array([[1], [2], [3], [4], [5]])
-    >>> phi = GaussianCCP(2, bias=False,
-    ...                           normalized=False).fit(X)
-    >>> print(np.round(phi.predict(X), 2))
-    [[0.14 0.61]
-     [0.61 1.  ]
-     [1.   0.61]
-     [0.61 0.14]
-     [0.14 0.01]]
-    >>> print(phi.points_)
-    [[3]
-     [2]]
-    >>> print(phi.sigmas_)
-    [[1.]
-     [1.]]
-    >>> phi = GaussianCCP([[3],[4]], 0.5).fit(X)
-    >>> print(np.round(phi.predict(X), 2))
-    [[1.   0.  ]
-     [1.   0.  ]
-     [0.99 0.13]
-     [0.13 0.99]
-     [0.   1.  ]]
-    >>> print(phi.points_)
-    [[3]
-     [4]]
-    >>> print(phi.sigmas_)
-    [[0.5]
-     [0.5]]
+    >>> X_train = np.arange(0,400, 2).reshape(-1, 1)
+    >>> y_train = 1 + 2*X_train[:,0] + np.random.rand(len(X_train))
+    >>> mapie = SplitMapieRegressor(
+    ...     calibrator=GaussianCCP(2), alpha=0.1, random_state=1,
+    ... ).fit(X_train, y_train)
+    >>> y_pred, y_pi = mapie.predict(X_train)
+    >>> print(np.round(y_pred[:5], 2))
+    [ 1.46  5.46  9.46 13.46 17.46]
+    >>> print(np.round(y_pi[:5, :, 0], 2))
+    [[ 1.06  1.86]
+     [ 5.06  5.86]
+     [ 9.06  9.86]
+     [13.06 13.86]
+     [17.06 17.87]]
+    >>> print(mapie.calibrator_.points_)
+    [[204]
+     [318]]
+    >>> print(mapie.calibrator_.sigmas_)
+    [[86.34106786]
+     [86.34106786]]
+    >>> print(mapie.calibrator_.n_out)
+    2
     """
     fit_attributes: List[str] = ["points_", "sigmas_", "functions_"]
 
@@ -228,6 +223,7 @@ class GaussianCCP(CCP):
         if _num_samples(points) != _num_samples(sigmas):
             raise ValueError("There should have as many points as "
                              "standard deviation values")
+
         if len(_safe_indexing(sigmas, 0)) not in [
             1, len(_safe_indexing(points, 0))
         ]:
@@ -280,7 +276,7 @@ class GaussianCCP(CCP):
         self.functions_ = format_functions(functions, self.bias)
 
 
-def check_phi(
+def check_calibrator(
     phi: Optional[CCP],
 ) -> CCP:
     """
@@ -307,8 +303,8 @@ def check_phi(
     """
     if phi is None:
         return GaussianCCP()
-    elif isinstance(phi, CCP):
+    elif isinstance(phi, Calibrator):
         return phi
     else:
-        raise ValueError("Invalid `phi` argument. It must be `None` or a "
-                         "`CCP` instance.")
+        raise ValueError("Invalid `calibrator` argument. It must be `None` "
+                         "or a `Calibrator` instance.")

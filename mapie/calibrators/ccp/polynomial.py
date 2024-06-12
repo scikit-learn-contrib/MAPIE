@@ -87,24 +87,27 @@ class PolynomialCCP(CCP):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.phi_function import PolynomialCCP
-    >>> X = np.array([[1, 2], [3, 4], [5, 6]])
-    >>> y_pred = np.array([1, 2, 3])
-    >>> phi = PolynomialCCP(3).fit(X, y_pred)
-    >>> print(phi.predict(X, y_pred))
-    [[  1.   2.   1.   4.   1.   8.   1.]
-     [  3.   4.   9.  16.  27.  64.   1.]
-     [  5.   6.  25.  36. 125. 216.   1.]]
-    >>> print(phi.exponents)
-    [0, 1, 2, 3]
-    >>> phi = PolynomialCCP([1, 2, 5], "y_pred",
-    ...                             bias=False).fit(X, y_pred)
-    >>> print(phi.predict(X, y_pred))
-    [[  1.   1.   1.]
-     [  2.   4.  32.]
-     [  3.   9. 243.]]
-    >>> print(phi.degree)
-    [1, 2, 5]
+    >>> from mapie.calibrators import PolynomialCCP
+    >>> from mapie.regression import SplitMapieRegressor
+    >>> np.random.seed(1)
+    >>> X_train = np.arange(0,400, 2).reshape(-1, 1)
+    >>> y_train = 1 + 2*X_train[:,0] + np.random.rand(len(X_train))
+    >>> mapie = SplitMapieRegressor(
+    ...     calibrator=PolynomialCCP(1), alpha=0.1, random_state=1,
+    ... ).fit(X_train, y_train)
+    >>> y_pred, y_pi = mapie.predict(X_train)
+    >>> print(np.round(y_pred[:5], 2))
+    [ 1.46  5.46  9.46 13.46 17.46]
+    >>> print(np.round(y_pi[:5, :, 0], 2))
+    [[ 1.01  1.91]
+     [ 5.01  5.91]
+     [ 9.01  9.92]
+     [13.   13.92]
+     [17.   17.92]]
+    >>> print(mapie.calibrator_.exponents)
+    [0, 1]
+    >>> print(mapie.calibrator_.n_out)
+    2
     """
     fit_attributes: List[str] = []
 
