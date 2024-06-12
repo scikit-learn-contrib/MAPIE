@@ -244,7 +244,7 @@ class ConformityScore(metaclass=ABCMeta):
 
         unbounded: bool
             Boolean specifying whether infinite prediction intervals
-            could be produced.
+            could be produced (when alpha_np is greater than or equal to 1.).
 
             By default ``False``.
 
@@ -264,12 +264,16 @@ class ConformityScore(metaclass=ABCMeta):
         alpha_cor = np.ceil(alpha_ref*(n_calib+1))/n_calib
         alpha_cor = np.clip(alpha_cor, a_min=0, a_max=1)
 
-        # Compute the target quantiles
+        # Compute the target quantiles:
+        # If unbounded is True and alpha is greater than or equal to 1,
+        # the quantile is set to infinity.
+        # Otherwise, the quantile is calculated as the corrected lower quantile
+        # of the signed conformity scores.
         quantile = signed * np.column_stack([
             np_nanquantile(
                 signed * conformity_scores, _alpha_cor,
                 axis=axis, method="lower"
-            ) if not unbounded or _alpha < 1 else np.inf * np.ones(n_ref)
+            ) if not (unbounded and _alpha >= 1) else np.inf * np.ones(n_ref)
             for _alpha, _alpha_cor in zip(alpha_ref, alpha_cor)
         ])
         return quantile
