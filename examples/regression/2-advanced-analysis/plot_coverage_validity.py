@@ -43,7 +43,10 @@ warnings.simplefilter("ignore", UserWarning)
 # Section 1: Comparison with the split conformalizer method (light version)
 # -------------------------------------------------------------------------
 #
-# TODO
+# We propose here to implement a lighter version of split CP by calculating
+# the quantile with a small correction according to [1].
+# We prepare the fit/calibration/test routine in order to calculate the average
+# coverage over several simulations.
 
 # Conformalizer Class
 class StandardConformalizer():
@@ -158,10 +161,11 @@ def cumulative_average(arr):
 
 
 ##############################################################################
-# Experiment 1.1: Coverage Validity for a given delta, n_calib
-# ------------------------------------------------------------
+# Experiment 1: Coverage Validity for a given delta, n_calib
+# ----------------------------------------------------------
 #
-# TODO
+# To begin, we propose to use ``delta=0.8`` and ``n_delta=6`` and compare
+# the coverage validity claim of the MAPIE class and the referenced class.
 
 # Parameters of the modelisation
 delta = 0.8
@@ -232,10 +236,19 @@ plt.show()
 
 
 ##############################################################################
-# Experiment 1.2: Again but without fixing random_state
-# -----------------------------------------------------
+# It can be seen that the two curves overlap, proving that both methods
+# produce the same results. Their effective coverage stabilizes between
+# the theoretical limits, always above the target coverage and converges
+# towards the exact coverage (i.e. expected according to the theory).
+
+
+##############################################################################
+# Experiment 2: Again but without fixing random_state
+# ---------------------------------------------------
 #
-# TODO
+# We just propose to reproduce the previous experiment without fixing the
+# random_state. The methods therefore follow different trajectories but
+# always achieve the expected coverage.
 
 # Run the experiment
 empirical_coverages_ref = []
@@ -279,10 +292,13 @@ plt.show()
 
 
 ##############################################################################
-# Section 2: Again but with different MAPIE CP methods
-# ----------------------------------------------------
+# Section 2: Comparison with different MAPIE CP methods
+# -----------------------------------------------------
 #
-# TODO
+# We propose to reproduce the previous experience with different methods of
+# the MAPIE package (prefit, prefit with asymmetrical non-conformity scores
+# and split).
+
 
 def get_coverage_split(conformalizer, data, target, delta, random_state=None):
     """
@@ -369,10 +385,13 @@ STRATEGIES = {
 
 
 ##############################################################################
-# Experiment 2: Again but with different MAPIE CP methods
+# Experiment 3: Again but with different MAPIE CP methods
 # -------------------------------------------------------
 #
-# TODO
+# The methods always follow different trajectories but always achieve the
+# expected coverage.
+# Since asymmetric scores can be used, the limits are not exactly the same.
+# We should calculate them differently but that doesn't change our conclusion.
 
 # Parameters of the modelisation
 delta = 0.8
@@ -411,15 +430,22 @@ plt.show()
 
 
 ##############################################################################
-# Experiment 3: Again but on different delta and n_calib
-# ------------------------------------------------------
+# Experiment 4: Extensive experimentation on different delta and n_calib
+# ----------------------------------------------------------------------
 #
-# TODO
+# Here we propose to extend the experiment on different sizes of the
+# calibration dataset and target coverage.
+# We show the influence of size on effective coverage.
+# In particular, we see that the expected coverage fluctuates between the
+# limits with respect to the size of the calibration dataset but continues
+# to converge towards the target coverage.
+# It can be noted that all methods follow this trajectory and continue to
+# achieve coverage validity.
 
-num_splits = 100
+num_splits = 500
 
-nc_min, nc_max = 10, 100
-n_calib_array = np.arange(nc_min, nc_max+1, 1)
+nc_min, nc_max = 10, 50
+n_calib_array = np.arange(nc_min, nc_max+1, 2)
 delta = 0.8
 delta_array = [delta]
 
@@ -432,18 +458,18 @@ effective_coverage_dict = {
     for method in STRATEGIES
 }
 
-for delta in delta_array:
-    for method, params in STRATEGIES.items():
-        for n_calib in n_calib_array:
-            coverages_list = []
-            run_params = model, params, n_calib, data, target, delta
-            coverages_list = Parallel(n_jobs=-1)(
-                delayed(run_get_coverage_split)(*run_params)
-                for _ in range(num_splits)
-            )
-            coverages_list = np.array(coverages_list)
-            final_coverage = cumulative_average(coverages_list)[-1]
-            final_coverage_dict[method][delta].append(final_coverage)
+# Run experiment
+for method, params in STRATEGIES.items():
+    for n_calib in n_calib_array:
+        coverages_list = []
+        run_params = model, params, n_calib, data, target, delta
+        coverages_list = Parallel(n_jobs=-1)(
+            delayed(run_get_coverage_split)(*run_params)
+            for _ in range(num_splits)
+        )
+        coverages_list = np.array(coverages_list)
+        final_coverage = cumulative_average(coverages_list)[-1]
+        final_coverage_dict[method][delta].append(final_coverage)
 
 
 # Theorical bounds and exact coverage to attempt
@@ -468,6 +494,7 @@ def exact_coverage_asym_fct(delta):
     return np.ceil((new_n+1)*delta)/(new_n+1)
 
 
+# Plot the results
 n_strat = len(final_coverage_dict)
 nrows, ncols = n_strat, 1
 
@@ -492,7 +519,10 @@ for i, method in enumerate(final_coverage_dict):
     ax[i].plot(n_calib_array, exact_cov, color='g', ls='--', label='Exact Cov')
     ax[i].hlines(delta, nc_min, nc_max, color='r', ls='--', label='Target Cov')
 
-    ax[i].legend(loc="lower right", ncol=2)
+    ax[i].legend(loc="upper right", ncol=2)
     ax[i].set_ylim(np.min(lb) - 0.05, 1.0)
+    ax[i].set_xlabel(r'$n_{calib}$')
+    ax[i].set_ylabel(r'$\overline{\mathbb{C}}$')
 
+fig.suptitle(r'$\delta = $' + str(delta))
 plt.show()
