@@ -1332,3 +1332,39 @@ def check_arrays_length(*arrays: NDArray) -> None:
         raise ValueError(
                 "There are arrays with different length"
             )
+
+
+def check_n_samples(
+    X: NDArray,
+    n_samples: Union[float, int]
+) -> int:
+    """
+    Check alpha and prepare it as a ArrayLike.
+
+    Parameters
+    ----------
+    n_samples: Union[float, int]
+        Can be a float between 0 and 1 or a int
+        Between 0 and 1, represent the part of data in the train sample
+        When n_samples is a int, it represents the number of elements
+        in the train sample
+
+    Returns
+    -------
+    int
+        n_samples
+
+    Raises
+    ------
+    ValueError
+        If n_samples is not an int or a float between 0 and 1.
+    """
+    if isinstance(n_samples, float) and 0 < n_samples < 1:
+        n_samples = int(np.floor(n_samples * X.shape[0]))
+    elif isinstance(n_samples, float) and n_samples > 1:
+        raise ValueError(
+            "Invalid n_samples.Allowed values are float between 0 and 1 or int"
+        )
+    else:
+        n_samples = int(n_samples)
+    return n_samples

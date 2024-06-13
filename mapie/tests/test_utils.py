@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Union
 
 import numpy as np
 import pytest
@@ -17,7 +17,8 @@ from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_array_inf, check_array_nan, check_arrays_length,
                          check_binary_zero_one, check_cv, check_gamma,
                          check_lower_upper_bounds, check_n_features_in,
-                         check_n_jobs, check_no_agg_cv, check_null_weight,
+                         check_n_jobs, check_no_agg_cv, check_n_samples,
+                         check_null_weight,
                          check_number_bins, check_split_strategy,
                          check_verbose, compute_quantiles, fit_estimator,
                          get_binning_groups)
@@ -508,3 +509,18 @@ def test_check_no_agg_cv_value_error(cv: Any) -> None:
         match=r"Allowed values must have the `get_n_splits` method"
     ):
         check_no_agg_cv(X_toy, cv, array)
+
+
+@pytest.mark.parametrize("X", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+@pytest.mark.parametrize("n_samples", [1.2, 2.4, 3.6])
+def test_invalid_n_samples(X: NDArray,
+                           n_samples: Union[float, int]) -> None:
+    """Test that invalid n_samples raise errors."""
+    with pytest.raises(
+        ValueError,
+        match=(
+            r".*Invalid n_samples."
+            r"Allowed values are float between 0 and 1 or int*"
+        )
+    ):
+        check_n_samples(X=X, n_samples=n_samples)

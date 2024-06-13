@@ -10,6 +10,7 @@ from sklearn.utils import check_random_state, resample
 from sklearn.utils.validation import _num_samples
 
 from ._typing import NDArray
+from .utils import check_n_samples
 
 
 class Subsample(BaseCrossValidator):
@@ -77,10 +78,12 @@ class Subsample(BaseCrossValidator):
         indices = np.arange(_num_samples(X))
         if self.n_samples is None:
             n_samples = len(indices)
-        elif isinstance(self.n_samples, float) and 0 < self.n_samples < 1:
-            n_samples = int(np.floor(self.n_samples * X.shape[0]))
         else:
-            n_samples = int(self.n_samples)
+            n_samples = check_n_samples(X, self.n_samples)
+        # elif isinstance(self.n_samples, float) and 0 < self.n_samples < 1:
+        #     n_samples = int(np.floor(self.n_samples * X.shape[0]))
+        # else:
+        #     n_samples = int(self.n_samples)
         random_state = check_random_state(self.random_state)
         for k in range(self.n_resamplings):
             train_index = resample(
