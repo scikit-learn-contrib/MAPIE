@@ -2,25 +2,30 @@
 ================================================
 Coverage Validity with MAPIE for Regression Task
 ================================================
-"""
 
-##############################################################################
-# DESCIPTION
-#
-# This notebook is inspired of the notebook used for episode "Uncertainty
-# Quantification: Avoid these Missteps in Validating Your Conformal Claims!"
-# (link to the [orginal notebook](https://github.com/mtorabirad/MLBoost)).
-#
-# [1] REF1
-#
-# [2] REF2
+This example verifies that conformal claims are valid in the MAPIE package
+when using the CP prefit/split methods.
+
+This notebook is inspired of the notebook used for episode "Uncertainty
+Quantification: Avoid these Missteps in Validating Your Conformal Claims!"
+(link to the [orginal notebook](https://github.com/mtorabirad/MLBoost)).
+
+For more details on theoretical guarantees:
+
+[1] Vovk, Vladimir, Alexander Gammerman, and Glenn Shafer.
+"Algorithmic Learning in a Random World." Springer Nature, 2022.
+
+[2] Angelopoulos, Anastasios N., and Stephen Bates.
+"Conformal prediction: A gentle introduction." Foundations and Trends®
+in Machine Learning 16.4 (2023): 494-591.
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.datasets import make_regression
-from sklearn.model_selection import KFold, ShuffleSplit, train_test_split
+from sklearn.model_selection import ShuffleSplit, train_test_split
 
 from mapie.regression import MapieRegressor
 from mapie.conformity_scores import AbsoluteConformityScore
@@ -35,8 +40,8 @@ warnings.simplefilter("ignore", UserWarning)
 
 
 ##############################################################################
-# Section 1: Comparison with the standard conformalizer method (litterature)
-# --------------------------------------------------------------------------
+# Section 1: Comparison with the split conformalizer method (light version)
+# -------------------------------------------------------------------------
 #
 # TODO
 
@@ -49,18 +54,18 @@ class StandardConformalizer():
         delta
     ):
         # Initialize the conformalizer with required parameters
-        self.point_predictor = pre_trained_model
+        self.estimator = pre_trained_model
         self.non_conformity_func = non_conformity_func
         self.delta = delta
 
     def _calculate_quantile(self, scores_calib):
         # Calculate the quantile value based on delta and non-conformity scores
-        self.delta_cor = np.ceil((self.delta)*(self.n_calib + 1))/self.n_calib
+        self.delta_cor = np.ceil(self.delta*(self.n_calib+1))/self.n_calib
         return np.quantile(scores_calib, self.delta_cor, method='lower')
 
     def _calibrate(self, X_calib, y_calib):
         # Calibrate the conformalizer to calculate q_hat
-        y_calib_pred = self.point_predictor.predict(X_calib)
+        y_calib_pred = self.estimator.predict(X_calib)
         scores_calib = self.non_conformity_func(y_calib_pred, y_calib)
         self.q_hat = self._calculate_quantile(scores_calib)
 
@@ -72,7 +77,7 @@ class StandardConformalizer():
 
     def predict(self, X, alpha=None):
         # Returns the predicted interval
-        y_pred = self.point_predictor.predict(X)
+        y_pred = self.estimator.predict(X)
         y_lower, y_upper = y_pred - self.q_hat, y_pred + self.q_hat
         y_pis = np.expand_dims(np.stack([y_lower, y_upper], axis=1), axis=-1)
         return y_lower, y_pis
@@ -163,7 +168,7 @@ delta = 0.8
 n_calib = 6
 
 n_train = 1000
-n_test = 100
+n_test = 1000
 num_splits = 1000
 
 # Load toy Data
@@ -175,8 +180,8 @@ X_train, X_cal_test, y_train, y_cal_test = train_test_split(
     data, target, train_size=n_train, random_state=1
 )
 
-# Create a linear regression model and fit it to the training data
-model = LinearRegression()
+# Create a regression model and fit it to the training data
+model = DecisionTreeRegressor()
 model.fit(X_train, y_train)
 
 # Compute theorical bounds and exact coverage to attempt
@@ -314,9 +319,9 @@ def get_coverage_split(conformalizer, data, target, delta, random_state=None):
         data, target, test_size=n_test
     )
 
-    # isinstance(conformalizer, MapieRegressor)
     # Calibration step
-    if isinstance(conformalizer.cv, ShuffleSplit):
+    if isinstance(conformalizer, MapieRegressor) and \
+            isinstance(conformalizer.cv, ShuffleSplit):
         conformalizer.fit(X_train_cal, y_train_cal)
     else:
         _, X_cal, _, y_cal = train_test_split(
@@ -337,8 +342,10 @@ def get_coverage_split(conformalizer, data, target, delta, random_state=None):
 
 
 def run_get_coverage_split(model, params, n_calib, data, target, delta):
+    if not params:
+        ref_reg = StandardConformalizer(model, non_conformity_func, delta)
+        return get_coverage_split(ref_reg, data, target, delta)
     try:
-        # Compute empirical coverage for each trial with MAPIE CP method
         mapie_reg = MapieRegressor(estimator=model, **params(n_calib))
         coverage = get_coverage_split(mapie_reg, data, target, delta)
     except Exception:
@@ -347,6 +354,7 @@ def run_get_coverage_split(model, params, n_calib, data, target, delta):
 
 
 STRATEGIES = {
+    "reference": None,
     "prefit": lambda n: dict(
         method="base",
         cv="prefit",
@@ -357,26 +365,6 @@ STRATEGIES = {
         cv="prefit",
         conformity_score=AbsoluteConformityScore(sym=False)
     ),
-    # "split": lambda n: dict(
-    #     method="base",
-    #     cv=ShuffleSplit(n_splits=1, test_size=n),
-    #     conformity_score=AbsoluteConformityScore(sym=True)
-    # ),
-    # "split_asym": lambda n: dict(
-    #     method="base",
-    #     cv=ShuffleSplit(n_splits=1, test_size=n),
-    #     conformity_score=AbsoluteConformityScore(sym=False)
-    # ),
-    "cv_plus_10": lambda n: dict(
-        method="plus",
-        cv=KFold(n_splits=10, shuffle=True),
-        conformity_score=AbsoluteConformityScore(sym=True)
-    ),
-    # "cv_plus_5": lambda n: dict(
-    #     method="plus",
-    #     cv=KFold(n_splits=5, shuffle=True),
-    #     conformity_score=AbsoluteConformityScore(sym=True)
-    # ),
 }
 
 
@@ -395,22 +383,17 @@ num_splits = 1000
 cumulative_averages_dict = dict()
 
 for method, params in STRATEGIES.items():
-    if 'cv' in method:
-        continue
     coverages_list = []
     run_params = model, params, n_calib, data, target, delta
     coverages_list = Parallel(n_jobs=-1)(
         delayed(run_get_coverage_split)(*run_params)
         for _ in range(num_splits)
     )
-
     cumulative_averages_dict[method] = cumulative_average(coverages_list)
 
 # Plot the results
 fig, ax = plt.subplots()
 for method in STRATEGIES:
-    if 'cv' in method:
-        continue
     plt.plot(cumulative_averages_dict[method], alpha=0.5, label=method)
 
 plt.hlines(exact_cov, 0, num_splits, color='r', ls='--', label='Exact Cov.')
@@ -433,11 +416,12 @@ plt.show()
 #
 # TODO
 
-num_splits = 200
+num_splits = 100
 
-n_calib_min, n_calib_max = 10, 200
-n_calib_array = np.arange(n_calib_min, n_calib_max+1, 2)
-delta_array = [0.8]  # [0.6, 0.8]
+nc_min, nc_max = 10, 100
+n_calib_array = np.arange(nc_min, nc_max+1, 1)
+delta = 0.8
+delta_array = [delta]
 
 final_coverage_dict = {
     method: {delta: [] for delta in delta_array}
@@ -463,59 +447,52 @@ for delta in delta_array:
 
 
 # Theorical bounds and exact coverage to attempt
-def lower_bound(delta):
+def lower_bound_fct(delta):
     return delta * np.ones_like(n_calib_array)
 
 
-def upper_bound(delta):
-    return (delta + 1/(n_calib_array+1))
+def upper_bound_fct(delta):
+    return delta + 1/(n_calib_array)
 
 
-def upper_bound_asym(delta):
-    return (delta + 1/(n_calib_array//2+1))
+def upper_bound_asym_fct(delta):
+    return delta + 1/(n_calib_array//2)
 
 
-def lower_bound_cross(delta):
-    return 1 - 2*(1-delta) - np.sqrt(2/n_calib_array)
+def exact_coverage_fct(delta):
+    return np.ceil((n_calib_array+1)*delta)/(n_calib_array+1)
 
 
-def exact_coverage(delta):
-    return (np.ceil((n_calib_array+1)*delta))/(n_calib_array+1)
+def exact_coverage_asym_fct(delta):
+    new_n = n_calib_array//2
+    return np.ceil((new_n+1)*delta)/(new_n+1)
 
 
-# def lower_bound_cross(delta, K, n):
-#     bound = 1 - 2*(1-delta)
-#     margin = np.min([2*(1-1/K)/(n/K+1), (1-K/n)/(K+1)])
-#     return bound - margin
-
-
-n_strat = len(STRATEGIES)
-nrows, ncols = n_strat, len(delta_array)  # np.max([len(delta_array), 2])
+n_strat = len(final_coverage_dict)
+nrows, ncols = n_strat, 1
 
 fig, ax = plt.subplots(nrows=nrows, ncols=ncols)
 
-for i, method in enumerate(STRATEGIES):
-    for j, delta in enumerate(delta_array):
+for i, method in enumerate(final_coverage_dict):
+    # Compute the different bounds, target
+    cov = final_coverage_dict[method][delta]
+    ub = upper_bound_fct(delta)
+    lb = lower_bound_fct(delta)
+    exact_cov = exact_coverage_fct(delta)
+    if 'asym' in method:
+        ub = upper_bound_asym_fct(delta)
+        exact_cov = exact_coverage_asym_fct(delta)
+    ub = np.clip(ub, a_min=0, a_max=1)
+    lb = np.clip(lb, a_min=0, a_max=1)
 
-        cov = final_coverage_dict[method][delta]
-        ub = upper_bound(delta)
-        lb = lower_bound(delta)
-        if 'asym' in method:
-            ub = upper_bound_asym(delta)
-        if 'cv' in method:
-            ub = np.ones_like(n_calib_array)
-            lb = lower_bound_cross(delta)
+    # Plot the results
+    ax[i].plot(n_calib_array, cov, alpha=0.5, label=method, color='g')
+    ax[i].plot(n_calib_array, lb, color='k', label='Lower Bound')
+    ax[i].plot(n_calib_array, ub, color='b', label='Upper Bound')
+    ax[i].plot(n_calib_array, exact_cov, color='g', ls='--', label='Exact Cov')
+    ax[i].hlines(delta, nc_min, nc_max, color='r', ls='--', label='Target Cov')
 
-        ub = np.clip(ub, a_min=0, a_max=1)
-        lb = np.clip(lb, a_min=0, a_max=1)
-
-        ax[i].plot(n_calib_array, cov, alpha=0.5, label=method, color='g')
-        ax[i].plot(n_calib_array, lb, color='k', label='Lower Bound')
-        ax[i].plot(n_calib_array, ub, color='b', label='Upper Bound')
-        ax[i].hlines(delta, n_calib_min, n_calib_max, color='r', ls='--',
-                     label='Target Coverage')
-
-        ax[i].legend(loc="lower right", ncol=2)
-        ax[i].set_ylim(np.min(lb) - 0.05, 1.0)
+    ax[i].legend(loc="lower right", ncol=2)
+    ax[i].set_ylim(np.min(lb) - 0.05, 1.0)
 
 plt.show()
