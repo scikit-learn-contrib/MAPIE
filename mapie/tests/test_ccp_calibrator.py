@@ -112,9 +112,9 @@ def test_phi_n_attributes(calibrator: CCPCalibrator, n_out_raw: int) -> None:
 
 
 def test_invalid_multiplication() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="The function used as multiplier "):
         mapie = SplitMapieRegressor(
-            calibrator=CustomCCP([lambda X: X])*(lambda X: (X[:, 0] < 3))*(
+            calibrator=CustomCCP([lambda X: X])*(
                     lambda X: (X[:, [0, 1]] > 0)),
             alpha=0.1,
         )

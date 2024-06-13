@@ -111,6 +111,10 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
     fit_attributes = ["predictor_"]
     calib_attributes = ["calibrator_"]
 
+    cv: Optional[
+            Union[str, BaseCrossValidator, BaseShuffleSplit]
+        ]
+
     @abstractmethod
     def __init__(
         self,
@@ -132,12 +136,6 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         """
         Initialisation
         """
-        self.random_state = random_state
-        self.cv = cv
-        self.predictor = predictor
-        self.conformity_score = conformity_score
-        self.calibrator = calibrator
-        self.alpha = alpha
 
     @abstractmethod
     def _check_fit_parameters(self) -> Union[RegressorMixin, ClassifierMixin]:
@@ -279,9 +277,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
                         fit_kwargs[param_name] = self_attrs[param_name]
                     elif param_name in local_vars:
                         fit_kwargs[param_name] = local_vars[param_name]
-                    elif param.default is param.empty:
-                        raise ValueError(f"Missing required argument:"
-                                         f" {param_name}")
+
         return fit_kwargs
 
     def fit_predictor(

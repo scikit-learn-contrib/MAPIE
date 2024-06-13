@@ -207,6 +207,7 @@ class CustomCCP(CCPCalibrator):
 
             By default ``None``
         """
+        check_multiplier(self.multipliers, X, y_pred, z)
         self._check_fit_parameters(X, y_pred, z)
 
         for phi in self.functions_:
@@ -219,5 +220,4 @@ class CustomCCP(CCPCalibrator):
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
         self.init_value_ = self._check_init_value(self.init_value, self.n_out)
-        check_multiplier(self.multipliers, X, y_pred, z)
         return self

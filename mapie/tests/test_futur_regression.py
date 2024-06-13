@@ -102,6 +102,14 @@ def test_fit_predict(z: Any) -> None:
     mapie_reg.predict(X_toy, z=z)
 
 
+@pytest.mark.parametrize("z", [None, z_toy])
+def test_fit_predict_reg(z: Any) -> None:
+    """Test that fit-predict raises no errors."""
+    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg.fit(X_toy, y_toy, z=z, reg_param=0.1)
+    mapie_reg.predict(X_toy, z=z)
+
+
 def test_not_fitted_predictor_fit_calibrator() -> None:
     """Test that calibrate before fit raises errors."""
     mapie_reg = SplitMapieRegressor(alpha=0.1)
@@ -496,7 +504,10 @@ def test_results_with_constant_sample_weights(
     np.testing.assert_allclose(y_pis0, y_pis2, rtol=1e-2, atol=1e-2)
 
 
-@pytest.mark.parametrize("dataset", [(X, y, z), (X_toy, y_toy, z_toy)])
+@pytest.mark.parametrize("dataset", [
+    (X, y, z), (X_toy, y_toy, z_toy),
+    (np.arange(0, 100).reshape(-1, 1), np.arange(0, 100), None)
+])
 @pytest.mark.parametrize("calibrator", PHI)
 @pytest.mark.parametrize("cv", CV)
 @pytest.mark.parametrize("alpha", [0.2, 0.1, 0.05])
