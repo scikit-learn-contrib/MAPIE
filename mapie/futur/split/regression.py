@@ -1,18 +1,21 @@
 from __future__ import annotations
 
-from typing import Optional
-
+from typing import List, Optional, Tuple, Union
+import inspect
 import numpy as np
 from sklearn.base import RegressorMixin
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators.ccp import check_calibrator
-from mapie.futur.split.base import SplitMapie, Calibrator
+from mapie.calibrators.ccp import check_calibrator, CCPCalibrator
+from mapie.conformity_scores import ConformityScore
+from mapie.futur.split.base import CCP, Calibrator
 from mapie.utils import (check_lower_upper_bounds, check_estimator_regression,
                          check_conformity_score)
+from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
+from sklearn.pipeline import Pipeline
 
 
-class SplitMapieRegressor(SplitMapie):
+class SplitMapieRegressor(CCP):
     """
     This class implements an adaptative conformal prediction method proposed by
     Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
@@ -131,6 +134,29 @@ class SplitMapieRegressor(SplitMapie):
      [11.76 13.16]
      [15.76 17.16]]
     """
+    def __init__(
+        self,
+        predictor: Optional[
+            Union[
+                RegressorMixin,
+                Pipeline,
+                List[Union[RegressorMixin, Pipeline]]
+            ]
+        ] = None,
+        calibrator: Optional[CCPCalibrator] = None,
+        cv: Optional[
+            Union[str, BaseCrossValidator, BaseShuffleSplit]
+        ] = None,
+        alpha: Optional[float] = None,
+        conformity_score: Optional[ConformityScore] = None,
+        random_state: Optional[int] = None,
+    ) -> None:
+        self.random_state = random_state
+        self.cv = cv
+        self.predictor = predictor
+        self.conformity_score = conformity_score
+        self.calibrator = calibrator
+        self.alpha = alpha
 
     def _check_fit_parameters(self) -> RegressorMixin:
         """
@@ -141,28 +167,29 @@ class SplitMapieRegressor(SplitMapie):
         predictor = check_estimator_regression(self.predictor, self.cv)
         return predictor
 
-    def _check_calibrate_parameters(self) -> Calibrator:
+    def _check_calibrate_parameters(self) -> Tuple[
+        ConformityScore, Calibrator
+    ]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
         ``calibrator`` arguments.
         """
-        self.conformity_score_ = check_conformity_score(
+        conformity_score_ = check_conformity_score(
             self.conformity_score, self.default_sym_
         )
         calibrator = check_calibrator(self.calibrator)
+        self.sym = conformity_score_.sym
         self._check_alpha(self.alpha)
-        return calibrator
+        return conformity_score_, calibrator
 
     def predict_score(
-        self, predictor: RegressorMixin, X: ArrayLike
+        self, X: ArrayLike
     ) -> NDArray:
         """
         Compute conformity scores
 
         Parameters
         ----------
-        predictor : RegressorMixin
-            Prediction
         X: ArrayLike
             Observed values.
 
@@ -171,40 +198,13 @@ class SplitMapieRegressor(SplitMapie):
         NDArray of shape (n_samples, )
             predictions
         """
-        return predictor.predict(X)
-
-    def predict_cs(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        y_pred: NDArray,
-    ) -> NDArray:
-        """
-        Compute conformity scores
-
-        Parameters
-        ----------
-        X: ArrayLike
-            Observed values.
-
-        y: ArrayLike
-            Observed Target
-
-        y_pred: NDArray
-            Predicted target.
-
-        Returns
-        -------
-        NDArray
-            Conformity scores on observed data
-        """
-        return self.conformity_score_.get_conformity_scores(X, y, y_pred)
+        return self.predictor_.predict(X)
 
     def predict_bounds(
         self,
         X: ArrayLike,
         y_pred: NDArray,
-        z: Optional[ArrayLike] = None,
+        **predict_kwargs,
     ) -> NDArray:
         """
         Compute conformity scores
@@ -226,7 +226,11 @@ class SplitMapieRegressor(SplitMapie):
             Bounds, as a 3D array of shape (n_samples, 2, 1)
             (because we only have 1 alpha value)
         """
-        conformity_score_pred = self.calibrator_.predict(X, y_pred, z)
+        predict_kwargs = self.get_method_arguments(
+            self.calibrator_.predict, inspect.currentframe(), predict_kwargs,
+            ["X"]
+        )
+        conformity_score_pred = self.calibrator_.predict(X, **predict_kwargs)
 
         y_pred_low = self.conformity_score_.get_estimation_distribution(
             X, y_pred[:, np.newaxis], conformity_score_pred[:, [0]]

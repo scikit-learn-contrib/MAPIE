@@ -1,22 +1,22 @@
 from __future__ import annotations
 
-from typing import Optional, Union
-
+from typing import Optional, Union, List, Tuple
+import inspect
 import numpy as np
-from sklearn.base import RegressorMixin, ClassifierMixin
+from sklearn.base import ClassifierMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators.ccp import check_calibrator
-from mapie.futur.split.base import SplitMapie, Calibrator
+from mapie.calibrators.ccp import check_calibrator, CCPCalibrator
+from mapie.futur.split.base import CCP, Calibrator
 from mapie.conformity_scores import ConformityScore
 from mapie.conformity_scores.classification_scores import LAC
 
 
-class SplitMapieClassifier(SplitMapie):
+class SplitMapieClassifier(CCP):
     """
     This class implements an adaptative conformal prediction method proposed by
     Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
@@ -30,7 +30,7 @@ class SplitMapieClassifier(SplitMapie):
 
     Parameters
     ----------
-    predictor: Optional[RegressorMixin]
+    predictor: Optional[ClassifierMixin]
         Any regressor from scikit-learn API.
         (i.e. with ``fit`` and ``predict`` methods).
         If ``None``, ``predictor`` defaults to a ``LinearRegressor`` instance.
@@ -134,15 +134,39 @@ class SplitMapieClassifier(SplitMapie):
      [0. 1. 0. 0.]
      [0. 0. 1. 0.]]
     """
+    def __init__(
+        self,
+        predictor: Optional[
+            Union[
+                ClassifierMixin,
+                Pipeline,
+                List[Union[ClassifierMixin, Pipeline]]
+            ]
+        ] = None,
+        calibrator: Optional[CCPCalibrator] = None,
+        cv: Optional[
+            Union[str, BaseCrossValidator, BaseShuffleSplit]
+        ] = None,
+        alpha: Optional[float] = None,
+        conformity_score: Optional[ConformityScore] = None,
+        random_state: Optional[int] = None,
+    ) -> None:
+        self.random_state = random_state
+        self.cv = cv
+        self.predictor = predictor
+        self.conformity_score = conformity_score
+        self.calibrator = calibrator
+        self.alpha = alpha
+
     def _check_estimator_fit_predict_predict_proba(
-        self, estimator: Union[RegressorMixin, ClassifierMixin]
+        self, estimator: ClassifierMixin
     ) -> None:
         """
         Check that the estimator has a fit and precict method.
 
         Parameters
         ----------
-        estimator: Union[RegressorMixin, ClassifierMixin]
+        estimator: ClassifierMixin
             Estimator to train.
 
         Raises
@@ -163,7 +187,7 @@ class SplitMapieClassifier(SplitMapie):
         self,
         estimator: Optional[ClassifierMixin] = None,
         cv: Optional[Union[str, BaseCrossValidator, BaseShuffleSplit]] = None,
-    ) -> RegressorMixin:
+    ) -> ClassifierMixin:
         """
         Check if estimator is ``None``,
         and returns a ``LogisticRegression`` instance if necessary.
@@ -209,7 +233,7 @@ class SplitMapieClassifier(SplitMapie):
                 )
         return est
 
-    def _check_fit_parameters(self) -> RegressorMixin:
+    def _check_fit_parameters(self) -> ClassifierMixin:
         """
         Check and replace default value of ``predictor`` and ``cv`` arguments.
         Copy the ``predictor`` in ``predictor_`` attribute if ``cv="prefit"``.
@@ -235,28 +259,29 @@ class SplitMapieClassifier(SplitMapie):
                 "Must be None or a ConformityScore instance."
             )
 
-    def _check_calibrate_parameters(self) -> Calibrator:
+    def _check_calibrate_parameters(self) -> Tuple[
+        ConformityScore, Calibrator
+    ]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
         ``calibrator`` arguments.
         """
-        self.conformity_score_ = self._check_calib_conformity_score(
+        conformity_score_ = self._check_calib_conformity_score(
             self.conformity_score, self.default_sym_
         )
         calibrator = check_calibrator(self.calibrator)
+        self.sym = True
         self._check_alpha(self.alpha)
-        return calibrator
+        return conformity_score_, calibrator
 
     def predict_score(
-        self, predictor: RegressorMixin, X: ArrayLike
+        self, X: ArrayLike
     ) -> NDArray:
         """
         Compute conformity scores
 
         Parameters
         ----------
-        predictor : RegressorMixin
-            Prediction
         X: ArrayLike
             Observed values.
 
@@ -265,40 +290,13 @@ class SplitMapieClassifier(SplitMapie):
         NDArray of shape (n_samples, n_classes)
             Predicted probas
         """
-        return predictor.predict_proba(X)
-
-    def predict_cs(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        y_pred: NDArray,
-    ) -> NDArray:
-        """
-        Compute conformity scores
-
-        Parameters
-        ----------
-        X: ArrayLike
-            Observed values.
-
-        y: ArrayLike
-            Observed Target
-
-        y_pred: NDArray
-            Predicted target.
-
-        Returns
-        -------
-        NDArray
-            Conformity scores on observed data
-        """
-        return self.conformity_score_.get_conformity_scores(X, y, y_pred)
+        return self.predictor_.predict_proba(X)
 
     def predict_bounds(
         self,
         X: ArrayLike,
         y_pred: NDArray,
-        z: Optional[ArrayLike] = None,
+        **predict_kwargs,
     ) -> NDArray:
         """
         Compute conformity scores
@@ -323,7 +321,11 @@ class SplitMapieClassifier(SplitMapie):
         # Classification conformity scores always have ``sym=True``, so
         # the calibrator_.predict result is a 2D array with
         # column 1 = -1 * column 2, So the true values are in res[:, 1]
-        conformity_score_pred = self.calibrator_.predict(X, y_pred, z)
+        predict_kwargs = self.get_method_arguments(
+            self.calibrator_.predict, inspect.currentframe(), predict_kwargs,
+            ["X"]
+        )
+        conformity_score_pred = self.calibrator_.predict(X, **predict_kwargs)
 
         y_pred_set = self.conformity_score_.get_estimation_distribution(
             X, y_pred, conformity_score_pred[:, 1]

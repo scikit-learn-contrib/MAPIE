@@ -4,13 +4,13 @@ from typing import Callable, Optional, Tuple, Union, List
 
 import numpy as np
 from mapie._typing import ArrayLike
-from .base import CCP, Calibrator
+from .base import CCPCalibrator, Calibrator
 from .utils import format_functions, compute_sigma, sample_points
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
 
 
-class GaussianCCP(CCP):
+class GaussianCCP(CCPCalibrator):
     """
     This class is used to define the transformation phi,
     used in the Gibbs et al. method to model the conformity scores.
@@ -277,8 +277,8 @@ class GaussianCCP(CCP):
 
 
 def check_calibrator(
-    phi: Optional[CCP],
-) -> CCP:
+    phi: Optional[CCPCalibrator],
+) -> CCPCalibrator:
     """
     Check if ``phi`` is a ``CCP`` instance.
 

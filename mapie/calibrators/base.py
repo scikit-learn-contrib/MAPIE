@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Optional, List
+from typing import List
 
 from mapie._typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator
@@ -24,14 +24,8 @@ class Calibrator(BaseEstimator, metaclass=ABCMeta):
     def fit(
         self,
         X_calib: ArrayLike,
-        y_pred_calib: Optional[ArrayLike],
-        z_calib: Optional[ArrayLike],
-        calib_conformity_scores: NDArray,
-        alpha: float,
-        sym: bool,
-        sample_weight_calib: Optional[ArrayLike] = None,
-        random_state: Optional[int] = None,
-        **optim_kwargs,
+        conformity_scores_calib: NDArray,
+        **kwargs,
     ) -> Calibrator:
         """
         Fit the calibrator instance
@@ -94,8 +88,7 @@ class Calibrator(BaseEstimator, metaclass=ABCMeta):
     def predict(
         self,
         X: ArrayLike,
-        y_pred: ArrayLike,
-        z: Optional[ArrayLike] = None,
+        **kwargs,
     ) -> NDArray:
         """
         Predict ``(X, y_pred, z)``

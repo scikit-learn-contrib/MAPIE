@@ -25,14 +25,10 @@ class Standard(Calibrator):
     def fit(
         self,
         X_calib: ArrayLike,
-        y_pred_calib: Optional[ArrayLike],
-        z_calib: Optional[ArrayLike],
-        calib_conformity_scores: NDArray,
-        alpha: float,
-        sym: bool,
-        sample_weight_calib: Optional[ArrayLike] = None,
-        random_state: Optional[int] = None,
-        **optim_kwargs,
+        conformity_scores_calib: NDArray,
+        alpha: Optional[float] = None,
+        sym: Optional[bool] = None,
+        **kwargs,
     ) -> Calibrator:
         """
         Fit the calibrator instance
@@ -90,6 +86,9 @@ class Standard(Calibrator):
         optim_kwargs: Dict
             Other argument, used in sklear.optimize.minimize
         """
+        assert alpha is not None
+        assert sym is not None
+
         signed = -1 if sym else 1
         quantile_search = "higher" if sym else "lower"
 
@@ -97,11 +96,11 @@ class Standard(Calibrator):
         alpha_up = 1 - alpha if sym else 1 - alpha/2
 
         self.q_up_ = ConformityScore.get_quantile(
-            calib_conformity_scores[..., np.newaxis],
+            conformity_scores_calib[..., np.newaxis],
             np.array([alpha_up]), axis=0, method="higher"
         )[0, 0]
         self.q_low_ = signed * ConformityScore.get_quantile(
-            calib_conformity_scores[..., np.newaxis],
+            conformity_scores_calib[..., np.newaxis],
             np.array([alpha_low]), axis=0, method=quantile_search
         )[0, 0]
 
@@ -110,8 +109,7 @@ class Standard(Calibrator):
     def predict(
         self,
         X: ArrayLike,
-        y_pred: ArrayLike,
-        z: Optional[ArrayLike] = None,
+        **kwargs,
     ) -> NDArray:
         """
         Predict ``(X, y_pred, z)``

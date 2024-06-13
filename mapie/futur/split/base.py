@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import List, Optional, Tuple, Union, Dict, cast
+from typing import List, Optional, Tuple, Union, Dict, cast, Callable, Any
 import warnings
+import inspect
 
-from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
                                      ShuffleSplit, PredefinedSplit)
 from sklearn.pipeline import Pipeline
@@ -12,12 +13,12 @@ from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
-from mapie.calibrators.ccp import CCP
+from mapie.calibrators.ccp import CCPCalibrator
 from mapie.calibrators import Calibrator
 from mapie.utils import fit_estimator, _safe_sample
 
 
-class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
+class CCP(BaseEstimator, metaclass=ABCMeta):
     """
     This class implements an adaptative conformal prediction method proposed by
     Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
@@ -31,7 +32,7 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
     Parameters
     ----------
-    predictor: Optional[RegressorMixin]
+    predictor: Union[RegressorMixin, ClassifierMixin]
         Any regressor from scikit-learn API.
         (i.e. with ``fit`` and ``predict`` methods).
         If ``None``, ``predictor`` defaults to a ``LinearRegressor`` instance.
@@ -110,16 +111,17 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     fit_attributes = ["predictor_"]
     calib_attributes = ["calibrator_"]
 
+    @abstractmethod
     def __init__(
         self,
         predictor: Optional[
             Union[
-                RegressorMixin,
+                Union[RegressorMixin, ClassifierMixin],
                 Pipeline,
-                List[Union[RegressorMixin, Pipeline]]
+                List[Union[Union[RegressorMixin, ClassifierMixin], Pipeline]]
             ]
         ] = None,
-        calibrator: Optional[CCP] = None,
+        calibrator: Optional[CCPCalibrator] = None,
         cv: Optional[
             Union[str, BaseCrossValidator, BaseShuffleSplit]
         ] = None,
@@ -127,6 +129,9 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         conformity_score: Optional[ConformityScore] = None,
         random_state: Optional[int] = None,
     ) -> None:
+        """
+        Initialisation
+        """
         self.random_state = random_state
         self.cv = cv
         self.predictor = predictor
@@ -135,13 +140,15 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self.alpha = alpha
 
     @abstractmethod
-    def _check_fit_parameters(self) -> RegressorMixin:
+    def _check_fit_parameters(self) -> Union[RegressorMixin, ClassifierMixin]:
         """
         Check and replace default value of ``predictor`` and ``cv`` arguments.
         """
 
     @abstractmethod
-    def _check_calibrate_parameters(self) -> Calibrator:
+    def _check_calibrate_parameters(self) -> Tuple[
+        ConformityScore, Calibrator
+    ]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
         ``calibrator`` arguments.
@@ -227,6 +234,56 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
             raise ValueError("Invalid alpha. "
                              "Allowed values are between 0 and 1.")
 
+    def get_method_arguments(
+        self, method: Callable, currentframe: Any,
+        kwargs: Optional[Dict], exclude_args: Optional[List[str]] = None,
+    ) -> Dict:
+        """
+        Return a dictionnary with ``calibrator_.fit`` arguments
+
+        Parameters
+        ----------
+        local_vars : Dict
+            Dictionnay of local variables
+
+        currentframe : FrameType
+            ``inpect.currentframe()``, called where the
+            ``get_method_arguments`` is called.
+
+        kwargs : Optional[Dict]
+            Other arguments
+
+        exclude_args : Optional[List[str]]
+            Arguments to exclude
+
+        Returns
+        -------
+        Dict
+            dictinnary of arguments
+        """
+        local_vars = {k: v for k, v in currentframe.f_locals.items()
+                      if k != 'self'}
+        self_attrs = {k: v for k, v in self.__dict__.items()}
+        sig = inspect.signature(method)
+
+        # Build the kwargs dictionary
+        fit_kwargs: Dict[str, Any] = {}
+        for param in sig.parameters.values():
+            if param.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                              inspect.Parameter.KEYWORD_ONLY):
+                param_name = param.name
+                if exclude_args is None or param_name not in exclude_args:
+                    if kwargs is not None and param_name in kwargs:
+                        fit_kwargs[param_name] = kwargs[param_name]
+                    elif param_name in self_attrs:
+                        fit_kwargs[param_name] = self_attrs[param_name]
+                    elif param_name in local_vars:
+                        fit_kwargs[param_name] = local_vars[param_name]
+                    elif param.default is param.empty:
+                        raise ValueError(f"Missing required argument:"
+                                         f" {param_name}")
+        return fit_kwargs
+
     def fit_predictor(
         self,
         X: ArrayLike,
@@ -234,7 +291,7 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params,
-    ) -> SplitMapie:
+    ) -> CCP:
         """
         Fit the predictor if ``cv`` argument is not ``"prefit"``
 
@@ -295,12 +352,11 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        z: Optional[ArrayLike] = None,
-        alpha: Optional[float] = None,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **optim_kwargs,
-    ) -> SplitMapie:
+        calib_kwargs: Optional[Dict] = None,
+        **kwargs,
+    ) -> CCP:
         """
         Calibrate with (``X``, ``y`` and ``z``)
         and the new value ``alpha`` value, if not ``None``
@@ -312,24 +368,6 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
         y: ArrayLike of shape (n_samples,)
             Training labels.
-
-        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
-            Exogenous variables
-
-            By default ``None``
-
-        alpha: Optional[float]
-            Between ``0.0`` and ``1.0``, represents the risk level of the
-            confidence interval.
-            Lower ``alpha`` produce larger (more conservative) prediction
-            intervals.
-            ``alpha`` is the complement of the target coverage level.
-
-            If ``None``, the calibration will be done using the ``alpha``value
-            set in the initialisation. Else, the new value will overwrite the
-            old one.
-
-            By default ``None``
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
@@ -349,7 +387,7 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
             By default ``None``.
 
-        optim_kwargs: Dict
+        calib_kwargs: Dict
             Other argument, used in sklear.optimize.minimize
 
         Returns
@@ -358,7 +396,7 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
             self
         """
         self._check_fit_parameters()
-        calibrator = self._check_calibrate_parameters()
+        self.conformity_score_, calibrator = self._check_calibrate_parameters()
         check_is_fitted(self, self.fit_attributes)
 
         # Get calibration set
@@ -367,41 +405,31 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
             _, calib_index = list(self.cv.split(X, y, groups))[0]
             (
-                X_calib, y_calib, sample_weight_calib
+                X_calib, y_calib, _
             ) = _safe_sample(X, y, sample_weight, calib_index)
 
-            if z is not None:
-                (
-                    z_calib, _, _
-                ) = _safe_sample(z, y, sample_weight, calib_index)
-            else:
-                z_calib = None
         else:
-            X_calib, y_calib, z_calib = X, y, z
-            sample_weight_calib = cast(Optional[NDArray], sample_weight)
-
-        if alpha is not None and self.alpha != alpha:
-            self._check_alpha(alpha)
-            self.alpha = alpha
-            warnings.warn(f"WARNING: The old value of alpha ({self.alpha}) "
-                          f"has been overwritten by the new one ({alpha}).")
+            X_calib, y_calib = X, y
 
         if self.alpha is None:
             warnings.warn("No calibration is done, because alpha is None.")
             return self
 
         # Compute conformity scores
-        y_pred_calib = self.predict_score(self.predictor_, X_calib)
+        y_pred_calib = self.predict_score(X_calib)
 
-        calib_conformity_scores = self.predict_cs(
+        conformity_scores_calib = self.conformity_score_.get_conformity_scores(
             X_calib, y_calib, y_pred_calib
         )
 
-        # Fit the calibrator
+        calib_arguments = self.get_method_arguments(
+            calibrator.fit, inspect.currentframe(), kwargs,
+            ["X_calib", "conformity_scores_calib"]
+        )
+
         self.calibrator_ = calibrator.fit(
-            X_calib, y_pred_calib, z_calib, calib_conformity_scores,
-            self.alpha, self.conformity_score_.sym, sample_weight_calib,
-            self.random_state, **optim_kwargs,
+            X_calib, conformity_scores_calib, **calib_arguments,
+            **(calib_kwargs if calib_kwargs is not None else {})
         )
 
         return self
@@ -410,13 +438,12 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        z: Optional[ArrayLike] = None,
-        alpha: Optional[float] = None,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        fit_params: Optional[Dict] = None,
-        calib_params: Optional[Dict] = None,
-    ) -> SplitMapie:
+        fit_kwargs: Optional[Dict] = None,
+        calib_kwargs: Optional[Dict] = None,
+        **kwargs
+    ) -> CCP:
         """
         Fit the predictor (if ``cv`` is not ``"prefit"``)
         and fit the calibration.
@@ -477,16 +504,16 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
             self
         """
         self.fit_predictor(X, y, sample_weight, groups,
-                           **(fit_params if fit_params is not None else {}))
-        self.fit_calibrator(X, y, z, alpha, sample_weight, groups,
-                            **(calib_params
-                               if calib_params is not None else {}))
+                           **(fit_kwargs if fit_kwargs is not None else {}))
+        self.fit_calibrator(X, y, sample_weight, groups,
+                            **(calib_kwargs
+                               if calib_kwargs is not None else {}), **kwargs)
         return self
 
     def predict(
         self,
         X: ArrayLike,
-        z: Optional[ArrayLike] = None,
+        **kwargs,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -510,28 +537,32 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
         check_is_fitted(self, self.fit_attributes)
-        y_pred = self.predict_score(self.predictor_, X)
+        y_pred = self.predict_score(X)
 
         if self.alpha is None:
             return y_pred
 
         check_is_fitted(self, self.calib_attributes)
 
-        y_bounds = self.predict_bounds(X, y_pred, z)
+        # Fit the calibrator
+        bounds_arguments = self.get_method_arguments(
+            self.calibrator_.predict, inspect.currentframe(), kwargs,
+            ["X", "y_pred"]
+        )
+
+        y_bounds = self.predict_bounds(X, y_pred, **bounds_arguments)
 
         return self.predict_best(y_pred), y_bounds
 
     @abstractmethod
     def predict_score(
-        self, predictor: RegressorMixin, X: ArrayLike
+        self, X: ArrayLike
     ) -> NDArray:
         """
         Compute conformity scores
 
         Parameters
         ----------
-        predictor : RegressorMixin
-            Prediction
         X: ArrayLike
             Observed values.
 
@@ -543,38 +574,11 @@ class SplitMapie(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def predict_cs(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        y_pred: NDArray,
-    ) -> NDArray:
-        """
-        Compute conformity scores
-
-        Parameters
-        ----------
-        X: ArrayLike
-            Observed values.
-
-        y: ArrayLike
-            Observed Target
-
-        y_pred: NDArray
-            Predicted target.
-
-        Returns
-        -------
-        NDArray
-            Conformity scores on observed data
-        """
-
-    @abstractmethod
     def predict_bounds(
         self,
         X: ArrayLike,
         y_pred: NDArray,
-        z: Optional[ArrayLike] = None,
+        **predict_kwargs,
     ) -> NDArray:
         """
         Compute conformity scores

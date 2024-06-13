@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Callable, Optional, Tuple, Union, List
 
 from mapie._typing import ArrayLike
-from .base import CCP
+from .base import CCPCalibrator
 from .utils import format_functions
 
 
-class PolynomialCCP(CCP):
+class PolynomialCCP(CCPCalibrator):
     """
     This class is used to define the transformation phi,
     used in the Gibbs et al. method to model the conformity scores.

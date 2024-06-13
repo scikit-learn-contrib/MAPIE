@@ -492,7 +492,7 @@ def fast_mean_pinball_loss(
 
 def calibrator_optim_objective(
     beta: NDArray, phi_x: NDArray, conformity_scores: NDArray, q: float,
-    sample_weight: NDArray,
+    sample_weight: NDArray, reg_param: Optional[float],
 ) -> float:
     """
     Objective funtcion to minimize to get the estimation of
@@ -531,7 +531,11 @@ def calibrator_optim_objective(
     float
         Scalar value to minimize, being the sum of the pinball losses.
     """
+    if reg_param is not None:
+        reg_val = float(reg_param * np.linalg.norm(beta))
+    else:
+        reg_val = 0
     return fast_mean_pinball_loss(
         y_true=conformity_scores, y_pred=phi_x.dot(beta),
         alpha=q, sample_weight=sample_weight,
-    )
+    ) + reg_val

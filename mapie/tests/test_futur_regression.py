@@ -24,7 +24,8 @@ from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      ResidualNormalisedScore)
 from mapie.metrics import regression_coverage_score
 from mapie.regression import SplitMapieRegressor
-from mapie.calibrators.ccp import CCP, CustomCCP, GaussianCCP, PolynomialCCP
+from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
+                                   PolynomialCCP)
 
 random_state = 1
 np.random.seed(random_state)
@@ -280,7 +281,7 @@ def test_invalid_cv(cv: Any) -> None:
 ])
 def test_fit_calibrate_combined_equivalence(
     alpha: Any, dataset: Tuple[NDArray, NDArray, NDArray],
-    cv: Any, calibrator: CCP, predictor: RegressorMixin
+    cv: Any, calibrator: CCPCalibrator, predictor: RegressorMixin
 ) -> None:
     """Test predict output shape."""
     (X, y, z) = dataset
@@ -304,65 +305,10 @@ def test_fit_calibrate_combined_equivalence(
     mapie_1.fit(X, y, z=z)
     mapie_2.fit_predictor(X, y)
     mapie_2.fit_calibrator(X, y, z=z)
-    y_pred_1, y_pis_1 = mapie_1.predict(X, z)
-    y_pred_2, y_pis_2 = mapie_2.predict(X, z)
+    y_pred_1, y_pis_1 = mapie_1.predict(X, z=z)
+    y_pred_2, y_pis_2 = mapie_2.predict(X, z=z)
     np.testing.assert_allclose(y_pred_1, y_pred_2)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
-    np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
-
-
-def test_recalibrate_warning() -> None:
-    """
-    Test that a warning is triggered when we calibrate a second time with
-    a different alpha value
-    """
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
-    mapie_reg.fit(X_toy, y_toy)
-    with pytest.warns(UserWarning, match=r"WARNING: The old value of alpha"):
-        mapie_reg.fit_calibrator(X_toy, y_toy, alpha=0.2)
-
-
-@pytest.mark.parametrize("dataset", [(X, y, z), (X_toy, y_toy, z_toy),
-                                     (X, y, None), (X_toy, y_toy, None)])
-@pytest.mark.parametrize("calibrator", PHI)
-@pytest.mark.parametrize("cv", CV)
-@pytest.mark.parametrize("predictor", [
-    LinearRegression(),
-    make_pipeline(LinearRegression()),
-])
-def test_recalibrate(
-    dataset: Tuple[NDArray, NDArray, NDArray],
-    cv: Any, calibrator: CCP, predictor: RegressorMixin
-) -> None:
-    """
-    Test that the PI are different for different value of alpha,
-    but they are equal if we calibrate again with the correct alpha
-    """
-    (X, y, z) = dataset
-    if cv == "prefit":
-        predictor.fit(X, y)
-
-    mapie_1 = SplitMapieRegressor(
-        predictor=predictor, calibrator=clone(calibrator), cv=cv,
-        alpha=0.2, random_state=random_state
-    )
-    mapie_2 = SplitMapieRegressor(
-        predictor=predictor, calibrator=clone(calibrator), cv=cv,
-        alpha=0.1, random_state=random_state
-    )
-    mapie_1.fit(X, y, z=z)
-    mapie_2.fit(X, y, z=z)
-
-    y_pred_1, y_pis_1 = mapie_1.predict(X, z)
-    y_pred_2, y_pis_2 = mapie_2.predict(X, z)
-
-    with pytest.raises(AssertionError):
-        np.testing.assert_allclose(y_pis_1, y_pis_2)
-
-    mapie_2.fit_calibrator(X, y, z=z, alpha=0.2)
-    y_pred_2, y_pis_2 = mapie_2.predict(X, z)
-    np.testing.assert_allclose(y_pred_1, y_pred_2)
-    np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0], )
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
 
 
@@ -375,7 +321,7 @@ def test_recalibrate(
 ])
 def test_predict_output_shape_alpha(
     dataset: Tuple[NDArray, NDArray, NDArray],
-    cv: Any, calibrator: CCP, predictor: RegressorMixin
+    cv: Any, calibrator: CCPCalibrator, predictor: RegressorMixin
 ) -> None:
     """Test predict output shape."""
     (X, y, z) = dataset
@@ -387,7 +333,7 @@ def test_predict_output_shape_alpha(
         cv=cv, alpha=0.1, random_state=random_state
     )
     mapie_reg.fit(X, y, z=z)
-    y_pred, y_pis = mapie_reg.predict(X, z)
+    y_pred, y_pis = mapie_reg.predict(X, z=z)
     assert y_pred.shape == (X.shape[0],)
     assert y_pis.shape == (X.shape[0], 2, 1)
 
@@ -401,7 +347,7 @@ def test_predict_output_shape_alpha(
 ])
 def test_predict_output_shape_no_alpha(
     dataset: Tuple[NDArray, NDArray, NDArray],
-    cv: Any, calibrator: CCP, predictor: RegressorMixin
+    cv: Any, calibrator: CCPCalibrator, predictor: RegressorMixin
 ) -> None:
     """Test predict output shape."""
     (X, y, z) = dataset
@@ -413,7 +359,7 @@ def test_predict_output_shape_no_alpha(
         alpha=None, random_state=random_state
     )
     mapie_reg.fit(X, y, z=z)
-    y_pred = mapie_reg.predict(X, z)
+    y_pred = mapie_reg.predict(X, z=z)
     assert np.array(y_pred).shape == (X.shape[0],)
 
 
@@ -424,7 +370,7 @@ def test_predict_output_shape_no_alpha(
     make_pipeline(LinearRegression()),
 ])
 def test_same_results_prefit_split(
-    dataset: Tuple[NDArray, NDArray, NDArray], template: CCP,
+    dataset: Tuple[NDArray, NDArray, NDArray], template: CCPCalibrator,
     predictor: RegressorMixin,
 ) -> None:
     """
@@ -463,8 +409,8 @@ def test_same_results_prefit_split(
     mapie_1.fit(X, y, z=z)
     mapie_2.fit(X_calib, y_calib, z=z_calib)
 
-    y_pred_1, y_pis_1 = mapie_1.predict(X, z)
-    y_pred_2, y_pis_2 = mapie_2.predict(X, z)
+    y_pred_1, y_pis_1 = mapie_1.predict(X, z=z)
+    y_pred_2, y_pis_2 = mapie_2.predict(X, z=z)
 
     np.testing.assert_allclose(y_pred_1, y_pred_2)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
@@ -480,7 +426,7 @@ def test_same_results_prefit_split(
 ])
 def test_results_for_ordered_alpha(
     dataset: Tuple[NDArray, NDArray, NDArray], cv: Any,
-    calibrator: CCP, predictor: RegressorMixin
+    calibrator: CCPCalibrator, predictor: RegressorMixin
 ) -> None:
     """
     Test that prediction intervals lower (upper) bounds give
@@ -498,9 +444,9 @@ def test_results_for_ordered_alpha(
                                       alpha=0.1, random_state=random_state)
 
     mapie_reg_1.fit(X, y, z=z)
-    _, y_pis_1 = mapie_reg_1.predict(X, z)
+    _, y_pis_1 = mapie_reg_1.predict(X, z=z)
     mapie_reg_2.fit(X, y, z=z)
-    _, y_pis_2 = mapie_reg_1.predict(X, z)
+    _, y_pis_2 = mapie_reg_1.predict(X, z=z)
 
     assert (y_pis_1[:, 0, 0] <= y_pis_2[:, 0, 0]).all()
     assert (y_pis_1[:, 1, 0] >= y_pis_2[:, 1, 0]).all()
@@ -561,7 +507,7 @@ def test_results_with_constant_sample_weights(
 def test_prediction_between_low_up(
     dataset: Tuple[NDArray, NDArray, NDArray],
     cv: Any,
-    calibrator: CCP,
+    calibrator: CCPCalibrator,
     alpha: float,
     predictor: RegressorMixin
 ) -> None:
@@ -597,7 +543,7 @@ def test_prediction_between_low_up(
 ])
 def test_linear_data_confidence_interval(
     cv: Any,
-    calibrator: CCP,
+    calibrator: CCPCalibrator,
     alpha: float,
     predictor: RegressorMixin
 ) -> None:
@@ -685,7 +631,7 @@ def test_results_prefit(predictor: RegressorMixin) -> None:
 )
 def test_conformity_score(
     cv: Any,
-    calibrator: CCP,
+    calibrator: CCPCalibrator,
     predictor: RegressorMixin,
     conformity_score: ConformityScore
 ) -> None:
@@ -724,6 +670,6 @@ def test_fit_parameters_passing() -> None:
         else:
             return False
 
-    mapie_reg.fit(X, y, fit_params={"monitor": early_stopping_monitor})
+    mapie_reg.fit(X, y, fit_kwargs={"monitor": early_stopping_monitor})
 
     assert cast(RegressorMixin, mapie_reg.predictor).estimators_.shape[0] == 3

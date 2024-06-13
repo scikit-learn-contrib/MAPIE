@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import Iterable, Callable, Optional, Union, List
 
 from mapie._typing import ArrayLike
-from .base import CCP
+from .base import CCPCalibrator
 from .utils import (compile_functions_warnings_errors, format_functions,
                     check_multiplier)
 from sklearn.utils import _safe_indexing
 
 
-class CustomCCP(CCP):
+class CustomCCP(CCPCalibrator):
     """
     This class is used to define the transformation phi,
     used in the Gibbs et al. method to model the conformity scores.
@@ -210,7 +210,7 @@ class CustomCCP(CCP):
         self._check_fit_parameters(X, y_pred, z)
 
         for phi in self.functions_:
-            if isinstance(phi, CCP):
+            if isinstance(phi, CCPCalibrator):
                 phi.fit_params(X, y_pred, z)
                 check_multiplier(phi.multipliers, X, y_pred, z)
         self.is_fitted_ = True

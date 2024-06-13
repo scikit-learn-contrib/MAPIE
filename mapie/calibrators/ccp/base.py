@@ -14,9 +14,11 @@ from mapie.calibrators.ccp.utils import calibrator_optim_objective
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import clone
+from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
+from mapie.utils import _safe_sample
 
 
-class CCP(Calibrator, metaclass=ABCMeta):
+class CCPCalibrator(Calibrator, metaclass=ABCMeta):
     """
     Base abstract class for the phi functions,
     used in the Gibbs et al. method to model the conformity scores.
@@ -165,7 +167,7 @@ class CCP(Calibrator, metaclass=ABCMeta):
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
-    ) -> CCP:
+    ) -> CCPCalibrator:
         """
         Fit function : Set all the necessary attributes to be able to transform
         ``(X, y_pred, z)`` into the expected transformation.
@@ -200,15 +202,19 @@ class CCP(Calibrator, metaclass=ABCMeta):
     def fit(
         self,
         X_calib: ArrayLike,
-        y_pred_calib: Optional[ArrayLike],
-        z_calib: Optional[ArrayLike],
-        calib_conformity_scores: NDArray,
-        alpha: float,
-        sym: bool,
-        sample_weight_calib: Optional[ArrayLike] = None,
+        conformity_scores_calib: NDArray,
+        y_pred_calib: Optional[ArrayLike] = None,
+        z: Optional[ArrayLike] = None,
+        cv: Optional[Union[str, BaseCrossValidator, BaseShuffleSplit]] = None,
+        sample_weight: Optional[NDArray] = None,
+        groups: Optional[ArrayLike] = None,
+        y: Optional[ArrayLike] = None,
+        alpha: Optional[float] = None,
+        sym: Optional[bool] = None,
         random_state: Optional[int] = None,
+        reg_param: Optional[float] = None,
         **optim_kwargs,
-    ) -> CCP:
+    ) -> CCPCalibrator:
         """
         Fit function : Set all the necessary attributes to be able to transform
         ``(X, y_pred, z)`` into the expected transformation.
@@ -222,14 +228,16 @@ class CCP(Calibrator, metaclass=ABCMeta):
         X: ArrayLike of shape (n_samples, n_features)
             Calibration data.
 
+        conformity_scores_calib: ArrayLike of shape (n_samples,)
+            Calibration conformity scores
+
         y_pred: ArrayLike of shape (n_samples,)
             Calibration target.
 
         z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
             Exogenous variables
 
-        conformity_scores: ArrayLike of shape (n_samples,)
-            Calibration conformity scores
+        cv, group, y: used to get z_calib and sample_weight_calib
 
         alpha: float
             Between ``0.0`` and ``1.0``, represents the risk level of the
@@ -267,9 +275,32 @@ class CCP(Calibrator, metaclass=ABCMeta):
 
             By default ``None``.
 
+        reg_param: Optional[float]
+            Constant that multiplies the L2 term, controlling regularization
+            strength. alpha must be a non-negative float i.e. in ``[0, inf)``
+
         optim_kwargs: Dict
-            Other argument, used in sklear.optimize.minimize
+            Other argument, used in sklear.optimize.minimize.
+            Can be any of : [method, jac, hess, hessp, bounds, constraints,
+            tol, callback, options]
         """
+        assert alpha is not None
+        assert sym is not None
+        assert y is not None
+
+        z_calib: Optional[ArrayLike]
+        # Get calibration set
+        if cv != 'prefit' and z is not None:
+            cv = cast(BaseCrossValidator, cv)
+
+            _, calib_index = list(cv.split(z, y, groups))[0]
+            (
+                z_calib, _, sample_weight_calib
+            ) = _safe_sample(z, y, sample_weight, calib_index)
+
+        else:
+            z_calib, sample_weight_calib = z, sample_weight
+
         if sym:
             q_low = 1 - alpha
             q_up = 1 - alpha
@@ -290,16 +321,17 @@ class CCP(Calibrator, metaclass=ABCMeta):
 
         phi_x = self.transform(X_calib, y_pred_calib, z_calib)
 
-        not_nan_index = np.where(~np.isnan(calib_conformity_scores))[0]
+        not_nan_index = np.where(~np.isnan(conformity_scores_calib))[0]
         # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
 
         optimal_beta_up = minimize(
             calibrator_optim_objective, self.init_value_,
             args=(
                 phi_x[not_nan_index, :],
-                calib_conformity_scores[not_nan_index],
+                conformity_scores_calib[not_nan_index],
                 q_up,
                 sample_weight_calib,
+                reg_param,
                 ),
             **optim_kwargs,
             )
@@ -309,9 +341,10 @@ class CCP(Calibrator, metaclass=ABCMeta):
                 calibrator_optim_objective, self.init_value_,
                 args=(
                     phi_x[not_nan_index, :],
-                    calib_conformity_scores[not_nan_index],
+                    conformity_scores_calib[not_nan_index],
                     q_low,
                     sample_weight_calib,
+                    reg_param,
                 ),
                 **optim_kwargs,
             )
@@ -395,8 +428,9 @@ class CCP(Calibrator, metaclass=ABCMeta):
     def predict(
         self,
         X: ArrayLike,
-        y_pred: ArrayLike,
+        y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
+        **kwargs,
     ) -> NDArray:
         """
         Transform ``(X, y_pred, z)`` into an array of shape
@@ -419,6 +453,8 @@ class CCP(Calibrator, metaclass=ABCMeta):
         NDArray
             Transformation
         """
+        assert y_pred is not None
+
         phi_x = self.transform(X, y_pred, z)
 
         y_pred_low = phi_x.dot(self.beta_low_[0][:, np.newaxis])
@@ -434,7 +470,7 @@ class CCP(Calibrator, metaclass=ABCMeta):
     ) -> NDArray:
         return self.transform(X, y_pred, z)
 
-    def __mul__(self, funct: Optional[Callable]) -> CCP:
+    def __mul__(self, funct: Optional[Callable]) -> CCPCalibrator:
         """
         Multiply a ``CCP`` with another function.
         This other function should return an array of shape (n_samples, 1)
@@ -462,5 +498,5 @@ class CCP(Calibrator, metaclass=ABCMeta):
                 new_phi.multipliers.append(funct)
             return new_phi
 
-    def __rmul__(self, other) -> CCP:
+    def __rmul__(self, other) -> CCPCalibrator:
         return self.__mul__(other)
