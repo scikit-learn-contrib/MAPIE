@@ -2,10 +2,16 @@
 History
 =======
 
-0.X.X (2024-**-**)
+0.8.6 (2024-**-**)
 ------------------
 
+* Fix sphinx dependencies
 * Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
+
+0.8.5 (2024-06-07)
+------------------
+
+* Issue with update from 0.8.4
 
 0.8.4 (2024-06-07)
 ------------------
