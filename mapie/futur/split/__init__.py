@@ -1,7 +1,7 @@
-from .regression import SplitMapieRegressor
-from .classification import SplitMapieClassifier
+from .regression import SplitCPRegressor
+from .classification import SplitCPClassifier
 
 __all__ = [
-    "SplitMapieRegressor",
-    "SplitMapieClassifier",
+    "SplitCPRegressor",
+    "SplitCPClassifier",
 ]

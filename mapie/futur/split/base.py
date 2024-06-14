@@ -1,50 +1,37 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import List, Optional, Tuple, Union, Dict, cast, Callable, Any
-import warnings
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 import inspect
+import warnings
+
 import numpy as np
-from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
-from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
-                                     ShuffleSplit, PredefinedSplit)
-from sklearn.pipeline import Pipeline
-from sklearn.utils.validation import check_is_fitted, _num_samples
-
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import ConformityScore
-from mapie.calibrators.ccp import CCPCalibrator
 from mapie.calibrators import BaseCalibrator
-from mapie.utils import fit_estimator, _sample_non_null_weight
+from mapie.calibrators.ccp import CCPCalibrator
+from mapie.conformity_scores import ConformityScore
+from mapie.utils import _sample_non_null_weight, fit_estimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
+                                     PredefinedSplit, ShuffleSplit)
+from sklearn.pipeline import Pipeline
+from sklearn.utils.validation import _num_samples, check_is_fitted
 
 
-class CCP(BaseEstimator, metaclass=ABCMeta):
+class SplitCP(BaseEstimator, metaclass=ABCMeta):
     """
-    This class implements an adaptative conformal prediction method proposed by
-    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
-    This method works with a ``"split"`` approach which requires a separate
-    calibration phase. The ``fit`` method automatically split the data into
-    two disjoint sets to train the predictor and the calibrator. You can call
-    ``fit_predictor`` and ``fit_calibrator`` to do the two step one after the
-    other. You will have to make sure that data used in the two methods,
-    for training and calibration are disjoint, to guarantee the expected
-    ``1-alpha`` coverage.
+    Base abstract class for Split Conformal Prediction
 
     Parameters
     ----------
     predictor: Union[RegressorMixin, ClassifierMixin]
-        Any regressor from scikit-learn API.
+        Any regressor or classifier from scikit-learn API.
         (i.e. with ``fit`` and ``predict`` methods).
-        If ``None``, ``predictor`` defaults to a ``LinearRegressor`` instance.
-
+        
         By default ``"None"``.
 
-    calibrator: Optional[CCPCalibrator]
-        A ``CCPCalibrator`` instance used to estimate the conformity scores.
-
-        If ``None``, use as default a ``GaussianCCP`` instance.
-        See the examples and the documentation to build a ``CCPCalibrator``
-        adaptated to your dataset and constraints.
+    calibrator: Optional[Calibrator]
+        A ``Calibrator`` instance used to estimate the conformity scores.
 
         By default ``None``.
 
@@ -100,11 +87,6 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         number generators. It may have an impact on the rest of your code.
 
         By default ``None``.
-
-    References
-    ----------
-    Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
-    "Conformal Prediction With Conditional Guarantees", 2023
     """
 
     default_sym_ = True
@@ -284,7 +266,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params,
-    ) -> CCP:
+    ) -> SplitCP:
         """
         Fit the predictor if ``cv`` argument is not ``"prefit"``
 
@@ -317,7 +299,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
 
         Returns
         -------
-        SplitMapie
+        SplitCP
             self
         """
         predictor = self._check_fit_parameters()
@@ -347,9 +329,9 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         groups: Optional[ArrayLike] = None,
         calib_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> CCP:
+    ) -> SplitCP:
         """
-        Calibrate with (``X``, ``y`` and ``z``)
+        Fit the calibrator with (``X``, ``y`` and ``z``)
         and the new value ``alpha`` value, if not ``None``
 
         Parameters
@@ -377,7 +359,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
 
         Returns
         -------
-        SplitMapie
+        SplitCP
             self
         """
         self._check_fit_parameters()
@@ -394,7 +376,8 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
 
             train_index, calib_index = list(self.cv.split(X, y, groups))[0]
         else:
-            train_index, calib_index = np.array([]), np.arange(_num_samples(X))
+            train_index, calib_index = (np.array([], dtype=int),
+                                        np.arange(_num_samples(X)))
         
         z = cast(Optional[ArrayLike], kwargs.get("z", None))
         (
@@ -446,7 +429,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         fit_kwargs: Optional[Dict] = None,
         calib_kwargs: Optional[Dict] = None,
         **kwargs
-    ) -> CCP:
+    ) -> SplitCP:
         """
         Fit the predictor (if ``cv`` is not ``"prefit"``)
         and fit the calibration.
@@ -502,7 +485,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
 
         Returns
         -------
-        SplitMapie
+        SplitCP
             self
         """
         self.fit_predictor(X, y, sample_weight, groups,
@@ -519,7 +502,6 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
-        The prediction interval is computed
 
         Parameters
         ----------
@@ -532,11 +514,10 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
-            - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
-            - Tuple[NDArray, NDArray] of shapes (n_samples,) and
-              (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
-                - [:, 0, :]: Lower bound of the prediction interval.
-                - [:, 1, :]: Upper bound of the prediction interval.
+            - Predictions : NDArray of shape (n_samples,)
+            if ``alpha`` is ``None``.
+            - Predictions and confidence intervals
+            if ``alpha`` is not ``None``.
         """
         check_is_fitted(self, self.fit_attributes)
         y_pred = self.predict_score(X)
@@ -560,7 +541,8 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         self, X: ArrayLike
     ) -> NDArray:
         """
-        Compute conformity scores
+        Compute the predictor prediction, used to compute the
+        conformity scores.
 
         Parameters
         ----------
@@ -582,7 +564,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         **predict_kwargs,
     ) -> NDArray:
         """
-        Compute conformity scores
+        Compute the bounds, using the fitted ``_calibrator``.
 
         Parameters
         ----------
@@ -598,13 +580,13 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         Returns
         -------
         NDArray
-            Bounds (or prediction set in classification), as a 2D array
+            Bounds (or prediction set in classification)
         """
 
     @abstractmethod
     def predict_best(self, y_pred: NDArray) -> NDArray:
         """
-        Compute the prediction
+        Compute the best prediction, in an array of shape (n_samples, )
 
         Parameters
         ----------
@@ -614,5 +596,5 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         Returns
         -------
         NDArray
-            best predictions
+            predictions
         """

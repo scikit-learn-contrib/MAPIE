@@ -9,15 +9,25 @@ from .utils import format_functions
 
 class PolynomialCCP(CCPCalibrator):
     """
-    This class is used to define the transformation phi,
-    used in the Gibbs et al. method to model the conformity scores.
-    This class build a ``CCPCalibrator`` object with polynomial features of
-    X, y_pred or z.
+    Calibrator used for the ``SplitCP`` method to estimate the conformity scores.
+    It corresponds to the adaptative conformal prediction method proposed by
+    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
+
+    The goal of to learn the quantile of the conformity scores distribution,
+    to built the prediction interval, not with a constant ``q`` (as it is the
+    case in the standard CP), but with a function ``q(X)`` which is adaptative
+    as it depends on ``X``.
+
+    This class builds a ``CCPCalibrator`` object with polynomial features of
+    ``X``, ``y_pred`` or ``z``.
+
+    See the examples and the documentation to build a ``CCPCalibrator``
+    adaptated to your dataset and constraints.
 
     Parameters
     ----------
     degree: Union[int, List[int]]
-        If ``degree``is an integer, it correspond to the degree of the
+        If ``degree`` is an integer, it correspond to the degree of the
         polynomial features transformer. It will create the features
         ``1``, ``variable``, ``variable``**2, ..., ``variable``**``degree``.
 
@@ -28,6 +38,11 @@ class PolynomialCCP(CCPCalibrator):
         ``variable``argument value.
 
         If ``None``, it will default to ``degree=1``.
+
+        Note: if ``0`` is in the considered exponents (if ``degree`` is an
+        integer, or if ``0 in degree`` if it is a list), it is not
+        ``variable**0`` of shape ``(n_samples, n_in)`` which is added, but only
+        one feature of ones, of shape ``(n_samples, 1)``.
 
         By default ``None``.
 
@@ -84,15 +99,25 @@ class PolynomialCCP(CCPCalibrator):
     exponents: List[int]
         List of exponents of the built polynomial features
 
+    beta_up_: Tuple[NDArray, bool]
+        Calibration fitting results, used to build the upper bound of the
+        prediction intervals.
+        beta_up_[0]: Array of shape (calibrator.n_out, )
+        beta_up_[1]: Whether the optimization process converged or not
+                    (the coverage is not garantied if the optimization fail)
+
+    beta_low_: Tuple[NDArray, bool]
+        Same as beta_up, but for the lower bound
+
     Examples
     --------
     >>> import numpy as np
     >>> from mapie.calibrators import PolynomialCCP
-    >>> from mapie.regression import SplitMapieRegressor
+    >>> from mapie.regression import SplitCPRegressor
     >>> np.random.seed(1)
     >>> X_train = np.arange(0,400, 2).reshape(-1, 1)
     >>> y_train = 1 + 2*X_train[:,0] + np.random.rand(len(X_train))
-    >>> mapie = SplitMapieRegressor(
+    >>> mapie = SplitCPRegressor(
     ...     calibrator=PolynomialCCP(1), alpha=0.1, random_state=1,
     ... ).fit(X_train, y_train)
     >>> y_pred, y_pi = mapie.predict(X_train)
@@ -137,7 +162,7 @@ class PolynomialCCP(CCPCalibrator):
         ----------
         degree: Union[int, List[int]]
             If ``degree``is an integer, it correspond to the degree of the
-            polynomial features transformer. It will create the features
+            polynomial features. It will create the features
             ``1``, ``variable``, ``variable``**2, ...,
             ``variable``**``degree``.
 
@@ -212,8 +237,8 @@ class PolynomialCCP(CCPCalibrator):
         z: Optional[ArrayLike] = None,
     ) -> None:
         """
-        Fit function : Set all the necessary attributes to be able to transform
-        ``(X, y_pred, z)`` into the expected transformation.
+        Fit function : Set all the necessary attributes to be able to
+        transform ``(X, y_pred, z)`` into the expected features.
 
         It should set all the attributes of ``fit_attributes``.
         It should also set, once fitted, ``n_in``, ``n_out`` and

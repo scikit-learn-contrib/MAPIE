@@ -12,7 +12,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import (_check_sample_weight, _num_features,
-                                      _check_y, check_is_fitted,
+                                      _check_y, check_is_fitted, _num_samples,
                                       column_or_1d, indexable)
 
 from ._compatibility import np_quantile
@@ -117,6 +117,8 @@ def _sample_non_null_weight(
         - Optional[NDArray] of sample_weight
         - ArrayLike of index of non-null weights
     """
+    if _num_samples(index) == 0:
+        return np.array([]), np.array([]), np.array([]), np.array([]), index
     X_select = _safe_indexing(X, index)
     y_select = _safe_indexing(y, index)
     z_select = _safe_indexing(z, index) if z is not None else None
@@ -133,7 +135,8 @@ def _sample_non_null_weight(
     y_select = _check_y(y_select)
 
     if sample_weight_select is not None:
-        sample_weight_select = _check_sample_weight(sample_weight_select, X)
+        sample_weight_select = _check_sample_weight(sample_weight_select,
+                                                    X_select)
         non_null_weight = sample_weight_select != 0
         X_select = _safe_indexing(X_select, non_null_weight)
         y_select = _safe_indexing(y_select, non_null_weight)

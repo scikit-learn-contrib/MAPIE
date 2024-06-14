@@ -1,48 +1,41 @@
 from __future__ import annotations
 
-from typing import Optional, Union, List, Tuple
-import inspect
+from typing import List, Optional, Tuple, Union
+
 import numpy as np
+from mapie._typing import ArrayLike, NDArray
+from mapie.calibrators.ccp import check_calibrator
+from mapie.conformity_scores import ConformityScore
+from mapie.conformity_scores.classification_scores import LAC
+from mapie.futur.split.base import BaseCalibrator, SplitCP
 from sklearn.base import ClassifierMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
-from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators.ccp import check_calibrator
-from mapie.futur.split.base import CCP, BaseCalibrator
-from mapie.conformity_scores import ConformityScore
-from mapie.conformity_scores.classification_scores import LAC
 
-
-class SplitMapieClassifier(CCP):
+class SplitCPClassifier(SplitCP):
     """
-    This class implements an adaptative conformal prediction method proposed by
-    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
-    This method works with a ``"split"`` approach which requires a separate
-    calibration phase. The ``fit`` method automatically split the data into
-    two disjoint sets to train the predictor and the calibrator. You can call
-    ``fit_estimator`` and ``fit_calibrator`` to do the two step one after the
-    other. You will have to make sure that data used in the two methods,
-    for training and calibration are disjoint, to guarantee the expected
-    ``1-alpha`` coverage.
+    Class to compute Conformal Predictions in a ``"split"`` approach for
+    classification tasks.
+    It is based on a predictor (a sklearn estimator), and a calibrator
+    (``Calibrator`` object).
 
     Parameters
     ----------
     predictor: Optional[ClassifierMixin]
-        Any regressor from scikit-learn API.
+        Any classifier from scikit-learn API.
         (i.e. with ``fit`` and ``predict`` methods).
-        If ``None``, ``predictor`` defaults to a ``LinearRegressor`` instance.
+        If ``None``, ``predictor`` defaults to a ``LogisticRegression``
+        instance.
 
         By default ``"None"``.
 
     calibrator: Optional[BaseCalibrator]
         A ``BaseCalibrator`` instance used to estimate the conformity scores.
 
-        If ``None``, use as default a ``GaussianCCP`` instance.
-        See the examples and the documentation to build a ``BaseCalibrator``
-        adaptated to your dataset and constraints.
+        If ``None``, use as default a ``StandardCalibrator`` instance.
 
         By default ``None``.
 
@@ -99,31 +92,14 @@ class SplitMapieClassifier(CCP):
 
         By default ``None``.
 
-    Attributes
-    ----------
-    beta_up_: Tuple[NDArray, bool]
-        Calibration fitting results, used to build the upper bound of the
-        prediction intervals.
-        beta_up[0]: Array of shape (calibrator.n_out, )
-        beta_up[1]: Whether the optimization process converged or not
-                    (the coverage is not garantied if the optimization fail)
-
-    beta_low_: Tuple[NDArray, bool]
-        Same as beta_up, but for the lower bound
-
-    References
-    ----------
-    Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
-    "Conformal Prediction With Conditional Guarantees", 2023
-
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.futur import SplitMapieClassifier
+    >>> from mapie.futur import SplitCPClassifier
     >>> np.random.seed(1)
     >>> X_train = np.arange(0,400,2).reshape(-1, 1)
     >>> y_train = np.array([0]*50 + [1]*50 + [2]*50 + [3]*50)
-    >>> mapie_reg = SplitMapieClassifier(alpha=0.1, random_state=1)
+    >>> mapie_reg = SplitCPClassifier(alpha=0.1, random_state=1)
     >>> mapie_reg = mapie_reg.fit(X_train, y_train)
     >>> y_pred, y_pis = mapie_reg.predict(X_train)
     >>> print(np.round(y_pred[[0, 40, 80, 120]], 2))
@@ -278,7 +254,8 @@ class SplitMapieClassifier(CCP):
         self, X: ArrayLike
     ) -> NDArray:
         """
-        Compute conformity scores
+        Compute the predicted probas, used to compute the
+        conformity scores.
 
         Parameters
         ----------
@@ -299,7 +276,7 @@ class SplitMapieClassifier(CCP):
         **kwargs,
     ) -> NDArray:
         """
-        Compute conformity scores
+        Compute the prediction sets, using the fitted ``_calibrator``.
 
         Parameters
         ----------
@@ -316,7 +293,7 @@ class SplitMapieClassifier(CCP):
         -------
         NDArray
             Prediction sets, as a 3D array of shape (n_samples, n_classes, 1)
-            (because we only have 1 alpha value)
+            for compatibility reason with ``MapieClassifier``.
         """
         # Classification conformity scores always have ``sym=True``, so
         # the calibrator_.predict result is a 2D array with
@@ -336,7 +313,7 @@ class SplitMapieClassifier(CCP):
 
     def predict_best(self, y_pred: NDArray) -> NDArray:
         """
-        Compute the prediction
+        Compute the prediction from the probas, using ``numpy.argmax``.
 
         Parameters
         ----------

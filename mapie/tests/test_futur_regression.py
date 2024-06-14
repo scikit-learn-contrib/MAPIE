@@ -23,7 +23,7 @@ from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore,
                                      ResidualNormalisedScore)
 from mapie.metrics import regression_coverage_score
-from mapie.regression import SplitMapieRegressor
+from mapie.regression import SplitCPRegressor
 from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
                                    PolynomialCCP)
 
@@ -49,31 +49,31 @@ PHI = [
 ]
 WIDTHS = {
     "split": 3.87,
-    "prefit": 4.81,
+    "prefit": 5.768691,
 }
 
 COVERAGES = {
     "split": 0.952,
-    "prefit": 0.980,
+    "prefit": 1,
 }
 
 
 # ======== MapieCCPRegressor =========
 def test_initialized() -> None:
     """Test that initialization does not crash."""
-    SplitMapieRegressor(alpha=0.1)
+    SplitCPRegressor(alpha=0.1)
 
 
 def test_fit_predictor() -> None:
     """Test that fit_predictor raises no errors."""
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg = SplitCPRegressor(alpha=0.1)
     mapie_reg.fit_predictor(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("z", [None, z_toy])
 def test_fit_calibrator(z: Any) -> None:
     """Test that fit_calibrator raises no errors."""
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg = SplitCPRegressor(alpha=0.1)
     mapie_reg.fit_predictor(X_toy, y_toy)
     mapie_reg.fit_calibrator(X_toy, y_toy, z=z)
 
@@ -81,14 +81,14 @@ def test_fit_calibrator(z: Any) -> None:
 @pytest.mark.parametrize("z", [None, z_toy])
 def test_fit(z: Any) -> None:
     """Test that fit raises no errors."""
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg = SplitCPRegressor(alpha=0.1)
     mapie_reg.fit(X_toy, y_toy, z=z)
 
 
 @pytest.mark.parametrize("z", [None, z_toy])
 def test_fit_predictor_fit_calibrator_predict(z: Any) -> None:
     """Test that fit-calibrate-predict raises no errors."""
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg = SplitCPRegressor(alpha=0.1)
     mapie_reg.fit_predictor(X_toy, y_toy)
     mapie_reg.fit_calibrator(X_toy, y_toy, z=z)
     mapie_reg.predict(X_toy, z=z)
@@ -97,7 +97,7 @@ def test_fit_predictor_fit_calibrator_predict(z: Any) -> None:
 @pytest.mark.parametrize("z", [None, z_toy])
 def test_fit_predict(z: Any) -> None:
     """Test that fit-predict raises no errors."""
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg = SplitCPRegressor(alpha=0.1)
     mapie_reg.fit(X_toy, y_toy, z=z)
     mapie_reg.predict(X_toy, z=z)
 
@@ -105,14 +105,14 @@ def test_fit_predict(z: Any) -> None:
 @pytest.mark.parametrize("z", [None, z_toy])
 def test_fit_predict_reg(z: Any) -> None:
     """Test that fit-predict raises no errors."""
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg = SplitCPRegressor(alpha=0.1)
     mapie_reg.fit(X_toy, y_toy, z=z, reg_param=0.1)
     mapie_reg.predict(X_toy, z=z)
 
 
 def test_not_fitted_predictor_fit_calibrator() -> None:
     """Test that calibrate before fit raises errors."""
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg = SplitCPRegressor(alpha=0.1)
     with pytest.raises(NotFittedError):
         mapie_reg.fit_calibrator(X_toy, y_toy)
 
@@ -120,7 +120,7 @@ def test_not_fitted_predictor_fit_calibrator() -> None:
 def test_calib_not_complete_phi() -> None:
     """Test that a not complete calibrator definition raises a warning"""
     with pytest.warns(UserWarning, match="WARNING: At least one row of the"):
-        mapie_reg = SplitMapieRegressor(
+        mapie_reg = SplitCPRegressor(
             alpha=0.1,
             calibrator=CustomCCP([lambda X: (X < 5).astype(int)], bias=False)
         )
@@ -130,7 +130,7 @@ def test_calib_not_complete_phi() -> None:
 def test_predict_not_complete_phi() -> None:
     """Test that a not complete calibrator definition raises a warning"""
     with pytest.warns(UserWarning, match="WARNING: At least one row of the"):
-        mapie_reg = SplitMapieRegressor(
+        mapie_reg = SplitCPRegressor(
             alpha=0.1,
             calibrator=CustomCCP([lambda X: (X < 5).astype(int)], bias=False)
         )
@@ -140,14 +140,14 @@ def test_predict_not_complete_phi() -> None:
 
 def test_no_fit_predict() -> None:
     """Test that predict before fit raises errors."""
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg = SplitCPRegressor(alpha=0.1)
     with pytest.raises(NotFittedError):
         mapie_reg.predict(X_toy)
 
 
 def test_no_calibrate_predict() -> None:
     """Test that predict before fit raises errors."""
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg = SplitCPRegressor(alpha=0.1)
     mapie_reg.fit_predictor(X_toy, y_toy)
     with pytest.raises(NotFittedError):
         mapie_reg.predict(X_toy)
@@ -155,7 +155,7 @@ def test_no_calibrate_predict() -> None:
 
 def test_default_sample_weight() -> None:
     """Test default sample weights."""
-    mapie_reg = SplitMapieRegressor(alpha=0.1)
+    mapie_reg = SplitCPRegressor(alpha=0.1)
     assert (
         signature(mapie_reg.fit_predictor).parameters["sample_weight"].default
         is None
@@ -168,7 +168,7 @@ def test_invalid_predictor(
 ) -> None:
     """Test that invalid predictors raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid estimator.*"):
-        mapie = SplitMapieRegressor(predictor=predictor, alpha=0.1)
+        mapie = SplitCPRegressor(predictor=predictor, alpha=0.1)
         mapie.fit_predictor(X, y)
 
 
@@ -182,7 +182,7 @@ def test_invalid_prefit_predictor_calibrate(
     """Test that non-fitted predictor with prefit cv raise errors when
     calibrate is called"""
     with pytest.raises(NotFittedError):
-        mapie = SplitMapieRegressor(predictor=predictor, cv="prefit",
+        mapie = SplitCPRegressor(predictor=predictor, cv="prefit",
                                     alpha=0.1)
         mapie.fit_calibrator(X, y)
 
@@ -197,14 +197,14 @@ def test_invalid_prefit_predictor_fit(
     """Test that non-fitted predictor with prefit cv raise errors when fit
     is called."""
     with pytest.raises(NotFittedError):
-        mapie = SplitMapieRegressor(predictor=predictor, cv="prefit",
+        mapie = SplitCPRegressor(predictor=predictor, cv="prefit",
                                     alpha=0.1)
         mapie.fit_predictor(X, y)
 
 
 def test_default_parameters() -> None:
     """Test default values of input parameters."""
-    mapie_reg = SplitMapieRegressor(random_state=random_state, alpha=0.1)
+    mapie_reg = SplitCPRegressor(random_state=random_state, alpha=0.1)
     mapie_reg.fit(X, y)
     assert isinstance(mapie_reg.predictor_, RegressorMixin)
     assert isinstance(mapie_reg.calibrator_, GaussianCCP)
@@ -219,7 +219,7 @@ def test_default_parameters() -> None:
 )
 def test_invalid_alpha(alpha: Any) -> None:
     with pytest.raises(ValueError):
-        mapie = SplitMapieRegressor(alpha=alpha)
+        mapie = SplitCPRegressor(alpha=alpha)
         mapie.fit(X, y)
 
 
@@ -228,13 +228,13 @@ def test_invalid_alpha(alpha: Any) -> None:
 )
 def test_invalid_phi(calibrator: Any) -> None:
     with pytest.raises(ValueError):
-        mapie = SplitMapieRegressor(calibrator=calibrator)
+        mapie = SplitCPRegressor(calibrator=calibrator)
         mapie.fit(X, y)
 
 
 def test_valid_predictor() -> None:
     """Test that valid predictors are not corrupted"""
-    mapie_reg = SplitMapieRegressor(
+    mapie_reg = SplitCPRegressor(
         predictor=DummyRegressor(),
         random_state=random_state,
         alpha=0.1,
@@ -256,7 +256,7 @@ def test_valid_predictor() -> None:
 def test_valid_cv(cv: Any, predictor: RegressorMixin) -> None:
     """Test that valid cv raise no errors."""
     predictor.fit(X_toy, y_toy)
-    mapie_reg = SplitMapieRegressor(predictor, CustomCCP(bias=True), cv=cv,
+    mapie_reg = SplitCPRegressor(predictor, CustomCCP(bias=True), cv=cv,
                                     alpha=0.1, random_state=random_state)
     mapie_reg.fit(X_toy, y_toy)
     mapie_reg.predict(X_toy)
@@ -274,7 +274,7 @@ def test_valid_cv(cv: Any, predictor: RegressorMixin) -> None:
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid agg_functions raise errors."""
     with pytest.raises(ValueError, match="Invalid cv argument."):
-        mapie = SplitMapieRegressor(cv=cv, alpha=0.1,
+        mapie = SplitCPRegressor(cv=cv, alpha=0.1,
                                     random_state=random_state)
         mapie.fit_predictor(X, y)
 
@@ -301,12 +301,12 @@ def test_fit_calibrate_combined_equivalence(
         predictor_2.fit(X, y)
 
     np.random.seed(random_state)
-    mapie_1 = SplitMapieRegressor(
+    mapie_1 = SplitCPRegressor(
         predictor=predictor_1, calibrator=calibrator,
         cv=cv, alpha=alpha, random_state=random_state
     )
     np.random.seed(random_state)
-    mapie_2 = SplitMapieRegressor(
+    mapie_2 = SplitCPRegressor(
         predictor=predictor_2, calibrator=calibrator,
         cv=cv, alpha=alpha, random_state=random_state
     )
@@ -336,7 +336,7 @@ def test_predict_output_shape_alpha(
     if cv == "prefit":
         predictor.fit(X, y)
 
-    mapie_reg = SplitMapieRegressor(
+    mapie_reg = SplitCPRegressor(
         predictor=predictor, calibrator=calibrator,
         cv=cv, alpha=0.1, random_state=random_state
     )
@@ -362,7 +362,7 @@ def test_predict_output_shape_no_alpha(
     if cv == "prefit":
         predictor.fit(X, y)
 
-    mapie_reg = SplitMapieRegressor(
+    mapie_reg = SplitCPRegressor(
         predictor=predictor, calibrator=calibrator, cv=cv,
         alpha=None, random_state=random_state
     )
@@ -403,13 +403,13 @@ def test_same_results_prefit_split(
     if isinstance(calibrator, GaussianCCP):
         calibrator.points = (calibrator.points_, calibrator.sigmas_)
 
-    mapie_1 = SplitMapieRegressor(
+    mapie_1 = SplitCPRegressor(
         clone(predictor), clone(calibrator), pred_cv, alpha=0.1,
         random_state=random_state,
     )
 
     fitted_predictor = clone(predictor).fit(X_train, y_train)
-    mapie_2 = SplitMapieRegressor(
+    mapie_2 = SplitCPRegressor(
         fitted_predictor, clone(calibrator), cv="prefit", alpha=0.1,
         random_state=random_state,
     )
@@ -446,9 +446,9 @@ def test_results_for_ordered_alpha(
 
     calibrator.fit_params(X)
 
-    mapie_reg_1 = SplitMapieRegressor(predictor, clone(calibrator), cv=cv,
+    mapie_reg_1 = SplitCPRegressor(predictor, clone(calibrator), cv=cv,
                                       alpha=0.05, random_state=random_state)
-    mapie_reg_2 = SplitMapieRegressor(predictor, clone(calibrator), cv=cv,
+    mapie_reg_2 = SplitCPRegressor(predictor, clone(calibrator), cv=cv,
                                       alpha=0.1, random_state=random_state)
 
     mapie_reg_1.fit(X, y, z=z)
@@ -484,11 +484,11 @@ def test_results_with_constant_sample_weights(
     calibrator.init_value = calibrator.init_value_
 
     n_samples = len(X)
-    mapie0 = SplitMapieRegressor(predictor, clone(calibrator),
+    mapie0 = SplitCPRegressor(predictor, clone(calibrator),
                                  cv=cv, alpha=0.1, random_state=random_state)
-    mapie1 = SplitMapieRegressor(predictor, clone(calibrator),
+    mapie1 = SplitCPRegressor(predictor, clone(calibrator),
                                  cv=cv, alpha=0.1, random_state=random_state)
-    mapie2 = SplitMapieRegressor(predictor, clone(calibrator),
+    mapie2 = SplitCPRegressor(predictor, clone(calibrator),
                                  cv=cv, alpha=0.1, random_state=random_state)
 
     mapie0.fit(X, y, z=z, sample_weight=None)
@@ -528,7 +528,7 @@ def test_prediction_between_low_up(
     if cv == "prefit":
         predictor.fit(X, y)
 
-    mapie = SplitMapieRegressor(predictor=predictor, calibrator=calibrator,
+    mapie = SplitCPRegressor(predictor=predictor, calibrator=calibrator,
                                 cv=cv, alpha=alpha, random_state=random_state)
     mapie.fit(X, y, z=z)
 
@@ -569,7 +569,7 @@ def test_linear_data_confidence_interval(
     if cv == "prefit":
         predictor.fit(X_toy, y_toy)
 
-    mapie = SplitMapieRegressor(predictor, clone(calibrator), cv=cv,
+    mapie = SplitCPRegressor(predictor, clone(calibrator), cv=cv,
                                 alpha=alpha, random_state=random_state)
     mapie.fit(X_toy, y_toy, z=z_toy)
 
@@ -588,7 +588,7 @@ def test_linear_regression_results() -> None:
     CP method (base, jacknife and cv)
     """
 
-    mapie = SplitMapieRegressor(
+    mapie = SplitCPRegressor(
         calibrator=clone(PHI[0]),
         cv=ShuffleSplit(n_splits=1, test_size=0.5, random_state=random_state),
         alpha=0.05,
@@ -616,7 +616,7 @@ def test_results_prefit(predictor: RegressorMixin) -> None:
         X_train_val, y_train_val, test_size=1 / 9, random_state=1
     )
     predictor.fit(X_train, y_train)
-    mapie_reg = SplitMapieRegressor(
+    mapie_reg = SplitCPRegressor(
         predictor=predictor, calibrator=clone(PHI[0]), cv="prefit", alpha=0.05,
         random_state=random_state
     )
@@ -651,7 +651,7 @@ def test_conformity_score(
     if cv == "prefit":
         predictor.fit(X, y + 1e3)
 
-    mapie_reg = SplitMapieRegressor(
+    mapie_reg = SplitCPRegressor(
         predictor=predictor,
         calibrator=calibrator,
         cv=cv,
@@ -671,7 +671,7 @@ def test_fit_parameters_passing() -> None:
     """
     gb = GradientBoostingRegressor(random_state=random_state)
 
-    mapie_reg = SplitMapieRegressor(predictor=gb, alpha=0.1,
+    mapie_reg = SplitCPRegressor(predictor=gb, alpha=0.1,
                                     random_state=random_state)
 
     def early_stopping_monitor(i, est, locals):

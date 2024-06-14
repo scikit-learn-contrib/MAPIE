@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import inspect
-import numpy as np
-from typing import (Iterable, Callable, Optional, Tuple, Union,
-                    cast, Dict, List)
-from mapie._typing import ArrayLike, NDArray
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
 import warnings
+
+import numpy as np
+from mapie._typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
 
@@ -15,40 +15,47 @@ def format_functions(
     bias: bool,
 ) -> List[Callable]:
     """
-    Validate functions for required and optional arguments.
+    Validate ``functions`` and add a column of ones, as a lambda function
+    if ``bias=True``.
 
     Parameters
     ----------
     functions: Optional[Union[Callable, Iterable[Callable]]]
-        List of functions (or ``CCPCalibrator`` objects) or single function.
+        List of functions (or CCPCalibrator objects) or single function.
+
         Each function can take a combinaison of the following arguments:
         - ``X``: Input dataset, of shape (n_samples, ``n_in``)
         - ``y_pred``: estimator prediction, of shape (n_samples,)
         - ``z``: exogenous variable, of shape (n_samples, n_features).
             It should be given in the ``fit`` and ``predict`` methods.
         The results of each functions will be concatenated to build the final
-        result of the phi function, of shape (n_samples, ``n_out``).
-        If ``None``, the resulting phi object will return a column of ones,
-        when called. It will result, in the MapieCCPRegressor, in a basic
-        split CP approach.
+        result of the transformation, of shape ``(n_samples, n_out)``, which
+        will be used to estimate the conformity scores quantiles.
+
+        If ``None``, return an empty list.
 
     bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
         the ``CCPCalibrator``object were built).
         If the ``CCPCalibrator``object definition covers all the dataset
-        (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
-        is never all zeros), this column of ones is not necessary
-        to obtain marginal coverage.
+        (meaning, for all calibration and test samples, the resulting
+        ``calibrator.predict(X, y_pred, z)`` is never all zeros),
+        this column of ones is not necessary to obtain marginal coverage.
         In this case, you can set this argument to ``False``.
 
-        Note: Even if it is not always necessary to guarantee the marginal
-        coverage, it can't degrade the prediction intervals.
+        If you are not sur, use ``bias=True`` to garantee the marginal
+        coverage.
 
     Returns
     -------
     List[Callable]
         ``functions`` as a not empty list
+
+    Raises
+    ------
+    ValueError
+        If ``functions`` is empty or ``None`` and ``bias=False``.
     """
     if functions is None:
         functions = []
@@ -76,7 +83,6 @@ def compile_functions_warnings_errors(
     Raises
     ------
     ValueError
-        If no functions are provided and `bias` is False.
         If functions contain unknown required arguments.
 
     Warns
@@ -180,7 +186,7 @@ def sample_points(
 
     Returns
     -------
-    points_
+    NDArray
         2D NDArray of points
 
     Raises
@@ -275,7 +281,6 @@ def compute_sigma(
          - For 100 points, the sigma value will, in general,
         be multiplied by a value between 0.5 and 2
 
-
     Returns
     -------
     sigmas_
@@ -313,7 +318,7 @@ def _init_sigmas(
     """
     If ``sigma`` is not ``None``, take a sigma value, and set ``sigmas_``
     to a standard deviation 2D array of shape (n_points, n_sigma),
-    n_sigma being 1 or the number of dimensions of X.
+    n_sigma being 1 or ``X_n_features``.
 
     Parameters
     ----------
@@ -407,7 +412,8 @@ def check_multiplier(
     z: Optional[ArrayLike] = None,
 ) -> None:
     """
-    Check is ``funct`` is a valid ``multiplier`` argument
+    Check if ``multipliers`` is a valid ``multiplier`` argument for
+    ``CCPCalibrator``.
 
     Parameters
     ----------
@@ -436,22 +442,26 @@ def check_multiplier(
 
 
 def fast_mean_pinball_loss(
-    y_true, y_pred, *, sample_weight=None, alpha=0.5
+    y_true: NDArray,
+    y_pred: NDArray,
+    *,
+    sample_weight: Optional[NDArray] = None,
+    alpha: float=0.5
 ) -> float:
     """
     Pinball loss for quantile regression.
-    Copy of the sklearn.metric.mean_minball_loss, but without the checks on
-    the ``y_true`` and ``y_pred`` arrays, for faster computation.
+    It does the same as ``sklearn.metric.mean_minball_loss``, but without
+    the checks on the ``y_true`` and ``y_pred`` arrays, for faster computation.
 
     Parameters
     ----------
-    y_true : array-like of shape (n_samples,) or (n_samples, n_outputs)
+    y_true : NDArray of shape (n_samples,) or (n_samples, n_outputs)
         Ground truth (correct) target values.
 
-    y_pred : array-like of shape (n_samples,) or (n_samples, n_outputs)
+    y_pred : NDArray of shape (n_samples,) or (n_samples, n_outputs)
         Estimated target values.
 
-    sample_weight : array-like of shape (n_samples,), default=None
+    sample_weight : NDArray of shape (n_samples,), default=None
         Sample weights.
 
     alpha : float, slope of the pinball loss, default=0.5,
@@ -464,23 +474,6 @@ def fast_mean_pinball_loss(
         Weighted average of all output errors.
         The pinball loss output is a non-negative floating point. The best
         value is 0.0.
-
-    Examples
-    --------
-    >>> from sklearn.metrics import mean_pinball_loss
-    >>> y_true = [1, 2, 3]
-    >>> mean_pinball_loss(y_true, [0, 2, 3], alpha=0.1)
-    0.03...
-    >>> mean_pinball_loss(y_true, [1, 2, 4], alpha=0.1)
-    0.3...
-    >>> mean_pinball_loss(y_true, [0, 2, 3], alpha=0.9)
-    0.3...
-    >>> mean_pinball_loss(y_true, [1, 2, 4], alpha=0.9)
-    0.03...
-    >>> mean_pinball_loss(y_true, y_true, alpha=0.1)
-    0.0
-    >>> mean_pinball_loss(y_true, y_true, alpha=0.9)
-    0.0
     """
     diff = y_true - y_pred
     sign = (diff >= 0).astype(diff.dtype)

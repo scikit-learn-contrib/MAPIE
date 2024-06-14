@@ -1,10 +1,10 @@
 from .base import BaseCalibrator
-from .standard import Standard
+from .standard import StandardCalibrator
 from .ccp import CustomCCP, PolynomialCCP, GaussianCCP
 
 __all__ = [
     "BaseCalibrator",
-    "Standard",
+    "StandardCalibrator",
     "CustomCCP",
     "PolynomialCCP",
     "GaussianCCP",

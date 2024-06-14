@@ -1,24 +1,25 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Iterable, Callable, Optional, Union, List, Tuple, cast
+from typing import Callable, Iterable, List, Optional, Tuple, Union, cast
 import warnings
 
-import numpy as np
-from scipy.optimize import minimize
 from mapie._typing import ArrayLike, NDArray
-from .utils import (compile_functions_warnings_errors, concatenate_functions,
-                    check_multiplier)
 from mapie.calibrators import BaseCalibrator
-from mapie.calibrators.ccp.utils import calibrator_optim_objective
-from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import check_is_fitted, _num_samples
+from mapie.calibrators.ccp.utils import (calibrator_optim_objective,
+                                         check_multiplier,
+                                         compile_functions_warnings_errors,
+                                         concatenate_functions)
+import numpy as np
 from sklearn.base import clone
+from sklearn.utils import _safe_indexing
+from sklearn.utils.validation import _num_samples, check_is_fitted
+from scipy.optimize import minimize
 
 
 class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
     """
-    Base abstract class for the calibrators used for the ``CCP`` method
+    Base abstract class for the calibrators used for the ``SplitCP`` method
     to estimate the conformity scores.
     It corresponds to the adaptative conformal prediction method proposed by
     Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
@@ -111,6 +112,11 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
     beta_low_: Tuple[NDArray, bool]
         Same as beta_up, but for the lower bound
+
+    References
+    ----------
+    Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
+    "Conformal Prediction With Conditional Guarantees", 2023
     """
 
     fit_attributes: List[str] = ["functions_"]
@@ -287,9 +293,9 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         if self.random_state is None:
             warnings.warn("WARNING: The method implemented in "
-                          "SplitMapie has a stochastic behavior. "
+                          "SplitCP has a stochastic behavior. "
                           "To have reproductible results, use a integer "
-                          "`random_state` value in the `SplitMapie` "
+                          "`random_state` value in the `SplitCP` "
                           "initialisation.")
         else:
             np.random.seed(self.random_state)

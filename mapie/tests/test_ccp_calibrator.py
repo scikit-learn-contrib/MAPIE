@@ -9,7 +9,7 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.datasets import make_regression
 from mapie.calibrators.ccp import (CustomCCP, GaussianCCP, PolynomialCCP,
                                    CCPCalibrator)
-from mapie.regression import SplitMapieRegressor
+from mapie.regression import SplitCPRegressor
 
 random_state = 1
 np.random.seed(random_state)
@@ -95,7 +95,7 @@ GAUSS_NO_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
 ])
 def test_custom_phi_functions(functions: Any) -> None:
     """Test that initialization does not crash."""
-    mapie = SplitMapieRegressor(calibrator=CustomCCP(functions), alpha=0.1)
+    mapie = SplitCPRegressor(calibrator=CustomCCP(functions), alpha=0.1)
     mapie.fit(X, y, z=z)
     mapie.predict(X)
 
@@ -105,7 +105,7 @@ def test_phi_n_attributes(calibrator: CCPCalibrator, n_out_raw: int) -> None:
     """
     Test that the n_in and n_out attributes are corrects
     """
-    mapie = SplitMapieRegressor(calibrator=clone(calibrator), alpha=0.1)
+    mapie = SplitCPRegressor(calibrator=clone(calibrator), alpha=0.1)
     mapie.fit(X, y, z=z)
     assert mapie.calibrator_.n_in == 10
     assert mapie.calibrator_.n_out == n_out_raw
@@ -113,7 +113,7 @@ def test_phi_n_attributes(calibrator: CCPCalibrator, n_out_raw: int) -> None:
 
 def test_invalid_multiplication() -> None:
     with pytest.raises(ValueError, match="The function used as multiplier "):
-        mapie = SplitMapieRegressor(
+        mapie = SplitCPRegressor(
             calibrator=CustomCCP([lambda X: X])*(
                     lambda X: (X[:, [0, 1]] > 0)),
             alpha=0.1,
@@ -128,7 +128,7 @@ def test_phi_functions_warning() -> None:
     """
     with pytest.warns(UserWarning,
                       match="WARNING: Unknown optional arguments."):
-        mapie = SplitMapieRegressor(
+        mapie = SplitCPRegressor(
             calibrator=CustomCCP([lambda X, d=d: X**d for d in range(4)]),
             alpha=0.1,
         )
@@ -148,7 +148,7 @@ def test_phi_functions_error(functions: Any) -> None:
     for f in functions:     # For coverage
         f(np.ones((10, 1)), np.ones((10, 1)))
     with pytest.raises(ValueError, match=r"Forbidden required argument."):
-        mapie = SplitMapieRegressor(calibrator=CustomCCP(functions), alpha=0.1)
+        mapie = SplitCPRegressor(calibrator=CustomCCP(functions), alpha=0.1)
         mapie.fit(X, y, z=z)
 
 
@@ -158,7 +158,7 @@ def test_phi_functions_empty() -> None:
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
     """
     with pytest.raises(ValueError):
-        mapie = SplitMapieRegressor(calibrator=CustomCCP([], bias=False),
+        mapie = SplitCPRegressor(calibrator=CustomCCP([], bias=False),
                                     alpha=0.1)
         mapie.fit(X, y, z=z)
 
@@ -166,7 +166,7 @@ def test_phi_functions_empty() -> None:
 # ======== PolynomialCCP =========
 def test_poly_phi_init() -> None:
     """Test that initialization does not crash."""
-    mapie = SplitMapieRegressor(calibrator=PolynomialCCP(), alpha=0.1)
+    mapie = SplitCPRegressor(calibrator=PolynomialCCP(), alpha=0.1)
     mapie.fit(X, y, z=z)
 
 
@@ -178,7 +178,7 @@ def test_poly_phi_init_other(
     degree: Any, variable: Any, bias: bool, normalized: bool
 ) -> None:
     """Test that initialization does not crash."""
-    mapie = SplitMapieRegressor(calibrator=PolynomialCCP(
+    mapie = SplitCPRegressor(calibrator=PolynomialCCP(
         degree, variable, bias, normalized), alpha=0.1)
     mapie.fit(X, y, z=z)
 
@@ -189,7 +189,7 @@ def test_invalid_variable_value(var: Any) -> None:
     Test that invalid variable value raise error
     """
     with pytest.raises(ValueError):
-        mapie = SplitMapieRegressor(calibrator=PolynomialCCP(variable=var),
+        mapie = SplitCPRegressor(calibrator=PolynomialCCP(variable=var),
                                     alpha=0.1)
         mapie.fit(X, y, z=z)
 
@@ -197,7 +197,7 @@ def test_invalid_variable_value(var: Any) -> None:
 # ======== GaussianCCP =========
 def test_gauss_phi_init() -> None:
     """Test that initialization does not crash."""
-    mapie = SplitMapieRegressor(calibrator=GaussianCCP(), alpha=0.1)
+    mapie = SplitCPRegressor(calibrator=GaussianCCP(), alpha=0.1)
     mapie.fit(X, y, z=z)
 
 
@@ -211,7 +211,7 @@ def test_poly_gauss_init_other(
     points: Any, sigma: Any, random_sigma: Any, bias: bool, normalized: bool
 ) -> None:
     """Test that initialization does not crash."""
-    mapie = SplitMapieRegressor(calibrator=GaussianCCP(
+    mapie = SplitCPRegressor(calibrator=GaussianCCP(
         points, sigma, random_sigma, bias, normalized), alpha=0.1)
     mapie.fit(X, y, z=z)
 
@@ -224,7 +224,7 @@ def test_invalid_gauss_points(points: Any) -> None:
     an error
     """
     with pytest.raises(ValueError, match="Invalid `points` argument."):
-        mapie = SplitMapieRegressor(calibrator=GaussianCCP(points), alpha=0.1)
+        mapie = SplitCPRegressor(calibrator=GaussianCCP(points), alpha=0.1)
         mapie.fit(X, y, z=z)
 
 
@@ -234,7 +234,7 @@ def test_invalid_gauss_points_2() -> None:
     an error
     """
     with pytest.raises(ValueError, match="There should have as many points"):
-        mapie = SplitMapieRegressor(calibrator=GaussianCCP(
+        mapie = SplitCPRegressor(calibrator=GaussianCCP(
             points=(np.ones((10, 3)), np.ones((8, 3)))), alpha=0.1)
         mapie.fit(X, y, z=z)
 
@@ -245,7 +245,7 @@ def test_invalid_gauss_points_3() -> None:
     an error
     """
     with pytest.raises(ValueError, match="The standard deviation 2D array"):
-        mapie = SplitMapieRegressor(calibrator=GaussianCCP(
+        mapie = SplitCPRegressor(calibrator=GaussianCCP(
             points=(np.ones((10, 3)), np.ones((10, 2)))), alpha=0.1)
         mapie.fit(X, y, z=z)
 
@@ -260,7 +260,7 @@ def test_invalid_gauss_sigma(sigma: Any) -> None:
     error
     """
     with pytest.raises(ValueError):
-        mapie = SplitMapieRegressor(calibrator=GaussianCCP(3, sigma),
+        mapie = SplitCPRegressor(calibrator=GaussianCCP(3, sigma),
                                     alpha=0.1)
         mapie.fit(X, y, z=z)
 
@@ -271,7 +271,7 @@ def test_gauss_need_calib(ind: int) -> None:
     Test that ``GaussianCCP`` arguments that require later completion
     have ``_need_x_calib`` = ``True``
     """
-    mapie = SplitMapieRegressor(calibrator=GaussianCCP(
+    mapie = SplitCPRegressor(calibrator=GaussianCCP(
         **GAUSS_NEED_FIT_SETTINGS[ind]), alpha=0.1)
     mapie.fit(X, y, z=z)
     check_is_fitted(mapie.calibrator_, mapie.calibrator_.fit_attributes)
@@ -283,7 +283,7 @@ def test_gauss_no_need_calib(ind: int) -> None:
     Test that ``GaussianCCP`` arguments that don't require later
     completion have ``_need_x_calib`` = ``False``
     """
-    mapie = SplitMapieRegressor(calibrator=GaussianCCP(
+    mapie = SplitCPRegressor(calibrator=GaussianCCP(
         **GAUSS_NEED_FIT_SETTINGS[ind]), alpha=0.1)
     mapie.fit(X, y, z=z)
     check_is_fitted(mapie.calibrator_, mapie.calibrator_.fit_attributes)

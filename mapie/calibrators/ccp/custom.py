@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from typing import Iterable, Callable, Optional, Union, List
+from typing import Callable, Iterable, List, Optional, Union
 
 from mapie._typing import ArrayLike
 from .base import CCPCalibrator
-from .utils import (compile_functions_warnings_errors, format_functions,
-                    check_multiplier)
+from .utils import (check_multiplier, compile_functions_warnings_errors,
+                    format_functions)
 from sklearn.utils import _safe_indexing
 
 
 class CustomCCP(CCPCalibrator):
     """
-    Calibrator used for the ``CCP`` method to estimate the conformity scores.
+    Calibrator used for the ``SplitCP`` method to estimate the conformity scores.
     It corresponds to the adaptative conformal prediction method proposed by
     Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
 
@@ -113,7 +113,7 @@ class CustomCCP(CCPCalibrator):
     --------
     >>> import numpy as np
     >>> from mapie.calibrators import GaussianCCP
-    >>> from mapie.regression import SplitMapieRegressor
+    >>> from mapie.regression import SplitCPRegressor
     >>> from mapie.conformity_scores import AbsoluteConformityScore
     >>> np.random.seed(1)
     >>> X_train = np.linspace(0, 3.14, 1001).reshape(-1, 1)

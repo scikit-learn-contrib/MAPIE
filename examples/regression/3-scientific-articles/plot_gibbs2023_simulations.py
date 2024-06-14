@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.regression import SplitMapieRegressor, MapieRegressor
+from mapie.regression import SplitCPRegressor, MapieRegressor
 from mapie.calibrators.ccp import CustomCCP, GaussianCCP
 from scipy.stats import norm
 from sklearn.linear_model import LinearRegression
@@ -195,13 +195,13 @@ def plot_results(X_test, y_test, n_trials=10,
             lambda X, t=t: np.logical_and(X >= t, X < t + 0.5).astype(int)
             for t in np.arange(0, 5.5, 0.5)
         ])
-        mapie_ccp = SplitMapieRegressor(
+        mapie_ccp = SplitCPRegressor(
             model, calibrator=calibrator_groups, alpha=ALPHA, cv="prefit",
             conformity_score=AbsoluteConformityScore(sym=False),
             random_state=None
         )
         mapie_ccp.conformity_score.eps = 1e-5
-        mapie_ccp.fit_calibrator(X_calib, y_calib)
+        mapie_ccp.fit(X_calib, y_calib)
         _, y_pi_ccp = mapie_ccp.predict(X_test)
     else:
         # CCP Shifts
@@ -218,13 +218,13 @@ def plot_results(X_test, y_test, n_trials=10,
             bias=True,
             normalized=False,
         )
-        mapie_ccp = SplitMapieRegressor(
+        mapie_ccp = SplitCPRegressor(
             model, calibrator=calibrator_shifts, alpha=ALPHA, cv="prefit",
             conformity_score=AbsoluteConformityScore(sym=False),
             random_state=None
         )
         mapie_ccp.conformity_score.eps = 1e-5
-        mapie_ccp.fit_calibrator(X_calib, y_calib)
+        mapie_ccp.fit(X_calib, y_calib)
         _, y_pi_ccp = mapie_ccp.predict(X_test)
 
     # =========== n_trials run to get average marginal coverage ============

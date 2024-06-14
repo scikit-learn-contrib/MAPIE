@@ -1,31 +1,25 @@
 from __future__ import annotations
 
 from typing import List, Optional, Tuple, Union
-import inspect
-import numpy as np
-from sklearn.base import RegressorMixin
 
+import numpy as np
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators.ccp import check_calibrator
 from mapie.conformity_scores import ConformityScore
-from mapie.futur.split.base import CCP, BaseCalibrator
-from mapie.utils import (check_lower_upper_bounds, check_estimator_regression,
-                         check_conformity_score)
+from mapie.futur.split.base import BaseCalibrator, SplitCP
+from mapie.utils import (check_conformity_score, check_estimator_regression,
+                         check_lower_upper_bounds)
+from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.pipeline import Pipeline
 
 
-class SplitMapieRegressor(CCP):
+class SplitCPRegressor(SplitCP):
     """
-    This class implements an adaptative conformal prediction method proposed by
-    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
-    This method works with a ``"split"`` approach which requires a separate
-    calibration phase. The ``fit`` method automatically split the data into
-    two disjoint sets to train the predictor and the calibrator. You can call
-    ``fit_estimator`` and ``fit_calibrator`` to do the two step one after the
-    other. You will have to make sure that data used in the two methods,
-    for training and calibration are disjoint, to guarantee the expected
-    ``1-alpha`` coverage.
+    Class to compute Conformal Predictions in a ``"split"`` approach for
+    regression tasks.
+    It is based on a predictor (a sklearn estimator), and a calibrator
+    (``Calibrator`` object).
 
     Parameters
     ----------
@@ -40,8 +34,6 @@ class SplitMapieRegressor(CCP):
         A ``BaseCalibrator`` instance used to estimate the conformity scores.
 
         If ``None``, use as default a ``GaussianCCP`` instance.
-        See the examples and the documentation to build a ``BaseCalibrator``
-        adaptated to your dataset and constraints.
 
         By default ``None``.
 
@@ -98,31 +90,14 @@ class SplitMapieRegressor(CCP):
 
         By default ``None``.
 
-    Attributes
-    ----------
-    beta_up_: Tuple[NDArray, bool]
-        Calibration fitting results, used to build the upper bound of the
-        prediction intervals.
-        beta_up[0]: Array of shape (calibrator.n_out, )
-        beta_up[1]: Whether the optimization process converged or not
-                    (the coverage is not garantied if the optimization fail)
-
-    beta_low_: Tuple[NDArray, bool]
-        Same as beta_up, but for the lower bound
-
-    References
-    ----------
-    Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
-    "Conformal Prediction With Conditional Guarantees", 2023
-
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.regression import SplitMapieRegressor
+    >>> from mapie.regression import SplitCPRegressor
     >>> np.random.seed(1)
     >>> X_train = np.arange(0,400, 2).reshape(-1, 1)
     >>> y_train = 2*X_train[:,0] + np.random.rand(len(X_train))
-    >>> mapie_reg = SplitMapieRegressor(alpha=0.1, random_state=1)
+    >>> mapie_reg = SplitCPRegressor(alpha=0.1, random_state=1)
     >>> mapie_reg = mapie_reg.fit(X_train, y_train)
     >>> y_pred, y_pis = mapie_reg.predict(X_train)
     >>> print(np.round(y_pred[:5], 2))
@@ -188,7 +163,8 @@ class SplitMapieRegressor(CCP):
         self, X: ArrayLike
     ) -> NDArray:
         """
-        Compute conformity scores
+        Compute the predictor prediction, used to compute the
+        conformity scores.
 
         Parameters
         ----------
@@ -209,7 +185,7 @@ class SplitMapieRegressor(CCP):
         **kwargs,
     ) -> NDArray:
         """
-        Compute conformity scores
+        Compute the bounds, using the fitted ``_calibrator``.
 
         Parameters
         ----------
@@ -248,16 +224,16 @@ class SplitMapieRegressor(CCP):
 
     def predict_best(self, y_pred: NDArray) -> NDArray:
         """
-        Compute the prediction
+        Compute the prediction, in an array of shape (n_samples, )
 
         Parameters
         ----------
         y_pred: NDArray
-            Prediction scores (can be the prediction, the probas, ...)
+            Prediction scores
 
         Returns
         -------
         NDArray
-            best predictions
+            Predictions
         """
         return y_pred

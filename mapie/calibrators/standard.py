@@ -9,7 +9,7 @@ from mapie.conformity_scores import ConformityScore
 from sklearn.utils.validation import _num_samples
 
 
-class Standard(BaseCalibrator):
+class StandardCalibrator(BaseCalibrator):
     """
     Base abstract class for the calibrators
 
