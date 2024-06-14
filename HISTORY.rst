@@ -2,13 +2,18 @@
 History
 =======
 
-0.8.6 (2024-**-**)
+0.8.x (2024-xx-xx)
 ------------------
-* Fix the quantile formula to ensure valid coverage (deal with infinite interval production).
+
+0.8.6 (2024-06-14)
+------------------
+
+* Fix the quantile formula to ensure valid coverage (deal with infinite interval production and asymmetric conformal scores).
 * Fix sphinx dependencies
 
 0.8.5 (2024-06-07)
 ------------------
+
 * Issue with update from 0.8.4
 
 0.8.4 (2024-06-07)
