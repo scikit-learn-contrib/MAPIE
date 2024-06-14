@@ -4,6 +4,7 @@ History
 
 0.8.6 (2024-**-**)
 ------------------
+* Fix the quantile formula to ensure valid coverage (deal with infinite interval production).
 * Fix sphinx dependencies
 
 0.8.5 (2024-06-07)

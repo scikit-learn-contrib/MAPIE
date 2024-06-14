@@ -148,7 +148,9 @@ def test_predict_output_shape(
     mapie_ts_reg = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
     (X, y) = dataset
     mapie_ts_reg.fit(X, y)
-    y_pred, y_pis = mapie_ts_reg.predict(X, alpha=alpha)
+    y_pred, y_pis = mapie_ts_reg.predict(
+        X, alpha=alpha, allow_infinite_bounds=True
+    )
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
     assert y_pis.shape == (X.shape[0], 2, n_alpha)
@@ -211,8 +213,8 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     mapie_multi = MapieTimeSeriesRegressor(n_jobs=-1, **STRATEGIES[strategy])
     mapie_single.fit(X_toy, y_toy)
     mapie_multi.fit(X_toy, y_toy)
-    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.2)
-    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.2)
+    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.5)
+    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.5)
     np.testing.assert_allclose(y_pred_single, y_pred_multi)
     np.testing.assert_allclose(y_pis_single, y_pis_multi)
 
