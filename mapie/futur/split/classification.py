@@ -10,8 +10,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators.ccp import check_calibrator, CCPCalibrator
-from mapie.futur.split.base import CCP, Calibrator
+from mapie.calibrators.ccp import check_calibrator
+from mapie.futur.split.base import CCP, BaseCalibrator
 from mapie.conformity_scores import ConformityScore
 from mapie.conformity_scores.classification_scores import LAC
 
@@ -37,11 +37,11 @@ class SplitMapieClassifier(CCP):
 
         By default ``"None"``.
 
-    calibrator: Optional[CCP]
-        A ``CCP`` instance used to estimate the conformity scores.
+    calibrator: Optional[BaseCalibrator]
+        A ``BaseCalibrator`` instance used to estimate the conformity scores.
 
         If ``None``, use as default a ``GaussianCCP`` instance.
-        See the examples and the documentation to build a ``CCP``
+        See the examples and the documentation to build a ``BaseCalibrator``
         adaptated to your dataset and constraints.
 
         By default ``None``.
@@ -143,7 +143,7 @@ class SplitMapieClassifier(CCP):
                 List[Union[ClassifierMixin, Pipeline]]
             ]
         ] = None,
-        calibrator: Optional[CCPCalibrator] = None,
+        calibrator: Optional[BaseCalibrator] = None,
         cv: Optional[
             Union[str, BaseCrossValidator, BaseShuffleSplit]
         ] = None,
@@ -260,7 +260,7 @@ class SplitMapieClassifier(CCP):
             )
 
     def _check_calibrate_parameters(self) -> Tuple[
-        ConformityScore, Calibrator
+        ConformityScore, BaseCalibrator
     ]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
@@ -296,7 +296,7 @@ class SplitMapieClassifier(CCP):
         self,
         X: ArrayLike,
         y_pred: NDArray,
-        **predict_kwargs,
+        **kwargs,
     ) -> NDArray:
         """
         Compute conformity scores
@@ -322,10 +322,11 @@ class SplitMapieClassifier(CCP):
         # the calibrator_.predict result is a 2D array with
         # column 1 = -1 * column 2, So the true values are in res[:, 1]
         predict_kwargs = self.get_method_arguments(
-            self.calibrator_.predict, inspect.currentframe(), predict_kwargs,
-            ["X"]
+            self.calibrator_.predict,
+            dict(zip(["X", "y_pred"],[X, y_pred])),
+            kwargs,
         )
-        conformity_score_pred = self.calibrator_.predict(X, **predict_kwargs)
+        conformity_score_pred = self.calibrator_.predict(**predict_kwargs)
 
         y_pred_set = self.conformity_score_.get_estimation_distribution(
             X, y_pred, conformity_score_pred[:, 1]

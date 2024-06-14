@@ -11,7 +11,7 @@ class PolynomialCCP(CCPCalibrator):
     """
     This class is used to define the transformation phi,
     used in the Gibbs et al. method to model the conformity scores.
-    This class build a ``CCP`` object with polynomial features of
+    This class build a ``CCPCalibrator`` object with polynomial features of
     X, y_pred or z.
 
     Parameters
@@ -40,8 +40,8 @@ class PolynomialCCP(CCPCalibrator):
     bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
-        the ``CCP``object were built).
-        If the ``CCP``object definition covers all the dataset
+        the ``CCPCalibrator``object were built).
+        If the ``CCPCalibrator``object definition covers all the dataset
         (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
         is never all zeros), this column of ones is not necessary
         to obtain marginal coverage.
@@ -154,8 +154,8 @@ class PolynomialCCP(CCPCalibrator):
         bias: bool
             Add a column of ones to the features, for safety reason
             (to garanty the marginal coverage, no matter how the other features
-            the ``CCP``object were built).
-            If the ``CCP``object definition covers all the dataset
+            the ``CCPCalibrator``object were built).
+            If the ``CCPCalibrator``object definition covers all the dataset
             (meaning, for all calibration and test samples,
             ``phi(X, y_pred, z)`` is never all zeros), this column of ones
             is not necessary to obtain marginal coverage.

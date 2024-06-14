@@ -582,7 +582,7 @@ def test_linear_data_confidence_interval(
 
 def test_linear_regression_results() -> None:
     """
-    Test that the CCP method in the case of a constant
+    Test that the CCPCalibrator method in the case of a constant
     calibrator = x -> np.ones(len(x)), on a multivariate linear regression
     problem with fixed random state, is strictly equivalent to the regular
     CP method (base, jacknife and cv)

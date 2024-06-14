@@ -4,18 +4,18 @@ from abc import ABCMeta, abstractmethod
 from typing import List, Optional, Tuple, Union, Dict, cast, Callable, Any
 import warnings
 import inspect
-
+import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
                                      ShuffleSplit, PredefinedSplit)
 from sklearn.pipeline import Pipeline
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, _num_samples
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore
 from mapie.calibrators.ccp import CCPCalibrator
-from mapie.calibrators import Calibrator
-from mapie.utils import fit_estimator, _safe_sample
+from mapie.calibrators import BaseCalibrator
+from mapie.utils import fit_estimator, _sample_non_null_weight
 
 
 class CCP(BaseEstimator, metaclass=ABCMeta):
@@ -39,11 +39,11 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
 
         By default ``"None"``.
 
-    calibrator: Optional[CCP]
-        A ``CCP`` instance used to estimate the conformity scores.
+    calibrator: Optional[CCPCalibrator]
+        A ``CCPCalibrator`` instance used to estimate the conformity scores.
 
         If ``None``, use as default a ``GaussianCCP`` instance.
-        See the examples and the documentation to build a ``CCP``
+        See the examples and the documentation to build a ``CCPCalibrator``
         adaptated to your dataset and constraints.
 
         By default ``None``.
@@ -114,6 +114,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
     cv: Optional[
             Union[str, BaseCrossValidator, BaseShuffleSplit]
         ]
+    alpha: Optional[float]
 
     @abstractmethod
     def __init__(
@@ -145,7 +146,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
 
     @abstractmethod
     def _check_calibrate_parameters(self) -> Tuple[
-        ConformityScore, Calibrator
+        ConformityScore, BaseCalibrator
     ]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
@@ -233,20 +234,19 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
                              "Allowed values are between 0 and 1.")
 
     def get_method_arguments(
-        self, method: Callable, currentframe: Any,
-        kwargs: Optional[Dict], exclude_args: Optional[List[str]] = None,
+        self, method: Callable, local_vars: Dict[str, Any],
+        kwargs: Optional[Dict],
     ) -> Dict:
         """
         Return a dictionnary with ``calibrator_.fit`` arguments
 
         Parameters
         ----------
-        local_vars : Dict
-            Dictionnay of local variables
+        method: Callable
+            method for which to check the signature
 
-        currentframe : FrameType
-            ``inpect.currentframe()``, called where the
-            ``get_method_arguments`` is called.
+        local_vars : Dict[str, Any]
+            Dictionnary of available variables
 
         kwargs : Optional[Dict]
             Other arguments
@@ -259,26 +259,23 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         Dict
             dictinnary of arguments
         """
-        local_vars = {k: v for k, v in currentframe.f_locals.items()
-                      if k != 'self'}
         self_attrs = {k: v for k, v in self.__dict__.items()}
         sig = inspect.signature(method)
 
-        # Build the kwargs dictionary
-        fit_kwargs: Dict[str, Any] = {}
+        method_kwargs: Dict[str, Any] = {}
         for param in sig.parameters.values():
+            # We ignore the arguments like *args and **kwargs of the method
             if param.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD,
                               inspect.Parameter.KEYWORD_ONLY):
                 param_name = param.name
-                if exclude_args is None or param_name not in exclude_args:
-                    if kwargs is not None and param_name in kwargs:
-                        fit_kwargs[param_name] = kwargs[param_name]
-                    elif param_name in self_attrs:
-                        fit_kwargs[param_name] = self_attrs[param_name]
-                    elif param_name in local_vars:
-                        fit_kwargs[param_name] = local_vars[param_name]
+                if kwargs is not None and param_name in kwargs:
+                    method_kwargs[param_name] = kwargs[param_name]
+                elif param_name in self_attrs:
+                    method_kwargs[param_name] = self_attrs[param_name]
+                elif param_name in local_vars:
+                    method_kwargs[param_name] = local_vars[param_name]
 
-        return fit_kwargs
+        return method_kwargs
 
     def fit_predictor(
         self,
@@ -306,8 +303,6 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
             their corresponding observations are removed
             before the fitting process and hence have no residuals.
             If weights are non-uniform, residuals are still uniformly weighted.
-            Note that the sample weight defined are only for the training, not
-            for the calibration procedure.
 
             By default ``None``.
 
@@ -333,8 +328,8 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
             train_index, _ = list(self.cv.split(X, y, groups))[0]
 
             (
-                X_train, y_train, sample_weight_train
-            ) = _safe_sample(X, y, sample_weight, train_index)
+                X_train, y_train, _, sample_weight_train, _
+            ) = _sample_non_null_weight(X, y, sample_weight, train_index)
 
             self.predictor_ = fit_estimator(
                 predictor, X_train, y_train,
@@ -366,14 +361,8 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
             Training labels.
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
-            Note that the sample weight defined are only for the training, not
-            for the calibration procedure.
+            Sample weights of the data, used as weights in the
+            calibration process.
 
             By default ``None``.
 
@@ -394,22 +383,26 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         self._check_fit_parameters()
         self.conformity_score_, calibrator = self._check_calibrate_parameters()
         check_is_fitted(self, self.fit_attributes)
-
-        # Get calibration set
-        if self.cv != 'prefit':
-            self.cv = cast(BaseCrossValidator, self.cv)
-
-            _, calib_index = list(self.cv.split(X, y, groups))[0]
-            (
-                X_calib, y_calib, _
-            ) = _safe_sample(X, y, sample_weight, calib_index)
-
-        else:
-            X_calib, y_calib = X, y
-
+        
         if self.alpha is None:
             warnings.warn("No calibration is done, because alpha is None.")
             return self
+
+        # Get training and calibration sets
+        if self.cv != 'prefit':
+            self.cv = cast(BaseCrossValidator, self.cv)
+
+            train_index, calib_index = list(self.cv.split(X, y, groups))[0]
+        else:
+            train_index, calib_index = np.array([]), np.arange(_num_samples(X))
+        
+        z = cast(Optional[ArrayLike], kwargs.get("z", None))
+        (
+            X_train, y_train, z_train, sample_weight_train, train_index
+        ) = _sample_non_null_weight(X, y, sample_weight, train_index, z)
+        (
+            X_calib, y_calib, z_calib, sample_weight_calib, calib_index
+        ) = _sample_non_null_weight(X, y, sample_weight, calib_index, z)
 
         # Compute conformity scores
         y_pred_calib = self.predict_score(X_calib)
@@ -419,12 +412,26 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
         )
 
         calib_arguments = self.get_method_arguments(
-            calibrator.fit, inspect.currentframe(), kwargs,
-            ["X_calib", "conformity_scores_calib"]
+            calibrator.fit, 
+            dict(zip([
+                "X", "y", "sample_weight", "groups",
+                "y_pred_calib", "conformity_scores_calib",
+                "X_train", "y_train", "z_train",
+                "sample_weight_train", "train_index",
+                "X_calib", "y_calib", "z_calib",
+                "sample_weight_calib", "calib_index",
+             ],
+             [
+                X, y, sample_weight, groups,
+                y_pred_calib, conformity_scores_calib,
+                X_train, y_train, z_train, sample_weight_train, train_index,
+                X_calib, y_calib, z_calib, sample_weight_calib, calib_index,
+             ])),
+             kwargs
         )
 
         self.calibrator_ = calibrator.fit(
-            X_calib, conformity_scores_calib, **calib_arguments,
+            **calib_arguments,
             **(calib_kwargs if calib_kwargs is not None else {})
         )
 
@@ -471,14 +478,13 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
             By default ``None``
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
+            Sample weights for fitting the out-of-fold models and the
+            conformalisation process.
             If ``None``, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
             before the fitting process and hence have no residuals.
             If weights are non-uniform, residuals are still uniformly weighted.
-            Note that the sample weight defined are only for the training, not
-            for the calibration procedure.
 
             By default ``None``.
 
@@ -542,8 +548,7 @@ class CCP(BaseEstimator, metaclass=ABCMeta):
 
         # Fit the calibrator
         bounds_arguments = self.get_method_arguments(
-            self.calibrator_.predict, inspect.currentframe(), kwargs,
-            ["X", "y_pred"]
+            self.calibrator_.predict, {}, kwargs,
         )
 
         y_bounds = self.predict_bounds(X, y_pred, **bounds_arguments)

@@ -20,7 +20,7 @@ def format_functions(
     Parameters
     ----------
     functions: Optional[Union[Callable, Iterable[Callable]]]
-        List of functions (or CCP objects) or single function.
+        List of functions (or ``CCPCalibrator`` objects) or single function.
         Each function can take a combinaison of the following arguments:
         - ``X``: Input dataset, of shape (n_samples, ``n_in``)
         - ``y_pred``: estimator prediction, of shape (n_samples,)
@@ -35,8 +35,8 @@ def format_functions(
     bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
-        the ``CCP``object were built).
-        If the ``CCP``object definition covers all the dataset
+        the ``CCPCalibrator``object were built).
+        If the ``CCPCalibrator``object definition covers all the dataset
         (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
         is never all zeros), this column of ones is not necessary
         to obtain marginal coverage.
@@ -491,8 +491,8 @@ def fast_mean_pinball_loss(
 
 
 def calibrator_optim_objective(
-    beta: NDArray, phi_x: NDArray, conformity_scores: NDArray, q: float,
-    sample_weight: NDArray, reg_param: Optional[float],
+    beta: NDArray, calibrator_preds: NDArray,conformity_scores: NDArray,
+    q: float, sample_weight: NDArray, reg_param: Optional[float],
 ) -> float:
     """
     Objective funtcion to minimize to get the estimation of
@@ -504,8 +504,8 @@ def calibrator_optim_objective(
     beta : NDArray
         Parameters to optimize to minimize the objective function
 
-    phi_x : NDArray
-        Transformation of the data X using the ``CCP``.
+    calibrator_preds : NDArray
+        Transformation of the data X using the ``CCPCalibrator``.
 
     conformity_scores : NDArray
         Conformity scores of X
@@ -536,6 +536,6 @@ def calibrator_optim_objective(
     else:
         reg_val = 0
     return fast_mean_pinball_loss(
-        y_true=conformity_scores, y_pred=phi_x.dot(beta),
+        y_true=conformity_scores, y_pred=calibrator_preds.dot(beta),
         alpha=q, sample_weight=sample_weight,
     ) + reg_val

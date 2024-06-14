@@ -11,17 +11,28 @@ from sklearn.utils import _safe_indexing
 
 class CustomCCP(CCPCalibrator):
     """
-    This class is used to define the transformation phi,
-    used in the Gibbs et al. method to model the conformity scores.
-    This class build a ``CCP`` object with custom features of
-    X, y_pred or z, defined as a list of functions in ``functions`` argument.
+    Calibrator used for the ``CCP`` method to estimate the conformity scores.
+    It corresponds to the adaptative conformal prediction method proposed by
+    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
 
-    This class can be used to concatenate ``CCP`` instances.
+    The goal of to learn the quantile of the conformity scores distribution,
+    to built the prediction interval, not with a constant ``q`` (as it is the
+    case in the standard CP), but with a function ``q(X)`` which is adaptative
+    as it depends on ``X``.
+
+    This class builds a ``CCPCalibrator`` object with custom features,
+    function of ``X``, ``y_pred`` or ``z``,
+    defined as a list of functions in ``functions`` argument.
+
+    This class can be used to concatenate ``CCPCalibrator`` instances.
+
+    See the examples and the documentation to build a ``CCPCalibrator``
+    adaptated to your dataset and constraints.
 
     Parameters
     ----------
     functions: Optional[Union[Callable, Iterable[Callable]]]
-        List of functions (or CCP objects) or single function.
+        List of functions (or CCPCalibrator objects) or single function.
 
         Each function can take a combinaison of the following arguments:
         - ``X``: Input dataset, of shape (n_samples, ``n_in``)
@@ -29,35 +40,33 @@ class CustomCCP(CCPCalibrator):
         - ``z``: exogenous variable, of shape (n_samples, n_features).
             It should be given in the ``fit`` and ``predict`` methods.
         The results of each functions will be concatenated to build the final
-        result of the phi function, of shape (n_samples, ``n_out``).
-        If ``None``, the resulting phi object will return a column of ones,
-        when called. It will result, in the MapieCCPRegressor, in a basic
-        split CP approach.
+        result of the transformation, of shape ``(n_samples, n_out)``, which
+        will be used to estimate the conformity scores quantiles.
 
         By default ``None``.
 
     bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
-        the ``CCP``object were built).
-        If the ``CCP``object definition covers all the dataset
-        (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
-        is never all zeros), this column of ones is not necessary
-        to obtain marginal coverage.
+        the ``CCPCalibrator``object were built).
+        If the ``CCPCalibrator``object definition covers all the dataset
+        (meaning, for all calibration and test samples, the resulting
+        ``calibrator.predict(X, y_pred, z)`` is never all zeros),
+        this column of ones is not necessary to obtain marginal coverage.
         In this case, you can set this argument to ``False``.
 
-        Note: Even if it is not always necessary to guarantee the marginal
-        coverage, it can't degrade the prediction intervals.
+        If you are not sur, use ``bias=True`` to garantee the marginal
+        coverage.
 
         By default ``False``.
 
-    normalized: bool
-        Whether or not to normalized the output result. Normalization
+    Whether or not to normalized the resulting
+        ``calibrator.predict(X, y_pred, z)``. Normalization
         will result in a bounded interval prediction width, avoiding the width
         to explode to +inf or crash to zero. It is particularly intersting when
         you know that the conformity scores are bounded. It also prevent the
-        interval to have a interval of zero width for out-of-distribution or
-        new samples. On the opposite, it is not recommended if the conformity
+        interval to have a width of zero for out-of-distribution samples.
+        On the opposite, it is not recommended if the conformity
         scores can vary a lot.
 
         By default ``False``
@@ -67,6 +76,16 @@ class CustomCCP(CCPCalibrator):
         If ``None``, is sampled from a normal distribution.
 
         By default ``None``.
+
+    multipliers: Optional[List[Callable]]
+        List of function which take any arguments of ``X, y_pred, z``
+        and return an array of shape ``(n_samples, 1)``. 
+        The result of ``calibrator.transform(X, y_pred, z)`` will be multiply
+        by the result of each function of ``multipliers``.
+
+        Note: When you multiply a ``CCPCalibrator`` with a function, it create
+        a new instance of ``CCPCalibrator`` (with the same arguments), but
+        add the function to the ``multipliers`` list.
 
     Attributes
     ----------
@@ -78,28 +97,20 @@ class CustomCCP(CCPCalibrator):
         Number of features of ``X``
 
     n_out: int
-        Number of features of phi(``X``, ``y_pred``, ``z``).
+        Number of features of ``calibrator.predict(X, y_pred, z)``
+
+    beta_up_: Tuple[NDArray, bool]
+        Calibration fitting results, used to build the upper bound of the
+        prediction intervals.
+        beta_up_[0]: Array of shape (calibrator.n_out, )
+        beta_up_[1]: Whether the optimization process converged or not
+                    (the coverage is not garantied if the optimization fail)
+
+    beta_low_: Tuple[NDArray, bool]
+        Same as beta_up, but for the lower bound
 
     Examples
     --------
-    # >>> import numpy as np
-    # >>> from mapie.calibrators import CustomCCP
-    # >>> X = np.array([[1, 2], [3, 4], [5, 6]])
-    # >>> y_pred = np.array([0, 0, 1])
-    # >>> phi = CustomCCP(
-    # ...     functions=[
-    # ...         lambda X: X, # X, if y_pred is 0
-    # ...         lambda y_pred: y_pred,                     # y_pred
-    # ...     ],
-    # ...     normalized=False,
-    # ... ).fit(X, y_pred)
-    # >>> print(phi.predict(X, y_pred))
-    # [[1. 2. 0.]
-    #  [3. 4. 0.]
-    #  [0. 0. 1.]]
-    # >>> print(phi.n_out)
-    # 3
-
     >>> import numpy as np
     >>> from mapie.calibrators import GaussianCCP
     >>> from mapie.regression import SplitMapieRegressor
@@ -153,12 +164,8 @@ class CustomCCP(CCPCalibrator):
         z: Optional[ArrayLike] = None,
     ) -> None:
         """
-        Fit function : Set all the necessary attributes to be able to transform
-        ``(X, y_pred, z)`` into the expected transformation.
-
-        It should set all the attributes of ``fit_attributes``.
-        It should also set, once fitted, ``n_in``, ``n_out`` and
-        ``init_value``.
+        Check fit parameters. In particular, check that the ``functions``
+        attribute is valid and set the ``functions_``.
 
         Parameters
         ----------
@@ -186,18 +193,18 @@ class CustomCCP(CCPCalibrator):
     ) -> CustomCCP:
         """
         Fit function : Set all the necessary attributes to be able to transform
-        ``(X, y_pred, z)`` into the expected transformation.
+        ``(X, y_pred, z)`` into the expected array of features.
 
-        It should set all the attributes of ``fit_attributes``.
-        It should also set, once fitted, ``n_in``, ``n_out`` and
-        ``init_value``.
+        It should set all the attributes of ``fit_attributes``
+        (i.e. ``functions_``). It should also set, once fitted, ``n_in``,
+        ``n_out`` and ``init_value_``.
 
         Parameters
         ----------
         X: ArrayLike of shape (n_samples, n_features)
             Training data.
 
-        y: ArrayLike of shape (n_samples,)
+        y_pred: ArrayLike of shape (n_samples,)
             Training labels.
 
             By default ``None``

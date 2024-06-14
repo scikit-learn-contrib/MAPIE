@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from typing import Optional, List
+from typing import List
 
 import numpy as np
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators import Calibrator
+from mapie.calibrators import BaseCalibrator
 from mapie.conformity_scores import ConformityScore
 from sklearn.utils.validation import _num_samples
 
 
-class Standard(Calibrator):
+class Standard(BaseCalibrator):
     """
     Base abstract class for the calibrators
 
@@ -17,7 +17,7 @@ class Standard(Calibrator):
     ----------
     fit_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
-        ``transform``.
+        ``predict``.
     """
 
     fit_attributes: List[str] = ["q_up_", "q_low_"]
@@ -26,83 +26,49 @@ class Standard(Calibrator):
         self,
         X_calib: ArrayLike,
         conformity_scores_calib: NDArray,
-        alpha: Optional[float] = None,
-        sym: Optional[bool] = None,
+        allow_infinite_bounds: bool = False,
         **kwargs,
-    ) -> Calibrator:
+    ) -> BaseCalibrator:
         """
         Fit the calibrator instance
 
         Parameters
         ----------
-        X: ArrayLike of shape (n_samples, n_features)
+        X_calib: ArrayLike of shape (n_samples, n_features)
             Calibration data.
 
-        y_pred: ArrayLike of shape (n_samples,)
-            Calibration target.
-
-        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
-            Exogenous variables
-
-        conformity_scores: ArrayLike of shape (n_samples,)
+        conformity_scores_calib: ArrayLike of shape (n_samples,)
             Calibration conformity scores
 
-        alpha: float
-            Between ``0.0`` and ``1.0``, represents the risk level of the
-            confidence interval.
-            Lower ``alpha`` produce larger (more conservative) prediction
-            intervals.
-            ``alpha`` is the complement of the target coverage level.
-
-        sym: bool
-            Weather or not, the prediction interval should be symetrical
-            or not.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
-            Note that the sample weight defined are only for the training, not
-            for the calibration procedure.
-
-            By default ``None``.
-
-        random_state: Optional[int]
-            Integer used to set the numpy seed, to get reproducible calibration
-            results.
-            If ``None``, the prediction intervals will be stochastics, and will
-            change if you refit the calibration
-            (even if no arguments have change).
-
-            WARNING: If ``random_state``is not ``None``, ``np.random.seed``
-            will be changed, which will reset the seed for all the other random
-            number generators. It may have an impact on the rest of your code.
-
-            By default ``None``.
+        allow_infinite_bounds: bool
+            Allow infinite prediction intervals to be produced.
 
         optim_kwargs: Dict
             Other argument, used in sklear.optimize.minimize
         """
-        assert alpha is not None
-        assert sym is not None
+        assert self.alpha is not None
 
-        signed = -1 if sym else 1
-        quantile_search = "higher" if sym else "lower"
+        if self.sym:
+            alpha_ref = 1-self.alpha
+            quantile_ref = ConformityScore.get_quantile(
+                conformity_scores_calib[..., np.newaxis],
+                np.array([alpha_ref]), axis=0
+            )[0, 0]
+            self.q_low_, self.q_up_ = -quantile_ref, quantile_ref
 
-        alpha_low = 1 - alpha if sym else alpha/2
-        alpha_up = 1 - alpha if sym else 1 - alpha/2
+        else:
+            alpha_low, alpha_up = self.alpha/2, 1 - self.alpha/2
 
-        self.q_up_ = ConformityScore.get_quantile(
-            conformity_scores_calib[..., np.newaxis],
-            np.array([alpha_up]), axis=0, method="higher"
-        )[0, 0]
-        self.q_low_ = signed * ConformityScore.get_quantile(
-            conformity_scores_calib[..., np.newaxis],
-            np.array([alpha_low]), axis=0, method=quantile_search
-        )[0, 0]
+            self.q_low_ = ConformityScore.get_quantile(
+                conformity_scores_calib[..., np.newaxis],
+                np.array([alpha_low]), axis=0, reversed=True,
+                unbounded=allow_infinite_bounds
+            )[0, 0]
+            self.q_up_ = ConformityScore.get_quantile(
+                conformity_scores_calib[..., np.newaxis],
+                np.array([alpha_up]), axis=0,
+                unbounded=allow_infinite_bounds
+            )[0, 0]
 
         return self
 
@@ -112,18 +78,12 @@ class Standard(Calibrator):
         **kwargs,
     ) -> NDArray:
         """
-        Predict ``(X, y_pred, z)``
+        Predict the conformity scores estimation
 
         Parameters
         ----------
         X : ArrayLike
             Observed samples
-
-        y_pred : ArrayLike
-            Target prediction
-
-        z : ArrayLike
-            Exogenous variable
 
         Returns
         -------

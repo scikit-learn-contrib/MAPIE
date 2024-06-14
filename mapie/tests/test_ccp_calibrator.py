@@ -123,7 +123,7 @@ def test_invalid_multiplication() -> None:
 
 def test_phi_functions_warning() -> None:
     """
-    Test that creating a CCP object with functions which have
+    Test that creating a CCPCalibrator object with functions which have
     optional arguments different from 'X', 'y_pred' or 'z' raise a warning.
     """
     with pytest.warns(UserWarning,
@@ -142,7 +142,7 @@ def test_phi_functions_warning() -> None:
 ])
 def test_phi_functions_error(functions: Any) -> None:
     """
-    Test that creating a CCP object with functions which have
+    Test that creating a CCPCalibrator object with functions which have
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
     """
     for f in functions:     # For coverage
@@ -154,7 +154,7 @@ def test_phi_functions_error(functions: Any) -> None:
 
 def test_phi_functions_empty() -> None:
     """
-    Test that creating a CCP object with functions which have
+    Test that creating a CCPCalibrator object with functions which have
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
     """
     with pytest.raises(ValueError):

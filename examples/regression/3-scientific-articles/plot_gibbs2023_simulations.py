@@ -191,12 +191,12 @@ def plot_results(X_test, y_test, n_trials=10,
 
     if experiment == "Groups":
         # CCP Groups
-        phi_groups = CustomCCP([
+        calibrator_groups = CustomCCP([
             lambda X, t=t: np.logical_and(X >= t, X < t + 0.5).astype(int)
             for t in np.arange(0, 5.5, 0.5)
         ])
         mapie_ccp = SplitMapieRegressor(
-            model, phi=phi_groups, alpha=ALPHA, cv="prefit",
+            model, calibrator=calibrator_groups, alpha=ALPHA, cv="prefit",
             conformity_score=AbsoluteConformityScore(sym=False),
             random_state=None
         )
@@ -210,7 +210,7 @@ def plot_results(X_test, y_test, n_trials=10,
         other_locs = [0.5, 2.5, 4.5]
         other_scale = 1
 
-        phi_shifts = GaussianCCP(
+        calibrator_shifts = GaussianCCP(
             points=(
                 np.array(eval_locs+other_locs).reshape(-1, 1),
                 [eval_scale]*len(eval_locs) + [other_scale]*len(other_locs),
@@ -219,7 +219,7 @@ def plot_results(X_test, y_test, n_trials=10,
             normalized=False,
         )
         mapie_ccp = SplitMapieRegressor(
-            model, phi=phi_shifts, alpha=ALPHA, cv="prefit",
+            model, calibrator=calibrator_shifts, alpha=ALPHA, cv="prefit",
             conformity_score=AbsoluteConformityScore(sym=False),
             random_state=None
         )

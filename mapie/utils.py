@@ -23,7 +23,8 @@ SPLIT_STRATEGIES = ["uniform", "quantile", "array split"]
 
 
 def check_null_weight(
-    sample_weight: Optional[ArrayLike], X: ArrayLike, y: ArrayLike
+    sample_weight: Optional[ArrayLike],
+    X: ArrayLike, y: ArrayLike
 ) -> Tuple[Optional[NDArray], ArrayLike, ArrayLike]:
     """
     Check sample weights and remove samples with null sample weights.
@@ -36,6 +37,8 @@ def check_null_weight(
         Training samples.
     y: ArrayLike of shape (n_samples,)
         Training labels.
+    z: Optional[ArrayLike]
+        Exogenous varible
 
     Returns
     -------
@@ -47,7 +50,7 @@ def check_null_weight(
 
     y: ArrayLike of shape (n_samples,)
         Training labels with non-null weights.
-
+    
     Examples
     --------
     >>> import numpy as np
@@ -77,12 +80,14 @@ def check_null_weight(
     return sample_weight, X, y
 
 
-def _safe_sample(
+def _sample_non_null_weight(
     X: ArrayLike,
     y: ArrayLike,
     sample_weight: Optional[ArrayLike],
     index: ArrayLike,
-) -> Tuple[ArrayLike, ArrayLike, Optional[NDArray]]:
+    z: Optional[ArrayLike] = None,
+) -> Tuple[ArrayLike, ArrayLike, Optional[ArrayLike],
+           Optional[NDArray], ArrayLike]:
     """
     Perform several checks on class parameters.
 
@@ -100,30 +105,47 @@ def _safe_sample(
     index: ArrayLike
         Indexes of the training set.
 
+    z: Optional[ArrayLike]
+        Exogenous varible
+
     Returns
     -------
-    Tuple[NDArray, NDArray, Optional[NDArray]]
-        - NDArray of training observed values
-        - NDArray of training target values
-        - Optional[NDArray] of training sample_weight
+    Tuple[ArrayLike, ArrayLike, Optional[ArrayLike], Optional[NDArray]]
+        - ArrayLike of observed values
+        - ArrayLike of target values
+        - Optional[ArrayLike] of exogenous varible
+        - Optional[NDArray] of sample_weight
+        - ArrayLike of index of non-null weights
     """
-    X_train = _safe_indexing(X, index)
-    y_train = _safe_indexing(y, index)
+    X_select = _safe_indexing(X, index)
+    y_select = _safe_indexing(y, index)
+    z_select = _safe_indexing(z, index) if z is not None else None
 
     if sample_weight is not None:
-        sample_weight_train = _safe_indexing(
+        sample_weight_select = _safe_indexing(
             sample_weight, index)
     else:
-        sample_weight_train = None
+        sample_weight_select = None
 
-    X_train, y_train = indexable(X_train, y_train)
-    y_train = _check_y(y_train)
-    sample_weight_train, X_train, y_train = check_null_weight(
-        sample_weight_train, X_train, y_train)
+    index = _safe_indexing(index, sample_weight_select != 0)
 
-    sample_weight_train = cast(Optional[NDArray], sample_weight_train)
+    X_select, y_select, z_select = indexable(X_select, y_select, z_select)
+    y_select = _check_y(y_select)
 
-    return X_train, y_train, sample_weight_train
+    if sample_weight_select is not None:
+        sample_weight_select = _check_sample_weight(sample_weight_select, X)
+        non_null_weight = sample_weight_select != 0
+        X_select = _safe_indexing(X_select, non_null_weight)
+        y_select = _safe_indexing(y_select, non_null_weight)
+        if z_select is not None:
+            z_select = _safe_indexing(z_select, non_null_weight)
+        sample_weight_select = _safe_indexing(
+            sample_weight_select, non_null_weight)
+        sample_weight_select = cast(NDArray, sample_weight_select)
+
+    sample_weight_select = cast(Optional[NDArray], sample_weight_select)
+
+    return X_select, y_select, z_select, sample_weight_select, index
 
 
 def fit_estimator(

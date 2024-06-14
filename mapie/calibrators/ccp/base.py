@@ -9,59 +9,67 @@ from scipy.optimize import minimize
 from mapie._typing import ArrayLike, NDArray
 from .utils import (compile_functions_warnings_errors, concatenate_functions,
                     check_multiplier)
-from mapie.calibrators import Calibrator
+from mapie.calibrators import BaseCalibrator
 from mapie.calibrators.ccp.utils import calibrator_optim_objective
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, _num_samples
 from sklearn.base import clone
-from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
-from mapie.utils import _safe_sample
 
 
-class CCPCalibrator(Calibrator, metaclass=ABCMeta):
+class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
     """
-    Base abstract class for the phi functions,
-    used in the Gibbs et al. method to model the conformity scores.
+    Base abstract class for the calibrators used for the ``CCP`` method
+    to estimate the conformity scores.
+    It corresponds to the adaptative conformal prediction method proposed by
+    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
+
+    The goal of to learn the quantile of the conformity scores distribution,
+    to built the prediction interval, not with a constant ``q`` (as it is the
+    case in the standard CP), but with a function ``q(X)`` which is adaptative
+    as it depends on ``X``.
+
+    See the examples and the documentation to build a ``CCPCalibrator``
+    adaptated to your dataset and constraints.
 
     Parameters
     ----------
     functions: Optional[Union[Callable, Iterable[Callable]]]
-        List of functions (or CCP objects) or single function.
+        List of functions (or ``CCPCalibrator`` objects) or single function.
+
         Each function can take a combinaison of the following arguments:
         - ``X``: Input dataset, of shape (n_samples, ``n_in``)
         - ``y_pred``: estimator prediction, of shape (n_samples,)
         - ``z``: exogenous variable, of shape (n_samples, n_features).
             It should be given in the ``fit`` and ``predict`` methods.
         The results of each functions will be concatenated to build the final
-        result of the phi function, of shape (n_samples, ``n_out``).
-        If ``None``, the resulting phi object will return a column of ones,
-        when called. It will result, in the MapieCCPRegressor, in a basic
-        split CP approach.
+        result of the transformation, of shape ``(n_samples, n_out)``, which
+        will be used to estimate the conformity scores quantiles.
 
         By default ``None``.
 
     bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
-        the ``CCP``object were built).
-        If the ``CCP``object definition covers all the dataset
-        (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
-        is never all zeros), this column of ones is not necessary
-        to obtain marginal coverage.
+        the ``CCPCalibrator``object were built).
+        If the ``CCPCalibrator``object definition covers all the dataset
+        (meaning, for all calibration and test samples, the resulting
+        ``calibrator.predict(X, y_pred, z)`` is never all zeros),
+        this column of ones is not necessary to obtain marginal coverage.
         In this case, you can set this argument to ``False``.
 
-        Note: Even if it is not always necessary to guarantee the marginal
-        coverage, it can't degrade the prediction intervals.
+        If you are not sur, use ``bias=True`` to garantee the marginal
+        coverage.
 
         By default ``False``.
 
     normalized: bool
-        Whether or not to normalized ``phi(X, y_pred, z)``. Normalization
+        Whether or not to normalized the resulting
+        ``calibrator.predict(X, y_pred, z)``. Normalization
         will result in a bounded interval prediction width, avoiding the width
         to explode to +inf or crash to zero. It is particularly intersting when
         you know that the conformity scores are bounded. It also prevent the
-        interval to have a interval of zero width for out-of-distribution or
-        new samples. On the opposite, it is not recommended if the conformity
+        interval to have a width of zero for out-of-distribution samples.
+        On the opposite, it is not recommended if the conformity
         scores can vary a lot.
 
         By default ``False``
@@ -71,6 +79,16 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
         If ``None``, is sampled from a normal distribution.
 
         By default ``None``.
+
+    multipliers: Optional[List[Callable]]
+        List of function which take any arguments of ``X, y_pred, z``
+        and return an array of shape ``(n_samples, 1)``. 
+        The result of ``calibrator.transform(X, y_pred, z)`` will be multiply
+        by the result of each function of ``multipliers``.
+
+        Note: When you multiply a ``CCPCalibrator`` with a function, it create
+        a new instance of ``CCPCalibrator`` (with the same arguments), but
+        add the function to the ``multipliers`` list.
 
     Attributes
     ----------
@@ -82,18 +100,17 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
         Number of features of ``X``
 
     n_out: int
-        Number of features of phi(``X``, ``y_pred``, ``z``)
+        Number of features of ``calibrator.predict(X, y_pred, z)``
 
     beta_up_: Tuple[NDArray, bool]
         Calibration fitting results, used to build the upper bound of the
         prediction intervals.
-        beta_up[0]: Array of shape (calibrator.n_out, )
-        beta_up[1]: Whether the optimization process converged or not
+        beta_up_[0]: Array of shape (calibrator.n_out, )
+        beta_up_[1]: Whether the optimization process converged or not
                     (the coverage is not garantied if the optimization fail)
 
     beta_low_: Tuple[NDArray, bool]
         Same as beta_up, but for the lower bound
-
     """
 
     fit_attributes: List[str] = ["functions_"]
@@ -120,7 +137,8 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
         z: Optional[ArrayLike] = None,
     ) -> None:
         """
-        Check fit parameters
+        Check fit parameters. In particular, check that the ``functions``
+        attribute is valid and set the ``functions_``.
 
         Parameters
         ----------
@@ -143,14 +161,16 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
     ) -> ArrayLike:
         """
         Set the ``init_value_`` attribute depending on ``init_value`` argument.
+        If ``init_value=None``, ``init_value_`` is set to
+        ``np.random.normal(0, 1, n_out)``.
 
         Parameters
         ----------
         init_value : Optional[ArrayLike]
-            Optimization initialisation value, set at ``CCP``
+            Optimization initialisation value, set at ``CCPCalibrator``
             initialisation.
         n_out : int
-            Number of dimensions of the ``CCP`` transformation.
+            Number of dimensions of the ``CCPCalibrator`` transformation.
 
         Returns
         -------
@@ -170,11 +190,11 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
     ) -> CCPCalibrator:
         """
         Fit function : Set all the necessary attributes to be able to transform
-        ``(X, y_pred, z)`` into the expected transformation.
+        ``(X, y_pred, z)`` into the expected array of features.
 
-        It should set all the attributes of ``fit_attributes``.
-        It should also set, once fitted, ``n_in``, ``n_out`` and
-        ``init_value``.
+        It should set all the attributes of ``fit_attributes``
+        (i.e. ``functions_``). It should also set, once fitted, ``n_in``,
+        ``n_out`` and ``init_value_``.
 
         Parameters
         ----------
@@ -204,14 +224,8 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
         X_calib: ArrayLike,
         conformity_scores_calib: NDArray,
         y_pred_calib: Optional[ArrayLike] = None,
-        z: Optional[ArrayLike] = None,
-        cv: Optional[Union[str, BaseCrossValidator, BaseShuffleSplit]] = None,
-        sample_weight: Optional[NDArray] = None,
-        groups: Optional[ArrayLike] = None,
-        y: Optional[ArrayLike] = None,
-        alpha: Optional[float] = None,
-        sym: Optional[bool] = None,
-        random_state: Optional[int] = None,
+        z_calib: Optional[ArrayLike] = None,
+        sample_weight_calib: Optional[NDArray] = None,
         reg_param: Optional[float] = None,
         **optim_kwargs,
     ) -> CCPCalibrator:
@@ -225,101 +239,64 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Calibration data.
+        X_calib: ArrayLike of shape (n_samples, n_features)
+            Calibration data with not-null weights.
 
         conformity_scores_calib: ArrayLike of shape (n_samples,)
-            Calibration conformity scores
+            Calibration conformity scores with not-null weights.
 
-        y_pred: ArrayLike of shape (n_samples,)
-            Calibration target.
+        y_pred_calib: ArrayLike of shape (n_samples,)
+            Calibration target with not-null weights.
 
-        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
-            Exogenous variables
-
-        cv, group, y: used to get z_calib and sample_weight_calib
-
-        alpha: float
-            Between ``0.0`` and ``1.0``, represents the risk level of the
-            confidence interval.
-            Lower ``alpha`` produce larger (more conservative) prediction
-            intervals.
-            ``alpha`` is the complement of the target coverage level.
-
-        sym: bool
-            Weather or not, the prediction interval should be symetrical
-            or not.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
-            Note that the sample weight defined are only for the training, not
-            for the calibration procedure.
+        z_calib: Optional[ArrayLike] of shape
+        (n_calib_samples, n_exog_features)
+            Exogenous variables with not-null weights.
 
             By default ``None``.
 
-        random_state: Optional[int]
-            Integer used to set the numpy seed, to get reproducible calibration
-            results.
-            If ``None``, the prediction intervals will be stochastics, and will
-            change if you refit the calibration
-            (even if no arguments have change).
-
-            WARNING: If ``random_state``is not ``None``, ``np.random.seed``
-            will be changed, which will reset the seed for all the other random
-            number generators. It may have an impact on the rest of your code.
+        sample_weight_calib: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights of the calibration data, used as weights in the
+            objective function of the optimization process.
+            If ``None``, then samples are equally weighted.
 
             By default ``None``.
 
         reg_param: Optional[float]
             Constant that multiplies the L2 term, controlling regularization
-            strength. alpha must be a non-negative float i.e. in ``[0, inf)``
+            strength. ``alpha`` must be a non-negative float i.e. in ``[0, inf)``
+
+            Note: A too strong regularization may compromise the guaranteed
+            marginal coverage. If ``calibrator.normalize=True``, it is usually
+            recommanded to use ``reg_param < 0.01``.
+
+            By default ``None``.
 
         optim_kwargs: Dict
             Other argument, used in sklear.optimize.minimize.
-            Can be any of : [method, jac, hess, hessp, bounds, constraints,
-            tol, callback, options]
+            Can be any of : ``method, jac, hess, hessp, bounds, constraints,
+            tol, callback, options``
         """
-        assert alpha is not None
-        assert sym is not None
-        assert y is not None
+        assert self.alpha is not None
 
-        z_calib: Optional[ArrayLike]
-        # Get calibration set
-        if cv != 'prefit' and z is not None:
-            cv = cast(BaseCrossValidator, cv)
-
-            _, calib_index = list(cv.split(z, y, groups))[0]
-            (
-                z_calib, _, sample_weight_calib
-            ) = _safe_sample(z, y, sample_weight, calib_index)
-
+        n_calib = _num_samples(X_calib)
+        if self.sym:
+            q_cor = np.ceil((1 - self.alpha)*(n_calib+1))/n_calib
         else:
-            z_calib, sample_weight_calib = z, sample_weight
+            q_cor = np.ceil((1 - self.alpha / 2)*(n_calib+1))/n_calib
+        q_cor = np.clip(q_cor, a_min=0, a_max=1)
 
-        if sym:
-            q_low = 1 - alpha
-            q_up = 1 - alpha
-        else:
-            q_low = alpha / 2
-            q_up = 1 - alpha / 2
-
-        if random_state is None:
+        if self.random_state is None:
             warnings.warn("WARNING: The method implemented in "
                           "SplitMapie has a stochastic behavior. "
                           "To have reproductible results, use a integer "
                           "`random_state` value in the `SplitMapie` "
                           "initialisation.")
         else:
-            np.random.seed(random_state)
+            np.random.seed(self.random_state)
 
         self.fit_params(X_calib, y_pred_calib, z_calib)
 
-        phi_x = self.transform(X_calib, y_pred_calib, z_calib)
+        cs_features = self.transform(X_calib, y_pred_calib, z_calib)
 
         not_nan_index = np.where(~np.isnan(conformity_scores_calib))[0]
         # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
@@ -327,22 +304,22 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
         optimal_beta_up = minimize(
             calibrator_optim_objective, self.init_value_,
             args=(
-                phi_x[not_nan_index, :],
+                cs_features[not_nan_index, :],
                 conformity_scores_calib[not_nan_index],
-                q_up,
+                q_cor,
                 sample_weight_calib,
                 reg_param,
                 ),
             **optim_kwargs,
             )
 
-        if not sym:
+        if not self.sym:
             optimal_beta_low = minimize(
                 calibrator_optim_objective, self.init_value_,
                 args=(
-                    phi_x[not_nan_index, :],
-                    conformity_scores_calib[not_nan_index],
-                    q_low,
+                    cs_features[not_nan_index, :],
+                    -conformity_scores_calib[not_nan_index],
+                    q_cor,
                     sample_weight_calib,
                     reg_param,
                 ),
@@ -358,7 +335,7 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
                 f"{optimal_beta_low.message}\n"
                 "The returned prediction interval may be inaccurate."
             )
-        if (not sym
+        if (not self.sym
            and not optimal_beta_low.success):
             warnings.warn(
                 "WARNING: The optimization process for the lower bound "
@@ -367,12 +344,10 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
                 "The returned prediction interval may be inaccurate."
             )
 
-        signed = -1 if sym else 1
-
         self.beta_up_ = cast(Tuple[NDArray, bool],
                              (optimal_beta_up.x, optimal_beta_up.success))
         self.beta_low_ = cast(Tuple[NDArray, bool],
-                              (signed * optimal_beta_low.x,
+                              (optimal_beta_low.x,
                                optimal_beta_low.success))
 
         return self
@@ -385,7 +360,8 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
     ) -> NDArray:
         """
         Transform ``(X, y_pred, z)`` into an array of shape
-        ``(n_samples, n_out)``
+        ``(n_samples, n_out)`` which represent features to estimate the
+        conformity scores.
 
         Parameters
         ----------
@@ -401,29 +377,28 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
         Returns
         -------
         NDArray
-            Transformation
+            features
         """
         check_is_fitted(self, self.fit_attributes)
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
-        phi_x = concatenate_functions(self.functions_, params_mapping,
+        cs_features = concatenate_functions(self.functions_, params_mapping,
                                       self.multipliers)
         if self.normalized:
-            norm = np.linalg.norm(phi_x, axis=1).reshape(-1, 1)
-            phi_x[(abs(norm) == 0)[:, 0], :] = np.ones(phi_x.shape[1])
+            norm = np.linalg.norm(cs_features, axis=1).reshape(-1, 1)
+            cs_features[(abs(norm) == 0)[:, 0], :] = np.ones(cs_features.shape[1])
 
             norm[abs(norm) == 0] = 1
-            phi_x /= norm
+            cs_features /= norm
 
-        if np.any(np.all(phi_x == 0, axis=1)):
+        if np.any(np.all(cs_features == 0, axis=1)):
             warnings.warn("WARNING: At least one row of the transformation "
-                          "phi(X, y_pred, z) is full of zeros. "
-                          "It will result in a prediction interval of zero "
-                          "width. Consider changing the CCP "
+                          "calibrator.transform(X, y_pred, z) is full of "
+                          "zeros. It will result in a prediction interval of "
+                          "zero width. Consider changing the `CCPCalibrator` "
                           "definintion.\nFix: Use `bias=True` "
-                          "in the `CCP` definition.")
-
-        return phi_x
+                          "in the `CCPCalibrator` definition.")
+        return cs_features
 
     def predict(
         self,
@@ -433,7 +408,7 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
         **kwargs,
     ) -> NDArray:
         """
-        Transform ``(X, y_pred, z)`` into an array of shape
+        Transform ``(X, y_pred, z)`` into an array of features of shape
         ``(n_samples, n_out)`` and compute the dot product with the
         optimized beta values, to get the conformity scores estimations.
 
@@ -455,10 +430,10 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
         """
         assert y_pred is not None
 
-        phi_x = self.transform(X, y_pred, z)
+        cs_features = self.transform(X, y_pred, z)
 
-        y_pred_low = phi_x.dot(self.beta_low_[0][:, np.newaxis])
-        y_pred_up = phi_x.dot(self.beta_up_[0][:, np.newaxis])
+        y_pred_low = -cs_features.dot(self.beta_low_[0][:, np.newaxis])
+        y_pred_up = cs_features.dot(self.beta_up_[0][:, np.newaxis])
 
         return np.hstack([y_pred_low, y_pred_up])
 
@@ -472,7 +447,7 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
 
     def __mul__(self, funct: Optional[Callable]) -> CCPCalibrator:
         """
-        Multiply a ``CCP`` with another function.
+        Multiply a ``CCPCalibrator`` with another function.
         This other function should return an array of shape (n_samples, 1)
         or (n_samples, )
 
@@ -484,14 +459,14 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
 
         Returns
         -------
-        CCP
-            self, with ``funct`` as a multiplier
+        CCPCalibrator
+            self, with ``funct`` append in the ``multipliers`` argument list.
         """
         if funct is None:
             return self
         else:
             compile_functions_warnings_errors([funct])
-            new_phi = clone(self)
+            new_phi = cast(CCPCalibrator, clone(self))
             if new_phi.multipliers is None:
                 new_phi.multipliers = [funct]
             else:
@@ -499,4 +474,7 @@ class CCPCalibrator(Calibrator, metaclass=ABCMeta):
             return new_phi
 
     def __rmul__(self, other) -> CCPCalibrator:
+        """
+        Do the same as ``__mul__``
+        """
         return self.__mul__(other)

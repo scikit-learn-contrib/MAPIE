@@ -6,9 +6,9 @@ import numpy as np
 from sklearn.base import RegressorMixin
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators.ccp import check_calibrator, CCPCalibrator
+from mapie.calibrators.ccp import check_calibrator
 from mapie.conformity_scores import ConformityScore
-from mapie.futur.split.base import CCP, Calibrator
+from mapie.futur.split.base import CCP, BaseCalibrator
 from mapie.utils import (check_lower_upper_bounds, check_estimator_regression,
                          check_conformity_score)
 from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
@@ -36,11 +36,11 @@ class SplitMapieRegressor(CCP):
 
         By default ``"None"``.
 
-    calibrator: Optional[CCP]
-        A ``CCP`` instance used to estimate the conformity scores.
+    calibrator: Optional[BaseCalibrator]
+        A ``BaseCalibrator`` instance used to estimate the conformity scores.
 
         If ``None``, use as default a ``GaussianCCP`` instance.
-        See the examples and the documentation to build a ``CCP``
+        See the examples and the documentation to build a ``BaseCalibrator``
         adaptated to your dataset and constraints.
 
         By default ``None``.
@@ -143,7 +143,7 @@ class SplitMapieRegressor(CCP):
                 List[Union[RegressorMixin, Pipeline]]
             ]
         ] = None,
-        calibrator: Optional[CCPCalibrator] = None,
+        calibrator: Optional[BaseCalibrator] = None,
         cv: Optional[
             Union[str, BaseCrossValidator, BaseShuffleSplit]
         ] = None,
@@ -168,7 +168,7 @@ class SplitMapieRegressor(CCP):
         return predictor
 
     def _check_calibrate_parameters(self) -> Tuple[
-        ConformityScore, Calibrator
+        ConformityScore, BaseCalibrator
     ]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
@@ -178,8 +178,10 @@ class SplitMapieRegressor(CCP):
             self.conformity_score, self.default_sym_
         )
         calibrator = check_calibrator(self.calibrator)
-        self.sym = conformity_score_.sym
         self._check_alpha(self.alpha)
+        calibrator.sym = conformity_score_.sym
+        calibrator.alpha = self.alpha
+        calibrator.random_state = self.random_state
         return conformity_score_, calibrator
 
     def predict_score(
@@ -204,7 +206,7 @@ class SplitMapieRegressor(CCP):
         self,
         X: ArrayLike,
         y_pred: NDArray,
-        **predict_kwargs,
+        **kwargs,
     ) -> NDArray:
         """
         Compute conformity scores
@@ -227,10 +229,11 @@ class SplitMapieRegressor(CCP):
             (because we only have 1 alpha value)
         """
         predict_kwargs = self.get_method_arguments(
-            self.calibrator_.predict, inspect.currentframe(), predict_kwargs,
-            ["X"]
+            self.calibrator_.predict,
+            dict(zip(["X", "y_pred"],[X, y_pred])),
+            kwargs,
         )
-        conformity_score_pred = self.calibrator_.predict(X, **predict_kwargs)
+        conformity_score_pred = self.calibrator_.predict(**predict_kwargs)
 
         y_pred_low = self.conformity_score_.get_estimation_distribution(
             X, y_pred[:, np.newaxis], conformity_score_pred[:, [0]]

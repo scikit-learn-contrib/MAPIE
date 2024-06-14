@@ -4,7 +4,7 @@ from typing import Callable, Optional, Tuple, Union, List
 
 import numpy as np
 from mapie._typing import ArrayLike
-from .base import CCPCalibrator, Calibrator
+from .base import CCPCalibrator, BaseCalibrator
 from .utils import format_functions, compute_sigma, sample_points
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
@@ -12,10 +12,21 @@ from sklearn.utils.validation import _num_samples
 
 class GaussianCCP(CCPCalibrator):
     """
-    This class is used to define the transformation phi,
-    used in the Gibbs et al. method to model the conformity scores.
-    This class build a ``CCP`` object with features been the gaussian
-    distances between X and some defined points.
+    Calibrator used for the ``CCP`` method to estimate the conformity scores.
+    It corresponds to the adaptative conformal prediction method proposed by
+    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
+
+    The goal of to learn the quantile of the conformity scores distribution,
+    to built the prediction interval, not with a constant ``q`` (as it is the
+    case in the standard CP), but with a function ``q(X)`` which is adaptative
+    as it depends on ``X``.
+
+    This class builds a ``CCPCalibrator`` object with gaussian kernel features,
+    by sampling some points (or set by the user), and computing the gaussian
+    distance between ``X`` and the point.
+
+    See the examples and the documentation to build a ``CCPCalibrator``
+    adaptated to your dataset and constraints.
 
     Parameters
     ----------
@@ -87,8 +98,8 @@ class GaussianCCP(CCPCalibrator):
     bias: bool
         Add a column of ones to the features, for safety reason
         (to garanty the marginal coverage, no matter how the other features
-        the ``CCP``object were built).
-        If the ``CCP``object definition covers all the dataset
+        the ``CCPCalibrator``object were built).
+        If the ``CCPCalibrator``object definition covers all the dataset
         (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
         is never all zeros), this column of ones is not necessary
         to obtain marginal coverage.
@@ -102,21 +113,32 @@ class GaussianCCP(CCPCalibrator):
         By default ``False``.
 
     normalized: bool
-        Whether or not to normalized ``phi(X, y_pred, z)``. Normalization
+        Whether or not to normalized the resulting
+        ``calibrator.predict(X, y_pred, z)``. Normalization
         will result in a bounded interval prediction width, avoiding the width
         to explode to +inf or crash to zero. It is particularly intersting when
         you know that the conformity scores are bounded. It also prevent the
-        interval to have a interval of zero width for out-of-distribution or
-        new samples. On the opposite, it is not recommended if the conformity
+        interval to have a width of zero for out-of-distribution samples.
+        On the opposite, it is not recommended if the conformity
         scores can vary a lot.
 
-        By default ``True``
+        By default ``False``
 
     init_value: Optional[ArrayLike]
         Optimization initialisation value.
         If ``None``, is sampled from a normal distribution.
 
         By default ``None``.
+
+    multipliers: Optional[List[Callable]]
+        List of function which take any arguments of ``X, y_pred, z``
+        and return an array of shape ``(n_samples, 1)``. 
+        The result of ``calibrator.transform(X, y_pred, z)`` will be multiply
+        by the result of each function of ``multipliers``.
+
+        Note: When you multiply a ``CCPCalibrator`` with a function, it create
+        a new instance of ``CCPCalibrator`` (with the same arguments), but
+        add the function to the ``multipliers`` list.
 
     Attributes
     ----------
@@ -136,6 +158,16 @@ class GaussianCCP(CCPCalibrator):
 
     sigmas_: NDArray of shape (len(points), 1) or (len(points), n_in)
         Standard deviation values
+
+    beta_up_: Tuple[NDArray, bool]
+        Calibration fitting results, used to build the upper bound of the
+        prediction intervals.
+        beta_up_[0]: Array of shape (calibrator.n_out, )
+        beta_up_[1]: Whether the optimization process converged or not
+                    (the coverage is not garantied if the optimization fail)
+
+    beta_low_: Tuple[NDArray, bool]
+        Same as beta_up, but for the lower bound
 
     Examples
     --------
@@ -239,12 +271,8 @@ class GaussianCCP(CCPCalibrator):
         z: Optional[ArrayLike] = None,
     ) -> None:
         """
-        Fit function : Set all the necessary attributes to be able to transform
-        ``(X, y_pred, z)`` into the expected transformation.
-
-        It should set all the attributes of ``fit_attributes``.
-        It should also set, once fitted, ``n_in``, ``n_out`` and
-        ``init_value``.
+        Check fit parameters. In particular, check that the ``functions``
+        attribute is valid and set the ``functions_``.
 
         Parameters
         ----------
@@ -277,34 +305,33 @@ class GaussianCCP(CCPCalibrator):
 
 
 def check_calibrator(
-    phi: Optional[CCPCalibrator],
-) -> CCPCalibrator:
+    calibrator: Optional[BaseCalibrator],
+) -> BaseCalibrator:
     """
-    Check if ``phi`` is a ``CCP`` instance.
+    Check if ``calibrator`` is a ``BaseCalibrator`` instance.
 
     Parameters
     ----------
-    phi: Optional[CCP]
-        A ``CCP`` instance used to estimate the conformity scores.
+    calibrator: Optional[BaseCalibrator]
+        A ``BaseCalibrator`` instance used to estimate the conformity scores
+        quantiles.
 
         If ``None``, use as default a ``GaussianCCP`` instance.
-        See the examples and the documentation to build a ``CCP``
-        adaptated to your dataset and constraints.
 
     Returns
     -------
-    CCP
-        ``phi`` if defined, a ``GaussianCCP`` instance otherwise.
+    BaseCalibrator
+        ``calibrator`` if defined, a ``GaussianCCP`` instance otherwise.
 
     Raises
     ------
     ValueError
-        If ``phi`` is not ``None`` nor a ``CCP`` instance.
+        If ``calibrator`` is not ``None`` nor a ``BaseCalibrator`` instance.
     """
-    if phi is None:
+    if calibrator is None:
         return GaussianCCP()
-    elif isinstance(phi, Calibrator):
-        return phi
+    elif isinstance(calibrator, BaseCalibrator):
+        return calibrator
     else:
         raise ValueError("Invalid `calibrator` argument. It must be `None` "
-                         "or a `Calibrator` instance.")
+                         "or a `BaseCalibrator` instance.")
