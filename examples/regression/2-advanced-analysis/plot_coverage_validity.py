@@ -442,9 +442,9 @@ plt.show()
 # It can be noted that all methods follow this trajectory and continue to
 # achieve coverage validity.
 
-num_splits = 500
+num_splits = 100
 
-nc_min, nc_max = 10, 50
+nc_min, nc_max = 10, 30
 n_calib_array = np.arange(nc_min, nc_max+1, 2)
 delta = 0.8
 delta_array = [delta]
