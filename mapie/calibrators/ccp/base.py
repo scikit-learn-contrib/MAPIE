@@ -91,6 +91,19 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         a new instance of ``CCPCalibrator`` (with the same arguments), but
         add the function to the ``multipliers`` list.
 
+    reg_param: Optional[float]
+        Constant that multiplies the L2 term, controlling regularization
+        strength. ``alpha`` must be a non-negative
+        float i.e. in ``[0, inf)``.
+
+        Note: A too strong regularization may compromise the guaranteed
+        marginal coverage. If ``calibrator.normalize=True``, it is usually
+        recommanded to use ``reg_param < 0.01``.
+
+        If ``None``, no regularization is used.
+
+        By default ``None``.
+
     Attributes
     ----------
     fit_attributes: Optional[List[str]]
@@ -128,12 +141,14 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         normalized: bool = False,
         init_value: Optional[ArrayLike] = None,
         multipliers: Optional[List[Callable]] = None,
+        reg_param: Optional[float] = None,
     ) -> None:
         self.functions = functions
         self.bias = bias
         self.normalized = normalized
         self.init_value = init_value
         self.multipliers = multipliers
+        self.reg_param = reg_param
 
     @abstractmethod
     def _check_fit_parameters(
@@ -217,8 +232,10 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
             By default ``None``
         """
-        check_multiplier(self.multipliers, X, y_pred, z)
+        # Fit the calibrator
         self._check_fit_parameters(X, y_pred, z)
+        # Do some checks
+        check_multiplier(self.multipliers, X, y_pred, z)
         result = self.transform(X, y_pred, z)
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
@@ -232,7 +249,6 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         y_pred_calib: Optional[ArrayLike] = None,
         z_calib: Optional[ArrayLike] = None,
         sample_weight_calib: Optional[NDArray] = None,
-        reg_param: Optional[float] = None,
         **optim_kwargs,
     ) -> CCPCalibrator:
         """
@@ -264,17 +280,6 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             Sample weights of the calibration data, used as weights in the
             objective function of the optimization process.
             If ``None``, then samples are equally weighted.
-
-            By default ``None``.
-
-        reg_param: Optional[float]
-            Constant that multiplies the L2 term, controlling regularization
-            strength. ``alpha`` must be a non-negative
-            float i.e. in ``[0, inf)``
-
-            Note: A too strong regularization may compromise the guaranteed
-            marginal coverage. If ``calibrator.normalize=True``, it is usually
-            recommanded to use ``reg_param < 0.01``.
 
             By default ``None``.
 
@@ -315,7 +320,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                 conformity_scores_calib[not_nan_index],
                 q_cor,
                 sample_weight_calib,
-                reg_param,
+                self.reg_param,
                 ),
             **optim_kwargs,
             )
@@ -328,7 +333,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                     -conformity_scores_calib[not_nan_index],
                     q_cor,
                     sample_weight_calib,
-                    reg_param,
+                    self.reg_param,
                 ),
                 **optim_kwargs,
             )

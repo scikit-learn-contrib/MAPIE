@@ -142,6 +142,19 @@ class GaussianCCP(CCPCalibrator):
         a new instance of ``CCPCalibrator`` (with the same arguments), but
         add the function to the ``multipliers`` list.
 
+    reg_param: Optional[float]
+        Constant that multiplies the L2 term, controlling regularization
+        strength. ``alpha`` must be a non-negative
+        float i.e. in ``[0, inf)``.
+
+        Note: A too strong regularization may compromise the guaranteed
+        marginal coverage. If ``calibrator.normalize=True``, it is usually
+        recommanded to use ``reg_param < 0.01``.
+
+        If ``None``, no regularization is used.
+
+        By default ``None``.
+
     Attributes
     ----------
     fit_attributes: Optional[List[str]]
@@ -212,6 +225,7 @@ class GaussianCCP(CCPCalibrator):
         normalized: bool = True,
         init_value: Optional[ArrayLike] = None,
         multipliers: Optional[List[Callable]] = None,
+        reg_param: Optional[float] = None,
     ) -> None:
         self.points = points
         self.sigma = sigma
@@ -220,6 +234,7 @@ class GaussianCCP(CCPCalibrator):
         self.normalized = normalized
         self.init_value = init_value
         self.multipliers = multipliers
+        self.reg_param = reg_param
 
     def _check_random_sigma(self) -> bool:
         """

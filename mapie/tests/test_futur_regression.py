@@ -105,8 +105,9 @@ def test_fit_predict(z: Any) -> None:
 @pytest.mark.parametrize("z", [None, z_toy])
 def test_fit_predict_reg(z: Any) -> None:
     """Test that fit-predict raises no errors."""
-    mapie_reg = SplitCPRegressor(alpha=0.1)
-    mapie_reg.fit(X_toy, y_toy, z=z, reg_param=0.1)
+    mapie_reg = SplitCPRegressor(calibrator=GaussianCCP(reg_param=0.1),
+                                 alpha=0.1)
+    mapie_reg.fit(X_toy, y_toy, z=z)
     mapie_reg.predict(X_toy, z=z)
 
 
@@ -397,7 +398,7 @@ def test_same_results_prefit_split(
     y_train, y_calib = y[train_index], y[val_index]
     z_calib = z[val_index]
 
-    calibrator = clone(template)
+    calibrator = cast(CCPCalibrator, clone(template))
     calibrator.fit_params(X, y, z)
     calibrator.init_value = calibrator.init_value_
     if isinstance(calibrator, GaussianCCP):

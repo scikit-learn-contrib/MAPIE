@@ -88,6 +88,19 @@ class CustomCCP(CCPCalibrator):
         a new instance of ``CCPCalibrator`` (with the same arguments), but
         add the function to the ``multipliers`` list.
 
+    reg_param: Optional[float]
+        Constant that multiplies the L2 term, controlling regularization
+        strength. ``alpha`` must be a non-negative
+        float i.e. in ``[0, inf)``.
+
+        Note: A too strong regularization may compromise the guaranteed
+        marginal coverage. If ``calibrator.normalize=True``, it is usually
+        recommanded to use ``reg_param < 0.01``.
+
+        If ``None``, no regularization is used.
+
+        By default ``None``.
+
     Attributes
     ----------
     fit_attributes: Optional[List[str]]
@@ -155,8 +168,10 @@ class CustomCCP(CCPCalibrator):
         normalized: bool = False,
         init_value: Optional[ArrayLike] = None,
         multipliers: Optional[List[Callable]] = None,
+        reg_param: Optional[float] = None,
     ) -> None:
-        super().__init__(functions, bias, normalized, init_value, multipliers)
+        super().__init__(functions, bias, normalized, init_value,
+                         multipliers, reg_param)
 
     def _check_fit_parameters(
         self,

@@ -85,6 +85,29 @@ class PolynomialCCP(CCPCalibrator):
 
         By default ``None``.
 
+    multipliers: Optional[List[Callable]]
+        List of function which take any arguments of ``X, y_pred, z``
+        and return an array of shape ``(n_samples, 1)``.
+        The result of ``calibrator.transform(X, y_pred, z)`` will be multiply
+        by the result of each function of ``multipliers``.
+
+        Note: When you multiply a ``CCPCalibrator`` with a function, it create
+        a new instance of ``CCPCalibrator`` (with the same arguments), but
+        add the function to the ``multipliers`` list.
+
+    reg_param: Optional[float]
+        Constant that multiplies the L2 term, controlling regularization
+        strength. ``alpha`` must be a non-negative
+        float i.e. in ``[0, inf)``.
+
+        Note: A too strong regularization may compromise the guaranteed
+        marginal coverage. If ``calibrator.normalize=True``, it is usually
+        recommanded to use ``reg_param < 0.01``.
+
+        If ``None``, no regularization is used.
+
+        By default ``None``.
+
     Attributes
     ----------
     fit_attributes: Optional[List[str]]
@@ -145,6 +168,7 @@ class PolynomialCCP(CCPCalibrator):
         normalized: bool = False,
         init_value: Optional[ArrayLike] = None,
         multipliers: Optional[List[Callable]] = None,
+        reg_param: Optional[float] = None,
     ) -> None:
         self.degree = degree
         self.variable = variable
@@ -152,6 +176,7 @@ class PolynomialCCP(CCPCalibrator):
         self.normalized = normalized
         self.init_value = init_value
         self.multipliers = multipliers
+        self.reg_param = reg_param
 
     def _convert_degree(
         self, degree: Optional[Union[int, List[int]]], bias: bool
