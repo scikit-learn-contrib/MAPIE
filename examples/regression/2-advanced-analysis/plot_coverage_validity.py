@@ -490,7 +490,7 @@ def exact_coverage_fct(delta):
 
 
 def exact_coverage_asym_fct(delta):
-    new_n = n_calib_array//2
+    new_n = n_calib_array//2-1
     return np.ceil((new_n+1)*delta)/(new_n+1)
 
 
