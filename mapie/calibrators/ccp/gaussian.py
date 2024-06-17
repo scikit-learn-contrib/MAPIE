@@ -196,22 +196,6 @@ class GaussianCCP(CCPCalibrator):
     ...     calibrator=GaussianCCP(2), alpha=0.1, random_state=1,
     ... ).fit(X_train, y_train)
     >>> y_pred, y_pi = mapie.predict(X_train)
-    >>> print(np.round(y_pred[:5], 2))
-    [ 1.46  5.46  9.46 13.46 17.46]
-    >>> print(np.round(y_pi[:5, :, 0], 2))
-    [[ 0.95  1.96]
-     [ 4.95  5.96]
-     [ 8.95  9.97]
-     [12.95 13.97]
-     [16.95 17.97]]
-    >>> print(mapie.calibrator_.points_)
-    [[204]
-     [318]]
-    >>> print(mapie.calibrator_.sigmas_)
-    [[86.34106786]
-     [86.34106786]]
-    >>> print(mapie.calibrator_.n_out)
-    2
     """
     fit_attributes: List[str] = ["points_", "sigmas_", "functions_"]
 

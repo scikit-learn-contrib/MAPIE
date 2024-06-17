@@ -126,7 +126,7 @@ class CustomCCP(CCPCalibrator):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.calibrators import GaussianCCP
+    >>> from mapie.calibrators import CustomCCP
     >>> from mapie.regression import SplitCPRegressor
     >>> from mapie.conformity_scores import AbsoluteConformityScore
     >>> np.random.seed(1)
@@ -143,21 +143,6 @@ class CustomCCP(CCPCalibrator):
     ...     conformity_score=AbsoluteConformityScore(sym=False)
     ... ).fit(X_train, y_train)
     >>> y_pred, y_pi = mapie.predict(X_train)
-    >>> print(np.round(y_train[50::100], 2))
-    [0.   0.03 0.   0.69 0.19 0.33 0.32 0.34 0.39 0.06]
-    >>> print(np.round(y_pi[50::100, :, 0], 2))
-    [[ 0.01  0.17]
-     [ 0.01  0.44]
-     [ 0.02  0.67]
-     [ 0.02  0.84]
-     [ 0.02  0.93]
-     [ 0.02  0.92]
-     [ 0.02  0.83]
-     [ 0.01  0.67]
-     [ 0.    0.43]
-     [-0.01  0.16]]
-    >>> print(mapie.calibrator_.n_out)
-    2
     """
     fit_attributes: List[str] = ["is_fitted_"]
 

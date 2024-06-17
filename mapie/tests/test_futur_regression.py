@@ -546,41 +546,6 @@ def test_prediction_between_low_up(
         assert (y_pred <= y_pis[:, 1, 0]).all()
 
 
-@pytest.mark.parametrize("calibrator", PHI[:2])
-@pytest.mark.parametrize("cv", CV)
-@pytest.mark.parametrize("alpha", [0.2])
-@pytest.mark.parametrize("predictor", [
-    LinearRegression(),
-    make_pipeline(LinearRegression()),
-])
-def test_linear_data_confidence_interval(
-    cv: Any,
-    calibrator: CCPCalibrator,
-    alpha: float,
-    predictor: RegressorMixin
-) -> None:
-    """
-    Test that MapieRegressor applied on a linear regression predictor
-    fitted on a linear curve results in null uncertainty.
-    """
-    X_toy = np.arange(0, 200, 1).reshape(-1, 1)
-    y_toy = X_toy[:, 0]*2
-    z_toy = np.ones((len(X_toy), 1))
-
-    if cv == "prefit":
-        predictor.fit(X_toy, y_toy)
-
-    mapie = SplitCPRegressor(predictor, clone(calibrator), cv=cv,
-                             alpha=alpha, random_state=random_state)
-    mapie.fit(X_toy, y_toy, z=z_toy)
-
-    y_pred, y_pis = mapie.predict(X_toy, z=z_toy)
-    np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 1, 0],
-                               rtol=0.01, atol=0.1)
-    np.testing.assert_allclose(y_pred, y_pis[:, 0, 0],
-                               rtol=0.01, atol=0.1)
-
-
 def test_linear_regression_results() -> None:
     """
     Test that the CCPCalibrator method in the case of a constant

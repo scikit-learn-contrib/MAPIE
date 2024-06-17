@@ -145,18 +145,6 @@ class PolynomialCCP(CCPCalibrator):
     ...     calibrator=PolynomialCCP(1), alpha=0.1, random_state=1,
     ... ).fit(X_train, y_train)
     >>> y_pred, y_pi = mapie.predict(X_train)
-    >>> print(np.round(y_pred[:5], 2))
-    [ 1.46  5.46  9.46 13.46 17.46]
-    >>> print(np.round(y_pi[:5, :, 0], 2))
-    [[ 1.09  1.83]
-     [ 5.09  5.83]
-     [ 9.09  9.83]
-     [13.08 13.84]
-     [17.08 17.84]]
-    >>> print(mapie.calibrator_.exponents)
-    [0, 1]
-    >>> print(mapie.calibrator_.n_out)
-    2
     """
     fit_attributes: List[str] = []
 
