@@ -58,7 +58,7 @@ ALPHA = 0.1
 # - Add noise :
 #  - between -1 and 0: uniform distribution of the points around the baseline
 #  - between 0 and 5: normal distribution with a noise value which
-# increase with ``x``
+#    increase with ``x``
 
 
 def x_sinx(x):
@@ -84,9 +84,9 @@ def get_1d_data_with_heteroscedastic_noise(
     true_pi[X < 0, 0] += noise*3*(1-ALPHA)
     true_pi[X < 0, 1] -= noise*3*(1-ALPHA)
     true_pi[X >= 0, 0] += norm.ppf(1 - ALPHA/2) * noise * (
-        (X[X >= 0])/max_x**power*max_x)
+        ((X[X >= 0])/max_x)**power*max_x)
     true_pi[X >= 0, 1] -= norm.ppf(1 - ALPHA/2) * noise * (
-        (X[X >= 0])/max_x**power*max_x)
+        ((X[X >= 0])/max_x)**power*max_x)
     return X.reshape(-1, 1), y, true_pi
 
 
@@ -144,31 +144,23 @@ estimator = Pipeline([
 # We are going to test different methods : ``CV+``, ``CQR`` and ``CCP``
 # (with default parameters)
 
-##############################################################################
-# Basic Split-conformal:
-
+# ================== Basic Split-conformal  ==================
 mapie_split = MapieRegressor(estimator, method="base", cv="split",
                              random_state=random_state)
 mapie_split.fit(X_train, y_train)
 y_pred_split, y_pi_split = mapie_split.predict(X_test, alpha=ALPHA)
 
-##############################################################################
-# CV+:
-
+# ================== CV+  ==================
 mapie_cv = MapieRegressor(estimator, method='plus', cv=5)
 mapie_cv.fit(X_train, y_train)
 y_pred_cv, y_pi_cv = mapie_cv.predict(X_test, alpha=ALPHA)
 
-##############################################################################
-# CQR:
-
+# ================== CQR  ==================
 mapie_cqr = MapieQuantileRegressor(quantile_estimator, alpha=ALPHA)
 mapie_cqr.fit(X_train, y_train)
 y_pred_cqr, y_pi_cqr = mapie_cqr.predict(X_test)
 
-##############################################################################
-# CCP:
-
+# ================== CCP  ==================
 mapie_ccp = SplitCPRegressor(estimator, alpha=ALPHA, cv="split")
 mapie_ccp.fit(X_train, y_train)
 y_pred_ccp, y_pi_ccp = mapie_ccp.predict(X_test)
@@ -315,8 +307,9 @@ def plot_widths(titles, y_pis):
 ##############################################################################
 # 5. Experiments:
 # --------------------------------------------------------------------------
+
 ##############################################################################
-# 5.1. Default ``CCPCalibrator`:
+# 5.1. Default :class:`~mapie.calibrators.GaussianCCP`:
 # --------------------------------------------------------------------------
 
 mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp]
@@ -330,29 +323,30 @@ plot_widths(titles, y_pis)
 ##############################################################################
 # 5.2. How to improve the results?
 # --------------------------------------------------------------------------
-
-# The CCP method is based on a function $\phi : X \to \phi(X) \in \R^d$
-
-# This vector $\phi(X)$ constitute features that should be able to represente
-# the distribuion of the conformity scores, which is here (by default) the
-# absolute residual: $\lvert y_{true} - y_{pred} \rvert$
-# #### Examples of basic $\phi$:
-#  - $\phi : X \to 1$, will try to estimate the absolute residual with a
-# constant, and will results in a prediction interval of constant width
-# (like the basic split CP)
-#  - $\phi : X \to (1, X)$, will result in a prediction interval of width
-# equal to: a constant + a value proportional to the value of $X$ (it seems
-# a good idea here, as the uncertainty increase with $X$)
-#  - $\phi : X \to (1, X^3)$, will result in a prediction interval of width
-# equal to: a constant + a value proportional to the value of $X^3$ (it seems
-# a good idea here, as the uncertainty increase with $X$)
-#  - $\phi : X \to y_{pred}$, will result in a prediction interval of width
-# proportional to the prediction (It is sometime the case, when the
-# uncertainty is proportionnal to the value).
-#    Note that using $\phi : X \to y_{pred}$ is somewhat similar to
+# The CCP method is based on a function :math:`\phi : X \to \phi(X) \in \R^d`
+# This vector :math:`\phi(X)` constitute features that should be able to
+# represente the distribuion of the conformity scores,
+# which is here (by default) the
+# absolute residual: :math:`\lvert y_{true} - y_{pred} \rvert`
+#
+# Examples of basic :math:`\phi`:
+#  - :math:`\phi : X \to 1`, will try to estimate the absolute residual with a
+#    constant, and will results in a prediction interval of constant width
+#    (like the basic split CP)
+#  - :math:`\phi : X \to (1, X)`, will result in a prediction interval of width
+#    equal to: a constant + a value proportional to the value of $X$ (it seems
+#    a good idea here, as the uncertainty increase with $X$)
+#  - :math:`\phi : X \to (1, X^3)`, will result in a prediction
+#    interval of width equal to: a constant
+#    + a value proportional to the value of $X^3$ (it seems
+#    a good idea here, as the uncertainty increase with $X$)
+#  - :math:`\phi : X \to y_{pred}`, will result in a prediction interval of
+#    width proportional to the prediction (It is sometime the case, when the
+#    uncertainty is proportionnal to the value).
+#
+# Note that using :math:`\phi : X \to y_{pred}` is somewhat similar to
 # using a standard Split CP (``method="base"`` in ``MapieRegressor``)
-# with a ``GammaConformityScore``.
-
+# with a :class:`~mapie.conformity_scores.GammaConformityScore``.
 # Using custom definition:
 # Note: calibrator1_bis is equivalent to calibrator1, as bias=True
 # adds a column of ones
@@ -365,6 +359,7 @@ calibrator3 = CustomCCP([lambda X: X**3], bias=True)
 ##############################################################################
 # Using ``PolynomialCCP``:
 # degree=1 is equivalent to degree=[0, 1]
+#
 # Warning, degree=2 is equivalent to degree=[0, 1, 2]
 
 calibrator1 = PolynomialCCP(0)
@@ -413,7 +408,7 @@ plot_widths(titles, y_pis)
 
 
 ##############################################################################
-# 5.3. Improve the performances <u>using what we know about the data</u>
+# 5.3. Improve the performances using what we know about the data
 # --------------------------------------------------------------------------
 # To improve the results, we need to analyse the data and the conformity
 # scores we chose (here, the absolute residuals).
@@ -462,9 +457,11 @@ plot_figure(mapies, y_preds, y_pis, titles)
 plot_widths(titles, y_pis)
 
 ##############################################################################
-# 5.4. Improve the performances <u>without prior knowledge:</u> ``GaussianCCP``
+# 5.4. Improve the performances without prior knowledge:
+# :class:`~mapie.calibrators.GaussianCCP`
 # --------------------------------------------------------------------------
-# We can use ``GaussianCCP`` calibrators, if we don't have prior information
+# We can use :class:`~mapie.calibrators.GaussianCCP` calibrators,
+# if we don't have prior information
 # about the data. It will sample points (are use the points given by the user),
 # and only consider the calibration conformity scores of points next to a
 # sample, to estimate the prediction interval of this sample. In this way,
