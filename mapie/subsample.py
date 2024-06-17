@@ -76,14 +76,7 @@ class Subsample(BaseCrossValidator):
             The testing set indices for that split.
         """
         indices = np.arange(_num_samples(X))
-        if self.n_samples is None:
-            n_samples = len(indices)
-        else:
-            n_samples = check_n_samples(X, self.n_samples)
-        # elif isinstance(self.n_samples, float) and 0 < self.n_samples < 1:
-        #     n_samples = int(np.floor(self.n_samples * X.shape[0]))
-        # else:
-        #     n_samples = int(self.n_samples)
+        n_samples = check_n_samples(X, self.n_samples, indices)
         random_state = check_random_state(self.random_state)
         for k in range(self.n_resamplings):
             train_index = resample(

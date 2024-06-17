@@ -1336,7 +1336,8 @@ def check_arrays_length(*arrays: NDArray) -> None:
 
 def check_n_samples(
     X: NDArray,
-    n_samples: Union[float, int]
+    n_samples: Optional[Union[float, int]],
+    indices: NDArray
 ) -> int:
     """
     Check alpha and prepare it as a ArrayLike.
@@ -1357,14 +1358,24 @@ def check_n_samples(
     Raises
     ------
     ValueError
-        If n_samples is not an int or a float between 0 and 1.
+        If n_samples is not an int in the range [1, inf)
+        or a float int he range (0.0, 1.0)
     """
-    if isinstance(n_samples, float) and 0 < n_samples < 1:
-        n_samples = int(np.floor(n_samples * X.shape[0]))
-    elif isinstance(n_samples, float) and n_samples > 1:
+    if n_samples is None:
+        n_samples = len(indices)
+    elif isinstance(n_samples, float):
+        if 0 < n_samples < 1:
+            n_samples = int(np.floor(n_samples * X.shape[0]))
+        else:
+            raise ValueError(
+                "Invalid n_samples. Allowed values "
+                "are float in the range (0.0, 1.0) or"
+                " int in the range [1, inf)"
+                )
+    elif isinstance(n_samples, int) and n_samples <= 0:
         raise ValueError(
-            "Invalid n_samples.Allowed values are float between 0 and 1 or int"
-        )
-    else:
-        n_samples = int(n_samples)
-    return n_samples
+                "Invalid n_samples. Allowed values "
+                "are float in the range (0.0, 1.0) or"
+                " int in the range [1, inf)"
+            )
+    return int(n_samples)
