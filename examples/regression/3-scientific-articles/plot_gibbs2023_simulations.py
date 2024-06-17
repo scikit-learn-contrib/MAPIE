@@ -364,6 +364,6 @@ plot_results(X_test, y_test, 50, experiment="Shifts")
 # to the split method with symetrical PI. Let's compare it to the split CP with
 # unsymetrical PI, to have a fair comparison.
 
-plot_results(X_test, y_test, 50, experiment="Groups")
+plot_results(X_test, y_test, 50, experiment="Groups", split_sym=False)
 
 plot_results(X_test, y_test, 50, experiment="Shifts", split_sym=False)
