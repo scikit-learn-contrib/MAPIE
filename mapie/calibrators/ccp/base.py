@@ -83,7 +83,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
     multipliers: Optional[List[Callable]]
         List of function which take any arguments of ``X, y_pred, z``
-        and return an array of shape ``(n_samples, 1)``. 
+        and return an array of shape ``(n_samples, 1)``.
         The result of ``calibrator.transform(X, y_pred, z)`` will be multiply
         by the result of each function of ``multipliers``.
 
@@ -269,7 +269,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         reg_param: Optional[float]
             Constant that multiplies the L2 term, controlling regularization
-            strength. ``alpha`` must be a non-negative float i.e. in ``[0, inf)``
+            strength. ``alpha`` must be a non-negative
+            float i.e. in ``[0, inf)``
 
             Note: A too strong regularization may compromise the guaranteed
             marginal coverage. If ``calibrator.normalize=True``, it is usually
@@ -389,10 +390,11 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
         cs_features = concatenate_functions(self.functions_, params_mapping,
-                                      self.multipliers)
+                                            self.multipliers)
         if self.normalized:
             norm = np.linalg.norm(cs_features, axis=1).reshape(-1, 1)
-            cs_features[(abs(norm) == 0)[:, 0], :] = np.ones(cs_features.shape[1])
+            cs_features[(abs(norm) == 0)[:, 0], :] = np.ones(
+                cs_features.shape[1])
 
             norm[abs(norm) == 0] = 1
             cs_features /= norm

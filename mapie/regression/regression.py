@@ -14,8 +14,8 @@ from mapie.conformity_scores import ConformityScore, ResidualNormalisedScore
 from mapie.estimator.estimator import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_conformity_score, check_cv,
-                         check_n_features_in, check_n_jobs,
-                         check_null_weight, check_verbose,
+                         check_estimator_regression, check_n_features_in,
+                         check_n_jobs, check_null_weight, check_verbose,
                          get_effective_calibration_samples)
 
 

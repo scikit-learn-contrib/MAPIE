@@ -11,9 +11,10 @@ from sklearn.utils import _safe_indexing
 
 class CustomCCP(CCPCalibrator):
     """
-    Calibrator used for the ``SplitCP`` method to estimate the conformity scores.
-    It corresponds to the adaptative conformal prediction method proposed by
-    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
+    Calibrator used for the ``SplitCP`` method to estimate the
+    conformity scores. It corresponds to the adaptative conformal
+    prediction method proposed by Gibbs et al. (2023)
+    in "Conformal Prediction With Conditional Guarantees".
 
     The goal of to learn the quantile of the conformity scores distribution,
     to built the prediction interval, not with a constant ``q`` (as it is the
@@ -79,7 +80,7 @@ class CustomCCP(CCPCalibrator):
 
     multipliers: Optional[List[Callable]]
         List of function which take any arguments of ``X, y_pred, z``
-        and return an array of shape ``(n_samples, 1)``. 
+        and return an array of shape ``(n_samples, 1)``.
         The result of ``calibrator.transform(X, y_pred, z)`` will be multiply
         by the result of each function of ``multipliers``.
 
@@ -124,7 +125,7 @@ class CustomCCP(CCPCalibrator):
     ...     ],
     ...     bias=True,
     ... )
-    >>> mapie = SplitMapieRegressor(
+    >>> mapie = SplitCPRegressor(
     ...     calibrator=calibrator, alpha=0.1, random_state=1,
     ...     conformity_score=AbsoluteConformityScore(sym=False)
     ... ).fit(X_train, y_train)
@@ -132,16 +133,16 @@ class CustomCCP(CCPCalibrator):
     >>> print(np.round(y_train[50::100], 2))
     [0.   0.03 0.   0.69 0.19 0.33 0.32 0.34 0.39 0.06]
     >>> print(np.round(y_pi[50::100, :, 0], 2))
-    [[0.02 0.14]
-     [0.02 0.42]
-     [0.02 0.66]
-     [0.03 0.84]
-     [0.03 0.93]
-     [0.02 0.93]
-     [0.02 0.83]
-     [0.02 0.66]
-     [0.01 0.41]
-     [0.01 0.12]]
+    [[ 0.01  0.17]
+     [ 0.01  0.44]
+     [ 0.02  0.67]
+     [ 0.02  0.84]
+     [ 0.02  0.93]
+     [ 0.02  0.92]
+     [ 0.02  0.83]
+     [ 0.01  0.67]
+     [ 0.    0.43]
+     [-0.01  0.16]]
     >>> print(mapie.calibrator_.n_out)
     2
     """

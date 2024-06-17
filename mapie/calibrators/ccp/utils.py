@@ -446,7 +446,7 @@ def fast_mean_pinball_loss(
     y_pred: NDArray,
     *,
     sample_weight: Optional[NDArray] = None,
-    alpha: float=0.5
+    alpha: float = 0.5
 ) -> float:
     """
     Pinball loss for quantile regression.
@@ -484,7 +484,7 @@ def fast_mean_pinball_loss(
 
 
 def calibrator_optim_objective(
-    beta: NDArray, calibrator_preds: NDArray,conformity_scores: NDArray,
+    beta: NDArray, calibrator_preds: NDArray, conformity_scores: NDArray,
     q: float, sample_weight: NDArray, reg_param: Optional[float],
 ) -> float:
     """

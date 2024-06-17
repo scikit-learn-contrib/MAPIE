@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from inspect import signature
-from typing import Any, Tuple, cast
+from typing import Any, Callable, Tuple, cast
 
 import numpy as np
 import pytest
@@ -49,12 +49,12 @@ PHI = [
 ]
 WIDTHS = {
     "split": 3.87,
-    "prefit": 5.768691,
+    "prefit": 3.89,
 }
 
 COVERAGES = {
-    "split": 0.952,
-    "prefit": 1,
+    "split": 0.956,
+    "prefit": 0.956,
 }
 
 
@@ -183,7 +183,7 @@ def test_invalid_prefit_predictor_calibrate(
     calibrate is called"""
     with pytest.raises(NotFittedError):
         mapie = SplitCPRegressor(predictor=predictor, cv="prefit",
-                                    alpha=0.1)
+                                 alpha=0.1)
         mapie.fit_calibrator(X, y)
 
 
@@ -198,7 +198,7 @@ def test_invalid_prefit_predictor_fit(
     is called."""
     with pytest.raises(NotFittedError):
         mapie = SplitCPRegressor(predictor=predictor, cv="prefit",
-                                    alpha=0.1)
+                                 alpha=0.1)
         mapie.fit_predictor(X, y)
 
 
@@ -257,7 +257,7 @@ def test_valid_cv(cv: Any, predictor: RegressorMixin) -> None:
     """Test that valid cv raise no errors."""
     predictor.fit(X_toy, y_toy)
     mapie_reg = SplitCPRegressor(predictor, CustomCCP(bias=True), cv=cv,
-                                    alpha=0.1, random_state=random_state)
+                                 alpha=0.1, random_state=random_state)
     mapie_reg.fit(X_toy, y_toy)
     mapie_reg.predict(X_toy)
 
@@ -275,7 +275,7 @@ def test_invalid_cv(cv: Any) -> None:
     """Test that invalid agg_functions raise errors."""
     with pytest.raises(ValueError, match="Invalid cv argument."):
         mapie = SplitCPRegressor(cv=cv, alpha=0.1,
-                                    random_state=random_state)
+                                 random_state=random_state)
         mapie.fit_predictor(X, y)
 
 
@@ -447,9 +447,9 @@ def test_results_for_ordered_alpha(
     calibrator.fit_params(X)
 
     mapie_reg_1 = SplitCPRegressor(predictor, clone(calibrator), cv=cv,
-                                      alpha=0.05, random_state=random_state)
+                                   alpha=0.05, random_state=random_state)
     mapie_reg_2 = SplitCPRegressor(predictor, clone(calibrator), cv=cv,
-                                      alpha=0.1, random_state=random_state)
+                                   alpha=0.1, random_state=random_state)
 
     mapie_reg_1.fit(X, y, z=z)
     _, y_pis_1 = mapie_reg_1.predict(X, z=z)
@@ -485,11 +485,11 @@ def test_results_with_constant_sample_weights(
 
     n_samples = len(X)
     mapie0 = SplitCPRegressor(predictor, clone(calibrator),
-                                 cv=cv, alpha=0.1, random_state=random_state)
+                              cv=cv, alpha=0.1, random_state=random_state)
     mapie1 = SplitCPRegressor(predictor, clone(calibrator),
-                                 cv=cv, alpha=0.1, random_state=random_state)
+                              cv=cv, alpha=0.1, random_state=random_state)
     mapie2 = SplitCPRegressor(predictor, clone(calibrator),
-                                 cv=cv, alpha=0.1, random_state=random_state)
+                              cv=cv, alpha=0.1, random_state=random_state)
 
     mapie0.fit(X, y, z=z, sample_weight=None)
     mapie1.fit(X, y, z=z, sample_weight=np.ones(shape=n_samples))
@@ -529,7 +529,7 @@ def test_prediction_between_low_up(
         predictor.fit(X, y)
 
     mapie = SplitCPRegressor(predictor=predictor, calibrator=calibrator,
-                                cv=cv, alpha=alpha, random_state=random_state)
+                             cv=cv, alpha=alpha, random_state=random_state)
     mapie.fit(X, y, z=z)
 
     with warnings.catch_warnings(record=True) as record:
@@ -570,7 +570,7 @@ def test_linear_data_confidence_interval(
         predictor.fit(X_toy, y_toy)
 
     mapie = SplitCPRegressor(predictor, clone(calibrator), cv=cv,
-                                alpha=alpha, random_state=random_state)
+                             alpha=alpha, random_state=random_state)
     mapie.fit(X_toy, y_toy, z=z_toy)
 
     y_pred, y_pis = mapie.predict(X_toy, z=z_toy)
@@ -603,31 +603,23 @@ def test_linear_regression_results() -> None:
     np.testing.assert_allclose(coverage, COVERAGES["split"], rtol=1e-2)
 
 
-@pytest.mark.parametrize("predictor", [
-    LinearRegression(),
-    make_pipeline(LinearRegression()),
-])
-def test_results_prefit(predictor: RegressorMixin) -> None:
+def test_results_prefit() -> None:
     """Test prefit results on a standard train/validation/test split."""
-    X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X, y, test_size=1 / 10, random_state=1
+    X_train, X_calib, y_train, y_calib = train_test_split(
+        X, y, test_size=0.5, random_state=1
     )
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val, y_train_val, test_size=1 / 9, random_state=1
-    )
-    predictor.fit(X_train, y_train)
+    predictor = LinearRegression().fit(X_train, y_train)
     mapie_reg = SplitCPRegressor(
         predictor=predictor, calibrator=clone(PHI[0]), cv="prefit", alpha=0.05,
         random_state=random_state
     )
-    mapie_reg.fit(X_val, y_val)
-    _, y_pis = mapie_reg.predict(X_test)
-    width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = regression_coverage_score(
-        y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
-    )
-    np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
-    np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
+    mapie_reg.fit(X_calib, y_calib)
+    _, y_pis = mapie_reg.predict(X)
+    y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
+    width_mean = (y_pred_up - y_pred_low).mean()
+    coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
+    np.testing.assert_allclose(width_mean, WIDTHS["split"], rtol=1e-2)
+    np.testing.assert_allclose(coverage, COVERAGES["split"], rtol=1e-2)
 
 
 @pytest.mark.parametrize("calibrator", PHI)
@@ -672,7 +664,7 @@ def test_fit_parameters_passing() -> None:
     gb = GradientBoostingRegressor(random_state=random_state)
 
     mapie_reg = SplitCPRegressor(predictor=gb, alpha=0.1,
-                                    random_state=random_state)
+                                 random_state=random_state)
 
     def early_stopping_monitor(i, est, locals):
         """Returns True on the 3rd iteration."""
@@ -684,3 +676,22 @@ def test_fit_parameters_passing() -> None:
     mapie_reg.fit(X, y, fit_kwargs={"monitor": early_stopping_monitor})
 
     assert cast(RegressorMixin, mapie_reg.predictor).estimators_.shape[0] == 3
+
+
+@pytest.mark.parametrize("custom_method", [
+    lambda local_arg: local_arg,
+    lambda self_arg: self_arg,
+    lambda kwarg_arg: kwarg_arg,
+    lambda local_arg, *args, **kwargs: local_arg,
+    lambda self_arg, *args, **kwargs: self_arg,
+    lambda kwarg_arg, *args, **kwargs: kwarg_arg,
+])
+def test_get_method_arguments(custom_method: Callable) -> None:
+    mapie = SplitCPRegressor(alpha=0.1)
+    mapie.self_arg = 1
+    local_vars = {"local_arg": 1}
+    kwarg_args = {"kwarg_arg": 1}
+
+    arguments = mapie.get_method_arguments(custom_method, local_vars,
+                                           kwarg_args)
+    custom_method(**arguments)

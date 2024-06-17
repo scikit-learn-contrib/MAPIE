@@ -50,7 +50,7 @@ def check_null_weight(
 
     y: ArrayLike of shape (n_samples,)
         Training labels with non-null weights.
-    
+
     Examples
     --------
     >>> import numpy as np

@@ -11,16 +11,27 @@ from sklearn.utils.validation import _num_samples
 
 class StandardCalibrator(BaseCalibrator):
     """
-    Base abstract class for the calibrators
+    Calibrator used to get the standard conformal prediciton. It is strictly
+    equivalent to ``MapieRegressor`` with ``method='base'``.
 
     Attributes
     ----------
     fit_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
         ``predict``.
-    """
 
+    q_up_: float
+        Calibration fitting results, used to build the upper bound of the
+        prediction intervals. It correspond to the quantile of the calibration
+        conformity scores.
+
+    q_low_: Tuple[NDArray, bool]
+        Same as q_up_, but for the lower bound
+    """
     fit_attributes: List[str] = ["q_up_", "q_low_"]
+
+    def __init__(self) -> None:
+        return
 
     def fit(
         self,

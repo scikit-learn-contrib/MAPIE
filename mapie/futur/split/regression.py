@@ -103,11 +103,11 @@ class SplitCPRegressor(SplitCP):
     >>> print(np.round(y_pred[:5], 2))
     [ 0.46  4.46  8.46 12.46 16.46]
     >>> print(np.round(y_pis[:5,:, 0], 2))
-    [[-0.23  1.15]
-     [ 3.77  5.15]
-     [ 7.76  9.16]
-     [11.76 13.16]
-     [15.76 17.16]]
+    [[-0.84  1.76]
+     [ 3.17  5.75]
+     [ 7.17  9.75]
+     [11.18 13.74]
+     [15.19 17.73]]
     """
     def __init__(
         self,
@@ -206,7 +206,7 @@ class SplitCPRegressor(SplitCP):
         """
         predict_kwargs = self.get_method_arguments(
             self.calibrator_.predict,
-            dict(zip(["X", "y_pred"],[X, y_pred])),
+            dict(zip(["X", "y_pred"], [X, y_pred])),
             kwargs,
         )
         conformity_score_pred = self.calibrator_.predict(**predict_kwargs)

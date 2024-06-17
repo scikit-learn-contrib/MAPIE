@@ -159,7 +159,7 @@ def test_phi_functions_empty() -> None:
     """
     with pytest.raises(ValueError):
         mapie = SplitCPRegressor(calibrator=CustomCCP([], bias=False),
-                                    alpha=0.1)
+                                 alpha=0.1)
         mapie.fit(X, y, z=z)
 
 
@@ -190,7 +190,7 @@ def test_invalid_variable_value(var: Any) -> None:
     """
     with pytest.raises(ValueError):
         mapie = SplitCPRegressor(calibrator=PolynomialCCP(variable=var),
-                                    alpha=0.1)
+                                 alpha=0.1)
         mapie.fit(X, y, z=z)
 
 
@@ -261,7 +261,7 @@ def test_invalid_gauss_sigma(sigma: Any) -> None:
     """
     with pytest.raises(ValueError):
         mapie = SplitCPRegressor(calibrator=GaussianCCP(3, sigma),
-                                    alpha=0.1)
+                                 alpha=0.1)
         mapie.fit(X, y, z=z)
 
 

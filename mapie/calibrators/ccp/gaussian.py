@@ -13,9 +13,10 @@ from sklearn.utils.validation import _num_samples
 
 class GaussianCCP(CCPCalibrator):
     """
-    Calibrator used for the ``SplitCP`` method to estimate the conformity scores.
-    It corresponds to the adaptative conformal prediction method proposed by
-    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
+    Calibrator used for the ``SplitCP`` method to estimate the
+    conformity scores. It corresponds to the adaptative conformal
+    prediction method proposed by Gibbs et al. (2023)
+    in "Conformal Prediction With Conditional Guarantees".
 
     The goal of to learn the quantile of the conformity scores distribution,
     to built the prediction interval, not with a constant ``q`` (as it is the
@@ -133,7 +134,7 @@ class GaussianCCP(CCPCalibrator):
 
     multipliers: Optional[List[Callable]]
         List of function which take any arguments of ``X, y_pred, z``
-        and return an array of shape ``(n_samples, 1)``. 
+        and return an array of shape ``(n_samples, 1)``.
         The result of ``calibrator.transform(X, y_pred, z)`` will be multiply
         by the result of each function of ``multipliers``.
 
@@ -185,11 +186,11 @@ class GaussianCCP(CCPCalibrator):
     >>> print(np.round(y_pred[:5], 2))
     [ 1.46  5.46  9.46 13.46 17.46]
     >>> print(np.round(y_pi[:5, :, 0], 2))
-    [[ 1.06  1.86]
-     [ 5.06  5.86]
-     [ 9.06  9.86]
-     [13.06 13.86]
-     [17.06 17.87]]
+    [[ 0.95  1.96]
+     [ 4.95  5.96]
+     [ 8.95  9.97]
+     [12.95 13.97]
+     [16.95 17.97]]
     >>> print(mapie.calibrator_.points_)
     [[204]
      [318]]

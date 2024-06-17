@@ -27,7 +27,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
     predictor: Union[RegressorMixin, ClassifierMixin]
         Any regressor or classifier from scikit-learn API.
         (i.e. with ``fit`` and ``predict`` methods).
-        
+
         By default ``"None"``.
 
     calibrator: Optional[Calibrator]
@@ -365,7 +365,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         self._check_fit_parameters()
         self.conformity_score_, calibrator = self._check_calibrate_parameters()
         check_is_fitted(self, self.fit_attributes)
-        
+
         if self.alpha is None:
             warnings.warn("No calibration is done, because alpha is None.")
             return self
@@ -378,7 +378,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         else:
             train_index, calib_index = (np.array([], dtype=int),
                                         np.arange(_num_samples(X)))
-        
+
         z = cast(Optional[ArrayLike], kwargs.get("z", None))
         (
             X_train, y_train, z_train, sample_weight_train, train_index
@@ -395,7 +395,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         )
 
         calib_arguments = self.get_method_arguments(
-            calibrator.fit, 
+            calibrator.fit,
             dict(zip([
                 "X", "y", "sample_weight", "groups",
                 "y_pred_calib", "conformity_scores_calib",
@@ -409,8 +409,8 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
                 y_pred_calib, conformity_scores_calib,
                 X_train, y_train, z_train, sample_weight_train, train_index,
                 X_calib, y_calib, z_calib, sample_weight_calib, calib_index,
-             ])),
-             kwargs
+            ])),
+            kwargs
         )
 
         self.calibrator_ = calibrator.fit(

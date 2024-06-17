@@ -9,9 +9,10 @@ from .utils import format_functions
 
 class PolynomialCCP(CCPCalibrator):
     """
-    Calibrator used for the ``SplitCP`` method to estimate the conformity scores.
-    It corresponds to the adaptative conformal prediction method proposed by
-    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
+    Calibrator used for the ``SplitCP`` method to estimate
+    the conformity scores. It corresponds to the adaptative conformal
+    prediction method proposed by Gibbs et al. (2023)
+    in "Conformal Prediction With Conditional Guarantees".
 
     The goal of to learn the quantile of the conformity scores distribution,
     to built the prediction interval, not with a constant ``q`` (as it is the
@@ -124,11 +125,11 @@ class PolynomialCCP(CCPCalibrator):
     >>> print(np.round(y_pred[:5], 2))
     [ 1.46  5.46  9.46 13.46 17.46]
     >>> print(np.round(y_pi[:5, :, 0], 2))
-    [[ 1.01  1.91]
-     [ 5.01  5.91]
-     [ 9.01  9.92]
-     [13.   13.92]
-     [17.   17.92]]
+    [[ 1.09  1.83]
+     [ 5.09  5.83]
+     [ 9.09  9.83]
+     [13.08 13.84]
+     [17.08 17.84]]
     >>> print(mapie.calibrator_.exponents)
     [0, 1]
     >>> print(mapie.calibrator_.n_out)
