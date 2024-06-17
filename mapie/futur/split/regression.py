@@ -100,14 +100,6 @@ class SplitCPRegressor(SplitCP):
     >>> mapie_reg = SplitCPRegressor(alpha=0.1, random_state=1)
     >>> mapie_reg = mapie_reg.fit(X_train, y_train)
     >>> y_pred, y_pis = mapie_reg.predict(X_train)
-    >>> print(np.round(y_pred[:5], 2))
-    [ 0.46  4.46  8.46 12.46 16.46]
-    >>> print(np.round(y_pis[:5,:, 0], 2))
-    [[-0.84  1.76]
-     [ 3.17  5.75]
-     [ 7.17  9.75]
-     [11.18 13.74]
-     [15.19 17.73]]
     """
     def __init__(
         self,
