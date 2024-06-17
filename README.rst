@@ -3,7 +3,7 @@
 |GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Conda| |Release| |Commits| |DOI|
 
 .. |GitHubActions| image:: https://github.com/scikit-learn-contrib/MAPIE/actions/workflows/test.yml/badge.svg
-   :target: https://github.com/scikit-learn-contrib/MAPIE/actions
+    :target: https://github.com/scikit-learn-contrib/MAPIE/actions
 
 .. |Codecov| image:: https://codecov.io/gh/scikit-learn-contrib/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
    :target: https://codecov.io/gh/scikit-learn-contrib/MAPIE
@@ -13,25 +13,25 @@
     :alt: Documentation Status
 
 .. |License| image:: https://img.shields.io/github/license/scikit-learn-contrib/MAPIE
-   :target: https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE
+    :target: https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE
 
 .. |PythonVersion| image:: https://img.shields.io/pypi/pyversions/mapie
-   :target: https://pypi.org/project/mapie/
+    :target: https://pypi.org/project/mapie/
 
 .. |PyPi| image:: https://img.shields.io/pypi/v/mapie
-   :target: https://pypi.org/project/mapie/
+    :target: https://pypi.org/project/mapie/
 
 .. |Conda| image:: https://img.shields.io/conda/vn/conda-forge/mapie
-   :target: https://anaconda.org/conda-forge/mapie
+    :target: https://anaconda.org/conda-forge/mapie
 
 .. |Release| image:: https://img.shields.io/github/v/release/scikit-learn-contrib/mapie
-   :target: https://github.com/scikit-learn-contrib/MAPIE/releases
+    :target: https://github.com/scikit-learn-contrib/MAPIE/releases
 
 .. |Commits| image:: https://img.shields.io/github/commits-since/scikit-learn-contrib/mapie/latest/master
-   :target: https://github.com/scikit-learn-contrib/MAPIE/commits/master
+    :target: https://github.com/scikit-learn-contrib/MAPIE/commits/master
 
 .. |DOI| image:: https://img.shields.io/badge/10.48550/arXiv.2207.12274-B31B1B.svg
-   :target: https://arxiv.org/abs/2207.12274
+    :target: https://arxiv.org/abs/2207.12274
 
 .. image:: https://github.com/scikit-learn-contrib/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
