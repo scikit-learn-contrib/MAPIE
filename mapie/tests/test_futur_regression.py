@@ -480,7 +480,7 @@ def test_results_with_constant_sample_weights(
     if cv == "prefit":
         predictor.fit(X, y)
 
-    calibrator = PHI[0]
+    calibrator = cast(CCPCalibrator, clone(PHI[0]))
     calibrator.fit_params(X)
     calibrator.init_value = calibrator.init_value_
 
