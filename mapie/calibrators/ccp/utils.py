@@ -165,6 +165,7 @@ def sample_points(
     ----------
     X : ArrayLike
         Samples
+
     points : Optional[Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]]]
         If Array: List of data points, used as centers to compute
         gaussian distances. Should be an array of shape (n_points, n_in).

@@ -399,7 +399,7 @@ def test_same_results_prefit_split(
     z_calib = z[val_index]
 
     calibrator = cast(CCPCalibrator, clone(template))
-    calibrator.fit_params(X, y, z)
+    calibrator._fit_params(X, y, z)
     calibrator.init_value = calibrator.init_value_
     if isinstance(calibrator, GaussianCCP):
         calibrator.points = (calibrator.points_, calibrator.sigmas_)
@@ -445,7 +445,7 @@ def test_results_for_ordered_alpha(
     if cv == "prefit":
         predictor.fit(X, y)
 
-    calibrator.fit_params(X)
+    calibrator._fit_params(X)
 
     mapie_reg_1 = SplitCPRegressor(predictor, clone(calibrator), cv=cv,
                                    alpha=0.05, random_state=random_state)
@@ -481,7 +481,7 @@ def test_results_with_constant_sample_weights(
         predictor.fit(X, y)
 
     calibrator = cast(CCPCalibrator, clone(PHI[0]))
-    calibrator.fit_params(X)
+    calibrator._fit_params(X)
     calibrator.init_value = calibrator.init_value_
 
     n_samples = len(X)
@@ -658,6 +658,6 @@ def test_get_method_arguments(custom_method: Callable) -> None:
     local_vars = {"local_arg": 1}
     kwarg_args = {"kwarg_arg": 1}
 
-    arguments = mapie.get_method_arguments(custom_method, local_vars,
-                                           kwarg_args)
+    arguments = mapie._get_method_arguments(custom_method, local_vars,
+                                            kwarg_args)
     custom_method(**arguments)

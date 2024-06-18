@@ -62,6 +62,7 @@ class StandardCalibrator(BaseCalibrator):
         check_required_arguments(self.alpha)
         self.alpha = cast(float, self.alpha)
 
+        # TODO: Partial copy paste of the ConformityScore.get_bounds method
         if self.sym:
             alpha_ref = 1-self.alpha
             quantile_ref = ConformityScore.get_quantile(

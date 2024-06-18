@@ -113,7 +113,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         prediction intervals.
         beta_up_[0]: Array of shape (calibrator.n_out, )
         beta_up_[1]: Whether the optimization process converged or not
-                    (the coverage is not garantied if the optimization fail)
+                    (cover is not guaranteed if the optimisation has failed)
 
     beta_low_: Tuple[NDArray, bool]
         Same as beta_up, but for the lower bound
@@ -182,6 +182,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         init_value : Optional[ArrayLike]
             Optimization initialisation value, set at ``CCPCalibrator``
             initialisation.
+
         n_out : int
             Number of dimensions of the ``CCPCalibrator`` transformation.
 
@@ -215,7 +216,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                     "The returned prediction interval may be inaccurate."
                 )
 
-    def fit_params(
+    def _fit_params(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
@@ -319,7 +320,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         else:
             np.random.seed(self.random_state)
 
-        self.fit_params(X_calib, y_pred_calib, z_calib)
+        self._fit_params(X_calib, y_pred_calib, z_calib)
 
         cs_features = self.transform(X_calib, y_pred_calib, z_calib)
 
@@ -437,10 +438,10 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         X : ArrayLike
             Observed samples
 
-        y_pred : ArrayLike
+        y_pred : Optional[ArrayLike]
             Target prediction
 
-        z : ArrayLike
+        z : Optional[ArrayLike]
             Exogenous variable
 
         Returns

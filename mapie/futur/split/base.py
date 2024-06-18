@@ -3,13 +3,12 @@ from __future__ import annotations
 import inspect
 import warnings
 from abc import ABCMeta, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
 
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
                                      PredefinedSplit, ShuffleSplit)
-from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
@@ -58,13 +57,10 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
     conformity_score: Optional[ConformityScore]
         ConformityScore instance.
         It defines the link between the observed values, the predicted ones
-        and the conformity scores. For instance, the default ``None`` value
-        correspondonds to a conformity score which assumes
-        y_obs = y_pred + conformity_score.
+        and the conformity scores.
 
-        - ``None``, to use the default ``AbsoluteConformityScore`` symetrical
-        conformity score
-        - Any ``ConformityScore`` class
+        - Can be any ``ConformityScore`` class
+        - ``None`` is associated with a default value defined by the subclass
 
         By default ``None``.
 
@@ -83,7 +79,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         If ``None``, the prediction intervals will be stochastics, and will
         change if you refit the calibration (even if no arguments have change).
 
-        WARNING: If ``random_state``is not ``None``, ``np.random.seed`` will
+        WARNING: If ``random_state`` is not ``None``, ``np.random.seed`` will
         be changed, which will reset the seed for all the other random
         number generators. It may have an impact on the rest of your code.
 
@@ -102,13 +98,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
     @abstractmethod
     def __init__(
         self,
-        predictor: Optional[
-            Union[
-                Union[RegressorMixin, ClassifierMixin],
-                Pipeline,
-                List[Union[Union[RegressorMixin, ClassifierMixin], Pipeline]]
-            ]
-        ] = None,
+        predictor: Optional[BaseEstimator] = None,
         calibrator: Optional[CCPCalibrator] = None,
         cv: Optional[
             Union[str, BaseCrossValidator, BaseShuffleSplit]
@@ -122,7 +112,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _check_fit_parameters(self) -> Union[RegressorMixin, ClassifierMixin]:
+    def _check_fit_parameters(self) -> BaseEstimator:
         """
         Check and replace default value of ``predictor`` and ``cv`` arguments.
         """
@@ -216,7 +206,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             raise ValueError("Invalid alpha. "
                              "Allowed values are between 0 and 1.")
 
-    def get_method_arguments(
+    def _get_method_arguments(
         self, method: Callable, local_vars: Dict[str, Any],
         kwargs: Optional[Dict],
     ) -> Dict:
@@ -395,7 +385,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             X_calib, y_calib, y_pred_calib
         )
 
-        calib_arguments = self.get_method_arguments(
+        calib_arguments = self._get_method_arguments(
             calibrator.fit,
             dict(zip([
                 "X", "y", "sample_weight", "groups",
@@ -509,9 +499,6 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         X: ArrayLike of shape (n_samples, n_features)
             Test data.
 
-        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
-            Exogenous variables
-
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -529,7 +516,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         check_is_fitted(self, self.calib_attributes)
 
         # Fit the calibrator
-        bounds_arguments = self.get_method_arguments(
+        bounds_arguments = self._get_method_arguments(
             self.calibrator_.predict, {}, kwargs,
         )
 
@@ -575,7 +562,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         y_pred: 2D NDArray
             Predicted scores (target)
 
-        z: ArrayLike
+        z: Optional[ArrayLike]
             Exogenous variables
 
         Returns
@@ -593,6 +580,9 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         ----------
         y_pred: NDArray
             Prediction scores (can be the prediction, the probas, ...)
+
+        z: Optional[ArrayLike]
+            Exogenous variables
 
         Returns
         -------

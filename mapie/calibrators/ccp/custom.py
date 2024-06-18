@@ -50,7 +50,7 @@ class CustomCCP(CCPCalibrator):
 
     bias: bool
         Add a column of ones to the features, for safety reason
-        (to garanty the marginal coverage, no matter how the other features
+        (to garantee the marginal coverage, no matter how the other features
         the ``CCPCalibrator``object were built).
         If the ``CCPCalibrator``object definition covers all the dataset
         (meaning, for all calibration and test samples, the resulting
@@ -63,7 +63,8 @@ class CustomCCP(CCPCalibrator):
 
         By default ``False``.
 
-    Whether or not to normalized the resulting
+    normalized: bool
+        Whether or not to normalized the resulting
         ``calibrator.predict(X, y_pred, z)``. Normalization
         will result in a bounded interval prediction width, avoiding the width
         to explode to +inf or crash to zero. It is particularly intersting when
@@ -176,7 +177,7 @@ class CustomCCP(CCPCalibrator):
         self.functions_ = format_functions(self.functions, self.bias)
         compile_functions_warnings_errors(self.functions_)
 
-    def fit_params(
+    def _fit_params(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
@@ -210,7 +211,7 @@ class CustomCCP(CCPCalibrator):
 
         for phi in self.functions_:
             if isinstance(phi, CCPCalibrator):
-                phi.fit_params(X, y_pred, z)
+                phi._fit_params(X, y_pred, z)
                 check_multiplier(phi._multipliers, X, y_pred, z)
         self.is_fitted_ = True
 

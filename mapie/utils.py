@@ -37,8 +37,6 @@ def check_null_weight(
         Training samples.
     y: ArrayLike of shape (n_samples,)
         Training labels.
-    z: Optional[ArrayLike]
-        Exogenous varible
 
     Returns
     -------

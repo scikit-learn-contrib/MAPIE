@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
-from sklearn.pipeline import Pipeline
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators.utils import check_calibrator
@@ -17,10 +16,10 @@ from mapie.utils import (check_conformity_score, check_estimator_regression,
 
 class SplitCPRegressor(SplitCP):
     """
-    Class to compute Conformal Predictions in a ``"split"`` approach for
-    regression tasks.
-    It is based on a predictor (a sklearn estimator), and a calibrator
-    (``Calibrator`` object).
+    Class to implement Conformal Prediction in ``"split"``
+    approach for regression tasks.
+    It is based on a predictor (``RegressorMixin`` object),
+    and a calibrator (``BaseCalibrator`` object).
 
     Parameters
     ----------
@@ -104,13 +103,7 @@ class SplitCPRegressor(SplitCP):
     """
     def __init__(
         self,
-        predictor: Optional[
-            Union[
-                RegressorMixin,
-                Pipeline,
-                List[Union[RegressorMixin, Pipeline]]
-            ]
-        ] = None,
+        predictor: Optional[RegressorMixin] = None,
         calibrator: Optional[BaseCalibrator] = None,
         cv: Optional[
             Union[str, BaseCrossValidator, BaseShuffleSplit]
@@ -188,16 +181,13 @@ class SplitCPRegressor(SplitCP):
         y_pred: 2D NDArray
             Observed Target
 
-        z: ArrayLike
-            Exogenous variables
-
         Returns
         -------
         NDArray
             Bounds, as a 3D array of shape (n_samples, 2, 1)
             (because we only have 1 alpha value)
         """
-        predict_kwargs = self.get_method_arguments(
+        predict_kwargs = self._get_method_arguments(
             self.calibrator_.predict,
             dict(zip(["X", "y_pred"], [X, y_pred])),
             kwargs,
