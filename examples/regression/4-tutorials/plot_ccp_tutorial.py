@@ -36,7 +36,6 @@ from mapie.calibrators import CustomCCP, GaussianCCP, PolynomialCCP
 from mapie.calibrators.ccp import CCPCalibrator
 from mapie.regression import (MapieQuantileRegressor, MapieRegressor,
                               SplitCPRegressor)
-import seaborn as sns
 from scipy.stats import norm
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
@@ -231,7 +230,7 @@ def need_transform(mapie):
 
 
 def plot_figure(mapies, y_preds, y_pis, titles, show_transform=False):
-    cp = list(sns.color_palette())*10
+    cp = plt.get_cmap('tab10').colors
     ncols = min(3, len(titles))
     nrows = int(np.ceil(len(titles) / ncols))
     ax_need_transform = np.zeros((nrows, ncols))
@@ -289,7 +288,7 @@ def plot_figure(mapies, y_preds, y_pis, titles, show_transform=False):
 
 def plot_widths(titles, y_pis):
     sort_order = np.argsort(X_test[:, 0])
-    cp = list(sns.color_palette())*10
+    cp = plt.get_cmap('tab10').colors
     plt.figure(figsize=(8, 6))
     for i, (title, pi) in enumerate(zip(titles, y_pis)):
         plt.plot(X_test[sort_order, 0],
@@ -367,8 +366,8 @@ calibrator2 = PolynomialCCP(1)
 calibrator3 = PolynomialCCP([0, 3])
 
 ##############################################################################
-# Note: adding '0' in the 'degree' argument list is equivalent to having
-# bias=True, as X^0=1
+# Note: adding ``0`` in the ``degree`` argument list is equivalent to having
+# ``bias=True``, as :math:`X^0=1`
 
 # ================== CCP 1  ==================
 mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator1, alpha=ALPHA,
