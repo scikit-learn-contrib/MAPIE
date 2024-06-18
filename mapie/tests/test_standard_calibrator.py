@@ -3,9 +3,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 from sklearn.datasets import make_regression
+
 from mapie.calibrators import StandardCalibrator
-from mapie.regression import SplitCPRegressor
 from mapie.conformity_scores import AbsoluteConformityScore
+from mapie.regression import SplitCPRegressor
 
 random_state = 1
 np.random.seed(random_state)

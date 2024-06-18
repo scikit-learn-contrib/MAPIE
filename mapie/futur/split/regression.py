@@ -3,15 +3,16 @@ from __future__ import annotations
 from typing import List, Optional, Tuple, Union
 
 import numpy as np
+from sklearn.base import RegressorMixin
+from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
+from sklearn.pipeline import Pipeline
+
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators.ccp import check_calibrator
 from mapie.conformity_scores import ConformityScore
 from mapie.futur.split.base import BaseCalibrator, SplitCP
 from mapie.utils import (check_conformity_score, check_estimator_regression,
                          check_lower_upper_bounds)
-from sklearn.base import RegressorMixin
-from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
-from sklearn.pipeline import Pipeline
 
 
 class SplitCPRegressor(SplitCP):

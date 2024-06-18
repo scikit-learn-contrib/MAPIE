@@ -1,21 +1,22 @@
 from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 import inspect
 import warnings
+from abc import ABCMeta, abstractmethod
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
-from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators import BaseCalibrator
-from mapie.calibrators.ccp import CCPCalibrator
-from mapie.conformity_scores import ConformityScore
-from mapie.utils import _sample_non_null_weight, fit_estimator
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
                                      PredefinedSplit, ShuffleSplit)
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import _num_samples, check_is_fitted
+
+from mapie._typing import ArrayLike, NDArray
+from mapie.calibrators import BaseCalibrator
+from mapie.calibrators.ccp import CCPCalibrator
+from mapie.conformity_scores import ConformityScore
+from mapie.utils import _sample_non_null_weight, fit_estimator
 
 
 class SplitCP(BaseEstimator, metaclass=ABCMeta):

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import inspect
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
 import warnings
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
-from mapie._typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
+
+from mapie._typing import ArrayLike, NDArray
 
 
 def format_functions(

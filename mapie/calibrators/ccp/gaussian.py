@@ -3,12 +3,14 @@ from __future__ import annotations
 from typing import Callable, List, Optional, Tuple, Union
 
 import numpy as np
+from sklearn.utils import _safe_indexing
+from sklearn.utils.validation import _num_samples
+
 from mapie._typing import ArrayLike
 from mapie.calibrators import BaseCalibrator
 from mapie.calibrators.ccp import CCPCalibrator
+
 from .utils import compute_sigma, format_functions, sample_points
-from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _num_samples
 
 
 class GaussianCCP(CCPCalibrator):

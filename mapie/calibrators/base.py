@@ -3,8 +3,9 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from typing import List, Optional
 
-from mapie._typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator
+
+from mapie._typing import ArrayLike, NDArray
 
 
 class BaseCalibrator(BaseEstimator, metaclass=ABCMeta):

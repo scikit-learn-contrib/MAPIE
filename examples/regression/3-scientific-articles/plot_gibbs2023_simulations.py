@@ -32,13 +32,14 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.regression import SplitCPRegressor, MapieRegressor
-from mapie.calibrators.ccp import CustomCCP, GaussianCCP
 from scipy.stats import norm
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
+
+from mapie.calibrators.ccp import CustomCCP, GaussianCCP
+from mapie.conformity_scores import AbsoluteConformityScore
+from mapie.regression import MapieRegressor, SplitCPRegressor
 
 warnings.filterwarnings("ignore")
 
@@ -144,10 +145,13 @@ plt.show()
 # :class:`~mapie.regression.MapieRegressor` and
 # :class:`~mapie.regression.MapieCCPRegressor` to compute prediction intervals
 # with the basic Split CP method and the paper CCP method.
-# The coverages will be computed on 500 different dataset generation, to have
-# a good idea of the true value. Indeed, the empirical coverage of a single
+# The coverages was computed, in the paper, on 500 different dataset
+# generations, to have a good idea of the true value.
+# Indeed, the empirical coverage of a single
 # experiment is stochastic, because of the finite number of calibration and
 # test samples.
+# We will only compute 50 trials, because of the documentation
+# computational power limitations. 
 
 ALPHA = 0.1
 

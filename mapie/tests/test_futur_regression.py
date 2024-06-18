@@ -19,13 +19,13 @@ from sklearn.model_selection import (KFold, LeaveOneOut, LeavePOut,
 from sklearn.pipeline import make_pipeline
 
 from mapie._typing import NDArray
+from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
+                                   PolynomialCCP)
 from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore,
                                      ResidualNormalisedScore)
 from mapie.metrics import regression_coverage_score
 from mapie.regression import SplitCPRegressor
-from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
-                                   PolynomialCCP)
 
 random_state = 1
 np.random.seed(random_state)

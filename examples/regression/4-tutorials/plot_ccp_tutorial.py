@@ -32,14 +32,15 @@ import warnings
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
-from mapie.calibrators import CustomCCP, GaussianCCP, PolynomialCCP
-from mapie.calibrators.ccp import CCPCalibrator
-from mapie.regression import (MapieQuantileRegressor, MapieRegressor,
-                              SplitCPRegressor)
 from scipy.stats import norm
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
+
+from mapie.calibrators import CustomCCP, GaussianCCP, PolynomialCCP
+from mapie.calibrators.ccp import CCPCalibrator
+from mapie.regression import (MapieQuantileRegressor, MapieRegressor,
+                              SplitCPRegressor)
 
 warnings.filterwarnings("ignore")
 

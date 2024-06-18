@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Callable, Optional, Tuple, Union, List
+from typing import Callable, List, Optional, Tuple, Union
 
 from mapie._typing import ArrayLike
+
 from .base import CCPCalibrator
 from .utils import format_functions
 

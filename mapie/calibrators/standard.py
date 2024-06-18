@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, cast
 
 import numpy as np
+from sklearn.utils.validation import _num_samples
+
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators import BaseCalibrator
+from .ccp.utils import check_required_arguments
 from mapie.conformity_scores import ConformityScore
-from sklearn.utils.validation import _num_samples
 
 
 class StandardCalibrator(BaseCalibrator):

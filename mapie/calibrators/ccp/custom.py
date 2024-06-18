@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from typing import Callable, Iterable, List, Optional, Union
 
+from sklearn.utils import _safe_indexing
+
 from mapie._typing import ArrayLike
+
 from .base import CCPCalibrator
 from .utils import (check_multiplier, compile_functions_warnings_errors,
                     format_functions)
-from sklearn.utils import _safe_indexing
 
 
 class CustomCCP(CCPCalibrator):

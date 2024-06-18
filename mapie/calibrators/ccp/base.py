@@ -1,20 +1,22 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Iterable, List, Optional, Tuple, Union, cast
-import warnings
+
+import numpy as np
+from scipy.optimize import minimize, OptimizeResult
+from sklearn.base import clone
+from sklearn.utils import _safe_indexing
+from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators import BaseCalibrator
 from mapie.calibrators.ccp.utils import (calibrator_optim_objective,
                                          check_multiplier,
                                          compile_functions_warnings_errors,
-                                         concatenate_functions)
-import numpy as np
-from sklearn.base import clone
-from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _num_samples, check_is_fitted
-from scipy.optimize import minimize
+                                         concatenate_functions,
+                                         check_required_arguments)
 
 
 class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):

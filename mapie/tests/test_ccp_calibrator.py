@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 
 import numpy as np
 import pytest
 from sklearn.base import clone
-from sklearn.utils.validation import check_is_fitted
 from sklearn.datasets import make_regression
-from mapie.calibrators.ccp import (CustomCCP, GaussianCCP, PolynomialCCP,
-                                   CCPCalibrator)
+from sklearn.utils.validation import check_is_fitted
+
+from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
+                                   PolynomialCCP)
 from mapie.regression import SplitCPRegressor
 
 random_state = 1

@@ -1,6 +1,6 @@
 from .base import BaseCalibrator
+from .ccp import CustomCCP, GaussianCCP, PolynomialCCP
 from .standard import StandardCalibrator
-from .ccp import CustomCCP, PolynomialCCP, GaussianCCP
 
 __all__ = [
     "BaseCalibrator",
