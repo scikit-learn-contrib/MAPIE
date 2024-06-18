@@ -7,8 +7,7 @@ from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
 
 from mapie._typing import ArrayLike
-from mapie.calibrators import BaseCalibrator
-from mapie.calibrators.ccp import CCPCalibrator
+from .base import CCPCalibrator
 
 from .utils import compute_sigma, format_functions, sample_points
 

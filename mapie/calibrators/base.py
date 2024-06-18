@@ -14,11 +14,10 @@ class BaseCalibrator(BaseEstimator, metaclass=ABCMeta):
 
     The ``BaseCalibrator`` subclasses should have at least two methods:
 
-    - ``fit`` : Fit the calibrator to estimator the conformity scores
+    - ``fit`` : Fit the calibrator to estimate the conformity scores
         quantiles.
 
-    - ``predict`` : Predict the calibrator estimation the conformity scores
-        quantiles.
+    -  ``predict`` : Predict the conformity score quantiles.
 
     Attributes
     ----------
@@ -40,7 +39,7 @@ class BaseCalibrator(BaseEstimator, metaclass=ABCMeta):
         **kwargs,
     ) -> BaseCalibrator:
         """
-        Fit the calibrator to estimator the conformity scores
+        Fit the calibrator to estimate the conformity scores
         quantiles. The method can take as arguments any of :
         ``X, y, sample_weight, groups, y_pred_calib, conformity_scores_calib,
         X_train, y_train, z_train, sample_weight_train, train_index,
@@ -69,18 +68,18 @@ class BaseCalibrator(BaseEstimator, metaclass=ABCMeta):
         **kwargs,
     ) -> NDArray:
         """
-        Predict the calibrator estimation the conformity scores
-        quantiles. The method can take as arguments any of : ``X, y_pred``
+        Predict the conformity score quantiles.
+        The method can take as arguments any of : ``X, y_pred``
         or any other argument, which the user will have to pass as
         ``**kwargs``.
 
         Parameters
         ----------
-        X : ArrayLike
+        X : ArrayLike of shape (n_samples, n_features)
             Observed samples
 
         Returns
         -------
-        NDArray
-            prediction
+        NDArray of shape (n_samples,)
+            Prediction
         """

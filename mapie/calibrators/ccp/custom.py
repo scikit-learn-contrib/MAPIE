@@ -58,7 +58,7 @@ class CustomCCP(CCPCalibrator):
         this column of ones is not necessary to obtain marginal coverage.
         In this case, you can set this argument to ``False``.
 
-        If you are not sur, use ``bias=True`` to garantee the marginal
+        If you are not sure, use ``bias=True`` to garantee the marginal
         coverage.
 
         By default ``False``.

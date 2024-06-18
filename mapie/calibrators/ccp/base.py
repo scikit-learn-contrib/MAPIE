@@ -60,7 +60,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         this column of ones is not necessary to obtain marginal coverage.
         In this case, you can set this argument to ``False``.
 
-        If you are not sur, use ``bias=True`` to garantee the marginal
+        If you are not sure, use ``bias=True`` to garantee the marginal
         coverage.
 
         By default ``False``.
@@ -486,11 +486,12 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             return self
         else:
             compile_functions_warnings_errors([funct])
+            old_multipliers = self._multipliers
             new_calibrator = cast(CCPCalibrator, clone(self))
-            if new_calibrator._multipliers is None:
+            if old_multipliers is None:
                 new_calibrator._multipliers = [funct]
             else:
-                new_calibrator._multipliers.append(funct)
+                new_calibrator._multipliers = old_multipliers + [funct]
             return new_calibrator
 
     def __rmul__(self, other) -> CCPCalibrator:
