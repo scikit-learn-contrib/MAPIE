@@ -54,11 +54,11 @@ ALPHA = 0.1
 # --------------------------------------------------------------------------
 # Let's start by creating some synthetic data with different domains and
 # distributions to evaluate the adaptativity of the methods:
-# - baseline distribution of ``x*sin(x)``
-# - Add noise :
-#  - between -1 and 0: uniform distribution of the points around the baseline
-#  - between 0 and 5: normal distribution with a noise value which
-#    increase with ``x``
+#  - baseline distribution of ``x*sin(x)``
+#  - Add noise :
+#    - between -1 and 0: uniform distribution of the points around the baseline
+#    - between 0 and 5: normal distribution with a noise value which
+#      increase with ``x``
 
 
 def x_sinx(x):
@@ -261,6 +261,11 @@ def plot_figure(mapies, y_preds, y_pis, titles, show_transform=False):
         main_axes = axes.flatten()
         transform_axes = np.full(main_axes.shape, None)
 
+    for i in range(len(mapies), len(main_axes)):
+        fig.delaxes(main_axes[i])
+        if transform_axes[i] is not None:
+            fig.delaxes(transform_axes[i])
+
     for i, (m_ax, t_ax, mapie, y_pred, y_pi, title) in enumerate(
         zip(main_axes, transform_axes, mapies, y_preds, y_pis, titles)
     ):
@@ -287,19 +292,77 @@ def plot_figure(mapies, y_preds, y_pis, titles, show_transform=False):
     plt.show()
 
 
-def plot_widths(titles, y_pis):
+def compute_conditional_coverage(X_test, y_test, y_pis, bins_width=0.5):
+    """
+    Computes the conditional coverage based on the prediction intervals.
+    """
+    bin_edges = np.arange(np.min(X_test), np.max(X_test) + bins_width,
+                          bins_width)
+    coverage = np.zeros(len(bin_edges) - 1)
+
+    for i in range(len(bin_edges) - 1):
+        in_bin = np.logical_and(X_test[:, 0] >= bin_edges[i],
+                                X_test[:, 0] < bin_edges[i + 1])
+        coverage[i] = np.mean(np.logical_and(
+            y_test[in_bin] >= y_pis[in_bin, 0, 0],
+            y_test[in_bin] <= y_pis[in_bin, 1, 0]
+        ))
+
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    return bin_centers, coverage
+
+
+def plot_evaluation(titles, y_pis, X_test, y_test):
     sort_order = np.argsort(X_test[:, 0])
     cp = plt.get_cmap('tab10').colors
-    plt.figure(figsize=(8, 6))
-    for i, (title, pi) in enumerate(zip(titles, y_pis)):
-        plt.plot(X_test[sort_order, 0],
-                 (pi[sort_order, 1, 0] - pi[sort_order, 0, 0]),
-                 lw=2, color=mcolors.rgb2hex(cp[i]), label=title)
 
-    plt.title("Prediction interval width")
-    plt.xlabel("X")
-    plt.ylabel("Width")
-    plt.legend(fontsize=14)
+    # Determine the number of rows needed
+    num_plots = len(titles)
+    num_rows = (num_plots + 2) // 3
+
+    fig, axs = plt.subplots(nrows=num_rows, ncols=3, figsize=(12, 4*num_rows))
+    for ax in axs[:, 2]:  # To add a blank column on the right
+        fig.delaxes(ax)
+    axs = axs[:, :2].flatten()  # Flatten to make indexing easier
+
+    cov_lim = [1, 0]
+    width_lim = [np.inf, 0]
+    for i in range(num_rows):
+        for j, pi in enumerate(y_pis[3*i: 3*(i+1)]):
+            c = mcolors.rgb2hex(cp[i*3+j])
+            # Conditionnal coverage
+            bin_centers, coverage = compute_conditional_coverage(X_test,
+                                                                 y_test, pi)
+            axs[i * 2].axhline(y=1-ALPHA, color='black', linestyle="--")
+            axs[i * 2].plot(bin_centers, coverage, lw=2, color=c)
+            cov_lim[0] = min(cov_lim[0], min(coverage))
+            cov_lim[1] = max(cov_lim[1], max(coverage))
+            # Interval width
+            width = pi[sort_order, 1, 0] - pi[sort_order, 0, 0]
+            axs[i * 2 + 1].plot(
+                X_test[sort_order, 0],
+                width,
+                lw=2, color=c, label=titles[i*3+j]
+            )
+            width_lim[0] = min(width_lim[0], min(width))
+            width_lim[1] = max(width_lim[1], max(width))
+        axs[i * 2 + 1].legend(fontsize=10)
+        axs[i * 2 + 1].set_title("Prediction Interval Width")
+        axs[i * 2 + 1].set_xlabel("X")
+        axs[i * 2 + 1].set_ylabel("Width")
+        axs[i * 2].legend([f"alpha={ALPHA}"], fontsize=10)
+        axs[i * 2].set_title("Conditional Coverage")
+        axs[i * 2].set_xlabel("X (bins of 0.5 width)")
+        axs[i * 2].set_ylabel("Coverage")
+
+    # Remove unused subplots
+    for j in range(num_plots * 2, len(axs)):
+        fig.delaxes(axs[j])
+
+    for ax_cov, ax_width in zip(axs[::2], axs[1::2]):
+        ax_cov.set_ylim([cov_lim[0]*0.95, cov_lim[1]*1.05])
+        ax_width.set_ylim([width_lim[0]*0.95, width_lim[1]*1.05])
+
     plt.tight_layout()
     plt.show()
 
@@ -315,10 +378,11 @@ def plot_widths(titles, y_pis):
 mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp]
 y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_ccp]
 y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp]
-titles = ["Basic Split (new implementation)", "CV+", "CQR", "CCP (default)"]
+titles = ["Basic Split", "CV+", "CQR", "CCP (default)"]
 
 plot_figure(mapies, y_preds, y_pis, titles)
-plot_widths(titles, y_pis)
+plot_evaluation(titles, y_pis, X_test, y_test)
+
 
 ##############################################################################
 # 5.2. How to improve the results?
@@ -334,12 +398,12 @@ plot_widths(titles, y_pis)
 #    constant, and will results in a prediction interval of constant width
 #    (like the basic split CP)
 #  - :math:`\phi : X \to (1, X)`, will result in a prediction interval of width
-#    equal to: a constant + a value proportional to the value of $X$ (it seems
-#    a good idea here, as the uncertainty increase with $X$)
+#    equal to: a constant + a value proportional to the value of :math:`X`
+#    (it seems a good idea here, as the uncertainty increase with :math:`X`)
 #  - :math:`\phi : X \to (1, X^3)`, will result in a prediction
 #    interval of width equal to: a constant
-#    + a value proportional to the value of $X^3$ (it seems
-#    a good idea here, as the uncertainty increase with $X$)
+#    + a value proportional to the value of :math:`X^3` (it seems
+#    a good idea here, as the uncertainty increase with :math:`X`)
 #  - :math:`\phi : X \to y_{pred}`, will result in a prediction interval of
 #    width proportional to the prediction (It is sometime the case, when the
 #    uncertainty is proportionnal to the value).
@@ -347,9 +411,8 @@ plot_widths(titles, y_pis)
 # Note that using :math:`\phi : X \to y_{pred}` is somewhat similar to
 # using a standard Split CP (``method="base"`` in ``MapieRegressor``)
 # with a :class:`~mapie.conformity_scores.GammaConformityScore``.
+#
 # Using custom definition:
-# Note: calibrator1_bis is equivalent to calibrator1, as bias=True
-# adds a column of ones
 
 calibrator1 = CustomCCP([lambda X: np.ones(len(X))])
 calibrator1_bis = CustomCCP(bias=True)
@@ -357,18 +420,23 @@ calibrator2 = CustomCCP([lambda X: X], bias=True)
 calibrator3 = CustomCCP([lambda X: X**3], bias=True)
 
 ##############################################################################
-# Using ``PolynomialCCP``:
-# degree=1 is equivalent to degree=[0, 1]
-#
-# Warning, degree=2 is equivalent to degree=[0, 1, 2]
+# Note:
+#  - ``calibrator1_bis`` is equivalent to ``calibrator1``, as ``bias=True``
+#    adds a column of ones
+
+##############################################################################
+# Using :class:`~mapie.calibrators.PolynomialCCP`:
 
 calibrator1 = PolynomialCCP(0)
 calibrator2 = PolynomialCCP(1)
 calibrator3 = PolynomialCCP([0, 3])
 
 ##############################################################################
-# Note: adding ``0`` in the ``degree`` argument list is equivalent to having
-# ``bias=True``, as :math:`X^0=1`
+# Note:
+#  - adding ``0`` in the ``degree`` argument list is equivalent to having
+#    ``bias=True``, as :math:`X^0=1`
+#  - degree=1 is equivalent to degree=[0, 1]
+#  - Warning, degree=2 is equivalent to degree=[0, 1, 2]
 
 # ================== CCP 1  ==================
 mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator1, alpha=ALPHA,
@@ -398,7 +466,7 @@ titles = ["Basic Split", "CV+", "CQR",
           "CCP (1)", "CCP (1, X)", "CCP (1, X**3)"]
 
 plot_figure(mapies, y_preds, y_pis, titles)
-plot_widths(titles, y_pis)
+plot_evaluation(titles, y_pis, X_test, y_test)
 
 ##############################################################################
 # Note: The small width different between ``Basic Split`` and ``CCP 1``
@@ -454,11 +522,10 @@ titles = ["Basic Split", "CV+", "CQR", "CCP 2 groups, 1 and 1",
           "CCP 2 groups, 1 and X", "CCP 2 groups, polynomials"]
 
 plot_figure(mapies, y_preds, y_pis, titles)
-plot_widths(titles, y_pis)
+plot_evaluation(titles, y_pis, X_test, y_test)
 
 ##############################################################################
-# 5.4. Improve the performances without prior knowledge:
-# :class:`~mapie.calibrators.GaussianCCP`
+# 5.4. Improve the performances without prior knowledge
 # --------------------------------------------------------------------------
 # We can use :class:`~mapie.calibrators.GaussianCCP` calibrators,
 # if we don't have prior information
@@ -501,10 +568,11 @@ titles = ["Basic Split", "CV+", "CQR", "CCP, 5 points, s=1 (under-fit)",
           "CCP, 30 points, s=0.25 (good calibrator)"]
 
 plot_figure(mapies, y_preds, y_pis, titles, show_transform=True)
-plot_widths(titles, y_pis)
+plot_evaluation(titles, y_pis, X_test, y_test)
 
 ##############################################################################
-# #### Using gaussian distances from randomly sampled points is a good solution
+# Using gaussian distances from randomly sampled points is a good solution
 # to have an overall good adaptativity.
-# #### $\to$ We just need to find the good standard deviation parameters
+#
+# :math:`\to` We just need to find the good standard deviation parameters
 # to have a good trade-off between adaptativity and overfitting.
