@@ -151,7 +151,7 @@ plt.show()
 # experiment is stochastic, because of the finite number of calibration and
 # test samples.
 # We will only compute 50 trials, because of the documentation
-# computational power limitations. 
+# computational power limitations.
 
 ALPHA = 0.1
 

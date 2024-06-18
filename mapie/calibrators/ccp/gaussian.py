@@ -90,7 +90,7 @@ class GaussianCCP(CCPCalibrator):
 
         Note: This is a default suggestion of randomization,
         which allow to have in the same time wide and narrow gaussians
-        (with a gigger range of multipliers for huge amount of points).
+        (with a bigger range of multipliers for huge amount of points).
 
         You can use fully custom sigma values, buy passing to the
         ``points`` argument, a different sigma value for each point.
@@ -133,16 +133,6 @@ class GaussianCCP(CCPCalibrator):
         If ``None``, is sampled from a normal distribution.
 
         By default ``None``.
-
-    multipliers: Optional[List[Callable]]
-        List of function which take any arguments of ``X, y_pred, z``
-        and return an array of shape ``(n_samples, 1)``.
-        The result of ``calibrator.transform(X, y_pred, z)`` will be multiply
-        by the result of each function of ``multipliers``.
-
-        Note: When you multiply a ``CCPCalibrator`` with a function, it create
-        a new instance of ``CCPCalibrator`` (with the same arguments), but
-        add the function to the ``multipliers`` list.
 
     reg_param: Optional[float]
         Constant that multiplies the L2 term, controlling regularization
@@ -210,7 +200,6 @@ class GaussianCCP(CCPCalibrator):
         bias: bool = False,
         normalized: bool = True,
         init_value: Optional[ArrayLike] = None,
-        multipliers: Optional[List[Callable]] = None,
         reg_param: Optional[float] = None,
     ) -> None:
         self.points = points
@@ -219,8 +208,9 @@ class GaussianCCP(CCPCalibrator):
         self.bias = bias
         self.normalized = normalized
         self.init_value = init_value
-        self.multipliers = multipliers
         self.reg_param = reg_param
+
+        self._multipliers: Optional[List[Callable]] = None
 
     def _check_random_sigma(self) -> bool:
         """

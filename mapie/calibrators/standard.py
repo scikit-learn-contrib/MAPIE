@@ -59,7 +59,8 @@ class StandardCalibrator(BaseCalibrator):
         optim_kwargs: Dict
             Other argument, used in sklear.optimize.minimize
         """
-        assert self.alpha is not None
+        check_required_arguments(self.alpha)
+        self.alpha = cast(float, self.alpha)
 
         if self.sym:
             alpha_ref = 1-self.alpha

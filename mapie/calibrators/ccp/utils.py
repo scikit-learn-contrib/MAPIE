@@ -533,3 +533,21 @@ def calibrator_optim_objective(
         y_true=conformity_scores, y_pred=calibrator_preds.dot(beta),
         alpha=q, sample_weight=sample_weight,
     ) + reg_val
+
+
+def check_required_arguments(*args) -> None:
+    """
+    Calibrators based on ``BaseCalibrator`` class, can have custom required
+    arguments in the ``fit`` and ``predict`` methods. They need to be defined
+    with default value, to match de ``BaseCalibrator`` class signature.
+    However, if the argument value is None, we raise an error (as the argument
+    is actually required).
+
+    Raises
+    ------
+    ValueError
+        If one of the passed argument is ``None``.
+    """
+    if any(arg is None for arg in args):
+        raise ValueError("One of the required arguments is None."
+                         "Fix the calibrator method definition.")

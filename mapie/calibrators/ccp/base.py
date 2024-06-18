@@ -83,16 +83,6 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         By default ``None``.
 
-    multipliers: Optional[List[Callable]]
-        List of function which take any arguments of ``X, y_pred, z``
-        and return an array of shape ``(n_samples, 1)``.
-        The result of ``calibrator.transform(X, y_pred, z)`` will be multiply
-        by the result of each function of ``multipliers``.
-
-        Note: When you multiply a ``CCPCalibrator`` with a function, it create
-        a new instance of ``CCPCalibrator`` (with the same arguments), but
-        add the function to the ``multipliers`` list.
-
     reg_param: Optional[float]
         Constant that multiplies the L2 term, controlling regularization
         strength. ``alpha`` must be a non-negative
@@ -142,15 +132,15 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         bias: bool = False,
         normalized: bool = False,
         init_value: Optional[ArrayLike] = None,
-        multipliers: Optional[List[Callable]] = None,
         reg_param: Optional[float] = None,
     ) -> None:
         self.functions = functions
         self.bias = bias
         self.normalized = normalized
         self.init_value = init_value
-        self.multipliers = multipliers
         self.reg_param = reg_param
+
+        self._multipliers: Optional[List[Callable]] = None
 
     @abstractmethod
     def _check_fit_parameters(
@@ -205,6 +195,26 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         else:
             return init_value
 
+    def _check_optimization_success(
+        self, *optimization_results: OptimizeResult
+    ) -> None:
+        """
+        _summary_
+
+        Parameters
+        ----------
+        *optimization_resutls: OptimizeResult
+            Scipy optimization outputs
+        """
+        for res in optimization_results:
+            if not res.success:
+                warnings.warn(
+                    "WARNING: The optimization process for the upper bound "
+                    f"failed with the following error: \n"
+                    f"{res.message}\n"
+                    "The returned prediction interval may be inaccurate."
+                )
+
     def fit_params(
         self,
         X: ArrayLike,
@@ -237,7 +247,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         # Fit the calibrator
         self._check_fit_parameters(X, y_pred, z)
         # Do some checks
-        check_multiplier(self.multipliers, X, y_pred, z)
+        check_multiplier(self._multipliers, X, y_pred, z)
         result = self.transform(X, y_pred, z)
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
@@ -290,7 +300,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             Can be any of : ``method, jac, hess, hessp, bounds, constraints,
             tol, callback, options``
         """
-        assert self.alpha is not None
+        check_required_arguments(self.alpha)
+        self.alpha = cast(float, self.alpha)
 
         n_calib = _num_samples(X_calib)
         if self.sym:
@@ -315,7 +326,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         not_nan_index = np.where(~np.isnan(conformity_scores_calib))[0]
         # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
 
-        optimal_beta_up = minimize(
+        optimal_beta_up = cast(OptimizeResult, minimize(
             calibrator_optim_objective, self.init_value_,
             args=(
                 cs_features[not_nan_index, :],
@@ -325,10 +336,10 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                 self.reg_param,
                 ),
             **optim_kwargs,
-            )
+            ))
 
         if not self.sym:
-            optimal_beta_low = minimize(
+            optimal_beta_low = cast(OptimizeResult, minimize(
                 calibrator_optim_objective, self.init_value_,
                 args=(
                     cs_features[not_nan_index, :],
@@ -338,25 +349,11 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                     self.reg_param,
                 ),
                 **optim_kwargs,
-            )
+            ))
         else:
             optimal_beta_low = optimal_beta_up
 
-        if not optimal_beta_up.success:
-            warnings.warn(
-                "WARNING: The optimization process for the upper bound "
-                f"failed with the following error: \n"
-                f"{optimal_beta_low.message}\n"
-                "The returned prediction interval may be inaccurate."
-            )
-        if (not self.sym
-           and not optimal_beta_low.success):
-            warnings.warn(
-                "WARNING: The optimization process for the lower bound "
-                f"failed with the following error: \n"
-                f"{optimal_beta_low.message}\n"
-                "The returned prediction interval may be inaccurate."
-            )
+        self._check_optimization_success(optimal_beta_up, optimal_beta_low)
 
         self.beta_up_ = cast(Tuple[NDArray, bool],
                              (optimal_beta_up.x, optimal_beta_up.success))
@@ -365,6 +362,18 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                                optimal_beta_low.success))
 
         return self
+
+    def _check_unconsistent_features(self, cs_features: NDArray) -> None:
+        """
+        Check if the ``cs_features`` array has rows full of zeros.
+        """
+        if np.any(np.all(cs_features == 0, axis=1)):
+            warnings.warn("WARNING: At least one row of the transformation "
+                          "calibrator.transform(X, y_pred, z) is full of "
+                          "zeros. It will result in a prediction interval of "
+                          "zero width. Consider changing the `CCPCalibrator` "
+                          "definintion.\nFix: Use `bias=True` "
+                          "in the `CCPCalibrator` definition.")
 
     def transform(
         self,
@@ -397,22 +406,18 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
         cs_features = concatenate_functions(self.functions_, params_mapping,
-                                            self.multipliers)
+                                            self._multipliers)
         if self.normalized:
-            norm = np.linalg.norm(cs_features, axis=1).reshape(-1, 1)
+            norm = cast(NDArray,
+                        np.linalg.norm(cs_features, axis=1)).reshape(-1, 1)
             cs_features[(abs(norm) == 0)[:, 0], :] = np.ones(
                 cs_features.shape[1])
 
             norm[abs(norm) == 0] = 1
             cs_features /= norm
 
-        if np.any(np.all(cs_features == 0, axis=1)):
-            warnings.warn("WARNING: At least one row of the transformation "
-                          "calibrator.transform(X, y_pred, z) is full of "
-                          "zeros. It will result in a prediction interval of "
-                          "zero width. Consider changing the `CCPCalibrator` "
-                          "definintion.\nFix: Use `bias=True` "
-                          "in the `CCPCalibrator` definition.")
+        self._check_unconsistent_features(cs_features)
+
         return cs_features
 
     def predict(
@@ -443,7 +448,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         NDArray
             Transformation
         """
-        assert y_pred is not None
+        check_required_arguments(y_pred)
 
         cs_features = self.transform(X, y_pred, z)
 
@@ -475,18 +480,18 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         Returns
         -------
         CCPCalibrator
-            self, with ``funct`` append in the ``multipliers`` argument list.
+            self, with ``funct`` append in the ``_multipliers`` argument list.
         """
         if funct is None:
             return self
         else:
             compile_functions_warnings_errors([funct])
-            new_phi = cast(CCPCalibrator, clone(self))
-            if new_phi.multipliers is None:
-                new_phi.multipliers = [funct]
+            new_calibrator = cast(CCPCalibrator, clone(self))
+            if new_calibrator._multipliers is None:
+                new_calibrator._multipliers = [funct]
             else:
-                new_phi.multipliers.append(funct)
-            return new_phi
+                new_calibrator._multipliers.append(funct)
+            return new_calibrator
 
     def __rmul__(self, other) -> CCPCalibrator:
         """

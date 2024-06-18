@@ -80,16 +80,6 @@ class CustomCCP(CCPCalibrator):
 
         By default ``None``.
 
-    multipliers: Optional[List[Callable]]
-        List of function which take any arguments of ``X, y_pred, z``
-        and return an array of shape ``(n_samples, 1)``.
-        The result of ``calibrator.transform(X, y_pred, z)`` will be multiply
-        by the result of each function of ``multipliers``.
-
-        Note: When you multiply a ``CCPCalibrator`` with a function, it create
-        a new instance of ``CCPCalibrator`` (with the same arguments), but
-        add the function to the ``multipliers`` list.
-
     reg_param: Optional[float]
         Constant that multiplies the L2 term, controlling regularization
         strength. ``alpha`` must be a non-negative
@@ -154,11 +144,9 @@ class CustomCCP(CCPCalibrator):
         bias: bool = False,
         normalized: bool = False,
         init_value: Optional[ArrayLike] = None,
-        multipliers: Optional[List[Callable]] = None,
         reg_param: Optional[float] = None,
     ) -> None:
-        super().__init__(functions, bias, normalized, init_value,
-                         multipliers, reg_param)
+        super().__init__(functions, bias, normalized, init_value, reg_param)
 
     def _check_fit_parameters(
         self,
@@ -217,13 +205,13 @@ class CustomCCP(CCPCalibrator):
 
             By default ``None``
         """
-        check_multiplier(self.multipliers, X, y_pred, z)
+        check_multiplier(self._multipliers, X, y_pred, z)
         self._check_fit_parameters(X, y_pred, z)
 
         for phi in self.functions_:
             if isinstance(phi, CCPCalibrator):
                 phi.fit_params(X, y_pred, z)
-                check_multiplier(phi.multipliers, X, y_pred, z)
+                check_multiplier(phi._multipliers, X, y_pred, z)
         self.is_fitted_ = True
 
         result = self.transform(X, y_pred, z)
