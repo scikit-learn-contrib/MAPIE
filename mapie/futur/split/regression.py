@@ -8,7 +8,7 @@ from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.pipeline import Pipeline
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators.ccp import check_calibrator
+from mapie.calibrators.utils import check_calibrator
 from mapie.conformity_scores import ConformityScore
 from mapie.futur.split.base import BaseCalibrator, SplitCP
 from mapie.utils import (check_conformity_score, check_estimator_regression,

@@ -19,10 +19,11 @@ z = X[:, -2:]
 
 @pytest.mark.parametrize("sym", [True, False])
 def test_calibrator_fit(sym: bool) -> None:
-    """Test that initialization does not crash."""
+    """Test that calibrator has correct sym parameter"""
     mapie = SplitCPRegressor(calibrator=StandardCalibrator(), alpha=0.1,
                              conformity_score=AbsoluteConformityScore(sym=sym))
     mapie.fit(X, y, z=z)
+    assert mapie.calibrator_.sym == sym
 
 
 @pytest.mark.parametrize("sym", [True, False])

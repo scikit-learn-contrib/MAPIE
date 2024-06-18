@@ -10,6 +10,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
                                    PolynomialCCP)
+from mapie.calibrators.ccp.utils import check_required_arguments
 from mapie.regression import SplitCPRegressor
 
 random_state = 1
@@ -21,7 +22,7 @@ X, y = make_regression(
 z = X[:, -2:]
 
 PHI = [
-    CustomCCP([lambda X: np.ones((len(X), 1))]),
+    CustomCCP(lambda X: np.ones((len(X), 1))),
     CustomCCP(None, bias=True),
     CustomCCP([lambda X: X]),
     CustomCCP([lambda X: X, lambda z: z]),
@@ -89,16 +90,12 @@ GAUSS_NO_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
 
 
 # ======== CustomCCP =========
-@pytest.mark.parametrize("functions", [
-    lambda X: X, [lambda X: X],
-    [lambda X: X, PolynomialCCP(2)],
-    [lambda X: X, PolynomialCCP(2), GaussianCCP(2)],
-])
-def test_custom_phi_functions(functions: Any) -> None:
+@pytest.mark.parametrize("calibrator", PHI)
+def test_custom_phi_functions(calibrator: Any) -> None:
     """Test that initialization does not crash."""
-    mapie = SplitCPRegressor(calibrator=CustomCCP(functions), alpha=0.1)
+    mapie = SplitCPRegressor(calibrator=calibrator, alpha=0.1)
     mapie.fit(X, y, z=z)
-    mapie.predict(X)
+    mapie.predict(X, z=z)
 
 
 @pytest.mark.parametrize("calibrator, n_out_raw", zip(PHI, N_OUT))
@@ -288,3 +285,16 @@ def test_gauss_no_need_calib(ind: int) -> None:
         **GAUSS_NEED_FIT_SETTINGS[ind]), alpha=0.1)
     mapie.fit(X, y, z=z)
     check_is_fitted(mapie.calibrator_, mapie.calibrator_.fit_attributes)
+
+
+@pytest.mark.parametrize("arg1", ["a", None, 1])
+@pytest.mark.parametrize("arg2", ["a", None, 1])
+def test_check_required_arguments(arg1: Any, arg2: Any) -> None:
+    """
+    Test that a ValueError is raised if any of the given argument is ``None``.
+    """
+    if arg1 is None or arg2 is None:
+        with pytest.raises(ValueError):
+            check_required_arguments(arg1, arg2)
+    else:
+        check_required_arguments(arg1, arg2)

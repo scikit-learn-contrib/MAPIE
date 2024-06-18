@@ -1,6 +1,6 @@
 from .base import CCPCalibrator
 from .custom import CustomCCP
-from .gaussian import GaussianCCP, check_calibrator
+from .gaussian import GaussianCCP
 from .polynomial import PolynomialCCP
 
 __all__ = [
@@ -8,5 +8,4 @@ __all__ = [
     "CustomCCP",
     "PolynomialCCP",
     "GaussianCCP",
-    "check_calibrator",
 ]
