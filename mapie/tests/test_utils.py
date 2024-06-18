@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Tuple, Union
-
+from typing import Any, Optional, Tuple
 import numpy as np
 import pytest
 import re
@@ -512,8 +511,56 @@ def test_check_no_agg_cv_value_error(cv: Any) -> None:
         check_no_agg_cv(X_toy, cv, array)
 
 
-@pytest.mark.parametrize("n_samples", [-5.5, -4, 0, 1.2])
-def test_invalid_n_samples(n_samples: Union[float, int]) -> None:
+@pytest.mark.parametrize("n_samples", [-4, -2, -1])
+def test_invalid_n_samples_int_negative(n_samples: int) -> None:
+    """Test that invalid n_samples raise errors."""
+    X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    indices = X.copy()
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            r"Invalid n_samples. Allowed values "
+            r"are float in the range (0.0, 1.0) or"
+            r" int in the range [1, inf)"
+        )
+    ):
+        check_n_samples(X=X, n_samples=n_samples, indices=indices)
+
+
+@pytest.mark.parametrize("n_samples", [0.002, 0.003, 0.04])
+def test_invalid_n_samples_int_zero(n_samples: int) -> None:
+    """Test that invalid n_samples raise errors."""
+    X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    indices = X.copy()
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            r"The value of n_samples is too small. "
+            r"You need to increase it so that n_samples*X.shape[0] > 1"
+            r"otherwise n_samples should be an int"
+        )
+    ):
+        check_n_samples(X=X, n_samples=n_samples, indices=indices)
+
+
+@pytest.mark.parametrize("n_samples", [-5.5, -4.3, -0.2])
+def test_invalid_n_samples_float_negative(n_samples: float) -> None:
+    """Test that invalid n_samples raise errors."""
+    X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    indices = X.copy()
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            r"Invalid n_samples. Allowed values "
+            r"are float in the range (0.0, 1.0) or"
+            r" int in the range [1, inf)"
+        )
+    ):
+        check_n_samples(X=X, n_samples=n_samples, indices=indices)
+
+
+@pytest.mark.parametrize("n_samples", [1.2, 2.5, 3.4])
+def test_invalid_n_samples_float_greater_than_1(n_samples: float) -> None:
     """Test that invalid n_samples raise errors."""
     X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     indices = X.copy()

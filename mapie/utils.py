@@ -1382,13 +1382,19 @@ def check_n_samples(
     ------
     ValueError
         If n_samples is not an int in the range [1, inf)
-        or a float int he range (0.0, 1.0)
+        or a float in the range (0.0, 1.0)
     """
     if n_samples is None:
         n_samples = len(indices)
     elif isinstance(n_samples, float):
         if 0 < n_samples < 1:
             n_samples = int(np.floor(n_samples * X.shape[0]))
+            if n_samples == 0:
+                raise ValueError(
+                    "The value of n_samples is too small. "
+                    "You need to increase it so that n_samples*X.shape[0] > 1"
+                    "otherwise n_samples should be an int"
+                    )
         else:
             raise ValueError(
                 "Invalid n_samples. Allowed values "
