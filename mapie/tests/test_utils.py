@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import re
 from typing import Any, Optional, Tuple
+
 import numpy as np
 import pytest
-import re
 from numpy.random import RandomState
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
@@ -17,11 +18,10 @@ from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_array_inf, check_array_nan, check_arrays_length,
                          check_binary_zero_one, check_cv, check_gamma,
                          check_lower_upper_bounds, check_n_features_in,
-                         check_n_jobs, check_no_agg_cv, check_n_samples,
-                         check_null_weight,
-                         check_number_bins, check_split_strategy,
-                         check_verbose, compute_quantiles, fit_estimator,
-                         get_binning_groups)
+                         check_n_jobs, check_n_samples, check_no_agg_cv,
+                         check_null_weight, check_number_bins,
+                         check_split_strategy, check_verbose,
+                         compute_quantiles, fit_estimator, get_binning_groups)
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -543,24 +543,8 @@ def test_invalid_n_samples_int_zero(n_samples: int) -> None:
         check_n_samples(X=X, n_samples=n_samples, indices=indices)
 
 
-@pytest.mark.parametrize("n_samples", [-5.5, -4.3, -0.2])
-def test_invalid_n_samples_float_negative(n_samples: float) -> None:
-    """Test that invalid n_samples raise errors."""
-    X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    indices = X.copy()
-    with pytest.raises(
-        ValueError,
-        match=re.escape(
-            r"Invalid n_samples. Allowed values "
-            r"are float in the range (0.0, 1.0) or"
-            r" int in the range [1, inf)"
-        )
-    ):
-        check_n_samples(X=X, n_samples=n_samples, indices=indices)
-
-
-@pytest.mark.parametrize("n_samples", [1.2, 2.5, 3.4])
-def test_invalid_n_samples_float_greater_than_1(n_samples: float) -> None:
+@pytest.mark.parametrize("n_samples", [-5.5, -4.3, -0.2, 1.2, 2.5, 3.4])
+def test_invalid_n_samples_float(n_samples: float) -> None:
     """Test that invalid n_samples raise errors."""
     X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     indices = X.copy()
