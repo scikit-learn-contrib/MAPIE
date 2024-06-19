@@ -23,7 +23,7 @@ class Subsample(BaseCrossValidator):
     ----------
     n_resamplings : int
         Number of resamplings. By default ``30``.
-    n_samples: float
+    n_samples: Union[int, float]
         Number of samples in each resampling. By default ``None``,
         the size of the training set. If it is between 0 and 1,
         it becomes the fraction of samples
