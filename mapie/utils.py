@@ -1403,8 +1403,8 @@ def check_n_samples(
                 )
     elif isinstance(n_samples, int) and n_samples <= 0:
         raise ValueError(
-                "Invalid n_samples. Allowed values "
-                "are float in the range (0.0, 1.0) or"
-                " int in the range [1, inf)"
-            )
+             "Invalid n_samples. Allowed values "
+             "are float in the range (0.0, 1.0) or"
+             " int in the range [1, inf)"
+             )
     return int(n_samples)
