@@ -5,12 +5,13 @@ History
 0.8.x (2024-xx-xx)
 ------------------
 
+* Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
+
 0.8.6 (2024-06-14)
 ------------------
 
 * Fix the quantile formula to ensure valid coverage (deal with infinite interval production and asymmetric conformal scores).
 * Fix sphinx dependencies
-* Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
 
 0.8.5 (2024-06-07)
 ------------------
