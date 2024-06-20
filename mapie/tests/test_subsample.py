@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Union
+
 import numpy as np
 import pytest
 
@@ -76,6 +78,24 @@ def test_n_samples_none(n_resamplings: int) -> None:
     assert len(val_set) == 0
 
 
+@pytest.mark.parametrize("n_samples", [0.4, 0.6, 3, 6])
+@pytest.mark.parametrize("n_resamplings", [2, 3, 4])
+def test_split_samples_Subsample(n_resamplings: int,
+                                 n_samples: Union[int, float]) -> None:
+    """Test that outputs of subsamplings are all different."""
+    X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    cv = Subsample(n_resamplings=n_resamplings,
+                   n_samples=n_samples, replace=False, random_state=0)
+    trains = [x[0] for x in cv.split(X)]
+    tests = [x[1] for x in cv.split(X)]
+    for i in range(n_resamplings):
+        for j in range(i + 1, n_resamplings):
+            with np.testing.assert_raises(AssertionError):
+                np.testing.assert_equal(trains[i], trains[j])
+            with np.testing.assert_raises(AssertionError):
+                np.testing.assert_equal(tests[i], tests[j])
+
+
 def test_default_parameters_BlockBootstrap() -> None:
     """Test default values of Subsample."""
     cv = BlockBootstrap()
@@ -131,3 +151,21 @@ def test_split_BlockBootstrap_error() -> None:
     cv = BlockBootstrap()
     with pytest.raises(ValueError, match=r".*Exactly one argument*"):
         next(cv.split(X))
+
+
+@pytest.mark.parametrize("length", [2, 3, 4])
+@pytest.mark.parametrize("n_resamplings", [2, 3, 4])
+def test_split_samples_BlockBootstrap(n_resamplings: int,
+                                      length: int) -> None:
+    """Test that outputs of subsamplings are all different."""
+    X = np.arange(31)
+    cv = BlockBootstrap(n_resamplings=n_resamplings,
+                        length=length, random_state=0)
+    trains = [x[0] for x in cv.split(X)]
+    tests = [x[1] for x in cv.split(X)]
+    for i in range(n_resamplings):
+        for j in range(i + 1, n_resamplings):
+            with np.testing.assert_raises(AssertionError):
+                np.testing.assert_equal(trains[i], trains[j])
+            with np.testing.assert_raises(AssertionError):
+                np.testing.assert_equal(tests[i], tests[j])
