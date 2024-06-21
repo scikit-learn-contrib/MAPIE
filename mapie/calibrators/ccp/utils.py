@@ -527,7 +527,7 @@ def calibrator_optim_objective(
         Scalar value to minimize, being the sum of the pinball losses.
     """
     if reg_param is not None:
-        reg_val = float(reg_param * np.linalg.norm(beta))
+        reg_val = float(reg_param * np.linalg.norm(beta, ord=1))
     else:
         reg_val = 0
     return fast_mean_pinball_loss(
