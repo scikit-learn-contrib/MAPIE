@@ -18,7 +18,7 @@ class CustomCCP(CCPCalibrator):
     prediction method proposed by Gibbs et al. (2023)
     in "Conformal Prediction With Conditional Guarantees".
 
-    The goal of to learn the quantile of the conformity scores distribution,
+    The goal is to learn the quantile of the conformity scores distribution,
     to built the prediction interval, not with a constant ``q`` (as it is the
     case in the standard CP), but with a function ``q(X)`` which is adaptative
     as it depends on ``X``.

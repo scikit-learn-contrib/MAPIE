@@ -15,7 +15,7 @@ class PolynomialCCP(CCPCalibrator):
     prediction method proposed by Gibbs et al. (2023)
     in "Conformal Prediction With Conditional Guarantees".
 
-    The goal of to learn the quantile of the conformity scores distribution,
+    The goal is to learn the quantile of the conformity scores distribution,
     to built the prediction interval, not with a constant ``q`` (as it is the
     case in the standard CP), but with a function ``q(X)`` which is adaptative
     as it depends on ``X``.
@@ -74,7 +74,7 @@ class PolynomialCCP(CCPCalibrator):
         will result in a bounded interval prediction width, avoiding the width
         to explode to +inf or crash to zero. It is particularly intersting when
         you know that the conformity scores are bounded. It also prevent the
-        interval to have a interval of zero width for out-of-distribution or
+        interval to have an interval of zero width for out-of-distribution or
         new samples. On the opposite, it is not recommended if the conformity
         scores can vary a lot.
 
