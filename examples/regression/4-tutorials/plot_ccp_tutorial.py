@@ -344,6 +344,11 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
                 width,
                 lw=2, color=c, label=titles[i*3+j]
             )
+            axs[i * 2 + 1].plot(
+                X_test[sort_order, 0],
+                test_pi[sort_order, 0] - test_pi[sort_order, 1],
+                lw=2, color='black', linestyle="--", label="Perfect Width"
+            )
             width_lim[0] = min(width_lim[0], min(width))
             width_lim[1] = max(width_lim[1], max(width))
         axs[i * 2 + 1].legend(fontsize=10)
