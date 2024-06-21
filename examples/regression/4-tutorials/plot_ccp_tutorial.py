@@ -344,7 +344,7 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
                 width,
                 lw=2, color=c, label=titles[i*3+j]
             )
-            
+
             width_lim[0] = min(width_lim[0], min(width))
             width_lim[1] = max(width_lim[1], max(width))
         perfect_width = test_pi[sort_order, 0] - test_pi[sort_order, 1]
@@ -355,7 +355,7 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
         )
         width_lim[0] = min(width_lim[0], min(perfect_width))
         width_lim[1] = max(width_lim[1], max(perfect_width))
-        
+
         axs[i * 2 + 1].legend(fontsize=10)
         axs[i * 2 + 1].set_title("Prediction Interval Width")
         axs[i * 2 + 1].set_xlabel("X")
