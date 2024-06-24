@@ -37,7 +37,7 @@ jobs:
         SEARCH_QUERY: 'repo:scikit-learn-contrib/MAPIE is:issue created:${{ env.last_month }} -reason:"not planned"'
 
     - name: Create issue
-      uses: peter-evans/create-issue-from-file@v4
+      uses: thibaultcordier/create-issue-from-file@v4
       with:
         title: Monthly issue metrics report
         token: ${{ secrets.GITHUB_TOKEN }}
