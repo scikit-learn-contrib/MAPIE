@@ -914,16 +914,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-    ) -> Tuple[
-        Optional[ClassifierMixin],
-        Optional[Union[int, str, BaseCrossValidator]],
-        ArrayLike,
-        NDArray,
-        NDArray,
-        Optional[NDArray],
-        Optional[NDArray],
-        ArrayLike
-    ]:
+    ):
         """
         Perform several checks on class parameters.
 
