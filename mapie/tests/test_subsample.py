@@ -32,6 +32,50 @@ def test_split_SubSample() -> None:
     np.testing.assert_equal(tests, tests_expected)
 
 
+@pytest.mark.parametrize("n_samples", [4, 6, 8, 10])
+@pytest.mark.parametrize("n_resamplings", [1, 2, 3])
+def test_n_samples_int(n_samples: int,
+                       n_resamplings: int) -> None:
+    """Test outputs of subsamplings when n_samples is a int"""
+    X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    cv = Subsample(n_resamplings=n_resamplings, random_state=0,
+                   n_samples=n_samples, replace=False)
+    train_set = np.concatenate([x[0] for x in cv.split(X)])
+    val_set = np.concatenate([x[1] for x in cv.split(X)])
+    assert len(train_set) == n_samples*n_resamplings
+    assert len(val_set) == (X.shape[0] - n_samples)*n_resamplings
+
+
+@pytest.mark.parametrize("n_samples", [0.4, 0.6, 0.8, 0.9])
+@pytest.mark.parametrize("n_resamplings", [1, 2, 3])
+def test_n_samples_float(n_samples: float,
+                         n_resamplings: int) -> None:
+    """Test outputs of subsamplings when n_samples is a
+    float between 0 and 1."""
+    X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    cv = Subsample(n_resamplings=n_resamplings, random_state=0,
+                   n_samples=n_samples, replace=False)
+    train_set = np.concatenate([x[0] for x in cv.split(X)])
+    val_set = np.concatenate([x[1] for x in cv.split(X)])
+    assert len(train_set) == int(np.floor(n_samples*X.shape[0]))*n_resamplings
+    assert len(val_set) == (
+        (X.shape[0] - int(np.floor(n_samples * X.shape[0]))) *
+        n_resamplings
+    )
+
+
+@pytest.mark.parametrize("n_resamplings", [1, 2, 3])
+def test_n_samples_none(n_resamplings: int) -> None:
+    """Test outputs of subsamplings when n_samples is None."""
+    X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    cv = Subsample(n_resamplings=n_resamplings, random_state=0,
+                   replace=False)
+    train_set = np.concatenate([x[0] for x in cv.split(X)])
+    val_set = np.concatenate([x[1] for x in cv.split(X)])
+    assert len(train_set) == X.shape[0]*n_resamplings
+    assert len(val_set) == 0
+
+
 def test_default_parameters_BlockBootstrap() -> None:
     """Test default values of Subsample."""
     cv = BlockBootstrap()

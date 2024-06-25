@@ -40,4 +40,5 @@ Contributors
 * Pierre de Fréminville <pidefrem>
 * Ambros Marzetta <ambrosm>
 * Carl McBride Ellis <Carl-McBride-Ellis>
+* Baptiste Calot <baptiste.calot@capgemini.com>
 To be continued ...

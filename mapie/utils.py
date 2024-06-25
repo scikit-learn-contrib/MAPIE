@@ -411,6 +411,29 @@ def check_gamma(
         )
 
 
+def get_effective_calibration_samples(scores: NDArray, sym: bool):
+    """
+    Calculates the effective number of calibration samples.
+
+    Parameters
+    ----------
+    scores: NDArray
+        An array of scores.
+
+    sym: bool
+        A boolean indicating whether the scores are symmetric.
+
+    Returns
+    -------
+    n: int
+        The effective number of calibration samples.
+    """
+    n = np.sum(~np.isnan(scores))
+    if not sym:
+        n //= 2
+    return n
+
+
 def check_alpha_and_n_samples(
     alphas: Union[Iterable[float], float],
     n: int,
@@ -448,7 +471,7 @@ def check_alpha_and_n_samples(
     if isinstance(alphas, float):
         alphas = np.array([alphas])
     for alpha in alphas:
-        if n < 1 / alpha or n < 1 / (1 - alpha):
+        if n < np.max([1/alpha, 1/(1-alpha)]):
             raise ValueError(
                 "Number of samples of the score is too low,\n"
                 "1/alpha (or 1/(1 - alpha)) must be lower "
@@ -1297,3 +1320,56 @@ def check_arrays_length(*arrays: NDArray) -> None:
         raise ValueError(
                 "There are arrays with different length"
             )
+
+
+def check_n_samples(
+    X: NDArray,
+    n_samples: Optional[Union[float, int]],
+    indices: NDArray
+) -> int:
+    """
+    Check alpha and prepare it as a ArrayLike.
+
+    Parameters
+    ----------
+    n_samples: Union[float, int]
+        Can be a float between 0 and 1 or a int
+        Between 0 and 1, represent the part of data in the train sample
+        When n_samples is a int, it represents the number of elements
+        in the train sample
+
+    Returns
+    -------
+    int
+        n_samples
+
+    Raises
+    ------
+    ValueError
+        If n_samples is not an int in the range [1, inf)
+        or a float in the range (0.0, 1.0)
+    """
+    if n_samples is None:
+        n_samples = len(indices)
+    elif isinstance(n_samples, float):
+        if 0 < n_samples < 1:
+            n_samples = int(np.floor(n_samples * X.shape[0]))
+            if n_samples == 0:
+                raise ValueError(
+                    "The value of n_samples is too small. "
+                    "You need to increase it so that n_samples*X.shape[0] > 1"
+                    "otherwise n_samples should be an int"
+                    )
+        else:
+            raise ValueError(
+                "Invalid n_samples. Allowed values "
+                "are float in the range (0.0, 1.0) or"
+                " int in the range [1, inf)"
+                )
+    elif isinstance(n_samples, int) and n_samples <= 0:
+        raise ValueError(
+             "Invalid n_samples. Allowed values "
+             "are float in the range (0.0, 1.0) or"
+             " int in the range [1, inf)"
+             )
+    return int(n_samples)

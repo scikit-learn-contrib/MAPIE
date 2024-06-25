@@ -94,13 +94,13 @@ STRATEGIES = {
 }
 
 WIDTHS = {
-    "blockbootstrap_enbpi_mean_wopt": 3.76,
-    "blockbootstrap_enbpi_median_wopt": 3.76,
-    "blockbootstrap_enbpi_mean": 3.76,
-    "blockbootstrap_enbpi_median": 3.76,
-    "blockbootstrap_aci_mean": 3.87,
-    "blockbootstrap_aci_median": 3.90,
-    "prefit": 4.79,
+    "blockbootstrap_enbpi_mean_wopt": 3.86,
+    "blockbootstrap_enbpi_median_wopt": 3.85,
+    "blockbootstrap_enbpi_mean": 3.86,
+    "blockbootstrap_enbpi_median": 3.85,
+    "blockbootstrap_aci_mean": 3.96,
+    "blockbootstrap_aci_median": 3.95,
+    "prefit": 4.86,
 }
 
 COVERAGES = {
@@ -108,9 +108,9 @@ COVERAGES = {
     "blockbootstrap_enbpi_median_wopt": 0.946,
     "blockbootstrap_enbpi_mean": 0.952,
     "blockbootstrap_enbpi_median": 0.946,
-    "blockbootstrap_aci_mean": 0.95,
-    "blockbootstrap_aci_median": 0.95,
-    "prefit": 0.98,
+    "blockbootstrap_aci_mean": 0.96,
+    "blockbootstrap_aci_median": 0.96,
+    "prefit": 0.97,
 }
 
 
@@ -148,7 +148,9 @@ def test_predict_output_shape(
     mapie_ts_reg = MapieTimeSeriesRegressor(**STRATEGIES[strategy])
     (X, y) = dataset
     mapie_ts_reg.fit(X, y)
-    y_pred, y_pis = mapie_ts_reg.predict(X, alpha=alpha)
+    y_pred, y_pis = mapie_ts_reg.predict(
+        X, alpha=alpha, allow_infinite_bounds=True
+    )
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
     assert y_pis.shape == (X.shape[0], 2, n_alpha)
@@ -211,8 +213,8 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     mapie_multi = MapieTimeSeriesRegressor(n_jobs=-1, **STRATEGIES[strategy])
     mapie_single.fit(X_toy, y_toy)
     mapie_multi.fit(X_toy, y_toy)
-    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.2)
-    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.2)
+    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.5)
+    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.5)
     np.testing.assert_allclose(y_pred_single, y_pred_multi)
     np.testing.assert_allclose(y_pis_single, y_pis_multi)
 
@@ -290,10 +292,10 @@ def test_linear_regression_results(strategy: str) -> None:
 def test_results_prefit() -> None:
     """Test prefit results on a standard train/validation/test split."""
     X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X, y, test_size=1 / 10, random_state=random_state
+        X, y, test_size=1/3, random_state=random_state
     )
     X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val, y_train_val, test_size=1 / 9, random_state=random_state
+        X_train_val, y_train_val, test_size=1/2, random_state=random_state
     )
     estimator = LinearRegression().fit(X_train, y_train)
     mapie_ts_reg = MapieTimeSeriesRegressor(
@@ -404,10 +406,10 @@ def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
 def test_interval_prediction_with_beta_optimize() -> None:
     """Test use of ``beta_optimize`` in prediction."""
     X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X, y, test_size=1 / 10, random_state=random_state
+        X, y, test_size=1/3, random_state=random_state
     )
     X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val, y_train_val, test_size=1 / 9, random_state=random_state
+        X_train_val, y_train_val, test_size=1/2, random_state=random_state
     )
     estimator = LinearRegression().fit(X_train, y_train)
     mapie_ts_reg = MapieTimeSeriesRegressor(
@@ -423,8 +425,8 @@ def test_interval_prediction_with_beta_optimize() -> None:
     coverage = regression_coverage_score(
         y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
     )
-    np.testing.assert_allclose(width_mean, 4.22, rtol=1e-2)
-    np.testing.assert_allclose(coverage, 0.9, rtol=1e-2)
+    np.testing.assert_allclose(width_mean, 3.67, rtol=1e-2)
+    np.testing.assert_allclose(coverage, 0.916, rtol=1e-2)
 
 
 def test_deprecated_path_warning() -> None:
@@ -518,3 +520,24 @@ def test_method_error_in_update(monkeypatch: Any, method: str) -> None:
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         mapie_ts_reg.fit(X_toy, y_toy)
         mapie_ts_reg.update(X_toy, y_toy)
+
+
+@pytest.mark.parametrize("method", ["enbpi", "aci"])
+@pytest.mark.parametrize("cv", ["split", "prefit"])
+def test_methods_preservation_in_fit(method: str, cv: str) -> None:
+    """Test of enbpi and aci method preservation in the fit MapieRegressor"""
+
+    X_train_val, X_test, y_train_val, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=random_state
+    )
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train_val, y_train_val, test_size=0.5, random_state=random_state
+    )
+    estimator = LinearRegression().fit(X_train, y_train)
+    mapie_ts_reg = MapieTimeSeriesRegressor(
+        estimator=estimator,
+        cv=cv, method=method
+    )
+    mapie_ts_reg.fit(X_val, y_val)
+    mapie_ts_reg.update(X_test, y_test, gamma=0.1, alpha=0.1)
+    assert mapie_ts_reg.method == method

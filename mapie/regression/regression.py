@@ -426,7 +426,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         cv = check_cv(
             self.cv, test_size=self.test_size, random_state=self.random_state
         )
-        if self.cv in ["split", "prefit"] and self.method != "base":
+        if self.cv in ["split", "prefit"] and \
+                self.method in ["naive", "plus", "minmax"]:
             self.method = "base"
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
@@ -599,6 +600,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         allow_infinite_bounds: bool
             Allow infinite prediction intervals to be produced.
 
+            By default ``False``.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -613,6 +616,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self._check_ensemble(ensemble)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
 
+        # If alpha is None, predict the target without confidence intervals
         if alpha is None:
             y_pred = self.estimator_.predict(
                 X, ensemble, return_multi_pred=False
@@ -627,11 +631,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     UserWarning
                 )
 
+            # Check alpha and the number of effective calibration samples
             alpha_np = cast(NDArray, alpha)
             if not allow_infinite_bounds:
-                n = len(self.conformity_scores_)
+                n = get_effective_calibration_samples(
+                    self.conformity_scores_,
+                    self.conformity_score_function_.sym
+                )
                 check_alpha_and_n_samples(alpha_np, n)
 
+            # Predict the target with confidence intervals
             y_pred, y_pred_low, y_pred_up = \
                 self.conformity_score_function_.get_bounds(
                     X,
@@ -640,6 +649,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                     alpha_np,
                     ensemble=ensemble,
                     method=self.method,
-                    optimize_beta=optimize_beta
+                    optimize_beta=optimize_beta,
+                    allow_infinite_bounds=allow_infinite_bounds
                 )
+
             return np.array(y_pred), np.stack([y_pred_low, y_pred_up], axis=1)

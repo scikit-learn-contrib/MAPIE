@@ -2,9 +2,27 @@
 History
 =======
 
-0.8.3 (2024-**-**)
+0.8.x (2024-xx-xx)
 ------------------
 
+* Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
+
+0.8.6 (2024-06-14)
+------------------
+
+* Fix the quantile formula to ensure valid coverage (deal with infinite interval production and asymmetric conformal scores).
+* Fix sphinx dependencies
+
+0.8.5 (2024-06-07)
+------------------
+
+* Issue with update from 0.8.4
+
+0.8.4 (2024-06-07)
+------------------
+
+* Fix the quantile formula to ensure valid coverage for any number of calibration data in `ConformityScore`.
+* Fix overloading of the value of the `method` attribute when using `MapieRegressor` and `MapieTimeSeriesRegressor`.
 * Fix conda versionning.
 * Reduce precision for test in `MapieCalibrator`.
 * Fix invalid certificate when downloading data.
