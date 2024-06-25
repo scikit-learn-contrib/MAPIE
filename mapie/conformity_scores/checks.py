@@ -18,7 +18,7 @@ def check_conformity_score(
 
     Examples
     --------
-    >>> from mapie.utils import check_conformity_score
+    >>> from mapie.conformity_scores.checks import check_conformity_score
     >>> try:
     ...     check_conformity_score(1)
     ... except Exception as exception:

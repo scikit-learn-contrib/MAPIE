@@ -18,7 +18,7 @@ from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_cv, check_estimator_fit_predict,
                          check_n_features_in, check_n_jobs, check_null_weight,
                          check_verbose, get_effective_calibration_samples)
-from mapie.conformity_scores.check import check_conformity_score
+from mapie.conformity_scores.checks import check_conformity_score
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
