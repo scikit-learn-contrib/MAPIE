@@ -15,7 +15,7 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
 
 from mapie._machine_precision import EPSILON
 from mapie._typing import ArrayLike, NDArray
-from mapie.estimator import EnsembleClassifier
+from mapie.estimator.classifier import EnsembleClassifier
 from mapie.metrics import classification_mean_width_score
 from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
                          check_estimator_classification, check_n_features_in,

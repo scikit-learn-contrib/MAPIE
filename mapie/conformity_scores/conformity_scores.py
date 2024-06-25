@@ -5,7 +5,7 @@ import numpy as np
 
 from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
-from mapie.estimator import EnsembleRegressor
+from mapie.estimator.regressor import EnsembleRegressor
 
 
 class ConformityScore(metaclass=ABCMeta):
@@ -326,14 +326,14 @@ class ConformityScore(metaclass=ABCMeta):
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
-        the estimator of type ``EnsembleEstimator`` and the conformity scores.
+        the estimator of type ``EnsembleRegressor`` and the conformity scores.
 
         Parameters
         ----------
         X: ArrayLike of shape (n_samples, n_features)
             Observed feature values.
 
-        estimator: EnsembleEstimator
+        estimator: EnsembleRegressor
             Estimator that is fitted to predict y from X.
 
         conformity_scores: ArrayLike of shape (n_samples,)

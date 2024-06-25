@@ -11,11 +11,7 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.estimator.interface import EnsembleEstimator
-from mapie.utils import (
-    check_no_agg_cv,
-    fit_estimator,
-    fix_number_of_classes,
-)
+from mapie.utils import check_no_agg_cv, fit_estimator, fix_number_of_classes
 
 
 class EnsembleClassifier(EnsembleEstimator):
