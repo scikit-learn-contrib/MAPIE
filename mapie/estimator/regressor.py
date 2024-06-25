@@ -11,7 +11,7 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
-from mapie.estimator.regression.interface import EnsembleEstimator
+from mapie.estimator.interface import EnsembleEstimator
 from mapie.utils import (check_nan_in_aposteriori_prediction, check_no_agg_cv,
                          fit_estimator)
 
@@ -497,7 +497,8 @@ class EnsembleRegressor(EnsembleEstimator):
         self,
         X: ArrayLike,
         ensemble: bool = False,
-        return_multi_pred: bool = True
+        return_multi_pred: bool = True,
+        **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample

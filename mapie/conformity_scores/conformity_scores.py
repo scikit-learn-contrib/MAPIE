@@ -5,7 +5,7 @@ import numpy as np
 
 from mapie._compatibility import np_nanquantile
 from mapie._typing import ArrayLike, NDArray
-from mapie.estimator.regression.interface import EnsembleEstimator
+from mapie.estimator import EnsembleRegressor
 
 
 class ConformityScore(metaclass=ABCMeta):
@@ -317,7 +317,7 @@ class ConformityScore(metaclass=ABCMeta):
     def get_bounds(
         self,
         X: ArrayLike,
-        estimator: EnsembleEstimator,
+        estimator: EnsembleRegressor,
         conformity_scores: NDArray,
         alpha_np: NDArray,
         ensemble: bool = False,

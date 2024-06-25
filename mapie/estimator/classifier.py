@@ -10,7 +10,7 @@ from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.estimator.classification.interface import EnsembleEstimator
+from mapie.estimator.interface import EnsembleEstimator
 from mapie.utils import (
     check_no_agg_cv,
     fit_estimator,
@@ -294,7 +294,7 @@ class EnsembleClassifier(EnsembleEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        y_enc: ArrayLike,
+        y_enc: Optional[ArrayLike] = None,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params,
@@ -341,6 +341,9 @@ class EnsembleClassifier(EnsembleEstimator):
         self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
         estimator = self.estimator
         n_samples = _num_samples(y)
+        if y_enc is None:
+            raise ValueError
+        y_enc = cast(NDArray, y_enc)
 
         # Computation
         if cv == "prefit":
@@ -378,25 +381,26 @@ class EnsembleClassifier(EnsembleEstimator):
 
     def predict_proba_calib(
         self,
-        X: ArrayLike,
-        y: ArrayLike,
-        y_enc: ArrayLike,
-        groups: Optional[ArrayLike] = None,
-    ) -> Tuple[NDArray, ArrayLike, ArrayLike]:
+        X: NDArray,
+        y: NDArray,
+        y_enc: NDArray,
+        groups: Optional[NDArray] = None,
+        **predict_params
+    ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Perform predictions on X : the calibration set.
 
         Parameters
         ----------
-        X: ArrayLike of shape (n_samples_test, n_features)
+        X: NDArray of shape (n_samples_test, n_features)
             Input data
 
-        y: Optional[ArrayLike] of shape (n_samples_test,)
+        y: Optional[NDArray] of shape (n_samples_test,)
             Input labels.
 
             By default ``None``.
 
-        groups: Optional[ArrayLike] of shape (n_samples_test,)
+        groups: Optional[NDArray] of shape (n_samples_test,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
 
@@ -439,7 +443,7 @@ class EnsembleClassifier(EnsembleEstimator):
                 # are not used during calibration
                 self.k_ = self.k_[val_indices]
                 y_pred_proba = y_pred_proba[val_indices]
-                # y_enc = y_enc[val_indices]
+                y_enc = y_enc[val_indices]
                 y = cast(NDArray, y)[val_indices]
 
         return y_pred_proba, y, y_enc
@@ -448,7 +452,8 @@ class EnsembleClassifier(EnsembleEstimator):
         self,
         X: ArrayLike,
         alpha_np: ArrayLike = [],
-        agg_scores: Any = None
+        agg_scores: Any = None,
+        **predict_params
     ) -> NDArray:
         """
         Predict target from X. It also computes the prediction per train sample

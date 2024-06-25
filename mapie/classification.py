@@ -13,15 +13,15 @@ from sklearn.utils.multiclass import (check_classification_targets,
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
-from ._machine_precision import EPSILON
-from ._typing import ArrayLike, NDArray
-from .estimator.classification.estimator import EnsembleClassifier
-from .metrics import classification_mean_width_score
-from .utils import (check_alpha, check_alpha_and_n_samples, check_cv,
-                    check_estimator_classification, check_n_features_in,
-                    check_n_jobs, check_null_weight, check_verbose,
-                    compute_quantiles)
-from .conformity_scores.utils_classification_conformity_scores import (
+from mapie._machine_precision import EPSILON
+from mapie._typing import ArrayLike, NDArray
+from mapie.estimator import EnsembleClassifier
+from mapie.metrics import classification_mean_width_score
+from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
+                         check_estimator_classification, check_n_features_in,
+                         check_n_jobs, check_null_weight, check_verbose,
+                         compute_quantiles)
+from mapie.conformity_scores.utils import (
     get_true_label_position
 )
 
@@ -988,9 +988,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         sample_weight,
         groups,
         size_raps
-    ) -> Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, NDArray, ArrayLike]:
-
+    ):
         """Split data for raps method
+
         Parameters
         ----------
         X: ArrayLike
@@ -1013,15 +1013,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        Tuple[ArrayLike, ArrayLike, ArrayLike, NDArray, Optional[NDArray],
-        Optional[ArrayLike]]
+        Tuple[NDArray, NDArray, NDArray, NDArray, Optional[NDArray],
+        Optional[NDArray]]
 
-            - ArrayLike of shape (n_samples, n_features)
-            - ArrayLike of shape (n_samples,)
-            - ArrayLike of shape (n_samples,)
-            - ArrayLike of shape (n_samples,)
+            - NDArray of shape (n_samples, n_features)
             - NDArray of shape (n_samples,)
-            - ArrayLike of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
         """
         raps_split = ShuffleSplit(
             1, test_size=size_raps, random_state=self.random_state
@@ -1096,14 +1096,24 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             The model itself.
         """
         # Checks
-        (estimator, cv, X, y, y_enc, sample_weight, groups, n_samples) = (
-            self._check_fit_parameter(X, y, sample_weight, groups)
-        )
+        (estimator,
+         cv,
+         X,
+         y,
+         y_enc,
+         sample_weight,
+         groups,
+         n_samples) = self._check_fit_parameter(X, y, sample_weight, groups)
 
         if self.method == "raps":
             (X, y_enc, y, n_samples, sample_weight, groups) = self._split_data(
                 X, y_enc, sample_weight, groups, size_raps
             )
+
+        # Cast
+        X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
+        sample_weight = cast(NDArray, sample_weight)
+        groups = cast(NDArray, groups)
 
         # Work
         self.estimator_ = EnsembleClassifier(
@@ -1117,7 +1127,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         )
 
         self.estimator_ = self.estimator_.fit(
-            X, y, y_enc, sample_weight, groups,
+            X, y, y_enc=y_enc, sample_weight=sample_weight, groups=groups,
             **fit_params
         )
 
