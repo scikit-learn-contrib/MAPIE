@@ -1104,6 +1104,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
          sample_weight,
          groups,
          n_samples) = self._check_fit_parameter(X, y, sample_weight, groups)
+        self.n_samples_ = n_samples
 
         if self.method == "raps":
             (X, y_enc, y, n_samples, sample_weight, groups) = self._split_data(
