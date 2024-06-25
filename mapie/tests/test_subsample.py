@@ -185,12 +185,12 @@ def test_split_samples_BlockBootstrap(n_resamplings: int,
                         length=length, random_state=0)
     trains = [x[0] for x in cv.split(X)]
     tests = [x[1] for x in cv.split(X)]
-    for i in range(n_resamplings):
-        for j in range(i + 1, n_resamplings):
-            with np.testing.assert_raises(AssertionError):
-                np.testing.assert_equal(trains[i], trains[j])
-            with np.testing.assert_raises(AssertionError):
-                np.testing.assert_equal(tests[i], tests[j])
+    for (train1, train2), (test1, test2) in product(
+            combinations(trains, 2), combinations(tests, 2)):
+        with np.testing.assert_raises(AssertionError):
+            np.testing.assert_equal(train1, train2)
+        with np.testing.assert_raises(AssertionError):
+            np.testing.assert_equal(test1, test2)
 
 
 @pytest.mark.parametrize("length", [2, 3, 4])
@@ -215,5 +215,5 @@ def test_reproductibility_samples_BlockBootstrap(
     )
     trains2 = [x[0] for x in list(cv2.split(X))]
     tests2 = [x[1] for x in list(cv2.split(X))]
-    np.testing.assert_array_equal(trains1, trains2)
+    np.testing.assert_equal(trains1, trains2)
     np.testing.assert_equal(tests1, tests2)
