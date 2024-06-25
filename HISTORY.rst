@@ -5,6 +5,7 @@ History
 0.8.x (2024-xx-xx)
 ------------------
 
+* Building unit tests for different `Subsample` and `BlockBooststrap` instances
 * Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
 
 0.8.6 (2024-06-14)

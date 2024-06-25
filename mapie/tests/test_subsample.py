@@ -114,8 +114,8 @@ def test_reproductibility_samples_Subsample(
                     n_samples=n_samples, replace=False, random_state=0)
     trains2 = [x[0] for x in cv2.split(X)]
     tests2 = [x[1] for x in cv2.split(X)]
-    assert np.array_equal(trains1, trains2)
-    assert np.array_equal(tests1, tests2)
+    np.testing.assert_array_equal(trains1, trains2)
+    np.testing.assert_array_equal(tests1, tests2)
 
 
 def test_default_parameters_BlockBootstrap() -> None:
@@ -215,7 +215,5 @@ def test_reproductibility_samples_BlockBootstrap(
     )
     trains2 = [x[0] for x in list(cv2.split(X))]
     tests2 = [x[1] for x in list(cv2.split(X))]
-    tests1_set = {tuple(sorted(arr)) for arr in tests1}
-    tests2_set = {tuple(sorted(arr)) for arr in tests2}
-    assert np.array_equal(trains1, trains2)
-    assert np.array_equal(np.array(tests1_set), np.array(tests2_set))
+    np.testing.assert_array_equal(trains1, trains2)
+    np.testing.assert_equal(tests1, tests2)
