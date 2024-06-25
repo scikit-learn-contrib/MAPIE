@@ -337,9 +337,6 @@ class EnsembleClassifier(EnsembleEstimator):
         self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
         estimator = self.estimator
         n_samples = _num_samples(y)
-        if y_enc is None:
-            raise ValueError
-        y_enc = cast(NDArray, y_enc)
 
         # Computation
         if cv == "prefit":
