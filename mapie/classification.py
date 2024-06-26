@@ -5,7 +5,8 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
+from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
+                                     StratifiedShuffleSplit)
 from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.multiclass import (check_classification_targets,
@@ -301,9 +302,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If ``method`` is ``"raps"`` and ``cv`` is not ``"prefit"``.
         """
-        if (self.method == "raps") and (
-            (self.cv not in self.raps_valid_cv_)
-            or isinstance(self.cv, ShuffleSplit)
+        if (self.method == "raps") and not (
+            (self.cv in self.raps_valid_cv_)
+            or isinstance(self.cv, BaseShuffleSplit)
         ):
             raise ValueError(
                 "RAPS method can only be used "
@@ -926,7 +927,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y: ArrayLike
             Target values.
 
-        sample_weight: Optional[NDArray] of shape (n_samples,)
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Non-null sample weights.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
@@ -940,8 +941,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         Optional[Union[int, str, BaseCrossValidator]],
         ArrayLike, NDArray, NDArray, Optional[NDArray],
         Optional[NDArray], ArrayLike]
-
             Parameters checked
+
         Raises
         ------
         ValueError
@@ -952,7 +953,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             If ``cv`` is `"prefit"`` or ``"split"`` and ``method`` is not
             ``"base"``.
         """
-
         self._check_parameters()
         cv = check_cv(
             self.cv, test_size=self.test_size, random_state=self.random_state
@@ -979,15 +979,15 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self.label_encoder_ = enc
         self._check_target(y)
 
-        return (estimator, cv, X, y, y_enc, sample_weight, groups, n_samples)
+        return estimator, cv, X, y, y_enc, sample_weight, groups, n_samples
 
     def _split_data(
         self,
-        X,
-        y_enc,
-        sample_weight,
-        groups,
-        size_raps
+        X: ArrayLike,
+        y_enc: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        size_raps: Optional[float] = None,
     ):
         """Split data for raps method
 
@@ -999,7 +999,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y_enc: ArrayLike
             Target values as normalized encodings.
 
-        sample_weight: Optional[NDArray] of shape (n_samples,)
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Non-null sample weights.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
@@ -1015,7 +1015,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         -------
         Tuple[NDArray, NDArray, NDArray, NDArray, Optional[NDArray],
         Optional[NDArray]]
-
             - NDArray of shape (n_samples, n_features)
             - NDArray of shape (n_samples,)
             - NDArray of shape (n_samples,)
@@ -1023,26 +1022,31 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             - NDArray of shape (n_samples,)
             - NDArray of shape (n_samples,)
         """
-        raps_split = ShuffleSplit(
-            1, test_size=size_raps, random_state=self.random_state
+        # Split data for raps method
+        raps_split = StratifiedShuffleSplit(
+            n_splits=1, test_size=size_raps, random_state=self.random_state
         )
-        train_raps_index, val_raps_index = next(raps_split.split(X))
+        train_raps_index, val_raps_index = next(raps_split.split(X, y_enc))
         X, self.X_raps, y_enc, self.y_raps = (
             _safe_indexing(X, train_raps_index),
             _safe_indexing(X, val_raps_index),
             _safe_indexing(y_enc, train_raps_index),
             _safe_indexing(y_enc, val_raps_index),
         )
+
+        # Decode y_raps for use in the RAPS method
         self.y_raps_no_enc = self.label_encoder_.inverse_transform(self.y_raps)
         y = self.label_encoder_.inverse_transform(y_enc)
+
+        # Cast to NDArray for type checking
         y_enc = cast(NDArray, y_enc)
         n_samples = _num_samples(y_enc)
         if sample_weight is not None:
-            sample_weight = sample_weight[train_raps_index]
             sample_weight = cast(NDArray, sample_weight)
+            sample_weight = sample_weight[train_raps_index]
         if groups is not None:
-            groups = groups[train_raps_index]
             groups = cast(NDArray, groups)
+            groups = groups[train_raps_index]
 
         return X, y_enc, y, n_samples, sample_weight, groups
 
@@ -1126,12 +1130,13 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             self.test_size,
             self.verbose,
         )
-
+        # Fit the prediction function
         self.estimator_ = self.estimator_.fit(
             X, y, y_enc=y_enc, sample_weight=sample_weight, groups=groups,
             **fit_params
         )
 
+        # Predict on calibration data
         y_pred_proba, y, y_enc = self.estimator_.predict_proba_calib(
             X, y, y_enc, groups
         )
@@ -1175,10 +1180,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             raise ValueError(
                 "Invalid method. " f"Allowed values are {self.valid_methods_}."
             )
-
-        # In split-CP, we keep only the model fitted on train dataset
-        if isinstance(cv, ShuffleSplit):
-            self.estimator_.single_estimator_ = self.estimator_.estimators_[0]
 
         return self
 
@@ -1278,9 +1279,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
 
-        y_pred_proba = self.estimator_.predict(X, alpha_np, agg_scores)
-        # Check that sum of probas is equal to 1
+        y_pred_proba = self.estimator_.predict(X, agg_scores)
         y_pred_proba = self._check_proba_normalized(y_pred_proba, axis=1)
+        if agg_scores != "crossval":
+            y_pred_proba = np.repeat(
+                y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
+            )
 
         # Choice of the quantile
         if self.method == "naive":

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Tuple, Union, cast
+from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import ClassifierMixin, clone
-from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
+from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit)
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
@@ -16,94 +16,94 @@ from mapie.utils import check_no_agg_cv, fit_estimator, fix_number_of_classes
 
 class EnsembleClassifier(EnsembleEstimator):
     """
-     This class implements methods to handle the training and usage of the
-     estimator. This estimator can be unique or composed by cross validated
-     estimators.
+    This class implements methods to handle the training and usage of the
+    estimator. This estimator can be unique or composed by cross validated
+    estimators.
 
-     Parameters
-     ----------
-     estimator: Optional[ClaMixin]
-         Any regressor with scikit-learn API
-         (i.e. with ``fit`` and ``predict`` methods).
-         If ``None``, estimator defaults to a ``LinearRegression`` instance.
+    Parameters
+    ----------
+    estimator: Optional[ClassifierMixin]
+        Any classifier with scikit-learn API
+        (i.e. with ``fit`` and ``predict`` methods).
+        If ``None``, estimator defaults to a ``LogisticRegression`` instance.
 
-         By default ``None``.
+        By default ``None``.
 
-     cv: Optional[str]
-         The cross-validation strategy for computing scores.
-         It directly drives the distinction between jackknife and cv variants.
-         Choose among:
+    cv: Optional[str]
+        The cross-validation strategy for computing scores.
+        It directly drives the distinction between jackknife and cv variants.
+        Choose among:
 
-         - ``None``, to use the default 5-fold cross-validation
-         - integer, to specify the number of folds.
-           If equal to -1, equivalent to
-           ``sklearn.model_selection.LeaveOneOut()``.
-         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
-           Main variants are:
-           - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
-           - ``sklearn.model_selection.KFold`` (cross-validation)
-         - ``"split"``, does not involve cross-validation but a division
-           of the data into training and calibration subsets. The splitter
-           used is the following: ``sklearn.model_selection.ShuffleSplit``.
-         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
-           All data provided in the ``fit`` method is then used
-           to calibrate the predictions through the score computation.
-           At prediction time, quantiles of these scores are used to estimate
-           prediction sets.
+        - ``None``, to use the default 5-fold cross-validation
+        - integer, to specify the number of folds.
+            If equal to -1, equivalent to
+            ``sklearn.model_selection.LeaveOneOut()``.
+        - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
+            Main variants are:
+            - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
+            - ``sklearn.model_selection.KFold`` (cross-validation)
+        - ``"split"``, does not involve cross-validation but a division
+            of the data into training and calibration subsets. The splitter
+            used is the following: ``sklearn.model_selection.ShuffleSplit``.
+        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
+            All data provided in the ``fit`` method is then used
+            to calibrate the predictions through the score computation.
+            At prediction time, quantiles of these scores are used to estimate
+            prediction sets.
 
-         By default ``None``.
+        By default ``None``.
 
-     test_size: Optional[Union[int, float]]
-         If ``float``, should be between ``0.0`` and ``1.0`` and represent the
-         proportion of the dataset to include in the test split. If ``int``,
-         represents the absolute number of test samples. If ``None``,
-         it will be set to ``0.1``.
+    test_size: Optional[Union[int, float]]
+        If ``float``, should be between ``0.0`` and ``1.0`` and represent the
+        proportion of the dataset to include in the test split. If ``int``,
+        represents the absolute number of test samples. If ``None``,
+        it will be set to ``0.1``.
 
-         If cv is not ``"split"``, ``test_size`` is ignored.
+        If cv is not ``"split"``, ``test_size`` is ignored.
 
-         By default ``None``.
+        By default ``None``.
 
-     n_jobs: Optional[int]
-         Number of jobs for parallel processing using joblib
-         via the "locky" backend.
-         If ``-1`` all CPUs are used.
-         If ``1`` is given, no parallel computing code is used at all,
-         which is useful for debugging.
-         For ``n_jobs`` below ``-1``, ``(n_cpus + 1 - n_jobs)`` are used.
-         ``None`` is a marker for `unset` that will be interpreted as
-         ``n_jobs=1`` (sequential execution).
+    n_jobs: Optional[int]
+        Number of jobs for parallel processing using joblib
+        via the "locky" backend.
+        If ``-1`` all CPUs are used.
+        If ``1`` is given, no parallel computing code is used at all,
+        which is useful for debugging.
+        For ``n_jobs`` below ``-1``, ``(n_cpus + 1 - n_jobs)`` are used.
+        ``None`` is a marker for `unset` that will be interpreted as
+        ``n_jobs=1`` (sequential execution).
 
-         By default ``None``.
+        By default ``None``.
 
     random_state: Optional[Union[int, RandomState]]
-         Pseudo random number generator state used for random uniform sampling
-         for evaluation quantiles and prediction sets.
-         Pass an int for reproducible output across multiple function calls.
+        Pseudo random number generator state used for random uniform sampling
+        for evaluation quantiles and prediction sets.
+        Pass an int for reproducible output across multiple function calls.
 
-         By default ``None``.
+        By default ``None``.
 
-     verbose: int, optional
-         The verbosity level, used with joblib for multiprocessing.
-         At this moment, parallel processing is disabled.
-         The frequency of the messages increases with the verbosity level.
-         If it more than ``10``, all iterations are reported.
-         Above ``50``, the output is sent to stdout.
+    verbose: int, optional
+        The verbosity level, used with joblib for multiprocessing.
+        At this moment, parallel processing is disabled.
+        The frequency of the messages increases with the verbosity level.
+        If it more than ``10``, all iterations are reported.
+        Above ``50``, the output is sent to stdout.
 
-         By default ``0``.
+        By default ``0``.
 
-     Attributes
-     ----------
-     single_estimator_: sklearn.ClassifierMixin
-         Estimator fitted on the whole training set.
+    Attributes
+    ----------
+    single_estimator_: sklearn.ClassifierMixin
+        Estimator fitted on the whole training set.
 
-     estimators_: list
-         List of out-of-folds estimators.
+    estimators_: list
+        List of out-of-folds estimators.
 
-     k_: ArrayLike
-         - Array of nans, of shape (len(y), 1) if ``cv`` is ``"prefit"``
-           (defined but not used)
-         - Dummy array of folds containing each training sample, otherwise.
-           Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
+    k_: ArrayLike
+        - Array of nans, of shape (len(y), 1) if ``cv`` is ``"prefit"``
+            (defined but not used)
+        - Dummy array of folds containing each training sample, otherwise.
+            Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
     """
 
     no_agg_cv_ = ["prefit", "split"]
@@ -197,19 +197,17 @@ class EnsembleClassifier(EnsembleEstimator):
         Parameters
         ----------
         y_pred_proba: ArrayLike of shape
-            (n_samples, n_classes) or
-            (n_samples, n_train_samples, n_classes)
+            (n_samples, n_classes) or (n_samples, n_train_samples, n_classes)
             Softmax output of a model.
 
         Returns
         -------
         ArrayLike of shape (n_samples, n_classes)
-            Softmax output of a model if the scores all sum
-            to one.
+            Softmax output of a model if the scores all sum to one.
 
         Raises
         ------
-            ValueError
+        ValueError
             If the sum of the scores is not equal to one.
         """
         np.testing.assert_allclose(
@@ -326,7 +324,7 @@ class EnsembleClassifier(EnsembleEstimator):
 
         Returns
         -------
-        EnsembleRegressor
+        EnsembleClassifier
             The estimator fitted.
         """
         # Initialization
@@ -367,9 +365,14 @@ class EnsembleClassifier(EnsembleEstimator):
                 )
                 for train_index, _ in cv.split(X, y, groups)
             )
-        self.single_estimator_: ClassifierMixin = single_estimator_
-        self.estimators_: List[ClassifierMixin] = estimators_
-        self.k_: NDArray = k_
+            # In split-CP, we keep only the model fitted on train dataset
+            if self.use_split_method_:
+                single_estimator_ = estimators_[0]
+
+        self.single_estimator_ = single_estimator_
+        self.estimators_ = estimators_
+        self.k_ = k_
+
         return self
 
     def predict_proba_calib(
@@ -381,7 +384,7 @@ class EnsembleClassifier(EnsembleEstimator):
         **predict_params
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
-        Perform predictions on X : the calibration set.
+        Perform predictions on X, the calibration set.
 
         Parameters
         ----------
@@ -431,34 +434,30 @@ class EnsembleClassifier(EnsembleEstimator):
             self.k_[val_indices] = val_ids
             y_pred_proba[val_indices] = predictions
 
-            if isinstance(cv, ShuffleSplit):
+            if isinstance(cv, BaseShuffleSplit):
                 # Should delete values indices that
                 # are not used during calibration
                 self.k_ = self.k_[val_indices]
                 y_pred_proba = y_pred_proba[val_indices]
                 y_enc = y_enc[val_indices]
-                y = cast(NDArray, y)[val_indices]
+                y = y[val_indices]
 
         return y_pred_proba, y, y_enc
 
     def predict(
         self,
         X: ArrayLike,
-        alpha_np: ArrayLike = [],
-        agg_scores: Any = None,
+        agg_scores: Optional[str] = None,
         **predict_params
     ) -> NDArray:
         """
         Predict target from X. It also computes the prediction per train sample
-        for each test sample according to ``self.method``.
+        for each test sample according to ``agg_scores``.
 
         Parameters
         ----------
         X: ArrayLike of shape (n_samples, n_features)
             Test data.
-
-        alpha_np: ArrayLike of shape (n_alphas)
-            Level of confidences.
 
         agg_scores: Optional[str]
             How to aggregate the scores output by the estimators on test data
@@ -469,15 +468,11 @@ class EnsembleClassifier(EnsembleEstimator):
         NDArray
             Predictions of shape
             (n_samples, n_classes)
-
         """
         check_is_fitted(self, self.fit_attributes)
-        alpha_np = cast(NDArray, alpha_np)
+
         if self.cv == "prefit":
             y_pred_proba = self.single_estimator_.predict_proba(X)
-            y_pred_proba = np.repeat(
-                y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
-            )
         else:
             y_pred_proba_k = np.asarray(
                 Parallel(
@@ -491,9 +486,6 @@ class EnsembleClassifier(EnsembleEstimator):
                 y_pred_proba = np.moveaxis(y_pred_proba_k[self.k_], 0, 2)
             elif agg_scores == "mean":
                 y_pred_proba = np.mean(y_pred_proba_k, axis=0)
-                y_pred_proba = np.repeat(
-                    y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
-                )
             else:
                 raise ValueError("Invalid 'agg_scores' argument.")
 

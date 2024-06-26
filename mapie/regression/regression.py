@@ -457,10 +457,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         groups = cast(Optional[NDArray], groups)
 
         return (
-            estimator, cs_estimator,
-            agg_function, cv,
-            X, y,
-            sample_weight, groups
+            estimator, cs_estimator, agg_function, cv,
+            X, y, sample_weight, groups
         )
 
     def fit(

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+from typing import Tuple, Union
 
-from mapie._typing import ArrayLike
+from mapie._typing import ArrayLike, NDArray
 
 
 class EnsembleEstimator(metaclass=ABCMeta):
@@ -32,7 +33,7 @@ class EnsembleEstimator(metaclass=ABCMeta):
         self,
         X: ArrayLike,
         **kwargs
-    ):
+    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample
         for each test sample according to ``self.method``.

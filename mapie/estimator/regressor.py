@@ -142,9 +142,9 @@ class EnsembleRegressor(EnsembleEstimator):
 
     k_: ArrayLike
         - Array of nans, of shape (len(y), 1) if ``cv`` is ``"prefit"``
-          (defined but not used)
+            (defined but not used)
         - Dummy array of folds containing each training sample, otherwise.
-          Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
+            Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
     """
     no_agg_cv_ = ["prefit", "split"]
     no_agg_methods_ = ["naive", "base"]
