@@ -1833,7 +1833,7 @@ def test_regularize_conf_scores_shape(k_lambda) -> None:
     Test that the conformity scores have the correct shape.
     """
     lambda_, k = k_lambda[0], k_lambda[1]
-    args_init, _ = STRATEGIES["raps"]
+    args_init, _ = LARGE_STRATEGIES["raps"]
     clf = LogisticRegression().fit(X, y)
     mapie_clf = MapieClassifier(estimator=clf, **args_init)
     conf_scores = np.random.rand(100, 1)
