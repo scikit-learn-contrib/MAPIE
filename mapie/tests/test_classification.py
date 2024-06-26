@@ -315,6 +315,44 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
+    "raps": (
+        Params(
+            method="raps",
+            cv="prefit",
+            test_size=None,
+            random_state=random_state
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="mean"
+        )
+    ),
+    "raps_split": (
+        Params(
+            method="raps",
+            cv=StratifiedShuffleSplit(
+                n_splits=1, train_size=0.5, random_state=random_state
+            ),
+            test_size=None,
+            random_state=random_state
+        ),
+        ParamsPredict(
+            include_last_label=True,
+            agg_scores="mean"
+        )
+    ),
+    "raps_randomized": (
+        Params(
+            method="raps",
+            cv="prefit",
+            test_size=None,
+            random_state=random_state
+        ),
+        ParamsPredict(
+            include_last_label="randomized",
+            agg_scores="mean"
+        )
+    ),
 }
 
 STRATEGIES_BINARY = {
@@ -365,7 +403,7 @@ STRATEGIES_BINARY = {
             include_last_label=False,
             agg_scores="crossval"
         )
-    )
+    ),
 }
 
 COVERAGES = {
@@ -389,8 +427,6 @@ COVERAGES = {
     "naive_split": 5/9,
     "top_k": 1.0,
     "top_k_split": 1.0,
-    "raps": 6/9,
-    "raps_randomized": 3/9
 }
 
 COVERAGES_BINARY = {
@@ -710,160 +746,11 @@ X, y = make_classification(
     random_state=random_state,
 )
 
-LARGE_STRATEGIES = {
-    "lac": (
-        Params(
-            method="lac",
-            cv="prefit",
-            test_size=None,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label=False,
-            agg_scores="mean"
-        )
-    ),
-    "lac_split": (
-        Params(
-            method="lac",
-            cv="split",
-            test_size=0.5,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label=False,
-            agg_scores="mean"
-        )
-    ),
-    "aps": (
-        Params(
-            method="aps",
-            cv="prefit",
-            test_size=None,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label=True,
-            agg_scores="mean"
-        )
-    ),
-    "aps_split": (
-        Params(
-            method="aps",
-            cv="split",
-            test_size=0.5,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label=True,
-            agg_scores="mean"
-        )
-    ),
-    "aps_randomized": (
-        Params(
-            method="aps",
-            cv="prefit",
-            test_size=None,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label="randomized",
-            agg_scores="mean"
-        )
-    ),
-    "naive": (
-        Params(
-            method="naive",
-            cv="prefit",
-            test_size=None,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label=True,
-            agg_scores="mean"
-        )
-    ),
-    "naive_split": (
-        Params(
-            method="naive",
-            cv="split",
-            test_size=0.5,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label=True,
-            agg_scores="mean"
-        )
-    ),
-    "top_k": (
-        Params(
-            method="top_k",
-            cv="prefit",
-            test_size=None,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label=True,
-            agg_scores="mean"
-        )
-    ),
-    "top_k_split": (
-        Params(
-            method="top_k",
-            cv="split",
-            test_size=0.5,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label=True,
-            agg_scores="mean"
-        )
-    ),
-    "raps": (
-        Params(
-            method="raps",
-            cv="prefit",
-            test_size=None,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label=True,
-            agg_scores="mean"
-        )
-    ),
-    "raps_split": (
-        Params(
-            method="raps",
-            cv=StratifiedShuffleSplit(
-                n_splits=1, train_size=0.5, random_state=random_state
-            ),
-            test_size=None,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label=True,
-            agg_scores="mean"
-        )
-    ),
-    "raps_randomized": (
-        Params(
-            method="raps",
-            cv="prefit",
-            test_size=None,
-            random_state=random_state
-        ),
-        ParamsPredict(
-            include_last_label="randomized",
-            agg_scores="mean"
-        )
-    ),
-}
-
 LARGE_COVERAGES = {
     "lac": 0.802,
     "lac_split": 0.842,
-    "aps": 0.928,
-    "aps_split": 0.93,
+    "aps_include": 0.928,
+    "aps_include_split": 0.93,
     "aps_randomized": 0.802,
     "naive": 0.936,
     "naive_split": 0.914,
@@ -1046,9 +933,9 @@ def test_binary_classif_same_result() -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
-    clf = LogisticRegression().fit(X_toy, y_toy)
+    clf = LogisticRegression().fit(X, y)
     mapie_clf = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
-    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.fit(X, y)
     assert (
         isinstance(mapie_clf.estimator_.single_estimator_, LogisticRegression)
     )
@@ -1500,11 +1387,9 @@ def test_valid_prediction(alpha: Any) -> None:
     mapie_clf.predict(X_toy, alpha=alpha)
 
 
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("strategy", [*COVERAGES])
 def test_toy_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
-    if strategy == "aps_randomized_cv_crossval":
-        return
     args_init, args_predict = STRATEGIES[strategy]
     if "split" not in strategy:
         clf = LogisticRegression().fit(X_toy, y_toy)
@@ -1525,10 +1410,10 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     )
 
 
-@pytest.mark.parametrize("strategy", [*LARGE_STRATEGIES])
+@pytest.mark.parametrize("strategy", [*LARGE_COVERAGES])
 def test_large_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a larger dataset"""
-    args_init, args_predict = LARGE_STRATEGIES[strategy]
+    args_init, args_predict = STRATEGIES[strategy]
     if "split" not in strategy:
         clf = LogisticRegression().fit(X, y)
     else:
@@ -1748,13 +1633,15 @@ def test_pred_loof_isnan() -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_pipeline_compatibility(strategy: str) -> None:
     """Check that MAPIE works on pipeline based on pandas dataframes"""
+    X = np.random.randint(0, 100, size=100)
+    X_cat = np.random.choice(["A", "B", "C"], size=X.shape[0])
     X = pd.DataFrame(
         {
-            "x_cat": ["A", "A", "B", "A", "A", "B"],
-            "x_num": [0, 1, 1, 4, np.nan, 5],
+            "x_cat": X_cat,
+            "x_num": X,
         }
     )
-    y = pd.Series([0, 1, 2, 0, 1, 0])
+    y = np.random.randint(0, 4, size=(100, 1))  # 3 classes
     numeric_preprocessor = Pipeline(
         [
             ("imputer", SimpleImputer(strategy="mean")),
@@ -1833,7 +1720,7 @@ def test_regularize_conf_scores_shape(k_lambda) -> None:
     Test that the conformity scores have the correct shape.
     """
     lambda_, k = k_lambda[0], k_lambda[1]
-    args_init, _ = LARGE_STRATEGIES["raps"]
+    args_init, _ = STRATEGIES["raps"]
     clf = LogisticRegression().fit(X, y)
     mapie_clf = MapieClassifier(estimator=clf, **args_init)
     conf_scores = np.random.rand(100, 1)
