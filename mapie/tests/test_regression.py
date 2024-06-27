@@ -867,7 +867,7 @@ def test_fit_parameters_passing() -> None:
         else:
             return False
 
-    mapie.fit(X, y, monitor=early_stopping_monitor)
+    mapie.fit(X, y, fit_params={'monitor': early_stopping_monitor})
 
     assert mapie.estimator_.single_estimator_.estimators_.shape[0] == 3
 

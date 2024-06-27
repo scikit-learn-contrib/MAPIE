@@ -405,6 +405,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
+        **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -450,7 +451,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         """
         if alpha is None:
             super().predict(
-                X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta
+                X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
+                **predict_params
             )
 
         if self.method == "aci":
@@ -458,7 +460,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         return super().predict(
             X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
-            allow_infinite_bounds=allow_infinite_bounds
+            allow_infinite_bounds=allow_infinite_bounds, **predict_params
         )
 
     def _more_tags(self):

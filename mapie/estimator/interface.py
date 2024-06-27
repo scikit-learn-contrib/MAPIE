@@ -62,7 +62,8 @@ class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
         self,
         X: ArrayLike,
         ensemble: bool = False,
-        return_multi_pred: bool = True
+        return_multi_pred: bool = True,
+        **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample
@@ -89,6 +90,9 @@ class EnsembleEstimator(RegressorMixin, metaclass=ABCMeta):
             If ``True`` the method returns the predictions and the multiple
             predictions (3 arrays). If ``False`` the method return the
             simple predictions only.
+
+        **predict_params : dict
+            Additional predict parameters.
 
         Returns
         -------

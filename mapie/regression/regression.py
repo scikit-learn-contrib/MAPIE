@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, Optional, Tuple, Union, cast
+from typing import Iterable, Optional, Tuple, Union, cast, Any
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -469,7 +469,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **fit_params,
+        **kwargs: Any,
     ) -> MapieRegressor:
         """
         Fit estimator and compute conformity scores used for
@@ -502,14 +502,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             train/test set.
             By default ``None``.
 
-        **fit_params : dict
+        fit_params : dict
             Additional fit parameters.
+
+        predict_params : dict
+            Additional predict parameters.
 
         Returns
         -------
         MapieRegressor
             The model itself.
         """
+        fit_params = kwargs.pop('fit_params', {})
+        predict_params = kwargs.pop('predict_params', {})
         # Checks
         (estimator,
          self.conformity_score_function_,
@@ -536,7 +541,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         )
 
         # Predict on calibration data
-        y_pred = self.estimator_.predict_calib(X, y=y, groups=groups)
+        y_pred = self.estimator_.predict_calib(X, y=y, groups=groups,
+                                               **predict_params)
 
         # Compute the conformity scores (manage jk-ab case)
         self.conformity_scores_ = \
@@ -553,6 +559,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
+        **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -602,6 +609,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             By default ``False``.
 
+        **predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -619,7 +629,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         # If alpha is None, predict the target without confidence intervals
         if alpha is None:
             y_pred = self.estimator_.predict(
-                X, ensemble, return_multi_pred=False
+                X, ensemble, return_multi_pred=False, **predict_params
             )
             return np.array(y_pred)
 
