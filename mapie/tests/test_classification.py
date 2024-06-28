@@ -74,6 +74,7 @@ ParamsPredict = TypedDict(
     }
 )
 
+# Here, we list all the strategies we want to test.
 STRATEGIES = {
     "lac": (
         Params(
@@ -353,8 +354,21 @@ STRATEGIES = {
             agg_scores="mean"
         )
     ),
+    "raps_randomized_split": (
+            Params(
+            method="raps",
+            cv="split",
+            test_size=0.5,
+            random_state=random_state
+        ),
+        ParamsPredict(
+            include_last_label="randomized",
+            agg_scores="mean"
+        )
+    ),
 }
 
+# Here, we list all the strategies we want to test only for binary classification.
 STRATEGIES_BINARY = {
     "lac": (
         Params(
@@ -406,6 +420,8 @@ STRATEGIES_BINARY = {
     ),
 }
 
+# Here, we only list the strategies we want to test on a small data set,
+# for multi-class classification.
 COVERAGES = {
     "lac": 6/9,
     "lac_split": 8/9,
@@ -429,6 +445,8 @@ COVERAGES = {
     "top_k_split": 1.0,
 }
 
+# Here, we only list the strategies we want to test on a small data set,
+# for binary classification.
 COVERAGES_BINARY = {
     "lac": 6/9,
     "lac_split": 8/9,
@@ -746,6 +764,8 @@ X, y = make_classification(
     random_state=random_state,
 )
 
+# Here, we only list the strategies we want to test on larger data sets,
+# particularly for the raps methods which require larger data sets.
 LARGE_COVERAGES = {
     "lac": 0.802,
     "lac_split": 0.842,
@@ -759,6 +779,7 @@ LARGE_COVERAGES = {
     "raps": 0.928,
     "raps_split": 0.918,
     "raps_randomized": 0.806,
+    "raps_randomized_split": 0.848,
 }
 
 
