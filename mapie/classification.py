@@ -909,6 +909,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         return n_classes, classes
 
+    def _get_label_encoder(self) -> LabelEncoder:
+        """
+        Construct the label encoder with respect to the classes values.
+
+        Returns
+        -------
+        LabelEncoder
+        """
+        return LabelEncoder().fit(self.classes_)
+
     def _check_fit_parameter(
         self,
         X: ArrayLike,
@@ -972,11 +982,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         n_samples = _num_samples(y)
 
         self.n_classes_, self.classes_ = self._get_classes_info(estimator, y)
-        enc = LabelEncoder()
-        enc.fit(self.classes_)
-        y_enc = enc.transform(y)
+        self.label_encoder_ = self._get_label_encoder()
+        y_enc = self.label_encoder_.transform(y)
 
-        self.label_encoder_ = enc
         self._check_target(y)
 
         return estimator, cv, X, y, y_enc, sample_weight, groups, n_samples
