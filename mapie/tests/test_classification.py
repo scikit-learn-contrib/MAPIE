@@ -355,7 +355,7 @@ STRATEGIES = {
         )
     ),
     "raps_randomized_split": (
-            Params(
+        Params(
             method="raps",
             cv="split",
             test_size=0.5,
@@ -368,7 +368,8 @@ STRATEGIES = {
     ),
 }
 
-# Here, we list all the strategies we want to test only for binary classification.
+# Here, we list all the strategies we want to test
+# only for binary classification.
 STRATEGIES_BINARY = {
     "lac": (
         Params(
