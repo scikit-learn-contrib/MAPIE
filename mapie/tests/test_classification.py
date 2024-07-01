@@ -1657,7 +1657,7 @@ def test_pred_loof_isnan() -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_pipeline_compatibility(strategy: str) -> None:
     """Check that MAPIE works on pipeline based on pandas dataframes"""
-    X = np.random.randint(0, 100, size=100)
+    X = np.concatenate([np.random.randint(0, 100, size=99), [np.nan]])
     X_cat = np.random.choice(["A", "B", "C"], size=X.shape[0])
     X = pd.DataFrame(
         {
