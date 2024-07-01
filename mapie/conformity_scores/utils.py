@@ -20,7 +20,7 @@ def check_regression_conformity_score(
 
     Examples
     --------
-    >>> from mapie.conformity_scores.checks import (
+    >>> from mapie.conformity_scores.utils import (
     ...     check_regression_conformity_score
     ... )
     >>> try:
@@ -56,7 +56,7 @@ def check_classification_conformity_score(
 
     Examples
     --------
-    >>> from mapie.conformity_scores.checks import (
+    >>> from mapie.conformity_scores.utils import (
     ...     check_classification_conformity_score
     ... )
     >>> try:
