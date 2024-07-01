@@ -1,26 +1,92 @@
-import numpy as np
-from mapie._typing import NDArray
+from typing import Optional
+
+from .regression import BaseRegressionScore
+from .classification import BaseClassificationScore
+from .bounds import AbsoluteConformityScore
+from .sets import APS, LAC, TopK
 
 
-def get_true_label_position(y_pred_proba: NDArray, y: NDArray) -> NDArray:
+def check_regression_conformity_score(
+    conformity_score: Optional[BaseRegressionScore],
+    sym: bool = True,
+) -> BaseRegressionScore:
     """
-    Return the sorted position of the true label in the
-    prediction
+    Check parameter ``conformity_score`` for regression task.
 
-    Parameters
-    ----------
-    y_pred_proba: NDArray of shape (n_samples, n_classes)
-        Model prediction.
+    Raises
+    ------
+    ValueError
+        If parameters are not valid.
 
-    y: NDArray of shape (n_samples)
-        Labels.
-
-    Returns
-    -------
-    NDArray of shape (n_samples, 1)
-        Position of the true label in the prediction.
+    Examples
+    --------
+    >>> from mapie.conformity_scores.checks import (
+    ...     check_regression_conformity_score
+    ... )
+    >>> try:
+    ...     check_regression_conformity_score(1)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    Invalid conformity_score argument.
+    Must be None or a ConformityScore instance.
     """
-    index = np.argsort(np.fliplr(np.argsort(y_pred_proba, axis=1)))
-    position = np.take_along_axis(index, y.reshape(-1, 1), axis=1)
+    if conformity_score is None:
+        return AbsoluteConformityScore(sym=sym)
+    elif isinstance(conformity_score, BaseRegressionScore):
+        return conformity_score
+    else:
+        raise ValueError(
+            "Invalid conformity_score argument.\n"
+            "Must be None or a ConformityScore instance."
+        )
 
-    return position
+
+def check_classification_conformity_score(
+    conformity_score: Optional[BaseClassificationScore] = None,
+    method: Optional[str] = None,
+) -> BaseClassificationScore:
+    """
+    Check parameter ``conformity_score`` for classification task.
+
+    Raises
+    ------
+    ValueError
+        If parameters are not valid.
+
+    Examples
+    --------
+    >>> from mapie.conformity_scores.checks import (
+    ...     check_classification_conformity_score
+    ... )
+    >>> try:
+    ...     check_classification_conformity_score(1)
+    ... except Exception as exception:
+    ...     print(exception)
+    ...
+    Invalid conformity_score argument.
+    Must be None or a ConformityScore instance.
+    """
+    allowed_methods = ['lac', 'naive', 'aps', 'raps', 'top_k']
+    deprecated_methods = ['score', 'cumulated_score']
+    if method is not None:
+        if method in ['score', 'lac']:
+            return LAC()
+        if method in ['naive', 'cumulated_score', 'aps', 'raps']:
+            return APS()
+        if method == 'top_k':
+            return TopK()
+        else:
+            raise ValueError(
+                f"Invalid method. Allowed values are {allowed_methods}. "
+                f"Deprecated values are {deprecated_methods}. "
+            )
+    elif isinstance(conformity_score, BaseClassificationScore):
+        return conformity_score
+    elif conformity_score is None:
+        return LAC()
+    else:
+        raise ValueError(
+            "Invalid conformity_score argument.\n"
+            "Must be None or a ConformityScore instance."
+        )

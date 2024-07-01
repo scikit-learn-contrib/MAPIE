@@ -80,9 +80,14 @@ Conformity scores
    :toctree: generated/
    :template: class.rst
 
+   conformity_scores.BaseRegressionScore
    conformity_scores.AbsoluteConformityScore
    conformity_scores.GammaConformityScore
    conformity_scores.ResidualNormalisedScore
+   conformity_scores.BaseClassificationScore
+   conformity_scores.LAC
+   conformity_scores.APS
+   conformity_scores.TopK
 
 Resampling
 ==========
