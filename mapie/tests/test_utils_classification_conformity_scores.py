@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 import pytest
 
-from mapie.conformity_scores.utils_classification_conformity_scores import (
+from mapie.conformity_scores.utils import (
     get_true_label_position,
 )
 from mapie._typing import NDArray

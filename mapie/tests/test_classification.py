@@ -14,7 +14,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
-                                     ShuffleSplit)
+                                     ShuffleSplit, StratifiedShuffleSplit)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.estimator_checks import check_estimator
@@ -74,6 +74,7 @@ ParamsPredict = TypedDict(
     }
 )
 
+# Here, we list all the strategies we want to test.
 STRATEGIES = {
     "lac": (
         Params(
@@ -330,8 +331,10 @@ STRATEGIES = {
     "raps_split": (
         Params(
             method="raps",
-            cv="split",
-            test_size=0.5,
+            cv=StratifiedShuffleSplit(
+                n_splits=1, train_size=0.5, random_state=random_state
+            ),
+            test_size=None,
             random_state=random_state
         ),
         ParamsPredict(
@@ -365,6 +368,8 @@ STRATEGIES = {
     ),
 }
 
+# Here, we list all the strategies we want to test
+# only for binary classification.
 STRATEGIES_BINARY = {
     "lac": (
         Params(
@@ -413,9 +418,11 @@ STRATEGIES_BINARY = {
             include_last_label=False,
             agg_scores="crossval"
         )
-    )
+    ),
 }
 
+# Here, we only list the strategies we want to test on a small data set,
+# for multi-class classification.
 COVERAGES = {
     "lac": 6/9,
     "lac_split": 8/9,
@@ -437,12 +444,10 @@ COVERAGES = {
     "naive_split": 5/9,
     "top_k": 1.0,
     "top_k_split": 1.0,
-    "raps": 1.0,
-    "raps_split": 7/9,
-    "raps_randomized": 8/9,
-    "raps_randomized_split": 1.0
 }
 
+# Here, we only list the strategies we want to test on a small data set,
+# for binary classification.
 COVERAGES_BINARY = {
     "lac": 6/9,
     "lac_split": 8/9,
@@ -675,50 +680,6 @@ y_toy_mapie = {
         [False, True, True],
         [False, True, True]
     ],
-    "raps": [
-        [True, False, False],
-        [True, False, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True]
-    ],
-    "raps_split": [
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False]
-    ],
-    "raps_randomized": [
-        [True, False, False],
-        [True, False, False],
-        [True, True, False],
-        [True, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, True],
-        [False, False, True]
-    ],
-    "raps_randomized_split": [
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True],
-        [True, True, True]
-    ]
 }
 
 X_toy_binary = np.arange(9).reshape(-1, 1)
@@ -803,6 +764,24 @@ X, y = make_classification(
     n_classes=n_classes,
     random_state=random_state,
 )
+
+# Here, we only list the strategies we want to test on larger data sets,
+# particularly for the raps methods which require larger data sets.
+LARGE_COVERAGES = {
+    "lac": 0.802,
+    "lac_split": 0.842,
+    "aps_include": 0.928,
+    "aps_include_split": 0.93,
+    "aps_randomized": 0.802,
+    "naive": 0.936,
+    "naive_split": 0.914,
+    "top_k": 0.96,
+    "top_k_split": 0.952,
+    "raps": 0.928,
+    "raps_split": 0.918,
+    "raps_randomized": 0.806,
+    "raps_randomized_split": 0.848,
+}
 
 
 class CumulatedScoreClassifier:
@@ -976,10 +955,12 @@ def test_binary_classif_same_result() -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
-    clf = LogisticRegression().fit(X_toy, y_toy)
+    clf = LogisticRegression().fit(X, y)
     mapie_clf = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
-    mapie_clf.fit(X_toy, y_toy)
-    assert isinstance(mapie_clf.single_estimator_, LogisticRegression)
+    mapie_clf.fit(X, y)
+    assert (
+        isinstance(mapie_clf.estimator_.single_estimator_, LogisticRegression)
+    )
 
 
 @pytest.mark.parametrize("method", METHODS)
@@ -988,7 +969,7 @@ def test_valid_method(method: str) -> None:
     mapie_clf = MapieClassifier(
         method=method, cv="prefit", random_state=random_state
     )
-    mapie_clf.fit(X_toy, y_toy)
+    mapie_clf.fit(X, y)
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
 
 
@@ -1428,7 +1409,7 @@ def test_valid_prediction(alpha: Any) -> None:
     mapie_clf.predict(X_toy, alpha=alpha)
 
 
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.parametrize("strategy", [*COVERAGES])
 def test_toy_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by MapieClassifier on a toy dataset"""
     if strategy == "aps_randomized_cv_crossval":
@@ -1450,6 +1431,28 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     np.testing.assert_allclose(
         classification_coverage_score(y_toy, y_ps[:, :, 0]),
         COVERAGES[strategy],
+    )
+
+
+@pytest.mark.parametrize("strategy", [*LARGE_COVERAGES])
+def test_large_dataset_predictions(strategy: str) -> None:
+    """Test prediction sets estimated by MapieClassifier on a larger dataset"""
+    args_init, args_predict = STRATEGIES[strategy]
+    if "split" not in strategy:
+        clf = LogisticRegression().fit(X, y)
+    else:
+        clf = LogisticRegression()
+    mapie_clf = MapieClassifier(estimator=clf, **args_init)
+    mapie_clf.fit(X, y, size_raps=0.5)
+    _, y_ps = mapie_clf.predict(
+        X,
+        alpha=0.2,
+        include_last_label=args_predict["include_last_label"],
+        agg_scores=args_predict["agg_scores"]
+    )
+    np.testing.assert_allclose(
+        classification_coverage_score(y, y_ps[:, :, 0]),
+        LARGE_COVERAGES[strategy], rtol=1e-2
     )
 
 
@@ -1560,7 +1563,7 @@ def test_sum_proba_to_one_predict(
     wrong_model = WrongOutputModel(y_pred_proba)
     mapie_clf = MapieClassifier(cv="prefit", random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
-    mapie_clf.single_estimator_ = wrong_model
+    mapie_clf.estimator_.single_estimator_ = wrong_model
     with pytest.raises(
         AssertionError, match=r".*The sum of the scores is not equal to one.*"
     ):
@@ -1641,13 +1644,12 @@ def test_include_label_error_in_predict(
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
     mapie_clf = MapieClassifier(random_state=random_state)
-    _, y_pred, _, _ = mapie_clf._fit_and_predict_oof_model(
-        estimator=LogisticRegression(),
+    mapie_clf.fit(X_toy, y_toy)
+    y_pred, _, _ = mapie_clf.estimator_._predict_proba_calib_oof_estimator(
+        estimator=LogisticRegression().fit(X_toy, y_toy),
         X=X_toy,
-        y=y_toy,
-        train_index=[0, 1, 2, 3, 4],
         val_index=[],
-        k=0,
+        k=0
     )
     assert len(y_pred) == 0
 
@@ -1655,13 +1657,15 @@ def test_pred_loof_isnan() -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_pipeline_compatibility(strategy: str) -> None:
     """Check that MAPIE works on pipeline based on pandas dataframes"""
+    X = np.concatenate([np.random.randint(0, 100, size=99), [np.nan]])
+    X_cat = np.random.choice(["A", "B", "C"], size=X.shape[0])
     X = pd.DataFrame(
         {
-            "x_cat": ["A", "A", "B", "A", "A", "B"],
-            "x_num": [0, 1, 1, 4, np.nan, 5],
+            "x_cat": X_cat,
+            "x_num": X,
         }
     )
-    y = pd.Series([0, 1, 2, 0, 1, 0])
+    y = np.random.randint(0, 4, size=(100, 1))  # 3 classes
     numeric_preprocessor = Pipeline(
         [
             ("imputer", SimpleImputer(strategy="mean")),
@@ -2027,7 +2031,7 @@ def test_fit_parameters_passing() -> None:
 
     mapie.fit(X, y, monitor=early_stopping_monitor)
 
-    assert mapie.single_estimator_.estimators_.shape[0] == 3
+    assert mapie.estimator_.single_estimator_.estimators_.shape[0] == 3
 
-    for estimator in mapie.estimators_:
+    for estimator in mapie.estimator_.estimators_:
         assert estimator.estimators_.shape[0] == 3

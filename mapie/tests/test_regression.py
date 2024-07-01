@@ -26,7 +26,7 @@ from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
                                      GammaConformityScore,
                                      ResidualNormalisedScore)
-from mapie.estimator.estimator import EnsembleRegressor
+from mapie.estimator.regressor import EnsembleRegressor
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample

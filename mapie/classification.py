@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
-from joblib import Parallel, delayed
-from sklearn.base import BaseEstimator, ClassifierMixin, clone
-from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
+                                     StratifiedShuffleSplit)
 from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.utils import _safe_indexing, check_random_state
 from sklearn.utils.multiclass import (check_classification_targets,
@@ -14,17 +14,16 @@ from sklearn.utils.multiclass import (check_classification_targets,
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
-from ._machine_precision import EPSILON
-from ._typing import ArrayLike, NDArray
-from .metrics import classification_mean_width_score
-from .utils import (check_alpha, check_alpha_and_n_samples, check_cv,
-                    check_estimator_classification, check_n_features_in,
-                    check_n_jobs, check_null_weight, check_verbose,
-                    compute_quantiles, fit_estimator, fix_number_of_classes)
-
-
-from mapie.conformity_scores.utils_classification_conformity_scores import (
-    get_true_label_position,
+from mapie._machine_precision import EPSILON
+from mapie._typing import ArrayLike, NDArray
+from mapie.estimator.classifier import EnsembleClassifier
+from mapie.metrics import classification_mean_width_score
+from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
+                         check_estimator_classification, check_n_features_in,
+                         check_n_jobs, check_null_weight, check_verbose,
+                         compute_quantiles)
+from mapie.conformity_scores.utils import (
+    get_true_label_position
 )
 
 
@@ -141,8 +140,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     valid_methods: List[str]
         List of all valid methods.
 
-    single_estimator_: sklearn.ClassifierMixin
-        Estimator fitted on the whole training set.
+    estimator_: EnsembleClassifier
+        Sklearn estimator that handle all that is related to the estimator.
 
     n_features_in_: int
         Number of features passed to the fit method.
@@ -195,9 +194,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         "naive", "score", "lac", "cumulated_score", "aps", "top_k", "raps"
     ]
     fit_attributes = [
-        "single_estimator_",
-        "estimators_",
-        "k_",
+        "estimator_",
         "n_features_in_",
         "conformity_scores_",
         "classes_",
@@ -305,9 +302,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If ``method`` is ``"raps"`` and ``cv`` is not ``"prefit"``.
         """
-        if (self.method == "raps") and (
-            (self.cv not in self.raps_valid_cv_)
-            or isinstance(self.cv, ShuffleSplit)
+        if (self.method == "raps") and not (
+            (self.cv in self.raps_valid_cv_)
+            or isinstance(self.cv, BaseShuffleSplit)
         ):
             raise ValueError(
                 "RAPS method can only be used "
@@ -549,113 +546,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             axis=1
         )
         return prediction_sets
-
-    def _predict_oof_model(
-        self,
-        estimator: ClassifierMixin,
-        X: ArrayLike,
-    ) -> NDArray:
-        """
-        Predict probabilities of a test set from a fitted estimator.
-
-        Parameters
-        ----------
-        estimator: ClassifierMixin
-            Fitted estimator.
-
-        X: ArrayLike
-            Test set.
-
-        Returns
-        -------
-        ArrayLike
-            Predicted probabilities.
-        """
-        y_pred_proba = estimator.predict_proba(X)
-        # we enforce y_pred_proba to contain all labels included in y
-        if len(estimator.classes_) != self.n_classes_:
-            y_pred_proba = fix_number_of_classes(
-                self.n_classes_,
-                estimator.classes_,
-                y_pred_proba
-            )
-        y_pred_proba = self._check_proba_normalized(y_pred_proba)
-        return y_pred_proba
-
-    def _fit_and_predict_oof_model(
-        self,
-        estimator: ClassifierMixin,
-        X: ArrayLike,
-        y: ArrayLike,
-        train_index: ArrayLike,
-        val_index: ArrayLike,
-        k: int,
-        sample_weight: Optional[ArrayLike] = None,
-        **fit_params,
-    ) -> Tuple[ClassifierMixin, NDArray, NDArray, ArrayLike]:
-        """
-        Fit a single out-of-fold model on a given training set and
-        perform predictions on a test set.
-
-        Parameters
-        ----------
-        estimator: ClassifierMixin
-            Estimator to train.
-
-        X: ArrayLike of shape (n_samples, n_features)
-            Input data.
-
-        y: ArrayLike of shape (n_samples,)
-            Input labels.
-
-        train_index: np.ndarray of shape (n_samples_train)
-            Training data indices.
-
-        val_index: np.ndarray of shape (n_samples_val)
-            Validation data indices.
-
-        k: int
-            Split identification number.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights. If None, then samples are equally weighted.
-            By default None.
-
-        **fit_params : dict
-            Additional fit parameters.
-
-        Returns
-        -------
-        Tuple[ClassifierMixin, NDArray, NDArray, ArrayLike]
-
-        - [0]: ClassifierMixin, fitted estimator
-        - [1]: NDArray of shape (n_samples_val,),
-          Estimator predictions on the validation fold,
-        - [2]: NDArray of shape (n_samples_val,)
-          Identification number of the validation fold,
-        - [3]: ArrayLike of shape (n_samples_val,)
-          Validation data indices
-        """
-        X_train = _safe_indexing(X, train_index)
-        y_train = _safe_indexing(y, train_index)
-        X_val = _safe_indexing(X, val_index)
-        y_val = _safe_indexing(y, val_index)
-
-        if sample_weight is None:
-            estimator = fit_estimator(
-                estimator, X_train, y_train, **fit_params
-            )
-        else:
-            sample_weight_train = _safe_indexing(sample_weight, train_index)
-            estimator = fit_estimator(
-                estimator, X_train, y_train, sample_weight_train, **fit_params
-            )
-        if _num_samples(X_val) > 0:
-            y_pred_proba = self._predict_oof_model(estimator, X_val)
-        else:
-            y_pred_proba = np.array([])
-        val_id = np.full_like(y_val, k, dtype=int)
-        return estimator, y_pred_proba, val_id, val_index
 
     def _get_true_label_cumsum_proba(
         self,
@@ -1019,12 +909,161 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         return n_classes, classes
 
+    def _get_label_encoder(self) -> LabelEncoder:
+        """
+        Construct the label encoder with respect to the classes values.
+
+        Returns
+        -------
+        LabelEncoder
+        """
+        return LabelEncoder().fit(self.classes_)
+
+    def _check_fit_parameter(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+    ):
+        """
+        Perform several checks on class parameters.
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed values.
+
+        y: ArrayLike
+            Target values.
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Non-null sample weights.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+            By default ``None``.
+
+        Returns
+        -------
+        Tuple[Optional[ClassifierMixin],
+        Optional[Union[int, str, BaseCrossValidator]],
+        ArrayLike, NDArray, NDArray, Optional[NDArray],
+        Optional[NDArray], ArrayLike]
+            Parameters checked
+
+        Raises
+        ------
+        ValueError
+            If conformity score is FittedResidualNormalizing score and method
+            is neither ``"prefit"`` or ``"split"``.
+
+        ValueError
+            If ``cv`` is `"prefit"`` or ``"split"`` and ``method`` is not
+            ``"base"``.
+        """
+        self._check_parameters()
+        cv = check_cv(
+            self.cv, test_size=self.test_size, random_state=self.random_state
+        )
+        X, y = indexable(X, y)
+        y = _check_y(y)
+
+        sample_weight = cast(Optional[NDArray], sample_weight)
+        groups = cast(Optional[NDArray], groups)
+        sample_weight, X, y = check_null_weight(sample_weight, X, y)
+
+        y = cast(NDArray, y)
+
+        estimator = check_estimator_classification(X, y, cv, self.estimator)
+        self.n_features_in_ = check_n_features_in(X, cv, estimator)
+
+        n_samples = _num_samples(y)
+
+        self.n_classes_, self.classes_ = self._get_classes_info(estimator, y)
+        self.label_encoder_ = self._get_label_encoder()
+        y_enc = self.label_encoder_.transform(y)
+
+        self._check_target(y)
+
+        return estimator, cv, X, y, y_enc, sample_weight, groups, n_samples
+
+    def _split_data(
+        self,
+        X: ArrayLike,
+        y_enc: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        size_raps: Optional[float] = None,
+    ):
+        """Split data for raps method
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed values.
+
+        y_enc: ArrayLike
+            Target values as normalized encodings.
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Non-null sample weights.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+            By default ``None``.
+
+        size_raps: : Optional[float]
+            Percentage of the data to be used for choosing lambda_star and
+            k_star for the RAPS method.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray, NDArray, Optional[NDArray],
+        Optional[NDArray]]
+            - NDArray of shape (n_samples, n_features)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+        """
+        # Split data for raps method
+        raps_split = StratifiedShuffleSplit(
+            n_splits=1, test_size=size_raps, random_state=self.random_state
+        )
+        train_raps_index, val_raps_index = next(raps_split.split(X, y_enc))
+        X, self.X_raps, y_enc, self.y_raps = (
+            _safe_indexing(X, train_raps_index),
+            _safe_indexing(X, val_raps_index),
+            _safe_indexing(y_enc, train_raps_index),
+            _safe_indexing(y_enc, val_raps_index),
+        )
+
+        # Decode y_raps for use in the RAPS method
+        self.y_raps_no_enc = self.label_encoder_.inverse_transform(self.y_raps)
+        y = self.label_encoder_.inverse_transform(y_enc)
+
+        # Cast to NDArray for type checking
+        y_enc = cast(NDArray, y_enc)
+        n_samples = _num_samples(y_enc)
+        if sample_weight is not None:
+            sample_weight = cast(NDArray, sample_weight)
+            sample_weight = sample_weight[train_raps_index]
+        if groups is not None:
+            groups = cast(NDArray, groups)
+            groups = groups[train_raps_index]
+
+        return X, y_enc, y, n_samples, sample_weight, groups
+
     def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        size_raps: Optional[float] = .2,
+        size_raps: Optional[float] = 0.2,
         groups: Optional[ArrayLike] = None,
         **fit_params,
     ) -> MapieClassifier:
@@ -1052,7 +1091,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Percentage of the data to be used for choosing lambda_star and
             k_star for the RAPS method.
 
-            By default ``.2``.
+            By default ``0.2``.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
@@ -1069,136 +1108,60 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             The model itself.
         """
         # Checks
-        self._check_parameters()
-        cv = check_cv(
-            self.cv, test_size=self.test_size, random_state=self.random_state
-        )
-        X, y = indexable(X, y)
-        y = _check_y(y)
-
-        sample_weight = cast(Optional[NDArray], sample_weight)
-        groups = cast(Optional[NDArray], groups)
-        sample_weight, X, y = check_null_weight(sample_weight, X, y)
-
-        y = cast(NDArray, y)
-
-        estimator = check_estimator_classification(
-            X,
-            y,
-            cv,
-            self.estimator
-        )
-        self.n_features_in_ = check_n_features_in(X, cv, estimator)
-
-        n_samples = _num_samples(y)
-
-        self.n_classes_, self.classes_ = self._get_classes_info(
-            estimator, y
-        )
-        enc = LabelEncoder()
-        enc.fit(self.classes_)
-        y_enc = enc.transform(y)
-
-        self.label_encoder_ = enc
-        self._check_target(y)
-
-        # Initialization
-        self.estimators_: List[ClassifierMixin] = []
-        self.k_ = np.empty_like(y, dtype=int)
-        self.n_samples_ = _num_samples(X)
+        (estimator,
+         cv,
+         X,
+         y,
+         y_enc,
+         sample_weight,
+         groups,
+         n_samples) = self._check_fit_parameter(X, y, sample_weight, groups)
+        self.n_samples_ = n_samples
 
         if self.method == "raps":
-            raps_split = ShuffleSplit(
-                1, test_size=size_raps, random_state=self.random_state
+            (X, y_enc, y, n_samples, sample_weight, groups) = self._split_data(
+                X, y_enc, sample_weight, groups, size_raps
             )
-            train_raps_index, val_raps_index = next(raps_split.split(X))
-            X, self.X_raps, y_enc, self.y_raps = \
-                _safe_indexing(X, train_raps_index), \
-                _safe_indexing(X, val_raps_index), \
-                _safe_indexing(y_enc, train_raps_index), \
-                _safe_indexing(y_enc, val_raps_index)
-            self.y_raps_no_enc = self.label_encoder_.inverse_transform(
-                self.y_raps
-            )
-            y = self.label_encoder_.inverse_transform(y_enc)
-            y_enc = cast(NDArray, y_enc)
-            n_samples = _num_samples(y_enc)
-            if sample_weight is not None:
-                sample_weight = sample_weight[train_raps_index]
-                sample_weight = cast(NDArray, sample_weight)
-            if groups is not None:
-                groups = groups[train_raps_index]
-                groups = cast(NDArray, groups)
+
+        # Cast
+        X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
+        sample_weight = cast(NDArray, sample_weight)
+        groups = cast(NDArray, groups)
 
         # Work
-        if cv == "prefit":
-            self.single_estimator_ = estimator
-            y_pred_proba = self.single_estimator_.predict_proba(X)
-            y_pred_proba = self._check_proba_normalized(y_pred_proba)
+        self.estimator_ = EnsembleClassifier(
+            estimator,
+            self.n_classes_,
+            cv,
+            self.n_jobs,
+            self.random_state,
+            self.test_size,
+            self.verbose,
+        )
+        # Fit the prediction function
+        self.estimator_ = self.estimator_.fit(
+            X, y, y_enc=y_enc, sample_weight=sample_weight, groups=groups,
+            **fit_params
+        )
 
-        else:
-            cv = cast(BaseCrossValidator, cv)
-            self.single_estimator_ = fit_estimator(
-                clone(estimator), X, y, sample_weight, **fit_params
-            )
-            y_pred_proba = np.empty(
-                (n_samples, self.n_classes_),
-                dtype=float
-            )
-            outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                delayed(self._fit_and_predict_oof_model)(
-                    clone(estimator),
-                    X,
-                    y,
-                    train_index,
-                    val_index,
-                    k,
-                    sample_weight,
-                    **fit_params,
-                )
-                for k, (train_index, val_index) in enumerate(
-                    cv.split(X, y_enc, groups)
-                )
-            )
-            (
-                self.estimators_,
-                predictions_list,
-                val_ids_list,
-                val_indices_list
-            ) = map(list, zip(*outputs))
-            predictions = np.concatenate(
-                cast(List[NDArray], predictions_list)
-            )
-            val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
-            val_indices = np.concatenate(
-                cast(List[NDArray], val_indices_list)
-            )
-            self.k_[val_indices] = val_ids
-            y_pred_proba[val_indices] = predictions
-
-            if isinstance(cv, ShuffleSplit):
-                # Should delete values indices that
-                # are not used during calibration
-                self.k_ = self.k_[val_indices]
-                y_pred_proba = y_pred_proba[val_indices]
-                y_enc = y_enc[val_indices]
-                y = cast(NDArray, y)[val_indices]
+        # Predict on calibration data
+        y_pred_proba, y, y_enc = self.estimator_.predict_proba_calib(
+            X, y, y_enc, groups
+        )
 
         # RAPS: compute y_pred and position on the RAPS validation dataset
         if self.method == "raps":
-            self.y_pred_proba_raps = self.single_estimator_.predict_proba(
-                self.X_raps
+            self.y_pred_proba_raps = (
+                self.estimator_.single_estimator_.predict_proba(self.X_raps)
             )
             self.position_raps = get_true_label_position(
-                self.y_pred_proba_raps,
-                self.y_raps
+                self.y_pred_proba_raps, self.y_raps
             )
 
         # Conformity scores
         if self.method == "naive":
-            self.conformity_scores_ = np.empty(
-                y_pred_proba.shape,
-                dtype="float"
+            self.conformity_scores_ = (
+                np.empty(y_pred_proba.shape, dtype="float")
             )
         elif self.method in ["score", "lac"]:
             self.conformity_scores_ = np.take_along_axis(
@@ -1206,10 +1169,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             )
         elif self.method in ["cumulated_score", "aps", "raps"]:
             self.conformity_scores_, self.cutoff = (
-                self._get_true_label_cumsum_proba(
-                    y,
-                    y_pred_proba
-                )
+                self._get_true_label_cumsum_proba(y, y_pred_proba)
             )
             y_proba_true = np.take_along_axis(
                 y_pred_proba, y_enc.reshape(-1, 1), axis=1
@@ -1222,17 +1182,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             # and get the position of each label from decreasing
             # probability
             self.conformity_scores_ = get_true_label_position(
-                y_pred_proba,
-                y_enc
+                y_pred_proba, y_enc
             )
         else:
             raise ValueError(
-                "Invalid method. "
-                f"Allowed values are {self.valid_methods_}."
+                "Invalid method. " f"Allowed values are {self.valid_methods_}."
             )
-
-        if isinstance(cv, ShuffleSplit):
-            self.single_estimator_ = self.estimators_[0]
 
         return self
 
@@ -1318,48 +1273,28 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         alpha = cast(Optional[NDArray], check_alpha(alpha))
         check_is_fitted(self, self.fit_attributes)
         lambda_star, k_star = None, None
+
         # Estimate prediction sets
-        y_pred = self.single_estimator_.predict(X)
+        y_pred = self.estimator_.single_estimator_.predict(X)
 
         if alpha is None:
             return y_pred
 
-        n = len(self.conformity_scores_)
-
         # Estimate of probabilities from estimator(s)
         # In all cases: len(y_pred_proba.shape) == 3
         # with  (n_test, n_classes, n_alpha or n_train_samples)
+        n = len(self.conformity_scores_)
         alpha_np = cast(NDArray, alpha)
         check_alpha_and_n_samples(alpha_np, n)
-        if cv == "prefit":
-            y_pred_proba = self.single_estimator_.predict_proba(X)
+
+        y_pred_proba = self.estimator_.predict(X, agg_scores)
+        y_pred_proba = self._check_proba_normalized(y_pred_proba, axis=1)
+        if agg_scores != "crossval":
             y_pred_proba = np.repeat(
                 y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
             )
-        else:
-            y_pred_proba_k = np.asarray(
-                Parallel(
-                    n_jobs=self.n_jobs, verbose=self.verbose
-                )(
-                    delayed(self._predict_oof_model)(estimator, X)
-                    for estimator in self.estimators_
-                )
-            )
-            if agg_scores == "crossval":
-                y_pred_proba = np.moveaxis(y_pred_proba_k[self.k_], 0, 2)
-            elif agg_scores == "mean":
-                y_pred_proba = np.mean(y_pred_proba_k, axis=0)
-                y_pred_proba = np.repeat(
-                    y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
-                )
-            else:
-                raise ValueError("Invalid 'agg_scores' argument.")
-        # Check that sum of probas is equal to 1
-        y_pred_proba = self._check_proba_normalized(y_pred_proba, axis=1)
 
         # Choice of the quantile
-        check_alpha_and_n_samples(alpha_np, n)
-
         if self.method == "naive":
             self.quantiles_ = 1 - alpha_np
         else:
