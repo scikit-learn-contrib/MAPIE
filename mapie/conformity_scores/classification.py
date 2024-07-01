@@ -31,6 +31,11 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         It should be specified if ``consistency_check==True``.
 
         By default, it is defined by the default precision.
+
+    Attributes
+    ----------
+    quantiles_: ArrayLike of shape (n_alpha)
+        The quantiles estimated from ``conformity_scores_`` and alpha values.
     """
 
     def __init__(

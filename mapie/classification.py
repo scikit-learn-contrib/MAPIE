@@ -146,9 +146,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     conformity_scores_: ArrayLike of shape (n_samples_train)
         The conformity scores used to calibrate the prediction sets.
 
-    quantiles_: ArrayLike of shape (n_alpha)
-        The quantiles estimated from ``conformity_scores_`` and alpha values.
-
     References
     ----------
     [1] Mauricio Sadinle, Jing Lei, and Larry Wasserman.
