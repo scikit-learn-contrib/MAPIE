@@ -32,8 +32,6 @@ class EnsembleEstimator(metaclass=ABCMeta):
     def predict(
         self,
         X: ArrayLike,
-        ensemble: bool = False,
-        return_multi_pred: bool = True,
         **kwargs,
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
