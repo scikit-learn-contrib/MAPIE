@@ -170,7 +170,7 @@ fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 for i, method in enumerate(methods):
     conformity_scores = mapie[method].conformity_scores_
     n = mapie[method].n_samples_
-    quantiles = mapie[method].quantiles_
+    quantiles = mapie[method].conformity_score_function_.quantiles_
     plot_scores(alpha, conformity_scores, quantiles, method, axs[i])
 plt.show()
 
@@ -270,7 +270,8 @@ fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 axs[0].set_xlabel("1 - alpha")
 axs[0].set_ylabel("Quantile")
 for method in methods:
-    axs[0].scatter(1 - alpha_, mapie[method].quantiles_, label=method)
+    quantiles = mapie[method].conformity_score_function_.quantiles_
+    axs[0].scatter(1 - alpha_, quantiles, label=method)
 axs[0].legend()
 for method in methods:
     axs[1].scatter(1 - alpha_, coverage[method], label=method)

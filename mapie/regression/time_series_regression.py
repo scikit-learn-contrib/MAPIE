@@ -9,7 +9,7 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import ConformityScore
+from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import MapieRegressor
 from mapie.utils import check_alpha, check_gamma
 
@@ -66,7 +66,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
-        conformity_score: Optional[ConformityScore] = None,
+        conformity_score: Optional[BaseRegressionScore] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         super().__init__(
@@ -114,7 +114,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         """
         y_pred = super().predict(X, ensemble=ensemble)
         scores = np.array(
-            self.conformity_score_function_.get_conformity_scores(X, y, y_pred)
+            self.conformity_score_function_.get_conformity_scores(
+                y, y_pred, X=X
+            )
         )
         return scores
 

@@ -6,15 +6,17 @@ from typing import Any, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import pytest
+
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
-                                     PredefinedSplit, ShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import (
+    GroupKFold, KFold, LeaveOneOut, PredefinedSplit, ShuffleSplit,
+    train_test_split
+)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -23,9 +25,10 @@ from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
-from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
-                                     GammaConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import (
+    AbsoluteConformityScore, BaseRegressionScore, GammaConformityScore,
+    ResidualNormalisedScore
+)
 from mapie.estimator.regressor import EnsembleRegressor
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
@@ -784,7 +787,7 @@ def test_pipeline_compatibility() -> None:
     "conformity_score", [AbsoluteConformityScore(), GammaConformityScore()]
 )
 def test_conformity_score(
-    strategy: str, conformity_score: ConformityScore
+    strategy: str, conformity_score: BaseRegressionScore
 ) -> None:
     """Test that any conformity score function with MAPIE raises no error."""
     mapie_reg = MapieRegressor(
@@ -799,7 +802,7 @@ def test_conformity_score(
     "conformity_score", [ResidualNormalisedScore()]
 )
 def test_conformity_score_with_split_strategies(
-   conformity_score: ConformityScore
+   conformity_score: BaseRegressionScore
 ) -> None:
     """
     Test that any conformity score function that handle only split strategies

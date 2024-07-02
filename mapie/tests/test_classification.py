@@ -23,6 +23,11 @@ from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
+from mapie.conformity_scores.sets.aps import APS
+from mapie.conformity_scores.sets.utils import (
+    check_proba_normalized, get_last_included_proba,
+    get_true_label_cumsum_proba
+)
 from mapie.metrics import classification_coverage_score
 from mapie.utils import check_alpha
 
@@ -1028,14 +1033,14 @@ def test_too_large_cv(cv: Any) -> None:
 )
 def test_invalid_include_last_label(include_last_label: Any) -> None:
     """Test that invalid include_last_label raise errors."""
-    mapie_clf = MapieClassifier(random_state=random_state)
+    mapie_clf = MapieClassifier(method='aps', random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(
         ValueError, match=r".*Invalid include_last_label argument.*"
     ):
         mapie_clf.predict(
             X_toy,
-            y_toy,
+            alpha=0.5,
             include_last_label=include_last_label
         )
 
@@ -1504,7 +1509,8 @@ def test_cumulated_scores() -> None:
         include_last_label=True,
         alpha=alpha
     )
-    np.testing.assert_allclose(mapie_clf.quantiles_, quantile)
+    computed_quantile = mapie_clf.conformity_score_function_.quantiles_
+    np.testing.assert_allclose(computed_quantile, quantile)
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
 
 
@@ -1532,7 +1538,8 @@ def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
         include_last_label=True,
         alpha=alpha
     )
-    np.testing.assert_allclose(mapie.quantiles_, quantile)
+    computed_quantile = mapie.conformity_score_function_.quantiles_
+    np.testing.assert_allclose(computed_quantile, quantile)
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
 
 
@@ -1606,28 +1613,16 @@ def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
         mapie_clf.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("method", WRONG_METHODS)
-@pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
-def test_method_error_in_predict(method: Any, alpha: float) -> None:
-    """Test else condition for the method in .predict"""
-    mapie_clf = MapieClassifier(
-        method="lac", random_state=random_state
-    )
-    mapie_clf.fit(X_toy, y_toy)
-    mapie_clf.method = method
-    with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie_clf.predict(X_toy, alpha=alpha)
-
-
 @pytest.mark.parametrize("include_labels", WRONG_INCLUDE_LABELS)
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_include_label_error_in_predict(
     monkeypatch: Any, include_labels: Union[bool, str], alpha: float
 ) -> None:
     """Test else condition for include_label parameter in .predict"""
+    from mapie.conformity_scores.sets import utils
     monkeypatch.setattr(
-        MapieClassifier,
-        "_check_include_last_label",
+        utils,
+        "check_include_last_label",
         do_nothing
     )
     mapie_clf = MapieClassifier(
@@ -1694,8 +1689,7 @@ def test_pred_proba_float64() -> None:
     y_pred_proba = np.random.random((1000, 10)).astype(np.float32)
     sum_of_rows = y_pred_proba.sum(axis=1)
     normalized_array = y_pred_proba / sum_of_rows[:, np.newaxis]
-    mapie = MapieClassifier(random_state=random_state)
-    checked_normalized_array = mapie._check_proba_normalized(normalized_array)
+    checked_normalized_array = check_proba_normalized(normalized_array)
 
     assert checked_normalized_array.dtype == "float64"
 
@@ -1744,12 +1738,9 @@ def test_regularize_conf_scores_shape(k_lambda) -> None:
     Test that the conformity scores have the correct shape.
     """
     lambda_, k = k_lambda[0], k_lambda[1]
-    args_init, _ = STRATEGIES["raps"]
-    clf = LogisticRegression().fit(X, y)
-    mapie_clf = MapieClassifier(estimator=clf, **args_init)
     conf_scores = np.random.rand(100, 1)
     cutoff = np.cumsum(np.ones(conf_scores.shape)) - 1
-    reg_conf_scores = mapie_clf._regularize_conformity_score(
+    reg_conf_scores = APS._regularize_conformity_score(
         k, lambda_, conf_scores, cutoff
     )
 
@@ -1768,9 +1759,8 @@ def test_get_true_label_cumsum_proba_shape() -> None:
         estimator=clf, random_state=random_state
     )
     mapie_clf.fit(X, y)
-    cumsum_proba, cutoff = mapie_clf._get_true_label_cumsum_proba(
-        y, y_pred
-    )
+    classes = mapie_clf.classes_
+    cumsum_proba, cutoff = get_true_label_cumsum_proba(y, y_pred, classes)
     assert cumsum_proba.shape == (len(X), 1)
     assert cutoff.shape == (len(X), )
 
@@ -1787,9 +1777,8 @@ def test_get_true_label_cumsum_proba_result() -> None:
         estimator=clf, random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
-    cumsum_proba, cutoff = mapie_clf._get_true_label_cumsum_proba(
-        y_toy, y_pred
-    )
+    classes = mapie_clf.classes_
+    cumsum_proba, cutoff = get_true_label_cumsum_proba(y_toy, y_pred, classes)
     np.testing.assert_allclose(
         cumsum_proba,
         np.array(
@@ -1829,10 +1818,11 @@ def test_get_last_included_proba_shape(k_lambda, strategy):
 
     mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
     include_last_label = STRATEGIES[strategy][1]["include_last_label"]
-    y_p_p_c, y_p_i_l, y_p_p_i_l = mapie._get_last_included_proba(
-        y_pred_proba, thresholds,
-        include_last_label, lambda_, k
-    )
+    y_p_p_c, y_p_i_l, y_p_p_i_l = \
+        get_last_included_proba(
+            y_pred_proba, thresholds, include_last_label,
+            mapie.method, lambda_, k
+        )
 
     assert y_p_p_c.shape == (len(X), len(np.unique(y)), len(thresholds))
     assert y_p_i_l.shape == (len(X), 1, len(thresholds))

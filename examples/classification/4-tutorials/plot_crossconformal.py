@@ -134,10 +134,11 @@ for method in methods:
 
 fig, axs = plt.subplots(1, len(mapies["lac"]), figsize=(20, 4))
 for i, (key, mapie) in enumerate(mapies["lac"].items()):
+    quantiles = mapie.conformity_score_function_.quantiles_[9]
     axs[i].set_xlabel("Conformity scores")
     axs[i].hist(mapie.conformity_scores_)
-    axs[i].axvline(mapie.quantiles_[9], ls="--", color="k")
-    axs[i].set_title(f"split={key}\nquantile={mapie.quantiles_[9]:.3f}")
+    axs[i].axvline(quantiles, ls="--", color="k")
+    axs[i].set_title(f"split={key}\nquantile={quantiles:.3f}")
 plt.suptitle(
     "Distribution of scores on each calibration fold for the "
     f"{methods[0]} method"

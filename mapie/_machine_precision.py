@@ -1,5 +1,5 @@
 import numpy as np
 
-EPSILON = np.finfo(np.float64).eps
+EPSILON = np.float64(1e-8)
 
 __all__ = ["EPSILON"]
