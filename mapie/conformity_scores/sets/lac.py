@@ -225,13 +225,12 @@ class LAC(BaseClassificationScore):
 
         # Build prediction sets
         if (estimator.cv == "prefit") or (agg_scores == "mean"):
-            prediction_sets = np.greater_equal(
-                y_pred_proba - (1 - self.quantiles_), -EPSILON
+            prediction_sets = np.less_equal(
+                (1 - y_pred_proba) - self.quantiles_, EPSILON
             )
         else:
             y_pred_included = np.less_equal(
-                (1 - y_pred_proba) - conformity_scores.ravel(),
-                EPSILON
+                (1 - y_pred_proba) - conformity_scores.ravel(), EPSILON
             ).sum(axis=2)
             prediction_sets = np.stack(
                 [
