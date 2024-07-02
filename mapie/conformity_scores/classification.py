@@ -35,7 +35,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
     Attributes
     ----------
     quantiles_: ArrayLike of shape (n_alpha)
-        The quantiles estimated from ``conformity_scores_`` and alpha values.
+        The quantiles estimated from ``get_sets`` method.
     """
 
     def __init__(

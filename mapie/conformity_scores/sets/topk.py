@@ -28,6 +28,43 @@ class TopK(BaseClassificationScore):
     and Jitendra Malik.
     "Uncertainty Sets for Image Classifiers using Conformal Prediction."
     International Conference on Learning Representations 2021.
+
+    Parameters
+    ----------
+    consistency_check: bool, optional
+        Whether to check the consistency between the methods
+        ``get_estimation_distribution`` and ``get_conformity_scores``.
+        If ``True``, the following equality must be verified:
+        ``self.get_estimation_distribution(
+            y_pred, self.get_conformity_scores(y, y_pred, **kwargs), **kwargs
+        ) == y``
+
+        By default ``True``.
+
+    eps: float, optional
+        Threshold to consider when checking the consistency between
+        ``get_estimation_distribution`` and ``get_conformity_scores``.
+        It should be specified if ``consistency_check==True``.
+
+        By default, it is defined by the default precision.
+
+    Attributes
+    ----------
+    method: str
+        Method to choose for prediction interval estimates.
+        This attribute is for compatibility with ``MapieClassifier``
+        which previously used a string instead of a score class.
+
+        By default, ``top_k`` for Top-K method.
+
+    classes: Optional[ArrayLike]
+        Names of the classes.
+
+    random_state: Optional[Union[int, RandomState]]
+        Pseudo random number generator state.
+
+    quantiles_: ArrayLike of shape (n_alpha)
+        The quantiles estimated from ``get_sets`` method.
     """
 
     def __init__(
@@ -56,7 +93,7 @@ class TopK(BaseClassificationScore):
             Method to choose for prediction interval estimates.
             Methods available in this class: ``top_k``.
 
-            By default ``top_k`` for Top K method.
+            By default ``top_k`` for Top-K method.
 
         classes: Optional[ArrayLike]
             Names of the classes.
@@ -73,9 +110,9 @@ class TopK(BaseClassificationScore):
 
     def get_conformity_scores(
         self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
-        y_enc: Optional[ArrayLike] = None,
+        y: NDArray,
+        y_pred: NDArray,
+        y_enc: Optional[NDArray] = None,
         **kwargs
     ) -> NDArray:
         """
@@ -89,11 +126,15 @@ class TopK(BaseClassificationScore):
         y_pred: NDArray of shape (n_samples,)
             Predicted target values.
 
+        y_enc: NDArray of shape (n_samples,)
+            Target values as normalized encodings.
+
         Returns
         -------
         NDArray of shape (n_samples,)
             Conformity scores.
         """
+        # Casting
         y = cast(NDArray, y)
         y_pred = cast(NDArray, y_pred)
         y_enc = cast(NDArray, y_enc)
@@ -107,8 +148,8 @@ class TopK(BaseClassificationScore):
 
     def get_estimation_distribution(
         self,
-        y_pred: ArrayLike,
-        conformity_scores: ArrayLike,
+        y_pred: NDArray,
+        conformity_scores: NDArray,
         **kwargs
     ) -> NDArray:
         """
