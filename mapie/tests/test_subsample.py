@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from itertools import combinations, product
+from typing import Union
+
 import numpy as np
 import pytest
 
@@ -76,6 +79,45 @@ def test_n_samples_none(n_resamplings: int) -> None:
     assert len(val_set) == 0
 
 
+@pytest.mark.parametrize("n_samples", [0.4, 0.6, 3, 6])
+@pytest.mark.parametrize("n_resamplings", [2, 3, 4])
+def test_split_samples_Subsample(n_resamplings: int,
+                                 n_samples: Union[int, float]) -> None:
+    """Test that outputs of subsamplings are all different."""
+    X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    cv = Subsample(n_resamplings=n_resamplings,
+                   n_samples=n_samples, replace=False, random_state=0)
+    trains = [x[0] for x in cv.split(X)]
+    tests = [x[1] for x in cv.split(X)]
+    for (train1, train2), (test1, test2) in product(
+            combinations(trains, 2), combinations(tests, 2)):
+        with np.testing.assert_raises(AssertionError):
+            np.testing.assert_equal(train1, train2)
+        with np.testing.assert_raises(AssertionError):
+            np.testing.assert_equal(test1, test2)
+
+
+@pytest.mark.parametrize("n_samples", [0.4, 0.6, 3, 6])
+@pytest.mark.parametrize("n_resamplings", [2, 3, 4])
+def test_reproductibility_samples_Subsample(
+        n_resamplings: int,
+        n_samples: Union[int, float]
+) -> None:
+    """This test ensures that each split between
+    two instances is the same for a given seed."""
+    X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    cv1 = Subsample(n_resamplings=n_resamplings,
+                    n_samples=n_samples, replace=False, random_state=0)
+    trains1 = [x[0] for x in cv1.split(X)]
+    tests1 = [x[1] for x in cv1.split(X)]
+    cv2 = Subsample(n_resamplings=n_resamplings,
+                    n_samples=n_samples, replace=False, random_state=0)
+    trains2 = [x[0] for x in cv2.split(X)]
+    tests2 = [x[1] for x in cv2.split(X)]
+    np.testing.assert_array_equal(trains1, trains2)
+    np.testing.assert_array_equal(tests1, tests2)
+
+
 def test_default_parameters_BlockBootstrap() -> None:
     """Test default values of Subsample."""
     cv = BlockBootstrap()
@@ -131,3 +173,47 @@ def test_split_BlockBootstrap_error() -> None:
     cv = BlockBootstrap()
     with pytest.raises(ValueError, match=r".*Exactly one argument*"):
         next(cv.split(X))
+
+
+@pytest.mark.parametrize("length", [2, 3, 4])
+@pytest.mark.parametrize("n_resamplings", [2, 3, 4])
+def test_split_samples_BlockBootstrap(n_resamplings: int,
+                                      length: int) -> None:
+    """Test that outputs of subsamplings are all different."""
+    X = np.arange(31)
+    cv = BlockBootstrap(n_resamplings=n_resamplings,
+                        length=length, random_state=0)
+    trains = [x[0] for x in cv.split(X)]
+    tests = [x[1] for x in cv.split(X)]
+    for (train1, train2), (test1, test2) in product(
+            combinations(trains, 2), combinations(tests, 2)):
+        with np.testing.assert_raises(AssertionError):
+            np.testing.assert_equal(train1, train2)
+        with np.testing.assert_raises(AssertionError):
+            np.testing.assert_equal(test1, test2)
+
+
+@pytest.mark.parametrize("length", [2, 3, 4])
+@pytest.mark.parametrize("n_resamplings", [2, 3, 4])
+def test_reproductibility_samples_BlockBootstrap(
+        n_resamplings: int,
+        length: int) -> None:
+    """This test ensures that each split between
+    two instances is the same for a given seed."""
+    X = np.arange(15)
+    cv1 = BlockBootstrap(
+        n_resamplings=n_resamplings,
+        length=length,
+        random_state=42
+    )
+    trains1 = [x[0] for x in list(cv1.split(X))]
+    tests1 = [x[1] for x in list(cv1.split(X))]
+    cv2 = BlockBootstrap(
+        n_resamplings=n_resamplings,
+        length=length,
+        random_state=42
+    )
+    trains2 = [x[0] for x in list(cv2.split(X))]
+    tests2 = [x[1] for x in list(cv2.split(X))]
+    np.testing.assert_equal(trains1, trains2)
+    np.testing.assert_equal(tests1, tests2)

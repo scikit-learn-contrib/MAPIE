@@ -13,12 +13,12 @@ from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore, ResidualNormalisedScore
-from mapie.estimator.estimator import EnsembleRegressor
+from mapie.estimator.regressor import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_conformity_score, check_cv,
-                         check_estimator_fit_predict, check_n_features_in,
-                         check_n_jobs, check_null_weight, check_verbose,
-                         get_effective_calibration_samples)
+                         check_cv, check_estimator_fit_predict,
+                         check_n_features_in, check_n_jobs, check_null_weight,
+                         check_verbose, get_effective_calibration_samples)
+from mapie.conformity_scores.checks import check_conformity_score
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
@@ -459,10 +459,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         groups = cast(Optional[NDArray], groups)
 
         return (
-            estimator, cs_estimator,
-            agg_function, cv,
-            X, y,
-            sample_weight, groups
+            estimator, cs_estimator, agg_function, cv,
+            X, y, sample_weight, groups
         )
 
     def fit(
