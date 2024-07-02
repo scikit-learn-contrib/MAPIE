@@ -197,7 +197,17 @@ class LAC(BaseClassificationScore):
         conformity_scores: NDArray of shape (n_samples,)
             Conformity scores.
 
-        TODO
+        agg_scores: Optional[str]
+            How to aggregate the scores output by the estimators on test data
+            if a cross-validation strategy is used. Choose among:
+
+            - "mean", take the mean of scores.
+            - "crossval", compare the scores between all training data and each
+              test point for each label to estimate if the label must be
+              included in the prediction set. Follows algorithm 2 of
+              Romano+2020.
+
+            By default, "mean".
 
         Returns
         -------

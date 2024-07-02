@@ -179,7 +179,6 @@ class TopK(BaseClassificationScore):
         alpha_np: NDArray,
         estimator: EnsembleClassifier,
         conformity_scores: NDArray,
-        agg_scores: Optional[str] = "mean",
         **kwargs
     ):
         """
@@ -201,17 +200,13 @@ class TopK(BaseClassificationScore):
         conformity_scores: NDArray of shape (n_samples,)
             Conformity scores.
 
-        TODO
-
         Returns
         -------
         NDArray of shape (n_samples, n_classes, n_alpha)
             Prediction sets (Booleans indicate whether classes are included).
         """
         # Checks
-        agg_scores = "mean"
-
-        y_pred_proba = estimator.predict(X, agg_scores)
+        y_pred_proba = estimator.predict(X, agg_scores="mean")
         y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
         y_pred_proba = np.repeat(
             y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2

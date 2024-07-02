@@ -412,7 +412,39 @@ class APS(BaseClassificationScore):
         conformity_scores: NDArray of shape (n_samples,)
             Conformity scores.
 
-        TODO
+        agg_scores: Optional[str]
+            How to aggregate the scores output by the estimators on test data
+            if a cross-validation strategy is used. Choose among:
+
+            - "mean", take the mean of scores.
+            - "crossval", compare the scores between all training data and each
+                test point for each label to estimate if the label must be
+                included in the prediction set. Follows algorithm 2 of
+                Romano+2020.
+
+            By default, "mean".
+
+        X_raps: NDArray of shape (n_samples, n_features)
+            Observed feature values for the RAPS method (split data).
+
+            By default, "None" but must be set to work.
+
+        y_raps_no_enc: NDArray of shape (n_samples,)
+            Observed labels for the RAPS method (split data).
+
+            By default, "None" but must be set to work.
+
+        y_pred_proba_raps: NDArray of shape (n_samples, n_classes)
+            Predicted probabilities for the RAPS method (split data).
+
+            By default, "None" but must be set to work.
+
+        position_raps: NDArray of shape (n_samples,)
+            Position of the points in the split set for the RAPS method
+            (split data). These positions are returned by the function
+            ``get_true_label_position``.
+
+            By default, "None" but must be set to work.
 
         Returns
         -------
