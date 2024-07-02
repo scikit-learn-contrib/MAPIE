@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, List, Optional, Tuple, Union, cast, Any
+from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import RegressorMixin, clone
@@ -675,6 +675,9 @@ class MapieQuantileRegressor(MapieRegressor):
             Deciding factor to whether to find the quantile value for
             each residuals separatly or to use the maximum of the two
             combined.
+
+        **predict_params : dict
+            Additional predict parameters.
 
         Returns
         -------

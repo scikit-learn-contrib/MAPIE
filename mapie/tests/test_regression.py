@@ -6,6 +6,7 @@ from typing import Any, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import pytest
+from scipy.stats import ttest_1samp
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
@@ -18,7 +19,6 @@ from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
-from scipy.stats import ttest_1samp
 from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
@@ -40,6 +40,64 @@ k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
 
 random_state = 1
+
+
+class CustomGradientBoostingRegressor(GradientBoostingRegressor):
+    def __init__(self,
+                 loss='squared_error',
+                 learning_rate=0.1,
+                 n_estimators=100,
+                 subsample=1.0,
+                 criterion='friedman_mse',
+                 min_samples_split=2,
+                 min_samples_leaf=1,
+                 min_weight_fraction_leaf=0.0,
+                 max_depth=3,
+                 min_impurity_decrease=0.0,
+                 init=None,
+                 random_state=None,
+                 max_features=None,
+                 alpha=0.9,
+                 verbose=0,
+                 max_leaf_nodes=None,
+                 warm_start=False,
+                 validation_fraction=0.1,
+                 n_iter_no_change=None,
+                 tol=0.0001,
+                 ccp_alpha=0.0):
+
+        super().__init__(
+            loss=loss,
+            learning_rate=learning_rate,
+            n_estimators=n_estimators,
+            subsample=subsample,
+            criterion=criterion,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            min_weight_fraction_leaf=min_weight_fraction_leaf,
+            max_depth=max_depth,
+            min_impurity_decrease=min_impurity_decrease,
+            init=init,
+            random_state=random_state,
+            max_features=max_features,
+            alpha=alpha,
+            verbose=verbose,
+            max_leaf_nodes=max_leaf_nodes,
+            warm_start=warm_start,
+            validation_fraction=validation_fraction,
+            n_iter_no_change=n_iter_no_change,
+            tol=tol,
+            ccp_alpha=ccp_alpha
+        )
+
+    def fit(self, X, y, **kwargs):
+        return super().fit(X, y, **kwargs)
+
+    def predict(self, X, check_predict_params=False):
+        if check_predict_params:
+            return np.zeros(X.shape[0])
+        return super().predict(X)
+
 
 Params = TypedDict(
     "Params",
@@ -873,6 +931,123 @@ def test_fit_parameters_passing() -> None:
 
     for estimator in mapie.estimator_.estimators_:
         assert estimator.estimators_.shape[0] == 3
+
+
+def test_predict_parameters_passing() -> None:
+    """
+    Test passing predict parameters.
+    Checks that y_pred from train are 0 and y_pred from test are 0
+    """
+
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
+
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state))
+
+    mapie_1 = MapieRegressor(estimator=custom_gbr)
+
+    mapie_2 = MapieRegressor(estimator=custom_gbr)
+
+    predict_params = {'check_predict_params': True}
+
+    mapie_1 = mapie_1.fit(X_train, y_train,
+                          predict_params=predict_params)
+
+    np.testing.assert_allclose(mapie_1.conformity_scores_, np.abs(y_train))
+
+    mapie_2 = mapie_2.fit(X_train, y_train)
+
+    y_pred_1 = mapie_1.predict(X_test, **predict_params)
+
+    np.testing.assert_allclose(y_pred_1, 0)
+
+    y_pred_2 = mapie_2.predict(X_test)
+
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_array_equal(y_pred_1, y_pred_2)
+
+
+def test_fit_and_predict_parameters_passing() -> None:
+    """
+    Test passing fit parameters and predict parameters.
+    For fit : checks that underlying GradientBoosting
+    estimators have used 3 iterations only during boosting,
+    instead of default value for n_estimators (=100).
+    For predict : Checks that y_pred from train are 0
+    and y_pred from test are 0.
+    """
+    def early_stopping_monitor(i, est, locals):
+        """Returns True on the 3rd iteration."""
+        if i == 2:
+            return True
+        else:
+            return False
+
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
+
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state))
+
+    score = AbsoluteConformityScore(sym=True)
+
+    mapie_1 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
+
+    mapie_2 = MapieRegressor(estimator=custom_gbr)
+
+    fit_params = {'monitor': early_stopping_monitor}
+
+    predict_params = {'check_predict_params': True}
+
+    mapie_1 = mapie_1.fit(X_train, y_train,
+                          fit_params=fit_params,
+                          predict_params=predict_params)
+
+    mapie_2 = mapie_2.fit(X_train, y_train)
+
+    assert mapie_1.estimator_.single_estimator_.estimators_.shape[0] == 3
+
+    for estimator in mapie_1.estimator_.estimators_:
+        assert estimator.estimators_.shape[0] == 3
+
+    assert (mapie_2.estimator_.single_estimator_.n_estimators ==
+           custom_gbr.n_estimators)
+
+    for estimator in mapie_2.estimator_.estimators_:
+        assert estimator.n_estimators == custom_gbr.n_estimators
+
+    np.testing.assert_array_equal(mapie_1.conformity_scores_, np.abs(y_train))
+
+    y_pred_1 = mapie_1.predict(X_test, **predict_params)
+
+    np.testing.assert_allclose(y_pred_1, 0)
+
+    y_pred_2 = mapie_2.predict(X_test)
+
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_array_equal(y_pred_1, y_pred_2)
+
+
+def test_invalid_predict_parameters() -> None:
+    """Test that invalid predict_parameters raise errors."""
+
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
+
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state))
+
+    mapie = MapieRegressor(estimator=custom_gbr)
+
+    predict_params = {'check_predict_params': True}
+
+    mapie_fitted = mapie.fit(X_train, y_train)
+
+    with pytest.raises(ValueError, match=(
+        fr".*Using 'predict_param' '{predict_params}'"
+        r".*without having used it in the fit method\..*"
+        fr"Please ensure '{predict_params}'"
+        r".*is used in the fit method before calling predict\..*"
+    )):
+        mapie_fitted.predict(X_test, **predict_params)
 
 
 def test_predict_infinite_intervals() -> None:

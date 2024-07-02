@@ -440,6 +440,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         allow_infinite_bounds: bool
             Allow infinite prediction intervals to be produced.
 
+        **predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
