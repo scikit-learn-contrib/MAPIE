@@ -135,8 +135,6 @@ class TopK(BaseClassificationScore):
             Conformity scores.
         """
         # Casting
-        y = cast(NDArray, y)
-        y_pred = cast(NDArray, y_pred)
         y_enc = cast(NDArray, y_enc)
 
         # Conformity scores

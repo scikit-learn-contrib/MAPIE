@@ -131,13 +131,13 @@ class LAC(BaseClassificationScore):
             Conformity scores.
         """
         # Casting
-        y_pred = cast(NDArray, y_pred)
         y_enc = cast(NDArray, y_enc)
 
         # Conformity scores
         conformity_scores = np.take_along_axis(
             1 - y_pred, y_enc.reshape(-1, 1), axis=1
         )
+
         return conformity_scores
 
     def get_estimation_distribution(

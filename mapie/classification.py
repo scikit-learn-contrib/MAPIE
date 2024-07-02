@@ -629,7 +629,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         # Compute the conformity scores
         self.conformity_scores_ = \
             self.conformity_score_function_.get_conformity_scores(
-                y_enc, y_pred_proba, X=X
+                y, y_pred_proba, y_enc=y_enc, X=X
             )
 
         return self

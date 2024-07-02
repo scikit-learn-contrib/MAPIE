@@ -152,8 +152,6 @@ class APS(BaseClassificationScore):
             Conformity scores.
         """
         # Casting
-        y = cast(NDArray, y)
-        y_pred = cast(NDArray, y_pred)
         y_enc = cast(NDArray, y_enc)
         classes = cast(NDArray, self.classes)
 
