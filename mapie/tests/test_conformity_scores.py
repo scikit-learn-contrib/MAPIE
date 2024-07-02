@@ -382,6 +382,48 @@ def test_residual_normalised_prefit_get_estimation_distribution() -> None:
     )
 
 
+def test_residual_normalised_additional_parameters() -> None:
+    """
+    Test that residual normalised score raises no error with additional
+    parameters.
+    """
+    residual_normalised_conf_score = ResidualNormalisedScore(
+        residual_estimator=LinearRegression(),
+        split_size=0.2,
+        random_state=random_state
+    )
+    # Test for get_conformity_scores
+    # 1) Test that no error is raised
+    residual_normalised_conf_score.get_conformity_scores(
+        y_toy, y_pred_list, X=X_toy
+    )
+    # 2) Test that an error is raised when X is not provided
+    with pytest.raises(
+        ValueError,
+        match=r"Additional parameters must be provided*"
+    ):
+        residual_normalised_conf_score.get_conformity_scores(
+            y_toy, y_pred_list
+        )
+
+    # Test for get_estimation_distribution
+    conf_scores = residual_normalised_conf_score.get_conformity_scores(
+        y_toy, y_pred_list, X=X_toy
+    )
+    # 1) Test that no error is raised
+    residual_normalised_conf_score.get_estimation_distribution(
+        y_pred_list, conf_scores, X=X_toy
+    )
+    # 2) Test that an error is raised when X is not provided
+    with pytest.raises(
+        ValueError,
+        match=r"Additional parameters must be provided*"
+    ):
+        residual_normalised_conf_score.get_estimation_distribution(
+            y_pred_list, conf_scores
+        )
+
+
 @pytest.mark.parametrize("score", [AbsoluteConformityScore(),
                                    GammaConformityScore(),
                                    ResidualNormalisedScore()])

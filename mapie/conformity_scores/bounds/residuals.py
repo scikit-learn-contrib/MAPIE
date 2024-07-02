@@ -1,5 +1,5 @@
 import warnings
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import RegressorMixin, clone
@@ -245,7 +245,12 @@ class ResidualNormalisedScore(BaseRegressionScore):
         The learning is done with the log of the residual and later we
         use the exponential of the prediction to avoid negative values.
         """
-        assert not (X is None)  # TODO
+        if X is None:
+            raise ValueError(
+                "Additional parameters must be provided for the method to "
+                + "work (here `X` is missing)."
+            )
+        X = cast(ArrayLike, X)
 
         (X, y, y_pred,
          self.residual_estimator_,
@@ -307,7 +312,12 @@ class ResidualNormalisedScore(BaseRegressionScore):
         ``conformity_scores`` can be either the conformity scores or
         the quantile of the conformity scores.
         """
-        assert not (X is None)  # TODO
+        if X is None:
+            raise ValueError(
+                "Additional parameters must be provided for the method to "
+                + "work (here `X` is missing)."
+            )
+        X = cast(ArrayLike, X)
 
         r_pred = self._predict_residual_estimator(X).reshape((-1, 1))
         if not self.prefit:
