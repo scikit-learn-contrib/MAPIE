@@ -5,6 +5,8 @@ History
 0.8.x (2024-xx-xx)
 ------------------
 
+* Add `**predict_params` attributes into `MapieRegressor` and linked classes
+* Change incoherent sign on C_k in the Kolmogorov-Smirnov statistical test documentation
 * Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
 
 0.8.6 (2024-06-14)
