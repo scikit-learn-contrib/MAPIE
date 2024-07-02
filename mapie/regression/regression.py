@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, Optional, Tuple, Union, cast
+from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -228,6 +228,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         verbose: int = 0,
         conformity_score: Optional[ConformityScore] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
+        predict_params: Optional[bool] = False
     ) -> None:
         self.estimator = estimator
         self.method = method
@@ -238,6 +239,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self.verbose = verbose
         self.conformity_score = conformity_score
         self.random_state = random_state
+        self.predict_params = predict_params
 
     def _check_parameters(self) -> None:
         """
@@ -467,7 +469,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **fit_params,
+        **kwargs: Any,
     ) -> MapieRegressor:
         """
         Fit estimator and compute conformity scores used for
@@ -500,14 +502,19 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             train/test set.
             By default ``None``.
 
-        **fit_params : dict
-            Additional fit parameters.
+        kwargs : dict
+            Additional ft and parameters.
 
         Returns
         -------
         MapieRegressor
             The model itself.
         """
+        fit_params = kwargs.pop('fit_params', {})
+        predict_params = kwargs.pop('predict_params', {})
+
+        if len(predict_params) > 0:
+            self.predict_params = True
         # Checks
         (estimator,
          self.conformity_score_function_,
@@ -534,7 +541,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         )
 
         # Predict on calibration data
-        y_pred = self.estimator_.predict_calib(X, y=y, groups=groups)
+        y_pred = self.estimator_.predict_calib(X, y=y, groups=groups,
+                                               **predict_params)
 
         # Compute the conformity scores (manage jk-ab case)
         self.conformity_scores_ = \
@@ -551,6 +559,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
+        **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -600,6 +609,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             By default ``False``.
 
+        **predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -609,6 +621,24 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 - [:, 0, :]: Lower bound of the prediction interval.
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
+
+        if self.predict_params is True:
+            warnings.warn(
+                f"Be careful that predict_params: '{predict_params}' "
+                "is used in fit method",
+                UserWarning
+            )
+
+        elif (len(predict_params) > 0 and
+              self.predict_params is False and
+              self.cv != "prefit"):
+            raise ValueError(
+                f"Using 'predict_param' '{predict_params}' "
+                f"without having used it in the fit method. "
+                f"Please ensure '{predict_params}' "
+                f"is used in the fit method before calling predict."
+            )
+
         # Checks
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
@@ -617,7 +647,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         # If alpha is None, predict the target without confidence intervals
         if alpha is None:
             y_pred = self.estimator_.predict(
-                X, ensemble, return_multi_pred=False
+                X, ensemble, return_multi_pred=False, **predict_params
             )
             return np.array(y_pred)
 

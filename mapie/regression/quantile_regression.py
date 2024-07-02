@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import RegressorMixin, clone
@@ -547,7 +547,6 @@ class MapieQuantileRegressor(MapieRegressor):
              The model itself.
         """
         self.cv = self._check_cv(cast(str, self.cv))
-
         # Initialization
         self.estimators_: List[RegressorMixin] = []
         if self.cv == "prefit":
@@ -649,6 +648,7 @@ class MapieQuantileRegressor(MapieRegressor):
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
         symmetry: Optional[bool] = True,
+        **predict_params: Any,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -676,6 +676,9 @@ class MapieQuantileRegressor(MapieRegressor):
             each residuals separatly or to use the maximum of the two
             combined.
 
+        **predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -699,7 +702,7 @@ class MapieQuantileRegressor(MapieRegressor):
             dtype=float,
         )
         for i, est in enumerate(self.estimators_):
-            y_preds[i] = est.predict(X)
+            y_preds[i] = est.predict(X, **predict_params)
         check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
         if symmetry:
             quantile = np.full(
