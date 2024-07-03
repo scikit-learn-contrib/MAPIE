@@ -3,7 +3,6 @@ from abc import ABCMeta, abstractmethod
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.estimator.classifier import EnsembleClassifier
 
-from mapie._machine_precision import EPSILON
 from mapie._typing import NDArray
 
 
@@ -13,37 +12,14 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
     This class should not be used directly. Use derived classes instead.
 
-    Parameters
-    ----------
-    consistency_check: bool, optional
-        Whether to check the consistency between the methods
-        ``get_estimation_distribution`` and ``get_conformity_scores``.
-        If ``True``, the following equality must be verified:
-        ``self.get_estimation_distribution(
-            y_pred, self.get_conformity_scores(y, y_pred, **kwargs), **kwargs
-        ) == y``
-
-        By default ``True``.
-
-    eps: float, optional
-        Threshold to consider when checking the consistency between
-        ``get_estimation_distribution`` and ``get_conformity_scores``.
-        It should be specified if ``consistency_check==True``.
-
-        By default, it is defined by the default precision.
-
     Attributes
     ----------
     quantiles_: ArrayLike of shape (n_alpha)
         The quantiles estimated from ``get_sets`` method.
     """
 
-    def __init__(
-        self,
-        consistency_check: bool = True,
-        eps: float = float(EPSILON),
-    ):
-        super().__init__(consistency_check=consistency_check, eps=eps)
+    def __init__(self) -> None:
+        super().__init__()
 
     @abstractmethod
     def get_sets(

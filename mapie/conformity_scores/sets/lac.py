@@ -25,25 +25,6 @@ class LAC(BaseClassificationScore):
     "Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.",
     Journal of the American Statistical Association, 114, 2019.
 
-    Parameters
-    ----------
-    consistency_check: bool, optional
-        Whether to check the consistency between the methods
-        ``get_estimation_distribution`` and ``get_conformity_scores``.
-        If ``True``, the following equality must be verified:
-        ``self.get_estimation_distribution(
-            y_pred, self.get_conformity_scores(y, y_pred, **kwargs), **kwargs
-        ) == y``
-
-        By default ``True``.
-
-    eps: float, optional
-        Threshold to consider when checking the consistency between
-        ``get_estimation_distribution`` and ``get_conformity_scores``.
-        It should be specified if ``consistency_check==True``.
-
-        By default, it is defined by the default precision.
-
     Attributes
     ----------
     method: str
@@ -63,15 +44,8 @@ class LAC(BaseClassificationScore):
         The quantiles estimated from ``get_sets`` method.
     """
 
-    def __init__(
-        self,
-        consistency_check: bool = True,
-        eps: float = float(EPSILON),
-    ):
-        super().__init__(
-            consistency_check=consistency_check,
-            eps=eps
-        )
+    def __init__(self) -> None:
+        super().__init__()
 
     def set_external_attributes(
         self,
@@ -139,35 +113,6 @@ class LAC(BaseClassificationScore):
         )
 
         return conformity_scores
-
-    def get_estimation_distribution(
-        self,
-        y_pred: NDArray,
-        conformity_scores: NDArray,
-        **kwargs
-    ) -> NDArray:
-        """
-        TODO
-        Placeholder for ``get_estimation_distribution``.
-        Subclasses should implement this method!
-
-        Compute samples of the estimation distribution given the predicted
-        targets and the conformity scores.
-
-        Parameters
-        ----------
-        y_pred: NDArray of shape (n_samples, ...)
-            Predicted target values.
-
-        conformity_scores: NDArray of shape (n_samples, ...)
-            Conformity scores.
-
-        Returns
-        -------
-        NDArray of shape (n_samples, ...)
-            Observed values.
-        """
-        return np.array([])
 
     def get_sets(
         self,
@@ -250,8 +195,5 @@ class LAC(BaseClassificationScore):
                     for _alpha in alpha_np
                 ], axis=2
             )
-
-        # Just for coverage: do nothing
-        self.get_estimation_distribution(y_pred_proba, conformity_scores)
 
         return prediction_sets
