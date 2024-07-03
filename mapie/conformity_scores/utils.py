@@ -3,7 +3,7 @@ from typing import Optional
 from .regression import BaseRegressionScore
 from .classification import BaseClassificationScore
 from .bounds import AbsoluteConformityScore
-from .sets import APS, LAC, TopK
+from .sets import APS, LAC, Naive, RAPS, TopK
 
 
 def check_regression_conformity_score(
@@ -72,9 +72,13 @@ def check_classification_conformity_score(
     if method is not None:
         if method in ['score', 'lac']:
             return LAC()
-        if method in ['naive', 'cumulated_score', 'aps', 'raps']:
+        if method in ['cumulated_score', 'aps']:
             return APS()
-        if method == 'top_k':
+        if method in ['naive']:
+            return Naive()
+        if method in ['raps']:
+            return RAPS()
+        if method in ['top_k']:
             return TopK()
         else:
             raise ValueError(

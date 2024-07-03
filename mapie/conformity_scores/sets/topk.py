@@ -9,7 +9,7 @@ from mapie.conformity_scores.sets.utils import (
 from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
-from mapie._typing import ArrayLike, NDArray
+from mapie._typing import NDArray
 from mapie.utils import compute_quantiles
 
 
@@ -118,49 +118,46 @@ class TopK(BaseClassificationScore):
 
         return conformity_scores
 
-    def get_sets(
+    def get_predictions(
         self,
-        X: ArrayLike,
+        X: NDArray,
         alpha_np: NDArray,
         estimator: EnsembleClassifier,
-        conformity_scores: NDArray,
         **kwargs
-    ):
+    ) -> NDArray:
         """
-        Compute classes of the prediction sets from the observed values,
-        the estimator of type ``EnsembleClassifier`` and the conformity scores.
-
-        Parameters
-        ----------
-        X: NDArray of shape (n_samples, n_features)
-            Observed feature values.
-
-        alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
-            uncertainty of the confidence interval.
-
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
-
-        conformity_scores: NDArray of shape (n_samples,)
-            Conformity scores.
-
-        Returns
-        -------
-        NDArray of shape (n_samples, n_classes, n_alpha)
-            Prediction sets (Booleans indicate whether classes are included).
+        TODO: Compute the predictions.
         """
-        # Checks
         y_pred_proba = estimator.predict(X, agg_scores="mean")
         y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
         y_pred_proba = np.repeat(
             y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
         )
+        return y_pred_proba
 
-        # Choice of the quantile
-        self.quantiles_ = compute_quantiles(conformity_scores, alpha_np)
+    def get_conformity_quantiles(
+        self,
+        conformity_scores: NDArray,
+        alpha_np: NDArray,
+        estimator: EnsembleClassifier,
+        **kwargs
+    ) -> NDArray:
+        """
+        TODO: Compute the quantiles.
+        """
+        return compute_quantiles(conformity_scores, alpha_np)
 
-        # Build prediction sets
+    def get_prediction_sets(
+        self,
+        y_pred_proba: NDArray,
+        conformity_scores: NDArray,
+        alpha_np: NDArray,
+        estimator: EnsembleClassifier,
+        **kwargs
+    ):
+        """
+        TODO: Compute the prediction sets.
+        """
         y_pred_proba = y_pred_proba[:, :, 0]
         index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
         y_pred_index_last = np.stack(

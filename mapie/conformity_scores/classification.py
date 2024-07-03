@@ -22,6 +22,42 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         super().__init__()
 
     @abstractmethod
+    def get_predictions(
+        self,
+        X: NDArray,
+        alpha_np: NDArray,
+        estimator: EnsembleClassifier,
+        **kwargs
+    ) -> NDArray:
+        """
+        TODO: Compute the predictions.
+        """
+
+    @abstractmethod
+    def get_conformity_quantiles(
+        self,
+        conformity_scores: NDArray,
+        alpha_np: NDArray,
+        estimator: EnsembleClassifier,
+        **kwargs
+    ) -> NDArray:
+        """
+        TODO: Compute the quantiles.
+        """
+
+    @abstractmethod
+    def get_prediction_sets(
+        self,
+        y_pred_proba: NDArray,
+        conformity_scores: NDArray,
+        alpha_np: NDArray,
+        estimator: EnsembleClassifier,
+        **kwargs
+    ):
+        """
+        TODO: Compute the prediction sets.
+        """
+
     def get_sets(
         self,
         X: NDArray,
@@ -54,6 +90,25 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         NDArray of shape (n_samples, n_classes, n_alpha)
             Prediction sets (Booleans indicate whether classes are included).
         """
+        # Checks
+        ()
+
+        # Predict probabilities
+        y_pred_proba = self.get_predictions(
+            X, alpha_np, estimator, **kwargs
+        )
+
+        # Choice of the quantile
+        self.quantiles_ = self.get_conformity_quantiles(
+            conformity_scores, alpha_np, estimator, **kwargs
+        )
+
+        # Build prediction sets
+        prediction_sets = self.get_prediction_sets(
+            y_pred_proba, conformity_scores, alpha_np, estimator, **kwargs
+        )
+
+        return prediction_sets
 
     def predict_set(
         self,

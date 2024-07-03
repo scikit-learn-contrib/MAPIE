@@ -23,10 +23,9 @@ from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
-from mapie.conformity_scores.sets.aps import APS
+from mapie.conformity_scores.sets.raps import RAPS
 from mapie.conformity_scores.sets.utils import (
-    check_proba_normalized, get_last_included_proba,
-    get_true_label_cumsum_proba
+    check_proba_normalized, get_true_label_cumsum_proba
 )
 from mapie.metrics import classification_coverage_score
 from mapie.utils import check_alpha
@@ -1740,7 +1739,7 @@ def test_regularize_conf_scores_shape(k_lambda) -> None:
     lambda_, k = k_lambda[0], k_lambda[1]
     conf_scores = np.random.rand(100, 1)
     cutoff = np.cumsum(np.ones(conf_scores.shape)) - 1
-    reg_conf_scores = APS._regularize_conformity_score(
+    reg_conf_scores = RAPS._regularize_conformity_score(
         k, lambda_, conf_scores, cutoff
     )
 
@@ -1816,12 +1815,11 @@ def test_get_last_included_proba_shape(k_lambda, strategy):
         y_pred_proba[:, :, np.newaxis], len(thresholds), axis=2
     )
 
-    mapie = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
     include_last_label = STRATEGIES[strategy][1]["include_last_label"]
     y_p_p_c, y_p_i_l, y_p_p_i_l = \
-        get_last_included_proba(
-            y_pred_proba, thresholds, include_last_label,
-            mapie.method, lambda_, k
+        RAPS._get_last_included_proba(
+            RAPS(), y_pred_proba, thresholds, include_last_label,
+            lambda_=lambda_, k_star=k
         )
 
     assert y_p_p_c.shape == (len(X), len(np.unique(y)), len(thresholds))

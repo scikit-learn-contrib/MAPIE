@@ -114,54 +114,17 @@ class LAC(BaseClassificationScore):
 
         return conformity_scores
 
-    def get_sets(
+    def get_predictions(
         self,
-        X: ArrayLike,
+        X: NDArray,
         alpha_np: NDArray,
         estimator: EnsembleClassifier,
-        conformity_scores: NDArray,
         agg_scores: Optional[str] = "mean",
         **kwargs
-    ):
+    ) -> NDArray:
         """
-        Compute classes of the prediction sets from the observed values,
-        the estimator of type ``EnsembleClassifier`` and the conformity scores.
-
-        Parameters
-        ----------
-        X: NDArray of shape (n_samples, n_features)
-            Observed feature values.
-
-        alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
-            uncertainty of the confidence interval.
-
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
-
-        conformity_scores: NDArray of shape (n_samples,)
-            Conformity scores.
-
-        agg_scores: Optional[str]
-            How to aggregate the scores output by the estimators on test data
-            if a cross-validation strategy is used. Choose among:
-
-            - "mean", take the mean of scores.
-            - "crossval", compare the scores between all training data and each
-              test point for each label to estimate if the label must be
-              included in the prediction set. Follows algorithm 2 of
-              Romano+2020.
-
-            By default, "mean".
-
-        Returns
-        -------
-        NDArray of shape (n_samples, n_classes, n_alpha)
-            Prediction sets (Booleans indicate whether classes are included).
+        TODO: Compute the predictions.
         """
-        # Checks
-        n = len(conformity_scores)
-
         y_pred_proba = estimator.predict(X, agg_scores)
         y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
         if agg_scores != "crossval":
@@ -169,16 +132,45 @@ class LAC(BaseClassificationScore):
                 y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
             )
 
-        # Choice of the quantile
-        if (estimator.cv == "prefit") or (agg_scores in ["mean"]):
-            self.quantiles_ = compute_quantiles(
+        return y_pred_proba
+
+    def get_conformity_quantiles(
+        self,
+        conformity_scores: NDArray,
+        alpha_np: NDArray,
+        estimator: EnsembleClassifier,
+        agg_scores: Optional[str] = "mean",
+        **kwargs
+    ) -> NDArray:
+        """
+        TODO: Compute the quantiles.
+        """
+        n = len(conformity_scores)
+
+        if estimator.cv == "prefit" or agg_scores in ["mean"]:
+            quantiles_ = compute_quantiles(
                 conformity_scores,
                 alpha_np
             )
         else:
-            self.quantiles_ = (n + 1) * (1 - alpha_np)
+            quantiles_ = (n + 1) * (1 - alpha_np)
 
-        # Build prediction sets
+        return quantiles_
+
+    def get_prediction_sets(
+        self,
+        y_pred_proba: NDArray,
+        conformity_scores: NDArray,
+        alpha_np: NDArray,
+        estimator: EnsembleClassifier,
+        agg_scores: Optional[str] = "mean",
+        **kwargs
+    ):
+        """
+        TODO: Compute the prediction sets.
+        """
+        n = len(conformity_scores)
+
         if (estimator.cv == "prefit") or (agg_scores == "mean"):
             prediction_sets = np.less_equal(
                 (1 - y_pred_proba) - self.quantiles_, EPSILON
