@@ -5,6 +5,13 @@ History
 0.8.x (2024-xx-xx)
 ------------------
 
+* Extend `ConformityScore` to support regression (with `BaseRegressionScore`) and to support classification (with `BaseClassificationScore`)
+* Extend `EnsembleEstimator` to support regression (with `EnsembleRegressor`) and to support classification (with `EnsembleClassifier`)
+* Refactor `MapieClassifier` by separating the handling of the `MapieClassifier` estimator into a new class called `EnsembleClassifier`
+* Refactor `MapieClassifier` by separating the handling of the `MapieClassifier` conformity score into a new class called `BaseClassificationScore`
+* Add severals non-conformity scores for classification (`LAC`, `APS`, `RAPS`, `TopK`) based on `BaseClassificationScore`
+* Transfer the logic of classification methods into the non-conformity score classes (`LAC`, `APS`, `RAPS`, `TopK`)
+* Extend the classification strategy definition by supporting `method` and `conformity_score` attributes
 * Building unit tests for different `Subsample` and `BlockBooststrap` instances
 * Change the sign of C_k in the `Kolmogorov-Smirnov` test documentation
 * Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
