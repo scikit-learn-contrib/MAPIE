@@ -126,7 +126,26 @@ class TopK(BaseClassificationScore):
         **kwargs
     ) -> NDArray:
         """
-        TODO: Compute the predictions.
+        Get predictions from an EnsembleClassifier.
+
+        This method should be implemented by any subclass of the current class.
+
+        Parameters:
+        -----------
+        X: NDArray of shape (n_samples, n_features)
+            Observed feature values.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between ``0`` and ``1``, represents the
+            uncertainty of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        Returns:
+        --------
+        NDArray
+            Array of predictions.
         """
         y_pred_proba = estimator.predict(X, agg_scores="mean")
         y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
@@ -143,7 +162,24 @@ class TopK(BaseClassificationScore):
         **kwargs
     ) -> NDArray:
         """
-        TODO: Compute the quantiles.
+        Get the quantiles of the conformity scores for each uncertainty level.
+
+        Parameters:
+        -----------
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores for each sample.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between 0 and 1, representing the uncertainty
+            of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        Returns:
+        --------
+        NDArray
+            Array of quantiles with respect to alpha_np.
         """
         return compute_quantiles(conformity_scores, alpha_np)
 
@@ -154,9 +190,30 @@ class TopK(BaseClassificationScore):
         alpha_np: NDArray,
         estimator: EnsembleClassifier,
         **kwargs
-    ):
+    ) -> NDArray:
         """
-        TODO: Compute the prediction sets.
+        Generate prediction sets based on the probability predictions,
+        the conformity scores and the uncertainty level.
+
+        Parameters:
+        -----------
+        y_pred_proba: NDArray of shape (n_samples, n_classes)
+            Target prediction.
+
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores for each sample.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between 0 and 1, representing the uncertainty
+            of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        Returns:
+        --------
+        NDArray
+            Array of quantiles with respect to alpha_np.
         """
         y_pred_proba = y_pred_proba[:, :, 0]
         index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))

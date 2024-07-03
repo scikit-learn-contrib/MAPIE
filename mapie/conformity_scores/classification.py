@@ -30,7 +30,26 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         **kwargs
     ) -> NDArray:
         """
-        TODO: Compute the predictions.
+        Abstract method to get predictions from an EnsembleClassifier.
+
+        This method should be implemented by any subclass of the current class.
+
+        Parameters:
+        -----------
+        X: NDArray of shape (n_samples, n_features)
+            Observed feature values.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between ``0`` and ``1``, represents the
+            uncertainty of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        Returns:
+        --------
+        NDArray
+            Array of predictions.
         """
 
     @abstractmethod
@@ -42,7 +61,26 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         **kwargs
     ) -> NDArray:
         """
-        TODO: Compute the quantiles.
+        Abstract method to get quantiles of the conformity scores.
+
+        This method should be implemented by any subclass of the current class.
+
+        Parameters:
+        -----------
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores for each sample.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between 0 and 1, representing the uncertainty
+            of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        Returns:
+        --------
+        NDArray
+            Array of quantiles with respect to alpha_np.
         """
 
     @abstractmethod
@@ -53,9 +91,32 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         alpha_np: NDArray,
         estimator: EnsembleClassifier,
         **kwargs
-    ):
+    ) -> NDArray:
         """
-        TODO: Compute the prediction sets.
+        Abstract method to generate prediction sets based on the probability
+        predictions, the conformity scores and the uncertainty level.
+
+        This method should be implemented by any subclass of the current class.
+
+        Parameters:
+        -----------
+        y_pred_proba: NDArray of shape (n_samples, n_classes)
+            Target prediction.
+
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores for each sample.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between 0 and 1, representing the uncertainty
+            of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        Returns:
+        --------
+        NDArray
+            Array of quantiles with respect to alpha_np.
         """
 
     def get_sets(
@@ -65,7 +126,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         estimator: EnsembleClassifier,
         conformity_scores: NDArray,
         **kwargs
-    ):
+    ) -> NDArray:
         """
         Compute classes of the prediction sets from the observed values,
         the estimator of type ``EnsembleClassifier`` and the conformity scores.
@@ -76,8 +137,8 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             Observed feature values.
 
         alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
-            uncertainty of the confidence interval.
+            NDArray of floats between 0 and 1, representing the uncertainty
+            of the confidence interval.
 
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
@@ -90,9 +151,6 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         NDArray of shape (n_samples, n_classes, n_alpha)
             Prediction sets (Booleans indicate whether classes are included).
         """
-        # Checks
-        ()
-
         # Predict probabilities
         y_pred_proba = self.get_predictions(
             X, alpha_np, estimator, **kwargs

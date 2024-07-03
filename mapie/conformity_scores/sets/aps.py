@@ -12,11 +12,12 @@ from mapie.utils import compute_quantiles
 
 
 class APS(Naive):
-    """TODO:
+    """
     Adaptive Prediction Sets (APS) method-based non-conformity score.
-    Three differents method are available in this class:
+    Three differents method are available:
 
-    - ``"naive"``, sum of the probabilities until the 1-alpha threshold.
+    - ``"naive"``, that is based on the sum of the probabilities until the
+        1-alpha threshold. See ``"Naive"`` class for more details.
 
     - ``"aps"`` (formerly called "cumulated_score"), Adaptive Prediction
         Sets method. It is based on the sum of the softmax outputs of the
@@ -25,20 +26,14 @@ class APS(Naive):
 
     - ``"raps"``, Regularized Adaptive Prediction Sets method. It uses the
         same technique as ``"aps"`` method but with a penalty term
-        to reduce the size of prediction sets. See [2] for more
-        details. For now, this method only works with ``"prefit"`` and
-        ``"split"`` strategies.
+        to reduce the size of prediction sets.
+        See ``"RAPS"`` class for more details.
 
     References
     ----------
     [1] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
     "Classification with Valid and Adaptive Coverage."
     NeurIPS 202 (spotlight) 2020.
-
-    [2] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
-    and Jitendra Malik.
-    "Uncertainty Sets for Image Classifiers using Conformal Prediction."
-    International Conference on Learning Representations 2021.
 
     Attributes
     ----------
@@ -116,7 +111,31 @@ class APS(Naive):
         **kwargs
     ) -> NDArray:
         """
-        TODO: Compute the quantiles.
+        Get the quantiles of the conformity scores for each uncertainty level.
+
+        Parameters:
+        -----------
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores for each sample.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between 0 and 1, representing the uncertainty
+            of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        agg_scores: Optional[str]
+            Method to aggregate the scores from the base estimators.
+            If "mean", the scores are averaged. If "crossval", the scores are
+            obtained from cross-validation.
+
+            By default ``"mean"``.
+
+        Returns:
+        --------
+        NDArray
+            Array of quantiles with respect to alpha_np.
         """
         n = len(conformity_scores)
 

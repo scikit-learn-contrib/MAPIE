@@ -13,30 +13,26 @@ from mapie.utils import check_alpha_and_n_samples, compute_quantiles
 
 
 class RAPS(APS):
-    """TODO:
-    Adaptive Prediction Sets (APS) method-based non-conformity score.
-    Three differents method are available in this class:
+    """
+    Regularized Adaptive Prediction Sets (RAPS) method-based non-conformity
+    score. Three differents method are available:
 
-    - ``"naive"``, sum of the probabilities until the 1-alpha threshold.
+    - ``"naive"``, that is based on the sum of the probabilities until the
+        1-alpha threshold. See ``"Naive"`` class for more details.
 
     - ``"aps"`` (formerly called "cumulated_score"), Adaptive Prediction
         Sets method. It is based on the sum of the softmax outputs of the
         labels until the true label is reached, on the calibration set.
-        See [1] for more details.
+        See ``"APS"`` class for more details.
 
     - ``"raps"``, Regularized Adaptive Prediction Sets method. It uses the
-        same technique as ``"aps"`` method but with a penalty term
-        to reduce the size of prediction sets. See [2] for more
-        details. For now, this method only works with ``"prefit"`` and
-        ``"split"`` strategies.
+        same technique as ``"aps"`` method but with a penalty term to reduce
+        the size of prediction sets. See [1] for more details. For now, this
+        method only works with ``"prefit"`` and ``"split"`` strategies.
 
     References
     ----------
-    [1] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
-    "Classification with Valid and Adaptive Coverage."
-    NeurIPS 202 (spotlight) 2020.
-
-    [2] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
+    [1] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
     and Jitendra Malik.
     "Uncertainty Sets for Image Classifiers using Conformal Prediction."
     International Conference on Learning Representations 2021.
@@ -104,7 +100,7 @@ class RAPS(APS):
     ) -> NDArray:
         """
         Regularize the conformity scores with the ``"raps"``
-        method. See algo. 2 in [3]. TODO: add ref.
+        method. See algo. 2 in [1].
 
         Parameters
         ----------
@@ -231,7 +227,7 @@ class RAPS(APS):
         lambda_star = np.zeros(len(alpha_np))
         best_sizes = np.full(len(alpha_np), np.finfo(np.float64).max)
 
-        for lambda_ in [.001, .01, .1, .2, .5]:  # values given in paper[3]TODO
+        for lambda_ in [.001, .01, .1, .2, .5]:  # values given in paper[1]
             true_label_cumsum_proba, cutoff = (
                 get_true_label_cumsum_proba(
                     y_raps_no_enc,
@@ -286,7 +282,59 @@ class RAPS(APS):
         **kwargs
     ) -> NDArray:
         """
-        TODO: Compute the quantiles.
+        Get the quantiles of the conformity scores for each uncertainty level.
+
+        Parameters:
+        -----------
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores for each sample.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between 0 and 1, representing the uncertainty
+            of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        agg_scores: Optional[str]
+            Method to aggregate the scores from the base estimators.
+            If "mean", the scores are averaged. If "crossval", the scores are
+            obtained from cross-validation.
+
+            By default, ``"mean"``.
+
+        include_last_label: Optional[Union[bool, str]]
+            Whether or not to include last label in prediction sets.
+            Choose among ``False``, ``True``  or ``"randomized"``.
+
+            By default, ``True``.
+
+        X_raps: NDArray of shape (n_samples, n_features)
+            Observed feature values for the RAPS method (split data).
+
+            By default, "None" but must be set to work.
+
+        y_raps_no_enc: NDArray of shape (n_samples,)
+            Observed labels for the RAPS method (split data).
+
+            By default, "None" but must be set to work.
+
+        y_pred_proba_raps: NDArray of shape (n_samples, n_classes)
+            Predicted probabilities for the RAPS method (split data).
+
+            By default, "None" but must be set to work.
+
+        position_raps: NDArray of shape (n_samples,)
+            Position of the points in the split set for the RAPS method
+            (split data). These positions are returned by the function
+            ``get_true_label_position``.
+
+            By default, "None" but must be set to work.
+
+        Returns:
+        --------
+        NDArray
+            Array of quantiles with respect to alpha_np.
         """
         # Casting to NDArray to avoid mypy errors
         X_raps = cast(NDArray, X_raps)
@@ -328,18 +376,54 @@ class RAPS(APS):
 
     def _add_regualization(
         self,
-        y_pred_proba_sorted_cumsum,
-        lambda_=None,
-        k_star=None,
-        prediction_phase=False,
+        y_pred_proba_sorted_cumsum: NDArray,
+        lambda_: Optional[float] = None,
+        k_star: Optional[int] = None,
+        prediction_phase: bool = False,
         **kwargs
-    ):
+    ) -> NDArray:
         """
-        TODO
+        Add regularization to the sorted cumulative sum of predicted
+        probabilities.
+
+        Parameters
+        ----------
+        y_pred_proba_sorted_cumsum: NDArray of shape (n_samples, n_classes)
+            The sorted cumulative sum of predicted probabilities.
+
+        lambda_: float
+            The lambda value used in the paper [1].
+
+            By default, "None" but must be set to work.
+
+        k_star: int
+            The optimal value of k (called k_reg in the paper [1]).
+
+            By default, "None" but must be set to work.
+
+        prediction_phase: bool, optional
+            Whether the function is called during the prediction phase.
+            If ``True``, the function will use the values of ``lambda_star``
+            and ``k_star`` of the object.
+
+            By default, ``False``.
+
+        **kwargs: dict, optional
+            Additional keyword arguments that might be used.
+            The current implementation does not use any.
+
+        Returns
+        -------
+        NDArray
+            The adjusted cumulative sum of predicted probabilities after
+            applying the regularization technique.
         """
         if prediction_phase:
-            lambda_ = self.lambda_star
-            k_star = self.k_star
+            lambda_ = cast(float, self.lambda_star)
+            k_star = cast(int, self.k_star)
+        else:
+            lambda_ = cast(float, lambda_)
+            k_star = cast(int, lambda_)
 
         y_pred_proba_sorted_cumsum += lambda_ * np.maximum(
             0,
@@ -352,14 +436,33 @@ class RAPS(APS):
 
     def _compute_vs_parameter(
         self,
-        y_proba_last_cumsumed,
-        threshold,
-        y_pred_proba_last,
-        prediction_sets,
-        *kwargs
-    ):
+        y_proba_last_cumsumed: NDArray,
+        threshold: NDArray,
+        y_pred_proba_last: NDArray,
+        prediction_sets: NDArray,
+        **kwargs
+    ) -> NDArray:
         """
-        TODO
+        Compute the V parameters from Angelopoulos+(2020).
+
+        Parameters:
+        -----------
+        y_proba_last_cumsumed: NDArray of shape (n_samples, n_alpha)
+            Cumulated score of the last included label.
+
+        threshold: NDArray of shape (n_alpha,) or shape (n_samples_train,)
+            Threshold to compare with y_proba_last_cumsum.
+
+        y_pred_proba_last: NDArray of shape (n_samples, 1, n_alpha)
+            Last included probability.
+
+        predicition_sets: NDArray of shape (n_samples, n_alpha)
+            Prediction sets.
+
+        Returns:
+        --------
+        NDArray of shape (n_samples, n_alpha)
+            Vs parameters.
         """
         # compute V parameter from Angelopoulos+(2020)
         L = np.sum(prediction_sets, axis=1)

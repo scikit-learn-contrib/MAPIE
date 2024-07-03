@@ -14,33 +14,9 @@ from mapie._typing import ArrayLike, NDArray
 
 
 class Naive(BaseClassificationScore):
-    """TODO:
-    Adaptive Prediction Sets (APS) method-based non-conformity score.
-    Three differents method are available in this class:
-
-    - ``"naive"``, sum of the probabilities until the 1-alpha threshold.
-
-    - ``"aps"`` (formerly called "cumulated_score"), Adaptive Prediction
-        Sets method. It is based on the sum of the softmax outputs of the
-        labels until the true label is reached, on the calibration set.
-        See [1] for more details.
-
-    - ``"raps"``, Regularized Adaptive Prediction Sets method. It uses the
-        same technique as ``"aps"`` method but with a penalty term
-        to reduce the size of prediction sets. See [2] for more
-        details. For now, this method only works with ``"prefit"`` and
-        ``"split"`` strategies.
-
-    References
-    ----------
-    [1] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
-    "Classification with Valid and Adaptive Coverage."
-    NeurIPS 202 (spotlight) 2020.
-
-    [2] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
-    and Jitendra Malik.
-    "Uncertainty Sets for Image Classifiers using Conformal Prediction."
-    International Conference on Learning Representations 2021.
+    """
+    Naive classification non-conformity score method that is based on the
+    cumulative sum of probabilities until the 1-alpha threshold.
 
     Attributes
     ----------
@@ -130,7 +106,31 @@ class Naive(BaseClassificationScore):
         **kwargs
     ) -> NDArray:
         """
-        TODO: Compute the predictions.
+        Get predictions from an EnsembleClassifier.
+
+        Parameters:
+        -----------
+        X: NDArray of shape (n_samples, n_features)
+            Observed feature values.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between ``0`` and ``1``, represents the
+            uncertainty of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        agg_scores: Optional[str]
+            Method to aggregate the scores from the base estimators.
+            If "mean", the scores are averaged. If "crossval", the scores are
+            obtained from cross-validation.
+
+            By default ``"mean"``.
+
+        Returns:
+        --------
+        NDArray
+            Array of predictions.
         """
         y_pred_proba = estimator.predict(X, agg_scores)
         y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
@@ -148,16 +148,52 @@ class Naive(BaseClassificationScore):
         **kwargs
     ) -> NDArray:
         """
-        TODO: Compute the quantiles.
+        Get the quantiles of the conformity scores for each uncertainty level.
+
+        Parameters:
+        -----------
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores for each sample.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between 0 and 1, representing the uncertainty
+            of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        Returns:
+        --------
+        NDArray
+            Array of quantiles with respect to alpha_np.
         """
         quantiles_ = 1 - alpha_np
         return quantiles_
 
     def _add_regualization(
         self,
-        y_pred_proba_sorted_cumsum,
+        y_pred_proba_sorted_cumsum: NDArray,
         **kwargs
     ):
+        """
+        Add regularization to the sorted cumulative sum of predicted
+        probabilities.
+
+        Parameters
+        ----------
+        y_pred_proba_sorted_cumsum: NDArray of shape (n_samples, n_classes)
+            The sorted cumulative sum of predicted probabilities.
+
+        **kwargs: dict, optional
+            Additional keyword arguments that might be used.
+            The current implementation does not use any.
+
+        Returns
+        -------
+        NDArray
+            The adjusted cumulative sum of predicted probabilities after
+            applying the regularization technique.
+        """
         return y_pred_proba_sorted_cumsum
 
     def _get_last_included_proba(
@@ -244,14 +280,33 @@ class Naive(BaseClassificationScore):
 
     def _compute_vs_parameter(
         self,
-        y_proba_last_cumsumed,
-        threshold,
-        y_pred_proba_last,
-        prediction_sets,
-        *kwargs
-    ):
+        y_proba_last_cumsumed: NDArray,
+        threshold: NDArray,
+        y_pred_proba_last: NDArray,
+        prediction_sets: NDArray,
+        **kwargs
+    ) -> NDArray:
         """
-        TODO
+        Compute the V parameters from Romano+(2020).
+
+        Parameters:
+        -----------
+        y_proba_last_cumsumed: NDArray of shape (n_samples, n_alpha)
+            Cumulated score of the last included label.
+
+        threshold: NDArray of shape (n_alpha,) or shape (n_samples_train,)
+            Threshold to compare with y_proba_last_cumsum.
+
+        y_pred_proba_last: NDArray of shape (n_samples, 1, n_alpha)
+            Last included probability.
+
+        predicition_sets: NDArray of shape (n_samples, n_alpha)
+            Prediction sets.
+
+        Returns:
+        --------
+        NDArray of shape (n_samples, n_alpha)
+            Vs parameters.
         """
         # compute V parameter from Romano+(2020)
         vs = (
@@ -329,7 +384,7 @@ class Naive(BaseClassificationScore):
             ), axis=1
         )
 
-        # TODO
+        # get the V parameter from Romano+(2020) or Angelopoulos+(2020)
         vs = self._compute_vs_parameter(
             y_proba_last_cumsumed,
             threshold,
@@ -360,9 +415,43 @@ class Naive(BaseClassificationScore):
         agg_scores: Optional[str] = "mean",
         include_last_label: Optional[Union[bool, str]] = True,
         **kwargs
-    ):
+    ) -> NDArray:
         """
-        TODO: Compute the prediction sets.
+        Generate prediction sets based on the probability predictions,
+        the conformity scores and the uncertainty level.
+
+        Parameters:
+        -----------
+        y_pred_proba: NDArray of shape (n_samples, n_classes)
+            Target prediction.
+
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores for each sample.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between 0 and 1, representing the uncertainty
+            of the confidence interval.
+
+        estimator: EnsembleClassifier
+            Estimator that is fitted to predict y from X.
+
+        agg_scores: Optional[str]
+            Method to aggregate the scores from the base estimators.
+            If "mean", the scores are averaged. If "crossval", the scores are
+            obtained from cross-validation.
+
+            By default ``"mean"``.
+
+        include_last_label: Optional[Union[bool, str]]
+            Whether or not to include last label in prediction sets.
+            Choose among ``False``, ``True``  or ``"randomized"``.
+
+            By default, ``True``.
+
+        Returns:
+        --------
+        NDArray
+            Array of quantiles with respect to alpha_np.
         """
         include_last_label = check_include_last_label(include_last_label)
 
