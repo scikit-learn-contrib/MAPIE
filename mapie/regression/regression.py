@@ -13,12 +13,12 @@ from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import ConformityScore, ResidualNormalisedScore
-from mapie.estimator.regressor import EnsembleRegressor
-from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_cv, check_estimator_fit_predict,
-                         check_n_features_in, check_n_jobs, check_null_weight,
-                         check_verbose, get_effective_calibration_samples)
 from mapie.conformity_scores.checks import check_conformity_score
+from mapie.estimator.regressor import EnsembleRegressor
+from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
+                         check_estimator_fit_predict, check_n_features_in,
+                         check_n_jobs, check_null_weight, check_verbose,
+                         get_effective_calibration_samples)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
