@@ -942,27 +942,20 @@ def test_predict_parameters_passing() -> None:
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
 
     X_train, X_test, y_train, y_test = (
-        train_test_split(X, y, test_size=0.2, random_state=random_state))
-
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
     mapie_1 = MapieRegressor(estimator=custom_gbr)
-
     mapie_2 = MapieRegressor(estimator=custom_gbr)
-
     predict_params = {'check_predict_params': True}
-
-    mapie_1 = mapie_1.fit(X_train, y_train,
-                          predict_params=predict_params)
-
-    np.testing.assert_allclose(mapie_1.conformity_scores_, np.abs(y_train))
-
+    mapie_1 = mapie_1.fit(
+        X_train, y_train, predict_params=predict_params
+    )
     mapie_2 = mapie_2.fit(X_train, y_train)
-
     y_pred_1 = mapie_1.predict(X_test, **predict_params)
-
-    np.testing.assert_allclose(y_pred_1, 0)
-
     y_pred_2 = mapie_2.predict(X_test)
-
+    np.testing.assert_allclose(y_pred_1, 0)
+    np.testing.assert_allclose(mapie_1.conformity_scores_, np.abs(y_train))
     with np.testing.assert_raises(AssertionError):
         np.testing.assert_array_equal(y_pred_1, y_pred_2)
 

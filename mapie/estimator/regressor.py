@@ -415,7 +415,7 @@ class EnsembleRegressor(EnsembleEstimator):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **fit_params,
+        **fit_params
     ) -> EnsembleRegressor:
         """
         Fit the base estimator under the ``single_estimator_`` attribute.
@@ -509,7 +509,7 @@ class EnsembleRegressor(EnsembleEstimator):
         X: ArrayLike,
         ensemble: bool = False,
         return_multi_pred: bool = True,
-        **predict_params,
+        **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample

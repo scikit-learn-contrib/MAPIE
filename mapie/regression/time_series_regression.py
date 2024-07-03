@@ -405,7 +405,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
-        **predict_params,
+        **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -440,7 +440,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         allow_infinite_bounds: bool
             Allow infinite prediction intervals to be produced.
 
-        **predict_params : dict
+        predict_params : dict
             Additional predict parameters.
 
         Returns

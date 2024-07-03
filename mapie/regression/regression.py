@@ -469,7 +469,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **kwargs: Any,
+        **kwargs: Any
     ) -> MapieRegressor:
         """
         Fit estimator and compute conformity scores used for
@@ -503,7 +503,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             By default ``None``.
 
         kwargs : dict
-            Additional ft and parameters.
+            Additional fit and predict parameters.
 
         Returns
         -------
@@ -609,7 +609,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             By default ``False``.
 
-        **predict_params : dict
+        predict_params : dict
             Additional predict parameters.
 
         Returns
