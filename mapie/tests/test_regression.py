@@ -971,10 +971,10 @@ def test_invalid_predict_parameters() -> None:
     mapie_fitted = mapie.fit(X_train, y_train)
 
     with pytest.raises(ValueError, match=(
-        fr".*Using 'predict_param' '{predict_params}'"
-        r".*without having used it in the fit method\..*"
-        fr"Please ensure '{predict_params}'"
-        r".*is used in the fit method before calling predict\..*"
+        fr".*Using 'predict_param' '{predict_params}' "
+        r"without using one 'predict_param' in the fit method\..*"
+        r"Please ensure one 'predict_param' "
+        r"is used in the fit method before calling predict\..*"
     )):
         mapie_fitted.predict(X_test, **predict_params)
 

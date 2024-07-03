@@ -623,21 +623,13 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
 
-        if hasattr(self, '_predict_params') and len(self._predict_params) > 0:
-            predict_params = self._predict_params
-            warnings.warn(
-                f"Using predict_params: '{predict_params}' "
-                "from the fit method in the predict method by default",
-                UserWarning
-            )
-
-        elif (len(predict_params) > 0 and hasattr(self, '_predict_params') and
-              len(self._predict_params) == 0 and
-              self.cv != "prefit"):
+        if (len(predict_params) > 0 and hasattr(self, '_predict_params') and
+                len(self._predict_params) == 0 and
+                self.cv != "prefit"):
             raise ValueError(
                 f"Using 'predict_param' '{predict_params}' "
-                f"without having used it in the fit method. "
-                f"Please ensure '{predict_params}' "
+                f"without using one 'predict_param' in the fit method. "
+                f"Please ensure one 'predict_param' "
                 f"is used in the fit method before calling predict."
             )
 
