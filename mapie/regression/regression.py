@@ -228,7 +228,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         verbose: int = 0,
         conformity_score: Optional[ConformityScore] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
-        predict_params: Optional[bool] = False
     ) -> None:
         self.estimator = estimator
         self.method = method
@@ -239,7 +238,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         self.verbose = verbose
         self.conformity_score = conformity_score
         self.random_state = random_state
-        self.predict_params = predict_params
 
     def _check_parameters(self) -> None:
         """
@@ -514,7 +512,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         predict_params = kwargs.pop('predict_params', {})
 
         if len(predict_params) > 0:
-            self.predict_params = True
+            self._predict_params = predict_params
+        else:
+            self._predict_params = {}
+
         # Checks
         (estimator,
          self.conformity_score_function_,
@@ -622,15 +623,16 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
 
-        if self.predict_params is True:
+        if hasattr(self, '_predict_params') and len(self._predict_params) > 0:
+            predict_params = self._predict_params
             warnings.warn(
-                f"Be careful that predict_params: '{predict_params}' "
-                "is used in fit method",
+                f"Using predict_params: '{predict_params}' "
+                "from the fit method in the predict method by default",
                 UserWarning
             )
 
-        elif (len(predict_params) > 0 and
-              self.predict_params is False and
+        elif (len(predict_params) > 0 and hasattr(self, '_predict_params') and
+              len(self._predict_params) == 0 and
               self.cv != "prefit"):
             raise ValueError(
                 f"Using 'predict_param' '{predict_params}' "

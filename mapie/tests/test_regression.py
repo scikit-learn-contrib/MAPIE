@@ -43,52 +43,8 @@ random_state = 1
 
 
 class CustomGradientBoostingRegressor(GradientBoostingRegressor):
-    def __init__(self,
-                 loss='squared_error',
-                 learning_rate=0.1,
-                 n_estimators=100,
-                 subsample=1.0,
-                 criterion='friedman_mse',
-                 min_samples_split=2,
-                 min_samples_leaf=1,
-                 min_weight_fraction_leaf=0.0,
-                 max_depth=3,
-                 min_impurity_decrease=0.0,
-                 init=None,
-                 random_state=None,
-                 max_features=None,
-                 alpha=0.9,
-                 verbose=0,
-                 max_leaf_nodes=None,
-                 warm_start=False,
-                 validation_fraction=0.1,
-                 n_iter_no_change=None,
-                 tol=0.0001,
-                 ccp_alpha=0.0):
-
-        super().__init__(
-            loss=loss,
-            learning_rate=learning_rate,
-            n_estimators=n_estimators,
-            subsample=subsample,
-            criterion=criterion,
-            min_samples_split=min_samples_split,
-            min_samples_leaf=min_samples_leaf,
-            min_weight_fraction_leaf=min_weight_fraction_leaf,
-            max_depth=max_depth,
-            min_impurity_decrease=min_impurity_decrease,
-            init=init,
-            random_state=random_state,
-            max_features=max_features,
-            alpha=alpha,
-            verbose=verbose,
-            max_leaf_nodes=max_leaf_nodes,
-            warm_start=warm_start,
-            validation_fraction=validation_fraction,
-            n_iter_no_change=n_iter_no_change,
-            tol=tol,
-            ccp_alpha=ccp_alpha
-        )
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def fit(self, X, y, **kwargs):
         return super().fit(X, y, **kwargs)
@@ -976,46 +932,30 @@ def test_fit_and_predict_parameters_passing() -> None:
         else:
             return False
 
-    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
-
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state))
-
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
     score = AbsoluteConformityScore(sym=True)
-
     mapie_1 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
-
     mapie_2 = MapieRegressor(estimator=custom_gbr)
-
     fit_params = {'monitor': early_stopping_monitor}
-
     predict_params = {'check_predict_params': True}
-
     mapie_1 = mapie_1.fit(X_train, y_train,
                           fit_params=fit_params,
                           predict_params=predict_params)
-
     mapie_2 = mapie_2.fit(X_train, y_train)
-
-    assert mapie_1.estimator_.single_estimator_.estimators_.shape[0] == 3
-
-    for estimator in mapie_1.estimator_.estimators_:
-        assert estimator.estimators_.shape[0] == 3
-
-    assert (mapie_2.estimator_.single_estimator_.n_estimators ==
-           custom_gbr.n_estimators)
-
-    for estimator in mapie_2.estimator_.estimators_:
-        assert estimator.n_estimators == custom_gbr.n_estimators
-
-    np.testing.assert_array_equal(mapie_1.conformity_scores_, np.abs(y_train))
-
     y_pred_1 = mapie_1.predict(X_test, **predict_params)
-
-    np.testing.assert_allclose(y_pred_1, 0)
-
     y_pred_2 = mapie_2.predict(X_test)
 
+    assert mapie_1.estimator_.single_estimator_.estimators_.shape[0] == 3
+    for estimator in mapie_1.estimator_.estimators_:
+        assert estimator.estimators_.shape[0] == 3
+    assert (mapie_2.estimator_.single_estimator_.n_estimators ==
+           custom_gbr.n_estimators)
+    for estimator in mapie_2.estimator_.estimators_:
+        assert estimator.n_estimators == custom_gbr.n_estimators
+    np.testing.assert_array_equal(mapie_1.conformity_scores_, np.abs(y_train))
+    np.testing.assert_allclose(y_pred_1, 0)
     with np.testing.assert_raises(AssertionError):
         np.testing.assert_array_equal(y_pred_1, y_pred_2)
 
@@ -1024,14 +964,10 @@ def test_invalid_predict_parameters() -> None:
     """Test that invalid predict_parameters raise errors."""
 
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
-
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state))
-
     mapie = MapieRegressor(estimator=custom_gbr)
-
     predict_params = {'check_predict_params': True}
-
     mapie_fitted = mapie.fit(X_train, y_train)
 
     with pytest.raises(ValueError, match=(
