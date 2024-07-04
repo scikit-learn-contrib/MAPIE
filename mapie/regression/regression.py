@@ -512,9 +512,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         predict_params = kwargs.pop('predict_params', {})
 
         if len(predict_params) > 0:
-            self._predict_params = predict_params
+            self._predict_params = True
         else:
-            self._predict_params = {}
+            self._predict_params = False
 
         # Checks
         (estimator,
@@ -624,7 +624,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
 
         if (len(predict_params) > 0 and hasattr(self, '_predict_params') and
-                len(self._predict_params) == 0 and
+                self._predict_params is False and
                 self.cv != "prefit"):
             raise ValueError(
                 f"Using 'predict_param' '{predict_params}' "
