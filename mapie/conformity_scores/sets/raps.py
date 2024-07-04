@@ -15,20 +15,9 @@ from mapie.utils import check_alpha_and_n_samples, compute_quantiles
 class RAPS(APS):
     """
     Regularized Adaptive Prediction Sets (RAPS) method-based non-conformity
-    score. Three differents method are available:
-
-    - ``"naive"``, that is based on the sum of the probabilities until the
-        1-alpha threshold. See ``"Naive"`` class for more details.
-
-    - ``"aps"`` (formerly called "cumulated_score"), Adaptive Prediction
-        Sets method. It is based on the sum of the softmax outputs of the
-        labels until the true label is reached, on the calibration set.
-        See ``"APS"`` class for more details.
-
-    - ``"raps"``, Regularized Adaptive Prediction Sets method. It uses the
-        same technique as ``"aps"`` method but with a penalty term to reduce
-        the size of prediction sets. See [1] for more details. For now, this
-        method only works with ``"prefit"`` and ``"split"`` strategies.
+    score. It uses the same technique as ``APS`` class but with a penalty term
+    to reduce the size of prediction sets. See [1] for more details. For now,
+    this method only works with ``"prefit"`` and ``"split"`` strategies.
 
     References
     ----------

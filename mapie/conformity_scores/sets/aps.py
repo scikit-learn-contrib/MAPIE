@@ -14,20 +14,8 @@ from mapie.utils import compute_quantiles
 class APS(Naive):
     """
     Adaptive Prediction Sets (APS) method-based non-conformity score.
-    Three differents method are available:
-
-    - ``"naive"``, that is based on the sum of the probabilities until the
-        1-alpha threshold. See ``"Naive"`` class for more details.
-
-    - ``"aps"`` (formerly called "cumulated_score"), Adaptive Prediction
-        Sets method. It is based on the sum of the softmax outputs of the
-        labels until the true label is reached, on the calibration set.
-        See [1] for more details.
-
-    - ``"raps"``, Regularized Adaptive Prediction Sets method. It uses the
-        same technique as ``"aps"`` method but with a penalty term
-        to reduce the size of prediction sets.
-        See ``"RAPS"`` class for more details.
+    It is based on the sum of the softmax outputs of the labels until the true
+    label is reached, on the calibration set. See [1] for more details.
 
     References
     ----------
