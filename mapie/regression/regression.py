@@ -165,6 +165,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
     estimator_: EnsembleRegressor
         Sklearn estimator that handle all that is related to the estimator.
 
+    conformity_score_function_: BaseRegressionScore
+        Score function that handle all that is related to conformity scores.
+
     conformity_scores_: ArrayLike of shape (n_samples_train,)
         Conformity scores between ``y_train`` and ``y_pred``.
 

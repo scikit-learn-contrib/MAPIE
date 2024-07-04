@@ -140,11 +140,17 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     estimator_: EnsembleClassifier
         Sklearn estimator that handle all that is related to the estimator.
 
+    conformity_score_function_: BaseClassificationScore
+        Score function that handle all that is related to conformity scores.
+
     n_features_in_: int
         Number of features passed to the fit method.
 
     conformity_scores_: ArrayLike of shape (n_samples_train)
         The conformity scores used to calibrate the prediction sets.
+
+    quantiles_: ArrayLike of shape (n_alpha)
+        The quantiles estimated from ``conformity_scores_`` and alpha values.
 
     References
     ----------
@@ -740,5 +746,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             agg_scores=agg_scores,
             **kwargs
         )
+
+        self.quantiles_ = self.conformity_score_function_.quantiles_
 
         return y_pred, prediction_sets
