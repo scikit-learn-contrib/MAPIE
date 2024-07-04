@@ -218,7 +218,7 @@ class RAPS(APS):
 
         return lambda_star
 
-    def get_conformity_quantiles(
+    def get_conformity_score_quantiles(
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,

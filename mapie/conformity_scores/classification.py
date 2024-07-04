@@ -53,7 +53,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def get_conformity_quantiles(
+    def get_conformity_score_quantiles(
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,
@@ -157,7 +157,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         )
 
         # Choice of the quantile
-        self.quantiles_ = self.get_conformity_quantiles(
+        self.quantiles_ = self.get_conformity_score_quantiles(
             conformity_scores, alpha_np, estimator, **kwargs
         )
 

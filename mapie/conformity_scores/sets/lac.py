@@ -143,7 +143,7 @@ class LAC(BaseClassificationScore):
 
         return y_pred_proba
 
-    def get_conformity_quantiles(
+    def get_conformity_score_quantiles(
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,
