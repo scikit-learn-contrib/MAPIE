@@ -623,7 +623,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
 
-        if (len(predict_params) > 0 and hasattr(self, '_predict_params') and
+        if (len(predict_params) > 0 and
                 self._predict_params is False and
                 self.cv != "prefit"):
             raise ValueError(

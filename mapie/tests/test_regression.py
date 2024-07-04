@@ -916,13 +916,46 @@ def test_predict_parameters_passing() -> None:
         np.testing.assert_array_equal(y_pred_1, y_pred_2)
 
 
-def test_fit_and_predict_parameters_passing() -> None:
+def test_fit_parameters_passing_with_predict_parameter() -> None:
     """
-    Test passing fit parameters and predict parameters.
-    For fit : checks that underlying GradientBoosting
+    Test passing fit parameters with predict parameters into the model.
+    Checks that underlying GradientBoosting
     estimators have used 3 iterations only during boosting,
     instead of default value for n_estimators (=100).
-    For predict : Checks that y_pred from train are 0
+    """
+    def early_stopping_monitor(i, est, locals):
+        """Returns True on the 3rd iteration."""
+        if i == 2:
+            return True
+        else:
+            return False
+
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state))
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
+    score = AbsoluteConformityScore(sym=True)
+    mapie_1 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
+    mapie_2 = MapieRegressor(estimator=custom_gbr)
+    fit_params = {'monitor': early_stopping_monitor}
+    predict_params = {'check_predict_params': True}
+    mapie_1 = mapie_1.fit(X_train, y_train,
+                          fit_params=fit_params,
+                          predict_params=predict_params)
+    mapie_2 = mapie_2.fit(X_train, y_train)
+
+    assert mapie_1.estimator_.single_estimator_.estimators_.shape[0] == 3
+    for estimator in mapie_1.estimator_.estimators_:
+        assert estimator.estimators_.shape[0] == 3
+    assert (mapie_2.estimator_.single_estimator_.n_estimators ==
+           custom_gbr.n_estimators)
+    for estimator in mapie_2.estimator_.estimators_:
+        assert estimator.n_estimators == custom_gbr.n_estimators
+
+
+def test_predict_parameters_passing_with_fit_parameter() -> None:
+    """
+    Test passing predict parameters with fit parameters into the model.
+    Checks that y_pred from train are 0
     and y_pred from test are 0.
     """
     def early_stopping_monitor(i, est, locals):
@@ -947,13 +980,6 @@ def test_fit_and_predict_parameters_passing() -> None:
     y_pred_1 = mapie_1.predict(X_test, **predict_params)
     y_pred_2 = mapie_2.predict(X_test)
 
-    assert mapie_1.estimator_.single_estimator_.estimators_.shape[0] == 3
-    for estimator in mapie_1.estimator_.estimators_:
-        assert estimator.estimators_.shape[0] == 3
-    assert (mapie_2.estimator_.single_estimator_.n_estimators ==
-           custom_gbr.n_estimators)
-    for estimator in mapie_2.estimator_.estimators_:
-        assert estimator.n_estimators == custom_gbr.n_estimators
     np.testing.assert_array_equal(mapie_1.conformity_scores_, np.abs(y_train))
     np.testing.assert_allclose(y_pred_1, 0)
     with np.testing.assert_raises(AssertionError):
