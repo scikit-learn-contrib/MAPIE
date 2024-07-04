@@ -20,14 +20,6 @@ class Naive(BaseClassificationScore):
 
     Attributes
     ----------
-    method: str
-        Method to choose for prediction interval estimates.
-        This attribute is for compatibility with ``MapieClassifier``
-        which previously used a string instead of a score class.
-        Methods available in this class: ``aps``, ``raps`` and ``naive``.
-
-        By default, ``aps`` for APS method.
-
     classes: Optional[ArrayLike]
         Names of the classes.
 
@@ -43,7 +35,6 @@ class Naive(BaseClassificationScore):
 
     def set_external_attributes(
         self,
-        method: str = 'naive',
         classes: Optional[ArrayLike] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         **kwargs
@@ -53,12 +44,6 @@ class Naive(BaseClassificationScore):
 
         Parameters
         ----------
-        method: str
-            Method to choose for prediction interval estimates.
-            Methods available in this class: ``aps``, ``raps`` and ``naive``.
-
-            By default ``aps`` for APS method.
-
         classes: Optional[ArrayLike]
             Names of the classes.
 
@@ -68,7 +53,6 @@ class Naive(BaseClassificationScore):
             Pseudo random number generator state.
         """
         super().set_external_attributes(**kwargs)
-        self.method = method
         self.classes = classes
         self.random_state = random_state
 

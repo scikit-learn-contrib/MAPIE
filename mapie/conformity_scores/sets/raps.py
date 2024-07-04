@@ -7,7 +7,7 @@ from mapie.conformity_scores.sets.utils import get_true_label_cumsum_proba
 from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
-from mapie._typing import ArrayLike, NDArray
+from mapie._typing import NDArray
 from mapie.metrics import classification_mean_width_score
 from mapie.utils import check_alpha_and_n_samples, compute_quantiles
 
@@ -39,14 +39,6 @@ class RAPS(APS):
 
     Attributes
     ----------
-    method: str
-        Method to choose for prediction interval estimates.
-        This attribute is for compatibility with ``MapieClassifier``
-        which previously used a string instead of a score class.
-        Methods available in this class: ``aps``, ``raps`` and ``naive``.
-
-        By default, ``aps`` for APS method.
-
     classes: Optional[ArrayLike]
         Names of the classes.
 
@@ -59,37 +51,6 @@ class RAPS(APS):
 
     def __init__(self) -> None:
         super().__init__()
-
-    def set_external_attributes(
-        self,
-        method: str = 'raps',
-        classes: Optional[ArrayLike] = None,
-        random_state: Optional[Union[int, np.random.RandomState]] = None,
-        **kwargs
-    ) -> None:
-        """
-        Set attributes that are not provided by the user.
-
-        Parameters
-        ----------
-        method: str
-            Method to choose for prediction interval estimates.
-            Methods available in this class: ``aps``, ``raps`` and ``naive``.
-
-            By default ``aps`` for APS method.
-
-        classes: Optional[ArrayLike]
-            Names of the classes.
-
-            By default ``None``.
-
-        random_state: Optional[Union[int, RandomState]]
-            Pseudo random number generator state.
-        """
-        super().set_external_attributes(**kwargs)
-        self.method = method
-        self.classes = classes
-        self.random_state = random_state
 
     @staticmethod
     def _regularize_conformity_score(

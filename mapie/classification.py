@@ -452,7 +452,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             method=self.method
         )
         cs_estimator.set_external_attributes(
-            method=self.method,
             classes=self.classes_,
             random_state=self.random_state
         )

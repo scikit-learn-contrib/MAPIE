@@ -31,13 +31,6 @@ class TopK(BaseClassificationScore):
 
     Attributes
     ----------
-    method: str
-        Method to choose for prediction interval estimates.
-        This attribute is for compatibility with ``MapieClassifier``
-        which previously used a string instead of a score class.
-
-        By default, ``top_k`` for Top-K method.
-
     classes: Optional[ArrayLike]
         Names of the classes.
 
@@ -53,7 +46,6 @@ class TopK(BaseClassificationScore):
 
     def set_external_attributes(
         self,
-        method: str = 'top_k',
         classes: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         **kwargs
@@ -63,12 +55,6 @@ class TopK(BaseClassificationScore):
 
         Parameters
         ----------
-        method: str
-            Method to choose for prediction interval estimates.
-            Methods available in this class: ``top_k``.
-
-            By default ``top_k`` for Top-K method.
-
         classes: Optional[ArrayLike]
             Names of the classes.
 
@@ -78,7 +64,6 @@ class TopK(BaseClassificationScore):
             Pseudo random number generator state.
         """
         super().set_external_attributes(**kwargs)
-        self.method = method
         self.classes = classes
         self.random_state = random_state
 

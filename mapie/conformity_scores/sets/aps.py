@@ -37,14 +37,6 @@ class APS(Naive):
 
     Attributes
     ----------
-    method: str
-        Method to choose for prediction interval estimates.
-        This attribute is for compatibility with ``MapieClassifier``
-        which previously used a string instead of a score class.
-        Methods available in this class: ``aps``, ``raps`` and ``naive``.
-
-        By default, ``aps`` for APS method.
-
     classes: Optional[ArrayLike]
         Names of the classes.
 
