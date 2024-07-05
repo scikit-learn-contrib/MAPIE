@@ -23,10 +23,8 @@ from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
-from mapie.conformity_scores.sets.raps import RAPS
-from mapie.conformity_scores.sets.utils import (
-    check_proba_normalized, get_true_label_cumsum_proba
-)
+from mapie.conformity_scores import APS, RAPS
+from mapie.conformity_scores.sets.utils import check_proba_normalized
 from mapie.metrics import classification_coverage_score
 from mapie.utils import check_alpha
 
@@ -1759,7 +1757,7 @@ def test_get_true_label_cumsum_proba_shape() -> None:
     )
     mapie_clf.fit(X, y)
     classes = mapie_clf.classes_
-    cumsum_proba, cutoff = get_true_label_cumsum_proba(y, y_pred, classes)
+    cumsum_proba, cutoff = APS.get_true_label_cumsum_proba(y, y_pred, classes)
     assert cumsum_proba.shape == (len(X), 1)
     assert cutoff.shape == (len(X), )
 
@@ -1777,7 +1775,9 @@ def test_get_true_label_cumsum_proba_result() -> None:
     )
     mapie_clf.fit(X_toy, y_toy)
     classes = mapie_clf.classes_
-    cumsum_proba, cutoff = get_true_label_cumsum_proba(y_toy, y_pred, classes)
+    cumsum_proba, cutoff = APS.get_true_label_cumsum_proba(
+        y_toy, y_pred, classes
+    )
     np.testing.assert_allclose(
         cumsum_proba,
         np.array(

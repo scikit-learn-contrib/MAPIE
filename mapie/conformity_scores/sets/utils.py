@@ -1,8 +1,7 @@
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 import numpy as np
-from sklearn.calibration import label_binarize
 
-from mapie._typing import ArrayLike, NDArray
+from mapie._typing import NDArray
 from mapie._machine_precision import EPSILON
 
 
@@ -30,45 +29,6 @@ def get_true_label_position(
     position = np.take_along_axis(index, y.reshape(-1, 1), axis=1)
 
     return position
-
-
-def get_true_label_cumsum_proba(
-    y: ArrayLike,
-    y_pred_proba: NDArray,
-    classes: ArrayLike
-) -> Tuple[NDArray, NDArray]:
-    """
-    Compute the cumsumed probability of the true label.
-
-    Parameters
-    ----------
-    y: NDArray of shape (n_samples, )
-        Array with the labels.
-
-    y_pred_proba: NDArray of shape (n_samples, n_classes)
-        Predictions of the model.
-
-    classes: NDArray of shape (n_classes, )
-        Array with the classes.
-
-    Returns
-    -------
-    Tuple[NDArray, NDArray] of shapes (n_samples, 1) and (n_samples, ).
-        The first element is the cumsum probability of the true label.
-        The second is the sorted position of the true label.
-    """
-    y_true = label_binarize(y=y, classes=classes)
-    index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
-    y_pred_sorted = np.take_along_axis(y_pred_proba, index_sorted, axis=1)
-    y_true_sorted = np.take_along_axis(y_true, index_sorted, axis=1)
-    y_pred_sorted_cumsum = np.cumsum(y_pred_sorted, axis=1)
-    cutoff = np.argmax(y_true_sorted, axis=1)
-    true_label_cumsum_proba = np.take_along_axis(
-        y_pred_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
-    )
-    cutoff += 1
-
-    return true_label_cumsum_proba, cutoff
 
 
 def check_include_last_label(

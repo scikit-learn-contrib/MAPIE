@@ -1,17 +1,17 @@
-from typing import Optional, Union, cast
+from typing import Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.dummy import check_random_state
+from sklearn.calibration import label_binarize
 
 from mapie.conformity_scores.sets.naive import Naive
 from mapie.conformity_scores.sets.utils import (
-    check_include_last_label, check_proba_normalized,
-    get_true_label_cumsum_proba
+    check_include_last_label, check_proba_normalized
 )
 from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
-from mapie._typing import NDArray
+from mapie._typing import ArrayLike, NDArray
 from mapie.utils import compute_quantiles
 
 
@@ -85,6 +85,45 @@ class APS(Naive):
             )
         return y_pred_proba
 
+    @staticmethod
+    def get_true_label_cumsum_proba(
+        y: ArrayLike,
+        y_pred_proba: NDArray,
+        classes: ArrayLike
+    ) -> Tuple[NDArray, NDArray]:
+        """
+        Compute the cumsumed probability of the true label.
+
+        Parameters
+        ----------
+        y: NDArray of shape (n_samples, )
+            Array with the labels.
+
+        y_pred_proba: NDArray of shape (n_samples, n_classes)
+            Predictions of the model.
+
+        classes: NDArray of shape (n_classes, )
+            Array with the classes.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray] of shapes (n_samples, 1) and (n_samples, ).
+            The first element is the cumsum probability of the true label.
+            The second is the sorted position of the true label.
+        """
+        y_true = label_binarize(y=y, classes=classes)
+        index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
+        y_pred_sorted = np.take_along_axis(y_pred_proba, index_sorted, axis=1)
+        y_true_sorted = np.take_along_axis(y_true, index_sorted, axis=1)
+        y_pred_sorted_cumsum = np.cumsum(y_pred_sorted, axis=1)
+        cutoff = np.argmax(y_true_sorted, axis=1)
+        true_label_cumsum_proba = np.take_along_axis(
+            y_pred_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
+        )
+        cutoff += 1
+
+        return true_label_cumsum_proba, cutoff
+
     def get_conformity_scores(
         self,
         y: NDArray,
@@ -117,7 +156,7 @@ class APS(Naive):
 
         # Conformity scores
         conformity_scores, self.cutoff = (
-            get_true_label_cumsum_proba(y, y_pred, classes)
+            self.get_true_label_cumsum_proba(y, y_pred, classes)
         )
         y_proba_true = np.take_along_axis(
             y_pred, y_enc.reshape(-1, 1), axis=1

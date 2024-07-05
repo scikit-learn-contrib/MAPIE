@@ -3,7 +3,6 @@ from typing import Optional, Tuple, Union, cast
 import numpy as np
 
 from mapie.conformity_scores.sets.aps import APS
-from mapie.conformity_scores.sets.utils import get_true_label_cumsum_proba
 from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
@@ -179,7 +178,7 @@ class RAPS(APS):
 
         for lambda_ in [.001, .01, .1, .2, .5]:  # values given in paper[1]
             true_label_cumsum_proba, cutoff = (
-                get_true_label_cumsum_proba(
+                self.get_true_label_cumsum_proba(
                     y_raps_no_enc,
                     y_pred_proba_raps[:, :, 0],
                     classes
