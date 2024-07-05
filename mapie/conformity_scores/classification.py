@@ -180,7 +180,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         Parameters:
         -----------
-        X: NDArray of shape (n_samples, ...)
+        X: NDArray of shape (n_samples,)
             The input data or samples for prediction.
 
         alpha_np: NDArray of shape (n_alpha, )

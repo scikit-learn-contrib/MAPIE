@@ -127,13 +127,13 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Parameters
         ----------
-        y: NDArray of shape (n_samples, ...)
+        y: NDArray of shape (n_samples,)
             Observed target values.
 
-        y_pred: NDArray of shape (n_samples, ...)
+        y_pred: NDArray of shape (n_samples,)
             Predicted target values.
 
-        conformity_scores: NDArray of shape (n_samples, ...)
+        conformity_scores: NDArray of shape (n_samples,)
             Conformity scores.
 
         Raises
@@ -175,15 +175,15 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Parameters
         ----------
-        y_pred: NDArray of shape (n_samples, ...)
+        y_pred: NDArray of shape (n_samples,)
             Predicted target values.
 
-        conformity_scores: NDArray of shape (n_samples, ...)
+        conformity_scores: NDArray of shape (n_samples,)
             Conformity scores.
 
         Returns
         -------
-        NDArray of shape (n_samples, ...)
+        NDArray of shape (n_samples,)
             Observed values.
         """
 
@@ -392,7 +392,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Parameters:
         -----------
-        X: NDArray of shape (n_samples, ...)
+        X: NDArray of shape (n_samples,)
             The input data or samples for prediction.
 
         alpha_np: NDArray of shape (n_alpha, )

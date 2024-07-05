@@ -76,7 +76,6 @@ class APS(Naive):
             y_pred, y_enc.reshape(-1, 1), axis=1
         )
         random_state = check_random_state(self.random_state)
-        random_state = cast(np.random.RandomState, random_state)
         u = random_state.uniform(size=len(y_pred)).reshape(-1, 1)
         conformity_scores -= u * y_proba_true
 
