@@ -10,6 +10,7 @@ from mapie.conformity_scores.utils import check_classification_conformity_score
 
 cs_list = [None, LAC(), APS(), TopK()]
 method_list = [None, 'naive', 'aps', 'raps', 'lac', 'top_k']
+wrong_method_list = ['naive_', 'aps_', 'raps_', 'lac_', 'top_k_']
 
 
 def test_error_mother_class_initialization() -> None:
@@ -35,3 +36,11 @@ def test_check_classification_method(
         check_classification_conformity_score(method=method),
         BaseClassificationScore
     )
+
+
+@pytest.mark.parametrize("method", wrong_method_list)
+def test_check_wrong_classification_method(
+    method: Optional[str]
+) -> None:
+    with pytest.raises(ValueError, match="Invalid method.*"):
+        check_classification_conformity_score(method=method)
