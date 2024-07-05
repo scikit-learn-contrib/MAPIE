@@ -55,6 +55,14 @@ class CustomGradientBoostingRegressor(GradientBoostingRegressor):
         return super().predict(X)
 
 
+def early_stopping_monitor(i, est, locals):
+    """Returns True on the 3rd iteration."""
+    if i == 2:
+        return True
+    else:
+        return False
+
+
 Params = TypedDict(
     "Params",
     {
@@ -871,20 +879,10 @@ def test_fit_parameters_passing() -> None:
     only during boosting, instead of default value for n_estimators (=100).
     """
     gb = GradientBoostingRegressor(random_state=random_state)
-
     mapie = MapieRegressor(estimator=gb, random_state=random_state)
-
-    def early_stopping_monitor(i, est, locals):
-        """Returns True on the 3rd iteration."""
-        if i == 2:
-            return True
-        else:
-            return False
-
     mapie.fit(X, y, fit_params={'monitor': early_stopping_monitor})
 
     assert mapie.estimator_.single_estimator_.estimators_.shape[0] == 3
-
     for estimator in mapie.estimator_.estimators_:
         assert estimator.estimators_.shape[0] == 3
 
@@ -892,17 +890,17 @@ def test_fit_parameters_passing() -> None:
 def test_predict_parameters_passing() -> None:
     """
     Test passing predict parameters.
-    Checks that y_pred from train are 0 and y_pred from test are 0
+    Checks that y_pred from train are 0, y_pred from test are 0 and
+    we check that y_pred constructed with or without predict_params
+    are different
     """
-
-    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
-
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)
     )
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
-    mapie_1 = MapieRegressor(estimator=custom_gbr)
-    mapie_2 = MapieRegressor(estimator=custom_gbr)
+    score = AbsoluteConformityScore(sym=True)
+    mapie_1 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
+    mapie_2 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
     predict_params = {'check_predict_params': True}
     mapie_1 = mapie_1.fit(
         X_train, y_train, predict_params=predict_params
@@ -910,38 +908,31 @@ def test_predict_parameters_passing() -> None:
     mapie_2 = mapie_2.fit(X_train, y_train)
     y_pred_1 = mapie_1.predict(X_test, **predict_params)
     y_pred_2 = mapie_2.predict(X_test)
-    np.testing.assert_allclose(y_pred_1, 0)
     np.testing.assert_allclose(mapie_1.conformity_scores_, np.abs(y_train))
+    np.testing.assert_allclose(y_pred_1, 0)
     with np.testing.assert_raises(AssertionError):
         np.testing.assert_array_equal(y_pred_1, y_pred_2)
 
 
-def test_fit_parameters_passing_with_predict_parameter() -> None:
+def test_fit_params_expected_behavior_unaffected_by_predict_params() -> None:
     """
-    Test passing fit parameters with predict parameters into the model.
+    We want to verify that there are no interferences
+    with predict_params on the expected behavior of fit_params
     Checks that underlying GradientBoosting
     estimators have used 3 iterations only during boosting,
     instead of default value for n_estimators (=100).
     """
-    def early_stopping_monitor(i, est, locals):
-        """Returns True on the 3rd iteration."""
-        if i == 2:
-            return True
-        else:
-            return False
-
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state))
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
-    score = AbsoluteConformityScore(sym=True)
-    mapie_1 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
+    mapie_1 = MapieRegressor(estimator=custom_gbr)
     mapie_2 = MapieRegressor(estimator=custom_gbr)
     fit_params = {'monitor': early_stopping_monitor}
     predict_params = {'check_predict_params': True}
     mapie_1 = mapie_1.fit(X_train, y_train,
                           fit_params=fit_params,
                           predict_params=predict_params)
-    mapie_2 = mapie_2.fit(X_train, y_train)
+    mapie_2 = mapie_2.fit(X_train, y_train, predict_params=predict_params)
 
     assert mapie_1.estimator_.single_estimator_.estimators_.shape[0] == 3
     for estimator in mapie_1.estimator_.estimators_:
@@ -952,43 +943,40 @@ def test_fit_parameters_passing_with_predict_parameter() -> None:
         assert estimator.n_estimators == custom_gbr.n_estimators
 
 
-def test_predict_parameters_passing_with_fit_parameter() -> None:
+def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
     """
-    Test passing predict parameters with fit parameters into the model.
-    Checks that y_pred from train are 0
-    and y_pred from test are 0.
+    We want to verify that there are no interferences
+    with fit_params on the expected behavior of predict_params
+    Checks that the predictions on the training and test sets
+    are 0 for the model with predict_params and that this is not
+    the case for the model without predict_params
     """
-    def early_stopping_monitor(i, est, locals):
-        """Returns True on the 3rd iteration."""
-        if i == 2:
-            return True
-        else:
-            return False
-
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state))
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
     score = AbsoluteConformityScore(sym=True)
     mapie_1 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
-    mapie_2 = MapieRegressor(estimator=custom_gbr)
+    mapie_2 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
     fit_params = {'monitor': early_stopping_monitor}
     predict_params = {'check_predict_params': True}
     mapie_1 = mapie_1.fit(X_train, y_train,
                           fit_params=fit_params,
                           predict_params=predict_params)
-    mapie_2 = mapie_2.fit(X_train, y_train)
+    mapie_2 = mapie_2.fit(X_train, y_train, fit_params=fit_params,)
     y_pred_1 = mapie_1.predict(X_test, **predict_params)
     y_pred_2 = mapie_2.predict(X_test)
 
-    np.testing.assert_array_equal(mapie_1.conformity_scores_, np.abs(y_train))
+    np.testing.assert_array_equal(mapie_1.conformity_scores_,
+                                  np.abs(y_train))
     np.testing.assert_allclose(y_pred_1, 0)
     with np.testing.assert_raises(AssertionError):
+        np.testing.assert_array_equal(mapie_2.conformity_scores_,
+                                      np.abs(y_train))
         np.testing.assert_array_equal(y_pred_1, y_pred_2)
 
 
 def test_invalid_predict_parameters() -> None:
     """Test that invalid predict_parameters raise errors."""
-
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state))
