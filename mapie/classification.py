@@ -116,6 +116,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         By default ``None``.
 
+    conformity_score_function_: BaseClassificationScore
+        Score function that handle all that is related to conformity scores.
+
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random uniform sampling
         for evaluation quantiles and prediction sets.
