@@ -972,6 +972,7 @@ def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
     with np.testing.assert_raises(AssertionError):
         np.testing.assert_array_equal(mapie_2.conformity_scores_,
                                       np.abs(y_train))
+    with np.testing.assert_raises(AssertionError):
         np.testing.assert_array_equal(y_pred_1, y_pred_2)
 
 
