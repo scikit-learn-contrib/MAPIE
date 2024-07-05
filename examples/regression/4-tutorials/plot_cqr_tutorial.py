@@ -101,11 +101,6 @@ X_train, X_test, y_train, y_test = train_test_split(
     y['MedHouseVal'],
     random_state=random_state
 )
-X_train, X_calib, y_train, y_calib = train_test_split(
-    X_train,
-    y_train,
-    random_state=random_state
-)
 
 
 ##############################################################################
@@ -267,13 +262,19 @@ for strategy, params in STRATEGIES.items():
     if strategy == "cqr":
         mapie = MapieQuantileRegressor(estimator, **params)
         mapie.fit(
-            X_train, y_train,
-            X_calib=X_calib, y_calib=y_calib,
+            X_train,
+            y_train,
+            calib_size=0.3,
             random_state=random_state
         )
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:
-        mapie = MapieRegressor(estimator, **params, random_state=random_state)
+        mapie = MapieRegressor(
+            estimator,
+            test_size=0.3,
+            random_state=random_state,
+            **params
+        )
         mapie.fit(X_train, y_train)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.2)
     (
