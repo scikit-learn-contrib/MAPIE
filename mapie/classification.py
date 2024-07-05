@@ -9,14 +9,14 @@ from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
                                      StratifiedShuffleSplit)
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import _safe_indexing, check_random_state
-from sklearn.utils.multiclass import (check_classification_targets,
-                                      type_of_target)
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseClassificationScore
-from mapie.conformity_scores.utils import check_classification_conformity_score
+from mapie.conformity_scores.utils import (
+    check_classification_conformity_score, check_target
+)
 from mapie.conformity_scores.sets.utils import get_true_label_position
 from mapie.estimator.classifier import EnsembleClassifier
 from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
@@ -68,7 +68,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
           prediction sets may be different from the others. See [3] for
           more details.
 
-        By default ``"lac"``.
+        - ``None``, that does not specify the method used.
+
+        In any case, the `method` parameter does not take precedence over the
+        `conformity_score` parameter to define the method used.
+
+        By default ``None``.
 
     cv: Optional[str]
         The cross-validation strategy for computing scores.
@@ -118,6 +123,11 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     conformity_score_function_: BaseClassificationScore
         Score function that handle all that is related to conformity scores.
+
+        In any case, the `conformity_score` parameter takes precedence over the
+        `method` parameter to define the method used.
+
+        By default ``None``.
 
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random uniform sampling
@@ -193,9 +203,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     """
 
     raps_valid_cv_ = ["prefit", "split"]
-    valid_methods_ = [
-        "naive", "score", "lac", "cumulated_score", "aps", "top_k", "raps"
-    ]
     fit_attributes = [
         "estimator_",
         "n_features_in_",
@@ -208,7 +215,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
-        method: str = "lac",
+        method: Optional[str] = None,
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
         test_size: Optional[Union[int, float]] = None,
         n_jobs: Optional[int] = None,
@@ -234,69 +241,10 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If parameters are not valid.
         """
-        if self.method not in self.valid_methods_:
-            raise ValueError(
-                "Invalid method. "
-                f"Allowed values are {self.valid_methods_}."
-            )
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
         check_random_state(self.random_state)
-        self._check_depreciated()
         self._check_raps()
-
-    def _check_depreciated(self) -> None:
-        """
-        Check if the chosen method is outdated.
-
-        Raises
-        ------
-        Warning
-            If method is ``"score"`` (not ``"lac"``) or
-            if method is ``"cumulated_score"`` (not ``"aps"``).
-        """
-        if self.method == "score":
-            warnings.warn(
-                "WARNING: Deprecated method. "
-                + "The method \"score\" is outdated. "
-                + "Prefer to use \"lac\" instead to keep "
-                + "the same behavior in the next release.",
-                DeprecationWarning
-            )
-        if self.method == "cumulated_score":
-            warnings.warn(
-                "WARNING: Deprecated method. "
-                + "The method \"cumulated_score\" is outdated. "
-                + "Prefer to use \"aps\" instead to keep "
-                + "the same behavior in the next release.",
-                DeprecationWarning
-            )
-
-    def _check_target(self, y: ArrayLike) -> None:
-        """
-        Check that if the type of target is binary,
-        (then the method have to be ``"lac"``), or multi-class.
-
-        Parameters
-        ----------
-        y: NDArray of shape (n_samples,)
-            Training labels.
-
-        Raises
-        ------
-        ValueError
-            If type of target is binary and method is not ``"lac"``
-            or ``"score"`` or if type of target is not multi-class.
-        """
-        check_classification_targets(y)
-        if type_of_target(y) == "binary" and \
-                self.method not in ["score", "lac"]:
-            raise ValueError(
-                "Invalid method for binary target. "
-                "Your target is not of type multiclass and "
-                "allowed values for binary type are "
-                f"{['score', 'lac']}."
-            )
 
     def _check_raps(self):
         """
@@ -448,8 +396,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         self.label_encoder_ = self._get_label_encoder()
         y_enc = self.label_encoder_.transform(y)
 
-        self._check_target(y)
-
         cs_estimator = check_classification_conformity_score(
             conformity_score=self.conformity_score,
             method=self.method
@@ -458,6 +404,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             classes=self.classes_,
             random_state=self.random_state
         )
+
+        check_target(cs_estimator, y)
 
         return (
             estimator, cs_estimator, cv,

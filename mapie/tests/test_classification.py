@@ -912,12 +912,6 @@ def test_initialized() -> None:
     MapieClassifier()
 
 
-def test_default_parameters() -> None:
-    """Test default values of input parameters."""
-    mapie_clf = MapieClassifier()
-    assert mapie_clf.method == "lac"
-
-
 @pytest.mark.parametrize("cv", ["prefit", "split"])
 @pytest.mark.parametrize("method", ["aps", "raps"])
 def test_warning_binary_classif(cv: str, method: str) -> None:
