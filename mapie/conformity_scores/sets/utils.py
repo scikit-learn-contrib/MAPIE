@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, cast
+from typing import Optional, Tuple, Union
 import numpy as np
 from sklearn.calibration import label_binarize
 
@@ -66,8 +66,9 @@ def get_true_label_cumsum_proba(
     true_label_cumsum_proba = np.take_along_axis(
         y_pred_sorted_cumsum, cutoff.reshape(-1, 1), axis=1
     )
+    cutoff += 1
 
-    return true_label_cumsum_proba, cutoff + 1
+    return true_label_cumsum_proba, cutoff
 
 
 def check_include_last_label(
@@ -117,7 +118,7 @@ def check_include_last_label(
 
 
 def check_proba_normalized(
-    y_pred_proba: ArrayLike,
+    y_pred_proba: NDArray,
     axis: int = 1
 ) -> NDArray:
     """
@@ -125,7 +126,7 @@ def check_proba_normalized(
 
     Parameters
     ----------
-    y_pred_proba: ArrayLike of shape (n_samples, n_classes) or
+    y_pred_proba: NDArray of shape (n_samples, n_classes) or
     (n_samples, n_train_samples, n_classes)
         Softmax output of a model.
 
@@ -139,12 +140,13 @@ def check_proba_normalized(
     ValueError
         If the sum of the scores is not equal to one.
     """
-    sum_proba = np.sum(y_pred_proba, axis=axis)
-    err_msg = "The sum of the scores is not equal to one."
-    np.testing.assert_allclose(sum_proba, 1, err_msg=err_msg, rtol=1e-5)
-    y_pred_proba = cast(NDArray, y_pred_proba).astype(np.float64)
-
-    return y_pred_proba
+    np.testing.assert_allclose(
+        np.sum(y_pred_proba, axis=axis),
+        1,
+        err_msg="The sum of the scores is not equal to one.",
+        rtol=1e-5
+    )
+    return y_pred_proba.astype(np.float64)
 
 
 def get_last_index_included(
