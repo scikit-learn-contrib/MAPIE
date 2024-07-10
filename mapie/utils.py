@@ -1373,3 +1373,19 @@ def check_n_samples(
              " int in the range [1, inf)"
              )
     return int(n_samples)
+
+
+def check_predict_params(
+    predict_params_used_in_fit: bool,
+    predict_params: dict,
+    cv: Optional[Union[int, str, BaseCrossValidator]] = None
+) -> None:
+    if (len(predict_params) > 0 and
+            predict_params_used_in_fit is False and
+            cv != "prefit"):
+        raise ValueError(
+            f"Using 'predict_param' '{predict_params}' "
+            f"without using one 'predict_param' in the fit method. "
+            f"Please ensure one 'predict_param' "
+            f"is used in the fit method before calling predict."
+        )

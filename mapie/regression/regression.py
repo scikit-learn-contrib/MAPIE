@@ -18,7 +18,8 @@ from mapie.estimator.regressor import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
                          check_estimator_fit_predict, check_n_features_in,
                          check_n_jobs, check_null_weight, check_verbose,
-                         get_effective_calibration_samples)
+                         get_effective_calibration_samples,
+                         check_predict_params)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
@@ -623,17 +624,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
 
-        if (len(predict_params) > 0 and
-                self._predict_params is False and
-                self.cv != "prefit"):
-            raise ValueError(
-                f"Using 'predict_param' '{predict_params}' "
-                f"without using one 'predict_param' in the fit method. "
-                f"Please ensure one 'predict_param' "
-                f"is used in the fit method before calling predict."
-            )
-
         # Checks
+        if hasattr(self, '_predict_params'):
+            check_predict_params(self._predict_params, predict_params, self.cv)
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
