@@ -38,6 +38,23 @@ def test_check_classification_method(
     )
 
 
+@pytest.mark.parametrize("method", method_list)
+@pytest.mark.parametrize("conformity_score", cs_list)
+def test_check_conflict_parameters(
+    method: Optional[str],
+    conformity_score: Optional[BaseClassificationScore]
+) -> None:
+    if method is None or conformity_score is None:
+        return
+    with pytest.warns(
+        UserWarning,
+        match="WARNING: the `conformity_score` parameter takes precedence*"
+    ):
+        check_classification_conformity_score(
+            method=method, conformity_score=conformity_score
+        )
+
+
 @pytest.mark.parametrize("method", wrong_method_list)
 def test_check_wrong_classification_method(
     method: Optional[str]

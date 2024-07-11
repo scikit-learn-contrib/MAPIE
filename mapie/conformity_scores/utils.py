@@ -110,6 +110,17 @@ def check_target(
         )
 
 
+method_score_map = {
+    'score': lambda: LAC(),
+    'lac': lambda: LAC(),
+    'cumulated_score': lambda: APS(),
+    'aps': lambda: APS(),
+    'naive': lambda: Naive(),
+    'raps': lambda: RAPS(),
+    'top_k': lambda: TopK()
+}
+
+
 def check_classification_conformity_score(
     conformity_score: Optional[BaseClassificationScore] = None,
     method: Optional[str] = None,
@@ -135,27 +146,26 @@ def check_classification_conformity_score(
     Invalid conformity_score argument.
     Must be None or a ConformityScore instance.
     """
-    allowed_methods = ['lac', 'naive', 'aps', 'raps', 'top_k']
+    if method is None and conformity_score is None:
+        return LAC()
+    elif conformity_score is not None:
+        if method is not None:
+            warnings.warn(
+                "WARNING: the `conformity_score` parameter takes precedence "
+                "over the `method` parameter to define the method used.",
+                UserWarning
+            )
+        if isinstance(conformity_score, BaseClassificationScore):
+            return conformity_score
     if method is not None:
-        _check_depreciated(method)
-        if method in ['score', 'lac']:
-            return LAC()
-        if method in ['cumulated_score', 'aps']:
-            return APS()
-        if method in ['naive']:
-            return Naive()
-        if method in ['raps']:
-            return RAPS()
-        if method in ['top_k']:
-            return TopK()
+        if isinstance(method, str) and method in method_score_map:
+            _check_depreciated(method)
+            return method_score_map[method]()
         else:
             raise ValueError(
-                f"Invalid method. Allowed values are {allowed_methods}."
+                "Invalid method. "
+                f"Allowed values are {list(method_score_map.keys())}."
             )
-    elif isinstance(conformity_score, BaseClassificationScore):
-        return conformity_score
-    elif conformity_score is None:
-        return LAC()
     else:
         raise ValueError(
             "Invalid conformity_score argument.\n"

@@ -147,9 +147,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     Attributes
     ----------
-    valid_methods: List[str]
-        List of all valid methods.
-
     estimator_: EnsembleClassifier
         Sklearn estimator that handle all that is related to the estimator.
 
@@ -164,6 +161,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
     quantiles_: ArrayLike of shape (n_alpha)
         The quantiles estimated from ``conformity_scores_`` and alpha values.
+
+    label_encoder_: LabelEncoder
+        Label encoder used to encode the labels.
 
     References
     ----------
@@ -634,7 +634,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
             When set to ``True`` or ``False``, it may result in a coverage
             higher than ``1 - alpha`` (because contrary to the "randomized"
-            setting, none of this methods create empty prediction sets). See
+            setting, none of these methods create empty prediction sets). See
             [2] and [3] for more details.
 
             By default ``True``.
