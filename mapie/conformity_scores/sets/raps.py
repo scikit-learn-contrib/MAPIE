@@ -152,6 +152,9 @@ class RAPS(APS):
 
         Parameters
         ----------
+        y_raps_no_enc: NDArray of shape (n_samples, )
+            True labels (after applying `label_encoder_.inverse_transform`).
+
         y_pred_proba_raps: NDArray of shape (n_samples, n_labels, n_alphas)
             Predictions of the model repeated on the last axis as many times
             as the number of alphas

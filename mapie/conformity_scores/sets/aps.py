@@ -255,7 +255,6 @@ class APS(Naive):
         y_pred_proba_cumsum: NDArray,
         y_pred_proba_last: NDArray,
         threshold: NDArray,
-        random_state: Optional[Union[int, np.random.RandomState]] = None,
         **kwargs
     ) -> NDArray:
         """
@@ -288,21 +287,6 @@ class APS(Naive):
             - the conformity score from training samples otherwise (i.e., when
             ``cv`` is CV splitter and ``agg_scores`` is "crossval")
 
-        method: str
-            Method that determines how to remove last label in the prediction
-            set.
-
-            - if "cumulated_score" or "aps", compute V parameter
-                from Romano+(2020)
-
-            - else compute V parameter from Angelopoulos+(2020)
-
-        lambda_star: Optional[Union[NDArray, float]] of shape (n_alpha):
-            Optimal value of the regulizer lambda.
-
-        k_star: Optional[NDArray] of shape (n_alpha):
-            Optimal value of the regulizer k.
-
         Returns
         -------
         NDArray of shape (n_samples, n_classes, n_alpha)
@@ -326,7 +310,7 @@ class APS(Naive):
         )
 
         # get random numbers for each observation and alpha value
-        random_state = check_random_state(random_state)
+        random_state = check_random_state(self.random_state)
         random_state = cast(np.random.RandomState, random_state)
         us = random_state.uniform(size=(prediction_sets.shape[0], 1))
         # remove last label from comparison between uniform number and V
@@ -421,7 +405,6 @@ class APS(Naive):
                 y_pred_proba_cumsum,
                 y_pred_proba_last,
                 thresholds,
-                self.random_state,
                 **kwargs
             )
         if estimator.cv == "prefit" or agg_scores in ["mean"]:

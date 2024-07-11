@@ -213,7 +213,7 @@ class Naive(BaseClassificationScore):
         y_pred_proba_sorted_cumsum = np.cumsum(y_pred_proba_sorted, axis=1)
         y_pred_proba_sorted_cumsum = self._add_regualization(
             y_pred_proba_sorted_cumsum, **kwargs
-        )
+        )  # Do nothing as no regularization for the naive method
 
         # get cumulated score at their original position
         y_pred_proba_cumsum = np.take_along_axis(
