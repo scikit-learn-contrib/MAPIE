@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, Iterable, Optional, Union, cast
+from typing import Any, Dict, Iterable, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -23,10 +23,8 @@ from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
-from mapie.conformity_scores import APS, RAPS
 from mapie.conformity_scores.sets.utils import check_proba_normalized
 from mapie.metrics import classification_coverage_score
-from mapie.utils import check_alpha
 
 random_state = 42
 
@@ -733,12 +731,6 @@ y_toy_binary_mapie = {
         [False, True]
     ]
 }
-
-REGULARIZATION_PARAMETERS = [
-    [.001, [1]],
-    [[.01, .2], [1, 3]],
-    [.1, [2, 4]]
-]
 
 IMAGE_INPUT = [
     {
@@ -1500,8 +1492,7 @@ def test_cumulated_scores() -> None:
         include_last_label=True,
         alpha=alpha
     )
-    computed_quantile = mapie_clf.conformity_score_function_.quantiles_
-    np.testing.assert_allclose(computed_quantile, quantile)
+    np.testing.assert_allclose(mapie_clf.quantiles_, quantile)
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
 
 
@@ -1529,8 +1520,7 @@ def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
         include_last_label=True,
         alpha=alpha
     )
-    computed_quantile = mapie.conformity_score_function_.quantiles_
-    np.testing.assert_allclose(computed_quantile, quantile)
+    np.testing.assert_allclose(mapie.quantiles_, quantile)
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
 
 
@@ -1721,104 +1711,6 @@ def test_classif_float32(cv) -> None:
     assert (
         np.repeat([[True, False, False]], 20, axis=0)[:, :, np.newaxis] == yps
     ).all()
-
-
-@pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
-def test_regularize_conf_scores_shape(k_lambda) -> None:
-    """
-    Test that the conformity scores have the correct shape.
-    """
-    lambda_, k = k_lambda[0], k_lambda[1]
-    conf_scores = np.random.rand(100, 1)
-    cutoff = np.cumsum(np.ones(conf_scores.shape)) - 1
-    reg_conf_scores = RAPS._regularize_conformity_score(
-        k, lambda_, conf_scores, cutoff
-    )
-
-    assert reg_conf_scores.shape == (100, 1, len(k))
-
-
-def test_get_true_label_cumsum_proba_shape() -> None:
-    """
-    Test that the true label cumsumed probabilities
-    have the correct shape.
-    """
-    clf = LogisticRegression()
-    clf.fit(X, y)
-    y_pred = clf.predict_proba(X)
-    mapie_clf = MapieClassifier(
-        estimator=clf, random_state=random_state
-    )
-    mapie_clf.fit(X, y)
-    classes = mapie_clf.classes_
-    cumsum_proba, cutoff = APS.get_true_label_cumsum_proba(y, y_pred, classes)
-    assert cumsum_proba.shape == (len(X), 1)
-    assert cutoff.shape == (len(X), )
-
-
-def test_get_true_label_cumsum_proba_result() -> None:
-    """
-    Test that the true label cumsumed probabilities
-    are the expected ones.
-    """
-    clf = LogisticRegression()
-    clf.fit(X_toy, y_toy)
-    y_pred = clf.predict_proba(X_toy)
-    mapie_clf = MapieClassifier(
-        estimator=clf, random_state=random_state
-    )
-    mapie_clf.fit(X_toy, y_toy)
-    classes = mapie_clf.classes_
-    cumsum_proba, cutoff = APS.get_true_label_cumsum_proba(
-        y_toy, y_pred, classes
-    )
-    np.testing.assert_allclose(
-        cumsum_proba,
-        np.array(
-            [
-                y_pred[0, 0], y_pred[1, 0],
-                y_pred[2, 0] + y_pred[2, 1],
-                y_pred[3, 0] + y_pred[3, 1],
-                y_pred[4, 1], y_pred[5, 1],
-                y_pred[6, 1] + y_pred[6, 2],
-                y_pred[7, 1] + y_pred[7, 2],
-                y_pred[8, 2]
-            ]
-        )[:, np.newaxis]
-    )
-    np.testing.assert_allclose(cutoff, np.array([1, 1, 2, 2, 1, 1, 2, 2, 1]))
-
-
-@pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
-@pytest.mark.parametrize("strategy", [*STRATEGIES])
-def test_get_last_included_proba_shape(k_lambda, strategy):
-    """
-    Test that the outputs of _get_last_included_proba method
-    have the correct shape.
-    """
-    lambda_, k = k_lambda[0], k_lambda[1]
-    if len(k) == 1:
-        thresholds = .2
-    else:
-        thresholds = np.random.rand(len(k))
-    thresholds = cast(NDArray, check_alpha(thresholds))
-    clf = LogisticRegression()
-    clf.fit(X, y)
-    y_pred_proba = clf.predict_proba(X)
-    y_pred_proba = np.repeat(
-        y_pred_proba[:, :, np.newaxis], len(thresholds), axis=2
-    )
-
-    include_last_label = STRATEGIES[strategy][1]["include_last_label"]
-    y_p_p_c, y_p_i_l, y_p_p_i_l = \
-        RAPS._get_last_included_proba(
-            RAPS(), y_pred_proba, thresholds, include_last_label,
-            lambda_=lambda_, k_star=k
-        )
-
-    assert y_p_p_c.shape == (len(X), len(np.unique(y)), len(thresholds))
-    assert y_p_i_l.shape == (len(X), 1, len(thresholds))
-    assert y_p_p_i_l.shape == (len(X), 1, len(thresholds))
 
 
 @pytest.mark.parametrize("cv", [5, None])
