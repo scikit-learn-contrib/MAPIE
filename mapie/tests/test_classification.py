@@ -1408,7 +1408,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     else:
         clf = LogisticRegression()
     mapie_clf = MapieClassifier(estimator=clf, **args_init)
-    mapie_clf.fit(X_toy, y_toy, size_raps=.5)
+    mapie_clf.fit(X_toy, y_toy, size_raps=0.5)
     _, y_ps = mapie_clf.predict(
         X_toy,
         alpha=0.5,

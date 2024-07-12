@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
+from typing import Optional
 
 import numpy as np
+from sklearn.base import BaseEstimator
 
 from mapie._compatibility import np_nanquantile
 from mapie._typing import NDArray
@@ -27,7 +29,44 @@ class BaseConformityScore(metaclass=ABCMeta):
         particularly when the attributes are known after the object has been
         instantiated.
         """
-        pass
+
+    def set_ref_predictor(
+        self,
+        predictor: BaseEstimator
+    ):
+        """
+        Set the reference predictor.
+
+        Parameters
+        ----------
+        predictor: BaeEstimator
+            Reference predictor.
+        """
+        self.predictor = predictor
+
+    def split_data(
+        self,
+        X: NDArray,
+        y: NDArray,
+        y_enc: NDArray,
+        sample_weight: Optional[NDArray] = None,
+        groups: Optional[NDArray] = None,
+    ):
+        """
+        Split data. Keeps part of the data for the calibration estimator
+        (separate from the calibration data).
+
+        Parameters
+        ----------
+        *args: Tuple of NDArray
+
+        Returns
+        -------
+        Tuple of NDArray
+            Split data for training and calibration.
+        """
+        self.n_samples_ = len(X)
+        return X, y, y_enc, sample_weight, groups
 
     @abstractmethod
     def get_conformity_scores(

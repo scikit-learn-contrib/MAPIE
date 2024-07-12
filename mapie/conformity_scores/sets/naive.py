@@ -34,6 +34,7 @@ class Naive(BaseClassificationScore):
 
     def set_external_attributes(
         self,
+        *,
         classes: Optional[ArrayLike] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         **kwargs

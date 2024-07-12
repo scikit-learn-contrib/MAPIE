@@ -46,6 +46,7 @@ class TopK(BaseClassificationScore):
 
     def set_external_attributes(
         self,
+        *,
         classes: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         **kwargs

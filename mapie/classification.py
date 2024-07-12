@@ -5,19 +5,16 @@ from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
-                                     StratifiedShuffleSplit)
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.preprocessing import LabelEncoder
-from sklearn.utils import _safe_indexing, check_random_state
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils import check_random_state
+from sklearn.utils.validation import (_check_y, check_is_fitted, indexable)
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.utils import (
     check_classification_conformity_score, check_target
 )
-from mapie.conformity_scores.sets.utils import get_true_label_position
 from mapie.estimator.classifier import EnsembleClassifier
 from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
                          check_estimator_classification, check_n_features_in,
@@ -75,7 +72,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         By default ``None``.
 
-    cv: Optional[str]
+    cv: Optional[Union[int, str, BaseCrossValidator]]
         The cross-validation strategy for computing scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
@@ -202,7 +199,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
      [False False  True]]
     """
 
-    raps_valid_cv_ = ["prefit", "split"]
     fit_attributes = [
         "estimator_",
         "n_features_in_",
@@ -244,26 +240,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         check_n_jobs(self.n_jobs)
         check_verbose(self.verbose)
         check_random_state(self.random_state)
-        self._check_raps()
-
-    def _check_raps(self):
-        """
-        Check that if the method used is ``"raps"``, then
-        the cross validation strategy is ``"prefit"``.
-
-        Raises
-        ------
-        ValueError
-            If ``method`` is ``"raps"`` and ``cv`` is not ``"prefit"``.
-        """
-        if (self.method == "raps") and not (
-            (self.cv in self.raps_valid_cv_)
-            or isinstance(self.cv, BaseShuffleSplit)
-        ):
-            raise ValueError(
-                "RAPS method can only be used "
-                f"with cv in {self.raps_valid_cv_}."
-            )
 
     def _get_classes_info(
             self, estimator: ClassifierMixin, y: NDArray
@@ -336,6 +312,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
+        size_raps: Optional[float] = None,
     ):
         """
         Perform several checks on class parameters.
@@ -390,103 +367,44 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         estimator = check_estimator_classification(X, y, cv, self.estimator)
         self.n_features_in_ = check_n_features_in(X, cv, estimator)
 
-        n_samples = _num_samples(y)
-
         self.n_classes_, self.classes_ = self._get_classes_info(estimator, y)
         self.label_encoder_ = self._get_label_encoder()
         y_enc = self.label_encoder_.transform(y)
 
         cs_estimator = check_classification_conformity_score(
             conformity_score=self.conformity_score,
-            method=self.method
+            method=self.method,
         )
+        # TODO test size_raps depreciated
         cs_estimator.set_external_attributes(
+            cv=self.cv,
             classes=self.classes_,
+            label_encoder=self.label_encoder_,
+            size_raps=size_raps,
             random_state=self.random_state
         )
+
+        # Cast
+        X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
+        sample_weight = cast(NDArray, sample_weight)
+        groups = cast(NDArray, groups)
+
+        X, y, y_enc, sample_weight, groups = \
+            cs_estimator.split_data(X, y, y_enc, sample_weight, groups)
+        self.n_samples_ = cs_estimator.n_samples_
 
         check_target(cs_estimator, y)
 
         return (
-            estimator, cs_estimator, cv,
-            X, y, y_enc, sample_weight, groups, n_samples
+            estimator, cs_estimator, cv, X, y, y_enc, sample_weight, groups
         )
-
-    def _split_data(
-        self,
-        X: ArrayLike,
-        y_enc: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
-        groups: Optional[ArrayLike] = None,
-        size_raps: Optional[float] = None,
-    ):
-        """Split data for raps method
-
-        Parameters
-        ----------
-        X: ArrayLike
-            Observed values.
-
-        y_enc: ArrayLike
-            Target values as normalized encodings.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Non-null sample weights.
-
-        groups: Optional[ArrayLike] of shape (n_samples,)
-            Group labels for the samples used while splitting the dataset into
-            train/test set.
-            By default ``None``.
-
-        size_raps: : Optional[float]
-            Percentage of the data to be used for choosing lambda_star and
-            k_star for the RAPS method.
-
-        Returns
-        -------
-        Tuple[NDArray, NDArray, NDArray, NDArray, Optional[NDArray],
-        Optional[NDArray]]
-            - NDArray of shape (n_samples, n_features)
-            - NDArray of shape (n_samples,)
-            - NDArray of shape (n_samples,)
-            - NDArray of shape (n_samples,)
-            - NDArray of shape (n_samples,)
-            - NDArray of shape (n_samples,)
-        """
-        # Split data for raps method
-        raps_split = StratifiedShuffleSplit(
-            n_splits=1, test_size=size_raps, random_state=self.random_state
-        )
-        train_raps_index, val_raps_index = next(raps_split.split(X, y_enc))
-        X, self.X_raps, y_enc, self.y_raps = (
-            _safe_indexing(X, train_raps_index),
-            _safe_indexing(X, val_raps_index),
-            _safe_indexing(y_enc, train_raps_index),
-            _safe_indexing(y_enc, val_raps_index),
-        )
-
-        # Decode y_raps for use in the RAPS method
-        self.y_raps_no_enc = self.label_encoder_.inverse_transform(self.y_raps)
-        y = self.label_encoder_.inverse_transform(y_enc)
-
-        # Cast to NDArray for type checking
-        y_enc = cast(NDArray, y_enc)
-        n_samples = _num_samples(y_enc)
-        if sample_weight is not None:
-            sample_weight = cast(NDArray, sample_weight)
-            sample_weight = sample_weight[train_raps_index]
-        if groups is not None:
-            groups = cast(NDArray, groups)
-            groups = groups[train_raps_index]
-
-        return X, y_enc, y, n_samples, sample_weight, groups
 
     def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        size_raps: Optional[float] = 0.2,
+        size_raps: Optional[float] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params,
     ) -> MapieClassifier:
@@ -514,7 +432,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             Percentage of the data to be used for choosing lambda_star and
             k_star for the RAPS method.
 
-            By default ``0.2``.
+            By default ``None``.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
@@ -538,14 +456,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
          y,
          y_enc,
          sample_weight,
-         groups,
-         n_samples) = self._check_fit_parameter(X, y, sample_weight, groups)
-        self.n_samples_ = n_samples
-
-        if self.method == "raps":
-            (X, y_enc, y, n_samples, sample_weight, groups) = self._split_data(
-                X, y_enc, sample_weight, groups, size_raps
-            )
+         groups) = self._check_fit_parameter(
+            X, y, sample_weight, groups, size_raps
+        )
 
         # Cast
         X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
@@ -573,19 +486,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             X, y, y_enc, groups
         )
 
-        # RAPS: compute y_pred and position on the RAPS validation dataset
-        if self.method == "raps":
-            self.y_pred_proba_raps = (
-                self.estimator_.single_estimator_.predict_proba(self.X_raps)
-            )
-            self.position_raps = get_true_label_position(
-                self.y_pred_proba_raps, self.y_raps
-            )
-
         # Compute the conformity scores
+        self.conformity_score_function_.set_ref_predictor(self.estimator_)
         self.conformity_scores_ = \
             self.conformity_score_function_.get_conformity_scores(
-                y, y_pred_proba, y_enc=y_enc, X=X
+                y, y_pred_proba, y_enc=y_enc, X=X,
+                sample_weight=sample_weight, groups=groups
             )
 
         return self
@@ -678,23 +584,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         check_alpha_and_n_samples(alpha_np, n)
 
         # Estimate prediction sets
-        if self.method == "raps":
-            kwargs = {
-                'X_raps': self.X_raps,
-                'y_raps_no_enc': self.y_raps_no_enc,
-                'y_pred_proba_raps': self.y_pred_proba_raps,
-                'position_raps': self.position_raps,
-            }
-        else:
-            kwargs = {}
-
         prediction_sets = self.conformity_score_function_.predict_set(
             X, alpha_np,
             estimator=self.estimator_,
             conformity_scores=self.conformity_scores_,
             include_last_label=include_last_label,
             agg_scores=agg_scores,
-            **kwargs
         )
 
         self.quantiles_ = self.conformity_score_function_.quantiles_

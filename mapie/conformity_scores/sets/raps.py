@@ -1,8 +1,14 @@
 from typing import Optional, Tuple, Union, cast
 
 import numpy as np
+from sklearn.calibration import LabelEncoder
+from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
+                                     StratifiedShuffleSplit)
+from sklearn.utils import _safe_indexing
+from sklearn.utils.validation import _num_samples
 
 from mapie.conformity_scores.sets.aps import APS
+from mapie.conformity_scores.sets.utils import get_true_label_position
 from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
@@ -25,6 +31,12 @@ class RAPS(APS):
     "Uncertainty Sets for Image Classifiers using Conformal Prediction."
     International Conference on Learning Representations 2021.
 
+    Parameters
+    ----------
+    size_raps: Optional[float]
+        Percentage of the data to be used for choosing lambda_star and
+        k_star for the RAPS method.
+
     Attributes
     ----------
     classes: Optional[ArrayLike]
@@ -37,8 +49,176 @@ class RAPS(APS):
         The quantiles estimated from ``get_sets`` method.
     """
 
-    def __init__(self) -> None:
+    valid_cv_ = ["prefit", "split"]
+
+    def __init__(
+        self,
+        size_raps: Optional[float] = 0.2
+    ) -> None:
         super().__init__()
+        self.size_raps = size_raps
+
+    def set_external_attributes(
+        self,
+        *,
+        cv: Union[str, BaseCrossValidator, BaseShuffleSplit] = None,
+        label_encoder: LabelEncoder = None,
+        size_raps: Optional[float] = None,
+        **kwargs
+    ) -> None:
+        """
+        Set attributes that are not provided by the user.
+
+        Parameters
+        ----------
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            The cross-validation strategy for computing scores.
+
+        label_encoder: Optional[LabelEncoder]
+            The label encoder used to encode the labels.
+
+            By default ``None``.
+
+        size_raps: Optional[float]
+            Percentage of the data to be used for choosing lambda_star and
+            k_star for the RAPS method.
+
+            By default ``None``.
+        """
+        super().set_external_attributes(**kwargs)
+        self.cv = cv
+        self.label_encoder_ = label_encoder
+        self.size_raps = size_raps
+
+    def _check_cv(self):
+        """
+        Check that if the method used is ``"raps"``, then
+        the cross validation strategy is ``"prefit"``.
+
+        Raises
+        ------
+        ValueError
+            If ``method`` is ``"raps"`` and ``cv`` is not ``"prefit"``.
+        """
+        if not (
+            self.cv in self.valid_cv_ or isinstance(self.cv, BaseShuffleSplit)
+        ):
+            raise ValueError(
+                "RAPS method can only be used "
+                f"with cv in {self.valid_cv_}."
+            )
+
+    def split_data(
+        self,
+        X: NDArray,
+        y: NDArray,
+        y_enc: NDArray,
+        sample_weight: Optional[NDArray] = None,
+        groups: Optional[NDArray] = None,
+    ):
+        """Split data
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Observed values.
+
+        y: ArrayLike
+            Target values.
+
+        y_enc: ArrayLike
+            Target values as normalized encodings.
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Non-null sample weights.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+            By default ``None``.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray, NDArray, Optional[NDArray],
+        Optional[NDArray]]
+            - NDArray of shape (n_samples, n_features)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+            - NDArray of shape (n_samples,)
+        """
+        # Checks
+        self._check_cv()
+
+        # Split data for raps method
+        raps_split = StratifiedShuffleSplit(
+            n_splits=1,
+            test_size=self.size_raps, random_state=self.random_state
+        )
+        train_raps_index, val_raps_index = next(raps_split.split(X, y_enc))
+        X, self.X_raps, y_enc, self.y_raps = (
+            _safe_indexing(X, train_raps_index),
+            _safe_indexing(X, val_raps_index),
+            _safe_indexing(y_enc, train_raps_index),
+            _safe_indexing(y_enc, val_raps_index),
+        )
+
+        # Decode y_raps for use in the RAPS method
+        self.y_raps_no_enc = self.label_encoder_.inverse_transform(self.y_raps)
+        y = self.label_encoder_.inverse_transform(y_enc)
+
+        # Cast to NDArray for type checking
+        y_enc = cast(NDArray, y_enc)
+        if sample_weight is not None:
+            sample_weight = cast(NDArray, sample_weight)
+            sample_weight = sample_weight[train_raps_index]
+        if groups is not None:
+            groups = cast(NDArray, groups)
+            groups = groups[train_raps_index]
+
+        # Keep sample data size for training and calibration
+        self.n_samples_ = _num_samples(y_enc)
+
+        return X, y, y_enc, sample_weight, groups
+
+    def get_conformity_scores(
+        self,
+        y: NDArray,
+        y_pred: NDArray,
+        y_enc: Optional[NDArray] = None,
+        **kwargs
+    ) -> NDArray:
+        """
+        Get the conformity score.
+
+        Parameters
+        ----------
+        y: NDArray of shape (n_samples,)
+            Observed target values.
+
+        y_pred: NDArray of shape (n_samples,)
+            Predicted target values.
+
+        y_enc: NDArray of shape (n_samples,)
+            Target values as normalized encodings.
+
+        Returns
+        -------
+        NDArray of shape (n_samples,)
+            Conformity scores.
+        """
+        # Compute y_pred and position on the RAPS validation dataset
+        self.y_pred_proba_raps = (
+            self.predictor.single_estimator_.predict_proba(self.X_raps)
+        )
+        self.position_raps = get_true_label_position(
+            self.y_pred_proba_raps, self.y_raps
+        )
+
+        return super().get_conformity_scores(
+            y, y_pred, y_enc=y_enc, **kwargs
+        )
 
     @staticmethod
     def _regularize_conformity_score(
@@ -79,11 +259,7 @@ class RAPS(APS):
             cutoff[:, np.newaxis], len(k_star), axis=1
         )
         conf_score += np.maximum(
-            np.expand_dims(
-                lambda_ * (cutoff - k_star),
-                axis=1
-            ),
-            0
+            np.expand_dims(lambda_ * (cutoff - k_star), axis=1), 0
         )
         return conf_score
 
@@ -126,9 +302,8 @@ class RAPS(APS):
             and the new best sizes.
         """
         sizes = [
-            classification_mean_width_score(
-                y_ps[:, :, i]
-            ) for i in range(len(alpha_np))
+            classification_mean_width_score(y_ps[:, :, i])
+            for i in range(len(alpha_np))
         ]
 
         sizes_improve = (sizes < best_sizes - EPSILON)
@@ -209,8 +384,9 @@ class RAPS(APS):
             )
 
             y_ps = np.greater_equal(
-                    y_pred_proba_raps - y_pred_proba_last, -EPSILON
+                y_pred_proba_raps - y_pred_proba_last, -EPSILON
             )
+
             lambda_star, best_sizes = self._update_size_and_lambda(
                 best_sizes, alpha_np, y_ps, lambda_, lambda_star
             )
@@ -227,10 +403,6 @@ class RAPS(APS):
         estimator: EnsembleClassifier,
         agg_scores: Optional[str] = "mean",
         include_last_label: Optional[Union[bool, str]] = True,
-        X_raps: Optional[NDArray] = None,
-        y_raps_no_enc: Optional[NDArray] = None,
-        y_pred_proba_raps: Optional[NDArray] = None,
-        position_raps: Optional[NDArray] = None,
         **kwargs
     ) -> NDArray:
         """
@@ -289,23 +461,23 @@ class RAPS(APS):
             Array of quantiles with respect to alpha_np.
         """
         # Casting to NDArray to avoid mypy errors
-        X_raps = cast(NDArray, X_raps)
-        y_raps_no_enc = cast(NDArray, y_raps_no_enc)
-        y_pred_proba_raps = cast(NDArray, y_pred_proba_raps)
-        position_raps = cast(NDArray, position_raps)
+        # X_raps = cast(NDArray, X_raps)
+        # y_raps_no_enc = cast(NDArray, y_raps_no_enc)
+        # y_pred_proba_raps = cast(NDArray, y_pred_proba_raps)
+        # position_raps = cast(NDArray, position_raps)
 
-        check_alpha_and_n_samples(alpha_np, X_raps.shape[0])
+        check_alpha_and_n_samples(alpha_np, self.X_raps.shape[0])
         self.k_star = compute_quantiles(
-            position_raps,
+            self.position_raps,
             alpha_np
         ) + 1
         y_pred_proba_raps = np.repeat(
-            y_pred_proba_raps[:, :, np.newaxis],
+            self.y_pred_proba_raps[:, :, np.newaxis],
             len(alpha_np),
             axis=2
         )
         self.lambda_star = self._find_lambda_star(
-            y_raps_no_enc,
+            self.y_raps_no_enc,
             y_pred_proba_raps,
             alpha_np,
             include_last_label,
