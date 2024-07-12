@@ -12,6 +12,17 @@ from .sets import APS, LAC, Naive, RAPS, TopK
 from mapie._typing import ArrayLike
 
 
+METHOD_SCORE_MAP = {
+    'score': lambda: LAC(),
+    'lac': lambda: LAC(),
+    'cumulated_score': lambda: APS(),
+    'aps': lambda: APS(),
+    'naive': lambda: Naive(),
+    'raps': lambda: RAPS(),
+    'top_k': lambda: TopK()
+}
+
+
 def check_regression_conformity_score(
     conformity_score: Optional[BaseRegressionScore],
     sym: bool = True,
@@ -120,17 +131,6 @@ def check_target(
             "allowed values for binary type are "
             f"{['score', 'lac']}."
         )
-
-
-METHOD_SCORE_MAP = {
-    'score': lambda: LAC(),
-    'lac': lambda: LAC(),
-    'cumulated_score': lambda: APS(),
-    'aps': lambda: APS(),
-    'naive': lambda: Naive(),
-    'raps': lambda: RAPS(),
-    'top_k': lambda: TopK()
-}
 
 
 def check_classification_conformity_score(
