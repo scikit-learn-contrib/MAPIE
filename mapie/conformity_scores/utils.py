@@ -29,6 +29,7 @@ def check_regression_conformity_score(
 ) -> BaseRegressionScore:
     """
     Check parameter ``conformity_score`` for regression task.
+    By default, return a AbsoluteConformityScore instance.
 
     Parameters
     ----------
@@ -58,7 +59,7 @@ def check_regression_conformity_score(
     ...     print(exception)
     ...
     Invalid conformity_score argument.
-    Must be None or a ConformityScore instance.
+    Must be None or a BaseRegressionScore instance.
     """
     if conformity_score is None:
         return AbsoluteConformityScore(sym=sym)
@@ -67,7 +68,7 @@ def check_regression_conformity_score(
     else:
         raise ValueError(
             "Invalid conformity_score argument.\n"
-            "Must be None or a ConformityScore instance."
+            "Must be None or a BaseRegressionScore instance."
         )
 
 
@@ -139,6 +140,7 @@ def check_classification_conformity_score(
 ) -> BaseClassificationScore:
     """
     Check parameter ``conformity_score`` for classification task.
+    By default, return a LAC instance.
 
     Parameters
     ----------
@@ -168,11 +170,9 @@ def check_classification_conformity_score(
     ...     print(exception)
     ...
     Invalid conformity_score argument.
-    Must be None or a ConformityScore instance.
+    Must be None or a BaseClassificationScore instance.
     """
-    if method is None and conformity_score is None:
-        return LAC()
-    elif conformity_score is not None:
+    if conformity_score is not None:
         if method is not None:
             warnings.warn(
                 "WARNING: the `conformity_score` parameter takes precedence "
@@ -181,7 +181,12 @@ def check_classification_conformity_score(
             )
         if isinstance(conformity_score, BaseClassificationScore):
             return conformity_score
-    if method is not None:
+        else:
+            raise ValueError(
+                "Invalid conformity_score argument.\n"
+                "Must be None or a BaseClassificationScore instance."
+            )
+    elif method is not None:
         if isinstance(method, str) and method in METHOD_SCORE_MAP:
             _check_depreciated(method)
             return METHOD_SCORE_MAP[method]()
@@ -191,7 +196,4 @@ def check_classification_conformity_score(
                 f"Allowed values are {list(METHOD_SCORE_MAP.keys())}."
             )
     else:
-        raise ValueError(
-            "Invalid conformity_score argument.\n"
-            "Must be None or a ConformityScore instance."
-        )
+        return LAC()

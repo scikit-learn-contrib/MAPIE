@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
@@ -10,6 +11,8 @@ from mapie.conformity_scores import (
     ResidualNormalisedScore
 )
 from mapie.regression import MapieRegressor
+from mapie.conformity_scores.utils import check_regression_conformity_score
+
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -20,6 +23,8 @@ conf_scores_residual_norm_list = np.array(
     [0.2, 0., 0.11111111, 0.09090909, 0., 0.2]
 )
 random_state = 42
+
+wrong_cs_list = [object(), "AbsoluteConformityScore", 1]
 
 
 class DummyConformityScore(BaseRegressionScore):
@@ -46,6 +51,18 @@ class DummyConformityScore(BaseRegressionScore):
 def test_error_mother_class_initialization(sym: bool) -> None:
     with pytest.raises(TypeError):
         BaseRegressionScore(sym)  # type: ignore
+
+
+@pytest.mark.parametrize("score", wrong_cs_list)
+def test_check_wrong_regression_score(
+    score: Any
+) -> None:
+    """
+    Test that the function check_regression_conformity_score raises
+    a ValueError when using a wrong score.
+    """
+    with pytest.raises(ValueError, match="Invalid conformity_score argument*"):
+        check_regression_conformity_score(conformity_score=score)
 
 
 @pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])

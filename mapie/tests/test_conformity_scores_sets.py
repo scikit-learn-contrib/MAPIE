@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import Any, Optional, cast
 
 import pytest
 import numpy as np
@@ -16,6 +16,7 @@ from mapie.utils import check_alpha
 random_state = 42
 
 cs_list = [None, LAC(), APS(), RAPS(), Naive(), TopK()]
+wrong_cs_list = [object(), "LAC", 1]
 valid_method_list = ['naive', 'aps', 'raps', 'lac', 'top_k']
 all_method_list = valid_method_list + [None]
 wrong_method_list = ['naive_', 'aps_', 'raps_', 'lac_', 'top_k_']
@@ -107,6 +108,18 @@ def test_check_wrong_classification_method(
     """
     with pytest.raises(ValueError, match="Invalid method.*"):
         check_classification_conformity_score(method=method)
+
+
+@pytest.mark.parametrize("score", wrong_cs_list)
+def test_check_wrong_classification_score(
+    score: Any
+) -> None:
+    """
+    Test that the function check_classification_conformity_score raises
+    a ValueError when using a wrong score.
+    """
+    with pytest.raises(ValueError, match="Invalid conformity_score argument*"):
+        check_classification_conformity_score(conformity_score=score)
 
 
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
