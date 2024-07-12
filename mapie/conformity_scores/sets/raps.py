@@ -39,14 +39,24 @@ class RAPS(APS):
 
     Attributes
     ----------
-    classes: Optional[ArrayLike]
+    classes: ArrayLike
         Names of the classes.
 
-    random_state: Optional[Union[int, RandomState]]
+    random_state: Union[int, RandomState]
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
         The quantiles estimated from ``get_sets`` method.
+
+    cv: Union[int, str, BaseCrossValidator]
+        The cross-validation strategy for computing scores.
+
+    label_encoder: LabelEncoder
+        The label encoder used to encode the labels.
+
+    size_raps: float
+        Percentage of the data to be used for choosing lambda_star and
+        k_star for the RAPS method.
     """
 
     valid_cv_ = ["prefit", "split"]
@@ -118,7 +128,9 @@ class RAPS(APS):
         sample_weight: Optional[NDArray] = None,
         groups: Optional[NDArray] = None,
     ):
-        """Split data
+        """
+        Split data. Keeps part of the data for the calibration estimator
+        (separate from the calibration data).
 
         Parameters
         ----------
@@ -144,7 +156,6 @@ class RAPS(APS):
         Tuple[NDArray, NDArray, NDArray, NDArray, Optional[NDArray],
         Optional[NDArray]]
             - NDArray of shape (n_samples, n_features)
-            - NDArray of shape (n_samples,)
             - NDArray of shape (n_samples,)
             - NDArray of shape (n_samples,)
             - NDArray of shape (n_samples,)
