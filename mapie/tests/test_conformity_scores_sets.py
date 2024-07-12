@@ -40,6 +40,9 @@ X, y = make_classification(
 
 
 def test_error_mother_class_initialization() -> None:
+    """
+    Test that the mother class BaseClassificationScore cannot be instantiated.
+    """
     with pytest.raises(TypeError):
         BaseClassificationScore()  # type: ignore
 
@@ -48,6 +51,10 @@ def test_error_mother_class_initialization() -> None:
 def test_check_classification_conformity_score(
     conformity_score: Optional[BaseClassificationScore]
 ) -> None:
+    """
+    Test that the function check_classification_conformity_score returns
+    an instance of BaseClassificationScore when using conformity_score.
+    """
     assert isinstance(
         check_classification_conformity_score(conformity_score),
         BaseClassificationScore
@@ -58,6 +65,10 @@ def test_check_classification_conformity_score(
 def test_check_classification_method(
     method: Optional[str]
 ) -> None:
+    """
+    Test that the function check_classification_conformity_score returns
+    an instance of BaseClassificationScore when using method.
+    """
     assert isinstance(
         check_classification_conformity_score(method=method),
         BaseClassificationScore
@@ -70,6 +81,10 @@ def test_check_conflict_parameters(
     method: Optional[str],
     conformity_score: Optional[BaseClassificationScore]
 ) -> None:
+    """
+    Test that the function check_classification_conformity_score raises
+    a warning when both method and conformity_score are provided.
+    """
     if method is None or conformity_score is None:
         return
     with pytest.warns(
@@ -85,6 +100,10 @@ def test_check_conflict_parameters(
 def test_check_wrong_classification_method(
     method: Optional[str]
 ) -> None:
+    """
+    Test that the function check_classification_conformity_score raises
+    a ValueError when using a wrong method.
+    """
     with pytest.raises(ValueError, match="Invalid method.*"):
         check_classification_conformity_score(method=method)
 
