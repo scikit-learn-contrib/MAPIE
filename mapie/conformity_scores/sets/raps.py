@@ -61,8 +61,8 @@ class RAPS(APS):
     def set_external_attributes(
         self,
         *,
-        cv: Union[str, BaseCrossValidator, BaseShuffleSplit] = None,
-        label_encoder: LabelEncoder = None,
+        cv: Optional[Union[str, BaseCrossValidator, BaseShuffleSplit]] = None,
+        label_encoder: Optional[LabelEncoder] = None,
         size_raps: Optional[float] = None,
         **kwargs
     ) -> None:
@@ -73,6 +73,8 @@ class RAPS(APS):
         ----------
         cv: Optional[Union[int, str, BaseCrossValidator]]
             The cross-validation strategy for computing scores.
+
+            By default ``None``.
 
         label_encoder: Optional[LabelEncoder]
             The label encoder used to encode the labels.
@@ -86,8 +88,8 @@ class RAPS(APS):
             By default ``None``.
         """
         super().set_external_attributes(**kwargs)
-        self.cv = cv
-        self.label_encoder_ = label_encoder
+        self.cv = cast(Union[str, BaseCrossValidator, BaseShuffleSplit], cv)
+        self.label_encoder_ = cast(LabelEncoder, label_encoder)
         self.size_raps = size_raps
 
     def _check_cv(self):
