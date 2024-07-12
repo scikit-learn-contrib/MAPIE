@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, Iterable, Optional, Union
+from typing import Any, Dict, Iterable, Optional, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -23,6 +23,7 @@ from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
+from mapie.conformity_scores.utils import METHOD_SCORE_MAP
 from mapie.conformity_scores.sets.utils import check_proba_normalized
 from mapie.metrics import classification_coverage_score
 
@@ -1442,6 +1443,46 @@ def test_large_dataset_predictions(strategy: str) -> None:
         classification_coverage_score(y, y_ps[:, :, 0]),
         LARGE_COVERAGES[strategy], rtol=1e-2
     )
+
+
+@pytest.mark.parametrize("strategy", [*LARGE_COVERAGES])
+def test_same_result_with_score_and_method(strategy: str) -> None:
+    """
+    Test that prediction sets estimated by MapieClassifier on a larger dataset
+    archive same coverage with conformity_score or method parameters.
+    """
+
+    def get_results(args_init, args_predict):
+        if "split" not in strategy:
+            clf = LogisticRegression().fit(X, y)
+        else:
+            clf = LogisticRegression()
+        mapie_clf = MapieClassifier(estimator=clf, **args_init)
+        mapie_clf.fit(X, y, size_raps=0.5)
+        _, y_ps = mapie_clf.predict(
+            X,
+            alpha=0.2,
+            include_last_label=args_predict["include_last_label"],
+            agg_scores=args_predict["agg_scores"]
+        )
+        return classification_coverage_score(y, y_ps[:, :, 0])
+
+    # Take args of the strategy to test
+    args_init = cast(dict, deepcopy(STRATEGIES[strategy][0]))
+    args_predict = cast(dict, deepcopy(STRATEGIES[strategy][1]))
+
+    # Test with method parameters
+    cov_method = get_results(args_init, args_predict)
+
+    # Change method to conformity_score
+    method = args_init.pop('method', None)
+    args_init['conformity_score'] = METHOD_SCORE_MAP[method]()
+
+    # Test with method parameters
+    cov_conformity_score = get_results(args_init, args_predict)
+
+    # Test that results are the same
+    np.testing.assert_allclose(cov_method, cov_conformity_score, rtol=1e-2)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES_BINARY])

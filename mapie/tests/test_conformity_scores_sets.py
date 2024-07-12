@@ -8,15 +8,16 @@ from sklearn.linear_model import LogisticRegression
 from mapie._typing import NDArray
 from mapie.classification import MapieClassifier
 from mapie.conformity_scores import BaseClassificationScore
-from mapie.conformity_scores.sets import APS, LAC, RAPS, TopK
+from mapie.conformity_scores.sets import APS, LAC, Naive, RAPS, TopK
 from mapie.conformity_scores.utils import check_classification_conformity_score
 from mapie.utils import check_alpha
 
 
 random_state = 42
 
-cs_list = [None, LAC(), APS(), TopK()]
-method_list = [None, 'naive', 'aps', 'raps', 'lac', 'top_k']
+cs_list = [None, LAC(), APS(), RAPS(), Naive(), TopK()]
+valid_method_list = ['naive', 'aps', 'raps', 'lac', 'top_k']
+all_method_list = valid_method_list + [None]
 wrong_method_list = ['naive_', 'aps_', 'raps_', 'lac_', 'top_k_']
 
 REGULARIZATION_PARAMETERS = [
@@ -61,7 +62,7 @@ def test_check_classification_conformity_score(
     )
 
 
-@pytest.mark.parametrize("method", method_list)
+@pytest.mark.parametrize("method", all_method_list)
 def test_check_classification_method(
     method: Optional[str]
 ) -> None:
@@ -75,7 +76,7 @@ def test_check_classification_method(
     )
 
 
-@pytest.mark.parametrize("method", method_list)
+@pytest.mark.parametrize("method", valid_method_list)
 @pytest.mark.parametrize("conformity_score", cs_list)
 def test_check_conflict_parameters(
     method: Optional[str],
@@ -85,7 +86,7 @@ def test_check_conflict_parameters(
     Test that the function check_classification_conformity_score raises
     a warning when both method and conformity_score are provided.
     """
-    if method is None or conformity_score is None:
+    if conformity_score is None:
         return
     with pytest.warns(
         UserWarning,

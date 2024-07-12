@@ -110,7 +110,7 @@ def check_target(
         )
 
 
-method_score_map = {
+METHOD_SCORE_MAP = {
     'score': lambda: LAC(),
     'lac': lambda: LAC(),
     'cumulated_score': lambda: APS(),
@@ -158,13 +158,13 @@ def check_classification_conformity_score(
         if isinstance(conformity_score, BaseClassificationScore):
             return conformity_score
     if method is not None:
-        if isinstance(method, str) and method in method_score_map:
+        if isinstance(method, str) and method in METHOD_SCORE_MAP:
             _check_depreciated(method)
-            return method_score_map[method]()
+            return METHOD_SCORE_MAP[method]()
         else:
             raise ValueError(
                 "Invalid method. "
-                f"Allowed values are {list(method_score_map.keys())}."
+                f"Allowed values are {list(METHOD_SCORE_MAP.keys())}."
             )
     else:
         raise ValueError(
