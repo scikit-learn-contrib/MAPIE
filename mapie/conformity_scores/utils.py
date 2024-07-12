@@ -19,6 +19,18 @@ def check_regression_conformity_score(
     """
     Check parameter ``conformity_score`` for regression task.
 
+    Parameters
+    ----------
+    conformity_score: BaseClassificationScore
+        Conformity score function.
+
+        By default, `None`.
+
+    sym: bool
+        Whether to use symmetric bounds.
+
+        By default, `True`.
+
     Raises
     ------
     ValueError
@@ -127,6 +139,18 @@ def check_classification_conformity_score(
 ) -> BaseClassificationScore:
     """
     Check parameter ``conformity_score`` for classification task.
+
+    Parameters
+    ----------
+    conformity_score: BaseClassificationScore
+        Conformity score function.
+
+        By default, `None`.
+
+    method: str
+        Method to compute the conformity score.
+
+        By default, `None`.
 
     Raises
     ------
