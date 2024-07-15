@@ -1,4 +1,4 @@
-from typing import Optional, Union, cast
+from typing import Optional, cast
 
 import numpy as np
 
@@ -43,30 +43,6 @@ class TopK(BaseClassificationScore):
 
     def __init__(self) -> None:
         super().__init__()
-
-    def set_external_attributes(
-        self,
-        *,
-        classes: Optional[int] = None,
-        random_state: Optional[Union[int, np.random.RandomState]] = None,
-        **kwargs
-    ) -> None:
-        """
-        Set attributes that are not provided by the user.
-
-        Parameters
-        ----------
-        classes: Optional[ArrayLike]
-            Names of the classes.
-
-            By default ``None``.
-
-        random_state: Optional[Union[int, RandomState]]
-            Pseudo random number generator state.
-        """
-        super().set_external_attributes(**kwargs)
-        self.classes = classes
-        self.random_state = random_state
 
     def get_conformity_scores(
         self,

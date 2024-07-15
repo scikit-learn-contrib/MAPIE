@@ -1,9 +1,12 @@
 from abc import ABCMeta, abstractmethod
+from typing import Optional, Union
+
+import numpy as np
 
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.estimator.classifier import EnsembleClassifier
 
-from mapie._typing import NDArray
+from mapie._typing import ArrayLike, NDArray
 
 
 class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
@@ -20,6 +23,30 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
     def __init__(self) -> None:
         super().__init__()
+
+    def set_external_attributes(
+        self,
+        *,
+        classes: Optional[ArrayLike] = None,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
+        **kwargs
+    ) -> None:
+        """
+        Set attributes that are not provided by the user.
+
+        Parameters
+        ----------
+        classes: Optional[ArrayLike]
+            Names of the classes.
+
+            By default ``None``.
+
+        random_state: Optional[Union[int, RandomState]]
+            Pseudo random number generator state.
+        """
+        super().set_external_attributes(**kwargs)
+        self.classes = classes
+        self.random_state = random_state
 
     @abstractmethod
     def get_predictions(
