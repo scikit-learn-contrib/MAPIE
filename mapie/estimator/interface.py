@@ -37,18 +37,4 @@ class EnsembleEstimator(metaclass=ABCMeta):
         """
         Predict target from X. It also computes the prediction per train sample
         for each test sample according to ``self.method``.
-
-        Parameters
-        ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Test data.
-
-        **kwargs : dict
-            Additional fit and predict parameters.
-
-        Returns
-        -------
-        Tuple[NDArray, NDArray]
-            - Predictions
-            - Predictions sets
         """
