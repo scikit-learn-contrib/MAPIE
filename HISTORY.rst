@@ -5,6 +5,7 @@ History
 0.8.x (2024-xx-xx)
 ------------------
 
+* Add `** predict_params` in fit and predict method for Mapie Regression
 * Building unit tests for different `Subsample` and `BlockBooststrap` instances
 * Change the sign of C_k in the `Kolmogorov-Smirnov` test documentation
 * Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
