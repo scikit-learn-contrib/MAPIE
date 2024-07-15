@@ -298,3 +298,18 @@ def test_check_required_arguments(arg1: Any, arg2: Any) -> None:
             check_required_arguments(arg1, arg2)
     else:
         check_required_arguments(arg1, arg2)
+
+
+@pytest.mark.parametrize("calibrator", [
+    GaussianCCP(20)*(lambda X: X[:, 0] > 0),
+    (lambda X: X > 0)*GaussianCCP(20),
+])
+def test_gaussian_sampling_with_multiplier(calibrator: CCPCalibrator):
+    """
+    Test that the points sampled (for the gaussian centers), are sampled
+    within the points which have a not null multiplier value
+    """
+    mapie = SplitCPRegressor(calibrator=calibrator, alpha=0.1)
+    mapie.fit(np.linspace(-100, 100, 1000).reshape(-1, 1), np.ones(1000))
+
+    assert all(mapie.calibrator_.points_[i] > 0 for i in range(20))

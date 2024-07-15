@@ -156,10 +156,13 @@ def compile_functions_warnings_errors(
 
 def sample_points(
     X: ArrayLike,
-    points: Optional[Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]]]
+    points: Optional[Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]]],
+    multipliers: Optional[List[Callable]] = None,
 ) -> NDArray:
     """
-    Generate the ``points_`` attribute from the ``points`` and ``X`` arguments
+    Generate the ``points_`` attribute from the ``points`` and ``X`` arguments.
+    Only the samples which have weights (value for each ``multipliers``
+    function) different from ``0`` can be sampled.
 
     Parameters
     ----------
@@ -186,6 +189,10 @@ def sample_points(
 
         If ``None``, default to ``20``.
 
+    multipliers: Optional[List[Callable]]
+        List of functions which should return an array of shape (n_samples, 1)
+        or (n_samples, ) used to weight the sample.
+
     Returns
     -------
     NDArray
@@ -199,8 +206,26 @@ def sample_points(
     if points is None:
         points = 20
     if isinstance(points, int):
+        if multipliers is None:
+            not_null_index = list(range(_num_samples(X)))
+        else:   # Only sample points which have a not null multiplier value
+            test = np.ones((_num_samples(X), 1)).astype(bool)
+            for f in multipliers:
+                multi = f(X)
+                if len(multi.shape) == 1:
+                    multi = multi.reshape(-1, 1)
+                test = test & (multi != 0)
+            not_null_index = [i for i in range(_num_samples(X)) if test[i, 0]]
+        if len(not_null_index) < points:
+            if _num_samples(X) > points:
+                raise ValueError("There are not enough samples with a "
+                                 "multiplier value different from zero "
+                                 f"to sample the {points} points.")
+            else:
+                raise ValueError("There is not enough valid samples from "
+                                 f"which to sample the {points} points.")
         points_index = np.random.choice(
-            _num_samples(X), size=points, replace=False
+            not_null_index, size=points, replace=False
         )
         points_ = _safe_indexing(X, points_index)
     elif isinstance(points, tuple):
