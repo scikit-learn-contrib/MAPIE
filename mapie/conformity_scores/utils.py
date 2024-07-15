@@ -210,7 +210,7 @@ def check_classification_conformity_score(
                 "Must be None or a BaseClassificationScore instance."
             )
     elif method is not None:
-        if method in METHOD_SCORE_MAP:
+        if isinstance(method, str) and method in METHOD_SCORE_MAP:
             check_depreciated_score(method)
             return METHOD_SCORE_MAP[method]()
         else:
