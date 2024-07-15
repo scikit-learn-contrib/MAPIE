@@ -122,6 +122,22 @@ def test_check_wrong_classification_score(
         check_classification_conformity_score(conformity_score=score)
 
 
+@pytest.mark.parametrize("cv", ['prefit', 'split'])
+@pytest.mark.parametrize("size_raps", [0.2, 0.5, 0.8])
+def test_check_depreciated_size_raps(size_raps: float, cv: str) -> None:
+    """
+    Test that the function check_classification_conformity_score raises
+    a DeprecationWarning when using size_raps.
+    """
+    clf = LogisticRegression().fit(X, y)
+    mapie_clf = MapieClassifier(estimator=clf, conformity_score=RAPS(), cv=cv)
+    with pytest.warns(
+        DeprecationWarning,
+        match="The parameter `size_raps` is deprecated.*"
+    ):
+        mapie_clf.fit(X, y, size_raps=size_raps)
+
+
 @pytest.mark.parametrize("k_lambda", REGULARIZATION_PARAMETERS)
 def test_regularize_conf_scores_shape(k_lambda) -> None:
     """

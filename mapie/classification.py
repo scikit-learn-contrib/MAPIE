@@ -13,7 +13,8 @@ from sklearn.utils.validation import (_check_y, check_is_fitted, indexable)
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.utils import (
-    check_classification_conformity_score, check_target
+    check_depreciated_size_raps, check_classification_conformity_score,
+    check_target
 )
 from mapie.estimator.classifier import EnsembleClassifier
 from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
@@ -375,7 +376,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             conformity_score=self.conformity_score,
             method=self.method,
         )
-        # TODO test size_raps depreciated
+        check_depreciated_size_raps(size_raps)
         cs_estimator.set_external_attributes(
             cv=self.cv,
             classes=self.classes_,

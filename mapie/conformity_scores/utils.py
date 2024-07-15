@@ -72,7 +72,7 @@ def check_regression_conformity_score(
         )
 
 
-def _check_depreciated(
+def check_depreciated_score(
     method: str
 ) -> None:
     """
@@ -87,17 +87,40 @@ def _check_depreciated(
     if method == "score":
         warnings.warn(
             "WARNING: Deprecated method. "
-            + "The method \"score\" is outdated. "
-            + "Prefer to use \"lac\" instead to keep "
-            + "the same behavior in the next release.",
+            "The method \"score\" is outdated. "
+            "Prefer to use \"lac\" instead to keep "
+            "the same behavior in the next release.",
             DeprecationWarning
         )
     if method == "cumulated_score":
         warnings.warn(
             "WARNING: Deprecated method. "
-            + "The method \"cumulated_score\" is outdated. "
-            + "Prefer to use \"aps\" instead to keep "
-            + "the same behavior in the next release.",
+            "The method \"cumulated_score\" is outdated. "
+            "Prefer to use \"aps\" instead to keep "
+            "the same behavior in the next release.",
+            DeprecationWarning
+        )
+
+
+def check_depreciated_size_raps(
+    size_raps: Optional[float]
+) -> None:
+    """
+    Check if the parameter ``size_raps`` is used. If so, raise a warning.
+
+    Raises
+    ------
+    Warning
+        If ``size_raps`` is not ``None``.
+    """
+    if not (size_raps is None):
+        warnings.warn(
+            "WARNING: Deprecated parameter. "
+            "The parameter `size_raps` is deprecated. "
+            "In the next release, `RAPS` takes precedence over "
+            "`MapieClassifier` for setting the size used. "
+            "Prefer to define `size_raps` in `RAPS` rather than "
+            "in the `fit` method of `MapieClassifier`.",
             DeprecationWarning
         )
 
@@ -188,7 +211,7 @@ def check_classification_conformity_score(
             )
     elif method is not None:
         if isinstance(method, str) and method in METHOD_SCORE_MAP:
-            _check_depreciated(method)
+            check_depreciated_score(method)
             return METHOD_SCORE_MAP[method]()
         else:
             raise ValueError(
