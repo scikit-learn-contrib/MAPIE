@@ -1380,6 +1380,24 @@ def check_predict_params(
     predict_params: dict,
     cv: Optional[Union[int, str, BaseCrossValidator]] = None
 ) -> None:
+    """
+    Check that if predict_params is used in the predict method,
+    it is also used in the fit method. Otherwise, raise an error."
+
+    Parameters
+    ----------
+    predict_params_used_in_fit: bool
+        True or False. It is True if one or more predict_params
+        are used in the fit method
+
+    predict_param: dict. Contains all predict params used in predict method
+
+    Raises
+    ------
+    ValueError
+        "If any predict_params are used in the predict method but none
+        are used in the fit method."
+    """
     if (len(predict_params) > 0 and
             predict_params_used_in_fit is False and
             cv != "prefit"):
