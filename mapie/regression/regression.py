@@ -543,8 +543,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         )
 
         # Predict on calibration data
-        y_pred = self.estimator_.predict_calib(X, y=y, groups=groups,
-                                               **predict_params)
+        y_pred = self.estimator_.predict_calib(
+                X, y=y, groups=groups, **predict_params
+        )
 
         # Compute the conformity scores (manage jk-ab case)
         self.conformity_scores_ = \
@@ -623,7 +624,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 - [:, 0, :]: Lower bound of the prediction interval.
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
-
         # Checks
         if hasattr(self, '_predict_params'):
             check_predict_params(self._predict_params, predict_params, self.cv)
