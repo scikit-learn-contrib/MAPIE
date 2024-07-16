@@ -324,6 +324,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         cs_features = self.transform(X_calib, y_pred_calib, z_calib)
 
+        self._check_unconsistent_features(cs_features)
+
         not_nan_index = np.where(~np.isnan(conformity_scores_calib))[0]
         # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
 
@@ -417,8 +419,6 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             norm[abs(norm) == 0] = 1
             cs_features /= norm
 
-        self._check_unconsistent_features(cs_features)
-
         return cs_features
 
     def predict(
@@ -452,6 +452,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         check_required_arguments(y_pred)
 
         cs_features = self.transform(X, y_pred, z)
+
+        self._check_unconsistent_features(cs_features)
 
         y_pred_low = -cs_features.dot(self.beta_low_[0][:, np.newaxis])
         y_pred_up = cs_features.dot(self.beta_up_[0][:, np.newaxis])
