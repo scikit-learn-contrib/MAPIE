@@ -13,7 +13,7 @@ from mapie._typing import NDArray
 from mapie.utils import compute_quantiles
 
 
-class TopK(BaseClassificationScore):
+class TopKConformityScore(BaseClassificationScore):
     """
     Top-K method-based non-conformity score.
 

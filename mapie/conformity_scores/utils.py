@@ -7,19 +7,22 @@ from sklearn.utils.multiclass import (check_classification_targets,
 from .regression import BaseRegressionScore
 from .classification import BaseClassificationScore
 from .bounds import AbsoluteConformityScore
-from .sets import APS, LAC, Naive, RAPS, TopK
+from .sets import (
+    APSConformityScore, LACConformityScore, NaiveConformityScore,
+    RAPSConformityScore, TopKConformityScore
+)
 
 from mapie._typing import ArrayLike
 
 
 METHOD_SCORE_MAP = {
-    'score': lambda: LAC(),
-    'lac': lambda: LAC(),
-    'cumulated_score': lambda: APS(),
-    'aps': lambda: APS(),
-    'naive': lambda: Naive(),
-    'raps': lambda: RAPS(),
-    'top_k': lambda: TopK()
+    'score': lambda: LACConformityScore(),
+    'lac': lambda: LACConformityScore(),
+    'cumulated_score': lambda: APSConformityScore(),
+    'aps': lambda: APSConformityScore(),
+    'naive': lambda: NaiveConformityScore(),
+    'raps': lambda: RAPSConformityScore(),
+    'top_k': lambda: TopKConformityScore()
 }
 
 
@@ -117,10 +120,10 @@ def check_depreciated_size_raps(
         warnings.warn(
             "WARNING: Deprecated parameter. "
             "The parameter `size_raps` is deprecated. "
-            "In the next release, `RAPS` takes precedence over "
+            "In the next release, `RAPSConformityScore` takes precedence over "
             "`MapieClassifier` for setting the size used. "
-            "Prefer to define `size_raps` in `RAPS` rather than "
-            "in the `fit` method of `MapieClassifier`.",
+            "Prefer to define `size_raps` in `RAPSConformityScore` rather "
+            "than in the `fit` method of `MapieClassifier`.",
             DeprecationWarning
         )
 
@@ -148,7 +151,7 @@ def check_target(
         or ``"score"`` or if type of target is not multi-class.
     """
     check_classification_targets(y)
-    if type_of_target(y) == "binary" and not isinstance(conformity_score, LAC):
+    if type_of_target(y) == "binary" and not isinstance(conformity_score, LACConformityScore):
         raise ValueError(
             "Invalid method for binary target. "
             "Your target is not of type multiclass and "
@@ -163,7 +166,7 @@ def check_classification_conformity_score(
 ) -> BaseClassificationScore:
     """
     Check parameter ``conformity_score`` for classification task.
-    By default, return a LAC instance.
+    By default, return a LACConformityScore instance.
 
     Parameters
     ----------
@@ -219,4 +222,4 @@ def check_classification_conformity_score(
                 f"Allowed values are {list(METHOD_SCORE_MAP.keys())}."
             )
     else:
-        return LAC()
+        return LACConformityScore()

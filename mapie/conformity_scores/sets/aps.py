@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.dummy import check_random_state
 from sklearn.calibration import label_binarize
 
-from mapie.conformity_scores.sets.naive import Naive
+from mapie.conformity_scores.sets.naive import NaiveConformityScore
 from mapie.conformity_scores.sets.utils import (
     check_include_last_label, check_proba_normalized
 )
@@ -15,7 +15,7 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.utils import compute_quantiles
 
 
-class APS(Naive):
+class APSConformityScore(NaiveConformityScore):
     """
     Adaptive Prediction Sets (APS) method-based non-conformity score.
     It is based on the sum of the softmax outputs of the labels until the true
@@ -211,7 +211,7 @@ class APS(Naive):
 
         return quantiles_
 
-    def _compute_vs_parameter(
+    def _compute_v_parameter(
         self,
         y_proba_last_cumsumed: NDArray,
         threshold: NDArray,
@@ -302,7 +302,7 @@ class APS(Naive):
         )
 
         # get the V parameter from Romano+(2020) or Angelopoulos+(2020)
-        vs = self._compute_vs_parameter(
+        vs = self._compute_v_parameter(
             y_proba_last_cumsumed,
             threshold,
             y_pred_proba_last,

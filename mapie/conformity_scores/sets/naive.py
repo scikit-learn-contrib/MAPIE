@@ -12,7 +12,7 @@ from mapie._machine_precision import EPSILON
 from mapie._typing import NDArray
 
 
-class Naive(BaseClassificationScore):
+class NaiveConformityScore(BaseClassificationScore):
     """
     Naive classification non-conformity score method that is based on the
     cumulative sum of probabilities until the 1-alpha threshold.
@@ -121,7 +121,7 @@ class Naive(BaseClassificationScore):
         quantiles_ = 1 - alpha_np
         return quantiles_
 
-    def _add_regualization(
+    def _add_regularization(
         self,
         y_pred_proba_sorted_cumsum: NDArray,
         **kwargs
@@ -188,7 +188,7 @@ class Naive(BaseClassificationScore):
         )
         # get sorted cumulated score
         y_pred_proba_sorted_cumsum = np.cumsum(y_pred_proba_sorted, axis=1)
-        y_pred_proba_sorted_cumsum = self._add_regualization(
+        y_pred_proba_sorted_cumsum = self._add_regularization(
             y_pred_proba_sorted_cumsum, **kwargs
         )  # Do nothing as no regularization for the naive method
 

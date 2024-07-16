@@ -11,7 +11,7 @@ from mapie._typing import NDArray
 from mapie.utils import compute_quantiles
 
 
-class LAC(BaseClassificationScore):
+class LACConformityScore(BaseClassificationScore):
     """
     Least Ambiguous set-valued Classifier (LAC) method-based
     non conformity score (also formerly called ``"score"``).

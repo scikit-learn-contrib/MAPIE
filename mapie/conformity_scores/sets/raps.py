@@ -7,7 +7,7 @@ from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
 
-from mapie.conformity_scores.sets.aps import APS
+from mapie.conformity_scores.sets.aps import APSConformityScore
 from mapie.conformity_scores.sets.utils import get_true_label_position
 from mapie.estimator.classifier import EnsembleClassifier
 
@@ -17,12 +17,13 @@ from mapie.metrics import classification_mean_width_score
 from mapie.utils import check_alpha_and_n_samples, compute_quantiles
 
 
-class RAPS(APS):
+class RAPSConformityScore(APSConformityScore):
     """
     Regularized Adaptive Prediction Sets (RAPS) method-based non-conformity
-    score. It uses the same technique as ``APS`` class but with a penalty term
-    to reduce the size of prediction sets. See [1] for more details. For now,
-    this method only works with ``"prefit"`` and ``"split"`` strategies.
+    score. It uses the same technique as ``APSConformityScore`` class but with
+    a penalty term to reduce the size of prediction sets. See [1] for more
+    details. For now, this method only works with ``"prefit"`` and ``"split"``
+    strategies.
 
     References
     ----------
@@ -511,7 +512,7 @@ class RAPS(APS):
 
         return quantiles_
 
-    def _add_regualization(
+    def _add_regularization(
         self,
         y_pred_proba_sorted_cumsum: NDArray,
         lambda_: Optional[float] = None,
@@ -571,7 +572,7 @@ class RAPS(APS):
 
         return y_pred_proba_sorted_cumsum
 
-    def _compute_vs_parameter(
+    def _compute_v_parameter(
         self,
         y_proba_last_cumsumed: NDArray,
         threshold: NDArray,

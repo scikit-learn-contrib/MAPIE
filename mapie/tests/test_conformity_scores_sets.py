@@ -8,14 +8,20 @@ from sklearn.linear_model import LogisticRegression
 from mapie._typing import NDArray
 from mapie.classification import MapieClassifier
 from mapie.conformity_scores import BaseClassificationScore
-from mapie.conformity_scores.sets import APS, LAC, Naive, RAPS, TopK
+from mapie.conformity_scores.sets import (
+    APSConformityScore, LACConformityScore, NaiveConformityScore,
+    RAPSConformityScore, TopKConformityScore
+)
 from mapie.conformity_scores.utils import check_classification_conformity_score
 from mapie.utils import check_alpha
 
 
 random_state = 42
 
-cs_list = [None, LAC(), APS(), RAPS(), Naive(), TopK()]
+cs_list = [
+    None, LACConformityScore(), APSConformityScore(), RAPSConformityScore(),
+    NaiveConformityScore(), TopKConformityScore()
+]
 wrong_cs_list = [object(), "LAC", 1]
 valid_method_list = ['naive', 'aps', 'raps', 'lac', 'top_k']
 all_method_list = valid_method_list + [None]
@@ -130,7 +136,9 @@ def test_check_depreciated_size_raps(size_raps: float, cv: str) -> None:
     a DeprecationWarning when using size_raps.
     """
     clf = LogisticRegression().fit(X, y)
-    mapie_clf = MapieClassifier(estimator=clf, conformity_score=RAPS(), cv=cv)
+    mapie_clf = MapieClassifier(
+        estimator=clf, conformity_score=RAPSConformityScore(), cv=cv
+    )
     with pytest.warns(
         DeprecationWarning,
         match="The parameter `size_raps` is deprecated.*"
@@ -146,7 +154,7 @@ def test_regularize_conf_scores_shape(k_lambda) -> None:
     lambda_, k = k_lambda[0], k_lambda[1]
     conf_scores = np.random.rand(100, 1)
     cutoff = np.cumsum(np.ones(conf_scores.shape)) - 1
-    reg_conf_scores = RAPS._regularize_conformity_score(
+    reg_conf_scores = RAPSConformityScore._regularize_conformity_score(
         k, lambda_, conf_scores, cutoff
     )
 
@@ -166,7 +174,9 @@ def test_get_true_label_cumsum_proba_shape() -> None:
     )
     mapie_clf.fit(X, y)
     classes = mapie_clf.classes_
-    cumsum_proba, cutoff = APS.get_true_label_cumsum_proba(y, y_pred, classes)
+    cumsum_proba, cutoff = APSConformityScore.get_true_label_cumsum_proba(
+        y, y_pred, classes
+    )
     assert cumsum_proba.shape == (len(X), 1)
     assert cutoff.shape == (len(X), )
 
@@ -184,7 +194,7 @@ def test_get_true_label_cumsum_proba_result() -> None:
     )
     mapie_clf.fit(X_toy, y_toy)
     classes = mapie_clf.classes_
-    cumsum_proba, cutoff = APS.get_true_label_cumsum_proba(
+    cumsum_proba, cutoff = APSConformityScore.get_true_label_cumsum_proba(
         y_toy, y_pred, classes
     )
     np.testing.assert_allclose(
@@ -225,9 +235,9 @@ def test_get_last_included_proba_shape(k_lambda, include_last_label):
     )
 
     y_p_p_c, y_p_i_l, y_p_p_i_l = \
-        RAPS._get_last_included_proba(
-            RAPS(), y_pred_proba, thresholds, include_last_label,
-            lambda_=lambda_, k_star=k
+        RAPSConformityScore._get_last_included_proba(
+            RAPSConformityScore(), y_pred_proba, thresholds,
+            include_last_label, lambda_=lambda_, k_star=k
         )
 
     assert y_p_p_c.shape == (len(X), len(np.unique(y)), len(thresholds))

@@ -3,7 +3,10 @@ from .classification import BaseClassificationScore
 from .bounds import (
     AbsoluteConformityScore, GammaConformityScore, ResidualNormalisedScore
 )
-from .sets import APS, LAC, Naive, RAPS, TopK
+from .sets import (
+    APSConformityScore, LACConformityScore, NaiveConformityScore,
+    RAPSConformityScore, TopKConformityScore
+)
 
 
 __all__ = [
@@ -12,9 +15,9 @@ __all__ = [
     "AbsoluteConformityScore",
     "GammaConformityScore",
     "ResidualNormalisedScore",
-    "Naive",
-    "LAC",
-    "APS",
-    "RAPS",
-    "TopK"
+    "NaiveConformityScore",
+    "LACConformityScore",
+    "APSConformityScore",
+    "RAPSConformityScore",
+    "TopKConformityScore"
 ]
