@@ -256,24 +256,7 @@ def compute_sigma(
         Samples
 
     points : Optional[Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]]]
-        If Array: List of data points, used as centers to compute
-        gaussian distances. Should be an array of shape (n_points, n_in).
-
-        If integer, the points will be sampled randomly from the ``X``
-        set, where ``X`` is the data give to the
-        ``GaussianCCP.fit`` method, which usually correspond to
-        the ``X`` argument of the ``MapieCCPRegressor.calibrate`` method
-        (unless you call ``GaussianCCP.fit(X)`` yourself).
-
-        You can pass a Tuple[ArrayLike, ArrayLike], to have a different
-        ``sigma`` value for each point. The two elements of the
-        tuple should be:
-         - Data points: 2D array of shape (n_points, n_in)
-         - Sigma values 2D array of shape (n_points, n_in) or (n_points, 1)
-        In this case, the ``sigma``, ``random_sigma`` and ``X`` argument are
-        ignored.
-
-        If ``None``, default to ``20``.
+        Input ``points`` argument of ``GaussianCCP`` calibrator.
 
     points_ : NDArray
         Fitted 2D arrray of points
@@ -281,7 +264,7 @@ def compute_sigma(
     sigma : Optional[Union[float, ArrayLike]]
         Standard deviation value used to compute the guassian distances,
         with the formula:
-        np.exp(-0.5 * ((X - point) / ``sigma``) ** 2)
+        ``np.exp(-0.5 * ((X - point) / sigma) ** 2)``
          - It can be an integer
          - It can be a 1D array of float with as many
         values as dimensions in the dataset
@@ -291,16 +274,18 @@ def compute_sigma(
         argument.
 
         If ``None``, ``sigma`` will default to a float equal to
-        ``np.std(X)/(n**0.5)``, where ``X`` is the data give to the
-        ``GaussianCCP.fit`` method, which correspond to the ``X``
-        argument of the ``MapieCCPRegressor.calibrate`` method
-        (unless you call ``GaussianCCP.fit(X)`` yourself).
+        ``np.std(X)/(n**0.5)*d``
+         - where ``X`` is the calibration data,
+         passed to ``GaussianCCP.fit`` method, through
+         ``SplitCPRegressor.fit/fit_calibrate`` method.
+         - ``n`` is the number of points (``len(points)``).
+         - ``d`` is the number of dimensions of ``X``.
 
     random_sigma : bool
         Whether to apply to the standard deviation values, a random multiplier,
         different for each point, equal to:
 
-        2**np.random.normal(0, 1*2**(-2+np.log10(len(``points``))))
+        ``2**np.random.normal(0, 1*2**(-2+np.log10(len(points))))``
 
         Exemple:
          - For 10 points, the sigma value will, in general,
@@ -320,8 +305,10 @@ def compute_sigma(
             sigmas_ = sigmas_.reshape(-1, 1)
     # If sigma is not defined
     elif sigma is None:
-        points_std = np.std(
-            np.array(X), axis=0)/(_num_samples(points_)**0.5)
+        points_std = np.std(np.array(X), axis=0)\
+            / (_num_samples(points_)**0.5)\
+            * _num_samples(_safe_indexing(X, 0))
+
         sigmas_ = np.ones((_num_samples(points_), 1))*points_std
     # If sigma is defined
     elif isinstance(points, int):
