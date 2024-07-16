@@ -96,7 +96,7 @@ class GaussianCCP(CCPCalibrator):
 
         If ``None``, default to ``False``.
 
-        By default, ``None``
+        By default, ``20``
 
     bias: bool
         Add a column of ones to the features, for safety reason
@@ -193,7 +193,7 @@ class GaussianCCP(CCPCalibrator):
     def __init__(
         self,
         points: Optional[Union[int, ArrayLike,
-                               Tuple[ArrayLike, ArrayLike]]] = None,
+                               Tuple[ArrayLike, ArrayLike]]] = 20,
         sigma: Optional[Union[float, ArrayLike]] = None,
         random_sigma: Optional[bool] = None,
         bias: bool = False,
