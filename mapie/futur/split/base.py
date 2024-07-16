@@ -318,8 +318,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        calib_kwargs: Optional[Dict] = None,
-        **kwargs,
+        **calib_kwargs,
     ) -> SplitCP:
         """
         Fit the calibrator with (``X``, ``y`` and ``z``)
@@ -370,7 +369,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             train_index, calib_index = (np.array([], dtype=int),
                                         np.arange(_num_samples(X)))
 
-        z = cast(Optional[ArrayLike], kwargs.get("z", None))
+        z = cast(Optional[ArrayLike], calib_kwargs.get("z", None))
         (
             X_train, y_train, z_train, sample_weight_train, train_index
         ) = _sample_non_null_weight(X, y, sample_weight, train_index, z)
@@ -401,7 +400,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
                 X_train, y_train, z_train, sample_weight_train, train_index,
                 X_calib, y_calib, z_calib, sample_weight_calib, calib_index,
             ])),
-            kwargs
+            calib_kwargs
         )
 
         self.calibrator_ = calibrator.fit(
@@ -418,8 +417,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         fit_kwargs: Optional[Dict] = None,
-        calib_kwargs: Optional[Dict] = None,
-        **kwargs
+        calib_kwargs: Optional[Dict] = None
     ) -> SplitCP:
         """
         Fit the predictor (if ``cv`` is not ``"prefit"``)
@@ -483,7 +481,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
                            **(fit_kwargs if fit_kwargs is not None else {}))
         self.fit_calibrator(X, y, sample_weight, groups,
                             **(calib_kwargs
-                               if calib_kwargs is not None else {}), **kwargs)
+                               if calib_kwargs is not None else {}))
         return self
 
     def predict(
