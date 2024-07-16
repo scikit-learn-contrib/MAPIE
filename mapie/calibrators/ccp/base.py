@@ -339,7 +339,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                 self.reg_param,
                 ),
             **optim_kwargs,
-            ))
+        ))
 
         if not self.sym:
             optimal_beta_low = cast(OptimizeResult, minimize(

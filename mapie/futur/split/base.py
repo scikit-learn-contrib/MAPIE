@@ -256,7 +256,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **fit_params,
+        **fit_kwargs,
     ) -> SplitCP:
         """
         Fit the predictor if ``cv`` argument is not ``"prefit"``
@@ -285,7 +285,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
 
             By default ``None``.
 
-        **fit_params: dict
+        **fit_kwargs: dict
             Additional fit parameters for the predictor.
 
         Returns
@@ -306,7 +306,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
 
             self.predictor_ = fit_estimator(
                 predictor, X_train, y_train,
-                sample_weight=sample_weight_train, **fit_params
+                sample_weight=sample_weight_train, **fit_kwargs
             )
         else:
             self.predictor_ = predictor
@@ -344,8 +344,10 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
 
             By default ``None``.
 
-        calib_kwargs: Dict
-            Other argument, used in sklear.optimize.minimize
+        calib_kwargs: dict
+            Additional fit parameters for the calibrator, used as kwargs.
+            See the calibrator ``.fit`` method documentation to have more
+            information about the available arguments.
 
         Returns
         -------
@@ -466,11 +468,13 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
 
             By default ``None``.
 
-        fit_params: dict
+        fit_kwargs: dict
             Additional fit parameters for the predictor, used as kwargs.
 
-        calib_params: dict
+        calib_kwargs: dict
             Additional fit parameters for the calibrator, used as kwargs.
+            See the calibrator ``.fit`` method documentation to have more
+            information about the available arguments.
 
         Returns
         -------
