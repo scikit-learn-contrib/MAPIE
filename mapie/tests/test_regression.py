@@ -560,8 +560,10 @@ def test_results_with_groups() -> None:
     y_pred_1 = [15, 10, 5, 15, 10, 5]
     conformity_scores_0 = np.abs(y - y_pred_0)
     conformity_scores_1 = np.abs(y - y_pred_1)
-    assert np.array_equal(mapie0.conformity_scores_, conformity_scores_0)
-    assert np.array_equal(mapie1.conformity_scores_, conformity_scores_1)
+    np.testing.assert_array_equal(mapie0.conformity_scores_,
+                                  conformity_scores_0)
+    np.testing.assert_array_equal(mapie1.conformity_scores_,
+                                  conformity_scores_1)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
