@@ -114,7 +114,7 @@ class BaseConformityScore(metaclass=ABCMeta):
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between ``0`` and ``1``, represents the
-            uncertainty of the confidence interval.
+            uncertainty of the confidence set.
 
         axis: int
             The axis from which to compute the quantile.
@@ -128,7 +128,7 @@ class BaseConformityScore(metaclass=ABCMeta):
             By default ``False``.
 
         unbounded: bool
-            Boolean specifying whether infinite prediction intervals
+            Boolean specifying whether infinite prediction sets
             could be produced (when alpha_np is greater than or equal to 1.).
 
             By default ``False``.

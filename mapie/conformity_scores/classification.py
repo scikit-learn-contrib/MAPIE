@@ -68,7 +68,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between ``0`` and ``1``, represents the
-            uncertainty of the confidence interval.
+            uncertainty of the confidence set.
 
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
@@ -99,7 +99,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between 0 and 1, representing the uncertainty
-            of the confidence interval.
+            of the confidence set.
 
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
@@ -135,7 +135,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between 0 and 1, representing the uncertainty
-            of the confidence interval.
+            of the confidence set.
 
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
@@ -165,7 +165,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between 0 and 1, representing the uncertainty
-            of the confidence interval.
+            of the confidence set.
 
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
