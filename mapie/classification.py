@@ -5,13 +5,14 @@ from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import (_check_y, check_is_fitted, indexable)
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseClassificationScore
+from mapie.conformity_scores.sets.raps import RAPSConformityScore
 from mapie.conformity_scores.utils import (
     check_depreciated_size_raps, check_classification_conformity_score,
     check_target
@@ -39,6 +40,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         If ``None``, estimator defaults to a ``LogisticRegression`` instance.
 
     method: Optional[str]
+        [DEPRECIATED see instead conformity_score]
         Method to choose for prediction interval estimates.
         Choose among:
 
@@ -119,7 +121,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         By default ``None``.
 
-    conformity_score_function_: BaseClassificationScore
+    conformity_score: BaseClassificationScore
         Score function that handle all that is related to conformity scores.
 
         In any case, the `conformity_score` parameter takes precedence over the
@@ -378,12 +380,22 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         )
         check_depreciated_size_raps(size_raps)
         cs_estimator.set_external_attributes(
-            cv=self.cv,
             classes=self.classes_,
             label_encoder=self.label_encoder_,
             size_raps=size_raps,
             random_state=self.random_state
         )
+        if (
+            isinstance(cs_estimator, RAPSConformityScore) and
+            not (
+                self.cv in ["split", "prefit"] or
+                isinstance(self.cv, BaseShuffleSplit)
+            )
+        ):
+            raise ValueError(
+                "RAPS method can only be used "
+                "with ``cv='split'`` and ``cv='prefit'``."
+            )
 
         # Cast
         X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)

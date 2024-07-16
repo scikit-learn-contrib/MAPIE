@@ -2,8 +2,7 @@ from typing import Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.calibration import LabelEncoder
-from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
-                                     StratifiedShuffleSplit)
+from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
 
@@ -49,9 +48,6 @@ class RAPSConformityScore(APSConformityScore):
     quantiles_: ArrayLike of shape (n_alpha)
         The quantiles estimated from ``get_sets`` method.
 
-    cv: Union[int, str, BaseCrossValidator]
-        The cross-validation strategy for computing scores.
-
     label_encoder: LabelEncoder
         The label encoder used to encode the labels.
 
@@ -59,8 +55,6 @@ class RAPSConformityScore(APSConformityScore):
         Percentage of the data to be used for choosing lambda_star and
         k_star for the RAPS method.
     """
-
-    valid_cv_ = ["prefit", "split"]
 
     def __init__(
         self,
@@ -72,7 +66,6 @@ class RAPSConformityScore(APSConformityScore):
     def set_external_attributes(
         self,
         *,
-        cv: Optional[Union[str, BaseCrossValidator, BaseShuffleSplit]] = None,
         label_encoder: Optional[LabelEncoder] = None,
         size_raps: Optional[float] = None,
         **kwargs
@@ -82,11 +75,6 @@ class RAPSConformityScore(APSConformityScore):
 
         Parameters
         ----------
-        cv: Optional[Union[int, str, BaseCrossValidator]]
-            The cross-validation strategy for computing scores.
-
-            By default ``None``.
-
         label_encoder: Optional[LabelEncoder]
             The label encoder used to encode the labels.
 
@@ -99,27 +87,8 @@ class RAPSConformityScore(APSConformityScore):
             By default ``None``.
         """
         super().set_external_attributes(**kwargs)
-        self.cv = cast(Union[str, BaseCrossValidator, BaseShuffleSplit], cv)
         self.label_encoder_ = cast(LabelEncoder, label_encoder)
         self.size_raps = size_raps
-
-    def _check_cv(self):
-        """
-        Check that if the method used is ``"raps"``, then
-        the cross validation strategy is ``"prefit"``.
-
-        Raises
-        ------
-        ValueError
-            If ``method`` is ``"raps"`` and ``cv`` is not ``"prefit"``.
-        """
-        if not (
-            self.cv in self.valid_cv_ or isinstance(self.cv, BaseShuffleSplit)
-        ):
-            raise ValueError(
-                "RAPS method can only be used "
-                f"with cv in {self.valid_cv_}."
-            )
 
     def split_data(
         self,
@@ -162,9 +131,6 @@ class RAPSConformityScore(APSConformityScore):
             - NDArray of shape (n_samples,)
             - NDArray of shape (n_samples,)
         """
-        # Checks
-        self._check_cv()
-
         # Split data for raps method
         raps_split = StratifiedShuffleSplit(
             n_splits=1,
