@@ -367,7 +367,7 @@ def test_calibration_data_size_asymmetric_score(delta: float) -> None:
     # Define an asymmetric conformity score
     score = AbsoluteConformityScore(sym=False)
 
-    # Test when ConformityScore is asymmetric
+    # Test when BaseRegressionScore is asymmetric
     # and calibration data size is sufficient
     n_calib_sufficient = int(np.ceil(1/(1-delta) * 2)) + 1
     Xc, Xt, yc, _ = train_test_split(Xct, yct, train_size=n_calib_sufficient)
@@ -377,7 +377,7 @@ def test_calibration_data_size_asymmetric_score(delta: float) -> None:
     mapie_reg.fit(Xc, yc)
     mapie_reg.predict(Xt, alpha=1-delta)
 
-    # Test when ConformityScore is asymmetric
+    # Test when BaseRegressionScore is asymmetric
     # and calibration data size is too low
     with pytest.raises(
         ValueError, match=r"Number of samples of the score is too low*"

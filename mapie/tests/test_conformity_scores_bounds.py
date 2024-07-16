@@ -222,7 +222,7 @@ def test_gamma_conformity_score_check_predicted_value(
 
 def test_check_consistency() -> None:
     """
-    Test that a dummy ConformityScore class that gives inconsistent scores
+    Test that a dummy BaseRegressionScore class that gives inconsistent scores
     and distributions raises an error.
     """
     dummy_conf_score = DummyConformityScore()

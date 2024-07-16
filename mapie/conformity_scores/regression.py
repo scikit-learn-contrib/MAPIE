@@ -149,7 +149,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         if max_conf_score > self.eps:
             raise ValueError(
                 "The two functions get_conformity_scores and "
-                "get_estimation_distribution of the BaseConformityScore class "
+                "get_estimation_distribution of the BaseRegressionScore class "
                 "are not consistent. "
                 "The following equation must be verified: "
                 "self.get_estimation_distribution(y_pred, "

@@ -138,8 +138,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default ``0``.
 
-    conformity_score: Optional[ConformityScore]
-        ConformityScore instance.
+    conformity_score: Optional[BaseRegressionScore]
+        BaseRegressionScore instance.
         It defines the link between the observed values, the predicted ones
         and the conformity scores. For instance, the default ``None`` value
         correspondonds to a conformity score which assumes
@@ -147,7 +147,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         - ``None``, to use the default ``AbsoluteConformityScore`` conformity
           score
-        - ConformityScore: any ``ConformityScore`` class
+        - BaseRegressionScore: any ``BaseRegressionScore`` class
 
         By default ``None``.
 
