@@ -39,7 +39,7 @@ class BaseConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        predictor: BaeEstimator
+        predictor: BaseEstimator
             Reference predictor.
         """
         self.predictor = predictor
@@ -172,7 +172,7 @@ class BaseConformityScore(metaclass=ABCMeta):
     ):
         """
         Compute the prediction sets on new samples based on the uncertainty of
-        the target confidence interval.
+        the target confidence set.
 
         Parameters:
         -----------
@@ -180,13 +180,13 @@ class BaseConformityScore(metaclass=ABCMeta):
             The input data or samples for prediction.
 
         alpha_np: NDArray of shape (n_alpha, )
-            Represents the uncertainty of the confidence interval to produce.
+            Represents the uncertainty of the confidence set to produce.
 
         **kwargs: dict
             Additional keyword arguments.
 
         Returns:
         --------
-        The output strcture depend on the subclass.
+        The output structure depend on the subclass.
             The prediction sets for each sample and each alpha level.
         """

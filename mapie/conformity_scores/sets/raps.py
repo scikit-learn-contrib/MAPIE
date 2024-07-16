@@ -125,11 +125,11 @@ class RAPSConformityScore(APSConformityScore):
         -------
         Tuple[NDArray, NDArray, NDArray, NDArray, Optional[NDArray],
         Optional[NDArray]]
-            - NDArray of shape (n_samples, n_features)
-            - NDArray of shape (n_samples,)
-            - NDArray of shape (n_samples,)
-            - NDArray of shape (n_samples,)
-            - NDArray of shape (n_samples,)
+            - X: NDArray of shape (n_samples, n_features)
+            - y: NDArray of shape (n_samples,)
+            - y_enc: NDArray of shape (n_samples,)
+            - sample_weight: Optional[NDArray] of shape (n_samples,)
+            - groups: Optional[NDArray] of shape (n_samples,)
         """
         # Split data for raps method
         raps_split = StratifiedShuffleSplit(
@@ -258,7 +258,7 @@ class RAPSConformityScore(APSConformityScore):
         Parameters
         ----------
         best_sizes: NDArray of shape (n_alphas, )
-            Smallest average prediciton set size before testing
+            Smallest average prediction set size before testing
             for the new value of lambda_
 
         alpha_np: NDArray of shape (n_alphas)
@@ -570,7 +570,7 @@ class RAPSConformityScore(APSConformityScore):
         """
         # compute V parameter from Angelopoulos+(2020)
         L = np.sum(prediction_sets, axis=1)
-        vs = (
+        v_param = (
             (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
             (
                 y_pred_proba_last[:, 0, :] -
@@ -578,4 +578,4 @@ class RAPSConformityScore(APSConformityScore):
                 self.lambda_star * (L > self.k_star)
             )
         )
-        return vs
+        return v_param

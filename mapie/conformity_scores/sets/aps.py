@@ -242,11 +242,11 @@ class APSConformityScore(NaiveConformityScore):
             Vs parameters.
         """
         # compute V parameter from Romano+(2020)
-        vs = (
+        v_param = (
             (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
             y_pred_proba_last[:, 0, :]
         )
-        return vs
+        return v_param
 
     def _add_random_tie_breaking(
         self,
@@ -302,7 +302,7 @@ class APSConformityScore(NaiveConformityScore):
         )
 
         # get the V parameter from Romano+(2020) or Angelopoulos+(2020)
-        vs = self._compute_v_parameter(
+        v_param = self._compute_v_parameter(
             y_proba_last_cumsumed,
             threshold,
             y_pred_proba_last,
@@ -312,13 +312,13 @@ class APSConformityScore(NaiveConformityScore):
         # get random numbers for each observation and alpha value
         random_state = check_random_state(self.random_state)
         random_state = cast(np.random.RandomState, random_state)
-        us = random_state.uniform(size=(prediction_sets.shape[0], 1))
+        u_param = random_state.uniform(size=(prediction_sets.shape[0], 1))
         # remove last label from comparison between uniform number and V
-        vs_less_than_us = np.less_equal(vs - us, EPSILON)
+        label_to_keep = np.less_equal(v_param - u_param, EPSILON)
         np.put_along_axis(
             prediction_sets,
             y_pred_index_last,
-            vs_less_than_us[:, np.newaxis, :],
+            label_to_keep[:, np.newaxis, :],
             axis=1
         )
         return prediction_sets

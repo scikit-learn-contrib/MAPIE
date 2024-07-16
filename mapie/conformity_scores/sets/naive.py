@@ -156,7 +156,7 @@ class NaiveConformityScore(BaseClassificationScore):
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Function that returns the smallest score
-        among those which are included in the prediciton set.
+        among those which are included in the prediction set.
 
         Parameters
         ----------

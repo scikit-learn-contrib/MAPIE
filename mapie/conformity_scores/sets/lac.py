@@ -16,7 +16,7 @@ class LACConformityScore(BaseClassificationScore):
     Least Ambiguous set-valued Classifier (LAC) method-based
     non conformity score (also formerly called ``"score"``).
 
-    It is based on the the scores (i.e. 1 minus the softmax score of the true
+    It is based on the scores (i.e. 1 minus the softmax score of the true
     label) on the calibration set.
 
     References
