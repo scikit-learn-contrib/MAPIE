@@ -151,7 +151,10 @@ def check_target(
         or ``"score"`` or if type of target is not multi-class.
     """
     check_classification_targets(y)
-    if type_of_target(y) == "binary" and not isinstance(conformity_score, LACConformityScore):
+    if (
+        type_of_target(y) == "binary" and
+        not isinstance(conformity_score, LACConformityScore)
+    ):
         raise ValueError(
             "Invalid method for binary target. "
             "Your target is not of type multiclass and "
