@@ -188,7 +188,7 @@ def plot_scores(
 
 fig, axs = plt.subplots(1, 1, figsize=(10, 5))
 conformity_scores = mapie_clf.conformity_scores_
-quantiles = mapie_clf.quantiles_
+quantiles = mapie_clf.conformity_score_function_.quantiles_
 plot_scores(alpha, conformity_scores, quantiles, 'lac', axs)
 plt.show()
 
@@ -309,10 +309,11 @@ mean_width = [
 
 
 def plot_coverages_widths(alpha, coverage, width, method):
+    quantiles = mapie_clf.conformity_score_function_.quantiles_
     _, axs = plt.subplots(1, 3, figsize=(15, 5))
     axs[0].set_xlabel("1 - alpha")
     axs[0].set_ylabel("Quantile")
-    axs[0].scatter(1 - alpha, mapie_clf.quantiles_, label=method)
+    axs[0].scatter(1 - alpha, quantiles, label=method)
     axs[0].legend()
     axs[1].scatter(1 - alpha, coverage, label=method)
     axs[1].set_xlabel("1 - alpha")

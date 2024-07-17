@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
@@ -5,31 +6,38 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
-                                     GammaConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import (
+    AbsoluteConformityScore, BaseRegressionScore, GammaConformityScore,
+    ResidualNormalisedScore
+)
 from mapie.regression import MapieRegressor
+from mapie.conformity_scores.utils import check_regression_conformity_score
+
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
-y_pred_list = [4, 7, 10, 12, 13, 12]
-conf_scores_list = [1, 0, -1, -1, 0, 3]
-conf_scores_gamma_list = [1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12]
-conf_scores_residual_norm_list = [0.2, 0., 0.11111111, 0.09090909, 0., 0.2]
+y_pred_list = np.array([4, 7, 10, 12, 13, 12])
+conf_scores_list = np.array([1, 0, -1, -1, 0, 3])
+conf_scores_gamma_list = np.array([1 / 4, 0, -1 / 10, -1 / 12, 0, 3 / 12])
+conf_scores_residual_norm_list = np.array(
+    [0.2, 0., 0.11111111, 0.09090909, 0., 0.2]
+)
 random_state = 42
 
+wrong_cs_list = [object(), "AbsoluteConformityScore", 1]
 
-class DummyConformityScore(ConformityScore):
+
+class DummyConformityScore(BaseRegressionScore):
     def __init__(self) -> None:
         super().__init__(sym=True, consistency_check=True)
 
     def get_signed_conformity_scores(
-        self, X: ArrayLike, y: ArrayLike, y_pred: ArrayLike,
+        self, y: ArrayLike, y_pred: ArrayLike, **kwargs
     ) -> NDArray:
         return np.subtract(y, y_pred)
 
     def get_estimation_distribution(
-        self, X: ArrayLike, y_pred: ArrayLike, conformity_scores: ArrayLike
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
     ) -> NDArray:
         """
         A positive constant is added to the sum between predictions and
@@ -42,7 +50,19 @@ class DummyConformityScore(ConformityScore):
 @pytest.mark.parametrize("sym", [False, True])
 def test_error_mother_class_initialization(sym: bool) -> None:
     with pytest.raises(TypeError):
-        ConformityScore(sym)  # type: ignore
+        BaseRegressionScore(sym)  # type: ignore
+
+
+@pytest.mark.parametrize("score", wrong_cs_list)
+def test_check_wrong_regression_score(
+    score: Any
+) -> None:
+    """
+    Test that the function check_regression_conformity_score raises
+    a ValueError when using a wrong score.
+    """
+    with pytest.raises(ValueError, match="Invalid conformity_score argument*"):
+        check_regression_conformity_score(conformity_score=score)
 
 
 @pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])
@@ -52,10 +72,10 @@ def test_absolute_conformity_score_get_conformity_scores(
     """Test conformity score computation for AbsoluteConformityScore."""
     abs_conf_score = AbsoluteConformityScore()
     signed_conf_scores = abs_conf_score.get_signed_conformity_scores(
-        X_toy, y_toy, y_pred
+        y_toy, y_pred, X=X_toy
     )
     conf_scores = abs_conf_score.get_conformity_scores(
-        X_toy, y_toy, y_pred
+        y_toy, y_pred, X=X_toy
     )
     expected_signed_conf_scores = np.array(conf_scores_list)
     expected_conf_scores = np.abs(expected_signed_conf_scores)
@@ -73,7 +93,7 @@ def test_absolute_conformity_score_get_estimation_distribution(
     """Test conformity observed value computation for AbsoluteConformityScore."""  # noqa: E501
     abs_conf_score = AbsoluteConformityScore()
     y_obs = abs_conf_score.get_estimation_distribution(
-        X_toy, y_pred, conf_scores
+        y_pred, conf_scores, X=X_toy
     )
     np.testing.assert_allclose(y_obs, y_toy)
 
@@ -83,10 +103,10 @@ def test_absolute_conformity_score_consistency(y_pred: NDArray) -> None:
     """Test methods consistency for AbsoluteConformityScore."""
     abs_conf_score = AbsoluteConformityScore()
     signed_conf_scores = abs_conf_score.get_signed_conformity_scores(
-        X_toy, y_toy, y_pred
+        y_toy, y_pred, X=X_toy,
     )
     y_obs = abs_conf_score.get_estimation_distribution(
-        X_toy, y_pred, signed_conf_scores
+        y_pred, signed_conf_scores, X=X_toy,
     )
     np.testing.assert_allclose(y_obs, y_toy)
 
@@ -98,7 +118,7 @@ def test_gamma_conformity_score_get_conformity_scores(
     """Test conformity score computation for GammaConformityScore."""
     gamma_conf_score = GammaConformityScore()
     conf_scores = gamma_conf_score.get_conformity_scores(
-        X_toy, y_toy, y_pred
+        y_toy, y_pred, X=X_toy
     )
     expected_signed_conf_scores = np.array(conf_scores_gamma_list)
     np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
@@ -118,7 +138,7 @@ def test_gamma_conformity_score_get_estimation_distribution(
     """Test conformity observed value computation for GammaConformityScore."""  # noqa: E501
     gamma_conf_score = GammaConformityScore()
     y_obs = gamma_conf_score.get_estimation_distribution(
-        X_toy, y_pred, conf_scores
+        y_pred, conf_scores, X=X_toy
     )
     np.testing.assert_allclose(y_obs, y_toy)
 
@@ -128,10 +148,10 @@ def test_gamma_conformity_score_consistency(y_pred: NDArray) -> None:
     """Test methods consistency for GammaConformityScore."""
     gamma_conf_score = GammaConformityScore()
     signed_conf_scores = gamma_conf_score.get_signed_conformity_scores(
-        X_toy, y_toy, y_pred
+        y_toy, y_pred, X=X_toy
     )
     y_obs = gamma_conf_score.get_estimation_distribution(
-        X_toy, y_pred, signed_conf_scores
+        y_pred, signed_conf_scores, X=X_toy,
     )
     np.testing.assert_allclose(y_obs, y_toy)
 
@@ -152,7 +172,7 @@ def test_gamma_conformity_score_check_oberved_value(
     gamma_conf_score = GammaConformityScore()
     with pytest.raises(ValueError):
         gamma_conf_score.get_signed_conformity_scores(
-            [], y_toy, y_pred
+            y_toy, y_pred, X=[]
         )
 
 
@@ -189,32 +209,32 @@ def test_gamma_conformity_score_check_predicted_value(
         match=r".*At least one of the predicted target is negative.*"
     ):
         gamma_conf_score.get_signed_conformity_scores(
-            X_toy, y_toy, y_pred
+            y_toy, y_pred, X=X_toy
         )
     with pytest.raises(
         ValueError,
         match=r".*At least one of the predicted target is negative.*"
     ):
         gamma_conf_score.get_estimation_distribution(
-            X_toy, y_pred, conf_scores
+            y_pred, conf_scores, X=X_toy
         )
 
 
 def test_check_consistency() -> None:
     """
-    Test that a dummy ConformityScore class that gives inconsistent scores
+    Test that a dummy BaseRegressionScore class that gives inconsistent scores
     and distributions raises an error.
     """
     dummy_conf_score = DummyConformityScore()
     conformity_scores = dummy_conf_score.get_signed_conformity_scores(
-        X_toy, y_toy, y_pred_list
+        y_toy, y_pred_list
     )
     with pytest.raises(
         ValueError,
         match=r".*The two functions get_conformity_scores.*"
     ):
         dummy_conf_score.check_consistency(
-            X_toy, y_toy, y_pred_list, conformity_scores
+            y_toy, y_pred_list, conformity_scores
         )
 
 
@@ -233,7 +253,7 @@ def test_residual_normalised_prefit_conformity_score_get_conformity_scores(
         random_state=random_state
     )
     conf_scores = residual_norm_conf_score.get_conformity_scores(
-        X_toy, y_toy, y_pred
+        y_toy, y_pred, X=X_toy
     )
     expected_signed_conf_scores = np.array(conf_scores_residual_norm_list)
     np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
@@ -249,7 +269,7 @@ def test_residual_normalised_conformity_score_get_conformity_scores(
     """
     residual_norm_score = ResidualNormalisedScore(random_state=random_state)
     conf_scores = residual_norm_score.get_conformity_scores(
-        X_toy, y_toy, y_pred
+        y_toy, y_pred, X=X_toy
     )
     expected_signed_conf_scores = np.array(
         [np.nan, np.nan, 1.e+08, 1.e+08, 0.e+00, 3.e+08]
@@ -264,7 +284,7 @@ def test_residual_normalised_score_prefit_with_notfitted_estim() -> None:
     )
     with pytest.raises(ValueError):
         residual_norm_conf_score.get_conformity_scores(
-            X_toy, y_toy, y_pred_list
+            y_toy, y_pred_list, X=X_toy
         )
 
 
@@ -272,9 +292,11 @@ def test_residual_normalised_score_with_default_params() -> None:
     """Test that no error is raised with default parameters."""
     residual_norm_score = ResidualNormalisedScore()
     conf_scores = residual_norm_score.get_conformity_scores(
-        X_toy, y_toy, y_pred_list
+        y_toy, y_pred_list, X=X_toy
     )
-    residual_norm_score.get_estimation_distribution(X_toy, y_toy, conf_scores)
+    residual_norm_score.get_estimation_distribution(
+        y_toy, conf_scores, X=X_toy
+    )
 
 
 def test_invalid_estimator() -> None:
@@ -288,7 +310,7 @@ def test_invalid_estimator() -> None:
     )
     with pytest.raises(ValueError):
         residual_norm_conf_score.get_conformity_scores(
-            X_toy, y_toy, y_pred_list
+            y_toy, y_pred_list, X=X_toy
         )
 
 
@@ -356,7 +378,7 @@ def test_residual_normalised_prefit_estimator_with_neg_values() -> None:
     )
     with pytest.warns(UserWarning):
         residual_norm_conf_score.get_conformity_scores(
-            X_toy, y_toy, y_pred_list
+            y_toy, y_pred_list, X=X_toy
         )
 
 
@@ -370,11 +392,53 @@ def test_residual_normalised_prefit_get_estimation_distribution() -> None:
         residual_estimator=estim, prefit=True
     )
     conf_scores = residual_normalised_conf_score.get_conformity_scores(
-        X_toy, y_toy, y_pred_list
+        y_toy, y_pred_list, X=X_toy
     )
     residual_normalised_conf_score.get_estimation_distribution(
-        X_toy, y_pred_list, conf_scores
+        y_pred_list, conf_scores, X=X_toy
     )
+
+
+def test_residual_normalised_additional_parameters() -> None:
+    """
+    Test that residual normalised score raises no error with additional
+    parameters.
+    """
+    residual_normalised_conf_score = ResidualNormalisedScore(
+        residual_estimator=LinearRegression(),
+        split_size=0.2,
+        random_state=random_state
+    )
+    # Test for get_conformity_scores
+    # 1) Test that no error is raised
+    residual_normalised_conf_score.get_conformity_scores(
+        y_toy, y_pred_list, X=X_toy
+    )
+    # 2) Test that an error is raised when X is not provided
+    with pytest.raises(
+        ValueError,
+        match=r"Additional parameters must be provided*"
+    ):
+        residual_normalised_conf_score.get_conformity_scores(
+            y_toy, y_pred_list
+        )
+
+    # Test for get_estimation_distribution
+    conf_scores = residual_normalised_conf_score.get_conformity_scores(
+        y_toy, y_pred_list, X=X_toy
+    )
+    # 1) Test that no error is raised
+    residual_normalised_conf_score.get_estimation_distribution(
+        y_pred_list, conf_scores, X=X_toy
+    )
+    # 2) Test that an error is raised when X is not provided
+    with pytest.raises(
+        ValueError,
+        match=r"Additional parameters must be provided*"
+    ):
+        residual_normalised_conf_score.get_estimation_distribution(
+            y_pred_list, conf_scores
+        )
 
 
 @pytest.mark.parametrize("score", [AbsoluteConformityScore(),
@@ -382,7 +446,7 @@ def test_residual_normalised_prefit_get_estimation_distribution() -> None:
                                    ResidualNormalisedScore()])
 @pytest.mark.parametrize("alpha", [[0.5], [0.5, 0.6]])
 def test_intervals_shape_with_every_score(
-    score: ConformityScore,
+    score: BaseRegressionScore,
     alpha: NDArray
 ) -> None:
     estim = LinearRegression().fit(X_toy, y_toy)
