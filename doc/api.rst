@@ -73,8 +73,8 @@ Metrics
    metrics.spiegelhalter_statistic
    metrics.top_label_ece
 
-Conformity scores
-=================
+Conformity scores (regression)
+==============================
 
 .. autosummary::
    :toctree: generated/
@@ -84,10 +84,20 @@ Conformity scores
    conformity_scores.AbsoluteConformityScore
    conformity_scores.GammaConformityScore
    conformity_scores.ResidualNormalisedScore
+
+Conformity scores (classification)
+==================================
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
    conformity_scores.BaseClassificationScore
-   conformity_scores.LAC
-   conformity_scores.APS
-   conformity_scores.TopK
+   conformity_scores.NaiveConformityScore
+   conformity_scores.LACConformityScore
+   conformity_scores.APSConformityScore
+   conformity_scores.RAPSConformityScore
+   conformity_scores.TopKConformityScore
 
 Resampling
 ==========
