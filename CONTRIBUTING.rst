@@ -14,7 +14,7 @@ Fork/clone/pull
 
 The typical workflow for contributing to `mapie` is:
 
-1. Fork the `master` branch from the `GitHub repository <github.com/scikit-learn-contrib/MAPIE>`_.
+1. Fork the `master` branch from the `GitHub repository <https://github.com/scikit-learn-contrib/MAPIE>`_.
 2. Clone your fork locally.
 3. Commit changes.
 4. Push the changes to your fork.
