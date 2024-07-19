@@ -19,6 +19,7 @@ def regression_coverage_score(
     y_true: ArrayLike,
     y_pred_low: ArrayLike,
     y_pred_up: ArrayLike,
+    warning_inf: bool = False
 ) -> float:
     """
     Effective coverage score obtained by the prediction intervals.
@@ -57,14 +58,15 @@ def regression_coverage_score(
     check_arrays_length(y_true, y_pred_low, y_pred_up)
     check_lower_upper_bounds(y_true, y_pred_low, y_pred_up)
     check_array_nan(y_true)
-    check_array_inf(y_true)
+    check_array_inf(y_true, warning_inf=warning_inf)
     check_array_nan(y_pred_low)
-    check_array_inf(y_pred_low)
+    check_array_inf(y_pred_low, warning_inf=warning_inf)
     check_array_nan(y_pred_up)
-    check_array_inf(y_pred_up)
+    check_array_inf(y_pred_up, warning_inf=warning_inf)
 
     coverage = np.mean(
-        ((y_pred_low <= y_true) & (y_pred_up >= y_true))
+        ((y_pred_low <= y_true) & (y_pred_up >= y_true)) |
+        np.isinf(y_pred_low) | np.isinf(y_pred_up)
     )
     return float(coverage)
 

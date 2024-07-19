@@ -1280,7 +1280,7 @@ def check_array_nan(array: NDArray) -> None:
         )
 
 
-def check_array_inf(array: NDArray) -> None:
+def check_array_inf(array: NDArray, warning_inf: bool = False) -> None:
     """
     Checks if the array have inf.
     If a value is infinite, we throw an error.
@@ -1296,9 +1296,12 @@ def check_array_inf(array: NDArray) -> None:
         If any elements of the array is +inf or -inf.
     """
     if np.isinf(array).any():
-        raise ValueError(
-            "Array contains infinite values."
-        )
+        if warning_inf:
+            warnings.warn("Array contains infinite values.", UserWarning)
+        else:
+            raise ValueError(
+                "Array contains infinite values."
+            )
 
 
 def check_arrays_length(*arrays: NDArray) -> None:
