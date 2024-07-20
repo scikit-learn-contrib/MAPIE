@@ -27,7 +27,7 @@ class StandardCalibrator(BaseCalibrator):
         prediction intervals. It correspond to the quantile of the calibration
         conformity scores.
 
-    q_low_: Tuple[NDArray, bool]
+    q_low_: float
         Same as q_up_, but for the lower bound
     """
     fit_attributes: List[str] = ["q_up_", "q_low_"]

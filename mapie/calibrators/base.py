@@ -10,7 +10,8 @@ from mapie._typing import ArrayLike, NDArray
 
 class BaseCalibrator(BaseEstimator, metaclass=ABCMeta):
     """
-    Base abstract class for the calibrators.
+    Base abstract class for the calibrators used in ``SplitCPRegressor``
+    or ``SplitCPClassifier`` to estimate the conformity scores.
 
     The ``BaseCalibrator`` subclasses should have at least two methods:
 
@@ -43,9 +44,10 @@ class BaseCalibrator(BaseEstimator, metaclass=ABCMeta):
         quantiles. The method can take as arguments any of :
         ``X, y, sample_weight, groups, y_pred_calib, conformity_scores_calib,
         X_train, y_train, z_train, sample_weight_train, train_index,
-        X_calib, y_calib, z_calib, sample_weight_calib, calib_index``
+        X_calib, y_calib, z_calib, sample_weight_calib, calib_index``,
+        any attributes of the ``SplitCP`` instance,
         or any other argument, which the user will have to pass as
-        ``**kwargs``.
+        ``**calib_kwargs``.
 
         Parameters
         ----------
@@ -69,7 +71,8 @@ class BaseCalibrator(BaseEstimator, metaclass=ABCMeta):
     ) -> NDArray:
         """
         Predict the conformity score quantiles.
-        The method can take as arguments any of : ``X, y_pred``
+        The method can take as arguments any of : ``X, y_pred``,
+        any attributes of the ``SplitCP`` instance,
         or any other argument, which the user will have to pass as
         ``**kwargs``.
 

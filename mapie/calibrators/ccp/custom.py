@@ -13,10 +13,11 @@ from .utils import (check_multiplier, compile_functions_warnings_errors,
 
 class CustomCCP(CCPCalibrator):
     """
-    Calibrator used for the ``SplitCP`` method to estimate the
-    conformity scores. It corresponds to the adaptative conformal
-    prediction method proposed by Gibbs et al. (2023)
-    in "Conformal Prediction With Conditional Guarantees".
+    Calibrator used for the in ``SplitCPRegressor`` or ``SplitCPClassifier``
+    to estimate the conformity scores.
+
+    It corresponds to the adaptative conformal prediction method proposed by
+    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
 
     The goal is to learn the quantile of the conformity scores distribution,
     to built the prediction interval, not with a constant ``q`` (as it is the
@@ -49,10 +50,9 @@ class CustomCCP(CCPCalibrator):
         By default ``None``.
 
     bias: bool
-        Add a column of ones to the features, for safety reason
-        (to garantee the marginal coverage, no matter how the other features
-        the ``CCPCalibrator``object were built).
-        If the ``CCPCalibrator``object definition covers all the dataset
+        Add a column of ones to the features,
+        (to make sure that the marginal coverage is guaranteed).
+        If the ``CCPCalibrator`` object definition covers all the dataset
         (meaning, for all calibration and test samples, the resulting
         ``calibrator.predict(X, y_pred, z)`` is never all zeros),
         this column of ones is not necessary to obtain marginal coverage.
@@ -77,18 +77,18 @@ class CustomCCP(CCPCalibrator):
 
     init_value: Optional[ArrayLike]
         Optimization initialisation value.
-        If ``None``, is sampled from a normal distribution.
+        If ``None``, the initial vector is sampled from a normal distribution.
 
         By default ``None``.
 
     reg_param: Optional[float]
-        Constant that multiplies the L2 term, controlling regularization
-        strength. ``alpha`` must be a non-negative
+        Float to monitor the ridge regularization
+        strength. ``reg_param`` must be a non-negative
         float i.e. in ``[0, inf)``.
 
         Note: A too strong regularization may compromise the guaranteed
         marginal coverage. If ``calibrator.normalize=True``, it is usually
-        recommanded to use ``reg_param < 0.01``.
+        recommanded to use ``reg_param < 1e-3``.
 
         If ``None``, no regularization is used.
 
@@ -96,25 +96,29 @@ class CustomCCP(CCPCalibrator):
 
     Attributes
     ----------
-    fit_attributes: Optional[List[str]]
+    transform_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
         ``transform``.
+
+    fit_attributes: Optional[List[str]]
+        Name of attributes set during the ``fit`` method, and required to call
+        ``predict``.
 
     n_in: int
         Number of features of ``X``
 
     n_out: int
-        Number of features of ``calibrator.predict(X, y_pred, z)``
+        Number of features of ``calibrator.transform(X, y_pred, z)``
 
     beta_up_: Tuple[NDArray, bool]
         Calibration fitting results, used to build the upper bound of the
         prediction intervals.
         beta_up_[0]: Array of shape (calibrator.n_out, )
         beta_up_[1]: Whether the optimization process converged or not
-                    (the coverage is not garantied if the optimization fail)
+                    (cover is not guaranteed if the optimisation has failed)
 
     beta_low_: Tuple[NDArray, bool]
-        Same as beta_up, but for the lower bound
+        Same as ``beta_up_``, but for the lower bound
 
     Examples
     --------
@@ -137,7 +141,7 @@ class CustomCCP(CCPCalibrator):
     ... ).fit(X_train, y_train)
     >>> y_pred, y_pi = mapie.predict(X_train)
     """
-    fit_attributes: List[str] = ["is_fitted_"]
+    transform_attributes: List[str] = ["functions_", "is_transform_fitted_"]
 
     def __init__(
         self,
@@ -149,15 +153,16 @@ class CustomCCP(CCPCalibrator):
     ) -> None:
         super().__init__(functions, bias, normalized, init_value, reg_param)
 
-    def _check_fit_parameters(
+    def _check_transform_parameters(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
     ) -> None:
         """
-        Check fit parameters. In particular, check that the ``functions``
-        attribute is valid and set the ``functions_``.
+        Check the parameters required to call ``transform``.
+        In particular, check that the ``functions``
+        attribute is valid and set the ``functions_`` argument.
 
         Parameters
         ----------
@@ -177,17 +182,17 @@ class CustomCCP(CCPCalibrator):
         self.functions_ = format_functions(self.functions, self.bias)
         compile_functions_warnings_errors(self.functions_)
 
-    def _fit_params(
+    def _transform_params(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
     ) -> CustomCCP:
         """
-        Fit function : Set all the necessary attributes to be able to transform
+        Set all the necessary attributes to be able to transform
         ``(X, y_pred, z)`` into the expected array of features.
 
-        It should set all the attributes of ``fit_attributes``
+        It should set all the attributes of ``transform_attributes``
         (i.e. ``functions_``). It should also set, once fitted, ``n_in``,
         ``n_out`` and ``init_value_``.
 
@@ -207,13 +212,13 @@ class CustomCCP(CCPCalibrator):
             By default ``None``
         """
         check_multiplier(self._multipliers, X, y_pred, z)
-        self._check_fit_parameters(X, y_pred, z)
+        self._check_transform_parameters(X, y_pred, z)
 
         for phi in self.functions_:
             if isinstance(phi, CCPCalibrator):
-                phi._fit_params(X, y_pred, z)
+                phi._transform_params(X, y_pred, z)
                 check_multiplier(phi._multipliers, X, y_pred, z)
-        self.is_fitted_ = True
+        self.is_transform_fitted_ = True
 
         result = self.transform(X, y_pred, z)
         self.n_in = len(_safe_indexing(X, 0))

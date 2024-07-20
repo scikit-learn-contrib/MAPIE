@@ -21,8 +21,8 @@ from mapie.calibrators.ccp.utils import (calibrator_optim_objective,
 
 class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
     """
-    Base abstract class for the calibrators used for the ``SplitCP`` method
-    to estimate the conformity scores.
+    Base abstract class for the calibrators used in ``SplitCPRegressor``
+    or ``SplitCPClassifier`` to estimate the conformity scores.
     It corresponds to the adaptative conformal prediction method proposed by
     Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
 
@@ -51,10 +51,9 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         By default ``None``.
 
     bias: bool
-        Add a column of ones to the features, for safety reason
-        (to garanty the marginal coverage, no matter how the other features
-        the ``CCPCalibrator``object were built).
-        If the ``CCPCalibrator``object definition covers all the dataset
+        Add a column of ones to the features,
+        (to make sure that the marginal coverage is guaranteed).
+        If the ``CCPCalibrator`` object definition covers all the dataset
         (meaning, for all calibration and test samples, the resulting
         ``calibrator.predict(X, y_pred, z)`` is never all zeros),
         this column of ones is not necessary to obtain marginal coverage.
@@ -79,18 +78,18 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
     init_value: Optional[ArrayLike]
         Optimization initialisation value.
-        If ``None``, is sampled from a normal distribution.
+        If ``None``, the initial vector is sampled from a normal distribution.
 
         By default ``None``.
 
     reg_param: Optional[float]
-        Constant that multiplies the L2 term, controlling regularization
-        strength. ``alpha`` must be a non-negative
+        Float to monitor the ridge regularization
+        strength. ``reg_param`` must be a non-negative
         float i.e. in ``[0, inf)``.
 
         Note: A too strong regularization may compromise the guaranteed
         marginal coverage. If ``calibrator.normalize=True``, it is usually
-        recommanded to use ``reg_param < 0.01``.
+        recommanded to use ``reg_param < 1e-3``.
 
         If ``None``, no regularization is used.
 
@@ -98,15 +97,19 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
     Attributes
     ----------
-    fit_attributes: Optional[List[str]]
+    transform_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
         ``transform``.
+
+    fit_attributes: Optional[List[str]]
+        Name of attributes set during the ``fit`` method, and required to call
+        ``predict``.
 
     n_in: int
         Number of features of ``X``
 
     n_out: int
-        Number of features of ``calibrator.predict(X, y_pred, z)``
+        Number of features of ``calibrator.transform(X, y_pred, z)``
 
     beta_up_: Tuple[NDArray, bool]
         Calibration fitting results, used to build the upper bound of the
@@ -116,15 +119,15 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                     (cover is not guaranteed if the optimisation has failed)
 
     beta_low_: Tuple[NDArray, bool]
-        Same as beta_up, but for the lower bound
+        Same as ``beta_up_``, but for the lower bound
 
     References
     ----------
     Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
     "Conformal Prediction With Conditional Guarantees", 2023
     """
-
-    fit_attributes: List[str] = ["functions_"]
+    transform_attributes: List[str] = ["functions_"]
+    fit_attributes: List[str] = ["beta_up_", "beta_low_"]
 
     def __init__(
         self,
@@ -143,15 +146,16 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         self._multipliers: Optional[List[Callable]] = None
 
     @abstractmethod
-    def _check_fit_parameters(
+    def _check_transform_parameters(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
     ) -> None:
         """
-        Check fit parameters. In particular, check that the ``functions``
-        attribute is valid and set the ``functions_``.
+        Check the parameters required to call ``transform``.
+        In particular, check that the ``functions``
+        attribute is valid and set the ``functions_`` argument.
 
         Parameters
         ----------
@@ -174,7 +178,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
     ) -> ArrayLike:
         """
         Set the ``init_value_`` attribute depending on ``init_value`` argument.
-        If ``init_value=None``, ``init_value_`` is set to
+        If ``init_value = None``, ``init_value_`` is set to
         ``np.random.normal(0, 1, n_out)``.
 
         Parameters
@@ -200,7 +204,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         self, *optimization_results: OptimizeResult
     ) -> None:
         """
-        _summary_
+        Check that all the ``optimization_results`` have successfully
+        converged.
 
         Parameters
         ----------
@@ -210,23 +215,23 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         for res in optimization_results:
             if not res.success:
                 warnings.warn(
-                    "WARNING: The optimization process for the upper bound "
+                    "WARNING: The optimization process "
                     f"failed with the following error: \n"
                     f"{res.message}\n"
                     "The returned prediction interval may be inaccurate."
                 )
 
-    def _fit_params(
+    def _transform_params(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
     ) -> CCPCalibrator:
         """
-        Fit function : Set all the necessary attributes to be able to transform
+        Set all the necessary attributes to be able to transform
         ``(X, y_pred, z)`` into the expected array of features.
 
-        It should set all the attributes of ``fit_attributes``
+        It should set all the attributes of ``transform_attributes``
         (i.e. ``functions_``). It should also set, once fitted, ``n_in``,
         ``n_out`` and ``init_value_``.
 
@@ -246,10 +251,11 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             By default ``None``
         """
         # Fit the calibrator
-        self._check_fit_parameters(X, y_pred, z)
+        self._check_transform_parameters(X, y_pred, z)
         # Do some checks
         check_multiplier(self._multipliers, X, y_pred, z)
         result = self.transform(X, y_pred, z)
+
         self.n_in = len(_safe_indexing(X, 0))
         self.n_out = len(_safe_indexing(result, 0))
         self.init_value_ = self._check_init_value(self.init_value, self.n_out)
@@ -265,12 +271,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         **optim_kwargs,
     ) -> CCPCalibrator:
         """
-        Fit function : Set all the necessary attributes to be able to transform
-        ``(X, y_pred, z)`` into the expected transformation.
-
-        It should set all the attributes of ``fit_attributes``.
-        It should also set, once fitted, ``n_in``, ``n_out`` and
-        ``init_value``.
+        Fit the calibrator. It should set all the ``transform_attributes``
+        and ``fit_attributes``.
 
         Parameters
         ----------
@@ -320,7 +322,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         else:
             np.random.seed(self.random_state)
 
-        self._fit_params(X_calib, y_pred_calib, z_calib)
+        self._transform_params(X_calib, y_pred_calib, z_calib)
 
         cs_features = self.transform(X_calib, y_pred_calib, z_calib)
 
@@ -405,7 +407,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         NDArray
             features
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self, self.transform_attributes)
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
         cs_features = concatenate_functions(self.functions_, params_mapping,
@@ -413,9 +415,9 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         if self.normalized:
             norm = cast(NDArray,
                         np.linalg.norm(cs_features, axis=1)).reshape(-1, 1)
+            # the rows full of zeros are replace by rows of ones
             cs_features[(abs(norm) == 0)[:, 0], :] = np.ones(
                 cs_features.shape[1])
-
             norm[abs(norm) == 0] = 1
             cs_features /= norm
 
@@ -429,9 +431,10 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         **kwargs,
     ) -> NDArray:
         """
-        Transform ``(X, y_pred, z)`` into an array of features of shape
-        ``(n_samples, n_out)`` and compute the dot product with the
-        optimized beta values, to get the conformity scores estimations.
+        Predict the conformity scores estimation by:
+         - Transforming ``(X, y_pred, z)`` into an array of features of shape
+         ``(n_samples, n_out)``
+         - computing the dot product with the optimized beta values.
 
         Parameters
         ----------
@@ -450,6 +453,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             Transformation
         """
         check_required_arguments(y_pred)
+        
+        check_is_fitted(self, self.transform_attributes + self.fit_attributes)
 
         cs_features = self.transform(X, y_pred, z)
 
@@ -466,13 +471,35 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
     ) -> NDArray:
+        """
+        Call the ``transform`` method.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Observed samples
+
+        y_pred : ArrayLike
+            Target prediction
+
+        z : ArrayLike
+            Exogenous variable
+
+        Returns
+        -------
+        NDArray
+            features
+        """
         return self.transform(X, y_pred, z)
 
     def __mul__(self, funct: Optional[Callable]) -> CCPCalibrator:
         """
         Multiply a ``CCPCalibrator`` with another function.
         This other function should return an array of shape (n_samples, 1)
-        or (n_samples, )
+        or (n_samples, ).
+
+        The output of the ``transform`` method of the resulting
+        ``CCPCalibrator`` instance will be multiplied by the ``funct`` values.
 
         Parameters
         ----------

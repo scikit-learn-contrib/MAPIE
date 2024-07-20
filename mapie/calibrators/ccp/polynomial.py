@@ -10,10 +10,11 @@ from .utils import format_functions
 
 class PolynomialCCP(CCPCalibrator):
     """
-    Calibrator used for the ``SplitCP`` method to estimate
-    the conformity scores. It corresponds to the adaptative conformal
-    prediction method proposed by Gibbs et al. (2023)
-    in "Conformal Prediction With Conditional Guarantees".
+    Calibrator used for the in ``SplitCPRegressor`` or ``SplitCPClassifier``
+    to estimate the conformity scores.
+
+    It corresponds to the adaptative conformal prediction method proposed by
+    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
 
     The goal is to learn the quantile of the conformity scores distribution,
     to built the prediction interval, not with a constant ``q`` (as it is the
@@ -33,18 +34,19 @@ class PolynomialCCP(CCPCalibrator):
         polynomial features transformer. It will create the features
         ``1``, ``variable``, ``variable``**2, ..., ``variable``**``degree``.
 
-        If ``degree``is an iterable of integers, it will create the features
+        If ``degree`` is a list of integers, it will create the features
         ``variable``**d, for all integer d in ``degree``
 
         ``variable`` may be ``X``, ``y_pred`` or ``z``, depending on the
-        ``variable``argument value.
+        ``variable`` argument value.
 
         If ``None``, it will default to ``degree=1``.
 
         Note: if ``0`` is in the considered exponents (if ``degree`` is an
         integer, or if ``0 in degree`` if it is a list), it is not
         ``variable**0`` of shape ``(n_samples, n_in)`` which is added, but only
-        one feature of ones, of shape ``(n_samples, 1)``.
+        one feature of ones, of shape ``(n_samples, 1)``. It is actually
+        equivalent to ``bias=True``.
 
         By default ``None``.
 
@@ -55,27 +57,27 @@ class PolynomialCCP(CCPCalibrator):
         By default ``"X"``
 
     bias: bool
-        Add a column of ones to the features, for safety reason
-        (to garanty the marginal coverage, no matter how the other features
-        the ``CCPCalibrator``object were built).
-        If the ``CCPCalibrator``object definition covers all the dataset
-        (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
-        is never all zeros), this column of ones is not necessary
-        to obtain marginal coverage.
+        Add a column of ones to the features,
+        (to make sure that the marginal coverage is guaranteed).
+        If the ``CCPCalibrator`` object definition covers all the dataset
+        (meaning, for all calibration and test samples, the resulting
+        ``calibrator.predict(X, y_pred, z)`` is never all zeros),
+        this column of ones is not necessary to obtain marginal coverage.
         In this case, you can set this argument to ``False``.
 
-        Note: Even if it is not always necessary to guarantee the marginal
-        coverage, it can't degrade the prediction intervals.
+        If you are not sure, use ``bias=True`` to garantee the marginal
+        coverage.
 
         By default ``False``.
 
     normalized: bool
-        Whether or not to normalized ``phi(X, y_pred, z)``. Normalization
+        Whether or not to normalized the resulting
+        ``calibrator.predict(X, y_pred, z)``. Normalization
         will result in a bounded interval prediction width, avoiding the width
         to explode to +inf or crash to zero. It is particularly intersting when
         you know that the conformity scores are bounded. It also prevent the
-        interval to have an interval of zero width for out-of-distribution or
-        new samples. On the opposite, it is not recommended if the conformity
+        interval to have a width of zero for out-of-distribution samples.
+        On the opposite, it is not recommended if the conformity
         scores can vary a lot.
 
         By default ``False``
@@ -87,13 +89,13 @@ class PolynomialCCP(CCPCalibrator):
         By default ``None``.
 
     reg_param: Optional[float]
-        Constant that multiplies the L2 term, controlling regularization
-        strength. ``alpha`` must be a non-negative
+        Float to monitor the ridge regularization
+        strength. ``reg_param`` must be a non-negative
         float i.e. in ``[0, inf)``.
 
         Note: A too strong regularization may compromise the guaranteed
         marginal coverage. If ``calibrator.normalize=True``, it is usually
-        recommanded to use ``reg_param < 0.01``.
+        recommanded to use ``reg_param < 1e-3``.
 
         If ``None``, no regularization is used.
 
@@ -101,15 +103,19 @@ class PolynomialCCP(CCPCalibrator):
 
     Attributes
     ----------
-    fit_attributes: Optional[List[str]]
+    transform_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
         ``transform``.
+
+    fit_attributes: Optional[List[str]]
+        Name of attributes set during the ``fit`` method, and required to call
+        ``predict``.
 
     n_in: int
         Number of features of ``X``
 
     n_out: int
-        Number of features of phi(``X``, ``y_pred``, ``z``)
+        Number of features of ``calibrator.transform(X, y_pred, z)``
 
     exponents: List[int]
         List of exponents of the built polynomial features
@@ -137,8 +143,6 @@ class PolynomialCCP(CCPCalibrator):
     ... ).fit(X_train, y_train)
     >>> y_pred, y_pi = mapie.predict(X_train)
     """
-    fit_attributes: List[str] = []
-
     def __init__(
         self,
         degree: Optional[Union[int, List[int]]] = None,
@@ -182,17 +186,16 @@ class PolynomialCCP(CCPCalibrator):
             By default ``None``.
 
         bias: bool
-            Add a column of ones to the features, for safety reason
-            (to garanty the marginal coverage, no matter how the other features
-            the ``CCPCalibrator``object were built).
-            If the ``CCPCalibrator``object definition covers all the dataset
-            (meaning, for all calibration and test samples,
-            ``phi(X, y_pred, z)`` is never all zeros), this column of ones
-            is not necessary to obtain marginal coverage.
+            Add a column of ones to the features,
+            (to make sure that the marginal coverage is guaranteed).
+            If the ``CCPCalibrator`` object definition covers all the dataset
+            (meaning, for all calibration and test samples, the resulting
+            ``calibrator.predict(X, y_pred, z)`` is never all zeros),
+            this column of ones is not necessary to obtain marginal coverage.
             In this case, you can set this argument to ``False``.
 
-            Note: Even if it is not always necessary to guarantee the marginal
-            coverage, it can't degrade the prediction intervals.
+            If you are not sure, use ``bias=True`` to garantee the marginal
+            coverage.
 
         Returns
         -------
@@ -235,19 +238,16 @@ class PolynomialCCP(CCPCalibrator):
         else:
             raise ValueError("variable must be 'X', 'y_pred' or 'z'")
 
-    def _check_fit_parameters(
+    def _check_transform_parameters(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
     ) -> None:
         """
-        Fit function : Set all the necessary attributes to be able to
-        transform ``(X, y_pred, z)`` into the expected features.
-
-        It should set all the attributes of ``fit_attributes``.
-        It should also set, once fitted, ``n_in``, ``n_out`` and
-        ``init_value``.
+        Check the parameters required to call ``transform``.
+        In particular, check that the ``functions``
+        attribute is valid and set the ``functions_`` argument.
 
         Parameters
         ----------

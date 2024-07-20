@@ -7,13 +7,12 @@ from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
+from sklearn.model_selection import (BaseCrossValidator,
                                      PredefinedSplit, ShuffleSplit)
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators import BaseCalibrator
-from mapie.calibrators.ccp import CCPCalibrator
 from mapie.conformity_scores import ConformityScore
 from mapie.utils import _sample_non_null_weight, fit_estimator
 
@@ -24,14 +23,18 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
 
     Parameters
     ----------
-    predictor: Union[RegressorMixin, ClassifierMixin]
-        Any regressor or classifier from scikit-learn API.
+    predictor: Optional[BaseEstimator]
+        Any estimator from scikit-learn API.
         (i.e. with ``fit`` and ``predict`` methods).
 
-        By default ``"None"``.
+        If ``None``, will default to a value defined by the subclass
 
-    calibrator: Optional[Calibrator]
-        A ``Calibrator`` instance used to estimate the conformity scores.
+        By default ``None``.
+
+    calibrator: Optional[BaseCalibrator]
+        A ``BaseCalibrator`` instance used to estimate the conformity scores.
+
+        If ``None``, defaults to a ``GaussianCCP`` calibrator.
 
         By default ``None``.
 
@@ -55,7 +58,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         By default ``None``.
 
     conformity_score: Optional[ConformityScore]
-        ConformityScore instance.
+        ``ConformityScore`` instance.
         It defines the link between the observed values, the predicted ones
         and the conformity scores.
 
@@ -90,19 +93,15 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
     fit_attributes = ["predictor_"]
     calib_attributes = ["calibrator_"]
 
-    cv: Optional[
-            Union[str, BaseCrossValidator, BaseShuffleSplit]
-        ]
+    cv: Optional[Union[int, str, ShuffleSplit, PredefinedSplit]]
     alpha: Optional[float]
 
     @abstractmethod
     def __init__(
         self,
         predictor: Optional[BaseEstimator] = None,
-        calibrator: Optional[CCPCalibrator] = None,
-        cv: Optional[
-            Union[str, BaseCrossValidator, BaseShuffleSplit]
-        ] = None,
+        calibrator: Optional[BaseCalibrator] = None,
+        cv: Optional[Union[int, str, ShuffleSplit, PredefinedSplit]] = None,
         alpha: Optional[float] = None,
         conformity_score: Optional[ConformityScore] = None,
         random_state: Optional[int] = None,
@@ -128,14 +127,16 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
 
     def _check_cv(
         self,
-        cv: Optional[Union[str, BaseCrossValidator, BaseShuffleSplit]] = None,
+        cv: Optional[Union[int, str, ShuffleSplit, PredefinedSplit]] = None,
         test_size: Optional[Union[int, float]] = None,
-    ) -> Union[str, BaseCrossValidator, BaseShuffleSplit]:
+    ) -> Union[str, ShuffleSplit, PredefinedSplit]:
         """
         Check if ``cv`` is ``None``, ``"prefit"``, ``"split"``,
-        or ``BaseShuffleSplit``/``BaseCrossValidator`` with ``n_splits``=1.
-        Return a ``ShuffleSplit`` instance ``n_splits``=1
+        or ``ShuffleSplit``/``PredefinedSplit`` with ``n_splits=1``.
+        
+        Return a ``ShuffleSplit`` instance with ``n_splits=1``
         if ``None`` or ``"split"``.
+
         Else raise error.
 
         Parameters
@@ -172,13 +173,13 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         else:
             raise ValueError(
                 "Invalid cv argument.  Allowed values are None, 'prefit', "
-                "'split' or a ShuffleSplit/PredefinedSplit object with "
-                "``n_splits=1``."
+                "'split' or a `ShuffleSplit/PredefinedSplit` object with "
+                "`n_splits=1`."
             )
 
     def _check_alpha(self, alpha: Optional[float] = None) -> None:
         """
-        Check alpha
+        Check the ``alpha`` parameter.
 
         Parameters
         ----------
@@ -211,7 +212,10 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         kwargs: Optional[Dict],
     ) -> Dict:
         """
-        Return a dictionnary with ``calibrator_.fit`` arguments
+        Return a dictionnary of the ``method`` arguments.
+
+        The arguments of ``method`` must be attributes of ``self``, in
+        ``local_vars``, or in ``kwargs``.
 
         Parameters
         ----------
@@ -270,7 +274,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             Training labels.
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
+            Sample weights used in the predictor fitting.
             If ``None``, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
@@ -280,7 +284,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             By default ``None``.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
-            Group labels for the samples used while splitting the dataset into
+            Group labels for the samples, used while splitting the dataset into
             train/test set.
 
             By default ``None``.
@@ -321,8 +325,13 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         **calib_kwargs,
     ) -> SplitCP:
         """
-        Fit the calibrator with (``X``, ``y`` and ``z``)
-        and the new value ``alpha`` value, if not ``None``
+        Fit the calibrator. Arguments of the calibrator's ``fit`` method
+        that are not in the following list:
+        ``X, y, sample_weight, groups, y_pred_calib, conformity_scores_calib,
+        X_train, y_train, z_train, sample_weight_train, train_index,
+        X_calib, y_calib, z_calib, sample_weight_calib, calib_index``
+        nor attributes of the ``SplitCP`` instance,
+        must be given by the user in ``**calib_kwargs``.
 
         Parameters
         ----------
@@ -347,7 +356,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         calib_kwargs: dict
             Additional fit parameters for the calibrator, used as kwargs.
             See the calibrator ``.fit`` method documentation to have more
-            information about the available arguments.
+            information about the required arguments.
 
         Returns
         -------
@@ -385,7 +394,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         conformity_scores_calib = self.conformity_score_.get_conformity_scores(
             X_calib, y_calib, y_pred_calib
         )
-
+        # Get the calibrator arguments
         calib_arguments = self._get_method_arguments(
             calibrator.fit,
             dict(zip([
@@ -423,7 +432,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
     ) -> SplitCP:
         """
         Fit the predictor (if ``cv`` is not ``"prefit"``)
-        and fit the calibration.
+        and fit the calibrator.
 
         Parameters
         ----------
@@ -433,27 +442,8 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         y: ArrayLike of shape (n_samples,)
             Training labels.
 
-        z: Optional[ArrayLike] of shape (n_calib_samples, n_exog_features)
-            Exogenous variables
-
-            By default ``None``
-
-        alpha: Optional[float]
-            Between ``0.0`` and ``1.0``, represents the risk level of the
-            confidence interval.
-            Lower ``alpha`` produce larger (more conservative) prediction
-            intervals.
-            ``alpha`` is the complement of the target coverage level.
-
-            If ``None``, the calibration will be done using the ``alpha``value
-            set in the initialisation. Else, the new value will overwrite the
-            old one.
-
-            By default ``None``
-
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models and the
-            conformalisation process.
+            Sample weights used in the predictor fitting.
             If ``None``, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
@@ -474,7 +464,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         calib_kwargs: dict
             Additional fit parameters for the calibrator, used as kwargs.
             See the calibrator ``.fit`` method documentation to have more
-            information about the available arguments.
+            information about the required arguments.
 
         Returns
         -------
@@ -494,7 +484,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         **kwargs,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
-        Predict target on new samples with confidence intervals.
+        Predict target on new samples with prediction intervals.
 
         Parameters
         ----------
@@ -506,7 +496,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         Union[NDArray, Tuple[NDArray, NDArray]]
             - Predictions : NDArray of shape (n_samples,)
             if ``alpha`` is ``None``.
-            - Predictions and confidence intervals
+            - Prediction intervals
             if ``alpha`` is not ``None``.
         """
         check_is_fitted(self, self.fit_attributes)
@@ -554,7 +544,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         **predict_kwargs,
     ) -> NDArray:
         """
-        Compute the bounds, using the fitted ``_calibrator``.
+        Compute the bounds, using the fitted ``calibrator_``.
 
         Parameters
         ----------

@@ -4,7 +4,7 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 from sklearn.base import RegressorMixin
-from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
+from sklearn.model_selection import PredefinedSplit, ShuffleSplit
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators.utils import check_calibrator
@@ -105,9 +105,7 @@ class SplitCPRegressor(SplitCP):
         self,
         predictor: Optional[RegressorMixin] = None,
         calibrator: Optional[BaseCalibrator] = None,
-        cv: Optional[
-            Union[str, BaseCrossValidator, BaseShuffleSplit]
-        ] = None,
+        cv: Optional[Union[int, str, ShuffleSplit, PredefinedSplit]] = None,
         alpha: Optional[float] = None,
         conformity_score: Optional[ConformityScore] = None,
         random_state: Optional[int] = None,
@@ -171,7 +169,7 @@ class SplitCPRegressor(SplitCP):
         **kwargs,
     ) -> NDArray:
         """
-        Compute the bounds, using the fitted ``_calibrator``.
+        Compute the bounds, using the fitted ``calibrator_``.
 
         Parameters
         ----------

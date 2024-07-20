@@ -36,17 +36,7 @@ def format_functions(
         If ``None``, return an empty list.
 
     bias: bool
-        Add a column of ones to the features, for safety reason
-        (to garanty the marginal coverage, no matter how the other features
-        the ``CCPCalibrator``object were built).
-        If the ``CCPCalibrator``object definition covers all the dataset
-        (meaning, for all calibration and test samples, the resulting
-        ``calibrator.predict(X, y_pred, z)`` is never all zeros),
-        this column of ones is not necessary to obtain marginal coverage.
-        In this case, you can set this argument to ``False``.
-
-        If you are not sure, use ``bias=True`` to garantee the marginal
-        coverage.
+        Whether or not to add a column of ones to the features.
 
     Returns
     -------
@@ -161,7 +151,7 @@ def sample_points(
 ) -> NDArray:
     """
     Generate the ``points_`` attribute from the ``points`` and ``X`` arguments.
-    Only the samples which have weights (value for each ``multipliers``
+    Only the samples which have weights (the value for each ``multipliers``
     function) different from ``0`` can be sampled.
 
     Parameters
@@ -174,10 +164,10 @@ def sample_points(
         gaussian distances. Should be an array of shape (n_points, n_in).
 
         If integer, the points will be sampled randomly from the ``X``
-        set, where ``X`` is the data give to the
+        dataset, where ``X`` is the data give to the
         ``GaussianCCP.fit`` method, which usually correspond to
-        the ``X`` argument of the ``MapieCCPRegressor.calibrate`` method
-        (unless you call ``GaussianCCP.fit(X)`` yourself).
+        the ``X`` argument of the ``fit`` or ``fit_calibrator`` method
+        of a ``SplitCP`` instance.
 
         You can pass a Tuple[ArrayLike, ArrayLike], to have a different
         ``sigma`` value for each point. The two elements of the
@@ -332,12 +322,12 @@ def _init_sigmas(
     """
     If ``sigma`` is not ``None``, take a sigma value, and set ``sigmas_``
     to a standard deviation 2D array of shape (n_points, n_sigma),
-    n_sigma being 1 or ``X_n_features``.
+    n_sigma being 1 or ``n_in``.
 
     Parameters
     ----------
     sigma : Union[float, ArrayLike]
-        standard deviation, as float or 1D array of length n_in
+        standard deviation, as float or 1D array of length ``n_in``
         (number of dimensins of the dataset)
 
     n_points : int
@@ -393,7 +383,8 @@ def concatenate_functions(
 ) -> NDArray:
     """
     Call the function of ``functions``, with the
-    correct arguments, and concatenate the results
+    correct arguments, and concatenate the results, multiplied by each
+    ``multipliers`` functions values.
 
     Parameters
     ----------
@@ -533,6 +524,19 @@ def calibrator_optim_objective(
 
         By default ``None``.
 
+    reg_param: Optional[float]
+        Float to monitor the ridge regularization
+        strength. ``reg_param`` must be a non-negative
+        float i.e. in ``[0, inf)``.
+
+        Note: A too strong regularization may compromise the guaranteed
+        marginal coverage. If ``calibrator.normalize=True``, it is usually
+        recommanded to use ``reg_param < 1e-3``.
+
+        If ``None``, no regularization is used.
+
+        By default ``None``.
+
     Returns
     -------
     float
@@ -550,11 +554,13 @@ def calibrator_optim_objective(
 
 def check_required_arguments(*args) -> None:
     """
-    Calibrators based on ``BaseCalibrator`` class, can have custom required
-    arguments in the ``fit`` and ``predict`` methods. They need to be defined
-    with default value, to match de ``BaseCalibrator`` class signature.
-    However, if the argument value is None, we raise an error (as the argument
-    is actually required).
+    Make sure that the ``args`` arguments are not ``None``.
+    
+    It is used in calibrators based on ``BaseCalibrator``.
+    Their ``fit`` and ``predict`` methods must have their custom
+    arguments as optional (even the required ones), to match the base class
+    signature. So we have to check that the required arguments
+    are not ``None``.
 
     Raises
     ------

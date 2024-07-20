@@ -14,10 +14,11 @@ from .utils import compute_sigma, format_functions, sample_points
 
 class GaussianCCP(CCPCalibrator):
     """
-    Calibrator used for the ``SplitCP`` method to estimate the
-    conformity scores. It corresponds to the adaptative conformal
-    prediction method proposed by Gibbs et al. (2023)
-    in "Conformal Prediction With Conditional Guarantees".
+    Calibrator used for the in ``SplitCPRegressor`` or ``SplitCPClassifier``
+    to estimate the conformity scores.
+
+    It corresponds to the adaptative conformal prediction method proposed by
+    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
 
     The goal is to learn the quantile of the conformity scores distribution,
     to built the prediction interval, not with a constant ``q`` (as it is the
@@ -25,8 +26,8 @@ class GaussianCCP(CCPCalibrator):
     as it depends on ``X``.
 
     This class builds a ``CCPCalibrator`` object with gaussian kernel features,
-    by sampling some points (or set by the user), and computing the gaussian
-    distance between ``X`` and the point.
+    which computes the gaussian distance between ``X`` and some points,
+    randomly sampled in the dataset or set by the user.
 
     See the examples and the documentation to build a ``CCPCalibrator``
     adaptated to your dataset and constraints.
@@ -38,10 +39,10 @@ class GaussianCCP(CCPCalibrator):
         gaussian distances. Should be an array of shape (n_points, n_in).
 
         If integer, the points will be sampled randomly from the ``X``
-        set, where ``X`` is the data give to the
+        dataset, where ``X`` is the data give to the
         ``GaussianCCP.fit`` method, which usually correspond to
-        the ``X`` argument of the ``MapieCCPRegressor.calibrate`` method
-        (unless you call ``GaussianCCP.fit(X)`` yourself).
+        the ``X`` argument of the ``fit`` or ``fit_calibrator`` method
+        of a ``SplitCP`` instance.
 
         You can pass a Tuple[ArrayLike, ArrayLike], to have a different
         ``sigma`` value for each point. The two elements of the
@@ -51,9 +52,7 @@ class GaussianCCP(CCPCalibrator):
         In this case, the ``sigma``, ``random_sigma`` and ``X`` argument are
         ignored.
 
-        If ``None``, default to ``20``.
-
-        By default, ``None``
+        By default, ``20``
 
     sigma : Optional[Union[float, ArrayLike]]
         Standard deviation value used to compute the guassian distances,
@@ -68,10 +67,12 @@ class GaussianCCP(CCPCalibrator):
         argument.
 
         If ``None``, ``sigma`` will default to a float equal to
-        ``np.std(X)/(n**0.5)``, where ``X`` is the data give to the
-        ``GaussianCCP.fit`` method, which correspond to the ``X``
-        argument of the ``MapieCCPRegressor.calibrate`` method
-        (unless you call ``GaussianCCP.fit(X)`` yourself).
+        ``np.std(X)/(n**0.5)*d``
+         - where ``X`` is the calibration data, passed to ``GaussianCCP.fit``
+         method, which usually correspond to the ``X`` argument of the ``fit``
+         or ``fit_calibrator`` method of a ``SplitCP`` instance.
+         - ``n`` is the number of points used as gaussian centers.
+         - ``d`` is the number of dimensions of ``X`` (i.e. ``n_in``).
 
         By default, ``None``
 
@@ -79,39 +80,38 @@ class GaussianCCP(CCPCalibrator):
         Whether to apply to the standard deviation values, a random multiplier,
         different for each point, equal to:
 
-        2**np.random.normal(0, 1*2**(-2+np.log10(len(``points``))))
+        ``2**np.random.normal(0, 1*2**(-2+np.log10(len(points))))``
 
         Exemple:
-         - For 10 points, the sigma value will, in general,
-        be multiplied by a value between 0.7 and 1.4
-         - For 100 points, the sigma value will, in general,
-        be multiplied by a value between 0.5 and 2
+         - For 10 points, the sigma value will be, in general,
+         multiplied by a value between 0.7 and 1.4
+         - For 100 points, the sigma value will be, in general,
+         multiplied by a value between 0.5 and 2
 
         Note: This is a default suggestion of randomization,
-        which allow to have in the same time wide and narrow gaussians
-        (with a bigger range of multipliers for huge amount of points).
+        which allow to have in the same time wide and narrow gaussians.
 
         You can use fully custom sigma values, buy passing to the
         ``points`` argument, a different sigma value for each point.
 
-        If ``None``, default to ``False``.
-
-        By default, ``20``
+        By default, ``False``
 
     bias: bool
-        Add a column of ones to the features, for safety reason
-        (to garanty the marginal coverage, no matter how the other features
-        the ``CCPCalibrator``object were built).
-        If the ``CCPCalibrator``object definition covers all the dataset
-        (meaning, for all calibration and test samples, ``phi(X, y_pred, z)``
-        is never all zeros), this column of ones is not necessary
-        to obtain marginal coverage.
+        Add a column of ones to the features,
+        (to make sure that the marginal coverage is guaranteed).
+        If the ``CCPCalibrator`` object definition covers all the dataset
+        (meaning, for all calibration and test samples, the resulting
+        ``calibrator.predict(X, y_pred, z)`` is never all zeros),
+        this column of ones is not necessary to obtain marginal coverage.
         In this case, you can set this argument to ``False``.
+
+        If you are not sure, use ``bias=True`` to garantee the marginal
+        coverage.
 
         Note: In this case, with ``GaussianCCP``, if ``normalized`` is
         ``True`` (it is, by default), the ``phi(X, y_pred, z)`` will never
         be all zeros, so this ``bias`` is not required
-        sto have coverage guarantee.
+        to have a guaranteed coverage.
 
         By default ``False``.
 
@@ -125,22 +125,28 @@ class GaussianCCP(CCPCalibrator):
         On the opposite, it is not recommended if the conformity
         scores can vary a lot.
 
-        By default ``False``
+        Note: To make sure that for too small ``sigma`` values,
+        or for out-of-distribution samples, the interval width doesn't crash
+        to zero, we set by default ``normalized = True``. By doing so, even
+        the samples which were in any gaussian tild, will still be linked to
+        the closest one.
+
+        By default ``True``
 
     init_value: Optional[ArrayLike]
         Optimization initialisation value.
-        If ``None``, is sampled from a normal distribution.
+        If ``None``, the initial vector is sampled from a normal distribution.
 
         By default ``None``.
 
     reg_param: Optional[float]
-        Constant that multiplies the L2 term, controlling regularization
-        strength. ``alpha`` must be a non-negative
+        Float to monitor the ridge regularization
+        strength. ``reg_param`` must be a non-negative
         float i.e. in ``[0, inf)``.
 
         Note: A too strong regularization may compromise the guaranteed
         marginal coverage. If ``calibrator.normalize=True``, it is usually
-        recommanded to use ``reg_param < 0.01``.
+        recommanded to use ``reg_param < 1e-3``.
 
         If ``None``, no regularization is used.
 
@@ -148,15 +154,19 @@ class GaussianCCP(CCPCalibrator):
 
     Attributes
     ----------
-    fit_attributes: Optional[List[str]]
+    transform_attributes: Optional[List[str]]
         Name of attributes set during the ``fit`` method, and required to call
         ``transform``.
+
+    fit_attributes: Optional[List[str]]
+        Name of attributes set during the ``fit`` method, and required to call
+        ``predict``.
 
     n_in: int
         Number of features of ``X``
 
     n_out: int
-        Number of features of phi(``X``, ``y_pred``, ``z``)
+        Number of features of ``calibrator.transform(X, y_pred, z)``
 
     points_: NDArray
         Array of shape (n_points, n_in), corresponding to the points used to
@@ -188,14 +198,14 @@ class GaussianCCP(CCPCalibrator):
     ... ).fit(X_train, y_train)
     >>> y_pred, y_pi = mapie.predict(X_train)
     """
-    fit_attributes: List[str] = ["points_", "sigmas_", "functions_"]
+    transform_attributes: List[str] = ["points_", "sigmas_", "functions_"]
 
     def __init__(
         self,
         points: Optional[Union[int, ArrayLike,
                                Tuple[ArrayLike, ArrayLike]]] = 20,
         sigma: Optional[Union[float, ArrayLike]] = None,
-        random_sigma: Optional[bool] = None,
+        random_sigma: bool = False,
         bias: bool = False,
         normalized: bool = True,
         init_value: Optional[ArrayLike] = None,
@@ -210,20 +220,6 @@ class GaussianCCP(CCPCalibrator):
         self.reg_param = reg_param
 
         self._multipliers: Optional[List[Callable]] = None
-
-    def _check_random_sigma(self) -> bool:
-        """
-        Check ``random_sigma``
-
-        Returns
-        -------
-        bool
-            checked ``random_sigma``
-        """
-        if self.random_sigma is None:
-            return False
-        else:
-            return self.random_sigma
 
     def _check_points_sigma(
         self, points: ArrayLike, sigmas: ArrayLike
@@ -242,7 +238,8 @@ class GaussianCCP(CCPCalibrator):
         Raises
         ------
         ValueError
-            If ``sigmas``is not of shape (n_points, 1) or (n_points, n_in)
+            - If ``points`` and ``sigmas`` don't have the same number of rows
+            - If ``sigmas``is not of shape (n_points, 1) or (n_points, n_in)
         """
         if _num_samples(points) != _num_samples(sigmas):
             raise ValueError("There should have as many points as "
@@ -256,15 +253,18 @@ class GaussianCCP(CCPCalibrator):
                              f"Got sigma of shape: ({_num_samples(sigmas)}, "
                              f"{len(_safe_indexing(points, 0))}).")
 
-    def _check_fit_parameters(
+    def _check_transform_parameters(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
     ) -> None:
         """
-        Check fit parameters. In particular, check that the ``functions``
-        attribute is valid and set the ``functions_``.
+        Check the parameters required to call ``transform``.
+        In particular, set the ``points_`` and ``sigmas_`` attributes, based
+        on the ``points``, ``sigma`` and ``random_sigma`` arguments.
+        Then, the ``functions_`` attributes is set, with functions to compute
+        all the gaussian distances.
 
         Parameters
         ----------
