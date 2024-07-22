@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import inspect
-import warnings
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -68,7 +67,7 @@ def compile_functions_warnings_errors(
     functions: List[Callable]
 ) -> None:
     """
-    Raise warnings and errors if the elements in ``functions`` have
+    Raise errors if the elements in ``functions`` have
     unexpected arguments.
 
     Raises
@@ -76,19 +75,12 @@ def compile_functions_warnings_errors(
     ValueError
         If functions contain unknown required arguments.
 
-    Warns
-    -----
-    UserWarning
-        If functions contain unknown optional arguments.
-
     Notes
     -----
     This method ensures that the provided functions only use recognized
     arguments ('X', 'y_pred', 'z'). Unknown optional arguments are allowed,
     but will always use their default values.
     """
-
-    warn_ind: Dict[str, List[int]] = {}
     error_ind: Dict[str, List[int]] = {}
     for i, funct in enumerate(functions):
         assert callable(funct)
@@ -97,34 +89,13 @@ def compile_functions_warnings_errors(
         for param, arg in params.items():
             if (
                 param not in ["X", "y_pred", "z"]
-                and param != "disable_marginal_guarantee"
+                and arg.default is inspect.Parameter.empty
             ):
-                if arg.default is inspect.Parameter.empty:
-                    if param in error_ind:
-                        error_ind[param].append(i)
-                    else:
-                        error_ind[param] = [i]
+                if param in error_ind:
+                    error_ind[param].append(i)
                 else:
-                    if param in warn_ind:
-                        warn_ind[param].append(i)
-                    else:
-                        warn_ind[param] = [i]
+                    error_ind[param] = [i]
 
-    if len(warn_ind) > 0:
-        warn_msg = ""
-        for param, inds in warn_ind.items():
-            warn_msg += (
-                f"The functions at index ({', '.join(map(str, inds))}) "
-                + "of the 'functions' argument, has an unknown optional "
-                + f"argument '{param}'.\n"
-            )
-        warnings.warn(
-            "WARNING: Unknown optional arguments.\n"
-            + warn_msg +
-            "The only recognized arguments are : 'X', 'y_pred' and 'z'. "
-            "The other optional arguments will act as parameters, "
-            "as it is always their default value which will be used."
-        )
     if len(error_ind) > 0:
         error_msg = ""
         for param, inds in error_ind.items():
