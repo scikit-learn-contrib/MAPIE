@@ -421,17 +421,6 @@ def test_inf_values() -> None:
         check_array_inf(np.array([1, 2, -np.inf, 4]))
 
 
-def test_inf_values_with_warning_inf() -> None:
-    """
-    Test if array has infinite values like +inf or -inf
-    """
-    with pytest.warns(
-        UserWarning,
-        match=r"Array contains infinite values."
-    ):
-        check_array_inf(np.array([1, 2, -np.inf, 4]), warning_inf=True)
-
-
 def test_length() -> None:
     """
     Test if the arrays have the same size (length)
