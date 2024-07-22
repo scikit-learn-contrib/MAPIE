@@ -202,8 +202,7 @@ class GaussianCCP(CCPCalibrator):
 
     def __init__(
         self,
-        points: Optional[Union[int, ArrayLike,
-                               Tuple[ArrayLike, ArrayLike]]] = 20,
+        points: Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]] = 20,
         sigma: Optional[Union[float, ArrayLike]] = None,
         random_sigma: bool = False,
         bias: bool = False,
@@ -281,7 +280,6 @@ class GaussianCCP(CCPCalibrator):
 
             By default ``None``
         """
-        self.random_sigma = self._check_random_sigma()
         self.points_ = sample_points(X, self.points, self._multipliers)
         self.sigmas_ = compute_sigma(X, self.points, self.points_,
                                      self.sigma, self.random_sigma)

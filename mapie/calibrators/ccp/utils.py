@@ -146,7 +146,7 @@ def compile_functions_warnings_errors(
 
 def sample_points(
     X: ArrayLike,
-    points: Optional[Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]]],
+    points: Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]],
     multipliers: Optional[List[Callable]] = None,
 ) -> NDArray:
     """
@@ -159,7 +159,7 @@ def sample_points(
     X : ArrayLike
         Samples
 
-    points : Optional[Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]]]
+    points : Union[int, ArrayLike, Tuple[ArrayLike, ArrayLike]]
         If Array: List of data points, used as centers to compute
         gaussian distances. Should be an array of shape (n_points, n_in).
 
@@ -193,8 +193,6 @@ def sample_points(
     ValueError
         If ``points`` is an invalid argument.
     """
-    if points is None:
-        points = 20
     if isinstance(points, int):
         if multipliers is None:
             not_null_index = list(range(_num_samples(X)))
@@ -555,7 +553,7 @@ def calibrator_optim_objective(
 def check_required_arguments(*args) -> None:
     """
     Make sure that the ``args`` arguments are not ``None``.
-    
+
     It is used in calibrators based on ``BaseCalibrator``.
     Their ``fit`` and ``predict`` methods must have their custom
     arguments as optional (even the required ones), to match the base class

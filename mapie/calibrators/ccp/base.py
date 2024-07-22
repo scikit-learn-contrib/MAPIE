@@ -453,7 +453,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             Transformation
         """
         check_required_arguments(y_pred)
-        
+
         check_is_fitted(self, self.transform_attributes + self.fit_attributes)
 
         cs_features = self.transform(X, y_pred, z)

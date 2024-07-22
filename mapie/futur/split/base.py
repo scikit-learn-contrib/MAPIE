@@ -133,7 +133,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         """
         Check if ``cv`` is ``None``, ``"prefit"``, ``"split"``,
         or ``ShuffleSplit``/``PredefinedSplit`` with ``n_splits=1``.
-        
+
         Return a ``ShuffleSplit`` instance with ``n_splits=1``
         if ``None`` or ``"split"``.
 
@@ -327,7 +327,8 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         """
         Fit the calibrator. Arguments of the calibrator's ``fit`` method
         that are not in the following list:
-        ``X, y, sample_weight, groups, y_pred_calib, conformity_scores_calib,
+        ``X, y, z, sample_weight, groups, y_pred_calib,
+        conformity_scores_calib,
         X_train, y_train, z_train, sample_weight_train, train_index,
         X_calib, y_calib, z_calib, sample_weight_calib, calib_index``
         nor attributes of the ``SplitCP`` instance,
@@ -357,6 +358,9 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             Additional fit parameters for the calibrator, used as kwargs.
             See the calibrator ``.fit`` method documentation to have more
             information about the required arguments.
+
+            Note: if the calibrator need exogenous variables (``z_train`` or
+            ``z_calib``), you should pass ``z`` in ``calib_kwargs``
 
         Returns
         -------
@@ -395,28 +399,36 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             X_calib, y_calib, y_pred_calib
         )
         # Get the calibrator arguments
+        dict_arguments = dict(zip([
+            "X", "y", "z", "sample_weight", "groups",
+            "y_pred_calib", "conformity_scores_calib",
+            "X_train", "y_train", "z_train",
+            "sample_weight_train", "train_index",
+            "X_calib", "y_calib", "z_calib",
+            "sample_weight_calib", "calib_index",
+            ],
+            [
+            X, y, z, sample_weight, groups,
+            y_pred_calib, conformity_scores_calib,
+            X_train, y_train, z_train, sample_weight_train, train_index,
+            X_calib, y_calib, z_calib, sample_weight_calib, calib_index,
+        ]))
         calib_arguments = self._get_method_arguments(
             calibrator.fit,
-            dict(zip([
-                "X", "y", "sample_weight", "groups",
-                "y_pred_calib", "conformity_scores_calib",
-                "X_train", "y_train", "z_train",
-                "sample_weight_train", "train_index",
-                "X_calib", "y_calib", "z_calib",
-                "sample_weight_calib", "calib_index",
-             ],
-             [
-                X, y, sample_weight, groups,
-                y_pred_calib, conformity_scores_calib,
-                X_train, y_train, z_train, sample_weight_train, train_index,
-                X_calib, y_calib, z_calib, sample_weight_calib, calib_index,
-            ])),
+            dict_arguments,
             calib_kwargs
         )
 
         self.calibrator_ = calibrator.fit(
             **calib_arguments,
-            **(calib_kwargs if calib_kwargs is not None else {})
+            **(
+                {
+                    key: calib_kwargs[key] for key in calib_kwargs
+                    if key not in dict_arguments
+                }
+                if calib_kwargs is not None
+                else {}
+            )
         )
 
         return self
@@ -466,6 +478,9 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             See the calibrator ``.fit`` method documentation to have more
             information about the required arguments.
 
+            Note: if the calibrator need exogenous variables (``z_train`` or
+            ``z_calib``), you should pass ``z`` in ``calib_kwargs``
+
         Returns
         -------
         SplitCP
@@ -490,6 +505,11 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         ----------
         X: ArrayLike of shape (n_samples, n_features)
             Test data.
+
+        kwargs: dict
+            Additional predict parameters for the calibrator, used as kwargs.
+            See the calibrator ``.predict`` method documentation to have more
+            information about the required arguments.
 
         Returns
         -------

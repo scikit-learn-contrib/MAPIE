@@ -82,7 +82,7 @@ def test_fit_calibrator(z: Any) -> None:
 def test_fit(z: Any) -> None:
     """Test that fit raises no errors."""
     mapie_reg = SplitCPRegressor(alpha=0.1)
-    mapie_reg.fit(X_toy, y_toy, z=z)
+    mapie_reg.fit(X_toy, y_toy, calib_kwargs={"z": z})
 
 
 @pytest.mark.parametrize("z", [None, z_toy])
@@ -98,7 +98,7 @@ def test_fit_predictor_fit_calibrator_predict(z: Any) -> None:
 def test_fit_predict(z: Any) -> None:
     """Test that fit-predict raises no errors."""
     mapie_reg = SplitCPRegressor(alpha=0.1)
-    mapie_reg.fit(X_toy, y_toy, z=z)
+    mapie_reg.fit(X_toy, y_toy, calib_kwargs={"z": z})
     mapie_reg.predict(X_toy, z=z)
 
 
@@ -107,7 +107,7 @@ def test_fit_predict_reg(z: Any) -> None:
     """Test that fit-predict raises no errors."""
     mapie_reg = SplitCPRegressor(calibrator=GaussianCCP(reg_param=0.1),
                                  alpha=0.1)
-    mapie_reg.fit(X_toy, y_toy, z=z)
+    mapie_reg.fit(X_toy, y_toy, calib_kwargs={"z": z})
     mapie_reg.predict(X_toy, z=z)
 
 
@@ -311,7 +311,7 @@ def test_fit_calibrate_combined_equivalence(
         predictor=predictor_2, calibrator=calibrator,
         cv=cv, alpha=alpha, random_state=random_state
     )
-    mapie_1.fit(X, y, z=z)
+    mapie_1.fit(X, y, calib_kwargs={"z": z})
     mapie_2.fit_predictor(X, y)
     mapie_2.fit_calibrator(X, y, z=z)
     y_pred_1, y_pis_1 = mapie_1.predict(X, z=z)
@@ -341,7 +341,7 @@ def test_predict_output_shape_alpha(
         predictor=predictor, calibrator=calibrator,
         cv=cv, alpha=0.1, random_state=random_state
     )
-    mapie_reg.fit(X, y, z=z)
+    mapie_reg.fit(X, y, calib_kwargs={"z": z})
     y_pred, y_pis = mapie_reg.predict(X, z=z)
     assert y_pred.shape == (X.shape[0],)
     assert y_pis.shape == (X.shape[0], 2, 1)
@@ -367,7 +367,7 @@ def test_predict_output_shape_no_alpha(
         predictor=predictor, calibrator=calibrator, cv=cv,
         alpha=None, random_state=random_state
     )
-    mapie_reg.fit(X, y, z=z)
+    mapie_reg.fit(X, y, calib_kwargs={"z": z})
     y_pred = mapie_reg.predict(X, z=z)
     assert np.array(y_pred).shape == (X.shape[0],)
 
@@ -399,7 +399,7 @@ def test_same_results_prefit_split(
     z_calib = z[val_index]
 
     calibrator = cast(CCPCalibrator, clone(template))
-    calibrator._fit_params(X, y, z)
+    calibrator._transform_params(X, y, z)
     calibrator.init_value = calibrator.init_value_
     if isinstance(calibrator, GaussianCCP):
         calibrator.points = (calibrator.points_, calibrator.sigmas_)
@@ -415,8 +415,8 @@ def test_same_results_prefit_split(
         random_state=random_state,
     )
 
-    mapie_1.fit(X, y, z=z)
-    mapie_2.fit(X_calib, y_calib, z=z_calib)
+    mapie_1.fit(X, y, calib_kwargs={"z": z})
+    mapie_2.fit(X_calib, y_calib, calib_kwargs={"z": z_calib})
 
     y_pred_1, y_pis_1 = mapie_1.predict(X, z=z)
     y_pred_2, y_pis_2 = mapie_2.predict(X, z=z)
@@ -445,16 +445,16 @@ def test_results_for_ordered_alpha(
     if cv == "prefit":
         predictor.fit(X, y)
 
-    calibrator._fit_params(X)
+    calibrator._transform_params(X)
 
     mapie_reg_1 = SplitCPRegressor(predictor, clone(calibrator), cv=cv,
                                    alpha=0.05, random_state=random_state)
     mapie_reg_2 = SplitCPRegressor(predictor, clone(calibrator), cv=cv,
                                    alpha=0.1, random_state=random_state)
 
-    mapie_reg_1.fit(X, y, z=z)
+    mapie_reg_1.fit(X, y, calib_kwargs={"z": z})
     _, y_pis_1 = mapie_reg_1.predict(X, z=z)
-    mapie_reg_2.fit(X, y, z=z)
+    mapie_reg_2.fit(X, y, calib_kwargs={"z": z})
     _, y_pis_2 = mapie_reg_1.predict(X, z=z)
 
     assert (y_pis_1[:, 0, 0] <= y_pis_2[:, 0, 0]).all()
@@ -481,7 +481,7 @@ def test_results_with_constant_sample_weights(
         predictor.fit(X, y)
 
     calibrator = cast(CCPCalibrator, clone(PHI[0]))
-    calibrator._fit_params(X)
+    calibrator._transform_params(X)
     calibrator.init_value = calibrator.init_value_
 
     n_samples = len(X)
@@ -492,9 +492,11 @@ def test_results_with_constant_sample_weights(
     mapie2 = SplitCPRegressor(predictor, clone(calibrator),
                               cv=cv, alpha=0.1, random_state=random_state)
 
-    mapie0.fit(X, y, z=z, sample_weight=None)
-    mapie1.fit(X, y, z=z, sample_weight=np.ones(shape=n_samples))
-    mapie2.fit(X, y, z=z, sample_weight=np.ones(shape=n_samples) * 3)
+    mapie0.fit(X, y, sample_weight=None, calib_kwargs={"z": z})
+    mapie1.fit(X, y, sample_weight=np.ones(shape=n_samples),
+               calib_kwargs={"z": z})
+    mapie2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 3,
+               calib_kwargs={"z": z})
 
     y_pred0, y_pis0 = mapie0.predict(X, z=z)
     y_pred1, y_pis1 = mapie1.predict(X, z=z)
@@ -531,7 +533,7 @@ def test_prediction_between_low_up(
 
     mapie = SplitCPRegressor(predictor=predictor, calibrator=calibrator,
                              cv=cv, alpha=alpha, random_state=random_state)
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
 
     with warnings.catch_warnings(record=True) as record:
         y_pred, y_pis = mapie.predict(X, z=z)
@@ -617,7 +619,7 @@ def test_conformity_score(
         conformity_score=conformity_score,
         random_state=random_state,
     )
-    mapie_reg.fit(X, y + 1e3, z=z)
+    mapie_reg.fit(X, y + 1e3, calib_kwargs={"z": z})
     mapie_reg.predict(X, z=z)
 
 

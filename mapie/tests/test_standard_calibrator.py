@@ -25,7 +25,7 @@ def test_calibrator_fit(sym: bool) -> None:
     """Test that calibrator has correct sym parameter"""
     mapie = SplitCPRegressor(calibrator=StandardCalibrator(), alpha=0.1,
                              conformity_score=AbsoluteConformityScore(sym=sym))
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
     assert mapie.calibrator_.sym == sym
 
 
@@ -34,7 +34,7 @@ def test_calibrator_fit_predict(sym: bool) -> None:
     """Test that initialization does not crash."""
     mapie = SplitCPRegressor(calibrator=StandardCalibrator(), alpha=0.1,
                              conformity_score=AbsoluteConformityScore(sym=sym))
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
     mapie.predict(X, z=z)
 
 

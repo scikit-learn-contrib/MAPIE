@@ -91,20 +91,22 @@ GAUSS_NO_NEED_FIT_SETTINGS: List[Dict[str, Any]] = [
 
 # ======== CustomCCP =========
 @pytest.mark.parametrize("calibrator", PHI)
-def test_custom_phi_functions(calibrator: Any) -> None:
+def test_custom_ccp_calibrator(calibrator: Any) -> None:
     """Test that initialization does not crash."""
     mapie = SplitCPRegressor(calibrator=calibrator, alpha=0.1)
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
     mapie.predict(X, z=z)
 
 
 @pytest.mark.parametrize("calibrator, n_out_raw", zip(PHI, N_OUT))
-def test_phi_n_attributes(calibrator: CCPCalibrator, n_out_raw: int) -> None:
+def test_ccp_calibrator_n_attributes(
+    calibrator: CCPCalibrator, n_out_raw: int
+) -> None:
     """
     Test that the n_in and n_out attributes are corrects
     """
     mapie = SplitCPRegressor(calibrator=clone(calibrator), alpha=0.1)
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
     assert mapie.calibrator_.n_in == 10
     assert mapie.calibrator_.n_out == n_out_raw
 
@@ -116,29 +118,14 @@ def test_invalid_multiplication() -> None:
                     lambda X: (X[:, [0, 1]] > 0)),
             alpha=0.1,
         )
-        mapie.fit(X, y, z=z)
-
-
-def test_phi_functions_warning() -> None:
-    """
-    Test that creating a CCPCalibrator object with functions which have
-    optional arguments different from 'X', 'y_pred' or 'z' raise a warning.
-    """
-    with pytest.warns(UserWarning,
-                      match="WARNING: Unknown optional arguments."):
-        mapie = SplitCPRegressor(
-            calibrator=CustomCCP([lambda X, d=d: X**d for d in range(4)]),
-            alpha=0.1,
-        )
-        mapie.fit(X, y, z=z)
-        mapie.predict(X)
+        mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 @pytest.mark.parametrize("functions", [
     [lambda X, other: X + other, lambda X, other: X - other],
     [lambda X, other: X + other]
 ])
-def test_phi_functions_error(functions: Any) -> None:
+def test_custom_functions_error(functions: Any) -> None:
     """
     Test that creating a CCPCalibrator object with functions which have
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
@@ -147,7 +134,22 @@ def test_phi_functions_error(functions: Any) -> None:
         f(np.ones((10, 1)), np.ones((10, 1)))
     with pytest.raises(ValueError, match=r"Forbidden required argument."):
         mapie = SplitCPRegressor(calibrator=CustomCCP(functions), alpha=0.1)
-        mapie.fit(X, y, z=z)
+        mapie.fit(X, y, calib_kwargs={"z": z})
+
+
+@pytest.mark.parametrize("functions", [
+    [lambda X, d=1: X + d, lambda X, d=2: X - d],
+    [lambda X, c=1, d=1: X + c*d]
+])
+def test_custom_functions_optional_arg(functions: Any) -> None:
+    """
+    Test that creating a CCPCalibrator object with functions which have
+    optional arguments doesn't raise an error.
+    """
+    for f in functions:     # For coverage
+        f(np.ones((10, 1)))
+    mapie = SplitCPRegressor(calibrator=CustomCCP(functions), alpha=0.1)
+    mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 def test_phi_functions_empty() -> None:
@@ -158,14 +160,14 @@ def test_phi_functions_empty() -> None:
     with pytest.raises(ValueError):
         mapie = SplitCPRegressor(calibrator=CustomCCP([], bias=False),
                                  alpha=0.1)
-        mapie.fit(X, y, z=z)
+        mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 # ======== PolynomialCCP =========
 def test_poly_phi_init() -> None:
     """Test that initialization does not crash."""
     mapie = SplitCPRegressor(calibrator=PolynomialCCP(), alpha=0.1)
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 @pytest.mark.parametrize("degree", [2, [0, 1, 3]])
@@ -178,7 +180,7 @@ def test_poly_phi_init_other(
     """Test that initialization does not crash."""
     mapie = SplitCPRegressor(calibrator=PolynomialCCP(
         degree, variable, bias, normalized), alpha=0.1)
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 @pytest.mark.parametrize("var", ["other", 1, np.ones((10, 1))])
@@ -189,14 +191,14 @@ def test_invalid_variable_value(var: Any) -> None:
     with pytest.raises(ValueError):
         mapie = SplitCPRegressor(calibrator=PolynomialCCP(variable=var),
                                  alpha=0.1)
-        mapie.fit(X, y, z=z)
+        mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 # ======== GaussianCCP =========
 def test_gauss_phi_init() -> None:
     """Test that initialization does not crash."""
     mapie = SplitCPRegressor(calibrator=GaussianCCP(), alpha=0.1)
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 @pytest.mark.parametrize("points", [3, [X[0, :], X[3, :], X[7, :]],
@@ -211,7 +213,7 @@ def test_poly_gauss_init_other(
     """Test that initialization does not crash."""
     mapie = SplitCPRegressor(calibrator=GaussianCCP(
         points, sigma, random_sigma, bias, normalized), alpha=0.1)
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 @pytest.mark.parametrize("points", [np.ones((10)),
@@ -223,7 +225,7 @@ def test_invalid_gauss_points(points: Any) -> None:
     """
     with pytest.raises(ValueError, match="Invalid `points` argument."):
         mapie = SplitCPRegressor(calibrator=GaussianCCP(points), alpha=0.1)
-        mapie.fit(X, y, z=z)
+        mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 def test_invalid_gauss_points_2() -> None:
@@ -234,7 +236,7 @@ def test_invalid_gauss_points_2() -> None:
     with pytest.raises(ValueError, match="There should have as many points"):
         mapie = SplitCPRegressor(calibrator=GaussianCCP(
             points=(np.ones((10, 3)), np.ones((8, 3)))), alpha=0.1)
-        mapie.fit(X, y, z=z)
+        mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 def test_invalid_gauss_points_3() -> None:
@@ -245,7 +247,7 @@ def test_invalid_gauss_points_3() -> None:
     with pytest.raises(ValueError, match="The standard deviation 2D array"):
         mapie = SplitCPRegressor(calibrator=GaussianCCP(
             points=(np.ones((10, 3)), np.ones((10, 2)))), alpha=0.1)
-        mapie.fit(X, y, z=z)
+        mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 @pytest.mark.parametrize("sigma", ["1",
@@ -260,7 +262,7 @@ def test_invalid_gauss_sigma(sigma: Any) -> None:
     with pytest.raises(ValueError):
         mapie = SplitCPRegressor(calibrator=GaussianCCP(3, sigma),
                                  alpha=0.1)
-        mapie.fit(X, y, z=z)
+        mapie.fit(X, y, calib_kwargs={"z": z})
 
 
 @pytest.mark.parametrize("ind", range(len(GAUSS_NEED_FIT_SETTINGS)))
@@ -271,7 +273,7 @@ def test_gauss_need_calib(ind: int) -> None:
     """
     mapie = SplitCPRegressor(calibrator=GaussianCCP(
         **GAUSS_NEED_FIT_SETTINGS[ind]), alpha=0.1)
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
     check_is_fitted(mapie.calibrator_, mapie.calibrator_.fit_attributes)
 
 
@@ -283,7 +285,7 @@ def test_gauss_no_need_calib(ind: int) -> None:
     """
     mapie = SplitCPRegressor(calibrator=GaussianCCP(
         **GAUSS_NEED_FIT_SETTINGS[ind]), alpha=0.1)
-    mapie.fit(X, y, z=z)
+    mapie.fit(X, y, calib_kwargs={"z": z})
     check_is_fitted(mapie.calibrator_, mapie.calibrator_.fit_attributes)
 
 
@@ -313,3 +315,18 @@ def test_gaussian_sampling_with_multiplier(calibrator: CCPCalibrator):
     mapie.fit(np.linspace(-100, 100, 1000).reshape(-1, 1), np.ones(1000))
 
     assert all(mapie.calibrator_.points_[i] > 0 for i in range(20))
+
+
+@pytest.mark.parametrize("calibrator", [
+    GaussianCCP(20)*(lambda X: X[:, 0] > 0),
+    GaussianCCP(30),
+])
+def test_gaussian_sampling_error_not_enough_points(calibrator: CCPCalibrator):
+    """
+    Test that the points sampled (for the gaussian centers), are sampled
+    within the points which have a not null multiplier value
+    """
+    mapie = SplitCPRegressor(calibrator=calibrator, alpha=0.1)
+
+    with pytest.raises(ValueError):
+        mapie.fit(np.linspace(-10, 10, 21).reshape(-1, 1), np.ones(21))
