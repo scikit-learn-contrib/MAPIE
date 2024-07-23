@@ -57,9 +57,9 @@ ALPHA = 0.1
 # distributions to evaluate the adaptativity of the methods:
 #  - baseline distribution of ``x*sin(x)``
 #  - Add noise :
-#    - between -1 and 0: uniform distribution of the points around the baseline
-#    - between 0 and 5: normal distribution with a noise value which
-#      increase with ``x``
+#   - between -1 and 0: uniform distribution of the points around the baseline
+#   - between 0 and 5: normal distribution with a noise value which
+#     increase with ``x``
 #
 # We are going to use 3000 samples for training, 3000 for calibration and
 # 20 000 for testing (to have an accurate conditional coverage).
@@ -174,7 +174,7 @@ def plot_subplot(ax, X, y, mapie, y_pred, upper_pi, lower_pi, color_rgb,
     ax.plot(x_test_sorted[:, 0], lower_pi_sorted, lw=lw, color=color)
     # Plot true prediction interval
     ax.plot(x_test_sorted[:, 0], test_pi[sort_order, 0], "--k",
-            lw=lw*1.5, label=f'True Interval (alpha={ALPHA})')
+            lw=lw*1.5, label='True Interval')
     ax.plot(x_test_sorted[:, 0], test_pi[sort_order, 1], "--k", lw=lw*1.5)
 
     if (
@@ -206,7 +206,7 @@ def has_ccp_calibrator(mapie):
     return False
 
 
-def plot_figure(mapies, y_preds, y_pis, titles, show_transform=False):
+def plot_figure(mapies, y_preds, y_pis, titles, show_components=False):
     """
     Plot the prediction interval of mapie instances.
     Also plot the features of the calibrator, if ``show_transform=True``
@@ -215,7 +215,7 @@ def plot_figure(mapies, y_preds, y_pis, titles, show_transform=False):
     ncols = min(3, len(titles))
     nrows = int(np.ceil(len(titles) / ncols))
     ax_need_transform = np.zeros((nrows, ncols))
-    if show_transform:
+    if show_components:
         for i, mapie in enumerate(mapies):
             ax_need_transform[i//ncols, i % ncols] = has_ccp_calibrator(mapie)
             row_need_transform = np.max(ax_need_transform, axis=1)
@@ -225,7 +225,7 @@ def plot_figure(mapies, y_preds, y_pis, titles, show_transform=False):
         ])
         fig, axes = plt.subplots(
             nrows=nrows + int(sum(row_need_transform)), ncols=ncols,
-            figsize=(ncols*4, nrows*4 + int(sum(row_need_transform))*2),
+            figsize=(ncols*3.6, nrows*3.6 + int(sum(row_need_transform))*1.8),
             height_ratios=height_ratio
         )
 
@@ -259,7 +259,7 @@ def plot_figure(mapies, y_preds, y_pis, titles, show_transform=False):
         if i % 3 == 0:
             m_ax.set_ylabel('Y')
         if t_ax is not None:
-            t_ax.set_title("Impact of each component on the PI width")
+            t_ax.set_title("Components of the PI")
             if i >= len(titles) - ncols:
                 t_ax.set_xlabel('X')
             if i % 3 == 0:
@@ -301,12 +301,10 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
     num_plots = len(titles)
     num_rows = (num_plots + 2) // 3
 
-    fig, axs = plt.subplots(nrows=num_rows, ncols=3, figsize=(12, 4*num_rows))
+    fig, axs = plt.subplots(nrows=num_rows, ncols=2, figsize=(10, 3.7*num_rows))
     if len(axs.shape) == 1:
         axs = axs.reshape(1, -1)
-    for ax in axs[:, 2]:  # To add a blank column on the right
-        fig.delaxes(ax)
-    axs = axs[:, :2].flatten()  # Flatten to make indexing easier
+    axs = axs.flatten()  # Flatten to make indexing easier
 
     cov_lim = [1, 0]
     width_lim = [np.inf, 0]
@@ -397,7 +395,8 @@ y_pred_cqr, y_pi_cqr = mapie_cqr.predict(X_test)
 
 # ================== CCP  ==================
 # `SplitCPRegressor` defaults to `calibrator=GaussianCCP()``
-mapie_ccp = SplitCPRegressor(estimator, alpha=ALPHA, cv=cv)
+mapie_ccp = SplitCPRegressor(estimator, calibrator=GaussianCCP(),
+                             alpha=ALPHA, cv=cv)
 mapie_ccp.fit(X_train, y_train)
 y_pred_ccp, y_pi_ccp = mapie_ccp.predict(X_test)
 
@@ -407,7 +406,7 @@ y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_ccp]
 y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp]
 titles = ["Basic Split", "CV+", "CQR", "CCP (default)"]
 
-plot_figure(mapies, y_preds, y_pis, titles, show_transform=True)
+plot_figure(mapies, y_preds, y_pis, titles)
 plot_evaluation(titles, y_pis, X_test, y_test)
 
 
@@ -526,15 +525,15 @@ y_preds = [y_pred_split, y_pred_cv, y_pred_cqr,
 y_pis = [y_pi_split, y_pi_cv, y_pi_cqr,
          y_pi_ccp_1, y_pi_ccp_2, y_pi_ccp_3]
 titles = ["Basic Split", "CV+", "CQR",
-          "CCP, 6 points, s=1 (under-fit)",
-          "CCP, 30 points, s=0.05 (over-fit)",
-          "CCP, 30 points, s=0.25 (good calibrator)"]
+          "CCP 1: 6 points, s=1 (under-fit)",
+          "CCP 2: 30 points, s=0.05 (over-fit)",
+          "CCP 3: 30 points, s=0.25 (good calibrator)"]
 
-plot_figure(mapies, y_preds, y_pis, titles)
+plot_figure(mapies, y_preds, y_pis, titles, show_components=True)
 plot_evaluation(titles, y_pis, X_test, y_test)
 
 ##############################################################################
-# -> Using gaussian distances (with correct sigma value) from randomly
+# --> Using gaussian distances (with correct sigma value) from randomly
 # sampled points is a good solution to have an overall good adaptativity.
 
 ##############################################################################
@@ -549,7 +548,7 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 #  2) For X < 0, the points seem uniformly distributed around
 #  the base distribution.
 #
-# -> It should be a good idea to inject in the calibrator the two groups
+# --> It should be a good idea to inject in the calibrator the two groups
 # ( X < 0 and X > 0). We can use on each group
 # :class:`~mapie.calibrators.ccp.GaussianCCP`
 # (or :class:`~mapie.calibrators.ccp.PolynomialCCP`,
@@ -566,7 +565,7 @@ calibrator2 = CustomCCP(
 )
 calibrator3 = CustomCCP(
     [
-        (lambda X: X < 0)*GaussianCCP(10),
+        (lambda X: X < 0)*GaussianCCP(5),
         (lambda X: X >= 0)*GaussianCCP(30)
     ],
     normalized=True,
@@ -597,12 +596,12 @@ y_preds = [y_pred_split, y_pred_cv, y_pred_cqr,
 y_pis = [y_pi_split, y_pi_cv, y_pi_cqr,
          y_pi_ccp_1, y_pi_ccp_2, y_pi_ccp_3]
 titles = ["Basic Split", "CV+", "CQR",
-          "CCP: constant (X<0) / polynomial (X>0)",
-          "CCP 2 polynomial (X<0) / polynomial (X>0)",
-          "CCP gaussian (X<0) / gaussian (X>0)"]
+          "CCP 1: const (X<0) / poly (X>0)",
+          "CCP 2: poly (X<0) / poly (X>0)",
+          "CCP: gauss (X<0) / gauss (X>0)"]
 
 
-plot_figure(mapies, y_preds, y_pis, titles, show_transform=True)
+plot_figure(mapies, y_preds, y_pis, titles, show_components=True)
 plot_evaluation(titles, y_pis, X_test, y_test)
 
 ##############################################################################
