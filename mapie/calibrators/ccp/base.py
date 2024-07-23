@@ -16,7 +16,8 @@ from mapie.calibrators.ccp.utils import (calibrator_optim_objective,
                                          check_multiplier,
                                          compile_functions_warnings_errors,
                                          concatenate_functions,
-                                         check_required_arguments)
+                                         check_required_arguments,
+                                         dynamic_arguments_call)
 
 
 class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
@@ -410,8 +411,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         check_is_fitted(self, self.transform_attributes)
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
-        cs_features = concatenate_functions(self.functions_, params_mapping,
-                                            self._multipliers)
+        cs_features = concatenate_functions(self.functions_, params_mapping)
+        # Normalize
         if self.normalized:
             norm = cast(NDArray,
                         np.linalg.norm(cs_features, axis=1)).reshape(-1, 1)
@@ -420,6 +421,11 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                 cs_features.shape[1])
             norm[abs(norm) == 0] = 1
             cs_features /= norm
+
+        # Multiply the result by each multiplier function
+        if self._multipliers is not None:
+            for f in self._multipliers:
+                cs_features *= dynamic_arguments_call(f, params_mapping)
 
         return cs_features
 

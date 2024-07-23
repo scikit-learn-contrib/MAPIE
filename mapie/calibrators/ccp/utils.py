@@ -204,6 +204,8 @@ def compute_sigma(
     points_: NDArray,
     sigma: Optional[Union[float, ArrayLike]],
     random_sigma: bool,
+    multipliers: Optional[List[Callable]] = None,
+
 ) -> NDArray:
     """
     Generate the ``sigmas_`` attribute from the ``points``, ``sigma``, ``X``
@@ -252,6 +254,10 @@ def compute_sigma(
          - For 100 points, the sigma value will, in general,
         be multiplied by a value between 0.5 and 2
 
+    multipliers: Optional[List[Callable]]
+        List of functions which should return an array of shape (n_samples, 1)
+        or (n_samples, ) used to weight the sample.
+
     Returns
     -------
     sigmas_
@@ -264,7 +270,19 @@ def compute_sigma(
             sigmas_ = sigmas_.reshape(-1, 1)
     # If sigma is not defined
     elif sigma is None:
-        points_std = np.std(np.array(X), axis=0)\
+        # We get the X indexes which correspond to a not zero multiplier value
+        if multipliers is None:
+            not_null_index = list(range(_num_samples(X)))
+        else:
+            test = np.ones((_num_samples(X), 1)).astype(bool)
+            for f in multipliers:
+                multi = f(X)
+                if len(multi.shape) == 1:
+                    multi = multi.reshape(-1, 1)
+                test = test & (multi != 0)
+            not_null_index = [i for i in range(_num_samples(X)) if test[i, 0]]
+
+        points_std = np.std(_safe_indexing(X, not_null_index), axis=0)\
             / (_num_samples(points_)**0.5)\
             * _num_samples(_safe_indexing(X, 0))
 
@@ -348,7 +366,6 @@ def dynamic_arguments_call(f: Callable, params_mapping: Dict) -> NDArray:
 
 def concatenate_functions(
     functions: List[Callable], params_mapping: Dict,
-    multipliers: Optional[List[Callable]]
 ) -> NDArray:
     """
     Call the function of ``functions``, with the
@@ -372,10 +389,6 @@ def concatenate_functions(
     result = np.hstack([
         dynamic_arguments_call(f, params_mapping) for f in functions
     ])
-    # Multiply the result by each multiplier function
-    if multipliers is not None:
-        for f in multipliers:
-            result *= dynamic_arguments_call(f, params_mapping)
     return result
 
 

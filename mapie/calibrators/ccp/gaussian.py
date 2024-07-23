@@ -281,8 +281,10 @@ class GaussianCCP(CCPCalibrator):
             By default ``None``
         """
         self.points_ = sample_points(X, self.points, self._multipliers)
-        self.sigmas_ = compute_sigma(X, self.points, self.points_,
-                                     self.sigma, self.random_sigma)
+        self.sigmas_ = compute_sigma(
+            X, self.points, self.points_, self.sigma,
+            self.random_sigma, self._multipliers
+        )
         self._check_points_sigma(self.points_, self.sigmas_)
 
         functions = [
