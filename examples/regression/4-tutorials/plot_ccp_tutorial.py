@@ -13,15 +13,15 @@ with :class:`~sklearn.preprocessing.PolynomialFeatures` and
 :class:`~sklearn.linear_model.QuantileRegressor` for CQR).
 
 We will compare the different available calibrators (
-:class:`~mapie.calibrators.CustomCCP`, :class:`~mapie.calibrators.GaussianCCP`
-and :class:`~mapie.calibrators.PolynomialCCP`) of the CCP method (using
-:class:`~mapie.regression.SplitCPRegressor`), with the
-standard split-conformal method, the CV+ method (
-:class:`~mapie.regression.MapieRegressor` with, respectively,
-``method="base", cv='split'`` and ``method="plus", cv=5``), and CQR
-(:class:`~mapie.regression.MapieRegressor`)
+:class:`~mapie.calibrators.ccp.CustomCCP`,
+:class:`~mapie.calibrators.ccp.GaussianCCP`
+and :class:`~mapie.calibrators.ccp.PolynomialCCP`) of the CCP method (using
+:class:`~mapie.futur.split.SplitCPRegressor`), with the
+standard split-conformal method, the CV+ method
+(:class:`~mapie.regression.MapieRegressor`) and CQR
+(:class:`~mapie.regression.MapieQuantileRegressor`)
 
-Recall that the ``alpha`` is `1 - target coverage`.
+Recall that the ``alpha`` is ``1 - target coverage``.
 
 [1] Isaac Gibbs, John J. Cherian, Emmanuel J. Candès (2023).
 Conformal Prediction With Conditional Guarantees
@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
 from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.model_selection import ShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
@@ -44,7 +45,7 @@ from mapie.regression import (MapieQuantileRegressor, MapieRegressor,
 
 warnings.filterwarnings("ignore")
 
-random_state = 1
+random_state = 42
 np.random.seed(random_state)
 
 ALPHA = 0.1
@@ -59,6 +60,9 @@ ALPHA = 0.1
 #    - between -1 and 0: uniform distribution of the points around the baseline
 #    - between 0 and 5: normal distribution with a noise value which
 #      increase with ``x``
+#
+# We are going to use 3000 samples for training, 3000 for calibration and
+# 20 000 for testing (to have an accurate conditional coverage).
 
 
 def x_sinx(x):
@@ -90,7 +94,7 @@ def get_1d_data_with_heteroscedastic_noise(
     return X.reshape(-1, 1), y, true_pi
 
 
-def generate_data(n_train=10000, n_test=4000, noise=0.8, power=2):
+def generate_data(n_train=6000, n_test=20000, noise=0.8, power=2):
     X, y, true_pi = get_1d_data_with_heteroscedastic_noise(
         x_sinx, -1, 5, n_train + n_test, noise, power)
     indexes = list(range(len(X)))
@@ -139,39 +143,14 @@ estimator = Pipeline([
 
 
 ##############################################################################
-# 3. Creation of Mapie instances
-# --------------------------------------------------------------------------
-# We are going to test different methods : ``CV+``, ``CQR`` and ``CCP``
-# (with default parameters)
-
-# ================== Basic Split-conformal  ==================
-mapie_split = MapieRegressor(estimator, method="base", cv="split",
-                             random_state=random_state)
-mapie_split.fit(X_train, y_train)
-y_pred_split, y_pi_split = mapie_split.predict(X_test, alpha=ALPHA)
-
-# ================== CV+  ==================
-mapie_cv = MapieRegressor(estimator, method='plus', cv=5)
-mapie_cv.fit(X_train, y_train)
-y_pred_cv, y_pi_cv = mapie_cv.predict(X_test, alpha=ALPHA)
-
-# ================== CQR  ==================
-mapie_cqr = MapieQuantileRegressor(quantile_estimator, alpha=ALPHA)
-mapie_cqr.fit(X_train, y_train)
-y_pred_cqr, y_pi_cqr = mapie_cqr.predict(X_test)
-
-# ================== CCP  ==================
-mapie_ccp = SplitCPRegressor(estimator, alpha=ALPHA, cv="split")
-mapie_ccp.fit(X_train, y_train)
-y_pred_ccp, y_pi_ccp = mapie_ccp.predict(X_test)
-
-
-##############################################################################
-# 4. Plotting function
+# 3. Plotting and adaptativity comparison functions
 # --------------------------------------------------------------------------
 
 def plot_subplot(ax, X, y, mapie, y_pred, upper_pi, lower_pi, color_rgb,
                  show_transform=False, ax_transform=None):
+    """
+    Plot the prediction interval and calibrator's features of a mapie instance
+    """
     sort_order = np.argsort(X[:, 0])
     lw = 1
     color = mcolors.rgb2hex(color_rgb)
@@ -180,9 +159,9 @@ def plot_subplot(ax, X, y, mapie, y_pred, upper_pi, lower_pi, color_rgb,
     y_pred_sorted = y_pred[sort_order]
     upper_pi_sorted = upper_pi[sort_order]
     lower_pi_sorted = lower_pi[sort_order]
-
+    sample = np.random.choice(list(range(len(X))), min(4000, len(X)))
     # Plot test data
-    ax.scatter(x_test_sorted[:, 0], y_test_sorted, s=1, alpha=0.3,
+    ax.scatter(x_test_sorted[sample, 0], y_test_sorted[sample], s=1, alpha=0.3,
                color='darkblue', label="Test Data")
     # Plot prediction
     ax.plot(x_test_sorted[:, 0], y_pred_sorted, lw=lw,
@@ -195,29 +174,27 @@ def plot_subplot(ax, X, y, mapie, y_pred, upper_pi, lower_pi, color_rgb,
     ax.plot(x_test_sorted[:, 0], lower_pi_sorted, lw=lw, color=color)
     # Plot true prediction interval
     ax.plot(x_test_sorted[:, 0], test_pi[sort_order, 0], "--k",
-            lw=lw*1.5, label='True PI')
+            lw=lw*1.5, label=f'True Interval (alpha={ALPHA})')
     ax.plot(x_test_sorted[:, 0], test_pi[sort_order, 1], "--k", lw=lw*1.5)
 
     if (
         show_transform and isinstance(mapie, SplitCPRegressor)
         and isinstance(mapie.calibrator_, CCPCalibrator)
     ):
-        for calibrator in (list(mapie.calibrator_.functions_)
-                           + [mapie.calibrator_]):
-            if isinstance(calibrator, CCPCalibrator):
-                if isinstance(calibrator, GaussianCCP):
-                    sigmas = np.log(calibrator.sigmas_[:, 0])
-                else:
-                    sigmas = np.zeros(calibrator.n_out)
-                for i, loc in enumerate(sigmas):
-                    ax_transform.plot(
-                        x_test_sorted[:, 0],
-                        calibrator.transform(x_test_sorted)[:, i],
-                        lw=lw, color=color
-                    )
+        transform = mapie.calibrator_.transform(x_test_sorted)\
+            * mapie.calibrator_.beta_up_[0]
+        for i in range(transform.shape[1]):
+            ax_transform.plot(
+                x_test_sorted[:, 0],
+                transform[:, i],
+                lw=lw, color=color
+            )
 
 
-def need_transform(mapie):
+def has_ccp_calibrator(mapie):
+    """
+    Whether or not, the ``mapie`` instance has a ``CCPCalibrator`` calibrator
+    """
     if (
         not isinstance(mapie, SplitCPRegressor)
         or not isinstance(mapie.calibrator_, CCPCalibrator)
@@ -225,31 +202,32 @@ def need_transform(mapie):
         return False
     for calibrator in list(mapie.calibrator_.functions_) + [mapie.calibrator_]:
         if isinstance(calibrator, CCPCalibrator):
-            if isinstance(calibrator, GaussianCCP):
-                return True
+            return True
     return False
 
 
 def plot_figure(mapies, y_preds, y_pis, titles, show_transform=False):
+    """
+    Plot the prediction interval of mapie instances.
+    Also plot the features of the calibrator, if ``show_transform=True``
+    """
     cp = plt.get_cmap('tab10').colors
     ncols = min(3, len(titles))
     nrows = int(np.ceil(len(titles) / ncols))
     ax_need_transform = np.zeros((nrows, ncols))
     if show_transform:
         for i, mapie in enumerate(mapies):
-            ax_need_transform[i//ncols, i % ncols] = need_transform(mapie)
+            ax_need_transform[i//ncols, i % ncols] = has_ccp_calibrator(mapie)
             row_need_transform = np.max(ax_need_transform, axis=1)
         height_ratio = np.array([
             item for x in row_need_transform
             for item in ([3] if x == 0 else [3, 1])
         ])
-        fig, axes = plt.subplots(nrows=nrows + int(sum(row_need_transform)),
-                                 ncols=ncols, figsize=(ncols*4, nrows*5),
-                                 height_ratios=height_ratio)
-
-        for ax in axes[np.where(height_ratio == 1)[0]-1, :].flatten():
-            ax.tick_params(axis='x', which='both', bottom=False,
-                           top=False, labelbottom=False)
+        fig, axes = plt.subplots(
+            nrows=nrows + int(sum(row_need_transform)), ncols=ncols,
+            figsize=(ncols*4, nrows*4 + int(sum(row_need_transform))*2),
+            height_ratios=height_ratio
+        )
 
         transform_axes = np.full((nrows, ncols), None)
         transform_axes[row_need_transform == 1, :] = axes[height_ratio == 1, :]
@@ -281,20 +259,21 @@ def plot_figure(mapies, y_preds, y_pis, titles, show_transform=False):
         if i % 3 == 0:
             m_ax.set_ylabel('Y')
         if t_ax is not None:
-            t_ax.set_title("Transformation")
+            t_ax.set_title("Impact of each component on the PI width")
             if i >= len(titles) - ncols:
                 t_ax.set_xlabel('X')
-        else:
-            m_ax.set_xlabel('X')
+            if i % 3 == 0:
+                t_ax.set_ylabel('component value')
+        m_ax.set_xlabel('X')
         m_ax.legend()
 
     fig.tight_layout()
     plt.show()
 
 
-def compute_conditional_coverage(X_test, y_test, y_pis, bins_width=0.5):
+def compute_conditional_coverage(X_test, y_test, y_pis, bins_width=0.25):
     """
-    Computes the conditional coverage based on the prediction intervals.
+    Compute the conditional coverage on ``X_test``, using discret bins
     """
     bin_edges = np.arange(np.min(X_test), np.max(X_test) + bins_width,
                           bins_width)
@@ -313,14 +292,18 @@ def compute_conditional_coverage(X_test, y_test, y_pis, bins_width=0.5):
 
 
 def plot_evaluation(titles, y_pis, X_test, y_test):
+    """
+    Plot the conditional coverages
+    """
     sort_order = np.argsort(X_test[:, 0])
     cp = plt.get_cmap('tab10').colors
 
-    # Determine the number of rows needed
     num_plots = len(titles)
     num_rows = (num_plots + 2) // 3
 
     fig, axs = plt.subplots(nrows=num_rows, ncols=3, figsize=(12, 4*num_rows))
+    if len(axs.shape) == 1:
+        axs = axs.reshape(1, -1)
     for ax in axs[:, 2]:  # To add a blank column on the right
         fig.delaxes(ax)
     axs = axs[:, :2].flatten()  # Flatten to make indexing easier
@@ -331,10 +314,21 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
         for j, pi in enumerate(y_pis[3*i: 3*(i+1)]):
             c = mcolors.rgb2hex(cp[i*3+j])
             # Conditionnal coverage
-            bin_centers, coverage = compute_conditional_coverage(X_test,
-                                                                 y_test, pi)
-            axs[i * 2].axhline(y=1-ALPHA, color='black', linestyle="--")
+            bin_centers, coverage = compute_conditional_coverage(
+                X_test, y_test, pi
+            )
             axs[i * 2].plot(bin_centers, coverage, lw=2, color=c)
+            axs[i * 2].axhline(
+                y=np.mean(coverage), color=c, linestyle="--",
+                label=f"Coverage={round(np.mean(coverage)*100, 1)}%"
+            )
+            axs[i * 2].axhline(
+                y=1-ALPHA, color='black', linestyle="--",
+                label=(
+                    f"alpha={ALPHA}" if j == len(y_pis[3*i: 3*(i+1)]) - 1
+                    else None
+                )
+            )
             cov_lim[0] = min(cov_lim[0], min(coverage))
             cov_lim[1] = max(cov_lim[1], max(coverage))
             # Interval width
@@ -360,7 +354,7 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
         axs[i * 2 + 1].set_title("Prediction Interval Width")
         axs[i * 2 + 1].set_xlabel("X")
         axs[i * 2 + 1].set_ylabel("Width")
-        axs[i * 2].legend([f"alpha={ALPHA}"], fontsize=10)
+        axs[i * 2].legend(fontsize=10)
         axs[i * 2].set_title("Conditional Coverage")
         axs[i * 2].set_xlabel("X (bins of 0.5 width)")
         axs[i * 2].set_ylabel("Coverage")
@@ -378,91 +372,221 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
 
 
 ##############################################################################
-# 5. Experiments:
+# 4. Creation of Mapie instances
 # --------------------------------------------------------------------------
+# We are going to test different methods : ``CV+``, ``CQR`` and ``CCP``
+# (with default parameters)
 
-##############################################################################
-# 5.1. Default :class:`~mapie.calibrators.GaussianCCP`:
-# --------------------------------------------------------------------------
+cv = ShuffleSplit(n_splits=1, test_size=0.5, random_state=random_state)
 
+# ================== Basic Split-conformal  ==================
+mapie_split = MapieRegressor(estimator, method="base", cv=cv)
+mapie_split.fit(X_train, y_train)
+y_pred_split, y_pi_split = mapie_split.predict(X_test, alpha=ALPHA)
+
+# ================== CV+  ==================
+# MapieRegressor defaults to method='plus' and cv=5
+mapie_cv = MapieRegressor(estimator)
+mapie_cv.fit(X_train, y_train)
+y_pred_cv, y_pi_cv = mapie_cv.predict(X_test, alpha=ALPHA)
+
+# ================== CQR  ==================
+mapie_cqr = MapieQuantileRegressor(quantile_estimator, alpha=ALPHA)
+mapie_cqr.fit(X_train, y_train)
+y_pred_cqr, y_pi_cqr = mapie_cqr.predict(X_test)
+
+# ================== CCP  ==================
+# `SplitCPRegressor` defaults to `calibrator=GaussianCCP()``
+mapie_ccp = SplitCPRegressor(estimator, alpha=ALPHA, cv=cv)
+mapie_ccp.fit(X_train, y_train)
+y_pred_ccp, y_pi_ccp = mapie_ccp.predict(X_test)
+
+# ================== PLOT ==================
 mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp]
 y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_ccp]
 y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp]
 titles = ["Basic Split", "CV+", "CQR", "CCP (default)"]
 
-plot_figure(mapies, y_preds, y_pis, titles)
+plot_figure(mapies, y_preds, y_pis, titles, show_transform=True)
 plot_evaluation(titles, y_pis, X_test, y_test)
 
 
 ##############################################################################
-# 5.2. How to improve the results?
+# The :class:`~mapie.futur.split.regression.SplitCPRegressor` has is
+# a very adaptative method, even with default
+# parameters values. If the dataset is more complex, the default parameters
+# may not be enough to get the best performances. In this case, we can use
+# more advanced settings, described below.
+
+
+##############################################################################
+# 5. How to improve the results?
 # --------------------------------------------------------------------------
-# The CCP method is based on a function :math:`\phi : X \to \phi(X) \in \R^d`
-# This vector :math:`\phi(X)` constitute features that should be able to
-# represente the distribuion of the conformity scores,
-# which is here (by default) the
-# absolute residual: :math:`\lvert y_{true} - y_{pred} \rvert`
 #
-# Examples of basic :math:`\phi`:
-#  - :math:`\phi : X \to 1`, will try to estimate the absolute residual with a
-#    constant, and will results in a prediction interval of constant width
-#    (like the basic split CP)
-#  - :math:`\phi : X \to (1, X)`, will result in a prediction interval of width
-#    equal to: a constant + a value proportional to the value of :math:`X`
-#    (it seems a good idea here, as the uncertainty increase with :math:`X`)
-#  - :math:`\phi : X \to (1, X^3)`, will result in a prediction
-#    interval of width equal to: a constant
-#    + a value proportional to the value of :math:`X^3` (it seems
-#    a good idea here, as the uncertainty increase with :math:`X`)
-#  - :math:`\phi : X \to y_{pred}`, will result in a prediction interval of
-#    width proportional to the prediction (It is sometime the case, when the
-#    uncertainty is proportionnal to the value).
+# 5.1. How does the ``CCP`` method works ?
+# --------------------------------------------------------------------------
+# The CCP method is based on a function which create some features(vector of
+# d dimensions), based on ``X`` (and potentially the prediction ``y_pred``).
 #
-# Note that using :math:`\phi : X \to y_{pred}` is somewhat similar to
-# using a standard Split CP (``method="base"`` in ``MapieRegressor``)
-# with a :class:`~mapie.conformity_scores.GammaConformityScore``.
+# These features should be able to represente the distribuion of the
+# conformity scores, which is here (by default) the absolute residual:
+# ``|y_true - y_pred|``
+
+##############################################################################
+# Examples of basic functions:
+# --------------------------------------------------------------------------
 #
-# Using custom definition:
+##############################################################################
+
+##############################################################################
+#  1) ``f : X -> (1)``, will try to estimate the absolute residual with a
+#  constant, and will results in a prediction interval of constant width
+#  (like the basic split CP)
+#
+#  2) ``f : X -> (1, X)``, will result in a prediction interval of width
+#  equal to: a constant + a value proportional to the value of ``X``
+#  (it seems a good idea here, as the uncertainty increase with ``X``)
+#
+#  3) ``f : X, y_pred -> (y_pred)``, will result in a prediction interval
+#  of width proportional to the prediction (Like the basic split CP with a
+#  gamma conformity score).
+
+
+##############################################################################
+# Using custom definition
+# --------------------------------------------------------------------------
+#
+##############################################################################
+
 
 calibrator1 = CustomCCP([lambda X: np.ones(len(X))])
 calibrator1_bis = CustomCCP(bias=True)
+# calibrator1_bis is equivalent to calibrator1,
+# as bias=True adds a column of ones
 calibrator2 = CustomCCP([lambda X: X], bias=True)
-calibrator3 = CustomCCP([lambda X: X**3], bias=True)
+calibrator3 = CustomCCP([lambda y_pred: y_pred])
+
 
 ##############################################################################
-# Note:
-#  - ``calibrator1_bis`` is equivalent to ``calibrator1``, as ``bias=True``
-#    adds a column of ones
-
+# Or using :class:`~mapie.calibrators.ccp.PolynomialCCP` class:
+# --------------------------------------------------------------------------
+#
 ##############################################################################
-# Using :class:`~mapie.calibrators.PolynomialCCP`:
 
 calibrator1 = PolynomialCCP(0)
-calibrator2 = PolynomialCCP(1)
-calibrator3 = PolynomialCCP([0, 3])
+calibrator2 = PolynomialCCP(1)  # degree=1 is equivalent to degree=[0, 1]
+calibrator3 = PolynomialCCP([1], "y_pred")
+# Note: adding '0' in the 'degree' argument list
+# is equivalent tohaving bias=True, as X^0=1
+
 
 ##############################################################################
-# Note:
-#  - adding ``0`` in the ``degree`` argument list is equivalent to having
-#    ``bias=True``, as :math:`X^0=1`
-#  - degree=1 is equivalent to degree=[0, 1]
-#  - Warning, degree=2 is equivalent to degree=[0, 1, 2]
+# 5.2. Improve the performances without prior knowledge: :class:`GaussianCCP`
+# --------------------------------------------------------------------------
+# If we don't know anything about the data, we can use
+# :class:`~mapie.calibrators.ccp.GaussianCCP`,
+# which will sample random points, and apply gaussian kernels
+# with a givenstandard deviation ``sigma``.
+#
+# Basically, the conformity score of a given point ``x_test``,
+# will be estimated based on the conformity scores
+# of calibration samples which are closed to ``x_test``.
+# It result in a globally good adaptativity.
+#
+# The ``sigma`` hyperparameter can be optimized using cross-validation.
+# It is defined by default based on the standard deviaiton of ``X``.
 
-# ================== CCP 1  ==================
-mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator1, alpha=ALPHA,
-                               random_state=random_state)
+calibrator_gauss1 = GaussianCCP(np.arange(-1, 6).reshape(-1, 1), 1)
+calibrator_gauss2 = GaussianCCP(30, 0.05)
+calibrator_gauss3 = GaussianCCP(30, 0.25, random_sigma=True)
+
+# # ================== CCP 1  ==================
+mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator_gauss1,
+                               cv=cv, alpha=ALPHA)
 mapie_ccp_1.fit(X_train, y_train)
 y_pred_ccp_1, y_pi_ccp_1 = mapie_ccp_1.predict(X_test)
 
-# ================== CCP 2 ==================
-mapie_ccp_2 = SplitCPRegressor(estimator, calibrator=calibrator2, alpha=ALPHA,
-                               random_state=random_state)
+# # ================== CCP 2 ==================
+mapie_ccp_2 = SplitCPRegressor(estimator, calibrator=calibrator_gauss2,
+                               cv=cv, alpha=ALPHA)
+mapie_ccp_2.fit(X_train, y_train)
+y_pred_ccp_2, y_pi_ccp_2 = mapie_ccp_2.predict(X_test)
+
+# # ================== CCP 3  ==================
+mapie_ccp_3 = SplitCPRegressor(estimator, calibrator=calibrator_gauss3,
+                               cv=cv, alpha=ALPHA)
+mapie_ccp_3.fit(X_train, y_train)
+y_pred_ccp_3, y_pi_ccp_3 = mapie_ccp_3.predict(X_test)
+
+
+mapies = [mapie_split, mapie_cv, mapie_cqr,
+          mapie_ccp_1, mapie_ccp_2, mapie_ccp_3]
+y_preds = [y_pred_split, y_pred_cv, y_pred_cqr,
+           y_pred_ccp_1, y_pred_ccp_2, y_pred_ccp_3]
+y_pis = [y_pi_split, y_pi_cv, y_pi_cqr,
+         y_pi_ccp_1, y_pi_ccp_2, y_pi_ccp_3]
+titles = ["Basic Split", "CV+", "CQR",
+          "CCP, 6 points, s=1 (under-fit)",
+          "CCP, 30 points, s=0.05 (over-fit)",
+          "CCP, 30 points, s=0.25 (good calibrator)"]
+
+plot_figure(mapies, y_preds, y_pis, titles)
+plot_evaluation(titles, y_pis, X_test, y_test)
+
+##############################################################################
+# -> Using gaussian distances (with correct sigma value) from randomly
+# sampled points is a good solution to have an overall good adaptativity.
+
+##############################################################################
+# 5.3. Improve the performances using what we know about the data
+# --------------------------------------------------------------------------
+# To improve the results, we need to analyse the data
+# and the conformity scoreswe chose (here, the absolute residuals).
+
+# 1. We can see that the residuals (error with the prediction)
+# increase with X, for X > 0.
+
+# 2. For X < 0, the points seem uniformly distributed around
+# the base distribution.
+
+# -> It should be a good idea to inject in the calibrator the two groups
+# ( X < 0 and X > 0). We can use on each group
+# :class:`~mapie.calibrators.ccp.GaussianCCP`
+# (or :class:`~mapie.calibrators.ccp.PolynomialCCP`,
+# as it seems adapted in this example)
+
+calibrator1 = CustomCCP(
+    [lambda X: X < 0, (lambda X: X >= 0)*PolynomialCCP(3)]
+)
+calibrator2 = CustomCCP(
+    [
+        (lambda X: X < 0)*PolynomialCCP(3),
+        (lambda X: X >= 0)*PolynomialCCP(3)
+    ]
+)
+calibrator3 = CustomCCP(
+    [
+        (lambda X: X < 0)*GaussianCCP(10),
+        (lambda X: X >= 0)*GaussianCCP(30)
+    ],
+    normalized=True,
+)
+
+# ================== CCP 1  ==================
+mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator1,
+                               cv=cv,  alpha=ALPHA)
+mapie_ccp_1.fit(X_train, y_train)
+y_pred_ccp_1, y_pi_ccp_1 = mapie_ccp_1.predict(X_test)
+
+# ================== CCP 2  ==================
+mapie_ccp_2 = SplitCPRegressor(estimator, calibrator=calibrator2,
+                               cv=cv, alpha=ALPHA)
 mapie_ccp_2.fit(X_train, y_train)
 y_pred_ccp_2, y_pi_ccp_2 = mapie_ccp_2.predict(X_test)
 
 # ================== CCP 3  ==================
-mapie_ccp_3 = SplitCPRegressor(estimator, calibrator=calibrator3, alpha=ALPHA,
-                               random_state=random_state)
+mapie_ccp_3 = SplitCPRegressor(estimator, calibrator=calibrator3,
+                               cv=cv, alpha=ALPHA)
 mapie_ccp_3.fit(X_train, y_train)
 y_pred_ccp_3, y_pi_ccp_3 = mapie_ccp_3.predict(X_test)
 
@@ -473,116 +597,10 @@ y_preds = [y_pred_split, y_pred_cv, y_pred_cqr,
 y_pis = [y_pi_split, y_pi_cv, y_pi_cqr,
          y_pi_ccp_1, y_pi_ccp_2, y_pi_ccp_3]
 titles = ["Basic Split", "CV+", "CQR",
-          "CCP (1)", "CCP (1, X)", "CCP (1, X**3)"]
+          "CCP: constant (X<0) / polynomial (X>0)",
+          "CCP 2 polynomial (X<0) / polynomial (X>0)",
+          "CCP gaussian (X<0) / gaussian (X>0)"]
 
-plot_figure(mapies, y_preds, y_pis, titles)
-plot_evaluation(titles, y_pis, X_test, y_test)
-
-##############################################################################
-# Note: The small width different between ``Basic Split`` and ``CCP 1``
-# is just because of the variance induced by the finite number of calibration
-# and test points. The two values would both converge toward the same width
-# if we would reproduce the experiment many times and average the results.
-
-
-##############################################################################
-# 5.3. Improve the performances using what we know about the data
-# --------------------------------------------------------------------------
-# To improve the results, we need to analyse the data and the conformity
-# scores we chose (here, the absolute residuals).
-# 1. We can see that the residuals increase with X for X > 0.
-# 2. For X < 0, the points seem uniformly distributed
-# around the base distribution.
-
-calibrator1 = CustomCCP([lambda X: X < 0, lambda X: X >= 0])
-calibrator2 = CustomCCP(
-    [lambda X: X < 0, (lambda X: X >= 0)*PolynomialCCP(1)]
-)
-calibrator3 = CustomCCP(
-    [
-        (lambda X: X < 0)*PolynomialCCP(5),
-        (lambda X: X >= 0)*PolynomialCCP(5)
-    ]
-)
-
-# ================== CCP 1  ==================
-mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator1, alpha=ALPHA,
-                               random_state=random_state)
-mapie_ccp_1.fit(X_train, y_train)
-y_pred_ccp_1, y_pi_ccp_1 = mapie_ccp_1.predict(X_test)
-
-# ================== CCP 2  ==================
-mapie_ccp_2 = SplitCPRegressor(estimator, calibrator=calibrator2, alpha=ALPHA,
-                               random_state=random_state)
-mapie_ccp_2.fit(X_train, y_train)
-y_pred_ccp_2, y_pi_ccp_2 = mapie_ccp_2.predict(X_test)
-
-# ================== CCP 3  ==================
-mapie_ccp_3 = SplitCPRegressor(estimator, calibrator=calibrator3, alpha=ALPHA,
-                               random_state=random_state)
-mapie_ccp_3.fit(X_train, y_train)
-y_pred_ccp_3, y_pi_ccp_3 = mapie_ccp_3.predict(X_test)
-
-mapies = [mapie_split, mapie_cv, mapie_cqr,
-          mapie_ccp_1, mapie_ccp_2, mapie_ccp_3]
-y_preds = [y_pred_split, y_pred_cv, y_pred_cqr,
-           y_pred_ccp_1, y_pred_ccp_2, y_pred_ccp_3]
-y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp_1, y_pi_ccp_2, y_pi_ccp_3]
-titles = ["Basic Split", "CV+", "CQR", "CCP 2 groups, 1 and 1",
-          "CCP 2 groups, 1 and X", "CCP 2 groups, polynomials"]
-
-plot_figure(mapies, y_preds, y_pis, titles)
-plot_evaluation(titles, y_pis, X_test, y_test)
-
-##############################################################################
-# 5.4. Improve the performances without prior knowledge
-# --------------------------------------------------------------------------
-# We can use :class:`~mapie.calibrators.GaussianCCP` calibrators,
-# if we don't have prior information
-# about the data. It will sample points (are use the points given by the user),
-# and only consider the calibration conformity scores of points next to a
-# sample, to estimate the prediction interval of this sample. In this way,
-# assuming wehave enough points, and the correct standard deviation value,
-# we will getan overall good adaptativity.
-
-calibrator_gauss1 = GaussianCCP(np.arange(-1, 6).reshape(-1, 1), 1)
-calibrator_gauss2 = GaussianCCP(30, 0.05, random_sigma=True, normalized=True)
-calibrator_gauss3 = GaussianCCP(30, 0.25, random_sigma=True, normalized=True,
-                                reg_param=1e-3)
-
-# ================== CCP 1  ==================
-mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator_gauss1,
-                               alpha=ALPHA, random_state=random_state)
-mapie_ccp_1.fit(X_train, y_train)
-y_pred_ccp_1, y_pi_ccp_1 = mapie_ccp_1.predict(X_test)
-
-# ================== CCP 2  ==================
-mapie_ccp_2 = SplitCPRegressor(estimator, calibrator=calibrator_gauss2,
-                               alpha=ALPHA, random_state=random_state)
-mapie_ccp_2.fit(X_train, y_train)
-y_pred_ccp_2, y_pi_ccp_2 = mapie_ccp_2.predict(X_test)
-
-# ================== CCP 3  ==================
-mapie_ccp_3 = SplitCPRegressor(estimator, calibrator=calibrator_gauss3,
-                               alpha=ALPHA, random_state=random_state)
-mapie_ccp_3.fit(X_train, y_train)
-y_pred_ccp_3, y_pi_ccp_3 = mapie_ccp_3.predict(X_test)
-
-mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp_1,
-          mapie_ccp_2, mapie_ccp_3]
-y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_ccp_1,
-           y_pred_ccp_2, y_pred_ccp_3]
-y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp_1, y_pi_ccp_2, y_pi_ccp_3]
-titles = ["Basic Split", "CV+", "CQR", "CCP, 5 points, s=1 (under-fit)",
-          "CCP, 30 points, s=0.05 (over-fit)",
-          "CCP, 30 points, s=0.25 (good calibrator)"]
 
 plot_figure(mapies, y_preds, y_pis, titles, show_transform=True)
 plot_evaluation(titles, y_pis, X_test, y_test)
-
-##############################################################################
-# Using gaussian distances from randomly sampled points is a good solution
-# to have an overall good adaptativity.
-#
-# :math:`\to` We just need to find the good standard deviation parameters
-# to have a good trade-off between adaptativity and overfitting.
