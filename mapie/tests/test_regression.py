@@ -6,15 +6,17 @@ from typing import Any, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import pytest
+
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
-                                     PredefinedSplit, ShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import (
+    GroupKFold, KFold, LeaveOneOut, PredefinedSplit, ShuffleSplit,
+    train_test_split
+)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -23,9 +25,10 @@ from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
-from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
-                                     GammaConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import (
+    AbsoluteConformityScore, BaseRegressionScore, GammaConformityScore,
+    ResidualNormalisedScore
+)
 from mapie.estimator.regressor import EnsembleRegressor
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
@@ -364,7 +367,7 @@ def test_calibration_data_size_asymmetric_score(delta: float) -> None:
     # Define an asymmetric conformity score
     score = AbsoluteConformityScore(sym=False)
 
-    # Test when ConformityScore is asymmetric
+    # Test when BaseRegressionScore is asymmetric
     # and calibration data size is sufficient
     n_calib_sufficient = int(np.ceil(1/(1-delta) * 2)) + 1
     Xc, Xt, yc, _ = train_test_split(Xct, yct, train_size=n_calib_sufficient)
@@ -374,7 +377,7 @@ def test_calibration_data_size_asymmetric_score(delta: float) -> None:
     mapie_reg.fit(Xc, yc)
     mapie_reg.predict(Xt, alpha=1-delta)
 
-    # Test when ConformityScore is asymmetric
+    # Test when BaseRegressionScore is asymmetric
     # and calibration data size is too low
     with pytest.raises(
         ValueError, match=r"Number of samples of the score is too low*"
@@ -560,8 +563,10 @@ def test_results_with_groups() -> None:
     y_pred_1 = [15, 10, 5, 15, 10, 5]
     conformity_scores_0 = np.abs(y - y_pred_0)
     conformity_scores_1 = np.abs(y - y_pred_1)
-    assert np.array_equal(mapie0.conformity_scores_, conformity_scores_0)
-    assert np.array_equal(mapie1.conformity_scores_, conformity_scores_1)
+    np.testing.assert_array_equal(mapie0.conformity_scores_,
+                                  conformity_scores_0)
+    np.testing.assert_array_equal(mapie1.conformity_scores_,
+                                  conformity_scores_1)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -784,7 +789,7 @@ def test_pipeline_compatibility() -> None:
     "conformity_score", [AbsoluteConformityScore(), GammaConformityScore()]
 )
 def test_conformity_score(
-    strategy: str, conformity_score: ConformityScore
+    strategy: str, conformity_score: BaseRegressionScore
 ) -> None:
     """Test that any conformity score function with MAPIE raises no error."""
     mapie_reg = MapieRegressor(
@@ -799,7 +804,7 @@ def test_conformity_score(
     "conformity_score", [ResidualNormalisedScore()]
 )
 def test_conformity_score_with_split_strategies(
-   conformity_score: ConformityScore
+   conformity_score: BaseRegressionScore
 ) -> None:
     """
     Test that any conformity score function that handle only split strategies

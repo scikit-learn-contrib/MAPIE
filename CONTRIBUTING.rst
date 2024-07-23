@@ -6,7 +6,7 @@ What to work on?
 ----------------
 
 You are welcome to propose and contribute new ideas.
-We encourage you to `open an issue <https://github.com/simai-ml/MAPIE/issues>`_ so that we can align on the work to be done.
+We encourage you to `open an issue <https://github.com/scikit-learn-contrib/MAPIE/issues>`so that we can align on the work to be done.
 It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
 
 Fork/clone/pull
@@ -14,7 +14,7 @@ Fork/clone/pull
 
 The typical workflow for contributing to `mapie` is:
 
-1. Fork the `master` branch from the `GitHub repository <https://github.com/simai-ml/MAPIE>`_.
+1. Fork the `master` branch from the `GitHub repository <https://github.com/scikit-learn-contrib/MAPIE>`_.
 2. Clone your fork locally.
 3. Commit changes.
 4. Push the changes to your fork.
@@ -64,8 +64,8 @@ Updating changelog
 
 You can make your contribution visible by :
 
-1. adding your name to the Contributors sections of `AUTHORS.rst <https://github.com/simai-ml/MAPIE/blob/master/AUTHORS.rst>`_
-2. adding a line describing your change into `HISTORY.rst <https://github.com/simai-ml/MAPIE/blob/master/HISTORY.rst>`_
+1. adding your name to the Contributors sections of `AUTHORS.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.rst>`_
+2. adding a line describing your change into `HISTORY.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.rst>`_
 
 Testing
 -------
