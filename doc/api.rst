@@ -93,3 +93,15 @@ Resampling
 
    subsample.BlockBootstrap
    subsample.Subsample
+
+CCP
+==========
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   futur.split.SplitCPRegressor
+   calibrators.ccp.CustomCCP
+   calibrators.ccp.PolynomialCCP
+   calibrators.ccp.GaussianCCP
