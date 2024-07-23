@@ -1380,8 +1380,10 @@ def test_results_with_groups() -> None:
     #  (array([1, 2, 4, 5]), array([0, 3]))]
     conformity_scores_0 = np.array([[1.], [0.], [0.], [1.], [1.], [1.]])
     conformity_scores_1 = np.array([[1.], [1.], [1.], [1.], [1.], [1.]])
-    assert np.array_equal(mapie0.conformity_scores_, conformity_scores_0)
-    assert np.array_equal(mapie1.conformity_scores_, conformity_scores_1)
+    np.testing.assert_array_equal(mapie0.conformity_scores_,
+                                  conformity_scores_0)
+    np.testing.assert_array_equal(mapie1.conformity_scores_,
+                                  conformity_scores_1)
 
 
 @pytest.mark.parametrize(
