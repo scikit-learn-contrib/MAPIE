@@ -475,7 +475,7 @@ calibrator3 = CustomCCP([lambda y_pred: y_pred])
 
 calibrator1 = PolynomialCCP(0)
 calibrator2 = PolynomialCCP(1)  # degree=1 is equivalent to degree=[0, 1]
-calibrator3 = PolynomialCCP([1], "y_pred")
+calibrator3 = PolynomialCCP([1], variable="y_pred")
 # Note: adding '0' in the 'degree' argument list
 # is equivalent tohaving bias=True, as X^0=1
 
@@ -486,7 +486,7 @@ calibrator3 = PolynomialCCP([1], "y_pred")
 # If we don't know anything about the data, we can use
 # :class:`~mapie.calibrators.ccp.GaussianCCP`,
 # which will sample random points, and apply gaussian kernels
-# with a givenstandard deviation ``sigma``.
+# with a given standard deviation ``sigma``.
 #
 # Basically, the conformity score of a given point ``x_test``,
 # will be estimated based on the conformity scores
@@ -542,13 +542,13 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 # --------------------------------------------------------------------------
 # To improve the results, we need to analyse the data
 # and the conformity scoreswe chose (here, the absolute residuals).
-
-# 1. We can see that the residuals (error with the prediction)
-# increase with X, for X > 0.
-
-# 2. For X < 0, the points seem uniformly distributed around
-# the base distribution.
-
+#
+#  1) We can see that the residuals (error with the prediction)
+#  increase with X, for X > 0.
+#
+#  2) For X < 0, the points seem uniformly distributed around
+#  the base distribution.
+#
 # -> It should be a good idea to inject in the calibrator the two groups
 # ( X < 0 and X > 0). We can use on each group
 # :class:`~mapie.calibrators.ccp.GaussianCCP`
@@ -604,3 +604,17 @@ titles = ["Basic Split", "CV+", "CQR",
 
 plot_figure(mapies, y_preds, y_pis, titles, show_transform=True)
 plot_evaluation(titles, y_pis, X_test, y_test)
+
+##############################################################################
+# Conlusion:
+# --------------------------------------------------------------------------
+#
+##############################################################################
+
+##############################################################################
+# The most adaptative interval is this last brown one, with the two groups
+# and the gaussian calibrators. In this specific case, the polynomial
+# calibrator also worked, but the gaussian one is more generic.
+#
+# This is the power of the ``CCP`` method: combining prior knowledge and
+# generic features (gaussian kernelsl) to have a great overall adaptativity!
