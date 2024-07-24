@@ -301,7 +301,8 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
     num_plots = len(titles)
     num_rows = (num_plots + 2) // 3
 
-    fig, axs = plt.subplots(nrows=num_rows, ncols=2, figsize=(10, 3.7*num_rows))
+    fig, axs = plt.subplots(nrows=num_rows, ncols=2,
+                            figsize=(10, 3.7*num_rows))
     if len(axs.shape) == 1:
         axs = axs.reshape(1, -1)
     axs = axs.flatten()  # Flatten to make indexing easier
