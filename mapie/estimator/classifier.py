@@ -189,7 +189,7 @@ class EnsembleClassifier(EnsembleEstimator):
     def _check_proba_normalized(
         y_pred_proba: ArrayLike,
         axis: int = 1
-    ) -> NDArray:
+    ) -> ArrayLike:
         """
         Check if, for all the observations, the sum of
         the probabilities is equal to one.
@@ -216,7 +216,6 @@ class EnsembleClassifier(EnsembleEstimator):
             err_msg="The sum of the scores is not equal to one.",
             rtol=1e-5
         )
-        y_pred_proba = cast(NDArray, y_pred_proba).astype(np.float64)
         return y_pred_proba
 
     def _predict_proba_oof_estimator(

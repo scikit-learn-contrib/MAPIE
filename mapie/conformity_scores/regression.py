@@ -3,17 +3,19 @@ from typing import Tuple
 
 import numpy as np
 
-from mapie._compatibility import np_nanquantile
-from mapie._typing import ArrayLike, NDArray
+from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.estimator.regressor import EnsembleRegressor
 
+from mapie._compatibility import np_nanquantile
+from mapie._machine_precision import EPSILON
+from mapie._typing import NDArray
 
-class ConformityScore(metaclass=ABCMeta):
+
+class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
     """
-    Base class for conformity scores.
+    Base conformity score class for regression task.
 
-    Warning: This class should not be used directly.
-    Use derived classes instead.
+    This class should not be used directly. Use derived classes instead.
 
     Parameters
     ----------
@@ -21,34 +23,30 @@ class ConformityScore(metaclass=ABCMeta):
         Whether to consider the conformity score as symmetrical or not.
 
     consistency_check: bool, optional
-        Whether to check the consistency between the following methods:
-        - ``get_estimation_distribution`` and
-        - ``get_signed_conformity_scores``
+        Whether to check the consistency between the methods
+        ``get_estimation_distribution`` and ``get_conformity_scores``.
+        If ``True``, the following equality must be verified:
+        ``self.get_estimation_distribution(
+            y_pred, self.get_conformity_scores(y, y_pred, **kwargs), **kwargs
+        ) == y``
 
         By default ``True``.
 
     eps: float, optional
-        Threshold to consider when checking the consistency between the
-        following methods:
-        - ``get_estimation_distribution`` and
-        - ``get_signed_conformity_scores``
-        The following equality must be verified:
-        ``self.get_estimation_distribution(
-            X,
-            y_pred,
-            self.get_conformity_scores(X, y, y_pred)
-        ) == y``
+        Threshold to consider when checking the consistency between
+        ``get_estimation_distribution`` and ``get_conformity_scores``.
         It should be specified if ``consistency_check==True``.
 
-        By default ``np.float64(1e-8)``.
+        By default, it is defined by the default precision.
     """
 
     def __init__(
         self,
         sym: bool,
         consistency_check: bool = True,
-        eps: np.float64 = np.float64(1e-8),
+        eps: float = float(EPSILON),
     ):
+        super().__init__()
         self.sym = sym
         self.consistency_check = consistency_check
         self.eps = eps
@@ -56,26 +54,23 @@ class ConformityScore(metaclass=ABCMeta):
     @abstractmethod
     def get_signed_conformity_scores(
         self,
-        X: ArrayLike,
-        y: ArrayLike,
-        y_pred: ArrayLike,
+        y: NDArray,
+        y_pred: NDArray,
+        **kwargs
     ) -> NDArray:
         """
-        Placeholder for ``get_signed_conformity_scores``.
+        Placeholder for ``get_conformity_scores``.
         Subclasses should implement this method!
 
-        Compute the signed conformity scores from the predicted values
-        and the observed ones.
+        Compute the sample conformity scores given the predicted and
+        observed targets.
 
         Parameters
         ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Observed feature values.
-
-        y: ArrayLike of shape (n_samples,)
+        y: NDArray of shape (n_samples,)
             Observed target values.
 
-        y_pred: ArrayLike of shape (n_samples,)
+        y_pred: NDArray of shape (n_samples,)
             Predicted target values.
 
         Returns
@@ -84,113 +79,17 @@ class ConformityScore(metaclass=ABCMeta):
             Signed conformity scores.
         """
 
-    @abstractmethod
-    def get_estimation_distribution(
-        self,
-        X: ArrayLike,
-        y_pred: ArrayLike,
-        conformity_scores: ArrayLike
-    ) -> NDArray:
-        """
-        Placeholder for ``get_estimation_distribution``.
-        Subclasses should implement this method!
-
-        Compute samples of the estimation distribution from the predicted
-        targets and ``conformity_scores`` that can be either the conformity
-        scores or the quantile of the conformity scores.
-
-        Parameters
-        ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Observed feature values.
-
-        y_pred: ArrayLike
-            The shape is either (n_samples, n_references): when the
-            method is called in ``get_bounds`` it needs a prediction per train
-            sample for each test sample to compute the bounds.
-            Or (n_samples,): when it is called in ``check_consistency``
-
-        conformity_scores: ArrayLike
-            The shape is either (n_samples, 1) when it is the
-            conformity scores themselves or (1, n_alpha) when it is only the
-            quantile of the conformity scores.
-
-        Returns
-        -------
-        NDArray of shape (n_samples, n_alpha) or
-        (n_samples, n_references) according to the shape of ``y_pred``
-            Observed values.
-        """
-
-    def check_consistency(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        y_pred: ArrayLike,
-        conformity_scores: ArrayLike,
-    ) -> None:
-        """
-        Check consistency between the following methods:
-        ``get_estimation_distribution`` and ``get_signed_conformity_scores``
-
-        The following equality should be verified:
-        ``self.get_estimation_distribution(
-            X,
-            y_pred,
-            self.get_conformity_scores(X, y, y_pred)
-        ) == y``
-
-        Parameters
-        ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Observed feature values.
-
-        y: ArrayLike of shape (n_samples,)
-            Observed target values.
-
-        y_pred: ArrayLike of shape (n_samples,)
-            Predicted target values.
-
-        conformity_scores: ArrayLike of shape (n_samples,)
-            Conformity scores.
-
-        Raises
-        ------
-        ValueError
-            If the two methods are not consistent.
-        """
-        score_distribution = self.get_estimation_distribution(
-            X, y_pred, conformity_scores
-        )
-        abs_conformity_scores = np.abs(np.subtract(score_distribution, y))
-        max_conf_score = np.max(abs_conformity_scores)
-        if max_conf_score > self.eps:
-            raise ValueError(
-                "The two functions get_conformity_scores and "
-                "get_estimation_distribution of the ConformityScore class "
-                "are not consistent. "
-                "The following equation must be verified: "
-                "self.get_estimation_distribution(X, y_pred, "
-                "self.get_conformity_scores(X, y, y_pred)) == y"  # noqa: E501
-                f"The maximum conformity score is {max_conf_score}."
-                "The eps attribute may need to be increased if you are "
-                "sure that the two methods are consistent."
-            )
-
     def get_conformity_scores(
         self,
-        X: ArrayLike,
-        y: ArrayLike,
-        y_pred: ArrayLike,
+        y: NDArray,
+        y_pred: NDArray,
+        **kwargs
     ) -> NDArray:
         """
         Get the conformity score considering the symmetrical property if so.
 
         Parameters
         ----------
-        X: NDArray of shape (n_samples, n_features)
-            Observed feature values.
-
         y: NDArray of shape (n_samples,)
             Observed target values.
 
@@ -202,81 +101,91 @@ class ConformityScore(metaclass=ABCMeta):
         NDArray of shape (n_samples,)
             Conformity scores.
         """
-        conformity_scores = self.get_signed_conformity_scores(X, y, y_pred)
+        conformity_scores = \
+            self.get_signed_conformity_scores(y, y_pred, **kwargs)
         if self.consistency_check:
-            self.check_consistency(X, y, y_pred, conformity_scores)
+            self.check_consistency(y, y_pred, conformity_scores, **kwargs)
         if self.sym:
             conformity_scores = np.abs(conformity_scores)
         return conformity_scores
 
-    @staticmethod
-    def get_quantile(
+    def check_consistency(
+        self,
+        y: NDArray,
+        y_pred: NDArray,
         conformity_scores: NDArray,
-        alpha_np: NDArray,
-        axis: int,
-        reversed: bool = False,
-        unbounded: bool = False
-    ) -> NDArray:
+        **kwargs
+    ) -> None:
         """
-        Compute the alpha quantile of the conformity scores or the conformity
-        scores aggregated with the predictions.
+        Check consistency between the following methods:
+        ``get_estimation_distribution`` and ``get_signed_conformity_scores``
+
+        The following equality should be verified:
+        ``self.get_estimation_distribution(
+            y_pred, self.get_conformity_scores(y, y_pred, **kwargs), **kwargs
+        ) == y``
 
         Parameters
         ----------
-        conformity_scores: NDArray of shape (n_samples,) or
-        (n_samples, n_references)
-            Values from which the quantile is computed, it can be the
-            conformity scores or the conformity scores aggregated with
-            the predictions.
+        y: NDArray of shape (n_samples,)
+            Observed target values.
 
-        alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
-            uncertainty of the confidence interval.
+        y_pred: NDArray of shape (n_samples,)
+            Predicted target values.
 
-        axis: int
-            The axis from which to compute the quantile.
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores.
 
-        reversed: bool
-            Boolean specifying whether we take the upper or lower quantile,
-            if False, the alpha quantile, otherwise the (1-alpha) quantile.
+        Raises
+        ------
+        ValueError
+            If the two methods are not consistent.
+        """
+        score_distribution = self.get_estimation_distribution(
+            y_pred, conformity_scores, **kwargs
+        )
+        abs_conformity_scores = np.abs(np.subtract(score_distribution, y))
+        max_conf_score = np.max(abs_conformity_scores)
+        if max_conf_score > self.eps:
+            raise ValueError(
+                "The two functions get_conformity_scores and "
+                "get_estimation_distribution of the BaseRegressionScore class "
+                "are not consistent. "
+                "The following equation must be verified: "
+                "self.get_estimation_distribution(y_pred, "
+                "self.get_conformity_scores(y, y_pred)) == y. "
+                f"The maximum conformity score is {max_conf_score}. "
+                "The eps attribute may need to be increased if you are "
+                "sure that the two methods are consistent."
+            )
 
-            By default ``False``.
+    @abstractmethod
+    def get_estimation_distribution(
+        self,
+        y_pred: NDArray,
+        conformity_scores: NDArray,
+        **kwargs
+    ) -> NDArray:
+        """
+        Placeholder for ``get_estimation_distribution``.
+        Subclasses should implement this method!
 
-        unbounded: bool
-            Boolean specifying whether infinite prediction intervals
-            could be produced (when alpha_np is greater than or equal to 1.).
+        Compute samples of the estimation distribution given the predicted
+        targets and the conformity scores.
 
-            By default ``False``.
+        Parameters
+        ----------
+        y_pred: NDArray of shape (n_samples,)
+            Predicted target values.
+
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores.
 
         Returns
         -------
-        NDArray of shape (1, n_alpha) or (n_samples, n_alpha)
-            The quantile of the conformity scores.
+        NDArray of shape (n_samples,)
+            Observed values.
         """
-        n_ref = conformity_scores.shape[1-axis]
-        n_calib = np.min(np.sum(~np.isnan(conformity_scores), axis=axis))
-        signed = 1-2*reversed
-
-        # Adapt alpha w.r.t upper/lower : alpha vs. 1-alpha
-        alpha_ref = (1-2*alpha_np)*reversed + alpha_np
-
-        # Adjust alpha w.r.t quantile correction
-        alpha_cor = np.ceil(alpha_ref*(n_calib+1))/n_calib
-        alpha_cor = np.clip(alpha_cor, a_min=0, a_max=1)
-
-        # Compute the target quantiles:
-        # If unbounded is True and alpha is greater than or equal to 1,
-        # the quantile is set to infinity.
-        # Otherwise, the quantile is calculated as the corrected lower quantile
-        # of the signed conformity scores.
-        quantile = signed * np.column_stack([
-            np_nanquantile(
-                signed * conformity_scores, _alpha_cor,
-                axis=axis, method="lower"
-            ) if not (unbounded and _alpha >= 1) else np.inf * np.ones(n_ref)
-            for _alpha, _alpha_cor in zip(alpha_ref, alpha_cor)
-        ])
-        return quantile
 
     @staticmethod
     def _beta_optimize(
@@ -292,15 +201,15 @@ class ConformityScore(metaclass=ABCMeta):
         alpha_np: NDArray
             The quantiles to compute.
 
-        upper_bounds: NDArray
+        upper_bounds: NDArray of shape (n_samples,)
             The array of upper values.
 
-        lower_bounds: NDArray
+        lower_bounds: NDArray of shape (n_samples,)
             The array of lower values.
 
         Returns
         -------
-        NDArray
+        NDArray of shape (n_samples,)
             Array of betas minimizing the differences
             ``(1-alpha+beta)-quantile - beta-quantile``.
         """
@@ -337,10 +246,10 @@ class ConformityScore(metaclass=ABCMeta):
 
     def get_bounds(
         self,
-        X: ArrayLike,
+        X: NDArray,
+        alpha_np: NDArray,
         estimator: EnsembleRegressor,
         conformity_scores: NDArray,
-        alpha_np: NDArray,
         ensemble: bool = False,
         method: str = 'base',
         optimize_beta: bool = False,
@@ -352,18 +261,18 @@ class ConformityScore(metaclass=ABCMeta):
 
         Parameters
         ----------
-        X: ArrayLike of shape (n_samples, n_features)
+        X: NDArray of shape (n_samples, n_features)
             Observed feature values.
-
-        estimator: EnsembleRegressor
-            Estimator that is fitted to predict y from X.
-
-        conformity_scores: ArrayLike of shape (n_samples,)
-            Conformity scores.
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between ``0`` and ``1``, represents the
             uncertainty of the confidence interval.
+
+        estimator: EnsembleRegressor
+            Estimator that is fitted to predict y from X.
+
+        conformity_scores: NDArray of shape (n_samples,)
+            Conformity scores.
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
@@ -426,10 +335,10 @@ class ConformityScore(metaclass=ABCMeta):
             alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np + beta_np
 
             conformity_scores_low = self.get_estimation_distribution(
-                X, y_pred_low, signed * conformity_scores
+                y_pred_low, signed * conformity_scores, X=X
             )
             conformity_scores_up = self.get_estimation_distribution(
-                X, y_pred_up, conformity_scores
+                y_pred_up, conformity_scores, X=X
             )
             bound_low = self.get_quantile(
                 conformity_scores_low, alpha_low, axis=1, reversed=True,
@@ -463,10 +372,38 @@ class ConformityScore(metaclass=ABCMeta):
                 )
 
             bound_low = self.get_estimation_distribution(
-                X, y_pred_low, quantile_low
+                y_pred_low, quantile_low, X=X
             )
             bound_up = self.get_estimation_distribution(
-                X, y_pred_up, quantile_up
+                y_pred_up, quantile_up, X=X
             )
 
         return y_pred, bound_low, bound_up
+
+    def predict_set(
+        self,
+        X: NDArray,
+        alpha_np: NDArray,
+        **kwargs
+    ):
+        """
+        Compute the prediction sets on new samples based on the uncertainty of
+        the target confidence set.
+
+        Parameters:
+        -----------
+        X: NDArray of shape (n_samples,)
+            The input data or samples for prediction.
+
+        alpha_np: NDArray of shape (n_alpha, )
+            Represents the uncertainty of the confidence set to produce.
+
+        **kwargs: dict
+            Additional keyword arguments.
+
+        Returns:
+        --------
+        The output structure depend on the ``get_bounds`` method.
+            The prediction sets for each sample and each alpha level.
+        """
+        return self.get_bounds(X=X, alpha_np=alpha_np, **kwargs)
