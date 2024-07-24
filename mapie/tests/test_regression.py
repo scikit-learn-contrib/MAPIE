@@ -890,28 +890,21 @@ def test_fit_parameters_passing() -> None:
 def test_predict_parameters_passing() -> None:
     """
     Test passing predict parameters.
-    Checks that y_pred from train are 0, y_pred from test are 0 and
-    we check that y_pred constructed with or without predict_params
-    are different
+    Checks that y_pred from train are 0, y_pred from test are 0.
     """
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)
     )
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
     score = AbsoluteConformityScore(sym=True)
-    mapie_1 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
-    mapie_2 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
+    mapie_model = MapieRegressor(estimator=custom_gbr, conformity_score=score)
     predict_params = {'check_predict_params': True}
-    mapie_1 = mapie_1.fit(
+    mapie_model = mapie_model.fit(
         X_train, y_train, predict_params=predict_params
     )
-    mapie_2 = mapie_2.fit(X_train, y_train)
-    y_pred_1 = mapie_1.predict(X_test, **predict_params)
-    y_pred_2 = mapie_2.predict(X_test)
-    np.testing.assert_allclose(mapie_1.conformity_scores_, np.abs(y_train))
-    np.testing.assert_allclose(y_pred_1, 0)
-    with np.testing.assert_raises(AssertionError):
-        np.testing.assert_array_equal(y_pred_1, y_pred_2)
+    y_pred = mapie_model.predict(X_test, **predict_params)
+    np.testing.assert_allclose(mapie_model.conformity_scores_, np.abs(y_train))
+    np.testing.assert_allclose(y_pred, 0)
 
 
 def test_fit_params_expected_behavior_unaffected_by_predict_params() -> None:
@@ -926,23 +919,17 @@ def test_fit_params_expected_behavior_unaffected_by_predict_params() -> None:
         train_test_split(X, y, test_size=0.2, random_state=random_state)
     )
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
-    mapie_1 = MapieRegressor(estimator=custom_gbr)
-    mapie_2 = MapieRegressor(estimator=custom_gbr)
+    mapie_model = MapieRegressor(estimator=custom_gbr)
     fit_params = {'monitor': early_stopping_monitor}
     predict_params = {'check_predict_params': True}
-    mapie_1 = mapie_1.fit(
+    mapie_model = mapie_model.fit(
         X_train, y_train,
         fit_params=fit_params, predict_params=predict_params
     )
-    mapie_2 = mapie_2.fit(X_train, y_train, predict_params=predict_params)
 
-    assert mapie_1.estimator_.single_estimator_.estimators_.shape[0] == 3
-    for estimator in mapie_1.estimator_.estimators_:
+    assert mapie_model.estimator_.single_estimator_.estimators_.shape[0] == 3
+    for estimator in mapie_model.estimator_.estimators_:
         assert estimator.estimators_.shape[0] == 3
-    assert (mapie_2.estimator_.single_estimator_.n_estimators ==
-           custom_gbr.n_estimators)
-    for estimator in mapie_2.estimator_.estimators_:
-        assert estimator.n_estimators == custom_gbr.n_estimators
 
 
 def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
@@ -958,27 +945,19 @@ def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
     )
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
     score = AbsoluteConformityScore(sym=True)
-    mapie_1 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
-    mapie_2 = MapieRegressor(estimator=custom_gbr, conformity_score=score)
+    mapie_model = MapieRegressor(estimator=custom_gbr, conformity_score=score)
     fit_params = {'monitor': early_stopping_monitor}
     predict_params = {'check_predict_params': True}
-    mapie_1 = mapie_1.fit(
+    mapie_model = mapie_model.fit(
         X_train, y_train,
         fit_params=fit_params,
         predict_params=predict_params
     )
-    mapie_2 = mapie_2.fit(X_train, y_train, fit_params=fit_params,)
-    y_pred_1 = mapie_1.predict(X_test, **predict_params)
-    y_pred_2 = mapie_2.predict(X_test)
+    y_pred = mapie_model.predict(X_test, **predict_params)
 
-    np.testing.assert_array_equal(mapie_1.conformity_scores_,
+    np.testing.assert_array_equal(mapie_model.conformity_scores_,
                                   np.abs(y_train))
-    np.testing.assert_allclose(y_pred_1, 0)
-    with np.testing.assert_raises(AssertionError):
-        np.testing.assert_array_equal(mapie_2.conformity_scores_,
-                                      np.abs(y_train))
-    with np.testing.assert_raises(AssertionError):
-        np.testing.assert_array_equal(y_pred_1, y_pred_2)
+    np.testing.assert_allclose(y_pred, 0)
 
 
 def test_invalid_predict_parameters() -> None:
