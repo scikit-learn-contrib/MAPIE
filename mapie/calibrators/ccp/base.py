@@ -14,7 +14,7 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators import BaseCalibrator
 from mapie.calibrators.ccp.utils import (calibrator_optim_objective,
                                          check_multiplier,
-                                         compile_functions_warnings_errors,
+                                         check_custom_calibrator_functions,
                                          concatenate_functions,
                                          check_required_arguments,
                                          dynamic_arguments_call)
@@ -521,7 +521,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         if funct is None:
             return self
         else:
-            compile_functions_warnings_errors([funct])
+            check_custom_calibrator_functions([funct])
             old_multipliers = self._multipliers
             new_calibrator = cast(CCPCalibrator, clone(self))
             if old_multipliers is None:

@@ -7,7 +7,7 @@ from sklearn.utils import _safe_indexing
 from mapie._typing import ArrayLike
 
 from .base import CCPCalibrator
-from .utils import (check_multiplier, compile_functions_warnings_errors,
+from .utils import (check_multiplier, check_custom_calibrator_functions,
                     format_functions)
 
 
@@ -180,7 +180,7 @@ class CustomCCP(CCPCalibrator):
             By default ``None``
         """
         self.functions_ = format_functions(self.functions, self.bias)
-        compile_functions_warnings_errors(self.functions_)
+        check_custom_calibrator_functions(self.functions_)
 
     def _transform_params(
         self,

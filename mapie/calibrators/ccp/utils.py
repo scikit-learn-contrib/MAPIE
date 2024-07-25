@@ -63,7 +63,7 @@ def format_functions(
     return functions
 
 
-def compile_functions_warnings_errors(
+def check_custom_calibrator_functions(
     functions: List[Callable]
 ) -> None:
     """
@@ -105,7 +105,7 @@ def compile_functions_warnings_errors(
                 + f"argument '{param}'.\n"
             )
         raise ValueError(
-            "Forbidden required argument.\n"
+            "Forbidden required argument in `CustomCCP` calibrator.\n"
             f"{error_msg}"
             "The only allowed required argument are : 'X', "
             "'y_pred' and 'z'.\n"

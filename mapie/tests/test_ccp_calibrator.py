@@ -132,7 +132,10 @@ def test_custom_functions_error(functions: Any) -> None:
     """
     for f in functions:     # For coverage
         f(np.ones((10, 1)), np.ones((10, 1)))
-    with pytest.raises(ValueError, match=r"Forbidden required argument."):
+    with pytest.raises(
+        ValueError,
+        match=r"Forbidden required argument in `CustomCCP` calibrator."
+    ):
         mapie = SplitCPRegressor(calibrator=CustomCCP(functions), alpha=0.1)
         mapie.fit(X, y, calib_kwargs={"z": z})
 
