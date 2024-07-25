@@ -155,7 +155,7 @@ def test_custom_functions_optional_arg(functions: Any) -> None:
     mapie.fit(X, y, calib_kwargs={"z": z})
 
 
-def test_phi_functions_empty() -> None:
+def test_empty_custom_calibrator() -> None:
     """
     Test that creating a CCPCalibrator object with functions which have
     required arguments different from 'X', 'y_pred' or 'z' raise an error.
@@ -167,7 +167,7 @@ def test_phi_functions_empty() -> None:
 
 
 # ======== PolynomialCCP =========
-def test_poly_phi_init() -> None:
+def test_poly_calibrator_default_init() -> None:
     """Test that initialization does not crash."""
     mapie = SplitCPRegressor(calibrator=PolynomialCCP(), alpha=0.1)
     mapie.fit(X, y, calib_kwargs={"z": z})
@@ -177,7 +177,7 @@ def test_poly_phi_init() -> None:
 @pytest.mark.parametrize("variable", ["X", "y_pred", "z"])
 @pytest.mark.parametrize("bias", [True, False])
 @pytest.mark.parametrize("normalized", [True, False])
-def test_poly_phi_init_other(
+def test_poly_calibrator_init_other(
     degree: Any, variable: Any, bias: bool, normalized: bool
 ) -> None:
     """Test that initialization does not crash."""
@@ -198,7 +198,7 @@ def test_invalid_variable_value(var: Any) -> None:
 
 
 # ======== GaussianCCP =========
-def test_gauss_phi_init() -> None:
+def test_gauss_calibrator_default_init() -> None:
     """Test that initialization does not crash."""
     mapie = SplitCPRegressor(calibrator=GaussianCCP(), alpha=0.1)
     mapie.fit(X, y, calib_kwargs={"z": z})
