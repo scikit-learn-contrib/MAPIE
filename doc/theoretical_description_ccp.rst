@@ -6,7 +6,7 @@
 Theoretical Description
 ########################
 
-The Conditional Conformal Prediction (CCP) method :ref:`[1]<references_ccp>` allows for better (adaptative) interval widths with
+The Conditional Conformal Prediction (CCP) method :ref:`[1]<theoretical_description_ccp_references>` allows for better (adaptative) interval widths with
 all type of data. The method has a lot of advantages:
 
 - It is model agnostic (it doesn't depend on the model but only on the predictions, unlike `CQR`)
@@ -47,6 +47,9 @@ This is the equation corresponding to the perfect conditional coverage, which is
 Then, relaxing this objective by replacing "all measurable f" with "all f belonging to some class :math:`\mathcal{F}`"
 seems a way to get close to the perfect conditional coverage.
 
+
+.. _theoretical_description_ccp_control_steps:
+
 The method follow 3 steps:
 ----------------------------
 
@@ -59,7 +62,7 @@ The method follow 3 steps:
 2. Find the best function of this class by resolving the following optimization problem:
 
   Note: It is actually a quantile regression between the transformation :math:`\Phi (X)` and the conformity scores `S`.
-
+  
   .. math::
     \hat{g}_S := arg\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), S)
 
@@ -79,7 +82,7 @@ The method follow 3 steps:
   .. math::
     \hat{C}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{g}(X_{n+1})
 
-.. _ccp_control_coverage:
+.. _theoretical_description_ccp_control_coverage:
 
 Coverage guarantees:
 -----------------------
@@ -130,7 +133,8 @@ The following will provide some tips on how to use the method (for more practica
 Avoid miscoverage
 --------------------
 
-- | The control of the coverage error (:ref:`here<ccp_control_coverage>`) can be very big, depending of the
+- | The control of the coverage error (:ref:`here<theoretical_description_ccp_control_coverage>`)
+    can be very big, depending of the
     values :math:`|f(X_i)|` can take, and the number of dimensions :math:`d`.
   | 
   | For example, if you divide 1000 samples into 20 disjoints groups of 50 samples,
@@ -149,7 +153,7 @@ Avoid miscoverage
     the same coverage on the test set (subject to variability due to the finite number of samples).
 
 
-.. _references_ccp:
+.. _theoretical_description_ccp_references:
 
 References
 ==========

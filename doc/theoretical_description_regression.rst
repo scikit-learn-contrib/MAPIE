@@ -29,6 +29,8 @@ feature vector :math:`X_{n+1}` such that
 All the methods below are described with the absolute residual conformity score for simplicity
 but other conformity scores are implemented in MAPIE (see :doc:`theoretical_description_conformity_scores`).
 
+.. _theoretical_description_regression_naive: 
+
 1. The "Naive" method
 =====================
 

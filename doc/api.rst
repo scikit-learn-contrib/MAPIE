@@ -102,6 +102,7 @@ CCP
    :template: class.rst
 
    futur.split.SplitCPRegressor
-   calibrators.ccp.CustomCCP
-   calibrators.ccp.PolynomialCCP
-   calibrators.ccp.GaussianCCP
+   calibrators.StandardCalibrator
+   calibrators.CustomCCP
+   calibrators.PolynomialCCP
+   calibrators.GaussianCCP
