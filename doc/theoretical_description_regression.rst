@@ -343,13 +343,13 @@ The method follow 3 steps:
   Note: It is actually a quantile regression between the transformation :math:`\Phi (X)` and the conformity scores `S`.
 
   .. math::
-    \hat{g}_S \coloneq  arg\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), S)
+    \hat{g}_S := arg\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), S)
 
   We use the same adaptation as the ``naive`` approach, to go from the ``full conformal``
   approach to the ``split`` one, using:
   
   .. math::
-    \hat{g} \coloneq  arg\min_{g \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^n{l_{\alpha^*} (g(X_i), S_i)} \quad \text{where} \quad \alpha^* = 1 - \frac{\lceil (n+1)(1-\alpha) \rceil}{n}
+    \hat{g} :=  arg\min_{g \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^n{l_{\alpha^*} (g(X_i), S_i)} \quad \text{where} \quad \alpha^* = 1 - \frac{\lceil (n+1)(1-\alpha) \rceil}{n}
 
 3. We use this optimized function :math:`\hat{g}` to compute the prediction intervals:
   
@@ -377,7 +377,7 @@ If :math:`\mathcal{F} = \{ x \mapsto \sum _{G \in \mathcal{G}} \; \beta_G \mathb
 .. math::
   \forall G \in \mathcal{G}, \quad
   \left | \mathbb{P}(Y_{n+1} \in \hat{C}(X_{n+1}) \; | \; X_{n+1} \in G) - (1 - \alpha) \right |
-  \leq \frac{|\mathcal{G}|}{(n+1) \mathbb{P}(X_{n+1} \in G)}
+  \leq \frac{|\mathcal{G}|}{(n+1) \mathbb{P}(X_{n+1} \in G)} \\
   = \frac{\text{number of groups in } \mathcal{G}}{\text{number of samples of } \{X_i\} \text{ in G}}
 
 How to use it in practice?
@@ -387,7 +387,10 @@ Creating a class a function adapted to our needs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following will provide some tips on how to use the method, see the
-:doc:`examples_regression/4-tutorials/plot_ccp_tutorial.rst` tutorial for more practical explanations.
+:doc:`examples_regression/4-tutorials/plot_ccp_tutorial` tutorial for more practical explanations.
+
+The following will provide some tips on how to use the method, see the
+:doc:`plot_ccp_tutorial` tutorial for more practical explanations.
 
 1. If you want a generally adaptative interval and you don't have prior
    knowledge about your data, you can use gaussian kernels, implemented in Mapie
@@ -415,7 +418,7 @@ Avoid miscoverage
 - | Some miscoverage can also comes from the optimization process, which is
     solved with numerical methods, and may fail to find the global minimum.
     If the target coverage is not achieved, you can try adding regularization,
-    to help the optimisation process. You can also try reducing the number of dimensions ``d``
+    to help the optimisation process. You can also try reducing the number of dimensions :math:`d`
     or using a smoother :math:`\Phi` function, such as with gaussian kernels
     (indeed, using only indicator functions makes the optimization very difficult).
 
