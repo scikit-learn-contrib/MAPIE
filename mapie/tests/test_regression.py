@@ -965,8 +965,9 @@ def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
     np.testing.assert_allclose(y_pred, 0)
 
 
-def test_invalid_predict_parameters() -> None:
-    """Test that invalid predict_parameters raise errors."""
+def test_using_one_predict_parameter_into_predict_but_not_in_fit() -> None:
+    """Test that using predict parameters in the predict method
+    without using one predict_parameter in the fit method raises an error"""
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)

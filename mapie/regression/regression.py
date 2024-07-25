@@ -515,7 +515,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
         fit_params = kwargs.pop('fit_params', {})
         predict_params = kwargs.pop('predict_params', {})
-
         if len(predict_params) > 0:
             self._predict_params = True
         else:
