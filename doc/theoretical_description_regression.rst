@@ -386,11 +386,8 @@ How to use it in practice?
 Creating a class a function adapted to our needs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following will provide some tips on how to use the method, see the
-:doc:`examples_regression/4-tutorials/plot_ccp_tutorial` tutorial for more practical explanations.
-
-The following will provide some tips on how to use the method, see the
-:doc:`plot_ccp_tutorial` tutorial for more practical explanations.
+The following will provide some tips on how to use the method, see
+:doc:`examples_regression/4-tutorials/plot_ccp_tutorial` for more practical explanations.
 
 1. If you want a generally adaptative interval and you don't have prior
    knowledge about your data, you can use gaussian kernels, implemented in Mapie
