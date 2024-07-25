@@ -21,6 +21,57 @@ from mapie._typing import ArrayLike, NDArray
 
 
 class Mondrian:
+    """Mondrian is a method that allows to make  perform conformal predictions
+    for disjoints groups of individuals.
+    The Mondrian method is implemented in the Mondrian class. It takes as
+    input a MapieClassifier, MapieRegressor or MapieMultiLabelClassifier
+    estimator and fits a model for each group of individuals. The Mondrian
+    class can then be used to run a conformal prediction procedure for each
+    of these groups and hence achieve marginal coverage on each of them.
+
+    Parameters
+    ----------
+    mapie_estimator : Union[MapieClassifier, MapieRegressor or MapieMultiLabelClassifier]
+        The estimator for which the Mondrian method will be applied. The estimator must 
+        be used with cv='prefit' and the conformity score must be one of the following:
+        - For MapieClassifier: 'lac', 'score', 'cumulated_score', 'aps' or 'topk'
+        - For MapieRegressor: 'gamma', 'absolute' or 'aps'
+    
+    Attributes
+    ----------
+    unique_groups : NDArray
+        The unique groups of individuals for which the estimator was fitted
+    mapie_estimators : Dict
+        A dictionary containing the fitted conformal estimator for each group of individuals
+
+    References
+    ----------
+    Vladimir Vovk, David Lindsay, Ilia Nouretdinov, and Alex Gammerman.
+    Mondrian confidence machine.
+    Technical report, Royal Holloway University of London, 2003
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from sklearn.naive_bayes import GaussianNB
+    >>> from mapie.classification import MapieClassifier
+    >>> X_toy = np.arange(9).reshape(-1, 1)
+    >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
+    >>> groups = [0, 0, 0, 0, 1, 1, 1, 1, 1]
+    >>> clf = GaussianNB().fit(X_toy, y_toy)
+    >>> mapie = Mondrian(MapieClassifier(estimator=clf, cv="prefit")).fit(X_toy, y_toy, groups=groups)
+    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.4, groups=groups)
+    >>> print(y_pi_mapie[:, :, 0])
+    [[ True False False]
+    [ True False False]
+    [ True  True False]
+    [ True  True False]
+    [False  True False]
+    [False  True  True]
+    [False False  True]
+    [False False  True]
+    [False False  True]]
+    """
 
     allowed_estimators = (
         MapieClassifier, MapieRegressor, MapieMultiLabelClassifier
@@ -52,7 +103,7 @@ class Mondrian:
                 "uses cv='prefit'"
             )
 
-    def _check_groups_fit(X, groups: NDArray):
+    def _check_groups_fit(self, X: NDArray, groups: NDArray):
         """Check that each group is defined by an integer and check that there
         are at least 2 individuals per group"""
         if not np.issubdtype(groups.dtype, np.integer):
@@ -84,8 +135,8 @@ class Mondrian:
                         "The conformity score for the MapieClassifier must be one of "+
                         f"{self.allowed_classification_ncs_class}"
                     )
-            else:
-                if self.mapie_estimator.ncs_str not in self.allowed_classification_ncs_str:
+            if self.mapie_estimator.method is not None:
+                if self.mapie_estimator.method not in self.allowed_classification_ncs_str:
                     raise ValueError(
                         "The conformity score for the MapieClassifier must be one of "+
                         f"{self.allowed_classification_ncs_str}"
@@ -102,12 +153,12 @@ class Mondrian:
         self._check_estimator()
         self._check_mapie_classifier()
         self._check_confomity_score()
-        self._check_groups_fit(X, groups)
         X, y = indexable(X, y)
         y = _check_y(y)
         X = cast(NDArray, X)
         y = cast(NDArray, y)
-        groups = cast(NDArray, groups)
+        groups = cast(NDArray, np.array(groups))
+        self._check_groups_fit(X, groups)
 
         return X, y, groups
 
