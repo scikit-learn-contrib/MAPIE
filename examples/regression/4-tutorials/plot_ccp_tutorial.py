@@ -1,7 +1,7 @@
 """
-====================================================
-Tutorial for conditionnal conformal predictions (CCP)
-====================================================
+============================================
+Tutorial: Conditional CP for regression
+============================================
 
 We will use a synthetic toy dataset for the tutorial of the CCP method, and
 its comparison with the other methods available in MAPIE. The CCP method
@@ -23,8 +23,9 @@ standard split-conformal method, the CV+ method
 
 Recall that the ``alpha`` is ``1 - target coverage``.
 
-[1] Isaac Gibbs, John J. Cherian, Emmanuel J. Candès (2023).
-Conformal Prediction With Conditional Guarantees
+[1] Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès,
+"Conformal Prediction With Conditional Guarantees",
+`arXiv <https://arxiv.org/abs/2305.12616>`_, 2023.
 """
 
 import warnings
