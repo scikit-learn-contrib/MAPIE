@@ -985,6 +985,27 @@ def test_using_one_predict_parameter_into_predict_but_not_in_fit() -> None:
         mapie_fitted.predict(X_test, **predict_params)
 
 
+def test_using_one_predict_parameter_into_fit_but_not_in_predict() -> None:
+    """Test that using predict parameters in the fit method
+    without using one predict_parameter in
+    the predict method raises an error"""
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    mapie = MapieRegressor(estimator=custom_gbr)
+    predict_params = {'check_predict_params': True}
+    mapie_fitted = mapie.fit(X_train, y_train, predict_params=predict_params)
+
+    with pytest.raises(ValueError, match=(
+        r"Using one 'predict_param' in the fit method "
+        r"without using one 'predict_param' in the predict method. "
+        r"Please ensure one 'predict_param' "
+        r"is used in the predict method before calling it."
+    )):
+        mapie_fitted.predict(X_test)
+
+
 def test_predict_infinite_intervals() -> None:
     """Test that MapieRegressor produces infinite bounds with alpha=0"""
     mapie_reg = MapieRegressor().fit(X, y)
