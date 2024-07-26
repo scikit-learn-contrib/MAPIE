@@ -88,11 +88,12 @@ class GaussianCCP(CCPCalibrator):
          - For 100 points, the sigma value will be, in general,
          multiplied by a value between 0.5 and 2
 
-        Note: This is a default suggestion of randomization,
-        which allow to have in the same time wide and narrow gaussians.
+        .. note::
+            This is a default suggestion of randomization,
+            which allow to have in the same time wide and narrow gaussians.
 
-        You can use fully custom sigma values, buy passing to the
-        ``points`` argument, a different sigma value for each point.
+            You can use fully custom sigma values, buy passing to the
+            ``points`` argument, a different sigma value for each point.
 
         By default, ``False``
 
@@ -108,10 +109,12 @@ class GaussianCCP(CCPCalibrator):
         If you are not sure, use ``bias=True`` to garantee the marginal
         coverage.
 
-        Note: In this case, with ``GaussianCCP``, if ``normalized`` is
-        ``True`` (it is, by default), the ``phi(X, y_pred, z)`` will never
-        be all zeros, so this ``bias`` is not required
-        to have a guaranteed coverage.
+        ..note::
+            In this case, with ``GaussianCCP``, if ``normalized`` is
+            ``True`` (it is, by default), the result of
+            ``calibrator.predict(X, y_pred, z)``  will never
+            be all zeros, so this ``bias`` is not required,
+            to have a guaranteed coverage.
 
         By default ``False``.
 
@@ -125,11 +128,12 @@ class GaussianCCP(CCPCalibrator):
         On the opposite, it is not recommended if the conformity
         scores can vary a lot.
 
-        Note: To make sure that for too small ``sigma`` values,
-        or for out-of-distribution samples, the interval width doesn't crash
-        to zero, we set by default ``normalized = True``. By doing so, even
-        the samples which were in any gaussian tild, will still be linked to
-        the closest one.
+        .. note::
+            To make sure that for too small ``sigma`` values,
+            or for out-of-distribution samples, the interval width doesn't
+            crash to zero, we set by default ``normalized = True``.
+            By doing so, even the samples which were in any gaussian tild,
+            will still be linked to the closest one.
 
         By default ``True``
 
@@ -144,9 +148,10 @@ class GaussianCCP(CCPCalibrator):
         strength. ``reg_param`` must be a non-negative
         float i.e. in ``[0, inf)``.
 
-        Note: A too strong regularization may compromise the guaranteed
-        marginal coverage. If ``calibrator.normalize=True``, it is usually
-        recommanded to use ``reg_param < 1e-3``.
+        .. warning::
+            A too strong regularization may compromise the guaranteed
+            marginal coverage. If ``calibrator.normalize=True``, it is usually
+            recommanded to use ``reg_param < 1e-3``.
 
         If ``None``, no regularization is used.
 
@@ -184,6 +189,19 @@ class GaussianCCP(CCPCalibrator):
 
     beta_low_: Tuple[NDArray, bool]
         Same as beta_up, but for the lower bound
+
+    Warnings
+    --------
+        The CCP implementation (:class:`~mapie.calibrators.ccp.CCPCalibrator`)
+        has a stochastic behavior. To have reproductible results,
+        use an integer ``random_state`` value in the
+        :class:`~mapie.futur.split.SplitCPRegressor` or
+        :class:`~mapie.futur.split.SplitCPClassifier` initialisation.
+
+    References
+    ----------
+    Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
+    "Conformal Prediction With Conditional Guarantees", 2023
 
     Examples
     --------

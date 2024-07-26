@@ -13,11 +13,12 @@ from .utils import (check_multiplier, check_custom_calibrator_functions,
 
 class CustomCCP(CCPCalibrator):
     """
-    Calibrator used for the in ``SplitCPRegressor`` or ``SplitCPClassifier``
-    to estimate the conformity scores.
+    Calibrator used in :class:`~SplitCPRegressor` or
+    :class:`~SplitCPClassifier` to estimate the conformity scores.
 
     It corresponds to the adaptative conformal prediction method proposed by
-    Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
+    Gibbs et al. (2023) in
+    "Conformal Prediction With Conditional Guarantees" [1].
 
     The goal is to learn the quantile of the conformity scores distribution,
     to built the prediction interval, not with a constant ``q`` (as it is the
@@ -36,13 +37,15 @@ class CustomCCP(CCPCalibrator):
     Parameters
     ----------
     functions: Optional[Union[Callable, Iterable[Callable]]]
-        List of functions (or CCPCalibrator objects) or single function.
+        List of functions (or ``CCPCalibrator`` objects) or single function.
 
         Each function can take a combinaison of the following arguments:
+
         - ``X``: Input dataset, of shape (n_samples, ``n_in``)
         - ``y_pred``: estimator prediction, of shape (n_samples,)
         - ``z``: exogenous variable, of shape (n_samples, n_features).
-            It should be given in the ``fit`` and ``predict`` methods.
+          It should be given in the ``fit`` and ``predict`` methods.
+
         The results of each functions will be concatenated to build the final
         result of the transformation, of shape ``(n_samples, n_out)``, which
         will be used to estimate the conformity scores quantiles.
@@ -86,9 +89,10 @@ class CustomCCP(CCPCalibrator):
         strength. ``reg_param`` must be a non-negative
         float i.e. in ``[0, inf)``.
 
-        Note: A too strong regularization may compromise the guaranteed
-        marginal coverage. If ``calibrator.normalize=True``, it is usually
-        recommanded to use ``reg_param < 1e-3``.
+        .. warning::
+            A too strong regularization may compromise the guaranteed
+            marginal coverage. If ``calibrator.normalize=True``, it is usually
+            recommanded to use ``reg_param < 1e-3``.
 
         If ``None``, no regularization is used.
 
@@ -119,6 +123,20 @@ class CustomCCP(CCPCalibrator):
 
     beta_low_: Tuple[NDArray, bool]
         Same as ``beta_up_``, but for the lower bound
+
+    Warnings
+    --------
+        The CCP implementation (:class:`~mapie.calibrators.ccp.CCPCalibrator`)
+        has a stochastic behavior. To have reproductible results,
+        use an integer ``random_state`` value in the
+        :class:`~mapie.futur.split.SplitCPRegressor` or
+        :class:`~mapie.futur.split.SplitCPClassifier` initialisation.
+
+    References
+    ----------
+    [1]:
+        Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
+        "Conformal Prediction With Conditional Guarantees", 2023
 
     Examples
     --------

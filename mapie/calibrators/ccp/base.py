@@ -41,10 +41,12 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         List of functions (or ``CCPCalibrator`` objects) or single function.
 
         Each function can take a combinaison of the following arguments:
+
         - ``X``: Input dataset, of shape (n_samples, ``n_in``)
         - ``y_pred``: estimator prediction, of shape (n_samples,)
         - ``z``: exogenous variable, of shape (n_samples, n_features).
-            It should be given in the ``fit`` and ``predict`` methods.
+          It should be given in the ``fit`` and ``predict`` methods.
+
         The results of each functions will be concatenated to build the final
         result of the transformation, of shape ``(n_samples, n_out)``, which
         will be used to estimate the conformity scores quantiles.
@@ -88,9 +90,10 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         strength. ``reg_param`` must be a non-negative
         float i.e. in ``[0, inf)``.
 
-        Note: A too strong regularization may compromise the guaranteed
-        marginal coverage. If ``calibrator.normalize=True``, it is usually
-        recommanded to use ``reg_param < 1e-3``.
+        .. warning::
+            A too strong regularization may compromise the guaranteed
+            marginal coverage. If ``calibrator.normalize=True``, it is usually
+            recommanded to use ``reg_param < 1e-3``.
 
         If ``None``, no regularization is used.
 
@@ -121,6 +124,14 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
     beta_low_: Tuple[NDArray, bool]
         Same as ``beta_up_``, but for the lower bound
+
+    Warnings
+    --------
+        The CCP implementation (:class:`~mapie.calibrators.ccp.CCPCalibrator`)
+        has a stochastic behavior. To have reproductible results,
+        use an integer ``random_state`` value in the
+        :class:`~mapie.futur.split.SplitCPRegressor` or
+        :class:`~mapie.futur.split.SplitCPClassifier` initialisation.
 
     References
     ----------

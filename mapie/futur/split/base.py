@@ -359,8 +359,9 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             See the calibrator ``.fit`` method documentation to have more
             information about the required arguments.
 
-            Note: if the calibrator need exogenous variables (``z_train`` or
-            ``z_calib``), you should pass ``z`` in ``calib_kwargs``
+            .. note::
+                if the calibrator need exogenous variables (``z_train`` or
+                ``z_calib``), you should pass ``z`` in ``calib_kwargs``
 
         Returns
         -------
@@ -478,8 +479,9 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             See the calibrator ``.fit`` method documentation to have more
             information about the required arguments.
 
-            Note: if the calibrator need exogenous variables (``z_train`` or
-            ``z_calib``), you should pass ``z`` in ``calib_kwargs``
+            .. note::
+                if the calibrator need exogenous variables (``z_train`` or
+                ``z_calib``), you should pass ``z`` in ``calib_kwargs``
 
         Returns
         -------

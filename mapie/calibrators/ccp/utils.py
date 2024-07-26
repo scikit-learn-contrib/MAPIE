@@ -511,9 +511,10 @@ def calibrator_optim_objective(
         strength. ``reg_param`` must be a non-negative
         float i.e. in ``[0, inf)``.
 
-        Note: A too strong regularization may compromise the guaranteed
-        marginal coverage. If ``calibrator.normalize=True``, it is usually
-        recommanded to use ``reg_param < 1e-3``.
+        .. warning::
+            A too strong regularization may compromise the guaranteed
+            marginal coverage. If ``calibrator.normalize=True``, it is usually
+            recommanded to use ``reg_param < 1e-3``.
 
         If ``None``, no regularization is used.
 

@@ -17,9 +17,9 @@ from mapie.utils import (check_conformity_score, check_estimator_regression,
 
 class SplitCPRegressor(SplitCP):
     """
-    Class to implement Conformal Prediction in ``"split"``
-    approach for regression tasks.
-    It is based on a predictor (``RegressorMixin`` object),
+    Class to implement Conformal Prediction in ``"split"`` approach for
+    regression tasks, based on :class:`~futur.split.base.SplitCP`.
+    It uses a predictor (``RegressorMixin`` object),
     and a calibrator (``BaseCalibrator`` object).
 
     Parameters
@@ -82,12 +82,18 @@ class SplitCPRegressor(SplitCP):
     random_state: Optional[int]
         Integer used to set the numpy seed, to get reproducible calibration
         results.
-        If ``None``, the prediction intervals will be stochastics, and will
+        If ``None``, the prediction intervals may be stochastics and
         change if you refit the calibration (even if no arguments have change).
 
-        WARNING: If ``random_state``is not ``None``, ``np.random.seed`` will
-        be changed, which will reset the seed for all the other random
-        number generators. It may have an impact on the rest of your code.
+        .. warning::
+            Some methods, as the CCP method
+            (:class:`~mapie.calibrators.ccp.CCPCalibrator`),
+            have a stochastic behavior. To have reproductible results,
+            use an integer ``random_state`` value.
+
+            However, if ``random_state`` is not ``None``, ``np.random.seed``
+            will be changed, which will reset the seed for all the other random
+            number generators. It may have an impact on the rest of your code.
 
         By default ``None``.
 

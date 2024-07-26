@@ -10,7 +10,8 @@ from .utils import format_functions
 
 class PolynomialCCP(CCPCalibrator):
     """
-    Calibrator used for the in ``SplitCPRegressor`` or ``SplitCPClassifier``
+    Calibrator based on :class:`~mapie.calibrators.ccp.CCPCalibrator`,
+    used for the in ``SplitCPRegressor`` or ``SplitCPClassifier``
     to estimate the conformity scores.
 
     It corresponds to the adaptative conformal prediction method proposed by
@@ -42,11 +43,12 @@ class PolynomialCCP(CCPCalibrator):
 
         If ``None``, it will default to ``degree=1``.
 
-        Note: if ``0`` is in the considered exponents (if ``degree`` is an
-        integer, or if ``0 in degree`` if it is a list), it is not
-        ``variable**0`` of shape ``(n_samples, n_in)`` which is added, but only
-        one feature of ones, of shape ``(n_samples, 1)``. It is actually
-        equivalent to ``bias=True``.
+        .. note::
+            if ``0`` is in the considered exponents (if ``degree`` is an
+            integer, or if ``0 in degree`` if it is a list), it is not
+            ``variable**0`` of shape ``(n_samples, n_in)`` which is added,
+            but only one feature of ones, of shape ``(n_samples, 1)``.
+            It is actually equivalent to ``bias=True``.
 
         By default ``None``.
 
@@ -93,9 +95,10 @@ class PolynomialCCP(CCPCalibrator):
         strength. ``reg_param`` must be a non-negative
         float i.e. in ``[0, inf)``.
 
-        Note: A too strong regularization may compromise the guaranteed
-        marginal coverage. If ``calibrator.normalize=True``, it is usually
-        recommanded to use ``reg_param < 1e-3``.
+        .. warning::
+            A too strong regularization may compromise the guaranteed
+            marginal coverage. If ``calibrator.normalize=True``, it is usually
+            recommanded to use ``reg_param < 1e-3``.
 
         If ``None``, no regularization is used.
 
@@ -129,6 +132,19 @@ class PolynomialCCP(CCPCalibrator):
 
     beta_low_: Tuple[NDArray, bool]
         Same as beta_up, but for the lower bound
+
+    Warnings
+    --------
+        The CCP implementation (:class:`~mapie.calibrators.ccp.CCPCalibrator`)
+        has a stochastic behavior. To have reproductible results,
+        use an integer ``random_state`` value in the
+        :class:`~mapie.futur.split.SplitCPRegressor` or
+        :class:`~mapie.futur.split.SplitCPClassifier` initialisation.
+
+    References
+    ----------
+    Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
+    "Conformal Prediction With Conditional Guarantees", 2023
 
     Examples
     --------

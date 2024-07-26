@@ -16,7 +16,7 @@ class BaseCalibrator(BaseEstimator, metaclass=ABCMeta):
     The ``BaseCalibrator`` subclasses should have at least two methods:
 
     - ``fit`` : Fit the calibrator to estimate the conformity scores
-        quantiles.
+      quantiles.
 
     -  ``predict`` : Predict the conformity score quantiles.
 
