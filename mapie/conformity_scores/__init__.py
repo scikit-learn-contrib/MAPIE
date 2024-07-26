@@ -1,11 +1,23 @@
-from .conformity_scores import ConformityScore
-from .residual_conformity_scores import (AbsoluteConformityScore,
-                                         GammaConformityScore,
-                                         ResidualNormalisedScore)
+from .regression import BaseRegressionScore
+from .classification import BaseClassificationScore
+from .bounds import (
+    AbsoluteConformityScore, GammaConformityScore, ResidualNormalisedScore
+)
+from .sets import (
+    APSConformityScore, LACConformityScore, NaiveConformityScore,
+    RAPSConformityScore, TopKConformityScore
+)
+
 
 __all__ = [
-    "ConformityScore",
+    "BaseRegressionScore",
+    "BaseClassificationScore",
     "AbsoluteConformityScore",
     "GammaConformityScore",
-    "ResidualNormalisedScore"
+    "ResidualNormalisedScore",
+    "NaiveConformityScore",
+    "LACConformityScore",
+    "APSConformityScore",
+    "RAPSConformityScore",
+    "TopKConformityScore"
 ]

@@ -17,7 +17,6 @@ from sklearn.utils.validation import (_check_sample_weight, _check_y,
 
 from ._compatibility import np_quantile
 from ._typing import ArrayLike, NDArray
-from .conformity_scores import AbsoluteConformityScore, ConformityScore
 
 SPLIT_STRATEGIES = ["uniform", "quantile", "array split"]
 
@@ -693,40 +692,6 @@ def check_lower_upper_bounds(
     if any_inversion:
         warnings.warn(
             "WARNING: The predictions are ill-sorted."
-        )
-
-
-def check_conformity_score(
-    conformity_score: Optional[ConformityScore],
-    sym: bool = True,
-) -> ConformityScore:
-    """
-    Check parameter ``conformity_score``.
-
-    Raises
-    ------
-    ValueError
-        If parameter is not valid.
-
-    Examples
-    --------
-    >>> from mapie.utils import check_conformity_score
-    >>> try:
-    ...     check_conformity_score(1)
-    ... except Exception as exception:
-    ...     print(exception)
-    ...
-    Invalid conformity_score argument.
-    Must be None or a ConformityScore instance.
-    """
-    if conformity_score is None:
-        return AbsoluteConformityScore(sym=sym)
-    elif isinstance(conformity_score, ConformityScore):
-        return conformity_score
-    else:
-        raise ValueError(
-            "Invalid conformity_score argument.\n"
-            "Must be None or a ConformityScore instance."
         )
 
 
@@ -1470,3 +1435,56 @@ def check_arrays_length(*arrays: NDArray) -> None:
         raise ValueError(
                 "There are arrays with different length"
             )
+
+
+def check_n_samples(
+    X: NDArray,
+    n_samples: Optional[Union[float, int]],
+    indices: NDArray
+) -> int:
+    """
+    Check alpha and prepare it as a ArrayLike.
+
+    Parameters
+    ----------
+    n_samples: Union[float, int]
+        Can be a float between 0 and 1 or a int
+        Between 0 and 1, represent the part of data in the train sample
+        When n_samples is a int, it represents the number of elements
+        in the train sample
+
+    Returns
+    -------
+    int
+        n_samples
+
+    Raises
+    ------
+    ValueError
+        If n_samples is not an int in the range [1, inf)
+        or a float in the range (0.0, 1.0)
+    """
+    if n_samples is None:
+        n_samples = len(indices)
+    elif isinstance(n_samples, float):
+        if 0 < n_samples < 1:
+            n_samples = int(np.floor(n_samples * X.shape[0]))
+            if n_samples == 0:
+                raise ValueError(
+                    "The value of n_samples is too small. "
+                    "You need to increase it so that n_samples*X.shape[0] > 1"
+                    "otherwise n_samples should be an int"
+                    )
+        else:
+            raise ValueError(
+                "Invalid n_samples. Allowed values "
+                "are float in the range (0.0, 1.0) or"
+                " int in the range [1, inf)"
+                )
+    elif isinstance(n_samples, int) and n_samples <= 0:
+        raise ValueError(
+             "Invalid n_samples. Allowed values "
+             "are float in the range (0.0, 1.0) or"
+             " int in the range [1, inf)"
+             )
+    return int(n_samples)

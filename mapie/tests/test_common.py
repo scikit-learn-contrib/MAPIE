@@ -109,7 +109,9 @@ def test_none_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     mapie_estimator = MapieEstimator(estimator=None)
     mapie_estimator.fit(X_toy, y_toy)
     if isinstance(mapie_estimator, MapieClassifier):
-        assert isinstance(mapie_estimator.single_estimator_, DefaultEstimator)
+        assert isinstance(
+            mapie_estimator.estimator_.single_estimator_, DefaultEstimator
+        )
     if isinstance(mapie_estimator, MapieRegressor):
         assert isinstance(
             mapie_estimator.estimator_.single_estimator_, DefaultEstimator
