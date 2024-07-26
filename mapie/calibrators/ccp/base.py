@@ -325,13 +325,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             q_cor = np.ceil((1 - self.alpha / 2)*(n_calib+1))/n_calib
         q_cor = np.clip(q_cor, a_min=0, a_max=1)
 
-        if self.random_state is None:
-            warnings.warn("WARNING: The method implemented in "
-                          "SplitCP has a stochastic behavior. "
-                          "To have reproductible results, use an integer "
-                          "`random_state` value in the `SplitCP` "
-                          "initialisation.")
-        else:
+        if self.random_state is not None:
             np.random.seed(self.random_state)
 
         self._transform_params(X_calib, y_pred_calib, z_calib)
