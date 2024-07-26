@@ -94,15 +94,27 @@ Resampling
    subsample.BlockBootstrap
    subsample.Subsample
 
-CCP
-==========
+New Split CP class
+===================
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
 
+   futur.split.base.SplitCP
    futur.split.SplitCPRegressor
+   futur.split.SplitCPClassifier
+
+Calibrators
+===========
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   calibrators.base.BaseCalibrator
    calibrators.StandardCalibrator
-   calibrators.CustomCCP
-   calibrators.PolynomialCCP
-   calibrators.GaussianCCP
+   calibrators.ccp.CCPCalibrator
+   calibrators.ccp.CustomCCP
+   calibrators.ccp.PolynomialCCP
+   calibrators.ccp.GaussianCCP
