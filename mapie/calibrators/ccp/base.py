@@ -11,7 +11,7 @@ from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators import BaseCalibrator
+from mapie.calibrators.base import BaseCalibrator
 from mapie.calibrators.ccp.utils import (calibrator_optim_objective,
                                          check_multiplier,
                                          check_custom_calibrator_functions,

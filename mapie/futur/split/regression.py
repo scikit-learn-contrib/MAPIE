@@ -7,9 +7,10 @@ from sklearn.base import RegressorMixin
 from sklearn.model_selection import PredefinedSplit, ShuffleSplit
 
 from mapie._typing import ArrayLike, NDArray
+from mapie.calibrators.base import BaseCalibrator
 from mapie.calibrators.utils import check_calibrator
 from mapie.conformity_scores import ConformityScore
-from mapie.futur.split.base import BaseCalibrator, SplitCP
+from mapie.futur.split.base import SplitCP
 from mapie.utils import (check_conformity_score, check_estimator_regression,
                          check_lower_upper_bounds)
 

@@ -12,7 +12,7 @@ from sklearn.model_selection import (BaseCrossValidator,
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators import BaseCalibrator
+from mapie.calibrators.base import BaseCalibrator
 from mapie.conformity_scores import ConformityScore
 from mapie.utils import _sample_non_null_weight, fit_estimator
 
