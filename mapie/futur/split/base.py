@@ -274,7 +274,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             return conformity_scores[:, 0]
         else:
             raise ValueError(
-                "Conformity scores, computed with the `get_conformity_scores`"
+                "Invalid conformity scores. The `get_conformity_scores`"
                 "method of the calibrator, should return an array of shape"
                 "(n_samples,) or (n_samples, 1)."
                 f"Got {conformity_scores.shape}."

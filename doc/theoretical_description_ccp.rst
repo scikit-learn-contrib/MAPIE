@@ -22,10 +22,10 @@ How does it works?
 Method's intuition
 --------------------
 
-We recall that the `naive` method estimates the absolute residuals by a constant :math:`\hat{q}_{n, \alpha}^+`
+We recall that the `standard split method` estimates the absolute residuals by a constant :math:`\hat{q}_{n, \alpha}^+`
 (which is the quantile of :math:`{|Y_i-\hat{\mu}(X_i)|}_{1 \leq i \leq n}`). Then, the prediction interval is:
 
-.. math:: \hat{C}_{n, \alpha}^{\textrm naive}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{q}_{n, \alpha}^+
+.. math:: \hat{C}_{n, \alpha}^{\textrm split}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{q}_{n, \alpha}^+
 
 The idea of the `CCP` method, is to learn, not a constant, but a function :math:`q(X)`,
 to have a different interval width depending on the :math:`X` value. Then, we would have:
@@ -55,7 +55,7 @@ The method follow 3 steps:
 ----------------------------
 
 1. Choose  a class of functions. The simple approach is to choose a class a finite dimension :math:`d \in \mathbb{N}`,
-   using 
+   using, for any :math:`\Phi \; : \; \mathbb{R}^d \to \mathbb{R}`
 
   .. math::
     \mathcal{F} = \left\{ \Phi (\cdot)^T \beta  :  \beta \in \mathbb{R}^d \right\}
@@ -67,7 +67,7 @@ The method follow 3 steps:
   .. math::
     \hat{g}_S := \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), S)
 
-  We use the same adaptation as the ``naive`` approach, to go from the ``full conformal``
+  We use the same adaptation as the ``standard`` approach, to go from the ``full conformal``
   approach to the ``split`` one, using:
   
   .. math::

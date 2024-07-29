@@ -7,6 +7,7 @@ import pytest
 from sklearn.base import clone
 from sklearn.datasets import make_regression
 from sklearn.utils.validation import check_is_fitted
+from sklearn.model_selection import ShuffleSplit
 
 from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
                                    PolynomialCCP)
@@ -321,15 +322,29 @@ def test_gaussian_sampling_with_multiplier(calibrator: CCPCalibrator):
 
 
 @pytest.mark.parametrize("calibrator", [
-    GaussianCCP(20)*(lambda X: X[:, 0] > 0),
-    GaussianCCP(30),
+    GaussianCCP(15)*(lambda X: X[:, 0] > 0),
 ])
 def test_gaussian_sampling_error_not_enough_points(calibrator: CCPCalibrator):
     """
-    Test that the points sampled (for the gaussian centers), are sampled
-    within the points which have a not null multiplier value
+    Test that the calibration samples with a not null multiplier value
+    to sample the ``points`` points.
     """
-    mapie = SplitCPRegressor(calibrator=calibrator, alpha=0.1)
+    mapie = SplitCPRegressor(calibrator=calibrator, alpha=0.1,
+                             cv=ShuffleSplit(1, test_size=0.5))
 
-    with pytest.raises(ValueError):
-        mapie.fit(np.linspace(-10, 10, 21).reshape(-1, 1), np.ones(21))
+    with pytest.raises(ValueError, match="There are not enough samples with"):
+        mapie.fit(np.linspace(-10, 10, 40).reshape(-1, 1), np.ones(40))
+
+
+@pytest.mark.parametrize("calibrator", [
+    GaussianCCP(30),
+])
+def test_gaussian_sampling_error_not_enough_points2(calibrator: CCPCalibrator):
+    """
+    Test that the calibration samples to sample the ``points`` points.
+    """
+    mapie = SplitCPRegressor(calibrator=calibrator, alpha=0.1,
+                             cv=ShuffleSplit(1, test_size=0.5))
+
+    with pytest.raises(ValueError, match="There is not enough valid samples"):
+        mapie.fit(np.linspace(-10, 10, 40).reshape(-1, 1), np.ones(40))

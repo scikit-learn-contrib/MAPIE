@@ -664,3 +664,18 @@ def test_get_method_arguments(custom_method: Callable) -> None:
     arguments = mapie._get_method_arguments(custom_method, local_vars,
                                             kwarg_args)
     custom_method(**arguments)
+
+
+@pytest.mark.parametrize("conformity_scores", [
+    np.random.rand(200, 1),
+    np.random.rand(200),
+])
+def test_check_conformity_scores(conformity_scores: NDArray) -> None:
+    mapie = SplitCPRegressor()
+    assert mapie._check_conformity_scores(conformity_scores).shape == (200,)
+
+
+def test_check_conformity_scores_error() -> None:
+    mapie = SplitCPRegressor()
+    with pytest.raises(ValueError, match="Invalid conformity scores."):
+        mapie._check_conformity_scores(np.random.rand(200, 5))

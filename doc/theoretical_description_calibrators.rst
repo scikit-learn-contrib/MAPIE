@@ -21,15 +21,15 @@ The new classes (:class:`~mapie.futur.split.SplitCPRegressor` and :class:`~mapie
 Thus, the calibrators, based on :class:`~mapie.calibrators.base.BaseCalibrator`,
 must have the two methods: ``fit`` and ``predict``.
 
-Mapie currently implements calibrators for the CCP method (and the naive method),
+Mapie currently implements calibrators for the CCP method (and the standard method),
 but any conformal prediction method can be implemented by the user as
 a subclass of :class:`~mapie.calibrators.base.BaseCalibrator`.
 
-Example of naive Split CP:
-----------------------------
+Example of standard split CP:
+------------------------------
 
 For instance, the :class:`~mapie.calibrators.StandardCalibrator` implements
-the :ref:`naive split method<theoretical_description_regression_naive>`:
+the :ref:`standard split method<theoretical_description_regression_standard>`:
 
 * ``.fit`` computes :math:`\hat{q}_{n, \alpha}^+`, the :math:`(1-\alpha)` quantile of the distribution
 * ``.predict`` comptues the prediction intervals with: :math:`\hat{\mu}(X_{n+1}) \pm \hat{q}_{n, \alpha}^+`
