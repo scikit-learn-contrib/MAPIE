@@ -24,7 +24,7 @@ from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
 from mapie.conformity_scores import (AbsoluteConformityScore,
                                      GammaConformityScore,
                                      ResidualNormalisedScore)
-from mapie.conformity_scores.interface import BaseConformityScore
+from mapie.conformity_scores import BaseRegressionScore
 from mapie.metrics import regression_coverage_score
 from mapie.regression import SplitCPRegressor
 
@@ -212,7 +212,7 @@ def test_default_parameters() -> None:
     assert isinstance(mapie_reg.calibrator_, GaussianCCP)
     assert isinstance(mapie_reg.cv, ShuffleSplit)
     assert mapie_reg.alpha == 0.1
-    assert isinstance(mapie_reg.conformity_score_, BaseConformityScore)
+    assert isinstance(mapie_reg.conformity_score_, BaseRegressionScore)
     assert isinstance(mapie_reg.random_state, int)
 
 
@@ -605,7 +605,7 @@ def test_conformity_score(
     cv: Any,
     calibrator: CCPCalibrator,
     predictor: RegressorMixin,
-    conformity_score: BaseConformityScore
+    conformity_score: BaseRegressionScore,
 ) -> None:
     """Test that any conformity score function with MAPIE raises no error."""
 
