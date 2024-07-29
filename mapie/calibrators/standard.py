@@ -8,7 +8,7 @@ from sklearn.utils.validation import _num_samples
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators.base import BaseCalibrator
 from .ccp.utils import check_required_arguments
-from mapie.conformity_scores import ConformityScore
+from mapie.conformity_scores.interface import BaseConformityScore
 
 
 class StandardCalibrator(BaseCalibrator):
@@ -62,10 +62,10 @@ class StandardCalibrator(BaseCalibrator):
         check_required_arguments(self.alpha)
         self.alpha = cast(float, self.alpha)
 
-        # TODO: Partial copy paste of the ConformityScore.get_bounds method
+        # TODO: Partial copy paste of the BaseConformityScore.get_bounds method
         if self.sym:
             alpha_ref = 1-self.alpha
-            quantile_ref = ConformityScore.get_quantile(
+            quantile_ref = BaseConformityScore.get_quantile(
                 conformity_scores_calib[..., np.newaxis],
                 np.array([alpha_ref]), axis=0
             )[0, 0]
@@ -74,12 +74,12 @@ class StandardCalibrator(BaseCalibrator):
         else:
             alpha_low, alpha_up = self.alpha/2, 1 - self.alpha/2
 
-            self.q_low_ = ConformityScore.get_quantile(
+            self.q_low_ = BaseConformityScore.get_quantile(
                 conformity_scores_calib[..., np.newaxis],
                 np.array([alpha_low]), axis=0, reversed=True,
                 unbounded=allow_infinite_bounds
             )[0, 0]
-            self.q_up_ = ConformityScore.get_quantile(
+            self.q_up_ = BaseConformityScore.get_quantile(
                 conformity_scores_calib[..., np.newaxis],
                 np.array([alpha_up]), axis=0,
                 unbounded=allow_infinite_bounds

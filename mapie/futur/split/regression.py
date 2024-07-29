@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import RegressorMixin
@@ -9,10 +9,11 @@ from sklearn.model_selection import PredefinedSplit, ShuffleSplit
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators.base import BaseCalibrator
 from mapie.calibrators.utils import check_calibrator
-from mapie.conformity_scores import ConformityScore
+from mapie.conformity_scores import BaseRegressionScore
+from mapie.conformity_scores.interface import BaseConformityScore
+from mapie.conformity_scores.utils import check_regression_conformity_score
 from mapie.futur.split.base import SplitCP
-from mapie.utils import (check_conformity_score, check_estimator_regression,
-                         check_lower_upper_bounds)
+from mapie.utils import check_estimator_regression, check_lower_upper_bounds
 
 
 class SplitCPRegressor(SplitCP):
@@ -57,16 +58,16 @@ class SplitCPRegressor(SplitCP):
 
         By default ``None``.
 
-    conformity_score: Optional[ConformityScore]
-        ConformityScore instance.
+    conformity_score: Optional[BaseRegressionScore]
+        BaseRegressionScore instance.
         It defines the link between the observed values, the predicted ones
         and the conformity scores. For instance, the default ``None`` value
         correspondonds to a conformity score which assumes
         y_obs = y_pred + conformity_score.
 
-        - ``None``, to use the default ``AbsoluteConformityScore`` symetrical
-        conformity score
-        - Any ``ConformityScore`` class
+        - ``None``, to use the default ``AbsoluteBaseRegressionScore``
+        symetrical conformity score
+        - Any ``BaseRegressionScore`` class
 
         By default ``None``.
 
@@ -114,7 +115,7 @@ class SplitCPRegressor(SplitCP):
         calibrator: Optional[BaseCalibrator] = None,
         cv: Optional[Union[int, str, ShuffleSplit, PredefinedSplit]] = None,
         alpha: Optional[float] = None,
-        conformity_score: Optional[ConformityScore] = None,
+        conformity_score: Optional[BaseRegressionScore] = None,
         random_state: Optional[int] = None,
     ) -> None:
         self.random_state = random_state
@@ -134,13 +135,13 @@ class SplitCPRegressor(SplitCP):
         return predictor
 
     def _check_calibrate_parameters(self) -> Tuple[
-        ConformityScore, BaseCalibrator
+        BaseRegressionScore, BaseCalibrator
     ]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
         ``calibrator`` arguments.
         """
-        conformity_score_ = check_conformity_score(
+        conformity_score_ = check_regression_conformity_score(
             self.conformity_score, self.default_sym_
         )
         calibrator = check_calibrator(self.calibrator)
@@ -149,6 +150,56 @@ class SplitCPRegressor(SplitCP):
         calibrator.alpha = self.alpha
         calibrator.random_state = self.random_state
         return conformity_score_, calibrator
+
+    def get_conformity_scores(
+        self,
+        conformity_score: BaseConformityScore,
+        X: NDArray,
+        y: NDArray,
+        y_pred: NDArray,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **kwargs,
+    ) -> NDArray:
+        """
+        Return the conformity scores of the data
+
+        Parameters
+        ----------
+        conformity_score: BaseRegressionScore
+            Score function that handle all that is related
+            to conformity scores.
+
+        X: NDArray of shape (n_samples, n_features)
+            Data
+
+        y: NDArray of shape (n_samples,)
+            Target
+
+        y_pred: NDArray of shape (n_samples,)
+            Predictions
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights of the data, used as weights in the
+            calibration process.
+
+            By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
+
+        Returns
+        -------
+        NDArray of shape (n_samples,)
+            Conformity scores.
+        """
+
+        return conformity_score.get_conformity_scores(
+            y, y_pred, X=X,
+        )
 
     def predict_score(
         self, X: ArrayLike
@@ -199,11 +250,14 @@ class SplitCPRegressor(SplitCP):
         )
         conformity_score_pred = self.calibrator_.predict(**predict_kwargs)
 
+        self.conformity_score_ = cast(
+            BaseRegressionScore, self.conformity_score_
+        )
         y_pred_low = self.conformity_score_.get_estimation_distribution(
-            X, y_pred[:, np.newaxis], conformity_score_pred[:, [0]]
+            y_pred[:, np.newaxis], conformity_score_pred[:, [0]], X=X,
         )
         y_pred_up = self.conformity_score_.get_estimation_distribution(
-            X, y_pred[:, np.newaxis], conformity_score_pred[:, [1]]
+            y_pred[:, np.newaxis], conformity_score_pred[:, [1]], X=X,
         )
 
         check_lower_upper_bounds(y_pred_low, y_pred_up, y_pred)

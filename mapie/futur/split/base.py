@@ -13,7 +13,7 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators.base import BaseCalibrator
-from mapie.conformity_scores import ConformityScore
+from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.utils import _sample_non_null_weight, fit_estimator
 
 
@@ -57,12 +57,12 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
 
         By default ``None``.
 
-    conformity_score: Optional[ConformityScore]
-        ``ConformityScore`` instance.
+    conformity_score: Optional[BaseConformityScore]
+        ``BaseConformityScore`` instance.
         It defines the link between the observed values, the predicted ones
         and the conformity scores.
 
-        - Can be any ``ConformityScore`` class
+        - Can be any ``BaseConformityScore`` class
         - ``None`` is associated with a default value defined by the subclass
 
         By default ``None``.
@@ -103,7 +103,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         calibrator: Optional[BaseCalibrator] = None,
         cv: Optional[Union[int, str, ShuffleSplit, PredefinedSplit]] = None,
         alpha: Optional[float] = None,
-        conformity_score: Optional[ConformityScore] = None,
+        conformity_score: Optional[BaseConformityScore] = None,
         random_state: Optional[int] = None,
     ) -> None:
         """
@@ -118,7 +118,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
 
     @abstractmethod
     def _check_calibrate_parameters(self) -> Tuple[
-        ConformityScore, BaseCalibrator
+        BaseConformityScore, BaseCalibrator
     ]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
@@ -254,6 +254,32 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
 
         return method_kwargs
 
+    def _check_conformity_scores(self, conformity_scores: NDArray) -> NDArray:
+        """
+        Check the conformity scores shape
+
+        Parameters
+        ----------
+        conformity_scores : NDArray of shape (n_samples,) or (n_sampels, 1)
+            Conformity scores
+
+        Returns
+        -------
+        NDArray:
+            Conformity scores as 1D-array of shape (n_samples,)
+        """
+        if len(conformity_scores.shape) == 1:
+            return conformity_scores
+        if conformity_scores.shape[1] == 1:
+            return conformity_scores[:, 0]
+        else:
+            raise ValueError(
+                "Conformity scores, computed with the `get_conformity_scores`"
+                "method of the calibrator, should return an array of shape"
+                "(n_samples,) or (n_samples, 1)."
+                f"Got {conformity_scores.shape}."
+            )
+
     def fit_predictor(
         self,
         X: ArrayLike,
@@ -337,10 +363,10 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         Parameters
         ----------
         X: ArrayLike of shape (n_samples, n_features)
-            Training data.
+            Data
 
         y: ArrayLike of shape (n_samples,)
-            Training labels.
+            Target
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights of the data, used as weights in the
@@ -396,9 +422,18 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         # Compute conformity scores
         y_pred_calib = self.predict_score(X_calib)
 
-        conformity_scores_calib = self.conformity_score_.get_conformity_scores(
-            X_calib, y_calib, y_pred_calib
+        y_calib = cast(NDArray, y_calib)
+        X_calib = cast(NDArray, X_calib)
+
+        conformity_scores_calib = self.get_conformity_scores(
+            self.conformity_score_, X_calib, y_calib,
+            y_pred_calib, sample_weight_calib, groups
         )
+
+        conformity_scores_calib = self._check_conformity_scores(
+            conformity_scores_calib
+        )
+
         # Get the calibrator arguments
         dict_arguments = dict(zip([
             "X", "y", "z", "sample_weight", "groups",
@@ -450,10 +485,10 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         Parameters
         ----------
         X: ArrayLike of shape (n_samples, n_features)
-            Training data.
+            Data
 
         y: ArrayLike of shape (n_samples,)
-            Training labels.
+            Target
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights used in the predictor fitting.
@@ -537,6 +572,53 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         y_bounds = self.predict_bounds(X, y_pred, **bounds_arguments)
 
         return self.predict_best(y_pred), y_bounds
+
+    @abstractmethod
+    def get_conformity_scores(
+        self,
+        conformity_score: BaseConformityScore,
+        X: NDArray,
+        y: NDArray,
+        y_pred: NDArray,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **kwargs,
+    ) -> NDArray:
+        """
+        Return the conformity scores of the data
+
+        Parameters
+        ----------
+        conformity_score: BaseRegressionScore
+            Score function that handle all that is related
+            to conformity scores.
+
+        X: NDArray of shape (n_samples, n_features)
+            Data
+
+        y: NDArray of shape (n_samples,)
+            Target
+
+        y_pred: NDArray of shape (n_samples,)
+            Predictions
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights of the data, used as weights in the
+            calibration process.
+
+            By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
+
+        Returns
+        -------
+        NDArray of shape (n_samples,)
+            Conformity scores.
+        """
 
     @abstractmethod
     def predict_score(
