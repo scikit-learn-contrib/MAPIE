@@ -12,7 +12,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators.utils import check_calibrator
-from mapie.conformity_scores import BaseClassificationScore, LACConformityScore
+from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.conformity_scores.utils import check_classification_conformity_score
 from mapie.estimator.classifier import EnsembleClassifier
@@ -99,7 +99,7 @@ class SplitCPClassifier(SplitCP):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.futur import SplitCPClassifier
+    >>> from mapie.futur.split import SplitCPClassifier
     >>> np.random.seed(1)
     >>> X_train = np.arange(0,400,2).reshape(-1, 1)
     >>> y_train = np.array([0]*50 + [1]*50 + [2]*50 + [3]*50)
@@ -108,11 +108,11 @@ class SplitCPClassifier(SplitCP):
     >>> y_pred, y_pis = mapie_reg.predict(X_train)
     >>> print(np.round(y_pred[[0, 40, 80, 120]], 2))
     [0 0 1 2]
-    >>> print(np.round(y_pis[[0, 40, 80, 120], :, 0], 2))
-    [[1. 1. 1. 1.]
-     [1. 0. 0. 0.]
-     [0. 1. 0. 0.]
-     [0. 0. 1. 0.]]
+    >>> print(y_pis[[0, 40, 80, 120], :, 0])
+    [[ True  True  True  True]
+     [ True False False False]
+     [False  True False False]
+     [False False  True False]]
     """
     def __init__(
         self,
@@ -205,9 +205,7 @@ class SplitCPClassifier(SplitCP):
             check_is_fitted(est)
             if not hasattr(est, "classes_"):
                 raise AttributeError(
-                    "Invalid classifier. "
-                    "Fitted classifier does not contain "
-                    "'classes_' attribute."
+                    "Fitted classifier must contain 'classes_' attribute."
                 )
         return est
 
@@ -220,22 +218,6 @@ class SplitCPClassifier(SplitCP):
         predictor = self._check_estimator_classification(self.predictor,
                                                          self.cv)
         return predictor
-
-    def _check_calib_conformity_score(
-        self, conformity_score: Optional[BaseClassificationScore], sym: bool
-    ):
-        if not sym:
-            raise ValueError("`sym` argument should be set to `True`"
-                             "in classification")
-        if conformity_score is None:
-            return LACConformityScore()
-        elif isinstance(conformity_score, BaseClassificationScore):
-            return conformity_score
-        else:
-            raise ValueError(
-                "Invalid conformity_score argument.\n"
-                "Must be None or a BaseClassificationScore instance."
-            )
 
     def _check_calibrate_parameters(self) -> Tuple[
         BaseClassificationScore, BaseCalibrator

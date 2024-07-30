@@ -565,3 +565,27 @@ def test_check_conformity_scores_error() -> None:
     mapie = SplitCPClassifier()
     with pytest.raises(ValueError, match="Invalid conformity scores."):
         mapie._check_conformity_scores(np.random.rand(200, 5))
+
+
+def test_invalid_classifier():
+    """
+    Fitted classifier must contain the ``classes_`` attribute
+    """
+    class Custom(ClassifierMixin):
+        def __init__(self) -> None:
+            self.fitted_ = True
+
+        def fit():
+            pass
+
+        def predict():
+            pass
+
+        def predict_proba():
+            pass
+
+    invalid_cls = Custom()
+    mapie = SplitCPClassifier(invalid_cls, cv="prefit", alpha=0.1)
+    with pytest.raises(AttributeError,
+                       match="Fitted classifier must contain 'classes_' attr"):
+        mapie.fit(X, y)
