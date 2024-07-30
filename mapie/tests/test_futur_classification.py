@@ -575,13 +575,13 @@ def test_invalid_classifier():
         def __init__(self) -> None:
             self.fitted_ = True
 
-        def fit():
+        def fit(self):
             pass
 
-        def predict():
+        def predict(self):
             pass
 
-        def predict_proba():
+        def predict_proba(self):
             pass
 
     invalid_cls = Custom()
