@@ -585,6 +585,11 @@ def test_invalid_classifier():
             pass
 
     invalid_cls = Custom()
+    # for coverage:
+    invalid_cls.fit()
+    invalid_cls.predict()
+    invalid_cls.predict_proba()
+
     mapie = SplitCPClassifier(invalid_cls, cv="prefit", alpha=0.1)
     with pytest.raises(AttributeError,
                        match="Fitted classifier must contain 'classes_' attr"):
