@@ -685,5 +685,5 @@ def test_optim_kwargs():
     mapie = SplitCPRegressor(alpha=0.1)
     with pytest.warns(UserWarning, match="Iteration limit reached"):
         mapie.fit(
-            X, y, calib_kwargs={"method": "SFSQP", "options": {"maxiter": 2}}
+            X, y, calib_kwargs={"method": "SLSQP", "options": {"maxiter": 2}}
         )
