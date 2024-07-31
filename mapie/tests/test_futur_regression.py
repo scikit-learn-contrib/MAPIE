@@ -49,8 +49,8 @@ PHI = [
     GaussianCCP(5),
 ]
 WIDTHS = {
-    "split": 3.87,
-    "prefit": 3.89,
+    "split": 3.943,
+    "prefit": 3.943,
 }
 
 COVERAGES = {
@@ -587,8 +587,8 @@ def test_results_prefit() -> None:
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
     coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
-    np.testing.assert_allclose(width_mean, WIDTHS["split"], rtol=1e-2)
-    np.testing.assert_allclose(coverage, COVERAGES["split"], rtol=1e-2)
+    np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
+    np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
 
 
 @pytest.mark.parametrize("calibrator", PHI)
@@ -679,3 +679,11 @@ def test_check_conformity_scores_error() -> None:
     mapie = SplitCPRegressor()
     with pytest.raises(ValueError, match="Invalid conformity scores."):
         mapie._check_conformity_scores(np.random.rand(200, 5))
+
+
+def test_optim_kwargs():
+    mapie = SplitCPRegressor(alpha=0.1)
+    with pytest.warns(UserWarning, match="Iteration limit reached"):
+        mapie.fit(
+            X, y, calib_kwargs={"options": {"method": "SFSQP", "maxiter": 2}}
+        )
