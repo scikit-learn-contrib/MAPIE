@@ -301,14 +301,14 @@ mapie_lac = MapieClassifier(LogisticRegression(), method="lac", cv=cv)
 # ============= CCP indicator groups on predicted classes =============
 mapie_ccp_y_pred = SplitCPClassifier(
     LogisticRegression(),
-    CustomCCP(lambda y_pred: y_pred),
+    calibrator=CustomCCP(lambda y_pred: y_pred),
     alpha=ALPHA, cv=cv, conformity_score=LACConformityScore()
 )
 
 # ======================== CCP Gaussian kernels ========================
 mapie_ccp_gauss = SplitCPClassifier(
     LogisticRegression(),
-    calibrator=GaussianCCP(40, 1, bias=True, reg_param=1e-4),
+    calibrator=GaussianCCP(40, 1, bias=True),
     alpha=ALPHA, cv=cv, conformity_score=LACConformityScore()
 )
 
