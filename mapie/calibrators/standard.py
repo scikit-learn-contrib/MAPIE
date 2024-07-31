@@ -55,9 +55,6 @@ class StandardCalibrator(BaseCalibrator):
 
         allow_infinite_bounds: bool
             Allow infinite prediction intervals to be produced.
-
-        optim_kwargs: Dict
-            Other argument, used in sklear.optimize.minimize
         """
         check_required_arguments(self.alpha)
         self.alpha = cast(float, self.alpha)

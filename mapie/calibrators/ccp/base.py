@@ -314,6 +314,9 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             Other argument, used in sklear.optimize.minimize.
             Can be any of : ``method, jac, hess, hessp, bounds, constraints,
             tol, callback, options``
+
+            By default, we use ``method='SLSQP'`` and
+            ``options={'maxiter: 1000}``.
         """
         check_required_arguments(self.alpha)
         self.alpha = cast(float, self.alpha)
@@ -336,6 +339,13 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         not_nan_index = np.where(~np.isnan(conformity_scores_calib))[0]
         # Some conf. score values may be nan (ex: with ResidualNormalisedScore)
+
+        if "method" not in optim_kwargs:
+            optim_kwargs["method"] = "SLSQP"
+        if "options" not in optim_kwargs:
+            optim_kwargs["options"] = {}
+        if "maxiter" not in optim_kwargs["options"]:
+            optim_kwargs["options"]["maxiter"] = 1000
 
         optimal_beta_up = cast(OptimizeResult, minimize(
             calibrator_optim_objective, self.init_value_,
