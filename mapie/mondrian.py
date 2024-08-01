@@ -15,7 +15,11 @@ from mapie.conformity_scores import (
     TopKConformityScore
 )
 from mapie.multi_label_classification import MapieMultiLabelClassifier
-from mapie.regression import MapieRegressor
+from mapie.regression import (
+    MapieQuantileRegressor,
+    MapieRegressor,
+    MapieTimeSeriesRegressor
+)
 from mapie.utils import check_alpha
 from mapie._typing import ArrayLike, NDArray
 
@@ -78,11 +82,9 @@ class Mondrian:
     [False False  True]]
     """
 
-    allowed_estimators = (
-        MapieClassifier,
-        MapieRegressor,
-        MapieMultiLabelClassifier,
-        MapieCalibrator
+    not_allowed_estimators = (
+        MapieQuantileRegressor,
+        MapieTimeSeriesRegressor
     )
     allowed_classification_ncs_str = [
         "lac", "score", "cumulated_score", "aps", "topk"
@@ -193,14 +195,14 @@ class Mondrian:
 
     def _check_estimator(self):
         """
-        Check that the estimator is in the allowed_estimators
+        Check that the estimator is not in the not_allowed_estimators
 
         Raises
         ------
         ValueError
-            If the estimator is not in the allowed_estimators
+            If the estimator is in the not_allowed_estimators
         """
-        if not isinstance(self.mapie_estimator, self.allowed_estimators):
+        if isinstance(self.mapie_estimator, self.not_allowed_estimators):
             raise ValueError(
                 "The estimator must be a MapieClassifier, MapieRegressor or" +
                 " MapieMultiLabelClassifier"
@@ -364,7 +366,6 @@ class Mondrian:
 
         check_is_fitted(self, self.fit_attributes)
         self._check_not_topk_calibrator()
-        X = indexable(X)
         X = cast(NDArray, X)
         groups = self._check_groups_predict(X, groups)
         if alpha is None:
@@ -414,7 +415,6 @@ class Mondrian:
             The calibrated predicted probabilities
         """
         self._check_is_topk_calibrator()
-        X = indexable(X)
         X = cast(NDArray, X)
         unique_groups = np.unique(groups)
         y_pred_proba = np.empty(
