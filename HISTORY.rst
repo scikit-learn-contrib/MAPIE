@@ -5,6 +5,8 @@ History
 0.8.x (2024-xx-xx)
 ------------------
 
+* Update the ts-changepoint notebook with the tutorial
+* Change import related to conformity scores into ts-changepoint notebook
 * Replace `assert np.array_equal` by `np.testing.assert_array_equal` in Mapie unit tests
 * Replace `github.com/simai-ml/MAPIE` by `github.com/scikit-learn-contrib/MAPIE`in all Mapie files
 * Extend `ConformityScore` to support regression (with `BaseRegressionScore`) and to support classification (with `BaseClassificationScore`)
