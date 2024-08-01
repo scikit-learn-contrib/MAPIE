@@ -1403,13 +1403,13 @@ def check_predict_params(
             raise ValueError(
                 f"Using 'predict_param' '{predict_params}' "
                 f"without using one 'predict_param' in the fit method. "
-                f"Please ensure one 'predict_param' "
-                f"is used in the fit method before calling predict."
+                f"Please ensure a similar configuration of 'predict_param' "
+                f"is used in the fit method before calling it in predict."
             )
         if len(predict_params) == 0 and predict_params_used_in_fit is True:
             raise ValueError(
                 "Using one 'predict_param' in the fit method "
                 "without using one 'predict_param' in the predict method. "
-                "Please ensure one 'predict_param' "
-                "is used in the predict method before calling it."
+                "Please ensure a similar configuration of 'predict_param' "
+                "is used in the predict method as called in the fit."
             )

@@ -966,8 +966,10 @@ def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
 
 
 def test_using_one_predict_parameter_into_predict_but_not_in_fit() -> None:
-    """Test that using predict parameters in the predict method
-    without using one predict_parameter in the fit method raises an error"""
+    """
+    Test that using predict parameters in the predict method
+    without using predict_parameter in the fit method raises an error.
+    """
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)
@@ -979,16 +981,18 @@ def test_using_one_predict_parameter_into_predict_but_not_in_fit() -> None:
     with pytest.raises(ValueError, match=(
         fr".*Using 'predict_param' '{predict_params}' "
         r"without using one 'predict_param' in the fit method\..*"
-        r"Please ensure one 'predict_param' "
-        r"is used in the fit method before calling predict\..*"
+        r"Please ensure a similar configuration of 'predict_param' "
+        r"is used in the fit method before calling it in predict\..*"
     )):
         mapie_fitted.predict(X_test, **predict_params)
 
 
 def test_using_one_predict_parameter_into_fit_but_not_in_predict() -> None:
-    """Test that using predict parameters in the fit method
-    without using one predict_parameter in
-    the predict method raises an error"""
+    """
+    Test that using predict parameters in the fit method
+    without using predict_parameter in
+    the predict method raises an error.
+    """
     custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)
@@ -1000,14 +1004,16 @@ def test_using_one_predict_parameter_into_fit_but_not_in_predict() -> None:
     with pytest.raises(ValueError, match=(
         r"Using one 'predict_param' in the fit method "
         r"without using one 'predict_param' in the predict method. "
-        r"Please ensure one 'predict_param' "
-        r"is used in the predict method before calling it."
+        r"Please ensure a similar configuration of 'predict_param' "
+        r"is used in the predict method as called in the fit."
     )):
         mapie_fitted.predict(X_test)
 
 
 def test_predict_infinite_intervals() -> None:
-    """Test that MapieRegressor produces infinite bounds with alpha=0"""
+    """
+    Test that MapieRegressor produces infinite bounds with alpha=0
+    """
     mapie_reg = MapieRegressor().fit(X, y)
     _, y_pis = mapie_reg.predict(X, alpha=0., allow_infinite_bounds=True)
     np.testing.assert_allclose(y_pis[:, 0, 0], -np.inf)
@@ -1017,7 +1023,9 @@ def test_predict_infinite_intervals() -> None:
 @pytest.mark.parametrize("method", ["minmax", "naive", "plus", "base"])
 @pytest.mark.parametrize("cv", ["split", "prefit"])
 def test_check_change_method_to_base(method: str, cv: str) -> None:
-    """Test of the overloading of method attribute to `base` method in fit"""
+    """
+    Test of the overloading of method attribute to `base` method in fit
+    """
 
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=0.5, random_state=random_state
