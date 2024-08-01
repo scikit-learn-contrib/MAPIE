@@ -10,6 +10,7 @@ from sklearn.datasets import (
     make_regression
 )
 from sklearn.multioutput import MultiOutputClassifier
+from sklearn.model_selection import ShuffleSplit
 
 from mapie.calibration import MapieCalibrator
 from mapie.classification import MapieClassifier
@@ -22,7 +23,11 @@ from mapie.conformity_scores import (
 )
 from mapie.mondrian import Mondrian
 from mapie.multi_label_classification import MapieMultiLabelClassifier
-from mapie.regression import MapieRegressor
+from mapie.regression import (
+    MapieQuantileRegressor,
+    MapieRegressor,
+    MapieTimeSeriesRegressor
+)
 
 VALID_MAPIE_ESTIMATORS_NAMES = [
     "calibration",
@@ -116,6 +121,8 @@ VALID_MAPIE_ESTIMATORS = {
     },
 }
 
+NON_VALID_MAPIE_ESTIMATORS = [MapieQuantileRegressor, MapieTimeSeriesRegressor]
+
 TOY_DATASETS = {
     "calibration": make_classification(
         n_samples=1000, n_features=5, n_informative=5,
@@ -180,3 +187,49 @@ def test_valid_estimators_dont_fail(mapie_estimator_name):
     else:
         mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
         mondrian_cp.predict(x, groups=groups, alpha=.2)
+
+
+@pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
+@pytest.mark.parametrize("non_valid_cv", ["split", -1, 5, ShuffleSplit(1)])
+def test_invalid_cv_fails(mapie_estimator_name, non_valid_cv):
+    task_dict = VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
+    mapie_estimator = task_dict["estimator"]
+    mapie_kwargs = task_dict["kwargs"]
+    task = task_dict["task"]
+    x, y = TOY_DATASETS[task]
+    ml_model = ML_MODELS[task]
+    groups = np.random.choice(10, len(x))
+    model = clone(ml_model)
+    mapie_inst = deepcopy(mapie_estimator)
+    if not isinstance(mapie_inst(), MapieMultiLabelClassifier):
+        mondrian_cp = Mondrian(
+            mapie_estimator=mapie_inst(estimator=model, cv=non_valid_cv)
+        )
+    else:
+        mondrian_cp = Mondrian(
+            mapie_estimator=mapie_inst(estimator=model, **mapie_kwargs),
+        )
+    if task == "multilabel_classification":
+        with pytest.raises(
+            ValueError, match=r".*MultiOutputClassifier instance is not*"
+        ):
+            mondrian_cp.fit(x, y, groups=groups)
+    elif task == "calibration":
+        with pytest.raises(ValueError, match=r".*estimator uses cv='prefit'*"):
+            mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
+    else:
+        with pytest.raises(ValueError, match=r".*estimator uses cv='prefit'*"):
+            mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
+
+
+@pytest.mark.parametrize("mapie_estimator", NON_VALID_MAPIE_ESTIMATORS)
+def test_non_valid_estimators_fails(mapie_estimator):
+    x, y = TOY_DATASETS["regression"]
+    ml_model = ML_MODELS["regression"]
+    groups = np.random.choice(10, len(x))
+    model = clone(ml_model)
+    model.fit(x, y)
+    mondrian = Mondrian(mapie_estimator=mapie_estimator(estimator=model,  cv="prefit"))
+    with pytest.raises(ValueError, match=r".*The estimator must be a*"):
+        mondrian.fit(x, y, groups=groups)
+        
