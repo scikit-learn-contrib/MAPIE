@@ -35,7 +35,7 @@ VALID_MAPIE_ESTIMATORS = {
     "calibration": {
         "estimator": MapieCalibrator,
         "task": "calibration",
-        "kwargs": {"method": "top_label"}
+        "kwargs": {"method": "top_label", "random_state": 0}
     },
     "classif_score": {
         "estimator": MapieClassifier,
@@ -407,3 +407,57 @@ def test_groups_is_list_ok():
     groups = np.random.choice(10, len(x)).tolist()
     mondrian.fit(x, y, groups=groups)
     mondrian.predict(x, groups=groups, alpha=.2)
+
+
+@pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
+def test_same_results_if_only_one_group(mapie_estimator_name):
+    task_dict = VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
+    mapie_estimator = task_dict["estimator"]
+    mapie_kwargs = task_dict["kwargs"]
+    task = task_dict["task"]
+    x, y = TOY_DATASETS[task]
+    ml_model = ML_MODELS[task]
+    groups = [0] * len(x)
+    model = clone(ml_model)
+    model.fit(x, y)
+    mapie_inst_mondrian = deepcopy(mapie_estimator)
+    mapie_classic_inst = deepcopy(mapie_estimator)
+    if not isinstance(mapie_inst_mondrian(), MapieMultiLabelClassifier):
+        mondrian_cp = Mondrian(
+            mapie_estimator=mapie_inst_mondrian(estimator=model, cv="prefit")
+        )
+        mapie_classic = mapie_classic_inst(estimator=model, cv="prefit")
+    else:
+        mondrian_cp = Mondrian(
+            mapie_estimator=mapie_inst_mondrian(estimator=model, **mapie_kwargs),
+        )
+        mapie_classic = mapie_classic_inst(estimator=model, **mapie_kwargs)
+    if task == "multilabel_classification":
+        mondrian_cp.fit(x, y, groups=groups)
+        mapie_classic.fit(x, y)
+        if mapie_estimator_name in [
+            "multi_label_recall_rcps", "multi_label_precision_ltt"
+        ]:
+            mondrian_pred = mondrian_cp.predict(
+                x, groups=groups, alpha=.2, **task_dict["predict_kargs"]
+            )
+            classic_pred = mapie_classic.predict(
+                x, alpha=.2, **task_dict["predict_kargs"]
+            )
+        else:
+            mondrian_pred = mondrian_cp.predict(x, groups=groups, alpha=.2)
+            classic_pred = mapie_classic.predict(x, alpha=.2)
+            
+    elif task == "calibration":
+        mondrian_cp.fit(X=x, y=y, groups=groups, **mapie_kwargs)
+        mapie_classic.fit(x, y, **mapie_kwargs)
+        mondrian_pred = mondrian_cp.predict_proba(x, groups=groups)
+        classic_pred = mapie_classic.predict_proba(x)
+        assert np.allclose(mondrian_pred, classic_pred, equal_nan=True)
+    else:
+        mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
+        mapie_classic.fit(x, y, **mapie_kwargs)
+        mondrian_pred = mondrian_cp.predict(x, groups=groups, alpha=.2)
+        classic_pred = mapie_classic.predict(x, alpha=.2)
+        assert np.allclose(mondrian_pred[0], classic_pred[0])
+        assert np.allclose(mondrian_pred[1], classic_pred[1])
