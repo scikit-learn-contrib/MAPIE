@@ -360,3 +360,14 @@ def test_alpha_none_return_one_element():
     mondrian.fit(x, y, groups=groups)
     preds = mondrian.predict(x, groups=groups)
     assert len(preds) == len(x)
+
+
+def test_groups_is_list_ok():
+    x, y = TOY_DATASETS["classification"]
+    ml_model = ML_MODELS["classification"]
+    model = clone(ml_model)
+    model.fit(x, y)
+    mondrian = Mondrian(mapie_estimator=MapieClassifier(estimator=model, cv="prefit"))
+    groups = np.random.choice(10, len(x)).tolist()
+    mondrian.fit(x, y, groups=groups)
+    preds = mondrian.predict(x, groups=groups, alpha=.2)
