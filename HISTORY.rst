@@ -6,6 +6,9 @@ History
 ------------------
 
 * Add `** predict_params` in fit and predict method for Mapie Classifier
+* Add `** predict_params` in fit and predict method for Mapie Regression
+* Update the ts-changepoint notebook with the tutorial
+* Change import related to conformity scores into ts-changepoint notebook
 * Replace `assert np.array_equal` by `np.testing.assert_array_equal` in Mapie unit tests
 * Replace `github.com/simai-ml/MAPIE` by `github.com/scikit-learn-contrib/MAPIE`in all Mapie files
 * Extend `ConformityScore` to support regression (with `BaseRegressionScore`) and to support classification (with `BaseClassificationScore`)
