@@ -222,6 +222,7 @@ class EnsembleClassifier(EnsembleEstimator):
         self,
         estimator: ClassifierMixin,
         X: ArrayLike,
+        **predict_params
     ) -> NDArray:
         """
         Predict probabilities of a test set from a fitted estimator.
@@ -239,7 +240,7 @@ class EnsembleClassifier(EnsembleEstimator):
         ArrayLike
             Predicted probabilities.
         """
-        y_pred_proba = estimator.predict_proba(X)
+        y_pred_proba = estimator.predict_proba(X, **predict_params)
         # we enforce y_pred_proba to contain all labels included in y
         if len(estimator.classes_) != self.n_classes:
             y_pred_proba = fix_number_of_classes(
@@ -252,7 +253,8 @@ class EnsembleClassifier(EnsembleEstimator):
         estimator: ClassifierMixin,
         X: ArrayLike,
         val_index: ArrayLike,
-        k: int
+        k: int,
+        **predict_params
     ) -> Tuple[NDArray, ArrayLike, ArrayLike]:
         """
         Perform predictions on a single out-of-fold model on a validation set.
@@ -276,7 +278,8 @@ class EnsembleClassifier(EnsembleEstimator):
 
         X_val = _safe_indexing(X, val_index)
         if _num_samples(X_val) > 0:
-            y_pred_proba = self._predict_proba_oof_estimator(estimator, X_val)
+            y_pred_proba = self._predict_proba_oof_estimator(estimator, X_val,
+                                                             **predict_params)
         else:
             y_pred_proba = np.array([])
         val_id = np.full(len(X_val), k, dtype=int)
@@ -401,6 +404,9 @@ class EnsembleClassifier(EnsembleEstimator):
 
             By default ``None``.
 
+        **predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         NDArray of shape (n_samples_test, 1)
@@ -409,7 +415,8 @@ class EnsembleClassifier(EnsembleEstimator):
         check_is_fitted(self, self.fit_attributes)
 
         if self.cv == "prefit":
-            y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba =\
+                self.single_estimator_.predict_proba(X)
             y_pred_proba = self._check_proba_normalized(y_pred_proba)
         else:
             X = cast(NDArray, X)
@@ -417,7 +424,7 @@ class EnsembleClassifier(EnsembleEstimator):
             cv = cast(BaseCrossValidator, self.cv)
             outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self._predict_proba_calib_oof_estimator)(
-                    estimator, X, calib_index, k
+                    estimator, X, calib_index, k, **predict_params
                 )
                 for k, ((_, calib_index), estimator) in enumerate(
                     zip(cv.split(X, y, groups), self.estimators_)
@@ -462,6 +469,9 @@ class EnsembleClassifier(EnsembleEstimator):
             How to aggregate the scores output by the estimators on test data
             if a cross-validation strategy is used
 
+        **predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         NDArray
@@ -471,14 +481,15 @@ class EnsembleClassifier(EnsembleEstimator):
         check_is_fitted(self, self.fit_attributes)
 
         if self.cv == "prefit":
-            y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba = self.single_estimator_.predict_proba(
+                X, **predict_params
+            )
         else:
             y_pred_proba_k = np.asarray(
-                Parallel(
-                    n_jobs=self.n_jobs, verbose=self.verbose
-                )(
-                    delayed(self._predict_proba_oof_estimator)(estimator, X)
-                    for estimator in self.estimators_
+                Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                    delayed(self._predict_proba_oof_estimator)(
+                        estimator, X, **predict_params
+                    ) for estimator in self.estimators_
                 )
             )
             if agg_scores == "crossval":

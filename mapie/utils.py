@@ -1383,7 +1383,6 @@ def check_predict_params(
     """
     Check that if predict_params is used in the predict method,
     it is also used in the fit method. Otherwise, raise an error.
-
     Parameters
     ----------
     predict_params_used_in_fit: bool
