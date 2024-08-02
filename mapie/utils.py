@@ -1387,8 +1387,10 @@ def check_predict_params(
     ----------
     predict_params_used_in_fit: bool
         True if one or more predict_params are used in the fit method
+
     predict_param: dict
         Contains all predict params used in predict method
+
     Raises
     ------
     ValueError
@@ -1402,11 +1404,11 @@ def check_predict_params(
                 f"without using one 'predict_param' in the fit method. "
                 f"Please ensure a similar configuration of 'predict_param' "
                 f"is used in the fit method before calling it in predict."
-                )
+            )
         if len(predict_params) == 0 and predict_params_used_in_fit is True:
             raise ValueError(
                 "Using one 'predict_param' in the fit method "
                 "without using one 'predict_param' in the predict method. "
                 "Please ensure a similar configuration of 'predict_param' "
                 "is used in the predict method as called in the fit."
-                )
+            )
