@@ -196,7 +196,9 @@ def test_valid_estimators_dont_fail(mapie_estimator_name):
         mondrian_cp.predict(x, groups=groups, alpha=.2)
 
 
-@pytest.mark.parametrize("mapie_estimator_name", NON_VALID_MAPIE_ESTIMATORS_NAMES)
+@pytest.mark.parametrize(
+        "mapie_estimator_name", NON_VALID_MAPIE_ESTIMATORS_NAMES
+)
 def test_non_cs_fails(mapie_estimator_name):
     task_dict = NON_VALID_CS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
@@ -209,10 +211,13 @@ def test_non_cs_fails(mapie_estimator_name):
     model.fit(x, y)
     mapie_inst = deepcopy(mapie_estimator)
     mondrian_cp = Mondrian(
-        mapie_estimator=mapie_inst(estimator=model, cv="prefit", **mapie_kwargs)
+        mapie_estimator=mapie_inst(
+            estimator=model, cv="prefit", **mapie_kwargs
+        )
     )
     with pytest.raises(ValueError, match=r".*The conformity score for*"):
         mondrian_cp.fit(x, y, groups=groups)
+
 
 @pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
 @pytest.mark.parametrize("non_valid_cv", ["split", -1, 5, ShuffleSplit(1)])
@@ -254,47 +259,64 @@ def test_non_valid_estimators_fails(mapie_estimator):
     groups = np.random.choice(10, len(x))
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=mapie_estimator(estimator=model,  cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=mapie_estimator(estimator=model,  cv="prefit")
+    )
     with pytest.raises(ValueError, match=r".*The estimator must be a*"):
         mondrian.fit(x, y, groups=groups)
-        
+
 
 def test_groups_not_defined_by_integers_fails():
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=MapieClassifier(estimator=model, cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
+    )
     groups = np.random.choice(10, len(x)).astype(str)
-    with pytest.raises(ValueError, match=r".*The groups must be defined by integers*"):
+    with pytest.raises(
+        ValueError, match=r".*The groups must be defined by integers*"
+    ):
         mondrian.fit(x, y, groups=groups)
+
 
 def test_groups_with_less_than_2_fails():
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=MapieClassifier(estimator=model, cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
+    )
     groups = np.array([1] + [2] * (len(x) - 1))
-    with pytest.raises(ValueError, match=r".*There must be at least 2 individuals*"):
+    with pytest.raises(
+        ValueError, match=r".*There must be at least 2 individuals*"
+    ):
         mondrian.fit(x, y, groups=groups)
+
 
 def test_groups_and_x_have_same_length_in_fit():
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=MapieClassifier(estimator=model, cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
+    )
     groups = np.random.choice(10, len(x) - 1)
     with pytest.raises(ValueError, match=r".*he number of individuals in*"):
         mondrian.fit(x, y, groups=groups)
+
 
 def test_all_groups_in_predict_are_in_fit():
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=MapieClassifier(estimator=model, cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
+    )
     groups = np.random.choice(10, len(x))
     mondrian.fit(x, y, groups=groups)
     groups = np.array([99] * len(x))
@@ -307,7 +329,9 @@ def test_all_groups_in_predict_proba_are_in_fit():
     ml_model = ML_MODELS["calibration"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=MapieCalibrator(estimator=model, cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=MapieCalibrator(estimator=model, cv="prefit")
+    )
     groups = np.random.choice(10, len(x))
     mondrian.fit(x, y, groups=groups)
     groups = np.array([99] * len(x))
@@ -320,7 +344,9 @@ def test_groups_and_x_have_same_length_in_predict():
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=MapieClassifier(estimator=model, cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
+    )
     groups = np.random.choice(10, len(x))
     mondrian.fit(x, y, groups=groups)
     groups = np.random.choice(10, len(x) - 1)
@@ -333,29 +359,37 @@ def test_predict_proba_only_with_calibrator():
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=MapieClassifier(estimator=model, cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
+    )
     groups = np.random.choice(10, len(x))
     mondrian.fit(x, y, groups=groups)
     with pytest.raises(ValueError, match=r".*The predict_proba method*"):
         mondrian.predict_proba(x, groups=groups, alpha=.2)
+
 
 def test_predict_fails_with_calibrator():
     x, y = TOY_DATASETS["calibration"]
     ml_model = ML_MODELS["calibration"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=MapieCalibrator(estimator=model, cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=MapieCalibrator(estimator=model, cv="prefit")
+    )
     groups = np.random.choice(10, len(x))
     mondrian.fit(x, y, groups=groups)
     with pytest.raises(ValueError, match=r".*The predict method*"):
         mondrian.predict(x, groups=groups, alpha=.2)
+
 
 def test_alpha_none_return_one_element():
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=MapieClassifier(estimator=model, cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
+    )
     groups = np.random.choice(10, len(x))
     mondrian.fit(x, y, groups=groups)
     preds = mondrian.predict(x, groups=groups)
@@ -367,7 +401,9 @@ def test_groups_is_list_ok():
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(mapie_estimator=MapieClassifier(estimator=model, cv="prefit"))
+    mondrian = Mondrian(
+        mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
+    )
     groups = np.random.choice(10, len(x)).tolist()
     mondrian.fit(x, y, groups=groups)
-    preds = mondrian.predict(x, groups=groups, alpha=.2)
+    mondrian.predict(x, groups=groups, alpha=.2)

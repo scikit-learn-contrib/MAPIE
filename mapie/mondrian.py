@@ -169,7 +169,7 @@ class Mondrian:
 
         Parameters
         ----------
-        X : ArrayLike of shape (n_samples, n_features)
+        X : NDArray of shape (n_samples, n_features)
             The input data
         groups : ArrayLike of shape (n_samples,)
 
@@ -187,7 +187,9 @@ class Mondrian:
         """
         groups = cast(NDArray, np.array(groups))
         if not np.all(np.isin(groups, self.unique_groups)):
-            raise ValueError("There is at least one new group in the prediction")
+            raise ValueError(
+                "There is at least one new group in the prediction"
+            )
         if len(groups) != X.shape[0]:
             raise ValueError("The number of individuals in the groups must " +
                              "be equal to the number of rows in X")
