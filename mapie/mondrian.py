@@ -370,7 +370,7 @@ class Mondrian:
         self._check_not_topk_calibrator()
         X = cast(NDArray, X)
         groups = self._check_groups_predict(X, groups)
-        if alpha is None:
+        if alpha is None and self.mapie_estimator.estimator is not None:
             return self.mapie_estimator.estimator.predict(X, **kwargs)
         else:
             alpha_np = cast(NDArray, check_alpha(alpha))
@@ -416,9 +416,10 @@ class Mondrian:
         y_pred_proba : NDArray of shape (n_samples, n_classes)
             The calibrated predicted probabilities
         """
+        check_is_fitted(self, self.fit_attributes)
         self._check_is_topk_calibrator()
-        groups = self._check_groups_predict(X, groups)
         X = cast(NDArray, X)
+        groups = self._check_groups_predict(X, groups)
         unique_groups = np.unique(groups)
         y_pred_proba = np.empty(
             (X.shape[0], len(self.mapie_estimator.estimator.classes_))
