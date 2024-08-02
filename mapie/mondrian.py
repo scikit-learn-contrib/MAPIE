@@ -187,7 +187,7 @@ class Mondrian:
         """
         groups = cast(NDArray, np.array(groups))
         if not np.all(np.isin(groups, self.unique_groups)):
-            raise ValueError("There is a new group in the prediction")
+            raise ValueError("There is at least one new group in the prediction")
         if len(groups) != X.shape[0]:
             raise ValueError("The number of individuals in the groups must " +
                              "be equal to the number of rows in X")
@@ -223,19 +223,19 @@ class Mondrian:
             is a MapieRegressor
         """
         if isinstance(self.mapie_estimator, MapieClassifier):
-            if self.mapie_estimator.conformity_score is not None:
-                if self.mapie_estimator.conformity_score not in \
-                   self.allowed_classification_ncs_class:
-                    raise ValueError(
-                        "The conformity score for the MapieClassifier must" +
-                        f" be one of {self.allowed_classification_ncs_class}"
-                    )
             if self.mapie_estimator.method is not None:
                 if self.mapie_estimator.method not in \
                    self.allowed_classification_ncs_str:
                     raise ValueError(
                         "The conformity score for the MapieClassifier must " +
                         f"be one of {self.allowed_classification_ncs_str}"
+                    )
+            if self.mapie_estimator.conformity_score is not None:
+                if self.mapie_estimator.conformity_score not in \
+                   self.allowed_classification_ncs_class:
+                    raise ValueError(
+                        "The conformity score for the MapieClassifier must" +
+                        f" be one of {self.allowed_classification_ncs_class}"
                     )
         elif isinstance(self.mapie_estimator, MapieRegressor):
             if self.mapie_estimator.conformity_score is not None:
@@ -369,7 +369,7 @@ class Mondrian:
         X = cast(NDArray, X)
         groups = self._check_groups_predict(X, groups)
         if alpha is None:
-            return self.mapie_estimator.predict(X, **kwargs)
+            return self.mapie_estimator.estimator.predict(X, **kwargs)
         else:
             alpha_np = cast(NDArray, check_alpha(alpha))
             unique_groups = np.unique(groups)
@@ -415,6 +415,7 @@ class Mondrian:
             The calibrated predicted probabilities
         """
         self._check_is_topk_calibrator()
+        groups = self._check_groups_predict(X, groups)
         X = cast(NDArray, X)
         unique_groups = np.unique(groups)
         y_pred_proba = np.empty(
