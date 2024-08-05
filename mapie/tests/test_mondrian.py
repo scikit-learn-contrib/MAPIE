@@ -268,7 +268,7 @@ def test_non_valid_estimators_fails(mapie_estimator):
     model = clone(ml_model)
     model.fit(x, y)
     mondrian = Mondrian(
-        mapie_estimator=mapie_estimator(estimator=model,  cv="prefit")
+        mapie_estimator=mapie_estimator(estimator=model, cv="prefit")
     )
     with pytest.raises(ValueError, match=r".*The estimator must be a*"):
         mondrian.fit(x, y, groups=groups)
