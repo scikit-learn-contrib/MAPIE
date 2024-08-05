@@ -87,7 +87,7 @@ class Mondrian:
         MapieTimeSeriesRegressor
     )
     allowed_classification_ncs_str = [
-        "lac", "score", "cumulated_score", "aps", "topk"
+        "lac", "score", "cumulated_score", "aps", "top_k"
     ]
     allowed_classification_ncs_class = (
         LACConformityScore, NaiveConformityScore, APSConformityScore,
@@ -232,17 +232,19 @@ class Mondrian:
                         "The conformity score for the MapieClassifier must " +
                         f"be one of {self.allowed_classification_ncs_str}"
                     )
+                else:
+                    return
             if self.mapie_estimator.conformity_score is not None:
-                if self.mapie_estimator.conformity_score not in \
-                   self.allowed_classification_ncs_class:
+                if not isinstance(self.mapie_estimator.conformity_score,
+                   self.allowed_classification_ncs_class):
                     raise ValueError(
                         "The conformity score for the MapieClassifier must" +
                         f" be one of {self.allowed_classification_ncs_class}"
                     )
         elif isinstance(self.mapie_estimator, MapieRegressor):
             if self.mapie_estimator.conformity_score is not None:
-                if self.mapie_estimator.conformity_score not in\
-                      self.allowed_regression_ncs:
+                if not isinstance(self.mapie_estimator.conformity_score,
+                   self.allowed_regression_ncs):
                     raise ValueError(
                         "The conformity score for the MapieRegressor must " +
                         f"be one of {self.allowed_regression_ncs}"
