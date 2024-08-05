@@ -60,7 +60,7 @@ VALID_MAPIE_ESTIMATORS = {
     "classif_topk": {
         "estimator": MapieClassifier,
         "task": "classification",
-        "kwargs": {"method": "topk"}
+        "kwargs": {"method": "top_k"}
     },
     "classif_lac_conformity": {
         "estimator": MapieClassifier,
@@ -167,18 +167,25 @@ def test_valid_estimators_dont_fail(mapie_estimator_name):
     mapie_kwargs = task_dict["kwargs"]
     task = task_dict["task"]
     x, y = TOY_DATASETS[task]
+    y = np.abs(y)  # to avoid negative values with Gamma NCS
     ml_model = ML_MODELS[task]
     groups = np.random.choice(10, len(x))
     model = clone(ml_model)
     model.fit(x, y)
     mapie_inst = deepcopy(mapie_estimator)
-    if not isinstance(mapie_inst(), MapieMultiLabelClassifier):
+    if task not in ["multilabel_classification", "calibration"]:
         mondrian_cp = Mondrian(
-            mapie_estimator=mapie_inst(estimator=model, cv="prefit")
+            mapie_estimator=mapie_inst(
+                estimator=model, cv="prefit", **mapie_kwargs
+            )
+        )
+    elif task == "multilabel_classification":
+        mondrian_cp = Mondrian(
+            mapie_estimator=mapie_inst(estimator=model, **mapie_kwargs),
         )
     else:
         mondrian_cp = Mondrian(
-            mapie_estimator=mapie_inst(estimator=model, **mapie_kwargs),
+            mapie_estimator=mapie_inst(estimator=model, cv="prefit")
         )
     if task == "multilabel_classification":
         mondrian_cp.fit(x, y, groups=groups)
