@@ -7,6 +7,34 @@ We will use a synthetic toy dataset for the tutorial of the CCP method, and
 its comparison with the other methods available in MAPIE. The CCP method
 implements the method described in the Gibbs et al. (2023) paper [1].
 
+We will see in this tutorial how to use the method. It has a lot of advantages:
+
+- It is model agnostic (it doesn't depend on the model but only on the
+  predictions, unlike `CQR`)
+- It uses the `split` approach (it require a calibration set, but is very fast
+  at inference time, unlike the `CV` approach)
+- It can create very adaptative intervals (with a varying width which truly
+  eflects the model uncertainty)
+- while providing coverage guantee on all sub-groups of interest
+  (avoiding biases)
+- with the possibility to inject prior knowledge about the data or the model
+
+However, we will also see its disadvantages:
+
+- The adaptativity depends on the calibrator we use: It can be difficult to
+  choose the correct calibrator,
+  with the best parameters (this tutorial will try to help you with this task).
+- If the inference is very fast, the calibration phase can be very long,
+  depending on the complexity of your calibrator
+
+Conclusion on the method:
+
+It can create more adaptative intervals than the other methods, but it can be
+difficult to find the best settings (calibrator type and parameters)
+and can have a big computational time.
+
+----
+
 In this tutorial, the estimator will be :class:`~sklearn.pipeline.Pipeline`
 with :class:`~sklearn.preprocessing.PolynomialFeatures` and
 :class:`~sklearn.linear_model.LinearRegression` (or
@@ -542,7 +570,7 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 # 5.3. Improve the performances using what we know about the data
 # --------------------------------------------------------------------------
 # To improve the results, we need to analyse the data
-# and the conformity scoreswe chose (here, the absolute residuals).
+# and the conformity scores we chose (here, the absolute residuals).
 #
 #  1) We can see that the residuals (error with the prediction)
 #  increase with X, for X > 0.
@@ -613,9 +641,21 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 ##############################################################################
 
 ##############################################################################
-# The most adaptative interval is this last brown one, with the two groups
-# and the gaussian calibrators. In this specific case, the polynomial
-# calibrator also worked, but the gaussian one is more generic.
+# The goal is to get prediction intervals which are the most adaptative
+# possible. Perfect adaptativity whould result in a perfectly constant
+# conditional coverage.
+#
+# Considering this adaptativity criteria, the most adaptative interval is
+# this last brown one, with the two groups
+# and the gaussian calibrators. In this example, the polynomial
+# calibrator (in purple) also worked well, but the gaussian one is more generic
+# (It usually work with any dataset, assuming we use the correct parameters,
+# whereas the polynomial features are not always adapted).
 #
 # This is the power of the ``CCP`` method: combining prior knowledge and
-# generic features (gaussian kernelsl) to have a great overall adaptativity!
+# generic features (gaussian kernelsl) to have a great overall adaptativity.
+#
+# However, it can be difficult to find the best calibrator and parameters.
+# Sometimes, a simpler method (standard ``split`` with ``GammaConformityScore``
+# for example) can be enough. Don't forget to try at first the simpler method,
+# and move on with the more advanced if it is necessary.

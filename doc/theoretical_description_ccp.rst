@@ -6,14 +6,8 @@
 Theoretical Description
 ########################
 
-The Conditional Conformal Prediction (CCP) method :ref:`[1]<theoretical_description_ccp_references>` allows for better (adaptative) interval widths with
-all type of data. The method has a lot of advantages:
-
-- It is model agnostic (it doesn't depend on the model but only on the predictions, unlike `CQR`)
-- It uses the `split` approach (it require a calibration set, but is very fast at inference time, unlike the `CV` approach)
-- It can create very adaptative intervals (with a varying width which truly reflects the model uncertainty)
-- while providing coverage guantee on all sub-groups of interest (avoiding biases)
-- with the possibility to inject prior knowledge about the data or the model
+The Conditional Conformal Prediction (CCP) method :ref:`[1]<theoretical_description_ccp_references>` is a model agnostic conformal prediction method which
+can create adaptative prediction intervals.
 
 
 How does it works?
@@ -67,11 +61,19 @@ The method follow 3 steps:
   .. math::
     \hat{g}_S := \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), S)
 
-  We use the same adaptation as the ``standard`` approach, to go from the ``full conformal``
-  approach to the ``split`` one, using:
-  
-  .. math::
-    \hat{g} :=  \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^n{l_{\alpha^*} (g(X_i), S_i)} \quad \text{where} \quad \alpha^* = 1 - \frac{\lceil (n+1)(1-\alpha) \rceil}{n}
+  .. warning::
+    This method (as it is in [1]), has a ``full conformal`` approach, meaning we need to compute this
+    optimisation for all :math:`X_{n+1}` and for all possible :math:`S` values. We can use
+    a upper bound of :math:`S`, but it would still requires to compute it for each new :math:`X_{n+1}`.
+    
+    We decided to adapte the method with a ``split`` approach, computing:
+    
+    .. math::
+      \hat{g} :=  \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^n{l_{\alpha^*} (g(X_i), S_i)} \quad \text{where} \quad \alpha^* = 1 - \frac{\lceil (n+1)(1-\alpha) \rceil}{n}
+
+    You may find small difference between our ``split`` approach and the ``full conformal`` approach [1], especially with small calibration sets.
+
+    It is generally recommanded to empirically check the resulting coverage on the test set.
 
 3. We use this optimized function :math:`\hat{g}` to compute the prediction intervals:
   
@@ -87,6 +89,10 @@ The method follow 3 steps:
 
 Coverage guarantees:
 -----------------------
+
+.. warning::
+  The following guarantees apply in the ``full conformal`` case. The differences should be negligeable,
+  but could appear for very small calibrtion sets.
 
 Following this steps, we have the coverage guarantee:
 
@@ -134,20 +140,15 @@ The following will provide some tips on how to use the method (for more practica
 Avoid miscoverage
 --------------------
 
-- | The control of the coverage error (:ref:`here<theoretical_description_ccp_control_coverage>`)
-    can be very big, depending of the
-    values :math:`|f(X_i)|` can take, and the number of dimensions :math:`d`.
-  | 
-  | For example, if you divide 1000 samples into 20 disjoints groups of 50 samples,
-    you could theoretically have a miscoverage of 40%!
-  | However, coverage is generally achieved in practice.
+- | To guarantee marginal coverage, you need to have an intercept term in the :math:`\Phi` function (meaning, a feature equal to :math:`1` for all :math:`X_i`).
+  | It correspond, in the :ref:`API<api>`, to ``bias=True``.
 
-- | Some miscoverage can also comes from the optimization process, which is
+- | Some miscoverage can come from the optimization process, which is
     solved with numerical methods, and may fail to find the global minimum.
     If the target coverage is not achieved, you can try adding regularization,
     to help the optimization process. You can also try reducing the number of dimensions :math:`d`
     or using a smoother :math:`\Phi` function, such as with gaussian kernels
-    (indeed, using only indicator functions makes the optimization very difficult).
+    (indeed, using only indicator functions makes the optimization difficult).
 
     .. warning::
       Adding some regularization will theoretically induce a miscoverage,
@@ -158,7 +159,8 @@ Avoid miscoverage
       and avoid too big regularization terms (below :math:`10^{-4}` is usually recommanded).
 
 
-- | Finally, you can reduce the value of :math:`\alpha` to enforce higher coverage.
+- | Finally, if you have coverage issues because the optimisation is difficult,
+    you can artificially enforce higher coverage by reducing the value of :math:`\alpha`.
     Evaluating the best adjusted :math:`\alpha` using cross-validation will ensure
     the same coverage on the test set (subject to variability due to the finite number of samples).
 
