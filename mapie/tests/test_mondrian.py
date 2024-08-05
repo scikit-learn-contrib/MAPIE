@@ -160,6 +160,8 @@ ML_MODELS = {
 
 @pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
 def test_valid_estimators_dont_fail(mapie_estimator_name):
+    """
+    Test that valid estimators don't fail"""
     task_dict = VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
     mapie_kwargs = task_dict["kwargs"]
@@ -200,6 +202,8 @@ def test_valid_estimators_dont_fail(mapie_estimator_name):
         "mapie_estimator_name", NON_VALID_MAPIE_ESTIMATORS_NAMES
 )
 def test_non_cs_fails(mapie_estimator_name):
+    """
+    Test that non valid conformity scores fail"""
     task_dict = NON_VALID_CS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
     mapie_kwargs = task_dict["kwargs"]
@@ -222,6 +226,8 @@ def test_non_cs_fails(mapie_estimator_name):
 @pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
 @pytest.mark.parametrize("non_valid_cv", ["split", -1, 5, ShuffleSplit(1)])
 def test_invalid_cv_fails(mapie_estimator_name, non_valid_cv):
+    """
+    Test that invalid cv fails"""
     task_dict = VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
     mapie_kwargs = task_dict["kwargs"]
@@ -254,6 +260,8 @@ def test_invalid_cv_fails(mapie_estimator_name, non_valid_cv):
 
 @pytest.mark.parametrize("mapie_estimator", NON_VALID_MAPIE_ESTIMATORS)
 def test_non_valid_estimators_fails(mapie_estimator):
+    """
+    Test that non valid estimators fail"""
     x, y = TOY_DATASETS["regression"]
     ml_model = ML_MODELS["regression"]
     groups = np.random.choice(10, len(x))
@@ -267,6 +275,8 @@ def test_non_valid_estimators_fails(mapie_estimator):
 
 
 def test_groups_not_defined_by_integers_fails():
+    """
+    Test that groups not defined by integers fails"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -282,6 +292,8 @@ def test_groups_not_defined_by_integers_fails():
 
 
 def test_groups_with_less_than_2_fails():
+    """
+    Test that groups with less than 2 elements fails"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -297,6 +309,8 @@ def test_groups_with_less_than_2_fails():
 
 
 def test_groups_and_x_have_same_length_in_fit():
+    """
+    Test that groups and x have the same length in fit"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -310,6 +324,8 @@ def test_groups_and_x_have_same_length_in_fit():
 
 
 def test_all_groups_in_predict_are_in_fit():
+    """
+    Test that all groups in predict are in fit"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -325,6 +341,8 @@ def test_all_groups_in_predict_are_in_fit():
 
 
 def test_all_groups_in_predict_proba_are_in_fit():
+    """
+    Test that all groups in predict_proba are in fit"""
     x, y = TOY_DATASETS["calibration"]
     ml_model = ML_MODELS["calibration"]
     model = clone(ml_model)
@@ -340,6 +358,8 @@ def test_all_groups_in_predict_proba_are_in_fit():
 
 
 def test_groups_and_x_have_same_length_in_predict():
+    """
+    Test that groups and x have the same length in predict"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -355,6 +375,8 @@ def test_groups_and_x_have_same_length_in_predict():
 
 
 def test_predict_proba_only_with_calibrator():
+    """
+    Test that predict_proba only works with calibrator"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -369,6 +391,8 @@ def test_predict_proba_only_with_calibrator():
 
 
 def test_predict_fails_with_calibrator():
+    """
+    Test that predict fails with calibrator"""
     x, y = TOY_DATASETS["calibration"]
     ml_model = ML_MODELS["calibration"]
     model = clone(ml_model)
@@ -383,6 +407,8 @@ def test_predict_fails_with_calibrator():
 
 
 def test_alpha_none_return_one_element():
+    """
+    Test that if alpha is None, the output is a single element"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -397,6 +423,8 @@ def test_alpha_none_return_one_element():
 
 
 def test_groups_is_list_ok():
+    """
+    Test that the groups can be a list"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -411,6 +439,8 @@ def test_groups_is_list_ok():
 
 @pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
 def test_same_results_if_only_one_group(mapie_estimator_name):
+    """
+    Test that the results are the same if there is only one group"""
     task_dict = VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
     mapie_kwargs = task_dict["kwargs"]
@@ -429,7 +459,9 @@ def test_same_results_if_only_one_group(mapie_estimator_name):
         mapie_classic = mapie_classic_inst(estimator=model, cv="prefit")
     else:
         mondrian_cp = Mondrian(
-            mapie_estimator=mapie_inst_mondrian(estimator=model, **mapie_kwargs),
+            mapie_estimator=mapie_inst_mondrian(
+                estimator=model, **mapie_kwargs
+            ),
         )
         mapie_classic = mapie_classic_inst(estimator=model, **mapie_kwargs)
     if task == "multilabel_classification":
@@ -447,7 +479,7 @@ def test_same_results_if_only_one_group(mapie_estimator_name):
         else:
             mondrian_pred = mondrian_cp.predict(x, groups=groups, alpha=.2)
             classic_pred = mapie_classic.predict(x, alpha=.2)
-            
+
     elif task == "calibration":
         mondrian_cp.fit(X=x, y=y, groups=groups, **mapie_kwargs)
         mapie_classic.fit(x, y, **mapie_kwargs)
