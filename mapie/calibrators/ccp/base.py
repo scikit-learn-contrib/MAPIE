@@ -427,7 +427,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         params_mapping = {"X": X, "y_pred": y_pred, "z": z}
         cs_features = concatenate_functions(self.functions_, params_mapping)
-        # Normalize
+
         if self.normalized:
             norm = cast(NDArray,
                         np.linalg.norm(cs_features, axis=1)).reshape(-1, 1)
