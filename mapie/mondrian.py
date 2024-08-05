@@ -235,8 +235,8 @@ class Mondrian:
                 else:
                     return
             if self.mapie_estimator.conformity_score is not None:
-                if not isinstance(self.mapie_estimator.conformity_score,
-                   self.allowed_classification_ncs_class):
+                if type(self.mapie_estimator.conformity_score) not in \
+                   self.allowed_classification_ncs_class:
                     raise ValueError(
                         "The conformity score for the MapieClassifier must" +
                         f" be one of {self.allowed_classification_ncs_class}"
