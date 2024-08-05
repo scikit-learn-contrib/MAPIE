@@ -378,10 +378,11 @@ class Mondrian:
             alpha_np = cast(NDArray, check_alpha(alpha))
             unique_groups = np.unique(groups)
             for i, group in enumerate(unique_groups):
+                m = self.mapie_estimators[group]
                 indices_groups = np.argwhere(groups == group)[:, 0]
                 X_g = X[indices_groups]
-                y_pred_g, y_pss_g = self.mapie_estimators[group].\
-                    predict(X_g, alpha=alpha_np, **kwargs)  # type: ignore
+                pred = m.predict(X_g, alpha=alpha_np, **kwargs)  # type: ignore
+                y_pred_g, y_pss_g = pred
                 if i == 0:
                     if len(y_pred_g.shape) == 1:
                         y_pred = np.empty((X.shape[0],))
