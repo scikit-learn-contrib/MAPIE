@@ -382,7 +382,7 @@ class Mondrian:
                 X_g = X[indices_groups]
                 y_pred_g, y_pss_g = self.mapie_estimators[group].predict(
                     X_g, alpha=alpha_np, **kwargs
-                )
+                )  # type: ignore
                 if i == 0:
                     if len(y_pred_g.shape) == 1:
                         y_pred = np.empty((X.shape[0],))
@@ -424,7 +424,8 @@ class Mondrian:
         groups = self._check_groups_predict(X, groups)
         unique_groups = np.unique(groups)
         y_pred_proba = np.empty(
-            (X.shape[0], len(self.mapie_estimator.estimator.classes_))
+            (X.shape[0],
+             len(self.mapie_estimator.estimator.classes_))  # type: ignore
         )
         for group in unique_groups:
             indices_groups = np.argwhere(groups == group)[:, 0]
