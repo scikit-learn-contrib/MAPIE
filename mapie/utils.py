@@ -1373,3 +1373,43 @@ def check_n_samples(
              " int in the range [1, inf)"
              )
     return int(n_samples)
+
+
+def check_predict_params(
+    predict_params_used_in_fit: bool,
+    predict_params: dict,
+    cv: Optional[Union[int, str, BaseCrossValidator]] = None
+) -> None:
+    """
+    Check that if predict_params is used in the predict method,
+    it is also used in the fit method. Otherwise, raise an error.
+
+    Parameters
+    ----------
+    predict_params_used_in_fit: bool
+        True if one or more predict_params are used in the fit method
+
+    predict_param: dict
+        Contains all predict params used in predict method
+
+    Raises
+    ------
+    ValueError
+        If any predict_params are used in the predict method but none
+        are used in the fit method.
+    """
+    if cv != "prefit":
+        if len(predict_params) > 0 and predict_params_used_in_fit is False:
+            raise ValueError(
+                f"Using 'predict_param' '{predict_params}' "
+                f"without using one 'predict_param' in the fit method. "
+                f"Please ensure a similar configuration of 'predict_param' "
+                f"is used in the fit method before calling it in predict."
+            )
+        if len(predict_params) == 0 and predict_params_used_in_fit is True:
+            raise ValueError(
+                "Using one 'predict_param' in the fit method "
+                "without using one 'predict_param' in the predict method. "
+                "Please ensure a similar configuration of 'predict_param' "
+                "is used in the predict method as called in the fit."
+            )

@@ -233,6 +233,7 @@ class EnsembleRegressor(EnsembleEstimator):
         estimator: RegressorMixin,
         X: ArrayLike,
         val_index: ArrayLike,
+        **predict_params
     ) -> Tuple[NDArray, ArrayLike]:
         """
         Perform predictions on a single out-of-fold model on a validation set.
@@ -248,6 +249,9 @@ class EnsembleRegressor(EnsembleEstimator):
         val_index: ArrayLike of shape (n_samples_val)
             Validation data indices.
 
+        **predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         Tuple[NDArray, ArrayLike]
@@ -255,7 +259,7 @@ class EnsembleRegressor(EnsembleEstimator):
         """
         X_val = _safe_indexing(X, val_index)
         if _num_samples(X_val) > 0:
-            y_pred = estimator.predict(X_val)
+            y_pred = estimator.predict(X_val, **predict_params)
         else:
             y_pred = np.array([])
         return y_pred, val_index
@@ -306,7 +310,7 @@ class EnsembleRegressor(EnsembleEstimator):
         else:
             raise ValueError("The value of self.agg_function is not correct")
 
-    def _pred_multi(self, X: ArrayLike) -> NDArray:
+    def _pred_multi(self, X: ArrayLike, **predict_params) -> NDArray:
         """
         Return a prediction per train sample for each test sample, by
         aggregation with matrix ``k_``.
@@ -316,12 +320,15 @@ class EnsembleRegressor(EnsembleEstimator):
         X: ArrayLike of shape (n_samples_test, n_features)
             Input data
 
+        **predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         NDArray of shape (n_samples_test, n_samples_train)
         """
         y_pred_multi = np.column_stack(
-            [e.predict(X) for e in self.estimators_]
+            [e.predict(X, **predict_params) for e in self.estimators_]
         )
         # At this point, y_pred_multi is of shape
         # (n_samples_test, n_estimators_). The method
@@ -334,7 +341,8 @@ class EnsembleRegressor(EnsembleEstimator):
         self,
         X: ArrayLike,
         y: Optional[ArrayLike] = None,
-        groups: Optional[ArrayLike] = None
+        groups: Optional[ArrayLike] = None,
+        **predict_params
     ) -> NDArray:
         """
         Perform predictions on X : the calibration set.
@@ -355,6 +363,9 @@ class EnsembleRegressor(EnsembleEstimator):
 
             By default ``None``.
 
+        **predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         NDArray of shape (n_samples_test, 1)
@@ -371,7 +382,7 @@ class EnsembleRegressor(EnsembleEstimator):
                 cv = cast(BaseCrossValidator, self.cv)
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._predict_oof_estimator)(
-                        estimator, X, calib_index,
+                        estimator, X, calib_index, **predict_params
                     )
                     for (_, calib_index), estimator in zip(
                         cv.split(X, y, groups),
@@ -404,7 +415,7 @@ class EnsembleRegressor(EnsembleEstimator):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **fit_params,
+        **fit_params
     ) -> EnsembleRegressor:
         """
         Fit the base estimator under the ``single_estimator_`` attribute.
@@ -526,6 +537,9 @@ class EnsembleRegressor(EnsembleEstimator):
             predictions (3 arrays). If ``False`` the method return the
             simple predictions only.
 
+        **predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         Tuple[NDArray, NDArray, NDArray]
@@ -535,7 +549,7 @@ class EnsembleRegressor(EnsembleEstimator):
         """
         check_is_fitted(self, self.fit_attributes)
 
-        y_pred = self.single_estimator_.predict(X)
+        y_pred = self.single_estimator_.predict(X, **predict_params)
         if not return_multi_pred and not ensemble:
             return y_pred
 
@@ -543,7 +557,7 @@ class EnsembleRegressor(EnsembleEstimator):
             y_pred_multi_low = y_pred[:, np.newaxis]
             y_pred_multi_up = y_pred[:, np.newaxis]
         else:
-            y_pred_multi = self._pred_multi(X)
+            y_pred_multi = self._pred_multi(X, **predict_params)
 
             if self.method == "minmax":
                 y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)

@@ -447,7 +447,7 @@ class EnsembleClassifier(EnsembleEstimator):
         self,
         X: ArrayLike,
         agg_scores: Optional[str] = None,
-        **predict_params
+        **predict_params,
     ) -> NDArray:
         """
         Predict target from X. It also computes the prediction per train sample
