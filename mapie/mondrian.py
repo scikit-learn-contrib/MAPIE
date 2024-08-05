@@ -60,26 +60,26 @@ class Mondrian:
 
     Examples
     --------
-    >>> import numpy as np
-    >>> from sklearn.naive_bayes import GaussianNB
+        >>> import numpy as np
+    >>> from sklearn.linear_model import LogisticRegression
     >>> from mapie.classification import MapieClassifier
     >>> X_toy = np.arange(9).reshape(-1, 1)
     >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
     >>> groups = [0, 0, 0, 0, 1, 1, 1, 1, 1]
-    >>> clf = GaussianNB().fit(X_toy, y_toy)
+    >>> clf = LogisticRegression(random_state=42).fit(X_toy, y_toy)
     >>> mapie = Mondrian(MapieClassifier(estimator=clf, cv="prefit")).fit(
     ...     X_toy, y_toy, groups)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.4, groups=groups)
-    >>> print(y_pi_mapie[:, :, 0])
+    >>> print(y_pi_mapie[:, :, 0].astype(bool))
     [[ True False False]
-    [ True False False]
-    [ True  True False]
-    [ True  True False]
-    [False  True False]
-    [False  True  True]
-    [False False  True]
-    [False False  True]
-    [False False  True]]
+     [ True False False]
+     [ True  True False]
+     [ True  True False]
+     [False  True False]
+     [False  True  True]
+     [False False  True]
+     [False False  True]
+     [False False  True]]
     """
 
     not_allowed_estimators = (
