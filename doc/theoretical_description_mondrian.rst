@@ -21,17 +21,22 @@ of the data or not.
 In a classifcation setting, the groups can be defined as the predicted classes of the data. Doing so,
 one can ensure that, for each predicted class, the coverage guarantee is satisfied.
 
-
 In order to achieve the group-conditional coverage guarantee, MCP simply this the data
 according to the groups and then applies the split conformal predictor to each group separately.
 
 The quantile of each group is defined as:
 
 .. math::
-   \widehat{q}^g = \text{quantiles}\left(s_1, ..., s_{n^g},\frac{\lceil (n^{(g) + 1)(1-\alpha)\rceil}{n^{(g) }  \right)
+   \widehat{q}^g = \text{quantiles}\left(s_1, ..., s_{n^g} ,\frac{\lceil (n^{(g)} + 1)(1-\alpha)\rceil}{n^{(g)}} \right)
 
 Where :math:`s_1, ..., s_{n^g}` are the conformity scores of the training points in group :math:`g` and :math:`n^{(g)}`
 is the number of training points in group :math:`g`.
+
+The following figure (from [1]) explains the process of Mondrian conformal prediction:
+
+.. image:: images/mondrian.png
+   :width: 600
+   :align: center
 
 References
 ----------
