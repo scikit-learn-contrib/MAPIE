@@ -27,7 +27,7 @@ according to the groups and then applies the split conformal predictor to each g
 The quantile of each group is defined as:
 
 .. math::
-   \widehat{q}^g = \text{quantiles}\left(s_1, ..., s_{n^g} ,\frac{\lceil (n^{(g)} + 1)(1-\alpha)\rceil}{n^{(g)}} \right)
+   \widehat{q}^g =Quantile\left(s_1, ..., s_{n^g} ,\frac{\lceil (n^{(g)} + 1)(1-\alpha)\rceil}{n^{(g)}} \right)
 
 Where :math:`s_1, ..., s_{n^g}` are the conformity scores of the training points in group :math:`g` and :math:`n^{(g)}`
 is the number of training points in group :math:`g`.
