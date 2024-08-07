@@ -279,7 +279,6 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         conformity_scores_calib: NDArray,
         y_pred_calib: Optional[ArrayLike] = None,
         z_calib: Optional[ArrayLike] = None,
-        sample_weight_calib: Optional[NDArray] = None,
         **optim_kwargs,
     ) -> CCPCalibrator:
         """
@@ -303,13 +302,6 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
             By default ``None``.
 
-        sample_weight_calib: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights of the calibration data, used as weights in the
-            objective function of the optimization process.
-            If ``None``, then samples are equally weighted.
-
-            By default ``None``.
-
         optim_kwargs: Dict
             Other argument, used in sklear.optimize.minimize.
             Can be any of : ``method, jac, hess, hessp, bounds, constraints,
@@ -321,12 +313,10 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         check_required_arguments(self.alpha)
         self.alpha = cast(float, self.alpha)
 
-        n_calib = _num_samples(X_calib)
         if self.sym:
-            q_cor = np.ceil((1 - self.alpha)*(n_calib+1))/n_calib
+            q = 1 - self.alpha
         else:
-            q_cor = np.ceil((1 - self.alpha / 2)*(n_calib+1))/n_calib
-        q_cor = np.clip(q_cor, a_min=0, a_max=1)
+            q = 1 - self.alpha / 2
 
         if self.random_state is not None:
             np.random.seed(self.random_state)
@@ -352,8 +342,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             args=(
                 cs_features[not_nan_index, :],
                 conformity_scores_calib[not_nan_index],
-                q_cor,
-                sample_weight_calib,
+                q,
                 self.reg_param,
                 ),
             **optim_kwargs,
@@ -365,8 +354,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                 args=(
                     cs_features[not_nan_index, :],
                     -conformity_scores_calib[not_nan_index],
-                    q_cor,
-                    sample_weight_calib,
+                    q,
                     self.reg_param,
                 ),
                 **optim_kwargs,

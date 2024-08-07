@@ -472,7 +472,7 @@ def fast_mean_pinball_loss(
 
 def calibrator_optim_objective(
     beta: NDArray, calibrator_preds: NDArray, conformity_scores: NDArray,
-    q: float, sample_weight: NDArray, reg_param: Optional[float],
+    q: float, reg_param: Optional[float],
 ) -> float:
     """
     Objective funtcion to minimize to get the estimation of
@@ -493,18 +493,6 @@ def calibrator_optim_objective(
     q : float
         Between ``0.0`` and ``1.0``, represents the quantile, being
         ``1-alpha`` if ``alpha`` is the risk level of the confidence interval.
-
-    sample_weight: Optional[ArrayLike] of shape (n_samples,)
-        Sample weights for fitting the out-of-fold models.
-        If ``None``, then samples are equally weighted.
-        If some weights are null,
-        their corresponding observations are removed
-        before the fitting process and hence have no residuals.
-        If weights are non-uniform, residuals are still uniformly weighted.
-        Note that the sample weight defined are only for the training, not
-        for the calibration procedure.
-
-        By default ``None``.
 
     reg_param: Optional[float]
         Float to monitor the ridge regularization
@@ -531,7 +519,7 @@ def calibrator_optim_objective(
         reg_val = 0
     return fast_mean_pinball_loss(
         y_true=conformity_scores, y_pred=calibrator_preds.dot(beta),
-        alpha=q, sample_weight=sample_weight,
+        alpha=q,
     ) + reg_val
 
 
