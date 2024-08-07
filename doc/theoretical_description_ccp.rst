@@ -58,16 +58,15 @@ The method follow 3 steps:
 
   .. note:: It is actually a quantile regression between the transformation :math:`\Phi (X)` and the conformity scores `S`.
   
+  Considering an upper bound :math:`M`of the conformity scores,
+  such as :math:`S_{n+1} < M`:
+
   .. math::
-    \hat{g}_S^{n+1} := \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), S)
+    \hat{g}_M^{n+1} := \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), M)
 
   .. warning::
-    This method has a ``full conformal`` approach, meaning we need to compute this
-    optimisation for all :math:`X_{n+1}` and for all possible :math:`S` values.
-    To avoid this, we can use (as suggested in [1]), a upper bound :math:`M`
-    of the scores, such as :math:`S_{n+1} < M`.
-    
-    In the :ref:`API<api>`, we use as default :math:`M=max(\{S_i\}_{i\leq n})`,
+    In the :ref:`API<api>`, we use by default :math:`M=max(\{S_i\}_{i\leq n})`,
+    the maximum conformity score of the calibration set,
     but you can specify it yourself if a bound is known, considering your data,
     model and conformity score.
 
@@ -81,7 +80,7 @@ The method follow 3 steps:
     However, it may result in a small miscoverage.
     It is recommanded to empirically check the resulting coverage on the test set.
 
-3. We use this optimized function :math:`\hat{g}` to compute the prediction intervals:
+3. We use this optimized function :math:`\hat{g}_M^{n+1}` to compute the prediction intervals:
   
   .. math::
     \hat{C}_M^{n+1}(X_{n+1}) = \{ y : S(X_{n+1}, \: y) \leq \hat{g}_M^{n+1}(X_{n+1}) \}
@@ -89,7 +88,7 @@ The method follow 3 steps:
   .. note:: The formulas are generic and work with all conformity scores. But in the case of the absolute residuals, we get:
     
     .. math::
-      \hat{C}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{g}(X_{n+1})
+      \hat{C}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{g}_M^{n+1}(X_{n+1})
 
 .. _theoretical_description_ccp_control_coverage:
 
@@ -102,6 +101,7 @@ Coverage guarantees:
 
 Following this steps, we have the coverage guarantee:
 :math:`\forall f \in \mathcal{F},`
+
 .. math::
   \mathbb{P}_f(Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1})) \geq 1 - \alpha \\
   \text{and} \quad \left | \mathbb{E} \left[ f(X_{n+1}) \left(\mathbb{I} \left\{ Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1}) \right\} - (1 - \alpha) \right) \right] \right |
