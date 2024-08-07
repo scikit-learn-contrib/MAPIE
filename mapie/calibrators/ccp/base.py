@@ -8,7 +8,7 @@ import numpy as np
 from scipy.optimize import minimize, OptimizeResult
 from sklearn.base import clone
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _num_samples, check_is_fitted
+from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators.base import BaseCalibrator
