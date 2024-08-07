@@ -49,8 +49,8 @@ PHI = [
     GaussianCCP(5),
 ]
 WIDTHS = {
-    "split": 3.943,
-    "prefit": 3.943,
+    "split": 3.867,
+    "prefit": 3.867,
 }
 
 COVERAGES = {
