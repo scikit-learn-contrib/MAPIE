@@ -41,4 +41,5 @@ Contributors
 * Ambros Marzetta <ambrosm>
 * Carl McBride Ellis <Carl-McBride-Ellis>
 * Baptiste Calot <baptiste.calot@capgemini.com>
+* Damien Bouet <bouet.dam@gmail.com>
 To be continued ...
