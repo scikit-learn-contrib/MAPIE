@@ -111,6 +111,133 @@ class Mondrian:
     ):
         self.mapie_estimator = mapie_estimator
 
+    def fit(self, X: ArrayLike, y: ArrayLike, groups: ArrayLike, **kwargs):
+        """
+        Fit the Mondrian method
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            The input data
+        y : ArrayLike of shape (n_samples,) or (n_samples, n_outputs)
+            The target values
+        groups : ArrayLike of shape (n_samples,)
+            The groups of individuals
+        **kwargs
+            Additional keyword arguments to pass to the estimator's fit method
+            that may be specific to the Mapie estimator used
+        """
+
+        X, y, groups = self._check_fit_parameters(X, y, groups)
+        self.unique_groups = np.unique(groups)
+        self.mapie_estimators = {}
+
+        for group in self.unique_groups:
+            mapie_group_estimator = deepcopy(self.mapie_estimator)
+            indices_groups = np.argwhere(groups == group)[:, 0]
+            X_g, y_g = X[indices_groups], y[indices_groups]
+            mapie_group_estimator.fit(X_g, y_g, **kwargs)
+            self.mapie_estimators[group] = mapie_group_estimator
+        return self
+
+    def predict(
+            self, X: ArrayLike, groups: ArrayLike,
+            alpha: Optional[Union[float, Iterable[float]]] = None,
+            **kwargs
+    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
+        """
+        Perform conformal prediction for each group of individuals
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            The input data
+        groups : ArrayLike of shape (n_samples,)
+            The groups of individuals
+        alpha : float or Iterable[float], optional
+            The desired coverage level(s) for each group.
+
+            By default None.
+        **kwargs
+            Additional keyword arguments to pass to the estimator's predict
+            method that may be specific to the Mapie estimator used
+
+        Returns
+        -------
+        y_pred : NDArray of shape (n_samples,) or (n_samples, n_outputs)
+            The predicted values
+        y_pss : NDArray of shape (n_samples, n_outputs, n_alpha)
+        """
+
+        check_is_fitted(self, self.fit_attributes)
+        self._check_not_topk_calibrator()
+        X = cast(NDArray, X)
+        groups = self._check_groups_predict(X, groups)
+        if alpha is None and self.mapie_estimator.estimator is not None:
+            return self.mapie_estimator.estimator.predict(X, **kwargs)
+        else:
+            alpha_np = cast(NDArray, check_alpha(alpha))
+            unique_groups = np.unique(groups)
+            for i, group in enumerate(unique_groups):
+                m = self.mapie_estimators[group]
+                indices_groups = np.argwhere(groups == group)[:, 0]
+                X_g = X[indices_groups]
+                pred = m.predict(X_g, alpha=alpha_np, **kwargs)  # type: ignore
+                y_pred_g, y_pss_g = pred
+                if i == 0:
+                    if len(y_pred_g.shape) == 1:
+                        y_pred = np.empty((X.shape[0],))
+                    else:
+                        y_pred = np.empty((X.shape[0], y_pred_g.shape[1]))
+                    y_pss = np.empty(
+                        (X.shape[0], y_pss_g.shape[1], len(alpha_np))
+                    )
+                y_pred[indices_groups] = y_pred_g
+                y_pss[indices_groups] = y_pss_g
+
+            return y_pred, y_pss
+
+    def predict_proba(
+            self, X: ArrayLike, groups: ArrayLike, **kwargs
+    ) -> NDArray:
+        """
+        Perform top-label calibration for each group of individuals
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            The input data
+        groups : ArrayLike of shape (n_samples,)
+            The groups of individuals
+        **kwargs
+            Additional keyword arguments to pass to the estimator's
+            predict_proba method that may be specific to the Mapie estimator
+            used
+
+        Returns
+        -------
+        y_pred_proba : NDArray of shape (n_samples, n_classes)
+            The calibrated predicted probabilities
+        """
+        check_is_fitted(self, self.fit_attributes)
+        self._check_is_topk_calibrator()
+        X = cast(NDArray, X)
+        groups = self._check_groups_predict(X, groups)
+        unique_groups = np.unique(groups)
+        y_pred_proba = np.empty(
+            (X.shape[0],
+             len(self.mapie_estimator.estimator.classes_))  # type: ignore
+        )
+        for group in unique_groups:
+            indices_groups = np.argwhere(groups == group)[:, 0]
+            X_g = X[indices_groups]
+            y_pred_proba_g = self.mapie_estimators[group].predict_proba(
+                X_g, **kwargs
+            )
+            y_pred_proba[indices_groups] = y_pred_proba_g
+
+        return y_pred_proba
+
     def _check_mapie_classifier(self):
         """
         Check that the underlying Mapie estimator uses cv='prefit'
@@ -309,130 +436,3 @@ class Mondrian:
                 "The predict method can only be used with a MapieClassifier," +
                 "MapieRegressor or MapieMultiLabelClassifier estimator"
             )
-
-    def fit(self, X: ArrayLike, y: ArrayLike, groups: ArrayLike, **kwargs):
-        """
-        Fit the Mondrian method
-
-        Parameters
-        ----------
-        X : ArrayLike of shape (n_samples, n_features)
-            The input data
-        y : ArrayLike of shape (n_samples,) or (n_samples, n_outputs)
-            The target values
-        groups : ArrayLike of shape (n_samples,)
-            The groups of individuals
-        **kwargs
-            Additional keyword arguments to pass to the estimator's fit method
-            that may be specific to the Mapie estimator used
-        """
-
-        X, y, groups = self._check_fit_parameters(X, y, groups)
-        self.unique_groups = np.unique(groups)
-        self.mapie_estimators = {}
-
-        for group in self.unique_groups:
-            mapie_group_estimator = deepcopy(self.mapie_estimator)
-            indices_groups = np.argwhere(groups == group)[:, 0]
-            X_g, y_g = X[indices_groups], y[indices_groups]
-            mapie_group_estimator.fit(X_g, y_g, **kwargs)
-            self.mapie_estimators[group] = mapie_group_estimator
-        return self
-
-    def predict(
-            self, X: ArrayLike, groups: ArrayLike,
-            alpha: Optional[Union[float, Iterable[float]]] = None,
-            **kwargs
-    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
-        """
-        Perform conformal prediction for each group of individuals
-
-        Parameters
-        ----------
-        X : ArrayLike of shape (n_samples, n_features)
-            The input data
-        groups : ArrayLike of shape (n_samples,)
-            The groups of individuals
-        alpha : float or Iterable[float], optional
-            The desired coverage level(s) for each group.
-
-            By default None.
-        **kwargs
-            Additional keyword arguments to pass to the estimator's predict
-            method that may be specific to the Mapie estimator used
-
-        Returns
-        -------
-        y_pred : NDArray of shape (n_samples,) or (n_samples, n_outputs)
-            The predicted values
-        y_pss : NDArray of shape (n_samples, n_outputs, n_alpha)
-        """
-
-        check_is_fitted(self, self.fit_attributes)
-        self._check_not_topk_calibrator()
-        X = cast(NDArray, X)
-        groups = self._check_groups_predict(X, groups)
-        if alpha is None and self.mapie_estimator.estimator is not None:
-            return self.mapie_estimator.estimator.predict(X, **kwargs)
-        else:
-            alpha_np = cast(NDArray, check_alpha(alpha))
-            unique_groups = np.unique(groups)
-            for i, group in enumerate(unique_groups):
-                m = self.mapie_estimators[group]
-                indices_groups = np.argwhere(groups == group)[:, 0]
-                X_g = X[indices_groups]
-                pred = m.predict(X_g, alpha=alpha_np, **kwargs)  # type: ignore
-                y_pred_g, y_pss_g = pred
-                if i == 0:
-                    if len(y_pred_g.shape) == 1:
-                        y_pred = np.empty((X.shape[0],))
-                    else:
-                        y_pred = np.empty((X.shape[0], y_pred_g.shape[1]))
-                    y_pss = np.empty(
-                        (X.shape[0], y_pss_g.shape[1], len(alpha_np))
-                    )
-                y_pred[indices_groups] = y_pred_g
-                y_pss[indices_groups] = y_pss_g
-
-            return y_pred, y_pss
-
-    def predict_proba(
-            self, X: ArrayLike, groups: ArrayLike, **kwargs
-    ) -> NDArray:
-        """
-        Perform top-label calibration for each group of individuals
-
-        Parameters
-        ----------
-        X : ArrayLike of shape (n_samples, n_features)
-            The input data
-        groups : ArrayLike of shape (n_samples,)
-            The groups of individuals
-        **kwargs
-            Additional keyword arguments to pass to the estimator's
-            predict_proba method that may be specific to the Mapie estimator
-            used
-
-        Returns
-        -------
-        y_pred_proba : NDArray of shape (n_samples, n_classes)
-            The calibrated predicted probabilities
-        """
-        check_is_fitted(self, self.fit_attributes)
-        self._check_is_topk_calibrator()
-        X = cast(NDArray, X)
-        groups = self._check_groups_predict(X, groups)
-        unique_groups = np.unique(groups)
-        y_pred_proba = np.empty(
-            (X.shape[0],
-             len(self.mapie_estimator.estimator.classes_))  # type: ignore
-        )
-        for group in unique_groups:
-            indices_groups = np.argwhere(groups == group)[:, 0]
-            X_g = X[indices_groups]
-            y_pred_proba_g = self.mapie_estimators[group].predict_proba(
-                X_g, **kwargs
-            )
-            y_pred_proba[indices_groups] = y_pred_proba_g
-
-        return y_pred_proba
