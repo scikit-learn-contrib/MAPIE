@@ -22,7 +22,7 @@ History
 * Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
 * Add `SplitCPRegressor`, based on new `SplitCP` abstract class, to support the new CCP method
 * Add `GaussianCCP`, `PolynomialCCP` and `CustomCCP` based on `CCPCalibrator` to implement the Conditional CP method
-* Add the `StandardCalibrator`, to reproduce standard CP and make sur that the `SplitCPRegressor` is implemented correctly.
+* Add the `StandardCalibrator`, to reproduce standard CP and make sure that the `SplitCPRegressor` is implemented correctly.
 * Add the CCP documentation, tutorial and demo notebook
 
 0.8.6 (2024-06-14)
