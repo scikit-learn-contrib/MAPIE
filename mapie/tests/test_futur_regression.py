@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from inspect import signature
-from typing import Any, Callable, Tuple, cast
+from typing import Any, Callable, Tuple, Union, cast
 
 import numpy as np
 import pytest
@@ -31,12 +31,12 @@ from mapie.regression import SplitCPRegressor
 random_state = 1
 np.random.seed(random_state)
 
-X_toy = np.linspace(0, 10, num=300).reshape(-1, 1)
+X_toy = np.linspace(0, 10, num=200).reshape(-1, 1)
 y_toy = 2*X_toy[:, 0] + (max(X_toy)/10)*np.random.rand(len(X_toy))
 z_toy = np.linspace(0, 10, num=len(X_toy)).reshape(-1, 1)
 
 X, y = make_regression(
-    n_samples=500, n_features=10, noise=1.0, random_state=random_state
+    n_samples=200, n_features=10, noise=1.0, random_state=random_state
 )
 z = X[:, -2:]
 
@@ -49,13 +49,25 @@ PHI = [
     GaussianCCP(5),
 ]
 WIDTHS = {
-    "split": 3.867,
-    "prefit": 3.867,
+    "safe": {
+        "split": 4.823,
+        "prefit": 4.823,
+    },
+    "unsafe": {
+        "split": 3.867,
+        "prefit": 3.867,
+    },
 }
 
 COVERAGES = {
-    "split": 0.956,
-    "prefit": 0.956,
+    "safe": {
+        "split": 0.98,
+        "prefit": 0.98,
+    },
+    "unsafe": {
+        "split": 0.965,
+        "prefit": 0.965,
+    },
 }
 
 
@@ -549,7 +561,10 @@ def test_prediction_between_low_up(
         assert (y_pred <= y_pis[:, 1, 0]).all()
 
 
-def test_linear_regression_results() -> None:
+@pytest.mark.parametrize("predict_mode", [
+    "safe", "unsafe"
+])
+def test_linear_regression_results(predict_mode: str) -> None:
     """
     Test that the CCPCalibrator method in the case of a constant
     calibrator = x -> np.ones(len(x)), on a multivariate linear regression
@@ -564,15 +579,24 @@ def test_linear_regression_results() -> None:
         random_state=random_state
     )
     mapie.fit(X, y)
-    _, y_pis = mapie.predict(X)
+    _, y_pis = mapie.predict(
+        X, unsafe_approximation=bool(predict_mode == "unsafe")
+    )
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
     coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
-    np.testing.assert_allclose(width_mean, WIDTHS["split"], rtol=1e-2)
-    np.testing.assert_allclose(coverage, COVERAGES["split"], rtol=1e-2)
+    np.testing.assert_allclose(
+        width_mean, WIDTHS[predict_mode]["split"], rtol=1e-2
+    )
+    np.testing.assert_allclose(
+        coverage, COVERAGES[predict_mode]["split"], rtol=1e-2
+    )
 
 
-def test_results_prefit() -> None:
+@pytest.mark.parametrize("predict_mode", [
+    "safe", "unsafe"
+])
+def test_results_prefit(predict_mode: str) -> None:
     """Test prefit results on a standard train/validation/test split."""
     X_train, X_calib, y_train, y_calib = train_test_split(
         X, y, test_size=0.5, random_state=1
@@ -583,12 +607,18 @@ def test_results_prefit() -> None:
         random_state=random_state
     )
     mapie_reg.fit(X_calib, y_calib)
-    _, y_pis = mapie_reg.predict(X)
+    _, y_pis = mapie_reg.predict(
+        X, unsafe_approximation=bool(predict_mode == "unsafe")
+    )
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
     coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
-    np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
-    np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
+    np.testing.assert_allclose(
+        width_mean, WIDTHS[predict_mode]["prefit"], rtol=1e-2
+    )
+    np.testing.assert_allclose(
+        coverage, COVERAGES[predict_mode]["prefit"], rtol=1e-2
+    )
 
 
 @pytest.mark.parametrize("calibrator", PHI)
@@ -687,3 +717,14 @@ def test_optim_kwargs():
         mapie.fit(
             X, y, calib_kwargs={"method": "SLSQP", "options": {"maxiter": 2}}
         )
+
+
+@pytest.mark.parametrize("cs_bound, sym", [
+    (None, True), (3, True), ((1, 1), False)
+])
+def test_cs_bound(cs_bound: Union[float, Tuple[float, float]], sym: bool):
+    mapie = SplitCPRegressor(
+        alpha=0.1, conformity_score=AbsoluteConformityScore(sym=sym)
+    )
+    mapie.fit(X_toy, y_toy)
+    mapie.predict(X_toy, cs_bound=cs_bound)
