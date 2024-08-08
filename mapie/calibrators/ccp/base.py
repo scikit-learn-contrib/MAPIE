@@ -481,7 +481,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             (cs_bound_up, cs_bound_low)
         """
         if cs_bound is not None:
-            if isinstance(cs_bound, float) and sym:
+            if isinstance(cs_bound, (int, float)) and sym:
                 cs_bound_up = cs_bound
                 cs_bound_low = cs_bound
             elif (

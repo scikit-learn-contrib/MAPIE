@@ -720,7 +720,7 @@ def test_optim_kwargs():
 
 
 @pytest.mark.parametrize("cs_bound, sym", [
-    (None, True), (3, True), ((1, 1), False)
+    (None, True), (None, False), (3, True), ((1.0, 1), False)
 ])
 def test_cs_bound(cs_bound: Union[float, Tuple[float, float]], sym: bool):
     mapie = SplitCPRegressor(
@@ -728,3 +728,17 @@ def test_cs_bound(cs_bound: Union[float, Tuple[float, float]], sym: bool):
     )
     mapie.fit(X_toy, y_toy)
     mapie.predict(X_toy, cs_bound=cs_bound)
+
+
+@pytest.mark.parametrize("cs_bound, sym", [
+    (3, False), ((1.0, 1), True)
+])
+def test_cs_bound_error(
+    cs_bound: Union[float, Tuple[float, float]], sym: bool
+) -> None:
+    mapie = SplitCPRegressor(
+        alpha=0.1, conformity_score=AbsoluteConformityScore(sym=sym)
+    )
+    mapie.fit(X_toy, y_toy)
+    with pytest.raises(ValueError, match="Invalid `cs_bound` value."):
+        mapie.predict(X_toy, cs_bound=cs_bound)
