@@ -49,41 +49,46 @@ The method follow 3 steps:
 ----------------------------
 
 1. Choose  a class of functions. The simple approach is to choose a class a finite dimension :math:`d \in \mathbb{N}`,
-   using, for any :math:`\Phi \; : \; \mathbb{R}^d \to \mathbb{R}`
+   using, for any :math:`\Phi \; : \; \mathbb{R}^d \to \mathbb{R}` (chosen by the user)
 
   .. math::
     \mathcal{F} = \left\{ \Phi (\cdot)^T \beta  :  \beta \in \mathbb{R}^d \right\}
 
-2. Find the best function of this class by resolving the following optimization problem:
+2. Find the best function of this class by solving the following optimization problem:
 
   .. note:: It is actually a quantile regression between the transformation :math:`\Phi (X)` and the conformity scores `S`.
   
+  Considering an upper bound :math:`M`of the conformity scores,
+  such as :math:`S_{n+1} < M`:
+
   .. math::
-    \hat{g}_S := \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), S)
+    \hat{g}_M^{n+1} := \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), M)
 
   .. warning::
-    This method (as it is in [1]), has a ``full conformal`` approach, meaning we need to compute this
-    optimisation for all :math:`X_{n+1}` and for all possible :math:`S` values. We can use
-    a upper bound of :math:`S`, but it would still requires to compute it for each new :math:`X_{n+1}`.
-    
-    We decided to adapte the method with a ``split`` approach, computing:
+    In the :ref:`API<api>`, we use by default :math:`M=max(\{S_i\}_{i\leq n})`,
+    the maximum conformity score of the calibration set,
+    but you can specify it yourself if a bound is known, considering your data,
+    model and conformity score.
+
+    Moreover, it means that there is still small computations which are done
+    for each test point :math:`X_{n+1}`. If you want to avoid that, you can
+    use ``unsafe_approximation=True``, which only consider:
     
     .. math::
-      \hat{g} :=  \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^n{l_{\alpha^*} (g(X_i), S_i)} \quad \text{where} \quad \alpha^* = 1 - \frac{\lceil (n+1)(1-\alpha) \rceil}{n}
+      \hat{g} :=  \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^n{l_{\alpha^*} (g(X_i), S_i)}
 
-    You may find small difference between our ``split`` approach and the ``full conformal`` approach [1], especially with small calibration sets.
+    However, it may result in a small miscoverage.
+    It is recommanded to empirically check the resulting coverage on the test set.
 
-    It is generally recommanded to empirically check the resulting coverage on the test set.
-
-3. We use this optimized function :math:`\hat{g}` to compute the prediction intervals:
+3. We use this optimized function :math:`\hat{g}_M^{n+1}` to compute the prediction intervals:
   
   .. math::
-    \hat{C}(X_{n+1}) = \{ y : S(X_{n+1}, \: y) \leq \hat{g}(X_{n+1}) \}
+    \hat{C}_M^{n+1}(X_{n+1}) = \{ y : S(X_{n+1}, \: y) \leq \hat{g}_M^{n+1}(X_{n+1}) \}
 
   .. note:: The formulas are generic and work with all conformity scores. But in the case of the absolute residuals, we get:
     
     .. math::
-      \hat{C}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{g}(X_{n+1})
+      \hat{C}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{g}_M^{n+1}(X_{n+1})
 
 .. _theoretical_description_ccp_control_coverage:
 
@@ -91,25 +96,27 @@ Coverage guarantees:
 -----------------------
 
 .. warning::
-  The following guarantees apply in the ``full conformal`` case. The differences should be negligeable,
-  but could appear for very small calibrtion sets.
+  The following guarantees assume that the approximation described above is not used, and that
+  the chosen bound M is indeed such as :math:`\forall \text{ test index }i, \; S_i < M`
 
 Following this steps, we have the coverage guarantee:
+:math:`\forall f \in \mathcal{F},`
 
 .. math::
-  \forall f \in \mathcal{F}, \quad
-  \left | \mathbb{E} \left[ f(X_{n+1}) \mathbb{I} \left\{ Y_{n+1} \in \hat{C}(X_{n+1}) \right\} \right] \right |
-  \leq \frac{d}{n+1} \mathbb{E} \left[ \max_{1 \leq i \leq n+1} |f(X_i)| \right]
+  \mathbb{P}_f(Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1})) \geq 1 - \alpha \\
+  \text{and} \quad \left | \mathbb{E} \left[ f(X_{n+1}) \left(\mathbb{I} \left\{ Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1}) \right\} - (1 - \alpha) \right) \right] \right |
+  \leq \frac{d}{n+1} \mathbb{E} \left[ \max_{1 \leq i \leq n+1} \left|f(X_i)\right| \right]
 
 .. note:: 
   If we want to have a homogenous coverage on some given groups in :math:`\mathcal{G}`, we can use
-  :math:`\mathcal{F} = \{ x \mapsto \sum _{G \in \mathcal{G}} \; \beta_G \mathbb{I} \{ x \in G \} : \beta_G \in \mathbb{R} \}`, then we have:
+  :math:`\mathcal{F} = \{ x \mapsto \sum _{G \in \mathcal{G}} \; \beta_G \mathbb{I} \{ x \in G \} : \beta_G \in \mathbb{R} \}`,
+  then we have :math:`\forall G \in \mathcal{G}`:
 
   .. math::
-    \forall G \in \mathcal{G}, \quad
-    \left | \mathbb{P} \left( Y_{n+1} \in \hat{C}(X_{n+1}) \; | \; X_{n+1} \in G \right) - (1 - \alpha) \right |
-    \leq \frac{|\mathcal{G}|}{(n+1) \mathbb{P}(X_{n+1} \in G)} \\
-    = \frac{\text{number of groups in } \mathcal{G}}{\text{number of samples of } \{X_i\} \text{ in G}}
+    1 - \alpha
+    \leq \mathbb{P} \left( Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1}) \; | \; X_{n+1} \in G \right) 
+    \leq 1- \alpha + \frac{|\mathcal{G}|}{(n+1) \mathbb{P}(X_{n+1} \in G)} \\
+    = 1- \alpha + \frac{\text{number of groups in } \mathcal{G}}{\text{number of samples of } \{X_i\} \text{ in G}}
 
 How to use it in practice?
 ============================

@@ -5,6 +5,9 @@ History
 0.8.x (2024-xx-xx)
 ------------------
 
+* Add `** predict_params` in fit and predict method for Mapie Regression
+* Update the ts-changepoint notebook with the tutorial
+* Change import related to conformity scores into ts-changepoint notebook
 * Replace `assert np.array_equal` by `np.testing.assert_array_equal` in Mapie unit tests
 * Replace `github.com/simai-ml/MAPIE` by `github.com/scikit-learn-contrib/MAPIE`in all Mapie files
 * Extend `ConformityScore` to support regression (with `BaseRegressionScore`) and to support classification (with `BaseClassificationScore`)
@@ -17,9 +20,9 @@ History
 * Building unit tests for different `Subsample` and `BlockBooststrap` instances
 * Change the sign of C_k in the `Kolmogorov-Smirnov` test documentation
 * Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
-* Add `SplitCPRegressor`, bsaed on new `SplitCP` abstract class, to support the new CCP method
+* Add `SplitCPRegressor`, based on new `SplitCP` abstract class, to support the new CCP method
 * Add `GaussianCCP`, `PolynomialCCP` and `CustomCCP` based on `CCPCalibrator` to implement the Conditional CP method
-* Add the `StandardCalibrator`, to reproduce standard CP and make sur that the `SplitCPRegressor` is implemented correctly.
+* Add the `StandardCalibrator`, to reproduce standard CP and make sure that the `SplitCPRegressor` is implemented correctly.
 * Add the CCP documentation, tutorial and demo notebook
 
 0.8.6 (2024-06-14)
