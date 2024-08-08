@@ -121,7 +121,7 @@ class Mondrian:
             If the underlying Mapie estimator does not use cv='prefit'
             if the Mondrian method is not used with a MapieMultiLabelClassifier
         NotFittedError
-            If the underlying Mapie estimator is not fitted and is the Mondrian
+            If the underlying Mapie estimator is not fitted and if the Mondrian
             method is used with a MapieMultiLabelClassifier
         """
         if not isinstance(self.mapie_estimator, MapieMultiLabelClassifier):
