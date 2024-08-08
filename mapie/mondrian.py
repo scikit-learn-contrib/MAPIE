@@ -122,7 +122,7 @@ class Mondrian:
         y : ArrayLike of shape (n_samples,) or (n_samples, n_outputs)
             The target values
         groups : ArrayLike of shape (n_samples,)
-            The groups of individuals
+            The groups of individuals. Must be defined by integers.
         **kwargs
             Additional keyword arguments to pass to the estimator's fit method
             that may be specific to the Mapie estimator used
@@ -153,7 +153,7 @@ class Mondrian:
         X : ArrayLike of shape (n_samples, n_features)
             The input data
         groups : ArrayLike of shape (n_samples,)
-            The groups of individuals
+            The groups of individuals. Must be defined by integers.
         alpha : float or Iterable[float], optional
             The desired coverage level(s) for each group.
 
@@ -208,7 +208,7 @@ class Mondrian:
         X : ArrayLike of shape (n_samples, n_features)
             The input data
         groups : ArrayLike of shape (n_samples,)
-            The groups of individuals
+            The groups of individuals. Must be defined by integers.
         **kwargs
             Additional keyword arguments to pass to the estimator's
             predict_proba method that may be specific to the Mapie estimator
@@ -299,6 +299,7 @@ class Mondrian:
         X : NDArray of shape (n_samples, n_features)
             The input data
         groups : ArrayLike of shape (n_samples,)
+            The groups of individuals. Must be defined by integers
 
         returns
         -------
@@ -390,7 +391,7 @@ class Mondrian:
         y : ArrayLike of shape (n_samples,) or (n_samples, n_outputs)
             The target values
         groups : ArrayLike of shape (n_samples,)
-            The groups of individuals
+            The groups of individuals. Must be defined by integers
 
         Returns
         -------
