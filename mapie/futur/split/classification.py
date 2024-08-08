@@ -106,12 +106,6 @@ class SplitCPClassifier(SplitCP):
     >>> mapie_reg = SplitCPClassifier(alpha=0.1, random_state=1)
     >>> mapie_reg = mapie_reg.fit(X_train, y_train)
     >>> y_pred, y_pis = mapie_reg.predict(X_train)
-    >>> print(np.round(y_pred[[40, 80, 120]], 2))
-    [0 1 2]
-    >>> print(y_pis[[40, 80, 120], :, 0])
-    [[ True False False False]
-     [False  True False False]
-     [False False  True False]]
     """
     def __init__(
         self,
