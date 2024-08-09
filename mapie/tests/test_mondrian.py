@@ -23,7 +23,7 @@ from mapie.conformity_scores import (
     RAPSConformityScore,
     ResidualNormalisedScore
 )
-from mapie.mondrian import Mondrian
+from mapie.mondrian import MondrianCP
 from mapie.multi_label_classification import MapieMultiLabelClassifier
 from mapie.regression import (
     MapieQuantileRegressor,
@@ -187,17 +187,17 @@ def test_valid_estimators_dont_fail(mapie_estimator_name):
     model.fit(x, y)
     mapie_inst = deepcopy(mapie_estimator)
     if task not in ["multilabel_classification", "calibration"]:
-        mondrian_cp = Mondrian(
+        mondrian_cp = MondrianCP(
             mapie_estimator=mapie_inst(
                 estimator=model, cv="prefit", **mapie_kwargs
             )
         )
     elif task == "multilabel_classification":
-        mondrian_cp = Mondrian(
+        mondrian_cp = MondrianCP(
             mapie_estimator=mapie_inst(estimator=model, **mapie_kwargs),
         )
     else:
-        mondrian_cp = Mondrian(
+        mondrian_cp = MondrianCP(
             mapie_estimator=mapie_inst(estimator=model, cv="prefit")
         )
     if task == "multilabel_classification":
@@ -234,7 +234,7 @@ def test_non_cs_fails(mapie_estimator_name):
     model = clone(ml_model)
     model.fit(x, y)
     mapie_inst = deepcopy(mapie_estimator)
-    mondrian_cp = Mondrian(
+    mondrian_cp = MondrianCP(
         mapie_estimator=mapie_inst(
             estimator=model, cv="prefit", **mapie_kwargs
         )
@@ -258,11 +258,11 @@ def test_invalid_cv_fails(mapie_estimator_name, non_valid_cv):
     model = clone(ml_model)
     mapie_inst = deepcopy(mapie_estimator)
     if not isinstance(mapie_inst(), MapieMultiLabelClassifier):
-        mondrian_cp = Mondrian(
+        mondrian_cp = MondrianCP(
             mapie_estimator=mapie_inst(estimator=model, cv=non_valid_cv)
         )
     else:
-        mondrian_cp = Mondrian(
+        mondrian_cp = MondrianCP(
             mapie_estimator=mapie_inst(estimator=model, **mapie_kwargs),
         )
     if task == "multilabel_classification":
@@ -296,17 +296,17 @@ def test_non_valid_estimators_fails(mapie_estimator_name):
     model.fit(x, y)
     mapie_inst = deepcopy(mapie_estimator)
     if task not in ["multilabel_classification", "calibration"]:
-        mondrian_cp = Mondrian(
+        mondrian_cp = MondrianCP(
             mapie_estimator=mapie_inst(
                 estimator=model, cv="prefit", **mapie_kwargs
             )
         )
     elif task == "multilabel_classification":
-        mondrian_cp = Mondrian(
+        mondrian_cp = MondrianCP(
             mapie_estimator=mapie_inst(estimator=model, **mapie_kwargs),
         )
     else:
-        mondrian_cp = Mondrian(
+        mondrian_cp = MondrianCP(
             mapie_estimator=mapie_inst(estimator=model, cv="prefit")
         )
     with pytest.raises(ValueError, match=r".*The estimator must be a*"):
@@ -318,22 +318,6 @@ def test_non_valid_estimators_fails(mapie_estimator_name):
             mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
 
 
-# @pytest.mark.parametrize("mapie_estimator", NON_VALID_MAPIE_ESTIMATORS)
-# def test_non_valid_estimators_fails(mapie_estimator):
-#     """
-#     Test that non valid estimators fail"""
-#     x, y = TOY_DATASETS["regression"]
-#     ml_model = ML_MODELS["regression"]
-#     groups = np.random.choice(10, len(x))
-#     model = clone(ml_model)
-#     model.fit(x, y)
-#     mondrian = Mondrian(
-#         mapie_estimator=mapie_estimator(estimator=model, cv="prefit")
-#     )
-#     with pytest.raises(ValueError, match=r".*The estimator must be a*"):
-#         mondrian.fit(x, y, groups=groups)
-
-
 def test_groups_not_defined_by_integers_fails():
     """
     Test that groups not defined by integers fails"""
@@ -341,7 +325,7 @@ def test_groups_not_defined_by_integers_fails():
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(
+    mondrian = MondrianCP(
         mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
     )
     groups = np.random.choice(10, len(x)).astype(str)
@@ -358,7 +342,7 @@ def test_groups_with_less_than_2_fails():
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(
+    mondrian = MondrianCP(
         mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
     )
     groups = np.array([1] + [2] * (len(x) - 1))
@@ -375,7 +359,7 @@ def test_groups_and_x_have_same_length_in_fit():
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(
+    mondrian = MondrianCP(
         mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
     )
     groups = np.random.choice(10, len(x) - 1)
@@ -390,7 +374,7 @@ def test_all_groups_in_predict_are_in_fit():
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(
+    mondrian = MondrianCP(
         mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
     )
     groups = np.random.choice(10, len(x))
@@ -407,7 +391,7 @@ def test_groups_and_x_have_same_length_in_predict():
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(
+    mondrian = MondrianCP(
         mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
     )
     groups = np.random.choice(10, len(x))
@@ -424,7 +408,7 @@ def test_alpha_none_return_one_element():
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(
+    mondrian = MondrianCP(
         mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
     )
     groups = np.random.choice(10, len(x))
@@ -440,7 +424,7 @@ def test_groups_is_list_ok():
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(
+    mondrian = MondrianCP(
         mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
     )
     groups = np.random.choice(10, len(x)).tolist()
@@ -464,12 +448,12 @@ def test_same_results_if_only_one_group(mapie_estimator_name):
     mapie_inst_mondrian = deepcopy(mapie_estimator)
     mapie_classic_inst = deepcopy(mapie_estimator)
     if not isinstance(mapie_inst_mondrian(), MapieMultiLabelClassifier):
-        mondrian_cp = Mondrian(
+        mondrian_cp = MondrianCP(
             mapie_estimator=mapie_inst_mondrian(estimator=model, cv="prefit")
         )
         mapie_classic = mapie_classic_inst(estimator=model, cv="prefit")
     else:
-        mondrian_cp = Mondrian(
+        mondrian_cp = MondrianCP(
             mapie_estimator=mapie_inst_mondrian(
                 estimator=model, **mapie_kwargs
             ),

@@ -24,7 +24,7 @@ from mapie.utils import check_alpha
 from mapie._typing import ArrayLike, NDArray
 
 
-class Mondrian:
+class MondrianCP:
     """Mondrian is a method that allows to make  perform conformal predictions
     for disjoints groups of individuals.
     The Mondrian method is implemented in the Mondrian class. It takes as
