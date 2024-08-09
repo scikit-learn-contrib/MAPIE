@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from copy import deepcopy
 from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from sklearn.base import BaseEstimator
 from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from mapie.calibration import MapieCalibrator
@@ -24,7 +27,7 @@ from mapie.utils import check_alpha
 from mapie._typing import ArrayLike, NDArray
 
 
-class MondrianCP:
+class MondrianCP(BaseEstimator):
     """Mondrian is a method that allows to make  perform conformal predictions
     for disjoints groups of individuals.
     The Mondrian method is implemented in the Mondrian class. It takes as
@@ -111,7 +114,9 @@ class MondrianCP:
     ):
         self.mapie_estimator = mapie_estimator
 
-    def fit(self, X: ArrayLike, y: ArrayLike, groups: ArrayLike, **fit_params):
+    def fit(
+            self, X: ArrayLike, y: ArrayLike, groups: ArrayLike, **fit_params
+    ) -> MondrianCP:
         """
         Fit the Mondrian method
 
@@ -332,8 +337,7 @@ class MondrianCP:
                         "The conformity score for the MapieClassifier must " +
                         f"be one of {self.allowed_classification_ncs_str}"
                     )
-                else:
-                    return
+
             if self.mapie_estimator.conformity_score is not None:
                 if type(self.mapie_estimator.conformity_score) not in \
                    self.allowed_classification_ncs_class:
@@ -341,7 +345,7 @@ class MondrianCP:
                         "The conformity score for the MapieClassifier must" +
                         f" be one of {self.allowed_classification_ncs_class}"
                     )
-        elif isinstance(self.mapie_estimator, MapieRegressor):
+        else:
             if self.mapie_estimator.conformity_score is not None:
                 if not isinstance(self.mapie_estimator.conformity_score,
                    self.allowed_regression_ncs):

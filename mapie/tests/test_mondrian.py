@@ -77,6 +77,11 @@ VALID_MAPIE_ESTIMATORS = {
         "task": "regression",
         "kwargs": {"conformity_score": AbsoluteConformityScore()}
     },
+    "regression_none": {
+        "estimator": MapieRegressor,
+        "task": "regression",
+        "kwargs": {"conformity_score": None}
+    },
     "regression_gamma_conformity": {
         "estimator": MapieRegressor,
         "task": "regression",
@@ -187,9 +192,11 @@ def test_valid_estimators_dont_fail(mapie_estimator_name):
     model.fit(x, y)
     mapie_inst = deepcopy(mapie_estimator)
     mondrian_cp = MondrianCP(
-        mapie_estimator=mapie_inst(estimator=model, cv="prefit")
+        mapie_estimator=mapie_inst(
+            estimator=model, cv="prefit", **mapie_kwargs
+        )
     )
-    mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
+    mondrian_cp.fit(x, y, groups=groups)
     mondrian_cp.predict(x, groups=groups, alpha=.2)
 
 
@@ -233,10 +240,12 @@ def test_invalid_cv_fails(mapie_estimator_name, non_valid_cv):
     model = clone(ml_model)
     mapie_inst = deepcopy(mapie_estimator)
     mondrian_cp = MondrianCP(
-        mapie_estimator=mapie_inst(estimator=model, cv=non_valid_cv)
+        mapie_estimator=mapie_inst(
+            estimator=model, cv=non_valid_cv, **mapie_kwargs
+        )
     )
     with pytest.raises(ValueError, match=r".*estimator uses cv='prefit'*"):
-        mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
+        mondrian_cp.fit(x, y, groups=groups)
 
 
 @pytest.mark.parametrize(
@@ -402,6 +411,7 @@ def test_same_results_if_only_one_group(mapie_estimator_name):
     mapie_kwargs = task_dict["kwargs"]
     task = task_dict["task"]
     x, y = TOY_DATASETS[task]
+    y = np.abs(y)
     ml_model = ML_MODELS[task]
     groups = [0] * len(x)
     model = clone(ml_model)
@@ -409,11 +419,15 @@ def test_same_results_if_only_one_group(mapie_estimator_name):
     mapie_inst_mondrian = deepcopy(mapie_estimator)
     mapie_classic_inst = deepcopy(mapie_estimator)
     mondrian_cp = MondrianCP(
-        mapie_estimator=mapie_inst_mondrian(estimator=model, cv="prefit")
+        mapie_estimator=mapie_inst_mondrian(
+            estimator=model, cv="prefit", random_state=0, **mapie_kwargs
+        )
     )
-    mapie_classic = mapie_classic_inst(estimator=model, cv="prefit")
-    mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
-    mapie_classic.fit(x, y, **mapie_kwargs)
+    mapie_classic = mapie_classic_inst(
+        estimator=model, cv="prefit", random_state=0, **mapie_kwargs,
+    )
+    mondrian_cp.fit(x, y, groups=groups)
+    mapie_classic.fit(x, y)
     mondrian_pred = mondrian_cp.predict(x, groups=groups, alpha=.2)
     classic_pred = mapie_classic.predict(x, alpha=.2)
     assert np.allclose(mondrian_pred[0], classic_pred[0])
