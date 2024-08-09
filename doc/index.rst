@@ -52,6 +52,13 @@
 .. toctree::
    :maxdepth: 2
    :hidden:
+   :caption: MONDRIAN
+
+   theoretical_description_mondrian
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
    :caption: CALIBRATION
 
    theoretical_description_calibration
