@@ -208,7 +208,7 @@ class MondrianCP:
 
             return y_pred, y_pss
 
-    def _check_mapie_classifier(self):
+    def _check_cv(self):
         """
         Check that the underlying Mapie estimator uses cv='prefit'
 
@@ -374,7 +374,7 @@ class MondrianCP:
         groups : NDArray of shape (n_samples,)
         """
         self._check_estimator()
-        self._check_mapie_classifier()
+        self._check_cv()
         self._check_confomity_score()
         X, y = indexable(X, y)
         y = _check_y(y)
