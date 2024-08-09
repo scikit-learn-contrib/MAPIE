@@ -180,6 +180,20 @@ class MondrianCP:
             )
         else:
             alpha_np = cast(NDArray, check_alpha(alpha))
+            if isinstance(self.mapie_estimator, MapieClassifier):
+                y_pred = np.empty(
+                    (X.shape[0], )
+                )
+                y_pss = np.empty(
+                    (
+                        X.shape[0],
+                        len(self.mapie_estimator.estimator.classes_),
+                        len(alpha_np)
+                    )
+                )
+            else:
+                y_pred = np.empty((X.shape[0],))
+                y_pss = np.empty((X.shape[0], 2, len(alpha_np)))
             unique_groups = np.unique(groups)
             for i, group in enumerate(unique_groups):
                 indices_groups = np.argwhere(groups == group)[:, 0]
@@ -187,14 +201,6 @@ class MondrianCP:
                 y_pred_g, y_pss_g = self.mapie_estimators[group].predict(
                     X_g, alpha=alpha_np, **predict_params
                 )
-                if i == 0:
-                    if len(y_pred_g.shape) == 1:
-                        y_pred = np.empty((X.shape[0],))
-                    else:
-                        y_pred = np.empty((X.shape[0], y_pred_g.shape[1]))
-                    y_pss = np.empty(
-                        (X.shape[0], y_pss_g.shape[1], len(alpha_np))
-                    )
                 y_pred[indices_groups] = y_pred_g
                 y_pss[indices_groups] = y_pss_g
 
