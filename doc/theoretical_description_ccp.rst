@@ -58,7 +58,7 @@ The method follow 3 steps:
 
   .. note:: It is actually a quantile regression between the transformation :math:`\Phi (X)` and the conformity scores `S`.
   
-  Considering an upper bound :math:`M`of the conformity scores,
+  Considering an upper bound :math:`M` of the conformity scores,
   such as :math:`S_{n+1} < M`:
 
   .. math::
@@ -75,7 +75,7 @@ The method follow 3 steps:
     use ``unsafe_approximation=True``, which only consider:
     
     .. math::
-      \hat{g} :=  \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^n{l_{\alpha^*} (g(X_i), S_i)}
+      \hat{g} :=  \text{arg}\min_{g \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)}
 
     However, it may result in a small miscoverage.
     It is recommanded to empirically check the resulting coverage on the test set.
@@ -103,7 +103,9 @@ Following this steps, we have the coverage guarantee:
 :math:`\forall f \in \mathcal{F},`
 
 .. math::
-  \mathbb{P}_f(Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1})) \geq 1 - \alpha \\
+  \mathbb{P}_f(Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1})) \geq 1 - \alpha
+
+.. math::
   \text{and} \quad \left | \mathbb{E} \left[ f(X_{n+1}) \left(\mathbb{I} \left\{ Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1}) \right\} - (1 - \alpha) \right) \right] \right |
   \leq \frac{d}{n+1} \mathbb{E} \left[ \max_{1 \leq i \leq n+1} \left|f(X_i)\right| \right]
 

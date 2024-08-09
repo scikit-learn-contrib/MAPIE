@@ -13,8 +13,10 @@ from .utils import (check_multiplier, check_custom_calibrator_functions,
 
 class CustomCCP(CCPCalibrator):
     """
-    Calibrator used in :class:`~SplitCPRegressor` or
-    :class:`~SplitCPClassifier` to estimate the conformity scores.
+    Calibrator based on :class:`~mapie.calibrators.ccp.CCPCalibrator`,
+    used in :class:`~mapie.futur.split.SplitCPRegressor` or
+    :class:`~mapie.futur.split.SplitCPClassifier`
+    to estimate the conformity scores.
 
     It corresponds to the adaptative conformal prediction method proposed by
     Gibbs et al. (2023) in
@@ -25,19 +27,22 @@ class CustomCCP(CCPCalibrator):
     case in the standard CP), but with a function ``q(X)`` which is adaptative
     as it depends on ``X``.
 
-    This class builds a ``CCPCalibrator`` object with custom features,
-    function of ``X``, ``y_pred`` or ``z``,
+    This class builds a :class:`~mapie.calibrators.ccp.CCPCalibrator`
+    object with custom features, function of ``X``, ``y_pred`` or ``z``,
     defined as a list of functions in ``functions`` argument.
 
-    This class can be used to concatenate ``CCPCalibrator`` instances.
+    This class can be used to concatenate
+    :class:`~mapie.calibrators.ccp.CCPCalibrator` instances.
 
-    See the examples and the documentation to build a ``CCPCalibrator``
+    See the examples and the documentation to build a
+    :class:`~mapie.calibrators.ccp.CCPCalibrator`
     adaptated to your dataset and constraints.
 
     Parameters
     ----------
     functions: Optional[Union[Callable, Iterable[Callable]]]
-        List of functions (or ``CCPCalibrator`` objects) or single function.
+        List of functions (or :class:`~mapie.calibrators.ccp.CCPCalibrator`
+        objects) or single function.
 
         Each function can take a combinaison of the following arguments:
 
@@ -123,14 +128,6 @@ class CustomCCP(CCPCalibrator):
 
     beta_low_: Tuple[NDArray, bool]
         Same as ``beta_up_``, but for the lower bound
-
-    Warnings
-    --------
-        The CCP implementation (:class:`~mapie.calibrators.ccp.CCPCalibrator`)
-        has a stochastic behavior. To have reproductible results,
-        use an integer ``random_state`` value in the
-        :class:`~mapie.futur.split.SplitCPRegressor` or
-        :class:`~mapie.futur.split.SplitCPClassifier` initialisation.
 
     References
     ----------
