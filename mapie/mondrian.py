@@ -28,15 +28,14 @@ class Mondrian:
     """Mondrian is a method that allows to make  perform conformal predictions
     for disjoints groups of individuals.
     The Mondrian method is implemented in the Mondrian class. It takes as
-    input a MapieClassifier, MapieRegressor or MapieMultiLabelClassifier
-    estimator and fits a model for each group of individuals. The Mondrian
-    class can then be used to run a conformal prediction procedure for each
-    of these groups and hence achieve marginal coverage on each of them.
+    input a MapieClassifier or MapieRegressor estimator and fits a model for
+    each group of individuals. The Mondrian class can then be used to run a
+    conformal prediction procedure for each of these groups and hence achieve
+    marginal coverage on each of them.
 
     Parameters
     ----------
-    mapie_estimator : Union[MapieClassifier, MapieRegressor,
-                            MapieMultiLabelClassifier]
+    mapie_estimator : Union[MapieClassifier, MapieRegressor]
         The estimator for which the Mondrian method will be applied. The
         estimator must be used with cv='prefit' and the conformity score must
         be one of the following:
@@ -84,6 +83,7 @@ class Mondrian:
 
     not_allowed_estimators = (
         MapieCalibrator,
+        MapieMultiLabelClassifier,
         MapieQuantileRegressor,
         MapieTimeSeriesRegressor
     )
@@ -106,7 +106,6 @@ class Mondrian:
         self, mapie_estimator: Union[
             MapieClassifier,
             MapieRegressor,
-            MapieMultiLabelClassifier
         ]
     ):
         self.mapie_estimator = mapie_estimator
@@ -205,19 +204,12 @@ class Mondrian:
         ------
         ValueError
             If the underlying Mapie estimator does not use cv='prefit'
-            if the Mondrian method is not used with a MapieMultiLabelClassifier
-        NotFittedError
-            If the underlying Mapie estimator is not fitted and if the Mondrian
-            method is used with a MapieMultiLabelClassifier
         """
-        if not isinstance(self.mapie_estimator, MapieMultiLabelClassifier):
-            if not self.mapie_estimator.cv == "prefit":
-                raise ValueError(
-                    "Mondrian can only be used if the underlying Mapie" +
-                    "estimator uses cv='prefit'."
-                )
-        else:
-            check_is_fitted(self.mapie_estimator.estimator)
+        if not self.mapie_estimator.cv == "prefit":
+            raise ValueError(
+                "Mondrian can only be used if the underlying Mapie" +
+                "estimator uses cv='prefit'."
+            )
 
     def _check_groups_fit(self, X: NDArray, groups: NDArray):
         """Check that each group is defined by an integer and check that there
@@ -293,8 +285,7 @@ class Mondrian:
         """
         if isinstance(self.mapie_estimator, self.not_allowed_estimators):
             raise ValueError(
-                "The estimator must be a MapieClassifier, MapieRegressor or" +
-                " MapieMultiLabelClassifier"
+                "The estimator must be a MapieClassifier or MapieRegressor"
             )
 
     def _check_confomity_score(self):
@@ -364,10 +355,7 @@ class Mondrian:
         self._check_mapie_classifier()
         self._check_confomity_score()
         X, y = indexable(X, y)
-        if isinstance(self.mapie_estimator, MapieMultiLabelClassifier):
-            y = _check_y(y, multi_output=True)
-        else:
-            y = _check_y(y)
+        y = _check_y(y)
         X = cast(NDArray, X)
         y = cast(NDArray, y)
         groups = cast(NDArray, np.array(groups))
