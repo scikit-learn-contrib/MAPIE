@@ -22,8 +22,10 @@ from mapie.calibrators.ccp.utils import (calibrator_optim_objective,
 
 class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
     """
-    Base abstract class for the calibrators used in ``SplitCPRegressor``
-    or ``SplitCPClassifier`` to estimate the conformity scores.
+    Base abstract class for the calibrators used in
+    :class:`~mapie.futur.split.SplitCPRegressor` or
+    :class:`~mapie.futur.split.SplitCPClassifier`
+    to estimate the conformity scores.
     It corresponds to the adaptative conformal prediction method proposed by
     Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
 
@@ -32,13 +34,15 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
     case in the standard CP), but with a function ``q(X)`` which is adaptative
     as it depends on ``X``.
 
-    See the examples and the documentation to build a ``CCPCalibrator``
+    See the examples and the documentation to build a
+    :class:`~mapie.calibrators.ccp.CCPCalibrator`
     adaptated to your dataset and constraints.
 
     Parameters
     ----------
     functions: Optional[Union[Callable, Iterable[Callable]]]
-        List of functions (or ``CCPCalibrator`` objects) or single function.
+        List of functions (or :class:`~mapie.calibrators.ccp.CCPCalibrator`
+        objects) or single function.
 
         Each function can take a combinaison of the following arguments:
 
@@ -124,14 +128,6 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
     beta_low_: Tuple[NDArray, bool]
         Same as ``beta_up_``, but for the lower bound
-
-    Warnings
-    --------
-        The CCP implementation (:class:`~mapie.calibrators.ccp.CCPCalibrator`)
-        has a stochastic behavior. To have reproductible results,
-        use an integer ``random_state`` value in the
-        :class:`~mapie.futur.split.SplitCPRegressor` or
-        :class:`~mapie.futur.split.SplitCPClassifier` initialisation.
 
     References
     ----------
