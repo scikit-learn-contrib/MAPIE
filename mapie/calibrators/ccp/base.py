@@ -577,41 +577,6 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                 cs_bound, self.sym, self.conformity_scores_calib
             )
 
-            # centroid = np.mean(self.calib_cs_features, axis=0)
-            # init_beta_up = cast(OptimizeResult, minimize(
-            #     calibrator_optim_objective, self.beta_up_[0],
-            #     args=(
-            #         np.vstack(
-            #             [self.calib_cs_features, centroid[np.newaxis, :]]
-            #         ),
-            #         np.hstack(
-            #             [self.conformity_scores_calib, [cs_bound_up]]
-            #         ),
-            #         self.q,
-            #         self.reg_param,
-            #     ),
-            #     **self.optim_kwargs,
-            # ))
-            # if self.sym:
-            #     init_beta_low = cast(OptimizeResult, minimize(
-            #         calibrator_optim_objective, self.beta_low_[0],
-            #         args=(
-            #             np.vstack(
-            #                 [self.calib_cs_features, centroid[np.newaxis, :]]
-            #             ),
-            #             -np.hstack(
-            #                 [self.conformity_scores_calib, [cs_bound_low]]
-            #             ),
-            #             self.q,
-            #             self.reg_param,
-            #         ),
-            #         **self.optim_kwargs,
-            #     ))
-            # else:
-            #     init_beta_low = init_beta_up
-            # self._check_optimization_success(init_beta_up, init_beta_low)
-
-
             y_pred_up = np.zeros((_num_samples(X), 1))
             y_pred_low = np.zeros((_num_samples(X), 1))
             for i in range(len(y_pred_up)):
