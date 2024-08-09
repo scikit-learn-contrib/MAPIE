@@ -20,6 +20,12 @@ This simulation is carried out to check that the CCP method implemented in
 MAPIE gives the same results as [1], and that the bounds of the PIs are
 obtained.
 
+It is important to note that we are checking here if the adaptativity property
+of the prediction intervals are well obtained. However, the paper do this
+computations with the full conformal prediction approach, whereas we
+implemented the faster but more conservatice split method. Thus, the results
+may vary a little.
+
 [1] Isaac Gibbs, John J. Cherian, Emmanuel J. Candès (2023).
 Conformal Prediction With Conditional Guarantees
 
@@ -352,22 +358,10 @@ def plot_results(X_test, y_test, n_trials=10,
 # 5. Reproduce experiment and results
 # -----------------------------------------------------------------------------
 
-plot_results(X_test, y_test, 50, experiment="Groups")
+plot_results(X_test, y_test, 20, experiment="Groups")
 
-plot_results(X_test, y_test, 50, experiment="Shifts")
+plot_results(X_test, y_test, 20, experiment="Shifts")
 
 
 ##############################################################################
 # We succesfully reproduced the experiement of the Gibbs et al. paper [1].
-
-##############################################################################
-# 6. Variant of the experiments: let's compare what is comparable
-# -----------------------------------------------------------------------------
-#
-# In the paper, the proposed method (used with not symetrical PI) is compared
-# to the split method with symetrical PI. Let's compare it to the split CP with
-# unsymetrical PI, to have a fair comparison.
-
-plot_results(X_test, y_test, 50, experiment="Groups", split_sym=False)
-
-plot_results(X_test, y_test, 50, experiment="Shifts", split_sym=False)
