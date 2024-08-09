@@ -83,6 +83,7 @@ class Mondrian:
     """
 
     not_allowed_estimators = (
+        MapieCalibrator,
         MapieQuantileRegressor,
         MapieTimeSeriesRegressor
     )
@@ -103,7 +104,6 @@ class Mondrian:
 
     def __init__(
         self, mapie_estimator: Union[
-            MapieCalibrator,
             MapieClassifier,
             MapieRegressor,
             MapieMultiLabelClassifier
@@ -122,7 +122,8 @@ class Mondrian:
         y : ArrayLike of shape (n_samples,) or (n_samples, n_outputs)
             The target values
         groups : ArrayLike of shape (n_samples,)
-            The groups of individuals. Must be defined by integers.
+            The groups of individuals. Must be defined by integers. There must
+            be at least 2 individuals per group.
         **kwargs
             Additional keyword arguments to pass to the estimator's fit method
             that may be specific to the Mapie estimator used
@@ -170,7 +171,6 @@ class Mondrian:
         """
 
         check_is_fitted(self, self.fit_attributes)
-        self._check_not_topk_calibrator()
         X = cast(NDArray, X)
         groups = self._check_groups_predict(X, groups)
         if alpha is None and self.mapie_estimator.estimator is not None:
@@ -196,47 +196,6 @@ class Mondrian:
                 y_pss[indices_groups] = y_pss_g
 
             return y_pred, y_pss
-
-    def predict_proba(
-            self, X: ArrayLike, groups: ArrayLike, **kwargs
-    ) -> NDArray:
-        """
-        Perform top-label calibration for each group of individuals
-
-        Parameters
-        ----------
-        X : ArrayLike of shape (n_samples, n_features)
-            The input data
-        groups : ArrayLike of shape (n_samples,)
-            The groups of individuals. Must be defined by integers.
-        **kwargs
-            Additional keyword arguments to pass to the estimator's
-            predict_proba method that may be specific to the Mapie estimator
-            used
-
-        Returns
-        -------
-        y_pred_proba : NDArray of shape (n_samples, n_classes)
-            The calibrated predicted probabilities
-        """
-        check_is_fitted(self, self.fit_attributes)
-        self._check_is_topk_calibrator()
-        X = cast(NDArray, X)
-        groups = self._check_groups_predict(X, groups)
-        unique_groups = np.unique(groups)
-        y_pred_proba = np.empty(
-            (X.shape[0],
-             len(self.mapie_estimator.estimator.classes_))  # type: ignore
-        )
-        for group in unique_groups:
-            indices_groups = np.argwhere(groups == group)[:, 0]
-            X_g = X[indices_groups]
-            y_pred_proba_g = self.mapie_estimators[group].predict_proba(
-                X_g, **kwargs
-            )
-            y_pred_proba[indices_groups] = y_pred_proba_g
-
-        return y_pred_proba
 
     def _check_mapie_classifier(self):
         """
@@ -415,25 +374,3 @@ class Mondrian:
         self._check_groups_fit(X, groups)
 
         return X, y, groups
-
-    def _check_is_topk_calibrator(self):
-        """
-        Check that the predict_proba method can only be used with a
-        MapieCalibrator estimator
-        """
-        if not isinstance(self.mapie_estimator, MapieCalibrator):
-            raise ValueError(
-                "The predict_proba method can only be used with a " +
-                "MapieCalibrator estimator"
-            )
-
-    def _check_not_topk_calibrator(self):
-        """
-        Check that the predict method can only be used with a MapieCalibrator
-        estimator
-        """
-        if isinstance(self.mapie_estimator, MapieCalibrator):
-            raise ValueError(
-                "The predict method can only be used with a MapieClassifier," +
-                "MapieRegressor or MapieMultiLabelClassifier estimator"
-            )
