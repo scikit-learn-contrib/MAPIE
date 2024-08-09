@@ -176,12 +176,12 @@ class MondrianCP:
         check_is_fitted(self, self.fit_attributes)
         X = cast(NDArray, X)
         groups = self._check_groups_predict(X, groups)
-        if alpha is None and self.mapie_estimator.estimator is not None:
+        alpha_np = cast(NDArray, check_alpha(alpha))
+        if alpha_np is None and self.mapie_estimator.estimator is not None:
             return self.mapie_estimator.estimator.predict(
                 X, **predict_params
             )
         else:
-            alpha_np = cast(NDArray, check_alpha(alpha))
             if isinstance(self.mapie_estimator, MapieClassifier):
                 y_pred = np.empty(
                     (X.shape[0], )
