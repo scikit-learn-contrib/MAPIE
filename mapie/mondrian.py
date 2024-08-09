@@ -32,6 +32,10 @@ class MondrianCP:
     each group of individuals. The Mondrian class can then be used to run a
     conformal prediction procedure for each of these groups and hence achieve
     marginal coverage on each of them.
+    The underlying Mapie estimator must be used with cv='prefit' and the
+    conformity score must be one of the following:
+    - For MapieClassifier: 'lac', 'score', 'cumulated_score', 'aps' or 'topk'
+    - For MapieRegressor: 'gamma', 'absolute' or 'aps'
 
     Parameters
     ----------
