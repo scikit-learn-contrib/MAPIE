@@ -11,7 +11,8 @@ from .utils import format_functions
 class PolynomialCCP(CCPCalibrator):
     """
     Calibrator based on :class:`~mapie.calibrators.ccp.CCPCalibrator`,
-    used for the in ``SplitCPRegressor`` or ``SplitCPClassifier``
+    used in :class:`~mapie.futur.split.SplitCPRegressor` or
+    :class:`~mapie.futur.split.SplitCPClassifier`
     to estimate the conformity scores.
 
     It corresponds to the adaptative conformal prediction method proposed by
@@ -22,10 +23,11 @@ class PolynomialCCP(CCPCalibrator):
     case in the standard CP), but with a function ``q(X)`` which is adaptative
     as it depends on ``X``.
 
-    This class builds a ``CCPCalibrator`` object with polynomial features of
-    ``X``, ``y_pred`` or ``z``.
+    This class builds a :class:`~mapie.calibrators.ccp.CCPCalibrator`
+    object with polynomial features of ``X``, ``y_pred`` or ``z``.
 
-    See the examples and the documentation to build a ``CCPCalibrator``
+    See the examples and the documentation to build a
+    :class:`~mapie.calibrators.ccp.CCPCalibrator`
     adaptated to your dataset and constraints.
 
     Parameters

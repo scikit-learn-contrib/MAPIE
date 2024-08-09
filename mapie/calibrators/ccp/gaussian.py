@@ -14,7 +14,9 @@ from .utils import compute_sigma, format_functions, sample_points
 
 class GaussianCCP(CCPCalibrator):
     """
-    Calibrator used for the in ``SplitCPRegressor`` or ``SplitCPClassifier``
+    Calibrator based on :class:`~mapie.calibrators.ccp.CCPCalibrator`,
+    used in :class:`~mapie.futur.split.SplitCPRegressor` or
+    :class:`~mapie.futur.split.SplitCPClassifier`
     to estimate the conformity scores.
 
     It corresponds to the adaptative conformal prediction method proposed by
@@ -25,11 +27,13 @@ class GaussianCCP(CCPCalibrator):
     case in the standard CP), but with a function ``q(X)`` which is adaptative
     as it depends on ``X``.
 
-    This class builds a ``CCPCalibrator`` object with gaussian kernel features,
+    This class builds a :class:`~mapie.calibrators.ccp.CCPCalibrator`
+    object with gaussian kernel features,
     which computes the gaussian distance between ``X`` and some points,
     randomly sampled in the dataset or set by the user.
 
-    See the examples and the documentation to build a ``CCPCalibrator``
+    See the examples and the documentation to build a
+    :class:`~mapie.calibrators.ccp.CCPCalibrator`
     adaptated to your dataset and constraints.
 
     Parameters
