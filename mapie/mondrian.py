@@ -133,6 +133,8 @@ class MondrianCP:
         self._check_group_length(X, groups)
         self.unique_groups = np.unique(groups)
         self.mapie_estimators = {}
+        if isinstance(self.mapie_estimator, MapieClassifier):
+            self.n_classes = len(np.unique(y.shape[1]))
 
         for group in self.unique_groups:
             mapie_group_estimator = deepcopy(self.mapie_estimator)
@@ -187,7 +189,7 @@ class MondrianCP:
                 y_pss = np.empty(
                     (
                         X.shape[0],
-                        len(self.mapie_estimator.estimator.classes_),
+                        self.n_classes,
                         len(alpha_np)
                     )
                 )
