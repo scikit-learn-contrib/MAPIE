@@ -134,7 +134,7 @@ class MondrianCP:
         self.unique_groups = np.unique(groups)
         self.mapie_estimators = {}
         if isinstance(self.mapie_estimator, MapieClassifier):
-            self.n_classes = len(np.unique(y.shape[1]))
+            self.n_classes = len(np.unique(y))
 
         for group in self.unique_groups:
             mapie_group_estimator = deepcopy(self.mapie_estimator)
