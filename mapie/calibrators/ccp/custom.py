@@ -124,14 +124,6 @@ class CustomCCP(CCPCalibrator):
     beta_low_: Tuple[NDArray, bool]
         Same as ``beta_up_``, but for the lower bound
 
-    Warnings
-    --------
-        The CCP implementation (:class:`~mapie.calibrators.ccp.CCPCalibrator`)
-        has a stochastic behavior. To have reproductible results,
-        use an integer ``random_state`` value in the
-        :class:`~mapie.futur.split.SplitCPRegressor` or
-        :class:`~mapie.futur.split.SplitCPClassifier` initialisation.
-
     References
     ----------
     [1]:
