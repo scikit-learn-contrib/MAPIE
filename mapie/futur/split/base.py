@@ -560,7 +560,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         y_pred = self.predict_score(X)
 
         if self.alpha is None:
-            return y_pred
+            return self.predict_best(y_pred)
 
         check_is_fitted(self, self.calib_attributes)
 
