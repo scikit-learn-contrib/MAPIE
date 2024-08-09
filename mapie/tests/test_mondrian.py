@@ -32,11 +32,6 @@ from mapie.regression import (
 )
 
 VALID_MAPIE_ESTIMATORS = {
-    "calibration": {
-        "estimator": MapieCalibrator,
-        "task": "calibration",
-        "kwargs": {"method": "top_label", "random_state": 0}
-    },
     "classif_score": {
         "estimator": MapieClassifier,
         "task": "classification",
@@ -77,23 +72,6 @@ VALID_MAPIE_ESTIMATORS = {
         "task": "classification",
         "kwargs": {"conformity_score": TopKConformityScore()}
     },
-    "multi_label_recall_crc": {
-        "estimator": MapieMultiLabelClassifier,
-        "task": "multilabel_classification",
-        "kwargs": {"metric_control": "recall", "method": "crc"}
-    },
-    "multi_label_recall_rcps": {
-        "estimator": MapieMultiLabelClassifier,
-        "task": "multilabel_classification",
-        "kwargs": {"metric_control": "recall", "method": "rcps"},
-        "predict_kargs": {"delta": 0.01}
-    },
-    "multi_label_precision_ltt": {
-        "estimator": MapieMultiLabelClassifier,
-        "task": "multilabel_classification",
-        "kwargs": {"metric_control": "precision", "method": "ltt"},
-        "predict_kargs": {"delta": 0.01}
-    },
     "regression_absolute_conformity": {
         "estimator": MapieRegressor,
         "task": "regression",
@@ -123,12 +101,47 @@ NON_VALID_CS = {
         "estimator": MapieRegressor,
         "task": "regression",
         "kwargs": {"conformity_score": ResidualNormalisedScore()}
-    },
+    }
 }
 
-NON_VALID_MAPIE_ESTIMATORS_NAMES = list(NON_VALID_CS.keys())
+NON_VALID_CS_NAMES = list(NON_VALID_CS.keys())
 
-NON_VALID_MAPIE_ESTIMATORS = [MapieQuantileRegressor, MapieTimeSeriesRegressor]
+NON_VALID_MAPIE_ESTIMATORS = {
+    "calibration": {
+        "estimator": MapieCalibrator,
+        "task": "calibration",
+        "kwargs": {"method": "top_label", "random_state": 0}
+    },
+    "multi_label_recall_crc": {
+        "estimator": MapieMultiLabelClassifier,
+        "task": "multilabel_classification",
+        "kwargs": {"metric_control": "recall", "method": "crc"}
+    },
+    "multi_label_recall_rcps": {
+        "estimator": MapieMultiLabelClassifier,
+        "task": "multilabel_classification",
+        "kwargs": {"metric_control": "recall", "method": "rcps"},
+        "predict_kargs": {"delta": 0.01}
+    },
+    "multi_label_precision_ltt": {
+        "estimator": MapieMultiLabelClassifier,
+        "task": "multilabel_classification",
+        "kwargs": {"metric_control": "precision", "method": "ltt"},
+        "predict_kargs": {"delta": 0.01}
+    },
+    "mapie_quantile": {
+        "estimator": MapieQuantileRegressor,
+        "task": "regression",
+        "kwargs": {"method": "quantile"}
+    },
+    "mapie_time_series": {
+        "estimator": MapieTimeSeriesRegressor,
+        "task": "regression",
+        "kwargs": {"method": "quantile"}
+    }
+}
+
+NON_VALID_MAPIE_ESTIMATORS_NAMES = list(NON_VALID_MAPIE_ESTIMATORS.keys())
 
 TOY_DATASETS = {
     "calibration": make_classification(
@@ -206,7 +219,7 @@ def test_valid_estimators_dont_fail(mapie_estimator_name):
 
 
 @pytest.mark.parametrize(
-        "mapie_estimator_name", NON_VALID_MAPIE_ESTIMATORS_NAMES
+        "mapie_estimator_name", NON_VALID_CS_NAMES
 )
 def test_non_cs_fails(mapie_estimator_name):
     """
@@ -265,20 +278,60 @@ def test_invalid_cv_fails(mapie_estimator_name, non_valid_cv):
             mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
 
 
-@pytest.mark.parametrize("mapie_estimator", NON_VALID_MAPIE_ESTIMATORS)
-def test_non_valid_estimators_fails(mapie_estimator):
+@pytest.mark.parametrize(
+        "mapie_estimator_name", NON_VALID_MAPIE_ESTIMATORS_NAMES
+)
+def test_non_valid_estimators_fails(mapie_estimator_name):
     """
-    Test that non valid estimators fail"""
-    x, y = TOY_DATASETS["regression"]
-    ml_model = ML_MODELS["regression"]
+    Test that valid estimators don't fail"""
+    task_dict = NON_VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
+    mapie_estimator = task_dict["estimator"]
+    mapie_kwargs = task_dict["kwargs"]
+    task = task_dict["task"]
+    x, y = TOY_DATASETS[task]
+    y = np.abs(y)  # to avoid negative values with Gamma NCS
+    ml_model = ML_MODELS[task]
     groups = np.random.choice(10, len(x))
     model = clone(ml_model)
     model.fit(x, y)
-    mondrian = Mondrian(
-        mapie_estimator=mapie_estimator(estimator=model, cv="prefit")
-    )
+    mapie_inst = deepcopy(mapie_estimator)
+    if task not in ["multilabel_classification", "calibration"]:
+        mondrian_cp = Mondrian(
+            mapie_estimator=mapie_inst(
+                estimator=model, cv="prefit", **mapie_kwargs
+            )
+        )
+    elif task == "multilabel_classification":
+        mondrian_cp = Mondrian(
+            mapie_estimator=mapie_inst(estimator=model, **mapie_kwargs),
+        )
+    else:
+        mondrian_cp = Mondrian(
+            mapie_estimator=mapie_inst(estimator=model, cv="prefit")
+        )
     with pytest.raises(ValueError, match=r".*The estimator must be a*"):
-        mondrian.fit(x, y, groups=groups)
+        if task == "multilabel_classification":
+            mondrian_cp.fit(x, y, groups=groups)
+        elif task == "calibration":
+            mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
+        else:
+            mondrian_cp.fit(x, y, groups=groups, **mapie_kwargs)
+
+
+# @pytest.mark.parametrize("mapie_estimator", NON_VALID_MAPIE_ESTIMATORS)
+# def test_non_valid_estimators_fails(mapie_estimator):
+#     """
+#     Test that non valid estimators fail"""
+#     x, y = TOY_DATASETS["regression"]
+#     ml_model = ML_MODELS["regression"]
+#     groups = np.random.choice(10, len(x))
+#     model = clone(ml_model)
+#     model.fit(x, y)
+#     mondrian = Mondrian(
+#         mapie_estimator=mapie_estimator(estimator=model, cv="prefit")
+#     )
+#     with pytest.raises(ValueError, match=r".*The estimator must be a*"):
+#         mondrian.fit(x, y, groups=groups)
 
 
 def test_groups_not_defined_by_integers_fails():
@@ -347,23 +400,6 @@ def test_all_groups_in_predict_are_in_fit():
         mondrian.predict(x, groups=groups, alpha=.2)
 
 
-def test_all_groups_in_predict_proba_are_in_fit():
-    """
-    Test that all groups in predict_proba are in fit"""
-    x, y = TOY_DATASETS["calibration"]
-    ml_model = ML_MODELS["calibration"]
-    model = clone(ml_model)
-    model.fit(x, y)
-    mondrian = Mondrian(
-        mapie_estimator=MapieCalibrator(estimator=model, cv="prefit")
-    )
-    groups = np.random.choice(10, len(x))
-    mondrian.fit(x, y, groups=groups)
-    groups = np.array([99] * len(x))
-    with pytest.raises(ValueError, match=r".*There is at least one new*"):
-        mondrian.predict_proba(x, groups=groups, alpha=.2)
-
-
 def test_groups_and_x_have_same_length_in_predict():
     """
     Test that groups and x have the same length in predict"""
@@ -378,38 +414,6 @@ def test_groups_and_x_have_same_length_in_predict():
     mondrian.fit(x, y, groups=groups)
     groups = np.random.choice(10, len(x) - 1)
     with pytest.raises(ValueError, match=r".*The number of individuals in*"):
-        mondrian.predict(x, groups=groups, alpha=.2)
-
-
-def test_predict_proba_only_with_calibrator():
-    """
-    Test that predict_proba only works with calibrator"""
-    x, y = TOY_DATASETS["classification"]
-    ml_model = ML_MODELS["classification"]
-    model = clone(ml_model)
-    model.fit(x, y)
-    mondrian = Mondrian(
-        mapie_estimator=MapieClassifier(estimator=model, cv="prefit")
-    )
-    groups = np.random.choice(10, len(x))
-    mondrian.fit(x, y, groups=groups)
-    with pytest.raises(ValueError, match=r".*The predict_proba method*"):
-        mondrian.predict_proba(x, groups=groups, alpha=.2)
-
-
-def test_predict_fails_with_calibrator():
-    """
-    Test that predict fails with calibrator"""
-    x, y = TOY_DATASETS["calibration"]
-    ml_model = ML_MODELS["calibration"]
-    model = clone(ml_model)
-    model.fit(x, y)
-    mondrian = Mondrian(
-        mapie_estimator=MapieCalibrator(estimator=model, cv="prefit")
-    )
-    groups = np.random.choice(10, len(x))
-    mondrian.fit(x, y, groups=groups)
-    with pytest.raises(ValueError, match=r".*The predict method*"):
         mondrian.predict(x, groups=groups, alpha=.2)
 
 

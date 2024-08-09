@@ -103,10 +103,7 @@ class Mondrian:
     ]
 
     def __init__(
-        self, mapie_estimator: Union[
-            MapieClassifier,
-            MapieRegressor,
-        ]
+        self, mapie_estimator: Union[MapieClassifier, MapieRegressor]
     ):
         self.mapie_estimator = mapie_estimator
 
