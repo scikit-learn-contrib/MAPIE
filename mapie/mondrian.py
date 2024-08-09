@@ -130,6 +130,7 @@ class MondrianCP:
         """
 
         X, y, groups = self._check_fit_parameters(X, y, groups)
+        self._check_group_length(X, groups)
         self.unique_groups = np.unique(groups)
         self.mapie_estimators = {}
 
@@ -237,11 +238,7 @@ class MondrianCP:
         _, counts = np.unique(groups, return_counts=True)
         if np.min(counts) < 2:
             raise ValueError("There must be at least 2 individuals per group")
-        if len(groups) != X.shape[0]:
-            raise ValueError(
-                "The number of individuals in the groups must be equal" +
-                " to the number of rows in X"
-            )
+        self._check_group_length(X, groups)
 
     def _check_groups_predict(self, X: NDArray, groups: ArrayLike) -> NDArray:
         """Check that there is no new group in the prediction and that
@@ -264,18 +261,32 @@ class MondrianCP:
         ------
         ValueError
             If there is a new group in the prediction
-            If the number of individuals in the groups is not equal to the
-            number of rows in X
         """
         groups = cast(NDArray, np.array(groups))
         if not np.all(np.isin(groups, self.unique_groups)):
             raise ValueError(
                 "There is at least one new group in the prediction"
             )
+        self._check_group_length(X, groups)
+        return groups
+
+    def _check_group_length(self, X: NDArray, groups: NDArray):
+        """Check that there is at least 2 individuals per group
+
+        Parameters
+        ----------
+        groups : NDArray of shape (n_samples,)
+            The groups of individuals. Must be defined by integers
+
+        Raises
+        ------
+        ValueError
+            If the number of individuals in the groups is not equal to the
+            number of rows in X
+        """
         if len(groups) != X.shape[0]:
             raise ValueError("The number of individuals in the groups must " +
                              "be equal to the number of rows in X")
-        return groups
 
     def _check_estimator(self):
         """
