@@ -107,7 +107,7 @@ class Mondrian:
     ):
         self.mapie_estimator = mapie_estimator
 
-    def fit(self, X: ArrayLike, y: ArrayLike, groups: ArrayLike, **kwargs):
+    def fit(self, X: ArrayLike, y: ArrayLike, groups: ArrayLike, **fit_params):
         """
         Fit the Mondrian method
 
@@ -120,7 +120,7 @@ class Mondrian:
         groups : ArrayLike of shape (n_samples,)
             The groups of individuals. Must be defined by integers. There must
             be at least 2 individuals per group.
-        **kwargs
+        **fit_params
             Additional keyword arguments to pass to the estimator's fit method
             that may be specific to the Mapie estimator used
         """
@@ -133,14 +133,14 @@ class Mondrian:
             mapie_group_estimator = deepcopy(self.mapie_estimator)
             indices_groups = np.argwhere(groups == group)[:, 0]
             X_g, y_g = X[indices_groups], y[indices_groups]
-            mapie_group_estimator.fit(X_g, y_g, **kwargs)
+            mapie_group_estimator.fit(X_g, y_g, **fit_params)
             self.mapie_estimators[group] = mapie_group_estimator
         return self
 
     def predict(
             self, X: ArrayLike, groups: ArrayLike,
             alpha: Optional[Union[float, Iterable[float]]] = None,
-            **kwargs
+            **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Perform conformal prediction for each group of individuals
@@ -155,7 +155,7 @@ class Mondrian:
             The desired coverage level(s) for each group.
 
             By default None.
-        **kwargs
+        **predict_params
             Additional keyword arguments to pass to the estimator's predict
             method that may be specific to the Mapie estimator used
 
@@ -170,16 +170,18 @@ class Mondrian:
         X = cast(NDArray, X)
         groups = self._check_groups_predict(X, groups)
         if alpha is None and self.mapie_estimator.estimator is not None:
-            return self.mapie_estimator.estimator.predict(X, **kwargs)
+            return self.mapie_estimator.estimator.predict(
+                X, **predict_params
+            )
         else:
             alpha_np = cast(NDArray, check_alpha(alpha))
             unique_groups = np.unique(groups)
             for i, group in enumerate(unique_groups):
-                m = self.mapie_estimators[group]
                 indices_groups = np.argwhere(groups == group)[:, 0]
                 X_g = X[indices_groups]
-                pred = m.predict(X_g, alpha=alpha_np, **kwargs)  # type: ignore
-                y_pred_g, y_pss_g = pred
+                y_pred_g, y_pss_g = self.mapie_estimators[group].predict(
+                    X_g, alpha=alpha_np, **predict_params
+                )
                 if i == 0:
                     if len(y_pred_g.shape) == 1:
                         y_pred = np.empty((X.shape[0],))
