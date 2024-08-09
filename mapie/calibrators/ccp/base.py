@@ -577,14 +577,46 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                 cs_bound, self.sym, self.conformity_scores_calib
             )
 
-            beta_init_up = self.beta_up_[0]
-            beta_init_low = self.beta_low_[0]
+            # centroid = np.mean(self.calib_cs_features, axis=0)
+            # init_beta_up = cast(OptimizeResult, minimize(
+            #     calibrator_optim_objective, self.beta_up_[0],
+            #     args=(
+            #         np.vstack(
+            #             [self.calib_cs_features, centroid[np.newaxis, :]]
+            #         ),
+            #         np.hstack(
+            #             [self.conformity_scores_calib, [cs_bound_up]]
+            #         ),
+            #         self.q,
+            #         self.reg_param,
+            #     ),
+            #     **self.optim_kwargs,
+            # ))
+            # if self.sym:
+            #     init_beta_low = cast(OptimizeResult, minimize(
+            #         calibrator_optim_objective, self.beta_low_[0],
+            #         args=(
+            #             np.vstack(
+            #                 [self.calib_cs_features, centroid[np.newaxis, :]]
+            #             ),
+            #             -np.hstack(
+            #                 [self.conformity_scores_calib, [cs_bound_low]]
+            #             ),
+            #             self.q,
+            #             self.reg_param,
+            #         ),
+            #         **self.optim_kwargs,
+            #     ))
+            # else:
+            #     init_beta_low = init_beta_up
+            # self._check_optimization_success(init_beta_up, init_beta_low)
+
 
             y_pred_up = np.zeros((_num_samples(X), 1))
             y_pred_low = np.zeros((_num_samples(X), 1))
             for i in range(len(y_pred_up)):
-                cor_beta_up = cast(OptimizeResult, minimize(
-                    calibrator_optim_objective, beta_init_up,
+                corrected_beta_up = cast(OptimizeResult, minimize(
+                    calibrator_optim_objective, self.beta_up_[0],
                     args=(
                         np.vstack(
                             [self.calib_cs_features, cs_features[[i], :]]
@@ -598,11 +630,9 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                     **self.optim_kwargs,
                 ))
 
-                beta_init_up = (beta_init_up*(i+1) + cor_beta_up.x)/(i+2)
-
                 if not self.sym:
-                    cor_beta_low = cast(OptimizeResult, minimize(
-                        calibrator_optim_objective, beta_init_low,
+                    corrected_beta_low = cast(OptimizeResult, minimize(
+                        calibrator_optim_objective, self.beta_low_[0],
                         args=(
                             np.vstack(
                                 [self.calib_cs_features, cs_features[[i], :]]
@@ -615,20 +645,19 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                         ),
                         **self.optim_kwargs,
                     ))
-                    beta_init_low = (
-                        beta_init_low*(i+1) + cor_beta_low.x
-                    )/(i+2)
 
                 else:
-                    cor_beta_low = cor_beta_up
+                    corrected_beta_low = corrected_beta_up
 
-                self._check_optimization_success(cor_beta_up, cor_beta_low)
+                self._check_optimization_success(
+                    corrected_beta_up, corrected_beta_low
+                )
 
                 y_pred_up[[i]] = cs_features[[i], :].dot(
-                    cor_beta_up.x[:, np.newaxis]
+                    corrected_beta_up.x[:, np.newaxis]
                 )
                 y_pred_low[[i]] = -cs_features[[i], :].dot(
-                    cor_beta_low.x[:, np.newaxis]
+                    corrected_beta_low.x[:, np.newaxis]
                 )
 
         return np.hstack([y_pred_low, y_pred_up])
