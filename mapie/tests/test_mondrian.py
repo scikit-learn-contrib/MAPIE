@@ -404,8 +404,7 @@ def test_groups_is_list_ok():
 
 @pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
 def test_same_results_if_only_one_group(mapie_estimator_name):
-    """
-    Test that the results are the same if there is only one group"""
+    """Test that the results are the same if there is only one group"""
     task_dict = VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
     mapie_kwargs = task_dict["kwargs"]
