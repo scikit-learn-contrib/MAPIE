@@ -54,6 +54,7 @@ class MondrianCP(BaseEstimator):
     ----------
     unique_groups : NDArray
         The unique groups of individuals for which the estimator was fitted
+
     mapie_estimators : Dict
         A dictionary containing the fitted conformal estimator for each group
         of individuals
