@@ -170,16 +170,15 @@ ML_MODELS = {
     "calibration": LogisticRegression(),
     "classification": LogisticRegression(),
     "multilabel_classification": MultiOutputClassifier(
-                LogisticRegression(multi_class="multinomial")
-            ),
+        LogisticRegression(multi_class="multinomial")
+    ),
     "regression": LinearRegression(),
 }
 
 
 @pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
 def test_valid_estimators_dont_fail(mapie_estimator_name):
-    """
-    Test that valid estimators don't fail"""
+    """Test that valid estimators don't fail"""
     task_dict = VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
     mapie_kwargs = task_dict["kwargs"]
@@ -204,8 +203,7 @@ def test_valid_estimators_dont_fail(mapie_estimator_name):
         "mapie_estimator_name", NON_VALID_CS_NAMES
 )
 def test_non_cs_fails(mapie_estimator_name):
-    """
-    Test that non valid conformity scores fail"""
+    """Test that non valid conformity scores fail"""
     task_dict = NON_VALID_CS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
     mapie_kwargs = task_dict["kwargs"]
@@ -228,8 +226,7 @@ def test_non_cs_fails(mapie_estimator_name):
 @pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
 @pytest.mark.parametrize("non_valid_cv", ["split", -1, 5, ShuffleSplit(1)])
 def test_invalid_cv_fails(mapie_estimator_name, non_valid_cv):
-    """
-    Test that invalid cv fails"""
+    """Test that invalid cv fails"""
     task_dict = VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
     mapie_kwargs = task_dict["kwargs"]
@@ -249,11 +246,10 @@ def test_invalid_cv_fails(mapie_estimator_name, non_valid_cv):
 
 
 @pytest.mark.parametrize(
-        "mapie_estimator_name", NON_VALID_MAPIE_ESTIMATORS_NAMES
+    "mapie_estimator_name", NON_VALID_MAPIE_ESTIMATORS_NAMES
 )
 def test_non_valid_estimators_fails(mapie_estimator_name):
-    """
-    Test that valid estimators don't fail"""
+    """Test that valid estimators don't fail"""
     task_dict = NON_VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
     mapie_kwargs = task_dict["kwargs"]
@@ -289,8 +285,7 @@ def test_non_valid_estimators_fails(mapie_estimator_name):
 
 
 def test_groups_not_defined_by_integers_fails():
-    """
-    Test that groups not defined by integers fails"""
+    """Test that groups not defined by integers fails"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -306,8 +301,7 @@ def test_groups_not_defined_by_integers_fails():
 
 
 def test_groups_with_less_than_2_fails():
-    """
-    Test that groups with less than 2 elements fails"""
+    """Test that groups with less than 2 elements fails"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -323,8 +317,7 @@ def test_groups_with_less_than_2_fails():
 
 
 def test_groups_and_x_have_same_length_in_fit():
-    """
-    Test that groups and x have the same length in fit"""
+    """Test that groups and x have the same length in fit"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -338,8 +331,7 @@ def test_groups_and_x_have_same_length_in_fit():
 
 
 def test_all_groups_in_predict_are_in_fit():
-    """
-    Test that all groups in predict are in fit"""
+    """Test that all groups in predict are in fit"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
@@ -355,8 +347,7 @@ def test_all_groups_in_predict_are_in_fit():
 
 
 def test_groups_and_x_have_same_length_in_predict():
-    """
-    Test that groups and x have the same length in predict"""
+    """Test that groups and x have the same length in predict"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
