@@ -45,12 +45,11 @@ class MondrianCP(BaseEstimator):
     Parameters
     ----------
     mapie_estimator : Union[MapieClassifier, MapieRegressor]
-        The estimator for which the Mondrian method will be applied. The
-        estimator must be used with cv='prefit' and the conformity score must
-        be one of the following:
-        - For MapieClassifier: 'lac', 'score', 'cumulated_score',
-        'aps' or 'topk'
-        - For MapieRegressor: 'gamma', 'absolute' or 'aps'
+        The estimator for which the Mondrian method will be applied.
+        It must be used with `cv='prefit'` and the
+        conformity score must be one of the following:
+        - For `MapieClassifier`: 'lac', 'score', 'cumulated_score', 'aps' or 'topk'
+        - For `MapieRegressor`: 'absolute' or 'gamma'
 
     Attributes
     ----------
