@@ -388,8 +388,7 @@ def test_alpha_none_return_one_element():
 
 
 def test_groups_is_list_ok():
-    """
-    Test that the groups can be a list"""
+    """Test that the groups can be a list"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
