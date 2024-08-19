@@ -32,10 +32,10 @@ class MondrianCP(BaseEstimator):
     for disjoints groups of individuals.
 
     The Mondrian method is implemented in the `MondrianCP` class. It takes as
-    input a `MapieClassifier` or `MapieRegressor` estimator and fits a model for
-    each group of individuals. The `MondrianCP` class can then be used to run a
-    conformal prediction procedure for each of these groups and hence achieve
-    marginal coverage on each of them.
+    input a `MapieClassifier` or `MapieRegressor` estimator and fits a model
+    for each group of individuals. The `MondrianCP` class can then be used to
+    run a conformal prediction procedure for each of these groups and hence
+    achieve marginal coverage on each of them.
 
     The underlying estimator must be used with `cv='prefit'` and the
     conformity score must be one of the following:
@@ -48,7 +48,8 @@ class MondrianCP(BaseEstimator):
         The estimator for which the Mondrian method will be applied.
         It must be used with `cv='prefit'` and the
         conformity score must be one of the following:
-        - For `MapieClassifier`: 'lac', 'score', 'cumulated_score', 'aps' or 'topk'
+        - For `MapieClassifier`: 'lac', 'score', 'cumulated_score', 'aps' or
+        'topk'
         - For `MapieRegressor`: 'absolute' or 'gamma'
 
     Attributes
@@ -73,11 +74,11 @@ class MondrianCP(BaseEstimator):
     >>> from mapie.classification import MapieClassifier
     >>> X_toy = np.arange(9).reshape(-1, 1)
     >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
-    >>> groups = [0, 0, 0, 0, 1, 1, 1, 1, 1]
+    >>> groups_toy = [0, 0, 0, 0, 1, 1, 1, 1, 1]
     >>> clf = LogisticRegression(random_state=42).fit(X_toy, y_toy)
     >>> mapie = MondrianCP(MapieClassifier(estimator=clf, cv="prefit")).fit(
-    ...     X_toy, y_toy, groups)
-    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.4, groups=groups)
+    ...     X_toy, y_toy, groups_toy)
+    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.4, groups=groups_toy)
     >>> print(y_pi_mapie[:, :, 0].astype(bool))
     [[ True False False]
      [ True False False]
@@ -204,11 +205,7 @@ class MondrianCP(BaseEstimator):
                     (X.shape[0], )
                 )
                 y_pss = np.empty(
-                    (
-                        X.shape[0],
-                        self.n_classes,
-                        len(alpha_np)
-                    )
+                    (X.shape[0], self.n_classes, len(alpha_np))
                 )
             else:
                 y_pred = np.empty((X.shape[0],))
@@ -248,6 +245,7 @@ class MondrianCP(BaseEstimator):
         ----------
         X : NDArray of shape (n_samples, n_features)
             The input data
+
         groups : NDArray of shape (n_samples,)
 
         Raises
@@ -296,10 +294,15 @@ class MondrianCP(BaseEstimator):
         return groups
 
     def _check_group_length(self, X: NDArray, groups: NDArray):
-        """Check that there is at least 2 individuals per group
+        """
+        Check that the number of rows in the groups array is equal to
+        the number of rows in the attributes array.
 
         Parameters
         ----------
+        X : NDArray of shape (n_samples, n_features)
+            The individual data.
+
         groups : NDArray of shape (n_samples,)
             The groups of individuals. Must be defined by integers
 
@@ -315,12 +318,12 @@ class MondrianCP(BaseEstimator):
 
     def _check_estimator(self):
         """
-        Check that the estimator is not in the not_allowed_estimators
+        Check that the estimator is not in the `not_allowed_estimators`.
 
         Raises
         ------
         ValueError
-            If the estimator is in the not_allowed_estimators
+            If the estimator is in the `not_allowed_estimators`.
         """
         if isinstance(self.mapie_estimator, self.not_allowed_estimators):
             raise ValueError(
@@ -329,17 +332,18 @@ class MondrianCP(BaseEstimator):
 
     def _check_confomity_score(self):
         """
-        Check that the conformity score is in allowed_classification_ncs_str
-        or allowed_classification_ncs_class if the estimator is MapieClassifier
-        or in the allowed_regression_ncs if the estimator is a MapieRegressor
+        Check that the conformity score is in `allowed_classification_ncs_str`
+        or `allowed_classification_ncs_class` if the estimator is a
+        `MapieClassifier` or in the `allowed_regression_ncs` if the estimator
+        is a `MapieRegressor`
 
         Raises
         ------
         ValueError
-            If conformity score is not in the allowed_classification_ncs_str
-            or allowed_classification_ncs_class if the estimator is a
-            MapieClassifier or in the allowed_regression_ncs if the estimator
-            is a MapieRegressor
+            If conformity score is not in the `allowed_classification_ncs_str`
+            or `allowed_classification_ncs_class` if the estimator is a
+            `MapieClassifier` or in the `allowed_regression_ncs` if the
+            estimator is a `MapieRegressor`.
         """
         if isinstance(self.mapie_estimator, MapieClassifier):
             if self.mapie_estimator.method is not None:
@@ -367,7 +371,7 @@ class MondrianCP(BaseEstimator):
                     )
 
     def _check_fit_parameters(
-            self, X: ArrayLike, y: ArrayLike, groups: ArrayLike
+        self, X: ArrayLike, y: ArrayLike, groups: ArrayLike
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Perform checks on the input data, groups and the estimator
@@ -376,8 +380,10 @@ class MondrianCP(BaseEstimator):
         ----------
         X : ArrayLike of shape (n_samples, n_features)
             The input data
+
         y : ArrayLike of shape (n_samples,) or (n_samples, n_outputs)
             The target values
+
         groups : ArrayLike of shape (n_samples,)
             The groups of individuals. Must be defined by integers
 
@@ -385,10 +391,14 @@ class MondrianCP(BaseEstimator):
         -------
         X : NDArray of shape (n_samples, n_features)
             The input data
+
         y : NDArray of shape (n_samples,) or (n_samples, n_outputs)
             The target values
+
         groups : NDArray of shape (n_samples,)
+            The group values
         """
+
         self._check_estimator()
         self._check_cv()
         self._check_confomity_score()
