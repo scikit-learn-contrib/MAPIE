@@ -21,7 +21,7 @@ of the data or not.
 In a classifcation setting, the groups can be defined as the predicted classes of the data. Doing so,
 one can ensure that, for each predicted class, the coverage guarantee is satisfied.
 
-In order to achieve the group-conditional coverage guarantee, MCP simply this the data
+In order to achieve the group-conditional coverage guarantee, MCP simply classifies the data
 according to the groups and then applies the split conformal predictor to each group separately.
 
 The quantile of each group is defined as:
