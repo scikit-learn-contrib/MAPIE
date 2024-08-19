@@ -28,17 +28,19 @@ from mapie._typing import ArrayLike, NDArray
 
 
 class MondrianCP(BaseEstimator):
-    """Mondrian is a method that allows to make  perform conformal predictions
+    """Mondrian is a method for making conformal predictions
     for disjoints groups of individuals.
-    The Mondrian method is implemented in the Mondrian class. It takes as
-    input a MapieClassifier or MapieRegressor estimator and fits a model for
-    each group of individuals. The Mondrian class can then be used to run a
+
+    The Mondrian method is implemented in the `MondrianCP` class. It takes as
+    input a `MapieClassifier` or `MapieRegressor` estimator and fits a model for
+    each group of individuals. The `MondrianCP` class can then be used to run a
     conformal prediction procedure for each of these groups and hence achieve
     marginal coverage on each of them.
-    The underlying Mapie estimator must be used with cv='prefit' and the
+
+    The underlying estimator must be used with `cv='prefit'` and the
     conformity score must be one of the following:
-    - For MapieClassifier: 'lac', 'score', 'cumulated_score', 'aps' or 'topk'
-    - For MapieRegressor: 'gamma', 'absolute' or 'aps'
+    - For `MapieClassifier`: 'lac', 'score', 'cumulated_score', 'aps' or 'topk'
+    - For `MapieRegressor`: 'absolute' or 'gamma'
 
     Parameters
     ----------
