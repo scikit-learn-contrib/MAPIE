@@ -166,12 +166,15 @@ class MondrianCP(BaseEstimator):
         ----------
         X : ArrayLike of shape (n_samples, n_features)
             The input data
+
         groups : ArrayLike of shape (n_samples,)
             The groups of individuals. Must be defined by integers.
+
         alpha : float or Iterable[float], optional
             The desired coverage level(s) for each group.
 
             By default None.
+
         **predict_params
             Additional keyword arguments to pass to the estimator's predict
             method that may be specific to the Mapie estimator used
