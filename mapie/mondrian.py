@@ -126,11 +126,14 @@ class MondrianCP(BaseEstimator):
         ----------
         X : ArrayLike of shape (n_samples, n_features)
             The input data
+
         y : ArrayLike of shape (n_samples,) or (n_samples, n_outputs)
             The target values
+
         groups : ArrayLike of shape (n_samples,)
             The groups of individuals. Must be defined by integers. There must
             be at least 2 individuals per group.
+
         **fit_params
             Additional keyword arguments to pass to the estimator's fit method
             that may be specific to the Mapie estimator used
