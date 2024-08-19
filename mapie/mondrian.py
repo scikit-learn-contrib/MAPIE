@@ -68,7 +68,7 @@ class MondrianCP(BaseEstimator):
 
     Examples
     --------
-        >>> import numpy as np
+    >>> import numpy as np
     >>> from sklearn.linear_model import LogisticRegression
     >>> from mapie.classification import MapieClassifier
     >>> X_toy = np.arange(9).reshape(-1, 1)
