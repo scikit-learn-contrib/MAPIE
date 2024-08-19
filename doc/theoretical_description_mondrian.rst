@@ -12,7 +12,7 @@ coverage guarantee.  The coverage guarantee is given by:
 .. math::
     P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) | G_{n+1} = g\} \geq 1 - \alpha
 
-where :math:`G(X_{n+1})` is the group of the new test point :math:`X_{n+1}` and :math:`g`
+where :math:`G_{n+1}` is the group of the new test point :math:`X_{n+1}` and :math:`g`
 is a group in the set of groups :math:`\mathcal{G}`.
 
 MCP can be used with any split conformal predictor and can be particularly useful when one have a prior 
