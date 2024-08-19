@@ -104,7 +104,7 @@ class MondrianCP(BaseEstimator):
         TopKConformityScore
     )
     allowed_regression_ncs = (
-        GammaConformityScore, AbsoluteConformityScore, APSConformityScore
+        AbsoluteConformityScore, GammaConformityScore
     )
     fit_attributes = [
         "unique_groups",
