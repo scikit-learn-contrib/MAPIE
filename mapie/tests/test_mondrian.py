@@ -372,8 +372,7 @@ def test_groups_and_x_have_same_length_in_predict():
 
 
 def test_alpha_none_return_one_element():
-    """
-    Test that if alpha is None, the output is a single element"""
+    """Test that if alpha is None, the output is a single element"""
     x, y = TOY_DATASETS["classification"]
     ml_model = ML_MODELS["classification"]
     model = clone(ml_model)
