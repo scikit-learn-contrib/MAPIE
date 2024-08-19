@@ -185,7 +185,9 @@ class MondrianCP(BaseEstimator):
         -------
         y_pred : NDArray of shape (n_samples,) or (n_samples, n_outputs)
             The predicted values
+
         y_pss : NDArray of shape (n_samples, n_outputs, n_alpha)
+            The predicted sets for the desired levels of coverage
         """
 
         check_is_fitted(self, self.fit_attributes)
