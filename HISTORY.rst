@@ -5,7 +5,7 @@ History
 0.8.x (2024-xx-xx)
 ------------------
 
-* Add Mondrian Conformal Prediction for regression, classification, calibration and multilabel-classification
+* Add Mondrian Conformal Prediction for regression and classification
 * Add `** predict_params` in fit and predict method for Mapie Regression
 * Update the ts-changepoint notebook with the tutorial
 * Change import related to conformity scores into ts-changepoint notebook
