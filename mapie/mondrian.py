@@ -117,7 +117,7 @@ class MondrianCP(BaseEstimator):
         self.mapie_estimator = mapie_estimator
 
     def fit(
-            self, X: ArrayLike, y: ArrayLike, groups: ArrayLike, **fit_params
+        self, X: ArrayLike, y: ArrayLike, groups: ArrayLike, **fit_params
     ) -> MondrianCP:
         """
         Fit the Mondrian method
