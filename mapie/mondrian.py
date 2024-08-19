@@ -155,9 +155,11 @@ class MondrianCP(BaseEstimator):
         return self
 
     def predict(
-            self, X: ArrayLike, groups: ArrayLike,
-            alpha: Optional[Union[float, Iterable[float]]] = None,
-            **predict_params
+        self,
+        X: ArrayLike,
+        groups: ArrayLike,
+        alpha: Optional[Union[float, Iterable[float]]] = None,
+        **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Perform conformal prediction for each group of individuals
