@@ -108,3 +108,13 @@ Resampling
 
    subsample.BlockBootstrap
    subsample.Subsample
+
+
+Mondrian
+==========
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   mondrian.MondrianCP
