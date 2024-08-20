@@ -55,6 +55,7 @@
    :caption: MONDRIAN
 
    theoretical_description_mondrian
+   tutorial_mondrian_regression
 
 .. toctree::
    :maxdepth: 2
