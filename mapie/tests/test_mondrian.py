@@ -200,7 +200,7 @@ def test_valid_estimators_dont_fail(mapie_estimator_name):
 
 
 @pytest.mark.parametrize(
-        "mapie_estimator_name", NON_VALID_CS_NAMES
+    "mapie_estimator_name", NON_VALID_CS_NAMES
 )
 def test_non_cs_fails(mapie_estimator_name):
     """Test that non valid conformity scores fail"""

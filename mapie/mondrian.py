@@ -113,7 +113,8 @@ class MondrianCP(BaseEstimator):
     ]
 
     def __init__(
-        self, mapie_estimator: Union[MapieClassifier, MapieRegressor]
+        self,
+        mapie_estimator: Union[MapieClassifier, MapieRegressor]
     ):
         self.mapie_estimator = mapie_estimator
 
@@ -241,7 +242,8 @@ class MondrianCP(BaseEstimator):
             )
 
     def _check_groups_fit(self, X: NDArray, groups: NDArray):
-        """Check that each group is defined by an integer and check that there
+        """
+        Check that each group is defined by an integer and check that there
         are at least 2 individuals per group
 
         Parameters
@@ -267,7 +269,8 @@ class MondrianCP(BaseEstimator):
         self._check_group_length(X, groups)
 
     def _check_groups_predict(self, X: NDArray, groups: ArrayLike) -> NDArray:
-        """Check that there is no new group in the prediction and that
+        """
+        Check that there is no new group in the prediction and that
         the number of individuals in the groups is equal to the number of
         rows in X
 
@@ -275,10 +278,11 @@ class MondrianCP(BaseEstimator):
         ----------
         X : NDArray of shape (n_samples, n_features)
             The input data
+
         groups : ArrayLike of shape (n_samples,)
             The groups of individuals. Must be defined by integers
 
-        returns
+        Returns
         -------
         groups : NDArray of shape (n_samples,)
             Groups of individuals
