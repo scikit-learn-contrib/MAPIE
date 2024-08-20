@@ -392,7 +392,8 @@ def test_groups_is_list_ok():
 
 
 @pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
-def test_same_results_if_only_one_group(mapie_estimator_name):
+@pytest.mark.parametrize("alpha", np.linspace(0.1, 0.9, 10))
+def test_same_results_if_only_one_group(mapie_estimator_name, alpha):
     """Test that the results are the same if there is only one group"""
     task_dict = VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
@@ -416,7 +417,7 @@ def test_same_results_if_only_one_group(mapie_estimator_name):
     )
     mondrian_cp.fit(x, y, groups=groups)
     mapie_classic.fit(x, y)
-    mondrian_pred = mondrian_cp.predict(x, groups=groups, alpha=.2)
-    classic_pred = mapie_classic.predict(x, alpha=.2)
+    mondrian_pred = mondrian_cp.predict(x, groups=groups, alpha=alpha)
+    classic_pred = mapie_classic.predict(x, alpha=alpha)
     assert np.allclose(mondrian_pred[0], classic_pred[0])
     assert np.allclose(mondrian_pred[1], classic_pred[1])
