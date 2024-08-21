@@ -55,7 +55,7 @@
    :caption: MONDRIAN
 
    theoretical_description_mondrian
-   tutorial_mondrian_regression
+   examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression
 
 .. toctree::
    :maxdepth: 2
