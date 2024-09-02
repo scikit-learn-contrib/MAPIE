@@ -77,9 +77,10 @@ class MondrianCP(BaseEstimator):
     >>> partition_toy = [0, 0, 0, 0, 1, 1, 1, 1, 1]
     >>> clf = LogisticRegression(random_state=42).fit(X_toy, y_toy)
     >>> mapie = MondrianCP(MapieClassifier(estimator=clf, cv="prefit")).fit(
-    ...     X_toy, y_toy, partition_toy)
+    ...     X_toy, y_toy, partition=partition_toy
+    ... )
     >>> _, y_pi_mapie = mapie.predict(
-    ...     X_toy, partition_toy, alpha=[0.1, 0.9])
+    ...     X_toy, partition=partition_toy, alpha=[0.1, 0.9])
     >>> print(y_pi_mapie[:, :, 0].astype(bool))
     [[ True False False]
      [ True False False]
