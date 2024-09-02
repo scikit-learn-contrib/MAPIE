@@ -29,7 +29,7 @@ from mapie._typing import ArrayLike, NDArray
 
 class MondrianCP(BaseEstimator):
     """Mondrian is a method for making conformal predictions
-    for disjoints groups of individuals.
+    for partition of individuals.
 
     The Mondrian method is implemented in the `MondrianCP` class. It takes as
     input a `MapieClassifier` or `MapieRegressor` estimator and fits a model
@@ -54,7 +54,7 @@ class MondrianCP(BaseEstimator):
 
     Attributes
     ----------
-    unique_groups : NDArray
+    partition_groups : NDArray
         The unique groups of individuals for which the estimator was fitted
 
     mapie_estimators : Dict
@@ -74,11 +74,12 @@ class MondrianCP(BaseEstimator):
     >>> from mapie.classification import MapieClassifier
     >>> X_toy = np.arange(9).reshape(-1, 1)
     >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
-    >>> groups_toy = [0, 0, 0, 0, 1, 1, 1, 1, 1]
+    >>> partition_toy = [0, 0, 0, 0, 1, 1, 1, 1, 1]
     >>> clf = LogisticRegression(random_state=42).fit(X_toy, y_toy)
     >>> mapie = MondrianCP(MapieClassifier(estimator=clf, cv="prefit")).fit(
-    ...     X_toy, y_toy, groups_toy)
-    >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.4, groups=groups_toy)
+    ...     X_toy, y_toy, partition_toy)
+    >>> _, y_pi_mapie = mapie.predict(
+    ...     X_toy, partition_toy, alpha=[0.1, 0.9])
     >>> print(y_pi_mapie[:, :, 0].astype(bool))
     [[ True False False]
      [ True False False]
@@ -108,7 +109,7 @@ class MondrianCP(BaseEstimator):
         AbsoluteConformityScore, GammaConformityScore
     )
     fit_attributes = [
-        "unique_groups",
+        "partition_groups",
         "mapie_estimators"
     ]
 
@@ -121,7 +122,7 @@ class MondrianCP(BaseEstimator):
     def fit(
         self, X: ArrayLike,
         y: ArrayLike,
-        groups: ArrayLike,
+        partition: ArrayLike,
         **fit_params
     ) -> MondrianCP:
         """
@@ -135,7 +136,7 @@ class MondrianCP(BaseEstimator):
         y : ArrayLike of shape (n_samples,) or (n_samples, n_outputs)
             The target values
 
-        groups : ArrayLike of shape (n_samples,)
+        partition : ArrayLike of shape (n_samples,)
             The groups of individuals. Must be defined by integers. There must
             be at least 2 individuals per group.
 
@@ -144,16 +145,16 @@ class MondrianCP(BaseEstimator):
             that may be specific to the Mapie estimator used
         """
 
-        X, y, groups = self._check_fit_parameters(X, y, groups)
-        self.unique_groups = np.unique(groups)
+        X, y, partition = self._check_fit_parameters(X, y, partition)
+        self.partition_groups = np.unique(partition)
         self.mapie_estimators = {}
 
         if isinstance(self.mapie_estimator, MapieClassifier):
             self.n_classes = len(np.unique(y))
 
-        for group in self.unique_groups:
+        for group in self.partition_groups:
             mapie_group_estimator = copy(self.mapie_estimator)
-            indices_groups = np.argwhere(groups == group)[:, 0]
+            indices_groups = np.argwhere(partition == group)[:, 0]
             X_g = [X[index] for index in indices_groups]
             y_g = [y[index] for index in indices_groups]
             mapie_group_estimator.fit(X_g, y_g, **fit_params)
@@ -164,7 +165,7 @@ class MondrianCP(BaseEstimator):
     def predict(
         self,
         X: ArrayLike,
-        groups: ArrayLike,
+        partition: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
@@ -176,7 +177,7 @@ class MondrianCP(BaseEstimator):
         X : ArrayLike of shape (n_samples, n_features)
             The input data
 
-        groups : ArrayLike of shape (n_samples,), optional
+        partition : ArrayLike of shape (n_samples,), optional
             The groups of individuals. Must be defined by integers.
 
             By default None.
@@ -214,11 +215,11 @@ class MondrianCP(BaseEstimator):
             y_pred = np.empty((len(X),))
             y_pss = np.empty((len(X), 2, len(alpha_np)))
 
-        groups = self._check_groups_predict(X, groups)
-        unique_groups = np.unique(groups)
+        partition = self._check_partition_predict(X, partition)
+        partition_groups = np.unique(partition)
 
-        for _, group in enumerate(unique_groups):
-            indices_groups = np.argwhere(groups == group)[:, 0]
+        for _, group in enumerate(partition_groups):
+            indices_groups = np.argwhere(partition == group)[:, 0]
             X_g = [X[index] for index in indices_groups]
             y_pred_g, y_pss_g = self.mapie_estimators[group].predict(
                 X_g, alpha=alpha_np, **predict_params
@@ -243,7 +244,7 @@ class MondrianCP(BaseEstimator):
                 "estimator uses cv='prefit'."
             )
 
-    def _check_groups_fit(self, X: NDArray, groups: NDArray):
+    def _check_partition_fit(self, X: NDArray, partition: NDArray):
         """
         Check that each group is defined by an integer and check that there
         are at least 2 individuals per group
@@ -253,29 +254,33 @@ class MondrianCP(BaseEstimator):
         X : NDArray of shape (n_samples, n_features)
             The input data
 
-        groups : NDArray of shape (n_samples,)
+        partition : NDArray of shape (n_samples,)
 
         Raises
         ------
         ValueError
-            If the groups are not defined by integers
+            If the partition is not defined by integers
             If there is less than 2 individuals per group
-            If the number of individuals in the groups is not equal to the
+            If the number of individuals in the partition is not equal to the
             number of rows in X
         """
-        if not np.issubdtype(groups.dtype, np.integer):
-            raise ValueError("The groups must be defined by integers")
+        if not np.issubdtype(partition.dtype, np.integer):
+            raise ValueError("The partition must be defined by integers")
 
-        _, counts = np.unique(groups, return_counts=True)
+        _, counts = np.unique(partition, return_counts=True)
         if np.min(counts) < 2:
             raise ValueError("There must be at least 2 individuals per group")
 
-        self._check_group_length(X, groups)
+        self._check_partition_length(X, partition)
 
-    def _check_groups_predict(self, X: NDArray, groups: ArrayLike) -> NDArray:
+    def _check_partition_predict(
+            self,
+            X: NDArray,
+            partition: ArrayLike
+    ) -> NDArray:
         """
         Check that there is no new group in the prediction and that
-        the number of individuals in the groups is equal to the number of
+        the number of individuals in the partition is equal to the number of
         rows in X
 
         Parameters
@@ -283,29 +288,29 @@ class MondrianCP(BaseEstimator):
         X : NDArray of shape (n_samples, n_features)
             The input data
 
-        groups : ArrayLike of shape (n_samples,)
+        partition : ArrayLike of shape (n_samples,)
             The groups of individuals. Must be defined by integers
 
         Returns
         -------
-        groups : NDArray of shape (n_samples,)
-            Groups of individuals
+        partition : NDArray of shape (n_samples,)
+            Partition of the dataset
 
         Raises
         ------
         ValueError
             If there is a new group in the prediction
         """
-        groups = cast(NDArray, np.array(groups))
-        if not np.all(np.isin(groups, self.unique_groups)):
+        partition = cast(NDArray, np.array(partition))
+        if not np.all(np.isin(partition, self.partition_groups)):
             raise ValueError(
                 "There is at least one new group in the prediction."
             )
-        self._check_group_length(X, groups)
+        self._check_partition_length(X, partition)
 
-        return groups
+        return partition
 
-    def _check_group_length(self, X: NDArray, groups: NDArray):
+    def _check_partition_length(self, X: NDArray, partition: NDArray):
         """
         Check that the number of rows in the groups array is equal to
         the number of rows in the attributes array.
@@ -315,18 +320,18 @@ class MondrianCP(BaseEstimator):
         X : NDArray of shape (n_samples, n_features)
             The individual data.
 
-        groups : NDArray of shape (n_samples,)
+        partition : NDArray of shape (n_samples,)
             The groups of individuals. Must be defined by integers
 
         Raises
         ------
         ValueError
-            If the number of individuals in the groups is not equal to the
+            If the number of individuals in the partition is not equal to the
             number of rows in X
         """
-        if len(groups) != len(X):
+        if len(partition) != len(X):
             raise ValueError(
-                "The number of individuals in the groups must "
+                "The number of individuals in the partition must "
                 "be equal to the number of rows in X"
             )
 
@@ -385,10 +390,10 @@ class MondrianCP(BaseEstimator):
                     )
 
     def _check_fit_parameters(
-        self, X: ArrayLike, y: ArrayLike, groups: ArrayLike
+        self, X: ArrayLike, y: ArrayLike, partition: ArrayLike
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
-        Perform checks on the input data, groups and the estimator
+        Perform checks on the input data, partition and the estimator
 
         Parameters
         ----------
@@ -398,7 +403,7 @@ class MondrianCP(BaseEstimator):
         y : ArrayLike of shape (n_samples,) or (n_samples, n_outputs)
             The target values
 
-        groups : ArrayLike of shape (n_samples,)
+        partition : ArrayLike of shape (n_samples,)
             The groups of individuals. Must be defined by integers
 
         Returns
@@ -409,7 +414,7 @@ class MondrianCP(BaseEstimator):
         y : NDArray of shape (n_samples,) or (n_samples, n_outputs)
             The target values
 
-        groups : NDArray of shape (n_samples,)
+        partition : NDArray of shape (n_samples,)
             The group values
         """
         self._check_estimator()
@@ -420,9 +425,9 @@ class MondrianCP(BaseEstimator):
         y = _check_y(y)
         X = cast(NDArray, X)
         y = cast(NDArray, y)
-        groups = cast(NDArray, np.array(groups))
+        partition = cast(NDArray, np.array(partition))
 
-        self._check_groups_fit(X, groups)
-        self._check_group_length(X, groups)
+        self._check_partition_fit(X, partition)
+        self._check_partition_length(X, partition)
 
-        return X, y, groups
+        return X, y, partition
