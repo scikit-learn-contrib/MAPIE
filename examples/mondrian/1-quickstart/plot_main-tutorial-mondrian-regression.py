@@ -161,6 +161,7 @@ for group in np.unique(partition_test):
 
 
 # Plot the coverage by groups, plot both methods side by side
+plt.figure(figsize=(10, 5))
 plt.bar(
     np.arange(len(coverages)) * 2,
     [float(coverages[group]["split"]) for group in coverages],
