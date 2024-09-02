@@ -44,10 +44,10 @@ n_points = 100000
 np.random.seed(0)
 X = np.linspace(0, 10, n_points).reshape(-1, 1)
 group_size = n_points // 10
-groups_list = []
+partition_list = []
 for i in range(10):
-    groups_list.append(np.array([i] * group_size))
-groups = np.concatenate(groups_list)
+    partition_list.append(np.array([i] * group_size))
+partition = np.concatenate(partition_list)
 
 noise_0_1 = np.random.normal(0, 0.1, group_size)
 noise_1_2 = np.random.normal(0, 0.5, group_size)
@@ -62,25 +62,25 @@ noise_9_10 = np.random.normal(0, .9, group_size)
 
 y = np.concatenate(
     [
-        np.sin(X[groups == 0, 0] * 2) + noise_0_1,
-        np.sin(X[groups == 1, 0] * 2) + noise_1_2,
-        np.sin(X[groups == 2, 0] * 2) + noise_2_3,
-        np.sin(X[groups == 3, 0] * 2) + noise_3_4,
-        np.sin(X[groups == 4, 0] * 2) + noise_4_5,
-        np.sin(X[groups == 5, 0] * 2) + noise_5_6,
-        np.sin(X[groups == 6, 0] * 2) + noise_6_7,
-        np.sin(X[groups == 7, 0] * 2) + noise_7_8,
-        np.sin(X[groups == 8, 0] * 2) + noise_8_9,
-        np.sin(X[groups == 9, 0] * 2) + noise_9_10,
+        np.sin(X[partition == 0, 0] * 2) + noise_0_1,
+        np.sin(X[partition == 1, 0] * 2) + noise_1_2,
+        np.sin(X[partition == 2, 0] * 2) + noise_2_3,
+        np.sin(X[partition == 3, 0] * 2) + noise_3_4,
+        np.sin(X[partition == 4, 0] * 2) + noise_4_5,
+        np.sin(X[partition == 5, 0] * 2) + noise_5_6,
+        np.sin(X[partition == 6, 0] * 2) + noise_6_7,
+        np.sin(X[partition == 7, 0] * 2) + noise_7_8,
+        np.sin(X[partition == 8, 0] * 2) + noise_8_9,
+        np.sin(X[partition == 9, 0] * 2) + noise_9_10,
     ], axis=0
 )
 
 
 ##############################################################################
-# We plot the dataset with the groups as colors.
+# We plot the dataset with the partition as colors.
 
 
-plt.scatter(X, y, c=groups)
+plt.scatter(X, y, c=partition)
 plt.show()
 
 
@@ -91,14 +91,14 @@ plt.show()
 X_train_temp, X_test, y_train_temp, y_test = train_test_split(
     X, y, test_size=0.2, random_state=0
 )
-groups_train_temp, groups_test, _, _ = train_test_split(
-    groups, y, test_size=0.2, random_state=0
+partition_train_temp, partition_test, _, _ = train_test_split(
+    partition, y, test_size=0.2, random_state=0
 )
 X_cal, X_train, y_cal, y_train = train_test_split(
     X_train_temp, y_train_temp, test_size=0.5, random_state=0
 )
-groups_cal, groups_train, _, _ = train_test_split(
-    groups_train_temp, y_train_temp, test_size=0.5, random_state=0
+partition_cal, partition_train, _, _ = train_test_split(
+    partition_train_temp, y_train_temp, test_size=0.5, random_state=0
 )
 
 
@@ -107,11 +107,11 @@ groups_cal, groups_train, _, _ = train_test_split(
 
 
 f, ax = plt.subplots(1, 3, figsize=(15, 5))
-ax[0].scatter(X_train, y_train, c=groups_train)
+ax[0].scatter(X_train, y_train, c=partition_train)
 ax[0].set_title("Train set")
-ax[1].scatter(X_cal, y_cal, c=groups_cal)
+ax[1].scatter(X_cal, y_cal, c=partition_cal)
 ax[1].set_title("Calibration set")
-ax[2].scatter(X_test, y_test, c=groups_test)
+ax[2].scatter(X_test, y_test, c=partition_test)
 ax[2].set_title("Test set")
 plt.show()
 
@@ -131,7 +131,7 @@ rf.fit(X_train, y_train)
 mapie_regressor = MapieRegressor(rf, cv="prefit")
 mondrian_regressor = MondrianCP(MapieRegressor(rf, cv="prefit"))
 mapie_regressor.fit(X_cal, y_cal)
-mondrian_regressor.fit(X_cal, y_cal, groups=groups_cal)
+mondrian_regressor.fit(X_cal, y_cal, partition=partition_cal)
 
 
 ##############################################################################
@@ -140,22 +140,23 @@ mondrian_regressor.fit(X_cal, y_cal, groups=groups_cal)
 
 _, y_pss_split = mapie_regressor.predict(X_test, alpha=.1)
 _, y_pss_mondrian = mondrian_regressor.predict(
-    X_test, groups=groups_test, alpha=.1
+    X_test, partition=partition_test, alpha=.1
 )
 
 
 ##############################################################################
-# 6. Compare the coverage by groups, plot both methods side by side.
+# 6. Compare the coverage by partition, plot both methods side by side.
 
 
 coverages = {}
-for group in np.unique(groups_test):
+for group in np.unique(partition_test):
     coverages[group] = {}
     coverages[group]["split"] = regression_coverage_score_v2(
-        y_test[groups_test == group], y_pss_split[groups_test == group]
+        y_test[partition_test == group], y_pss_split[partition_test == group]
     )
     coverages[group]["mondrian"] = regression_coverage_score_v2(
-        y_test[groups_test == group], y_pss_mondrian[groups_test == group]
+        y_test[partition_test == group],
+        y_pss_mondrian[partition_test == group]
     )
 
 
@@ -178,4 +179,5 @@ plt.xticks(
 plt.hlines(0.9, -1, 21, label="90% coverage", color="black", linestyle="--")
 plt.ylabel("Coverage")
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+plt.tight_layout()
 plt.show()
