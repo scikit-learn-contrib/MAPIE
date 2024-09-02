@@ -31,7 +31,6 @@ from mapie.metrics import classification_coverage_score
 
 random_state = 42
 
-
 METHODS = ["lac", "aps", "raps"]
 WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "other", 1, 2.5, (1, 2)]
@@ -1999,9 +1998,9 @@ def test_predict_parameters_passing() -> None:
 
     expected_conformity_scores = np.ones((X_train.shape[0], 1))
     y_pred = mapie_model.predict(X_test, agg_scores="mean", **predict_params)
-    np.testing.assert_allclose(mapie_model.conformity_scores_,
-                               expected_conformity_scores)
-    np.testing.assert_allclose(y_pred, 0)
+    np.testing.assert_equal(mapie_model.conformity_scores_,
+                            expected_conformity_scores)
+    np.testing.assert_equal(y_pred, 0)
 
 
 def test_with_no_predict_parameters_passing() -> None:
@@ -2069,9 +2068,9 @@ def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
 
     expected_conformity_scores = np.ones((X_train.shape[0], 1))
 
-    np.testing.assert_allclose(mapie_model.conformity_scores_,
-                               expected_conformity_scores)
-    np.testing.assert_allclose(y_pred, 0)
+    np.testing.assert_equal(mapie_model.conformity_scores_,
+                            expected_conformity_scores)
+    np.testing.assert_equal(y_pred, 0)
 
 
 def test_using_one_predict_parameter_into_predict_but_not_in_fit() -> None:
