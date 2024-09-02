@@ -165,7 +165,7 @@ class MondrianCP(BaseEstimator):
     def predict(
         self,
         X: ArrayLike,
-        groups: Optional[ArrayLike] = None,
+        groups: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
