@@ -80,7 +80,7 @@ class MondrianCP(BaseEstimator):
     ...     X_toy, y_toy, partition=partition_toy
     ... )
     >>> _, y_pi_mapie = mapie.predict(
-    ...     X_toy, partition=partition_toy, alpha=[0.1, 0.9])
+    ...     X_toy, partition=partition_toy, alpha=0.4)
     >>> print(y_pi_mapie[:, :, 0].astype(bool))
     [[ True False False]
      [ True False False]
