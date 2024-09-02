@@ -145,7 +145,6 @@ class MondrianCP(BaseEstimator):
         """
 
         X, y, groups = self._check_fit_parameters(X, y, groups)
-        self._check_group_length(X, groups)
         self.unique_groups = np.unique(groups)
         self.mapie_estimators = {}
 
@@ -424,5 +423,6 @@ class MondrianCP(BaseEstimator):
         groups = cast(NDArray, np.array(groups))
 
         self._check_groups_fit(X, groups)
+        self._check_group_length(X, groups)
 
         return X, y, groups
