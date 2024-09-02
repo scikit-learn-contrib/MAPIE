@@ -177,7 +177,8 @@ ML_MODELS = {
 
 
 @pytest.mark.parametrize("mapie_estimator_name", VALID_MAPIE_ESTIMATORS_NAMES)
-def test_valid_estimators_dont_fail(mapie_estimator_name):
+@pytest.mark.parametrize("alpha", [.2, [.2, .4]])
+def test_valid_estimators_dont_fail(mapie_estimator_name, alpha):
     """Test that valid estimators don't fail"""
     task_dict = VALID_MAPIE_ESTIMATORS[mapie_estimator_name]
     mapie_estimator = task_dict["estimator"]
@@ -196,7 +197,7 @@ def test_valid_estimators_dont_fail(mapie_estimator_name):
         )
     )
     mondrian_cp.fit(x, y, partition=partition)
-    mondrian_cp.predict(x, partition=partition, alpha=.2)
+    mondrian_cp.predict(x, partition=partition, alpha=alpha)
 
 
 @pytest.mark.parametrize(
