@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from copy import deepcopy
+from copy import copy
 from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -148,21 +148,24 @@ class MondrianCP(BaseEstimator):
         self._check_group_length(X, groups)
         self.unique_groups = np.unique(groups)
         self.mapie_estimators = {}
+
         if isinstance(self.mapie_estimator, MapieClassifier):
             self.n_classes = len(np.unique(y))
 
         for group in self.unique_groups:
-            mapie_group_estimator = deepcopy(self.mapie_estimator)
+            mapie_group_estimator = copy(self.mapie_estimator)
             indices_groups = np.argwhere(groups == group)[:, 0]
-            X_g, y_g = X[indices_groups], y[indices_groups]
+            X_g = [X[index] for index in indices_groups]
+            y_g = [y[index] for index in indices_groups]
             mapie_group_estimator.fit(X_g, y_g, **fit_params)
             self.mapie_estimators[group] = mapie_group_estimator
+
         return self
 
     def predict(
         self,
         X: ArrayLike,
-        groups: ArrayLike,
+        groups: Optional[ArrayLike] = None,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
@@ -174,8 +177,10 @@ class MondrianCP(BaseEstimator):
         X : ArrayLike of shape (n_samples, n_features)
             The input data
 
-        groups : ArrayLike of shape (n_samples,)
+        groups : ArrayLike of shape (n_samples,), optional
             The groups of individuals. Must be defined by integers.
+
+            By default None.
 
         alpha : float or Iterable[float], optional
             The desired coverage level(s) for each group.
@@ -194,37 +199,35 @@ class MondrianCP(BaseEstimator):
         y_pss : NDArray of shape (n_samples, n_outputs, n_alpha)
             The predicted sets for the desired levels of coverage
         """
-
         check_is_fitted(self, self.fit_attributes)
         X = cast(NDArray, X)
-        groups = self._check_groups_predict(X, groups)
         alpha_np = cast(NDArray, check_alpha(alpha))
+
         if alpha_np is None and self.mapie_estimator.estimator is not None:
             return self.mapie_estimator.estimator.predict(
                 X, **predict_params
             )
-        else:
-            if isinstance(self.mapie_estimator, MapieClassifier):
-                y_pred = np.empty(
-                    (X.shape[0], )
-                )
-                y_pss = np.empty(
-                    (X.shape[0], self.n_classes, len(alpha_np))
-                )
-            else:
-                y_pred = np.empty((X.shape[0],))
-                y_pss = np.empty((X.shape[0], 2, len(alpha_np)))
-            unique_groups = np.unique(groups)
-            for i, group in enumerate(unique_groups):
-                indices_groups = np.argwhere(groups == group)[:, 0]
-                X_g = X[indices_groups]
-                y_pred_g, y_pss_g = self.mapie_estimators[group].predict(
-                    X_g, alpha=alpha_np, **predict_params
-                )
-                y_pred[indices_groups] = y_pred_g
-                y_pss[indices_groups] = y_pss_g
 
-            return y_pred, y_pss
+        if isinstance(self.mapie_estimator, MapieClassifier):
+            y_pred = np.empty((len(X), ))
+            y_pss = np.empty((len(X), self.n_classes, len(alpha_np)))
+        else:
+            y_pred = np.empty((len(X),))
+            y_pss = np.empty((len(X), 2, len(alpha_np)))
+
+        groups = self._check_groups_predict(X, groups)
+        unique_groups = np.unique(groups)
+
+        for _, group in enumerate(unique_groups):
+            indices_groups = np.argwhere(groups == group)[:, 0]
+            X_g = [X[index] for index in indices_groups]
+            y_pred_g, y_pss_g = self.mapie_estimators[group].predict(
+                X_g, alpha=alpha_np, **predict_params
+            )
+            y_pred[indices_groups] = y_pred_g
+            y_pss[indices_groups] = y_pss_g
+
+        return y_pred, y_pss
 
     def _check_cv(self):
         """
@@ -263,9 +266,11 @@ class MondrianCP(BaseEstimator):
         """
         if not np.issubdtype(groups.dtype, np.integer):
             raise ValueError("The groups must be defined by integers")
+
         _, counts = np.unique(groups, return_counts=True)
         if np.min(counts) < 2:
             raise ValueError("There must be at least 2 individuals per group")
+
         self._check_group_length(X, groups)
 
     def _check_groups_predict(self, X: NDArray, groups: ArrayLike) -> NDArray:
@@ -295,9 +300,10 @@ class MondrianCP(BaseEstimator):
         groups = cast(NDArray, np.array(groups))
         if not np.all(np.isin(groups, self.unique_groups)):
             raise ValueError(
-                "There is at least one new group in the prediction"
+                "There is at least one new group in the prediction."
             )
         self._check_group_length(X, groups)
+
         return groups
 
     def _check_group_length(self, X: NDArray, groups: NDArray):
@@ -319,9 +325,11 @@ class MondrianCP(BaseEstimator):
             If the number of individuals in the groups is not equal to the
             number of rows in X
         """
-        if len(groups) != X.shape[0]:
-            raise ValueError("The number of individuals in the groups must " +
-                             "be equal to the number of rows in X")
+        if len(groups) != len(X):
+            raise ValueError(
+                "The number of individuals in the groups must "
+                "be equal to the number of rows in X"
+            )
 
     def _check_estimator(self):
         """
@@ -405,15 +413,16 @@ class MondrianCP(BaseEstimator):
         groups : NDArray of shape (n_samples,)
             The group values
         """
-
         self._check_estimator()
         self._check_cv()
         self._check_confomity_score()
+
         X, y = indexable(X, y)
         y = _check_y(y)
         X = cast(NDArray, X)
         y = cast(NDArray, y)
         groups = cast(NDArray, np.array(groups))
+
         self._check_groups_fit(X, groups)
 
         return X, y, groups
