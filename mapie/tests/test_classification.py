@@ -2087,9 +2087,9 @@ def test_using_one_predict_parameter_into_predict_but_not_in_fit() -> None:
     mapie_fitted = mapie.fit(X_train, y_train)
 
     with pytest.raises(ValueError, match=(
-        fr".*Using 'predict_param' '{predict_params}' "
-        r"without using one 'predict_param' in the fit method\..*"
-        r"Please ensure a similar configuration of 'predict_param' "
+        fr".*Using 'predict_params' '{predict_params}' "
+        r"without using one 'predict_params' in the fit method\..*"
+        r"Please ensure a similar configuration of 'predict_params' "
         r"is used in the fit method before calling it in predict\..*"
     )):
         mapie_fitted.predict(X_test, agg_scores="mean", **predict_params)
@@ -2109,9 +2109,9 @@ def test_using_one_predict_parameter_into_fit_but_not_in_predict() -> None:
     mapie_fitted = mapie.fit(X_train, y_train, predict_params=predict_params)
 
     with pytest.raises(ValueError, match=(
-        r"Using one 'predict_param' in the fit method "
-        r"without using one 'predict_param' in the predict method. "
-        r"Please ensure a similar configuration of 'predict_param' "
+        r"Using one 'predict_params' in the fit method "
+        r"without using one 'predict_params' in the predict method. "
+        r"Please ensure a similar configuration of 'predict_params' "
         r"is used in the predict method as called in the fit."
     )):
         mapie_fitted.predict(X_test)
