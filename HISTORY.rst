@@ -5,6 +5,7 @@ History
 0.8.x (2024-xx-xx)
 ------------------
 
+* Add `** predict_params` in fit and predict method for Mapie Classifier
 * Add Mondrian Conformal Prediction for regression and classification
 * Add `** predict_params` in fit and predict method for Mapie Regression
 * Update the ts-changepoint notebook with the tutorial
