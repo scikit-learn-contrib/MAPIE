@@ -234,7 +234,9 @@ MAPIE is free and open-source software licensed under the `license <https://gith
 📚 Citation
 ===========
 
-If you use MAPIE in your research, please cite using::
+If you use MAPIE in your research, please cite using:
+
+.. code:: latex
 
     @inproceedings{Cordier_Flexible_and_Systematic_2023,
     author = {Cordier, Thibault and Blot, Vincent and Lacombe, Louis and Morzadec, Thomas and Capitaine, Arnaud and Brunel, Nicolas},
