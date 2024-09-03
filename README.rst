@@ -236,11 +236,11 @@ MAPIE is free and open-source software licensed under the `license <https://gith
 
 If you use MAPIE in your research, please cite using:
 
-```tex
-@inproceedings{Cordier_Flexible_and_Systematic_2023,
-author = {Cordier, Thibault and Blot, Vincent and Lacombe, Louis and Morzadec, Thomas and Capitaine, Arnaud and Brunel, Nicolas},
-booktitle = {Conformal and Probabilistic Prediction with Applications},
-title = {{Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library}},
-year = {2023}
-}
-```
+.. code:: tex
+    @inproceedings{Cordier_Flexible_and_Systematic_2023,
+    author = {Cordier, Thibault and Blot, Vincent and Lacombe, Louis and Morzadec, Thomas and Capitaine, Arnaud and Brunel, Nicolas},
+    booktitle = {Conformal and Probabilistic Prediction with Applications},
+    title = {{Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library}},
+    year = {2023}
+    }
+
