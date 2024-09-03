@@ -6,26 +6,29 @@ from typing import Any, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import pytest
+from scipy.stats import ttest_1samp
+
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
-                                     PredefinedSplit, ShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import (
+    GroupKFold, KFold, LeaveOneOut, PredefinedSplit, ShuffleSplit,
+    train_test_split
+)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
-from scipy.stats import ttest_1samp
 from typing_extensions import TypedDict
 
 from mapie._typing import NDArray
 from mapie.aggregation_functions import aggregate_all
-from mapie.conformity_scores import (AbsoluteConformityScore, ConformityScore,
-                                     GammaConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import (
+    AbsoluteConformityScore, BaseRegressionScore, GammaConformityScore,
+    ResidualNormalisedScore
+)
 from mapie.estimator.regressor import EnsembleRegressor
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
@@ -40,6 +43,28 @@ k = np.ones(shape=(5, X.shape[1]))
 METHODS = ["naive", "base", "plus", "minmax"]
 
 random_state = 1
+
+
+class CustomGradientBoostingRegressor(GradientBoostingRegressor):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def fit(self, X, y, **kwargs):
+        return super().fit(X, y, **kwargs)
+
+    def predict(self, X, check_predict_params=False):
+        if check_predict_params:
+            return np.zeros(X.shape[0])
+        return super().predict(X)
+
+
+def early_stopping_monitor(i, est, locals):
+    """Returns True on the 3rd iteration."""
+    if i == 2:
+        return True
+    else:
+        return False
+
 
 Params = TypedDict(
     "Params",
@@ -364,7 +389,7 @@ def test_calibration_data_size_asymmetric_score(delta: float) -> None:
     # Define an asymmetric conformity score
     score = AbsoluteConformityScore(sym=False)
 
-    # Test when ConformityScore is asymmetric
+    # Test when BaseRegressionScore is asymmetric
     # and calibration data size is sufficient
     n_calib_sufficient = int(np.ceil(1/(1-delta) * 2)) + 1
     Xc, Xt, yc, _ = train_test_split(Xct, yct, train_size=n_calib_sufficient)
@@ -374,7 +399,7 @@ def test_calibration_data_size_asymmetric_score(delta: float) -> None:
     mapie_reg.fit(Xc, yc)
     mapie_reg.predict(Xt, alpha=1-delta)
 
-    # Test when ConformityScore is asymmetric
+    # Test when BaseRegressionScore is asymmetric
     # and calibration data size is too low
     with pytest.raises(
         ValueError, match=r"Number of samples of the score is too low*"
@@ -560,8 +585,10 @@ def test_results_with_groups() -> None:
     y_pred_1 = [15, 10, 5, 15, 10, 5]
     conformity_scores_0 = np.abs(y - y_pred_0)
     conformity_scores_1 = np.abs(y - y_pred_1)
-    assert np.array_equal(mapie0.conformity_scores_, conformity_scores_0)
-    assert np.array_equal(mapie1.conformity_scores_, conformity_scores_1)
+    np.testing.assert_array_equal(mapie0.conformity_scores_,
+                                  conformity_scores_0)
+    np.testing.assert_array_equal(mapie1.conformity_scores_,
+                                  conformity_scores_1)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -784,7 +811,7 @@ def test_pipeline_compatibility() -> None:
     "conformity_score", [AbsoluteConformityScore(), GammaConformityScore()]
 )
 def test_conformity_score(
-    strategy: str, conformity_score: ConformityScore
+    strategy: str, conformity_score: BaseRegressionScore
 ) -> None:
     """Test that any conformity score function with MAPIE raises no error."""
     mapie_reg = MapieRegressor(
@@ -799,7 +826,7 @@ def test_conformity_score(
     "conformity_score", [ResidualNormalisedScore()]
 )
 def test_conformity_score_with_split_strategies(
-   conformity_score: ConformityScore
+   conformity_score: BaseRegressionScore
 ) -> None:
     """
     Test that any conformity score function that handle only split strategies
@@ -857,26 +884,136 @@ def test_fit_parameters_passing() -> None:
     only during boosting, instead of default value for n_estimators (=100).
     """
     gb = GradientBoostingRegressor(random_state=random_state)
-
     mapie = MapieRegressor(estimator=gb, random_state=random_state)
-
-    def early_stopping_monitor(i, est, locals):
-        """Returns True on the 3rd iteration."""
-        if i == 2:
-            return True
-        else:
-            return False
-
-    mapie.fit(X, y, monitor=early_stopping_monitor)
+    mapie.fit(X, y, fit_params={'monitor': early_stopping_monitor})
 
     assert mapie.estimator_.single_estimator_.estimators_.shape[0] == 3
-
     for estimator in mapie.estimator_.estimators_:
         assert estimator.estimators_.shape[0] == 3
 
 
+def test_predict_parameters_passing() -> None:
+    """
+    Test passing predict parameters.
+    Checks that y_pred from train are 0, y_pred from test are 0.
+    """
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
+    score = AbsoluteConformityScore(sym=True)
+    mapie_model = MapieRegressor(estimator=custom_gbr, conformity_score=score)
+    predict_params = {'check_predict_params': True}
+    mapie_model = mapie_model.fit(
+        X_train, y_train, predict_params=predict_params
+    )
+    y_pred = mapie_model.predict(X_test, **predict_params)
+    np.testing.assert_allclose(mapie_model.conformity_scores_, np.abs(y_train))
+    np.testing.assert_allclose(y_pred, 0)
+
+
+def test_fit_params_expected_behavior_unaffected_by_predict_params() -> None:
+    """
+    We want to verify that there are no interferences
+    with predict_params on the expected behavior of fit_params
+    Checks that underlying GradientBoosting
+    estimators have used 3 iterations only during boosting,
+    instead of default value for n_estimators (=100).
+    """
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
+    mapie_model = MapieRegressor(estimator=custom_gbr)
+    fit_params = {'monitor': early_stopping_monitor}
+    predict_params = {'check_predict_params': True}
+    mapie_model = mapie_model.fit(
+        X_train, y_train,
+        fit_params=fit_params, predict_params=predict_params
+    )
+
+    assert mapie_model.estimator_.single_estimator_.estimators_.shape[0] == 3
+    for estimator in mapie_model.estimator_.estimators_:
+        assert estimator.estimators_.shape[0] == 3
+
+
+def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
+    """
+    We want to verify that there are no interferences
+    with fit_params on the expected behavior of predict_params
+    Checks that the predictions on the training and test sets
+    are 0 for the model with predict_params and that this is not
+    the case for the model without predict_params
+    """
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
+    score = AbsoluteConformityScore(sym=True)
+    mapie_model = MapieRegressor(estimator=custom_gbr, conformity_score=score)
+    fit_params = {'monitor': early_stopping_monitor}
+    predict_params = {'check_predict_params': True}
+    mapie_model = mapie_model.fit(
+        X_train, y_train,
+        fit_params=fit_params,
+        predict_params=predict_params
+    )
+    y_pred = mapie_model.predict(X_test, **predict_params)
+
+    np.testing.assert_array_equal(mapie_model.conformity_scores_,
+                                  np.abs(y_train))
+    np.testing.assert_allclose(y_pred, 0)
+
+
+def test_using_one_predict_parameter_into_predict_but_not_in_fit() -> None:
+    """
+    Test that using predict parameters in the predict method
+    without using predict_parameter in the fit method raises an error.
+    """
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    mapie = MapieRegressor(estimator=custom_gbr)
+    predict_params = {'check_predict_params': True}
+    mapie_fitted = mapie.fit(X_train, y_train)
+
+    with pytest.raises(ValueError, match=(
+        fr".*Using 'predict_param' '{predict_params}' "
+        r"without using one 'predict_param' in the fit method\..*"
+        r"Please ensure a similar configuration of 'predict_param' "
+        r"is used in the fit method before calling it in predict\..*"
+    )):
+        mapie_fitted.predict(X_test, **predict_params)
+
+
+def test_using_one_predict_parameter_into_fit_but_not_in_predict() -> None:
+    """
+    Test that using predict parameters in the fit method
+    without using predict_parameter in
+    the predict method raises an error.
+    """
+    custom_gbr = CustomGradientBoostingRegressor(random_state=random_state)
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    mapie = MapieRegressor(estimator=custom_gbr)
+    predict_params = {'check_predict_params': True}
+    mapie_fitted = mapie.fit(X_train, y_train, predict_params=predict_params)
+
+    with pytest.raises(ValueError, match=(
+        r"Using one 'predict_param' in the fit method "
+        r"without using one 'predict_param' in the predict method. "
+        r"Please ensure a similar configuration of 'predict_param' "
+        r"is used in the predict method as called in the fit."
+    )):
+        mapie_fitted.predict(X_test)
+
+
 def test_predict_infinite_intervals() -> None:
-    """Test that MapieRegressor produces infinite bounds with alpha=0"""
+    """
+    Test that MapieRegressor produces infinite bounds with alpha=0
+    """
     mapie_reg = MapieRegressor().fit(X, y)
     _, y_pis = mapie_reg.predict(X, alpha=0., allow_infinite_bounds=True)
     np.testing.assert_allclose(y_pis[:, 0, 0], -np.inf)
@@ -886,7 +1023,9 @@ def test_predict_infinite_intervals() -> None:
 @pytest.mark.parametrize("method", ["minmax", "naive", "plus", "base"])
 @pytest.mark.parametrize("cv", ["split", "prefit"])
 def test_check_change_method_to_base(method: str, cv: str) -> None:
-    """Test of the overloading of method attribute to `base` method in fit"""
+    """
+    Test of the overloading of method attribute to `base` method in fit
+    """
 
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=0.5, random_state=random_state

@@ -73,16 +73,31 @@ Metrics
    metrics.spiegelhalter_statistic
    metrics.top_label_ece
 
-Conformity scores
-=================
+Conformity scores (regression)
+==============================
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
 
+   conformity_scores.BaseRegressionScore
    conformity_scores.AbsoluteConformityScore
    conformity_scores.GammaConformityScore
    conformity_scores.ResidualNormalisedScore
+
+Conformity scores (classification)
+==================================
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   conformity_scores.BaseClassificationScore
+   conformity_scores.NaiveConformityScore
+   conformity_scores.LACConformityScore
+   conformity_scores.APSConformityScore
+   conformity_scores.RAPSConformityScore
+   conformity_scores.TopKConformityScore
 
 Resampling
 ==========
@@ -93,3 +108,13 @@ Resampling
 
    subsample.BlockBootstrap
    subsample.Subsample
+
+
+Mondrian
+==========
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   mondrian.MondrianCP

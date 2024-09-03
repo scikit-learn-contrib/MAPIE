@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, Optional, Tuple, Union, cast
+from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -12,13 +12,15 @@ from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import ConformityScore, ResidualNormalisedScore
+from mapie.conformity_scores import (BaseRegressionScore,
+                                     ResidualNormalisedScore)
+from mapie.conformity_scores.utils import check_regression_conformity_score
 from mapie.estimator.regressor import EnsembleRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_cv, check_estimator_fit_predict,
                          check_n_features_in, check_n_jobs, check_null_weight,
-                         check_verbose, get_effective_calibration_samples)
-from mapie.conformity_scores.checks import check_conformity_score
+                         check_verbose, get_effective_calibration_samples,
+                         check_predict_params)
 
 
 class MapieRegressor(BaseEstimator, RegressorMixin):
@@ -137,8 +139,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         By default ``0``.
 
-    conformity_score: Optional[ConformityScore]
-        ConformityScore instance.
+    conformity_score: Optional[BaseRegressionScore]
+        BaseRegressionScore instance.
         It defines the link between the observed values, the predicted ones
         and the conformity scores. For instance, the default ``None`` value
         correspondonds to a conformity score which assumes
@@ -146,7 +148,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         - ``None``, to use the default ``AbsoluteConformityScore`` conformity
           score
-        - ConformityScore: any ``ConformityScore`` class
+        - BaseRegressionScore: any ``BaseRegressionScore`` class
 
         By default ``None``.
 
@@ -163,6 +165,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
     estimator_: EnsembleRegressor
         Sklearn estimator that handle all that is related to the estimator.
+
+    conformity_score_function_: BaseRegressionScore
+        Score function that handle all that is related to conformity scores.
 
     conformity_scores_: ArrayLike of shape (n_samples_train,)
         Conformity scores between ``y_train`` and ``y_pred``.
@@ -226,7 +231,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
-        conformity_score: Optional[ConformityScore] = None,
+        conformity_score: Optional[BaseRegressionScore] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         self.estimator = estimator
@@ -431,7 +436,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.method = "base"
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
-        cs_estimator = check_conformity_score(
+        cs_estimator = check_regression_conformity_score(
             self.conformity_score, self.default_sym_
         )
         if isinstance(cs_estimator, ResidualNormalisedScore) and \
@@ -449,7 +454,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         # Casting
         cv = cast(BaseCrossValidator, cv)
         estimator = cast(RegressorMixin, estimator)
-        cs_estimator = cast(ConformityScore, cs_estimator)
+        cs_estimator = cast(BaseRegressionScore, cs_estimator)
         agg_function = cast(Optional[str], agg_function)
         X = cast(NDArray, X)
         y = cast(NDArray, y)
@@ -467,7 +472,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **fit_params,
+        **kwargs: Any
     ) -> MapieRegressor:
         """
         Fit estimator and compute conformity scores used for
@@ -500,14 +505,21 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             train/test set.
             By default ``None``.
 
-        **fit_params : dict
-            Additional fit parameters.
+        kwargs : dict
+            Additional fit and predict parameters.
 
         Returns
         -------
         MapieRegressor
             The model itself.
         """
+        fit_params = kwargs.pop('fit_params', {})
+        predict_params = kwargs.pop('predict_params', {})
+        if len(predict_params) > 0:
+            self._predict_params = True
+        else:
+            self._predict_params = False
+
         # Checks
         (estimator,
          self.conformity_score_function_,
@@ -534,12 +546,14 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         )
 
         # Predict on calibration data
-        y_pred = self.estimator_.predict_calib(X, y=y, groups=groups)
+        y_pred = self.estimator_.predict_calib(
+                X, y=y, groups=groups, **predict_params
+        )
 
         # Compute the conformity scores (manage jk-ab case)
         self.conformity_scores_ = \
             self.conformity_score_function_.get_conformity_scores(
-                X, y, y_pred
+                y, y_pred, X=X
             )
 
         return self
@@ -551,6 +565,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
+        **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -600,6 +615,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
             By default ``False``.
 
+        predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -610,6 +628,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 - [:, 1, :]: Upper bound of the prediction interval.
         """
         # Checks
+        if hasattr(self, '_predict_params'):
+            check_predict_params(self._predict_params, predict_params, self.cv)
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
@@ -617,7 +637,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         # If alpha is None, predict the target without confidence intervals
         if alpha is None:
             y_pred = self.estimator_.predict(
-                X, ensemble, return_multi_pred=False
+                X, ensemble, return_multi_pred=False, **predict_params
             )
             return np.array(y_pred)
 
@@ -639,16 +659,15 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
                 check_alpha_and_n_samples(alpha_np, n)
 
             # Predict the target with confidence intervals
-            y_pred, y_pred_low, y_pred_up = \
-                self.conformity_score_function_.get_bounds(
-                    X,
-                    self.estimator_,
-                    self.conformity_scores_,
-                    alpha_np,
-                    ensemble=ensemble,
-                    method=self.method,
-                    optimize_beta=optimize_beta,
-                    allow_infinite_bounds=allow_infinite_bounds
-                )
+            outputs = self.conformity_score_function_.predict_set(
+                X, alpha_np,
+                estimator=self.estimator_,
+                conformity_scores=self.conformity_scores_,
+                ensemble=ensemble,
+                method=self.method,
+                optimize_beta=optimize_beta,
+                allow_infinite_bounds=allow_infinite_bounds
+            )
+            y_pred, y_pred_low, y_pred_up = outputs
 
             return np.array(y_pred), np.stack([y_pred_low, y_pred_up], axis=1)
