@@ -6,6 +6,8 @@ History
 ------------------
 
 * Fix citations and license links
+* Fix the CQR tutorial to have same data in both methods
+* Add `** predict_params` in fit and predict method for Mapie Classifier
 * Add Mondrian Conformal Prediction for regression and classification
 * Add `** predict_params` in fit and predict method for Mapie Regression
 * Update the ts-changepoint notebook with the tutorial
