@@ -5,6 +5,7 @@ History
 0.8.x (2024-xx-xx)
 ------------------
 
+* Fix citations and license links
 * Fix the CQR tutorial to have same data in both methods
 * Add `** predict_params` in fit and predict method for Mapie Classifier
 * Add Mondrian Conformal Prediction for regression and classification
