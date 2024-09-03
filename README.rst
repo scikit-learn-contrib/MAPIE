@@ -228,10 +228,19 @@ and with the financial support from Région Ile de France and Confiance.ai.
 📝 License
 ==========
 
-MAPIE is free and open-source software licensed under the `3-clause BSD license <LICENSE>`_.
+MAPIE is free and open-source software licensed under the `<https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE>`_.
 
 
 📚 Citation
 ===========
 
-If you use MAPIE in your research, please cite using `<https://github.com/scikit-learn-contrib/MAPIE/blob/master/CITATION.cff>`_ on our repository.
+If you use MAPIE in your research, please cite using:
+
+```bibtex
+@inproceedings{Cordier_Flexible_and_Systematic_2023,
+author = {Cordier, Thibault and Blot, Vincent and Lacombe, Louis and Morzadec, Thomas and Capitaine, Arnaud and Brunel, Nicolas},
+booktitle = {Conformal and Probabilistic Prediction with Applications},
+title = {{Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library}},
+year = {2023}
+}
+```
