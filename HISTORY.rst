@@ -4,7 +4,7 @@ History
 
 0.9.x (2024-xx-xx)
 ------------------
-
+* Update gitignore by including the documentation folder generated for Mondrian
 
 
 0.9.0 (2024-09-03)
