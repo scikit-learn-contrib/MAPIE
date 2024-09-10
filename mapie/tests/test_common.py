@@ -17,7 +17,7 @@ from mapie.regression import MapieQuantileRegressor, MapieRegressor
 X_toy = np.arange(18).reshape(-1, 1)
 y_toy = np.array(
     [0, 0, 1, 0, 1, 2, 1, 2, 2, 0, 0, 1, 0, 1, 2, 1, 2, 2]
-    )
+)
 
 
 def MapieSimpleEstimators() -> List[BaseEstimator]:
@@ -208,3 +208,15 @@ def test_warning_when_import_from_residual_conformity_score():
             GammaConformityScore
         )
         GammaConformityScore()
+
+
+def test_warning_when_import_from_conformity_scores():
+    """Check that a DepreciationWarning is raised when importing from
+    mapie.conformity_scores.conformity_score"""
+
+    with pytest.warns(
+        DeprecationWarning, match=r".*Conformity score class is depreciated.*"
+    ):
+        from mapie.conformity_scores.conformity_scores import (  # noqa: F401
+            ConformityScore
+        )
