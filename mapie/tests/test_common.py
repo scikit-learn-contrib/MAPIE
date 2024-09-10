@@ -195,3 +195,16 @@ def test_sklearn_compatible_estimator(
 ) -> None:
     """Check compatibility with sklearn, using sklearn estimator checks API."""
     check(estimator)
+
+
+def test_warning_when_import_from_residual_conformity_score():
+    """Check that a DepreciationWarning is raised when importing from
+    mapie.conformity_scores.residual_conformity_scores"""
+
+    with pytest.warns(
+        DeprecationWarning, match=r".*Imports from mapie.conformity_scores.*"
+    ):
+        from mapie.conformity_scores.residual_conformity_scores import (
+            GammaConformityScore
+        )
+        GammaConformityScore()
