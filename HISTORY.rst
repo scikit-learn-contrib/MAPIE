@@ -4,7 +4,7 @@ History
 
 0.9.x (2024-xx-xx)
 ------------------
-
+* Fix (partially) the set-up with pip instead of conda for new contributors
 
 
 0.9.0 (2024-09-03)
