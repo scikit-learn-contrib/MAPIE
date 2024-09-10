@@ -14,7 +14,9 @@
 
 import os
 import sys
+from distutils.version import LooseVersion
 
+import sphinx
 import sphinx_gallery
 import sphinx_rtd_theme
 
@@ -42,22 +44,20 @@ extensions = [
     "numpydoc",
     "sphinx_gallery.gen_gallery",
 ]
-mathjax_path = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-
+mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 
 # this is needed for some reason...
 # see https://github.com/numpy/numpydoc/issues/69
 numpydoc_show_class_members = False
 
-from distutils.version import LooseVersion
-
 # pngmath / imgmath compatibility layer for different sphinx versions
-import sphinx
-
 if LooseVersion(sphinx.__version__) < LooseVersion("1.4"):
     extensions.append("sphinx.ext.pngmath")
 else:
     extensions.append("sphinx.ext.imgmath")
+
+# Ensure imgmath_latex is correctly set
+imgmath_latex = 'latex'
 
 autodoc_default_flags = ["members", "inherited-members"]
 
