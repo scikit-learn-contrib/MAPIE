@@ -254,12 +254,12 @@ def test_warning_when_import_from_conformity_scores():
 
             def get_signed_conformity_scores(
                 self, y: ArrayLike, y_pred: ArrayLike, **kwargs
-            ) -> None:
+            ) -> NDArray:
                 pass
 
             def get_estimation_distribution(
                 self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
-            ) -> None:
+            ) -> NDArray:
                 """
                 A positive constant is added to the sum between predictions and
                 conformity scores to make the estimated distribution
@@ -269,12 +269,12 @@ def test_warning_when_import_from_conformity_scores():
 
             def get_conformity_scores(
                 self, y: ArrayLike, y_pred: ArrayLike, **kwargs
-            ) -> None:
+            ) -> NDArray:
                 pass
 
             def predict_set(
                 self, X: NDArray, alpha_np: NDArray, **kwargs
-            ) -> None:
+            ) -> NDArray:
                 pass
 
         dcs = DummyConformityScore()
