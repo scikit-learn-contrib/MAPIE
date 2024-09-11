@@ -10,7 +10,7 @@ from mapie._typing import NDArray
 @deprecated(
     "WARNING: Deprecated path to import ConformityScore. "
     "Please prefer the new path: "
-    "[from mapie.conformity_scores import ConformityScore]."
+    "[from mapie.conformity_scores import BaseRegressionScore]."
 )
 class ConformityScore(BaseConformityScore, metaclass=ABCMeta):
     """
