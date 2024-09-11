@@ -11,6 +11,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.validation import check_is_fitted
 
+from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
 from mapie.regression import MapieQuantileRegressor, MapieRegressor
 
@@ -197,12 +198,12 @@ def test_sklearn_compatible_estimator(
     check(estimator)
 
 
-def test_warning_when_import_from_residual_conformity_score():
+def test_warning_when_import_from_gamma_conformity_score():
     """Check that a DepreciationWarning is raised when importing from
     mapie.conformity_scores.residual_conformity_scores"""
 
     with pytest.warns(
-        DeprecationWarning, match=r".*Imports from mapie.conformity_scores.*"
+        FutureWarning, match=r".*WARNING: Deprecated path to import.*"
     ):
         from mapie.conformity_scores.residual_conformity_scores import (
             GammaConformityScore
@@ -210,13 +211,60 @@ def test_warning_when_import_from_residual_conformity_score():
         GammaConformityScore()
 
 
+def test_warning_when_import_from_absolute_conformity_score():
+    """Check that a DepreciationWarning is raised when importing from
+    mapie.conformity_scores.residual_conformity_scores"""
+
+    with pytest.warns(
+        FutureWarning, match=r".*WARNING: Deprecated path to import.*"
+    ):
+        from mapie.conformity_scores.residual_conformity_scores import (
+            AbsoluteConformityScore
+        )
+        AbsoluteConformityScore()
+
+
+def test_warning_when_import_from_residual_conformity_score():
+    """Check that a DepreciationWarning is raised when importing from
+    mapie.conformity_scores.residual_conformity_scores"""
+
+    with pytest.warns(
+        FutureWarning, match=r".*WARNING: Deprecated path to import.*"
+    ):
+        from mapie.conformity_scores.residual_conformity_scores import (
+            ResidualNormalisedScore
+        )
+        ResidualNormalisedScore()
+
+
 def test_warning_when_import_from_conformity_scores():
     """Check that a DepreciationWarning is raised when importing from
     mapie.conformity_scores.conformity_score"""
 
     with pytest.warns(
-        DeprecationWarning, match=r".*Conformity score class is depreciated.*"
+        FutureWarning, match=r".*WARNING: Deprecated path to import.*"
     ):
-        from mapie.conformity_scores.conformity_scores import (  # noqa: F401
+        from mapie.conformity_scores.conformity_scores import (
             ConformityScore
         )
+
+        class DummyConformityScore(ConformityScore):
+            def __init__(self) -> None:
+                super().__init__(sym=True, consistency_check=True)
+
+            def get_signed_conformity_scores(
+                self, y: ArrayLike, y_pred: ArrayLike, **kwargs
+            ) -> NDArray:
+                return np.subtract(y, y_pred)
+
+            def get_estimation_distribution(
+                self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
+            ) -> NDArray:
+                """
+                A positive constant is added to the sum between predictions and
+                conformity scores to make the estimated distribution
+                inconsistent with the conformity score.
+                """
+                return np.add(y_pred, conformity_scores) + 1
+
+        DummyConformityScore()
