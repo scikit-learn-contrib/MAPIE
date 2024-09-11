@@ -1,9 +1,9 @@
 from sklearn.utils import deprecated
 
 from .bounds import (
-    AbsoluteConformityScore as OldAbsoluteConformityScore,
-    GammaConformityScore as OldGammaConformityScore,
-    ResidualNormalisedScore as OldResidualNormalisedScore
+    AbsoluteConformityScore as NewAbsoluteConformityScore,
+    GammaConformityScore as NewGammaConformityScore,
+    ResidualNormalisedScore as NewResidualNormalisedScore
 )
 
 
@@ -12,7 +12,7 @@ from .bounds import (
     "Please prefer the new path: "
     "[from mapie.conformity_scores.bounds import AbsoluteConformityScore]."
 )
-class AbsoluteConformityScore(OldAbsoluteConformityScore):
+class AbsoluteConformityScore(NewAbsoluteConformityScore):
     pass
 
 
@@ -21,7 +21,7 @@ class AbsoluteConformityScore(OldAbsoluteConformityScore):
     "Please prefer the new path: "
     "[from mapie.conformity_scores.bounds import GammaConformityScore]."
 )
-class GammaConformityScore(OldGammaConformityScore):
+class GammaConformityScore(NewGammaConformityScore):
     pass
 
 
@@ -30,5 +30,5 @@ class GammaConformityScore(OldGammaConformityScore):
     "Please prefer the new path: "
     "[from mapie.conformity_scores.bounds import ResidualNormalisedScore]."
 )
-class ResidualNormalisedScore(OldResidualNormalisedScore):
+class ResidualNormalisedScore(NewResidualNormalisedScore):
     pass
