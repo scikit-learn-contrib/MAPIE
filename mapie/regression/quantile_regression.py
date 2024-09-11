@@ -652,6 +652,7 @@ class MapieQuantileRegressor(MapieRegressor):
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
         symmetry: Optional[bool] = True,
+        **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -679,6 +680,9 @@ class MapieQuantileRegressor(MapieRegressor):
             each residuals separatly or to use the maximum of the two
             combined.
 
+        predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -702,7 +706,7 @@ class MapieQuantileRegressor(MapieRegressor):
             dtype=float,
         )
         for i, est in enumerate(self.estimators_):
-            y_preds[i] = est.predict(X)
+            y_preds[i] = est.predict(X, **predict_params)
         check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
         if symmetry:
             quantile = np.full(

@@ -16,7 +16,6 @@ from sklearn.utils.validation import (_check_sample_weight, _num_features,
 
 from ._compatibility import np_quantile
 from ._typing import ArrayLike, NDArray
-from .conformity_scores import AbsoluteConformityScore, ConformityScore
 
 SPLIT_STRATEGIES = ["uniform", "quantile", "array split"]
 
@@ -412,6 +411,29 @@ def check_gamma(
         )
 
 
+def get_effective_calibration_samples(scores: NDArray, sym: bool):
+    """
+    Calculates the effective number of calibration samples.
+
+    Parameters
+    ----------
+    scores: NDArray
+        An array of scores.
+
+    sym: bool
+        A boolean indicating whether the scores are symmetric.
+
+    Returns
+    -------
+    n: int
+        The effective number of calibration samples.
+    """
+    n = np.sum(~np.isnan(scores))
+    if not sym:
+        n //= 2
+    return n
+
+
 def check_alpha_and_n_samples(
     alphas: Union[Iterable[float], float],
     n: int,
@@ -449,7 +471,7 @@ def check_alpha_and_n_samples(
     if isinstance(alphas, float):
         alphas = np.array([alphas])
     for alpha in alphas:
-        if n < 1 / alpha or n < 1 / (1 - alpha):
+        if n < np.max([1/alpha, 1/(1-alpha)]):
             raise ValueError(
                 "Number of samples of the score is too low,\n"
                 "1/alpha (or 1/(1 - alpha)) must be lower "
@@ -597,40 +619,6 @@ def check_lower_upper_bounds(
     if any_inversion:
         warnings.warn(
             "WARNING: The predictions are ill-sorted."
-        )
-
-
-def check_conformity_score(
-    conformity_score: Optional[ConformityScore],
-    sym: bool = True,
-) -> ConformityScore:
-    """
-    Check parameter ``conformity_score``.
-
-    Raises
-    ------
-    ValueError
-        If parameter is not valid.
-
-    Examples
-    --------
-    >>> from mapie.utils import check_conformity_score
-    >>> try:
-    ...     check_conformity_score(1)
-    ... except Exception as exception:
-    ...     print(exception)
-    ...
-    Invalid conformity_score argument.
-    Must be None or a ConformityScore instance.
-    """
-    if conformity_score is None:
-        return AbsoluteConformityScore(sym=sym)
-    elif isinstance(conformity_score, ConformityScore):
-        return conformity_score
-    else:
-        raise ValueError(
-            "Invalid conformity_score argument.\n"
-            "Must be None or a ConformityScore instance."
         )
 
 
@@ -1331,4 +1319,96 @@ def check_arrays_length(*arrays: NDArray) -> None:
     if len(np.unique(res)) > 1:
         raise ValueError(
                 "There are arrays with different length"
+            )
+
+
+def check_n_samples(
+    X: NDArray,
+    n_samples: Optional[Union[float, int]],
+    indices: NDArray
+) -> int:
+    """
+    Check alpha and prepare it as a ArrayLike.
+
+    Parameters
+    ----------
+    n_samples: Union[float, int]
+        Can be a float between 0 and 1 or a int
+        Between 0 and 1, represent the part of data in the train sample
+        When n_samples is a int, it represents the number of elements
+        in the train sample
+
+    Returns
+    -------
+    int
+        n_samples
+
+    Raises
+    ------
+    ValueError
+        If n_samples is not an int in the range [1, inf)
+        or a float in the range (0.0, 1.0)
+    """
+    if n_samples is None:
+        n_samples = len(indices)
+    elif isinstance(n_samples, float):
+        if 0 < n_samples < 1:
+            n_samples = int(np.floor(n_samples * X.shape[0]))
+            if n_samples == 0:
+                raise ValueError(
+                    "The value of n_samples is too small. "
+                    "You need to increase it so that n_samples*X.shape[0] > 1"
+                    "otherwise n_samples should be an int"
+                    )
+        else:
+            raise ValueError(
+                "Invalid n_samples. Allowed values "
+                "are float in the range (0.0, 1.0) or"
+                " int in the range [1, inf)"
+                )
+    elif isinstance(n_samples, int) and n_samples <= 0:
+        raise ValueError(
+             "Invalid n_samples. Allowed values "
+             "are float in the range (0.0, 1.0) or"
+             " int in the range [1, inf)"
+             )
+    return int(n_samples)
+
+
+def check_predict_params(
+    predict_params_used_in_fit: bool,
+    predict_params: dict,
+    cv: Optional[Union[int, str, BaseCrossValidator]] = None
+) -> None:
+    """
+    Check that if predict_params is used in the predict method,
+    it is also used in the fit method. Otherwise, raise an error.
+    Parameters
+    ----------
+    predict_params_used_in_fit: bool
+        True if one or more predict_params are used in the fit method
+
+    predict_param: dict
+        Contains all predict params used in predict method
+
+    Raises
+    ------
+    ValueError
+        If any predict_params are used in the predict method but none
+        are used in the fit method.
+    """
+    if cv != "prefit":
+        if len(predict_params) > 0 and predict_params_used_in_fit is False:
+            raise ValueError(
+                f"Using 'predict_params' '{predict_params}' "
+                f"without using one 'predict_params' in the fit method. "
+                f"Please ensure a similar configuration of 'predict_params' "
+                f"is used in the fit method before calling it in predict."
+            )
+        if len(predict_params) == 0 and predict_params_used_in_fit is True:
+            raise ValueError(
+                "Using one 'predict_params' in the fit method "
+                "without using one 'predict_params' in the predict method. "
+                "Please ensure a similar configuration of 'predict_params' "
+                "is used in the predict method as called in the fit."
             )

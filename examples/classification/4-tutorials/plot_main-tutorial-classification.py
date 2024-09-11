@@ -148,7 +148,7 @@ def plot_scores(n, alphas, scores, quantiles):
 
 scores = mapie_score.conformity_scores_
 n = len(mapie_score.conformity_scores_)
-quantiles = mapie_score.quantiles_
+quantiles = mapie_score.conformity_score_function_.quantiles_
 plot_scores(n, alpha, scores, quantiles)
 
 ##############################################################################

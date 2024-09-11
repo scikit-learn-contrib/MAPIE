@@ -41,4 +41,5 @@ Contributors
 * Ambros Marzetta <ambrosm>
 * Carl McBride Ellis <Carl-McBride-Ellis>
 * Tiago Leon Melo <tleonmelo@hotmail.com>
+* Baptiste Calot <baptiste.calot@capgemini.com>
 To be continued ...

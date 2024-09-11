@@ -195,7 +195,7 @@ and their corresponding labels :math:`y_i` and to compare its properties to that
 cumulative differences on sorted scores: 
 
 .. math::
-    C_k = \frac{1}{N}\sum_{i=1}^k (s_i - y_i)
+    C_k = \frac{1}{N}\sum_{i=1}^k (y_i - s_i)
 
 We also introduce a typical normalization scale :math:`\sigma`:
 

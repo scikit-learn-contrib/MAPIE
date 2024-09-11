@@ -2,9 +2,50 @@
 History
 =======
 
-0.8.3 (2024-**-**)
+0.9.x (2024-xx-xx)
 ------------------
 
+
+
+0.9.0 (2024-09-03)
+------------------
+
+* Fix citations and license links
+* Fix the CQR tutorial to have same data in both methods
+* Add `** predict_params` in fit and predict method for Mapie Classifier
+* Add Mondrian Conformal Prediction for regression and classification
+* Add `** predict_params` in fit and predict method for Mapie Regression
+* Update the ts-changepoint notebook with the tutorial
+* Change import related to conformity scores into ts-changepoint notebook
+* Replace `assert np.array_equal` by `np.testing.assert_array_equal` in Mapie unit tests
+* Replace `github.com/simai-ml/MAPIE` by `github.com/scikit-learn-contrib/MAPIE`in all Mapie files
+* Extend `ConformityScore` to support regression (with `BaseRegressionScore`) and to support classification (with `BaseClassificationScore`)
+* Extend `EnsembleEstimator` to support regression (with `EnsembleRegressor`) and to support classification (with `EnsembleClassifier`)
+* Refactor `MapieClassifier` by separating the handling of the `MapieClassifier` estimator into a new class called `EnsembleClassifier`
+* Refactor `MapieClassifier` by separating the handling of the `MapieClassifier` conformity score into a new class called `BaseClassificationScore`
+* Add severals non-conformity scores for classification (`LAC`, `APS`, `RAPS`, `TopK`) based on `BaseClassificationScore`
+* Transfer the logic of classification methods into the non-conformity score classes (`LAC`, `APS`, `RAPS`, `TopK`)
+* Extend the classification strategy definition by supporting `method` and `conformity_score` attributes
+* Building unit tests for different `Subsample` and `BlockBooststrap` instances
+* Change the sign of C_k in the `Kolmogorov-Smirnov` test documentation
+* Building a training set with a fraction between 0 and 1 with `n_samples` attribute when using `split` method from `Subsample` class.
+
+0.8.6 (2024-06-14)
+------------------
+
+* Fix the quantile formula to ensure valid coverage (deal with infinite interval production and asymmetric conformal scores).
+* Fix sphinx dependencies
+
+0.8.5 (2024-06-07)
+------------------
+
+* Issue with update from 0.8.4
+
+0.8.4 (2024-06-07)
+------------------
+
+* Fix the quantile formula to ensure valid coverage for any number of calibration data in `ConformityScore`.
+* Fix overloading of the value of the `method` attribute when using `MapieRegressor` and `MapieTimeSeriesRegressor`.
 * Fix conda versionning.
 * Reduce precision for test in `MapieCalibrator`.
 * Fix invalid certificate when downloading data.

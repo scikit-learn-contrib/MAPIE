@@ -3,7 +3,7 @@
 |GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Conda| |Release| |Commits| |DOI|
 
 .. |GitHubActions| image:: https://github.com/scikit-learn-contrib/MAPIE/actions/workflows/test.yml/badge.svg
-   :target: https://github.com/scikit-learn-contrib/MAPIE/actions
+    :target: https://github.com/scikit-learn-contrib/MAPIE/actions
 
 .. |Codecov| image:: https://codecov.io/gh/scikit-learn-contrib/MAPIE/branch/master/graph/badge.svg?token=F2S6KYH4V1
    :target: https://codecov.io/gh/scikit-learn-contrib/MAPIE
@@ -13,25 +13,25 @@
     :alt: Documentation Status
 
 .. |License| image:: https://img.shields.io/github/license/scikit-learn-contrib/MAPIE
-   :target: https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE
+    :target: https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE
 
 .. |PythonVersion| image:: https://img.shields.io/pypi/pyversions/mapie
-   :target: https://pypi.org/project/mapie/
+    :target: https://pypi.org/project/mapie/
 
 .. |PyPi| image:: https://img.shields.io/pypi/v/mapie
-   :target: https://pypi.org/project/mapie/
+    :target: https://pypi.org/project/mapie/
 
 .. |Conda| image:: https://img.shields.io/conda/vn/conda-forge/mapie
-   :target: https://anaconda.org/conda-forge/mapie
+    :target: https://anaconda.org/conda-forge/mapie
 
 .. |Release| image:: https://img.shields.io/github/v/release/scikit-learn-contrib/mapie
-   :target: https://github.com/scikit-learn-contrib/MAPIE/releases
+    :target: https://github.com/scikit-learn-contrib/MAPIE/releases
 
 .. |Commits| image:: https://img.shields.io/github/commits-since/scikit-learn-contrib/mapie/latest/master
-   :target: https://github.com/scikit-learn-contrib/MAPIE/commits/master
+    :target: https://github.com/scikit-learn-contrib/MAPIE/commits/master
 
 .. |DOI| image:: https://img.shields.io/badge/10.48550/arXiv.2207.12274-B31B1B.svg
-   :target: https://arxiv.org/abs/2207.12274
+    :target: https://arxiv.org/abs/2207.12274
 
 .. image:: https://github.com/scikit-learn-contrib/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
@@ -166,10 +166,15 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 🤝  Affiliations
 ================
 
-MAPIE has been developed through a collaboration between Quantmetry, Michelin, ENS Paris-Saclay,
+MAPIE has been developed through a collaboration between Capgemini, Quantmetry, Michelin, ENS Paris-Saclay,
 and with the financial support from Région Ile de France and Confiance.ai.
 
-|Quantmetry| |Michelin| |ENS| |Confiance.ai| |IledeFrance|
+|Capgemini| |Quantmetry| |Michelin| |ENS| |Confiance.ai| |IledeFrance|
+
+.. |Capgemini| image:: https://www.capgemini.com/wp-content/themes/capgemini2020/assets/images/logo.svg
+    :height: 35px
+    :width: 140px
+    :target: https://www.capgemini.com/
 
 .. |Quantmetry| image:: https://www.quantmetry.com/wp-content/uploads/2020/08/08-Logo-quant-Texte-noir.svg
     :height: 35px
@@ -184,7 +189,7 @@ and with the financial support from Région Ile de France and Confiance.ai.
 .. |ENS| image:: https://file.diplomeo-static.com/file/00/00/01/34/13434.svg
     :height: 35px
     :width: 140px
-    :target: https://ens-paris-saclay.fr/en
+    :target: https://ens-paris-saclay.fr/en/
 
 .. |Confiance.ai| image:: https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg
     :height: 45px
@@ -228,10 +233,19 @@ and with the financial support from Région Ile de France and Confiance.ai.
 📝 License
 ==========
 
-MAPIE is free and open-source software licensed under the `3-clause BSD license <LICENSE>`_.
+MAPIE is free and open-source software licensed under the `license <https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE>`_.
 
 
 📚 Citation
 ===========
 
-If you use MAPIE in your research, please cite using `citations file <CITATION.cff>`_ on our repository.
+If you use MAPIE in your research, please cite using:
+
+.. code:: latex
+
+    @inproceedings{Cordier_Flexible_and_Systematic_2023,
+    author = {Cordier, Thibault and Blot, Vincent and Lacombe, Louis and Morzadec, Thomas and Capitaine, Arnaud and Brunel, Nicolas},
+    booktitle = {Conformal and Probabilistic Prediction with Applications},
+    title = {{Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library}},
+    year = {2023}
+    }
