@@ -255,7 +255,7 @@ def test_warning_when_import_from_conformity_scores():
             def get_signed_conformity_scores(
                 self, y: ArrayLike, y_pred: ArrayLike, **kwargs
             ) -> NDArray:
-                return np.subtract(y, y_pred)
+                pass
 
             def get_estimation_distribution(
                 self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
@@ -265,9 +265,23 @@ def test_warning_when_import_from_conformity_scores():
                 conformity scores to make the estimated distribution
                 inconsistent with the conformity score.
                 """
-                return np.add(y_pred, conformity_scores) + 1
+                pass
 
-        DummyConformityScore()
+            def get_conformity_scores(
+                self, y: ArrayLike, y_pred: ArrayLike, **kwargs
+            ) -> NDArray:
+                pass
+
+            def predict_set(
+                self, y_pred: ArrayLike, alpha: float, **kwargs
+            ) -> Tuple[NDArray, NDArray]:
+                pass
+
+        dcs = DummyConformityScore()
+        dcs.get_signed_conformity_scores(y_toy, y_toy)
+        dcs.get_estimation_distribution(y_toy, y_toy)
+        dcs.get_conformity_scores(y_toy, y_toy)
+        dcs.predict_set(y_toy, 0.5)
 
 
 def test_warning_when_import_from_old_get_true_label_position():
