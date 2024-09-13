@@ -86,3 +86,6 @@ target/
 
 # ZIP files
 *.zip
+
+# Pyenv
+.python-version

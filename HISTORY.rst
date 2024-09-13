@@ -2,9 +2,13 @@
 History
 =======
 
-0.9.x (2024-xx-xx)
+0.9.1 (2024-09-13)
 ------------------
+
+* Fix issue 511 to access non-conformity scores with previous path
 * Update gitignore by including the documentation folder generated for Mondrian
+* Fix (partially) the set-up with pip instead of conda for new contributors
+
 
 
 0.9.0 (2024-09-03)
