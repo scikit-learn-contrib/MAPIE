@@ -8,6 +8,7 @@ Development Lead
 * Thibault Cordier <thibault.a.cordier@capgemini.com>
 * Vincent Blot <vincent.blot@capgemini.com>
 * Louis Lacombe <louis.lacombe@capgemini.com>
+* Valentin Laurent <valentin.laurent@capgemini.com>
 
 Emeritus Core Developers
 ------------------------
