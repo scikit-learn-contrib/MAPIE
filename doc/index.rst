@@ -52,11 +52,26 @@
 .. toctree::
    :maxdepth: 2
    :hidden:
+   :caption: MONDRIAN
+
+   theoretical_description_mondrian
+   examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
    :caption: CALIBRATION
 
    theoretical_description_calibration
    examples_calibration/index
    notebooks_calibration
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: METRICS
+
+   theoretical_description_metrics
 
 .. toctree::
    :maxdepth: 2

@@ -9,7 +9,7 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.conformity_scores import ConformityScore
+from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import MapieRegressor
 from mapie.utils import check_alpha, check_gamma
 
@@ -66,7 +66,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
-        conformity_score: Optional[ConformityScore] = None,
+        conformity_score: Optional[BaseRegressionScore] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         super().__init__(
@@ -114,7 +114,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         """
         y_pred = super().predict(X, ensemble=ensemble)
         scores = np.array(
-            self.conformity_score_function_.get_conformity_scores(X, y, y_pred)
+            self.conformity_score_function_.get_conformity_scores(
+                y, y_pred, X=X
+            )
         )
         return scores
 
@@ -405,6 +407,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
+        **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -439,6 +442,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         allow_infinite_bounds: bool
             Allow infinite prediction intervals to be produced.
 
+        predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -450,7 +456,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         """
         if alpha is None:
             super().predict(
-                X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta
+                X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
+                **predict_params
             )
 
         if self.method == "aci":
@@ -458,7 +465,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         return super().predict(
             X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
-            allow_infinite_bounds=allow_infinite_bounds
+            allow_infinite_bounds=allow_infinite_bounds, **predict_params
         )
 
     def _more_tags(self):

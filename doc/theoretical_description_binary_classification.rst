@@ -1,10 +1,10 @@
-.. title:: Theoretical Description : contents
+.. title:: Theoretical Description Binary Classification : contents
 
 .. _theoretical_description_binay_classification:
 
-=======================
+#######################
 Theoretical Description
-=======================
+#######################
 
 There are mainly three different ways to handle uncertainty quantification in binary classification:
 calibration (see :doc:`theoretical_description_calibration`), confidence interval (CI) for the probability
@@ -12,7 +12,7 @@ calibration (see :doc:`theoretical_description_calibration`), confidence interva
 These 3 notions are tightly related for score-based classifier, as it is shown in [1]. 
 
 Prediction sets can be computed in the same way for multiclass and binary classification with
-:class:`~mapie.calibration.MapieClassifier`, and there are the same theoretical guarantees.
+:class:`~mapie.classification.MapieClassifier`, and there are the same theoretical guarantees.
 Nevertheless, prediction sets are often much less informative in the binary case than in the multiclass case.
 
 From Gupta et al [1]:
@@ -83,8 +83,8 @@ for the labels of test objects which are guaranteed to be well-calibrated under 
 that the observations are generated independently from the same distribution [2].
 
 
-4. References
--------------
+References
+----------
 
 [1] Gupta, Chirag, Aleksandr Podkopaev, and Aaditya Ramdas.
 "Distribution-free binary classification: prediction sets, confidence intervals, and calibration."

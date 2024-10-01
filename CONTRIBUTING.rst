@@ -6,7 +6,7 @@ What to work on?
 ----------------
 
 You are welcome to propose and contribute new ideas.
-We encourage you to `open an issue <https://github.com/simai-ml/MAPIE/issues>`_ so that we can align on the work to be done.
+We encourage you to `open an issue <https://github.com/scikit-learn-contrib/MAPIE/issues>`so that we can align on the work to be done.
 It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
 
 Fork/clone/pull
@@ -14,7 +14,7 @@ Fork/clone/pull
 
 The typical workflow for contributing to `mapie` is:
 
-1. Fork the `master` branch from the `GitHub repository <https://github.com/simai-ml/MAPIE>`_.
+1. Fork the `master` branch from the `GitHub repository <https://github.com/scikit-learn-contrib/MAPIE>`_.
 2. Clone your fork locally.
 3. Commit changes.
 4. Push the changes to your fork.
@@ -50,11 +50,26 @@ Documenting your change
 
 If you're adding a class or a function, then you'll need to add a docstring with a doctest. We follow the `numpy docstring convention <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html>`_, so please do too.
 Any estimator should follow the [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html), so please follow these guidelines.
-In order to build the documentation locally, run :
+In order to build the documentation locally, you first need to install some dependencies :
+
+Create a dedicated virtual environment via `conda`:
 
 .. code:: sh
 
-    $ cd doc
+    $ conda env create -f environment.doc.yml
+    $ conda activate mapie-doc
+
+Alternatively, using `pip`, create a different virtual environment than the one used for development, and install the dependencies:
+
+.. code:: sh
+
+    $ pip install -r requirements.doc.txt
+    $ pip install -e .
+
+Finally, once dependencies are installed, you can build the documentation locally by running:
+
+.. code:: sh
+
     $ make clean-doc
     $ make doc
 
@@ -64,8 +79,8 @@ Updating changelog
 
 You can make your contribution visible by :
 
-1. adding your name to the Contributors sections of `AUTHORS.rst <https://github.com/simai-ml/MAPIE/blob/master/AUTHORS.rst>`_
-2. adding a line describing your change into `HISTORY.rst <https://github.com/simai-ml/MAPIE/blob/master/HISTORY.rst>`_
+1. adding your name to the Contributors sections of `AUTHORS.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.rst>`_
+2. adding a line describing your change into `HISTORY.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.rst>`_
 
 Testing
 -------

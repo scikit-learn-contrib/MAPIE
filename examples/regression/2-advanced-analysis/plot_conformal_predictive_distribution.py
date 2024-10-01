@@ -71,7 +71,7 @@ class MapieConformalPredictiveDistribution(MapieRegressor):
         y_pred = self.predict(X)
         cs = self.conformity_scores_[~np.isnan(self.conformity_scores_)]
         res = self.conformity_score_function_.get_estimation_distribution(
-            X, y_pred.reshape((-1, 1)), cs
+            y_pred.reshape((-1, 1)), cs, X=X
         )
         return res
 

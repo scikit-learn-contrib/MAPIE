@@ -1,10 +1,10 @@
-.. title:: Theoretical Description : contents
+.. title:: Theoretical Description Regression : contents
 
 .. _theoretical_description_regression:
 
-=======================
+#######################
 Theoretical Description
-=======================
+#######################
 
 The :class:`mapie.regression.MapieRegressor` class uses various
 resampling methods based on the jackknife strategy
@@ -58,7 +58,7 @@ The figure below illustrates the naive method.
    :align: center
 
 2. The split method
-=====================
+===================
 
 The so-called split method computes the residuals of a calibration dataset to estimate the 
 typical error obtained on a new test data point. 
@@ -245,30 +245,43 @@ uncertainty is higher than :math:`CV+`, because the models' prediction spread
 is then higher.
 
 
-9. The conformalized quantile regression (CQR) method
+9. The Conformalized Quantile Regression (CQR) Method
 =====================================================
 
-The conformalized quantile method allows for better interval widths with
-heteroscedastic data. It uses quantile regressors with different quantile
-values to estimate the prediction bounds and the residuals of these methods are
-used to create the guaranteed coverage value.
+The conformalized quantile regression (CQR) method allows for better interval widths with
+heteroscedastic data. It uses quantile regressors with different quantile values to estimate
+the prediction bounds. The residuals of these methods are used to create the guaranteed
+coverage value.
 
-.. math:: 
+Notations and Definitions
+-------------------------
+- :math:`\mathcal{I}_1` is the set of indices of the data in the training set.
+- :math:`\mathcal{I}_2` is the set of indices of the data in the calibration set.
+- :math:`\hat{q}_{\alpha_{\text{low}}}`: Lower quantile model trained on :math:`{(X_i, Y_i) : i \in \mathcal{I}_1}`.
+- :math:`\hat{q}_{\alpha_{\text{high}}}`: Upper quantile model trained on :math:`{(X_i, Y_i) : i \in \mathcal{I}_1}`.
+- :math:`E_i`: Residuals for the i-th sample in the calibration set.
+- :math:`E_{\text{low}}`: Residuals from the lower quantile model.
+- :math:`E_{\text{high}}`: Residuals from the upper quantile model.
+- :math:`Q_{1-\alpha}(E, \mathcal{I}_2)`: The :math:`(1-\alpha)(1+1/|\mathcal{I}_2|)`-th empirical quantile of the set :math:`{E_i : i \in \mathcal{I}_2}`.
 
-    \hat{C}_{n, \alpha}^{\rm CQR}(X_{n+1}) = 
-    [\hat{q}_{\alpha_{lo}}(X_{n+1}) - Q_{1-\alpha}(E_{low}, \mathcal{I}_2),
-    \hat{q}_{\alpha_{hi}}(X_{n+1}) + Q_{1-\alpha}(E_{high}, \mathcal{I}_2)]
+Mathematical Formulation
+------------------------
+The prediction interval :math:`\hat{C}_{n, \alpha}^{\text{CQR}}(X_{n+1})` for a new sample :math:`X_{n+1}` is given by:
 
-Where :math:`Q_{1-\alpha}(E, \mathcal{I}_2) := (1-\alpha)(1+1/ |\mathcal{I}_2|)`-th
-empirical quantile of :math:`{E_i : i \in \mathcal{I}_2}` and :math:`\mathcal{I}_2` is the
-residuals of the estimator fitted on the calibration set. Note that in the symmetric method, 
-:math:`E_{low}` and :math:`E_{high}` are equal.
+.. math::
 
-As justified by [3], this method offers a theoretical guarantee of the target coverage 
-level :math:`1-\alpha`.
+    \hat{C}_{n, \alpha}^{\text{CQR}}(X_{n+1}) = 
+    [\hat{q}_{\alpha_{\text{lo}}}(X_{n+1}) - Q_{1-\alpha}(E_{\text{low}}, \mathcal{I}_2),
+    \hat{q}_{\alpha_{\text{hi}}}(X_{n+1}) + Q_{1-\alpha}(E_{\text{high}}, \mathcal{I}_2)]
 
-Note that only the split method has been implemented and that it will run three separate 
-regressions when using :class:`mapie.quantile_regression.MapieQuantileRegressor`.
+Where:
+
+- :math:`\hat{q}_{\alpha_{\text{lo}}}(X_{n+1})` is the predicted lower quantile for the new sample.
+- :math:`\hat{q}_{\alpha_{\text{hi}}}(X_{n+1})` is the predicted upper quantile for the new sample.
+
+Note: In the symmetric method, :math:`E_{\text{low}}` and :math:`E_{\text{high}}` sets are no longer distinct. We consider directly the union set :math:`E_{\text{all}} = E_{\text{low}} \cup E_{\text{high}}` and the empirical quantile is then calculated on all the absolute (positive) residuals.
+
+As justified by the literature, this method offers a theoretical guarantee of the target coverage level :math:`1-\alpha`.
 
 
 10. The ensemble batch prediction intervals (EnbPI) method

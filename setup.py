@@ -3,7 +3,7 @@ import codecs
 from setuptools import find_packages, setup
 
 DISTNAME = "MAPIE"
-VERSION = "0.8.3"
+VERSION = "0.9.1"
 DESCRIPTION = (
     "A scikit-learn-compatible module "
     "for estimating prediction intervals."
@@ -21,9 +21,9 @@ PROJECT_URLS = {
 LICENSE = "new BSD"
 MAINTAINER = "T. Cordier, V. Blot, L. Lacombe"
 MAINTAINER_EMAIL = (
-    "tcordier@quantmetry.com, "
-    "vblot@quantmetry.com, "
-    "llacombe@quantmetry.com"
+    "thibault.a.cordier@capgemini.com, "
+    "vincent.blot@capgemini.com, "
+    "louis.lacombe@capgemini.com"
 )
 PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
@@ -41,7 +41,8 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10"
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11"
 ]
 
 setup(

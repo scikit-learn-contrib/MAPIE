@@ -19,4 +19,4 @@ dependencies:
     - sphinx-gallery=0.10.1
     - sphinx_rtd_theme=1.0.0
     - twine=3.7.1
-    - wheel=0.37.0
+    - wheel=0.38.1
