@@ -62,9 +62,9 @@ and two standard deviations from the mean.
     alpha = [0.05, 0.32]
     y_pred, y_pis = mapie_regressor.predict(X_test, alpha=alpha)
 
-MAPIE returns a ``np.ndarray`` of shape ``(n_samples, 3, len(alpha))`` giving the predictions,
-as well as the lower and upper bounds of the prediction intervals for the target quantile
-for each desired alpha value.
+MAPIE returns a tuple, the first element is a ``np.ndarray`` of shape ``(n_samples)`` giving the 
+predictions, and the second element a ``np.ndarray`` of shape ``(n_samples, 2, len(alpha))`` giving 
+the lower and upper bounds of the prediction intervals for the target quantile for each desired alpha value.
 
 You can compute the coverage of your prediction intervals.
 
