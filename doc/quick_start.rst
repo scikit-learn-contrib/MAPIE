@@ -64,7 +64,7 @@ and two standard deviations from the mean.
 
 MAPIE returns a tuple, the first element is a ``np.ndarray`` of shape ``(n_samples)`` giving the 
 predictions, and the second element a ``np.ndarray`` of shape ``(n_samples, 2, len(alpha))`` giving 
-the lower and upper bounds of the prediction intervals for the target quantile for each desired alpha value.
+the lower and upper bounds of the **P**rediction **I**nterval**S** for the target quantile for each desired alpha value.
 
 You can compute the coverage of your prediction intervals.
 
