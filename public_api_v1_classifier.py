@@ -116,7 +116,8 @@ class CrossConformalClassifier:
         """
         Return 
         ----- 
-
+        Return ponctual prediction similar to predict method of scikit-learn classifiers
+        Shape (n_samples,)
         """
         pass
 
