@@ -6,6 +6,7 @@ History
 ------------------
 
 * Bump wheel version to avoid known security vulnerabilities
+* Fix issue 495 to center correctly the prediction intervals
 
 0.9.1 (2024-09-13)
 ------------------
