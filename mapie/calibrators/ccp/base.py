@@ -465,7 +465,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             By default ``None``
 
         sym : bool
-            Whether or not the computed prediction intervals shoulb be
+            Whether or not the computed prediction intervals should be
             symetrical or not
 
         conformity_scores: NDArray
