@@ -88,7 +88,7 @@ random_state = 42
 np.random.seed(random_state)
 
 ALPHA = 0.1
-UNSAFE_APPROXIMATION = True  # Not recommanded
+UNSAFE_APPROXIMATION = True
 
 ##############################################################################
 # 1. Data generation

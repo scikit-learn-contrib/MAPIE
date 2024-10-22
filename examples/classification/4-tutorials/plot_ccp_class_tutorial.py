@@ -3,12 +3,13 @@
 Tutorial: Conditional CP for classification
 ============================================
 
-We will use a synthetic toy dataset for the tutorial of the CCP method, and
-its comparison with the other methods available in MAPIE. The CCP method
+The tutorial will explain how to use the CCP method for classification
+and will wompare it with the other methods available in MAPIE. The CCP method
 implements the method described in the Gibbs et al. (2023) paper [1].
 
 In this tutorial, the classifier will be
 :class:`~sklearn.linear_model.LogisticRegression`.
+We will use a synthetic toy dataset.
 
 We will compare the CCP method (using
 :class:`~mapie.futur.split.SplitCPRegressor`,
@@ -20,6 +21,13 @@ standard method, using for both, the LAC conformity score
 Recall that the ``LAC`` method consists on applying a threshold on the
 predicted softmax, to keep all the classes above the threshold
 (``alpha`` is ``1 - target coverage``).
+
+Warning:
+In this tutorial, we use ``unsafe_approximation=True`` to have a faster
+computation (because Read The Docs examples require fast computation).
+This mode use an approximation, which make the inference (``predict``) faster,
+but induce a small miscoverage. It is recommanded not to use it, or be
+very careful and empirically check the coverage and a test set.
 
 [1] Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès,
 "Conformal Prediction With Conditional Guarantees",
@@ -45,6 +53,7 @@ random_state = 1
 np.random.seed(random_state)
 
 ALPHA = 0.2
+UNSAFE_APPROXIMATION = True
 N_CLASSES = 5
 
 ##############################################################################
@@ -88,7 +97,7 @@ def generate_data(seed=1, n_train=2000, n_calib=2000, n_test=2000, ):
 # Let's visualize the data and its distribution
 
 
-x_train, y_train, *_ = generate_data(seed=None, n_train=2000)
+x_train, y_train, *_ = generate_data(seed=None, n_train=1000)
 
 for c in range(N_CLASSES):
     plt.scatter(x_train[y_train == c, 0], x_train[y_train == c, 1],
@@ -103,8 +112,9 @@ plt.show()
 
 
 def run_exp(
-    mapies, names, alpha, n_train=2000, n_calib=2000,
-    n_test=2000, grid_step=100, plot=True, seed=1, max_display=2000
+    mapies, names, alpha,
+    n_train=1000, n_calib=1000, n_test=1000,
+    grid_step=100, plot=True, seed=1, max_display=2000
 ):
     (
         x_train, y_train, x_calib, y_calib, x_test, y_test
@@ -148,7 +158,9 @@ def run_exp(
             mapie.fit(
                 np.vstack([x_train, x_calib]), np.hstack([y_train, y_calib])
             )
-            _, y_ps_test = mapie.predict(x_test)
+            _, y_ps_test = mapie.predict(
+                x_test, unsafe_approximation=UNSAFE_APPROXIMATION
+            )
             if plot:
                 y_pred_mesh, y_ps_mesh = mapie.predict(X_test_mesh)
         else:
