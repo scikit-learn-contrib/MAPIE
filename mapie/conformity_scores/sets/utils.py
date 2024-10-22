@@ -131,7 +131,7 @@ def get_last_index_included(
         - the quantiles associated with alpha values when
             ``cv`` == "prefit", ``cv`` == "split"
             or ``agg_scores`` is "mean"
-            (Or a quantile value for each sample,
+            (or a quantile value for each sample,
             with shape (n_samples, n_alpha))
 
         - the conformity score from training samples otherwise

@@ -56,14 +56,14 @@ class SplitCPClassifier(SplitCP):
           and calibration (the data given in the ``calibrate`` method)
           are disjoint.
         - ``"split"`` or ``None``: divide the data into training and
-          calibration subsets (using the default ``calib_size``=0.3).
+          calibration subsets (using the default ``calib_size=0.3``).
           The splitter used is the following:
             ``sklearn.model_selection.ShuffleSplit`` with ``n_splits=1``.
 
         By default ``None``.
 
     conformity_score: Optional[BaseClassificationScore]
-        BaseClassificationScore instance.
+        ``BaseClassificationScore`` instance.
         It defines the link between the observed values, the predicted ones
         and the conformity scores. For instance, the default ``None`` value
         correspondonds to a conformity score which assumes
@@ -87,7 +87,7 @@ class SplitCPClassifier(SplitCP):
     random_state: Optional[int]
         Integer used to set the numpy seed, to get reproducible calibration
         results.
-        If ``None``, the prediction intervals will be stochastics, and will
+        If ``None``, the prediction intervals will be stochastic, and will
         change if you refit the calibration (even if no arguments have change).
 
         WARNING: If ``random_state``is not ``None``, ``np.random.seed`` will
