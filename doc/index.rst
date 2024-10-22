@@ -40,6 +40,7 @@
    theoretical_description_ccp
    theoretical_description_calibrators
    examples_regression/4-tutorials/plot_ccp_tutorial
+   examples_classification/4-tutorials/plot_ccp_class_tutorial
 
 .. toctree::
    :maxdepth: 2
@@ -57,6 +58,14 @@
    theoretical_description_multilabel_classification
    examples_multilabel_classification/1-quickstart/plot_tutorial_multilabel_classification
    notebooks_multilabel_classification
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: MONDRIAN
+
+   theoretical_description_mondrian
+   examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression
 
 .. toctree::
    :maxdepth: 2

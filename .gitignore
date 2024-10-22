@@ -14,6 +14,7 @@ doc/examples_classification/
 doc/examples_regression/
 doc/examples_calibration/
 doc/examples_multilabel_classification/
+doc/examples_mondrian/
 doc/auto_examples/
 doc/modules/generated/
 doc/datasets/generated/
@@ -85,3 +86,6 @@ target/
 
 # ZIP files
 *.zip
+
+# Pyenv
+.python-version

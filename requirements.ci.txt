@@ -4,4 +4,5 @@ mypy
 pandas
 pytest
 pytest-cov
+scikit-learn
 typed-ast

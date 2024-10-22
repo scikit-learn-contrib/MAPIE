@@ -14,7 +14,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
-                                     ShuffleSplit, StratifiedShuffleSplit)
+                                     ShuffleSplit, StratifiedShuffleSplit,
+                                     train_test_split)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.estimator_checks import check_estimator
@@ -23,6 +24,7 @@ from typing_extensions import TypedDict
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
+from mapie.conformity_scores import LACConformityScore
 from mapie.conformity_scores.utils import METHOD_SCORE_MAP
 from mapie.conformity_scores.sets.utils import check_proba_normalized
 from mapie.metrics import classification_coverage_score
@@ -421,6 +423,36 @@ STRATEGIES_BINARY = {
         )
     ),
 }
+
+
+class CustomGradientBoostingClassifier(GradientBoostingClassifier):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def fit(self, X, y, **kwargs):
+        return super().fit(X, y, **kwargs)
+
+    def predict_proba(self, X, check_predict_params=False):
+        if check_predict_params:
+            n_samples = X.shape[0]
+            n_classes = len(self.classes_)
+            return np.zeros((n_samples, n_classes))
+        else:
+            return super().predict_proba(X)
+
+    def predict(self, X, check_predict_params=False):
+        if check_predict_params:
+            return np.zeros(X.shape[0])
+        return super().predict(X)
+
+
+def early_stopping_monitor(i, est, locals):
+    """Returns True on the 3rd iteration."""
+    if i == 2:
+        return True
+    else:
+        return False
+
 
 # Here, we only list the strategies we want to test on a small data set,
 # for multi-class classification.
@@ -1939,16 +1971,147 @@ def test_fit_parameters_passing() -> None:
         estimator=gb, method="aps", random_state=random_state
     )
 
-    def early_stopping_monitor(i, est, locals):
-        """Returns True on the 3rd iteration."""
-        if i == 2:
-            return True
-        else:
-            return False
-
-    mapie.fit(X, y, monitor=early_stopping_monitor)
+    mapie.fit(X, y, fit_params={'monitor': early_stopping_monitor})
 
     assert mapie.estimator_.single_estimator_.estimators_.shape[0] == 3
 
     for estimator in mapie.estimator_.estimators_:
         assert estimator.estimators_.shape[0] == 3
+
+
+def test_predict_parameters_passing() -> None:
+    """
+    Test passing predict parameters.
+    Checks that conformity_scores from train are 0, y_pred from test are 0.
+    """
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
+    score = LACConformityScore()
+    mapie_model = MapieClassifier(estimator=custom_gbc, conformity_score=score)
+
+    predict_params = {'check_predict_params': True}
+    mapie_model = mapie_model.fit(
+        X_train, y_train, predict_params=predict_params
+    )
+
+    expected_conformity_scores = np.ones((X_train.shape[0], 1))
+    y_pred = mapie_model.predict(X_test, agg_scores="mean", **predict_params)
+    np.testing.assert_equal(mapie_model.conformity_scores_,
+                            expected_conformity_scores)
+    np.testing.assert_equal(y_pred, 0)
+
+
+def test_with_no_predict_parameters_passing() -> None:
+    """
+    Test passing with no predict parameters from the
+    CustomGradientBoostingClassifier class.
+    Checks that y_pred from test are what we want
+    """
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
+    mapie_model = MapieClassifier(estimator=custom_gbc)
+    mapie_model = mapie_model.fit(X_train, y_train)
+    y_pred = mapie_model.predict(X_test, agg_scores="mean")
+
+    assert np.any(y_pred != 0)
+
+
+def test_fit_params_expected_behavior_unaffected_by_predict_params() -> None:
+    """
+    We want to verify that there are no interferences
+    with predict_params on the expected behavior of fit_params
+    Checks that underlying GradientBoosting
+    estimators have used 3 iterations only during boosting,
+    instead of default value for n_estimators (=100).
+    """
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
+    mapie_model = MapieClassifier(estimator=custom_gbc)
+    fit_params = {'monitor': early_stopping_monitor}
+    predict_params = {'check_predict_params': True}
+    mapie_model = mapie_model.fit(
+        X_train, y_train,
+        fit_params=fit_params, predict_params=predict_params
+    )
+
+    assert mapie_model.estimator_.single_estimator_.estimators_.shape[0] == 3
+    for estimator in mapie_model.estimator_.estimators_:
+        assert estimator.estimators_.shape[0] == 3
+
+
+def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
+    """
+    We want to verify that there are no interferences
+    with fit_params on the expected behavior of predict_params
+    Checks that conformity_scores from train and y_pred from test are 0.
+    """
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
+    score = LACConformityScore()
+    mapie_model = MapieClassifier(estimator=custom_gbc, conformity_score=score)
+    fit_params = {'monitor': early_stopping_monitor}
+    predict_params = {'check_predict_params': True}
+    mapie_model = mapie_model.fit(
+        X_train, y_train,
+        fit_params=fit_params,
+        predict_params=predict_params
+    )
+    y_pred = mapie_model.predict(X_test, agg_scores="mean", **predict_params)
+
+    expected_conformity_scores = np.ones((X_train.shape[0], 1))
+
+    np.testing.assert_equal(mapie_model.conformity_scores_,
+                            expected_conformity_scores)
+    np.testing.assert_equal(y_pred, 0)
+
+
+def test_using_one_predict_parameter_into_predict_but_not_in_fit() -> None:
+    """
+    Test that using predict parameters in the predict method
+    without using predict_parameter in the fit method raises an error.
+    """
+    custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    mapie = MapieClassifier(estimator=custom_gbc)
+    predict_params = {'check_predict_params': True}
+    mapie_fitted = mapie.fit(X_train, y_train)
+
+    with pytest.raises(ValueError, match=(
+        fr".*Using 'predict_params' '{predict_params}' "
+        r"without using one 'predict_params' in the fit method\..*"
+        r"Please ensure a similar configuration of 'predict_params' "
+        r"is used in the fit method before calling it in predict\..*"
+    )):
+        mapie_fitted.predict(X_test, agg_scores="mean", **predict_params)
+
+
+def test_using_one_predict_parameter_into_fit_but_not_in_predict() -> None:
+    """
+    Test that using predict parameters in the fit method without using
+    predict_parameter in the predict method raises an error.
+    """
+    custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y, test_size=0.2, random_state=random_state)
+    )
+    mapie = MapieClassifier(estimator=custom_gbc)
+    predict_params = {'check_predict_params': True}
+    mapie_fitted = mapie.fit(X_train, y_train, predict_params=predict_params)
+
+    with pytest.raises(ValueError, match=(
+        r"Using one 'predict_params' in the fit method "
+        r"without using one 'predict_params' in the predict method. "
+        r"Please ensure a similar configuration of 'predict_params' "
+        r"is used in the predict method as called in the fit."
+    )):
+        mapie_fitted.predict(X_test)

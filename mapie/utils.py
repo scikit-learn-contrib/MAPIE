@@ -1498,7 +1498,6 @@ def check_predict_params(
     """
     Check that if predict_params is used in the predict method,
     it is also used in the fit method. Otherwise, raise an error.
-
     Parameters
     ----------
     predict_params_used_in_fit: bool
@@ -1516,15 +1515,15 @@ def check_predict_params(
     if cv != "prefit":
         if len(predict_params) > 0 and predict_params_used_in_fit is False:
             raise ValueError(
-                f"Using 'predict_param' '{predict_params}' "
-                f"without using one 'predict_param' in the fit method. "
-                f"Please ensure a similar configuration of 'predict_param' "
+                f"Using 'predict_params' '{predict_params}' "
+                f"without using one 'predict_params' in the fit method. "
+                f"Please ensure a similar configuration of 'predict_params' "
                 f"is used in the fit method before calling it in predict."
             )
         if len(predict_params) == 0 and predict_params_used_in_fit is True:
             raise ValueError(
-                "Using one 'predict_param' in the fit method "
-                "without using one 'predict_param' in the predict method. "
-                "Please ensure a similar configuration of 'predict_param' "
+                "Using one 'predict_params' in the fit method "
+                "without using one 'predict_params' in the predict method. "
+                "Please ensure a similar configuration of 'predict_params' "
                 "is used in the predict method as called in the fit."
             )

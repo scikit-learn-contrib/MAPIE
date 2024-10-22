@@ -2,9 +2,25 @@
 History
 =======
 
-0.8.x (2024-xx-xx)
+0.9.x (2024-xx-xx)
 ------------------
 
+* Bump wheel version to avoid known security vulnerabilities
+
+0.9.1 (2024-09-13)
+------------------
+
+* Fix issue 511 to access non-conformity scores with previous path
+* Update gitignore by including the documentation folder generated for Mondrian
+* Fix (partially) the set-up with pip instead of conda for new contributors
+
+0.9.0 (2024-09-03)
+------------------
+
+* Fix citations and license links
+* Fix the CQR tutorial to have same data in both methods
+* Add `** predict_params` in fit and predict method for Mapie Classifier
+* Add Mondrian Conformal Prediction for regression and classification
 * Add `** predict_params` in fit and predict method for Mapie Regression
 * Update the ts-changepoint notebook with the tutorial
 * Change import related to conformity scores into ts-changepoint notebook

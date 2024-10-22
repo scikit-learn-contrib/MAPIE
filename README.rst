@@ -166,10 +166,15 @@ For more information on the contribution process, please go `here <CONTRIBUTING.
 🤝  Affiliations
 ================
 
-MAPIE has been developed through a collaboration between Quantmetry, Michelin, ENS Paris-Saclay,
+MAPIE has been developed through a collaboration between Capgemini, Quantmetry, Michelin, ENS Paris-Saclay,
 and with the financial support from Région Ile de France and Confiance.ai.
 
-|Quantmetry| |Michelin| |ENS| |Confiance.ai| |IledeFrance|
+|Capgemini| |Quantmetry| |Michelin| |ENS| |Confiance.ai| |IledeFrance|
+
+.. |Capgemini| image:: https://www.capgemini.com/wp-content/themes/capgemini2020/assets/images/logo.svg
+    :height: 35px
+    :width: 140px
+    :target: https://www.capgemini.com/
 
 .. |Quantmetry| image:: https://www.quantmetry.com/wp-content/uploads/2020/08/08-Logo-quant-Texte-noir.svg
     :height: 35px
@@ -184,7 +189,7 @@ and with the financial support from Région Ile de France and Confiance.ai.
 .. |ENS| image:: https://file.diplomeo-static.com/file/00/00/01/34/13434.svg
     :height: 35px
     :width: 140px
-    :target: https://ens-paris-saclay.fr/en
+    :target: https://ens-paris-saclay.fr/en/
 
 .. |Confiance.ai| image:: https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg
     :height: 45px
@@ -230,10 +235,19 @@ and with the financial support from Région Ile de France and Confiance.ai.
 📝 License
 ==========
 
-MAPIE is free and open-source software licensed under the `3-clause BSD license <LICENSE>`_.
+MAPIE is free and open-source software licensed under the `license <https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE>`_.
 
 
 📚 Citation
 ===========
 
-If you use MAPIE in your research, please cite using `citations file <CITATION.cff>`_ on our repository.
+If you use MAPIE in your research, please cite using:
+
+.. code:: latex
+
+    @inproceedings{Cordier_Flexible_and_Systematic_2023,
+    author = {Cordier, Thibault and Blot, Vincent and Lacombe, Louis and Morzadec, Thomas and Capitaine, Arnaud and Brunel, Nicolas},
+    booktitle = {Conformal and Probabilistic Prediction with Applications},
+    title = {{Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library}},
+    year = {2023}
+    }
