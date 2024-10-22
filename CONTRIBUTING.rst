@@ -50,11 +50,26 @@ Documenting your change
 
 If you're adding a class or a function, then you'll need to add a docstring with a doctest. We follow the `numpy docstring convention <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html>`_, so please do too.
 Any estimator should follow the [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html), so please follow these guidelines.
-In order to build the documentation locally, run :
+In order to build the documentation locally, you first need to install some dependencies :
+
+Create a dedicated virtual environment via `conda`:
 
 .. code:: sh
 
-    $ cd doc
+    $ conda env create -f environment.doc.yml
+    $ conda activate mapie-doc
+
+Alternatively, using `pip`, create a different virtual environment than the one used for development, and install the dependencies:
+
+.. code:: sh
+
+    $ pip install -r requirements.doc.txt
+    $ pip install -e .
+
+Finally, once dependencies are installed, you can build the documentation locally by running:
+
+.. code:: sh
+
     $ make clean-doc
     $ make doc
 

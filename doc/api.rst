@@ -136,3 +136,12 @@ Calibrators
    calibrators.ccp.CustomCCP
    calibrators.ccp.PolynomialCCP
    calibrators.ccp.GaussianCCP
+
+Mondrian
+========
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   mondrian.MondrianCP

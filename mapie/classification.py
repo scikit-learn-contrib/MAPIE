@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, Optional, Tuple, Union, cast
+from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -20,7 +20,8 @@ from mapie.conformity_scores.utils import (
 from mapie.estimator.classifier import EnsembleClassifier
 from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
                          check_estimator_classification, check_n_features_in,
-                         check_n_jobs, check_null_weight, check_verbose)
+                         check_n_jobs, check_null_weight, check_predict_params,
+                         check_verbose)
 
 
 class MapieClassifier(BaseEstimator, ClassifierMixin):
@@ -419,7 +420,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         sample_weight: Optional[ArrayLike] = None,
         size_raps: Optional[float] = None,
         groups: Optional[ArrayLike] = None,
-        **fit_params,
+        **kwargs: Any
     ) -> MapieClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -453,14 +454,22 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
             By default ``None``.
 
-        **fit_params : dict
-            Additional fit parameters.
+        kwargs : dict
+            Additional fit and predict parameters.
 
         Returns
         -------
         MapieClassifier
             The model itself.
         """
+        fit_params = kwargs.pop('fit_params', {})
+        predict_params = kwargs.pop('predict_params', {})
+
+        if len(predict_params) > 0:
+            self._predict_params = True
+        else:
+            self._predict_params = False
+
         # Checks
         (estimator,
          self.conformity_score_function_,
@@ -496,7 +505,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         # Predict on calibration data
         y_pred_proba, y, y_enc = self.estimator_.predict_proba_calib(
-            X, y, y_enc, groups
+            X, y, y_enc, groups, **predict_params
         )
 
         # Compute the conformity scores
@@ -506,7 +515,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
                 y, y_pred_proba, y_enc=y_enc, X=X,
                 sample_weight=sample_weight, groups=groups
             )
-
         return self
 
     def predict(
@@ -514,7 +522,8 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         include_last_label: Optional[Union[bool, str]] = True,
-        agg_scores: Optional[str] = "mean"
+        agg_scores: Optional[str] = "mean",
+        **predict_params
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Prediction and prediction sets on new samples based on target
@@ -571,6 +580,9 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
             By default "mean".
 
+        predict_params : dict
+            Additional predict parameters.
+
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
@@ -581,11 +593,16 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         (n_samples,) and (n_samples, n_classes, n_alpha) if alpha is not None.
         """
         # Checks
+
+        if hasattr(self, '_predict_params'):
+            check_predict_params(self._predict_params,
+                                 predict_params, self.cv)
+
         check_is_fitted(self, self.fit_attributes)
         alpha = cast(Optional[NDArray], check_alpha(alpha))
 
         # Estimate predictions
-        y_pred = self.estimator_.single_estimator_.predict(X)
+        y_pred = self.estimator_.single_estimator_.predict(X, **predict_params)
         if alpha is None:
             return y_pred
 
