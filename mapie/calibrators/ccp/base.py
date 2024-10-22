@@ -8,7 +8,7 @@ import numpy as np
 from scipy.optimize import minimize, OptimizeResult
 from sklearn.base import clone
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.calibrators.base import BaseCalibrator
@@ -333,6 +333,13 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         if "maxiter" not in optim_kwargs["options"]:
             optim_kwargs["options"]["maxiter"] = 1000
 
+        self.calib_cs_features = cs_features[not_nan_index, :]
+        self.conformity_scores_calib = conformity_scores_calib[not_nan_index]
+        self.q = q
+        self.reg_param
+
+        self.optim_kwargs = optim_kwargs
+
         optimal_beta_up = cast(OptimizeResult, minimize(
             calibrator_optim_objective, self.init_value_,
             args=(
@@ -428,11 +435,76 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         return cs_features
 
+    def _check_cs_bound(
+        self,
+        cs_bound: Optional[Union[float, Tuple[float, float]]],
+        sym: bool,
+        conformity_scores: NDArray,
+    ) -> Tuple[float, float]:
+        """
+        Create a valid up and down conformity score bound, based on
+        ``cs_bound``
+
+        Parameters
+        ----------
+        cs_bound: Optional[Union[float, Tuple[float, float]]]
+            Bound of the conformity scores, such as for all conformity score S
+            corresponding to ``X`` and ``y_pred``:
+
+             - If the conformity score has ``sym=True``:
+               ``cs_bound`` is a ``float`` and ``|S| <= cs_bound``
+
+             - If the conformity score has ``sym=False``:
+               ``cs_bound`` is a ``Tuple[float, float]`` and
+               ``cs_bound[0] <= S <= cs_bound[1]``
+
+            If ``cs_bound=None``,
+            the maximum (and minimum if ``sym=False``) value
+            of the calibration conformity scores is used.
+
+            By default ``None``
+
+        sym : bool
+            Whether or not the computed prediction intervals should be
+            symetrical or not
+
+        conformity_scores: NDArray
+            Conformity scores, used to estimate the bounds if ``cs_bound=None``
+
+        Returns
+        -------
+        Tuple[float, float]
+            (cs_bound_up, cs_bound_low)
+        """
+        if cs_bound is not None:
+            if isinstance(cs_bound, (int, float)) and sym:
+                cs_bound_up = cs_bound
+                cs_bound_low = cs_bound
+            elif (
+                isinstance(cs_bound, tuple) and len(cs_bound) == 2
+                and not sym
+            ):
+                cs_bound_up = cs_bound[0]
+                cs_bound_low = cs_bound[1]
+            else:
+                raise ValueError(
+                    "Invalid `cs_bound` value. "
+                    "It must be a float if the ConformityScore has "
+                    "`sym=True`, and a tuple of two floats if `sym=False`."
+                )
+        else:
+            cs_bound_up = max(conformity_scores)
+            cs_bound_low = min(conformity_scores)
+
+        return cs_bound_up, cs_bound_low
+
     def predict(
         self,
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
+        cs_bound: Optional[Union[float, Tuple[float, float]]] = None,
+        unsafe_approximation: bool = False,
         **kwargs,
     ) -> NDArray:
         """
@@ -452,6 +524,38 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         z : Optional[ArrayLike]
             Exogenous variable
 
+        cs_bound: Optional[Union[float, Tuple[float, float]]]
+            Bound of the conformity scores, such as for all conformity score S
+            corresponding to ``X`` and ``y_pred``:
+
+             - If the conformity score has ``sym=True``:
+               ``cs_bound`` is a ``float`` and ``|S| <= cs_bound``
+
+             - If the conformity score has ``sym=False``:
+               ``cs_bound`` is a ``Tuple[float, float]`` and
+               ``cs_bound[0] <= S <= cs_bound[1]``
+
+            If ``cs_bound=None``,
+            the maximum (and minimum if ``sym=False``) value
+            of the calibration conformity scores is used.
+
+            By default ``None``
+
+        unsafe_approximation: Bool
+            The most of the computation is done during the calibration phase
+            (``fit`` method).
+            However, the theoretical guarantees of the method rely on a small
+            adjustment of the calibration for each test point. It will induce
+            a conservatice interval prediction (potentially with over-coverage)
+            and a long inference time, depending on the numbere of test points.
+
+            Using ``unsafe_approximation = True`` will desactivate this
+            correction, providing the interval predictions almost instantly.
+            However, it can result in a small miss-coverage, as the previous
+            guarantees don't hold anymore.
+
+            By default, ``False``
+
         Returns
         -------
         NDArray
@@ -465,8 +569,61 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         self._check_unconsistent_features(cs_features)
 
-        y_pred_low = -cs_features.dot(self.beta_low_[0][:, np.newaxis])
-        y_pred_up = cs_features.dot(self.beta_up_[0][:, np.newaxis])
+        if unsafe_approximation:
+            y_pred_low = -cs_features.dot(self.beta_low_[0][:, np.newaxis])
+            y_pred_up = cs_features.dot(self.beta_up_[0][:, np.newaxis])
+        else:
+            cs_bound_up, cs_bound_low = self._check_cs_bound(
+                cs_bound, self.sym, self.conformity_scores_calib
+            )
+
+            y_pred_up = np.zeros((_num_samples(X), 1))
+            y_pred_low = np.zeros((_num_samples(X), 1))
+            for i in range(len(y_pred_up)):
+                corrected_beta_up = cast(OptimizeResult, minimize(
+                    calibrator_optim_objective, self.beta_up_[0],
+                    args=(
+                        np.vstack(
+                            [self.calib_cs_features, cs_features[[i], :]]
+                        ),
+                        np.hstack(
+                            [self.conformity_scores_calib, [cs_bound_up]]
+                        ),
+                        self.q,
+                        self.reg_param,
+                    ),
+                    **self.optim_kwargs,
+                ))
+
+                if not self.sym:
+                    corrected_beta_low = cast(OptimizeResult, minimize(
+                        calibrator_optim_objective, self.beta_low_[0],
+                        args=(
+                            np.vstack(
+                                [self.calib_cs_features, cs_features[[i], :]]
+                            ),
+                            -np.hstack(
+                                [self.conformity_scores_calib, [cs_bound_low]]
+                            ),
+                            self.q,
+                            self.reg_param,
+                        ),
+                        **self.optim_kwargs,
+                    ))
+
+                else:
+                    corrected_beta_low = corrected_beta_up
+
+                self._check_optimization_success(
+                    corrected_beta_up, corrected_beta_low
+                )
+
+                y_pred_up[[i]] = cs_features[[i], :].dot(
+                    corrected_beta_up.x[:, np.newaxis]
+                )
+                y_pred_low[[i]] = -cs_features[[i], :].dot(
+                    corrected_beta_low.x[:, np.newaxis]
+                )
 
         return np.hstack([y_pred_low, y_pred_up])
 

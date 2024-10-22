@@ -3,16 +3,14 @@
 Tutorial: Conditional CP for regression
 ============================================
 
-We will use a synthetic toy dataset for the tutorial of the CCP method, and
-its comparison with the other methods available in MAPIE. The CCP method
+The tutorial will explain how to use the CCP method, and
+will compare it with the other methods available in MAPIE. The CCP method
 implements the method described in the Gibbs et al. (2023) paper [1].
 
 We will see in this tutorial how to use the method. It has a lot of advantages:
 
 - It is model agnostic (it doesn't depend on the model but only on the
   predictions, unlike `CQR`)
-- It uses the `split` approach (it require a calibration set, but is very fast
-  at inference time, unlike the `CV` approach)
 - It can create very adaptative intervals (with a varying width which truly
   eflects the model uncertainty)
 - while providing coverage guantee on all sub-groups of interest
@@ -24,8 +22,11 @@ However, we will also see its disadvantages:
 - The adaptativity depends on the calibrator we use: It can be difficult to
   choose the correct calibrator,
   with the best parameters (this tutorial will try to help you with this task).
-- If the inference is very fast, the calibration phase can be very long,
-  depending on the complexity of your calibrator
+- The calibration and even more the inference are much longer than for the
+  other methods. We can reduce the inference time using
+  ``unsafe_approximation=True``, but we lose the theoretical guarantees and
+  risk a small miscoverage
+  (even if, most of the time, the coverage is achieved).
 
 Conclusion on the method:
 
@@ -35,7 +36,8 @@ and can have a big computational time.
 
 ----
 
-In this tutorial, the estimator will be :class:`~sklearn.pipeline.Pipeline`
+In this tutorial, we will use a synthetic toy dataset.
+The estimator will be :class:`~sklearn.pipeline.Pipeline`
 with :class:`~sklearn.preprocessing.PolynomialFeatures` and
 :class:`~sklearn.linear_model.LinearRegression` (or
 :class:`~sklearn.linear_model.QuantileRegressor` for CQR).
@@ -50,6 +52,14 @@ standard split-conformal method, the CV+ method
 (:class:`~mapie.regression.MapieQuantileRegressor`)
 
 Recall that the ``alpha`` is ``1 - target coverage``.
+
+Warning:
+
+In this tutorial, we use ``unsafe_approximation=True`` to have a faster
+computation (because Read The Docs examples require fast computation).
+This mode use an approximation, which make the inference (``predict``) faster,
+but induce a small miscoverage. It is recommanded not to use it, or be
+very careful and empirically check the coverage and a test set.
 
 [1] Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès,
 "Conformal Prediction With Conditional Guarantees",
@@ -78,6 +88,7 @@ random_state = 42
 np.random.seed(random_state)
 
 ALPHA = 0.1
+UNSAFE_APPROXIMATION = True
 
 ##############################################################################
 # 1. Data generation
@@ -90,8 +101,8 @@ ALPHA = 0.1
 #   - between 0 and 5: normal distribution with a noise value which
 #     increase with ``x``
 #
-# We are going to use 3000 samples for training, 3000 for calibration and
-# 20 000 for testing (to have an accurate conditional coverage).
+# We are going to use 5000 samples for training, 5000 for calibration and
+# 5000 for testing.
 
 
 def x_sinx(x):
@@ -123,7 +134,7 @@ def get_1d_data_with_heteroscedastic_noise(
     return X.reshape(-1, 1), y, true_pi
 
 
-def generate_data(n_train=6000, n_test=20000, noise=0.8, power=2):
+def generate_data(n_train=10000, n_test=5000, noise=0.8, power=2):
     X, y, true_pi = get_1d_data_with_heteroscedastic_noise(
         x_sinx, -1, 5, n_train + n_test, noise, power)
     indexes = list(range(len(X)))
@@ -428,7 +439,9 @@ y_pred_cqr, y_pi_cqr = mapie_cqr.predict(X_test)
 mapie_ccp = SplitCPRegressor(estimator, calibrator=GaussianCCP(),
                              alpha=ALPHA, cv=cv)
 mapie_ccp.fit(X_train, y_train)
-y_pred_ccp, y_pi_ccp = mapie_ccp.predict(X_test)
+y_pred_ccp, y_pi_ccp = mapie_ccp.predict(
+    X_test, unsafe_approximation=UNSAFE_APPROXIMATION
+)
 
 # ================== PLOT ==================
 mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp]
@@ -533,19 +546,25 @@ calibrator_gauss3 = GaussianCCP(30, 0.25, random_sigma=True)
 mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator_gauss1,
                                cv=cv, alpha=ALPHA)
 mapie_ccp_1.fit(X_train, y_train)
-y_pred_ccp_1, y_pi_ccp_1 = mapie_ccp_1.predict(X_test)
+y_pred_ccp_1, y_pi_ccp_1 = mapie_ccp_1.predict(
+    X_test, unsafe_approximation=UNSAFE_APPROXIMATION
+)
 
 # # ================== CCP 2 ==================
 mapie_ccp_2 = SplitCPRegressor(estimator, calibrator=calibrator_gauss2,
                                cv=cv, alpha=ALPHA)
 mapie_ccp_2.fit(X_train, y_train)
-y_pred_ccp_2, y_pi_ccp_2 = mapie_ccp_2.predict(X_test)
+y_pred_ccp_2, y_pi_ccp_2 = mapie_ccp_2.predict(
+    X_test, unsafe_approximation=UNSAFE_APPROXIMATION
+)
 
 # # ================== CCP 3  ==================
 mapie_ccp_3 = SplitCPRegressor(estimator, calibrator=calibrator_gauss3,
                                cv=cv, alpha=ALPHA)
 mapie_ccp_3.fit(X_train, y_train)
-y_pred_ccp_3, y_pi_ccp_3 = mapie_ccp_3.predict(X_test)
+y_pred_ccp_3, y_pi_ccp_3 = mapie_ccp_3.predict(
+    X_test, unsafe_approximation=UNSAFE_APPROXIMATION
+)
 
 
 mapies = [mapie_split, mapie_cv, mapie_cqr,
@@ -605,19 +624,25 @@ calibrator3 = CustomCCP(
 mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator1,
                                cv=cv,  alpha=ALPHA)
 mapie_ccp_1.fit(X_train, y_train)
-y_pred_ccp_1, y_pi_ccp_1 = mapie_ccp_1.predict(X_test)
+y_pred_ccp_1, y_pi_ccp_1 = mapie_ccp_1.predict(
+    X_test, unsafe_approximation=UNSAFE_APPROXIMATION
+)
 
 # ================== CCP 2  ==================
 mapie_ccp_2 = SplitCPRegressor(estimator, calibrator=calibrator2,
                                cv=cv, alpha=ALPHA)
 mapie_ccp_2.fit(X_train, y_train)
-y_pred_ccp_2, y_pi_ccp_2 = mapie_ccp_2.predict(X_test)
+y_pred_ccp_2, y_pi_ccp_2 = mapie_ccp_2.predict(
+    X_test, unsafe_approximation=UNSAFE_APPROXIMATION
+)
 
 # ================== CCP 3  ==================
 mapie_ccp_3 = SplitCPRegressor(estimator, calibrator=calibrator3,
                                cv=cv, alpha=ALPHA)
 mapie_ccp_3.fit(X_train, y_train)
-y_pred_ccp_3, y_pi_ccp_3 = mapie_ccp_3.predict(X_test)
+y_pred_ccp_3, y_pi_ccp_3 = mapie_ccp_3.predict(
+    X_test, unsafe_approximation=UNSAFE_APPROXIMATION
+)
 
 mapies = [mapie_split, mapie_cv, mapie_cqr,
           mapie_ccp_1, mapie_ccp_2, mapie_ccp_3]
