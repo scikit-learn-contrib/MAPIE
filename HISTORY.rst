@@ -5,6 +5,10 @@ History
 0.9.x (2024-xx-xx)
 ------------------
 
+* Add `SplitCPRegressor`, based on new `SplitCP` abstract class, to support the new CCP method
+* Add `GaussianCCP`, `PolynomialCCP` and `CustomCCP` based on `CCPCalibrator` to implement the Conditional CP method
+* Add the `StandardCalibrator`, to reproduce standard CP and make sure that the `SplitCPRegressor` is implemented correctly.
+* Add the CCP documentation, tutorial and demo notebooks
 * Bump wheel version to avoid known security vulnerabilities
 
 0.9.1 (2024-09-13)
