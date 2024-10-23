@@ -11,20 +11,19 @@ from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators.base import BaseCalibrator
-from mapie.calibrators.ccp.utils import (calibrator_optim_objective,
-                                         check_multiplier,
-                                         check_custom_calibrator_functions,
-                                         concatenate_functions,
-                                         check_required_arguments,
-                                         dynamic_arguments_call)
+from mapie.future.calibrators.base import BaseCalibrator
+from mapie.future.calibrators.ccp.utils import (
+    calibrator_optim_objective, check_multiplier,
+    check_custom_calibrator_functions, concatenate_functions,
+    check_required_arguments, dynamic_arguments_call
+)
 
 
 class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
     """
     Base abstract class for the calibrators used in
-    :class:`~mapie.futur.split.SplitCPRegressor` or
-    :class:`~mapie.futur.split.SplitCPClassifier`
+    :class:`~mapie.future.split.SplitCPRegressor` or
+    :class:`~mapie.future.split.SplitCPClassifier`
     to estimate the conformity scores.
     It corresponds to the adaptative conformal prediction method proposed by
     Gibbs et al. (2023) in "Conformal Prediction With Conditional Guarantees".
@@ -35,14 +34,15 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
     as it depends on ``X``.
 
     See the examples and the documentation to build a
-    :class:`~mapie.calibrators.ccp.CCPCalibrator`
+    :class:`~mapie.future.calibrators.ccp.CCPCalibrator`
     adaptated to your dataset and constraints.
 
     Parameters
     ----------
     functions: Optional[Union[Callable, Iterable[Callable]]]
-        List of functions (or :class:`~mapie.calibrators.ccp.CCPCalibrator`
-        objects) or single function.
+        List of functions (or
+        :class:`~mapie.future.calibrators.ccp.CCPCalibrator` objects)
+        or single function.
 
         Each function can take a combinaison of the following arguments:
 

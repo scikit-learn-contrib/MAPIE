@@ -19,8 +19,8 @@ from sklearn.model_selection import (KFold, LeaveOneOut, LeavePOut,
 from sklearn.pipeline import make_pipeline
 
 from mapie._typing import NDArray
-from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
-                                   PolynomialCCP)
+from mapie.future.calibrators.ccp import (CCPCalibrator, CustomCCP,
+                                          GaussianCCP, PolynomialCCP)
 from mapie.conformity_scores import (AbsoluteConformityScore,
                                      GammaConformityScore,
                                      ResidualNormalisedScore)

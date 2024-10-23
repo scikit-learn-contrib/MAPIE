@@ -13,9 +13,9 @@ from .utils import (check_multiplier, check_custom_calibrator_functions,
 
 class CustomCCP(CCPCalibrator):
     """
-    Calibrator based on :class:`~mapie.calibrators.ccp.CCPCalibrator`,
-    used in :class:`~mapie.futur.split.SplitCPRegressor` or
-    :class:`~mapie.futur.split.SplitCPClassifier`
+    Calibrator based on :class:`~mapie.future.calibrators.ccp.CCPCalibrator`,
+    used in :class:`~mapie.future.split.SplitCPRegressor` or
+    :class:`~mapie.future.split.SplitCPClassifier`
     to estimate the conformity scores.
 
     It corresponds to the adaptative conformal prediction method proposed by
@@ -27,22 +27,23 @@ class CustomCCP(CCPCalibrator):
     case in the standard CP), but with a function ``q(X)`` which is adaptative
     as it depends on ``X``.
 
-    This class builds a :class:`~mapie.calibrators.ccp.CCPCalibrator`
+    This class builds a :class:`~mapie.future.calibrators.ccp.CCPCalibrator`
     object with custom features, function of ``X``, ``y_pred`` or ``z``,
     defined as a list of functions in ``functions`` argument.
 
     This class can be used to concatenate
-    :class:`~mapie.calibrators.ccp.CCPCalibrator` instances.
+    :class:`~mapie.future.calibrators.ccp.CCPCalibrator` instances.
 
     See the examples and the documentation to build a
-    :class:`~mapie.calibrators.ccp.CCPCalibrator`
+    :class:`~mapie.future.calibrators.ccp.CCPCalibrator`
     adaptated to your dataset and constraints.
 
     Parameters
     ----------
     functions: Optional[Union[Callable, Iterable[Callable]]]
-        List of functions (or :class:`~mapie.calibrators.ccp.CCPCalibrator`
-        objects) or single function.
+        List of functions (or
+        :class:`~mapie.future.calibrators.ccp.CCPCalibrator` objects)
+        or single function.
 
         Each function can take a combinaison of the following arguments:
 
@@ -138,7 +139,7 @@ class CustomCCP(CCPCalibrator):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.calibrators import CustomCCP
+    >>> from mapie.future.calibrators import CustomCCP
     >>> from mapie.regression import SplitCPRegressor
     >>> from mapie.conformity_scores import AbsoluteConformityScore
     >>> np.random.seed(1)

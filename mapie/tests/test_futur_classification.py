@@ -18,12 +18,12 @@ from sklearn.model_selection import (KFold, LeaveOneOut, LeavePOut,
 from sklearn.pipeline import make_pipeline
 
 from mapie._typing import NDArray
-from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
-                                   PolynomialCCP)
+from mapie.future.calibrators.ccp import (CCPCalibrator, CustomCCP,
+                                          GaussianCCP, PolynomialCCP)
 from mapie.conformity_scores import LACConformityScore, APSConformityScore
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.metrics import classification_coverage_score
-from mapie.futur.split import SplitCPClassifier
+from mapie.future.split import SplitCPClassifier
 
 random_state = 1
 np.random.seed(random_state)

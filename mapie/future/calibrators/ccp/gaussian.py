@@ -14,9 +14,9 @@ from .utils import compute_sigma, format_functions, sample_points
 
 class GaussianCCP(CCPCalibrator):
     """
-    Calibrator based on :class:`~mapie.calibrators.ccp.CCPCalibrator`,
-    used in :class:`~mapie.futur.split.SplitCPRegressor` or
-    :class:`~mapie.futur.split.SplitCPClassifier`
+    Calibrator based on :class:`~mapie.future.calibrators.ccp.CCPCalibrator`,
+    used in :class:`~mapie.future.split.SplitCPRegressor` or
+    :class:`~mapie.future.split.SplitCPClassifier`
     to estimate the conformity scores.
 
     It corresponds to the adaptative conformal prediction method proposed by
@@ -27,13 +27,13 @@ class GaussianCCP(CCPCalibrator):
     case in the standard CP), but with a function ``q(X)`` which is adaptative
     as it depends on ``X``.
 
-    This class builds a :class:`~mapie.calibrators.ccp.CCPCalibrator`
+    This class builds a :class:`~mapie.future.calibrators.ccp.CCPCalibrator`
     object with gaussian kernel features,
     which computes the gaussian distance between ``X`` and some points,
     randomly sampled in the dataset or set by the user.
 
     See the examples and the documentation to build a
-    :class:`~mapie.calibrators.ccp.CCPCalibrator`
+    :class:`~mapie.future.calibrators.ccp.CCPCalibrator`
     adaptated to your dataset and constraints.
 
     Parameters
@@ -202,7 +202,7 @@ class GaussianCCP(CCPCalibrator):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.calibrators import GaussianCCP
+    >>> from mapie.future.calibrators import GaussianCCP
     >>> from mapie.regression import SplitCPRegressor
     >>> np.random.seed(1)
     >>> X_train = np.arange(0,400, 2).reshape(-1, 1)

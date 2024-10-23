@@ -119,9 +119,9 @@ New Split CP class
    :toctree: generated/
    :template: class.rst
 
-   futur.split.base.SplitCP
-   futur.split.SplitCPRegressor
-   futur.split.SplitCPClassifier
+   future.split.base.SplitCP
+   future.split.SplitCPRegressor
+   future.split.SplitCPClassifier
 
 Calibrators
 ===========
@@ -130,12 +130,12 @@ Calibrators
    :toctree: generated/
    :template: class.rst
 
-   calibrators.base.BaseCalibrator
-   calibrators.StandardCalibrator
-   calibrators.ccp.CCPCalibrator
-   calibrators.ccp.CustomCCP
-   calibrators.ccp.PolynomialCCP
-   calibrators.ccp.GaussianCCP
+   future.calibrators.base.BaseCalibrator
+   future.calibrators.StandardCalibrator
+   future.calibrators.ccp.CCPCalibrator
+   future.calibrators.ccp.CustomCCP
+   future.calibrators.ccp.PolynomialCCP
+   future.calibrators.ccp.GaussianCCP
 
 Mondrian
 ========

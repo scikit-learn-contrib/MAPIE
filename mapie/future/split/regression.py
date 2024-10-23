@@ -7,19 +7,19 @@ from sklearn.base import RegressorMixin
 from sklearn.model_selection import PredefinedSplit, ShuffleSplit
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators.base import BaseCalibrator
-from mapie.calibrators.utils import check_calibrator
+from mapie.future.calibrators.base import BaseCalibrator
+from mapie.future.calibrators.utils import check_calibrator
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.conformity_scores.utils import check_regression_conformity_score
-from mapie.futur.split.base import SplitCP
+from mapie.future.split.base import SplitCP
 from mapie.utils import check_estimator_regression, check_lower_upper_bounds
 
 
 class SplitCPRegressor(SplitCP):
     """
     Class to implement Conformal Prediction in ``"split"`` approach for
-    regression tasks, based on :class:`~futur.split.base.SplitCP`.
+    regression tasks, based on :class:`~future.split.base.SplitCP`.
     It uses a predictor (``RegressorMixin`` object),
     and a calibrator (``BaseCalibrator`` object).
 
@@ -88,7 +88,7 @@ class SplitCPRegressor(SplitCP):
 
         .. warning::
             Some methods, as the CCP method
-            (:class:`~mapie.calibrators.ccp.CCPCalibrator`),
+            (:class:`~mapie.future.calibrators.ccp.CCPCalibrator`),
             have a stochastic behavior. To have reproductible results,
             use an integer ``random_state`` value.
 

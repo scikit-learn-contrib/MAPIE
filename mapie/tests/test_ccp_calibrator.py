@@ -9,9 +9,9 @@ from sklearn.datasets import make_regression
 from sklearn.utils.validation import check_is_fitted
 from sklearn.model_selection import ShuffleSplit
 
-from mapie.calibrators.ccp import (CCPCalibrator, CustomCCP, GaussianCCP,
-                                   PolynomialCCP)
-from mapie.calibrators.ccp.utils import check_required_arguments
+from mapie.future.calibrators.ccp import (CCPCalibrator, CustomCCP,
+                                          GaussianCCP, PolynomialCCP)
+from mapie.future.calibrators.ccp.utils import check_required_arguments
 from mapie.regression import SplitCPRegressor
 
 random_state = 1

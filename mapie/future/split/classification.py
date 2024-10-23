@@ -11,12 +11,12 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.utils.validation import check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators.utils import check_calibrator
+from mapie.future.calibrators.utils import check_calibrator
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.conformity_scores.utils import check_classification_conformity_score
 from mapie.estimator.classifier import EnsembleClassifier
-from mapie.futur.split.base import BaseCalibrator, SplitCP
+from mapie.future.split.base import BaseCalibrator, SplitCP
 
 
 class SplitCPClassifier(SplitCP):
@@ -99,7 +99,7 @@ class SplitCPClassifier(SplitCP):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.futur.split import SplitCPClassifier
+    >>> from mapie.future.split import SplitCPClassifier
     >>> np.random.seed(1)
     >>> X_train = np.arange(0,400,2).reshape(-1, 1)
     >>> y_train = np.array([0]*50 + [1]*50 + [2]*50 + [3]*50)

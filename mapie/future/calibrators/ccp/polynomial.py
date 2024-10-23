@@ -10,9 +10,9 @@ from .utils import format_functions
 
 class PolynomialCCP(CCPCalibrator):
     """
-    Calibrator based on :class:`~mapie.calibrators.ccp.CCPCalibrator`,
-    used in :class:`~mapie.futur.split.SplitCPRegressor` or
-    :class:`~mapie.futur.split.SplitCPClassifier`
+    Calibrator based on :class:`~mapie.future.calibrators.ccp.CCPCalibrator`,
+    used in :class:`~mapie.future.split.SplitCPRegressor` or
+    :class:`~mapie.future.split.SplitCPClassifier`
     to estimate the conformity scores.
 
     It corresponds to the adaptative conformal prediction method proposed by
@@ -23,11 +23,11 @@ class PolynomialCCP(CCPCalibrator):
     case in the standard CP), but with a function ``q(X)`` which is adaptative
     as it depends on ``X``.
 
-    This class builds a :class:`~mapie.calibrators.ccp.CCPCalibrator`
+    This class builds a :class:`~mapie.future.calibrators.ccp.CCPCalibrator`
     object with polynomial features of ``X``, ``y_pred`` or ``z``.
 
     See the examples and the documentation to build a
-    :class:`~mapie.calibrators.ccp.CCPCalibrator`
+    :class:`~mapie.future.calibrators.ccp.CCPCalibrator`
     adaptated to your dataset and constraints.
 
     Parameters
@@ -143,7 +143,7 @@ class PolynomialCCP(CCPCalibrator):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.calibrators import PolynomialCCP
+    >>> from mapie.future.calibrators import PolynomialCCP
     >>> from mapie.regression import SplitCPRegressor
     >>> np.random.seed(1)
     >>> X_train = np.arange(0,400, 2).reshape(-1, 1)

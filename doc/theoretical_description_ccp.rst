@@ -9,6 +9,24 @@ Theoretical Description
 The Conditional Conformal Prediction (CCP) method :ref:`[1]<theoretical_description_ccp_references>` is a model agnostic conformal prediction method which
 can create adaptative prediction intervals.
 
+In MAPIE, this method has a lot of advantages:
+
+- It is model agnostic (it doesn’t depend on the model but only on the predictions, unlike CQR)
+- It can create very adaptative intervals (with a varying width which truly reflects the model uncertainty)
+- while providing coverage guarantee on all sub-groups of interest (avoiding biases)
+- with the possibility to inject prior knowledge about the data or the model
+
+However, we will also see its disadvantages:
+- The adaptativity depends on the calibrator we use: It can be difficult to choose the correct calibrator,
+with the best parameters.
+- The calibration and even more the inference are much longer than for the other methods.
+We can reduce the inference time using ``unsafe_approximation=True``,
+but we lose the strong theoretical guarantees and risk a small miscoverage
+(even if, most of the time, the coverage is achieved).
+
+To conclude, it can create more adaptative intervals than the other methods,
+but it can be difficult to find the best settings (calibrator type and parameters)
+and can have a big computational time.
 
 How does it works?
 ====================
@@ -134,12 +152,12 @@ The following will provide some tips on how to use the method (for more practica
 
 1. If you want a generally adaptative interval and you don't have prior
    knowledge about your data, you can use gaussian kernels, implemented in Mapie
-   in :class:`~mapie.calibrators.ccp.GaussianCCP`. See the API doc for more information.
+   in :class:`~mapie.future.calibrators.ccp.GaussianCCP`. See the API doc for more information.
 
 2. If you want to avoid bias on sub-groups and ensure an homogenous coverage on those,
    you can add indicator functions corresponding to those groups. 
 
-3. You can inject prior knowledge in the method using :class:`~mapie.calibrators.ccp.CustomCCP`,
+3. You can inject prior knowledge in the method using :class:`~mapie.future.calibrators.ccp.CustomCCP`,
    if you have information about the conformity scores distribution
    (domains with different biavior, expected model uncertainty depending on a given feature, etc).
 

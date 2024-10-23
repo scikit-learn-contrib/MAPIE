@@ -43,7 +43,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from mapie.calibrators.ccp import CustomCCP, GaussianCCP
+from mapie.future.calibrators.ccp import CustomCCP, GaussianCCP
 from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.regression import MapieRegressor, SplitCPRegressor
 

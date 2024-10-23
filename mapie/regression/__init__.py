@@ -1,4 +1,4 @@
-from mapie.futur.split import SplitCPRegressor
+from mapie.future.split import SplitCPRegressor
 
 from .quantile_regression import MapieQuantileRegressor
 from .regression import MapieRegressor

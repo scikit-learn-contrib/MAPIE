@@ -12,8 +12,8 @@ We will see in this tutorial how to use the method. It has a lot of advantages:
 - It is model agnostic (it doesn't depend on the model but only on the
   predictions, unlike `CQR`)
 - It can create very adaptative intervals (with a varying width which truly
-  eflects the model uncertainty)
-- while providing coverage guantee on all sub-groups of interest
+  reflects the model uncertainty)
+- while providing coverage guarantee on all sub-groups of interest
   (avoiding biases)
 - with the possibility to inject prior knowledge about the data or the model
 
@@ -24,8 +24,8 @@ However, we will also see its disadvantages:
   with the best parameters (this tutorial will try to help you with this task).
 - The calibration and even more the inference are much longer than for the
   other methods. We can reduce the inference time using
-  ``unsafe_approximation=True``, but we lose the theoretical guarantees and
-  risk a small miscoverage
+  ``unsafe_approximation=True``, but we lose the strong theoretical guarantees
+  and risk a small miscoverage
   (even if, most of the time, the coverage is achieved).
 
 Conclusion on the method:
@@ -43,10 +43,10 @@ with :class:`~sklearn.preprocessing.PolynomialFeatures` and
 :class:`~sklearn.linear_model.QuantileRegressor` for CQR).
 
 We will compare the different available calibrators (
-:class:`~mapie.calibrators.ccp.CustomCCP`,
-:class:`~mapie.calibrators.ccp.GaussianCCP`
-and :class:`~mapie.calibrators.ccp.PolynomialCCP`) of the CCP method (using
-:class:`~mapie.futur.split.SplitCPRegressor`), with the
+:class:`~mapie.future.calibrators.ccp.CustomCCP`,
+:class:`~mapie.future.calibrators.ccp.GaussianCCP`
+and :class:`~mapie.future.calibrators.ccp.PolynomialCCP`) of the CCP method
+(using :class:`~mapie.future.split.SplitCPRegressor`), with the
 standard split-conformal method, the CV+ method
 (:class:`~mapie.regression.MapieRegressor`) and CQR
 (:class:`~mapie.regression.MapieQuantileRegressor`)
@@ -77,8 +77,8 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from mapie.calibrators import CustomCCP, GaussianCCP, PolynomialCCP
-from mapie.calibrators.ccp import CCPCalibrator
+from mapie.future.calibrators import CustomCCP, GaussianCCP, PolynomialCCP
+from mapie.future.calibrators.ccp import CCPCalibrator
 from mapie.regression import (MapieQuantileRegressor, MapieRegressor,
                               SplitCPRegressor)
 
@@ -454,7 +454,7 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 
 
 ##############################################################################
-# The :class:`~mapie.futur.split.regression.SplitCPRegressor` has is
+# The :class:`~mapie.future.split.regression.SplitCPRegressor` has is
 # a very adaptative method, even with default
 # parameters values. If the dataset is more complex, the default parameters
 # may not be enough to get the best performances. In this case, we can use
@@ -510,7 +510,7 @@ calibrator3 = CustomCCP([lambda y_pred: y_pred])
 
 
 ##############################################################################
-# Or using :class:`~mapie.calibrators.ccp.PolynomialCCP` class:
+# Or using :class:`~mapie.future.calibrators.ccp.PolynomialCCP` class:
 # --------------------------------------------------------------------------
 #
 ##############################################################################
@@ -526,7 +526,7 @@ calibrator3 = PolynomialCCP([1], variable="y_pred")
 # 5.2. Improve the performances without prior knowledge: :class:`GaussianCCP`
 # --------------------------------------------------------------------------
 # If we don't know anything about the data, we can use
-# :class:`~mapie.calibrators.ccp.GaussianCCP`,
+# :class:`~mapie.future.calibrators.ccp.GaussianCCP`,
 # which will sample random points, and apply gaussian kernels
 # with a given standard deviation ``sigma``.
 #
@@ -599,8 +599,8 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 #
 # --> It should be a good idea to inject in the calibrator the two groups
 # ( X < 0 and X > 0). We can use on each group
-# :class:`~mapie.calibrators.ccp.GaussianCCP`
-# (or :class:`~mapie.calibrators.ccp.PolynomialCCP`,
+# :class:`~mapie.future.calibrators.ccp.GaussianCCP`
+# (or :class:`~mapie.future.calibrators.ccp.PolynomialCCP`,
 # as it seems adapted in this example)
 
 calibrator1 = CustomCCP(
@@ -660,12 +660,8 @@ plot_figure(mapies, y_preds, y_pis, titles, show_components=True)
 plot_evaluation(titles, y_pis, X_test, y_test)
 
 ##############################################################################
-# Conlusion:
+# 6. Conclusion:
 # --------------------------------------------------------------------------
-#
-##############################################################################
-
-##############################################################################
 # The goal is to get prediction intervals which are the most adaptative
 # possible. Perfect adaptativity whould result in a perfectly constant
 # conditional coverage.

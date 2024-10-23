@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.utils.validation import _num_samples
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.calibrators.base import BaseCalibrator
+from mapie.future.calibrators.base import BaseCalibrator
 from .ccp.utils import check_required_arguments
 from mapie.conformity_scores.interface import BaseConformityScore
 

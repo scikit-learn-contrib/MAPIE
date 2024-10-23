@@ -12,9 +12,9 @@ In this tutorial, the classifier will be
 We will use a synthetic toy dataset.
 
 We will compare the CCP method (using
-:class:`~mapie.futur.split.SplitCPRegressor`,
-:class:`~mapie.calibrators.ccp.CustomCCP` and
-:class:`~mapie.calibrators.ccp.GaussianCCP`), with the
+:class:`~mapie.future.split.SplitCPRegressor`,
+:class:`~mapie.future.calibrators.ccp.CustomCCP` and
+:class:`~mapie.future.calibrators.ccp.GaussianCCP`), with the
 standard method, using for both, the LAC conformity score
 (:class:`~mapie.conformity_scores.LACConformityScore`).
 
@@ -42,10 +42,10 @@ from matplotlib.patches import Patch
 from sklearn.model_selection import ShuffleSplit
 from sklearn.linear_model import LogisticRegression
 
-from mapie.calibrators import CustomCCP, GaussianCCP
+from mapie.future.calibrators import CustomCCP, GaussianCCP
 from mapie.classification import MapieClassifier
 from mapie.conformity_scores import LACConformityScore
-from mapie.futur.split.classification import SplitCPClassifier
+from mapie.future.split.classification import SplitCPClassifier
 
 warnings.filterwarnings("ignore")
 
@@ -296,7 +296,7 @@ def plot_cond_coverage(scores, names):
 #   homogenous coverage on each class).
 # - The ``CCP`` method with gaussian kernels, to have adaptative prediction
 #   sets, without prior knowledge or information
-#   (:class:`~mapie.calibrators.ccp.GaussianCCP`).
+#   (:class:`~mapie.future.calibrators.ccp.GaussianCCP`).
 
 
 n_train = 5000
@@ -348,7 +348,8 @@ run_exp(mapies, names, ALPHA, n_train=n_train, n_calib=n_calib, n_test=n_test)
 # for the middle points (the dark purple being sets with 4 classes).
 #
 # Thus, between the two ``CCP`` methods, the one using gaussian kernels
-# (:class:`~mapie.calibrators.ccp.GaussianCCP`) seems the most adaptative.
+# (:class:`~mapie.future.calibrators.ccp.GaussianCCP`) seems the most
+# adaptative.
 #
 # This modelisation of uncertainty is not visible at all in the standard
 # method, where we have, in the opposite, empty sets where the distributions
@@ -381,7 +382,7 @@ plot_cond_coverage(scores, names)
 # method, and the under-coverage on class 4 was also slightly corrected.
 #
 # However, the ``CCP`` with a gaussian calibrator
-# (:class:`~mapie.calibrators.ccp.GaussianCCP`), is clearly the
+# (:class:`~mapie.future.calibrators.ccp.GaussianCCP`), is clearly the
 # most adaptative method, with no under-coverage neither for the class 2 and 4.
 #
 # To conclude, the ``CCP`` method offer adaptative perdiction sets.
