@@ -45,7 +45,8 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from mapie.future.calibrators.ccp import CustomCCP, GaussianCCP
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.regression import MapieRegressor, SplitCPRegressor
+from mapie.regression import MapieRegressor
+from mapie.future.split import SplitCPRegressor
 
 warnings.filterwarnings("ignore")
 
