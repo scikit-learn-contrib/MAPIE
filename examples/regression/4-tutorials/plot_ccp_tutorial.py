@@ -79,8 +79,8 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from mapie.future.calibrators import CustomCCP, GaussianCCP, PolynomialCCP
 from mapie.future.calibrators.ccp import CCPCalibrator
-from mapie.regression import (MapieQuantileRegressor, MapieRegressor,
-                              SplitCPRegressor)
+from mapie.future.split import SplitCPRegressor
+from mapie.regression import MapieQuantileRegressor, MapieRegressor
 
 warnings.filterwarnings("ignore")
 
