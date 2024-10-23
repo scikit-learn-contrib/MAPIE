@@ -140,7 +140,7 @@ class CustomCCP(CCPCalibrator):
     --------
     >>> import numpy as np
     >>> from mapie.future.calibrators import CustomCCP
-    >>> from mapie.regression import SplitCPRegressor
+    >>> from mapie.future.split import SplitCPRegressor
     >>> from mapie.conformity_scores import AbsoluteConformityScore
     >>> np.random.seed(1)
     >>> X_train = np.linspace(0, 3.14, 1001).reshape(-1, 1)

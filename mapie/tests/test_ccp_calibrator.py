@@ -12,7 +12,7 @@ from sklearn.model_selection import ShuffleSplit
 from mapie.future.calibrators.ccp import (CCPCalibrator, CustomCCP,
                                           GaussianCCP, PolynomialCCP)
 from mapie.future.calibrators.ccp.utils import check_required_arguments
-from mapie.regression import SplitCPRegressor
+from mapie.future.split import SplitCPRegressor
 
 random_state = 1
 np.random.seed(random_state)

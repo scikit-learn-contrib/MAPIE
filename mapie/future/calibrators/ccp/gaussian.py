@@ -203,7 +203,7 @@ class GaussianCCP(CCPCalibrator):
     --------
     >>> import numpy as np
     >>> from mapie.future.calibrators import GaussianCCP
-    >>> from mapie.regression import SplitCPRegressor
+    >>> from mapie.future.split import SplitCPRegressor
     >>> np.random.seed(1)
     >>> X_train = np.arange(0,400, 2).reshape(-1, 1)
     >>> y_train = 1 + 2*X_train[:,0] + np.random.rand(len(X_train))

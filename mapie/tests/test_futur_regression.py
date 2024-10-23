@@ -26,7 +26,7 @@ from mapie.conformity_scores import (AbsoluteConformityScore,
                                      ResidualNormalisedScore)
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.metrics import regression_coverage_score
-from mapie.regression import SplitCPRegressor
+from mapie.future.split import SplitCPRegressor
 
 random_state = 1
 np.random.seed(random_state)

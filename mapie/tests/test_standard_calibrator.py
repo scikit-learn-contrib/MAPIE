@@ -9,7 +9,8 @@ from sklearn.model_selection import train_test_split
 
 from mapie.future.calibrators import StandardCalibrator
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.regression import SplitCPRegressor, MapieRegressor
+from mapie.future.split import SplitCPRegressor
+from mapie.regression import MapieRegressor
 
 random_state = 1
 np.random.seed(random_state)
