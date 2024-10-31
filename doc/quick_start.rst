@@ -60,7 +60,7 @@ and two standard deviations from the mean.
     mapie_regressor.fit(X_train, y_train)
 
     alpha = [0.05, 0.32]
-    y_pred, y_pis = mapie_regressor.predict(X_test, alpha=alpha)
+    y_pred, y_pred_intervals = mapie_regressor.predict(X_test, alpha=alpha)
 
 MAPIE returns a tuple, the first element is a ``np.ndarray`` of shape ``(n_samples)`` giving the 
 predictions, and the second element a ``np.ndarray`` of shape ``(n_samples, 2, len(alpha))`` giving 
