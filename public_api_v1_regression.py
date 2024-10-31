@@ -3,7 +3,7 @@ from typing import Optional, Union, Self, List
 import numpy as np
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 
-from numpy.typing import ArrayLike, NDArray
+from mapie._typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator
 
@@ -67,6 +67,7 @@ class SplitConformalRegressor:
         estimator: RegressorMixin = LinearRegression(),  # Improved 'None' default
         conformity_score: Union[str, BaseRegressionScore] = "absolute",  # Add string option
         confidence_level: Union[float, List[float]] = 0.9,
+        prefit: bool = False,
         n_jobs: Optional[int] = None,
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None
@@ -83,7 +84,7 @@ class SplitConformalRegressor:
     ) -> Self:
         pass
 
-    def calibrate(
+    def conformalize(
         self,
         X_calib: ArrayLike,
         y_calib: ArrayLike,
@@ -93,6 +94,24 @@ class SplitConformalRegressor:
         pass
 
     # predict and predict_set signatures are the same as NaiveConformalRegressor
+    def predict(self, X) -> NDArray:
+        pass
+
+    def predict_set(
+        self,
+        X: ArrayLike,
+        optimize_beta: bool = False,
+        allow_infinite_bounds: bool = False,
+        # **predict_params  -> QUESTION: Is this redundant with predict_params in .fit() ?
+    ) -> NDArray:
+        """
+        Returns
+        -------
+        An array containing the prediction intervals,
+        of shape (n_samples, 2) if confidence_level is a float,
+        or (n_samples, 2, n_confidence_level) if confidence_level is an array of floats
+        """
+        pass
 
 
 class CrossConformalRegressor:
@@ -110,14 +129,21 @@ class CrossConformalRegressor:
     ) -> None:
         pass
 
-    def fit_calibrate(
+    def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
         fit_params: Optional[dict] = None,
-        predict_params: Optional[dict] = None,
         # sample_weight: Optional[ArrayLike] = None, -> in fit_params
         # groups: Optional[ArrayLike] = None,  ->  To specify directly in the cv parameter
+    ) -> Self:
+        pass
+
+    def conformalize(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        predict_params: Optional[dict] = None,
     ) -> Self:
         pass
 
@@ -132,6 +158,7 @@ class CrossConformalRegressor:
 
     def predict(
         self,
+        X: ArrayLike,
         # ensemble: bool = False, -> removed, see aggregation_method
         aggregation_method: Optional[str] = None,  # None: no aggregation, 'mean', 'median'
     ) -> NDArray:
@@ -163,7 +190,7 @@ class ConformalizedQuantileRegressor:
     ) -> Self:
         pass
 
-    def calibrate(
+    def conformalize(
         self,
         X_calib: ArrayLike,
         y_calib: ArrayLike,
