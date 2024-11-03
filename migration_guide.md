@@ -65,7 +65,7 @@ Defines additional parameters exclusively for prediction.
 
 ## 3. Method Changes
 
-In MAPIE v1, the conformal prediction workflow is more streamlined and modular, with distinct methods for training, calibration, and prediction. The calibration process in v1 now consists of four clear steps, simplifying and clarifying the process.
+In MAPIE v1, the conformal prediction workflow is more streamlined and modular, with distinct methods for training, calibration, and prediction. The calibration process in v1 consists of four steps.
 
 ### Step 1: Data Splitting
 
@@ -95,7 +95,7 @@ In MAPIE v0.9, both point predictions and prediction intervals were produced thr
 
 MAPIE v1 introduces two distinct methods for prediction:
 - **`.predict_set()`** is dedicated to generating prediction intervals (i.e., lower and upper bounds), clearly separating interval predictions from point predictions.
-- **`.predict()`** now focuses solely on producing point predictions, enhancing the API's clarity by distinguishing between the two types of predictions.
+- **`.predict()`** now focuses solely on producing point predictions.
 ---
 
 ## 4. Migration Example: MAPIE v0.9 to MAPIE v1
