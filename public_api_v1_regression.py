@@ -10,57 +10,6 @@ from sklearn.model_selection import BaseCrossValidator
 from mapie.conformity_scores import BaseRegressionScore
 
 
-class NaiveConformalRegressor:
-    def __init__(
-        self,
-        estimator: RegressorMixin = LinearRegression(),  # Improved 'None' default
-        conformity_score: Union[str, BaseRegressionScore] = "absolute",  # Add string option
-        confidence_level: Union[float, List[float]] = 0.9,
-        n_jobs: Optional[int] = None,
-        verbose: int = 0,
-        random_state: Optional[Union[int, np.random.RandomState]] = None,
-    ) -> None:
-        pass
-
-    def fit(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        # sample_weight: Optional[ArrayLike] = None, -> in fit_params
-        fit_params: Optional[dict] = None,  # Ex for LGBMClassifier: {'categorical_feature': 'auto'}
-        predict_params: Optional[dict] = None,
-    ) -> Self:
-        pass
-
-    def predict_set(
-        self,
-        X: ArrayLike,
-        optimize_beta: bool = False,
-        allow_infinite_bounds: bool = False,
-        # **predict_params  -> QUESTION: Is this redundant with predict_params in .fit() ?
-    ) -> NDArray:
-        """
-        Returns
-        -------
-        An array containing the prediction intervals,
-        of shape (n_samples, 2) if confidence_level is a float,
-        or (n_samples, 2, n_confidence_level) if confidence_level is an array of floats
-        """
-        pass
-
-    def predict(
-        self,
-        X: ArrayLike,
-        # **predict_params  -> Is this redundant with predict_params in .fit() ?
-    ) -> NDArray:
-        """
-        Returns
-        -------
-        An array containing the point predictions, with shape (n_samples,)
-        """
-        pass
-
-
 class SplitConformalRegressor:
     def __init__(
         self,
@@ -94,9 +43,6 @@ class SplitConformalRegressor:
         pass
 
     # predict and predict_set signatures are the same as NaiveConformalRegressor
-    def predict(self, X) -> NDArray:
-        pass
-
     def predict_set(
         self,
         X: ArrayLike,
@@ -110,6 +56,18 @@ class SplitConformalRegressor:
         An array containing the prediction intervals,
         of shape (n_samples, 2) if confidence_level is a float,
         or (n_samples, 2, n_confidence_level) if confidence_level is an array of floats
+        """
+        pass
+
+    def predict(
+        self,
+        X: ArrayLike,
+        # **predict_params  -> Is this redundant with predict_params in .fit() ?
+    ) -> NDArray:
+        """
+        Returns
+        -------
+        An array containing the point predictions, with shape (n_samples,)
         """
         pass
 
@@ -164,19 +122,17 @@ class CrossConformalRegressor:
     ) -> NDArray:
         pass
 
-
 class JackknifeAfterBootstrapRegressor:
-    pass  # TODO
-
-
-class ConformalizedQuantileRegressor:
     def __init__(
         self,
-        estimator: RegressorMixin = QuantileRegressor(),  # Improved 'None' default
+        estimator: RegressorMixin = LinearRegression(),
+        conformity_score: Union[str, BaseRegressionScore] = "absolute",
         confidence_level: Union[float, List[float]] = 0.9,
-        random_state: Optional[Union[int, np.random.RandomState]] = None,  # Moved from .fit
-        # Future API : n_jobs: Optional[int] = None,
-        # Future API : verbose: int = 0,
+        method: str = "plus",  # 'base' | 'plus' | 'minmax',
+        n_bootstraps: int = 100,
+        n_jobs: Optional[int] = None,
+        verbose: int = 0,
+        random_state: Optional[Union[int, np.random.RandomState]] = None
     ) -> None:
         pass
 
@@ -185,8 +141,6 @@ class ConformalizedQuantileRegressor:
         X: ArrayLike,
         y: ArrayLike,
         fit_params: Optional[dict] = None,
-        # sample_weight: Optional[ArrayLike] = None, -> in fit_params
-        # groups: Optional[ArrayLike] = None,  ->  To specify directly in the cv parameter
     ) -> Self:
         pass
 
@@ -201,24 +155,70 @@ class ConformalizedQuantileRegressor:
     def predict_set(
         self,
         X: ArrayLike,
-        optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
-        symmetry: bool = True,  # Corrected typing
     ) -> NDArray:
+        """
+        Returns prediction intervals for each sample in `X`.
+        """
         pass
 
-    # predict signature is the same as NaiveConformalRegressor
+    def predict(
+        self,
+        X: ArrayLike,
+    ) -> NDArray:
+        """
+        Returns point predictions with shape (n_samples,).
+        """
+        pass
 
 
-class DRAFTTimeSeriesConformalRegressor: # DRAFT
+class ConformalizedQuantileRegressor:
     def __init__(
         self,
-        estimator: Optional[RegressorMixin] = None,
-        method: str = "enbpi",
-        # Future API : n_jobs: Optional[int] = None,
-        # Future API : verbose: int = 0,
-        conformity_score: Optional[BaseRegressionScore] = None,
-        # Future API : random_state: Optional[Union[int, np.random.RandomState]] = None,
+        estimator: RegressorMixin = QuantileRegressor(),
+        confidence_level: Union[float, List[float]] = 0.9,
+        quantile: Union[float, List[float]] = 0.5,  # Quantile(s) to target
+        alpha: float = 0.1,  # Regularization parameter
+        n_jobs: Optional[int] = None,
+        verbose: int = 0,
+        random_state: Optional[Union[int, np.random.RandomState]] = None
     ) -> None:
         pass
 
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        fit_params: Optional[dict] = None,
+    ) -> Self:
+        pass
+
+    def conformalize(
+        self,
+        X_calib: ArrayLike,
+        y_calib: ArrayLike,
+        predict_params: Optional[dict] = None,
+    ) -> Self:
+        pass
+
+    def predict_set(
+        self,
+        X: ArrayLike,
+        allow_infinite_bounds: bool = False,
+    ) -> NDArray:
+        """
+        Returns prediction intervals for quantile regression.
+        """
+        pass
+
+    def predict(
+        self,
+        X: ArrayLike,
+    ) -> NDArray:
+        """
+        Returns point predictions with shape (n_samples,).
+        """
+        pass
+
+class GibbsConformalRegressor:
+    pass  # TODO    
