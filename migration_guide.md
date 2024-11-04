@@ -35,7 +35,8 @@ A parameter used to specify the scoring approach for evaluating model prediction
 ### `confidence_level`
 Indicates the desired coverage probability of the prediction intervals.
 - **v0.9**: Specified as `alpha` during prediction, representing error rate.
-- **v1**: Replaced with `confidence_level` to denote the coverage rate directly. Set at model initialization, improving consistency and clarity.
+- **v1**: Replaced with `confidence_level` to denote the coverage rate directly. Set at model initialization, improving consistency and clarity
+`confidence_level` is equivalent to `1 - alpha`.
 
 ### `method`
 Specifies the approach for calculating prediction intervals, especially in advanced models like Cross Conformal and Jackknife After Bootstrap regressors. 
@@ -61,6 +62,12 @@ Dictionary of parameters specifically used during training, such as `sample_weig
 Defines additional parameters exclusively for prediction. 
 - **v0.9**: Passed additional parameters in a flexible but less explicit manner, sometimes mixed within training configurations.
 - **v1**: Now structured as a dedicated dictionary, `predict_params`, to be used during calibration (`conformalize` method) or prediction stages, ensuring no overlap with training parameters.
+
+### `aggregation_method`
+The `aggregation_method` parameter defines how predictions from multiple conformal regressors are aggregated when making point predictions.
+
+- **v0.9**: Previously, the `agg_function` parameter was used to specify the aggregation method, allowing options such as taking the mean or median of predictions.
+- **v1**: The `agg_function` parameter has been renamed to `aggregation_method` to clarify its purpose. It now serves the same role in selecting an aggregation technique but is specified at the time of prediction rather than during class initialization.
 ---
 
 ## 3. Method Changes
