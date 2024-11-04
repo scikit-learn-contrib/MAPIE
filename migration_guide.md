@@ -44,9 +44,10 @@ Specifies the approach for calculating prediction intervals, especially in advan
 - **v1**: Specific to `CrossConformalRegressor` and `JackknifeAfterBootstrapRegressor`, indicating the interval calculation approach (`"base"`, `"plus"`, or `"minmax"`).
 
 ### `cv` Parameter
-Manages cross-validation configuration
-- **v0.9**: Part of `MapieRegressor` for handling cross-validation; where `cv="prefit"` could be used in case the model had already been pre-fitted.
-- **v1**: `cv` is now present only in `CrossConformalRegressor`, and the `prefit` option has been removed from `cv`.
+The `cv` parameter manages the cross-validation configuration, accepting either an integer to indicate the number of data splits or a `BaseCrossValidator` object for custom data splitting.
+
+- **v0.9**: The `cv` parameter was included in `MapieRegressor`, where it handled cross-validation. The option `cv="prefit"` was available for models that were already pre-trained.
+- **v1**: The `cv` parameter is now only present in `CrossConformalRegressor`, with the `prefit` option removed. Additionally, the `groups` parameter was removed from the `fit` method, allowing groups to be directly passed to `cv` for processing.
 
 ### `prefit` Option
 Controls whether the model has been pre-fitted before applying conformal prediction.  
@@ -169,3 +170,16 @@ v1.conformalize(X_conf, y_conf)
 prediction_intervals_v1 = v1.predict_set(X_test)
 prediction_points_v1 = v1.predict(X_test)
 ```
+
+---
+
+## 5. Additional Migration Examples
+
+We will provide further migration examples :
+
+- **Prefit Models**: Using `SplitConformalRegressor` with `prefit=True`
+- **Non-Prefit Models**:
+  - `SplitConformalRegressor` without `prefit`
+  - `CrossConformalRegressor` with `fit_params` (e.g., `sample_weight`) and `predict_params`
+  - `ConformalizedQuantileRegressor` with `symmetric_intervals=False`
+  - `JackknifeAfterBootstrapRegressor` with custom configurations
