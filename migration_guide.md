@@ -64,10 +64,12 @@ Defines additional parameters exclusively for prediction.
 - **v1**: Now structured as a dedicated dictionary, `predict_params`, to be used during calibration (`conformalize` method) or prediction stages, ensuring no overlap with training parameters.
 
 ### `aggregation_method`
+
 The `aggregation_method` parameter defines how predictions from multiple conformal regressors are aggregated when making point predictions.
 
-- **v0.9**: Previously, the `agg_function` parameter was used to specify the aggregation method, allowing options such as taking the mean or median of predictions.
-- **v1**: The `agg_function` parameter has been renamed to `aggregation_method` to clarify its purpose. It now serves the same role in selecting an aggregation technique but is specified at the time of prediction rather than during class initialization.
+- **v0.9**: Previously, the `agg_function` parameter specified the aggregation method, allowing options such as the mean or median of predictions. This was applicable only when using ensemble methods by setting `ensemble=True` in the `predict` method.
+
+- **v1**: The `agg_function` parameter has been renamed to `aggregation_method` for clarity. It now serves the same purpose in selecting an aggregation technique but is specified at prediction time rather than during class initialization. Additionally, the `ensemble` parameter has been removed, as `aggregation_method` is relevant only to the `CrossConformalRegressor` and `JackknifeAfterBootstrapRegressor` classes. 
 ---
 
 ## 3. Method Changes
