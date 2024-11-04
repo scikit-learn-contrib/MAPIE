@@ -167,7 +167,7 @@ class JackknifeAfterBootstrapRegressor:
         self,
         X: ArrayLike,
         # ensemble: bool = False, -> removed, see aggregation_method
-        aggregation_method: str = 'mean',  # None: no aggregation, 'mean', 'median'
+        aggregation_method: str = 'mean',  # 'mean', 'median'
     ) -> NDArray:
         """
         Returns point predictions with shape (n_samples,).
@@ -206,7 +206,7 @@ class ConformalizedQuantileRegressor:
         self,
         X: ArrayLike,
         allow_infinite_bounds: bool = False,
-        optimize_interval_width: bool = False, # replace optimize_beta
+        minimize_interval_width: bool = False, # replace optimize_beta
         symmetric_intervals: bool = True, # replace symmetric
     ) -> NDArray:
         """
