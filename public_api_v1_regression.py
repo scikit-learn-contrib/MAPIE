@@ -156,6 +156,7 @@ class JackknifeAfterBootstrapRegressor:
         self,
         X: ArrayLike,
         allow_infinite_bounds: bool = False,
+        # **predict_params  -> To remove: redundant with predict_params in .fit()
     ) -> NDArray:
         """
         Returns prediction intervals for each sample in `X`.
@@ -165,6 +166,8 @@ class JackknifeAfterBootstrapRegressor:
     def predict(
         self,
         X: ArrayLike,
+        # ensemble: bool = False, -> removed, see aggregation_method
+        aggregation_method: Optional[str] = None,  # None: no aggregation, 'mean', 'median'
     ) -> NDArray:
         """
         Returns point predictions with shape (n_samples,).
@@ -178,7 +181,6 @@ class ConformalizedQuantileRegressor:
         estimator: RegressorMixin = QuantileRegressor(),
         confidence_level: Union[float, List[float]] = 0.9,
         quantile: Union[float, List[float]] = 0.5,  # Quantile(s) to target
-        alpha: float = 0.1,  # Regularization parameter
         n_jobs: Optional[int] = None,
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None
