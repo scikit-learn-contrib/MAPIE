@@ -39,7 +39,7 @@ Indicates the desired coverage probability of the prediction intervals.
 
 ### `method`
 Specifies the approach for calculating prediction intervals, especially in advanced models like Cross Conformal and Jackknife After Bootstrap regressors. 
-- **v0.9**: Configured for the main prediction process.
+- **v0.9**: Part of `MapieRegressor`. Configured for the main prediction process.
 - **v1**: Specific to `CrossConformalRegressor` and `JackknifeAfterBootstrapRegressor`, indicating the interval calculation approach (`"base"`, `"plus"`, or `"minmax"`).
 
 ### `cv` Parameter
