@@ -35,8 +35,8 @@ class SplitConformalRegressor:
 
     def conformalize(
         self,
-        X_calib: ArrayLike,
-        y_calib: ArrayLike,
+        X_conf: ArrayLike,
+        y_conf: ArrayLike,
         predict_params: Optional[dict] = None,
         # sample_weight: Optional[ArrayLike] = None, -> in fit_params
     ) -> Self:
@@ -146,8 +146,8 @@ class JackknifeAfterBootstrapRegressor:
 
     def conformalize(
         self,
-        X_calib: ArrayLike,
-        y_calib: ArrayLike,
+        X_conf: ArrayLike,
+        y_conf: ArrayLike,
         predict_params: Optional[dict] = None,
     ) -> Self:
         pass
@@ -167,7 +167,7 @@ class JackknifeAfterBootstrapRegressor:
         self,
         X: ArrayLike,
         # ensemble: bool = False, -> removed, see aggregation_method
-        aggregation_method: Optional[str] = None,  # None: no aggregation, 'mean', 'median'
+        aggregation_method: str = 'mean',  # 'mean', 'median'
     ) -> NDArray:
         """
         Returns point predictions with shape (n_samples,).
@@ -180,9 +180,8 @@ class ConformalizedQuantileRegressor:
         self,
         estimator: RegressorMixin = QuantileRegressor(),
         confidence_level: Union[float, List[float]] = 0.9,
-        quantile: Union[float, List[float]] = 0.5,  # Quantile(s) to target
-        n_jobs: Optional[int] = None,
-        verbose: int = 0,
+        # n_jobs: Optional[int] = None -> Not yet available in MapieQuantileRegressor
+        # verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None
     ) -> None:
         pass
@@ -197,8 +196,8 @@ class ConformalizedQuantileRegressor:
 
     def conformalize(
         self,
-        X_calib: ArrayLike,
-        y_calib: ArrayLike,
+        X_conf: ArrayLike,
+        y_conf: ArrayLike,
         predict_params: Optional[dict] = None,
     ) -> Self:
         pass
@@ -207,9 +206,32 @@ class ConformalizedQuantileRegressor:
         self,
         X: ArrayLike,
         allow_infinite_bounds: bool = False,
+        minimize_interval_width: bool = False, # replace optimize_beta
+        symmetric_intervals: bool = True, # replace symmetric
     ) -> NDArray:
         """
-        Returns prediction intervals for quantile regression.
+        Compute prediction intervals for quantile regression.
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Test data for prediction intervals.
+
+        allow_infinite_bounds : bool, default=False
+            If True, allows intervals to include infinite bounds for coverage.
+        
+        minimize_interval_width : bool, default=False
+            If True, narrows the prediction intervals as much as possible 
+            while maintaining target coverage.
+
+        symmetric_intervals : bool, default=True
+            If True, computes symmetric intervals around the predicted mean.
+            If False, calculates separate upper and lower bounds for asymmetric intervals.
+
+        Returns
+        -------
+        NDArray
+            Prediction intervals of shape (n_samples, 2), with lower and upper bounds.
         """
         pass
 
