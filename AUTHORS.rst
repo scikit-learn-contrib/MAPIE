@@ -9,6 +9,7 @@ Development Lead
 * Vincent Blot <vincent.blot@capgemini.com>
 * Louis Lacombe <louis.lacombe@capgemini.com>
 * Valentin Laurent <valentin.laurent@capgemini.com>
+* Hussein Jawad <hussein.jawad@capgemini.com>
 
 Emeritus Core Developers
 ------------------------
