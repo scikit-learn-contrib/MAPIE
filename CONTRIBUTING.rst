@@ -32,7 +32,7 @@ You can create a virtual environment via ``conda``:
     $ conda env create -f environment.dev.yml
     $ conda activate mapie
 
-Alternatively, you can install dependencies with ``pip``:
+Alternatively, using ``pip``, create a virtual environment and install dependencies with the following command:
 
 .. code-block:: sh
 
