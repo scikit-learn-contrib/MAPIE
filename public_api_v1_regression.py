@@ -548,10 +548,10 @@ class JackknifeAfterBootstrapRegressor:
     ) -> Self:
         """
         Calibrates the model on the provided data using the jackknife-after-bootstrap approach,
-        which involves generating bootstrap samples and applying jackknife resampling to estimate
+        which leverages pre-generated bootstrap samples along with jackknife techniques to estimate
         prediction intervals. This step analyzes conformity scores and adjusts the intervals based
         on specified confidence levels.
-
+        
         Parameters
         ----------
         X_conf : ArrayLike
