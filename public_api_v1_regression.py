@@ -268,7 +268,7 @@ class CrossConformalRegressor:
         Generates point predictions for the input data `X` using the specified
         aggregation method across the cross-validation folds.
 
-    predict_set(X, optimize_beta=False, allow_infinite_bounds=False) -> NDArray
+    predict_set(X, minimize_interval_width=False, allow_infinite_bounds=False) -> NDArray
         Generates prediction intervals for the input data `X` based on the
         conformity score and confidence level, adjusted to achieve the desired
         coverage probability.
@@ -368,7 +368,7 @@ class CrossConformalRegressor:
     def predict_set(
         self,
         X: ArrayLike,
-        optimize_beta: bool = False,
+        minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
         # **predict_params  -> To remove: redundant with predict_params in .fit()
     ) -> NDArray:
@@ -381,7 +381,7 @@ class CrossConformalRegressor:
         X : ArrayLike
             Data features for generating prediction intervals.
 
-        optimize_beta : bool, default=False
+        minimize_interval_width : bool, default=False
             If True, attempts to minimize the interval width.
 
         allow_infinite_bounds : bool, default=False
@@ -551,7 +551,7 @@ class JackknifeAfterBootstrapRegressor:
         which leverages pre-generated bootstrap samples along with jackknife techniques to estimate
         prediction intervals. This step analyzes conformity scores and adjusts the intervals based
         on specified confidence levels.
-        
+
         Parameters
         ----------
         X_conf : ArrayLike
@@ -634,6 +634,15 @@ class ConformalizedQuantileRegressor:
     estimator : RegressorMixin, default=QuantileRegressor()
         The base quantile regression estimator used to generate point and interval predictions.
         
+    conformity_score : Union[str, BaseRegressionScore], default="absolute"
+        The conformity score method used to calculate the conformity error.
+        String options:
+        - "absolute": absolute error between predicted and true target values.
+        - "gamma": absolute error between predicted and true target values normalized by the target prediction.
+        - "residualsNorm": absolute error between predicted and true target values normalized by the residuals.
+
+        A custom score function inheriting from BaseRegressionScore may also be provided.
+
     confidence_level : Union[float, List[float]], default=0.9
         The confidence level(s) for the prediction intervals, indicating the desired
         coverage probability of the prediction intervals. If a float is provided,
@@ -679,6 +688,7 @@ class ConformalizedQuantileRegressor:
         self,
         estimator: RegressorMixin = QuantileRegressor(),
         confidence_level: Union[float, List[float]] = 0.9,
+        conformity_score: Union[str, BaseRegressionScore] = "absolute",
         # n_jobs: Optional[int] = None -> Not yet available in MapieQuantileRegressor
         # verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None
