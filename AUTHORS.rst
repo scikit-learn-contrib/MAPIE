@@ -9,6 +9,7 @@ Development Lead
 * Vincent Blot <vincent.blot@capgemini.com>
 * Louis Lacombe <louis.lacombe@capgemini.com>
 * Valentin Laurent <valentin.laurent@capgemini.com>
+* Hussein Jawad <hussein.jawad@capgemini.com>
 
 Emeritus Core Developers
 ------------------------
@@ -42,4 +43,5 @@ Contributors
 * Ambros Marzetta <ambrosm>
 * Carl McBride Ellis <Carl-McBride-Ellis>
 * Baptiste Calot <baptiste.calot@capgemini.com>
+* Leonardo Garma <leonardo.garma@gmail.com>
 To be continued ...

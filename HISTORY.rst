@@ -5,6 +5,7 @@ History
 0.9.x (2024-xx-xx)
 ------------------
 
+* Fix issue 525 in contribution guidelines with syntax errors in hyperlinks and other formatting issues.
 * Bump wheel version to avoid known security vulnerabilities
 
 0.9.1 (2024-09-13)
