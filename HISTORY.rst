@@ -9,6 +9,7 @@ History
 * Add `GaussianCCP`, `PolynomialCCP` and `CustomCCP` based on `CCPCalibrator` to implement the Conditional CP method
 * Add the `StandardCalibrator`, to reproduce standard CP and make sure that the `SplitCPRegressor` is implemented correctly.
 * Add the CCP documentation, tutorial and demo notebooks
+* Fix issue 525 in contribution guidelines with syntax errors in hyperlinks and other formatting issues.
 * Bump wheel version to avoid known security vulnerabilities
 
 0.9.1 (2024-09-13)
