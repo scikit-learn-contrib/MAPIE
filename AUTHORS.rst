@@ -42,6 +42,7 @@ Contributors
 * Pierre de Fréminville <pidefrem>
 * Ambros Marzetta <ambrosm>
 * Carl McBride Ellis <Carl-McBride-Ellis>
+* Tiago Leon Melo <tleonmelo@hotmail.com>
 * Baptiste Calot <baptiste.calot@capgemini.com>
 * Leonardo Garma <leonardo.garma@gmail.com>
 To be continued ...
