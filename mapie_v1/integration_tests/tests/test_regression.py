@@ -20,7 +20,9 @@ def test_dummy():
     X_train, y_train, X_conf, y_conf = train_test_split(
         X_toy, y_toy, test_size=test_size, random_state=random_state
     )
-    v1 = SplitConformalRegressor(confidence_level=confidence_level, random_state=random_state)
+    v1 = SplitConformalRegressor(
+        confidence_level=confidence_level, random_state=random_state
+    )
     v1.fit_conformalize(X_train, y_train, X_conf, y_conf)
     v1_preds = v1.predict(X_toy)
     v1_pred_intervals = v1.predict_set(X_toy)
