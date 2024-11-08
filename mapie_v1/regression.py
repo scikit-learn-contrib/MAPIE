@@ -1,4 +1,5 @@
-from typing import Optional, Union, Self, List
+from typing import Optional, Union, List
+from typing_extensions import Self
 
 import numpy as np
 from sklearn.linear_model import LinearRegression, QuantileRegressor
@@ -206,6 +207,19 @@ class SplitConformalRegressor:
         """
         pass
 
+    def fit_conformalize(
+        self,
+        X_train: ArrayLike,
+        y_train: ArrayLike,
+        X_conf: ArrayLike,
+        y_conf: ArrayLike,
+        fit_params: Optional[dict] = None,
+        predict_params: Optional[dict] = None,
+    ) -> Self:
+        """
+        Dummy method to fit and conformalize in one step for testing purposes.
+        """
+        pass
 
 class CrossConformalRegressor:
     """
