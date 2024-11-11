@@ -132,7 +132,8 @@ def test_consistent_coverage(
 
     v0, v1 = initialize_models(
         strategy_key=strategy_key,
-        test_size=test_size,
+        v0_params=v0_params,
+        v1_params=v0_params,
         random_state=RANDOM_STATE,
         k_folds=K_FOLDS
     )
@@ -190,13 +191,12 @@ def test_consistent_coverage_for_prefit_model(
     This ensures that conformal prediction methods provide intervals
     without re-fitting the model, yielding the expected coverage.
     """
-    alpha = 1 - confidence_level
 
     # Define parameters for v0 and v1 versions of the model
     v0_params = {
         "estimator": estimator,
         "conformity_score": conformity_score,
-        "alpha": alpha,
+        "alpha": 1 - confidence_level,
         "random_state": RANDOM_STATE,
         "test_size": test_size,
     }
