@@ -1,10 +1,10 @@
-# Migration Guide from MAPIE v0.9 to MAPIE v1
+# Migration guide from MAPIE v0.9 to MAPIE v1
 
 MAPIE v1 introduces several updates, enhancements, and structural changes that simplify the API by breaking down `MapieRegressor` functionality into dedicated classes for different conformal prediction methods. This guide outlines the key differences between MAPIE v0.9 and MAPIE v1 and provides instructions for adapting your code to the new structure.
 
 ---
 
-## 1. Overview of Class Restructuring
+## 1. Overview of class restructuring
 
 MAPIE v1 organizes the `MapieRegressor` functionality into specific regressor classes, each optimized for a particular type of conformal prediction:
 
@@ -15,7 +15,7 @@ MAPIE v1 organizes the `MapieRegressor` functionality into specific regressor cl
 
 This modular approach makes it easier to select and configure a specific conformal regression method. Each class includes parameters relevant to its own methodology, reducing redundancy and improving readability.
 
-### Migration Summary of `MapieRegressor` to New Classes
+### Migration summary of `MapieRegressor` to new classes
 
 In MAPIE v0.9, `MapieRegressor` managed all conformal regression methods under a single interface, which sometimes led to parameter redundancy and ambiguity. In MAPIE v1, each method-specific class includes only the parameters and methods relevant to its method.
 
@@ -25,7 +25,7 @@ In MAPIE v0.9, `MapieRegressor` managed all conformal regression methods under a
 
 ---
 
-## 2. Key Parameter Changes
+## 2. Key parameter changes
 
 ### `conformity_score`
 A parameter used to specify the scoring approach for evaluating model predictions. 
@@ -43,18 +43,18 @@ Specifies the approach for calculating prediction intervals, especially in advan
 - **v0.9**: Part of `MapieRegressor`. Configured for the main prediction process.
 - **v1**: Specific to `CrossConformalRegressor` and `JackknifeAfterBootstrapRegressor`, indicating the interval calculation approach (`"base"`, `"plus"`, or `"minmax"`).
 
-### `cv` Parameter
+### `cv` (includes `groups`)
 The `cv` parameter manages the cross-validation configuration, accepting either an integer to indicate the number of data splits or a `BaseCrossValidator` object for custom data splitting.
 
 - **v0.9**: The `cv` parameter was included in `MapieRegressor`, where it handled cross-validation. The option `cv="prefit"` was available for models that were already pre-trained.
 - **v1**: The `cv` parameter is now only present in `CrossConformalRegressor`, with the `prefit` option removed. Additionally, the `groups` parameter was removed from the `fit` method, allowing groups to be directly passed to `cv` for processing.
 
-### `prefit` Option
+### `prefit`
 Controls whether the model has been pre-fitted before applying conformal prediction.  
 - **v0.9**: Indicated through `cv="prefit"` in `MapieRegressor`.
 - **v1**: `prefit` is now a separate boolean parameter, allowing explicit control over whether the model has been pre-fitted before applying conformal methods.
 
-### `fit_params`
+### `fit_params` (includes `sample_weight`)
 Dictionary of parameters specifically used during training, such as `sample_weight` in scikit-learn.
 - **v0.9**: Passed additional parameters in a flexible but less explicit manner.
 - **v1**: Now explicitly structured as a dedicated dictionary, `fit_params`, ensuring parameters used during training are clearly defined and separated from other stages.
@@ -62,22 +62,31 @@ Dictionary of parameters specifically used during training, such as `sample_weig
 ### `predict_params`
 Defines additional parameters exclusively for prediction. 
 - **v0.9**: Passed additional parameters in a flexible but less explicit manner, sometimes mixed within training configurations.
-- **v1**: Now structured as a dedicated dictionary, `predict_params`, to be used during calibration (`conformalize` method) or prediction stages, ensuring no overlap with training parameters.
+- **v1**: Now structured as a dedicated dictionary, `predict_params`, to be used during calibration (`conformalize` method) and prediction stages, ensuring no overlap with training parameters.
 
 ### `aggregation_method`
 
 The `aggregation_method` parameter defines how predictions from multiple conformal regressors are aggregated when making point predictions.
 
 - **v0.9**: Previously, the `agg_function` parameter specified the aggregation method, allowing options such as the mean or median of predictions. This was applicable only when using ensemble methods by setting `ensemble=True` in the `predict` method.
-
 - **v1**: The `agg_function` parameter has been renamed to `aggregation_method` for clarity. It now serves the same purpose in selecting an aggregation technique but is specified at prediction time rather than during class initialization. Additionally, the `ensemble` parameter has been removed, as `aggregation_method` is relevant only to the `CrossConformalRegressor` and `JackknifeAfterBootstrapRegressor` classes. 
+
+### `Other parameters`
+No more parameters with incorrect `None` defaults.
+- **v0.9**: Eg: `estimator` had a `None` default value, even though the actual default value is LinearRegression(). This was the case for other parameters as well.
+- **v1**: All parameters now have explicit defaults.
+
+Some parameters' name have been improved for clarity:
+- `optimize_beta` -> `minimize_interval_width`
+- `symmetry`-> `symmetric_intervals`
+
 ---
 
-## 3. Method Changes
+## 3. Method changes
 
 In MAPIE v1, the conformal prediction workflow is more streamlined and modular, with distinct methods for training, calibration, and prediction. The calibration process in v1 consists of four steps.
 
-### Step 1: Data Splitting
+### Step 1: Data splitting
 
 In v0.9, Data splitting is done within two-phase process. First, data `(X, y)` was divided into training `(X_train, y_train)` and test `(X_test, y_test)` sets using `train_test_split` from `sklearn`. In the second phase, the split between training and calibration was either done manually or handled internally by `MapieRegressor`.
 
@@ -85,7 +94,7 @@ In v1, a `conf_split` function has been introduced to split the data `(X, y)` in
 
 This new approach in v1 gives users more control over data splitting, making it easier to manage training, calibration, and testing phases explicitly.  The `CrossConformalRegressor` is an exception, where train/calibration splitting happens internally because cross-validation requires more granular control over data splits.
 
-### Step 2 & 3: Model Training and Calibration
+### Step 2 & 3: Model training and calibration
 
 In v0.9, the `fit` method handled both model training and calibration.
 
@@ -99,7 +108,7 @@ In v1.0: MAPIE seperates between the training and calibration:
   - This new method performs calibration after fitting, using separate calibration data (`X_calib`, `y_calib`).
   - `predict_params` can be passed here, allowing independent control over calibration and prediction stages.
 
-### Step 4: Making Predictions (`predict` and `predict_set` Methods)
+### Step 4: Making predictions (`predict` and `predict_set` methods)
 
 In MAPIE v0.9, both point predictions and prediction intervals were produced through the `predict` method.
 
@@ -108,11 +117,11 @@ MAPIE v1 introduces two distinct methods for prediction:
 - **`.predict()`** now focuses solely on producing point predictions.
 ---
 
-## 4. Migration Example: MAPIE v0.9 to MAPIE v1
+## 4. Migration example: MAPIE v0.9 to MAPIE v1
 
 Below is a side-by-side example of code in MAPIE v0.9 and its equivalent in MAPIE v1 using the new modular classes and methods.
 
-### MAPIE v0.9 Code
+### MAPIE v0.9 code
 
 ```python
 from sklearn.linear_model import LinearRegression
@@ -142,7 +151,7 @@ prediction_intervals_v0 = v0.predict(X_test, alpha=0.1)[1][:, :, 0]
 prediction_points_v0 = v0.predict(X_test)
 ```
 
-### Equivalent MAPIE v1 Code
+### Equivalent MAPIE v1 code
 
 ```python
 from sklearn.linear_model import LinearRegression
@@ -173,7 +182,7 @@ prediction_points_v1 = v1.predict(X_test)
 
 ---
 
-## 5. Additional Migration Examples
+## 5. Additional migration examples
 
 We will provide further migration examples :
 

@@ -22,24 +22,21 @@ class SplitConformalRegressor:
     estimator : RegressorMixin, default=LinearRegression()
         The base regression estimator used to generate point predictions.
 
-    conformity_score : Union[str, BaseRegressionScore], default="absolute"
-        The conformity score method used to calculate the conformity error.
-        String options:
-        - "absolute": absolute error between predicted and true target values.
-        - "gamma": absolute error between predicted and true target values
-          normalized by the target prediction.
-        - "residualsNorm": absolute error between predicted and true target
-          values normalized by the residuals.
-
-        A custom score function inheriting from BaseRegressionScore may also
-        be provided.
-
     confidence_level : Union[float, List[float]], default=0.9
         The confidence level(s) for the prediction intervals. Indicates the
         desired coverage probability of the prediction intervals. If a float
         is provided, it represents a single confidence level. If a list,
         multiple prediction intervals for each specified confidence level are
         returned.
+
+    conformity_score : Union[str, BaseRegressionScore], default="absolute"
+        The conformity score method used to calculate the conformity error.
+        Valid options: TODO : reference here the valid options, once the list
+        has been be created during the implementation.
+        See: TODO : reference conformity score classes or documentation
+
+        A custom score function inheriting from BaseRegressionScore may also
+        be provided.
 
     prefit : bool, default=False
         If True, assumes that the base estimator is already fitted, and skips
@@ -100,14 +97,13 @@ class SplitConformalRegressor:
 
     def __init__(
         self,
-        estimator: RegressorMixin = LinearRegression(),  # Improved 'None'
-        conformity_score: Union[str, BaseRegressionScore] = "absolute",
+        estimator: RegressorMixin = LinearRegression(),
         confidence_level: Union[float, List[float]] = 0.9,
+        conformity_score: Union[str, BaseRegressionScore] = "absolute",
         prefit: bool = False,
         n_jobs: Optional[int] = None,
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
-        # groups -> not used in the current implementation
     ) -> None:
         pass
 
@@ -116,7 +112,6 @@ class SplitConformalRegressor:
         X_train: ArrayLike,
         y_train: ArrayLike,
         fit_params: Optional[dict] = None,
-        # sample_weight: Optional[ArrayLike] = None, -> in fit_params
     ) -> Self:
         """
         Fits the base estimator to the training data.
@@ -145,7 +140,6 @@ class SplitConformalRegressor:
         X_conf: ArrayLike,
         y_conf: ArrayLike,
         predict_params: Optional[dict] = None,
-        # sample_weight: Optional[ArrayLike] = None, -> in fit_params
     ) -> Self:
         """
         Calibrates the fitted model to the conformity set. This step analyzes
@@ -177,7 +171,6 @@ class SplitConformalRegressor:
         X: ArrayLike,
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
-        # **predict_params  -> QUESTION: Is this redundant with .fit() ?
     ) -> NDArray:
         """
         Generates prediction intervals based on the calibrated model and
@@ -207,7 +200,6 @@ class SplitConformalRegressor:
     def predict(
         self,
         X: ArrayLike,
-        # **predict_params  -> Is this redundant with predict_params in fit() ?
     ) -> NDArray:
         """
         Generates point predictions for given data using the fitted model.
@@ -251,23 +243,20 @@ class CrossConformalRegressor:
     estimator : RegressorMixin, default=LinearRegression()
         The base regression estimator used to generate point predictions.
 
-    conformity_score : Union[str, BaseRegressionScore], default="absolute"
-        The conformity score method used to calculate the conformity error.
-        String options:
-        - "absolute": absolute error between predicted and true target values.
-        - "gamma": absolute error between predicted and true target values
-          normalized by the target prediction.
-        - "residualsNorm": absolute error between predicted and true target
-          values normalized by the residuals.
-
-        A custom score function inheriting from BaseRegressionScore may also be
-        provided.
-
     confidence_level : Union[float, List[float]], default=0.9
         The confidence level(s) for the prediction intervals, indicating the
         desired coverage probability of the prediction intervals. If a float is
         provided, it represents a single confidence level. If a list, multiple
         prediction intervals for each specified confidence level are returned.
+
+    conformity_score : Union[str, BaseRegressionScore], default="absolute"
+        The conformity score method used to calculate the conformity error.
+        Valid options: TODO : reference here the valid options, once the list
+        has been be created during the implementation.
+        See: TODO : reference conformity score classes or documentation
+
+        A custom score function inheriting from BaseRegressionScore may also be
+        provided.
 
     method : str, default="plus"
         The method used for cross-conformal prediction. Options are:
@@ -281,6 +270,8 @@ class CrossConformalRegressor:
         The cross-validation splitting strategy. If an integer is passed, it is
         the number of folds for `KFold` cross-validation. Alternatively, a
         specific cross-validation splitter from scikit-learn can be provided.
+        TODO : reference here the valid options,
+         once the list has been be created during the implementation
 
     n_jobs : Optional[int], default=None
         The number of jobs to run in parallel when applicable.
@@ -295,10 +286,10 @@ class CrossConformalRegressor:
 
     Methods
     -------
-    fit(X, y, fit_params=None) -> Self
+    fit(X_train, y_train, fit_params=None) -> Self
         Fits the base estimator to the training data using cross-validation.
 
-    conformalize(X, y, predict_params=None) -> Self
+    conformalize(X_conf, y_conf, predict_params=None) -> Self
         Calibrates the model using cross-validation and updates the prediction
         intervals based on conformity errors observed across folds.
 
@@ -338,12 +329,10 @@ class CrossConformalRegressor:
     def __init__(
         self,
         estimator: RegressorMixin = LinearRegression(),
-        conformity_score: Union[str, BaseRegressionScore] = "absolute",
         confidence_level: Union[float, List[float]] = 0.9,
-        method: str = "plus",  # 'base' | 'plus' | 'minmax'
+        conformity_score: Union[str, BaseRegressionScore] = "absolute",
+        method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
-        # Updated default; removed str option
-        # 'prefit' option removed as unnecessary in cross-validation context
         n_jobs: Optional[int] = None,
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None
@@ -352,21 +341,19 @@ class CrossConformalRegressor:
 
     def fit(
         self,
-        X: ArrayLike,
-        y: ArrayLike,
+        X_train: ArrayLike,
+        y_train: ArrayLike,
         fit_params: Optional[dict] = None,
-        # sample_weight in fit_params
-        # groups specified directly in the cv parameter
     ) -> Self:
         """
         Fits the base estimator to the training data using cross-validation.
 
         Parameters
         ----------
-        X : ArrayLike
+        X_train : ArrayLike
             Training data features.
 
-        y : ArrayLike
+        y_train : ArrayLike
             Training data targets.
 
         fit_params : Optional[dict], default=None
@@ -382,8 +369,8 @@ class CrossConformalRegressor:
 
     def conformalize(
         self,
-        X: ArrayLike,
-        y: ArrayLike,
+        X_conf: ArrayLike,
+        y_conf: ArrayLike,
         predict_params: Optional[dict] = None,
     ) -> Self:
         """
@@ -394,10 +381,10 @@ class CrossConformalRegressor:
 
         Parameters
         ----------
-        X : ArrayLike
+        X_conf : ArrayLike
             Features for generating conformity scores across folds.
 
-        y : ArrayLike
+        y_conf : ArrayLike
             Target values for generating conformity scores across folds.
 
         predict_params : Optional[dict], default=None
@@ -417,8 +404,6 @@ class CrossConformalRegressor:
         X: ArrayLike,
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
-        # **predict_params -> To remove
-        # : redundant with predict_params in .fit()
     ) -> NDArray:
         """
         Generates prediction intervals for the input data `X` based on the
@@ -449,10 +434,7 @@ class CrossConformalRegressor:
     def predict(
         self,
         X: ArrayLike,
-        # ensemble: bool = False, -> removed, see aggregation_method
-        aggregation_method: Optional[
-            str
-        ] = None,  # None: no aggregation, 'mean', 'median'
+        aggregation_method: Optional[str] = None,
     ) -> NDArray:
         """
         Generates point predictions for the input data `X` using the
@@ -466,7 +448,8 @@ class CrossConformalRegressor:
 
         aggregation_method : Optional[str], default=None
             The method to aggregate predictions across folds. Options:
-            - None: No aggregation, returns predictions from each fold.
+            - None: No aggregation, returns predictions from the estimator
+            trained on the entire dataset
             - "mean": Returns the mean prediction across folds.
             - "median": Returns the median prediction across folds.
 
@@ -490,24 +473,21 @@ class JackknifeAfterBootstrapRegressor:
     estimator : RegressorMixin, default=LinearRegression()
         The base regression estimator used to generate point predictions.
 
-    conformity_score : Union[str, BaseRegressionScore], default="absolute"
-        The conformity score method used to calculate the conformity error.
-        String options:
-        - "absolute": absolute error between predicted and true target values.
-        - "gamma": absolute error between predicted and true target values
-          normalized by the target prediction.
-        - "residualsNorm": absolute error between predicted and true target
-          values normalized by the residuals.
-
-        A custom score function inheriting from BaseRegressionScore may also
-        be provided.
-
     confidence_level : Union[float, List[float]], default=0.9
         The confidence level(s) for the prediction intervals, indicating the
         desired coverage probability of the prediction intervals. If a float
         is provided, it represents a single confidence level. If a list,
         multiple prediction intervals for each specified confidence level are
         returned.
+
+    conformity_score : Union[str, BaseRegressionScore], default="absolute"
+        The conformity score method used to calculate the conformity error.
+        Valid options: TODO : reference here the valid options, once the list
+        has been be created during the implementation.
+        See: TODO : reference conformity score classes or documentation
+
+        A custom score function inheriting from BaseRegressionScore may also
+        be provided.
 
     method : str, default="plus"
         The method used for jackknife-after-bootstrap prediction. Options are:
@@ -534,7 +514,7 @@ class JackknifeAfterBootstrapRegressor:
 
     Methods
     -------
-    fit(X, y, fit_params=None) -> Self
+    fit(X_train, y_train, fit_params=None) -> Self
         Fits the base estimator to the training data and initializes internal
         parameters required for the jackknife-after-bootstrap process.
 
@@ -570,9 +550,9 @@ class JackknifeAfterBootstrapRegressor:
     def __init__(
         self,
         estimator: RegressorMixin = LinearRegression(),
-        conformity_score: Union[str, BaseRegressionScore] = "absolute",
         confidence_level: Union[float, List[float]] = 0.9,
-        method: str = "plus",  # 'base' | 'plus' | 'minmax',
+        conformity_score: Union[str, BaseRegressionScore] = "absolute",
+        method: str = "plus",
         n_bootstraps: int = 100,
         n_jobs: Optional[int] = None,
         verbose: int = 0,
@@ -582,8 +562,8 @@ class JackknifeAfterBootstrapRegressor:
 
     def fit(
         self,
-        X: ArrayLike,
-        y: ArrayLike,
+        X_train: ArrayLike,
+        y_train: ArrayLike,
         fit_params: Optional[dict] = None,
     ) -> Self:
         """
@@ -591,10 +571,10 @@ class JackknifeAfterBootstrapRegressor:
 
         Parameters
         ----------
-        X : ArrayLike
+        X_train : ArrayLike
             Training data features.
 
-        y : ArrayLike
+        y_train : ArrayLike
             Training data targets.
 
         fit_params : Optional[dict], default=None
@@ -707,18 +687,6 @@ class ConformalizedQuantileRegressor:
         The base quantile regression estimator used to generate point and
         interval predictions.
 
-    conformity_score : Union[str, BaseRegressionScore], default="absolute"
-        The conformity score method used to calculate the conformity error.
-        String options:
-        - "absolute": absolute error between predicted and true target values.
-        - "gamma": absolute error between predicted and true target values
-           normalized by the target prediction.
-        - "residualsNorm": absolute error between predicted and true target
-           values normalized by the residuals.
-
-        A custom score function inheriting from BaseRegressionScore may also
-        be provided.
-
     confidence_level : Union[float, List[float]], default=0.9
         The confidence level(s) for the prediction intervals, indicating the
         desired coverage probability of the prediction intervals. If a float
@@ -726,13 +694,22 @@ class ConformalizedQuantileRegressor:
         multiple prediction intervals for each specified confidence level
         are returned.
 
+    conformity_score : Union[str, BaseRegressionScore], default="absolute"
+        The conformity score method used to calculate the conformity error.
+        Valid options: TODO : reference here the valid options, once the list
+        has been be created during the implementation.
+        See: TODO : reference conformity score classes or documentation
+
+        A custom score function inheriting from BaseRegressionScore may also
+        be provided.
+
     random_state : Optional[Union[int, np.random.RandomState]], default=None
         A seed or random state instance to ensure reproducibility in any random
         operations within the regressor.
 
     Methods
     -------
-    fit(X, y, fit_params=None) -> Self
+    fit(X_train, y_train, fit_params=None) -> Self
         Fits the base estimator to the training data and initializes internal
         parameters required for conformal prediction.
 
@@ -775,14 +752,15 @@ class ConformalizedQuantileRegressor:
         # n_jobs: Optional[int] = None
         # Not yet available in MapieQuantileRegressor
         # verbose: int = 0,
+        # Idem
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         pass
 
     def fit(
         self,
-        X: ArrayLike,
-        y: ArrayLike,
+        X_train: ArrayLike,
+        y_train: ArrayLike,
         fit_params: Optional[dict] = None,
     ) -> Self:
         """
@@ -790,10 +768,10 @@ class ConformalizedQuantileRegressor:
 
         Parameters
         ----------
-        X : ArrayLike
+        X_train : ArrayLike
             Training data features.
 
-        y : ArrayLike
+        y_train : ArrayLike
             Training data targets.
 
         fit_params : Optional[dict], default=None
@@ -841,8 +819,8 @@ class ConformalizedQuantileRegressor:
         self,
         X: ArrayLike,
         allow_infinite_bounds: bool = False,
-        minimize_interval_width: bool = False,  # replace optimize_beta
-        symmetric_intervals: bool = True,  # replace symmetric
+        minimize_interval_width: bool = False,
+        symmetric_intervals: bool = True,
     ) -> NDArray:
         """
         Computes prediction intervals for quantile regression based
