@@ -113,7 +113,7 @@ class CrossConformalClassifier:
     def predict_sets(
         self,
         X: ArrayLike,
-        agg_scores: Optional[str] = "mean",
+        aggregation_method: Optional[str] = "mean",
         # How to aggregate the scores by the estimators on test data
         conformity_score_params: Optional[dict] = None
     ) -> NDArray:
