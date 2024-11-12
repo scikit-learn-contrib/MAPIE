@@ -38,7 +38,7 @@ def initialize_models(
     v0_params: dict,
     v1_params: dict,
     k_folds=5,
-    RANDOM_STATE=42
+    random_state=42
 ):
 
     # Apply the relevant parameters to v0 based on strategy_key
@@ -210,7 +210,7 @@ def test_consistent_coverage_for_prefit_model(
         v0_params=v0_params,
         v1_params=v1_params,
         k_folds=K_FOLDS,
-        RANDOM_STATE=RANDOM_STATE
+        random_state=RANDOM_STATE
     )
 
     # Split the data for training and conformity
@@ -303,7 +303,7 @@ def test_consistent_interval_width(
         v0_params=v0_params,
         v1_params=v1_params,
         k_folds=K_FOLDS,
-        RANDOM_STATE=RANDOM_STATE
+        random_state=RANDOM_STATE
     )
 
     # Split the data into training and conformity sets
@@ -332,14 +332,16 @@ def test_consistent_interval_width(
     # Calculate average interval widths
     v0_avg_width = np.mean(v0_interval_widths)
     v1_avg_width = np.mean(v1_interval_widths)
+    mean_interval = (v0_avg_width + v1_avg_width) / 2
+    normalized_difference = abs(v0_avg_width - v1_avg_width) / mean_interval
 
-    # Assert that the average interval widths are close
+    tolerance = 0.05  # Set a threshold for acceptable difference, e.g., 5%
     err_msg = (
-        f"Interval width mismatch: v0 avg width {v0_avg_width}, "
-        f"v1 avg width {v1_avg_width}"
+        f"Normalized interval width difference too high: "
+        f"v0 avg width {v0_avg_width}, v1 avg width {v1_avg_width}, "
+        f"normalized difference {normalized_difference}"
     )
-    assert_almost_equal(v0_avg_width, v1_avg_width, decimal=1,
-                        err_msg=err_msg)
+    assert normalized_difference < tolerance, err_msg
 
 
 def test_dummy():
