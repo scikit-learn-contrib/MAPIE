@@ -9,7 +9,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold, train_test_split
 
-from mapie.regression import (
+from mapie_v1.regression import (
     SplitConformalRegressor,
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
