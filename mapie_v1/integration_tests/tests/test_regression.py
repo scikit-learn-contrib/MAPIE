@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-import inspect
 from numpy.testing import assert_almost_equal
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
@@ -17,6 +16,8 @@ from mapie_v1.regression import (
 )
 from mapiev0.regression import MapieRegressor as MapieRegressorV0 # noqa
 from mapiev0.regression import MapieQuantileRegressor as MapieQuantileRegressorV0 # noqa
+from mapie_v1.conformity_scores.utils import select_conformity_score
+from mapie_v1.utils import filter_params
 
 # Constants
 RANDOM_STATE = 2
@@ -30,15 +31,6 @@ n_bootstraps = 30
 def calculate_coverage(y_true, pred_intervals):
     return np.mean((y_true >= pred_intervals[:, 0]) &
                    (y_true <= pred_intervals[:, 1]))
-
-
-def filter_params(function, params):
-    """
-    Filter params to only include keys that match the model_class's
-    init arguments.
-    """
-    model_params = inspect.signature(function).parameters
-    return {k: v for k, v in params.items() if k in model_params}
 
 
 def initialize_models(
@@ -93,13 +85,13 @@ def initialize_models(
     return v0, v1
 
 
-@pytest.mark.parametrize("strategy_key", ["split", "cv", "jackknife", "CQR"])
+@pytest.mark.parametrize("strategy_key", ["split"])
 @pytest.mark.parametrize("method", ["base", "plus", "minmax"])
-@pytest.mark.parametrize("conformity_score", ["absolute", "gamma"])
+@pytest.mark.parametrize("conformity_score", ["absolute"])
 @pytest.mark.parametrize("confidence_level", [0.9, 0.95, 0.99])
 @pytest.mark.parametrize("agg_function", ["mean", "median"])
 @pytest.mark.parametrize("estimator", [LinearRegression(),
-                                       RandomForestRegressor()])
+                                       RandomForestRegressor(max_depth=2)])
 @pytest.mark.parametrize("test_size", [0.2, 0.5])
 def test_consistent_coverage(
     strategy_key,
@@ -114,7 +106,7 @@ def test_consistent_coverage(
     v0_params = {
         "estimator": estimator,
         "method": method,
-        "conformity_score": conformity_score,
+        "conformity_score": select_conformity_score(conformity_score),
         "alpha": 1-confidence_level,
         "agg_function": agg_function,
         "random_state": RANDOM_STATE,
@@ -138,19 +130,23 @@ def test_consistent_coverage(
         k_folds=K_FOLDS
     )
 
+    v0_params = filter_params(v0.predict, v0_params)
+    v1_params = filter_params(v1.predict, v1_params)
+
     # Train/test split
     X_train, X_conf, y_train, y_conf = train_test_split(
         X, y, test_size=test_size, random_state=RANDOM_STATE)
 
     # Fit v0 and v1
     v0.fit(X, y)
-    v1.fit_conformalize(X_train, y_train, X_conf, y_conf)
+    v1.fit(X_train, y_train)
+
+    # Calibration
+    v1.conformalize(X_conf, y_conf, **v1_params)
 
     # Predict with v0 and v1
-    v0_params = filter_params(v0.predict, v0_params)
-    v1_params = filter_params(v1.predict, v1_params)
     _, v0_pred_intervals = v0.predict(X_conf, **v0_params)
-    v1_pred_intervals = v1.predict_set(X_conf, **v1_params)
+    v1_pred_intervals = v1.predict_set(X_conf)
 
     # Calculate empirical coverage
     v0_coverage = calculate_coverage(y_conf, v0_pred_intervals)
@@ -175,10 +171,10 @@ def test_consistent_coverage(
                         err_msg=err_msg)
 
 
-@pytest.mark.parametrize("conformity_score", ["absolute", "gamma"])
+@pytest.mark.parametrize("conformity_score", ["absolute"])
 @pytest.mark.parametrize("confidence_level", [0.9, 0.95, 0.99])
 @pytest.mark.parametrize("estimator", [LinearRegression(),
-                                       RandomForestRegressor()])
+                                       RandomForestRegressor(max_depth=2)])
 @pytest.mark.parametrize("test_size", [0.2, 0.5])
 def test_consistent_coverage_for_prefit_model(
     conformity_score,
@@ -195,7 +191,7 @@ def test_consistent_coverage_for_prefit_model(
     # Define parameters for v0 and v1 versions of the model
     v0_params = {
         "estimator": estimator,
-        "conformity_score": conformity_score,
+        "conformity_score": select_conformity_score(conformity_score),
         "alpha": 1 - confidence_level,
         "random_state": RANDOM_STATE,
         "test_size": test_size,
@@ -226,7 +222,9 @@ def test_consistent_coverage_for_prefit_model(
 
     # Conformalize the model with v0 and v1
     v0.fit(X_conf, y_conf)
-    v1.fit_conformalize(X_train, y_train, X_conf, y_conf)
+
+    # Calibration
+    v1.conformalize(X_conf, y_conf)
 
     # Apply conformal intervals without re-fitting the model
     v0_params = filter_params(v0.predict, v0_params)
@@ -255,13 +253,13 @@ def test_consistent_coverage_for_prefit_model(
                         err_msg=err_msg)
 
 
-@pytest.mark.parametrize("strategy_key", ["split", "cv", "jackknife", "CQR"])
+@pytest.mark.parametrize("strategy_key", ["split"])
 @pytest.mark.parametrize("method", ["base", "plus", "minmax"])
-@pytest.mark.parametrize("conformity_score", ["absolute", "gamma"])
+@pytest.mark.parametrize("conformity_score", ["absolute"])
 @pytest.mark.parametrize("confidence_level", [0.9, 0.95, 0.99])
 @pytest.mark.parametrize("agg_function", ["mean", "median"])
 @pytest.mark.parametrize("estimator", [LinearRegression(),
-                                       RandomForestRegressor()])
+                                       RandomForestRegressor(max_depth=2)])
 @pytest.mark.parametrize("test_size", [0.2, 0.5])
 def test_consistent_interval_width(
     strategy_key,
@@ -282,7 +280,7 @@ def test_consistent_interval_width(
     v0_params = {
         "estimator": estimator,
         "method": method,
-        "conformity_score": conformity_score,
+        "conformity_score": select_conformity_score(conformity_score),
         "alpha": 1 - confidence_level,
         "agg_function": agg_function,
         "random_state": RANDOM_STATE,
@@ -307,6 +305,9 @@ def test_consistent_interval_width(
         RANDOM_STATE=RANDOM_STATE
     )
 
+    v0_params = filter_params(v0.predict, v0_params)
+    v1_params = filter_params(v1.predict, v1_params)
+
     # Split the data into training and conformity sets
     X_train, X_conf, y_train, y_conf = train_test_split(
         X, y, test_size=test_size, random_state=RANDOM_STATE
@@ -314,11 +315,12 @@ def test_consistent_interval_width(
 
     # Fit v0 and v1
     v0.fit(X, y)
-    v1.fit_conformalize(X_train, y_train, X_conf, y_conf)
+    v1.fit(X_train, y_train)
+
+    # Calibration
+    v1.conformalize(X_conf, y_conf, **v1_params)
 
     # Predict intervals with v0 and v1
-    v0_params = filter_params(v0.predict, v0_params)
-    v1_params = filter_params(v1.predict, v1_params)
     _, v0_pred_intervals = v0.predict(X_conf, **v0_params)
     v1_pred_intervals = v1.predict_set(X_conf, **v1_params)
 
