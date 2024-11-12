@@ -16,7 +16,7 @@ from mapie_v1.regression import (
     ConformalizedQuantileRegressor
 )
 from mapiev0.regression import MapieRegressor as MapieRegressorV0 # noqa
-from mapiev0.regression import MapieQuantileRegressorV0
+from mapiev0.regression import MapieQuantileRegressor as MapieQuantileRegressorV0 # noqa
 
 # Constants
 RANDOM_STATE = 2
