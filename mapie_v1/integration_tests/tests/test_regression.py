@@ -130,9 +130,6 @@ def test_consistent_coverage(
         k_folds=K_FOLDS
     )
 
-    v0_params = filter_params(v0.predict, v0_params)
-    v1_params = filter_params(v1.predict, v1_params)
-
     # Train/test split
     X_train, X_conf, y_train, y_conf = train_test_split(
         X, y, test_size=test_size, random_state=RANDOM_STATE)
@@ -142,11 +139,13 @@ def test_consistent_coverage(
     v1.fit(X_train, y_train)
 
     # Calibration
-    v1.conformalize(X_conf, y_conf, **v1_params)
+    v1.conformalize(X_conf, y_conf)
 
     # Predict with v0 and v1
-    _, v0_pred_intervals = v0.predict(X_conf, **v0_params)
-    v1_pred_intervals = v1.predict_set(X_conf)
+    v0_predict_params = filter_params(v0.predict, v0_params)
+    v1_predict_params = filter_params(v1.predict, v1_params)
+    _, v0_pred_intervals = v0.predict(X_conf, **v0_predict_params)
+    v1_pred_intervals = v1.predict_set(X_conf, **v1_predict_params)
 
     # Calculate empirical coverage
     v0_coverage = calculate_coverage(y_conf, v0_pred_intervals)
@@ -227,10 +226,10 @@ def test_consistent_coverage_for_prefit_model(
     v1.conformalize(X_conf, y_conf)
 
     # Apply conformal intervals without re-fitting the model
-    v0_params = filter_params(v0.predict, v0_params)
-    v1_params = filter_params(v1.predict, v1_params)
-    _, v0_pred_intervals = v0.predict(X_conf, **v0_params)
-    v1_pred_intervals = v1.predict_set(X_conf, **v1_params)
+    v0_predict_params = filter_params(v0.predict, v0_params)
+    v1_predict_params = filter_params(v1.predict, v1_params)
+    _, v0_pred_intervals = v0.predict(X_conf, **v0_predict_params)
+    v1_pred_intervals = v1.predict_set(X_conf, **v1_predict_params)
 
     # Calculate empirical coverage
     v0_coverage = calculate_coverage(y_conf, v0_pred_intervals)
@@ -305,9 +304,6 @@ def test_consistent_interval_width(
         RANDOM_STATE=RANDOM_STATE
     )
 
-    v0_params = filter_params(v0.predict, v0_params)
-    v1_params = filter_params(v1.predict, v1_params)
-
     # Split the data into training and conformity sets
     X_train, X_conf, y_train, y_conf = train_test_split(
         X, y, test_size=test_size, random_state=RANDOM_STATE
@@ -318,11 +314,13 @@ def test_consistent_interval_width(
     v1.fit(X_train, y_train)
 
     # Calibration
-    v1.conformalize(X_conf, y_conf, **v1_params)
+    v1.conformalize(X_conf, y_conf)
 
     # Predict intervals with v0 and v1
-    _, v0_pred_intervals = v0.predict(X_conf, **v0_params)
-    v1_pred_intervals = v1.predict_set(X_conf, **v1_params)
+    v0_predict_params = filter_params(v0.predict, v0_params)
+    v1_predict_params = filter_params(v1.predict, v1_params)
+    _, v0_pred_intervals = v0.predict(X_conf, **v0_predict_params)
+    v1_pred_intervals = v1.predict_set(X_conf, **v1_predict_params)
 
     # Calculate interval widths
     v0_interval_widths = v0_pred_intervals[:, 1] - v0_pred_intervals[:, 0]
