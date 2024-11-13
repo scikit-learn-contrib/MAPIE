@@ -21,7 +21,6 @@ from mapie_v1.utils import (filter_params,
                             train_test_split_shuffle)
 from sklearn.model_selection import KFold
 
-# Constants
 RANDOM_STATE = 1
 K_FOLDS = 3
 N_BOOTSTRAPS = 30
