@@ -62,7 +62,6 @@ def test_exact_interval_equality(
     between v0 and v1 models when using the same settings.
     """
 
-    # Define parameters for v0 and v1 versions of the model
     v0_params = {
         "estimator": estimator,
         "method": method,
@@ -86,7 +85,6 @@ def test_exact_interval_equality(
         "allow_infinite_bounds": allow_infinite_bounds
     }
 
-    # Initialize models based on the chosen strategy
     v0, v1 = initialize_models(
         strategy_key=strategy_key,
         v0_params=v0_params,
@@ -95,26 +93,21 @@ def test_exact_interval_equality(
         random_state=RANDOM_STATE
     )
 
-    # Split the data into training and conformity sets
     X_train, X_conf, y_train, y_conf = train_test_split_shuffle(
         X, y, test_size=test_size, random_state=RANDOM_STATE
     )
 
-    # Fit v0 and v1
     v0.fit(X, y)
     v1.fit(X_train, y_train)
 
-    # Calibration
     v1.conformalize(X_conf, y_conf)
 
-    # Predict intervals with v0 and v1
     v0_predict_params = filter_params(v0.predict, v0_params)
     v1_predict_params = filter_params(v1.predict, v1_params)
     _, v0_pred_intervals = v0.predict(X_conf, **v0_predict_params)
     v1_pred_intervals = v1.predict_set(X_conf, **v1_predict_params)
     v0_pred_intervals = v0_pred_intervals[:, :, 0]
 
-    # Assert that intervals are exactly equal
     np.testing.assert_array_equal(
         v1_pred_intervals,
         v0_pred_intervals,
@@ -167,29 +160,23 @@ def test_consistent_coverage(
         k_folds=K_FOLDS
     )
 
-    # Train/test split
     X_train, X_conf, y_train, y_conf = train_test_split_shuffle(
         X, y, test_size=test_size, random_state=RANDOM_STATE)
 
-    # Fit v0 and v1
     v0.fit(X, y)
     v1.fit(X_train, y_train)
 
-    # Calibration
     v1.conformalize(X_conf, y_conf)
 
-    # Predict with v0 and v1
     v0_predict_params = filter_params(v0.predict, v0_params)
     v1_predict_params = filter_params(v1.predict, v1_params)
     _, v0_pred_intervals = v0.predict(X_conf, **v0_predict_params)
     v1_pred_intervals = v1.predict_set(X_conf, **v1_predict_params)
     v0_pred_intervals = v0_pred_intervals[:, :, 0]
 
-    # Calculate empirical coverage
     v0_coverage = calculate_coverage(y_conf, v0_pred_intervals)
     v1_coverage = calculate_coverage(y_conf, v1_pred_intervals)
 
-    # Assert empirical coverage is close to expected confidence level
     assert_almost_equal(v0_coverage,
                         confidence_level,
                         decimal=1,
@@ -200,7 +187,6 @@ def test_consistent_coverage(
                         decimal=1,
                         err_msg=f"v1 coverage {v1_coverage}")
 
-    # Assert that v0 and v1 coverage rates are similar
     err_msg = f"Coverage mismatch: v0 {v0_coverage}, v1 {v1_coverage}"
     assert_almost_equal(v0_coverage,
                         v1_coverage,
@@ -225,7 +211,6 @@ def test_consistent_coverage_for_prefit_model(
     without re-fitting the model, yielding the expected coverage.
     """
 
-    # Define parameters for v0 and v1 versions of the model
     v0_params = {
         "estimator": estimator,
         "conformity_score": select_conformity_score(conformity_score),
@@ -241,7 +226,6 @@ def test_consistent_coverage_for_prefit_model(
         "n_bootstraps": N_BOOTSTRAPS,
     }
 
-    # Initialize models with 'prefit' strategy
     v0, v1 = initialize_models(
         strategy_key="prefit",
         v0_params=v0_params,
@@ -250,31 +234,25 @@ def test_consistent_coverage_for_prefit_model(
         random_state=RANDOM_STATE
     )
 
-    # Split the data for training and conformity
     X_train, X_conf, y_train, y_conf = train_test_split_shuffle(
         X, y, test_size=test_size, random_state=RANDOM_STATE)
 
-    # Fit the estimator initially
     estimator.fit(X_train, y_train)
 
-    # Conformalize the model with v0 and v1
     v0.fit(X_conf, y_conf)
 
     # Calibration
     v1.conformalize(X_conf, y_conf)
 
-    # Apply conformal intervals without re-fitting the model
     v0_predict_params = filter_params(v0.predict, v0_params)
     v1_predict_params = filter_params(v1.predict, v1_params)
     _, v0_pred_intervals = v0.predict(X_conf, **v0_predict_params)
     v1_pred_intervals = v1.predict_set(X_conf, **v1_predict_params)
     v0_pred_intervals = v0_pred_intervals[:, :, 0]
 
-    # Calculate empirical coverage
     v0_coverage = calculate_coverage(y_conf, v0_pred_intervals)
     v1_coverage = calculate_coverage(y_conf, v1_pred_intervals)
 
-    # Assert empirical coverage is close to expected confidence level
     assert_almost_equal(v0_coverage,
                         confidence_level,
                         decimal=1,
@@ -284,7 +262,6 @@ def test_consistent_coverage_for_prefit_model(
                         decimal=1,
                         err_msg=f"v1 coverage {v1_coverage}")
 
-    # Assert that v0 and v1 coverage rates are similar
     err_msg = f"Coverage mismatch: v0 {v0_coverage}, v1 {v1_coverage}"
     assert_almost_equal(v0_coverage,
                         v1_coverage, decimal=2,
@@ -315,7 +292,6 @@ def test_consistent_interval_width(
     have similar widths.
     """
 
-    # Define parameters for v0 and v1 versions of the model
     v0_params = {
         "estimator": estimator,
         "method": method,
@@ -335,7 +311,6 @@ def test_consistent_interval_width(
         "n_bootstraps": N_BOOTSTRAPS,
     }
 
-    # Initialize models based on the chosen strategy
     v0, v1 = initialize_models(
         strategy_key=strategy_key,
         v0_params=v0_params,
@@ -344,36 +319,30 @@ def test_consistent_interval_width(
         random_state=RANDOM_STATE
     )
 
-    # Split the data into training and conformity sets
     X_train, X_conf, y_train, y_conf = train_test_split_shuffle(
         X, y, test_size=test_size, random_state=RANDOM_STATE
     )
 
-    # Fit v0 and v1
     v0.fit(X, y)
     v1.fit(X_train, y_train)
 
-    # Calibration
     v1.conformalize(X_conf, y_conf)
 
-    # Predict intervals with v0 and v1
     v0_predict_params = filter_params(v0.predict, v0_params)
     v1_predict_params = filter_params(v1.predict, v1_params)
     _, v0_pred_intervals = v0.predict(X_conf, **v0_predict_params)
     v1_pred_intervals = v1.predict_set(X_conf, **v1_predict_params)
     v0_pred_intervals = v0_pred_intervals[:, :, 0]
 
-    # Calculate interval widths
     v0_interval_widths = v0_pred_intervals[:, 1] - v0_pred_intervals[:, 0]
     v1_interval_widths = v1_pred_intervals[:, 1] - v1_pred_intervals[:, 0]
 
-    # Calculate average interval widths
     v0_avg_width = np.mean(v0_interval_widths)
     v1_avg_width = np.mean(v1_interval_widths)
     mean_interval = (v0_avg_width + v1_avg_width) / 2
     normalized_difference = abs(v0_avg_width - v1_avg_width) / mean_interval
 
-    tolerance = 0.06  # Set a threshold for acceptable difference, e.g., 6%
+    tolerance = 0.06
     err_msg = (
         f"Normalized interval width difference too high: "
         f"v0 avg width {v0_avg_width}, v1 avg width {v1_avg_width}, "
@@ -419,7 +388,6 @@ def initialize_models(
     random_state=42
 ):
 
-    # Apply the relevant parameters to v0 based on strategy_key
     if strategy_key == "prefit":
         v0_params.update({"cv": "prefit"})
         v0_params = filter_params(MapieRegressorV0.__init__, v0_params)
