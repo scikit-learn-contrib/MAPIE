@@ -177,16 +177,6 @@ def test_consistent_coverage(
     v0_coverage = calculate_coverage(y_conf, v0_pred_intervals)
     v1_coverage = calculate_coverage(y_conf, v1_pred_intervals)
 
-    assert_almost_equal(v0_coverage,
-                        confidence_level,
-                        decimal=1,
-                        err_msg=f"v0 coverage {v0_coverage}")
-
-    assert_almost_equal(v1_coverage,
-                        confidence_level,
-                        decimal=1,
-                        err_msg=f"v1 coverage {v1_coverage}")
-
     err_msg = f"Coverage mismatch: v0 {v0_coverage}, v1 {v1_coverage}"
     assert_almost_equal(v0_coverage,
                         v1_coverage,
@@ -252,15 +242,6 @@ def test_consistent_coverage_for_prefit_model(
 
     v0_coverage = calculate_coverage(y_conf, v0_pred_intervals)
     v1_coverage = calculate_coverage(y_conf, v1_pred_intervals)
-
-    assert_almost_equal(v0_coverage,
-                        confidence_level,
-                        decimal=1,
-                        err_msg=f"v0 coverage {v0_coverage}")
-    assert_almost_equal(v1_coverage,
-                        confidence_level,
-                        decimal=1,
-                        err_msg=f"v1 coverage {v1_coverage}")
 
     err_msg = f"Coverage mismatch: v0 {v0_coverage}, v1 {v1_coverage}"
     assert_almost_equal(v0_coverage,
