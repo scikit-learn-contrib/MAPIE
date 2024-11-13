@@ -108,7 +108,7 @@ class SplitConformalRegressor:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
-        
+
         self.estimator = estimator
         self.confidence_level = confidence_level
         self.prefit = prefit
@@ -161,7 +161,7 @@ class SplitConformalRegressor:
             fit_params = filter_params(self.estimator.fit, fit_params)
             self.estimator.fit(X_train, y_train, **fit_params)
             self.mapie_regressor.estimator = self.estimator
-            
+
         return self
 
     def conformalize(
@@ -228,7 +228,7 @@ class SplitConformalRegressor:
             - (n_samples, 2) for single confidence level,
             - (n_samples, 2, n_confidence_levels) if multiple
                confidence levels are specified.
-        """ 
+        """
         _, intervals = self.mapie_regressor.predict(
             X,
             alpha=self.alpha,
