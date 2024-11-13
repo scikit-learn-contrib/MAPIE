@@ -39,6 +39,8 @@ X, y = make_regression(n_samples=500,
 @pytest.mark.parametrize("conformity_score", ["absolute"])
 @pytest.mark.parametrize("confidence_level", [0.9, 0.95, 0.99])
 @pytest.mark.parametrize("agg_function", ["mean", "median"])
+@pytest.mark.parametrize("minimize_interval_width", [True, False])
+@pytest.mark.parametrize("allow_infinite_bounds", [True, False])
 @pytest.mark.parametrize(
     "estimator", [
         LinearRegression(),
@@ -50,6 +52,8 @@ def test_exact_interval_equality(
     conformity_score,
     confidence_level,
     agg_function,
+    minimize_interval_width,
+    allow_infinite_bounds,
     estimator,
     test_size
 ):
@@ -67,6 +71,8 @@ def test_exact_interval_equality(
         "agg_function": agg_function,
         "random_state": RANDOM_STATE,
         "test_size": test_size,
+        "optimize_beta": minimize_interval_width,
+        "allow_infinite_bounds": allow_infinite_bounds
     }
     v1_params = {
         "estimator": estimator,
@@ -76,6 +82,8 @@ def test_exact_interval_equality(
         "aggregate_function": agg_function,
         "random_state": RANDOM_STATE,
         "n_bootstraps": N_BOOTSTRAPS,
+        "minimize_interval_width": minimize_interval_width,
+        "allow_infinite_bounds": allow_infinite_bounds
     }
 
     # Initialize models based on the chosen strategy
