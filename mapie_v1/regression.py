@@ -110,26 +110,22 @@ class SplitConformalRegressor:
     ) -> None:
 
         self.estimator = estimator
-        self.confidence_level = confidence_level
         self.prefit = prefit
-        self.n_jobs = n_jobs
-        self.verbose = verbose
-        self.random_state = random_state
         self.conformity_score = select_conformity_score(conformity_score)
         self.mapie_regressor = MapieRegressor(
             estimator=self.estimator,
             method="base",
             cv="prefit",
-            n_jobs=self.n_jobs,
-            verbose=self.verbose,
+            n_jobs=n_jobs,
+            verbose=verbose,
             conformity_score=self.conformity_score,
-            random_state=self.random_state,
+            random_state=random_state,
         )
 
-        if isinstance(self.confidence_level, float):
-            self.confidence_level = [self.confidence_level]
+        if isinstance(confidence_level, float):
+            confidence_level = [confidence_level]
 
-        self.alpha = [1 - level for level in self.confidence_level]
+        self.alpha = [1 - level for level in confidence_level]
 
     def fit(
         self,
