@@ -1,16 +1,6 @@
 from typing import Union
-from mapie.conformity_scores import (
-    BaseRegressionScore,
-    AbsoluteConformityScore,
-    GammaConformityScore,
-    ResidualNormalisedScore,
-)
-
-CONFORMITY_SCORES_STRING_MAP = {
-    "absolute": AbsoluteConformityScore,
-    "gamma": GammaConformityScore,
-    "residual_normalized": ResidualNormalisedScore,
-}
+from mapie.conformity_scores import BaseRegressionScore
+from . import CONFORMITY_SCORES_STRING_MAP
 
 
 def select_conformity_score(
