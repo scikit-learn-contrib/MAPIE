@@ -42,7 +42,7 @@ X, y = make_regression(n_samples=500,
         LinearRegression(),
         RandomForestRegressor(random_state=RANDOM_STATE, max_depth=2)])
 @pytest.mark.parametrize("test_size", [0.2, 0.5])
-def test_exact_interval_equality(
+def test_exact_interval_equality_split(
     strategy_key,
     method,
     conformity_score,
