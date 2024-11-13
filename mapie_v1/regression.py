@@ -8,6 +8,9 @@ from sklearn.model_selection import BaseCrossValidator
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
+from mapie.regression import MapieRegressor
+from mapie_v1.conformity_scores.utils import select_conformity_score
+from mapie_v1.integration_tests.utils import filter_params
 
 
 class SplitConformalRegressor:
@@ -105,7 +108,28 @@ class SplitConformalRegressor:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
-        pass
+        
+        self.estimator = estimator
+        self.confidence_level = confidence_level
+        self.prefit = prefit
+        self.n_jobs = n_jobs
+        self.verbose = verbose
+        self.random_state = random_state
+        self.conformity_score = select_conformity_score(conformity_score)
+        self.mapie_regressor = MapieRegressor(
+            estimator=self.estimator,
+            method="base",
+            cv="prefit",
+            n_jobs=self.n_jobs,
+            verbose=self.verbose,
+            conformity_score=self.conformity_score,
+            random_state=self.random_state,
+        )
+
+        if isinstance(self.confidence_level, float):
+            self.confidence_level = [self.confidence_level]
+
+        self.alpha = [1 - level for level in self.confidence_level]
 
     def fit(
         self,
@@ -133,7 +157,12 @@ class SplitConformalRegressor:
         Self
             The fitted SplitConformalRegressor instance.
         """
-        pass
+        if not self.prefit:
+            fit_params = filter_params(self.estimator.fit, fit_params)
+            self.estimator.fit(X_train, y_train, **fit_params)
+            self.mapie_regressor.estimator = self.estimator
+            
+        return self
 
     def conformalize(
         self,
@@ -164,7 +193,12 @@ class SplitConformalRegressor:
             The SplitConformalRegressor instance with updated prediction
             intervals.
         """
-        pass
+        predict_params = {} if predict_params is None else predict_params
+        self.mapie_regressor.fit(X_conf,
+                                 y_conf,
+                                 predict_params=predict_params)
+
+        return self
 
     def predict_set(
         self,
@@ -194,8 +228,18 @@ class SplitConformalRegressor:
             - (n_samples, 2) for single confidence level,
             - (n_samples, 2, n_confidence_levels) if multiple
                confidence levels are specified.
-        """
-        pass
+        """ 
+        _, intervals = self.mapie_regressor.predict(
+            X,
+            alpha=self.alpha,
+            optimize_beta=minimize_interval_width,
+            allow_infinite_bounds=allow_infinite_bounds
+        )
+
+        if len(self.alpha) == 1:
+            intervals = intervals[:, :, 0]
+
+        return intervals
 
     def predict(
         self,
@@ -214,21 +258,8 @@ class SplitConformalRegressor:
         NDArray
             Array of point predictions, with shape (n_samples,).
         """
-        pass
-
-    def fit_conformalize(
-        self,
-        X_train: ArrayLike,
-        y_train: ArrayLike,
-        X_conf: ArrayLike,
-        y_conf: ArrayLike,
-        fit_params: Optional[dict] = None,
-        predict_params: Optional[dict] = None,
-    ) -> Self:
-        """
-        Dummy method to fit and conformalize in one step for testing purposes.
-        """
-        pass
+        predictions = self.mapie_regressor.predict(X, alpha=None)
+        return predictions
 
 
 class CrossConformalRegressor:
