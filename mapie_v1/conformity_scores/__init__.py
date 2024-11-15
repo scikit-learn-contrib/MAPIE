@@ -4,7 +4,7 @@ from mapie.conformity_scores import (
     ResidualNormalisedScore,
 )
 
-CONFORMITY_SCORES_STRING_MAP = {
+REGRESSION_CONFORMITY_SCORES_STRING_MAP = {
     "absolute": AbsoluteConformityScore,
     "gamma": GammaConformityScore,
     "residual_normalized": ResidualNormalisedScore,

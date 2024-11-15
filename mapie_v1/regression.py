@@ -10,7 +10,7 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import MapieRegressor
 from mapie.utils import check_estimator_fit_predict
-from mapie_v1.conformity_scores.utils import select_conformity_score
+from mapie_v1.conformity_scores.utils import check_and_select_split_conformity_score
 
 
 class SplitConformalRegressor:
@@ -35,7 +35,7 @@ class SplitConformalRegressor:
     conformity_score : Union[str, BaseRegressionScore], default="absolute"
         The conformity score method used to calculate the conformity error.
         Valid options: see keys and values of the dictionnary
-        :py:const:`mapie_v1.conformity_scores.CONFORMITY_SCORES_STRING_MAP`.
+        :py:const:`mapie_v1.conformity_scores.REGRESSION_CONFORMITY_SCORES_STRING_MAP`.
         See: TODO : reference conformity score classes or documentation
 
         A custom score function inheriting from BaseRegressionScore may also
@@ -84,7 +84,7 @@ class SplitConformalRegressor:
         check_estimator_fit_predict(estimator)
         self.estimator = estimator
         self.prefit = prefit
-        self.conformity_score = select_conformity_score(conformity_score)
+        self.conformity_score = check_and_select_split_conformity_score(conformity_score)
 
         # Note to developers: to implement this v1 class without touching the
         # v0 backend, we're for now using a hack. We always set cv="prefit",
