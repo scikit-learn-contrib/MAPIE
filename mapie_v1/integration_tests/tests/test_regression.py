@@ -14,7 +14,8 @@ from mapie_v1.regression import (
 )
 from mapiev0.regression import MapieRegressor as MapieRegressorV0 # noqa
 from mapiev0.regression import MapieQuantileRegressor as MapieQuantileRegressorV0 # noqa
-from mapie_v1.conformity_scores.utils import check_and_select_split_conformity_score
+from mapie_v1.conformity_scores.utils import \
+    check_and_select_split_conformity_score
 from mapie_v1.integration_tests.utils import (filter_params,
                                               train_test_split_shuffle)
 from sklearn.model_selection import KFold
@@ -67,7 +68,9 @@ def test_exact_interval_equality_split(
     v0_params = {
         "estimator": estimator,
         "method": method,
-        "conformity_score": check_and_select_split_conformity_score(conformity_score),
+        "conformity_score": check_and_select_split_conformity_score(
+            conformity_score
+        ),
         "alpha": 1 - confidence_level,
         "agg_function": agg_function,
         "random_state": RANDOM_STATE,
