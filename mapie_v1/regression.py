@@ -3,14 +3,14 @@ from typing_extensions import Self
 
 import numpy as np
 from sklearn.linear_model import LinearRegression, QuantileRegressor
-from sklearn.base import RegressorMixin
+from sklearn.base import RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import MapieRegressor
+from mapie.utils import check_estimator_fit_predict
 from mapie_v1.conformity_scores.utils import select_conformity_score
-from mapie_v1.integration_tests.utils import filter_params
 
 
 class SplitConformalRegressor:
@@ -34,8 +34,8 @@ class SplitConformalRegressor:
 
     conformity_score : Union[str, BaseRegressionScore], default="absolute"
         The conformity score method used to calculate the conformity error.
-        Valid options: TODO : reference here the valid options, once the list
-        has been be created during the implementation.
+        Valid options: see keys and values of the dictionnary
+        :py:const:`mapie_v1.conformity_scores.CONFORMITY_SCORES_STRING_MAP`.
         See: TODO : reference conformity score classes or documentation
 
         A custom score function inheriting from BaseRegressionScore may also
@@ -62,33 +62,6 @@ class SplitConformalRegressor:
     for splitting the conformity set. Future implementations may allow the use
     of groups.
 
-    Methods
-    -------
-    fit(X_train, y_train, fit_params=None) -> Self
-        Fits the base estimator to the training data and initializes any
-        internal parameters required for conformal prediction.
-
-    conformalize(X_conf, y_conf, predict_params=None) -> Self
-        Fits the conformity score using a separate conformity set,
-        allowing the model to adjust the prediction intervals based
-        on conformity errors.
-
-    predict(X) -> NDArray
-        Generates point predictions for the input data `X`.
-
-    predict_set(X, minimize_interval_width=False, allow_infinite_bounds=False)
-        -> NDArray
-        Generates prediction intervals for the input data `X` based on the
-        conformity score and confidence level. The resulting intervals are
-        adjusted to achieve the desired coverage probability.
-
-        Returns
-        -------
-        NDArray
-            An array containing the prediction intervals with shape
-            `(n_samples, 2)` if `confidence_level` is a single float, or
-            `(n_samples, 2, n_confidence_levels)` if `confidence_level` is a
-            list of floats.
     Examples
     --------
     >>> regressor = SplitConformalRegressor(estimator=LinearRegression(),
@@ -108,10 +81,14 @@ class SplitConformalRegressor:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
-
+        check_estimator_fit_predict(estimator)
         self.estimator = estimator
         self.prefit = prefit
         self.conformity_score = select_conformity_score(conformity_score)
+
+        # Note to developers: to implement this v1 class without touching the
+        # v0 backend, we're for now using a hack. We always set cv="prefit",
+        # and we fit the estimator if needed. See the .fit method below.
         self.mapie_regressor = MapieRegressor(
             estimator=self.estimator,
             method="base",
@@ -154,9 +131,10 @@ class SplitConformalRegressor:
             The fitted SplitConformalRegressor instance.
         """
         if not self.prefit:
-            fit_params = filter_params(self.estimator.fit, fit_params)
-            self.estimator.fit(X_train, y_train, **fit_params)
-            self.mapie_regressor.estimator = self.estimator
+            cloned_estimator = clone(self.estimator)
+            fit_params = {} if fit_params is None else fit_params
+            cloned_estimator.fit(X_train, y_train, **fit_params)
+            self.mapie_regressor.estimator = cloned_estimator
 
         return self
 
@@ -167,9 +145,8 @@ class SplitConformalRegressor:
         predict_params: Optional[dict] = None,
     ) -> Self:
         """
-        Calibrates the fitted model to the conformity set. This step analyzes
-        the conformity scores and adjusts the prediction intervals based on
-        conformity errors and specified confidence levels.
+        Computes conformity scores using the conformity set, allowing to
+        predict intervals later on.
 
         Parameters
         ----------
@@ -203,8 +180,8 @@ class SplitConformalRegressor:
         allow_infinite_bounds: bool = False,
     ) -> NDArray:
         """
-        Generates prediction intervals based on the calibrated model and
-        conformal predictions framework.
+        Generates prediction intervals for the input data `X` based on
+        conformity scores and confidence level(s).
 
         Parameters
         ----------
@@ -220,10 +197,10 @@ class SplitConformalRegressor:
         Returns
         -------
         NDArray
-            Prediction intervals with shape:
-            - (n_samples, 2) for single confidence level,
-            - (n_samples, 2, n_confidence_levels) if multiple
-               confidence levels are specified.
+            An array containing the prediction intervals with shape
+            `(n_samples, 2)` if `confidence_level` is a single float, or
+            `(n_samples, 2, n_confidence_levels)` if `confidence_level` is a
+            list of floats.
         """
         _, intervals = self.mapie_regressor.predict(
             X,

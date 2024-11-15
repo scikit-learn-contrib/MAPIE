@@ -74,7 +74,8 @@ def check_null_weight(
         sample_weight = cast(NDArray, sample_weight)
     return sample_weight, X, y
 
-
+# TODO back-end: this will be useless in v1 because we'll not distinguish
+# sample_weight from other fit_params
 def fit_estimator(
     estimator: Union[RegressorMixin, ClassifierMixin],
     X: ArrayLike,
