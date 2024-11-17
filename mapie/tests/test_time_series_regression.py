@@ -94,9 +94,9 @@ STRATEGIES = {
 }
 
 WIDTHS = {
-    "blockbootstrap_enbpi_mean_wopt": 3.86,
+    "blockbootstrap_enbpi_mean_wopt": 3.89,
     "blockbootstrap_enbpi_median_wopt": 3.85,
-    "blockbootstrap_enbpi_mean": 3.86,
+    "blockbootstrap_enbpi_mean": 3.89,
     "blockbootstrap_enbpi_median": 3.85,
     "blockbootstrap_aci_mean": 3.96,
     "blockbootstrap_aci_median": 3.95,
@@ -104,10 +104,10 @@ WIDTHS = {
 }
 
 COVERAGES = {
-    "blockbootstrap_enbpi_mean_wopt": 0.952,
-    "blockbootstrap_enbpi_median_wopt": 0.946,
-    "blockbootstrap_enbpi_mean": 0.952,
-    "blockbootstrap_enbpi_median": 0.946,
+    "blockbootstrap_enbpi_mean_wopt": 0.956,
+    "blockbootstrap_enbpi_median_wopt": 0.956,
+    "blockbootstrap_enbpi_mean": 0.956,
+    "blockbootstrap_enbpi_median": 0.956,
     "blockbootstrap_aci_mean": 0.96,
     "blockbootstrap_aci_median": 0.96,
     "prefit": 0.97,

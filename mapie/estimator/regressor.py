@@ -566,7 +566,8 @@ class EnsembleRegressor(EnsembleEstimator):
                 y_pred_multi_low = y_pred_multi
                 y_pred_multi_up = y_pred_multi
             elif self.method == "enbpi":
-                y_pred_aggregate = aggregate_all(self.agg_function, y_pred_multi)
+                y_pred_aggregate = aggregate_all(
+                    self.agg_function, y_pred_multi)
                 y_pred_multi_low = y_pred_aggregate[:, np.newaxis]
                 y_pred_multi_up = y_pred_aggregate[:, np.newaxis]
             else:
