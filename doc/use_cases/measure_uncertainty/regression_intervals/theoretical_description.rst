@@ -1,10 +1,9 @@
-.. title:: Theoretical Description Regression : contents
+#######################
+Conformal regression : theoretical description
+#######################
 
-.. _theoretical_description_regression:
-
-################################################
-Theoretical Description For Regression Intervals
-################################################
+1. Overview
+============
 
 The :class:`mapie.regression.MapieRegressor` class uses various
 resampling methods based on the jackknife strategy
@@ -29,8 +28,8 @@ feature vector :math:`X_{n+1}` such that
 All the methods below are described with the absolute residual conformity score for simplicity
 but other conformity scores are implemented in MAPIE (see :doc:`theoretical_description_conformity_scores`).
 
-1. The "Naive" method
-=====================
+1.1. The "Naive" method
+----------------------
 
 The so-called naive method computes the residuals of the training data to estimate the 
 typical error obtained on a new test data point. 
@@ -57,8 +56,8 @@ The figure below illustrates the naive method.
    :width: 200
    :align: center
 
-2. The split method
-===================
+1.2. The split method
+----------------------
 
 The so-called split method computes the residuals of a calibration dataset to estimate the 
 typical error obtained on a new test data point. 
@@ -81,8 +80,8 @@ scores are not computed on the calibration set. Moreover, this method will alway
 with a constant width.
   
 
-3. The jackknife method
-=======================
+1.3. The jackknife method
+----------------------
 
 The *standard* jackknife method is based on the construction of a set of 
 *leave-one-out* models. 
@@ -116,8 +115,8 @@ sample size is close to the number of features
 (as seen in the "Reproducing the simulations from Foygel-Barber et al. (2020)" example). 
 
 
-4. The jackknife+ method
-========================
+1.4. The jackknife+ method
+----------------------
 
 Unlike the standard jackknife method which estimates a prediction interval centered 
 around the prediction of the model trained on the entire dataset, the so-called jackknife+ 
@@ -132,8 +131,8 @@ with a coverage level of :math:`1-2\alpha` for a target coverage level of :math:
 without any *a priori* assumption on the distribution of the data :math:`(X, Y)`
 nor on the predictive model.
 
-5. The jackknife-minmax method
-==============================
+1.5. The jackknife-minmax method
+----------------------
 
 The jackknife-minmax method offers a slightly more conservative alternative since it uses 
 the minimal and maximal values of the leave-one-out predictions to compute the prediction intervals.
@@ -159,8 +158,8 @@ they require to run as many simulations as the number of training points, which 
 for a typical data science use case. 
 
 
-6. The CV+ method
-=================
+1.6. The CV+ method
+----------------------
 
 In order to reduce the computational time, one can adopt a cross-validation approach
 instead of a leave-one-out approach, called the CV+ method.
@@ -189,8 +188,8 @@ more conservative, but gives a reasonable compromise for large datasets when the
 method is unfeasible.
 
 
-7. The CV and CV-minmax methods
-===============================
+1.7. The CV and CV-minmax methods
+----------------------
 
 By analogy with the standard jackknife and jackknife-minmax methods, the CV and CV-minmax approaches
 are also included in MAPIE. As for the CV+ method, they rely on out-of-fold regression models that
@@ -205,8 +204,8 @@ methods and emphasizes their main differences.
    :width: 800
 
 
-8. The jackknife+-after-bootstrap method
-========================================
+1.8. The jackknife+-after-bootstrap method
+----------------------
 
 In order to reduce the computational time, and get more robust predictions, 
 one can adopt a bootstrap approach instead of a leave-one-out approach, called 
@@ -245,8 +244,8 @@ uncertainty is higher than :math:`CV+`, because the models' prediction spread
 is then higher.
 
 
-9. The Conformalized Quantile Regression (CQR) Method
-=====================================================
+1.9. The Conformalized Quantile Regression (CQR) Method
+----------------------
 
 The conformalized quantile regression (CQR) method allows for better interval widths with
 heteroscedastic data. It uses quantile regressors with different quantile values to estimate
@@ -265,7 +264,7 @@ Notations and Definitions
 - :math:`Q_{1-\alpha}(E, \mathcal{I}_2)`: The :math:`(1-\alpha)(1+1/|\mathcal{I}_2|)`-th empirical quantile of the set :math:`{E_i : i \in \mathcal{I}_2}`.
 
 Mathematical Formulation
-------------------------
+^^^^^^^^^^^^
 The prediction interval :math:`\hat{C}_{n, \alpha}^{\text{CQR}}(X_{n+1})` for a new sample :math:`X_{n+1}` is given by:
 
 .. math::
@@ -284,8 +283,8 @@ Note: In the symmetric method, :math:`E_{\text{low}}` and :math:`E_{\text{high}}
 As justified by the literature, this method offers a theoretical guarantee of the target coverage level :math:`1-\alpha`.
 
 
-10. The ensemble batch prediction intervals (EnbPI) method
-==========================================================
+1.10. The ensemble batch prediction intervals (EnbPI) method
+----------------------
 
 The coverage guarantee offered by the various resampling methods based on the
 jackknife strategy, and implemented in MAPIE, are only valid under the "exchangeability
@@ -336,51 +335,8 @@ is, the slower the update of the residuals is effective. Therefore there is a
 compromise to make on the number of training samples to fit the model and
 update the prediction intervals.
 
-
-Key takeaways
-=============
-
-- The jackknife+ method introduced by [1] allows the user to easily obtain theoretically guaranteed
-  prediction intervals for any kind of sklearn-compatible Machine Learning regressor.
-
-- Since the typical coverage levels estimated by jackknife+ follow very closely the target coverage levels,
-  this method should be used when accurate and robust prediction intervals are required.
-
-- For practical applications where :math:`n` is large and/or the computational time of each 
-  *leave-one-out* simulation is high, it is advised to adopt the CV+ method, based on *out-of-fold* 
-  simulations, or the jackknife+-after-bootstrap method, instead. 
-  Indeed, the methods based on the jackknife resampling approach are very cumbersome because they 
-  require to run a high number of simulations, equal to the number of training samples :math:`n`.
-
-- Although the CV+ method results in prediction intervals that are slightly larger than for the 
-  jackknife+ method, it offers a good compromise between computational time and accurate predictions.
-
-- The jackknife+-after-bootstrap method results in the same computational efficiency, and
-  offers a higher sensitivity to epistemic uncertainty.
-
-- The jackknife-minmax and CV-minmax methods are more conservative since they result in higher
-  theoretical and practical coverages due to the larger widths of the prediction intervals.
-  It is therefore advised to use them when conservative estimates are needed.
-
-- The conformalized quantile regression method allows for more adaptiveness on the prediction 
-  intervals which becomes key when faced with heteroscedastic data.
-
-- If the "exchangeability hypothesis" is not valid, typically for time series,
-  use EnbPI, and update the residuals each time new observations are available.
-
-The table below summarizes the key features of each method by focusing on the obtained coverages and the
-computational cost. :math:`n`, :math:`n_{\rm test}`, and :math:`K` are the number of training samples,
-test samples, and cross-validated folds, respectively.
-
-.. csv-table:: Key features of MAPIE methods (adapted from [1])*.
-   :file: images/comp-methods.csv
-   :header-rows: 1
-
-.. [*] Here, the training and evaluation costs correspond to the computational time of the MAPIE ``.fit()`` and ``.predict()`` methods.
-
-
 References
-==========
+----------------------
 
 [1] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani.
 "Predictive inference with the jackknife+." Ann. Statist., 49(1):486–507, February 2021.
@@ -399,3 +355,106 @@ International Conference on Machine Learning (ICML, 2021).
 [5] Jing Lei, Max G’Sell, Alessandro Rinaldo, Ryan J Tibshirani, and Larry Wasserman.
 "Distribution-free predictive inference for regression". 
 Journal of the American Statistical Association, 113(523):1094–1111, 2018.
+
+2. Conformity scores
+=====================
+
+The :class:`mapie.conformity_scores.ConformityScore` class implements various
+methods to compute conformity scores for regression.
+We give here a brief theoretical description of the scores included in the module.
+Note that it is possible for the user to create any conformal scores that are not 
+already included in MAPIE by inheriting this class.
+
+Before describing the methods, let's briefly present the mathematical setting.
+With conformal predictions, we want to transform a heuristic notion of uncertainty
+from a model into a rigorous one, and the first step to do it is to choose a conformal score.
+The only requirement for the score function :math:`s(X, Y) \in \mathbb{R}` is
+that larger scores should encode worse agreement between :math:`X` and :math:`Y`. [1]
+
+There are two types of scores : the symmetric and asymmetric ones.
+The symmetric property defines the way of computing the quantile of the conformity
+scores when calculating the interval's bounds. If a score is symmetrical two
+quantiles will be computed : one on the right side of the distribution
+and the other on the left side.
+
+2.1. The absolute residual score
+------------------------------
+
+The absolute residual score (:class:`mapie.conformity_scores.AbsoluteConformityScore`)
+is the simplest and most commonly used conformal score, it translates the error
+of the model : in regression, it is called the residual.
+
+.. math:: |Y-\hat{\mu}(X)|
+
+The intervals of prediction's bounds are then computed from the following formula :
+
+.. math:: [\hat{\mu}(X) - q(s), \hat{\mu}(X) + q(s)]
+
+Where :math:`q(s)` is the :math:`(1-\alpha)` quantile of the conformity scores.
+(see :doc:`theoretical_description_regression` for more details).
+
+With this score, the intervals of predictions will be constant over the whole dataset.
+This score is by default symmetric (*see above for definition*).
+
+2.2. The gamma score
+------------------
+
+The gamma score [2] (:class:`mapie.conformity_scores.GammaConformityScore`) adds a
+notion of adaptivity with the normalization of the residuals by the predictions.
+
+.. math:: \frac{|Y-\hat{\mu}(X)|}{\hat{\mu}(X)}
+
+It computes adaptive intervals : intervals of different size on each example, with
+the following formula  :
+
+.. math:: [\hat{\mu}(X) * (1 - q(s)), \hat{\mu}(X) * (1 + q(s))]
+
+Where :math:`q(s)` is the :math:`(1-\alpha)` quantile of the conformity scores.
+(see :doc:`theoretical_description_regression` for more details).
+
+This score is by default asymmetric (*see definition above*).
+
+Compared to the absolute residual score, it allows us to see regions with smaller intervals
+than others which are interpreted as regions with more certainty than others.
+It is important to note that, this conformity score is inversely proportional to the
+order of magnitude of the predictions. Therefore, the uncertainty is proportional to
+the order of magnitude of the predictions, implying that this score should be used
+in use cases where we want greater uncertainty when the prediction is high.
+
+2.3. The residual normalized score
+--------------------------------
+
+The residual normalized score [1] (:class:`mapie.conformity_scores.ResidualNormalisedScore`)
+is slightly more complex than the previous scores.
+The normalization of the residual is now done by the predictions of an additional model
+:math:`\hat\sigma` which learns to predict the base model residuals from :math:`X`.
+:math:`\hat\sigma` is trained on :math:`(X, |Y-\hat{\mu}(X)|)` and the formula of the score is:
+
+.. math:: \frac{|Y-\hat{\mu}(X)|}{\hat{\sigma}(X)}
+
+This score provides adaptive intervals : intervals of different sizes in each point
+with the following formula :
+
+.. math:: [\hat{\mu}(X) - q(s) * \hat{\sigma}(X), \hat{\mu}(X) + q(s) * \hat{\sigma}(X)]
+
+Where :math:`q(s)` is the :math:`(1-\alpha)` quantile of the conformity scores.
+(see :doc:`theoretical_description_regression` for more details).
+
+This score is by default symmetric (*see definition above*). Unlike the scores above,
+and due to the additional model required this score can only be used with split methods.
+
+Normalization by the learned residuals from :math:`X` adds to the score a knowledge of
+:math:`X` and its similarity to the other examples in the dataset.
+Compared to the gamma score, the other adaptive score implemented in MAPIE,
+it is not proportional to the uncertainty.
+
+References
+----------
+
+[1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J., & Wasserman, L. (2018). Distribution-Free 
+Predictive Inference for Regression. Journal of the American Statistical Association, 113(523), 1094–1111. 
+Available from https://doi.org/10.1080/01621459.2017.1307116
+
+[2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. &amp; Brunel, N.. (2023).
+Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library.
+Available from https://proceedings.mlr.press/v204/cordier23a.html.
