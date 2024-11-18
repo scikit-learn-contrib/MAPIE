@@ -6,3 +6,4 @@ Tabular Data
 
    tutorial_tabular_regression
    tutorial_cqr
+   regression_examples

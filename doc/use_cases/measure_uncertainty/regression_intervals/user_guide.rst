@@ -51,7 +51,7 @@ computational cost. :math:`n`, :math:`n_{\rm test}`, and :math:`K` are the numbe
 test samples, and cross-validated folds, respectively.
 
 .. csv-table:: Key features of MAPIE methods (adapted from [1])*.
-   :file: images/comp-methods.csv
+   :file: ../../../images/comp-methods.csv
    :header-rows: 1
 
 .. [*] Here, the training and evaluation costs correspond to the computational time of the MAPIE ``.fit()`` and ``.predict()`` methods.

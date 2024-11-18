@@ -101,7 +101,7 @@ The estimated prediction intervals can then be plotted as follows.
     )
     plt.show()
 
-.. image:: images/quickstart_1.png
+.. image:: ../images/quickstart_1.png
     :width: 400
     :align: center
 
@@ -171,6 +171,6 @@ Similarly, it's possible to do the same for a basic classification problem.
     )
     plt.show()
 
-.. image:: images/quickstart_2.png
+.. image:: ../images/quickstart_2.png
     :width: 400
     :align: center
