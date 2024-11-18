@@ -2,9 +2,9 @@
 
 .. _theoretical_description_classification:
 
-#######################
-Theoretical Description
-#######################
+###############################################
+Theoretical Description For Classification Sets
+###############################################
 
 Three methods for multi-class uncertainty quantification have been implemented in MAPIE so far :
 LAC (that stands for Least Ambiguous set-valued Classifier) [1], Adaptive Prediction Sets [2, 3] and Top-K [3].

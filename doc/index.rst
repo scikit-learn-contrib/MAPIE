@@ -1,81 +1,55 @@
-.. include:: ../README.rst 
+=========================
+MAPIE Documentation
+=========================
+
+Welcome to the official documentation for MAPIE (Model Agnostic Prediction Interval Estimator). This guide covers everything from getting started to advanced use cases, with examples and references.
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
    :caption: Getting Started
 
-   quick_start
-   split_cross_conformal
+   getting_started/quick_start
+   getting_started/conformalization_data
+   getting_started/choosing_algorithm
+
+.. toctree::
+   :caption: Use Cases
+   :maxdepth: 3
+
+   use_cases/measure_uncertainty/index
+   use_cases/control_errors/index
+   use_cases/calibrate_multiclass
+
+.. toctree::
+   :caption: Examples Gallery
+   :maxdepth: 3
+
+   examples/tabular_data/index
+   examples/computer_vision/index
+   examples/time_series/index
+   examples/nlp/index
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
-   :caption: REGRESSION
+   :caption: Q&A
 
-   theoretical_description_regression
-   theoretical_description_conformity_scores
-   examples_regression/4-tutorials/plot_main-tutorial-regression
-   examples_regression/4-tutorials/plot_cqr_tutorial
-   examples_regression/4-tutorials/plot_ts-tutorial
-   examples_regression/index
-   notebooks_regression
+   faq/metrics_to_use
+   faq/adapt_frameworks
+   faq/contribute_to_mapie
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
-   :caption: CLASSIFICATION
+   :caption: Scientific Reference
 
-   theoretical_description_classification
-   examples_classification/4-tutorials/plot_main-tutorial-classification
-   examples_classification/4-tutorials/plot_crossconformal
-   examples_classification/index
-   notebooks_classification
+   references/conformal_prediction
+   references/published_algorithms
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
-   :caption: BINARY CLASSIFICATION
-
-   theoretical_description_binary_classification
-   examples_classification/4-tutorials/plot_main-tutorial-binary-classification
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: MULTI-LABEL CLASSIFICATION
-
-   theoretical_description_multilabel_classification
-   examples_multilabel_classification/1-quickstart/plot_tutorial_multilabel_classification
-   notebooks_multilabel_classification
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: MONDRIAN
-
-   theoretical_description_mondrian
-   examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: CALIBRATION
-
-   theoretical_description_calibration
-   examples_calibration/index
-   notebooks_calibration
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: METRICS
-
-   theoretical_description_metrics
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
    :caption: API
 
    api
+
+=========================
+
+Ready to get started? Check out the **Getting Started** section or dive into the **Examples Gallery** to see MAPIE in action!
