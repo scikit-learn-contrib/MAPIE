@@ -18,7 +18,7 @@ Welcome to the official documentation for MAPIE (Model Agnostic Prediction Inter
 
    use_cases/measure_uncertainty/index
    use_cases/control_errors/index
-   use_cases/calibrate_multiclass
+   use_cases/calibrate_multiclass/index
 
 .. toctree::
    :caption: Examples Gallery
