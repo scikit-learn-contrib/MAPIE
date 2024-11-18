@@ -1,2 +1,2 @@
-Algorithm Expostion for Regression Intervals
-============================================
+Algorithms Expostion
+====================

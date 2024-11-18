@@ -9,3 +9,4 @@ This use case demonstrates how to measure uncertainty for a classification model
    code_examples
    algorithms
    theoretical_description_classification
+   theoretical_description_conformity_scores

@@ -3,7 +3,7 @@
 .. _theoretical_description_conformity_scores:
 
 #############################################
-Theoretical Description for Conformity Scores
+Theoretical Description For Conformity Scores
 #############################################
 
 The :class:`mapie.conformity_scores.ConformityScore` class implements various

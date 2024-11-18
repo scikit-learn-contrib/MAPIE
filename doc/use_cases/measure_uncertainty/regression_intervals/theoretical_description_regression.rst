@@ -2,9 +2,9 @@
 
 .. _theoretical_description_regression:
 
-######################################################################
-Theoretical Description - Conformal Prediction For Regression Intervals
-######################################################################
+################################################
+Theoretical Description For Regression Intervals
+################################################
 
 The :class:`mapie.regression.MapieRegressor` class uses various
 resampling methods based on the jackknife strategy
