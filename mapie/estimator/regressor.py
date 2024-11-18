@@ -213,6 +213,8 @@ class EnsembleRegressor(EnsembleEstimator):
         RegressorMixin
             Fitted estimator.
         """
+        # TODO back-end: avoid using private utilities from sklearn like
+        # _safe_indexing (may break anytime without notice)
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)
         if not (sample_weight is None):
