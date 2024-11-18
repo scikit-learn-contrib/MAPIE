@@ -2,8 +2,7 @@ Tabular Data
 ============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   tutorial_tabular_regression
-   tutorial_cqr
-   regression_examples
+   regression/index
+   classification/index
