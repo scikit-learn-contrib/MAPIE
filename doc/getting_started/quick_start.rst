@@ -30,8 +30,8 @@ To install directly from the github repository :
     pip install git+https://github.com/scikit-learn-contrib/MAPIE
 
 
-2. Run MapieRegressor
-=====================
+2. Run SplitConformalRegressor
+==============================
 
 Let us start with a basic regression problem. 
 Here, we generate one-dimensional noisy data that we fit with a linear model.
@@ -112,8 +112,8 @@ It is given by the alpha parameter defined in ``MapieRegressor``, here equal to 
 thus giving target coverages of ``0.95`` and ``0.68``.
 The effective coverage is the actual fraction of true labels lying in the prediction intervals.
 
-3. Run MapieClassifier
-=======================
+3. Run SplitConformalClassifier
+===============================
 
 Similarly, it's possible to do the same for a basic classification problem.
 
