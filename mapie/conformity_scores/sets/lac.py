@@ -87,7 +87,7 @@ class LACConformityScore(BaseClassificationScore):
         """
         Get predictions from an EnsembleClassifier.
 
-        Parameters:
+        Parameters
         -----------
         X: NDArray of shape (n_samples, n_features)
             Observed feature values.
@@ -106,7 +106,7 @@ class LACConformityScore(BaseClassificationScore):
 
             By default ``"mean"``.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of predictions.
@@ -131,7 +131,7 @@ class LACConformityScore(BaseClassificationScore):
         """
         Get the quantiles of the conformity scores for each uncertainty level.
 
-        Parameters:
+        Parameters
         -----------
         conformity_scores: NDArray of shape (n_samples,)
             Conformity scores for each sample.
@@ -150,7 +150,7 @@ class LACConformityScore(BaseClassificationScore):
 
             By default ``"mean"``.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
@@ -180,7 +180,7 @@ class LACConformityScore(BaseClassificationScore):
         Generate prediction sets based on the probability predictions,
         the conformity scores and the uncertainty level.
 
-        Parameters:
+        Parameters
         -----------
         y_pred_proba: NDArray of shape (n_samples, n_classes)
             Target prediction.
@@ -202,7 +202,7 @@ class LACConformityScore(BaseClassificationScore):
 
             By default ``"mean"``.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.

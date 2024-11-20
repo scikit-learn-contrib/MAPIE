@@ -451,8 +451,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
             - Tuple[NDArray, NDArray] of shapes (n_samples,) and
               (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
-                - [:, 0, :]: Lower bound of the prediction interval.
-                - [:, 1, :]: Upper bound of the prediction interval.
+              - [:, 0, :]: Lower bound of the prediction interval.
+              - [:, 1, :]: Upper bound of the prediction interval.
         """
         if alpha is None:
             super().predict(

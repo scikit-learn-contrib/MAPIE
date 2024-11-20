@@ -686,8 +686,8 @@ class MapieQuantileRegressor(MapieRegressor):
             - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
             - Tuple[NDArray, NDArray] of shapes (n_samples,) and
               (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
-                - [:, 0, :]: Lower bound of the prediction interval.
-                - [:, 1, :]: Upper bound of the prediction interval.
+              - [:, 0, :]: Lower bound of the prediction interval.
+              - [:, 1, :]: Upper bound of the prediction interval.
         """
         check_is_fitted(self, self.fit_attributes)
         check_defined_variables_predict_cqr(ensemble, alpha)

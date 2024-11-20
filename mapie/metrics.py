@@ -41,7 +41,7 @@ def regression_coverage_score(
         Effective coverage obtained by the prediction intervals.
 
     Examples
-    --------
+    ---------
     >>> from mapie.metrics import regression_coverage_score
     >>> import numpy as np
     >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
@@ -1175,8 +1175,8 @@ def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
     The Journal of Machine Learning Research.
     2022 Jan 1;23(1):15886-940.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from mapie.metrics import kolmogorov_smirnov_statistic
     >>> y_true = np.array([0, 1, 0, 1, 0])
@@ -1231,8 +1231,8 @@ def kolmogorov_smirnov_cdf(x: float) -> float:
     Ann. Math. Statist. 24 (4) 624 - 639, December,
     1953.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from mapie.metrics import kolmogorov_smirnov_cdf
     >>> print(np.round(kolmogorov_smirnov_cdf(1), 4))
@@ -1282,8 +1282,8 @@ def kolmogorov_smirnov_p_value(y_true: NDArray, y_score: NDArray) -> float:
     Ann. Math. Statist. 24 (4) 624 - 639, December,
     1953.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pandas as pd
     >>> from mapie.metrics import kolmogorov_smirnov_p_value
     >>> y_true = np.array([1, 0, 1, 0, 1, 0])
@@ -1333,8 +1333,8 @@ def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
     The Journal of Machine Learning Research.
     2022 Jan 1;23(1):15886-940.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from mapie.metrics import kuiper_statistic
     >>> y_true = np.array([0, 1, 0, 1, 0])
@@ -1388,8 +1388,8 @@ def kuiper_cdf(x: float) -> float:
     Ann. Math. Statist. 22 (3) 427 - 432
     September, 1951.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from mapie.metrics import kuiper_cdf
     >>> print(np.round(kuiper_cdf(1), 4))
@@ -1449,8 +1449,8 @@ def kuiper_p_value(y_true: NDArray, y_score: NDArray) -> float:
     Ann. Math. Statist. 22 (3) 427 - 432
     September, 1951.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pandas as pd
     >>> from mapie.metrics import kuiper_p_value
     >>> y_true = np.array([1, 0, 1, 0, 1, 0])
@@ -1499,8 +1499,8 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     Statistics in medicine.
     1986 Sep;5(5):421-33.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from mapie.metrics import spiegelhalter_statistic
     >>> y_true = np.array([0, 1, 0, 1, 0])
@@ -1556,8 +1556,8 @@ def spiegelhalter_p_value(y_true: NDArray, y_score: NDArray) -> float:
     Statistics in medicine.
     1986 Sep;5(5):421-33.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from mapie.metrics import spiegelhalter_p_value
     >>> y_true = np.array([1, 0, 1, 0, 1, 0])

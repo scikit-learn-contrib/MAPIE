@@ -36,7 +36,7 @@ warnings.filterwarnings("ignore")
 
 ##############################################################################
 # 1. Create the noisy dataset
-# -----------------------------
+# ----------------------------------------------------------------------------
 # We create a dataset with 10 groups, each of those groups having a different
 # level of noise.
 
@@ -87,7 +87,7 @@ plt.show()
 
 ##############################################################################
 # 2. Split the dataset into a training set, a calibration set, and a test set.
-# -----------------------------
+# ----------------------------------------------------------------------------
 
 X_train_temp, X_test, y_train_temp, y_test = train_test_split(
     X, y, test_size=0.2, random_state=0
@@ -119,7 +119,7 @@ plt.show()
 
 ##############################################################################
 # 3. Fit a random forest regressor on the training set.
-# -----------------------------
+# ----------------------------------------------------------------------------
 
 rf = RandomForestRegressor(n_estimators=100)
 rf.fit(X_train, y_train)
@@ -127,7 +127,7 @@ rf.fit(X_train, y_train)
 
 ##############################################################################
 # 4. Fit a MapieRegressor and a MondrianCP on the calibration set.
-# -----------------------------
+# ----------------------------------------------------------------------------
 
 mapie_regressor = MapieRegressor(rf, cv="prefit")
 mondrian_regressor = MondrianCP(MapieRegressor(rf, cv="prefit"))
@@ -137,7 +137,7 @@ mondrian_regressor.fit(X_cal, y_cal, partition=partition_cal)
 
 ##############################################################################
 # 5. Predict the prediction intervals on the test set with both methods.
-# -----------------------------
+# ----------------------------------------------------------------------------
 
 _, y_pss_split = mapie_regressor.predict(X_test, alpha=.1)
 _, y_pss_mondrian = mondrian_regressor.predict(
@@ -147,7 +147,7 @@ _, y_pss_mondrian = mondrian_regressor.predict(
 
 ##############################################################################
 # 6. Compare the coverage by partition, plot both methods side by side.
-# -----------------------------
+# ----------------------------------------------------------------------------
 
 coverages = {}
 for group in np.unique(partition_test):
