@@ -171,15 +171,15 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
 # adaptive conformal methods ?". For this we have the two metrics
 # :func:`~mapie.metrics.regression_ssc_score` and :func:`~mapie.metrics.hsic`.
 # - SSC (Size Stratified Coverage) is the maximum violation of the coverage :
-#   the intervals are grouped by width and the coverage is computed for each
-#   group. The lower coverage is the maximum coverage violation. An adaptive
-#   method is one where this maximum violation is as close as possible to the
-#   global coverage. If we interpret the result for the four methods here :
-#   CV+ seems to be the better one.
+# the intervals are grouped by width and the coverage is computed for each
+# group. The lower coverage is the maximum coverage violation. An adaptive
+# method is one where this maximum violation is as close as possible to the
+# global coverage. If we interpret the result for the four methods here :
+# CV+ seems to be the better one.
 # - And with the hsic correlation coefficient, we have the
-#   same interpretation : :func:`~mapie.metrics.hsic` computes the correlation
-#   between the coverage indicator and the interval size, a value of 0
-#   translates an independence between the two.
+# same interpretation : :func:`~mapie.metrics.hsic` computes the correlation
+# between the coverage indicator and the interval size, a value of 0
+# translates an independence between the two.
 #
 # We would like to highlight here the misinterpretation that can be made
 # with these metrics. In fact, here CV+ with the absolute residual score

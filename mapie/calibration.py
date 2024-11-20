@@ -34,10 +34,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         If ``None``, estimator defaults to a ``LogisticRegression`` instance.
 
     method: Optional[str]
-        Method to choose for calibration method.
-        Choose among:
-
-        - "top_label", performs a calibration on the class with highest score
+        The only valid method is "top_label".
+        Performs a calibration on the class with highest score
         given both score and class, see section 2 of [1].
 
         By default "top_label".
@@ -54,7 +52,8 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         The cross-validation strategy to compute scores :
 
         - "split", performs a standard splitting into a calibration and a
-        test set.
+          test set.
+
         - "prefit", assumes that ``estimator`` has been fitted already.
           All the data that are provided in the ``fit`` method are then used
           to calibrate the predictions through the score computation.

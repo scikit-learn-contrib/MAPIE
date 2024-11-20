@@ -23,18 +23,17 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         Whether to consider the conformity score as symmetrical or not.
 
     consistency_check: bool, optional
-        Whether to check the consistency between the methods
-        ``get_estimation_distribution`` and ``get_conformity_scores``.
-        If ``True``, the following equality must be verified:
-        ``self.get_estimation_distribution(
-            y_pred, self.get_conformity_scores(y, y_pred, **kwargs), **kwargs
-        ) == y``
+        Whether to check the consistency between the
+        methods ``get_estimation_distribution`` and ``get_conformity_scores``.
+        If ``True``, ``self.get_estimation_distribution`` called with params
+        ``y_pred`` and ``self.get_conformity_scores(y, y_pred, **kwargs)`` must
+        be equal to ``y``.
 
         By default ``True``.
 
     eps: float, optional
-        Threshold to consider when checking the consistency between
-        ``get_estimation_distribution`` and ``get_conformity_scores``.
+        Threshold to consider when checking the consistency
+        between ``get_estimation_distribution`` and ``get_conformity_scores``.
         It should be specified if ``consistency_check==True``.
 
         By default, it is defined by the default precision.
@@ -390,7 +389,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         Compute the prediction sets on new samples based on the uncertainty of
         the target confidence set.
 
-        Parameters:
+        Parameters
         -----------
         X: NDArray of shape (n_samples,)
             The input data or samples for prediction.
@@ -401,7 +400,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         **kwargs: dict
             Additional keyword arguments.
 
-        Returns:
+        Returns
         --------
         The output structure depend on the ``get_bounds`` method.
             The prediction sets for each sample and each alpha level.

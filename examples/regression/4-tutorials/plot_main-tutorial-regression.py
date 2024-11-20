@@ -9,9 +9,12 @@ Throughout this tutorial, we will answer the following questions:
 
 - How well do the MAPIE strategies capture the aleatoric uncertainty
   existing in the data?
+
 - How do the prediction intervals estimated by the resampling strategies
   evolve for new *out-of-distribution* data ?
+
 - How do the prediction intervals vary between regressor models ?
+
 Throughout this tutorial, we estimate the prediction intervals first using
 a polynomial function, and then using a boosting model, and a simple neural
 network.

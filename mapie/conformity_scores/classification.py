@@ -61,7 +61,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         This method should be implemented by any subclass of the current class.
 
-        Parameters:
+        Parameters
         -----------
         X: NDArray of shape (n_samples, n_features)
             Observed feature values.
@@ -73,7 +73,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of predictions.
@@ -92,7 +92,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         This method should be implemented by any subclass of the current class.
 
-        Parameters:
+        Parameters
         -----------
         conformity_scores: NDArray of shape (n_samples,)
             Conformity scores for each sample.
@@ -104,7 +104,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
@@ -125,7 +125,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         This method should be implemented by any subclass of the current class.
 
-        Parameters:
+        Parameters
         -----------
         y_pred_proba: NDArray of shape (n_samples, n_classes)
             Target prediction.
@@ -140,7 +140,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
@@ -205,7 +205,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         Compute the prediction sets on new samples based on the uncertainty of
         the target confidence set.
 
-        Parameters:
+        Parameters
         -----------
         X: NDArray of shape (n_samples,)
             The input data or samples for prediction.
@@ -216,7 +216,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         **kwargs: dict
             Additional keyword arguments.
 
-        Returns:
+        Returns
         --------
         The output structure depend on the ``get_sets`` method.
             The prediction sets for each sample and each alpha level.

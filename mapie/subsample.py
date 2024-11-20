@@ -170,6 +170,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
             The training set indices for that split.
         test : NDArray of shape (n_indices_test,)
             The testing set indices for that split.
+
         Raises
         ------
         ValueError

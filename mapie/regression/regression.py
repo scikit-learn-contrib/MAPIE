@@ -67,9 +67,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
           ``sklearn.model_selection.LeaveOneOut()``.
         - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
           Main variants are:
-            - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
-            - ``sklearn.model_selection.KFold`` (cross-validation),
-            - ``subsample.Subsample`` object (bootstrap).
+          - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
+          - ``sklearn.model_selection.KFold`` (cross-validation),
+          - ``subsample.Subsample`` object (bootstrap).
         - ``"split"``, does not involve cross-validation but a division
           of the data into training and calibration subsets. The splitter
           used is the following: ``sklearn.model_selection.ShuffleSplit``.
@@ -624,8 +624,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
             - Tuple[NDArray, NDArray] of shapes (n_samples,) and
               (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
-                - [:, 0, :]: Lower bound of the prediction interval.
-                - [:, 1, :]: Upper bound of the prediction interval.
+              - [:, 0, :]: Lower bound of the prediction interval.
+              - [:, 1, :]: Upper bound of the prediction interval.
         """
         # Checks
         if hasattr(self, '_predict_params'):

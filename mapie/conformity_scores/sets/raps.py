@@ -388,7 +388,7 @@ class RAPSConformityScore(APSConformityScore):
         """
         Get the quantiles of the conformity scores for each uncertainty level.
 
-        Parameters:
+        Parameters
         -----------
         conformity_scores: NDArray of shape (n_samples,)
             Conformity scores for each sample.
@@ -435,7 +435,7 @@ class RAPSConformityScore(APSConformityScore):
 
             By default, "None" but must be set to work.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
@@ -549,7 +549,7 @@ class RAPSConformityScore(APSConformityScore):
         """
         Compute the V parameters from Angelopoulos+(2020).
 
-        Parameters:
+        Parameters
         -----------
         y_proba_last_cumsumed: NDArray of shape (n_samples, n_alpha)
             Cumulated score of the last included label.
@@ -563,7 +563,7 @@ class RAPSConformityScore(APSConformityScore):
         predicition_sets: NDArray of shape (n_samples, n_alpha)
             Prediction sets.
 
-        Returns:
+        Returns
         --------
         NDArray of shape (n_samples, n_alpha)
             Vs parameters.

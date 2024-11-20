@@ -92,7 +92,7 @@ class TopKConformityScore(BaseClassificationScore):
 
         This method should be implemented by any subclass of the current class.
 
-        Parameters:
+        Parameters
         -----------
         X: NDArray of shape (n_samples, n_features)
             Observed feature values.
@@ -104,7 +104,7 @@ class TopKConformityScore(BaseClassificationScore):
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of predictions.
@@ -126,7 +126,7 @@ class TopKConformityScore(BaseClassificationScore):
         """
         Get the quantiles of the conformity scores for each uncertainty level.
 
-        Parameters:
+        Parameters
         -----------
         conformity_scores: NDArray of shape (n_samples,)
             Conformity scores for each sample.
@@ -138,7 +138,7 @@ class TopKConformityScore(BaseClassificationScore):
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
@@ -157,7 +157,7 @@ class TopKConformityScore(BaseClassificationScore):
         Generate prediction sets based on the probability predictions,
         the conformity scores and the uncertainty level.
 
-        Parameters:
+        Parameters
         -----------
         y_pred_proba: NDArray of shape (n_samples, n_classes)
             Target prediction.
@@ -172,7 +172,7 @@ class TopKConformityScore(BaseClassificationScore):
         estimator: EnsembleClassifier
             Estimator that is fitted to predict y from X.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
