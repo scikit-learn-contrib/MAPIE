@@ -153,12 +153,12 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 #
 # 1 - Plots where the confidence level varies. Here two metrics are plotted
 # for each method and for each UCB
-#   * The actual recall (which should be always near to the required one):
-#     we can see that they are close to each other.
-#   * The value of the threshold: we see that the threshold is decreasing as
-#     :math:`1 - \alpha` increases, which is what is expected because a
-#     smaller threshold will give larger prediction sets, hence a larger
-#     recall.
+# * The actual recall (which should be always near to the required one):
+# we can see that they are close to each other.
+# * The value of the threshold: we see that the threshold is decreasing as
+# :math:`1 - \alpha` increases, which is what is expected because a
+# smaller threshold will give larger prediction sets, hence a larger
+# recall.
 #
 
 vars_y = [recalls, thresholds]
@@ -180,12 +180,12 @@ plt.show()
 # 2 - Plots where we choose a specific risk value (0.1 in our case) and look at
 # the average risk, the UCB of the risk (for RCPS methods) and the choice of
 # the threshold :math:`\lambda`
-#   * We can see that among the RCPS methods, the Bernstein method
-#     gives the best results as for a given value of :math:`\alpha`
-#     as we are above the required recall but with a larger value of
-#     :math:`\lambda` than the two others bounds.
-#   * The CRC method gives the best results since it guarantees the coverage
-#     with a larger threshold.
+# * We can see that among the RCPS methods, the Bernstein method
+# gives the best results as for a given value of :math:`\alpha`
+# as we are above the required recall but with a larger value of
+# :math:`\lambda` than the two others bounds.
+# * The CRC method gives the best results since it guarantees the coverage
+# with a larger threshold.
 
 fig, axs = plt.subplots(
     1,
