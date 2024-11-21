@@ -8,7 +8,7 @@ History
 * Fix issue 525 in contribution guidelines with syntax errors in hyperlinks and other formatting issues.
 * Bump wheel version to avoid known security vulnerabilities
 * Fix issue 495 to center correctly the prediction intervals
-* Fix most documentation build warnings
+* Fix documentation build warnings
 
 0.9.1 (2024-09-13)
 ------------------
