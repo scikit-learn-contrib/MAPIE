@@ -19,9 +19,7 @@ jupyter:
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a 
 simple, one-dimensional, ground truth function
 
-$$
-f(x) = x \sin(x)
-$$
+.. math:: f(x) = x \sin(x)
 
 Throughout this tutorial, we will answer the following questions:
 
