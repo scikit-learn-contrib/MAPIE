@@ -454,7 +454,7 @@ class EnsembleRegressor(EnsembleEstimator):
             The estimator fitted.
         """
 
-        single_estimator_ = self.fit_single_estimator(
+        self.single_estimator_ = self.fit_single_estimator(
             X,
             y,
             sample_weight,
@@ -462,16 +462,13 @@ class EnsembleRegressor(EnsembleEstimator):
             **fit_params
         )
 
-        estimators_ = self.fit_multi_estimators(
+        self.estimators_ = self.fit_multi_estimators(
             X,
             y,
             sample_weight,
             groups,
             **fit_params
         )
-
-        self.single_estimator_ = single_estimator_
-        self.estimators_ = estimators_
 
         return self
 
@@ -531,7 +528,7 @@ class EnsembleRegressor(EnsembleEstimator):
             return self.estimator
         if self.use_split_method_:
             cv = cast(BaseCrossValidator, self.cv)
-            indexes = cv.split(X, y, groups)[0]
+            indexes = [index for index, _ in cv.split(X, y, groups)][0]
         else:
             indexes = np.arange(_num_samples(X))
 
