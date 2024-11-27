@@ -23,11 +23,14 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         Whether to consider the conformity score as symmetrical or not.
 
     consistency_check: bool, optional
-        Whether to check the consistency between the
-        methods ``get_estimation_distribution`` and ``get_conformity_scores``.
-        If ``True``, ``self.get_estimation_distribution`` called with params
-        ``y_pred`` and ``self.get_conformity_scores(y, y_pred, **kwargs)`` must
-        be equal to ``y``.
+        Whether to check the consistency between the methods
+        ``get_estimation_distribution`` and ``get_conformity_scores``.
+        If ``True``, the following equality must be verified::
+
+            y == self.get_estimation_distribution(
+                y_pred,
+                self.get_conformity_scores(y, y_pred, **kwargs),
+                **kwargs)
 
         By default ``True``.
 
@@ -119,10 +122,12 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         Check consistency between the following methods:
         ``get_estimation_distribution`` and ``get_signed_conformity_scores``
 
-        The following equality should be verified:
-        ``self.get_estimation_distribution(
-            y_pred, self.get_conformity_scores(y, y_pred, **kwargs), **kwargs
-        ) == y``
+        The following equality should be verified::
+
+            y == self.get_estimation_distribution(
+                y_pred,
+                self.get_conformity_scores(y, y_pred, **kwargs),
+                **kwargs)
 
         Parameters
         ----------
@@ -302,9 +307,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         Tuple[NDArray, NDArray, NDArray]
             - The predictions itself. (y_pred) of shape (n_samples,).
             - The lower bounds of the prediction intervals of shape
-            (n_samples, n_alpha).
+              (n_samples, n_alpha).
             - The upper bounds of the prediction intervals of shape
-            (n_samples, n_alpha).
+              (n_samples, n_alpha).
 
         Raises
         ------
