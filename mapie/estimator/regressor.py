@@ -453,8 +453,7 @@ class EnsembleRegressor(EnsembleEstimator):
         EnsembleRegressor
             The estimator fitted.
         """
-
-        self.single_estimator_ = self.fit_single_estimator(
+        self.fit_single_estimator(
             X,
             y,
             sample_weight,
@@ -462,7 +461,7 @@ class EnsembleRegressor(EnsembleEstimator):
             **fit_params
         )
 
-        self.estimators_ = self.fit_multi_estimators(
+        self.fit_multi_estimators(
             X,
             y,
             sample_weight,
@@ -479,7 +478,7 @@ class EnsembleRegressor(EnsembleEstimator):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params
-    ) -> List[RegressorMixin]:
+    ) -> RegressorMixin:
 
         n_samples = _num_samples(y)
         estimators: list[RegressorMixin] = []
@@ -488,7 +487,8 @@ class EnsembleRegressor(EnsembleEstimator):
             self.k_ = np.full(
                 shape=(n_samples, 1), fill_value=np.nan, dtype=float
             )
-        if self.cv not in ["prefit", "naive"]:
+
+        else:
             cv = cast(BaseCrossValidator, self.cv)
             self.k_ = np.full(
                 shape=(n_samples, cv.get_n_splits(X, y, groups)),
@@ -496,22 +496,25 @@ class EnsembleRegressor(EnsembleEstimator):
                 dtype=float,
             )
 
-            estimators = Parallel(
-                self.n_jobs,
-                verbose=self.verbose
-            )(
-                delayed(self._fit_oof_estimator)(
-                    clone(self.estimator),
-                    X,
-                    y,
-                    train_index,
-                    sample_weight,
-                    **fit_params
+            if self.method != "naive":
+                estimators = Parallel(
+                    self.n_jobs,
+                    verbose=self.verbose
+                )(
+                    delayed(self._fit_oof_estimator)(
+                        clone(self.estimator),
+                        X,
+                        y,
+                        train_index,
+                        sample_weight,
+                        **fit_params
+                    )
+                    for train_index, _ in cv.split(X, y, groups)
                 )
-                for train_index, _ in cv.split(X, y, groups)
-            )
 
-        return estimators
+        self.estimators_ = estimators
+
+        return self
 
     def fit_single_estimator(
         self,
@@ -525,23 +528,24 @@ class EnsembleRegressor(EnsembleEstimator):
         self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
 
         if self.cv == "prefit":
-            return self.estimator
-        if self.use_split_method_:
-            cv = cast(BaseCrossValidator, self.cv)
-            indexes = [index for index, _ in cv.split(X, y, groups)][0]
+            self.single_estimator_ = self.estimator
         else:
-            indexes = np.arange(_num_samples(X))
+            if self.use_split_method_:
+                cv = cast(BaseCrossValidator, self.cv)
+                indexes = [index for index, _ in cv.split(X, y, groups)][0]
+            else:
+                indexes = np.arange(_num_samples(X))
 
-        single_estimator = self._fit_oof_estimator(
-                clone(self.estimator),
-                X,
-                y,
-                indexes,
-                sample_weight,
-                **fit_params
-            )
+            self.single_estimator_ = self._fit_oof_estimator(
+                    clone(self.estimator),
+                    X,
+                    y,
+                    indexes,
+                    sample_weight,
+                    **fit_params
+                )
 
-        return single_estimator
+        return self
 
     def predict(
         self,

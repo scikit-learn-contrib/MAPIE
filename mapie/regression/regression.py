@@ -513,12 +513,28 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         MapieRegressor
             The model itself.
         """
-        fit_params = kwargs.pop('fit_params', {})
-        predict_params = kwargs.pop('predict_params', {})
-        if len(predict_params) > 0:
-            self._predict_params = True
-        else:
-            self._predict_params = False
+
+        # Initialize the estimator
+        self.init_fit(X, y, sample_weight, groups, **kwargs)
+
+        # Fit the prediction function
+        self.fit_estimator(X, y, sample_weight, groups)
+
+        # Conformalize the model:
+        self.conformlize(X, y, sample_weight, groups, **kwargs)
+
+        return self
+
+    def init_fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **kwargs: Any
+    ) -> MapieRegressor:
+
+        self._fit_params = kwargs.pop('fit_params', {})
 
         # Checks
         (estimator,
@@ -540,9 +556,41 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.test_size,
             self.verbose
         )
-        # Fit the prediction function
-        self.estimator_ = self.estimator_.fit(
-            X, y, sample_weight=sample_weight, groups=groups, **fit_params
+
+    def fit_estimator(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+    ) -> MapieRegressor:
+
+        self.estimator_.fit_single_estimator(
+            X,
+            y,
+            sample_weight=sample_weight,
+            groups=groups,
+            **self._fit_params
+        )
+
+    def conformlize(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **kwargs: Any
+    ) -> MapieRegressor:
+
+        predict_params = kwargs.pop('predict_params', {})
+        self._predict_params = len(predict_params) > 0
+
+        self.estimator_.fit_multi_estimators(
+            X,
+            y,
+            sample_weight,
+            groups,
+            **self._fit_params
         )
 
         # Predict on calibration data

@@ -320,7 +320,21 @@ class CrossConformalRegressor:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None
     ) -> None:
-        pass
+ 
+        self.mapie_regressor = MapieRegressor(
+            estimator=self.estimator,
+            method=method,
+            cv=cv,
+            n_jobs=n_jobs,
+            verbose=verbose,
+            conformity_score=self.conformity_score,
+            random_state=random_state,
+        )
+
+        if isinstance(confidence_level, float):
+            confidence_level = [confidence_level]
+
+        self.alpha = [1 - level for level in confidence_level]
 
     def fit(
         self,
@@ -348,7 +362,8 @@ class CrossConformalRegressor:
         Self
             The fitted CrossConformalRegressor instance.
         """
-        pass
+        self.mapie_regressor.init_fit(X, y, fit_params=fit_params)
+        self.mapie_regressor.fit_estimator(X, y)
 
     def conformalize(
         self,
@@ -385,7 +400,12 @@ class CrossConformalRegressor:
         Self
             The conformalized SplitConformalRegressor instance.
         """
-        pass
+        self.mapie_regressor.conformalize(
+            X,
+            y,
+            groups=groups,
+            predict_params=predict_params
+        )
 
     def predict_set(
         self,
