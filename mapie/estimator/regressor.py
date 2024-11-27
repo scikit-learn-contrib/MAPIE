@@ -485,16 +485,13 @@ class EnsembleRegressor(EnsembleEstimator):
     ) -> List[RegressorMixin]:
 
         n_samples = _num_samples(y)
-        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+        estimators: list[RegressorMixin] = []
 
         if self.cv == "prefit":
             self.k_ = np.full(
                 shape=(n_samples, 1), fill_value=np.nan, dtype=float
             )
-            estimators = []
-        elif self.cv == 'naive':
-            estimators = []
-        else:
+        if self.cv not in ["prefit", "naive"]:
             cv = cast(BaseCrossValidator, self.cv)
             self.k_ = np.full(
                 shape=(n_samples, cv.get_n_splits(X, y, groups)),
@@ -502,7 +499,10 @@ class EnsembleRegressor(EnsembleEstimator):
                 dtype=float,
             )
 
-            estimators = Parallel(self.n_jobs, verbose=self.verbose)(
+            estimators = Parallel(
+                self.n_jobs,
+                verbose=self.verbose
+            )(
                 delayed(self._fit_oof_estimator)(
                     clone(self.estimator),
                     X,
