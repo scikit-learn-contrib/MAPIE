@@ -453,58 +453,98 @@ class EnsembleRegressor(EnsembleEstimator):
         EnsembleRegressor
             The estimator fitted.
         """
-        # Initialization
-        single_estimator_: RegressorMixin
-        estimators_: List[RegressorMixin] = []
-        full_indexes = np.arange(_num_samples(X))
-        cv = self.cv
-        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
-        estimator = self.estimator
-        n_samples = _num_samples(y)
 
-        # Computation
-        if cv == "prefit":
-            single_estimator_ = estimator
-            self.k_ = np.full(
-                shape=(n_samples, 1), fill_value=np.nan, dtype=float
-            )
-        else:
-            single_estimator_ = self._fit_oof_estimator(
-                clone(estimator),
-                X,
-                y,
-                full_indexes,
-                sample_weight,
-                **fit_params
-            )
-            cv = cast(BaseCrossValidator, cv)
-            self.k_ = np.full(
-                shape=(n_samples, cv.get_n_splits(X, y, groups)),
-                fill_value=np.nan,
-                dtype=float,
-            )
-            if self.method == "naive":
-                estimators_ = [single_estimator_]
-            else:
-                estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
-                    delayed(self._fit_oof_estimator)(
-                        clone(estimator),
-                        X,
-                        y,
-                        train_index,
-                        sample_weight,
-                        **fit_params
-                    )
-                    for train_index, _ in cv.split(X, y, groups)
-                )
-                # In split-CP, we keep only the model fitted on train dataset
-                if self.use_split_method_:
-                    single_estimator_ = estimators_[0]
+        single_estimator_ = self.fit_single_estimator(
+            X,
+            y,
+            sample_weight,
+            groups,
+            **fit_params
+        )
+
+        estimators_ = self.fit_multi_estimators(
+            X,
+            y,
+            sample_weight,
+            groups,
+            **fit_params
+        )
 
         self.single_estimator_ = single_estimator_
         self.estimators_ = estimators_
 
         return self
+
+    def fit_multi_estimators(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params
+    ) -> List[RegressorMixin]:
+
+        n_samples = _num_samples(y)
+        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+
+        if self.cv == "prefit":
+            self.k_ = np.full(
+                shape=(n_samples, 1), fill_value=np.nan, dtype=float
+            )
+            estimators = []
+        elif self.cv == 'naive':
+            estimators = []
+        else:
+            cv = cast(BaseCrossValidator, self.cv)
+            self.k_ = np.full(
+                shape=(n_samples, cv.get_n_splits(X, y, groups)),
+                fill_value=np.nan,
+                dtype=float,
+            )
+
+            estimators = Parallel(self.n_jobs, verbose=self.verbose)(
+                delayed(self._fit_oof_estimator)(
+                    clone(self.estimator),
+                    X,
+                    y,
+                    train_index,
+                    sample_weight,
+                    **fit_params
+                )
+                for train_index, _ in cv.split(X, y, groups)
+            )
+
+        return estimators
+
+    def fit_single_estimator(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params
+    ) -> RegressorMixin:
+
+        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+
+        if self.cv == "prefit":
+            return self.estimator
+        if self.use_split_method_:
+            cv = cast(BaseCrossValidator, self.cv)
+            indexes = cv.split(X, y, groups)[0]
+        else:
+            indexes = np.arange(_num_samples(X))
+
+        single_estimator = self._fit_oof_estimator(
+                clone(self.estimator),
+                X,
+                y,
+                indexes,
+                sample_weight,
+                **fit_params
+            )
+
+        return single_estimator
 
     def predict(
         self,
