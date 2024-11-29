@@ -529,9 +529,10 @@ class EnsembleRegressor(EnsembleEstimator):
     ) -> RegressorMixin:
 
         self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+        single_estimator_: RegressorMixin
 
         if self.cv == "prefit":
-            self.single_estimator_ = self.estimator
+            single_estimator_ = self.estimator
         else:
             cv = cast(BaseCrossValidator, self.cv)
             train_indexes = [index for index, _ in cv.split(X, y, groups)][0]
@@ -541,7 +542,7 @@ class EnsembleRegressor(EnsembleEstimator):
             else:
                 indexes = full_indexes
 
-            self.single_estimator_ = self._fit_oof_estimator(
+            single_estimator_ = self._fit_oof_estimator(
                     clone(self.estimator),
                     X,
                     y,
@@ -550,6 +551,7 @@ class EnsembleRegressor(EnsembleEstimator):
                     **fit_params
                 )
 
+        self.single_estimator_ = single_estimator_
         return self
 
     def predict(
