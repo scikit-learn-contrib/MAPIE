@@ -522,8 +522,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         # Fit the prediction function
         self.fit_estimator(X, y, sample_weight, groups)
 
-        # Conformlize the model:
-        self.conformlize(X, y, sample_weight, groups, **kwargs)
+        # conformalize the model:
+        self.conformalize(X, y, sample_weight, groups, **kwargs)
 
         return self
 
@@ -581,7 +581,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
 
         return self
 
-    def conformlize(
+    def conformalize(
         self,
         X: ArrayLike,
         y: ArrayLike,

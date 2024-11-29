@@ -402,7 +402,7 @@ class CrossConformalRegressor:
         Self
             The conformalized SplitConformalRegressor instance.
         """
-        self.mapie_regressor.conformlize(
+        self.mapie_regressor.conformalize(
             X,
             y,
             groups=groups,
