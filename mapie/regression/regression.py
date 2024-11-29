@@ -579,6 +579,8 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             **self._fit_params
         )
 
+        return self
+
     def conformlize(
         self,
         X: ArrayLike,
