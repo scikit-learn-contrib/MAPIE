@@ -478,7 +478,7 @@ class EnsembleRegressor(EnsembleEstimator):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params
-    ) -> RegressorMixin:
+    ) -> EnsembleRegressor:
 
         n_samples = _num_samples(y)
         estimators: List[RegressorMixin] = []
@@ -526,7 +526,7 @@ class EnsembleRegressor(EnsembleEstimator):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **fit_params
-    ) -> RegressorMixin:
+    ) -> EnsembleRegressor:
 
         self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
         single_estimator_: RegressorMixin
