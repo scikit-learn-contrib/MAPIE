@@ -484,6 +484,9 @@ class EnsembleRegressor(EnsembleEstimator):
         estimators: list[RegressorMixin] = []
 
         if self.cv == "prefit":
+
+            # self.k_ is defined but not used
+            # Because it is among the fit attributes
             self.k_ = np.full(
                 shape=(n_samples, 1), fill_value=np.nan, dtype=float
             )

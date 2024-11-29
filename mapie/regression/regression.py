@@ -515,7 +515,9 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         """
 
         # Initialize the estimator
-        self.init_fit(X, y, sample_weight, groups, **kwargs)
+        X, y, sample_weight, groups = self.init_fit(
+            X, y, sample_weight, groups, **kwargs
+        )
 
         # Fit the prediction function
         self.fit_estimator(X, y, sample_weight, groups)
@@ -555,6 +557,10 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             self.random_state,
             self.test_size,
             self.verbose
+        )
+
+        return (
+            X, y, sample_weight, groups
         )
 
     def fit_estimator(
