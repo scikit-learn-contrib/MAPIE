@@ -534,7 +534,7 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any
-    ) -> MapieRegressor:
+    ):
 
         self._fit_params = kwargs.pop('fit_params', {})
 

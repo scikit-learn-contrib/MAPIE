@@ -320,7 +320,7 @@ class CrossConformalRegressor:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None
     ) -> None:
- 
+
         self.mapie_regressor = MapieRegressor(
             estimator=self.estimator,
             method=method,
@@ -362,8 +362,10 @@ class CrossConformalRegressor:
         Self
             The fitted CrossConformalRegressor instance.
         """
-        self.mapie_regressor.init_fit(X, y, fit_params=fit_params)
-        self.mapie_regressor.fit_estimator(X, y)
+        X, y, sample_weight, groups = self.init_fit(
+            X, y, fit_params=fit_params
+        )
+        self.mapie_regressor.fit_estimator(X, y, sample_weight, groups)
 
     def conformalize(
         self,

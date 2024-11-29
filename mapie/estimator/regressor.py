@@ -481,7 +481,7 @@ class EnsembleRegressor(EnsembleEstimator):
     ) -> RegressorMixin:
 
         n_samples = _num_samples(y)
-        estimators: list[RegressorMixin] = []
+        estimators: List[RegressorMixin] = []
 
         if self.cv == "prefit":
 
@@ -533,11 +533,13 @@ class EnsembleRegressor(EnsembleEstimator):
         if self.cv == "prefit":
             self.single_estimator_ = self.estimator
         else:
+            cv = cast(BaseCrossValidator, self.cv)
+            train_indexes = [index for index, _ in cv.split(X, y, groups)][0]
+            full_indexes = np.arange(_num_samples(X))
             if self.use_split_method_:
-                cv = cast(BaseCrossValidator, self.cv)
-                indexes = [index for index, _ in cv.split(X, y, groups)][0]
+                indexes = train_indexes
             else:
-                indexes = np.arange(_num_samples(X))
+                indexes = full_indexes
 
             self.single_estimator_ = self._fit_oof_estimator(
                     clone(self.estimator),
