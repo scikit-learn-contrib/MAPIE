@@ -1037,6 +1037,7 @@ def test_check_change_method_to_base(method: str, cv: str) -> None:
     mapie_reg.fit(X_val, y_val)
     assert mapie_reg.method == "base"
 
+
 @pytest.mark.parametrize("method", ["minmax", "naive", "plus", "base"])
 @pytest.mark.parametrize("cv", ["split", "prefit", 3])
 def test_check_fit_ensemble_estimators(method: str, cv: str) -> None:
