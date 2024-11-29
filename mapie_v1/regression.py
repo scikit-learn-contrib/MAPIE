@@ -365,7 +365,7 @@ class CrossConformalRegressor:
         X, y, sample_weight, groups = self.init_fit(
             X, y, fit_params=fit_params
         )
-        self.mapie_regressor.fit(X, y, sample_weight, groups)
+        self.mapie_regressor.fit_estimator(X, y, sample_weight, groups)
 
     def conformalize(
         self,
