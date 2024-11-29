@@ -411,66 +411,6 @@ class EnsembleRegressor(EnsembleEstimator):
 
         return y_pred
 
-    def fit(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
-        groups: Optional[ArrayLike] = None,
-        **fit_params
-    ) -> EnsembleRegressor:
-        """
-        Fit the base estimator under the ``single_estimator_`` attribute.
-        Fit all cross-validated estimator clones
-        and rearrange them into a list, the ``estimators_`` attribute.
-        Out-of-fold conformity scores are stored under
-        the ``conformity_scores_`` attribute.
-
-        Parameters
-        ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Input data.
-
-        y: ArrayLike of shape (n_samples,)
-            Input labels.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights. If None, then samples are equally weighted.
-
-            By default ``None``.
-
-        groups: Optional[ArrayLike] of shape (n_samples,)
-            Group labels for the samples used while splitting the dataset into
-            train/test set.
-
-            By default ``None``.
-
-        **fit_params : dict
-            Additional fit parameters.
-
-        Returns
-        -------
-        EnsembleRegressor
-            The estimator fitted.
-        """
-        self.fit_single_estimator(
-            X,
-            y,
-            sample_weight,
-            groups,
-            **fit_params
-        )
-
-        self.fit_multi_estimators(
-            X,
-            y,
-            sample_weight,
-            groups,
-            **fit_params
-        )
-
-        return self
-
     def fit_multi_estimators(
         self,
         X: ArrayLike,
@@ -519,7 +459,7 @@ class EnsembleRegressor(EnsembleEstimator):
 
         return self
 
-    def fit_single_estimator(
+    def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
