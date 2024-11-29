@@ -514,15 +514,11 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             The model itself.
         """
 
-        # Initialize the estimator
         X, y, sample_weight, groups = self.init_fit(
             X, y, sample_weight, groups, **kwargs
         )
 
-        # Fit the prediction function
         self.fit_estimator(X, y, sample_weight, groups)
-
-        # conformalize the model:
         self.conformalize(X, y, sample_weight, groups, **kwargs)
 
         return self
