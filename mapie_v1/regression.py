@@ -10,8 +10,11 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import MapieRegressor
 from mapie.utils import check_estimator_fit_predict
-from mapie_v1.conformity_scores.utils import \
-    check_and_select_split_conformity_score
+from mapie_v1.conformity_scores.utils import (
+    check_and_select_split_conformity_score,
+    process_confidence_level,
+    compute_alpha,
+)
 
 
 class SplitConformalRegressor:
@@ -101,10 +104,8 @@ class SplitConformalRegressor:
             random_state=random_state,
         )
 
-        if isinstance(confidence_level, float):
-            confidence_level = [confidence_level]
-
-        self.alpha = [1 - level for level in confidence_level]
+        self.confidence_level = process_confidence_level(confidence_level)
+        self.alpha = compute_alpha(self.confidence_level)
 
     def fit(
         self,
@@ -331,10 +332,8 @@ class CrossConformalRegressor:
             random_state=random_state,
         )
 
-        if isinstance(confidence_level, float):
-            confidence_level = [confidence_level]
-
-        self.alpha = [1 - level for level in confidence_level]
+        self.confidence_level = process_confidence_level(confidence_level)
+        self.alpha = compute_alpha(self.confidence_level)
 
     def fit(
         self,

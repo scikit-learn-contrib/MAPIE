@@ -426,6 +426,14 @@ class EnsembleRegressor(EnsembleEstimator):
         Out-of-fold conformity scores are stored under
         the ``conformity_scores_`` attribute.
 
+        Note
+        ----
+        This ``fit`` method is implemented because the class interface requires
+        it. However, it is not used directly. Instead, the fitting process is 
+        replaced by the ``fit_single_estimator`` and ``fit_multi_estimators`` 
+        methods, which should be utilized for single and multiple estimators, 
+        respectively.
+        
         Parameters
         ----------
         X: ArrayLike of shape (n_samples, n_features)
