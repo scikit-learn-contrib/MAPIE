@@ -31,4 +31,4 @@ def compute_alpha(
     """
     Compute alpha values from confidence levels.
     """
-    return [ 1 - level for level in confidence_levels]
+    return [1 - level for level in confidence_levels]
