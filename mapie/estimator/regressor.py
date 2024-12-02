@@ -486,7 +486,8 @@ class EnsembleRegressor(EnsembleEstimator):
         if self.cv == "prefit":
 
             # Create a placeholder attribute 'k_' filled with NaN values
-            # (This attribute is defined for consistency but is not used in prefit mode)
+            # This attribute is defined for consistency but
+            # is not used in prefit mode
             self.k_ = np.full(
                 shape=(n_samples, 1), fill_value=np.nan, dtype=float
             )
