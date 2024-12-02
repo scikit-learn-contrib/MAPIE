@@ -426,6 +426,14 @@ class EnsembleRegressor(EnsembleEstimator):
         Out-of-fold conformity scores are stored under
         the ``conformity_scores_`` attribute.
 
+        Note
+        ----
+        This ``fit`` method is implemented because the class interface requires
+        it. However, it is not used directly. Instead, the fitting process is
+        replaced by the ``fit_single_estimator`` and ``fit_multi_estimators``
+        methods, which should be utilized for single and multiple estimators,
+        respectively.
+
         Parameters
         ----------
         X: ArrayLike of shape (n_samples, n_features)
@@ -453,42 +461,60 @@ class EnsembleRegressor(EnsembleEstimator):
         EnsembleRegressor
             The estimator fitted.
         """
-        # Initialization
-        single_estimator_: RegressorMixin
-        estimators_: List[RegressorMixin] = []
-        full_indexes = np.arange(_num_samples(X))
-        cv = self.cv
-        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
-        estimator = self.estimator
-        n_samples = _num_samples(y)
+        self.fit_single_estimator(
+            X,
+            y,
+            sample_weight,
+            groups,
+            **fit_params
+        )
 
-        # Computation
-        if cv == "prefit":
-            single_estimator_ = estimator
+        self.fit_multi_estimators(
+            X,
+            y,
+            sample_weight,
+            groups,
+            **fit_params
+        )
+
+        return self
+
+    def fit_multi_estimators(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params
+    ) -> EnsembleRegressor:
+
+        n_samples = _num_samples(y)
+        estimators: List[RegressorMixin] = []
+
+        if self.cv == "prefit":
+
+            # Create a placeholder attribute 'k_' filled with NaN values
+            # This attribute is defined for consistency but
+            # is not used in prefit mode
             self.k_ = np.full(
                 shape=(n_samples, 1), fill_value=np.nan, dtype=float
             )
+
         else:
-            single_estimator_ = self._fit_oof_estimator(
-                clone(estimator),
-                X,
-                y,
-                full_indexes,
-                sample_weight,
-                **fit_params
-            )
-            cv = cast(BaseCrossValidator, cv)
+            cv = cast(BaseCrossValidator, self.cv)
             self.k_ = np.full(
                 shape=(n_samples, cv.get_n_splits(X, y, groups)),
                 fill_value=np.nan,
                 dtype=float,
             )
-            if self.method == "naive":
-                estimators_ = [single_estimator_]
-            else:
-                estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
+
+            if self.method != "naive":
+                estimators = Parallel(
+                    self.n_jobs,
+                    verbose=self.verbose
+                )(
                     delayed(self._fit_oof_estimator)(
-                        clone(estimator),
+                        clone(self.estimator),
                         X,
                         y,
                         train_index,
@@ -497,13 +523,44 @@ class EnsembleRegressor(EnsembleEstimator):
                     )
                     for train_index, _ in cv.split(X, y, groups)
                 )
-                # In split-CP, we keep only the model fitted on train dataset
-                if self.use_split_method_:
-                    single_estimator_ = estimators_[0]
+
+        self.estimators_ = estimators
+
+        return self
+
+    def fit_single_estimator(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params
+    ) -> EnsembleRegressor:
+
+        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+        single_estimator_: RegressorMixin
+
+        if self.cv == "prefit":
+            single_estimator_ = self.estimator
+        else:
+            cv = cast(BaseCrossValidator, self.cv)
+            train_indexes = [index for index, _ in cv.split(X, y, groups)][0]
+            full_indexes = np.arange(_num_samples(X))
+            if self.use_split_method_:
+                indexes = train_indexes
+            else:
+                indexes = full_indexes
+
+            single_estimator_ = self._fit_oof_estimator(
+                    clone(self.estimator),
+                    X,
+                    y,
+                    indexes,
+                    sample_weight,
+                    **fit_params
+                )
 
         self.single_estimator_ = single_estimator_
-        self.estimators_ = estimators_
-
         return self
 
     def predict(
