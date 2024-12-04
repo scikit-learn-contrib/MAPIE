@@ -176,13 +176,13 @@ def plot_1d_data(
 ):
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3)
+    ax.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3, label="Prediction intervals")
     ax.scatter(X_train, y_train, color="red", alpha=0.3, label="Training data")
-    ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
-    ax.plot(X_test, y_test - y_sigma, color="gray", ls="--")
+    ax.plot(X_test, y_test, color="gray")
+    ax.plot(X_test, y_test - y_sigma, color="gray", ls="--", label="True confidence intervals")
     ax.plot(X_test, y_test + y_sigma, color="gray", ls="--")
     ax.plot(
-        X_test, y_pred, color="blue", alpha=0.5, label="Prediction intervals"
+        X_test, y_pred, color="blue", alpha=0.5, label="y_pred"
     )
     if title is not None:
         ax.set_title(title)
