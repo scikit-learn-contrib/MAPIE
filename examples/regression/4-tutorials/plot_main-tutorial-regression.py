@@ -184,7 +184,8 @@ def plot_1d_data(
     )
     ax.plot(X_test, y_test, color="gray")
     ax.plot(
-        X_test, y_test - y_sigma, color="gray", ls="--", label="True confidence intervals"
+        X_test, y_test - y_sigma, color="gray", ls="--", 
+        label="True confidence intervals"
     )
     ax.plot(X_test, y_test + y_sigma, color="gray", ls="--")
     ax.plot(
