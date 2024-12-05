@@ -433,6 +433,8 @@ class EnsembleRegressor(EnsembleEstimator):
         replaced by the ``fit_single_estimator`` and ``fit_multi_estimators``
         methods, which should be utilized for single and multiple estimators,
         respectively.
+        TODO back-end: once EnsembleEstimator has been removed,
+        this method may be removed, and also test_check_fit_ensemble_estimators
 
         Parameters
         ----------
@@ -544,11 +546,14 @@ class EnsembleRegressor(EnsembleEstimator):
             single_estimator_ = self.estimator
         else:
             cv = cast(BaseCrossValidator, self.cv)
-            train_indexes = [index for index, _ in cv.split(X, y, groups)][0]
-            full_indexes = np.arange(_num_samples(X))
             if self.use_split_method_:
+                train_indexes = [
+                    train_index for train_index, test_index in cv.split(
+                        X, y, groups)
+                ][0]
                 indexes = train_indexes
             else:
+                full_indexes = np.arange(_num_samples(X))
                 indexes = full_indexes
 
             single_estimator_ = self._fit_oof_estimator(

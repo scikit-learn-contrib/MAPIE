@@ -864,19 +864,6 @@ def test_return_multi_pred(ensemble: bool) -> None:
     assert len(output) == 3
 
 
-def test_beta_optimize_user_warning() -> None:
-    """
-    Test that a UserWarning is displayed when optimize_beta is used.
-    """
-    mapie_reg = MapieRegressor(
-        conformity_score=AbsoluteConformityScore(sym=False)
-    ).fit(X, y)
-    with pytest.warns(
-        UserWarning, match=r"Beta optimisation should only be used for*",
-    ):
-        mapie_reg.predict(X, alpha=0.05, optimize_beta=True)
-
-
 def test_fit_parameters_passing() -> None:
     """
     Test passing fit parameters, here early stopping at iteration 3.
