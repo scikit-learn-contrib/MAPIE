@@ -16,7 +16,8 @@ from mapie_v1.conformity_scores._utils import (
 )
 from mapie_v1._utils import transform_confidence_level_to_alpha_list, \
     check_method_not_naive, check_cv_not_string, hash_X_y, \
-    check_if_X_y_different_from_fit, make_intervals_single_if_single_alpha
+    check_if_X_y_different_from_fit, make_intervals_single_if_single_alpha, \
+    cast_point_predictions_to_ndarray
 
 
 class SplitConformalRegressor:
@@ -237,7 +238,7 @@ class SplitConformalRegressor:
             Array of point predictions, with shape (n_samples,).
         """
         predictions = self._mapie_regressor.predict(X, alpha=None)
-        return predictions
+        return cast_point_predictions_to_ndarray(predictions)
 
 
 class CrossConformalRegressor:
@@ -439,6 +440,8 @@ class CrossConformalRegressor:
             predict_params=predict_params
         )
 
+        return self
+
     def predict_set(
         self,
         X: ArrayLike,
@@ -518,7 +521,10 @@ class CrossConformalRegressor:
             self._mapie_regressor._check_agg_function(aggregation_method)
             self._mapie_regressor.agg_function = aggregation_method
 
-        return self._mapie_regressor.predict(X, alpha=None, ensemble=ensemble)
+        predictions = self._mapie_regressor.predict(
+            X, alpha=None, ensemble=ensemble
+        )
+        return cast_point_predictions_to_ndarray(predictions)
 
 
 class JackknifeAfterBootstrapRegressor:
@@ -627,6 +633,7 @@ class JackknifeAfterBootstrapRegressor:
         Self
             The fitted JackknifeAfterBootstrapRegressor instance.
         """
+        return self
 
     def conformalize(
         self,
@@ -659,6 +666,7 @@ class JackknifeAfterBootstrapRegressor:
             The JackknifeAfterBootstrapRegressor instance with
             calibrated prediction intervals.
         """
+        return self
 
     def predict_set(
         self,
@@ -684,7 +692,7 @@ class JackknifeAfterBootstrapRegressor:
             Prediction intervals of shape `(n_samples, 2)`,
             with lower and upper bounds for each sample.
         """
-        pass
+        return np.ndarray(0)
 
     def predict(
         self,
@@ -712,7 +720,7 @@ class JackknifeAfterBootstrapRegressor:
         NDArray
             Array of point predictions, with shape `(n_samples,)`.
         """
-        pass
+        return np.ndarray(0)
 
 
 class ConformalizedQuantileRegressor:
@@ -824,6 +832,7 @@ class ConformalizedQuantileRegressor:
         Self
             The fitted ConformalizedQuantileRegressor instance.
         """
+        return self
 
     def conformalize(
         self,
@@ -855,6 +864,7 @@ class ConformalizedQuantileRegressor:
             The ConformalizedQuantileRegressor instance with calibrated
             prediction intervals.
         """
+        return self
 
     def predict_set(
         self,
@@ -892,7 +902,7 @@ class ConformalizedQuantileRegressor:
             Prediction intervals with shape `(n_samples, 2)`, with lower
             and upper bounds for each sample.
         """
-        pass
+        return np.ndarray(0)
 
     def predict(
         self,
@@ -911,7 +921,7 @@ class ConformalizedQuantileRegressor:
         NDArray
             Array of point predictions with shape `(n_samples,)`.
         """
-        pass
+        return np.ndarray(0)
 
 
 class GibbsConformalRegressor:
