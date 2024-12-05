@@ -45,4 +45,5 @@ Contributors
 * Baptiste Calot <baptiste.calot@capgemini.com>
 * Leonardo Garma <leonardo.garma@gmail.com>
 * Mohammed Jawhar <mohammedjawhar365@gmail.com>
+* Syed Affan <saffand03@gmail.com>
 To be continued ...
