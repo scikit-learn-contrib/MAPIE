@@ -24,7 +24,7 @@ class SplitConformalRegressor:
     A conformal regression model using split conformal prediction to generate
     prediction intervals.
 
-    This method involves using a hold-out conformity set to determine 
+    This method involves using a hold-out conformity set to determine
     prediction intervals around point predictions from a base regressor.
 
     Parameters
