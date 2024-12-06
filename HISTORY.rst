@@ -10,6 +10,7 @@ History
 * Fix issue 495 to center correctly the prediction intervals
 * Fix documentation build warnings
 * Fix issue 528 to correct broken ENS image in the documentation
+* Fix issue 548 to correct labels generated in tutorial
 
 0.9.1 (2024-09-13)
 ------------------
