@@ -21,12 +21,11 @@ from mapie_v1._utils import transform_confidence_level_to_alpha_list, \
 
 class SplitConformalRegressor:
     """
-    Predictions intervals for regression using split conformal prediction.
-
     A conformal regression model using split conformal prediction to generate
-    prediction intervals with statistical guarantees. This method involves
-    using a hold-out conformity set to determine prediction intervals around
-    point predictions from a base regressor.
+    prediction intervals.
+
+    This method involves using a hold-out conformity set to determine 
+    prediction intervals around point predictions from a base regressor.
 
     Parameters
     ----------
@@ -244,13 +243,12 @@ class SplitConformalRegressor:
 
 class CrossConformalRegressor:
     """
-    Predictions intervals for regression using cross conformal prediction.
-
     A conformal regression model using cross-conformal prediction to generate
-    prediction intervals with statistical guarantees. This method involves
-    computing conformity scoring across multiple folds in a cross-validation
-    fashion to determine prediction intervals around point predictions from a
-    base regressor.
+    prediction intervals.
+
+    This method involves computing conformity scoring across multiple folds in
+    a cross-validation fashion to determine prediction intervals around point
+    predictions from a base regressor.
 
     Parameters
     ----------
@@ -527,12 +525,12 @@ class CrossConformalRegressor:
 
 class JackknifeAfterBootstrapRegressor:
     """
-    Predictions intervals for regression using jackknife-after-bootstrap.
-
     A conformal regression model using the jackknife-after-bootstrap approach
-    to generate prediction intervals with statistical guarantees. This method
-    combines bootstrap sampling with the jackknife technique to produce robust
-    prediction intervals around point predictions from a base regressor.
+    to generate prediction intervals.
+
+    This method combines bootstrap sampling with the jackknife technique
+    to produce robust prediction intervals around point predictions from
+    a base regressor.
 
     Parameters
     ----------
@@ -723,11 +721,10 @@ class JackknifeAfterBootstrapRegressor:
 
 class ConformalizedQuantileRegressor:
     """
-    Predictions intervals for regression using conformalized quantile regression.
-
     A conformal quantile regression model that generates prediction intervals
-    with statistical guarantees using quantile regression as the base
-    estimator. This approach provides prediction intervals by leveraging
+    using quantile regression as the base estimator.
+
+    This approach provides prediction intervals by leveraging
     quantile predictions and applying conformal adjustments to ensure coverage.
 
     Parameters
@@ -798,10 +795,6 @@ class ConformalizedQuantileRegressor:
         estimator: RegressorMixin = QuantileRegressor(),
         confidence_level: Union[float, List[float]] = 0.9,
         conformity_score: Union[str, BaseRegressionScore] = "absolute",
-        # n_jobs: Optional[int] = None
-        # Not yet available in MapieQuantileRegressor
-        # verbose: int = 0,
-        # Idem
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         pass
