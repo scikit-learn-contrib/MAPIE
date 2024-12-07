@@ -8,11 +8,10 @@ from sklearn.utils.validation import check_array, column_or_1d
 from ._machine_precision import EPSILON
 from ._typing import ArrayLike, NDArray
 from .utils import (calc_bins, check_alpha, check_array_inf, check_array_nan,
-                    check_array_shape_classification,
+                    check_array_shape_classification, check_split_strategy,
                     check_array_shape_regression, check_arrays_length,
-                    check_binary_zero_one, check_lower_upper_bounds,
-                    check_nb_intervals_sizes, check_nb_sets_sizes,
-                    check_number_bins, check_split_strategy)
+                    check_binary_zero_one, check_nb_intervals_sizes,
+                    check_nb_sets_sizes, check_number_bins)
 
 
 def regression_coverage_score(
@@ -55,7 +54,6 @@ def regression_coverage_score(
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
     check_arrays_length(y_true, y_pred_low, y_pred_up)
-    check_lower_upper_bounds(y_true, y_pred_low, y_pred_up)
     check_array_nan(y_true)
     check_array_inf(y_true)
     check_array_nan(y_pred_low)
