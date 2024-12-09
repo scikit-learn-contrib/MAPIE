@@ -105,7 +105,7 @@ def test_intervals_and_predictions_exact_equality_split(
         "random_state": RANDOM_STATE,
     }
 
-    v0, v1 = initialize_models("split", v0_params, v1_params)
+    v0, v1 = initialize_models(cv, v0_params, v1_params)
     compare_model_predictions_and_intervals(v0=v0,
                                             v1=v1,
                                             X=X_split,
@@ -280,7 +280,7 @@ def initialize_models(
               CrossConformalRegressor,
               JackknifeAfterBootstrapRegressor]
 
-    if strategy_key == "split":
+    if strategy_key in ["split", "prefit"]:
         v1_params = filter_params(SplitConformalRegressor.__init__, v1_params)
         v1 = SplitConformalRegressor(**v1_params)
 
