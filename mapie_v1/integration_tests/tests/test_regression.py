@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Union
+from typing import Optional, Union, Dict, Tuple
 
 import numpy as np
 import pytest
@@ -63,7 +63,7 @@ X_split, y_split = make_regression(
         LinearRegression(),
         RandomForestRegressor(random_state=RANDOM_STATE, max_depth=2)])
 @pytest.mark.parametrize("test_size", [0.2, 0.5])
-def test_exact_interval_equality_split(
+def test_intervals_and_predictions_exact_equality_split(
     cv,
     method,
     conformity_score,
@@ -106,15 +106,15 @@ def test_exact_interval_equality_split(
     }
 
     v0, v1 = initialize_models("split", v0_params, v1_params)
-    evaluate_models(v0=v0,
-                    v1=v1,
-                    X=X_split,
-                    y=y_split,
-                    v0_params=v0_params,
-                    v1_params=v1_params,
-                    test_size=test_size,
-                    random_state=RANDOM_STATE,
-                    prefit=prefit)
+    compare_model_predictions_and_intervals(v0=v0,
+                                            v1=v1,
+                                            X=X_split,
+                                            y=y_split,
+                                            v0_params=v0_params,
+                                            v1_params=v1_params,
+                                            test_size=test_size,
+                                            random_state=RANDOM_STATE,
+                                            prefit=prefit)
 
 
 params_test_cases_cross = [
@@ -185,7 +185,7 @@ def test_intervals_and_predictions_exact_equality_cross(params_cross):
     v1_params = params_cross["v1"]
 
     v0, v1 = initialize_models("cross", v0_params, v1_params)
-    evaluate_models(v0, v1, X, y, v0_params, v1_params)
+    compare_model_predictions_and_intervals(v0, v1, X, y, v0_params, v1_params)
 
 
 params_test_cases_jackknife = [
@@ -235,24 +235,51 @@ params_test_cases_jackknife = [
             "minimize_interval_width": True,
             "random_state": RANDOM_STATE,
         },
-    }
+    },
+    {
+        "v0": {
+            "alpha": 0.1,
+            "cv": Subsample(n_resamplings=10, random_state=RANDOM_STATE),
+            "method": "minmax",
+            "aggregation_method": "mean",
+            "allow_infinite_bounds": True,
+            "random_state": RANDOM_STATE,
+        },
+        "v1": {
+            "confidence_level": 0.9,
+            "resampling": 10,
+            "method": "minmax",
+            "aggregation_method": "mean",
+            "allow_infinite_bounds": True,
+            "random_state": RANDOM_STATE,
+        }
+    },
 ]
 
 
 @pytest.mark.parametrize("params_jackknife", params_test_cases_jackknife)
-def test_jackknife_after_bootstrap_consistency(params_jackknife):
+def test_intervals_and_predictions_exact_equality_jackknife(params_jackknife):
     v0_params = params_jackknife["v0"]
     v1_params = params_jackknife["v1"]
 
     v0, v1 = initialize_models("jackknife", v0_params, v1_params)
-    evaluate_models(v0, v1, X, y, v0_params, v1_params)
+    compare_model_predictions_and_intervals(v0, v1, X, y, v0_params, v1_params)
 
 
 def initialize_models(
-    strategy_key,
-    v0_params: dict,
-    v1_params: dict,
-):
+    strategy_key: str,
+    v0_params: Dict,
+    v1_params: Dict,
+) -> Tuple[MapieRegressorV0, Union[
+    SplitConformalRegressor,
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor
+]]:
+
+    v1: Union[SplitConformalRegressor,
+              CrossConformalRegressor,
+              JackknifeAfterBootstrapRegressor]
+
     if strategy_key == "split":
         v1_params = filter_params(SplitConformalRegressor.__init__, v1_params)
         v1 = SplitConformalRegressor(**v1_params)
@@ -277,15 +304,15 @@ def initialize_models(
     return v0, v1
 
 
-def evaluate_models(
+def compare_model_predictions_and_intervals(
     v0: MapieRegressorV0,
     v1: Union[SplitConformalRegressor,
               CrossConformalRegressor,
               JackknifeAfterBootstrapRegressor],
     X: ArrayLike,
     y: ArrayLike,
-    v0_params: dict = {},
-    v1_params: dict = {},
+    v0_params: Dict = {},
+    v1_params: Dict = {},
     prefit: bool = False,
     test_size: Optional[float] = None,
     random_state: int = 42,
@@ -293,7 +320,7 @@ def evaluate_models(
 
     if test_size is not None:
         X_train, X_conf, y_train, y_conf = train_test_split_shuffle(
-            X, y, test_size=test_size, random_state=RANDOM_STATE
+            X, y, test_size=test_size, random_state=random_state
         )
     else:
         X_train, X_conf, y_train, y_conf = X, X, y, y
@@ -303,9 +330,12 @@ def evaluate_models(
     v1_conformalize_params = filter_params(v1.conformalize, v1_params)
 
     if prefit:
-        v0.estimator.fit(X_train, y_train)
+        estimator = v0.estimator
+        estimator.fit(X_train, y_train)
+        v0.estimator = estimator
+        v1._mapie_regressor.estimator = estimator
+
         v0.fit(X_conf, y_conf, **v0_fit_params)
-        v1._mapie_regressor.estimator.fit(X_train, y_train)
     else:
         v0.fit(X, y, **v0_fit_params)
         v1.fit(X_train, y_train, **v1_fit_params)
@@ -316,12 +346,8 @@ def evaluate_models(
     v1_predict_params = filter_params(v1.predict, v1_params)
     v1_predict_set_params = filter_params(v1.predict_set, v1_params)
 
-    v0_preds: ArrayLike
-    v0_pred_intervals: ArrayLike
     v0_preds, v0_pred_intervals = v0.predict(X_conf, **v0_predict_params)
-
-    v1_pred_intervals: ArrayLike = v1.predict_set(X_conf,
-                                                  **v1_predict_set_params)
+    v1_pred_intervals = v1.predict_set(X_conf, **v1_predict_set_params)
     if v1_pred_intervals.ndim == 2:
         v1_pred_intervals = np.expand_dims(v1_pred_intervals, axis=2)
 
