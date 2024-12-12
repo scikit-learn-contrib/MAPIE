@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore")
 # Estimating the aleatoric uncertainty of heteroscedastic noisy data
 # ---------------------------------------------------------------------
 #
-# Let's define again the :math:`x \times \sin(x)` function and another simple
+# Let's define again the ``x * sin(x)`` function and another simple
 # function that generates one-dimensional data with normal noise uniformely
 # in a given interval.
 
@@ -70,7 +70,7 @@ def get_1d_data_with_heteroscedastic_noise(
 ##############################################################################
 # We first generate noisy one-dimensional data uniformely on an interval.
 # Here, the noise is considered as *heteroscedastic*, since it will increase
-# linearly with :math:`x`.
+# linearly with `x`.
 
 min_x, max_x, n_samples, noise = 0, 5, 300, 0.5
 (
@@ -92,7 +92,7 @@ plt.show()
 ##############################################################################
 # As mentioned previously, we fit our training data with a simple
 # polynomial function. Here, we choose a degree equal to 10 so the function
-# is able to perfectly fit :math:`x \times \sin(x)`.
+# is able to perfectly fit ``x * sin(x)``.
 
 degree_polyn = 10
 polyn_model = Pipeline(

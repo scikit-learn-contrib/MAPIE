@@ -22,9 +22,9 @@ For each testing fold used by MAPIE to store residuals, an internal
 cross-validation occurs on the training fold, optimizing hyperparameters.
 This ensures that residuals seen by MAPIE are never seen by the algorithm
 beforehand. However, this method is much heavier computationally since
-it results in :math:`N * P` calculations, where *N* is the number of
+it results in ``N * P`` calculations, where *N* is the number of
 *out-of-fold* models and *P* the number of parameter search cross-validations,
-versus :math:`N + P` for the non-nested approach.
+versus ``N + P`` for the non-nested approach.
 
 Here, we compare the two strategies on a toy dataset. We use the Random
 Forest Regressor as a base regressor for the CV+ strategy. For the sake of

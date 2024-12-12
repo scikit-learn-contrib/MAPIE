@@ -33,7 +33,7 @@ from mapie.metrics import (classification_coverage_score,
 # We will use MAPIE to estimate a prediction set of several classes such
 # that the probability that the true label of a new test point is included
 # in the prediction set is always higher than the target confidence level :
-# :math:`P(Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \geq 1 - \alpha`.
+#``P(Yₙ₊₁ ∈ Ĉₙ,α(Xₙ₊₁)) ≥ 1 - α```
 # We start by using the softmax score output by the base classifier as the
 # conformity score on a toy two-dimensional dataset.
 #
@@ -42,17 +42,17 @@ from mapie.metrics import (classification_coverage_score,
 # * Generate a dataset with train, calibration and test, the model is
 #   fitted on the training set.
 #
-# * Set the conformal score :math:`S_i = \hat{f}(X_{i})_{y_i}` the softmax
+# * Set the conformal score ``Sᵢ = 𝑓̂(Xᵢ)ᵧᵢ``, the softmax
 #   output of the true class for each sample in the calibration set.
 #
-# * Define :math:`\hat{q}` as being the :math:`(n + 1) (\alpha) / n`
-#   previous quantile of :math:`S_{1}, ..., S_{n}`
-#   (this is essentially the quantile :math:`\alpha`, but with a small sample
+# * Define ``q̂`` as being the ``(n + 1)(α) / n``
+#   previous quantile of ``S₁, ..., Sₙ``
+#   (this is essentially the quantile ``α``, but with a small sample
 #   correction).
 #
-# * Finally, for a new test data point (where :math:`X_{n + 1}` is known but
-#   :math:`Y_{n + 1}` is not), create a prediction set
-#   :math:`C(X_{n+1}) = \{y: \hat{f}(X_{n+1})_{y} > \hat{q}\}` which includes
+# * Finally, for a new test data point (where ``Xₙ₊₁`` is known but
+#   ``Yₙ₊₁`` is not), create a prediction set
+#   ``C(Xₙ₊₁) = {y: 𝑓̂(Xₙ₊₁)ᵧ > q̂}`` which includes
 #   all the classes with a sufficiently high softmax output.
 
 # We use a two-dimensional toy dataset with three labels. The distribution of
@@ -205,9 +205,9 @@ plot_results(alpha, X_test_mesh, y_pred_score, y_ps_score)
 # classifier.
 #
 # Let’s now study the effective coverage and the mean prediction set widths
-# as function of the :math:`1-\alpha` target coverage. To this aim, we use once
+# as function of the ``1 - α`` target coverage. To this aim, we use once
 # again the ``predict`` method of MAPIE to estimate predictions sets on a
-# large number of :math:`\alpha` values.
+# large number of ``α`` values.
 
 alpha2 = np.arange(0.02, 0.98, 0.02)
 _, y_ps_score2 = mapie_score.predict(X_test, alpha=alpha2)
@@ -243,7 +243,7 @@ plot_coverages_widths(alpha2, coverages_score, widths_score, "lac")
 #
 # We saw in the previous section that the "lac" method is well calibrated by
 # providing accurate coverage levels. However, it tends to give null
-# prediction sets for uncertain regions, especially when the :math:`\alpha`
+# prediction sets for uncertain regions, especially when the ``α``
 # value is high.
 # MAPIE includes another method, called Adaptive Prediction Set (APS),
 # whose conformity score is the cumulated score of the softmax output until
