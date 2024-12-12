@@ -602,7 +602,10 @@ class JackknifeAfterBootstrapRegressor:
     Examples
     --------
     >>> regressor = JackknifeAfterBootstrapRegressor(
-    ...    estimator=LinearRegression(), confidence_level=0.9, n_bootstraps=8)
+    ...    estimator=LinearRegression(), 
+    ...    confidence_level=0.9, 
+    ...    resampling=8,
+    ...    aggregation_method="mean")
     >>> regressor.fit(X_train, y_train)
     >>> regressor.conformalize(X_conf, y_conf)
     >>> intervals = regressor.predict_set(X_test)
