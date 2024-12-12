@@ -631,7 +631,7 @@ class JackknifeAfterBootstrapRegressor:
             JackknifeAfterBootstrapRegressor._VALID_AGGREGATION_METHODS
         )
 
-        if isinstance(resampling, int) :
+        if isinstance(resampling, int):
             cv = Subsample(n_resamplings=resampling)
         elif isinstance(resampling, Subsample):
             cv = resampling
