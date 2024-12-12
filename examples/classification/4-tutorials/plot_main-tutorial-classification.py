@@ -33,7 +33,7 @@ from mapie.metrics import (classification_coverage_score,
 # We will use MAPIE to estimate a prediction set of several classes such
 # that the probability that the true label of a new test point is included
 # in the prediction set is always higher than the target confidence level :
-# ``P(Yₙ₊₁ ∈ Ĉₙ,α(Xₙ₊₁)) ≥ 1 - α```
+# ``P(Yₙ₊₁ ∈ Ĉₙ,α(Xₙ₊₁)) ≥ 1 - α``
 # We start by using the softmax score output by the base classifier as the
 # conformity score on a toy two-dimensional dataset.
 #
