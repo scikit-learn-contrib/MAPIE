@@ -179,7 +179,7 @@ plt.show()
 ##############################################################################
 # 2 - Plots where we choose a specific risk value (0.1 in our case) and look at
 # the average risk, the UCB of the risk (for RCPS methods) and the choice of
-# the threshold ``λ``
+# the threshold ``λ``.
 # * We can see that among the RCPS methods, the Bernstein method
 # gives the best results as for a given value of ``α``
 # as we are above the required recall but with a larger value of
