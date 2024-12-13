@@ -9,6 +9,7 @@ from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import QuantileRegressor
+from lightgbm import LGBMRegressor
 
 from mapie.subsample import Subsample
 from mapie._typing import ArrayLike
@@ -33,14 +34,14 @@ N_BOOTSTRAPS = 30
 
 
 X, y_signed = make_regression(
-    n_samples=50,
+    n_samples=100,
     n_features=10,
     noise=1.0,
     random_state=RANDOM_STATE
 )
 y = np.abs(y_signed)
 sample_weight = RandomState(RANDOM_STATE).random(len(X))
-groups = [0] * 10 + [1] * 10 + [2] * 10 + [3] * 10 + [4] * 10
+groups = [0] * 20 + [1] * 20 + [2] * 20 + [3] * 20 + [4] * 20
 positive_predictor = TransformedTargetRegressor(
     regressor=LinearRegression(),
     func=lambda y_: np.log(y_ + 1),
@@ -271,7 +272,15 @@ split_model = QuantileRegressor(
                 alpha=0.0,
             )
 
-prefit_models = []
+lgbm_models = []
+lgbm_alpha = 0.1
+for alpha_ in [lgbm_alpha / 2, (1 - (lgbm_alpha / 2)), 0.5]:
+    estimator_ = LGBMRegressor(
+        objective='quantile',
+        alpha=alpha_,
+    )
+    lgbm_models.append(estimator_)
+
 
 @pytest.mark.parametrize("params_jackknife", params_test_cases_jackknife)
 def test_intervals_and_predictions_exact_equality_jackknife(params_jackknife):
@@ -302,8 +311,8 @@ params_test_cases_quantile = [
     },
     {
         "v0": {
-            "estimator": prefit_models,
-            "alpha": [0.5, 0.5],
+            "estimator": lgbm_models,
+            "alpha": lgbm_alpha,
             "cv": "prefit",
             "method": "quantile",
             "calib_size": 0.3,
@@ -312,8 +321,8 @@ params_test_cases_quantile = [
             "random_state": RANDOM_STATE,
         },
         "v1": {
-            "estimator": prefit_models,
-            "confidence_level": [0.5, 0.5],
+            "estimator": lgbm_models,
+            "confidence_level": 1-lgbm_alpha,
             "prefit": True,
             "test_size": 0.3,
             "fit_params": {"sample_weight": sample_weight},
@@ -324,17 +333,19 @@ params_test_cases_quantile = [
     {
         "v0": {
             "estimator": split_model,
-            "alpha": 0.1,
+            "alpha": 0.5,
             "cv": "split",
             "method": "quantile",
             "calib_size": 0.3,
+            "allow_infinite_bounds": True,
             "random_state": RANDOM_STATE,
         },
         "v1": {
             "estimator": split_model,
-            "confidence_level": 0.9,
+            "confidence_level": 0.5,
             "prefit": False,
             "test_size": 0.3,
+            "allow_infinite_bounds": True,
             "random_state": RANDOM_STATE,
         },
     },
@@ -358,19 +369,23 @@ params_test_cases_quantile = [
 ]
 
 
-@pytest.mark.parametrize("params_quantile", params_test_cases_jackknife)
+@pytest.mark.parametrize("params_quantile", params_test_cases_quantile)
 def test_intervals_and_predictions_exact_equality_quantile(params_quantile):
     v0_params = params_quantile["v0"]
     v1_params = params_quantile["v1"]
 
+    test_size = v1_params["test_size"] if "test_size" in v1_params else None
+    prefit = ("prefit" in v1_params) and v1_params["prefit"]
+
     v0, v1 = select_models_by_strategy("quantile")
     compare_model_predictions_and_intervals(model_v0=v0,
                                             model_v1=v1,
-                                            X=X_split,
-                                            y=y_split,
+                                            X=X,
+                                            y=y,
                                             v0_params=v0_params,
                                             v1_params=v1_params,
-                                            test_size=v1_params["test_size"],
+                                            test_size=test_size,
+                                            prefit=prefit,
                                             random_state=RANDOM_STATE)
 
 
