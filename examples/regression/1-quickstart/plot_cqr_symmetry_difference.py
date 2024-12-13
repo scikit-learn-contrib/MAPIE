@@ -111,4 +111,4 @@ plt.show()
 # each bound, allowing for more flexible and accurate intervals that reflect
 # the heteroscedastic nature of the data. The resulting effective coverages
 # demonstrate the theoretical guarantee of the target coverage level
-# :math:`1 - \alpha`.
+# ``1 - α``.

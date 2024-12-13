@@ -74,7 +74,7 @@ X_train, X_cal, y_train, y_cal = train_test_split(
 # quantile regression using
 # :class:`~mapie.quanitle_regression.MapieQuantileRegressor`. Note that the
 # three estimators need to be trained at quantile values of
-# :math:`(\alpha/2, 1-(\alpha/2), 0.5)`.
+# ``(α/2, 1-(α/2), 0.5)``.
 
 
 # Train a MLPRegressor for MapieRegressor
