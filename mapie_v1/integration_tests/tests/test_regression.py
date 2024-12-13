@@ -213,6 +213,7 @@ params_test_cases_jackknife = [
             "aggregation_method": "median",
             "method": "plus",
             "fit_params": {"sample_weight": sample_weight},
+            "ensemble": True,
             "random_state": RANDOM_STATE,
         },
     },
@@ -222,7 +223,6 @@ params_test_cases_jackknife = [
             "alpha": [0.5, 0.5],
             "conformity_score": GammaConformityScore(),
             "agg_function": "mean",
-            "ensemble": True,
             "cv": Subsample(n_resamplings=20,
                             replace=True,
                             random_state=RANDOM_STATE),
@@ -260,6 +260,7 @@ params_test_cases_jackknife = [
             ),
             "method": "minmax",
             "aggregation_method": "mean",
+            "ensemble": True,
             "allow_infinite_bounds": True,
             "random_state": RANDOM_STATE,
         }
