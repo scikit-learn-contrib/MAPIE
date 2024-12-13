@@ -102,12 +102,12 @@ plt.show()
 # Bernstein and Waudby-Smith–Ramdas).
 # The two methods give two different guarantees on the risk:
 #
-# * RCPS: ``P(R(𝒯ₓ̂ₗ) ≤ α) ≥ 1 - δ``
-#   where ``R(𝒯ₓ̂ₗ)``
+# * RCPS: ``𝒫(R(𝒯̂λ̂) ≤ α) ≥ 1 − δ``
+#   where ``R(𝒯̂λ̂)``
 #   is the risk we want to control and α is the desired risk
 #
-# * CRC: ``𝐸[Lₙ₊₁(𝑥̂ₗ)] ≤ α``
-#   where ``Lₙ₊₁(𝑥̂ₗ)`` is the risk of a new observation and
+# * CRC: ``𝐸[Lₙ₊₁(λ̂)] ≤ α``
+#   where ``Lₙ₊₁(λ̂)`` is the risk of a new observation and
 #   ``α`` is the desired risk
 #
 # In both cases, the objective of the method is to find the optimal value of
@@ -227,8 +227,8 @@ plt.show()
 #
 # More precisely, we look after all the ``λ`` that sastisfy the
 # following:
-# ``𝒫(R(𝒯ₓₗ) ≤ α) ≥ 1 - δ``,
-# where ``R(𝒯ₓₗ)`` is the risk we want to control and
+# ``𝒫(R(𝒯̂λ̂) ≤ α) ≥ 1 − δ``,
+# where ``R(𝒯̂λ̂)`` is the risk we want to control and
 # each ``λ`` should satisfy FWER control.
 # ``α`` is the desired risk.
 #
