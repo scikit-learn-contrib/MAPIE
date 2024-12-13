@@ -812,7 +812,7 @@ class JackknifeAfterBootstrapRegressor:
         ----------
         X : ArrayLike
             Data features for generating point predictions.
-        
+
         ensemble : bool, default=False
             If True, aggregates predictions across models fitted on each
             bootstrap samples, this is using the aggregation method defined
