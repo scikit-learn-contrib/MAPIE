@@ -600,7 +600,7 @@ class MapieQuantileRegressor(MapieRegressor):
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
         **fit_params,
-    ):
+    ) -> Tuple[ArrayLike, ArrayLike]:
 
         self._check_parameters()
         checked_estimator = self._check_estimator(self.estimator)
