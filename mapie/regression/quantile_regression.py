@@ -546,9 +546,8 @@ class MapieQuantileRegressor(MapieRegressor):
         MapieQuantileRegressor
              The model itself.
         """
-        self.cv = self._check_cv(cast(str, self.cv))
-        self.alpha_np = self._check_alpha(self.alpha)
-        self.estimators_: List[RegressorMixin] = []
+
+        self.init_fit()
 
         if self.cv == "prefit":
             X_calib, y_calib = self.prefit_estimators(X, y)
@@ -570,6 +569,12 @@ class MapieQuantileRegressor(MapieRegressor):
         self.conformalize(X_calib, y_calib)
 
         return self
+
+    def init_fit(self):
+
+        self.cv = self._check_cv(cast(str, self.cv))
+        self.alpha_np = self._check_alpha(self.alpha)
+        self.estimators_: List[RegressorMixin] = []
 
     def prefit_estimators(
         self,
