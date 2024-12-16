@@ -1036,3 +1036,21 @@ def test_check_change_method_to_base(method: str, cv: str) -> None:
     )
     mapie_reg.fit(X_val, y_val)
     assert mapie_reg.method == "base"
+
+
+def test_deprecated_ensemble_regressor_fit_warning() -> None:
+    ens_reg = EnsembleRegressor(
+        LinearRegression(),
+        "plus",
+        KFold(n_splits=5, random_state=None, shuffle=True),
+        "nonsense",
+        None,
+        random_state,
+        0.20,
+        False
+    )
+    with pytest.warns(
+        FutureWarning,
+        match=r".WARNING: EnsembleRegressor.fit is deprecated.*"
+    ):
+        ens_reg.fit(X, y)
