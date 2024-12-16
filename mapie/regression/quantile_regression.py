@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, Dict, List, Optional, Tuple, Union, cast
+from typing import Iterable, List, Optional, Tuple, Union, cast, Any
 
 import numpy as np
 from sklearn.base import RegressorMixin, clone
@@ -547,7 +547,7 @@ class MapieQuantileRegressor(MapieRegressor):
              The model itself.
         """
 
-        self.init_fit()
+        self.initialize_fit()
 
         if self.cv == "prefit":
             X_calib, y_calib = self.prefit_estimators(X, y)
@@ -570,8 +570,7 @@ class MapieQuantileRegressor(MapieRegressor):
 
         return self
 
-    def init_fit(self):
-
+    def initialize_fit(self) -> None:
         self.cv = self._check_cv(cast(str, self.cv))
         self.alpha_np = self._check_alpha(self.alpha)
         self.estimators_: List[RegressorMixin] = []
@@ -667,13 +666,15 @@ class MapieQuantileRegressor(MapieRegressor):
 
     def conformalize(
         self,
-        X_conf: ArrayLike,
-        y_conf: ArrayLike,
+        X: ArrayLike,
+        y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        predict_params: Dict = {},
-    ):
+        # Parameter groups kept for compliance with superclass MapieRegressor
+        groups: Optional[ArrayLike] = None,
+        **kwargs: Any,
+    ) -> MapieRegressor:
 
-        self.n_calib_samples = _num_samples(y_conf)
+        self.n_calib_samples = _num_samples(y)
 
         y_calib_preds = np.full(
                 shape=(3, self.n_calib_samples),
@@ -681,15 +682,15 @@ class MapieQuantileRegressor(MapieRegressor):
             )
 
         for i, est in enumerate(self.estimators_):
-            y_calib_preds[i] = est.predict(X_conf, **predict_params).ravel()
+            y_calib_preds[i] = est.predict(X, **kwargs).ravel()
 
         self.conformity_scores_ = np.full(
                 shape=(3, self.n_calib_samples),
                 fill_value=np.nan
             )
 
-        self.conformity_scores_[0] = y_calib_preds[0] - y_conf
-        self.conformity_scores_[1] = y_conf - y_calib_preds[1]
+        self.conformity_scores_[0] = y_calib_preds[0] - y
+        self.conformity_scores_[1] = y - y_calib_preds[1]
         self.conformity_scores_[2] = np.max(
             [
                 self.conformity_scores_[0],
