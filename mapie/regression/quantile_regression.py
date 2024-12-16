@@ -657,6 +657,9 @@ class MapieQuantileRegressor(MapieRegressor):
             )
         self.single_estimator_ = self.estimators_[2]
 
+        X_calib = cast(ArrayLike, X_calib)
+        y_calib = cast(ArrayLike, y_calib)
+
         return X_calib, y_calib
 
     def conformalize(
@@ -667,7 +670,6 @@ class MapieQuantileRegressor(MapieRegressor):
         predict_params: Dict = {},
     ):
 
-        X_conf, y_conf = indexable(X_conf, y_conf)
         self.n_calib_samples = _num_samples(y_conf)
 
         y_calib_preds = np.full(
