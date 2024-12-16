@@ -579,9 +579,7 @@ class MapieQuantileRegressor(MapieRegressor):
 
         estimator = cast(List, self.estimator)
         self._check_prefit_params(estimator)
-
-        for i, est in enumerate(estimator):
-            self.estimators_.append(est)
+        self.estimators_ = list(estimator)
         self.single_estimator_ = self.estimators_[2]
 
         X_calib, y_calib = indexable(X, y)
