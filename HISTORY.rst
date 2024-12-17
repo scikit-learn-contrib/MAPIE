@@ -14,6 +14,7 @@ History
 * Fix issue 547 to fix wrong warning
 * Fix issue 480 (correct display of mathematical equations in generated notebooks)
 * Refactor MapieRegressor, EnsembleRegressor, and MapieQuantileRegressor, to prepare for the release of v1.0.0
+* Remove optimize_beta usage warning when using for methods other than EnbPI
 
 0.9.1 (2024-09-13)
 ------------------
