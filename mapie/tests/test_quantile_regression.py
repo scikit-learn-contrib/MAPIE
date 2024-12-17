@@ -470,11 +470,13 @@ def test_for_small_dataset() -> None:
             estimator=qt,
             alpha=0.1
         )
+        X_calib_toy_small = X_calib_toy[:2]
+        y_calib_toy_small = y_calib_toy[:2]
         mapie_reg.fit(
-            np.array([1, 2, 3]),
-            np.array([2, 2, 3]),
-            X_calib=np.array([3, 5]),
-            y_calib=np.array([2, 3])
+            X_train_toy,
+            y_train_toy,
+            X_calib=X_calib_toy_small,
+            y_calib=y_calib_toy_small
         )
 
 
