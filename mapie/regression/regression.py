@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -694,13 +693,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             return np.array(y_pred)
 
         else:
-            if optimize_beta and self.method != 'enbpi':
-                warnings.warn(
-                    "WARNING: Beta optimisation should only be used for "
-                    "method='enbpi'.",
-                    UserWarning
-                )
-
             # Check alpha and the number of effective calibration samples
             alpha_np = cast(NDArray, alpha)
             if not allow_infinite_bounds:
