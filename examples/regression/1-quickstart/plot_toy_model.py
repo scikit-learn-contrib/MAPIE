@@ -13,11 +13,14 @@ from sklearn.linear_model import LinearRegression
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieRegressor
 
+RANDOM_STATE = 42
 regressor = LinearRegression()
-X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
+X, y = make_regression(
+    n_samples=500, n_features=1, noise=20, random_state=RANDOM_STATE
+)
 
 alpha = [0.05, 0.32]
-mapie = MapieRegressor(regressor, method="plus")
+mapie = MapieRegressor(regressor, method="plus", random_state=RANDOM_STATE)
 mapie.fit(X, y)
 y_pred, y_pis = mapie.predict(X, alpha=alpha)
 
