@@ -19,15 +19,21 @@ PROJECT_URLS = {
     "Source Code": "https://github.com/scikit-learn-contrib/MAPIE"
 }
 LICENSE = "new BSD"
-MAINTAINER = "T. Cordier, V. Blot, L. Lacombe"
+MAINTAINER = "V. Laurent, T. Cordier, V. Blot, L. Lacombe"
 MAINTAINER_EMAIL = (
+    "valentin.laurent@capgemini.com, "
     "thibault.a.cordier@capgemini.com, "
     "vincent.blot@capgemini.com, "
     "louis.lacombe@capgemini.com"
 )
 PYTHON_REQUIRES = ">=3.7"
 PACKAGES = find_packages()
-INSTALL_REQUIRES = ["scikit-learn", "scipy", "numpy>=1.21", "packaging"]
+INSTALL_REQUIRES = [
+    "scikit-learn < 1.6.0",
+    "scipy",
+    "numpy>=1.21",
+    "packaging"
+]
 CLASSIFIERS = [
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
