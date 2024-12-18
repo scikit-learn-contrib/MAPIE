@@ -569,7 +569,9 @@ class MapieQuantileRegressor(MapieRegressor):
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
-    ) -> Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]:
+    ) -> Tuple[
+        ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]
+    ]:
         """
         Handles the preparation of training and calibration datasets,
         including validation and splitting.
