@@ -3,14 +3,15 @@ from typing import Optional, Union, List, cast
 from typing_extensions import Self
 
 import numpy as np
-from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.base import RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.pipeline import Pipeline
 
 from mapie.subsample import Subsample
 from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
-from mapie.regression import MapieRegressor
+from mapie.regression import MapieRegressor, MapieQuantileRegressor
 from mapie.utils import check_estimator_fit_predict
 from mapie_v1.conformity_scores._utils import (
     check_and_select_regression_conformity_score,
@@ -904,12 +905,29 @@ class ConformalizedQuantileRegressor:
 
     def __init__(
         self,
-        estimator: RegressorMixin = QuantileRegressor(),
-        confidence_level: Union[float, List[float]] = 0.9,
-        conformity_score: Union[str, BaseRegressionScore] = "absolute",
+        estimator: Optional[
+            Union[
+                RegressorMixin,
+                Pipeline,
+                List[Union[RegressorMixin, Pipeline]]
+            ]
+        ] = None,
+        confidence_level: float = 0.9,
+        prefit: bool = False,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
-        pass
+
+        self._alpha = 1 - confidence_level
+
+        cv: str = "prefit" if prefit else "split"
+        self._mapie_quantile_regressor = MapieQuantileRegressor(
+            estimator=estimator,
+            method="quantile",
+            cv=cv,
+            alpha=self._alpha,
+        )
+
+        self._sample_weight: Optional[NDArray] = None
 
     def fit(
         self,
@@ -937,6 +955,21 @@ class ConformalizedQuantileRegressor:
         Self
             The fitted ConformalizedQuantileRegressor instance.
         """
+
+        if fit_params:
+            fit_params_ = copy.deepcopy(fit_params)
+            self._sample_weight = fit_params_.pop("sample_weight", None)
+        else:
+            fit_params_ = {}
+
+        self._mapie_quantile_regressor._initialize_fit_conformalize()
+        self._mapie_quantile_regressor._fit_estimators(
+                                            X=X_train,
+                                            y=y_train,
+                                            sample_weight=self._sample_weight,
+                                            **fit_params_,
+        )
+
         return self
 
     def conformalize(
@@ -969,6 +1002,16 @@ class ConformalizedQuantileRegressor:
             The ConformalizedQuantileRegressor instance with calibrated
             prediction intervals.
         """
+
+        if not predict_params:
+            predict_params = {}
+
+        self._mapie_quantile_regressor.conformalize(
+            X_conf,
+            y_conf,
+            **predict_params
+        )
+
         return self
 
     def predict_set(
@@ -1007,7 +1050,17 @@ class ConformalizedQuantileRegressor:
             Prediction intervals with shape `(n_samples, 2)`, with lower
             and upper bounds for each sample.
         """
-        return np.ndarray(0)
+        _, intervals = self._mapie_quantile_regressor.predict(
+            X,
+            optimize_beta=minimize_interval_width,
+            allow_infinite_bounds=allow_infinite_bounds,
+            symmetry=symmetric_intervals
+        )
+
+        return make_intervals_single_if_single_alpha(
+            intervals,
+            self._alpha
+        )
 
     def predict(
         self,
@@ -1026,7 +1079,9 @@ class ConformalizedQuantileRegressor:
         NDArray
             Array of point predictions with shape `(n_samples,)`.
         """
-        return np.ndarray(0)
+        estimator = self._mapie_quantile_regressor
+        predictions, _ = estimator.predict(X)
+        return predictions
 
 
 class GibbsConformalRegressor:
