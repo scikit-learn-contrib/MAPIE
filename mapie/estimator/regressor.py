@@ -6,17 +6,16 @@ import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils import _safe_indexing
+from sklearn.utils import _safe_indexing, deprecated
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
-from mapie.estimator.interface import EnsembleEstimator
 from mapie.utils import (check_nan_in_aposteriori_prediction, check_no_agg_cv,
                          fit_estimator)
 
 
-class EnsembleRegressor(EnsembleEstimator):
+class EnsembleRegressor:
     """
     This class implements methods to handle the training and usage of the
     estimator. This estimator can be unique or composed by cross validated
@@ -409,6 +408,11 @@ class EnsembleRegressor(EnsembleEstimator):
 
         return y_pred
 
+    @deprecated(
+        "WARNING: EnsembleRegressor.fit is deprecated."
+        "Instead use EnsembleRegressor.fit_single_estimator"
+        "then EnsembleRegressor.fit_multi_estimators"
+    )
     def fit(
         self,
         X: ArrayLike,
@@ -451,42 +455,60 @@ class EnsembleRegressor(EnsembleEstimator):
         EnsembleRegressor
             The estimator fitted.
         """
-        # Initialization
-        single_estimator_: RegressorMixin
-        estimators_: List[RegressorMixin] = []
-        full_indexes = np.arange(_num_samples(X))
-        cv = self.cv
-        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
-        estimator = self.estimator
-        n_samples = _num_samples(y)
+        self.fit_single_estimator(
+            X,
+            y,
+            sample_weight,
+            groups,
+            **fit_params
+        )
 
-        # Computation
-        if cv == "prefit":
-            single_estimator_ = estimator
+        self.fit_multi_estimators(
+            X,
+            y,
+            sample_weight,
+            groups,
+            **fit_params
+        )
+
+        return self
+
+    def fit_multi_estimators(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params
+    ) -> EnsembleRegressor:
+
+        n_samples = _num_samples(y)
+        estimators: List[RegressorMixin] = []
+
+        if self.cv == "prefit":
+
+            # Create a placeholder attribute 'k_' filled with NaN values
+            # This attribute is defined for consistency but
+            # is not used in prefit mode
             self.k_ = np.full(
                 shape=(n_samples, 1), fill_value=np.nan, dtype=float
             )
+
         else:
-            single_estimator_ = self._fit_oof_estimator(
-                clone(estimator),
-                X,
-                y,
-                full_indexes,
-                sample_weight,
-                **fit_params
-            )
-            cv = cast(BaseCrossValidator, cv)
+            cv = cast(BaseCrossValidator, self.cv)
             self.k_ = np.full(
                 shape=(n_samples, cv.get_n_splits(X, y, groups)),
                 fill_value=np.nan,
                 dtype=float,
             )
-            if self.method == "naive":
-                estimators_ = [single_estimator_]
-            else:
-                estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
+
+            if self.method != "naive":
+                estimators = Parallel(
+                    self.n_jobs,
+                    verbose=self.verbose
+                )(
                     delayed(self._fit_oof_estimator)(
-                        clone(estimator),
+                        clone(self.estimator),
                         X,
                         y,
                         train_index,
@@ -495,13 +517,47 @@ class EnsembleRegressor(EnsembleEstimator):
                     )
                     for train_index, _ in cv.split(X, y, groups)
                 )
-                # In split-CP, we keep only the model fitted on train dataset
-                if self.use_split_method_:
-                    single_estimator_ = estimators_[0]
+
+        self.estimators_ = estimators
+
+        return self
+
+    def fit_single_estimator(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params
+    ) -> EnsembleRegressor:
+
+        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+        single_estimator_: RegressorMixin
+
+        if self.cv == "prefit":
+            single_estimator_ = self.estimator
+        else:
+            cv = cast(BaseCrossValidator, self.cv)
+            if self.use_split_method_:
+                train_indexes = [
+                    train_index for train_index, test_index in cv.split(
+                        X, y, groups)
+                ][0]
+                indexes = train_indexes
+            else:
+                full_indexes = np.arange(_num_samples(X))
+                indexes = full_indexes
+
+            single_estimator_ = self._fit_oof_estimator(
+                    clone(self.estimator),
+                    X,
+                    y,
+                    indexes,
+                    sample_weight,
+                    **fit_params
+                )
 
         self.single_estimator_ = single_estimator_
-        self.estimators_ = estimators_
-
         return self
 
     def predict(
@@ -565,6 +621,11 @@ class EnsembleRegressor(EnsembleEstimator):
             elif self.method == "plus":
                 y_pred_multi_low = y_pred_multi
                 y_pred_multi_up = y_pred_multi
+            elif self.method == "enbpi":
+                y_pred_aggregate = aggregate_all(
+                    self.agg_function, y_pred_multi)
+                y_pred_multi_low = y_pred_aggregate[:, np.newaxis]
+                y_pred_multi_up = y_pred_aggregate[:, np.newaxis]
             else:
                 y_pred_multi_low = y_pred[:, np.newaxis]
                 y_pred_multi_up = y_pred[:, np.newaxis]

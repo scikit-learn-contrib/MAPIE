@@ -54,7 +54,7 @@ plt.show()
 
 ##############################################################################
 # 2. Defining a Conformal Predictive Distribution class with MAPIE
-# ----------------------------------------------------------
+# ------------------------------------------------------------------
 #
 # To be able to obtain the cumulative distribution function of
 # a prediction with MAPIE, we propose here to wrap the

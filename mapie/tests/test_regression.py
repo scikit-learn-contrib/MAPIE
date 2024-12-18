@@ -864,19 +864,6 @@ def test_return_multi_pred(ensemble: bool) -> None:
     assert len(output) == 3
 
 
-def test_beta_optimize_user_warning() -> None:
-    """
-    Test that a UserWarning is displayed when optimize_beta is used.
-    """
-    mapie_reg = MapieRegressor(
-        conformity_score=AbsoluteConformityScore(sym=False)
-    ).fit(X, y)
-    with pytest.warns(
-        UserWarning, match=r"Beta optimisation should only be used for*",
-    ):
-        mapie_reg.predict(X, alpha=0.05, optimize_beta=True)
-
-
 def test_fit_parameters_passing() -> None:
     """
     Test passing fit parameters, here early stopping at iteration 3.
@@ -1036,3 +1023,21 @@ def test_check_change_method_to_base(method: str, cv: str) -> None:
     )
     mapie_reg.fit(X_val, y_val)
     assert mapie_reg.method == "base"
+
+
+def test_deprecated_ensemble_regressor_fit_warning() -> None:
+    ens_reg = EnsembleRegressor(
+        LinearRegression(),
+        "plus",
+        KFold(n_splits=5, random_state=None, shuffle=True),
+        "nonsense",
+        None,
+        random_state,
+        0.20,
+        False
+    )
+    with pytest.warns(
+        FutureWarning,
+        match=r".WARNING: EnsembleRegressor.fit is deprecated.*"
+    ):
+        ens_reg.fit(X, y)

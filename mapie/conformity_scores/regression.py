@@ -25,16 +25,18 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
     consistency_check: bool, optional
         Whether to check the consistency between the methods
         ``get_estimation_distribution`` and ``get_conformity_scores``.
-        If ``True``, the following equality must be verified:
-        ``self.get_estimation_distribution(
-            y_pred, self.get_conformity_scores(y, y_pred, **kwargs), **kwargs
-        ) == y``
+        If ``True``, the following equality must be verified::
+
+            y == self.get_estimation_distribution(
+                y_pred,
+                self.get_conformity_scores(y, y_pred, **kwargs),
+                **kwargs)
 
         By default ``True``.
 
     eps: float, optional
-        Threshold to consider when checking the consistency between
-        ``get_estimation_distribution`` and ``get_conformity_scores``.
+        Threshold to consider when checking the consistency
+        between ``get_estimation_distribution`` and ``get_conformity_scores``.
         It should be specified if ``consistency_check==True``.
 
         By default, it is defined by the default precision.
@@ -120,10 +122,12 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         Check consistency between the following methods:
         ``get_estimation_distribution`` and ``get_signed_conformity_scores``
 
-        The following equality should be verified:
-        ``self.get_estimation_distribution(
-            y_pred, self.get_conformity_scores(y, y_pred, **kwargs), **kwargs
-        ) == y``
+        The following equality should be verified::
+
+            y == self.get_estimation_distribution(
+                y_pred,
+                self.get_conformity_scores(y, y_pred, **kwargs),
+                **kwargs)
 
         Parameters
         ----------
@@ -303,9 +307,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         Tuple[NDArray, NDArray, NDArray]
             - The predictions itself. (y_pred) of shape (n_samples,).
             - The lower bounds of the prediction intervals of shape
-            (n_samples, n_alpha).
+              (n_samples, n_alpha).
             - The upper bounds of the prediction intervals of shape
-            (n_samples, n_alpha).
+              (n_samples, n_alpha).
 
         Raises
         ------
@@ -390,7 +394,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         Compute the prediction sets on new samples based on the uncertainty of
         the target confidence set.
 
-        Parameters:
+        Parameters
         -----------
         X: NDArray of shape (n_samples,)
             The input data or samples for prediction.
@@ -401,7 +405,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         **kwargs: dict
             Additional keyword arguments.
 
-        Returns:
+        Returns
         --------
         The output structure depend on the ``get_bounds`` method.
             The prediction sets for each sample and each alpha level.

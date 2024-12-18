@@ -18,8 +18,8 @@ by Sadinle et al. (2019) also introduced by other examples
 of this documentation.
 
 We start the tutorial by splitting our training dataset
-in :math:`K` folds and sequentially use each fold as a
-calibration set, the :math:`K-1` folds remaining folds are
+in ``K`` folds and sequentially use each fold as a
+calibration set, the ``K-1`` folds remaining folds are
 used for training the base model using
 the ``cv="prefit"`` option of
 :class:`~mapie.classification.MapieClassifier`.

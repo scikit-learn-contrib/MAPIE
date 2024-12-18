@@ -186,7 +186,7 @@ and with the financial support from Région Ile de France and Confiance.ai.
     :width: 45px
     :target: https://www.michelin.com/en/
 
-.. |ENS| image:: https://file.diplomeo-static.com/file/00/00/01/34/13434.svg
+.. |ENS| image:: https://www.ens.psl.eu/sites/default/files/logo_ens_psl_en_png.png
     :height: 35px
     :width: 140px
     :target: https://ens-paris-saclay.fr/en/

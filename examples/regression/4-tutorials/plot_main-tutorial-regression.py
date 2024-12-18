@@ -4,14 +4,17 @@ Tutorial for tabular regression
 ===============================
 
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a
-simple, one-dimensional, ground truth function :math:`f(x) = x \times \sin(x)`.
+simple, one-dimensional, ground truth function ``f(x) = x * sin(x)``.
 Throughout this tutorial, we will answer the following questions:
 
 - How well do the MAPIE strategies capture the aleatoric uncertainty
   existing in the data?
+
 - How do the prediction intervals estimated by the resampling strategies
   evolve for new *out-of-distribution* data ?
+
 - How do the prediction intervals vary between regressor models ?
+
 Throughout this tutorial, we estimate the prediction intervals first using
 a polynomial function, and then using a boosting model, and a simple neural
 network.
@@ -44,7 +47,7 @@ warnings.filterwarnings("ignore")
 # 1. Estimating the aleatoric uncertainty of homoscedastic noisy data
 # -------------------------------------------------------------------
 #
-# Let's start by defining the :math:`x \times \sin(x)` function and another
+# Let's start by defining the ``x * sin(x)`` function and another
 # simple function that generates one-dimensional data with normal noise
 # uniformely in a given interval.
 
@@ -74,7 +77,7 @@ def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, noise):
 ##############################################################################
 # We first generate noisy one-dimensional data uniformely on an interval.
 # Here, the noise is considered as *homoscedastic*, since it remains constant
-# over :math:`x`.
+# over `x`.
 
 
 min_x, max_x, n_samples, noise = -5, 5, 600, 0.5
@@ -94,7 +97,7 @@ plt.show()
 ##############################################################################
 # As mentioned previously, we fit our training data with a simple
 # polynomial function. Here, we choose a degree equal to 10 so the function
-# is able to perfectly fit :math:`x \times \sin(x)`.
+# is able to perfectly fit ``x * sin(x)``.
 
 degree_polyn = 10
 polyn_model = Pipeline(
@@ -173,13 +176,20 @@ def plot_1d_data(
 ):
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.fill_between(X_test, y_pred_low, y_pred_up, alpha=0.3)
-    ax.scatter(X_train, y_train, color="red", alpha=0.3, label="Training data")
-    ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
-    ax.plot(X_test, y_test - y_sigma, color="gray", ls="--")
+    ax.fill_between(
+      X_test, y_pred_low, y_pred_up, alpha=0.3, label="Prediction intervals"
+    )
+    ax.scatter(
+      X_train, y_train, color="red", alpha=0.3, label="Training data"
+    )
+    ax.plot(X_test, y_test, color="gray")
+    ax.plot(
+        X_test, y_test - y_sigma, color="gray", ls="--",
+        label="True confidence intervals"
+    )
     ax.plot(X_test, y_test + y_sigma, color="gray", ls="--")
     ax.plot(
-        X_test, y_pred, color="blue", alpha=0.5, label="Prediction intervals"
+        X_test, y_pred, color="blue", alpha=0.5, label="y_pred"
     )
     if title is not None:
         ax.set_title(title)
@@ -216,7 +226,7 @@ plt.show()
 # At first glance, the four strategies give similar results and the
 # prediction intervals are very close to the true confidence intervals.
 # Let’s confirm this by comparing the prediction interval widths over
-# :math:`x` between all strategies.
+# `x` between all strategies.
 
 
 fig, ax = plt.subplots(1, 1, figsize=(9, 5))
@@ -275,7 +285,7 @@ pd.DataFrame([
 # 2. Estimating the aleatoric uncertainty of heteroscedastic noisy data
 # ---------------------------------------------------------------------
 #
-# Let's define again the :math:`x \times \sin(x)` function and another simple
+# Let's define again the ``x * sin(x)`` function and another simple
 # function that generates one-dimensional data with normal noise uniformely
 # in a given interval.
 
@@ -307,7 +317,7 @@ def get_1d_data_with_heteroscedastic_noise(
 ##############################################################################
 # We first generate noisy one-dimensional data uniformely on an interval.
 # Here, the noise is considered as *heteroscedastic*, since it will increase
-# linearly with :math:`x`.
+# linearly with `x`.
 
 
 min_x, max_x, n_samples, noise = 0, 5, 300, 0.5
@@ -331,7 +341,7 @@ plt.show()
 ##############################################################################
 # As mentioned previously, we fit our training data with a simple
 # polynomial function. Here, we choose a degree equal to 10 so the function
-# is able to perfectly fit :math:`x \times \sin(x)`.
+# is able to perfectly fit ``x * sin(x)``.
 
 degree_polyn = 10
 polyn_model = Pipeline(
@@ -437,12 +447,12 @@ plt.show()
 # One can observe that all the strategies behave in a similar way as in the
 # first example shown previously. One exception is the CQR method which takes
 # into account the heteroscedasticity of the data. In this method we observe
-# very low interval widths at low values of :math:`x`.
+# very low interval widths at low values of ``x``.
 # This is the only method that
 # even slightly follows the true width, and therefore is the preferred method
 # for heteroscedastic data. Notice also that the true width is greater (lower)
-# than the predicted width from the other methods at :math:`x \gtrapprox 3``
-# (:math:`x \leq 3`). This means that while the marginal coverage correct for
+# than the predicted width from the other methods at ``x ≳ 3``
+# (``x ≤ 3``). This means that while the marginal coverage correct for
 # these methods, the conditional coverage is likely not guaranteed as we will
 # observe in the next figure.
 
@@ -615,10 +625,10 @@ plt.show()
 
 ##############################################################################
 # At first glance, our polynomial function does not give accurate
-# predictions with respect to the true function when :math:`|x| > 6`.
+# predictions with respect to the true function when ``|x| > 6``.
 # The prediction intervals estimated with the Jackknife+ do not seem to
 # increase. On the other hand, the CV and other related methods seem to capture
-# some uncertainty when :math:`x > 6`.
+# some uncertainty when ``x > 6``.
 #
 # Let's now compare the prediction interval widths between all strategies.
 
@@ -637,16 +647,16 @@ plt.show()
 
 ##############################################################################
 # The prediction interval widths start to increase exponentially
-# for :math:`|x| > 4` for the CV+, CV-minmax, Jackknife-minmax, and quantile
+# for ``|x| > 4`` for the CV+, CV-minmax, Jackknife-minmax, and quantile
 # strategies. On the other hand, the prediction intervals estimated by
-# Jackknife+ remain roughly constant until :math:`|x| \approx 5` before
+# Jackknife+ remain roughly constant until ``|x| ≈ 5`` before
 # increasing.
 # The CQR strategy seems to perform well, however, on the extreme values
 # of the data the quantile regression fails to give reliable results as it
 # outputs
 # negative value for the prediction intervals. This occurs because the quantile
-# regressor with quantile :math:`1 - \alpha/2` gives higher values than the
-# quantile regressor with quantile :math:`\alpha/2`. Note that a warning will
+# regressor with quantile `1 - α/2` gives higher values than the
+# quantile regressor with quantile ``α/2``. Note that a warning will
 # be issued when this occurs.
 
 pd.DataFrame([

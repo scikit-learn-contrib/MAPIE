@@ -17,8 +17,8 @@ class ResidualNormalisedScore(BaseRegressionScore):
     """
     Residual Normalised score.
 
-    The signed conformity score = (|y - y_pred|) / r_pred. r_pred being the
-    predicted residual (|y - y_pred|) of the base estimator.
+    The signed conformity score = abs(y - y_pred) / r_pred. r_pred being the
+    predicted residual abs(y - y_pred) of the base estimator.
     It is calculated by a model that learns to predict these residuals.
     The learning is done with the log of the residual and we use the
     exponential of the prediction to avoid negative values.

@@ -67,6 +67,9 @@ templates_path = ["_templates"]
 # generate autosummary even if no references
 autosummary_generate = True
 
+
+autosectionlabel_prefix_document = True
+
 # The suffix of source filenames.
 source_suffix = ".rst"
 

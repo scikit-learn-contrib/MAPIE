@@ -28,4 +28,4 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] Typing passes successfully : `make type-check`
 - [ ] Unit tests pass successfully : `make tests`
 - [ ] Coverage is 100% : `make coverage`
-- [ ] Documentation builds successfully : `make doc`
+- [ ] Documentation builds successfully and without warnings : `make doc`

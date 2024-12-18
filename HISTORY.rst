@@ -11,6 +11,14 @@ History
 * Add the CCP documentation, tutorial and demo notebooks
 * Fix issue 525 in contribution guidelines with syntax errors in hyperlinks and other formatting issues.
 * Bump wheel version to avoid known security vulnerabilities
+* Fix issue 495 to center correctly the prediction intervals
+* Fix documentation build warnings
+* Fix issue 528 to correct broken ENS image in the documentation
+* Fix issue 548 to correct labels generated in tutorial
+* Fix issue 547 to fix wrong warning
+* Fix issue 480 (correct display of mathematical equations in generated notebooks)
+* Refactor MapieRegressor, EnsembleRegressor, and MapieQuantileRegressor, to prepare for the release of v1.0.0
+* Remove optimize_beta usage warning when using for methods other than EnbPI
 
 0.9.1 (2024-09-13)
 ------------------

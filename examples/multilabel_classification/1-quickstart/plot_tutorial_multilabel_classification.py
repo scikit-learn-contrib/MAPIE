@@ -27,7 +27,7 @@ from mapie.multi_label_classification import MapieMultiLabelClassifier
 
 ##############################################################################
 # 1. Construction of the dataset
-# -----------------------------
+# ----------------------------------------------------------------------------
 # We use a two-dimensional toy dataset with three possible labels. The idea
 # is to create a triangle where the observations on the edges have only one
 # label, those on the vertices have two labels (those of the two edges) and the
@@ -94,24 +94,24 @@ plt.show()
 
 ##############################################################################
 # 2 Recall control risk with CRC and RCPS
-# ---------------------------------------
+# ----------------------------------------------------------------------------
 # 2.1 Fitting MapieMultiLabelClassifier
-# ------------------------------------
+# ----------------------------------------------------------------------------
 # MapieMultiLabelClassifier will be fitted with RCPS and CRC methods. For the
 # RCPS method, we will test all three Upper Confidence Bounds (Hoeffding,
 # Bernstein and Waudby-Smith–Ramdas).
 # The two methods give two different guarantees on the risk:
 #
-# * RCPS: :math:`P(R(\mathcal{T}_{\hat{\lambda}})\leq\alpha)\geq 1-\delta`
-# where :math:`R(\mathcal{T}_{\hat{\lambda}})`
-# is the risk we want to control and :math:`\alpha` is the desired risk
+# * RCPS: ``𝒫(R(𝒯̂λ̂) ≤ α) ≥ 1 − δ``
+#   where ``R(𝒯̂λ̂)``
+#   is the risk we want to control and α is the desired risk
 #
-# * CRC: :math:`\mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha`
-# where :math:`L_{n+1}(\hat{\lambda})` is the risk of a new observation and
-# :math:`\alpha` is the desired risk
+# * CRC: ``𝐸[Lₙ₊₁(λ̂)] ≤ α``
+#   where ``Lₙ₊₁(λ̂)`` is the risk of a new observation and
+#   ``α`` is the desired risk
 #
 # In both cases, the objective of the method is to find the optimal value of
-# :math:`\lambda` (threshold above which we consider a label as being present)
+# ``λ`` (threshold above which we consider a label as being present)
 # such that the recall on the test points is at least equal to the required
 # recall.
 
@@ -148,17 +148,17 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 
 ##############################################################################
 # 2.2. Results
-# ----------
+# ----------------------------------------------------------------------------
 # To check the results of the methods, we propose two types of plots:
 #
-# * Plots where the confidence level varies. Here two metrics are plotted
-#   for each method and for each UCB
-#     * The actual recall (which should be always near to the required one):
-#       we can see that they are close to each other.
-#     * The value of the threshold: we see that the threshold is decreasing as
-#       :math:`1 - \alpha` increases, which is what is expected because a
-#       smaller threshold will give larger prediction sets, hence a larger
-#       recall.
+# 1 - Plots where the confidence level varies. Here two metrics are plotted
+# for each method and for each UCB
+# * The actual recall (which should be always near to the required one):
+# we can see that they are close to each other.
+# * The value of the threshold: we see that the threshold is decreasing as
+# ``1 - α`` increases, which is what is expected because a
+# smaller threshold will give larger prediction sets, hence a larger
+# recall.
 #
 
 vars_y = [recalls, thresholds]
@@ -177,15 +177,15 @@ for i, var in enumerate(vars_y):
 plt.show()
 
 ##############################################################################
-# * Plots where we choose a specific risk value (0.1 in our case) and look at
-#   the average risk, the UCB of the risk (for RCPS methods) and the choice of
-#   the threshold :math:`\lambda`
-#     * We can see that among the RCPS methods, the Bernstein method
-#       gives the best results as for a given value of :math:`\alpha`
-#       as we are above the required recall but with a larger value of
-#       :math:`\lambda` than the two others bounds.
-#     * The CRC method gives the best results since it guarantees the coverage
-#       with a larger threshold.
+# 2 - Plots where we choose a specific risk value (0.1 in our case) and look at
+# the average risk, the UCB of the risk (for RCPS methods) and the choice of
+# the threshold ``λ``.
+# * We can see that among the RCPS methods, the Bernstein method
+# gives the best results as for a given value of ``α``
+# as we are above the required recall but with a larger value of
+# ``λ`` than the two others bounds.
+# * The CRC method gives the best results since it guarantees the coverage
+# with a larger threshold.
 
 fig, axs = plt.subplots(
     1,
@@ -216,27 +216,27 @@ plt.show()
 
 ##############################################################################
 # 3. Precision control risk with LTT
-# ------------------
+# ----------------------------------------------------------------------------
 # 3.1 Fitting MapieMultilabelClassifier
-# -------------------------------------
+# ----------------------------------------------------------------------------
 #
 # In this part, we will use LTT to control precision.
 # At the opposite of the 2 previous method, LTT can handle non-monotonous loss.
 # The procedure consist in multiple hypothesis testing. This is why the output
-# of this procedure isn't reduce to one value of :math:`\lambda`.
+# of this procedure isn't reduce to one value of ``λ``.
 #
-# More precisely, we look after all the :math:`\lambda` that sastisfy the
+# More precisely, we look after all the ``λ`` that sastisfy the
 # following:
-# :math:`\mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha ) \geq 1 - \delta`,
-# where :math:`R(\mathcal{T}_{\lambda})` is the risk we want to control and
-# each :math:`\lambda`` should satisfy FWER control.
-# :math:`\alpha` is the desired risk.
+# ``𝒫(R(𝒯̂λ̂) ≤ α) ≥ 1 − δ``,
+# where ``R(𝒯̂λ̂)`` is the risk we want to control and
+# each ``λ`` should satisfy FWER control.
+# ``α`` is the desired risk.
 #
-# Notice that the procedure will diligently examine each :math:`\lambda`
-# such that the risk remains below level :math:`\alpha`, meaning not
-# every :math:`\lambda` will be considered.
-# This means that a for a :math:`\lambda` such that risk is below
-# :math:`\alpha`
+# Notice that the procedure will diligently examine each ``λ``
+# such that the risk remains below level ``α``, meaning not
+# every ``λ`` will be considered.
+# This means that a for a ``λ`` such that risk is below
+# ``α``
 # doesn't necessarly pass the FWER control! This is what we are going to
 # explore.
 
@@ -266,8 +266,8 @@ idx_max = np.argmin(r_hat[valid_index])
 
 ##############################################################################
 # 3.2 Valid parameters for precision control
-# ------------------------------------------
-# We can see that not all :math:`\lambda` such that risk is below the orange
+# ----------------------------------------------------------------------------
+# We can see that not all ``λ`` such that risk is below the orange
 # line are choosen by the procedure. Otherwise, all the lambdas that are
 # in the red rectangle verify family wise error rate control and allow to
 # control precision at the desired level with a high probability.

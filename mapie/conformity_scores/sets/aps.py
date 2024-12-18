@@ -53,7 +53,7 @@ class APSConformityScore(NaiveConformityScore):
         """
         Get predictions from an EnsembleClassifier.
 
-        Parameters:
+        Parameters
         -----------
         X: NDArray of shape (n_samples, n_features)
             Observed feature values.
@@ -72,7 +72,7 @@ class APSConformityScore(NaiveConformityScore):
 
             By default ``"mean"``.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of predictions.
@@ -178,7 +178,7 @@ class APSConformityScore(NaiveConformityScore):
         """
         Get the quantiles of the conformity scores for each uncertainty level.
 
-        Parameters:
+        Parameters
         -----------
         conformity_scores: NDArray of shape (n_samples,)
             Conformity scores for each sample.
@@ -197,7 +197,7 @@ class APSConformityScore(NaiveConformityScore):
 
             By default ``"mean"``.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
@@ -222,7 +222,7 @@ class APSConformityScore(NaiveConformityScore):
         """
         Compute the V parameters from Romano+(2020).
 
-        Parameters:
+        Parameters
         -----------
         y_proba_last_cumsumed: NDArray of shape (n_samples, n_alpha)
             Cumulated score of the last included label.
@@ -236,7 +236,7 @@ class APSConformityScore(NaiveConformityScore):
         predicition_sets: NDArray of shape (n_samples, n_alpha)
             Prediction sets.
 
-        Returns:
+        Returns
         --------
         NDArray of shape (n_samples, n_alpha)
             Vs parameters.
@@ -337,7 +337,7 @@ class APSConformityScore(NaiveConformityScore):
         Generate prediction sets based on the probability predictions,
         the conformity scores and the uncertainty level.
 
-        Parameters:
+        Parameters
         -----------
         y_pred_proba: NDArray of shape (n_samples, n_classes)
             Target prediction.
@@ -365,7 +365,7 @@ class APSConformityScore(NaiveConformityScore):
 
             By default, ``True``.
 
-        Returns:
+        Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
