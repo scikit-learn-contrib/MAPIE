@@ -538,7 +538,7 @@ class MapieQuantileRegressor(MapieRegressor):
             self._fit_estimators(
                 X=X_train,
                 y=y_train,
-                sample_weight_train=sample_weight,
+                sample_weight=sample_weight,
                 **fit_params
             )
 
