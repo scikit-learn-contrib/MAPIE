@@ -914,7 +914,6 @@ class ConformalizedQuantileRegressor:
         ] = None,
         confidence_level: float = 0.9,
         prefit: bool = False,
-        random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
 
         self._alpha = 1 - confidence_level
@@ -1003,13 +1002,12 @@ class ConformalizedQuantileRegressor:
             prediction intervals.
         """
 
-        if not predict_params:
-            predict_params = {}
+        self.predict_params = predict_params if predict_params else {}
 
         self._mapie_quantile_regressor.conformalize(
             X_conf,
             y_conf,
-            **predict_params
+            **self.predict_params
         )
 
         return self
@@ -1054,7 +1052,8 @@ class ConformalizedQuantileRegressor:
             X,
             optimize_beta=minimize_interval_width,
             allow_infinite_bounds=allow_infinite_bounds,
-            symmetry=symmetric_intervals
+            symmetry=symmetric_intervals,
+            **self.predict_params
         )
 
         return make_intervals_single_if_single_alpha(
@@ -1080,7 +1079,7 @@ class ConformalizedQuantileRegressor:
             Array of point predictions with shape `(n_samples,)`.
         """
         estimator = self._mapie_quantile_regressor
-        predictions, _ = estimator.predict(X)
+        predictions, _ = estimator.predict(X, **self.predict_params)
         return predictions
 
 

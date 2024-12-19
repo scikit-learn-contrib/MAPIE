@@ -468,7 +468,7 @@ def compare_model_predictions_and_intervals(
         v1.fit(X_train, y_train, **v1_fit_params)
 
     v1.conformalize(X_conf, y_conf, **v1_conformalize_params)
-
+    
     v0_predict_params = filter_params(v0.predict, v0_params)
     if 'alpha' in v0_init_params:
         v0_predict_params.pop('alpha')
