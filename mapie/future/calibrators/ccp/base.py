@@ -505,7 +505,6 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         X: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
         z: Optional[ArrayLike] = None,
-        cs_bound: Optional[Union[float, Tuple[float, float]]] = None,
         unsafe_approximation: bool = False,
         **kwargs,
     ) -> NDArray:
