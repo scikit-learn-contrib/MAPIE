@@ -917,6 +917,7 @@ class ConformalizedQuantileRegressor:
     ) -> None:
 
         self._alpha = 1 - confidence_level
+        self.prefit = prefit
 
         cv: str = "prefit" if prefit else "split"
         self._mapie_quantile_regressor = MapieQuantileRegressor(
@@ -954,6 +955,12 @@ class ConformalizedQuantileRegressor:
         Self
             The fitted ConformalizedQuantileRegressor instance.
         """
+
+        if self.prefit:
+            raise ValueError(
+                "The estimators are already fitted, the .fit() method should"
+                " not be called with prefit=True."
+            )
 
         if fit_params:
             fit_params_ = copy.deepcopy(fit_params)
@@ -1001,7 +1008,6 @@ class ConformalizedQuantileRegressor:
             The ConformalizedQuantileRegressor instance with calibrated
             prediction intervals.
         """
-
         self.predict_params = predict_params if predict_params else {}
 
         self._mapie_quantile_regressor.conformalize(
