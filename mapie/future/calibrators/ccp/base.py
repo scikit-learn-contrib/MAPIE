@@ -443,10 +443,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         return cs_features
 
-    def _check_cs_bound(
+    def _get_cs_bound(
         self,
-        cs_bound: Optional[Union[float, Tuple[float, float]]],
-        sym: bool,
         conformity_scores: NDArray,
     ) -> Tuple[float, float]:
         """
@@ -484,25 +482,9 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         Tuple[float, float]
             (cs_bound_up, cs_bound_low)
         """
-        if cs_bound is not None:
-            if isinstance(cs_bound, (int, float)) and sym:
-                cs_bound_up = cs_bound
-                cs_bound_low = cs_bound
-            elif (
-                isinstance(cs_bound, tuple) and len(cs_bound) == 2
-                and not sym
-            ):
-                cs_bound_up = cs_bound[0]
-                cs_bound_low = cs_bound[1]
-            else:
-                raise ValueError(
-                    "Invalid `cs_bound` value. "
-                    "It must be a float if the ConformityScore has "
-                    "`sym=True`, and a tuple of two floats if `sym=False`."
-                )
-        else:
-            cs_bound_up = max(conformity_scores)
-            cs_bound_low = min(conformity_scores)
+
+        cs_bound_up = max(conformity_scores)
+        cs_bound_low = min(conformity_scores)
 
         return cs_bound_up, cs_bound_low
 
@@ -581,8 +563,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             y_pred_low = -cs_features.dot(self.beta_low_[0][:, np.newaxis])
             y_pred_up = cs_features.dot(self.beta_up_[0][:, np.newaxis])
         else:
-            cs_bound_up, cs_bound_low = self._check_cs_bound(
-                cs_bound, self.sym, self.conformity_scores_calib
+            cs_bound_up, cs_bound_low = self._get_cs_bound(
+                self.conformity_scores_calib
             )
 
             y_pred_up = np.zeros((_num_samples(X), 1))
