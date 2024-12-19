@@ -834,43 +834,54 @@ class JackknifeAfterBootstrapRegressor:
 
 class ConformalizedQuantileRegressor:
     """
-    A conformal quantile regression model that generates prediction intervals
-    using quantile regression as the base estimator.
+    A model that combines quantile regression with conformal prediction to
+    generate reliable prediction intervals with specified coverage levels.
 
-    This approach provides prediction intervals by leveraging
-    quantile predictions and applying conformal adjustments to ensure coverage.
+    The `ConformalizedQuantileRegressor` leverages quantile regression as its
+    base estimator to predict conditional quantiles of the target variable,
+    and applies conformal adjustments to ensure prediction intervals achieve
+    the desired confidence levels. This approach is particularly useful in
+    uncertainty quantification for regression tasks.
 
     Parameters
     ----------
-    estimator : RegressorMixin, default=QuantileRegressor()
-        The base quantile regression estimator used to generate point and
-        interval predictions.
+    estimator : Union[`RegressorMixin`, `Pipeline`, \
+        `List[Union[RegressorMixin, Pipeline]]`]
+        The base quantile regression model(s) for estimating target quantiles.
 
-    confidence_level : Union[float, List[float]], default=0.9
+        - When `prefit=False` (default):
+            A single quantile regression estimator (e.g., `QuantileRegressor`)
+            or a pipeline that combines preprocessing and regression.
+            Supported Regression estimators:
+
+            - ``sklearn.linear_model.QuantileRegressor``
+            - ``sklearn.ensemble.GradientBoostingRegressor``
+            - ``sklearn.ensemble.HistGradientBoostingRegressor``
+            - ``lightgbm.LGBMRegressor``
+
+        - When `prefit=True`:
+            A list of three fitted quantile regression estimators corresponding
+            to lower, upper, and median quantiles. These estimators should be
+            pre-trained with consistent quantile settings:
+
+            * ``lower quantile = 1 - confidence_level / 2``
+            * ``upper quantile = confidence_level / 2``
+            * ``median quantile = 0.5``
+
+    confidence_level : float default=0.9
         The confidence level(s) for the prediction intervals, indicating the
-        desired coverage probability of the prediction intervals. If a float
-        is provided, it represents a single confidence level. If a list,
-        multiple prediction intervals for each specified confidence level
-        are returned.
+        desired coverage probability of the prediction intervals.
 
-    conformity_score : Union[str, BaseRegressionScore], default="absolute"
-        The conformity score method used to calculate the conformity error.
-        Valid options: TODO : reference here the valid options, once the list
-        has been be created during the implementation.
-        See: TODO : reference conformity score classes or documentation
-
-        A custom score function inheriting from BaseRegressionScore may also
-        be provided.
-
-    random_state : Optional[Union[int, np.random.RandomState]], default=None
-        A seed or random state instance to ensure reproducibility in any random
-        operations within the regressor.
+    prefit : bool, default=False
+        If `True`, assumes the base estimators are already fitted.
+        When set to `True`, the `fit` method cannot be called and the
+        provided estimators should be pre-trained.
 
     Methods
     -------
     fit(X_train, y_train, fit_params=None) -> Self
-        Fits the base estimator to the training data and initializes internal
-        parameters required for conformal prediction.
+        Trains the base quantile regression estimator on the provided data.
+        Not applicable if `prefit=True`.
 
     conformalize(X_conf, y_conf, predict_params=None) -> Self
         Calibrates the model on provided data, adjusting the prediction
@@ -987,7 +998,7 @@ class ConformalizedQuantileRegressor:
         """
         Calibrates the model on the provided data, adjusting the prediction
         intervals based on quantile predictions and specified confidence
-        levels. This step analyzes the conformity scores and refines the
+        level. This step analyzes the conformity scores and refines the
         intervals to ensure desired coverage.
 
         Parameters
