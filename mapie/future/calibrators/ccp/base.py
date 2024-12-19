@@ -372,9 +372,9 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                         ]
                     ),
                     np.hstack(
-                        - [
-                            conformity_scores_calib[not_nan_index],
-                            conformity_scores_calib[not_nan_index[0]]
+                        [
+                            - conformity_scores_calib[not_nan_index],
+                            - conformity_scores_calib[not_nan_index[0]]
                         ]
                     ),
                     q,
