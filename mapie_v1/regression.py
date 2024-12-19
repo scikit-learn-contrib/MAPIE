@@ -849,7 +849,7 @@ class ConformalizedQuantileRegressor:
                     List[Union[RegressorMixin, Pipeline]]]
         The base quantile regression model(s) for estimating target quantiles.
         - When `prefit=False` (default):
-          A single quantile regression estimator (e.g., `QuantileRegressor`) 
+          A single quantile regression estimator (e.g., `QuantileRegressor`)
           or a pipeline that combines preprocessing and regression.
           Supported Regression estimators:
             * `sklearn.linear_model.QuantileRegressor`
