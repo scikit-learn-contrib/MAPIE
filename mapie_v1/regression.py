@@ -847,15 +847,22 @@ class ConformalizedQuantileRegressor:
     ----------
     estimator : Union[RegressorMixin, Pipeline,
                     List[Union[RegressorMixin, Pipeline]]]
-        The base quantile regression model(s) used to estimate the target
-        quantiles.
-        - In `fit` mode (`prefit=False`), this should be a single quantile
-          regression estimator (e.g., `QuantileRegressor`) or a pipeline
-          combining preprocessing and regression.
-        - In `prefit` mode (`prefit=True`), this must be a list of three
-          fitted quantile regression estimators, corresponding to the lower,
-          upper, and median quantiles. These models are expected to be
-          pre-trained and aligned with the target quantiles.
+        The base quantile regression model(s) for estimating target quantiles.
+        - When `prefit=False` (default):
+          A single quantile regression estimator (e.g., `QuantileRegressor`) 
+          or a pipeline that combines preprocessing and regression.
+          Supported Regression estimators:
+            * `sklearn.linear_model.QuantileRegressor`
+            * `sklearn.ensemble.GradientBoostingRegressor`
+            * `sklearn.ensemble.HistGradientBoostingRegressor`
+            * `lightgbm.LGBMRegressor`
+        - When `prefit=True`:
+          A list of three fitted quantile regression estimators corresponding
+          to lower, upper, and median quantiles. These estimators should be
+          pre-trained with consistent quantile settings:
+          * lower quantile = 1 - confidence_level / 2
+          * upper quantile = confidence_level / 2
+          * median quantile = 0.5
 
     confidence_level : float default=0.9
         The confidence level(s) for the prediction intervals, indicating the
