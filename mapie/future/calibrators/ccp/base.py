@@ -344,12 +344,16 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             calibrator_optim_objective, self.init_value_,
             args=(
                 np.vstack(
-                    [cs_features[not_nan_index, :],
-                    cs_features[not_nan_index[0], :]]
+                    [
+                        cs_features[not_nan_index, :],
+                        cs_features[not_nan_index[0], :]
+                    ]
                 ),
                 np.hstack(
-                    [conformity_scores_calib[not_nan_index],
-                    [conformity_scores_calib[not_nan_index[0]]]]
+                    [
+                        conformity_scores_calib[not_nan_index],
+                        conformity_scores_calib[not_nan_index[0]]
+                    ]
                 ),
                 q,
                 self.reg_param,
@@ -362,12 +366,16 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
                 calibrator_optim_objective, self.init_value_,
                 args=(
                     np.vstack(
-                        [cs_features[not_nan_index, :],
-                        cs_features[not_nan_index[0], :]]
+                        [
+                            cs_features[not_nan_index, :],
+                            cs_features[not_nan_index[0], :]
+                        ]
                     ),
                     np.hstack(
-                    - [conformity_scores_calib[not_nan_index],
-                    - [conformity_scores_calib[not_nan_index[0]]]]
+                        - [
+                            conformity_scores_calib[not_nan_index],
+                            conformity_scores_calib[not_nan_index[0]]
+                        ]
                     ),
                     q,
                     self.reg_param,
