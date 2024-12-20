@@ -7,7 +7,6 @@ from numpy.random import RandomState
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import QuantileRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
@@ -23,8 +22,6 @@ from mapie_v1.regression import SplitConformalRegressor, \
 
 from mapiev0.regression import MapieRegressor as MapieRegressorV0  # noqa
 from mapiev0.regression import MapieQuantileRegressor as MapieQuantileRegressorV0  # noqa
-from mapie_v1.conformity_scores._utils import \
-    check_and_select_regression_conformity_score
 from mapie_v1.integration_tests.utils import (filter_params,
                                               train_test_split_shuffle)
 from sklearn.model_selection import LeaveOneOut, GroupKFold
@@ -35,86 +32,101 @@ N_BOOTSTRAPS = 30
 
 
 X, y_signed = make_regression(
-    n_samples=100,
+    n_samples=1000,
     n_features=10,
     noise=1.0,
     random_state=RANDOM_STATE
 )
 y = np.abs(y_signed)
 sample_weight = RandomState(RANDOM_STATE).random(len(X))
-groups = [0] * 20 + [1] * 20 + [2] * 20 + [3] * 20 + [4] * 20
+groups = [0] * 40 + [1] * 40 + [2] * 40 + [3] * 40 + [4] * 40
 positive_predictor = TransformedTargetRegressor(
     regressor=LinearRegression(),
     func=lambda y_: np.log(y_ + 1),
     inverse_func=lambda X_: np.exp(X_) - 1
 )
 
-X_split, y_split = make_regression(
-    n_samples=500,
-    n_features=10,
-    noise=1.0,
+sample_weight_train = train_test_split(
+    X,
+    y,
+    sample_weight,
+    test_size=0.4,
     random_state=RANDOM_STATE
-)
+)[-2]
+
+params_test_cases_split = [
+    {
+        "v0": {
+            "alpha": 0.2,
+            "conformity_score": AbsoluteConformityScore(),
+            "cv": "split",
+            "test_size": 0.4,
+            "sample_weight": sample_weight,
+            "random_state": RANDOM_STATE,
+        },
+        "v1": {
+            "confidence_level": 0.8,
+            "conformity_score": "absolute",
+            "prefit": False,
+            "test_size": 0.4,
+            "fit_params": {"sample_weight": sample_weight_train},
+            "random_state": RANDOM_STATE,
+        }
+    },
+    {
+        "v0": {
+            "estimator": positive_predictor,
+            "test_size": 0.2,
+            "alpha": [0.5, 0.5],
+            "conformity_score": GammaConformityScore(),
+            "cv": "split",
+            "random_state": RANDOM_STATE,
+        },
+        "v1": {
+            "estimator": positive_predictor,
+            "test_size": 0.2,
+            "confidence_level": [0.5, 0.5],
+            "conformity_score": "gamma",
+            "prefit": False,
+            "random_state": RANDOM_STATE,
+        }
+    },
+    {
+        "v0": {
+            "estimator": LinearRegression(),
+            "alpha": 0.1,
+            "test_size": 0.2,
+            "conformity_score": AbsoluteConformityScore(),
+            "cv": "prefit",
+            "allow_infinite_bounds": True,
+            "random_state": RANDOM_STATE,
+        },
+        "v1": {
+            "estimator": LinearRegression(),
+            "confidence_level": 0.9,
+            "prefit": True,
+            "test_size": 0.2,
+            "conformity_score":  AbsoluteConformityScore(),
+            "allow_infinite_bounds": True,
+            "random_state": RANDOM_STATE,
+        }
+    },
+]
 
 
-@pytest.mark.parametrize("cv", ["split", "prefit"])
-@pytest.mark.parametrize("method", ["base", "plus", "minmax"])
-@pytest.mark.parametrize("conformity_score", ["absolute"])
-@pytest.mark.parametrize("confidence_level", [0.9, 0.95, 0.99])
-@pytest.mark.parametrize("agg_function", ["mean", "median"])
-@pytest.mark.parametrize("allow_infinite_bounds", [True, False])
-@pytest.mark.parametrize(
-    "estimator", [
-        LinearRegression(),
-        RandomForestRegressor(random_state=RANDOM_STATE, max_depth=2)])
-@pytest.mark.parametrize("test_size", [0.2, 0.5])
-def test_intervals_and_predictions_exact_equality_split(
-    cv,
-    method,
-    conformity_score,
-    confidence_level,
-    agg_function,
-    allow_infinite_bounds,
-    estimator,
-    test_size
-):
-    """
-    Test that the prediction intervals are exactly the same
-    between v0 and v1 models when using the same settings.
-    """
-    prefit = cv == "prefit"
+@pytest.mark.parametrize("params_split", params_test_cases_split)
+def test_intervals_and_predictions_exact_equality_split(params_split):
+    v0_params = params_split["v0"]
+    v1_params = params_split["v1"]
 
-    v0_params = {
-        "estimator": estimator,
-        "method": method,
-        "conformity_score": check_and_select_regression_conformity_score(
-            conformity_score
-        ),
-        "alpha": 1 - confidence_level,
-        "agg_function": agg_function,
-        "test_size": test_size,
-        "allow_infinite_bounds": allow_infinite_bounds,
-        "cv": cv,
-        "random_state": RANDOM_STATE,
-    }
-    v1_params = {
-        "estimator": estimator,
-        "method": method,
-        "conformity_score": conformity_score,
-        "confidence_level": confidence_level,
-        "aggregate_function": agg_function,
-        "random_state": RANDOM_STATE,
-        "n_bootstraps": N_BOOTSTRAPS,
-        "allow_infinite_bounds": allow_infinite_bounds,
-        "prefit": prefit,
-        "random_state": RANDOM_STATE,
-    }
+    test_size = v1_params["test_size"] if "test_size" in v1_params else None
+    prefit = ("prefit" in v1_params) and v1_params["prefit"]
 
     compare_model_predictions_and_intervals(
         model_v0=MapieRegressorV0,
         model_v1=SplitConformalRegressor,
-        X=X_split,
-        y=y_split,
+        X=X,
+        y=y,
         v0_params=v0_params,
         v1_params=v1_params,
         test_size=test_size,
@@ -306,14 +318,6 @@ for alpha_ in [gbr_alpha / 2, (1 - (gbr_alpha / 2)), 0.5]:
         max_depth=3
     )
     gbr_models.append(estimator_)
-
-sample_weight_train = train_test_split(
-    X,
-    y,
-    sample_weight,
-    test_size=0.4,
-    random_state=RANDOM_STATE
-)[-2]
 
 params_test_cases_quantile = [
     {
