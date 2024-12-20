@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from inspect import signature
-from typing import Any, Callable, Tuple, Union, cast
+from typing import Any, Callable, Tuple, cast
 
 import numpy as np
 import pytest
