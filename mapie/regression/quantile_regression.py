@@ -346,13 +346,11 @@ class MapieQuantileRegressor(MapieRegressor):
                 "Invalid cv method, only valid method is ``split``."
             )
 
-    def _check_calib_set(
+    def _train_calib_split(
         self,
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        X_calib: Optional[ArrayLike] = None,
-        y_calib: Optional[ArrayLike] = None,
         calib_size: Optional[float] = 0.3,
         random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
@@ -360,61 +358,33 @@ class MapieQuantileRegressor(MapieRegressor):
     ) -> Tuple[
         ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]
     ]:
-        """
-        Check if a calibration set has already been defined, if not, then
-        we define one using the ``train_test_split`` method.
-
-        Parameters
-        ----------
-        Same definition of parameters as for the ``fit`` method.
-
-        Returns
-        -------
-        Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]
-            - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)
-                X_train
-            - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)
-                y_train
-            - [2]: ArrayLike of shape (n_samples_*calib_size, n_features)
-                X_calib
-            - [3]: ArrayLike of shape (n_samples_*calib_size,)
-                y_calib
-            - [4]: ArrayLike of shape (n_samples_,)
-                sample_weight_train
-        """
-        if X_calib is None or y_calib is None:
-            if sample_weight is None:
-                X_train, X_calib, y_train, y_calib = train_test_split(
-                        X,
-                        y,
-                        test_size=calib_size,
-                        random_state=random_state,
-                        shuffle=shuffle,
-                        stratify=stratify
-                )
-                sample_weight_train = sample_weight
-            else:
-                (
-                        X_train,
-                        X_calib,
-                        y_train,
-                        y_calib,
-                        sample_weight_train,
-                        _,
-                ) = train_test_split(
-                        X,
-                        y,
-                        sample_weight,
-                        test_size=calib_size,
-                        random_state=random_state,
-                        shuffle=shuffle,
-                        stratify=stratify
-                )
+        if sample_weight is None:
+            X_train, X_calib, y_train, y_calib = train_test_split(
+                X,
+                y,
+                test_size=calib_size,
+                random_state=random_state,
+                shuffle=shuffle,
+                stratify=stratify
+            )
+            sample_weight_train = sample_weight
         else:
-            X_train, y_train, sample_weight_train = X, y, sample_weight
-        X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
-        y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
-        sample_weight_train = cast(ArrayLike, sample_weight_train)
+            (
+                X_train,
+                X_calib,
+                y_train,
+                y_calib,
+                sample_weight_train,
+                _,
+            ) = train_test_split(
+                X,
+                y,
+                sample_weight,
+                test_size=calib_size,
+                random_state=random_state,
+                shuffle=shuffle,
+                stratify=stratify
+            )
         return X_train, y_train, X_calib, y_calib, sample_weight_train
 
     def _check_prefit_params(
@@ -546,13 +516,12 @@ class MapieQuantileRegressor(MapieRegressor):
         MapieQuantileRegressor
              The model itself.
         """
-
-        self.initialize_fit()
+        self._initialize_fit_conformalize()
 
         if self.cv == "prefit":
-            X_calib, y_calib = self.prefit_estimators(X, y)
+            X_calib, y_calib = X, y
         else:
-            X_calib, y_calib = self.fit_estimators(
+            result = self._prepare_train_calib(
                 X=X,
                 y=y,
                 sample_weight=sample_weight,
@@ -563,33 +532,31 @@ class MapieQuantileRegressor(MapieRegressor):
                 random_state=random_state,
                 shuffle=shuffle,
                 stratify=stratify,
-                **fit_params,
+            )
+            X_train, y_train, X_calib, y_calib, sample_weight = result
+            self._fit_estimators(
+                X=X_train,
+                y=y_train,
+                sample_weight=sample_weight,
+                **fit_params
             )
 
         self.conformalize(X_calib, y_calib)
 
         return self
 
-    def initialize_fit(self) -> None:
+    def _initialize_fit_conformalize(self) -> None:
         self.cv = self._check_cv(cast(str, self.cv))
         self.alpha_np = self._check_alpha(self.alpha)
         self.estimators_: List[RegressorMixin] = []
 
-    def prefit_estimators(
-        self,
-        X: ArrayLike,
-        y: ArrayLike
-    ) -> Tuple[ArrayLike, ArrayLike]:
-
+    def _initialize_and_check_prefit_estimators(self) -> None:
         estimator = cast(List, self.estimator)
         self._check_prefit_params(estimator)
         self.estimators_ = list(estimator)
         self.single_estimator_ = self.estimators_[2]
 
-        X_calib, y_calib = indexable(X, y)
-        return X_calib, y_calib
-
-    def fit_estimators(
+    def _prepare_train_calib(
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -601,47 +568,62 @@ class MapieQuantileRegressor(MapieRegressor):
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
-        **fit_params,
-    ) -> Tuple[ArrayLike, ArrayLike]:
-
+    ) -> Tuple[
+        ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]
+    ]:
+        """
+        Handles the preparation of training and calibration datasets,
+        including validation and splitting.
+        Returns: X_train, y_train, X_calib, y_calib, sample_weight_train
+        """
         self._check_parameters()
-        checked_estimator = self._check_estimator(self.estimator)
         random_state = check_random_state(random_state)
         X, y = indexable(X, y)
 
-        results = self._check_calib_set(
-            X,
-            y,
-            sample_weight,
-            X_calib,
-            y_calib,
-            calib_size,
-            random_state,
-            shuffle,
-            stratify,
-        )
+        if X_calib is None or y_calib is None:
+            return self._train_calib_split(
+                X,
+                y,
+                sample_weight,
+                calib_size,
+                random_state,
+                shuffle,
+                stratify
+            )
+        else:
+            return X, y, X_calib, y_calib, sample_weight
 
-        X_train, y_train, X_calib, y_calib, sample_weight_train = results
-        X_train, y_train = indexable(X_train, y_train)
-        X_calib, y_calib = indexable(X_calib, y_calib)
-        y_train, y_calib = _check_y(y_train), _check_y(y_calib)
-        self.n_calib_samples = _num_samples(y_calib)
-        check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
-        sample_weight_train, X_train, y_train = check_null_weight(
-            sample_weight_train,
-            X_train,
-            y_train
+    # Second function: Handles estimator fitting
+    def _fit_estimators(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        **fit_params
+    ) -> None:
+        """
+        Fits the estimators with provided training data
+        and stores them in self.estimators_.
+        """
+        checked_estimator = self._check_estimator(self.estimator)
+
+        X, y = indexable(X, y)
+        y = _check_y(y)
+
+        sample_weight, X, y = check_null_weight(
+            sample_weight, X, y
         )
-        y_train = cast(NDArray, y_train)
 
         if isinstance(checked_estimator, Pipeline):
             estimator = checked_estimator[-1]
         else:
             estimator = checked_estimator
+
         name_estimator = estimator.__class__.__name__
-        alpha_name = self.quantile_estimator_params[
-            name_estimator
-        ]["alpha_name"]
+        alpha_name = self.quantile_estimator_params[name_estimator][
+            "alpha_name"
+        ]
+
         for i, alpha_ in enumerate(self.alpha_np):
             cloned_estimator_ = clone(checked_estimator)
             params = {alpha_name: alpha_}
@@ -649,20 +631,18 @@ class MapieQuantileRegressor(MapieRegressor):
                 cloned_estimator_[-1].set_params(**params)
             else:
                 cloned_estimator_.set_params(**params)
-            self.estimators_.append(fit_estimator(
-                cloned_estimator_,
-                X_train,
-                y_train,
-                sample_weight_train,
-                **fit_params,
+
+            self.estimators_.append(
+                fit_estimator(
+                    cloned_estimator_,
+                    X,
+                    y,
+                    sample_weight,
+                    **fit_params,
                 )
             )
+
         self.single_estimator_ = self.estimators_[2]
-
-        X_calib = cast(ArrayLike, X_calib)
-        y_calib = cast(ArrayLike, y_calib)
-
-        return X_calib, y_calib
 
     def conformalize(
         self,
@@ -673,8 +653,15 @@ class MapieQuantileRegressor(MapieRegressor):
         groups: Optional[ArrayLike] = None,
         **kwargs: Any,
     ) -> MapieRegressor:
+        if self.cv == "prefit":
+            self._initialize_and_check_prefit_estimators()
 
-        self.n_calib_samples = _num_samples(y)
+        X_calib, y_calib = cast(ArrayLike, X), cast(ArrayLike, y)
+        X_calib, y_calib = indexable(X_calib, y_calib)
+        y_calib = _check_y(y_calib)
+
+        self.n_calib_samples = _num_samples(y_calib)
+        check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
 
         y_calib_preds = np.full(
                 shape=(3, self.n_calib_samples),
@@ -682,15 +669,15 @@ class MapieQuantileRegressor(MapieRegressor):
             )
 
         for i, est in enumerate(self.estimators_):
-            y_calib_preds[i] = est.predict(X, **kwargs).ravel()
+            y_calib_preds[i] = est.predict(X_calib, **kwargs).ravel()
 
         self.conformity_scores_ = np.full(
                 shape=(3, self.n_calib_samples),
                 fill_value=np.nan
             )
 
-        self.conformity_scores_[0] = y_calib_preds[0] - y
-        self.conformity_scores_[1] = y - y_calib_preds[1]
+        self.conformity_scores_[0] = y_calib_preds[0] - y_calib
+        self.conformity_scores_[1] = y_calib - y_calib_preds[1]
         self.conformity_scores_[2] = np.max(
             [
                 self.conformity_scores_[0],
