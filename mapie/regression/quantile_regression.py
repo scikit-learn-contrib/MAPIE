@@ -305,7 +305,8 @@ class MapieQuantileRegressor(MapieRegressor):
                         )
                 else:
                     raise ValueError(
-                        "The base model is not supported. \n"
+                        "The base model does not seem to be accepted"
+                        + " by MapieQuantileRegressor. \n"
                         "Give a base model among: \n"
                         f"{self.quantile_estimator_params.keys()} "
                         "Or, add your base model to"
