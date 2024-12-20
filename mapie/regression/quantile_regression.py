@@ -201,7 +201,7 @@ class MapieQuantileRegressor(MapieRegressor):
             warnings.warn(
                 "WARNING: The alpha that is set needs to be the same"
                 + " as the alpha of your prefitted model in the following"
-                " order [(1 - alpha)/2, alpha/2, 0.5]"
+                " order [alpha/2, 1 - alpha/2, 0.5]"
             )
         if isinstance(alpha, float):
             if np.any(np.logical_or(alpha <= 0, alpha >= 1.0)):
