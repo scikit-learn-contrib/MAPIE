@@ -32,7 +32,7 @@ N_BOOTSTRAPS = 30
 
 
 X, y_signed = make_regression(
-    n_samples=1000,
+    n_samples=200,
     n_features=10,
     noise=1.0,
     random_state=RANDOM_STATE
