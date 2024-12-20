@@ -201,19 +201,18 @@ class MapieQuantileRegressor(MapieRegressor):
             warnings.warn(
                 "WARNING: The alpha that is set needs to be the same"
                 + " as the alpha of your prefitted model in the following"
-                " order [(1 - confidence_level)/2, confidence_level/2, 0.5]"
+                " order [(1 - alpha)/2, alpha/2, 0.5]"
             )
         if isinstance(alpha, float):
             if np.any(np.logical_or(alpha <= 0, alpha >= 1.0)):
                 raise ValueError(
-                    "Invalid confidence_level. "
-                    "Allowed values are between 0.0 and 1.0."
+                    "Invalid alpha. Allowed values are between 0.0 and 1.0."
                 )
             else:
                 alpha_np = np.array([alpha / 2, 1 - alpha / 2, 0.5])
         else:
             raise ValueError(
-                "Invalid confidence_level. Allowed values are float."
+                "Invalid alpha. Allowed values are float."
             )
         return alpha_np
 
@@ -424,9 +423,8 @@ class MapieQuantileRegressor(MapieRegressor):
         else:
             raise ValueError(
                 "You need to have provided 3 different estimators, they"
-                " need to be preset with alpha values"
-                "(alpha = 1 - confidence_level)"
-                "in the following order [alpha/2, 1 - alpha/2, 0.5]."
+                " need to be preset with alpha values in the following"
+                " order [alpha/2, 1 - alpha/2, 0.5]."
             )
 
     def fit(
