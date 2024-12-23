@@ -253,6 +253,8 @@ Below is a MAPIE v0.9 code for cross-conformal prediction:
 
     # Generate synthetic data
     X, y = make_regression(n_samples=100, n_features=2, noise=0.1)
+    groups = np.random.randint(0, 3, X.shape[0])
+    sample_weight = np.random.rand(X.shape[0])
 
     # Step 1: Split data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4)
@@ -271,7 +273,7 @@ Below is a MAPIE v0.9 code for cross-conformal prediction:
     )
 
     # Step 4: Fit MAPIE on the calibration set
-    v0.fit(X_conf, y_conf)
+    v0.fit(X_conf, y_conf, sample_weight=sample_weight, groups=groups)
 
     # Step 5: Make predictions with confidence intervals
     prediction_intervals_v0 = v0.predict(X_test, alpha=0.1)[1][:, :, 0]
@@ -291,7 +293,9 @@ Below is the equivalent MAPIE v1 code for cross-conformal prediction:
 
     # Generate synthetic data
     X, y = make_regression(n_samples=100, n_features=2, noise=0.1)
-    
+    groups = np.random.randint(0, 3, X.shape[0])
+    sample_weight = np.random.rand(X.shape[0])
+
     # Step 1: Split data with conf_split (returns X_train, y_train, X_conf, y_conf, X_test, y_test)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4)
 
@@ -306,14 +310,15 @@ Below is the equivalent MAPIE v1 code for cross-conformal prediction:
         estimator=regression_model,
         confidence_level=0.9,  # equivalent to alpha=0.1 in v0.9
         cv=3,  # cross-validation folds
-        conformity_score="absolute"
+        conformity_score="absolute",
+        fit_params={"sample_weight": sample_weight}
     )
 
     # Step 4: fit the model on the training set
     v1.fit(X_train, y_train)
 
     # Step 5: Conformalize the model on the calibration set. In CrossConformalRegressor, the calibration set should be equal to the training set.
-    v1.conformalize(X_train, y_train)
+    v1.conformalize(X_train, y_train, groups=groups, sample_weight=sample_weight)
 
     # Step 1: Make predictions with confidence intervals
     prediction_intervals_v1 = v1.predict_set(X_test)
