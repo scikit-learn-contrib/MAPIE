@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from mapie.subsample import Subsample
 from mapie._typing import ArrayLike
 from mapie.conformity_scores import GammaConformityScore, \
-    AbsoluteConformityScore
+    AbsoluteConformityScore, ResidualNormalisedScore
 from mapie_v1.regression import SplitConformalRegressor, \
     CrossConformalRegressor, \
     JackknifeAfterBootstrapRegressor, \
@@ -29,17 +29,18 @@ from sklearn.model_selection import LeaveOneOut, GroupKFold
 RANDOM_STATE = 1
 K_FOLDS = 3
 N_BOOTSTRAPS = 30
-
+N_SAMPLES = 200
+N_GROUPS = 5
 
 X, y_signed = make_regression(
-    n_samples=200,
+    n_samples=N_SAMPLES,
     n_features=10,
     noise=1.0,
     random_state=RANDOM_STATE
 )
 y = np.abs(y_signed)
 sample_weight = RandomState(RANDOM_STATE).random(len(X))
-groups = [0] * 40 + [1] * 40 + [2] * 40 + [3] * 40 + [4] * 40
+groups = [j for j in range(N_GROUPS) for i in range((N_SAMPLES//N_GROUPS))]
 positive_predictor = TransformedTargetRegressor(
     regressor=LinearRegression(),
     func=lambda y_: np.log(y_ + 1),
@@ -96,7 +97,9 @@ params_test_cases_split = [
             "estimator": LinearRegression(),
             "alpha": 0.1,
             "test_size": 0.2,
-            "conformity_score": AbsoluteConformityScore(),
+            "conformity_score": ResidualNormalisedScore(
+                random_state=RANDOM_STATE
+            ),
             "cv": "prefit",
             "allow_infinite_bounds": True,
             "random_state": RANDOM_STATE,
@@ -106,9 +109,30 @@ params_test_cases_split = [
             "confidence_level": 0.9,
             "prefit": True,
             "test_size": 0.2,
-            "conformity_score":  AbsoluteConformityScore(),
+            "conformity_score": ResidualNormalisedScore(
+                random_state=RANDOM_STATE
+            ),
             "allow_infinite_bounds": True,
             "random_state": RANDOM_STATE,
+        }
+    },
+    {
+        "v0": {
+            "estimator": positive_predictor,
+            "alpha": 0.1,
+            "conformity_score": GammaConformityScore(),
+            "cv": "split",
+            "random_state": RANDOM_STATE,
+            "test_size": 0.3,
+            "optimize_beta": True
+        },
+        "v1": {
+            "estimator": positive_predictor,
+            "confidence_level": 0.9,
+            "conformity_score": GammaConformityScore(),
+            "random_state": RANDOM_STATE,
+            "test_size": 0.3,
+            "minimize_interval_width": True
         }
     },
 ]
@@ -119,8 +143,8 @@ def test_intervals_and_predictions_exact_equality_split(params_split):
     v0_params = params_split["v0"]
     v1_params = params_split["v1"]
 
-    test_size = v1_params["test_size"] if "test_size" in v1_params else None
-    prefit = ("prefit" in v1_params) and v1_params["prefit"]
+    test_size = v1_params.get("test_size", None)
+    prefit = v1_params.get("prefit", False)
 
     compare_model_predictions_and_intervals(
         model_v0=MapieRegressorV0,
@@ -340,6 +364,7 @@ params_test_cases_quantile = [
     {
         "v0": {
             "estimator": gbr_models,
+            "alpha": gbr_alpha,
             "cv": "prefit",
             "method": "quantile",
             "calib_size": 0.2,
@@ -349,6 +374,7 @@ params_test_cases_quantile = [
         },
         "v1": {
             "estimator": gbr_models,
+            "confidence_level": 1-gbr_alpha,
             "prefit": True,
             "test_size": 0.2,
             "fit_params": {"sample_weight": sample_weight},
@@ -400,8 +426,8 @@ def test_intervals_and_predictions_exact_equality_quantile(params_quantile):
     v0_params = params_quantile["v0"]
     v1_params = params_quantile["v1"]
 
-    test_size = v1_params["test_size"] if "test_size" in v1_params else None
-    prefit = ("prefit" in v1_params) and v1_params["prefit"]
+    test_size = v1_params.get("test_size", None)
+    prefit = v1_params.get("prefit", False)
 
     compare_model_predictions_and_intervals(
         model_v0=MapieQuantileRegressorV0,
