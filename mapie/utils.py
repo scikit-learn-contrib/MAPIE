@@ -1,3 +1,4 @@
+import logging
 import warnings
 from inspect import signature
 from typing import Any, Iterable, Optional, Tuple, Union, cast
@@ -573,39 +574,6 @@ def check_lower_upper_bounds(
     y_pred_up: NDArray,
     y_preds: NDArray
 ) -> None:
-    """
-    Check if lower or upper bounds and prediction are consistent.
-
-    Parameters
-    ----------
-    y_pred_low: NDArray of shape (n_samples,)
-        Lower bound prediction.
-
-    y_pred_up: NDArray of shape (n_samples,)
-        Upper bound prediction.
-
-    y_preds: NDArray of shape (n_samples,)
-        Prediction.
-
-    Raises
-    ------
-    Warning
-        If any of the predictions are ill-sorted.
-
-    Examples
-    --------
-    >>> import warnings
-    >>> warnings.filterwarnings("error")
-    >>> import numpy as np
-    >>> from mapie.utils import check_lower_upper_bounds
-    >>> y_preds = np.array([[4, 3, 2], [4, 4, 4], [2, 3, 4]])
-    >>> try:
-    ...     check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
-    ... except Exception as exception:
-    ...     print(exception)
-    ...
-    WARNING: The predictions are ill-sorted.
-    """
     y_pred_low = column_or_1d(y_pred_low)
     y_pred_up = column_or_1d(y_pred_up)
     y_preds = column_or_1d(y_preds)
@@ -617,9 +585,12 @@ def check_lower_upper_bounds(
     )
 
     if any_inversion:
-        warnings.warn(
-            "WARNING: The predictions are ill-sorted."
+        initial_logger_level = logging.root.level
+        logging.basicConfig(level=logging.INFO)
+        logging.info(
+            "The predictions are ill-sorted."
         )
+        logging.basicConfig(level=initial_logger_level)
 
 
 def check_defined_variables_predict_cqr(

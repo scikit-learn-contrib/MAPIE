@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any, Optional, Tuple
 
@@ -228,11 +229,12 @@ def test_valid_verbose(verbose: Any) -> None:
     check_verbose(verbose)
 
 
-def test_initial_low_high_pred() -> None:
+def test_initial_low_high_pred(caplog) -> None:
     """Test lower/upper predictions of the quantiles regression crossing"""
     y_preds = np.array([[4, 5, 2], [4, 4, 4], [2, 3, 4]])
-    with pytest.warns(UserWarning, match=r"WARNING: The predictions are*"):
+    with caplog.at_level(logging.INFO):
         check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
+    assert "The predictions are ill-sorted" in caplog.text
 
 
 def test_final_low_high_pred() -> None:
