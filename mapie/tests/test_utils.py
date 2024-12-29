@@ -237,15 +237,16 @@ def test_initial_low_high_pred(caplog) -> None:
     assert "The predictions are ill-sorted" in caplog.text
 
 
-def test_final_low_high_pred() -> None:
+def test_final_low_high_pred(caplog) -> None:
     """Test lower/upper predictions crossing"""
     y_preds = np.array(
         [[4, 3, 2], [3, 3, 3], [2, 3, 4]]
     )
     y_pred_low = np.array([4, 7, 2])
     y_pred_up = np.array([3, 3, 3])
-    with pytest.warns(UserWarning, match=r"WARNING: The predictions are*"):
+    with caplog.at_level(logging.INFO):
         check_lower_upper_bounds(y_pred_low, y_pred_up, y_preds[2])
+    assert "The predictions are ill-sorted" in caplog.text
 
 
 def test_ensemble_in_predict() -> None:
@@ -331,19 +332,6 @@ def test_quantile_prefit_non_iterable(estimator: Any) -> None:
     ):
         mapie_reg = MapieQuantileRegressor(estimator=estimator, cv="prefit")
         mapie_reg.fit([1, 2, 3], [4, 5, 6])
-
-
-# def test_calib_set_no_Xy_but_sample_weight() -> None:
-#     """Test warning message if sample weight provided but no X y in calib."""
-#     X = np.array([4, 5, 6])
-#     y = np.array([4, 3, 2])
-#     sample_weight = np.array([4, 4, 4])
-#     sample_weight_calib = np.array([4, 3, 4])
-#     with pytest.warns(UserWarning, match=r"WARNING: sample weight*"):
-#         check_calib_set(
-#             X=X, y=y, sample_weight=sample_weight,
-#             sample_weight_calib=sample_weight_calib
-#         )
 
 
 @pytest.mark.parametrize("strategy", ["quantile", "uniform", "array split"])
