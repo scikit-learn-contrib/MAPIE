@@ -46,7 +46,7 @@ class SplitConformalRegressor:
         The conformity score method used to calculate the conformity error.
         Valid options: see keys and values of the dictionnary
 :py:const:`mapie_v1.conformity_scores.REGRESSION_CONFORMITY_SCORES_STRING_MAP`.
-        See :doc:`theoretical_description_conformity_scores`
+        See :ref:`theoretical_description_conformity_scores`
 
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
@@ -74,11 +74,29 @@ class SplitConformalRegressor:
 
     Examples
     --------
-    >>> regressor = SplitConformalRegressor(estimator=LinearRegression(),
-                                            confidence_level=0.95)
-    >>> regressor.fit(X_train, y_train)
-    >>> regressor.conformalize(X_conf, y_conf)
-    >>> intervals = regressor.predict_set(X_test)
+    >>> from mapie_v1.regression import SplitConformalRegressor
+    >>> from sklearn.linear_model import Ridge
+    >>> from sklearn.datasets import make_regression
+
+    >>> X, y = make_regression(n_samples=500, n_features=2, noise=1.0)
+    >>> X_train, X_test_initial, y_train, y_test_initial = train_test_split(
+    ...    X,
+    ...    y,
+    ...    test_size=0.2,
+    ... )
+    >>> X_conf, X_test, y_conf, y_test = train_test_split(
+    ...     X_test_initial,
+    ...     y_test_initial,
+    ...     test_size=0.5,
+    ... )
+
+    >>> mapie_regressor = SplitConformalRegressor(
+    ...     estimator=Ridge(),
+    ...     confidence_level=0.95
+    ... ).fit(X_train, y_train).conformalize(X_conf, y_conf)
+
+    >>> prediction_points = mapie_regressor.predict(X_test)
+    >>> prediction_intervals = mapie_regressor.predict_set(X_test)
     """
 
     def __init__(
@@ -268,7 +286,7 @@ class CrossConformalRegressor:
         The conformity score method used to calculate the conformity error.
         Valid options: TODO : reference here the valid options, once the list
         has been be created during the implementation.
-        See :doc:`theoretical_description_conformity_scores`
+        See :ref:`theoretical_description_conformity_scores`
 
         A custom score function inheriting from BaseRegressionScore may also be
         provided.
@@ -313,11 +331,29 @@ class CrossConformalRegressor:
 
     Examples
     --------
-    >>> regressor = CrossConformalRegressor(
-    ...     estimator=LinearRegression(), confidence_level=0.95, cv=10)
-    >>> regressor.fit(X, y)
-    >>> regressor.conformalize(X, y)
-    >>> intervals = regressor.predict_set(X_test)
+    >>> from mapie_v1.regression import CrossConformalRegressor
+    >>> from sklearn.linear_model import Ridge
+    >>> from sklearn.datasets import make_regression
+
+    >>> X_initial, y_initial = make_regression(
+    ... n_samples=500,
+    ... n_features=2,
+    ... noise=1.0
+    ... )
+    >>> X, X_test, y, y_test = train_test_split(
+    ...    X_initial,
+    ...    y_initial,
+    ...    test_size=0.2,
+    ... )
+
+    >>> mapie_regressor = CrossConformalRegressor(
+    ...     estimator=Ridge(),
+    ...     confidence_level=0.95,
+    ...     cv=10
+    ... ).fit(X, y).conformalize(X, y)
+
+    >>> prediction_points = mapie_regressor.predict(X_test)
+    >>> prediction_intervals = mapie_regressor.predict_set(X_test)
     """
 
     _VALID_METHODS = ["base", "plus", "minmax"]
@@ -562,7 +598,7 @@ class JackknifeAfterBootstrapRegressor:
         The conformity score method used to calculate the conformity error.
         Valid options: TODO : reference here the valid options, once the list
         has been be created during the implementation.
-        See :doc:`theoretical_description_conformity_scores`
+        See :ref:`theoretical_description_conformity_scores`
 
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
@@ -606,14 +642,29 @@ class JackknifeAfterBootstrapRegressor:
 
     Examples
     --------
-    >>> regressor = JackknifeAfterBootstrapRegressor(
-    ...    estimator=LinearRegression(),
-    ...    confidence_level=0.9,
-    ...    resampling=8,
-    ...    aggregation_method="mean")
-    >>> regressor.fit(X_train, y_train)
-    >>> regressor.conformalize(X_conf, y_conf)
-    >>> intervals = regressor.predict_set(X_test)
+    >>> from mapie_v1.regression import JackknifeAfterBootstrapRegressor
+    >>> from sklearn.linear_model import Ridge
+    >>> from sklearn.datasets import make_regression
+
+    >>> X_initial, y_initial = make_regression(
+    ... n_samples=500,
+    ... n_features=2,
+    ... noise=1.0
+    ... )
+    >>> X, X_test, y, y_test = train_test_split(
+    ...    X_initial,
+    ...    y_initial,
+    ...    test_size=0.2,
+    ... )
+
+    >>> mapie_regressor = JackknifeAfterBootstrapRegressor(
+    ...     estimator=Ridge(),
+    ...     confidence_level=0.95,
+    ...     resampling=25,
+    ... ).fit(X, y).conformalize(X, y)
+
+    >>> prediction_points = mapie_regressor.predict(X_test)
+    >>> prediction_intervals = mapie_regressor.predict_set(X_test)
     """
 
     _VALID_METHODS = ["plus", "minmax"]
@@ -907,11 +958,29 @@ class ConformalizedQuantileRegressor:
 
     Examples
     --------
-    >>> regressor = ConformalizedQuantileRegressor(
-    ...     estimator=QuantileRegressor(), confidence_level=0.95)
-    >>> regressor.fit(X_train, y_train)
-    >>> regressor.conformalize(X_conf, y_conf)
-    >>> intervals = regressor.predict_set(X_test)
+    >>> from mapie_v1.regression import ConformalizedQuantileRegressor
+    >>> from sklearn.linear_model import QuantileRegressor
+    >>> from sklearn.datasets import make_regression
+
+    >>> X, y = make_regression(n_samples=500, n_features=2, noise=1.0)
+    >>> X_train, X_test_initial, y_train, y_test_initial = train_test_split(
+    ...    X,
+    ...    y,
+    ...    test_size=0.2,
+    ... )
+    >>> X_conf, X_test, y_conf, y_test = train_test_split(
+    ...     X_test_initial,
+    ...     y_test_initial,
+    ...     test_size=0.5,
+    ... )
+
+    >>> mapie_regressor = ConformalizedQuantileRegressor(
+    ...     estimator=QuantileRegressor(),
+    ...     confidence_level=0.95,
+    ... ).fit(X_train, y_train).conformalize(X_conf, y_conf)
+
+    >>> prediction_points = mapie_regressor.predict(X_test)
+    >>> prediction_intervals = mapie_regressor.predict_set(X_test)
     """
 
     def __init__(
@@ -1098,7 +1167,3 @@ class ConformalizedQuantileRegressor:
         estimator = self._mapie_quantile_regressor
         predictions, _ = estimator.predict(X, **self.predict_params)
         return predictions
-
-
-class GibbsConformalRegressor:
-    pass  # TODO
