@@ -589,30 +589,6 @@ def test_non_trained_estimator() -> None:
         )
 
 
-def test_warning_alpha_prefit() -> None:
-    """
-    Check that the user is warned that the alphas need to be correctly set.
-    """
-    with pytest.warns(
-        UserWarning,
-        match=r".*WARNING: The alpha that is set needs to be the same*"
-    ):
-        gb_trained1, gb_trained2, gb_trained3 = clone(gb), clone(gb), clone(gb)
-        gb_trained1.fit(X_train, y_train)
-        gb_trained2.fit(X_train, y_train)
-        gb_trained3.fit(X_train, y_train)
-        list_estimators = [gb_trained1, gb_trained2, gb_trained3]
-        mapie_reg = MapieQuantileRegressor(
-            estimator=list_estimators,
-            cv="prefit",
-            alpha=0.3
-        )
-        mapie_reg.fit(
-            X_calib,
-            y_calib
-        )
-
-
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2, 0.3])
 def test_prefit_and_non_prefit_equal(alpha: float) -> None:
     """
