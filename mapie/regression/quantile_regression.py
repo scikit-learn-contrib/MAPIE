@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import Iterable, List, Optional, Tuple, Union, cast, Any
 
 import numpy as np
@@ -26,8 +25,6 @@ class MapieQuantileRegressor(MapieRegressor):
     """
     This class implements the conformalized quantile regression strategy
     as proposed by Romano et al. (2019) to make conformal predictions.
-    The only valid ``method`` is ``"quantile"`` and the only valid
-    ``cv`` is ``"split"``.
 
     Parameters
     ----------
@@ -197,12 +194,6 @@ class MapieQuantileRegressor(MapieRegressor):
         ValueError
             If the value of ``alpha`` is not between ``0.0`` and ``1.0``.
         """
-        if self.cv == "prefit":
-            warnings.warn(
-                "WARNING: The alpha that is set needs to be the same"
-                + " as the alpha of your prefitted model in the following"
-                " order [alpha/2, 1 - alpha/2, 0.5]"
-            )
         if isinstance(alpha, float):
             if np.any(np.logical_or(alpha <= 0, alpha >= 1.0)):
                 raise ValueError(
