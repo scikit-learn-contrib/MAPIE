@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple, Union, cast
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, clone
-from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.utils import _safe_indexing, deprecated
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
@@ -403,7 +403,10 @@ class EnsembleRegressor:
                     )
                     self.k_[ind, i] = 1
 
-                if self.cv == "split":
+                if (
+                    isinstance(self.cv, BaseShuffleSplit) and
+                    self.cv.n_splits == 1
+                ):
                     y_pred = pred_matrix.flatten()
                 else:
                     check_nan_in_aposteriori_prediction(pred_matrix)
