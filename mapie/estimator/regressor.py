@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple, Union, cast
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, clone
-from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import _safe_indexing, deprecated
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
