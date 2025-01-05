@@ -318,7 +318,8 @@ def test_not_enough_resamplings() -> None:
         match=r"WARNING: at least one point of*"
     ):
         mapie_ts_reg = MapieTimeSeriesRegressor(
-            cv=BlockBootstrap(n_resamplings=1, n_blocks=1), agg_function="mean"
+            cv=BlockBootstrap(n_resamplings=2, n_blocks=1, random_state=0),
+            agg_function="mean"
         )
         mapie_ts_reg.fit(X, y)
 

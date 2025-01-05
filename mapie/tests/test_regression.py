@@ -701,7 +701,7 @@ def test_not_enough_resamplings() -> None:
     """
     with pytest.warns(UserWarning, match=r"WARNING: at least one point of*"):
         mapie_reg = MapieRegressor(
-            cv=Subsample(n_resamplings=1), agg_function="mean"
+            cv=Subsample(n_resamplings=2, random_state=0), agg_function="mean"
         )
         mapie_reg.fit(X, y)
 

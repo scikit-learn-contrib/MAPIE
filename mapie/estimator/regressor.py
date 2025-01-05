@@ -403,10 +403,7 @@ class EnsembleRegressor:
                     )
                     self.k_[ind, i] = 1
 
-                if (
-                    isinstance(self.cv, BaseShuffleSplit) and
-                    self.cv.n_splits == 1
-                ):
+                if self.use_split_method_:
                     y_pred = pred_matrix.flatten()
                 else:
                     check_nan_in_aposteriori_prediction(pred_matrix)
