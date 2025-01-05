@@ -402,9 +402,12 @@ class EnsembleRegressor:
                         predictions[i], dtype=float
                     )
                     self.k_[ind, i] = 1
-                check_nan_in_aposteriori_prediction(pred_matrix)
 
-                y_pred = aggregate_all(self.agg_function, pred_matrix)
+                if self.cv == "split":
+                    y_pred = pred_matrix.flatten()
+                else:
+                    check_nan_in_aposteriori_prediction(pred_matrix)
+                    y_pred = aggregate_all(self.agg_function, pred_matrix)
 
         return y_pred
 
