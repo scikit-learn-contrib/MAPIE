@@ -343,18 +343,8 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         optimal_beta_up = cast(OptimizeResult, minimize(
             calibrator_optim_objective, self.init_value_,
             args=(
-                np.vstack(
-                    [
-                        cs_features[not_nan_index, :],
-                        cs_features[not_nan_index[0], :]
-                    ]
-                ),
-                np.hstack(
-                    [
-                        conformity_scores_calib[not_nan_index],
-                        conformity_scores_calib[not_nan_index[0]]
-                    ]
-                ),
+                cs_features[not_nan_index, :],
+                conformity_scores_calib[not_nan_index],
                 q,
                 self.reg_param,
                 ),
@@ -365,21 +355,11 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             optimal_beta_low = cast(OptimizeResult, minimize(
                 calibrator_optim_objective, self.init_value_,
                 args=(
-                    np.vstack(
-                        [
-                            cs_features[not_nan_index, :],
-                            cs_features[not_nan_index[0], :]
-                        ]
-                    ),
-                    np.hstack(
-                        [
-                            - conformity_scores_calib[not_nan_index],
-                            - conformity_scores_calib[not_nan_index[0]]
-                        ]
-                    ),
+                    cs_features[not_nan_index, :],
+                    -conformity_scores_calib[not_nan_index],
                     q,
                     self.reg_param,
-                    ),
+                ),
                 **optim_kwargs,
             ))
         else:
