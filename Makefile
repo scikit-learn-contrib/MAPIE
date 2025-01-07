@@ -1,7 +1,7 @@
 .PHONY: tests doc build
 
 lint:
-	flake8 . --exclude=doc
+	flake8 . --max-line-length=88 --exclude=doc
 
 type-check:
 	mypy mapie
