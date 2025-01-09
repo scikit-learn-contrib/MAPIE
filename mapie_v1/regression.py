@@ -45,7 +45,7 @@ class SplitConformalRegressor:
     conformity_score : Union[str, BaseRegressionScore], default="absolute"
         The conformity score method used to calculate the conformity error.
         Valid options: see keys and values of the dictionnary
-:py:const:`mapie_v1.conformity_scores.REGRESSION_CONFORMITY_SCORES_STRING_MAP`.
+        :py:const:`mapie_v1.conformity_scores.REGRESSION_CONFORMITY_SCORES_STRING_MAP`.
         See :ref:`theoretical_description_conformity_scores`
 
         A custom score function inheriting from BaseRegressionScore may also

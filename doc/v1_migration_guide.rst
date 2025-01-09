@@ -162,11 +162,11 @@ MAPIE v0.9 Code
 
 Below is a MAPIE v0.9 code for split conformal prediction in case of pre-fitted model:
 
-.. code-block:: python
+.. testcode::
 
     from sklearn.linear_model import LinearRegression
-    from mapie.estimator import MapieRegressor
-    from mapie.conformity_scores import GammaConformityScore
+    from mapie.regression import MapieRegressor
+    from mapie.conformity_scores import ResidualNormalisedScore
     from sklearn.model_selection import train_test_split
     from sklearn.datasets import make_regression
 
@@ -180,7 +180,7 @@ Below is a MAPIE v0.9 code for split conformal prediction in case of pre-fitted 
     v0 = MapieRegressor(
         estimator=prefit_model,
         cv="prefit",
-        conformity_score=GammaConformityScore()
+        conformity_score=ResidualNormalisedScore()
     )
 
     v0.fit(X_conf, y_conf)
@@ -193,11 +193,11 @@ Equivalent MAPIE v1 code
 
 Below is the equivalent MAPIE v1 code for split conformal prediction:
 
-.. code-block:: python
+.. testcode::
 
     from sklearn.linear_model import LinearRegression
-    from mapie.estimator import SplitConformalRegressor
-    from mapie.utils import conf_split
+    from sklearn.model_selection import train_test_split
+    from mapie_v1.regression import SplitConformalRegressor
     from sklearn.datasets import make_regression
 
     X, y = make_regression(n_samples=100, n_features=2, noise=0.1)
@@ -210,7 +210,7 @@ Below is the equivalent MAPIE v1 code for split conformal prediction:
     v1 = SplitConformalRegressor(
         estimator=prefit_model,
         confidence_level=0.9,
-        conformity_score="gamma",
+        conformity_score="residual_normalized",
         prefit=True
     )
 
@@ -233,19 +233,18 @@ MAPIE v0.9 code
 
 Below is a MAPIE v0.9 code for cross-conformal prediction:
 
-.. code-block:: python
+.. testcode::
 
+    import numpy as np
     from sklearn.ensemble import RandomForestRegressor
-    from mapie.estimator import MapieRegressor
-    from mapie.conformity_scores import CrossConformalConformityScore
-    from sklearn.model_selection import train_test_split
+    from mapie.regression import MapieRegressor
+    from sklearn.model_selection import train_test_split, GroupKFold
     from sklearn.datasets import make_regression
 
-    X, y = make_regression(n_samples=100, n_features=2, noise=0.1)
-    groups = np.random.randint(0, 3, X.shape[0])
+    X_full, y_full = make_regression(n_samples=100, n_features=2, noise=0.1)
+    X, X_test, y, y_test = train_test_split(X_full, y_full)
+    groups = np.random.randint(0, 10, X.shape[0])
     sample_weight = np.random.rand(X.shape[0])
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y)
 
     regression_model = RandomForestRegressor(
         n_estimators=100,
@@ -254,12 +253,11 @@ Below is a MAPIE v0.9 code for cross-conformal prediction:
 
     v0 = MapieRegressor(
         estimator=regression_model,
-        cv=3,
-        conformity_score=CrossConformalConformityScore(),
+        cv=GroupKFold(),
         agg_function="median",
     )
 
-    v0.fit(X_conf, y_conf, sample_weight=sample_weight, groups=groups)
+    v0.fit(X, y, sample_weight=sample_weight, groups=groups)
 
     prediction_intervals_v0 = v0.predict(X_test, alpha=0.1)[1][:, :, 0]
     prediction_points_v0 = v0.predict(X_test, ensemble=True)
@@ -269,18 +267,18 @@ Equivalent MAPIE v1 code
 
 Below is the equivalent MAPIE v1 code for cross-conformal prediction:
 
-.. code-block:: python
+.. testcode::
 
+    import numpy as np
     from sklearn.ensemble import RandomForestRegressor
-    from mapie.estimator import CrossConformalRegressor
-    from mapie.utils import conf_split
+    from sklearn.model_selection import train_test_split, GroupKFold
+    from mapie_v1.regression import CrossConformalRegressor
     from sklearn.datasets import make_regression
 
     X_full, y_full = make_regression(n_samples=100, n_features=2, noise=0.1)
-    groups = np.random.randint(0, 3, X_full.shape[0])
-    sample_weight = np.random.rand(X_full.shape[0])
-
     X, X_test, y, y_test = train_test_split(X_full, y_full)
+    groups = np.random.randint(0, 10, X.shape[0])
+    sample_weight = np.random.rand(X.shape[0])
 
     regression_model = RandomForestRegressor(
         n_estimators=100,
@@ -290,7 +288,7 @@ Below is the equivalent MAPIE v1 code for cross-conformal prediction:
     v1 = CrossConformalRegressor(
         estimator=regression_model,
         confidence_level=0.9,
-        cv=3,
+        cv=GroupKFold(),
         conformity_score="absolute",
     )
 
