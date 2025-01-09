@@ -72,6 +72,7 @@ class MondrianCP(BaseEstimator):
     >>> import numpy as np
     >>> from sklearn.linear_model import LogisticRegression
     >>> from mapie.classification import MapieClassifier
+    >>> from mapie.mondrian import MondrianCP
     >>> X_toy = np.arange(9).reshape(-1, 1)
     >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
     >>> partition_toy = [0, 0, 0, 0, 1, 1, 1, 1, 1]
