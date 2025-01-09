@@ -22,6 +22,9 @@ coverage:
 doc:
 	$(MAKE) html -C doc
 
+doctest:
+	$(MAKE) doctest -C doc
+
 clean-doc:
 	$(MAKE) clean -C doc
 

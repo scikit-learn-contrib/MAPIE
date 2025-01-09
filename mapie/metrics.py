@@ -560,7 +560,7 @@ def regression_ssc_score(
 
     Examples
     --------
-    >>> from mapie.metrics import regression_ssc
+    >>> from mapie.metrics import regression_ssc_score
     >>> import numpy as np
     >>> y_true = np.array([5, 7.5, 9.5])
     >>> y_intervals = np.array([
@@ -1283,6 +1283,7 @@ def kolmogorov_smirnov_p_value(y_true: NDArray, y_score: NDArray) -> float:
     Examples
     --------
     >>> import pandas as pd
+    >>> import numpy as np
     >>> from mapie.metrics import kolmogorov_smirnov_p_value
     >>> y_true = np.array([1, 0, 1, 0, 1, 0])
     >>> y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])
@@ -1450,6 +1451,7 @@ def kuiper_p_value(y_true: NDArray, y_score: NDArray) -> float:
     Examples
     --------
     >>> import pandas as pd
+    >>> import numpy as np
     >>> from mapie.metrics import kuiper_p_value
     >>> y_true = np.array([1, 0, 1, 0, 1, 0])
     >>> y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])

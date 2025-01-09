@@ -15,6 +15,7 @@ History
 * Limit max sklearn version allowed at MAPIE installation
 * Refactor MapieRegressor, EnsembleRegressor, and MapieQuantileRegressor, to prepare for the release of v1.0.0
 * Documentation build: fix warnings, fix image generation, update sklearn version requirement
+* Documentation test: add a doc testing step (in MAKEFILE and CI)
 * Increase max line length from 79 to 88 characters
 * Bump wheel version
 
