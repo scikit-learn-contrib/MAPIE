@@ -1,0 +1,30 @@
+name: Documentation tests
+
+on:
+  push:
+    branches:
+      -dev
+      -main
+      -master
+  pull_request:
+
+jobs:
+  build:
+    runs-on:
+      os: macos-latest
+      python-version: "3.11"
+      numpy-version: 1.25.2
+    steps:
+      - name: Git clone
+        uses: actions/checkout@v2
+      - name: Set up virtual environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: "3.11"
+          environment-file: environment.doc.yml
+          channels: defaults, conda-forge
+          miniconda-version: "latest"
+      - name: Install numpy
+        run: conda install numpy=1.25.2
+      - name: Test doc
+        run: cd doc && make doctest
