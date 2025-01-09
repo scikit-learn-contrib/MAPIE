@@ -560,7 +560,7 @@ def regression_ssc_score(
 
     Examples
     --------
-    >>> from mapie.metrics import regression_ssc
+    >>> from mapie.metrics import regression_ssc_score
     >>> import numpy as np
     >>> y_true = np.array([5, 7.5, 9.5])
     >>> y_intervals = np.array([
