@@ -11,17 +11,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Git clone
         uses: actions/checkout@v2
-      - name: Set up virtual environment
-        uses: conda-incubator/setup-miniconda@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-          environment-file: environment.doc.yml
-          channels: defaults, conda-forge
-          miniconda-version: "latest"
-      - name: Install numpy
-        run: conda install numpy=1.25.2
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.doc.txt
+
       - name: Test doc
         run: cd doc && make doctest
