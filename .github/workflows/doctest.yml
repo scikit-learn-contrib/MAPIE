@@ -10,10 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on:
-      os: macos-latest
-      python-version: "3.11"
-      numpy-version: 1.25.2
+    runs-on: ubuntu-latest
     steps:
       - name: Git clone
         uses: actions/checkout@v2
