@@ -11,6 +11,7 @@ History
 * Fix issue 548 to correct labels generated in tutorial
 * Fix issue 547 to fix wrong warning
 * Fix issue 480 (correct display of mathematical equations in generated notebooks)
+* Temporary solution waiting for issue 588 to be fixed (optimize_beta not working)
 * Remove several irrelevant user warnings
 * Limit max sklearn version allowed at MAPIE installation
 * Refactor MapieRegressor, EnsembleRegressor, and MapieQuantileRegressor, to prepare for the release of v1.0.0

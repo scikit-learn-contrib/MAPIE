@@ -1,3 +1,4 @@
+import logging
 from abc import ABCMeta, abstractmethod
 from typing import Tuple
 
@@ -217,6 +218,13 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             Array of betas minimizing the differences
             ``(1-alpha+beta)-quantile - beta-quantile``.
         """
+        # Using logging.warning instead of warnings.warn to avoid warnings during tests
+        logging.warning(
+            "The option to optimize beta (minimize interval width) is not working and "
+            "needs to be fixed. See more details in "
+            "https://github.com/scikit-learn-contrib/MAPIE/issues/588"
+        )
+
         beta_np = np.full(
             shape=(len(lower_bounds), len(alpha_np)),
             fill_value=np.nan,
