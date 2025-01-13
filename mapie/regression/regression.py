@@ -549,7 +549,6 @@ class MapieRegressor(BaseEstimator, RegressorMixin):
             cv,
             agg_function,
             self.n_jobs,
-            self.random_state,
             self.test_size,
             self.verbose
         )

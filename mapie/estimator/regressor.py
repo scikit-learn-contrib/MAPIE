@@ -161,7 +161,6 @@ class EnsembleRegressor:
         cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_function: Optional[str],
         n_jobs: Optional[int],
-        random_state: Optional[Union[int, np.random.RandomState]],
         test_size: Optional[Union[int, float]],
         verbose: int
     ):
@@ -170,7 +169,6 @@ class EnsembleRegressor:
         self.cv = cv
         self.agg_function = agg_function
         self.n_jobs = n_jobs
-        self.random_state = random_state
         self.test_size = test_size
         self.verbose = verbose
 
