@@ -125,12 +125,6 @@ class EnsembleRegressor:
 
         By default ``0``.
 
-    random_state: Optional[Union[int, RandomState]]
-        Pseudo random number generator state used for random sampling.
-        Pass an int for reproducible output across multiple function calls.
-
-        By default ``None``.
-
     Attributes
     ----------
     single_estimator_: sklearn.RegressorMixin
