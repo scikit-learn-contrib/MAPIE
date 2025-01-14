@@ -9,6 +9,8 @@ The limit of the absolute residual conformity score is illustrated.
 We use here the OpenML house_prices dataset:
 https://www.openml.org/search?type=data&sort=runs&id=42165&status=active.
 
+Note : OpenML is down as of 14/01/25, so we'll load the data from Kaggle instead.
+
 The data is modelled by a Random Forest model
 :class:`~sklearn.ensemble.RandomForestRegressor` with a fixed parameter set.
 The prediction intervals are determined by means of the MAPIE regressor
@@ -31,7 +33,10 @@ The empirical coverage is similar between the two conformity scores.
 """
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.datasets import fetch_openml
+import requests
+import zipfile
+import io
+import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
@@ -43,12 +48,14 @@ random_state = 42
 
 # Parameters
 features = [
-    "MSSubClass",
-    "LotArea",
-    "OverallQual",
-    "OverallCond",
-    "GarageArea",
+    "MS SubClass",
+    "Lot Area",
+    "Overall Qual",
+    "Overall Cond",
+    "Garage Area",
 ]
+target = "SalePrice"
+
 alpha = 0.05
 rf_kwargs = {"n_estimators": 10, "random_state": random_state}
 model = RandomForestRegressor(**rf_kwargs)
@@ -63,7 +70,17 @@ model = RandomForestRegressor(**rf_kwargs)
 # in such cases.
 # Two sub datasets are extracted: the training and test ones.
 
-X, y = fetch_openml(name="house_prices", return_X_y=True)
+dataset_url = (
+    "https://www.kaggle.com" +
+    "/api/v1/datasets/download/shashanknecrothapa/ames-housing-dataset"
+)
+r = requests.get(dataset_url, stream=True)
+with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+    with z.open("AmesHousing.csv") as file:
+        data = pd.read_csv(file)
+
+X = data[features]
+y = data[target]
 
 X_train, X_test, y_train, y_test = train_test_split(
     X[features], y, test_size=0.2, random_state=random_state
