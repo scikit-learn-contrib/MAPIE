@@ -2,7 +2,10 @@
 History
 =======
 
-0.9.x (2024-xx-xx)
+0.9.x (2025-xx-xx)
+------------------
+
+0.9.2 (2025-15-01)
 ------------------
 
 * Fix issue 525 in contribution guidelines with syntax errors in hyperlinks and other formatting issues.
