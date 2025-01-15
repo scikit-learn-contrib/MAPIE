@@ -19,6 +19,7 @@ History
 * Documentation test: add a doc testing step (in MAKEFILE and CI)
 * Increase max line length from 79 to 88 characters
 * Bump wheel version
+* Other minor evolutions
 
 0.9.1 (2024-09-13)
 ------------------
