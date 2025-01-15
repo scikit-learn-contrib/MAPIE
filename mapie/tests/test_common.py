@@ -310,7 +310,6 @@ def test_warning_when_import_from_estimator():
             cv=3,
             agg_function="mean",
             n_jobs=1,
-            random_state=0,
             test_size=0.2,
             verbose=0,
         )

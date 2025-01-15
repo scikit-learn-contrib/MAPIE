@@ -751,7 +751,6 @@ def test_aggregate_with_mask_with_invalid_agg_function() -> None:
         KFold(n_splits=5, random_state=None, shuffle=True),
         "nonsense",
         None,
-        random_state,
         0.20,
         False
     )
@@ -1032,7 +1031,6 @@ def test_deprecated_ensemble_regressor_fit_warning() -> None:
         KFold(n_splits=5, random_state=None, shuffle=True),
         "nonsense",
         None,
-        random_state,
         0.20,
         False
     )
