@@ -1,13 +1,10 @@
 Classification notebooks
 ========================
 
-The following examples present advanced analyses on multi-class classification
-problems for computer vision settings that are too heavy to be included in the example
+The following example present an advanced analyse on multi-class classification
+problem for computer vision settings that is too heavy to be included in the example
 galleries.
 
 
 1. Estimating prediction sets on the Cifar10 dataset : `cifar_notebook <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/classification/Cifar10.ipynb>`_
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-2. Top-label calibration for outputs of ML models : `top_label_notebook <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/classification/top_label_calibration.ipynb>`_
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
