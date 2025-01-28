@@ -8,5 +8,5 @@ dependencies:
     - mypy
     - pandas
     - pytest-cov
-    - scikit-learn
+    - scikit-learn<1.6.0
     - typed-ast
