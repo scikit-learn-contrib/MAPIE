@@ -59,7 +59,7 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
-mapie_v1/integration_tests/mapie_v0_package
+tests_v1/integration_tests/mapie_v0_package
 
 # Translations
 *.mo
