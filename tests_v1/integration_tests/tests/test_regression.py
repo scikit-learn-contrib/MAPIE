@@ -22,9 +22,11 @@ from mapie_v1.regression import SplitConformalRegressor, \
 
 from mapiev0.regression import MapieRegressor as MapieRegressorV0  # noqa
 from mapiev0.regression import MapieQuantileRegressor as MapieQuantileRegressorV0  # noqa
-from mapie_v1.integration_tests.utils import (filter_params,
+from tests_v1.integration_tests.utils import (filter_params,
                                               train_test_split_shuffle)
 from sklearn.model_selection import LeaveOneOut, GroupKFold
+
+pytestmark = pytest.mark.regression
 
 RANDOM_STATE = 1
 K_FOLDS = 3
