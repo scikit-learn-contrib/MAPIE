@@ -1,5 +1,10 @@
 from typing import Callable, Dict, Any, Optional, Tuple
-from mapie._typing import NDArray
+
+import numpy as np
+from sklearn.base import BaseEstimator, ClassifierMixin
+from typing_extensions import Self
+
+from mapie._typing import NDArray, ArrayLike
 import inspect
 from sklearn.model_selection import ShuffleSplit
 
@@ -31,3 +36,25 @@ def filter_params(
 
     model_params = inspect.signature(function).parameters
     return {k: v for k, v in params.items() if k in model_params}
+
+
+class DummyClassifierWithFitAndPredictParams(BaseEstimator, ClassifierMixin):
+    def __init__(self):
+        self._classes = None
+        self._fit_param = None
+
+    def fit(self, X: ArrayLike, y: ArrayLike, fit_param: bool) -> Self:
+        self._classes = np.unique(y)
+        if len(self._classes) < 3:
+            raise ValueError("Dummy classifier needs at least 3 classes")
+        self._fit_param = fit_param
+        return self
+
+    def predict(self, X: ArrayLike, predict_param: bool):
+        if self._fit_param & predict_param:
+            return np.array(self._classes[0]) * len(X)
+        if self._fit_param:
+            return np.array(self._classes[1]) * len(X)
+        if predict_param:
+            return np.array(self._classes[2]) * len(X)
+        return np.random.choice(self._classes, len(X))

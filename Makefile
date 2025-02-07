@@ -23,8 +23,10 @@ v1-tests:
 v1-docstring-tests:
 	pytest -vs --doctest-modules mapie_v1 --ignore=$(integration_tests_folder_name)
 
+# Run `make v1-integration-tests params="-m classification"` to select only classification tests (for example)
+# Delete the mapie v0 folder to reinstall the latest version (master)
 v1-integration-tests:
-	@pip install git+https://github.com/scikit-learn-contrib/MAPIE@master --no-dependencies --target=./$(integration_tests_folder_name)/$(mapie_v0_folder_name) >/dev/null 2>&1
+	@if [ ! -d "./$(integration_tests_folder_name)/$(mapie_v0_folder_name)" ]; then pip install git+https://github.com/scikit-learn-contrib/MAPIE@master --no-dependencies --target=./$(integration_tests_folder_name)/$(mapie_v0_folder_name) >/dev/null 2>&1; fi
 	@mv ./$(integration_tests_folder_name)/$(mapie_v0_folder_name)/mapie ./$(integration_tests_folder_name)/$(mapie_v0_folder_name)/mapiev0
 	@- export PYTHONPATH="${PYTHONPATH}:./$(integration_tests_folder_name)/$(mapie_v0_folder_name)"; pytest -vs $(integration_tests_folder_name)/tests $(params)
 	@mv ./$(integration_tests_folder_name)/$(mapie_v0_folder_name)/mapiev0 ./$(integration_tests_folder_name)/$(mapie_v0_folder_name)/mapie

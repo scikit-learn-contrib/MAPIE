@@ -23,6 +23,13 @@ class SplitConformalClassifier:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
+        """
+        Notes
+        -----
+        This implementation currently uses a ShuffleSplit cross-validation scheme
+        for splitting the conformalization set. Future implementations may allow the use
+        of groups.
+        """
         pass
 
     def fit(
@@ -48,8 +55,8 @@ class SplitConformalClassifier:
         self,
         X: ArrayLike,
         conformity_score_params: Optional[dict] = None,
-        # Parameters specific to conformal method,
-        # For example: include_last_label
+        # Prediction time parameters specific to conformity scores,
+        # The only example for now is: include_last_label
     ) -> Tuple[NDArray, NDArray]:
         """
         Shape: (n, ), (n, n_class, n_confidence_level)
