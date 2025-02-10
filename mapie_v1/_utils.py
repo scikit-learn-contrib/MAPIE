@@ -1,5 +1,6 @@
+import copy
 import warnings
-from typing import Union, List, Tuple, cast
+from typing import Union, List, Tuple, cast, Optional
 
 from numpy import array
 from mapie._typing import ArrayLike, NDArray
@@ -70,3 +71,15 @@ def cast_predictions_to_ndarray_tuple(
     predictions: Union[NDArray, Tuple[NDArray, NDArray]]
 ) -> Tuple[NDArray, NDArray]:
     return cast(Tuple[NDArray, NDArray], predictions)
+
+
+def prepare_params(params: Union[dict, None]) -> dict:
+    return copy.deepcopy(params) if params else {}
+
+
+def prepare_fit_params_and_sample_weight(
+    fit_params: Union[dict, None]
+) -> Tuple[dict, Optional[ArrayLike]]:
+    fit_params_ = prepare_params(fit_params)
+    sample_weight = fit_params_.pop("sample_weight", None)
+    return fit_params_, sample_weight

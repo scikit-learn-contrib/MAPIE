@@ -1,4 +1,3 @@
-import copy
 from typing import Optional, Union, List, cast, Tuple
 from typing_extensions import Self
 
@@ -16,10 +15,16 @@ from mapie.utils import check_estimator_fit_predict
 from mapie_v1.conformity_scores._utils import (
     check_and_select_regression_conformity_score,
 )
-from mapie_v1._utils import transform_confidence_level_to_alpha_list, \
-    check_if_param_in_allowed_values, check_cv_not_string, hash_X_y, \
-    check_if_X_y_different_from_fit, \
-    cast_point_predictions_to_ndarray, cast_predictions_to_ndarray_tuple
+from mapie_v1._utils import (
+    transform_confidence_level_to_alpha_list,
+    check_if_param_in_allowed_values,
+    check_cv_not_string,
+    hash_X_y,
+    check_if_X_y_different_from_fit,
+    cast_point_predictions_to_ndarray,
+    cast_predictions_to_ndarray_tuple,
+    prepare_params, prepare_fit_params_and_sample_weight,
+)
 
 
 class SplitConformalRegressor:
@@ -120,6 +125,7 @@ class SplitConformalRegressor:
         self._alphas = transform_confidence_level_to_alpha_list(
             confidence_level
         )
+        self._predict_params: dict = {}
 
     def fit(
         self,
@@ -149,8 +155,8 @@ class SplitConformalRegressor:
         """
         if not self._prefit:
             cloned_estimator = clone(self._estimator)
-            fit_params = {} if fit_params is None else fit_params
-            cloned_estimator.fit(X_train, y_train, **fit_params)
+            fit_params_ = prepare_params(fit_params)
+            cloned_estimator.fit(X_train, y_train, **fit_params_)
             self._mapie_regressor.estimator = cloned_estimator
 
         return self
@@ -182,10 +188,12 @@ class SplitConformalRegressor:
         Self
             The conformalized SplitConformalRegressor instance.
         """
-        predict_params = {} if predict_params is None else predict_params
-        self._mapie_regressor.fit(X_conformalize,
-                                  y_conformalize,
-                                  predict_params=predict_params)
+        self._predict_params = prepare_params(predict_params)
+        self._mapie_regressor.fit(
+            X_conformalize,
+            y_conformalize,
+            predict_params=self._predict_params
+        )
 
         return self
 
@@ -221,7 +229,8 @@ class SplitConformalRegressor:
             X,
             alpha=self._alphas,
             optimize_beta=minimize_interval_width,
-            allow_infinite_bounds=allow_infinite_bounds
+            allow_infinite_bounds=allow_infinite_bounds,
+            **self._predict_params,
         )
         return cast_predictions_to_ndarray_tuple(predictions)
 
@@ -242,7 +251,11 @@ class SplitConformalRegressor:
         NDArray
             Array of point predictions, with shape (n_samples,).
         """
-        predictions = self._mapie_regressor.predict(X, alpha=None)
+        predictions = self._mapie_regressor.predict(
+            X,
+            alpha=None,
+            **self._predict_params
+        )
         return cast_point_predictions_to_ndarray(predictions)
 
 
@@ -361,7 +374,8 @@ class CrossConformalRegressor:
         )
 
         self._hashed_X_y: int = 0
-        self._sample_weight: Optional[NDArray] = None
+        self._sample_weight: Optional[ArrayLike] = None
+        self._predict_params: dict = {}
 
     def fit(
         self,
@@ -391,11 +405,9 @@ class CrossConformalRegressor:
         """
         self._hashed_X_y = hash_X_y(X, y)
 
-        if fit_params:
-            fit_params_ = copy.deepcopy(fit_params)
-            self._sample_weight = fit_params_.pop("sample_weight", None)
-        else:
-            fit_params_ = {}
+        fit_params_, self._sample_weight = prepare_fit_params_and_sample_weight(
+            fit_params
+        )
 
         X, y, self._sample_weight, groups = self._mapie_regressor.init_fit(
             X, y, self._sample_weight, fit_params=fit_params_
@@ -443,15 +455,14 @@ class CrossConformalRegressor:
         """
         check_if_X_y_different_from_fit(X, y, self._hashed_X_y)
         groups = cast(Optional[NDArray], groups)
-        if not predict_params:
-            predict_params = {}
+        self._predict_params = prepare_params(predict_params)
 
         self._mapie_regressor.conformalize(
             X,
             y,
             sample_weight=self._sample_weight,
             groups=groups,
-            predict_params=predict_params
+            predict_params=self._predict_params,
         )
 
         return self
@@ -502,6 +513,7 @@ class CrossConformalRegressor:
             optimize_beta=minimize_interval_width,
             allow_infinite_bounds=allow_infinite_bounds,
             ensemble=ensemble,
+            **self._predict_params,
         )
         return cast_predictions_to_ndarray_tuple(predictions)
 
@@ -536,7 +548,7 @@ class CrossConformalRegressor:
             aggregate_predictions
         )
         predictions = self._mapie_regressor.predict(
-            X, alpha=None, ensemble=ensemble
+            X, alpha=None, ensemble=ensemble, **self._predict_params,
         )
         return cast_point_predictions_to_ndarray(predictions)
 
@@ -684,7 +696,8 @@ class JackknifeAfterBootstrapRegressor:
         )
 
         self._hashed_X_y: int = 0
-        self._sample_weight: Optional[NDArray] = None
+        self._sample_weight: Optional[ArrayLike] = None
+        self._predict_params: dict = {}
 
     def fit(
         self,
@@ -714,11 +727,9 @@ class JackknifeAfterBootstrapRegressor:
         """
         self._hashed_X_y = hash_X_y(X, y)
 
-        if fit_params:
-            fit_params_ = copy.deepcopy(fit_params)
-            self._sample_weight = fit_params_.pop("sample_weight", None)
-        else:
-            fit_params_ = {}
+        fit_params_, self._sample_weight = prepare_fit_params_and_sample_weight(
+            fit_params
+        )
 
         X, y, self._sample_weight, groups = self._mapie_regressor.init_fit(
             X, y, self._sample_weight, fit_params=fit_params_
@@ -760,16 +771,14 @@ class JackknifeAfterBootstrapRegressor:
             The JackknifeAfterBootstrapRegressor instance with
             calibrated prediction intervals.
         """
-
         check_if_X_y_different_from_fit(X, y, self._hashed_X_y)
-        if not predict_params:
-            predict_params = {}
+        self._predict_params = prepare_params(predict_params)
 
         self._mapie_regressor.conformalize(
             X,
             y,
             sample_weight=self._sample_weight,
-            predict_params=predict_params
+            predict_params=self._predict_params,
         )
 
         return self
@@ -819,6 +828,7 @@ class JackknifeAfterBootstrapRegressor:
             optimize_beta=minimize_interval_width,
             allow_infinite_bounds=allow_infinite_bounds,
             ensemble=ensemble,
+            **self._predict_params,
         )
         return cast_predictions_to_ndarray_tuple(predictions)
 
@@ -849,7 +859,7 @@ class JackknifeAfterBootstrapRegressor:
             Array of point predictions, with shape `(n_samples,)`.
         """
         predictions = self._mapie_regressor.predict(
-            X, alpha=None, ensemble=ensemble
+            X, alpha=None, ensemble=ensemble, **self._predict_params,
         )
         return cast_point_predictions_to_ndarray(predictions)
 
@@ -932,7 +942,6 @@ class ConformalizedQuantileRegressor:
         confidence_level: float = 0.9,
         prefit: bool = False,
     ) -> None:
-
         self._alpha = 1 - confidence_level
         self.prefit = prefit
 
@@ -944,7 +953,8 @@ class ConformalizedQuantileRegressor:
             alpha=self._alpha,
         )
 
-        self._sample_weight: Optional[NDArray] = None
+        self._sample_weight: Optional[ArrayLike] = None
+        self._predict_params: dict = {}
 
     def fit(
         self,
@@ -979,11 +989,9 @@ class ConformalizedQuantileRegressor:
                 " not be called with prefit=True."
             )
 
-        if fit_params:
-            fit_params_ = copy.deepcopy(fit_params)
-            self._sample_weight = fit_params_.pop("sample_weight", None)
-        else:
-            fit_params_ = {}
+        fit_params_, self._sample_weight = prepare_fit_params_and_sample_weight(
+            fit_params
+        )
 
         self._mapie_quantile_regressor._initialize_fit_conformalize()
         self._mapie_quantile_regressor._fit_estimators(
@@ -1025,12 +1033,12 @@ class ConformalizedQuantileRegressor:
             The ConformalizedQuantileRegressor instance with calibrated
             prediction intervals.
         """
-        self.predict_params = predict_params if predict_params else {}
+        self._predict_params = prepare_params(predict_params)
 
         self._mapie_quantile_regressor.conformalize(
             X_conformalize,
             y_conformalize,
-            **self.predict_params
+            **self._predict_params
         )
 
         return self
@@ -1078,7 +1086,7 @@ class ConformalizedQuantileRegressor:
             optimize_beta=minimize_interval_width,
             allow_infinite_bounds=allow_infinite_bounds,
             symmetry=symmetric_intervals,
-            **self.predict_params
+            **self._predict_params
         )
         return cast_predictions_to_ndarray_tuple(predictions)
 
@@ -1100,5 +1108,5 @@ class ConformalizedQuantileRegressor:
             Array of point predictions with shape `(n_samples,)`.
         """
         estimator = self._mapie_quantile_regressor
-        predictions, _ = estimator.predict(X, **self.predict_params)
+        predictions, _ = estimator.predict(X, **self._predict_params)
         return predictions
