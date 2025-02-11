@@ -1944,23 +1944,6 @@ def test_raise_error_new_class() -> None:
         mapie_clf.fit(X, y)
 
 
-@pytest.mark.parametrize("method", ["score", "cumulated_score"])
-def test_deprecated_method_warning(method: str) -> None:
-    """
-    Test that a warning is raised if choose a deprecated method.
-    """
-    clf = LogisticRegression()
-    clf.fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(
-        estimator=clf, method=method,
-        cv="prefit", random_state=random_state
-    )
-    with pytest.warns(
-        DeprecationWarning, match=r".*WARNING: Deprecated method.*"
-    ):
-        mapie_clf.fit(X_toy, y_toy)
-
-
 def test_fit_parameters_passing() -> None:
     """
     Test passing fit parameters, here early stopping at iteration 3.
