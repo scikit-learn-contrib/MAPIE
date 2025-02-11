@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, cast, Tuple
+from typing import Optional, Union, List, cast, Tuple, Iterable
 from typing_extensions import Self
 
 import numpy as np
@@ -98,7 +98,7 @@ class SplitConformalRegressor:
     def __init__(
         self,
         estimator: RegressorMixin = LinearRegression(),
-        confidence_level: Union[float, List[float]] = 0.9,
+        confidence_level: Union[float, Iterable[float]] = 0.9,
         conformity_score: Union[str, BaseRegressionScore] = "absolute",
         prefit: bool = True,
         n_jobs: Optional[int] = None,
@@ -342,7 +342,7 @@ class CrossConformalRegressor:
     def __init__(
         self,
         estimator: RegressorMixin = LinearRegression(),
-        confidence_level: Union[float, List[float]] = 0.9,
+        confidence_level: Union[float, Iterable[float]] = 0.9,
         conformity_score: Union[str, BaseRegressionScore] = "absolute",
         method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
@@ -649,7 +649,7 @@ class JackknifeAfterBootstrapRegressor:
     def __init__(
         self,
         estimator: RegressorMixin = LinearRegression(),
-        confidence_level: Union[float, List[float]] = 0.9,
+        confidence_level: Union[float, Iterable[float]] = 0.9,
         conformity_score: Union[str, BaseRegressionScore] = "absolute",
         method: str = "plus",
         resampling: Union[int, Subsample] = 30,

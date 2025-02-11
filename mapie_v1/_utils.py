@@ -1,6 +1,7 @@
 import copy
 import warnings
-from typing import Union, List, Tuple, cast, Optional
+from typing import Union, Tuple, cast, Optional, Iterable
+from collections.abc import Iterable as IterableType
 
 from numpy import array
 from mapie._typing import ArrayLike, NDArray
@@ -9,9 +10,9 @@ from decimal import Decimal
 
 
 def transform_confidence_level_to_alpha_list(
-    confidence_level: Union[float, List[float]]
-) -> List[float]:
-    if isinstance(confidence_level, list):
+    confidence_level: Union[float, Iterable[float]]
+) -> Iterable[float]:
+    if isinstance(confidence_level, IterableType):
         confidence_levels = confidence_level
     else:
         confidence_levels = [confidence_level]
