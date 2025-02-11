@@ -98,7 +98,7 @@ def params_split_test_3(dataset):
         "v0": {
             "__init__": {
                 "estimator": RandomForestClassifier(),
-                "conformity_score": "top_k",
+                "conformity_score": "aps",
                 "cv": "split"
             },
             "fit": {
