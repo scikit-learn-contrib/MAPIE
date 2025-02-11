@@ -39,7 +39,7 @@ class MondrianCP(BaseEstimator):
 
     The underlying estimator must be used with `cv='prefit'` and the
     conformity score must be one of the following:
-    - For `MapieClassifier`: 'lac', 'score', 'cumulated_score', 'aps' or 'topk'
+    - For `MapieClassifier`: 'lac', 'aps' or 'topk'
     - For `MapieRegressor`: 'absolute' or 'gamma'
 
     Parameters
@@ -48,7 +48,7 @@ class MondrianCP(BaseEstimator):
         The estimator for which the Mondrian method will be applied.
         It must be used with `cv='prefit'` and the
         conformity score must be one of the following:
-        - For `MapieClassifier`: 'lac', 'score', 'cumulated_score', 'aps' or
+        - For `MapieClassifier`: 'lac', 'aps' or
         'topk'
         - For `MapieRegressor`: 'absolute' or 'gamma'
 
@@ -101,7 +101,7 @@ class MondrianCP(BaseEstimator):
         MapieTimeSeriesRegressor
     )
     allowed_classification_ncs_str = [
-        "lac", "score", "cumulated_score", "aps", "top_k"
+        "lac", "aps", "top_k"
     ]
     allowed_classification_ncs_class = (
         LACConformityScore, NaiveConformityScore, APSConformityScore,
