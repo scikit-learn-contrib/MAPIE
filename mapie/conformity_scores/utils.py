@@ -16,9 +16,7 @@ from mapie._typing import ArrayLike
 
 
 METHOD_SCORE_MAP = {
-    'score': lambda: LACConformityScore(),
     'lac': lambda: LACConformityScore(),
-    'cumulated_score': lambda: APSConformityScore(),
     'aps': lambda: APSConformityScore(),
     'naive': lambda: NaiveConformityScore(),
     'raps': lambda: RAPSConformityScore(),
@@ -72,36 +70,6 @@ def check_regression_conformity_score(
         raise ValueError(
             "Invalid conformity_score argument.\n"
             "Must be None or a BaseRegressionScore instance."
-        )
-
-
-def check_depreciated_score(
-    method: str
-) -> None:
-    """
-    Check if the chosen method is outdated.
-
-    Raises
-    ------
-    Warning
-        If method is ``"score"`` (not ``"lac"``) or
-        if method is ``"cumulated_score"`` (not ``"aps"``).
-    """
-    if method == "score":
-        warnings.warn(
-            "WARNING: Deprecated method. "
-            "The method \"score\" is outdated. "
-            "Prefer to use \"lac\" instead to keep "
-            "the same behavior in the next release.",
-            DeprecationWarning
-        )
-    if method == "cumulated_score":
-        warnings.warn(
-            "WARNING: Deprecated method. "
-            "The method \"cumulated_score\" is outdated. "
-            "Prefer to use \"aps\" instead to keep "
-            "the same behavior in the next release.",
-            DeprecationWarning
         )
 
 
@@ -217,7 +185,6 @@ def check_classification_conformity_score(
             )
     elif method is not None:
         if isinstance(method, str) and method in METHOD_SCORE_MAP:
-            check_depreciated_score(method)
             return METHOD_SCORE_MAP[method]()
         else:
             raise ValueError(
