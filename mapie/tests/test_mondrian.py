@@ -32,11 +32,6 @@ from mapie.regression import (
 )
 
 VALID_MAPIE_ESTIMATORS = {
-    "classif_score": {
-        "estimator": MapieClassifier,
-        "task": "classification",
-        "kwargs": {"method": "score"}
-    },
     "classif_lac": {
         "estimator": MapieClassifier,
         "task": "classification",
@@ -46,11 +41,6 @@ VALID_MAPIE_ESTIMATORS = {
         "estimator": MapieClassifier,
         "task": "classification",
         "kwargs": {"method": "aps"}
-    },
-    "classif_cumulated_score": {
-        "estimator": MapieClassifier,
-        "task": "classification",
-        "kwargs": {"method": "cumulated_score"}
     },
     "classif_topk": {
         "estimator": MapieClassifier,

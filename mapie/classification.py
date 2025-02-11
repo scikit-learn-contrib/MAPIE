@@ -47,12 +47,12 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
 
         - ``"naive"``, sum of the probabilities until the 1-alpha threshold.
 
-        - ``"lac"`` (formerly called ``"score"``), Least Ambiguous set-valued
+        - ``"lac"``, Least Ambiguous set-valued
           Classifier. It is based on the scores
           (i.e. 1 minus the softmax score of the true label)
           on the calibration set. See [1] for more details.
 
-        - ``"aps"`` (formerly called "cumulated_score"), Adaptive Prediction
+        - ``"aps"``, Adaptive Prediction
           Sets method. It is based on the sum of the softmax outputs of the
           labels until the true label is reached, on the calibration set.
           See [2] for more details.
