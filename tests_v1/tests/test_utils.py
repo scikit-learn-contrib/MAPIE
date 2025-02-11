@@ -1,5 +1,18 @@
-from mapie_v1._utils import prepare_params, prepare_fit_params_and_sample_weight
+import pytest
+
+from mapie_v1._utils import (
+    prepare_params,
+    prepare_fit_params_and_sample_weight,
+    transform_confidence_level_to_alpha_list,
+)
 from unittest.mock import patch
+
+
+@pytest.mark.parametrize(
+    "confidence_level, expected", [(0.9, [0.1]), ([0.1, 0.2], [0.9, 0.8])]
+)
+def test_transform_confidence_level_to_alpha_list(confidence_level, expected):
+    assert transform_confidence_level_to_alpha_list(confidence_level) == expected
 
 
 def test_prepare_params_none():
