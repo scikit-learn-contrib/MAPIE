@@ -493,7 +493,6 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
             self.n_classes_,
             cv,
             self.n_jobs,
-            self.random_state,
             self.test_size,
             self.verbose,
         )

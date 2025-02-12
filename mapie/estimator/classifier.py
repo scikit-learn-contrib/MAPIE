@@ -74,13 +74,6 @@ class EnsembleClassifier:
 
         By default ``None``.
 
-    random_state: Optional[Union[int, RandomState]]
-        Pseudo random number generator state used for random uniform sampling
-        for evaluation quantiles and prediction sets.
-        Pass an int for reproducible output across multiple function calls.
-
-        By default ``None``.
-
     verbose: int, optional
         The verbosity level, used with joblib for multiprocessing.
         At this moment, parallel processing is disabled.
@@ -119,7 +112,6 @@ class EnsembleClassifier:
         n_classes: int,
         cv: Optional[Union[int, str, BaseCrossValidator]],
         n_jobs: Optional[int],
-        random_state: Optional[Union[int, np.random.RandomState]],
         test_size: Optional[Union[int, float]],
         verbose: int,
     ):
@@ -127,7 +119,6 @@ class EnsembleClassifier:
         self.n_classes = n_classes
         self.cv = cv
         self.n_jobs = n_jobs
-        self.random_state = random_state
         self.test_size = test_size
         self.verbose = verbose
 
