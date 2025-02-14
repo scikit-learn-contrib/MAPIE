@@ -12,9 +12,7 @@ from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import MapieRegressor, MapieQuantileRegressor
 from mapie.utils import check_estimator_fit_predict
-from mapie_v1.conformity_scores._utils import (
-    check_and_select_regression_conformity_score,
-)
+from mapie_v1.conformity_scores._utils import check_and_select_conformity_score
 from mapie_v1._utils import (
     transform_confidence_level_to_alpha_list,
     check_if_param_in_allowed_values,
@@ -107,8 +105,10 @@ class SplitConformalRegressor:
         check_estimator_fit_predict(estimator)
         self._estimator = estimator
         self._prefit = prefit
-        self._conformity_score = check_and_select_regression_conformity_score(
-            conformity_score)
+        self._conformity_score = check_and_select_conformity_score(
+            conformity_score,
+            BaseRegressionScore,
+        )
 
         # Note to developers: to implement this v1 class without touching the
         # v0 backend, we're for now using a hack. We always set cv="prefit",
@@ -158,7 +158,6 @@ class SplitConformalRegressor:
             fit_params_ = prepare_params(fit_params)
             cloned_estimator.fit(X_train, y_train, **fit_params_)
             self._mapie_regressor.estimator = cloned_estimator
-
         return self
 
     def conformalize(
@@ -363,8 +362,9 @@ class CrossConformalRegressor:
             cv=cv,
             n_jobs=n_jobs,
             verbose=verbose,
-            conformity_score=check_and_select_regression_conformity_score(
-                conformity_score
+            conformity_score=check_and_select_conformity_score(
+                conformity_score,
+                BaseRegressionScore,
             ),
             random_state=random_state,
         )
@@ -685,8 +685,9 @@ class JackknifeAfterBootstrapRegressor:
             n_jobs=n_jobs,
             verbose=verbose,
             agg_function=aggregation_method,
-            conformity_score=check_and_select_regression_conformity_score(
-                conformity_score
+            conformity_score=check_and_select_conformity_score(
+                conformity_score,
+                BaseRegressionScore,
             ),
             random_state=random_state,
         )
