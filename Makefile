@@ -11,6 +11,7 @@ tests:
 
 coverage:
 	pytest -vsx \
+		--doctest-modules \
 		--cov-branch \
 		--cov=mapie \
 		--cov-report term-missing \
