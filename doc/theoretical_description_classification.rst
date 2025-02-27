@@ -159,14 +159,14 @@ By analogy with the CV+ method for regression, estimating the prediction sets is
 
 - We split the training set into *K* disjoint subsets :math:`S_1, S_2, ..., S_K` of equal size. 
   
-- *K* regression functions :math:`\hat{\mu}_{-S_k}` are fitted on the training set with the 
+- *K* classification functions :math:`\hat{\mu}_{-S_k}` are fitted on the training set with the 
   corresponding :math:`k^{th}` fold removed.
 
 - The corresponding *out-of-fold* conformity score is computed for each :math:`i^{th}` point 
 
 - Compare the conformity scores of training instances with the scores of each label for each new test point in order to
   decide whether or not the label should be included in the prediction set. 
-  For the APS method, the prediction set is constructed as follows (see equation 11 of [3]) : 
+  For the APS method, the prediction set is constructed as follows (see equation 11 of [2]) : 
 
 .. math:: 
     C_{n, \alpha}(X_{n+1}) = 
