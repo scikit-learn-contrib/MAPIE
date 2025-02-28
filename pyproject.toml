@@ -1,0 +1,55 @@
+[build-system]
+requires = [
+    "setuptools"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "MAPIE"
+version = "0.9.3-alpha1"
+description = "A scikit-learn-compatible module for estimating prediction intervals."
+readme = "README.rst"
+license = {file = "LICENSE"}
+maintainers = [
+    {name = "Valentin Laurent", email = "valentin.laurent@capgemini.com"},
+    {name = "Thibault Cordier", email = "thibault.a.cordier@capgemini.com"},
+    {name = "Louis Lacombe", email = "louis.lacombe@capgemini.com"},
+    {name = "Vincent Blot", email = "vincent.blot@capgemini.com"},
+]
+requires-python = ">=3.7"
+dependencies = [
+    "scikit-learn<1.6.0",
+    "scipy",
+    "numpy>=1.21",
+    "packaging"
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved",
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11"
+]
+
+[project.urls]
+Homepage = "https://github.com/scikit-learn-contrib/MAPIE"
+Documentation = "https://mapie.readthedocs.io/en/latest/"
+Repository = "https://github.com/scikit-learn-contrib/MAPIE"
+Issues = "https://github.com/scikit-learn-contrib/MAPIE/issues"
+Changelog = "https://github.com/scikit-learn-contrib/MAPIE/releases"
+DOWNLOAD = "https://pypi.org/project/MAPIE/#files"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["mapie", "mapie.*"]
