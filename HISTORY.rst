@@ -5,7 +5,7 @@ History
 0.9.x (2025-xx-xx)
 ------------------
 
-0.9.3-alpha1 (2025-15-01)
+0.9.3-alpha2 (2025-15-01)
 ------------------
 
 * Fix issue 512 to use a pyproject.toml file.
