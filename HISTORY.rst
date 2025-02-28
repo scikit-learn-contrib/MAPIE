@@ -9,6 +9,7 @@ History
 ------------------
 
 * Fix issue 512 to use a pyproject.toml file.
+* Update versions of twine and wheel. No specific version for these libraries, always use latest.
 
 0.9.2 (2025-15-01)
 ------------------
