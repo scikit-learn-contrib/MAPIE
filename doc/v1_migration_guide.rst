@@ -73,7 +73,7 @@ A parameter used to specify the scoring approach for evaluating model prediction
 - **v0.9**: Only allowed custom objects derived from ``BaseRegressionScore``.
 - **v1**: Now accepts both strings (like ``"absolute"``) for predefined methods and custom ``BaseRegressionScore`` instances, simplifying usage.
 
-``confidence_level``
+``alpha``
 ~~~~~~~~~~~~~~~~~~~~
 Indicates the desired coverage probability of the prediction intervals.
 
@@ -122,7 +122,7 @@ Defines additional parameters exclusively for prediction.
 - **v0.9**: Passed additional parameters in a flexible but less explicit manner, sometimes mixed within training configurations.
 - **v1**: Now structured as a dedicated dictionary, ``predict_params``, to be used during calibration (``conformalize`` method) and prediction stages, ensuring no overlap with training parameters.
 
-``agg_function``, ``aggregation_method``, ``aggregate_predictions``, and ``ensemble``
+``agg_function`` and ``ensemble``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The aggregation method and technique for combining predictions in cross conformal methods.
 
@@ -137,17 +137,23 @@ The aggregation method and technique for combining predictions in cross conforma
 - **v0.9**: This parameter was used to control the randomness of the data splitting.
 - **v1**: This parameter has been removed in cases where data splitting is now manual. Future evolutions may reintroduce it as a general purpose randomness control parameter.
 
-``Other parameters``
+``symmetry``
+~~~~~~~~~~~~~~~~~~
+
+- **v0.9**: This parameter of the `predict` method of the MapieQuantileRegressor was set to True by default
+- **v1**: This parameter is now named `symmetric_correction` and is set to False by default, because the resulting intervals are smaller. It is used in the `predict_interval` method of the ConformalizedQuantileRegressor.
+
+``optimize_beta``
+~~~~~~~~~~~~~~~~~~
+
+This parameter used during interval prediction in regression has been renamed ``minimize_interval_width`` for clarity.
+
+None defaults
 ~~~~~~~~~~~~~~~~~~~~
 No more parameters with incorrect ``None`` defaults.
 
 - **v0.9**: Eg: ``estimator`` had a ``None`` default value, even though the actual default value is ``LinearRegression()``. This was the case for other parameters as well.
 - **v1**: All parameters now have explicit defaults.
-
-Some parameters' name have been improved for clarity:
-
-- ``optimize_beta`` -> ``minimize_interval_width``
-- ``symmetry``-> ``symmetric_intervals``
 
 
 4. Migration example: MAPIE v0.9 to MAPIE v1

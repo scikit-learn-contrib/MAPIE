@@ -357,6 +357,7 @@ params_test_cases_quantile = [
             "calib_size": 0.4,
             "sample_weight": sample_weight,
             "random_state": RANDOM_STATE,
+            "symmetry": False,
         },
         "v1": {
             "confidence_level": 0.8,
@@ -383,6 +384,7 @@ params_test_cases_quantile = [
             "test_size": 0.2,
             "fit_params": {"sample_weight": sample_weight},
             "minimize_interval_width": True,
+            "symmetric_correction": True,
         },
     },
     {
@@ -394,6 +396,7 @@ params_test_cases_quantile = [
             "calib_size": 0.3,
             "allow_infinite_bounds": True,
             "random_state": RANDOM_STATE,
+            "symmetry": False,
         },
         "v1": {
             "estimator": split_model,
@@ -410,13 +413,12 @@ params_test_cases_quantile = [
             "method": "quantile",
             "calib_size": 0.3,
             "random_state": RANDOM_STATE,
-            "symmetry": False
         },
         "v1": {
             "confidence_level": 0.9,
             "prefit": False,
             "test_size": 0.3,
-            "symmetric_intervals": False,
+            "symmetric_correction": True,
         },
     },
 ]
