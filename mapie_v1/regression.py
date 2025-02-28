@@ -1077,7 +1077,7 @@ class ConformalizedQuantileRegressor:
         X: ArrayLike,
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
-        symmetric_intervals: bool = True,
+        symmetric_correction: bool = False,
     ) -> Tuple[NDArray, NDArray]:
         """
         Predicts points and intervals.
@@ -1097,12 +1097,14 @@ class ConformalizedQuantileRegressor:
         allow_infinite_bounds : bool, default=False
             If True, allows prediction intervals with infinite bounds.
 
-        symmetric_intervals : bool, default=True
-            If True, computes symmetric intervals around the predicted
-            median or mean.
+        symmetric_correction : bool, default=False
+            To produce prediction intervals, the conformalized quantile regression
+            technique corrects the predictions of the upper and lower quantile
+            regressors by adding a constant.
 
-            If False, calculates separate upper and lower bounds for
-            asymmetric intervals.
+            If `symmetric_correction` is set to `False` , this constant is different for
+            the upper and the lower quantile predictions. If set to True, this constant
+            is the same for both.
 
         Returns
         -------
@@ -1116,7 +1118,7 @@ class ConformalizedQuantileRegressor:
             X,
             optimize_beta=minimize_interval_width,
             allow_infinite_bounds=allow_infinite_bounds,
-            symmetry=symmetric_intervals,
+            symmetry=symmetric_correction,
             **self._predict_params
         )
         return cast_predictions_to_ndarray_tuple(predictions)
