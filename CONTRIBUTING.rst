@@ -23,7 +23,7 @@ The typical workflow for contributing to `mapie` is:
 Local setup
 -----------
 
-We encourage you to use a virtual environment, with Python > `3.6`. You'll want to activate it every time you want to work on `mapie`.
+We encourage you to use a virtual environment, with Python `3.7`, `3.8`, `3.9` or `3.10`. You'll want to activate it every time you want to work on `mapie`.
 
 You can create a virtual environment via ``conda``:
 
