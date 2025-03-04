@@ -20,8 +20,8 @@ from mapie_v1.regression import SplitConformalRegressor, \
     JackknifeAfterBootstrapRegressor, \
     ConformalizedQuantileRegressor
 
-from mapiev0.regression import MapieRegressor as MapieRegressorV0  # noqa
-from mapiev0.regression import MapieQuantileRegressor as MapieQuantileRegressorV0  # noqa
+from mapie.regression import MapieRegressor
+from mapie.regression import MapieQuantileRegressor
 from tests_v1.integration_tests.utils import (filter_params,
                                               train_test_split_shuffle)
 from sklearn.model_selection import LeaveOneOut, GroupKFold
@@ -56,6 +56,294 @@ sample_weight_train = train_test_split(
     test_size=0.4,
     random_state=RANDOM_STATE
 )[-2]
+
+
+params_test_cases_cross = [
+    {
+        "v1": {
+            "class": CrossConformalRegressor,
+            "__init__": {
+                "confidence_level": 0.8,
+                "conformity_score": "absolute",
+                "cv": 4,
+                "method": "base",
+                "random_state": RANDOM_STATE,
+            },
+            "fit": {
+                "fit_params": {"sample_weight": sample_weight},
+            },
+            "predict_interval": {
+                "aggregate_predictions": "median",
+            },
+            "predict": {
+                "aggregate_predictions": "median",
+            }
+        },
+        "v0": {
+            "__init__": {
+                "conformity_score": AbsoluteConformityScore(),
+                "cv": 4,
+                "method": "base",
+                "random_state": RANDOM_STATE,
+                "agg_function": "median",
+            },
+            "fit": {
+                "sample_weight": sample_weight,
+            },
+            "predict": {
+                "alpha": 0.2,
+                "ensemble": True,
+            },
+        },
+    },
+    {
+        "v1": {
+            "class": CrossConformalRegressor,
+            "__init__": {
+                "estimator": positive_predictor,
+                "confidence_level": [0.5, 0.5],
+                "conformity_score": "gamma",
+                "cv": LeaveOneOut(),
+                "method": "plus",
+                "random_state": RANDOM_STATE,
+            },
+            "predict_interval": {
+                "minimize_interval_width": True,
+            },
+        },
+        "v0": {
+            "__init__": {
+                "estimator": positive_predictor,
+                "conformity_score": GammaConformityScore(),
+                "cv": LeaveOneOut(),
+                "agg_function": "mean",
+                "method": "plus",
+                "random_state": RANDOM_STATE,
+            },
+            "predict": {
+                "alpha": [0.5, 0.5],
+                "optimize_beta": True,
+                "ensemble": True,
+            },
+        },
+    },
+    {
+        "v1": {
+            "class": CrossConformalRegressor,
+            "__init__": {
+                "cv": GroupKFold(),
+                "method": "minmax",
+                "random_state": RANDOM_STATE,
+            },
+            "conformalize": {
+                "groups": groups,
+            },
+            "predict_interval": {
+                "allow_infinite_bounds": True,
+                "aggregate_predictions": None,
+            },
+            "predict": {
+                "aggregate_predictions": None,
+            },
+        },
+        "v0": {
+            "__init__": {
+                "cv": GroupKFold(),
+                "method": "minmax",
+                "random_state": RANDOM_STATE,
+            },
+            "fit": {
+                "groups": groups,
+            },
+            "predict": {
+                "alpha": 0.1,
+                "allow_infinite_bounds": True,
+            },
+        },
+    },
+]
+
+params_test_cases_jackknife = [
+    {
+        "v1": {
+            "class": JackknifeAfterBootstrapRegressor,
+            "__init__": {
+                "confidence_level": 0.8,
+                "conformity_score": "absolute",
+                "resampling": Subsample(
+                    n_resamplings=15, random_state=RANDOM_STATE
+                ),
+                "aggregation_method": "median",
+                "method": "plus",
+                "random_state": RANDOM_STATE,
+            },
+            "fit": {
+                "fit_params": {"sample_weight": sample_weight},
+            },
+        },
+        "v0": {
+            "__init__": {
+                "conformity_score": AbsoluteConformityScore(),
+                "cv": Subsample(n_resamplings=15, random_state=RANDOM_STATE),
+                "agg_function": "median",
+                "method": "plus",
+                "random_state": RANDOM_STATE,
+            },
+            "fit": {
+                "sample_weight": sample_weight,
+            },
+            "predict": {
+                "alpha": 0.2,
+                "ensemble": True,
+            },
+        },
+    },
+    {
+        "v1": {
+            "class": JackknifeAfterBootstrapRegressor,
+            "__init__": {
+                "estimator": positive_predictor,
+                "confidence_level": [0.5, 0.5],
+                "aggregation_method": "mean",
+                "conformity_score": "gamma",
+                "resampling": Subsample(
+                    n_resamplings=20,
+                    replace=True,
+                    random_state=RANDOM_STATE
+                ),
+                "method": "plus",
+                "random_state": RANDOM_STATE,
+            },
+            "predict_interval": {
+                "minimize_interval_width": True,
+            },
+        },
+        "v0": {
+            "__init__": {
+                "estimator": positive_predictor,
+                "conformity_score": GammaConformityScore(),
+                "agg_function": "mean",
+                "cv": Subsample(
+                    n_resamplings=20,
+                    replace=True,
+                    random_state=RANDOM_STATE
+                ),
+                "method": "plus",
+                "random_state": RANDOM_STATE,
+            },
+            "predict": {
+                "alpha": [0.5, 0.5],
+                "optimize_beta": True,
+                "ensemble": True,
+            },
+        },
+    },
+    {
+        "v1": {
+            "class": JackknifeAfterBootstrapRegressor,
+            "__init__": {
+                "confidence_level": 0.9,
+                "resampling": Subsample(
+                    n_resamplings=30, random_state=RANDOM_STATE
+                ),
+                "method": "minmax",
+                "aggregation_method": "mean",
+                "random_state": RANDOM_STATE,
+            },
+            "predict_interval": {
+                "allow_infinite_bounds": True,
+            },
+        },
+        "v0": {
+            "__init__": {
+                "cv": Subsample(n_resamplings=30, random_state=RANDOM_STATE),
+                "method": "minmax",
+                "agg_function": "mean",
+                "random_state": RANDOM_STATE,
+            },
+            "predict": {
+                "alpha": 0.1,
+                "ensemble": True,
+                "allow_infinite_bounds": True,
+            },
+        },
+    },
+]
+
+
+def run_v0_pipeline_cross_or_jackknife(params):
+    params_ = params["v0"]
+    mapie_regressor = MapieRegressor(**params_.get("__init__", {}))
+
+    mapie_regressor.fit(X, y, **params_.get("fit", {}))
+    preds, pred_intervals = mapie_regressor.predict(X, **params_.get("predict", {}))
+
+    return preds, pred_intervals
+
+
+def run_v1_pipeline_cross_or_jackknife(params):
+    params_ = params["v1"]
+    init_params = params_.get("__init__", {})
+    confidence_level = init_params.get("confidence_level", 0.9)
+    confidence_level_length = 1 if isinstance(confidence_level, float) else len(
+        confidence_level
+    )
+    minimize_interval_width = params_.get("predict_interval", {}).get(
+        "minimize_interval_width"
+    )
+
+    mapie_regressor = params_["class"](**init_params)
+    mapie_regressor.fit(X, y, **params_.get("fit", {}))
+    mapie_regressor.conformalize(X, y, **params_.get("conformalize", {}))
+
+    X_test = X
+    preds, pred_intervals = mapie_regressor.predict_interval(
+        X_test,
+        **params_.get("predict_interval", {})
+    )
+    preds_using_predict = mapie_regressor.predict(
+        X_test,
+        **params_.get("predict", {})
+    )
+
+    return (
+        preds,
+        pred_intervals,
+        preds_using_predict,
+        len(X_test),
+        confidence_level_length,
+        minimize_interval_width,
+    )
+
+
+@pytest.mark.parametrize(
+    "params",
+    params_test_cases_cross + params_test_cases_jackknife
+)
+def test_cross_and_jackknife(params: dict) -> None:
+    v0_preds, v0_pred_intervals = run_v0_pipeline_cross_or_jackknife(params)
+    (
+        v1_preds,
+        v1_pred_intervals,
+        v1_preds_using_predict,
+        X_test_length,
+        confidence_level_length,
+        minimize_interval_width,
+    ) = run_v1_pipeline_cross_or_jackknife(params)
+
+    np.testing.assert_array_equal(v0_preds, v1_preds)
+    np.testing.assert_array_equal(v0_pred_intervals, v1_pred_intervals)
+    np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
+
+    if not minimize_interval_width:
+        # condition to remove when optimize_beta/minimize_interval_width works
+        # but keep assertion to check shapes
+        assert v1_pred_intervals.shape == (X_test_length, 2, confidence_level_length)
+
+
+# Below are SplitConformalRegressor and ConformalizedQuantileRegressor tests
+# They're using an outdated structure, prefer the style used for CrossConformalRegressor
+# and JackknifeAfterBootstrapRegressor above
 
 params_test_cases_split = [
     {
@@ -146,7 +434,7 @@ def test_intervals_and_predictions_exact_equality_split(params_split: dict) -> N
     prefit = v1_params.get("prefit", False)
 
     compare_model_predictions_and_intervals(
-        model_v0=MapieRegressorV0,
+        model_v0=MapieRegressor,
         model_v1=SplitConformalRegressor,
         X=X,
         y=y,
@@ -154,178 +442,6 @@ def test_intervals_and_predictions_exact_equality_split(params_split: dict) -> N
         v1_params=v1_params,
         test_size=test_size,
         prefit=prefit,
-        random_state=RANDOM_STATE,
-    )
-
-
-params_test_cases_cross = [
-    {
-        "v0": {
-            "alpha": 0.2,
-            "conformity_score": AbsoluteConformityScore(),
-            "cv": 4,
-            "agg_function": "median",
-            "ensemble": True,
-            "method": "base",
-            "sample_weight": sample_weight,
-            "random_state": RANDOM_STATE,
-        },
-        "v1": {
-            "confidence_level": 0.8,
-            "conformity_score": "absolute",
-            "cv": 4,
-            "aggregate_predictions": "median",
-            "method": "base",
-            "fit_params": {"sample_weight": sample_weight},
-            "random_state": RANDOM_STATE,
-        }
-    },
-    {
-        "v0": {
-            "estimator": positive_predictor,
-            "alpha": [0.5, 0.5],
-            "conformity_score": GammaConformityScore(),
-            "cv": LeaveOneOut(),
-            "agg_function": "mean",
-            "ensemble": True,
-            "method": "plus",
-            "optimize_beta": True,
-            "random_state": RANDOM_STATE,
-        },
-        "v1": {
-            "estimator": positive_predictor,
-            "confidence_level": [0.5, 0.5],
-            "conformity_score": "gamma",
-            "cv": LeaveOneOut(),
-            "method": "plus",
-            "minimize_interval_width": True,
-            "random_state": RANDOM_STATE,
-        }
-    },
-    {
-        "v0": {
-            "alpha": 0.1,
-            "cv": GroupKFold(),
-            "groups": groups,
-            "method": "minmax",
-            "allow_infinite_bounds": True,
-            "random_state": RANDOM_STATE,
-        },
-        "v1": {
-            "cv": GroupKFold(),
-            "groups": groups,
-            "method": "minmax",
-            "aggregate_predictions": None,
-            "allow_infinite_bounds": True,
-            "random_state": RANDOM_STATE,
-        }
-    },
-]
-
-
-@pytest.mark.parametrize("params_cross", params_test_cases_cross)
-def test_intervals_and_predictions_exact_equality_cross(params_cross: dict) -> None:
-
-    compare_model_predictions_and_intervals(
-        model_v0=MapieRegressorV0,
-        model_v1=CrossConformalRegressor,
-        X=X,
-        y=y,
-        v0_params=params_cross["v0"],
-        v1_params=params_cross["v1"],
-        random_state=RANDOM_STATE,
-    )
-
-
-params_test_cases_jackknife = [
-    {
-        "v0": {
-            "alpha": 0.2,
-            "conformity_score": AbsoluteConformityScore(),
-            "cv": Subsample(n_resamplings=15, random_state=RANDOM_STATE),
-            "agg_function": "median",
-            "ensemble": True,
-            "method": "plus",
-            "sample_weight": sample_weight,
-            "random_state": RANDOM_STATE,
-        },
-        "v1": {
-            "confidence_level": 0.8,
-            "conformity_score": "absolute",
-            "resampling": Subsample(
-                n_resamplings=15, random_state=RANDOM_STATE
-            ),
-            "aggregation_method": "median",
-            "method": "plus",
-            "fit_params": {"sample_weight": sample_weight},
-            "ensemble": True,
-            "random_state": RANDOM_STATE,
-        },
-    },
-    {
-        "v0": {
-            "estimator": positive_predictor,
-            "alpha": [0.5, 0.5],
-            "conformity_score": GammaConformityScore(),
-            "agg_function": "mean",
-            "ensemble": True,
-            "cv": Subsample(n_resamplings=20,
-                            replace=True,
-                            random_state=RANDOM_STATE),
-            "method": "plus",
-            "optimize_beta": True,
-            "random_state": RANDOM_STATE,
-        },
-        "v1": {
-            "estimator": positive_predictor,
-            "confidence_level": [0.5, 0.5],
-            "aggregation_method": "mean",
-            "conformity_score": "gamma",
-            "resampling": Subsample(n_resamplings=20,
-                                    replace=True,
-                                    random_state=RANDOM_STATE),
-            "method": "plus",
-            "minimize_interval_width": True,
-            "random_state": RANDOM_STATE,
-        },
-    },
-    {
-        "v0": {
-            "alpha": 0.1,
-            "cv": Subsample(n_resamplings=30, random_state=RANDOM_STATE),
-            "method": "minmax",
-            "agg_function": "mean",
-            "ensemble": True,
-            "allow_infinite_bounds": True,
-            "random_state": RANDOM_STATE,
-        },
-        "v1": {
-            "confidence_level": 0.9,
-            "resampling": Subsample(
-                n_resamplings=30, random_state=RANDOM_STATE
-            ),
-            "method": "minmax",
-            "aggregation_method": "mean",
-            "ensemble": True,
-            "allow_infinite_bounds": True,
-            "random_state": RANDOM_STATE,
-        }
-    },
-]
-
-
-@pytest.mark.parametrize("params_jackknife", params_test_cases_jackknife)
-def test_intervals_and_predictions_exact_equality_jackknife(
-    params_jackknife: dict
-) -> None:
-
-    compare_model_predictions_and_intervals(
-        model_v0=MapieRegressorV0,
-        model_v1=JackknifeAfterBootstrapRegressor,
-        X=X,
-        y=y,
-        v0_params=params_jackknife["v0"],
-        v1_params=params_jackknife["v1"],
         random_state=RANDOM_STATE,
     )
 
@@ -435,7 +551,7 @@ def test_intervals_and_predictions_exact_equality_quantile(
     prefit = v1_params.get("prefit", False)
 
     compare_model_predictions_and_intervals(
-        model_v0=MapieQuantileRegressorV0,
+        model_v0=MapieQuantileRegressor,
         model_v1=ConformalizedQuantileRegressor,
         X=X,
         y=y,
@@ -448,7 +564,7 @@ def test_intervals_and_predictions_exact_equality_quantile(
 
 
 def compare_model_predictions_and_intervals(
-    model_v0: Type[MapieRegressorV0],
+    model_v0: Type[MapieRegressor],
     model_v1: Type[Union[
         SplitConformalRegressor,
         CrossConformalRegressor,
@@ -528,4 +644,6 @@ def compare_model_predictions_and_intervals(
     np.testing.assert_array_equal(v0_pred_intervals, v1_pred_intervals)
     np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
     if not v0_params.get("optimize_beta"):
+        # condition to remove when optimize_beta works
+        # keep assertion
         assert v1_pred_intervals.shape == (len(X_conf), 2, n_alpha)
