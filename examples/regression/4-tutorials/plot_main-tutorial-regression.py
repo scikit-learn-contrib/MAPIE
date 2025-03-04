@@ -1,9 +1,7 @@
 r"""
 ==============================================================
-[Pre-v1] Tutorial for tabular regression
+Tutorial for tabular regression
 ==============================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
-**This notebook hasn't been updated to the new API yet.**
 
 
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a
@@ -39,7 +37,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieQuantileRegressor, MapieRegressor
+from mapie.regression import MapieQuantileRegressor
+from mapie_v1.regression import CrossConformalRegressor, SplitConformalRegressor, JackknifeAfterBootstrapRegressor, ConformalizedQuantileRegressor
 from mapie.subsample import Subsample
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -127,7 +126,6 @@ polyn_model_quant = Pipeline(
 # in order to obtain a 95% confidence for our prediction intervals.
 
 STRATEGIES = {
-    "naive": dict(method="naive"),
     "jackknife": dict(method="base", cv=-1),
     "jackknife_plus": dict(method="plus", cv=-1),
     "jackknife_minmax": dict(method="minmax", cv=-1),
@@ -145,13 +143,17 @@ STRATEGIES = {
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "conformalized_quantile_regression":
-        mapie = MapieQuantileRegressor(polyn_model_quant, **params)
+        mapie = ConformalizedQuantileRegressor(polyn_model_quant, **params)
         mapie.fit(X_train, y_train, random_state=1)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
-    else:
-        mapie = MapieRegressor(polyn_model, **params)
+    elif strategy[:9] == "jackknife":
+        mapie = JackknifeAfterBootstrapRegressor(polyn_model, **params)
         mapie.fit(X_train, y_train)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, confidence_level=0.95)
+    else:
+        mapie = SplitConformalRegressor(polyn_model, **params)
+        mapie.fit(X_train, y_train)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, confidence_level=0.95)
 
 
 ##############################################################################
