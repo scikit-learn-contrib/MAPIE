@@ -81,18 +81,14 @@ clean:
 
 v1-checks-not-in-ci:
 	$(MAKE) v1-type-check # Issues when trying to include it in CI, see task "Dépendances v1 + MyPy stricter in CI" in project board
-	$(MAKE) v1-integration-tests # We don't want to include this in CI, will be removed at v1 release
+	$(MAKE) v1-integration-tests # We will include a different version at v1 release, so we're not adding this in CI for now
 
 v1-type-check:
 	mypy mapie_v1 --disallow-untyped-defs --exclude $(mapie_v0_folder_name)
 
 v1-integration-tests:
 	# Run `make v1-integration-tests params="-m classification"` to select only classification tests (for example)
-	# Delete the mapie v0 folder to reinstall the latest version (master)
-	@if [ ! -d "./$(integration_tests_folder_name)/$(mapie_v0_folder_name)" ]; then pip install git+https://github.com/scikit-learn-contrib/MAPIE@master --no-dependencies --target=./$(integration_tests_folder_name)/$(mapie_v0_folder_name) >/dev/null 2>&1; fi
-	@mv ./$(integration_tests_folder_name)/$(mapie_v0_folder_name)/mapie ./$(integration_tests_folder_name)/$(mapie_v0_folder_name)/mapiev0
-	@- export PYTHONPATH="${PYTHONPATH}:./$(integration_tests_folder_name)/$(mapie_v0_folder_name)"; pytest -vs $(integration_tests_folder_name)/tests $(params)
-	@mv ./$(integration_tests_folder_name)/$(mapie_v0_folder_name)/mapiev0 ./$(integration_tests_folder_name)/$(mapie_v0_folder_name)/mapie
+	pytest -vs $(integration_tests_folder_name)/tests $(params)
 
 v1-coverage:
 	# To add in CI when we reach 100%
