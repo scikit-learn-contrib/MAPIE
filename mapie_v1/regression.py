@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, cast, Tuple, Iterable
+from typing import Optional, Union, List, Tuple, Iterable
 from typing_extensions import Self
 
 import numpy as np
@@ -17,8 +17,6 @@ from mapie_v1._utils import (
     transform_confidence_level_to_alpha_list,
     check_if_param_in_allowed_values,
     check_cv_not_string,
-    hash_X_y,
-    check_if_X_y_different_from_fit,
     cast_point_predictions_to_ndarray,
     cast_predictions_to_ndarray_tuple,
     prepare_params, prepare_fit_params_and_sample_weight,
@@ -29,7 +27,7 @@ class SplitConformalRegressor:
     """
     Computes prediction intervals using the split conformal regression technique:
 
-    1. The `train` method (optional) fits the base regressor to the training data.
+    1. The `fit` method (optional) fits the base regressor to the training data.
     2. The `conformalize` method estimates the uncertainty of the base regressor by
        computing conformity scores on the conformity set.
     3. The `predict_interval` computes prediction points and intervals.
@@ -267,10 +265,10 @@ class CrossConformalRegressor:
     """
     Computes prediction intervals using the cross conformal regression technique:
 
-    1. The `train` method fits the base regressor to the entire dataset.
-    2. The `conformalize` method estimates the uncertainty of the base regressor by
-       computing conformity scores using the entire dataset, in a cross-validation style
-    3. The `predict_interval` computes prediction points and intervals.
+    1. The `fit_conformalize` method estimates the uncertainty of the base regressor in
+       a cross-validation style. It fits the base regressor on folds of the dataset and
+       computes conformity scores on the out-of-fold data.
+    2. The `predict_interval` computes prediction points and intervals.
 
     Parameters
     ----------
@@ -344,7 +342,7 @@ class CrossConformalRegressor:
     ...     estimator=Ridge(),
     ...     confidence_level=0.95,
     ...     cv=10
-    ... ).fit(X, y).conformalize(X, y)
+    ... ).fit_conformalize(X, y)
 
     >>> predicted_points, predicted_intervals = mapie_regressor.predict_interval(X_test)
     """
@@ -386,18 +384,20 @@ class CrossConformalRegressor:
             confidence_level
         )
 
-        self._hashed_X_y: int = 0
-        self._sample_weight: Optional[ArrayLike] = None
         self._predict_params: dict = {}
 
-    def fit(
+    def fit_conformalize(
         self,
         X: ArrayLike,
         y: ArrayLike,
+        groups: Optional[ArrayLike] = None,
         fit_params: Optional[dict] = None,
+        predict_params: Optional[dict] = None,
     ) -> Self:
         """
-        Fits the base regressor to the data.
+        Estimates the uncertainty of the base regressor in a cross-validation style:
+        fits the base regressor on different folds of the dataset
+        and computes conformity scores on the corresponding out-of-fold data.
 
         Parameters
         ----------
@@ -407,50 +407,11 @@ class CrossConformalRegressor:
         y : ArrayLike
             Targets
 
-        fit_params : Optional[dict], default=None
-            Parameters to pass to the `fit` method of the base regressor.
-
-        Returns
-        -------
-        Self
-            The fitted CrossConformalRegressor instance.
-        """
-        self._hashed_X_y = hash_X_y(X, y)
-
-        fit_params_, self._sample_weight = prepare_fit_params_and_sample_weight(
-            fit_params
-        )
-
-        X, y, self._sample_weight, groups = self._mapie_regressor.init_fit(
-            X, y, self._sample_weight, fit_params=fit_params_
-        )
-
-        self._mapie_regressor.fit_estimator(
-            X, y, self._sample_weight
-        )
-        return self
-
-    def conformalize(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        groups: Optional[ArrayLike] = None,
-        predict_params: Optional[dict] = None,
-    ) -> Self:
-        """
-        Estimates the uncertainty of the base regressor, by computing
-        conformity scores on the data in a cross-validation style.
-
-        Parameters
-        ----------
-        X : ArrayLike
-            Features. Must be the same X used in .fit
-
-        y : ArrayLike
-            Targets. Must be the same y used in .fit
-
         groups: Optional[ArrayLike] of shape (n_samples,), default=None
             Groups to pass to the cross-validator.
+
+        fit_params : Optional[dict], default=None
+            Parameters to pass to the `fit` method of the base regressor.
 
         predict_params : Optional[dict], default=None
             Parameters to pass to the `predict` method of the base regressor.
@@ -460,20 +421,20 @@ class CrossConformalRegressor:
         Returns
         -------
         Self
-            The conformalized SplitConformalRegressor instance.
+            The fitted CrossConformalRegressor instance.
         """
-        check_if_X_y_different_from_fit(X, y, self._hashed_X_y)
-        groups = cast(Optional[NDArray], groups)
+        fit_params_, sample_weight = prepare_fit_params_and_sample_weight(
+            fit_params
+        )
         self._predict_params = prepare_params(predict_params)
-
-        self._mapie_regressor.conformalize(
+        self._mapie_regressor.fit(
             X,
             y,
-            sample_weight=self._sample_weight,
-            groups=groups,
-            predict_params=self._predict_params,
+            sample_weight,
+            groups,
+            fit_params=fit_params_,
+            predict_params=self._predict_params
         )
-
         return self
 
     def predict_interval(
@@ -489,8 +450,8 @@ class CrossConformalRegressor:
         If several confidence levels were provided during initialisation, several
         intervals will be predicted for each sample. See the return signature.
 
-        By default, points are predicted using an average, and the regressor trained
-        on the entire dataset is not used. See the `aggregate_predictions` parameter.
+        By default, points are predicted using an aggregation.
+        See the `ensemble` parameter.
 
         Parameters
         ----------
@@ -541,8 +502,8 @@ class CrossConformalRegressor:
         """
         Predicts points.
 
-        By default, points are predicted using an average, and the regressor trained
-        on the entire dataset is not used. See the `aggregate_predictions` parameter.
+        By default, points are predicted using an aggregation.
+        See the `ensemble` parameter.
 
         Parameters
         ----------
@@ -587,10 +548,10 @@ class JackknifeAfterBootstrapRegressor:
     """
     Computes prediction intervals using the jackknife-after-bootstrap technique:
 
-    1. The `train` method fits the base regressor to the entire dataset.
-    2. The `conformalize` method estimates the uncertainty of the base regressor by
-       computing conformity scores using the entire dataset, with bootstrap sampling.
-    3. The `predict_interval` computes prediction points and intervals.
+    1. The `fit_conformalize` method estimates the uncertainty of the base regressor
+       using bootstrap sampling. It fits the base regressor on samples of the dataset
+       and computes conformity scores on the out-of-sample data.
+    2. The `predict_interval` computes prediction points and intervals.
 
     Parameters
     ----------
@@ -665,7 +626,7 @@ class JackknifeAfterBootstrapRegressor:
     ...     estimator=Ridge(),
     ...     confidence_level=0.95,
     ...     resampling=25,
-    ... ).fit(X, y).conformalize(X, y)
+    ... ).fit_conformalize(X, y)
 
     >>> predicted_points, predicted_intervals = mapie_regressor.predict_interval(X_test)
     """
@@ -723,59 +684,19 @@ class JackknifeAfterBootstrapRegressor:
             confidence_level
         )
 
-        self._hashed_X_y: int = 0
-        self._sample_weight: Optional[ArrayLike] = None
         self._predict_params: dict = {}
 
-    def fit(
+    def fit_conformalize(
         self,
         X: ArrayLike,
         y: ArrayLike,
         fit_params: Optional[dict] = None,
-    ) -> Self:
-        """
-        Fits the base regressor to the data.
-
-        Parameters
-        ----------
-        X : ArrayLike
-            Features
-
-        y : ArrayLike
-            Targets
-
-        fit_params : Optional[dict], default=None
-            Parameters to pass to the `fit` method of the base regressor.
-
-        Returns
-        -------
-        Self
-            The fitted JackknifeAfterBootstrapRegressor instance.
-        """
-        self._hashed_X_y = hash_X_y(X, y)
-
-        fit_params_, self._sample_weight = prepare_fit_params_and_sample_weight(
-            fit_params
-        )
-
-        X, y, self._sample_weight, groups = self._mapie_regressor.init_fit(
-            X, y, self._sample_weight, fit_params=fit_params_
-        )
-
-        self._mapie_regressor.fit_estimator(
-            X, y, self._sample_weight
-        )
-        return self
-
-    def conformalize(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
         predict_params: Optional[dict] = None,
     ) -> Self:
         """
-        Estimates the uncertainty of the base regressor, by computing
-        conformity scores on the data using bootstrap sampling.
+        Estimates the uncertainty of the base regressor using bootstrap sampling:
+        fits the base regressor on (potentially overlapping) samples of the dataset,
+        and computes conformity scores on the corresponding out of samples data.
 
         Parameters
         ----------
@@ -784,6 +705,9 @@ class JackknifeAfterBootstrapRegressor:
 
         y : ArrayLike
             Targets. Must be the same y used in .fit
+
+        fit_params : Optional[dict], default=None
+            Parameters to pass to the `fit` method of the base regressor.
 
         predict_params : Optional[dict], default=None
             Parameters to pass to the `predict` method of the base regressor.
@@ -795,16 +719,17 @@ class JackknifeAfterBootstrapRegressor:
         Self
             The JackknifeAfterBootstrapRegressor instance.
         """
-        check_if_X_y_different_from_fit(X, y, self._hashed_X_y)
+        fit_params_, sample_weight = prepare_fit_params_and_sample_weight(
+            fit_params
+        )
         self._predict_params = prepare_params(predict_params)
-
-        self._mapie_regressor.conformalize(
+        self._mapie_regressor.fit(
             X,
             y,
-            sample_weight=self._sample_weight,
+            sample_weight,
+            fit_params=fit_params_,
             predict_params=self._predict_params,
         )
-
         return self
 
     def predict_interval(
@@ -820,8 +745,8 @@ class JackknifeAfterBootstrapRegressor:
         If several confidence levels were provided during initialisation, several
         intervals will be predicted for each sample. See the return signature.
 
-        By default, points are predicted using an aggregation, and the regressor trained
-        on the entire dataset is not used. See the `ensemble` parameter.
+        By default, points are predicted using an aggregation.
+        See the `ensemble` parameter.
 
         Parameters
         ----------
@@ -868,8 +793,8 @@ class JackknifeAfterBootstrapRegressor:
         """
         Predicts points.
 
-        By default, points are predicted using an aggregation, and the regressor trained
-        on the entire dataset is not used. See the `ensemble` parameter.
+        By default, points are predicted using an aggregation.
+        See the `ensemble` parameter.
 
         Parameters
         ----------
@@ -898,7 +823,7 @@ class ConformalizedQuantileRegressor:
     """
     Computes prediction intervals using the conformalized quantile regression technique:
 
-    1. The `train` method fits three models to the training data using the provided
+    1. The `fit` method fits three models to the training data using the provided
        regressor: a model to predict the target, and models to predict upper
        and lower quantiles around the target.
     2. The `conformalize` method estimates the uncertainty of the quantile models
