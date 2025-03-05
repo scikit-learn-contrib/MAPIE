@@ -52,7 +52,7 @@ doc:
 	$(MAKE) html -C doc
 
 doctest:
-	# Seems to catch more errors than pytest --doctest-modules flag
+	# Tests .. testcode:: blocks in documentation, among other things
 	$(MAKE) doctest -C doc
 
 
