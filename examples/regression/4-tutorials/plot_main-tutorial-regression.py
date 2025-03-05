@@ -122,38 +122,38 @@ polyn_model_quant = Pipeline(
 # We then estimate the prediction intervals for all the strategies very easily
 # with a
 # `fit` and `predict` process. The prediction interval's lower and upper bounds
-# are then saved in a DataFrame. Here, we set an alpha value of 0.05
+# are then saved in a DataFrame. Here, we set confidence_level=0.95
 # in order to obtain a 95% confidence for our prediction intervals.
-
+RANDOM_STATE = 1
 STRATEGIES = {
-    "jackknife": dict(method="base", cv=-1),
-    "jackknife_plus": dict(method="plus", cv=-1),
-    "jackknife_minmax": dict(method="minmax", cv=-1),
-    "cv": dict(method="base", cv=10),
-    "cv_plus": dict(method="plus", cv=10),
-    "cv_minmax": dict(method="minmax", cv=10),
-    "jackknife_plus_ab": dict(method="plus", cv=Subsample(n_resamplings=50)),
-    "jackknife_minmax_ab": dict(
-        method="minmax", cv=Subsample(n_resamplings=50)
-    ),
-    "conformalized_quantile_regression": dict(
-        method="quantile", cv="split", alpha=0.05
-    )
+    "jackknife": dict(confidence_level=0.95, method="base", cv=-1),
+    "jackknife_plus": dict(confidence_level=0.95, method="plus", cv=-1),
+    "jackknife_minmax": dict(confidence_level=0.95, method="minmax", cv=-1),
+    "cv": dict(confidence_level=0.95, method="base", cv=10),
+    "cv_plus": dict(confidence_level=0.95, method="plus", cv=10),
+    "cv_minmax": dict(confidence_level=0.95, method="minmax", cv=10),
+    "jackknife_plus_ab": dict(confidence_level=0.95, method="plus", resampling=50),
+    "jackknife_minmax_ab": dict(confidence_level=0.95, method="minmax", resampling=50),
+    "conformalized_quantile_regression": dict(confidence_level=0.95)
 }
 y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "conformalized_quantile_regression":
         mapie = ConformalizedQuantileRegressor(polyn_model_quant, **params)
-        mapie.fit(X_train, y_train, random_state=1)
+        mapie.fit(X_train, y_train, random_state=RANDOM_STATE)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
-    elif strategy[:9] == "jackknife":
+    elif strategy[:9] == "jackknife" and strategy[-2:] == "ab":
         mapie = JackknifeAfterBootstrapRegressor(polyn_model, **params)
+        mapie.fit(X_train, y_train, random_state=RANDOM_STATE)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, **params)
+    elif strategy[:9] == "jackknife":
+        mapie = CrossConformalRegressor(polyn_model, **params)
         mapie.fit(X_train, y_train)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, confidence_level=0.95)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:
         mapie = SplitConformalRegressor(polyn_model, **params)
-        mapie.fit(X_train, y_train)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, confidence_level=0.95)
+        mapie.fit(X_train, y_train, random_state=RANDOM_STATE)
+        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, **params)
 
 
 ##############################################################################
@@ -389,7 +389,7 @@ y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "conformalized_quantile_regression":
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
-        mapie.fit(X_train, y_train, random_state=1)
+        mapie.fit(X_train, y_train, random_state=RANDOM_STATE)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:
         mapie = MapieRegressor(polyn_model, **params)
@@ -594,7 +594,7 @@ y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "conformalized_quantile_regression":
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
-        mapie.fit(X_train, y_train, random_state=1)
+        mapie.fit(X_train, y_train, random_state=RANDOM_STATE)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:
         mapie = MapieRegressor(polyn_model, **params)
