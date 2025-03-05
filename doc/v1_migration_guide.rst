@@ -13,12 +13,12 @@ MAPIE v1 organizes the ``MapieRegressor`` functionality into specific regressor 
 - ``JackknifeAfterBootstrapRegressor``: Supports jackknife-after-bootstrap conformal prediction.
 - ``ConformalizedQuantileRegressor``: For quantile-based conformal prediction.
 
-This modular approach makes it easier to select and configure a specific conformal regression method. Each class includes parameters relevant to its own methodology, reducing redundancy and improving readability.
+This modular approach makes it easier to select and configure a specific conformal regression technique. Each class includes parameters relevant to its own methodology, reducing redundancy and improving readability.
 
 Migration summary of ``MapieRegressor`` to new classes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In MAPIE v0.9, ``MapieRegressor`` managed all conformal regression methods under a single interface, which sometimes led to parameter redundancy and ambiguity. In MAPIE v1, each method-specific class includes only the parameters and methods relevant to its method.
+In MAPIE v0.9, ``MapieRegressor`` managed all conformal regression techniques under a single interface, which sometimes led to parameter redundancy and ambiguity. In MAPIE v1, each method-specific class includes only the parameters and techniques relevant to its technique.
 
 +--------------------+--------------------------------------------------------------------------+
 | MAPIE v0.9 Class   | MAPIE v1 Classes                                                         |
@@ -28,6 +28,9 @@ In MAPIE v0.9, ``MapieRegressor`` managed all conformal regression methods under
 |                    | ``JackknifeAfterBootstrapRegressor``, ``ConformalizedQuantileRegressor`` |
 +--------------------+--------------------------------------------------------------------------+
 
+In the following guide:
+- "Split conformal techniques" refer to ``SplitConformalRegressor`` and ``ConformalizedQuantileRegressor``
+- "Cross-conformal techniques" refer to ``CrossConformalRegressor`` and ``JackknifeAfterBootstrapRegressor``
 
 2. Method changes
 -----------------
@@ -38,7 +41,7 @@ Step 1: Data splitting
 ~~~~~~~~~~~~~~~~~~~~~~
 In v0.9, data splitting is handled by MAPIE.
 
-In v1, the data splitting is left to the user, with the exception of cross-conformal methods (``CrossConformalRegressor`` and ``JackknifeAfterBootstrapRegressor``). The user can split the data into training, conformalization, and test sets using scikit-learn's ``train_test_split`` or other methods.
+In v1, the data splitting is left to the user for split conformal techniques. The user can split the data into training, conformalization, and test sets using scikit-learn's ``train_test_split`` or other methods.
 
 Step 2 & 3: Model training and conformalization (ie: calibration)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,13 +49,22 @@ In v0.9, the ``fit`` method handled both model training and calibration.
 
 In v1.0: MAPIE separates between training and calibration. We decided to name the *calibration* step *conformalization*, to avoid confusion with probability calibration.
 
-- ``.fit()`` method:
-  - In v1, ``fit`` only trains the model on training data, without handling conformalization.
-  - Additional fitting parameters, like ``sample_weight``, should be included in ``fit_params``, keeping this method focused on training alone.
+For split conformal techniques:
 
-- ``.conformalize()`` method:
-  - This new method performs conformalization after fitting, using separate conformity data ``(X_conformalize, y_conformalize)``.
-  - ``predict_params`` can be passed here, allowing independent control over conformalization and prediction stages.
+``.fit()`` method:
+
+- In v1, ``fit`` only trains the model on training data, without handling conformalization.
+- Additional fitting parameters, like ``sample_weight``, should be included in ``fit_params``, keeping this method focused on training alone.
+
+``.conformalize()`` method:
+
+- Used in split methods only
+- This new method performs conformalization after fitting, using separate conformity data ``(X_conformalize, y_conformalize)``.
+- ``predict_params`` should be passed here
+
+For cross conformal techniques:
+
+``.fit_conformalize()`` method: because those techniques rely on fitting and conformalizing models in a cross-validation fashion, the fitting and conformalization steps are not distinct.
 
 Step 4: Making predictions (``predict`` and ``predict_interval`` methods)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -302,8 +314,7 @@ Below is the equivalent MAPIE v1 code for cross-conformal prediction:
         conformity_score="absolute",
     )
 
-    v1.fit(X, y, fit_params={"sample_weight": sample_weight})
-    v1.conformalize(X, y, groups=groups)
+    v1.fit_conformalize(X, y, groups=groups, fit_params={"sample_weight": sample_weight})
 
     prediction_points_v1, prediction_intervals_v1 = v1.predict_interval(X_test)
     prediction_points_v1 = v1.predict(X_test, aggregate_predictions="median")

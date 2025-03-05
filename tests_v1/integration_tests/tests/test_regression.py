@@ -69,7 +69,7 @@ params_test_cases_cross = [
                 "method": "base",
                 "random_state": RANDOM_STATE,
             },
-            "fit": {
+            "fit_conformalize": {
                 "fit_params": {"sample_weight": sample_weight},
             },
             "predict_interval": {
@@ -135,7 +135,7 @@ params_test_cases_cross = [
                 "method": "minmax",
                 "random_state": RANDOM_STATE,
             },
-            "conformalize": {
+            "fit_conformalize": {
                 "groups": groups,
             },
             "predict_interval": {
@@ -177,7 +177,7 @@ params_test_cases_jackknife = [
                 "method": "plus",
                 "random_state": RANDOM_STATE,
             },
-            "fit": {
+            "fit_conformalize": {
                 "fit_params": {"sample_weight": sample_weight},
             },
         },
@@ -293,8 +293,7 @@ def run_v1_pipeline_cross_or_jackknife(params):
     )
 
     mapie_regressor = params_["class"](**init_params)
-    mapie_regressor.fit(X, y, **params_.get("fit", {}))
-    mapie_regressor.conformalize(X, y, **params_.get("conformalize", {}))
+    mapie_regressor.fit_conformalize(X, y, **params_.get("fit_conformalize", {}))
 
     X_test = X
     preds, pred_intervals = mapie_regressor.predict_interval(
