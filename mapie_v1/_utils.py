@@ -1,9 +1,7 @@
 import copy
-import warnings
 from typing import Union, Tuple, cast, Optional, Iterable
 from collections.abc import Iterable as IterableType
 
-from numpy import array
 from mapie._typing import ArrayLike, NDArray
 from sklearn.model_selection import BaseCrossValidator
 from decimal import Decimal
@@ -40,25 +38,6 @@ def check_cv_not_string(cv: Union[int, str, BaseCrossValidator]) -> None:
     if isinstance(cv, str):
         raise ValueError(
             "'cv' string options not available in MAPIE >= v1"
-        )
-
-
-def hash_X_y(X: ArrayLike, y: ArrayLike) -> int:
-    # Known issues:
-    # - the hash calculated with `hash` changes between Python processes
-    # - two arrays with  the same content but different shapes will all have
-    #   the same hash because .tobytes() ignores shape
-    return hash(array(X).tobytes() + array(y).tobytes())
-
-
-def check_if_X_y_different_from_fit(
-    X: ArrayLike,
-    y: ArrayLike,
-    previous_X_y_hash: int
-) -> None:
-    if hash_X_y(X, y) != previous_X_y_hash:
-        warnings.warn(
-            "You have to use the same X and y in .fit and .conformalize"
         )
 
 
