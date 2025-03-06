@@ -35,6 +35,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import train_test_split
 
 from mapie.metrics import regression_coverage_score
 from mapie.regression import MapieQuantileRegressor
@@ -83,7 +84,7 @@ def get_1d_data_with_constant_noise(funct, min_x, max_x, n_samples, noise):
 
 
 min_x, max_x, n_samples, noise = -5, 5, 600, 0.5
-X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
+X_train_conformalize, y_train_conformalize, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
     x_sinx, min_x, max_x, n_samples, noise
 )
 
@@ -92,9 +93,9 @@ X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_constant_noise(
 
 plt.xlabel("x")
 plt.ylabel("y")
-plt.scatter(X_train, y_train, color="C0")
+plt.scatter(X_train_conformalize, y_train_conformalize, color="C0")
 _ = plt.plot(X_test, y_mesh, color="C1")
-plt.show()
+# # plt.show()
 
 ##############################################################################
 # As mentioned previously, we fit our training data with a simple
@@ -126,35 +127,81 @@ polyn_model_quant = Pipeline(
 # in order to obtain a 95% confidence for our prediction intervals.
 RANDOM_STATE = 1
 STRATEGIES = {
-    "jackknife": dict(confidence_level=0.95, method="base", cv=-1),
-    "jackknife_plus": dict(confidence_level=0.95, method="plus", cv=-1),
-    "jackknife_minmax": dict(confidence_level=0.95, method="minmax", cv=-1),
-    "cv": dict(confidence_level=0.95, method="base", cv=10),
-    "cv_plus": dict(confidence_level=0.95, method="plus", cv=10),
-    "cv_minmax": dict(confidence_level=0.95, method="minmax", cv=10),
-    "jackknife_plus_ab": dict(confidence_level=0.95, method="plus", resampling=50),
-    "jackknife_minmax_ab": dict(confidence_level=0.95, method="minmax", resampling=50),
-    "conformalized_quantile_regression": dict(confidence_level=0.95)
+    "cv": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="base", cv=10),
+    },
+    "cv_plus": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="plus", cv=10),
+    },
+    "cv_minmax": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="minmax", cv=10),
+    },
+    "jackknife": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="base", cv=-1),
+    },
+    "jackknife_plus": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="plus", cv=-1),
+    },
+    "jackknife_minmax": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="minmax", cv=-1),
+    },
+    "jackknife_plus_ab": {
+        "class": JackknifeAfterBootstrapRegressor,
+        "init_params": dict(method="plus", resampling=50),
+    },
+    "jackknife_minmax_ab": {
+        "class": JackknifeAfterBootstrapRegressor,
+        "init_params": dict(method="minmax", resampling=50),
+    },
+    "conformalized_quantile_regression": {
+        "class": ConformalizedQuantileRegressor,
+        "init_params": dict(),
+    },
 }
-y_pred, y_pis = {}, {}
-for strategy, params in STRATEGIES.items():
-    if strategy == "conformalized_quantile_regression":
-        mapie = ConformalizedQuantileRegressor(polyn_model_quant, **params)
-        mapie.fit(X_train, y_train, random_state=RANDOM_STATE)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
-    elif strategy[:9] == "jackknife" and strategy[-2:] == "ab":
-        mapie = JackknifeAfterBootstrapRegressor(polyn_model, **params)
-        mapie.fit(X_train, y_train, random_state=RANDOM_STATE)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, **params)
-    elif strategy[:9] == "jackknife":
-        mapie = CrossConformalRegressor(polyn_model, **params)
-        mapie.fit(X_train, y_train)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
-    else:
-        mapie = SplitConformalRegressor(polyn_model, **params)
-        mapie.fit(X_train, y_train, random_state=RANDOM_STATE)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, **params)
 
+STRATEGIES = {
+    "cv": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="base", cv=10),
+    },
+}
+
+y_pred, y_pis = {}, {}
+for strategy_name, strategy_params in STRATEGIES.items():
+    init_params = strategy_params["init_params"]
+    class_ = strategy_params["class"]
+    if strategy_name == "conformalized_quantile_regression":
+        X_train, X_conformalize, y_train, y_conformalize = train_test_split(X_train_conformalize, y_train_conformalize, test_size=0.3, random_state=RANDOM_STATE)
+        mapie = class_(polyn_model_quant, confidence_level=0.95, **init_params)
+        print(mapie._alpha)
+        mapie.fit(X_train, y_train)
+        mapie.conformalize(X_conformalize, y_conformalize)
+        print(f"y_conformalize.shape: {y_conformalize.shape}")
+        print(f"y_conformalize: {y_conformalize[:10]}")
+        y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test, symmetric_correction=True)
+    elif strategy_name in {"cv", "cv_plus", "cv_minmax", "jackknife", "jackknife_plus", "jackknife_minmax"}:
+        print(f"strategy_name: {strategy_name}")
+        mapie = class_(polyn_model, confidence_level=0.95, random_state=RANDOM_STATE, **init_params)
+        mapie.fit_conformalize(X_train_conformalize, y_train_conformalize)
+        y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test, aggregate_predictions=None)  # Garder les parametres par defaut meme si pas les memes resulats, tant qu'on sait pourquoi
+    else:
+        print(f"strategy_name: {strategy_name}")
+        mapie = class_(polyn_model, confidence_level=0.95, random_state=RANDOM_STATE, **init_params)
+        mapie.fit_conformalize(X_train_conformalize, y_train_conformalize)
+        y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test)
+
+#print(f"X_train_conformalize.shape: {X_train_conformalize.shape}")
+#print(f"X_train_conformalize: {X_train_conformalize[:10]}")
+#print(f"X_train: {X_train[:10]}")
+#print(f"X_conformalize: {X_conformalize[:10]}")
+print(f"y_pis: {y_pis['cv']}")
+#print(f"y_pred: {y_pred['conformalized_quantile_regression']}")
 
 ##############################################################################
 # Let’s now compare the target confidence intervals with the predicted
@@ -214,8 +261,8 @@ fig, axs = plt.subplots(3, 2, figsize=(9, 13))
 coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1], axs[2, 0], axs[2, 1]]
 for strategy, coord in zip(strategies, coords):
     plot_1d_data(
-        X_train.ravel(),
-        y_train.ravel(),
+        X_train_conformalize.ravel(),
+        y_train_conformalize.ravel(),
         X_test.ravel(),
         y_mesh.ravel(),
         np.full((X_test.shape[0]), 1.96*noise).ravel(),
@@ -225,7 +272,7 @@ for strategy, coord in zip(strategies, coords):
         ax=coord,
         title=strategy
     )
-plt.show()
+# plt.show()
 
 ##############################################################################
 # At first glance, the four strategies give similar results and the
@@ -245,7 +292,7 @@ for strategy in STRATEGIES:
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 ax.legend(fontsize=8)
-plt.show()
+# plt.show()
 
 
 ##############################################################################
@@ -327,7 +374,7 @@ def get_1d_data_with_heteroscedastic_noise(
 
 min_x, max_x, n_samples, noise = 0, 5, 300, 0.5
 (
-    X_train, y_train, X_test, y_test, y_mesh
+    X_train_conformalize, y_train_conformalize, X_test, y_test, y_mesh
 ) = get_1d_data_with_heteroscedastic_noise(
     x_sinx, min_x, max_x, n_samples, noise
 )
@@ -339,9 +386,9 @@ min_x, max_x, n_samples, noise = 0, 5, 300, 0.5
 
 plt.xlabel("x")
 plt.ylabel("y")
-plt.scatter(X_train, y_train, color="C0")
+plt.scatter(X_train_conformalize, y_train_conformalize, color="C0")
 plt.plot(X_test, y_mesh, color="C1")
-plt.show()
+# plt.show()
 
 ##############################################################################
 # As mentioned previously, we fit our training data with a simple
@@ -389,11 +436,11 @@ y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "conformalized_quantile_regression":
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
-        mapie.fit(X_train, y_train, random_state=RANDOM_STATE)
+        mapie.fit(X_train_conformalize, y_train_conformalize, random_state=RANDOM_STATE)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:
         mapie = MapieRegressor(polyn_model, **params)
-        mapie.fit(X_train, y_train)
+        mapie.fit(X_train_conformalize, y_train_conformalize)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
 
@@ -415,8 +462,8 @@ fig, axs = plt.subplots(3, 2, figsize=(9, 13))
 coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1], axs[2, 0], axs[2, 1]]
 for strategy, coord in zip(strategies, coords):
     plot_1d_data(
-        X_train.ravel(),
-        y_train.ravel(),
+        X_train_conformalize.ravel(),
+        y_train_conformalize.ravel(),
         X_test.ravel(),
         y_mesh.ravel(),
         (1.96*noise*X_test).ravel(),
@@ -426,7 +473,7 @@ for strategy, coord in zip(strategies, coords):
         ax=coord,
         title=strategy
     )
-plt.show()
+# plt.show()
 
 ##############################################################################
 # We can observe that all of the strategies except CQR seem to have similar
@@ -445,7 +492,7 @@ for strategy in STRATEGIES:
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 ax.legend(fontsize=8)
-plt.show()
+# plt.show()
 
 
 ##############################################################################
@@ -493,7 +540,7 @@ plt.xlabel("x bins")
 plt.xticks(rotation=0)
 plt.ylim(0.8, 1.0)
 plt.legend(fontsize=8, loc=[0, 0])
-plt.show()
+# plt.show()
 
 ##############################################################################
 # Let’s now conclude by summarizing the *effective* coverage, namely the
@@ -551,14 +598,14 @@ def get_1d_data_with_normal_distrib(funct, mu, sigma, n_samples, noise):
 
 
 mu, sigma, n_samples, noise = 0, 2, 1000, 0.
-X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_normal_distrib(
+X_train_conformalize, y_train_conformalize, X_test, y_test, y_mesh = get_1d_data_with_normal_distrib(
     x_sinx, mu, sigma, n_samples, noise
 )
 plt.xlabel("x")
 plt.ylabel("y")
-plt.scatter(X_train, y_train, color="C0")
+plt.scatter(X_train_conformalize, y_train_conformalize, color="C0")
 _ = plt.plot(X_test, y_test, color="C1")
-plt.show()
+# plt.show()
 
 ##############################################################################
 # As before, we estimate the prediction intervals using a polynomial
@@ -594,11 +641,11 @@ y_pred, y_pis = {}, {}
 for strategy, params in STRATEGIES.items():
     if strategy == "conformalized_quantile_regression":
         mapie = MapieQuantileRegressor(polyn_model_quant, **params)
-        mapie.fit(X_train, y_train, random_state=RANDOM_STATE)
+        mapie.fit(X_train_conformalize, y_train_conformalize, random_state=RANDOM_STATE)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
     else:
         mapie = MapieRegressor(polyn_model, **params)
-        mapie.fit(X_train, y_train)
+        mapie.fit(X_train_conformalize, y_train_conformalize)
         y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
 
 strategies = [
@@ -614,8 +661,8 @@ fig, axs = plt.subplots(3, 2, figsize=(9, 13))
 coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1], axs[2, 0], axs[2, 1]]
 for strategy, coord in zip(strategies, coords):
     plot_1d_data(
-        X_train.ravel(),
-        y_train.ravel(),
+        X_train_conformalize.ravel(),
+        y_train_conformalize.ravel(),
         X_test.ravel(),
         y_mesh.ravel(),
         1.96*noise,
@@ -625,7 +672,7 @@ for strategy, coord in zip(strategies, coords):
         ax=coord,
         title=strategy
     )
-plt.show()
+# plt.show()
 
 
 ##############################################################################
@@ -648,7 +695,7 @@ for strategy in STRATEGIES:
 ax.set_xlabel("x")
 ax.set_ylabel("Prediction Interval Width")
 ax.legend(fontsize=8)
-plt.show()
+# plt.show()
 
 ##############################################################################
 # The prediction interval widths start to increase exponentially
