@@ -23,7 +23,7 @@ The typical workflow for contributing to `mapie` is:
 Local setup
 -----------
 
-We encourage you to use a virtual environment. You'll want to activate it every time you want to work on `mapie`.
+We encourage you to use a virtual environment, with Python `3.9` or `3.10`. You'll want to activate it every time you want to work on `mapie`.
 
 You can create a virtual environment via ``conda``:
 
@@ -38,7 +38,13 @@ Alternatively, using ``pip``, create a virtual environment and install dependenc
 
     $ pip install -r requirements.dev.txt
 
-Finally, install `mapie` in development mode:
+If you work on Mac, you may have to install libomp manually in order to install LightGBM:
+
+.. code-block:: sh
+
+    $ brew install libomp
+
+Finally, install ``mapie`` in development mode:
 
 .. code-block:: sh
 
