@@ -29,7 +29,7 @@ clean-doc:
 	$(MAKE) clean -C doc
 
 build:
-	python setup.py sdist bdist_wheel
+	python -m build
 
 clean-build:
 	rm -rf build dist MAPIE.egg-info
