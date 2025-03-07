@@ -92,7 +92,7 @@ est_mlp.fit(X_train.reshape(-1, 1), y_train)
 # We then predict using the test set and evaluate its coverage.
 
 
-# Conformalize uncertainties on calibration set
+# Conformalize uncertainties on conformalize set
 mapie = SplitConformalRegressor(
     estimator=est_mlp, confidence_level=confidence_level, prefit=True
 )
