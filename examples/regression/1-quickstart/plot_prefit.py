@@ -62,12 +62,15 @@ X_train_conformalize, X_test, y_train_conformalize, y_test = train_test_split(
     X, y, test_size=1 / 10, random_state=RANDOM_STATE
 )
 X_train, X_conformalize, y_train, y_conformalize = train_test_split(
-    X_train_conformalize, y_train_conformalize, test_size=1 / 9, random_state=RANDOM_STATE
+    X_train_conformalize, y_train_conformalize,
+    test_size=1 / 9, random_state=RANDOM_STATE
 )
 
 
 ##############################################################################
-# 2. Pre-train a neural network
+# 2. Use a neural network
+# -----------------------------------------------------------------------------
+# 2.1 Pre-train a neural network
 # -----------------------------------------------------------------------------
 #
 # For this example, we will train a
@@ -81,7 +84,7 @@ est_mlp.fit(X_train.reshape(-1, 1), y_train)
 
 
 ##############################################################################
-# 3. Using MAPIE to conformalize the models
+# 2.2 Use MAPIE to conformalize the models
 # -----------------------------------------------------------------------------
 #
 # We will now proceed to conformalize the models using MAPIE. To this aim, we set
@@ -90,7 +93,9 @@ est_mlp.fit(X_train.reshape(-1, 1), y_train)
 
 
 # Conformalize uncertainties on calibration set
-mapie = SplitConformalRegressor(estimator=est_mlp, confidence_level=confidence_level, prefit=True)
+mapie = SplitConformalRegressor(
+    estimator=est_mlp, confidence_level=confidence_level, prefit=True
+)
 mapie.conformalize(X_conformalize.reshape(-1, 1), y_conformalize)
 
 # Evaluate prediction and coverage level on testing set
@@ -99,10 +104,10 @@ coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
 
 
 ##############################################################################
-# 4. Plot results
+# 2.3 Plot results
 # -----------------------------------------------------------------------------
 #
-# In order to view the results, we will plot the predictions of the 
+# In order to view the results, we will plot the predictions of the
 # the multi-layer perceptron (MLP) with their prediction intervals calculated with
 # :class:`~mapie.regression.SplitConformalRegressor`.
 
@@ -164,7 +169,9 @@ plt.show()
 
 
 ##############################################################################
-# 5. Pre-train LGBM models
+# 3. Use LGBM models
+# -----------------------------------------------------------------------------
+# 3.1 Pre-train LGBM models
 # -----------------------------------------------------------------------------
 #
 # For this example, we will train multiple LGBMRegressor with a
@@ -185,7 +192,7 @@ for alpha_ in [(1 - confidence_level) / 2, (1 + confidence_level) / 2, 0.5]:
     list_estimators_cqr.append(estimator_)
 
 ##############################################################################
-# 6. Using MAPIE to conformalize the models
+# 3.2 Use MAPIE to conformalize the models
 # -----------------------------------------------------------------------------
 #
 # We will now proceed to conformalize the models using MAPIE. To this aim, we set
@@ -193,7 +200,9 @@ for alpha_ in [(1 - confidence_level) / 2, (1 + confidence_level) / 2, 0.5]:
 # We then predict using the test set and evaluate its coverage.
 
 # Conformalize uncertainties on conformalize set
-mapie_cqr = ConformalizedQuantileRegressor(list_estimators_cqr, confidence_level=0.9, prefit=True)
+mapie_cqr = ConformalizedQuantileRegressor(
+    list_estimators_cqr, confidence_level=0.9, prefit=True
+)
 mapie_cqr.conformalize(X_conformalize.reshape(-1, 1), y_conformalize)
 
 # Evaluate prediction and coverage level on testing set
@@ -206,7 +215,7 @@ coverage_cqr = regression_coverage_score(
 
 
 ##############################################################################
-# 7. Plot results
+# 3.3 Plot results
 # -----------------------------------------------------------------------------
 #
 # As fdor the MLP predictions, we plot the predictions of the LGBMRegressor
