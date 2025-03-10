@@ -5,6 +5,8 @@ History
 0.9.x (2025-xx-xx)
 ------------------
 
+* Fix issue  512 to replace setup.py by pyproject.toml, bump twine and wheel dependencies to latest
+
 0.9.2 (2025-15-01)
 ------------------
 
