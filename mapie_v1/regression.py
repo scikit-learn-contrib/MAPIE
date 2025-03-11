@@ -19,7 +19,11 @@ from mapie_v1._utils import (
     check_cv_not_string,
     cast_point_predictions_to_ndarray,
     cast_predictions_to_ndarray_tuple,
-    prepare_params, prepare_fit_params_and_sample_weight,
+    prepare_params,
+    prepare_fit_params_and_sample_weight,
+    raise_error_if_previous_method_not_called,
+    raise_error_if_method_already_called,
+    raise_error_if_fit_called_in_prefit_mode, transform_confidence_level_to_alpha,
 )
 
 
@@ -105,6 +109,8 @@ class SplitConformalRegressor:
         check_estimator_fit_predict(estimator)
         self._estimator = estimator
         self._prefit = prefit
+        self._is_fitted = prefit
+        self._is_conformalized = False
         self._conformity_score = check_and_select_conformity_score(
             conformity_score,
             BaseRegressionScore,
@@ -152,11 +158,15 @@ class SplitConformalRegressor:
         Self
             The fitted SplitConformalRegressor instance.
         """
-        if not self._prefit:
-            cloned_estimator = clone(self._estimator)
-            fit_params_ = prepare_params(fit_params)
-            cloned_estimator.fit(X_train, y_train, **fit_params_)
-            self._mapie_regressor.estimator = cloned_estimator
+        raise_error_if_fit_called_in_prefit_mode(self._prefit)
+        raise_error_if_method_already_called("fit", self._is_fitted)
+
+        cloned_estimator = clone(self._estimator)
+        fit_params_ = prepare_params(fit_params)
+        cloned_estimator.fit(X_train, y_train, **fit_params_)
+        self._mapie_regressor.estimator = cloned_estimator
+
+        self._is_fitted = True
         return self
 
     def conformalize(
@@ -187,6 +197,16 @@ class SplitConformalRegressor:
         Self
             The conformalized SplitConformalRegressor instance.
         """
+        raise_error_if_previous_method_not_called(
+            "conformalize",
+            "fit",
+            self._is_fitted,
+        )
+        raise_error_if_method_already_called(
+            "conformalize",
+            self._is_conformalized,
+        )
+
         self._predict_params = prepare_params(predict_params)
         self._mapie_regressor.fit(
             X_conformalize,
@@ -194,6 +214,7 @@ class SplitConformalRegressor:
             predict_params=self._predict_params
         )
 
+        self._is_conformalized = True
         return self
 
     def predict_interval(
@@ -227,6 +248,11 @@ class SplitConformalRegressor:
             - Prediction points, of shape `(n_samples,)`
             - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
         """
+        raise_error_if_previous_method_not_called(
+            "predict_interval",
+            "conformalize",
+            self._is_conformalized,
+        )
         predictions = self._mapie_regressor.predict(
             X,
             alpha=self._alphas,
@@ -253,6 +279,11 @@ class SplitConformalRegressor:
         NDArray
             Array of point predictions, with shape (n_samples,).
         """
+        raise_error_if_previous_method_not_called(
+            "predict",
+            "conformalize",
+            self._is_conformalized,
+        )
         predictions = self._mapie_regressor.predict(
             X,
             alpha=None,
@@ -383,6 +414,7 @@ class CrossConformalRegressor:
         self._alphas = transform_confidence_level_to_alpha_list(
             confidence_level
         )
+        self.is_fitted_and_conformalized = False
 
         self._predict_params: dict = {}
 
@@ -423,6 +455,11 @@ class CrossConformalRegressor:
         Self
             The fitted CrossConformalRegressor instance.
         """
+        raise_error_if_method_already_called(
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+
         fit_params_, sample_weight = prepare_fit_params_and_sample_weight(
             fit_params
         )
@@ -435,6 +472,8 @@ class CrossConformalRegressor:
             fit_params=fit_params_,
             predict_params=self._predict_params
         )
+
+        self.is_fitted_and_conformalized = True
         return self
 
     def predict_interval(
@@ -481,6 +520,12 @@ class CrossConformalRegressor:
             - Prediction points, of shape `(n_samples,)`
             - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
         """
+        raise_error_if_previous_method_not_called(
+            "predict_interval",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+
         ensemble = self._check_aggregate_predictions_and_return_ensemble(
             aggregate_predictions
         )
@@ -524,6 +569,12 @@ class CrossConformalRegressor:
         NDArray
             Array of point predictions, with shape `(n_samples,)`.
         """
+        raise_error_if_previous_method_not_called(
+            "predict",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+
         ensemble = self._check_aggregate_predictions_and_return_ensemble(
             aggregate_predictions
         )
@@ -684,6 +735,7 @@ class JackknifeAfterBootstrapRegressor:
             confidence_level
         )
 
+        self.is_fitted_and_conformalized = False
         self._predict_params: dict = {}
 
     def fit_conformalize(
@@ -719,6 +771,11 @@ class JackknifeAfterBootstrapRegressor:
         Self
             The JackknifeAfterBootstrapRegressor instance.
         """
+        raise_error_if_method_already_called(
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+
         fit_params_, sample_weight = prepare_fit_params_and_sample_weight(
             fit_params
         )
@@ -730,6 +787,8 @@ class JackknifeAfterBootstrapRegressor:
             fit_params=fit_params_,
             predict_params=self._predict_params,
         )
+
+        self.is_fitted_and_conformalized = True
         return self
 
     def predict_interval(
@@ -775,6 +834,12 @@ class JackknifeAfterBootstrapRegressor:
             - Prediction points, of shape `(n_samples,)`
             - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
         """
+        raise_error_if_previous_method_not_called(
+            "predict_interval",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+
         predictions = self._mapie_regressor.predict(
             X,
             alpha=self._alphas,
@@ -813,6 +878,12 @@ class JackknifeAfterBootstrapRegressor:
         NDArray
             Array of point predictions, with shape `(n_samples,)`.
         """
+        raise_error_if_previous_method_not_called(
+            "predict",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+
         predictions = self._mapie_regressor.predict(
             X, alpha=None, ensemble=ensemble, **self._predict_params,
         )
@@ -895,14 +966,15 @@ class ConformalizedQuantileRegressor:
         confidence_level: float = 0.9,
         prefit: bool = False,
     ) -> None:
-        self._alpha = 1 - confidence_level
-        self.prefit = prefit
+        self._alpha = transform_confidence_level_to_alpha(confidence_level)
+        self._prefit = prefit
+        self._is_fitted = prefit
+        self._is_conformalized = False
 
-        cv: str = "prefit" if prefit else "split"
         self._mapie_quantile_regressor = MapieQuantileRegressor(
             estimator=estimator,
             method="quantile",
-            cv=cv,
+            cv="prefit" if prefit else "split",
             alpha=self._alpha,
         )
 
@@ -938,25 +1010,21 @@ class ConformalizedQuantileRegressor:
         Self
             The fitted ConformalizedQuantileRegressor instance.
         """
-
-        if self.prefit:
-            raise ValueError(
-                "The estimators are already fitted, the .fit() method should"
-                " not be called with prefit=True."
-            )
+        raise_error_if_fit_called_in_prefit_mode(self._prefit)
+        raise_error_if_method_already_called("fit", self._is_fitted)
 
         fit_params_, self._sample_weight = prepare_fit_params_and_sample_weight(
             fit_params
         )
-
         self._mapie_quantile_regressor._initialize_fit_conformalize()
         self._mapie_quantile_regressor._fit_estimators(
-                                            X=X_train,
-                                            y=y_train,
-                                            sample_weight=self._sample_weight,
-                                            **fit_params_,
+            X=X_train,
+            y=y_train,
+            sample_weight=self._sample_weight,
+            **fit_params_,
         )
 
+        self._is_fitted = True
         return self
 
     def conformalize(
@@ -987,14 +1055,24 @@ class ConformalizedQuantileRegressor:
         Self
             The ConformalizedQuantileRegressor instance.
         """
-        self._predict_params = prepare_params(predict_params)
+        raise_error_if_previous_method_not_called(
+            "conformalize",
+            "fit",
+            self._is_fitted,
+        )
+        raise_error_if_method_already_called(
+            "conformalize",
+            self._is_conformalized,
+        )
 
+        self._predict_params = prepare_params(predict_params)
         self._mapie_quantile_regressor.conformalize(
             X_conformalize,
             y_conformalize,
             **self._predict_params
         )
 
+        self._is_conformalized = True
         return self
 
     def predict_interval(
@@ -1039,6 +1117,12 @@ class ConformalizedQuantileRegressor:
             - Prediction points, of shape `(n_samples,)`
             - Prediction intervals, of shape `(n_samples, 2, 1)`
         """
+        raise_error_if_previous_method_not_called(
+            "predict_interval",
+            "conformalize",
+            self._is_conformalized,
+        )
+
         predictions = self._mapie_quantile_regressor.predict(
             X,
             optimize_beta=minimize_interval_width,
@@ -1065,6 +1149,12 @@ class ConformalizedQuantileRegressor:
         NDArray
             Array of point predictions with shape `(n_samples,)`.
         """
+        raise_error_if_previous_method_not_called(
+            "predict",
+            "conformalize",
+            self._is_conformalized,
+        )
+
         estimator = self._mapie_quantile_regressor
         predictions, _ = estimator.predict(X, **self._predict_params)
         return predictions
