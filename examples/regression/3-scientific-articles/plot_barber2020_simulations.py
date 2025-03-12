@@ -1,12 +1,10 @@
 """
 ===========================================================================================
-[Pre-v1] Reproducing the simulations from Foygel-Barber et al. (2020)
+Reproducing the simulations from Foygel-Barber et al. (2020)
 ===========================================================================================
 **Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
-**This notebook hasn't been updated to the new API yet.**
 
-
-:class:`~mapie.regression.MapieRegressor` is used to investigate
+:class:`~mapie_v1.regression.CrossConformalRegressor` is used to investigate
 the coverage level and the prediction interval width as a function
 of the dimension using simulated data points as introduced in
 Foygel-Barber et al. (2021) [1].
@@ -40,21 +38,24 @@ from sklearn.linear_model import LinearRegression
 from mapie._typing import NDArray
 from mapie.metrics import (regression_coverage_score,
                            regression_mean_width_score)
-from mapie.regression import MapieRegressor
+from mapie_v1.regression import CrossConformalRegressor
+
+RANDOM_STATE = 1
 
 
 def PIs_vs_dimensions(
     strategies: Dict[str, Any],
-    alpha: float,
+    confidence_level: float,
     n_trial: int,
     dimensions: NDArray,
+    random_state: int = 1
 ) -> Dict[str, Dict[int, Dict[str, NDArray]]]:
     """
     Compute the prediction intervals for a linear regression problem.
     Function adapted from Foygel-Barber et al. (2020).
 
     It generates several times linear data with random noise whose
-    signal-to-noise     is equal to 10 and for several given dimensions,
+    signal-to-noise is equal to 10 and for several given dimensions,
     given by the dimensions list.
 
     Here we use MAPIE, with a LinearRegression base model, to estimate
@@ -72,8 +73,8 @@ def PIs_vs_dimensions(
     strategies : Dict[str, Dict[str, Any]]
         List of strategies for estimating prediction intervals,
         with corresponding parameters.
-    alpha : float
-        1 - (target coverage level).
+    confidence_level : float
+        target coverage level.
     n_trial : int
         Number of trials for each dimension for estimating
         prediction intervals.
@@ -90,6 +91,7 @@ def PIs_vs_dimensions(
     n_train = 100
     n_test = 100
     SNR = 10
+    rng = np.random.default_rng(random_state)
     results: Dict[str, Dict[int, Dict[str, NDArray]]] = {
         strategy: {
             dimension: {
@@ -102,25 +104,28 @@ def PIs_vs_dimensions(
     }
     for dimension in dimensions:
         for trial in range(n_trial):
-            beta = np.random.normal(size=dimension)
+            beta = rng.normal(size=dimension)
             beta_norm = np.sqrt(np.square(beta).sum())
             beta = beta / beta_norm * np.sqrt(SNR)
-            X_train = np.random.normal(size=(n_train, dimension))
-            noise_train = np.random.normal(size=n_train)
-            noise_test = np.random.normal(size=n_test)
+            X_train = rng.normal(size=(n_train, dimension))
+            noise_train = rng.normal(size=n_train)
+            noise_test = rng.normal(size=n_test)
             y_train = X_train.dot(beta) + noise_train
-            X_test = np.random.normal(size=(n_test, dimension))
+            X_test = rng.normal(size=(n_test, dimension))
             y_test = X_test.dot(beta) + noise_test
 
             for strategy, params in strategies.items():
-                mapie = MapieRegressor(
-                    LinearRegression(),
-                    agg_function="median",
+                mapie = CrossConformalRegressor(
+                    estimator=LinearRegression(),
+                    confidence_level=confidence_level,
                     n_jobs=-1,
+                    random_state=random_state,
                     **params
                 )
-                mapie.fit(X_train, y_train)
-                _, y_pis = mapie.predict(X_test, alpha=alpha)
+                mapie.fit_conformalize(X_train, y_train)
+                _, y_pis = mapie.predict_interval(
+                    X_test, aggregate_predictions="median"
+                )
                 coverage = regression_coverage_score(
                     y_test, y_pis[:, 0, 0], y_pis[:, 1, 0]
                 )
@@ -180,7 +185,7 @@ def plot_simulation_results(
             width_mean + width_SE,
             alpha=0.25,
         )
-    ax1.axhline(1 - alpha, linestyle="dashed", c="k")
+    ax1.axhline(confidence_level, linestyle="dashed", c="k")
     ax1.set_ylim(0.0, 1.0)
     ax1.set_xlabel("Dimension d")
     ax1.set_ylabel("Coverage")
@@ -192,13 +197,17 @@ def plot_simulation_results(
 
 
 STRATEGIES = {
-    "naive": dict(method="naive"),
     "cv": dict(method="base", cv=5),
     "cv_plus": dict(method="plus", cv=5),
 }
-alpha = 0.1
+confidence_level = 0.9
 ntrial = 3
 dimensions = np.arange(10, 150, 10)
-results = PIs_vs_dimensions(STRATEGIES, alpha, ntrial, dimensions)
+results = PIs_vs_dimensions(
+    strategies=STRATEGIES,
+    confidence_level=confidence_level,
+    n_trial=ntrial,
+    dimensions=dimensions,
+    random_state=RANDOM_STATE)
 plot_simulation_results(results, title="Coverages and interval widths")
 plt.show()
