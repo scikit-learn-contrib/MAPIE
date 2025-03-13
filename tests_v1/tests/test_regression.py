@@ -1,3 +1,12 @@
+"""
+Testing the main functionalities of the API as seen from a user point-of-view.
+New tests here should be added wisely.
+Group tests in a class if more than one test is needed for a given functionality.
+Be careful of test time. Testing varied scenarios is more important than
+trying to test all scenarios.
+Write black-box tests (no mocks): don't test implementation details.
+"""
+
 import numpy as np
 import pytest
 from sklearn.datasets import make_regression
