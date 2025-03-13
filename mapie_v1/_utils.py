@@ -7,6 +7,17 @@ from sklearn.model_selection import BaseCrossValidator
 from decimal import Decimal
 
 
+def transform_confidence_level_to_alpha(
+    confidence_level: float,
+) -> float:
+    # Using decimals to avoid weird-looking float approximations
+    # when computing alpha = 1 - confidence_level
+    # Such approximations arise even with simple confidence levels like 0.9
+    confidence_level_decimal = Decimal(str(confidence_level))
+    alpha_decimal = Decimal("1") - confidence_level_decimal
+    return float(alpha_decimal)
+
+
 def transform_confidence_level_to_alpha_list(
     confidence_level: Union[float, Iterable[float]]
 ) -> Iterable[float]:
@@ -20,17 +31,7 @@ def transform_confidence_level_to_alpha_list(
     ]
 
 
-def transform_confidence_level_to_alpha(
-    confidence_level: float,
-) -> float:
-    # Using decimals to avoid weird-looking float approximations
-    # when computing alpha = 1 - confidence_level
-    # Such approximations arise even with simple confidence levels like 0.9
-    confidence_level_decimal = Decimal(str(confidence_level))
-    alpha_decimal = Decimal("1") - confidence_level_decimal
-    return float(alpha_decimal)
-
-
+# Could be replaced by using sklearn _validate_params (ideally wrapping it)
 def check_if_param_in_allowed_values(
     param: str, param_name: str, allowed_values: list
 ) -> None:
@@ -44,19 +45,29 @@ def check_if_param_in_allowed_values(
 def check_cv_not_string(cv: Union[int, str, BaseCrossValidator]) -> None:
     if isinstance(cv, str):
         raise ValueError(
-            "'cv' string options not available in MAPIE >= v1"
+            "'cv' string options not available in MAPIE >= v1.0.0"
         )
 
 
 def cast_point_predictions_to_ndarray(
     point_predictions: Union[NDArray, Tuple[NDArray, NDArray]]
 ) -> NDArray:
+    if isinstance(point_predictions, tuple):
+        raise TypeError(
+            "Developer error: use this function to cast point predictions only, "
+            "not points + intervals."
+        )
     return cast(NDArray, point_predictions)
 
 
 def cast_predictions_to_ndarray_tuple(
     predictions: Union[NDArray, Tuple[NDArray, NDArray]]
 ) -> Tuple[NDArray, NDArray]:
+    if not isinstance(predictions, tuple):
+        raise TypeError(
+            "Developer error: use this function to cast predictions containing points "
+            "and intervals, not points only."
+        )
     return cast(Tuple[NDArray, NDArray], predictions)
 
 

@@ -526,7 +526,7 @@ class CrossConformalRegressor:
             self.is_fitted_and_conformalized,
         )
 
-        ensemble = self._check_aggregate_predictions_and_return_ensemble(
+        ensemble = self._set_aggregate_predictions_and_return_ensemble(
             aggregate_predictions
         )
         predictions = self._mapie_regressor.predict(
@@ -575,7 +575,7 @@ class CrossConformalRegressor:
             self.is_fitted_and_conformalized,
         )
 
-        ensemble = self._check_aggregate_predictions_and_return_ensemble(
+        ensemble = self._set_aggregate_predictions_and_return_ensemble(
             aggregate_predictions
         )
         predictions = self._mapie_regressor.predict(
@@ -583,7 +583,7 @@ class CrossConformalRegressor:
         )
         return cast_point_predictions_to_ndarray(predictions)
 
-    def _check_aggregate_predictions_and_return_ensemble(
+    def _set_aggregate_predictions_and_return_ensemble(
         self, aggregate_predictions: Optional[str]
     ) -> bool:
         if not aggregate_predictions:
@@ -591,6 +591,7 @@ class CrossConformalRegressor:
         else:
             ensemble = True
             self._mapie_regressor._check_agg_function(aggregate_predictions)
+            # A hack here, to allow choosing the aggregation function at prediction time
             self._mapie_regressor.agg_function = aggregate_predictions
         return ensemble
 
