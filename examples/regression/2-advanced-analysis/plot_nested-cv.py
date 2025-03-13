@@ -1,13 +1,12 @@
 """
 ==========================================================================================
-[Pre-v1] Nested cross-validation for estimating prediction intervals
+Nested cross-validation for estimating prediction intervals
 ==========================================================================================
 **Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
-**This notebook hasn't been updated to the new API yet.**
-
 
 This example compares non-nested and nested cross-validation strategies for
-estimating prediction intervals with :class:`~mapie.regression.MapieRegressor`.
+estimating prediction intervals with
+:class:`~mapie.regression_v1.CrossConformalRegressor`.
 
 In the regular sequential method, a cross-validation parameter search is
 carried out over the entire training set.
@@ -50,32 +49,32 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from sklearn.datasets import make_sparse_uncorrelated
 
 from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieRegressor
+from mapie_v1.regression import CrossConformalRegressor
 
 
-random_state = 42
+RANDOM_STATE = 42
 
 # Load the toy data
-X, y = make_sparse_uncorrelated(500, random_state=random_state)
+X, y = make_sparse_uncorrelated(500, random_state=RANDOM_STATE)
 
 # Split the data into training and test sets.
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=random_state
+    X, y, test_size=0.2, random_state=RANDOM_STATE
 )
 
 # Define the Random Forest model as base regressor with parameter ranges.
-rf_model = RandomForestRegressor(random_state=random_state, verbose=0)
+rf_model = RandomForestRegressor(random_state=RANDOM_STATE, verbose=0)
 rf_params = {"max_depth": randint(2, 10), "n_estimators": randint(10, 100)}
 
 # Cross-validation and prediction-interval parameters.
 cv = 10
 n_iter = 5
-alpha = 0.05
+confidence_level = 0.95
 
 # Non-nested approach with the CV+ strategy using the Random Forest model.
 cv_obj = RandomizedSearchCV(
@@ -86,24 +85,24 @@ cv_obj = RandomizedSearchCV(
     scoring="neg_root_mean_squared_error",
     return_train_score=True,
     verbose=0,
-    random_state=random_state,
+    random_state=RANDOM_STATE,
     n_jobs=-1,
 )
 cv_obj.fit(X_train, y_train)
 best_est = cv_obj.best_estimator_
-mapie_non_nested = MapieRegressor(
-    best_est, method="plus", cv=cv, agg_function="median", n_jobs=-1,
-    random_state=random_state
+mapie_non_nested = CrossConformalRegressor(
+    estimator=best_est, method="plus", cv=cv, n_jobs=-1,
+    confidence_level=confidence_level, random_state=RANDOM_STATE
 )
-mapie_non_nested.fit(X_train, y_train)
-y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict(
-    X_test, alpha=alpha
+mapie_non_nested.fit_conformalize(X_train, y_train)
+y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict_interval(
+    X_test, aggregate_predictions='median'
 )
 widths_non_nested = y_pis_non_nested[:, 1, 0] - y_pis_non_nested[:, 0, 0]
 coverage_non_nested = regression_coverage_score(
     y_test, y_pis_non_nested[:, 0, 0], y_pis_non_nested[:, 1, 0]
 )
-score_non_nested = mean_squared_error(y_test, y_pred_non_nested, squared=False)
+score_non_nested = root_mean_squared_error(y_test, y_pred_non_nested)
 
 # Nested approach with the CV+ strategy using the Random Forest model.
 cv_obj = RandomizedSearchCV(
@@ -114,20 +113,22 @@ cv_obj = RandomizedSearchCV(
     scoring="neg_root_mean_squared_error",
     return_train_score=True,
     verbose=0,
-    random_state=random_state,
+    random_state=RANDOM_STATE,
     n_jobs=-1,
 )
-mapie_nested = MapieRegressor(
-    cv_obj, method="plus", cv=cv, agg_function="median",
-    random_state=random_state
+mapie_nested = CrossConformalRegressor(
+    estimator=cv_obj, method="plus", cv=cv, n_jobs=-1,
+    confidence_level=confidence_level, random_state=RANDOM_STATE
 )
-mapie_nested.fit(X_train, y_train)
-y_pred_nested, y_pis_nested = mapie_nested.predict(X_test, alpha=alpha)
+mapie_nested.fit_conformalize(X_train, y_train)
+y_pred_nested, y_pis_nested = mapie_nested.predict_interval(
+    X_test, aggregate_predictions='median'
+)
 widths_nested = y_pis_nested[:, 1, 0] - y_pis_nested[:, 0, 0]
 coverage_nested = regression_coverage_score(
     y_test, y_pis_nested[:, 0, 0], y_pis_nested[:, 1, 0]
 )
-score_nested = mean_squared_error(y_test, y_pred_nested, squared=False)
+score_nested = root_mean_squared_error(y_test, y_pred_nested)
 
 # Print scores and effective coverages.
 print(
