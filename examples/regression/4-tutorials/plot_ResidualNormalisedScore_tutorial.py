@@ -1,9 +1,8 @@
 """
 =====================================================================
-[Pre-v1] Tutorial for residual normalised score
+Tutorial for residual normalised score
 =====================================================================
 **Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
-**This notebook hasn't been updated to the new API yet.**
 
 We will use the sklearn california housing dataset to understand how the
 residual normalised score works and show the multiple ways of using it.
@@ -23,14 +22,12 @@ from sklearn.model_selection import train_test_split
 
 from mapie.conformity_scores import ResidualNormalisedScore
 from mapie.metrics import regression_coverage_score_v2, regression_ssc_score
-from mapie.regression import MapieRegressor
+from mapie_v1.regression import SplitConformalRegressor
 
 warnings.filterwarnings("ignore")
 
-random_state = 23
-rng = np.random.default_rng(random_state)
-round_to = 3
-
+RANDOM_STATE = 1
+rng = np.random.default_rng(RANDOM_STATE)
 
 ##############################################################################
 # 1. Data
@@ -60,28 +57,28 @@ plt.show()
 
 ##############################################################################
 # Let's now create the different splits for the dataset, with a training,
-# calibration, residual and test set. Recall that the calibration set is used
+# conformalize, residual and test set. Recall that the conformalize set is used
 # for calibrating the prediction intervals and the residual set is used to fit
 # the residual estimator used by the
 # :class:`~mapie.conformity_scores.ResidualNormalisedScore`.
 
 np.array(X)
 np.array(y)
-X_train, X_test, y_train, y_test = train_test_split(
+X_train_conformalize, X_test, y_train_conformalize, y_test = train_test_split(
     X,
     y,
-    random_state=random_state,
+    random_state=RANDOM_STATE,
     test_size=0.02
 )
-X_train, X_calib, y_train, y_calib = train_test_split(
-    X_train,
-    y_train,
-    random_state=random_state
+X_train, X_conformalize, y_train, y_conformalize = train_test_split(
+    X_train_conformalize,
+    y_train_conformalize,
+    random_state=RANDOM_STATE
 )
-X_calib_prefit, X_res, y_calib_prefit, y_res = train_test_split(
-    X_calib,
-    y_calib,
-    random_state=random_state,
+X_conformalize_prefit, X_res, y_conformalize_prefit, y_res = train_test_split(
+    X_conformalize,
+    y_conformalize,
+    random_state=RANDOM_STATE,
     test_size=0.5
 )
 
@@ -95,11 +92,11 @@ X_calib_prefit, X_res, y_calib_prefit, y_res = train_test_split(
 # a :class:`~sklearn.linear_model.LinearRegression` is used for the residual
 # estimator. (Note that to avoid negative values it is trained with the log
 # of the features and the exponential of the predictions are used).
-# It is also possible to use it with ``cv="prefit"`` i.e. with
+# It is also possible to use it with ``prefit=True`` i.e. with
 # the base model trained beforehand. The third setup that we illustrate here
 # is with the residual model prefitted : we can set the estimator in parameters
 # of the class, not forgetting to specify ``prefit="True"``. Finally, as an
-# example of the exotic parameterisation we can do : we use as a residual
+# example of the exotic parameterisation we use as a residual
 # estimator a :class:`~sklearn.linear_model.LinearRegression` wrapped to avoid
 # negative values like it is done by default in the class.
 
@@ -118,14 +115,14 @@ class PosEstim(LinearRegression):
         return np.exp(y_pred)
 
 
-base_model = RandomForestRegressor(n_estimators=10, random_state=random_state)
+base_model = RandomForestRegressor(n_estimators=10, random_state=RANDOM_STATE)
 base_model = base_model.fit(X_train, y_train)
 
 residual_estimator = RandomForestRegressor(
     n_estimators=20,
     max_leaf_nodes=70,
     min_samples_leaf=7,
-    random_state=random_state
+    random_state=RANDOM_STATE
 )
 residual_estimator = residual_estimator.fit(
     X_res, np.abs(np.subtract(y_res, base_model.predict(X_res)))
@@ -133,55 +130,76 @@ residual_estimator = residual_estimator.fit(
 wrapped_residual_estimator = PosEstim().fit(
     X_res, np.abs(np.subtract(y_res, base_model.predict(X_res)))
 )
+
+CONFIDENCE_LEVEL = 0.9
+
 # Estimating prediction intervals
 STRATEGIES = {
     "Default": {
-        "cv": "split",
-        "conformity_score": ResidualNormalisedScore()
+        "class": SplitConformalRegressor,
+        "init_params": dict(
+            confidence_level=CONFIDENCE_LEVEL,
+            prefit=False,
+            conformity_score=ResidualNormalisedScore(),
+        ),
     },
     "Base model prefit": {
-        "cv": "prefit",
-        "estimator": base_model,
-        "conformity_score": ResidualNormalisedScore(
-            split_size=0.5, random_state=random_state
-        )
+        "class": SplitConformalRegressor,
+        "init_params": dict(
+            estimator=base_model,
+            confidence_level=CONFIDENCE_LEVEL,
+            prefit=True,
+            conformity_score=ResidualNormalisedScore(
+                split_size=0.5,
+                random_state=RANDOM_STATE,
+            ),
+        ),
     },
     "Base and residual model prefit": {
-        "cv": "prefit",
-        "estimator": base_model,
-        "conformity_score": ResidualNormalisedScore(
-            residual_estimator=residual_estimator,
-            random_state=random_state,
-            prefit=True
-        )
+        "class": SplitConformalRegressor,
+        "init_params": dict(
+            estimator=base_model,
+            confidence_level=CONFIDENCE_LEVEL,
+            prefit=True,
+            conformity_score=ResidualNormalisedScore(
+                residual_estimator=residual_estimator,
+                random_state=RANDOM_STATE,
+                prefit=True,
+            ),
+        ),
     },
     "Wrapped residual model": {
-        "cv": "prefit",
-        "estimator": base_model,
-        "conformity_score": ResidualNormalisedScore(
-            residual_estimator=wrapped_residual_estimator,
-            random_state=random_state,
-            prefit=True
-        )
+        "class": SplitConformalRegressor,
+        "init_params": dict(
+            estimator=base_model,
+            confidence_level=CONFIDENCE_LEVEL,
+            prefit=True,
+            conformity_score=ResidualNormalisedScore(
+                residual_estimator=wrapped_residual_estimator,
+                random_state=RANDOM_STATE,
+                prefit=True,
+            ),
+        ),
     },
 }
 
-y_pred, intervals, coverage, cond_coverage = {}, {}, {}, {}
+y_pred, y_pis, coverage, cond_coverage = {}, {}, {}, {}
 num_bins = 10
-alpha = 0.1
-for strategy, params in STRATEGIES.items():
-    mapie = MapieRegressor(**params, random_state=random_state)
-    if mapie.conformity_score.prefit:
-        mapie.fit(X_calib_prefit, y_calib_prefit)
+for strategy_name, strategy_params in STRATEGIES.items():
+    init_params = strategy_params["init_params"]
+    class_ = strategy_params["class"]
+    mapie = class_(**init_params)
+    if mapie._prefit:
+        mapie.conformalize(X_conformalize_prefit, y_conformalize_prefit)
     else:
-        mapie.fit(X_calib, y_calib)
-    y_pred[strategy], intervals[strategy] = mapie.predict(X_test, alpha=alpha)
-
-    coverage[strategy] = regression_coverage_score_v2(
-        y_test, intervals[strategy]
+        mapie.fit(X_train, y_train)
+        mapie.conformalize(X_conformalize, y_conformalize)
+    y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test)
+    coverage[strategy_name] = regression_coverage_score_v2(
+        y_test, y_pis[strategy_name]
     )
-    cond_coverage[strategy] = regression_ssc_score(
-        y_test, intervals[strategy], num_bins=num_bins
+    cond_coverage[strategy_name] = regression_ssc_score(
+        y_test, y_pis[strategy_name], num_bins=num_bins
     )
 
 
@@ -275,19 +293,19 @@ for ax, strategy in zip(axs.flat, STRATEGIES.keys()):
     plot_predictions(
         y_test,
         y_pred[strategy],
-        intervals[strategy],
+        y_pis[strategy],
         coverage[strategy][0],
         cond_coverage[strategy][0],
         ax=ax
     )
 
-fig.suptitle(f"Predicted values and intervals of level {alpha}")
+fig.suptitle(f"Predicted values and intervals of level {CONFIDENCE_LEVEL}")
 plt.tight_layout()
 plt.show()
 
 ##############################################################################
 # The results show that all the setups reach the global coverage guaranteed of
-# 1-alpha.
+# confidence_level.
 # It is interesting to note that the "base model prefit" and the "wrapped
 # residual model" give exactly the same results. And this is because they are
 # the same models : one prefitted and one fitted directly in the class.
