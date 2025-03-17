@@ -2,10 +2,10 @@
 ==========================================================================================================
 Example use of the prefit parameter with neural networks and LGBM Regressor
 ==========================================================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
 
-:class:`~mapie.regression.SplitConformalRegressor` and
-:class:`~mapie.regression.ConformalizedQuantileRegressor`
+
+:class:`~mapie_v1.regression.SplitConformalRegressor` and
+:class:`~mapie_v1.regression.ConformalizedQuantileRegressor`
 are used to conformalize uncertainties for large models for
 which the cost of cross-validation is too high. Typically,
 neural networks rely on a single validation set.
@@ -75,7 +75,7 @@ X_train, X_conformalize, y_train, y_conformalize = train_test_split(
 #
 # For this example, we will train a
 # :class:`~sklearn.neural_network.MLPRegressor` for
-# :class:`~mapie.regression.SplitConformalRegressor`.
+# :class:`~mapie_v1.regression.SplitConformalRegressor`.
 
 
 # Train a MLPRegressor for SplitConformalRegressor
@@ -109,7 +109,7 @@ coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
 #
 # In order to view the results, we will plot the predictions of the
 # the multi-layer perceptron (MLP) with their prediction intervals calculated with
-# :class:`~mapie.regression.SplitConformalRegressor`.
+# :class:`~mapie_v1.regression.SplitConformalRegressor`.
 
 # Plot obtained prediction intervals on testing set
 theoretical_semi_width = scipy.stats.norm.ppf(1 - confidence_level) * sigma
@@ -177,7 +177,7 @@ plt.show()
 # For this example, we will train multiple LGBMRegressor with a
 # quantile objective as this is a requirement to perform conformalized
 # quantile regression using
-# :class:`~mapie.regression.ConformalizedQuantileRegressor`. Note that the
+# :class:`~mapie_v1.regression.ConformalizedQuantileRegressor`. Note that the
 # three estimators need to be trained at quantile values of
 # ``(1+confidence_level)/2, (1-confidence_level)/2, 0.5)``.
 
@@ -220,7 +220,7 @@ coverage_cqr = regression_coverage_score(
 #
 # As fdor the MLP predictions, we plot the predictions of the LGBMRegressor
 # with their prediction intervals calculated with
-# :class:`~mapie.regression.ConformalizedQuantileRegressor`.
+# :class:`~mapie_v1.regression.ConformalizedQuantileRegressor`.
 
 # Plot obtained prediction intervals on testing set
 theoretical_semi_width = scipy.stats.norm.ppf(1 - confidence_level) * sigma

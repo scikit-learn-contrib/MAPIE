@@ -2,11 +2,11 @@
 ===============================================================================
 Estimating aleatoric and epistemic uncertainties
 ===============================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
 
-This example uses :class:`~mapie.regression_v1.CrossConformalRegressor`,
-:class:`~mapie.regression_v1.ConformalizedQuantileRegressor` and
-:class:`~mapie.regression_v1.JackknifeAfterBootstrapRegressor` to estimate
+
+This example uses :class:`~mapie_v1.regression.CrossConformalRegressor`,
+:class:`~mapie_v1.regression.ConformalizedQuantileRegressor` and
+:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """

@@ -2,9 +2,9 @@
 ==========================================================================================
 Estimating prediction intervals of Gamma distributed target
 ==========================================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
 
-This example uses :class:`~mapie.regression.CrossConformalRegressor` to estimate
+
+This example uses :class:`~mapie_v1.regression.CrossConformalRegressor` to estimate
 prediction intervals associated with Gamma distributed target.
 The limit of the absolute residual conformity score is illustrated.
 

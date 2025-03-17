@@ -2,7 +2,7 @@
 ===========================================================================================
 Reproducing the simulations from Foygel-Barber et al. (2020)
 ===========================================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
+
 
 :class:`~mapie_v1.regression.CrossConformalRegressor` is used to investigate
 the coverage level and the prediction interval width as a function

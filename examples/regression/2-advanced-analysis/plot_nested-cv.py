@@ -2,11 +2,11 @@
 ==========================================================================================
 Nested cross-validation for estimating prediction intervals
 ==========================================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
+
 
 This example compares non-nested and nested cross-validation strategies for
 estimating prediction intervals with
-:class:`~mapie.regression_v1.CrossConformalRegressor`.
+:class:`~mapie_v1.regression.CrossConformalRegressor`.
 
 In the regular sequential method, a cross-validation parameter search is
 carried out over the entire training set.

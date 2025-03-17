@@ -2,13 +2,13 @@
 ===================================================================================
 Tutorial for conformalized quantile regression (CQR)
 ===================================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
+
 
 We will use the sklearn california housing dataset as the base for the
 comparison of the different methods available on MAPIE. Two classes will
-be used: :class:`~mapie.regression_v1.ConformalizedQuantileRegressor` for CQR.
-We use :class:`~mapie.regression_v1.CrossConformalRegressor` and
-:class:`~mapie.regression_v1.JackknifeAfterBootstrapRegressor` for the other methods.
+be used: :class:`~mapie_v1.regression.ConformalizedQuantileRegressor` for CQR.
+We use :class:`~mapie_v1.regression.CrossConformalRegressor` and
+:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor` for the other methods.
 
 For this example, the estimator will be :class:`~lightgbm.LGBMRegressor` with
 ``objective="quantile"`` as this is a necessary component for CQR, the

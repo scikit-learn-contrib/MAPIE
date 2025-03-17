@@ -2,7 +2,7 @@
 =================================================================================
 Reproducing the simulations from Kim et al. (2020)
 =================================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
+
 
 :class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor` and
 :class:`~mapie_v1.regression.CrossConformalRegressor` are used to

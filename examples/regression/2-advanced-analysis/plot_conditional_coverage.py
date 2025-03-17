@@ -2,7 +2,7 @@
 ==============================================================
 Estimating conditional coverage
 ==============================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
+
 
 This example uses :class:`~mapie_v1.regression.SplitConformalRegressor`,
 :class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor`,

@@ -2,12 +2,13 @@
 =========================================================================================
 Estimate the prediction intervals of 1D homoscedastic data
 =========================================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
+
+
 We show here how to use various MAPIE methods on data with homoscedastic data.
 
-:class:`~mapie.regression.CrossConformalRegressor`,
-:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`,
-:class:`~mapie.regression.ConformalizedQuantileRegressor`,
+:class:`~mapie_v1.regression.CrossConformalRegressor`,
+:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor`,
+:class:`~mapie_v1.regression.ConformalizedQuantileRegressor`,
 are used to estimate the prediction intervals of 1D homoscedastic
 data using different strategies.
 """

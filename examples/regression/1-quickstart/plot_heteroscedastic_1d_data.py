@@ -2,12 +2,11 @@
 ===========================================================================================
 Estimate the prediction intervals of 1D heteroscedastic data
 ===========================================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
 
 
-:class:`~mapie.regression.CrossConformalRegressor`,
-:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`,
-:class:`~mapie.regression.ConformalizedQuantileRegressor` are used
+:class:`~mapie_v1.regression.CrossConformalRegressor`,
+:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor`,
+:class:`~mapie_v1.regression.ConformalizedQuantileRegressor` are used
 to estimate the prediction intervals of 1D heteroscedastic data using
 different strategies.
 

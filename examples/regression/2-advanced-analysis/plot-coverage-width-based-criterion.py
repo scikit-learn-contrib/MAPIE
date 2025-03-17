@@ -2,11 +2,11 @@
 ===============================================================================
 Estimating coverage width based criterion
 ===============================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
 
-This example uses :class:`~mapie.regression_v1.CrossConformalRegressor`,
-:class:`~mapie.regression_v1.ConformalizedQuantileRegressor` and
-:class:`~mapie.regression_v1.JackknifeAfterBootstrapRegressor`.
+
+This example uses :class:`~mapie_v1.regression.CrossConformalRegressor`,
+:class:`~mapie_v1.regression.ConformalizedQuantileRegressor` and
+:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor`.
 :class:`~mapie.metrics` is used to estimate the coverage width
 based criterion of 1D homoscedastic data using different strategies.
 The coverage width based criterion is computed with the function
