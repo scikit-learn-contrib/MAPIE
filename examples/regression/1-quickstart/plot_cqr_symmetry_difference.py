@@ -33,15 +33,15 @@ X_train, X_conformalize, y_train, y_conformalize = train_test_split(
     X_train_conformalize, y_train_conformalize, test_size=0.3, random_state=RANDOM_STATE
 )
 
-# Define alpha level
+# Define confidence level
 confidence_level = 0.8
 
-# Fit a Gradient Boosting Regressor for quantile regression
+# Initialize a Gradient Boosting Regressor for quantile regression
 gb_reg = GradientBoostingRegressor(
     loss="quantile", alpha=0.5, random_state=RANDOM_STATE
 )
 
-# MAPIE Quantile Regressor
+# Using ConformalizedQuantileRegressor
 mapie_qr = ConformalizedQuantileRegressor(
     estimator=gb_reg, confidence_level=confidence_level)
 mapie_qr.fit(X_train, y_train)

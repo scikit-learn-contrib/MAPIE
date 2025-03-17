@@ -9,7 +9,7 @@ This example uses :class:`~mapie_v1.regression.SplitConformalRegressor`,
  with conformal scores that returns adaptive intervals i.e.
 (:class:`~mapie.conformity_scores.GammaConformityScore` and
 :class:`~mapie.conformity_scores.ResidualNormalisedScore`) as well as
-:func:`~mapie_v1.regression.ConformalizedQuantileRegressor` and
+:class:`~mapie_v1.regression.ConformalizedQuantileRegressor` and
 :class:`~mapie_v1.regression.CrossConformalRegressor.
 The conditional coverage is computed with the three
 functions that allows to estimate the conditional coverage in regression
