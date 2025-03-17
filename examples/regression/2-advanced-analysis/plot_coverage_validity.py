@@ -71,7 +71,8 @@ class StandardConformalizer():
     def _conformalize(self, X_conformalize, y_conformalize):
         # Calibrate the conformalizer to calculate q_hat
         y_conformalize_pred = self.estimator.predict(X_conformalize)
-        scores_conformalize = self.non_conformity_func(y_conformalize_pred, y_conformalize)
+        scores_conformalize = self.non_conformity_func(
+            y_conformalize_pred, y_conformalize)
         self.q_hat = self._calculate_quantile(scores_conformalize)
 
     def fit(self, X, y):
