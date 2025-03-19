@@ -1,12 +1,12 @@
 """
 ==============================================================
-Estimating conditional coverage
+Focus on local (or "conditional") coverage
 ==============================================================
 
 
 This example uses :class:`~mapie_v1.regression.SplitConformalRegressor`,
 :class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor`,
- with conformal scores that returns adaptive intervals i.e.
+with conformal scores that returns adaptive intervals i.e.
 (:class:`~mapie.conformity_scores.GammaConformityScore` and
 :class:`~mapie.conformity_scores.ResidualNormalisedScore`) as well as
 :class:`~mapie_v1.regression.ConformalizedQuantileRegressor` and

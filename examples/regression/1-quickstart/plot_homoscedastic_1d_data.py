@@ -1,6 +1,6 @@
 """
 =========================================================================================
-Estimate the prediction intervals of 1D homoscedastic data
+Use MAPIE on data with constant uncertainty
 =========================================================================================
 
 

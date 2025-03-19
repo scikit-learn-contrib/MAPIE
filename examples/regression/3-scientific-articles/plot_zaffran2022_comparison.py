@@ -1,6 +1,6 @@
 """
 =====================================================================================================
-Reproduction of part of the paper experiments of Zaffran et al. (2022)
+Adaptive conformal predictions for time series, Zaffran et al. (2022)
 =====================================================================================================
 
 

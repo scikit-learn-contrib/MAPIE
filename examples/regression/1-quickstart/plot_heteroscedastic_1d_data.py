@@ -1,6 +1,6 @@
 """
 ===========================================================================================
-Estimate the prediction intervals of 1D heteroscedastic data
+Use MAPIE on data with uneven uncertainty
 ===========================================================================================
 
 
@@ -10,7 +10,8 @@ Estimate the prediction intervals of 1D heteroscedastic data
 to estimate the prediction intervals of 1D heteroscedastic data using
 different strategies.
 
-The example clearly shows that the latter class (ConformalizedQuantileRegressor)
+The example clearly shows that
+:class:`~mapie_v1.regression.ConformalizedQuantileRegressor`
 should provide the same coverage for a lower width of intervals because it
 adapts the prediction intervals to the local heteroscedastic noise.
 """

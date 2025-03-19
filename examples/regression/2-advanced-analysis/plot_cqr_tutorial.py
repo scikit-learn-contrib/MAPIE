@@ -1,7 +1,7 @@
 """
-===================================================================================
-Tutorial for conformalized quantile regression (CQR)
-===================================================================================
+==========================================================================================================
+ConformalizedQuantileRegressor on gamma distributed data
+==========================================================================================================
 
 
 We will use the sklearn california housing dataset as the base for the
@@ -404,7 +404,7 @@ plt.show()
 
 ##############################################################################
 # None of the methods seems to
-# have conditional coverage at the target ``confidence_level`. However, we can
+# have conditional coverage at the target ``confidence_level``. However, we can
 # clearly notice that the CQR seems to better adapt to large prices. Its
 # conditional coverage is closer to the target coverage not only for higher
 # prices, but also for lower prices where the other methods have a higher

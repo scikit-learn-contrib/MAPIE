@@ -1,6 +1,6 @@
 """
 ================================================================================
-Make Conformal Predictive Distribution with MAPIE
+Conformal Predictive Distribution with MAPIE
 ================================================================================
 
 """

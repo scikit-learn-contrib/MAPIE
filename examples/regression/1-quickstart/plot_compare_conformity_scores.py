@@ -1,6 +1,6 @@
 """
 ==========================================================================================
-Estimating prediction intervals of Gamma distributed target
+Use MAPIE on data with gamma distribution
 ==========================================================================================
 
 
@@ -17,9 +17,9 @@ The data is modelled by a Random Forest model
 :class:`~sklearn.ensemble.RandomForestRegressor` with a fixed parameter set.
 The prediction intervals are determined by means of the MAPIE regressor
 :class:`~mapie_v1.regression.CrossConformalRegressor` considering two conformity scores:
-""absolute"" which
+``"absolute"`` which
 considers the absolute residuals as the conformity scores and
-"gamma" which
+``"gamma"`` which
 considers the residuals divided by the predicted means as conformity scores.
 We consider the standard CV+ resampling method.
 
@@ -91,12 +91,12 @@ X_train_conformalize, X_test, y_train_conformalize, y_test = train_test_split(
 #
 # Two models are trained with two different conformity score:
 #
-# - conformity_score = "absolute" (default
+# - ``conformity_score = "absolute"`` (default
 #   conformity score) is relevant for target positive as well as negative.
 #   The prediction interval widths are, in this case, approximately the same
 #   over the range of prediction.
 #
-# - conformity_score = "gamma" is relevant for target
+# - ``conformity_score = "gamma"`` is relevant for target
 #   following roughly a Gamma distribution. The prediction interval widths
 #   scale with the predicted value.
 
@@ -136,8 +136,8 @@ pred_int_width_absconfscore = (
 )
 
 ##############################################################################
-# Then, train the model with
-# :conformity_score = "gamma".
+# Then, train the model with:
+# `conformity_score = "gamma"`.
 mapie = CrossConformalRegressor(
     model, confidence_level=confidence_level, conformity_score="gamma"
 )
@@ -162,9 +162,9 @@ pred_int_width_gammaconfscore = (
 #
 # Once the models have been trained, we now compare the prediction intervals
 # obtained from the two conformity scores. We can see that the
-# "absolute" conformity score generates
+# ``"absolute" ``conformity score generates
 # prediction interval with almost the same width for all the predicted values.
-# Conversely, the "gamma" conformity score
+# Conversely, the ``"gamma"`` conformity score
 # yields prediction interval with width scaling with the predicted values.
 #
 # The choice of the conformity score depends on the problem we face.

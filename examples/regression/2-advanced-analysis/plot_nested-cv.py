@@ -1,6 +1,6 @@
 """
 ==========================================================================================
-Nested cross-validation for estimating prediction intervals
+Hyperparameters tuning with CrossConformalRegressor
 ==========================================================================================
 
 

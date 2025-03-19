@@ -1,6 +1,6 @@
 """
 ===========================================================================================
-Reproducing the simulations from Foygel-Barber et al. (2020)
+Predictive inference with the jackknife+, Foygel-Barber et al. (2020)
 ===========================================================================================
 
 

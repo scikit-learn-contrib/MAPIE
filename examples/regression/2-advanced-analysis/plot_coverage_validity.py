@@ -1,6 +1,6 @@
 """
 ===============================================================================
-Coverage Validity with MAPIE for Regression Task
+Coverage validity of MAPIE for regression tasks
 ===============================================================================
 
 
@@ -42,7 +42,7 @@ warnings.simplefilter("ignore", UserWarning)
 
 ##############################################################################
 # Section 1: Comparison with the split conformalizer method (light version)
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------
 #
 # We propose here to implement a lighter version of split CP by calculating
 # the quantile with a small correction according to [1].
@@ -174,7 +174,7 @@ def cumulative_average(arr):
 ##############################################################################
 # Experiment 1: Coverage Validity for given confidence_level (confidence level) and
 # n_conformalize (data points dedicated to conformalization)
-# ----------------------------------------------------------
+# --------------------------------------------------------------------------------
 #
 # To begin, we propose to use ``confidence_level=0.8`` and
 # ``n_conformalize=6`` and compare the coverage validity claim
@@ -275,7 +275,7 @@ plt.show()
 
 ##############################################################################
 # Experiment 2: Coverage validity with different random states
-# ---------------------------------------------------
+# -----------------------------------------------------------------------------
 #
 # We just propose to reproduce the previous experiment without fixing the
 # random_state. The methods therefore follow different trajectories but
@@ -341,7 +341,7 @@ plt.show()
 
 ##############################################################################
 # Section 2: Comparison with different MAPIE CP methods
-# -----------------------------------------------------
+# -----------------------------------------------------------------------------
 #
 # We propose to reproduce the previous experience with different methods of
 # the MAPIE package (prefit, prefit with asymmetrical non-conformity scores
@@ -394,7 +394,7 @@ STRATEGIES = {
 
 ##############################################################################
 # Experiment 3: Coverage with different MAPIE CP methods
-# -------------------------------------------------------
+# -----------------------------------------------------------------------------
 #
 # The methods always follow different trajectories but always achieve the
 # expected coverage.
@@ -444,7 +444,7 @@ plt.show()
 
 ##############################################################################
 # Experiment 4: Extensive experimentation on different delta and n_calib
-# ----------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------
 #
 # Here we propose to extend the experiment on different sizes of the
 # calibration dataset and target coverage.
