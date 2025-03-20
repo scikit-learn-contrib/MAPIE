@@ -210,7 +210,7 @@ mapie_aci = MapieTimeSeriesRegressor(
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 
 y_pred_enbpi_npfit, y_pis_enbpi_npfit = mapie_enbpi.predict(
-    X_test, alpha=alpha, ensemble=True, optimize_beta=True,
+    X_test, alpha=alpha, ensemble=True, 
     allow_infinite_bounds=True
 )
 y_pis_enbpi_npfit = np.clip(y_pis_enbpi_npfit, 1, 10)
@@ -233,7 +233,7 @@ mapie_aci = mapie_aci.fit(X_train, y_train)
 y_pred_aci_npfit = np.zeros(y_pred_enbpi_npfit.shape)
 y_pis_aci_npfit = np.zeros(y_pis_enbpi_npfit.shape)
 y_pred_aci_npfit[:gap], y_pis_aci_npfit[:gap, :, :] = mapie_aci.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True,
+    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, 
     allow_infinite_bounds=True
 )
 for step in range(gap, len(X_test), gap):
@@ -249,7 +249,7 @@ for step in range(gap, len(X_test), gap):
         X_test.iloc[step:(step + gap), :],
         alpha=alpha,
         ensemble=True,
-        optimize_beta=True,
+        
         allow_infinite_bounds=True
     )
     y_pis_aci_npfit[step:step + gap, :, :] = np.clip(
@@ -284,7 +284,7 @@ mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 y_pred_enbpi_pfit = np.zeros(y_pred_enbpi_npfit.shape)
 y_pis_enbpi_pfit = np.zeros(y_pis_enbpi_npfit.shape)
 y_pred_enbpi_pfit[:gap], y_pis_enbpi_pfit[:gap, :, :] = mapie_enbpi.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True,
+    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, 
     allow_infinite_bounds=True
 )
 
@@ -300,7 +300,7 @@ for step in range(gap, len(X_test), gap):
         X_test.iloc[step:(step + gap), :],
         alpha=alpha,
         ensemble=True,
-        optimize_beta=True,
+        
         allow_infinite_bounds=True
     )
     y_pis_enbpi_pfit[step:step + gap, :, :] = np.clip(
@@ -332,7 +332,7 @@ mapie_aci = mapie_aci.fit(X_train, y_train)
 y_pred_aci_pfit = np.zeros(y_pred_aci_npfit.shape)
 y_pis_aci_pfit = np.zeros(y_pis_aci_npfit.shape)
 y_pred_aci_pfit[:gap], y_pis_aci_pfit[:gap, :, :] = mapie_aci.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True,
+    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, 
     allow_infinite_bounds=True
 )
 
@@ -353,7 +353,7 @@ for step in range(gap, len(X_test), gap):
         X_test.iloc[step:(step + gap), :],
         alpha=alpha,
         ensemble=True,
-        optimize_beta=True,
+        
         allow_infinite_bounds=True
     )
     y_pis_aci_pfit[step:step + gap, :, :] = np.clip(
