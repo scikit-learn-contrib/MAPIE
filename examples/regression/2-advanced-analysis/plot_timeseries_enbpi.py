@@ -1,6 +1,6 @@
 """
 ==================================================================
-Estimating prediction intervals of time series forecast with EnbPI
+Time series: example of the EnbPI technique
 ==================================================================
 
 This example uses

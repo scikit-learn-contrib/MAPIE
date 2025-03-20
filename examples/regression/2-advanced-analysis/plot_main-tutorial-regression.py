@@ -1,7 +1,7 @@
 r"""
-==============================================================
-Tutorial for tabular regression
-==============================================================
+=======================================================================
+Comparison between conformalized quantile regressor and cross methods
+=======================================================================
 
 
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a

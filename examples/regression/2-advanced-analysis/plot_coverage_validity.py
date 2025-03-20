@@ -172,8 +172,7 @@ def cumulative_average(arr):
 
 
 ##############################################################################
-# Experiment 1: Coverage Validity for given confidence_level (confidence level) and
-# n_conformalize (data points dedicated to conformalization)
+# Experiment 1: Coverage Validity for given confidence_level and n_conformalize
 # --------------------------------------------------------------------------------
 #
 # To begin, we propose to use ``confidence_level=0.8`` and

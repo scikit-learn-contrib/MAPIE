@@ -5,7 +5,7 @@ The symmetric_correction parameter of ConformalizedQuantileRegressor
 
 
 An example plot of :class:`~mapie_v1.regression.ConformalizedQuantileRegressor`
-illustrating the impact of the symmetry parameter.
+illustrating the impact of the ``symmetric_correction`` parameter.
 """
 import numpy as np
 from matplotlib import pyplot as plt
@@ -124,9 +124,9 @@ plt.tight_layout()
 plt.show()
 
 ##############################################################################
-# The symmetric intervals (`symmetry=True`) use a combined set of residuals
-# for both bounds, while the asymmetric intervals use distinct residuals for
-# each bound, allowing for more flexible and accurate intervals that reflect
-# the heteroscedastic nature of the data. The resulting effective coverages
-# demonstrate the theoretical guarantee of the target coverage level
-# ``confidence_level``.
+# The symmetric intervals (``symmetric_correction=True``) use a combined set of residuals
+# for both bounds, while the asymmetric intervals (``symmetric_correction=False``)
+# use distinct residuals for each bound, allowing for more flexible and
+# accurate intervals that reflect the heteroscedastic nature of the data.
+# The resulting effective coverages demonstrate the theoretical guarantee of
+# the target coverage level ``confidence_level``.

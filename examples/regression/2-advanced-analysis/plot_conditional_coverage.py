@@ -186,34 +186,28 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
     print(estimated_cond_cov)
 
 ##############################################################################
-# We can see here that the global coverage is approximately the same for
-# all methods. What we want to understand is : "Are these methods good
-# adaptive conformal methods ?". For this we have the two metrics
+# The global coverage is similar for all methods. To determine if these
+# methods are good adaptive conformal methods, we use two metrics:
 # :func:`~mapie.metrics.regression_ssc_score` and :func:`~mapie.metrics.hsic`.
-# - SSC (Size Stratified Coverage) is the maximum violation of the coverage :
-# the intervals are grouped by width and the coverage is computed for each
-# group. The lower coverage is the maximum coverage violation. An adaptive
-# method is one where this maximum violation is as close as possible to the
-# global coverage. If we interpret the result for the four methods here :
-# CV+ seems to be the better one.
-# - And with the hsic correlation coefficient, we have the
-# same interpretation : :func:`~mapie.metrics.hsic` computes the correlation
-# between the coverage indicator and the interval size, a value of 0
-# translates an independence between the two.
 #
-# We would like to highlight here the misinterpretation that can be made
-# with these metrics. In fact, here CV+ with the absolute residual score
-# calculates constant intervals which, by definition, are not adaptive.
-# Therefore, it is very important to check that the intervals widths are well
-# spread before drawing conclusions (with a plot of the distribution of
-# interval widths or a visualisation of the data for example).
+# - SSC (Size Stratified Coverage): This measures the maximum violation
+# of coverage by grouping intervals by width and computing coverage for
+# each group. An adaptive method has a maximum violation close to the global
+# coverage. Among the four methods, CV+ performs the best.
 #
-# In this example, with the hsic correlation coefficient, none of the methods
-# stand out from the others. However, the SSC score for the method using the
-# gamma score is significantly worse than for CQR and ResidualNormalisedScore,
-# even though their global coverage is similar. ResidualNormalisedScore and CQR
-# are very close here, with ResidualNormalisedScore being slightly more
-# conservative.
+# HSIC (Hilbert-Schmidt Independence Criterion): This computes the
+# correlation between coverage and interval size. A value of 0 indicates
+# independence between the two.
+#
+# It's important to note that CV+ with the absolute residual score
+# calculates constant intervals, which are not adaptive. Therefore,
+# checking the distribution of interval widths is crucial before drawing conclusions.
+#
+# In this example, none of the methods stand out with the HSIC correlation coefficient.
+# However, the SSC score for the gamma score method is significantly worse than
+# for CQR and ResidualNormalisedScore, despite similar global coverage.
+# ResidualNormalisedScore and CQR are very close, with ResidualNormalisedScore
+# being slightly more conservative.
 
 
 # Visualition of the data and predictions
@@ -336,21 +330,19 @@ plt.tight_layout()
 plt.show()
 
 ##############################################################################
-# With toy datasets like this, it is easy to compare visually the methods
-# with a plot of the data and predictions.
-# As mentionned above, a histogram of the ditribution of the interval widths is
-# important to accompany the metrics. It is clear from this histogram
-# that CV+ is not adaptive, the metrics presented here should not be used
-# to evaluate its adaptivity. A wider spread of intervals indicates a more
-# adaptive method.
-# Finally, with the plot of coverage by bins of intervals grouped by widths
-# (which is the output of :func:`~mapie.metrics.regression_ssc`), we want
-# the bins to be as constant as possible around the global coverage (here 0.9).
+# With toy datasets, it's easy to visually compare methods using data and
+# prediction plots. A histogram of interval widths is crucial to accompany
+# the metrics. This histogram shows that CV+ is not adaptive, so the metrics
+# should not be used to evaluate its adaptivity. A wider spread of intervals
+# indicates a more adaptive method.
+#
+# The plot of coverage by bins of intervals grouped by widths
+# (output of :func:`~mapie.metrics.regression_ssc`) should
+# show bins as constant as possible around the global coverage (0.9).
 
-# As the previous metrics show, gamma score does not perform well in terms of
-# size stratified coverage. It either over-covers or under-covers too much.
-# For ResidualNormalisedScore and CQR, while the first one has several bins
-# with over-coverage, the second one has more under-coverage. These results
-# are confirmed by the visualisation of the data: CQR is better when the data
-# are more spread out, whereas ResidualNormalisedScore is better with small
-# intervals.
+# The gamma score does not perform well in size stratified coverage,
+# often over-covering or under-covering. ResidualNormalisedScore has
+# several bins with over-coverage, while CQR has more under-coverage.
+# Visualizing the data confirms these results: CQR performs better
+# with spread-out data, whereas ResidualNormalisedScore is better
+# with small intervals.

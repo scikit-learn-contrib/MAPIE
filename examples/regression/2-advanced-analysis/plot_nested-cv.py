@@ -4,38 +4,30 @@ Hyperparameters tuning with CrossConformalRegressor
 ==========================================================================================
 
 
-This example compares non-nested and nested cross-validation strategies for
-estimating prediction intervals with
+This example compares non-nested and nested cross-validation strategies
+when using
 :class:`~mapie_v1.regression.CrossConformalRegressor`.
 
-In the regular sequential method, a cross-validation parameter search is
-carried out over the entire training set.
-The model with the set of parameters that gives the best score is then used in
-MAPIE to estimate the prediction intervals associated with the predictions.
-A limitation of this method is that residuals used by MAPIE are computed on
-the validation dataset, which can be subject to overfitting as far as
-hyperparameter tuning is concerned.
+In the regular sequential method, a cross-validation parameter search is performed
+on the entire training set. The best model is then used in MAPIE to estimate
+prediction intervals. However, as MAPIE computes residuals on
+the validation dataset used during hyperparameter tuning, it can lead to
+overfitting. This fools MAPIE into being slightly too optimistic with confidence
+intervals.
 
-This fools MAPIE into being slightly too optimistic with confidence intervals.
 To solve this problem, an alternative option is to perform a nested
 cross-validation parameter search directly within the MAPIE estimator on each
 *out-of-fold* dataset.
-For each testing fold used by MAPIE to store residuals, an internal
-cross-validation occurs on the training fold, optimizing hyperparameters.
 This ensures that residuals seen by MAPIE are never seen by the algorithm
 beforehand. However, this method is much heavier computationally since
 it results in ``N * P`` calculations, where *N* is the number of
 *out-of-fold* models and *P* the number of parameter search cross-validations,
 versus ``N + P`` for the non-nested approach.
 
-Here, we compare the two strategies on a toy dataset. We use the Random
-Forest Regressor as a base regressor for the CV+ strategy. For the sake of
-light computation, we adopt a RandomizedSearchCV parameter search strategy
-with a low number of iterations and with a reproducible random state.
+Here, we compare the two strategies on a toy dataset.
 
 The two approaches give slightly different predictions with the nested CV
-approach estimating slightly larger prediction interval widths by a
-few percents at most (apart from a handful of exceptions).
+approach estimating larger prediction interval in average.
 
 For this example, the two approaches result in identical scores and identical
 effective coverages.

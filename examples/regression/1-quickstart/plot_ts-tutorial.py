@@ -4,7 +4,7 @@ Tutorial for time series
 ========================
 
 In this tutorial we describe how to use
-:class:`~mapie.time_series_regression.MapieTimeSeriesRegressor`
+:class:`~mapie.regression.MapieTimeSeriesRegressor`
 to estimate prediction intervals associated with time series forecast.
 
 Here, we use the Victoria electricity demand dataset used in the book
@@ -24,7 +24,8 @@ the prediction intervals associated with one-step ahead forecasts through
 the EnbPI method.
 
 As its parent class :class:`~MapieRegressor`,
-:class:`~MapieTimeSeriesRegressor` has two main arguments : "cv", and "method".
+:class:`~mapie.regression.MapieTimeSeriesRegressor` has two main arguments :
+"cv", and "method".
 In order to implement EnbPI, "method" must be set to "enbpi" (the default
 value) while "cv" must be set to the :class:`~mapie.subsample.BlockBootstrap`
 class that block bootstraps the training set.
@@ -34,8 +35,8 @@ strategy as it is more suited for time series data.
 The EnbPI method allows you update the residuals during the prediction,
 each time new observations are available so that the deterioration of
 predictions, or the increase of noise level, can be dynamically taken into
-account. It can be done with :class:`~MapieTimeSeriesRegressor` through
-the ``partial_fit`` class method called at every step.
+account. It can be done with :class:`~mapie.regression.MapieTimeSeriesRegressor`
+through the ``partial_fit`` class method called at every step.
 
 
 The ACI strategy allows you to adapt the conformal inference

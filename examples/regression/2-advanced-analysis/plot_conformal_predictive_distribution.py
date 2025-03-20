@@ -84,9 +84,9 @@ class MapieConformalPredictiveDistribution(SplitConformalRegressor):
 
 ##############################################################################
 # Now, we propose to use it with two different conformity scores -
-# :class:`~mapie.conformity_score.AbsoluteConformityScore` and
-# :class:`~mapie.conformity_score.ResidualNormalisedScore` - in split-conformal
-# inference.
+# :class:`~mapie.conformity_scores.AbsoluteConformityScore` and
+# :class:`~mapie.conformity_scores.ResidualNormalisedScore` -
+# in split-conformal inference.
 
 mapie_regressor_1 = MapieConformalPredictiveDistribution(
     estimator=LinearRegression(),

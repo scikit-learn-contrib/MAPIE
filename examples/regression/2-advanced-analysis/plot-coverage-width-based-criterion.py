@@ -10,7 +10,7 @@ This example uses :class:`~mapie_v1.regression.CrossConformalRegressor`,
 :class:`~mapie.metrics` is used to estimate the coverage width
 based criterion of 1D homoscedastic data using different strategies.
 The coverage width based criterion is computed with the function
-:func:`~mapie.metrics.coverage_width_based()`
+:func:`~mapie.metrics.coverage_width_based`
 """
 
 import os
