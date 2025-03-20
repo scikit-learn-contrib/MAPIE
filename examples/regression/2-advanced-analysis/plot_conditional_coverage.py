@@ -191,13 +191,12 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
 # :func:`~mapie.metrics.regression_ssc_score` and :func:`~mapie.metrics.hsic`.
 #
 # - SSC (Size Stratified Coverage): This measures the maximum violation
-# of coverage by grouping intervals by width and computing coverage for
-# each group. An adaptive method has a maximum violation close to the global
-# coverage. Among the four methods, CV+ performs the best.
-#
-# HSIC (Hilbert-Schmidt Independence Criterion): This computes the
-# correlation between coverage and interval size. A value of 0 indicates
-# independence between the two.
+#   of coverage by grouping intervals by width and computing coverage for
+#   each group. An adaptive method has a maximum violation close to the global
+#   coverage. Among the four methods, CV+ performs the best.
+# - HSIC (Hilbert-Schmidt Independence Criterion): This computes the
+#   correlation between coverage and interval size. A value of 0 indicates
+#   independence between the two.
 #
 # It's important to note that CV+ with the absolute residual score
 # calculates constant intervals, which are not adaptive. Therefore,
