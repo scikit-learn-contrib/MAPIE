@@ -70,7 +70,7 @@ X_train, X_conformalize, y_train, y_conformalize = train_test_split(
 # 1. Use a neural network
 # -----------------------------------------------------------------------------
 # 1.1 Pre-train a neural network
-#
+# -----------------------------------------------------------------------------
 #
 # For this example, we will train a
 # :class:`~sklearn.neural_network.MLPRegressor` for
@@ -84,7 +84,7 @@ est_mlp.fit(X_train.reshape(-1, 1), y_train)
 
 ##############################################################################
 # 1.2 Use MAPIE to conformalize the models
-#
+# -----------------------------------------------------------------------------
 #
 # We will now proceed to conformalize the models using MAPIE. To this aim, we set
 # `prefit=True` so that we use the model that we already trained prior.
@@ -104,7 +104,7 @@ coverage = regression_coverage_score(y_test, y_pis[:, 0, 0], y_pis[:, 1, 0])
 
 ##############################################################################
 # 1.3 Plot results
-#
+# -----------------------------------------------------------------------------
 #
 # In order to view the results, we will plot the predictions of the
 # the multi-layer perceptron (MLP) with their prediction intervals calculated with
@@ -171,7 +171,7 @@ plt.show()
 # 2. Use LGBM models
 # -----------------------------------------------------------------------------
 # 2.1 Pre-train LGBM models
-#
+# -----------------------------------------------------------------------------
 #
 # For this example, we will train multiple LGBMRegressor with a
 # quantile objective as this is a requirement to perform conformalized
@@ -192,7 +192,7 @@ for alpha_ in [(1 - confidence_level) / 2, (1 + confidence_level) / 2, 0.5]:
 
 ##############################################################################
 # 2.2 Use MAPIE to conformalize the models
-#
+# -----------------------------------------------------------------------------
 #
 # We will now proceed to conformalize the models using MAPIE. To this aim, we set
 # `prefit=True` so that we use the models that we already trained prior.
@@ -215,7 +215,7 @@ coverage_cqr = regression_coverage_score(
 
 ##############################################################################
 # 2.3 Plot results
-#
+# -----------------------------------------------------------------------------
 #
 # As fdor the MLP predictions, we plot the predictions of the LGBMRegressor
 # with their prediction intervals calculated with
