@@ -1,20 +1,22 @@
 """
 ==============================================================
-[Pre-v1] Estimating conditional coverage
+Focus on local (or "conditional") coverage
 ==============================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
-**This notebook hasn't been updated to the new API yet.**
 
-This example uses :func:`~mapie.regression.MapieRegressor` with conformal
-scores that returns adaptive intervals i.e.
+
+This example uses :class:`~mapie_v1.regression.SplitConformalRegressor`,
+:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor`,
+with conformal scores that returns adaptive intervals i.e.
 (:class:`~mapie.conformity_scores.GammaConformityScore` and
 :class:`~mapie.conformity_scores.ResidualNormalisedScore`) as well as
-:func:`~mapie.regression.MapieQuantileRegressor`.
+:class:`~mapie_v1.regression.ConformalizedQuantileRegressor` and
+:class:`~mapie_v1.regression.CrossConformalRegressor.
 The conditional coverage is computed with the three
 functions that allows to estimate the conditional coverage in regression
 :func:`~mapie.metrics.regression_ssc`,
 :func:`~mapie.metrics.regression_ssc_score` and :func:`~mapie.metrics.hsic`.
 """
+
 import warnings
 from typing import Tuple, Union
 
@@ -22,21 +24,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from lightgbm import LGBMRegressor
+from sklearn.model_selection import train_test_split
 
 from mapie._typing import NDArray
 from mapie.conformity_scores import (GammaConformityScore,
                                      ResidualNormalisedScore)
 from mapie.metrics import (hsic, regression_coverage_score_v2, regression_ssc,
                            regression_ssc_score)
-from mapie.regression import MapieQuantileRegressor, MapieRegressor
-from mapie.subsample import Subsample
+from mapie_v1.regression import (
+    SplitConformalRegressor,
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor,
+    ConformalizedQuantileRegressor
+)
 
 warnings.filterwarnings("ignore")
 
-random_state = 42
+RANDOM_STATE = 42
 split_size = 0.20
 alpha = 0.05
-rng = np.random.default_rng(random_state)
+rng = np.random.default_rng(RANDOM_STATE)
 
 
 # Functions for generating our dataset
@@ -84,71 +91,81 @@ def sin_with_controlled_noise(
 
 # Data generation
 min_x, max_x, n_samples = 0, 10, 3000
-X_train, y_train = sin_with_controlled_noise(min_x, max_x, n_samples)
+X_train_conformalize, y_train_conformalize = sin_with_controlled_noise(
+    min_x, max_x, n_samples)
 X_test, y_test = sin_with_controlled_noise(min_x, max_x,
                                            int(n_samples * split_size))
 
 # Definition of our base models
-model = LGBMRegressor(random_state=random_state, alpha=0.5)
+model = LGBMRegressor(random_state=RANDOM_STATE, alpha=0.5)
 model_quant = LGBMRegressor(
             objective="quantile",
             alpha=0.5,
-            random_state=random_state
+            random_state=RANDOM_STATE
 )
 
 
 # Definition of the experimental set up
 STRATEGIES = {
-    "CV+": {
-        "method": "plus",
-        "cv": 10,
+    "cv_plus": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="plus", cv=10),
     },
-    "JK+ab_Gamma": {
-        "method": "plus",
-        "cv": Subsample(n_resamplings=100),
-        "conformity_score": GammaConformityScore()
-    },
-    "ResidualNormalised": {
-        "cv": "split",
-        "conformity_score": ResidualNormalisedScore(
-            residual_estimator=LGBMRegressor(
-                alpha=0.5,
-                random_state=random_state),
-            split_size=0.7,
-            random_state=random_state
+    "jackknife_plus_ab": {
+        "class": JackknifeAfterBootstrapRegressor,
+        "init_params": dict(
+            method="plus", resampling=100,
+            conformity_score=GammaConformityScore(),
         )
     },
-    "CQR": {
-        "method": "quantile", "cv": "split", "alpha": alpha
+    "residual_normalised": {
+        "class": SplitConformalRegressor,
+        "init_params": dict(
+            prefit=False,
+            conformity_score=ResidualNormalisedScore(
+                residual_estimator=LGBMRegressor(alpha=0.5, random_state=RANDOM_STATE),
+                split_size=0.7,
+                random_state=RANDOM_STATE,
+            ),
+        ),
+    },
+    "conformalized_quantile_regression": {
+        "class": ConformalizedQuantileRegressor,
+        "init_params": dict(),
     },
 }
 
-y_pred, intervals, coverage, cond_coverage, coef_corr = {}, {}, {}, {}, {}
+y_pred, y_pis, coverage, cond_coverage, coef_corr = {}, {}, {}, {}, {}
 num_bins = 10
-for strategy, params in STRATEGIES.items():
-    # computing predictions
-    if strategy == "CQR":
-        mapie = MapieQuantileRegressor(
-            model_quant,
-            **params
+for strategy_name, strategy_params in STRATEGIES.items():
+    init_params = strategy_params["init_params"]
+    class_ = strategy_params["class"]
+    if strategy_name in ["conformalized_quantile_regression", "residual_normalised"]:
+        X_train, X_conformalize, y_train, y_conformalize = (
+            train_test_split(
+                X_train_conformalize, y_train_conformalize,
+                test_size=0.3, random_state=RANDOM_STATE
+            )
         )
-        mapie.fit(X_train, y_train, random_state=random_state)
-        y_pred[strategy], intervals[strategy] = mapie.predict(X_test)
-    else:
-        mapie = MapieRegressor(model, **params, random_state=random_state)
+        mapie = class_(model_quant, confidence_level=0.95, **init_params)
         mapie.fit(X_train, y_train)
-        y_pred[strategy], intervals[strategy] = mapie.predict(
-            X_test, alpha=alpha
+        mapie.conformalize(X_conformalize, y_conformalize)
+        y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test)
+    else:
+        mapie = class_(
+            model, confidence_level=0.95, random_state=RANDOM_STATE, **init_params
         )
+        mapie.fit_conformalize(X_train_conformalize, y_train_conformalize)
+        y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test)
 
     # computing metrics
-    coverage[strategy] = regression_coverage_score_v2(
-        y_test, intervals[strategy]
+    coverage[strategy_name] = regression_coverage_score_v2(
+        y_test, y_pis[strategy_name]
     )
-    cond_coverage[strategy] = regression_ssc_score(
-        y_test, intervals[strategy], num_bins=num_bins
+    cond_coverage[strategy_name] = regression_ssc_score(
+        y_test, y_pis[strategy_name], num_bins=1
     )
-    coef_corr[strategy] = hsic(y_test, intervals[strategy])
+    coef_corr[strategy_name] = hsic(y_test, y_pis[strategy_name])
 
 
 # Visualisation of the estimated conditional coverage
@@ -169,34 +186,27 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
     print(estimated_cond_cov)
 
 ##############################################################################
-# We can see here that the global coverage is approximately the same for
-# all methods. What we want to understand is : "Are these methods good
-# adaptive conformal methods ?". For this we have the two metrics
+# The global coverage is similar for all methods. To determine if these
+# methods are good adaptive conformal methods, we use two metrics:
 # :func:`~mapie.metrics.regression_ssc_score` and :func:`~mapie.metrics.hsic`.
-# - SSC (Size Stratified Coverage) is the maximum violation of the coverage :
-# the intervals are grouped by width and the coverage is computed for each
-# group. The lower coverage is the maximum coverage violation. An adaptive
-# method is one where this maximum violation is as close as possible to the
-# global coverage. If we interpret the result for the four methods here :
-# CV+ seems to be the better one.
-# - And with the hsic correlation coefficient, we have the
-# same interpretation : :func:`~mapie.metrics.hsic` computes the correlation
-# between the coverage indicator and the interval size, a value of 0
-# translates an independence between the two.
 #
-# We would like to highlight here the misinterpretation that can be made
-# with these metrics. In fact, here CV+ with the absolute residual score
-# calculates constant intervals which, by definition, are not adaptive.
-# Therefore, it is very important to check that the intervals widths are well
-# spread before drawing conclusions (with a plot of the distribution of
-# interval widths or a visualisation of the data for example).
+# - SSC (Size Stratified Coverage): This measures the maximum violation
+#   of coverage by grouping intervals by width and computing coverage for
+#   each group. An adaptive method has a maximum violation close to the global
+#   coverage. Among the four methods, CV+ performs the best.
+# - HSIC (Hilbert-Schmidt Independence Criterion): This computes the
+#   correlation between coverage and interval size. A value of 0 indicates
+#   independence between the two.
 #
-# In this example, with the hsic correlation coefficient, none of the methods
-# stand out from the others. However, the SSC score for the method using the
-# gamma score is significantly worse than for CQR and ResidualNormalisedScore,
-# even though their global coverage is similar. ResidualNormalisedScore and CQR
-# are very close here, with ResidualNormalisedScore being slightly more
-# conservative.
+# It's important to note that CV+ with the absolute residual score
+# calculates constant intervals, which are not adaptive. Therefore,
+# checking the distribution of interval widths is crucial before drawing conclusions.
+#
+# In this example, none of the methods stand out with the HSIC correlation coefficient.
+# However, the SSC score for the gamma score method is significantly worse than
+# for CQR and ResidualNormalisedScore, despite similar global coverage.
+# ResidualNormalisedScore and CQR are very close, with ResidualNormalisedScore
+# being slightly more conservative.
 
 
 # Visualition of the data and predictions
@@ -284,7 +294,7 @@ def plot_coverage_by_width(y, intervals, num_bins, alpha, title="", ax=None):
 
 
 max_width = np.max([
-    np.abs(intervals[strategy][:, 0, 0] - intervals[strategy][:, 1, 0])
+    np.abs(y_pis[strategy][:, 0, 0] - y_pis[strategy][:, 1, 0])
     for strategy in STRATEGIES.keys()])
 
 fig_distr, axs_distr = plt.subplots(nrows=2, ncols=2, figsize=(12, 10))
@@ -295,16 +305,16 @@ for ax_viz, ax_hist, ax_distr, strategy in zip(
     axs_viz.flat, axs_hist.flat, axs_distr.flat, STRATEGIES.keys()
 ):
     plot_intervals(
-        X_test, y_test, y_pred[strategy], intervals[strategy],
+        X_test, y_test, y_pred[strategy], y_pis[strategy],
         title=strategy, ax=ax_viz
     )
     plot_coverage_by_width(
-        y_test, intervals[strategy],
+        y_test, y_pis[strategy],
         num_bins=num_bins, alpha=alpha, title=strategy, ax=ax_hist
     )
 
     ax_distr.hist(
-        np.abs(intervals[strategy][:, 0, 0] - intervals[strategy][:, 1, 0]),
+        np.abs(y_pis[strategy][:, 0, 0] - y_pis[strategy][:, 1, 0]),
         bins=num_bins
     )
     ax_distr.set_xlabel("Interval width")
@@ -319,21 +329,19 @@ plt.tight_layout()
 plt.show()
 
 ##############################################################################
-# With toy datasets like this, it is easy to compare visually the methods
-# with a plot of the data and predictions.
-# As mentionned above, a histogram of the ditribution of the interval widths is
-# important to accompany the metrics. It is clear from this histogram
-# that CV+ is not adaptive, the metrics presented here should not be used
-# to evaluate its adaptivity. A wider spread of intervals indicates a more
-# adaptive method.
-# Finally, with the plot of coverage by bins of intervals grouped by widths
-# (which is the output of :func:`~mapie.metrics.regression_ssc`), we want
-# the bins to be as constant as possible around the global coverage (here 0.9).
+# With toy datasets, it's easy to visually compare methods using data and
+# prediction plots. A histogram of interval widths is crucial to accompany
+# the metrics. This histogram shows that CV+ is not adaptive, so the metrics
+# should not be used to evaluate its adaptivity. A wider spread of intervals
+# indicates a more adaptive method.
+#
+# The plot of coverage by bins of intervals grouped by widths
+# (output of :func:`~mapie.metrics.regression_ssc`) should
+# show bins as constant as possible around the global coverage (0.9).
 
-# As the previous metrics show, gamma score does not perform well in terms of
-# size stratified coverage. It either over-covers or under-covers too much.
-# For ResidualNormalisedScore and CQR, while the first one has several bins
-# with over-coverage, the second one has more under-coverage. These results
-# are confirmed by the visualisation of the data: CQR is better when the data
-# are more spread out, whereas ResidualNormalisedScore is better with small
-# intervals.
+# The gamma score does not perform well in size stratified coverage,
+# often over-covering or under-covering. ResidualNormalisedScore has
+# several bins with over-coverage, while CQR has more under-coverage.
+# Visualizing the data confirms these results: CQR performs better
+# with spread-out data, whereas ResidualNormalisedScore is better
+# with small intervals.
