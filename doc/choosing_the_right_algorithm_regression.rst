@@ -1,5 +1,5 @@
 ############################################
-Choosing the right algorithm
+Choose the right algorithm
 ############################################
 
 Following is a simple decision tree to help you you getting started quickly with MAPIE.
