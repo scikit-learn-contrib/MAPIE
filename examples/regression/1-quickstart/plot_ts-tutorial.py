@@ -4,7 +4,7 @@ Tutorial for time series
 ========================
 
 In this tutorial we describe how to use
-:class:`~mapie.time_series_regression.MapieTimeSeriesRegressor`
+:class:`~mapie.regression.MapieTimeSeriesRegressor`
 to estimate prediction intervals associated with time series forecast.
 
 Here, we use the Victoria electricity demand dataset used in the book
@@ -24,7 +24,8 @@ the prediction intervals associated with one-step ahead forecasts through
 the EnbPI method.
 
 As its parent class :class:`~MapieRegressor`,
-:class:`~MapieTimeSeriesRegressor` has two main arguments : "cv", and "method".
+:class:`~mapie.regression.MapieTimeSeriesRegressor` has two main arguments :
+"cv", and "method".
 In order to implement EnbPI, "method" must be set to "enbpi" (the default
 value) while "cv" must be set to the :class:`~mapie.subsample.BlockBootstrap`
 class that block bootstraps the training set.
@@ -34,8 +35,8 @@ strategy as it is more suited for time series data.
 The EnbPI method allows you update the residuals during the prediction,
 each time new observations are available so that the deterioration of
 predictions, or the increase of noise level, can be dynamically taken into
-account. It can be done with :class:`~MapieTimeSeriesRegressor` through
-the ``partial_fit`` class method called at every step.
+account. It can be done with :class:`~mapie.regression.MapieTimeSeriesRegressor`
+through the ``partial_fit`` class method called at every step.
 
 
 The ACI strategy allows you to adapt the conformal inference
@@ -210,7 +211,7 @@ mapie_aci = MapieTimeSeriesRegressor(
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 
 y_pred_enbpi_npfit, y_pis_enbpi_npfit = mapie_enbpi.predict(
-    X_test, alpha=alpha, ensemble=True, optimize_beta=True,
+    X_test, alpha=alpha, ensemble=True,
     allow_infinite_bounds=True
 )
 y_pis_enbpi_npfit = np.clip(y_pis_enbpi_npfit, 1, 10)
@@ -233,7 +234,7 @@ mapie_aci = mapie_aci.fit(X_train, y_train)
 y_pred_aci_npfit = np.zeros(y_pred_enbpi_npfit.shape)
 y_pis_aci_npfit = np.zeros(y_pis_enbpi_npfit.shape)
 y_pred_aci_npfit[:gap], y_pis_aci_npfit[:gap, :, :] = mapie_aci.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True,
+    X_test.iloc[:gap, :], alpha=alpha, ensemble=True,
     allow_infinite_bounds=True
 )
 for step in range(gap, len(X_test), gap):
@@ -249,7 +250,6 @@ for step in range(gap, len(X_test), gap):
         X_test.iloc[step:(step + gap), :],
         alpha=alpha,
         ensemble=True,
-        optimize_beta=True,
         allow_infinite_bounds=True
     )
     y_pis_aci_npfit[step:step + gap, :, :] = np.clip(
@@ -284,7 +284,7 @@ mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 y_pred_enbpi_pfit = np.zeros(y_pred_enbpi_npfit.shape)
 y_pis_enbpi_pfit = np.zeros(y_pis_enbpi_npfit.shape)
 y_pred_enbpi_pfit[:gap], y_pis_enbpi_pfit[:gap, :, :] = mapie_enbpi.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True,
+    X_test.iloc[:gap, :], alpha=alpha, ensemble=True,
     allow_infinite_bounds=True
 )
 
@@ -300,7 +300,6 @@ for step in range(gap, len(X_test), gap):
         X_test.iloc[step:(step + gap), :],
         alpha=alpha,
         ensemble=True,
-        optimize_beta=True,
         allow_infinite_bounds=True
     )
     y_pis_enbpi_pfit[step:step + gap, :, :] = np.clip(
@@ -332,7 +331,7 @@ mapie_aci = mapie_aci.fit(X_train, y_train)
 y_pred_aci_pfit = np.zeros(y_pred_aci_npfit.shape)
 y_pis_aci_pfit = np.zeros(y_pis_aci_npfit.shape)
 y_pred_aci_pfit[:gap], y_pis_aci_pfit[:gap, :, :] = mapie_aci.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True, optimize_beta=True,
+    X_test.iloc[:gap, :], alpha=alpha, ensemble=True,
     allow_infinite_bounds=True
 )
 
@@ -353,7 +352,6 @@ for step in range(gap, len(X_test), gap):
         X_test.iloc[step:(step + gap), :],
         alpha=alpha,
         ensemble=True,
-        optimize_beta=True,
         allow_infinite_bounds=True
     )
     y_pis_aci_pfit[step:step + gap, :, :] = np.clip(

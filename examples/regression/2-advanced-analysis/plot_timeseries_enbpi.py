@@ -1,6 +1,6 @@
 """
 ==================================================================
-Estimating prediction intervals of time series forecast with EnbPI
+Time series: example of the EnbPI technique
 ==================================================================
 
 This example uses
@@ -152,7 +152,6 @@ for step in range(step_size, len(X_test), step_size):
         X_test.iloc[step:(step + step_size), :],
         alpha=alpha,
         ensemble=True,
-        optimize_beta=True,
     )
 coverage_pfit_enbpi = regression_coverage_score(
     y_test, y_pis_pfit_enbpi[:, 0, 0], y_pis_pfit_enbpi[:, 1, 0]
