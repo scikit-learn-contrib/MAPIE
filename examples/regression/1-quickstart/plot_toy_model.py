@@ -1,6 +1,6 @@
 """
 =====================================================================================
-Plotting MAPIE prediction intervals with a toy dataset
+Use MAPIE to plot prediction intervals
 =====================================================================================
 An example plot of :class:`~mapie_v1.regression.SplitConformalRegressor` used
 in the Quickstart.
