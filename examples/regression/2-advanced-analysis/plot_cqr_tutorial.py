@@ -1,35 +1,20 @@
 """
-===================================================================================
-[Pre-v1] Tutorial for conformalized quantile regression (CQR)
-===================================================================================
-**Note: we recently released MAPIE v1.0.0, which introduces breaking API changes.**
-**This notebook hasn't been updated to the new API yet.**
+==========================================================================================================
+ConformalizedQuantileRegressor on gamma distributed data
+==========================================================================================================
 
 
 We will use the sklearn california housing dataset as the base for the
 comparison of the different methods available on MAPIE. Two classes will
-be used: :class:`~mapie.quantile_regression.MapieQuantileRegressor` for CQR
-and :class:`~mapie.regression.MapieRegressor` for the other methods.
+be used: :class:`~mapie_v1.regression.ConformalizedQuantileRegressor` for CQR.
+We use :class:`~mapie_v1.regression.CrossConformalRegressor` and
+:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor` for the other methods.
 
 For this example, the estimator will be :class:`~lightgbm.LGBMRegressor` with
 ``objective="quantile"`` as this is a necessary component for CQR, the
 regression needs to be from a quantile regressor.
 
-For the conformalized quantile regression (CQR), we will use a split-conformal
-method meaning that we will split the training set into a training and
-calibration set. This means using
-:class:`~mapie.quantile_regression.MapieQuantileRegressor` with ``cv="split"``
-and the ``alpha`` parameter already defined. Recall that the ``alpha`` is
-`1 - target coverage`.
-
-For the other type of conformal methods, they are chosen with the
-parameter ``method`` of :class:`~mapie.regression.MapieRegressor` and the
-parameter ``cv`` is the strategy for cross-validation. In this method, to use a
-"leave-one-out" strategy, one would have to use ``cv=-1`` where a positive
-value would indicate the number of folds for a cross-validation strategy.
-Note that for the jackknife+ after boostrap, we need to use the
-class :class:`~mapie.subsample.Subsample` (note that the `alpha` parameter is
-defined in the ``predict`` for these methods).
+We then compare the coverage and the intervals width.
 """
 
 import warnings
@@ -46,11 +31,13 @@ from sklearn.model_selection import KFold, RandomizedSearchCV, train_test_split
 
 from mapie.metrics import (regression_coverage_score,
                            regression_mean_width_score)
-from mapie.regression import MapieQuantileRegressor, MapieRegressor
-from mapie.subsample import Subsample
+from mapie_v1.regression import (
+    ConformalizedQuantileRegressor,
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor)
 
-random_state = 18
-rng = np.random.default_rng(random_state)
+RANDOM_STATE = 1
+rng = np.random.default_rng(RANDOM_STATE)
 round_to = 3
 
 warnings.filterwarnings("ignore")
@@ -61,7 +48,7 @@ warnings.filterwarnings("ignore")
 # The target variable of this dataset is the median house value for the
 # California districts. This dataset is composed of 8 features, including
 # variables such as the age of the house, the median income of the
-# neighborhood, the average numbe rooms or bedrooms or even the location in
+# neighborhood, the average number rooms or bedrooms or even the location in
 # latitude and longitude. In total there are around 20k observations.
 # As the value is expressed in thousands of $ we will multiply it by 100 for
 # better visualization (note that this will not affect the results).
@@ -95,14 +82,14 @@ plt.show()
 
 ##############################################################################
 # Let's now create the different splits for the dataset, with a training,
-# calibration and test set. Recall that the calibration set is used for
-# calibrating the prediction intervals.
+# conformalize and test set. Remember that the conformalize set is used to
+# conformalize the prediction intervals.
 
 
-X_train, X_test, y_train, y_test = train_test_split(
+X_train_conformalize, X_test, y_train_conformalize, y_test = train_test_split(
     X,
     y['MedHouseVal'],
-    random_state=random_state
+    random_state=RANDOM_STATE
 )
 
 
@@ -119,7 +106,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 estimator = LGBMRegressor(
     objective='quantile',
     alpha=0.5,
-    random_state=random_state,
+    random_state=RANDOM_STATE,
     verbose=-1
 )
 params_distributions = dict(
@@ -134,9 +121,9 @@ optim_model = RandomizedSearchCV(
     n_jobs=-1,
     n_iter=10,
     cv=KFold(n_splits=5, shuffle=True),
-    random_state=random_state
+    random_state=RANDOM_STATE
 )
-optim_model.fit(X_train, y_train)
+optim_model.fit(X_train_conformalize, y_train_conformalize)
 estimator = optim_model.best_estimator_
 
 
@@ -145,7 +132,7 @@ estimator = optim_model.best_estimator_
 # --------------------------------------------------------------------------
 # We will now proceed to compare the different methods available in MAPIE used
 # for uncertainty quantification on regression settings. For this tutorial we
-# will compare the "naive", "Jackknife plus after Bootstrap", "cv plus" and
+# will compare the "cv", "Jackknife plus after Bootstrap", "cv plus" and
 # "conformalized quantile regression". Please have a look at the theoretical
 # description of the documentation for more details on these methods.
 #
@@ -232,68 +219,70 @@ def plot_prediction_intervals(
 
 
 ##############################################################################
-# We proceed to using MAPIE to return the predictions and prediction intervals.
-# We will use an ``α=0.2``, this means a target coverage of 0.8
-# (recall that this parameter needs to be initialized directly when setting
-# :class:`~mapie.quantile_regression.MapieQuantileRegressor` and when using
-# :class:`~mapie.regression.MapieRegressor`, it needs to be set in the
-# ``predict``).
-# Note that for the CQR, there are two options for ``cv``:
-#
-# * ``cv="split"`` (by default), the split-conformal where MAPIE trains the
-#   model on a training set and then calibrates on the calibration set.
-# * ``cv="prefit"`` meaning that you can train your models with the correct
-#   quantile values (must be given in the following order:
-#   ``(α, 1-(α/2), 0.5)`` and given to MAPIE as an iterable
-#   object. (Check the examples for how to use prefit in MAPIE)
-#
-# Additionally, note that there is a list of accepted models by
-# :class:`~mapie.quantile_regression.MapieQuantileRegressor`
-# (``quantile_estimator_params``) and that we will use symmetrical residuals.
+# Here, wWe use MAPIE to return the predictions and prediction intervals.
+# We will use an ``confidence_level=CONFIDENCE_LEVEL``, (this is the target
+# coverage for our prediction intervals).
+# Note that that we will use symmetrical residuals for the CQR.
 
 
 STRATEGIES = {
-    "naive": {"method": "naive"},
-    "cv_plus": {"method": "plus", "cv": 10},
-    "jackknife_plus_ab": {"method": "plus", "cv": Subsample(n_resamplings=50)},
-    "cqr": {"method": "quantile", "cv": "split", "alpha": 0.2},
+    "cv": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="base", cv=10),
+    },
+    "cv_plus": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="plus", cv=10),
+    },
+    "jackknife_plus_ab": {
+        "class": JackknifeAfterBootstrapRegressor,
+        "init_params": dict(method="plus", resampling=50),
+    },
+    "conformalized_quantile_regression": {
+        "class": ConformalizedQuantileRegressor,
+        "init_params": dict(),
+    },
 }
+CONFIDENCE_LEVEL = 0.8
 y_pred, y_pis = {}, {}
 y_test_sorted, y_pred_sorted, lower_bound, upper_bound = {}, {}, {}, {}
 coverage, width = {}, {}
-for strategy, params in STRATEGIES.items():
-    if strategy == "cqr":
-        mapie = MapieQuantileRegressor(estimator, **params)
-        mapie.fit(
-            X_train,
-            y_train,
-            calib_size=0.3,
-            random_state=random_state
+for strategy_name, strategy_params in STRATEGIES.items():
+    init_params = strategy_params["init_params"]
+    class_ = strategy_params["class"]
+    if strategy_name == "conformalized_quantile_regression":
+        X_train, X_conformalize, y_train, y_conformalize = (
+            train_test_split(
+                X_train_conformalize, y_train_conformalize,
+                test_size=0.3, random_state=RANDOM_STATE
+            )
         )
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
-    else:
-        mapie = MapieRegressor(
-            estimator,
-            test_size=0.3,
-            random_state=random_state,
-            **params
-        )
+        mapie = class_(estimator, confidence_level=CONFIDENCE_LEVEL, **init_params)
         mapie.fit(X_train, y_train)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.2)
-    (
-        y_test_sorted[strategy],
-        y_pred_sorted[strategy],
-        lower_bound[strategy],
-        upper_bound[strategy]
-    ) = sort_y_values(y_test, y_pred[strategy], y_pis[strategy])
-    coverage[strategy] = regression_coverage_score(
-        y_test,
-        y_pis[strategy][:, 0, 0],
-        y_pis[strategy][:, 1, 0]
+        mapie.conformalize(X_conformalize, y_conformalize)
+        y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(
+            X_test, symmetric_correction=True)
+    else:
+        mapie = class_(
+            estimator, confidence_level=CONFIDENCE_LEVEL,
+            random_state=RANDOM_STATE, **init_params
         )
-    width[strategy] = regression_mean_width_score(
-        y_pis[strategy][:, 0, 0],
-        y_pis[strategy][:, 1, 0]
+        mapie.fit_conformalize(X_train_conformalize, y_train_conformalize)
+        y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test)
+    (
+        y_test_sorted[strategy_name],
+        y_pred_sorted[strategy_name],
+        lower_bound[strategy_name],
+        upper_bound[strategy_name]
+    ) = sort_y_values(y_test, y_pred[strategy_name], y_pis[strategy_name])
+    coverage[strategy_name] = regression_coverage_score(
+        y_test,
+        y_pis[strategy_name][:, 0, 0],
+        y_pis[strategy_name][:, 1, 0]
+        )
+    width[strategy_name] = regression_mean_width_score(
+        y_pis[strategy_name][:, 0, 0],
+        y_pis[strategy_name][:, 1, 0]
         )
 
 
@@ -308,16 +297,16 @@ num_plots = rng.choice(
     )
 fig, axs = plt.subplots(2, 2, figsize=(15, 13))
 coords = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
-for strategy, coord in zip(STRATEGIES.keys(), coords):
+for strategy_name, coord in zip(STRATEGIES.keys(), coords):
     plot_prediction_intervals(
-        strategy,
+        strategy_name,
         coord,
-        y_test_sorted[strategy],
-        y_pred_sorted[strategy],
-        lower_bound[strategy],
-        upper_bound[strategy],
-        coverage[strategy],
-        width[strategy],
+        y_test_sorted[strategy_name],
+        y_pred_sorted[strategy_name],
+        lower_bound[strategy_name],
+        upper_bound[strategy_name],
+        coverage[strategy_name],
+        width[strategy_name],
         num_plots
         )
 lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
@@ -336,8 +325,7 @@ plt.show()
 ##############################################################################
 # We notice more adaptability of the prediction intervals for the
 # conformalized quantile regression while the other methods have fixed
-# interval width. Indeed, as the prices get larger, the prediction intervals
-# are increased with the increase in price.
+# interval width.
 
 
 def get_coverages_widths_by_bins(
@@ -355,11 +343,11 @@ def get_coverages_widths_by_bins(
     or width per bin.
     """
     cuts = []
-    cuts_ = pd.qcut(y_test["naive"], bins).unique()[:-1]
+    cuts_ = pd.qcut(y_test["cv"], bins).unique()[:-1]
     for item in cuts_:
         cuts.append(item.left)
     cuts.append(cuts_[-1].right)
-    cuts.append(np.max(y_test["naive"])+1)
+    cuts.append(np.max(y_test["cv"])+1)
     recap = {}
     for i in range(len(cuts) - 1):
         cut1, cut2 = cuts[i], cuts[i+1]
@@ -405,7 +393,7 @@ binned_data = get_coverages_widths_by_bins(
 
 
 binned_data.T.plot.bar(figsize=(12, 4))
-plt.axhline(0.80, ls="--", color="k")
+plt.axhline(CONFIDENCE_LEVEL, ls="--", color="k")
 plt.ylabel("Conditional coverage")
 plt.xlabel("Binned house prices")
 plt.xticks(rotation=345)
@@ -415,8 +403,8 @@ plt.show()
 
 
 ##############################################################################
-# What we observe from these results is that none of the methods seems to
-# have conditional coverage at the target ``1 - α``. However, we can
+# None of the methods seems to
+# have conditional coverage at the target ``confidence_level``. However, we can
 # clearly notice that the CQR seems to better adapt to large prices. Its
 # conditional coverage is closer to the target coverage not only for higher
 # prices, but also for lower prices where the other methods have a higher
@@ -445,7 +433,6 @@ plt.show()
 
 ##############################################################################
 # When observing the values of the the interval width we again see what was
-# observed in the previous graphs with the interval widths. We can again see
-# that the prediction intervals are larger as the price of the houses
-# increases, interestingly, it's important to note that the prediction
+# observed in the previous graphs with the interval widths. It's important to
+# note that the prediction
 # intervals are shorter when the estimator is more certain.
