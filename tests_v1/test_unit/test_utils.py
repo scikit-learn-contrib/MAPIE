@@ -166,30 +166,44 @@ class TestTrainConformalizeTestSplit:
         X, y = dataset
         with pytest.raises(ValueError):
             train_conformalize_test_split(
-                X, y, train_size=1, conformalize_size=1, test_size=1, random_state=RANDOM_STATE)
+                X, y, train_size=1, conformalize_size=1,
+                test_size=1, random_state=RANDOM_STATE
+            )
 
     def test_error_wrong_float(self, dataset):
         X, y = dataset
         with pytest.raises(ValueError):
             train_conformalize_test_split(
-                X, y, train_size=0.5, conformalize_size=0.5, test_size=0.5, random_state=RANDOM_STATE)
+                X, y, train_size=0.5, conformalize_size=0.5,
+                test_size=0.5, random_state=RANDOM_STATE
+            )
 
     def test_error_wrong_int_and_float(self, dataset):
         X, y = dataset
         with pytest.raises(TypeError):
             train_conformalize_test_split(
-                X, y, train_size=5, conformalize_size=0.5, test_size=0.5, random_state=RANDOM_STATE)
+                X, y, train_size=5, conformalize_size=0.5,
+                test_size=0.5, random_state=RANDOM_STATE
+            )
 
     def test_3_floats(self, dataset):
         X, y = dataset
-        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = train_conformalize_test_split(
-                X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=RANDOM_STATE)
+        (
+            X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+        ) = train_conformalize_test_split(
+                X, y, train_size=0.6, conformalize_size=0.2,
+                test_size=0.2, random_state=RANDOM_STATE
+        )
         assert len(X_train) == 60
         assert len(X_conformalize) == 20
         assert len(X_test) == 20
 
     def test_shuffle_false(self, dataset):
         X, y = dataset
-        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = train_conformalize_test_split(
-                X, y, train_size=60, conformalize_size=20, test_size=20, random_state=RANDOM_STATE, shuffle=False)
+        (
+            X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+        ) = train_conformalize_test_split(
+                X, y, train_size=60, conformalize_size=20,
+                test_size=20, random_state=RANDOM_STATE, shuffle=False
+        )
         assert np.array_equal(np.concatenate((y_train, y_conformalize, y_test)), y)
