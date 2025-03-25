@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mapie_v1._utils import (
+from MAPIE.mapie_v1.utils import (
     prepare_params,
     prepare_fit_params_and_sample_weight,
     transform_confidence_level_to_alpha_list,
@@ -48,7 +48,7 @@ class TestTransformConfidenceLevelToAlphaList:
 
     def test_transform_confidence_level_to_alpha_is_called(self):
         with patch(
-            'mapie_v1._utils.transform_confidence_level_to_alpha'
+            'mapie_v1.utils.transform_confidence_level_to_alpha'
         ) as mock_transform_confidence_level_to_alpha:
             transform_confidence_level_to_alpha_list([0.2, 0.3])
             mock_transform_confidence_level_to_alpha.assert_called()
@@ -103,7 +103,7 @@ def test_prepare_params(params, expected):
 
 class TestPrepareFitParamsAndSampleWeight:
     def test_uses_prepare_params(self):
-        with patch('mapie_v1._utils.prepare_params') as mock_prepare_params:
+        with patch('mapie_v1.utils.prepare_params') as mock_prepare_params:
             prepare_fit_params_and_sample_weight({"param1": 1})
             mock_prepare_params.assert_called()
 
