@@ -4,7 +4,9 @@ from collections.abc import Iterable as IterableType
 
 from mapie._typing import ArrayLike, NDArray
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import train_test_split
 from decimal import Decimal
+from math import isclose
 
 
 def transform_confidence_level_to_alpha(
@@ -114,3 +116,72 @@ def raise_error_if_fit_called_in_prefit_mode(
             "The fit method must be skipped when the prefit parameter is set to True. "
             "Use the conformalize method directly after instanciation."
         )
+
+
+def train_conformalize_test_split(
+    X: NDArray,
+    y: NDArray,
+    train_size: Union[float, int],
+    conformalize_size: Union[float, int],
+    test_size: Union[float, int],
+    random_state: int = None,
+    shuffle: bool = True,
+    stratify: list = None,
+) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
+
+    train_size, test_size_after_split = _set_proportions(
+        train_size, conformalize_size, test_size, len(X)
+    )
+
+    X_train, X_test_conformalize, y_train, y_test_conformalize = train_test_split(
+        X, y,
+        train_size=train_size,
+        random_state=random_state,
+        shuffle=shuffle, stratify=stratify
+    )
+
+    X_conformalize, X_test, y_conformalize, y_test = train_test_split(
+        X_test_conformalize, y_test_conformalize,
+        test_size=test_size_after_split,
+        random_state=random_state,
+        shuffle=shuffle, stratify=stratify
+    )
+
+    return X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+
+
+# Tell that train_test_split is not a test.
+setattr(train_test_split, "__test__", False)
+
+
+def _set_proportions(
+    train_size: Union[float, int],
+    conformalize_size: Union[float, int],
+    test_size: Union[float, int],
+    dataset_size: int,
+) -> Tuple[float, float]:
+
+    count_input_proportions = sum([test_size, train_size, conformalize_size])
+
+    if isinstance(train_size, float) and \
+            isinstance(conformalize_size, float) and \
+            isinstance(test_size, float):
+        if not isclose(1, count_input_proportions):
+            raise ValueError("The sum of the input proportions must be == 1.")
+        test_size_after_split = test_size/(1-train_size)
+
+    elif isinstance(train_size, int) and \
+            isinstance(conformalize_size, int) and \
+            isinstance(test_size, int):
+        if count_input_proportions != dataset_size:
+            raise ValueError(
+                "The sum of the input proportions \
+                    must be equal to the size of the dataset.")
+        test_size_after_split = test_size
+
+    else:
+        raise TypeError(
+            "train_size, conformalize_size and test_size \
+                should be all int or all float.")
+
+    return train_size, test_size_after_split
