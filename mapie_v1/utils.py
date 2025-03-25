@@ -128,6 +128,100 @@ def train_conformalize_test_split(
     shuffle: bool = True,
     stratify: list = None,
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
+    """Split arrays or matrices into train, conformalize and test subsets.
+
+    Quick utility that wraps two calls to sklearn.model_selection.train_test_split
+    for splitting data into 3 sets in one line.
+
+    We advise to give the major part of the data points to the train set
+    and at least 200 data points to the conformalize set.
+
+    Parameters
+    ----------
+    X : indexable with same type and length / shape[0] than "y"
+        Allowed inputs are lists, numpy arrays, scipy-sparse
+        matrices or pandas dataframes.
+
+    y : indexable with same type and length / shape[0] than "X"
+        Allowed inputs are lists, numpy arrays, scipy-sparse
+        matrices or pandas dataframes.
+
+    train_size : float or int, default=None
+        If float, should be between 0.0 and 1.0 and represent the
+        proportion of the dataset to include in the train split. If
+        int, represents the absolute number of train samples.
+
+    conformalize_size : float or int, default=None
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the test split. If int, represents the
+        absolute number of test samples.
+
+    test_size : float or int, default=None
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the test split. If int, represents the
+        absolute number of test samples.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the shuffling applied to the data before applying the split.
+        Pass an int for reproducible output across multiple function calls.
+        See :term:`Glossary <random_state>`.
+
+    shuffle : bool, default=True
+        Whether or not to shuffle the data before splitting. If shuffle=False
+        then stratify must be None.
+
+    stratify : array-like, default=None
+        If not None, data is split in a stratified fashion, using this as
+        the class labels.
+        Read more in the :ref:`User Guide <stratification>`.
+
+    Returns
+    -------
+    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test :
+        6 array-like splits of inputs.
+        output types are the same as the input types.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from sklearn.datasets import make_regression
+    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> X, y = np.arange(10).reshape((5, 2)), range(5)
+    >>> X
+    array([[0, 1],
+        [2, 3],
+        [4, 5],
+        [6, 7],
+        [8, 9]])
+    >>> list(y)
+    [0, 1, 2, 3, 4]
+    >>> (
+    ...     X_train, X_conformalize, X_test,
+    ...     y_train, y_conformalize, y_test
+    ... ) = train_conformalize_test_split(
+    ...     X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=1
+    ... )
+    >>> X_train
+    array([[8, 9],
+        [0, 1],
+        [6, 7]])
+    >>> X_conformalize
+    array([[2, 3]])
+    >>> X_test
+    array([[4, 5]])
+    >>> y_train
+    [4, 0, 3]
+    >>> y_conformalize
+    [1]
+    >>> y_test
+    [2]
+
+    >>> train_conformalize_test_split(
+    ...     X, y, train_size=0.6, random_state=1)
+    (array([[8, 9],
+        [0, 1],
+        [6, 7]]), array([[2, 3]]), array([[4, 5]]), [4, 0, 3], [1], [2])
+    """
 
     train_size, test_size_after_split = _set_proportions(
         train_size, conformalize_size, test_size, len(X)
