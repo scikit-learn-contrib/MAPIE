@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from sklearn.datasets import make_regression
 
 from mapie_v1.utils import (
     prepare_params,
@@ -13,6 +14,7 @@ from mapie_v1.utils import (
     raise_error_if_previous_method_not_called,
     raise_error_if_method_already_called,
     raise_error_if_fit_called_in_prefit_mode,
+    train_conformalize_test_split
 )
 from unittest.mock import patch
 
@@ -145,3 +147,49 @@ class TestRaiseErrorIfFitCalledInPrefitMode:
 
     def test_does_nothing_when_not_in_prefit_mode(self):
         assert raise_error_if_fit_called_in_prefit_mode(False) is None
+
+
+RANDOM_STATE = 1
+
+
+@pytest.fixture(scope="module")
+def dataset():
+    X, y = make_regression(
+        n_samples=100, n_features=2, noise=1.0, random_state=RANDOM_STATE
+    )
+    return X, y
+
+
+class TestTrainConformalizeTestSplit:
+
+    def test_error_wrong_int(self, dataset):
+        X, y = dataset
+        with pytest.raises(ValueError):
+            train_conformalize_test_split(
+                X, y, train_size=1, conformalize_size=1, test_size=1, random_state=RANDOM_STATE)
+
+    def test_error_wrong_float(self, dataset):
+        X, y = dataset
+        with pytest.raises(ValueError):
+            train_conformalize_test_split(
+                X, y, train_size=0.5, conformalize_size=0.5, test_size=0.5, random_state=RANDOM_STATE)
+
+    def test_error_wrong_int_and_float(self, dataset):
+        X, y = dataset
+        with pytest.raises(TypeError):
+            train_conformalize_test_split(
+                X, y, train_size=5, conformalize_size=0.5, test_size=0.5, random_state=RANDOM_STATE)
+
+    def test_3_floats(self, dataset):
+        X, y = dataset
+        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = train_conformalize_test_split(
+                X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=RANDOM_STATE)
+        assert len(X_train) == 60
+        assert len(X_conformalize) == 20
+        assert len(X_test) == 20
+
+    def test_shuffle_false(self, dataset):
+        X, y = dataset
+        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = train_conformalize_test_split(
+                X, y, train_size=60, conformalize_size=20, test_size=20, random_state=RANDOM_STATE, shuffle=False)
+        assert np.array_equal(np.concatenate((y_train, y_conformalize, y_test)), y)
