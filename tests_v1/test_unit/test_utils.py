@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from MAPIE.mapie_v1.utils import (
+from mapie_v1.utils import (
     prepare_params,
     prepare_fit_params_and_sample_weight,
     transform_confidence_level_to_alpha_list,
