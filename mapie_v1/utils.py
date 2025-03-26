@@ -215,19 +215,24 @@ def train_conformalize_test_split(
     [2]
     """
 
-    train_size, test_size_after_split = _set_proportions(
+    _check_train_conf_test_proportions(
         train_size, conformalize_size, test_size, len(X)
     )
 
-    X_train, X_test_conformalize, y_train, y_test_conformalize = train_test_split(
+    X_train, X_conformalize_test, y_train, y_conformalize_test = train_test_split(
         X, y,
         train_size=train_size,
         random_state=random_state,
         shuffle=shuffle, stratify=stratify
     )
 
+    if isinstance(train_size, float):
+        test_size_after_split = test_size/(1-train_size)
+    else:
+        test_size_after_split = test_size
+
     X_conformalize, X_test, y_conformalize, y_test = train_test_split(
-        X_test_conformalize, y_test_conformalize,
+        X_conformalize_test, y_conformalize_test,
         test_size=test_size_after_split,
         random_state=random_state,
         shuffle=shuffle, stratify=stratify
@@ -236,11 +241,7 @@ def train_conformalize_test_split(
     return X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
 
 
-# Tell that train_test_split is not a test.
-setattr(train_test_split, "__test__", False)
-
-
-def _set_proportions(
+def _check_train_conf_test_proportions(
     train_size: Union[float, int],
     conformalize_size: Union[float, int],
     test_size: Union[float, int],
@@ -253,21 +254,18 @@ def _set_proportions(
             isinstance(conformalize_size, float) and \
             isinstance(test_size, float):
         if not isclose(1, count_input_proportions):
-            raise ValueError("The sum of the input proportions must be == 1.")
-        test_size_after_split = test_size/(1-train_size)
+            raise ValueError("When using floats, train_size + \
+                             conformalize_size + test_size must be equal to 1.")
 
     elif isinstance(train_size, int) and \
             isinstance(conformalize_size, int) and \
             isinstance(test_size, int):
         if count_input_proportions != dataset_size:
-            raise ValueError(
-                "The sum of the input proportions \
-                    must be equal to the size of the dataset.")
-        test_size_after_split = test_size
+            raise ValueError("When using integers, train_size + \
+                             conformalize_size + test_size must be equal \
+                             to the size of the input data.")
 
     else:
         raise TypeError(
             "train_size, conformalize_size and test_size \
-                should be all int or all float.")
-
-    return train_size, test_size_after_split
+                should be either all int or all float.")
