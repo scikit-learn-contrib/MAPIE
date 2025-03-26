@@ -130,7 +130,7 @@ def train_conformalize_test_split(
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
     """Split arrays or matrices into train, conformalize and test subsets.
 
-    Quick utility that wraps two calls to sklearn.model_selection.train_test_split
+    Quick utility similar to sklearn.model_selection.train_test_split
     for splitting data into 3 sets in one line.
 
     We advise to give the major part of the data points to the train set
@@ -146,17 +146,17 @@ def train_conformalize_test_split(
         Allowed inputs are lists, numpy arrays, scipy-sparse
         matrices or pandas dataframes.
 
-    train_size : float or int, default=None
+    train_size : float or int
         If float, should be between 0.0 and 1.0 and represent the
         proportion of the dataset to include in the train split. If
         int, represents the absolute number of train samples.
 
-    conformalize_size : float or int, default=None
+    conformalize_size : float or int
         If float, should be between 0.0 and 1.0 and represent the proportion
         of the dataset to include in the test split. If int, represents the
         absolute number of test samples.
 
-    test_size : float or int, default=None
+    test_size : float or int
         If float, should be between 0.0 and 1.0 and represent the proportion
         of the dataset to include in the test split. If int, represents the
         absolute number of test samples.
@@ -164,7 +164,6 @@ def train_conformalize_test_split(
     random_state : int, RandomState instance or None, default=None
         Controls the shuffling applied to the data before applying the split.
         Pass an int for reproducible output across multiple function calls.
-        See :term:`Glossary <random_state>`.
 
     shuffle : bool, default=True
         Whether or not to shuffle the data before splitting. If shuffle=False
@@ -173,7 +172,6 @@ def train_conformalize_test_split(
     stratify : array-like, default=None
         If not None, data is split in a stratified fashion, using this as
         the class labels.
-        Read more in the :ref:`User Guide <stratification>`.
 
     Returns
     -------
@@ -215,12 +213,6 @@ def train_conformalize_test_split(
     [1]
     >>> y_test
     [2]
-
-    >>> train_conformalize_test_split(
-    ...     X, y, train_size=0.6, random_state=1)
-    (array([[8, 9],
-        [0, 1],
-        [6, 7]]), array([[2, 3]]), array([[4, 5]]), [4, 0, 3], [1], [2])
     """
 
     train_size, test_size_after_split = _set_proportions(
