@@ -187,10 +187,10 @@ def train_conformalize_test_split(
     >>> X, y = np.arange(10).reshape((5, 2)), range(5)
     >>> X
     array([[0, 1],
-        [2, 3],
-        [4, 5],
-        [6, 7],
-        [8, 9]])
+           [2, 3],
+           [4, 5],
+           [6, 7],
+           [8, 9]])
     >>> list(y)
     [0, 1, 2, 3, 4]
     >>> (
@@ -201,8 +201,8 @@ def train_conformalize_test_split(
     ... )
     >>> X_train
     array([[8, 9],
-        [0, 1],
-        [6, 7]])
+           [0, 1],
+           [6, 7]])
     >>> X_conformalize
     array([[2, 3]])
     >>> X_test
