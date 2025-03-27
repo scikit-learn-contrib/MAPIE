@@ -46,5 +46,4 @@ Contributors
 * Leonardo Garma <leonardo.garma@gmail.com>
 * Mohammed Jawhar <mohammedjawhar365@gmail.com>
 * Syed Affan <saffand03@gmail.com>
-* Cyprien Bertran <C-BdB>
 To be continued ...
