@@ -24,12 +24,12 @@ import numpy as np
 import scipy
 from lightgbm import LGBMRegressor
 from matplotlib import pyplot as plt
-from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
 
 from mapie._typing import NDArray
 from mapie.metrics import regression_coverage_score
 from mapie_v1.regression import SplitConformalRegressor, ConformalizedQuantileRegressor
+from mapie_v1.utils import train_conformalize_test_split
 
 warnings.filterwarnings("ignore")
 
@@ -56,13 +56,11 @@ n_samples = 10000
 X = np.linspace(0, 1, n_samples)
 y = f(X) + rng.normal(0, sigma, n_samples)
 
-# Train/validation/test split
-X_train_conformalize, X_test, y_train_conformalize, y_test = train_test_split(
-    X, y, test_size=1 / 10, random_state=RANDOM_STATE
-)
-X_train, X_conformalize, y_train, y_conformalize = train_test_split(
-    X_train_conformalize, y_train_conformalize,
-    test_size=1 / 9, random_state=RANDOM_STATE
+# Train/conformalize/test split
+(
+    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+) = train_conformalize_test_split(
+    X, y, train_size=0.8, conformalize_size=0.1, test_size=0.1, random_state=RANDOM_STATE
 )
 
 

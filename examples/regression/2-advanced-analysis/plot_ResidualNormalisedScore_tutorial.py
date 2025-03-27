@@ -23,6 +23,7 @@ from sklearn.model_selection import train_test_split
 from mapie.conformity_scores import ResidualNormalisedScore
 from mapie.metrics import regression_coverage_score_v2, regression_ssc_score
 from mapie_v1.regression import SplitConformalRegressor
+from mapie_v1.utils import train_conformalize_test_split
 
 warnings.filterwarnings("ignore")
 
@@ -64,17 +65,13 @@ plt.show()
 
 np.array(X)
 np.array(y)
-X_train_conformalize, X_test, y_train_conformalize, y_test = train_test_split(
-    X,
-    y,
-    random_state=RANDOM_STATE,
-    test_size=0.02
+
+(
+    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+) = train_conformalize_test_split(
+    X, y, train_size=0.7, conformalize_size=0.28, test_size=0.02, random_state=RANDOM_STATE
 )
-X_train, X_conformalize, y_train, y_conformalize = train_test_split(
-    X_train_conformalize,
-    y_train_conformalize,
-    random_state=RANDOM_STATE
-)
+
 X_conformalize_prefit, X_res, y_conformalize_prefit, y_res = train_test_split(
     X_conformalize,
     y_conformalize,
