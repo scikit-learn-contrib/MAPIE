@@ -5,7 +5,7 @@ History
 0.9.x (2025-xx-xx)
 ------------------
 
-* Add train_conformalize_train_split()
+* Add train_conformalize_train_split public utility
 
 0.9.2 (2025-15-01)
 ------------------

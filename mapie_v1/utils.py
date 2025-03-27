@@ -9,6 +9,153 @@ from decimal import Decimal
 from math import isclose
 
 
+def train_conformalize_test_split(
+    X: NDArray,
+    y: NDArray,
+    train_size: Union[float, int],
+    conformalize_size: Union[float, int],
+    test_size: Union[float, int],
+    random_state: int = None,
+    shuffle: bool = True,
+) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
+    """Split arrays or matrices into train, conformalize and test subsets.
+
+    Utility similar to sklearn.model_selection.train_test_split
+    for splitting data into 3 sets.
+
+    We advise to give the major part of the data points to the train set
+    and at least 200 data points to the conformalize set.
+
+    Parameters
+    ----------
+    X : indexable with same type and length / shape[0] than "y"
+        Allowed inputs are lists, numpy arrays, scipy-sparse
+        matrices or pandas dataframes.
+
+    y : indexable with same type and length / shape[0] than "X"
+        Allowed inputs are lists, numpy arrays, scipy-sparse
+        matrices or pandas dataframes.
+
+    train_size : float or int
+        If float, should be between 0.0 and 1.0 and represent the
+        proportion of the dataset to include in the train split. If
+        int, represents the absolute number of train samples.
+
+    conformalize_size : float or int
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the conformalize split. If int, represents the
+        absolute number of test samples.
+
+    test_size : float or int
+        If float, should be between 0.0 and 1.0 and represent the proportion
+        of the dataset to include in the test split. If int, represents the
+        absolute number of test samples.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the shuffling applied to the data before applying the split.
+        Pass an int for reproducible output across multiple function calls.
+
+    shuffle : bool, default=True
+        Whether or not to shuffle the data before splitting.
+
+    Returns
+    -------
+    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test :
+        6 array-like splits of inputs.
+        output types are the same as the input types.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from sklearn.datasets import make_regression
+    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> X, y = np.arange(10).reshape((5, 2)), range(5)
+    >>> X
+    array([[0, 1],
+           [2, 3],
+           [4, 5],
+           [6, 7],
+           [8, 9]])
+    >>> list(y)
+    [0, 1, 2, 3, 4]
+    >>> (
+    ...     X_train, X_conformalize, X_test,
+    ...     y_train, y_conformalize, y_test
+    ... ) = train_conformalize_test_split(
+    ...     X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=1
+    ... )
+    >>> X_train
+    array([[8, 9],
+           [0, 1],
+           [6, 7]])
+    >>> X_conformalize
+    array([[2, 3]])
+    >>> X_test
+    array([[4, 5]])
+    >>> y_train
+    [4, 0, 3]
+    >>> y_conformalize
+    [1]
+    >>> y_test
+    [2]
+    """
+
+    _check_train_conf_test_proportions(
+        train_size, conformalize_size, test_size, len(X)
+    )
+
+    X_train, X_conformalize_test, y_train, y_conformalize_test = train_test_split(
+        X, y,
+        train_size=train_size,
+        random_state=random_state,
+        shuffle=shuffle,
+    )
+
+    if isinstance(train_size, float):
+        test_size_after_split = test_size/(1-train_size)
+    else:
+        test_size_after_split = test_size
+
+    X_conformalize, X_test, y_conformalize, y_test = train_test_split(
+        X_conformalize_test, y_conformalize_test,
+        test_size=test_size_after_split,
+        random_state=random_state,
+        shuffle=shuffle,
+    )
+
+    return X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+
+
+def _check_train_conf_test_proportions(
+    train_size: Union[float, int],
+    conformalize_size: Union[float, int],
+    test_size: Union[float, int],
+    dataset_size: int,
+) -> Tuple[float, float]:
+
+    count_input_proportions = sum([test_size, train_size, conformalize_size])
+
+    if isinstance(train_size, float) and \
+            isinstance(conformalize_size, float) and \
+            isinstance(test_size, float):
+        if not isclose(1, count_input_proportions):
+            raise ValueError("When using floats, train_size + \
+                             conformalize_size + test_size must be equal to 1.")
+
+    elif isinstance(train_size, int) and \
+            isinstance(conformalize_size, int) and \
+            isinstance(test_size, int):
+        if count_input_proportions != dataset_size:
+            raise ValueError("When using integers, train_size + \
+                             conformalize_size + test_size must be equal \
+                             to the size of the input data.")
+
+    else:
+        raise TypeError(
+            "train_size, conformalize_size and test_size \
+                should be either all int or all float.")
+
+
 def transform_confidence_level_to_alpha(
     confidence_level: float,
 ) -> float:
@@ -116,156 +263,3 @@ def raise_error_if_fit_called_in_prefit_mode(
             "The fit method must be skipped when the prefit parameter is set to True. "
             "Use the conformalize method directly after instanciation."
         )
-
-
-def train_conformalize_test_split(
-    X: NDArray,
-    y: NDArray,
-    train_size: Union[float, int],
-    conformalize_size: Union[float, int],
-    test_size: Union[float, int],
-    random_state: int = None,
-    shuffle: bool = True,
-    stratify: list = None,
-) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
-    """Split arrays or matrices into train, conformalize and test subsets.
-
-    Quick utility similar to sklearn.model_selection.train_test_split
-    for splitting data into 3 sets in one line.
-
-    We advise to give the major part of the data points to the train set
-    and at least 200 data points to the conformalize set.
-
-    Parameters
-    ----------
-    X : indexable with same type and length / shape[0] than "y"
-        Allowed inputs are lists, numpy arrays, scipy-sparse
-        matrices or pandas dataframes.
-
-    y : indexable with same type and length / shape[0] than "X"
-        Allowed inputs are lists, numpy arrays, scipy-sparse
-        matrices or pandas dataframes.
-
-    train_size : float or int
-        If float, should be between 0.0 and 1.0 and represent the
-        proportion of the dataset to include in the train split. If
-        int, represents the absolute number of train samples.
-
-    conformalize_size : float or int
-        If float, should be between 0.0 and 1.0 and represent the proportion
-        of the dataset to include in the test split. If int, represents the
-        absolute number of test samples.
-
-    test_size : float or int
-        If float, should be between 0.0 and 1.0 and represent the proportion
-        of the dataset to include in the test split. If int, represents the
-        absolute number of test samples.
-
-    random_state : int, RandomState instance or None, default=None
-        Controls the shuffling applied to the data before applying the split.
-        Pass an int for reproducible output across multiple function calls.
-
-    shuffle : bool, default=True
-        Whether or not to shuffle the data before splitting. If shuffle=False
-        then stratify must be None.
-
-    stratify : array-like, default=None
-        If not None, data is split in a stratified fashion, using this as
-        the class labels.
-
-    Returns
-    -------
-    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test :
-        6 array-like splits of inputs.
-        output types are the same as the input types.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from sklearn.datasets import make_regression
-    >>> from mapie_v1.utils import train_conformalize_test_split
-    >>> X, y = np.arange(10).reshape((5, 2)), range(5)
-    >>> X
-    array([[0, 1],
-           [2, 3],
-           [4, 5],
-           [6, 7],
-           [8, 9]])
-    >>> list(y)
-    [0, 1, 2, 3, 4]
-    >>> (
-    ...     X_train, X_conformalize, X_test,
-    ...     y_train, y_conformalize, y_test
-    ... ) = train_conformalize_test_split(
-    ...     X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=1
-    ... )
-    >>> X_train
-    array([[8, 9],
-           [0, 1],
-           [6, 7]])
-    >>> X_conformalize
-    array([[2, 3]])
-    >>> X_test
-    array([[4, 5]])
-    >>> y_train
-    [4, 0, 3]
-    >>> y_conformalize
-    [1]
-    >>> y_test
-    [2]
-    """
-
-    _check_train_conf_test_proportions(
-        train_size, conformalize_size, test_size, len(X)
-    )
-
-    X_train, X_conformalize_test, y_train, y_conformalize_test = train_test_split(
-        X, y,
-        train_size=train_size,
-        random_state=random_state,
-        shuffle=shuffle, stratify=stratify
-    )
-
-    if isinstance(train_size, float):
-        test_size_after_split = test_size/(1-train_size)
-    else:
-        test_size_after_split = test_size
-
-    X_conformalize, X_test, y_conformalize, y_test = train_test_split(
-        X_conformalize_test, y_conformalize_test,
-        test_size=test_size_after_split,
-        random_state=random_state,
-        shuffle=shuffle, stratify=stratify
-    )
-
-    return X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
-
-
-def _check_train_conf_test_proportions(
-    train_size: Union[float, int],
-    conformalize_size: Union[float, int],
-    test_size: Union[float, int],
-    dataset_size: int,
-) -> Tuple[float, float]:
-
-    count_input_proportions = sum([test_size, train_size, conformalize_size])
-
-    if isinstance(train_size, float) and \
-            isinstance(conformalize_size, float) and \
-            isinstance(test_size, float):
-        if not isclose(1, count_input_proportions):
-            raise ValueError("When using floats, train_size + \
-                             conformalize_size + test_size must be equal to 1.")
-
-    elif isinstance(train_size, int) and \
-            isinstance(conformalize_size, int) and \
-            isinstance(test_size, int):
-        if count_input_proportions != dataset_size:
-            raise ValueError("When using integers, train_size + \
-                             conformalize_size + test_size must be equal \
-                             to the size of the input data.")
-
-    else:
-        raise TypeError(
-            "train_size, conformalize_size and test_size \
-                should be either all int or all float.")
