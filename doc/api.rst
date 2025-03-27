@@ -88,7 +88,7 @@ Utils (from mapie_v1)
 
 .. autosummary::
    :toctree: generated/
-   :template: class.rst
+   :template: function.rst
 
    mapie_v1.utils.train_conformalize_test_split
 
