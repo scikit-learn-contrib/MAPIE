@@ -13,7 +13,7 @@ from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import MapieRegressor, MapieQuantileRegressor
 from mapie.utils import check_estimator_fit_predict
 from mapie_v1.conformity_scores._utils import check_and_select_conformity_score
-from mapie_v1._utils import (
+from mapie_v1.utils import (
     transform_confidence_level_to_alpha_list,
     check_if_param_in_allowed_values,
     check_cv_not_string,
