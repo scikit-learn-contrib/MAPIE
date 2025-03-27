@@ -14,7 +14,11 @@ from mapie.conformity_scores import BaseClassificationScore
 from mapie_v1._utils import (
     transform_confidence_level_to_alpha_list,
     prepare_params,
-    cast_predictions_to_ndarray_tuple, cast_point_predictions_to_ndarray,
+    cast_predictions_to_ndarray_tuple,
+    cast_point_predictions_to_ndarray,
+    raise_error_if_previous_method_not_called,
+    raise_error_if_method_already_called,
+    raise_error_if_fit_called_in_prefit_mode,
 )
 from mapie_v1.conformity_scores._utils import check_and_select_conformity_score
 
@@ -46,6 +50,8 @@ class SplitConformalClassifier:
             BaseClassificationScore
         )
         self._prefit = prefit
+        self._is_fitted = prefit
+        self._is_conformalized = False
 
         # Note to developers: to implement this v1 class without touching the
         # v0 backend, we're for now using a hack. We always set cv="prefit",
@@ -66,14 +72,15 @@ class SplitConformalClassifier:
         y_train: ArrayLike,
         fit_params: Optional[dict] = None,
     ) -> Self:
-        # Known issue to the following hack: we do not perform extensive checks,
-        # as they are done in _mapie_classifier.fit. Those checks are probably
-        # too extensive given MAPIE maturity anyway.
-        if not self._prefit:
-            cloned_estimator = clone(self._estimator)
-            fit_params_ = prepare_params(fit_params)
-            cloned_estimator.fit(X_train, y_train, **fit_params_)
-            self._mapie_classifier.estimator = cloned_estimator
+        raise_error_if_fit_called_in_prefit_mode(self._prefit)
+        raise_error_if_method_already_called("fit", self._is_fitted)
+
+        cloned_estimator = clone(self._estimator)
+        fit_params_ = prepare_params(fit_params)
+        cloned_estimator.fit(X_train, y_train, **fit_params_)
+        self._mapie_classifier.estimator = cloned_estimator
+
+        self._is_fitted = True
         return self
 
     def conformalize(
@@ -86,12 +93,24 @@ class SplitConformalClassifier:
         Specify that predict_params are passed to predict AND predict_proba,
         and are used in .conformalize but also in .predict_set and .predict
         """
+        raise_error_if_previous_method_not_called(
+            "conformalize",
+            "fit",
+            self._is_fitted,
+        )
+        raise_error_if_method_already_called(
+            "conformalize",
+            self._is_conformalized,
+        )
+
         self._predict_params = prepare_params(predict_params)
         self._mapie_classifier.fit(
             X_conformalize,
             y_conformalize,
             predict_params=self._predict_params,
         )
+
+        self._is_conformalized = True
         return self
 
     def predict_set(
@@ -105,6 +124,11 @@ class SplitConformalClassifier:
         """
         Shapes: (n, ) and (n, n_class, n_confidence_levels)
         """
+        raise_error_if_previous_method_not_called(
+            "predict_set",
+            "conformalize",
+            self._is_conformalized,
+        )
         conformity_score_params_ = prepare_params(conformity_score_params)
         predictions = self._mapie_classifier.predict(
             X,
@@ -115,6 +139,11 @@ class SplitConformalClassifier:
         return cast_predictions_to_ndarray_tuple(predictions)
 
     def predict(self, X: ArrayLike) -> NDArray:
+        raise_error_if_previous_method_not_called(
+            "predict",
+            "conformalize",
+            self._is_conformalized,
+        )
         predictions = self._mapie_classifier.predict(
             X,
             alpha=None,
