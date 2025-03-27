@@ -23,11 +23,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
 
 from mapie.conformity_scores import (AbsoluteConformityScore,
                                      ResidualNormalisedScore)
 from mapie_v1.regression import SplitConformalRegressor
+from mapie_v1.utils import train_conformalize_test_split
 
 warnings.filterwarnings('ignore')
 
@@ -43,12 +43,13 @@ RANDOM_STATE = 15
 X, y = make_regression(
     n_samples=1000, n_features=1, noise=20, random_state=RANDOM_STATE
 )
-X_train_conformalize, X_test, y_train_conformalize, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=RANDOM_STATE
-)
 
-X_train, X_conformalize, y_train, y_conformalize = train_test_split(
-    X_train_conformalize, y_train_conformalize, test_size=0.3, random_state=RANDOM_STATE
+(
+    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+) = train_conformalize_test_split(
+    X, y,
+    train_size=0.6, conformalize_size=0.2, test_size=0.2,
+    random_state=RANDOM_STATE
 )
 
 
