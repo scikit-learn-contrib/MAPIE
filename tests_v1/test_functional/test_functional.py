@@ -1,29 +1,21 @@
-"""
-Testing the main functionalities of the API as seen from a user point-of-view.
-New tests here should be added wisely.
-Group tests in a class if more than one test is needed for a given functionality.
-Be careful of test time. Testing varied scenarios is more important than
-trying to test all scenarios.
-Write black-box tests (no mocks): don't test implementation details.
-"""
-
 import numpy as np
 import pytest
-from sklearn.datasets import make_regression
+from sklearn.datasets import make_regression, make_classification
 from sklearn.linear_model import LinearRegression, QuantileRegressor
-from sklearn.dummy import DummyRegressor
+from sklearn.dummy import DummyRegressor, DummyClassifier
 from sklearn.model_selection import train_test_split
 from mapie_v1.regression import (
     SplitConformalRegressor,
     CrossConformalRegressor,
     ConformalizedQuantileRegressor, JackknifeAfterBootstrapRegressor,
 )
+from mapie_v1.classification import SplitConformalClassifier
 
 RANDOM_STATE = 1
 
 
 @pytest.fixture(scope="module")
-def dataset():
+def dataset_regression():
     X, y = make_regression(
         n_samples=500, n_features=2, noise=1.0, random_state=RANDOM_STATE
     )
@@ -36,8 +28,23 @@ def dataset():
     return X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
 
 
-def test_scr_same_predictions_prefit_not_prefit(dataset) -> None:
-    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
+@pytest.fixture(scope="module")
+def dataset_classification():
+    X, y = make_classification(
+        n_samples=500, n_informative=5, n_classes=4, random_state=RANDOM_STATE,
+    )
+    X_train, X_conf_test, y_train, y_conf_test = train_test_split(
+        X, y, random_state=RANDOM_STATE
+    )
+    X_conformalize, X_test, y_conformalize, y_test = train_test_split(
+        X_conf_test, y_conf_test, random_state=RANDOM_STATE
+    )
+    return X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+
+
+def test_scr_same_predictions_prefit_not_prefit(dataset_regression) -> None:
+    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = (
+        dataset_regression)
     regressor = LinearRegression()
     regressor.fit(X_train, y_train)
     scr_prefit = SplitConformalRegressor(estimator=regressor, prefit=True)
@@ -50,17 +57,41 @@ def test_scr_same_predictions_prefit_not_prefit(dataset) -> None:
     np.testing.assert_equal(predictions_scr_prefit, predictions_scr_not_prefit)
 
 
-class TestWrongMethodsOrderRaisesError:
-    @pytest.mark.parametrize(
-        "split_technique",
-        [SplitConformalRegressor, ConformalizedQuantileRegressor]
-    )
-    def test_split_technique_with_prefit_false(self, split_technique, dataset):
+@pytest.mark.parametrize(
+    "split_technique,predict_method,dataset,estimator_class",
+    [
+        (
+            SplitConformalRegressor,
+            "predict_interval",
+            "dataset_regression",
+            DummyRegressor
+        ),
+        (
+            ConformalizedQuantileRegressor,
+            "predict_interval",
+            "dataset_regression",
+            QuantileRegressor
+        ),
+        (
+            SplitConformalClassifier,
+            "predict_set",
+            "dataset_classification",
+            DummyClassifier
+        )
+    ]
+)
+class TestWrongMethodsOrderRaisesErrorForSplitTechniques:
+    def test_with_prefit_false(
+        self,
+        split_technique,
+        predict_method,
+        dataset,
+        estimator_class,
+        request
+    ):
+        dataset = request.getfixturevalue(dataset)
         X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
-        if split_technique == ConformalizedQuantileRegressor:
-            estimator = QuantileRegressor()
-        else:
-            estimator = DummyRegressor()
+        estimator = estimator_class()
         technique = split_technique(estimator=estimator, prefit=False)
 
         with pytest.raises(ValueError, match=r"call fit before calling conformalize"):
@@ -78,25 +109,31 @@ class TestWrongMethodsOrderRaisesError:
             match=r"call conformalize before calling predict"
         ):
             technique.predict(X_test)
+
         with pytest.raises(
             ValueError,
-            match=r"call conformalize before calling predict_interval"
+            match=f"call conformalize before calling {predict_method}"
         ):
-            technique.predict_interval(X_test)
+            getattr(technique, predict_method)(X_test)
 
         technique.conformalize(X_conformalize, y_conformalize)
 
         with pytest.raises(ValueError, match=r"conformalize method already called"):
             technique.conformalize(X_conformalize, y_conformalize)
 
-    @pytest.mark.parametrize(
-        "split_technique",
-        [SplitConformalRegressor, ConformalizedQuantileRegressor]
-    )
-    def test_split_technique_with_prefit_true(self, split_technique, dataset):
+    def test_with_prefit_true(
+        self,
+        split_technique,
+        predict_method,
+        dataset,
+        estimator_class,
+        request
+    ):
+        dataset = request.getfixturevalue(dataset)
         X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
-        estimator = DummyRegressor()
+        estimator = estimator_class()
         estimator.fit(X_train, y_train)
+
         if split_technique == ConformalizedQuantileRegressor:
             technique = split_technique(estimator=[estimator] * 3, prefit=True)
         else:
@@ -109,37 +146,47 @@ class TestWrongMethodsOrderRaisesError:
             match=r"call conformalize before calling predict"
         ):
             technique.predict(X_test)
+
         with pytest.raises(
             ValueError,
-            match=r"call conformalize before calling predict_interval"
+            match=f"call conformalize before calling {predict_method}"
         ):
-            technique.predict_interval(X_test)
+            getattr(technique, predict_method)(X_test)
 
         technique.conformalize(X_conformalize, y_conformalize)
 
         with pytest.raises(ValueError, match=r"conformalize method already called"):
             technique.conformalize(X_conformalize, y_conformalize)
 
-    @pytest.mark.parametrize(
-        "cross_technique",
-        [CrossConformalRegressor, JackknifeAfterBootstrapRegressor]
-    )
-    def test_cross_technique_with_prefit_false(self, cross_technique, dataset):
-        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
-        technique = cross_technique(estimator=DummyRegressor())
 
-        with pytest.raises(
-            ValueError,
-            match=r"call fit_conformalize before calling predict"
-        ):
-            technique.predict(X_test)
-        with pytest.raises(
-            ValueError,
-            match=r"call fit_conformalize before calling predict_interval"
-        ):
-            technique.predict_interval(X_test)
+@pytest.mark.parametrize(
+    "cross_technique,dataset",
+    [
+        (CrossConformalRegressor, "dataset_regression"),
+        (JackknifeAfterBootstrapRegressor, "dataset_regression")
+    ]
+)
+def test_wrong_methods_order_raises_error_for_cross_techniques(
+    cross_technique,
+    dataset,
+    request
+):
+    dataset = request.getfixturevalue(dataset)
+    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
+    technique = cross_technique(estimator=DummyRegressor())
 
+    with pytest.raises(
+        ValueError,
+        match=r"call fit_conformalize before calling predict"
+    ):
+        technique.predict(X_test)
+    with pytest.raises(
+        ValueError,
+        match=r"call fit_conformalize before calling predict_interval"
+    ):
+        technique.predict_interval(X_test)
+
+    technique.fit_conformalize(X_conformalize, y_conformalize)
+
+    with pytest.raises(ValueError, match=r"fit_conformalize method already called"):
         technique.fit_conformalize(X_conformalize, y_conformalize)
-
-        with pytest.raises(ValueError, match=r"fit_conformalize method already called"):
-            technique.fit_conformalize(X_conformalize, y_conformalize)

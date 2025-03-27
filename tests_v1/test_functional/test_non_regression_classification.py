@@ -12,13 +12,11 @@ from mapie.conformity_scores import (
     TopKConformityScore, LACConformityScore,
 )
 from mapie_v1.classification import SplitConformalClassifier
-from tests_v1.integration_tests.utils import (
+from tests_v1.test_functional.utils import (
     DummyClassifierWithFitAndPredictParams,
     train_test_split_shuffle,
 )
 from mapie._typing import ArrayLike
-
-pytestmark = pytest.mark.classification
 
 RANDOM_STATE = 1
 
