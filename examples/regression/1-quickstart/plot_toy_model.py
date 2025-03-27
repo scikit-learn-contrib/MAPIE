@@ -8,20 +8,21 @@ in the Quickstart.
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.datasets import make_regression
-from sklearn.model_selection import train_test_split
 
 from mapie.metrics import regression_coverage_score
 from mapie_v1.regression import SplitConformalRegressor
+from mapie_v1.utils import train_conformalize_test_split
 
 RANDOM_STATE = 42
 
 X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=RANDOM_STATE)
 
-X_train, X_test_conformalize, y_train, y_test_conformalize = train_test_split(
-    X, y, test_size=0.4,  random_state=RANDOM_STATE
-)
-X_test, X_conformalize, y_test, y_conformalize = train_test_split(
-    X_test_conformalize, y_test_conformalize, test_size=0.5, random_state=RANDOM_STATE
+(
+    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+) = train_conformalize_test_split(
+    X, y,
+    train_size=0.6, conformalize_size=0.2, test_size=0.2,
+    random_state=RANDOM_STATE
 )
 
 confidence_level = [0.95, 0.68]

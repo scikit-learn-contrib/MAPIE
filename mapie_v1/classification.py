@@ -11,7 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from mapie._typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
 from mapie.conformity_scores import BaseClassificationScore
-from mapie_v1._utils import (
+from mapie_v1.utils import (
     transform_confidence_level_to_alpha_list,
     prepare_params,
     cast_predictions_to_ndarray_tuple,
