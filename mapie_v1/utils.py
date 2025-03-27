@@ -2,7 +2,7 @@ import copy
 from typing import Union, Tuple, cast, Optional, Iterable
 from collections.abc import Iterable as IterableType
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.model_selection import train_test_split
 from decimal import Decimal

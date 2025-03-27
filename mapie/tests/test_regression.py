@@ -24,7 +24,7 @@ from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import (
     AbsoluteConformityScore, BaseRegressionScore, GammaConformityScore,

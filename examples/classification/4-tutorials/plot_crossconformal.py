@@ -35,7 +35,7 @@ from sklearn.model_selection import KFold
 from sklearn.naive_bayes import GaussianNB
 from typing_extensions import TypedDict
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.classification import MapieClassifier
 from mapie.metrics import (classification_coverage_score,
                            classification_mean_width_score)

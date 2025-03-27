@@ -4,7 +4,7 @@ from sklearn.utils import deprecated
 
 from mapie.conformity_scores.regression import BaseConformityScore
 from mapie._machine_precision import EPSILON
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 
 
 @deprecated(
