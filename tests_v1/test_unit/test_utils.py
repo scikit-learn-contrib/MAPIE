@@ -61,8 +61,8 @@ class TestTrainConformalizeTestSplit:
         (
             X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
         ) = train_conformalize_test_split(
-                X, y, train_size=0.6, conformalize_size=0.2,
-                test_size=0.2, random_state=RANDOM_STATE
+            X, y, train_size=0.6, conformalize_size=0.2,
+            test_size=0.2, random_state=RANDOM_STATE
         )
         assert len(X_train) == 60
         assert len(X_conformalize) == 20
@@ -73,8 +73,8 @@ class TestTrainConformalizeTestSplit:
         (
             X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
         ) = train_conformalize_test_split(
-                X, y, train_size=60, conformalize_size=20,
-                test_size=20, random_state=RANDOM_STATE
+            X, y, train_size=60, conformalize_size=20,
+            test_size=20, random_state=RANDOM_STATE
         )
         assert len(X_train) == 60
         assert len(X_conformalize) == 20
@@ -85,14 +85,14 @@ class TestTrainConformalizeTestSplit:
         (
             X_train_1, X_conformalize_1, X_test_1, y_train_1, y_conformalize_1, y_test_1
         ) = train_conformalize_test_split(
-                X, y, train_size=60, conformalize_size=20,
-                test_size=20, random_state=RANDOM_STATE
+            X, y, train_size=60, conformalize_size=20,
+            test_size=20, random_state=RANDOM_STATE
         )
         (
             X_train_2, X_conformalize_2, X_test_2, y_train_2, y_conformalize_2, y_test_2
         ) = train_conformalize_test_split(
-                X, y, train_size=60, conformalize_size=20,
-                test_size=20, random_state=RANDOM_STATE
+            X, y, train_size=60, conformalize_size=20,
+            test_size=20, random_state=RANDOM_STATE
         )
         assert np.array_equal(X_train_1, X_train_2)
         assert np.array_equal(X_conformalize_1, X_conformalize_2)
@@ -106,14 +106,14 @@ class TestTrainConformalizeTestSplit:
         (
             X_train_1, X_conformalize_1, X_test_1, y_train_1, y_conformalize_1, y_test_1
         ) = train_conformalize_test_split(
-                X, y, train_size=60, conformalize_size=20,
-                test_size=20, random_state=RANDOM_STATE
+            X, y, train_size=60, conformalize_size=20,
+            test_size=20, random_state=RANDOM_STATE
         )
         (
             X_train_2, X_conformalize_2, X_test_2, y_train_2, y_conformalize_2, y_test_2
         ) = train_conformalize_test_split(
-                X, y, train_size=60, conformalize_size=20,
-                test_size=20, random_state=RANDOM_STATE+1
+            X, y, train_size=60, conformalize_size=20,
+            test_size=20, random_state=RANDOM_STATE + 1
         )
         assert not np.array_equal(X_train_1, X_train_2)
         assert not np.array_equal(X_conformalize_1, X_conformalize_2)
@@ -127,8 +127,8 @@ class TestTrainConformalizeTestSplit:
         (
             X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
         ) = train_conformalize_test_split(
-                X, y, train_size=60, conformalize_size=20,
-                test_size=20, random_state=RANDOM_STATE, shuffle=False
+            X, y, train_size=60, conformalize_size=20,
+            test_size=20, random_state=RANDOM_STATE, shuffle=False
         )
         assert np.array_equal(np.concatenate((y_train, y_conformalize, y_test)), y)
 

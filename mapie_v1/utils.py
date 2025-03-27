@@ -15,7 +15,7 @@ def train_conformalize_test_split(
     train_size: Union[float, int],
     conformalize_size: Union[float, int],
     test_size: Union[float, int],
-    random_state: int = None,
+    random_state: Optional[int] = None,
     shuffle: bool = True,
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
     """Split arrays or matrices into train, conformalize and test subsets.
@@ -44,7 +44,7 @@ def train_conformalize_test_split(
     conformalize_size : float or int
         If float, should be between 0.0 and 1.0 and represent the proportion
         of the dataset to include in the conformalize split. If int, represents the
-        absolute number of test samples.
+        absolute number of conformalize samples.
 
     test_size : float or int
         If float, should be between 0.0 and 1.0 and represent the proportion
@@ -112,7 +112,7 @@ def train_conformalize_test_split(
     )
 
     if isinstance(train_size, float):
-        test_size_after_split = test_size/(1-train_size)
+        test_size_after_split = test_size / (1 - train_size)
     else:
         test_size_after_split = test_size
 
@@ -131,29 +131,33 @@ def _check_train_conf_test_proportions(
     conformalize_size: Union[float, int],
     test_size: Union[float, int],
     dataset_size: int,
-) -> Tuple[float, float]:
-
+) -> None:
     count_input_proportions = sum([test_size, train_size, conformalize_size])
 
     if isinstance(train_size, float) and \
             isinstance(conformalize_size, float) and \
             isinstance(test_size, float):
         if not isclose(1, count_input_proportions):
-            raise ValueError("When using floats, train_size + \
-                             conformalize_size + test_size must be equal to 1.")
+            raise ValueError(
+                "When using floats, train_size + conformalize_size"
+                " + test_size must be equal to 1."
+            )
 
     elif isinstance(train_size, int) and \
             isinstance(conformalize_size, int) and \
             isinstance(test_size, int):
         if count_input_proportions != dataset_size:
-            raise ValueError("When using integers, train_size + \
-                             conformalize_size + test_size must be equal \
-                             to the size of the input data.")
+            raise ValueError(
+                "When using integers, train_size + "
+                "conformalize_size + test_size must be equal "
+                "to the size of the input data."
+            )
 
     else:
         raise TypeError(
-            "train_size, conformalize_size and test_size \
-                should be either all int or all float.")
+            "train_size, conformalize_size and test_size"
+            "should be either all int or all float."
+        )
 
 
 def transform_confidence_level_to_alpha(
