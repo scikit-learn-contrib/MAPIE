@@ -69,7 +69,9 @@ np.array(y)
 (
     X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
 ) = train_conformalize_test_split(
-    X, y, train_size=0.7, conformalize_size=0.28, test_size=0.02, random_state=RANDOM_STATE
+    X, y,
+    train_size=0.7, conformalize_size=0.28, test_size=0.02,
+    random_state=RANDOM_STATE
 )
 
 X_conformalize_prefit, X_res, y_conformalize_prefit, y_res = train_test_split(

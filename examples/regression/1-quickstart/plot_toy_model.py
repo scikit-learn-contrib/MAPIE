@@ -20,7 +20,9 @@ X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=RANDO
 (
     X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
 ) = train_conformalize_test_split(
-    X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=RANDOM_STATE
+    X, y,
+    train_size=0.6, conformalize_size=0.2, test_size=0.2,
+    random_state=RANDOM_STATE
 )
 
 confidence_level = [0.95, 0.68]

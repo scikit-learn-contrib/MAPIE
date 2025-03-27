@@ -60,7 +60,9 @@ y = f(X) + rng.normal(0, sigma, n_samples)
 (
     X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
 ) = train_conformalize_test_split(
-    X, y, train_size=0.8, conformalize_size=0.1, test_size=0.1, random_state=RANDOM_STATE
+    X, y,
+    train_size=0.8, conformalize_size=0.1, test_size=0.1,
+    random_state=RANDOM_STATE
 )
 
 
