@@ -83,6 +83,15 @@ Metrics
    mapie.metrics.spiegelhalter_statistic
    mapie.metrics.top_label_ece
 
+Utils (from mapie_v1)
+==============================
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   mapie_v1.utils.train_conformalize_test_split
+
 Conformity Scores (Regression)
 ==============================
 
