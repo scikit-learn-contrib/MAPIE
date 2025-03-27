@@ -12,7 +12,7 @@ from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
 from numpy.typing import NDArray
-from mapie.metrics import classification_mean_width_score
+from mapie.metrics.classification import classification_mean_width_score
 from mapie.utils import check_alpha_and_n_samples, compute_quantiles
 
 

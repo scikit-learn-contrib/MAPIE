@@ -26,7 +26,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 
-from mapie.metrics import regression_coverage_score_v2
+from mapie.metrics.regression import regression_coverage_score_v2
 from mapie.mondrian import MondrianCP
 from mapie.regression import MapieRegressor
 
