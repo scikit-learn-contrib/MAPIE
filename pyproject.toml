@@ -52,4 +52,4 @@ DOWNLOAD = "https://pypi.org/project/MAPIE/#files"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["mapie", "mapie.*"]
+include = ["mapie", "mapie.*", "mapie_v1", "mapie_v1.*"]
