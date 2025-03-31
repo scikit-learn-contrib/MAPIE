@@ -5,7 +5,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import (
     AbsoluteConformityScore, BaseRegressionScore, GammaConformityScore,
     ResidualNormalisedScore

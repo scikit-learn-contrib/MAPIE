@@ -16,7 +16,7 @@ from tests_v1.test_functional.utils import (
     DummyClassifierWithFitAndPredictParams,
     train_test_split_shuffle,
 )
-from mapie._typing import ArrayLike
+from numpy.typing import ArrayLike
 
 RANDOM_STATE = 1
 

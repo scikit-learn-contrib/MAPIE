@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from typing_extensions import Self
 
-from mapie._typing import NDArray, ArrayLike
+from numpy.typing import NDArray, ArrayLike
 import inspect
 from sklearn.model_selection import ShuffleSplit
 

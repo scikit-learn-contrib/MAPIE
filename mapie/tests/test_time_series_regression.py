@@ -10,7 +10,7 @@ from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
 from sklearn.utils.estimator_checks import check_estimator
 from typing_extensions import TypedDict
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.metrics import regression_coverage_score

@@ -7,7 +7,7 @@ from typing import List, Optional, Union
 import numpy as np
 import pytest
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.control_risk.ltt import find_lambda_control_star, ltt_procedure
 from mapie.control_risk.p_values import compute_hoeffdding_bentkus_p_value
 from mapie.control_risk.risks import (compute_risk_precision,

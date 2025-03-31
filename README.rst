@@ -79,8 +79,8 @@ Implemented methods in **MAPIE** respect three fundamental pillars:
 🔗 Requirements
 ===============
 
-- **MAPIE** runs on Python 3.7+.
-- **MAPIE** stands on the shoulders of giants. Its only internal dependencies are `scikit-learn <https://scikit-learn.org/stable/>`_ and `numpy=>1.21 <https://numpy.org/>`_.
+- **MAPIE** runs on Python 3.9+.
+- **MAPIE** stands on the shoulders of giants. Its only internal dependencies are `scikit-learn <https://scikit-learn.org/stable/>`_ and `numpy=>1.22 <https://numpy.org/>`_.
 
 
 🛠 Installation

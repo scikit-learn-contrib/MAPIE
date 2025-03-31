@@ -7,9 +7,8 @@ import numpy as np
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.estimator.regressor import EnsembleRegressor
 
-from mapie._compatibility import np_nanquantile
 from mapie._machine_precision import EPSILON
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 
 
 class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
@@ -238,13 +237,13 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 num=len(lower_bounds),
                 endpoint=True,
             )
-            one_alpha_beta = np_nanquantile(
+            one_alpha_beta = np.nanquantile(
                 upper_bounds.astype(float),
                 1 - _alpha + betas,
                 axis=1,
                 method="higher",
             )
-            beta = np_nanquantile(
+            beta = np.nanquantile(
                 lower_bounds.astype(float),
                 betas,
                 axis=1,
