@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.classification import MapieClassifier
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.sets import (

@@ -12,7 +12,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 
 from mapie.subsample import Subsample
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import GammaConformityScore, \
     AbsoluteConformityScore, ResidualNormalisedScore
 from mapie_v1.regression import SplitConformalRegressor, \

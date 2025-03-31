@@ -1,6 +1,6 @@
 import numpy as np
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 
 

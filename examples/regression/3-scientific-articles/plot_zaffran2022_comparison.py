@@ -45,7 +45,7 @@ from matplotlib import pylab as plt
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import PredefinedSplit
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.time_series_regression import MapieTimeSeriesRegressor
 

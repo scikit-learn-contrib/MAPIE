@@ -9,7 +9,7 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state, resample
 from sklearn.utils.validation import _num_samples
 
-from ._typing import NDArray
+from numpy.typing import NDArray
 from .utils import check_n_samples
 
 

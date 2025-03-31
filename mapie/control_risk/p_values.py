@@ -3,7 +3,7 @@ from typing import Union, cast
 import numpy as np
 from scipy.stats import binom
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.utils import check_alpha
 
 

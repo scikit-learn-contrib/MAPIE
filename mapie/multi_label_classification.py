@@ -14,7 +14,7 @@ from sklearn.utils import check_random_state
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
-from ._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from .control_risk.crc_rcps import find_lambda_star, get_r_hat_plus
 from .control_risk.ltt import find_lambda_control_star, ltt_procedure
 from .control_risk.risks import compute_risk_precision, compute_risk_recall

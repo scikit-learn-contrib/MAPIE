@@ -6,7 +6,7 @@ import numpy as np
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.estimator.classifier import EnsembleClassifier
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 
 
 class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
