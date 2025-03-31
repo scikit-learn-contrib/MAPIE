@@ -78,14 +78,17 @@ class SplitConformalRegressor:
     Examples
     --------
     >>> from mapie_v1.regression import SplitConformalRegressor
+    >>> from mapie_v1.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_regression
     >>> from sklearn.model_selection import train_test_split
     >>> from sklearn.linear_model import Ridge
 
     >>> X, y = make_regression(n_samples=500, n_features=2, noise=1.0)
-    >>> X_train, X_conf_test, y_train, y_conf_test = train_test_split(X, y)
-    >>> X_conformalize, X_test, y_conformalize, y_test = train_test_split(
-    ... X_conf_test, y_conf_test
+    >>> (
+    ...     X_train, X_conformalize, X_test,
+    ...     y_train, y_conformalize, y_test
+    ... ) = train_conformalize_test_split(
+    ...     X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=1
     ... )
 
     >>> mapie_regressor = SplitConformalRegressor(
@@ -937,14 +940,17 @@ class ConformalizedQuantileRegressor:
     Examples
     --------
     >>> from mapie_v1.regression import ConformalizedQuantileRegressor
+    >>> from mapie_v1.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_regression
     >>> from sklearn.model_selection import train_test_split
     >>> from sklearn.linear_model import QuantileRegressor
 
     >>> X, y = make_regression(n_samples=500, n_features=2, noise=1.0)
-    >>> X_train, X_conf_test, y_train, y_conf_test = train_test_split(X, y)
-    >>> X_conformalize, X_test, y_conformalize, y_test = train_test_split(
-    ... X_conf_test, y_conf_test
+    >>> (
+    ...     X_train, X_conformalize, X_test,
+    ...     y_train, y_conformalize, y_test
+    ... ) = train_conformalize_test_split(
+    ...     X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=1
     ... )
 
     >>> mapie_regressor = ConformalizedQuantileRegressor(
