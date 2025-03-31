@@ -12,7 +12,7 @@ from .sets import (
     RAPSConformityScore, TopKConformityScore
 )
 
-from mapie._typing import ArrayLike
+from numpy.typing import ArrayLike
 
 
 METHOD_SCORE_MAP = {

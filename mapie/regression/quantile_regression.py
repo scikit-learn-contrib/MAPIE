@@ -11,8 +11,7 @@ from sklearn.utils import check_random_state
 from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
-from mapie._compatibility import np_quantile
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.utils import (check_alpha_and_n_samples,
                          check_defined_variables_predict_cqr,
                          check_estimator_fit_predict, check_lower_upper_bounds,
@@ -745,17 +744,17 @@ class MapieQuantileRegressor(MapieRegressor):
         if symmetry:
             quantile = np.full(
                 2,
-                np_quantile(
+                np.quantile(
                     self.conformity_scores_[2], q, method="higher"
                 )
             )
         else:
             quantile = np.array(
                 [
-                    np_quantile(
+                    np.quantile(
                         self.conformity_scores_[0], q, method="higher"
                     ),
-                    np_quantile(
+                    np.quantile(
                         self.conformity_scores_[1], q, method="higher"
                     )
                 ]

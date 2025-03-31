@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from mapie.conformity_scores.sets.utils import get_true_label_position
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 
 Y_TRUE_PROBA_PLACE = [
     [

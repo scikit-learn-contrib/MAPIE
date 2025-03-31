@@ -33,7 +33,6 @@ coverage:
 		--cov-report term-missing \
 		--pyargs mapie \
 		--cov-fail-under=100 \
-		--cov-config=.coveragerc \
 		--no-cov-on-fail
 
 v1-tests:

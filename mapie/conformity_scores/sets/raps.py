@@ -11,7 +11,7 @@ from mapie.conformity_scores.sets.utils import get_true_label_position
 from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.metrics import classification_mean_width_score
 from mapie.utils import check_alpha_and_n_samples, compute_quantiles
 
