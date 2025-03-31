@@ -9,7 +9,7 @@ from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit)
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.utils import check_no_agg_cv, fit_estimator, fix_number_of_classes
 
 

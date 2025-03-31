@@ -11,7 +11,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.validation import check_is_fitted
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
 from mapie.regression import MapieQuantileRegressor, MapieRegressor
 

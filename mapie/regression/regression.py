@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import (BaseRegressionScore,
                                      ResidualNormalisedScore)
 from mapie.conformity_scores.utils import check_regression_conformity_score

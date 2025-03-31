@@ -4,8 +4,7 @@ from typing import Optional
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from mapie._compatibility import np_nanquantile
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 
 
 class BaseConformityScore(metaclass=ABCMeta):
@@ -155,7 +154,7 @@ class BaseConformityScore(metaclass=ABCMeta):
         # Otherwise, the quantile is calculated as the corrected lower quantile
         # of the signed conformity scores.
         quantile = signed * np.column_stack([
-            np_nanquantile(
+            np.nanquantile(
                 signed * conformity_scores, _alpha_cor,
                 axis=axis, method="lower"
             ) if not (unbounded and _alpha >= 1) else np.inf * np.ones(n_ref)

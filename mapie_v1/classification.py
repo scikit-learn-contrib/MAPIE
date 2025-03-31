@@ -8,7 +8,7 @@ from sklearn.base import ClassifierMixin, clone
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.linear_model import LogisticRegression
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
 from mapie.conformity_scores import BaseClassificationScore
 from mapie_v1.utils import (

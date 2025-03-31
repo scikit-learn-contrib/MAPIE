@@ -5,7 +5,14 @@ MAPIE v1 introduces several updates, enhancements, and structural changes that s
 
 This guide outlines the differences between MAPIE v0.x and MAPIE v1 and provides instructions for migrating your code to the new API.
 
-1. Overview of class restructuring
+1. Python and NumPy versions support
+-------------------------------------------------
+
+We now support Python >= 3.9 (formerly >=3.7), and NumPy >= 1.23 (formerly >=1.21).
+
+MAPIE v1 may run with Python < 3.9, but we do not recommend it.
+
+2. Class restructuring
 -----------------------------------
 
 MAPIE v1 breaks down the ``MapieRegressor`` and ``MapieClassifier`` classes into 5 classes, each dedicated to a particular conformal prediction technique. ``MapieQuantileRegressor`` has also been revamped, and renamed ``ConformalizedQuantileRegressor``.
@@ -48,7 +55,7 @@ The ``cv`` parameter is key to understand what new class to use in the v1 API:
 
 For more details regarding the difference between split and cross conformal types, see :doc:`split_cross_conformal`
 
-2. Method changes
+3. Method changes
 -----------------
 
 In MAPIE v1, the conformal prediction workflow is more streamlined and modular, with distinct methods for training, conformalization (named calibration in the scientific literature), and prediction. The conformalization process in v1 consists of four steps.
@@ -91,7 +98,7 @@ The ``.predict()`` method now focuses solely on producing point predictions.
 
 
 
-3. Parameters change
+4. Parameters change
 ------------------------
 
 ``alpha``
@@ -182,7 +189,7 @@ No more parameters with incorrect ``None`` defaults.
 - **v1**: All parameters now have explicit defaults.
 
 
-4. Migration example: MAPIE v0.x to MAPIE v1
+5. Migration examples: MAPIE v0.x to MAPIE v1
 ----------------------------------------------------------------------------------------
 
 Below is a side-by-side example of code in MAPIE v0.x and its equivalent in MAPIE v1

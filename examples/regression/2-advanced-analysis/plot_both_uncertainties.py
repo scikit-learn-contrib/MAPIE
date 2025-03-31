@@ -19,7 +19,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import train_test_split
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie_v1.regression import (
     CrossConformalRegressor,
     ConformalizedQuantileRegressor,

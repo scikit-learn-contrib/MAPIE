@@ -24,7 +24,7 @@ from mapie.regression import (
     MapieTimeSeriesRegressor
 )
 from mapie.utils import check_alpha
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 
 
 class MondrianCP(BaseEstimator):

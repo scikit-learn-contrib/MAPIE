@@ -45,7 +45,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.metrics import (regression_coverage_score,
                            regression_mean_width_score)
 from mapie_v1.regression import (

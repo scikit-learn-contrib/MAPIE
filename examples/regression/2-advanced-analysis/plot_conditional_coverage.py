@@ -26,7 +26,7 @@ import pandas as pd
 from lightgbm import LGBMRegressor
 from sklearn.model_selection import train_test_split
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.conformity_scores import (GammaConformityScore,
                                      ResidualNormalisedScore)
 from mapie.metrics import (hsic, regression_coverage_score_v2, regression_ssc,
