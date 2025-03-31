@@ -11,7 +11,7 @@ from mapie.conformity_scores.sets.utils import (
 from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.utils import compute_quantiles
 
 

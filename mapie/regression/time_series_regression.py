@@ -8,7 +8,7 @@ from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.validation import check_is_fitted
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import MapieRegressor
 from mapie.utils import check_alpha, check_gamma

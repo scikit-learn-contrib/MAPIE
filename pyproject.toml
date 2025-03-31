@@ -16,12 +16,11 @@ maintainers = [
     {name = "Louis Lacombe", email = "louis.lacombe@capgemini.com"},
     {name = "Vincent Blot", email = "vincent.blot@capgemini.com"},
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 dependencies = [
     "scikit-learn<1.6.0",
     "scipy",
-    "numpy>=1.21",
-    "packaging"
+    "numpy>=1.23"
 ]
 classifiers = [
     "Intended Audience :: Science/Research",

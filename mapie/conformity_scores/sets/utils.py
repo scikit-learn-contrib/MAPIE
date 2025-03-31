@@ -1,7 +1,7 @@
 from typing import Optional, Union
 import numpy as np
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie._machine_precision import EPSILON
 
 

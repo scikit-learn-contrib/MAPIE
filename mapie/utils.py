@@ -15,8 +15,7 @@ from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import (_check_sample_weight, _num_features,
                                       check_is_fitted, column_or_1d)
 
-from ._compatibility import np_quantile
-from ._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 
 SPLIT_STRATEGIES = ["uniform", "quantile", "array split"]
 
@@ -718,7 +717,7 @@ def compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
     if len(vector.shape) <= 2:
         quantiles_ = np.stack(
             [
-                np_quantile(
+                np.quantile(
                     vector,
                     ((n + 1) * (1 - _alpha)) / n,
                     method="higher",

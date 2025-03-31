@@ -8,7 +8,7 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 
 from mapie.subsample import Subsample
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import MapieRegressor, MapieQuantileRegressor
 from mapie.utils import check_estimator_fit_predict

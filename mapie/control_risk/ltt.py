@@ -3,7 +3,7 @@ from typing import Any, List, Optional, Tuple
 
 import numpy as np
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from .p_values import compute_hoeffdding_bentkus_p_value
 

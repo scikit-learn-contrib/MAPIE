@@ -13,7 +13,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.multi_label_classification import MapieMultiLabelClassifier
 
 Params = TypedDict(

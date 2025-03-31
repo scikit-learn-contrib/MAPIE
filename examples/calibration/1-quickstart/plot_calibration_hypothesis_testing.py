@@ -29,7 +29,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.utils import check_random_state
 
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 from mapie.metrics import (cumulative_differences, kolmogorov_smirnov_p_value,
                            length_scale)
 

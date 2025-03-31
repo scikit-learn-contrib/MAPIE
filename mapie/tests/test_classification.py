@@ -22,7 +22,7 @@ from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.classification import MapieClassifier
 from mapie.conformity_scores import LACConformityScore
 from mapie.conformity_scores.utils import METHOD_SCORE_MAP
