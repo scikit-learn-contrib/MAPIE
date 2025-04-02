@@ -52,36 +52,54 @@ Calibration
 
    mapie.calibration.MapieCalibrator
 
-Metrics
-=======
+Calibration Metrics
+======================================
 
 .. autosummary::
    :toctree: generated/
    :template: function.rst
 
-   mapie.metrics.classification_coverage_score
-   mapie.metrics.classification_coverage_score_v2
-   mapie.metrics.classification_mean_width_score
-   mapie.metrics.classification_ssc
-   mapie.metrics.classification_ssc_score
-   mapie.metrics.cumulative_differences
-   mapie.metrics.expected_calibration_error
-   mapie.metrics.hsic
-   mapie.metrics.kolmogorov_smirnov_cdf
-   mapie.metrics.kolmogorov_smirnov_p_value
-   mapie.metrics.kolmogorov_smirnov_statistic
-   mapie.metrics.kuiper_cdf
-   mapie.metrics.kuiper_p_value
-   mapie.metrics.kuiper_statistic
-   mapie.metrics.length_scale
-   mapie.metrics.regression_coverage_score
-   mapie.metrics.regression_coverage_score_v2
-   mapie.metrics.regression_mean_width_score
-   mapie.metrics.regression_ssc
-   mapie.metrics.regression_ssc_score
-   mapie.metrics.spiegelhalter_p_value
-   mapie.metrics.spiegelhalter_statistic
-   mapie.metrics.top_label_ece
+   mapie.metrics.calibration.expected_calibration_error
+   mapie.metrics.calibration.top_label_ece
+   mapie.metrics.calibration.cumulative_differences
+   mapie.metrics.calibration.kolmogorov_smirnov_cdf
+   mapie.metrics.calibration.kolmogorov_smirnov_p_value
+   mapie.metrics.calibration.kolmogorov_smirnov_statistic
+   mapie.metrics.calibration.kuiper_cdf
+   mapie.metrics.calibration.kuiper_p_value
+   mapie.metrics.calibration.kuiper_statistic
+   mapie.metrics.calibration.length_scale
+   mapie.metrics.calibration.spiegelhalter_p_value
+   mapie.metrics.calibration.spiegelhalter_statistic
+
+Classification Metrics
+========================================
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   mapie.metrics.classification.classification_coverage_score
+   mapie.metrics.classification.classification_coverage_score_v2
+   mapie.metrics.classification.classification_mean_width_score
+   mapie.metrics.classification.classification_ssc
+   mapie.metrics.classification.classification_ssc_score
+
+Regression Metrics
+====================================
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   mapie.metrics.regression.regression_coverage_score
+   mapie.metrics.regression.regression_coverage_score_v2
+   mapie.metrics.regression.regression_mean_width_score
+   mapie.metrics.regression.regression_ssc
+   mapie.metrics.regression.regression_ssc_score
+   mapie.metrics.regression.hsic
+   mapie.metrics.regression.coverage_width_based
+   mapie.metrics.regression.regression_mwi_score
 
 Utils (from mapie_v1)
 ==============================

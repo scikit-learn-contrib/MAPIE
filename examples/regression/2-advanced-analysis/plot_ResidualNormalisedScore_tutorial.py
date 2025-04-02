@@ -21,7 +21,10 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
 from mapie.conformity_scores import ResidualNormalisedScore
-from mapie.metrics import regression_coverage_score_v2, regression_ssc_score
+from mapie.metrics.regression import (
+    regression_coverage_score_v2,
+    regression_ssc_score,
+)
 from mapie_v1.regression import SplitConformalRegressor
 from mapie_v1.utils import train_conformalize_test_split
 
