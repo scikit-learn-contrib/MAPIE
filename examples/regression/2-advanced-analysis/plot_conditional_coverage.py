@@ -29,8 +29,11 @@ from sklearn.model_selection import train_test_split
 from numpy.typing import NDArray
 from mapie.conformity_scores import (GammaConformityScore,
                                      ResidualNormalisedScore)
-from mapie.metrics import (hsic, regression_coverage_score_v2, regression_ssc,
-                           regression_ssc_score)
+from mapie.metrics.regression import (
+    regression_coverage_score_v2,
+    regression_ssc,
+    regression_ssc_score, hsic,
+)
 from mapie_v1.regression import (
     SplitConformalRegressor,
     CrossConformalRegressor,

@@ -37,7 +37,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import train_test_split
 
-from mapie.metrics import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score
 from mapie_v1.regression import (
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,

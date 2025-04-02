@@ -45,7 +45,7 @@ from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from sklearn.datasets import make_sparse_uncorrelated
 
-from mapie.metrics import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score
 from mapie_v1.regression import CrossConformalRegressor
 
 

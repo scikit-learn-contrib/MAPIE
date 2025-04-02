@@ -13,7 +13,7 @@ from typing_extensions import TypedDict
 from numpy.typing import NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.metrics import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score
 from mapie.regression import MapieTimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
 

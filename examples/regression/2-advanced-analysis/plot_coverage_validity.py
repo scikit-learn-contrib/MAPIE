@@ -30,7 +30,7 @@ from sklearn.model_selection import train_test_split
 
 from mapie_v1.regression import SplitConformalRegressor
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.metrics import regression_coverage_score_v2
+from mapie.metrics.regression import regression_coverage_score_v2
 
 from joblib import Parallel, delayed
 

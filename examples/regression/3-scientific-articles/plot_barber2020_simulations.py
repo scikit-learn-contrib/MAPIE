@@ -36,8 +36,10 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from numpy.typing import NDArray
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics.regression import (
+    regression_coverage_score,
+    regression_mean_width_score,
+)
 from mapie_v1.regression import CrossConformalRegressor
 
 RANDOM_STATE = 1
