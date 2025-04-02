@@ -27,7 +27,7 @@ from matplotlib import pyplot as plt
 from sklearn.neural_network import MLPRegressor
 
 from numpy.typing import NDArray
-from mapie.metrics import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score
 from mapie_v1.regression import SplitConformalRegressor, ConformalizedQuantileRegressor
 from mapie_v1.utils import train_conformalize_test_split
 

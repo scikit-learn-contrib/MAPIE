@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.datasets import make_regression
 
-from mapie.metrics import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score
 from mapie_v1.regression import SplitConformalRegressor
 from mapie_v1.utils import train_conformalize_test_split
 

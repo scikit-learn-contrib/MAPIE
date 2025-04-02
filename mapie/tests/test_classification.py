@@ -27,7 +27,7 @@ from mapie.classification import MapieClassifier
 from mapie.conformity_scores import LACConformityScore
 from mapie.conformity_scores.utils import METHOD_SCORE_MAP
 from mapie.conformity_scores.sets.utils import check_proba_normalized
-from mapie.metrics import classification_coverage_score
+from mapie.metrics.classification import classification_coverage_score
 
 random_state = 42
 
