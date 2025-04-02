@@ -56,8 +56,10 @@ from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
-from mapie.metrics import (coverage_width_based, regression_coverage_score,
-                           regression_mean_width_score)
+from mapie.metrics.regression import (
+    regression_coverage_score,
+    regression_mean_width_score, coverage_width_based,
+)
 from mapie.regression import MapieTimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
 

@@ -31,7 +31,7 @@ from mapie.conformity_scores import (
     ResidualNormalisedScore
 )
 from mapie.estimator.regressor import EnsembleRegressor
-from mapie.metrics import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
 

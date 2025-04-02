@@ -37,8 +37,10 @@ from typing_extensions import TypedDict
 
 from numpy.typing import NDArray
 from mapie.classification import MapieClassifier
-from mapie.metrics import (classification_coverage_score,
-                           classification_mean_width_score)
+from mapie.metrics.classification import (
+    classification_coverage_score,
+    classification_mean_width_score,
+)
 
 ##############################################################################
 # 1. Estimating the impact of train/calibration split on the prediction sets
