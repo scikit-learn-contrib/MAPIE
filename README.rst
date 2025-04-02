@@ -241,7 +241,11 @@ MAPIE is free and open-source software licensed under the `license <https://gith
 📚 Citation
 ===========
 
-If you use MAPIE in your research, please cite using:
+If you use MAPIE in your research, please cite the main paper:
+
+Cordier, Thibault, et al. "Flexible and systematic uncertainty estimation with conformal prediction via the mapie library." *Conformal and Probabilistic Prediction with Applications.* PMLR, 2023.
+
+Or equivalently the BibTex entry:
 
 .. code:: latex
 
@@ -250,4 +254,17 @@ If you use MAPIE in your research, please cite using:
     booktitle = {Conformal and Probabilistic Prediction with Applications},
     title = {{Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library}},
     year = {2023}
+    }
+
+You can also have a look at the ICML workshop manuscript:
+
+Taquet, Vianney, et al. "MAPIE: an open-source library for distribution-free uncertainty quantification." *arXiv preprint arXiv:2207.12274* (2022).
+
+.. code:: latex
+
+    @article{taquet2022mapie,
+    title={MAPIE: an open-source library for distribution-free uncertainty quantification},
+    author={Taquet, Vianney and Blot, Vincent and Morzadec, Thomas and Lacombe, Louis and Brunel, Nicolas},
+    journal={arXiv preprint arXiv:2207.12274},
+    year={2022}
     }
