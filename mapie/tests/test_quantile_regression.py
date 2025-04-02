@@ -19,7 +19,7 @@ from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from numpy.typing import NDArray
-from mapie.metrics import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score
 from mapie.regression import MapieQuantileRegressor
 
 X_toy = np.array(
