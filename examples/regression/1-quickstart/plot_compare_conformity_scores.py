@@ -42,7 +42,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
-from mapie.metrics.regression import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score_v2
 from mapie_v1.regression import CrossConformalRegressor
 
 RANDOM_STATE = 42
@@ -111,8 +111,8 @@ y_pred_absconfscore, y_pis_absconfscore = mapie.predict_interval(
     X_test
 )
 
-coverage_absconfscore = regression_coverage_score(
-    y_test, y_pis_absconfscore[:, 0, 0], y_pis_absconfscore[:, 1, 0]
+coverage_absconfscore = regression_coverage_score_v2(
+    y_test, y_pis_absconfscore
 )
 
 ##############################################################################
@@ -146,8 +146,8 @@ y_pred_gammaconfscore, y_pis_gammaconfscore = mapie.predict_interval(
     X_test
 )
 
-coverage_gammaconfscore = regression_coverage_score(
-    y_test, y_pis_gammaconfscore[:, 0, 0], y_pis_gammaconfscore[:, 1, 0]
+coverage_gammaconfscore = regression_coverage_score_v2(
+    y_test, y_pis_gammaconfscore
 )
 
 yerr_gammaconfscore = get_yerr(y_pred_gammaconfscore, y_pis_gammaconfscore)
@@ -175,7 +175,7 @@ for img_id, y_pred, y_err, cov, class_name, int_width in zip(
     [0, 1],
     [y_pred_absconfscore, y_pred_gammaconfscore],
     [yerr_absconfscore, yerr_gammaconfscore],
-    [coverage_absconfscore, coverage_gammaconfscore],
+    [coverage_absconfscore[0], coverage_gammaconfscore],
     ["AbsoluteResidualScore", "GammaResidualScore"],
     [pred_int_width_absconfscore, pred_int_width_gammaconfscore],
 ):
