@@ -121,19 +121,19 @@ def regression_coverage_score_v2(
 
     It is different from ``regression_coverage_score`` because it uses
     directly the output of ``predict`` method and can compute the
-    coverage for each alpha.
+    coverage for each confidence level.
 
     Parameters
     ----------
-    y_true: NDArray of shape (n_samples, n_alpha) or (n_samples,)
+    y_true: NDArray of shape (n_samples, n_confidence_level) or (n_samples,)
         True labels.
-    y_intervals: NDArray of shape (n_samples, 2, n_alpha)
+    y_intervals: NDArray of shape (n_samples, 2, n_confidence_level)
         Lower and upper bound of prediction intervals
-        with different alpha risks.
+        with different confidence levels.
 
     Returns
     -------
-    NDArray of shape (n_alpha,)
+    NDArray of shape (n_confidence_level,)
         Effective coverage obtained by the prediction intervals.
     """
     check_arrays_length(y_true, y_intervals)
@@ -180,7 +180,7 @@ def regression_ssc(
     ----------
     y_true: NDArray of shape (n_samples,)
         True labels.
-    y_intervals: NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
+    y_intervals: NDArray of shape (n_samples, 2, n_confidence_level) or (n_samples, 2)
         Prediction intervals given by booleans of labels.
     num_bins: int n
         Number of groups. Should be less than the number of different
@@ -188,7 +188,7 @@ def regression_ssc(
 
     Returns
     -------
-    NDArray of shape (n_alpha, num_bins)
+    NDArray of shape (n_confidence_level, num_bins)
 
     Examples
     --------
@@ -235,7 +235,7 @@ def regression_ssc_score(
     num_bins: int = 3
 ) -> NDArray:
     """
-    Aggregate by the minimum for each alpha the Size-Stratified Coverage [3]:
+    Aggregate by the minimum for each confidence level the Size-Stratified Coverage [3]:
     returns the maximum violation of the conditional coverage
     (with the groups defined).
 
@@ -252,7 +252,7 @@ def regression_ssc_score(
     ----------
     y_true: NDArray of shape (n_samples,)
         True labels.
-    y_intervals: NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
+    y_intervals: NDArray of shape (n_samples, 2, n_confidence_level) or (n_samples, 2)
         Prediction intervals given by booleans of labels.
     num_bins: int n
         Number of groups. Should be less than the number of different
@@ -260,7 +260,7 @@ def regression_ssc_score(
 
     Returns
     -------
-    NDArray of shape (n_alpha,)
+    NDArray of shape (n_confidence_level,)
 
     Examples
     --------
@@ -324,7 +324,7 @@ def hsic(
     ----------
     y_true: NDArray of shape (n_samples,)
         True labels.
-    y_intervals: NDArray of shape (n_samples, 2, n_alpha) or (n_samples, 2)
+    y_intervals: NDArray of shape (n_samples, 2, n_confidence_level) or (n_samples, 2)
         Prediction sets given by booleans of labels.
     kernel_sizes: ArrayLike of size (2,)
         The variance (sigma) for each variable (the indicator of coverage and
@@ -332,8 +332,8 @@ def hsic(
 
     Returns
     -------
-    NDArray of shape (n_alpha,)
-        One hsic correlation coefficient by alpha.
+    NDArray of shape (n_confidence_level,)
+        One hsic correlation coefficient by confidence level.
 
     Raises
     ------
@@ -372,8 +372,8 @@ def hsic(
         raise ValueError(
             "kernel_size should be positive"
         )
-    n_samples, _, n_alpha = y_intervals.shape
-    y_true_per_alpha = np.tile(y_true, (n_alpha, 1)).transpose()
+    n_samples, _, n_confidence_level = y_intervals.shape
+    y_true_per_alpha = np.tile(y_true, (n_confidence_level, 1)).transpose()
     widths = np.expand_dims(
         np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :]).transpose(),
         axis=2
@@ -532,7 +532,7 @@ def coverage_width_based(
 def regression_mwi_score(
         y_true: NDArray,
         y_pis: NDArray,
-        alpha: float
+        confidence_level: float
 ) -> float:
     """
     The Winkler score, proposed by Winkler (1972), is a measure used to
@@ -547,8 +547,8 @@ def regression_mwi_score(
     y_pis: ArrayLike of shape (n_samples, 2, 1)
         Lower and upper bounds of prediction intervals
         output from a MAPIE regressor
-    alpha: float
-        The value of alpha
+    confidence_level: float
+        The value of confidence_level
 
     Returns
     -------
@@ -584,5 +584,5 @@ def regression_mwi_score(
     error_above = np.sum((y_true - y_pred_up)[y_true > y_pred_up])
     error_below = np.sum((y_pred_low - y_true)[y_true < y_pred_low])
     total_error = error_above + error_below
-    mwi = (width + total_error * 2 / alpha) / len(y_true)
+    mwi = (width + total_error * 2 / (1 - confidence_level)) / len(y_true)
     return mwi

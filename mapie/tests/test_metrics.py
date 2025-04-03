@@ -837,5 +837,5 @@ def test_regression_mwi_score() -> None:
 
     alpha = 0.1
 
-    mwi_score = regression_mwi_score(y_true, y_pis, alpha)
+    mwi_score = regression_mwi_score(y_true, y_pis, 1 - alpha)
     np.testing.assert_allclose(mwi_score, 82.25, rtol=1e-2)
