@@ -141,7 +141,8 @@ def regression_coverage_score_v2(
     ---------
     NDArray of shape (n_confidence_level,)
         Effective coverage obtained by the prediction intervals
-        for each confidence level
+        for each confidence level.
+
     Examples
     ---------
     >>> from mapie.metrics.regression import regression_coverage_score_v2
@@ -166,7 +167,7 @@ def regression_coverage_score_v2(
     ... ).fit(X_train, y_train).conformalize(X_conformalize, y_conformalize)
 
     >>> predicted_points, predicted_intervals = mapie_regressor.predict_interval(X_test)
-    >>> print(regression_coverage_score_v2(y_test, predicted_intervals))
+    >>> coverage = regression_coverage_score_v2(y_test, predicted_intervals)[0]
     """
     check_arrays_length(y_true, y_intervals)
     check_array_nan(y_true)
