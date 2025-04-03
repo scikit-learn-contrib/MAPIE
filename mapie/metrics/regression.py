@@ -15,59 +15,6 @@ from mapie.utils import (
 )
 
 
-def regression_coverage_score(
-    y_true: ArrayLike,
-    y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike,
-) -> float:
-    """
-    Effective coverage score obtained by the prediction intervals.
-
-    The effective coverage is obtained by estimating the fraction
-    of true labels that lie within the prediction intervals.
-
-    Parameters
-    ----------
-    y_true: ArrayLike of shape (n_samples,)
-        True labels.
-    y_pred_low: ArrayLike of shape (n_samples,)
-        Lower bound of prediction intervals.
-    y_pred_up: ArrayLike of shape (n_samples,)
-        Upper bound of prediction intervals.
-
-    Returns
-    -------
-    float
-        Effective coverage obtained by the prediction intervals.
-
-    Examples
-    ---------
-    >>> from mapie.metrics.regression import regression_coverage_score
-    >>> import numpy as np
-    >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
-    >>> y_pred_low = np.array([4, 6, 9, 8.5, 10.5])
-    >>> y_pred_up = np.array([6, 9, 10, 12.5, 12])
-    >>> print(regression_coverage_score(y_true, y_pred_low, y_pred_up))
-    0.8
-    """
-    y_true = cast(NDArray, column_or_1d(y_true))
-    y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
-    y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
-
-    check_arrays_length(y_true, y_pred_low, y_pred_up)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_pred_low)
-    check_array_inf(y_pred_low)
-    check_array_nan(y_pred_up)
-    check_array_inf(y_pred_up)
-
-    coverage = np.mean(
-        ((y_pred_low <= y_true) & (y_pred_up >= y_true))
-    )
-    return float(coverage)
-
-
 def regression_mean_width_score(
     y_pred_low: ArrayLike,
     y_pred_up: ArrayLike
