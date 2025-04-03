@@ -99,7 +99,7 @@ mapie.conformalize(X_conformalize.reshape(-1, 1), y_conformalize)
 
 # Evaluate prediction and coverage level on testing set
 y_pred, y_pis = mapie.predict_interval(X_test.reshape(-1, 1))
-coverage = regression_coverage_score_v2(y_test, y_pis)
+coverage = regression_coverage_score_v2(y_test, y_pis)[0]
 
 
 ##############################################################################
@@ -134,7 +134,7 @@ plt.fill_between(
 plt.title(
     f"Target and effective coverages for:\n "
     f"MLP with SplitConformalRegressor, confidence_level={confidence_level}: "
-    + f"(coverage is {coverage[0]:.3f})\n"
+    + f"(coverage is {coverage:.3f})\n"
 )
 plt.scatter(X_test, y_test, color="red", alpha=0.7, label="testing", s=2)
 plt.plot(
@@ -209,7 +209,7 @@ y_pred_cqr, y_pis_cqr = mapie_cqr.predict_interval(X_test.reshape(-1, 1))
 coverage_cqr = regression_coverage_score_v2(
     y_test,
     y_pis_cqr
-)
+)[0]
 
 
 ##############################################################################
@@ -244,7 +244,7 @@ plt.fill_between(
 plt.title(
     f"Target and effective coverages for:\n "
     f"LGBM with ConformalizedQuantileRegressor, confidence_level={confidence_level}: "
-    + f"(coverage is {coverage_cqr[0]:.3f})"
+    + f"(coverage is {coverage_cqr:.3f})"
 )
 plt.scatter(X_test, y_test, color="red", alpha=0.7, label="testing", s=2)
 plt.plot(

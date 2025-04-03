@@ -36,7 +36,7 @@ y_pred, y_pred_interval = mapie_regressor.predict_interval(X_test)
 coverage_scores = [
     regression_coverage_score_v2(
         y_test, y_pred_interval)
-]
+][0]
 
 plt.xlabel("x")
 plt.ylabel("y")
