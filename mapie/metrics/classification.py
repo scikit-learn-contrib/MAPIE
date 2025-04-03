@@ -122,18 +122,18 @@ def classification_coverage_score_v2(
 
     It is different from ``classification_coverage_score`` because it uses
     directly the output of ``predict`` method and can compute the
-    coverage for each alpha.
+    coverage for each confidence level.
 
     Parameters
     ----------
-    y_true: NDArray of shape (n_samples, n_alpha) or (n_samples,)
+    y_true: NDArray of shape (n_samples, n_confidence_level) or (n_samples,)
         True labels.
-    y_pred_set: NDArray of shape (n_samples, n_class, n_alpha)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
         Prediction sets given by booleans of labels.
 
     Returns
     -------
-    NDArray of shape (n_alpha,)
+    NDArray of shape (n_confidence_level,)
         Effective coverage obtained by the prediction sets.
     """
     check_arrays_length(y_true, y_pred_set)
@@ -174,7 +174,7 @@ def classification_ssc(
     ----------
     y_true: NDArray of shape (n_samples,)
         True labels.
-    y_pred_set: NDArray of shape (n_samples, n_class, n_alpha)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
     or (n_samples, n_class)
         Prediction sets given by booleans of labels.
     num_bins: int or None
@@ -184,7 +184,7 @@ def classification_ssc(
 
     Returns
     -------
-    NDArray of shape (n_alpha, num_bins)
+    NDArray of shape (n_confidence_level, num_bins)
 
     Examples
     --------
@@ -246,7 +246,7 @@ def classification_ssc_score(
     num_bins: Union[int, None] = None
 ) -> NDArray:
     """
-    Aggregate by the minimum for each alpha the Size-Stratified Coverage [3]:
+    Aggregate by the minimum for each confidence level the Size-Stratified Coverage [3]:
     returns the maximum violation of the conditional coverage
     (with the groups defined).
 
@@ -254,7 +254,7 @@ def classification_ssc_score(
     ----------
     y_true: NDArray of shape (n_samples,)
         True labels.
-    y_pred_set: NDArray of shape (n_samples, n_class, n_alpha)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
     or (n_samples, n_class)
         Prediction sets given by booleans of labels.
     num_bins: int or None
@@ -264,7 +264,7 @@ def classification_ssc_score(
 
     Returns
     -------
-    NDArray of shape (n_alpha,)
+    NDArray of shape (n_confidence_level,)
 
     Examples
     --------
