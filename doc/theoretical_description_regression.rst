@@ -100,7 +100,7 @@ Estimating the prediction intervals is carried out in three main steps:
   
 .. math:: \hat{\mu}(X_{n+1}) \pm ((1-\alpha) \textrm{ quantile of } |Y_1-\hat{\mu}_{-1}(X_1)|, ..., |Y_n-\hat{\mu}_{-n}(X_n)|)
 
-The resulting confidence interval can therefore be summarized as follows
+The resulting prediction interval can therefore be summarized as follows
 
 .. math:: \hat{C}_{n, \alpha}^{\rm jackknife}(X_{n+1}) = [ \hat{q}_{n, \alpha}^-\{\hat{\mu}(X_{n+1}) - R_i^{\rm LOO} \}, \hat{q}_{n, \alpha}^+\{\hat{\mu}(X_{n+1}) + R_i^{\rm LOO} \}] 
 
@@ -123,7 +123,7 @@ Unlike the standard jackknife method which estimates a prediction interval cente
 around the prediction of the model trained on the entire dataset, the so-called jackknife+ 
 method uses each leave-one-out prediction on the new test point to take the variability of the 
 regression function into account.
-The resulting confidence interval can therefore be summarized as follows
+The resulting prediction interval can therefore be summarized as follows
 
 .. math:: \hat{C}_{n, \alpha}^{\rm jackknife+}(X_{n+1}) = [ \hat{q}_{n, \alpha}^-\{\hat{\mu}_{-i}(X_{n+1}) - R_i^{\rm LOO} \}, \hat{q}_{n, \alpha}^+\{\hat{\mu}_{-i}(X_{n+1}) + R_i^{\rm LOO} \}] 
 
