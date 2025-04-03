@@ -35,8 +35,7 @@ y_pred, y_pred_interval = mapie_regressor.predict_interval(X_test)
 
 coverage_scores = [
     regression_coverage_score_v2(
-        y_test, y_pred_interval
-    ) for i, _ in enumerate(confidence_level)
+        y_test, y_pred_interval)
 ]
 
 plt.xlabel("x")
@@ -54,8 +53,8 @@ plt.fill_between(
 )
 plt.title(
     f"Effective coverage for "
-    f"confidence_level={confidence_level[0]:.2f}: {coverage_scores[0][0]:.3f}\n"
+    f"confidence_level={confidence_level[0]:.2f}: {coverage_scores[0]:.3f}\n"
     f"Effective coverage for "
-    f"confidence_level={confidence_level[1]:.2f}: {coverage_scores[1][0]:.3f}"
+    f"confidence_level={confidence_level[1]:.2f}: {coverage_scores[1]:.3f}"
 )
 plt.show()
