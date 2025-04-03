@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.datasets import make_regression
 
-from mapie.metrics.regression import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score_v2
 from mapie_v1.regression import SplitConformalRegressor
 from mapie_v1.utils import train_conformalize_test_split
 
@@ -34,8 +34,8 @@ mapie_regressor.conformalize(X_conformalize, y_conformalize)
 y_pred, y_pred_interval = mapie_regressor.predict_interval(X_test)
 
 coverage_scores = [
-    regression_coverage_score(
-        y_test, y_pred_interval[:, 0, i], y_pred_interval[:, 1, i]
+    regression_coverage_score_v2(
+        y_test, y_pred_interval
     ) for i, _ in enumerate(confidence_level)
 ]
 
@@ -54,8 +54,8 @@ plt.fill_between(
 )
 plt.title(
     f"Effective coverage for "
-    f"confidence_level={confidence_level[0]:.2f}: {coverage_scores[0]:.3f}\n"
+    f"confidence_level={confidence_level[0]:.2f}: {coverage_scores[0][0]:.3f}\n"
     f"Effective coverage for "
-    f"confidence_level={confidence_level[1]:.2f}: {coverage_scores[1]:.3f}"
+    f"confidence_level={confidence_level[1]:.2f}: {coverage_scores[1][0]:.3f}"
 )
 plt.show()
