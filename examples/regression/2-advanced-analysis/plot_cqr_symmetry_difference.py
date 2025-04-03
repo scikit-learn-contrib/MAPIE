@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from sklearn.datasets import make_regression
 from sklearn.ensemble import GradientBoostingRegressor
 
-from mapie.metrics.regression import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score_v2
 from mapie_v1.regression import ConformalizedQuantileRegressor
 from mapie_v1.utils import train_conformalize_test_split
 
@@ -56,11 +56,11 @@ print(f"y.shape: {y.shape}")
 print(f"y_pis_sym[:, 0].shape: {y_pis_sym[:, 0].shape}")
 print(f"y_pis_sym[:, 1].shape: {y_pis_sym[:, 1].shape}")
 # Calculate coverage scores
-coverage_score_sym = regression_coverage_score(
-    y_test, y_pis_sym[:, 0], y_pis_sym[:, 1]
+coverage_score_sym = regression_coverage_score_v2(
+    y_test, y_pis_sym
 )
-coverage_score_asym = regression_coverage_score(
-    y_test, y_pis_asym[:, 0], y_pis_asym[:, 1]
+coverage_score_asym = regression_coverage_score_v2(
+    y_test, y_pis_asym
 )
 
 # Sort the values for plotting
@@ -98,7 +98,7 @@ plt.fill_between(
 plt.title(
     f"Symmetric Intervals\n"
     f"Target and effective coverages for "
-    f"confidence_level={confidence_level:.2f}; coverage={coverage_score_sym:.3f})"
+    f"confidence_level={confidence_level:.2f}; coverage={coverage_score_sym[0]:.3f})"
 )
 
 # Plot asymmetric prediction intervals
@@ -119,7 +119,7 @@ plt.fill_between(
 plt.title(
     f"Asymmetric Intervals\n"
     f"Target and effective coverages for "
-    f"confidence_level={confidence_level:.2f}; coverage={coverage_score_sym:.3f})"
+    f"confidence_level={confidence_level:.2f}; coverage={coverage_score_sym[0]:.3f})"
 )
 plt.tight_layout()
 plt.show()
