@@ -114,27 +114,59 @@ def regression_coverage_score_v2(
     y_intervals: NDArray,
 ) -> NDArray:
     """
-    Effective coverage score obtained by the prediction intervals.
+    Effective coverage obtained by the prediction intervals.
 
-    The effective coverage is obtained by estimating the fraction
+    Intervals given by the ``predict_interval`` method can be passed directly
+    to the ``y_intervals`` argument (see example below).
+
+    Beside this intended use, this function also works with:
+
+    - ``y_true`` of shape (n_sample,) and ``y_intervals`` of shape (n_sample, 2)
+    - ``y_true`` of shape (n_sample, n_experiment) and `y_intervals` of shape
+      (n_sample, 2, n_experiment)
+
+    The effective coverage is obtained by computing the fraction
     of true labels that lie within the prediction intervals.
 
-    It is different from ``regression_coverage_score`` because it uses
-    directly the output of ``predict`` method and can compute the
-    coverage for each confidence level.
-
     Parameters
-    ----------
-    y_true: NDArray of shape (n_samples, n_confidence_level) or (n_samples,)
+    ------------
+    y_true: NDArray of shape (n_samples,)
         True labels.
+
     y_intervals: NDArray of shape (n_samples, 2, n_confidence_level)
         Lower and upper bound of prediction intervals
-        with different confidence levels.
+        with different confidence levels, given by the ``predict_interval`` method
 
     Returns
-    -------
+    ---------
     NDArray of shape (n_confidence_level,)
-        Effective coverage obtained by the prediction intervals.
+        Effective coverage obtained by the prediction intervals
+        for each confidence level
+    Examples
+    ---------
+    >>> from mapie.metrics.regression import regression_coverage_score_v2
+    >>> from mapie_v1.regression import SplitConformalRegressor
+    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> from sklearn.datasets import make_regression
+    >>> from sklearn.model_selection import train_test_split
+    >>> from sklearn.linear_model import Ridge
+
+    >>> X, y = make_regression(n_samples=500, n_features=2, noise=1.0)
+    >>> (
+    ...     X_train, X_conformalize, X_test,
+    ...     y_train, y_conformalize, y_test
+    ... ) = train_conformalize_test_split(
+    ...     X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=1
+    ... )
+
+    >>> mapie_regressor = SplitConformalRegressor(
+    ...     estimator=Ridge(),
+    ...     confidence_level=0.95,
+    ...     prefit=False,
+    ... ).fit(X_train, y_train).conformalize(X_conformalize, y_conformalize)
+
+    >>> predicted_points, predicted_intervals = mapie_regressor.predict_interval(X_test)
+    >>> print(regression_coverage_score_v2(y_test, predicted_intervals))
     """
     check_arrays_length(y_true, y_intervals)
     check_array_nan(y_true)
