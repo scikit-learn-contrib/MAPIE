@@ -280,7 +280,7 @@ for strategy_name, strategy_params in STRATEGIES.items():
     coverage[strategy_name] = regression_coverage_score_v2(
         y_test,
         y_pis[strategy_name]
-        )
+        )[0]
     width[strategy_name] = regression_mean_width_score(
         y_pis[strategy_name][:, 0, 0],
         y_pis[strategy_name][:, 1, 0]

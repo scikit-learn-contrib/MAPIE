@@ -263,7 +263,7 @@ for strategy in STRATEGIES:
     coverage_score[strategy] = regression_coverage_score_v2(
         y_test,
         y_pis[strategy]
-    )
+    )[0]
     width_mean_score[strategy] = regression_mean_width_score(
         y_pis[strategy][:, 0, 0],
         y_pis[strategy][:, 1, 0]
@@ -279,7 +279,7 @@ for strategy in STRATEGIES:
 results = pd.DataFrame(
     [
         [
-            coverage_score[strategy][0],
+            coverage_score[strategy],
             width_mean_score[strategy],
             cwc_score[strategy]
         ] for strategy in STRATEGIES
