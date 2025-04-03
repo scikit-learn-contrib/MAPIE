@@ -542,11 +542,10 @@ def coverage_width_based(
 
     check_alpha(1-alpha)
 
-    coverage_score = regression_coverage_score(
+    coverage_score = regression_coverage_score_v2(
         y_true,
-        y_pred_low,
-        y_pred_up
-    )
+        np.column_stack((y_pred_low, y_pred_up)),
+    )[0]
     mean_width = regression_mean_width_score(
         y_pred_low,
         y_pred_up
