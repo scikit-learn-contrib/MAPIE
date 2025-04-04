@@ -32,7 +32,7 @@ from mapie.conformity_scores import (
 )
 from mapie.estimator.regressor import EnsembleRegressor
 from mapie.metrics.regression import (
-    regression_coverage_score_v2,
+    regression_coverage_score,
 )
 from mapie.regression import MapieRegressor
 from mapie.subsample import Subsample
@@ -314,7 +314,7 @@ def test_coverage_validity(delta: float, n_calib: int) -> None:
         Xc, Xt, yc, yt = train_test_split(Xct, yct, test_size=n_test)
         mapie_reg.fit(Xc, yc)
         _, y_pis = mapie_reg.predict(Xt, alpha=1-delta)
-        coverage = regression_coverage_score_v2(yt, y_pis)[0]
+        coverage = regression_coverage_score(yt, y_pis)[0]
         cov_list.append(coverage)
 
     # Here we are testing whether the average coverage is statistically
@@ -621,7 +621,7 @@ def test_linear_regression_results(strategy: str) -> None:
     _, y_pis = mapie.predict(X, alpha=0.05)
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
-    coverage = regression_coverage_score_v2(y, y_pis)[0]
+    coverage = regression_coverage_score(y, y_pis)[0]
     np.testing.assert_allclose(width_mean, WIDTHS[strategy], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
@@ -651,7 +651,7 @@ def test_results_prefit_naive() -> None:
     mapie_reg.fit(X, y)
     _, y_pis = mapie_reg.predict(X, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = regression_coverage_score_v2(y, y_pis)[0]
+    coverage = regression_coverage_score(y, y_pis)[0]
     np.testing.assert_allclose(width_mean, WIDTHS["naive"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["naive"], rtol=1e-2)
 
@@ -666,7 +666,7 @@ def test_results_prefit() -> None:
     mapie_reg.fit(X_calib, y_calib)
     _, y_pis = mapie_reg.predict(X_calib, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = regression_coverage_score_v2(y_calib, y_pis)[0]
+    coverage = regression_coverage_score(y_calib, y_pis)[0]
     np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
 

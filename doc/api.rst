@@ -92,7 +92,7 @@ Regression Metrics
    :toctree: generated/
    :template: function.rst
 
-   mapie.metrics.regression.regression_coverage_score_v2
+   mapie.metrics.regression.regression_coverage_score
    mapie.metrics.regression.regression_mean_width_score
    mapie.metrics.regression.regression_ssc
    mapie.metrics.regression.regression_ssc_score
