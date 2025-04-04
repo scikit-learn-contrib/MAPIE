@@ -189,7 +189,31 @@ No more parameters with incorrect ``None`` defaults.
 - **v1**: All parameters now have explicit defaults.
 
 
-5. Migration examples: MAPIE v0.x to MAPIE v1
+5. Metrics change
+----------------------------------------------------------------------------------------
+
+In MAPIE v1, metrics are divided into three modules: ``calibration``, ``classification``, and ``regression``, which changes the import paths.
+
+Below is an example of the import needed for the ``classification_coverage_score`` function:
+
+- **v0.x**:
+.. code-block::
+
+    from mapie.metrics import classification_coverage_score
+
+- **v1**:
+.. code-block::
+
+    from mapie.metrics.classification import classification_coverage_score
+
+
+Additionally, two regression functions have undergone some change from v0.x to v1:
+
+- **regression_coverage_score**: Merged with ``regression_coverage_v2``. In MAPIE v1, ``regression_coverage_score`` now corresponds to MAPIE v0.x's ``regression_coverage_score_v2``.
+- **regression_mwi_score**: Now takes ``confidence_level`` as input instead of ``alpha`` (``confidence_level`` is equivalent to ``1 - alpha``).
+
+
+6. Migration examples: MAPIE v0.x to MAPIE v1
 ----------------------------------------------------------------------------------------
 
 Below is a side-by-side example of code in MAPIE v0.x and its equivalent in MAPIE v1
