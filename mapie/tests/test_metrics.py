@@ -32,7 +32,6 @@ from mapie.metrics.classification import (
     classification_ssc, classification_ssc_score,
 )
 from mapie.metrics.regression import (
-    regression_coverage_score,
     regression_mean_width_score,
     regression_coverage_score_v2,
     regression_ssc,
@@ -195,8 +194,6 @@ y_true = prng.randint(0, 2, 51)
 def test_regression_ypredlow_shape() -> None:
     """Test shape of y_pred_low."""
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        regression_coverage_score(y_toy, y_preds[:, :2], y_preds[:, 2])
-    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError):
         coverage_width_based(
@@ -206,8 +203,6 @@ def test_regression_ypredlow_shape() -> None:
 
 def test_regression_ypredup_shape() -> None:
     """Test shape of y_pred_up."""
-    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        regression_coverage_score(y_toy, y_preds[:, 1], y_preds[:, 1:])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError):
@@ -251,8 +246,6 @@ def test_regression_valid_input_shape() -> None:
 
 def test_regression_same_length() -> None:
     """Test when y_true and y_preds have different lengths."""
-    with pytest.raises(ValueError, match=r".*arrays with different len*"):
-        regression_coverage_score(y_toy, y_preds[:-1, 1], y_preds[:-1, 2])
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
@@ -269,25 +262,7 @@ def test_regression_same_length() -> None:
 
 def test_regression_toydata_coverage_score() -> None:
     """Test coverage_score for toy data."""
-    scr = regression_coverage_score(y_toy, y_preds[:, 1], y_preds[:, 2])
-    assert scr == 0.8
-
-
-def test_regression_ytrue_type_coverage_score() -> None:
-    """Test that list(y_true) gives right coverage."""
-    scr = regression_coverage_score(list(y_toy), y_preds[:, 1], y_preds[:, 2])
-    assert scr == 0.8
-
-
-def test_regression_ypredlow_type_coverage_score() -> None:
-    """Test that list(y_pred_low) gives right coverage."""
-    scr = regression_coverage_score(y_toy, list(y_preds[:, 1]), y_preds[:, 2])
-    assert scr == 0.8
-
-
-def test_regression_ypredup_type_coverage_score() -> None:
-    """Test that list(y_pred_up) gives right coverage."""
-    scr = regression_coverage_score(y_toy, y_preds[:, 1], list(y_preds[:, 2]))
+    scr = regression_coverage_score_v2(y_toy, y_preds[:, 1:])[0]
     assert scr == 0.8
 
 
@@ -580,18 +555,6 @@ def test_hsic_correlation_value() -> None:
     """Test that the values returned by hsic are correct"""
     coef = hsic(y_toy, intervals, kernel_sizes=(1, 1))
     np.testing.assert_allclose(coef, np.array([0.16829506, 0.3052798]))
-
-
-def test_regression_coverage_v1andv2() -> None:
-    """
-    Test that ``regression_coverage_score`` and
-    ```regression_coverage_score_v2``` returns the same results
-    """
-    cov_v1 = regression_coverage_score(
-        y_toy, intervals[:, 0, 0], intervals[:, 1, 0]
-    )
-    cov_v2 = regression_coverage_score_v2(np.expand_dims(y_toy, 1), intervals)
-    np.testing.assert_allclose(cov_v1, cov_v2[0])
 
 
 def test_regression_coverage_score_v2_ytrue_valid_shape() -> None:

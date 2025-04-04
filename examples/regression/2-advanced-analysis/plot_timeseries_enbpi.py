@@ -36,7 +36,7 @@ from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from numpy.typing import NDArray
 from mapie.metrics.regression import (
-    regression_coverage_score,
+    regression_coverage_score_v2,
     regression_mean_width_score,
 )
 from mapie.regression import MapieTimeSeriesRegressor
@@ -121,9 +121,9 @@ mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
 y_pred_npfit_enbpi, y_pis_npfit_enbpi = mapie_enpbi.predict(
     X_test, alpha=alpha, ensemble=True, optimize_beta=True
 )
-coverage_npfit_enbpi = regression_coverage_score(
-    y_test, y_pis_npfit_enbpi[:, 0, 0], y_pis_npfit_enbpi[:, 1, 0]
-)
+coverage_npfit_enbpi = regression_coverage_score_v2(
+    y_test, y_pis_npfit_enbpi
+)[0]
 
 width_npfit_enbpi = regression_mean_width_score(
     y_pis_npfit_enbpi[:, 1, 0], y_pis_npfit_enbpi[:, 0, 0]
@@ -155,9 +155,9 @@ for step in range(step_size, len(X_test), step_size):
         alpha=alpha,
         ensemble=True,
     )
-coverage_pfit_enbpi = regression_coverage_score(
-    y_test, y_pis_pfit_enbpi[:, 0, 0], y_pis_pfit_enbpi[:, 1, 0]
-)
+coverage_pfit_enbpi = regression_coverage_score_v2(
+    y_test, y_pis_pfit_enbpi
+)[0]
 width_pfit_enbpi = regression_mean_width_score(
     y_pis_pfit_enbpi[:, 1, 0], y_pis_pfit_enbpi[:, 0, 0]
 )

@@ -15,59 +15,6 @@ from mapie.utils import (
 )
 
 
-def regression_coverage_score(
-    y_true: ArrayLike,
-    y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike,
-) -> float:
-    """
-    Effective coverage score obtained by the prediction intervals.
-
-    The effective coverage is obtained by estimating the fraction
-    of true labels that lie within the prediction intervals.
-
-    Parameters
-    ----------
-    y_true: ArrayLike of shape (n_samples,)
-        True labels.
-    y_pred_low: ArrayLike of shape (n_samples,)
-        Lower bound of prediction intervals.
-    y_pred_up: ArrayLike of shape (n_samples,)
-        Upper bound of prediction intervals.
-
-    Returns
-    -------
-    float
-        Effective coverage obtained by the prediction intervals.
-
-    Examples
-    ---------
-    >>> from mapie.metrics.regression import regression_coverage_score
-    >>> import numpy as np
-    >>> y_true = np.array([5, 7.5, 9.5, 10.5, 12.5])
-    >>> y_pred_low = np.array([4, 6, 9, 8.5, 10.5])
-    >>> y_pred_up = np.array([6, 9, 10, 12.5, 12])
-    >>> print(regression_coverage_score(y_true, y_pred_low, y_pred_up))
-    0.8
-    """
-    y_true = cast(NDArray, column_or_1d(y_true))
-    y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
-    y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
-
-    check_arrays_length(y_true, y_pred_low, y_pred_up)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_pred_low)
-    check_array_inf(y_pred_low)
-    check_array_nan(y_pred_up)
-    check_array_inf(y_pred_up)
-
-    coverage = np.mean(
-        ((y_pred_low <= y_true) & (y_pred_up >= y_true))
-    )
-    return float(coverage)
-
-
 def regression_mean_width_score(
     y_pred_low: ArrayLike,
     y_pred_up: ArrayLike
@@ -114,27 +61,60 @@ def regression_coverage_score_v2(
     y_intervals: NDArray,
 ) -> NDArray:
     """
-    Effective coverage score obtained by the prediction intervals.
+    Effective coverage obtained by the prediction intervals.
 
-    The effective coverage is obtained by estimating the fraction
+    Intervals given by the ``predict_interval`` method can be passed directly
+    to the ``y_intervals`` argument (see example below).
+
+    Beside this intended use, this function also works with:
+
+    - ``y_true`` of shape (n_sample,) and ``y_intervals`` of shape (n_sample, 2)
+    - ``y_true`` of shape (n_sample, n_experiment) and `y_intervals` of shape
+      (n_sample, 2, n_experiment)
+
+    The effective coverage is obtained by computing the fraction
     of true labels that lie within the prediction intervals.
 
-    It is different from ``regression_coverage_score`` because it uses
-    directly the output of ``predict`` method and can compute the
-    coverage for each confidence level.
-
     Parameters
-    ----------
-    y_true: NDArray of shape (n_samples, n_confidence_level) or (n_samples,)
+    ------------
+    y_true: NDArray of shape (n_samples,)
         True labels.
+
     y_intervals: NDArray of shape (n_samples, 2, n_confidence_level)
         Lower and upper bound of prediction intervals
-        with different confidence levels.
+        with different confidence levels, given by the ``predict_interval`` method
 
     Returns
-    -------
+    ---------
     NDArray of shape (n_confidence_level,)
-        Effective coverage obtained by the prediction intervals.
+        Effective coverage obtained by the prediction intervals
+        for each confidence level.
+
+    Examples
+    ---------
+    >>> from mapie.metrics.regression import regression_coverage_score_v2
+    >>> from mapie_v1.regression import SplitConformalRegressor
+    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> from sklearn.datasets import make_regression
+    >>> from sklearn.model_selection import train_test_split
+    >>> from sklearn.linear_model import Ridge
+
+    >>> X, y = make_regression(n_samples=500, n_features=2, noise=1.0)
+    >>> (
+    ...     X_train, X_conformalize, X_test,
+    ...     y_train, y_conformalize, y_test
+    ... ) = train_conformalize_test_split(
+    ...     X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=1
+    ... )
+
+    >>> mapie_regressor = SplitConformalRegressor(
+    ...     estimator=Ridge(),
+    ...     confidence_level=0.95,
+    ...     prefit=False,
+    ... ).fit(X_train, y_train).conformalize(X_conformalize, y_conformalize)
+
+    >>> predicted_points, predicted_intervals = mapie_regressor.predict_interval(X_test)
+    >>> coverage = regression_coverage_score_v2(y_test, predicted_intervals)[0]
     """
     check_arrays_length(y_true, y_intervals)
     check_array_nan(y_true)
@@ -509,11 +489,10 @@ def coverage_width_based(
 
     check_alpha(1-alpha)
 
-    coverage_score = regression_coverage_score(
+    coverage_score = regression_coverage_score_v2(
         y_true,
-        y_pred_low,
-        y_pred_up
-    )
+        np.column_stack((y_pred_low, y_pred_up)),
+    )[0]
     mean_width = regression_mean_width_score(
         y_pred_low,
         y_pred_up
