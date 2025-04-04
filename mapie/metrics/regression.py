@@ -203,8 +203,7 @@ def regression_ssc(
             np.take_along_axis(y_intervals[:, 0, :], indexes, axis=0),
             np.take_along_axis(y_intervals[:, 1, :], indexes, axis=0)
         ], axis=1)
-        coverages[:, i] = regression_coverage_score(y_true[indexes],
-                                                       intervals_binned)
+        coverages[:, i] = regression_coverage_score(y_true[indexes], intervals_binned)
 
     return coverages
 
