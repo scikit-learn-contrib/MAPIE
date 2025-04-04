@@ -37,7 +37,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import train_test_split
 
-from mapie.metrics.regression import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score_v2
 from mapie_v1.regression import (
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
@@ -303,9 +303,9 @@ plt.show()
 
 pd.DataFrame([
     [
-        regression_coverage_score(
-            y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
-        ),
+        regression_coverage_score_v2(
+            y_test, y_pis[strategy]
+        )[0],
         (
             y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]
         ).mean()
@@ -538,9 +538,9 @@ def get_heteroscedastic_coverage(y_test, y_pis, STRATEGIES, bins):
             y_test_trunc = np.take(y_test, indices)
             y_low_ = np.take(y_pis[strategy][:, 0, 0], indices)
             y_high_ = np.take(y_pis[strategy][:, 1, 0], indices)
-            score_coverage = regression_coverage_score(
-                y_test_trunc[0], y_low_[0], y_high_[0]
-            )
+            score_coverage = regression_coverage_score_v2(
+                y_test_trunc[0], np.stack((y_low_[0], y_high_[0]), axis=-1)
+            )[0]
             recap[name].append(score_coverage)
     recap_df = pd.DataFrame(recap, index=STRATEGIES)
     return recap_df
@@ -569,9 +569,9 @@ plt.show()
 
 pd.DataFrame([
     [
-        regression_coverage_score(
-            y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
-        ),
+        regression_coverage_score_v2(
+            y_test, y_pis[strategy]
+        )[0],
         (
             y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]
         ).mean()
@@ -766,9 +766,9 @@ plt.show()
 
 pd.DataFrame([
     [
-        regression_coverage_score(
-            y_test, y_pis[strategy][:, 0, 0], y_pis[strategy][:, 1, 0]
-        ),
+        regression_coverage_score_v2(
+            y_test, y_pis[strategy]
+        )[0],
         (
             y_pis[strategy][:, 1, 0] - y_pis[strategy][:, 0, 0]
         ).mean()
