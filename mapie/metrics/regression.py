@@ -56,7 +56,7 @@ def regression_mean_width_score(
     return float(mean_width)
 
 
-def regression_coverage_score_v2(
+def regression_coverage_score(
     y_true: NDArray,
     y_intervals: NDArray,
 ) -> NDArray:
@@ -92,7 +92,7 @@ def regression_coverage_score_v2(
 
     Examples
     ---------
-    >>> from mapie.metrics.regression import regression_coverage_score_v2
+    >>> from mapie.metrics.regression import regression_coverage_score
     >>> from mapie_v1.regression import SplitConformalRegressor
     >>> from mapie_v1.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_regression
@@ -114,7 +114,7 @@ def regression_coverage_score_v2(
     ... ).fit(X_train, y_train).conformalize(X_conformalize, y_conformalize)
 
     >>> predicted_points, predicted_intervals = mapie_regressor.predict_interval(X_test)
-    >>> coverage = regression_coverage_score_v2(y_test, predicted_intervals)[0]
+    >>> coverage = regression_coverage_score(y_test, predicted_intervals)[0]
     """
     check_arrays_length(y_true, y_intervals)
     check_array_nan(y_true)
@@ -203,8 +203,7 @@ def regression_ssc(
             np.take_along_axis(y_intervals[:, 0, :], indexes, axis=0),
             np.take_along_axis(y_intervals[:, 1, :], indexes, axis=0)
         ], axis=1)
-        coverages[:, i] = regression_coverage_score_v2(y_true[indexes],
-                                                       intervals_binned)
+        coverages[:, i] = regression_coverage_score(y_true[indexes], intervals_binned)
 
     return coverages
 
@@ -489,7 +488,7 @@ def coverage_width_based(
 
     check_alpha(1-alpha)
 
-    coverage_score = regression_coverage_score_v2(
+    coverage_score = regression_coverage_score(
         y_true,
         np.column_stack((y_pred_low, y_pred_up)),
     )[0]

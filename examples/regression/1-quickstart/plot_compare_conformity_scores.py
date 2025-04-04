@@ -42,7 +42,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
-from mapie.metrics.regression import regression_coverage_score_v2
+from mapie.metrics.regression import regression_coverage_score
 from mapie_v1.regression import CrossConformalRegressor
 
 RANDOM_STATE = 42
@@ -111,7 +111,7 @@ y_pred_absconfscore, y_pis_absconfscore = mapie.predict_interval(
     X_test
 )
 
-coverage_absconfscore = regression_coverage_score_v2(
+coverage_absconfscore = regression_coverage_score(
     y_test, y_pis_absconfscore
 )[0]
 
@@ -146,7 +146,7 @@ y_pred_gammaconfscore, y_pis_gammaconfscore = mapie.predict_interval(
     X_test
 )
 
-coverage_gammaconfscore = regression_coverage_score_v2(
+coverage_gammaconfscore = regression_coverage_score(
     y_test, y_pis_gammaconfscore
 )[0]
 

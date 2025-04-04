@@ -33,7 +33,7 @@ from mapie.metrics.classification import (
 )
 from mapie.metrics.regression import (
     regression_mean_width_score,
-    regression_coverage_score_v2,
+    regression_coverage_score,
     regression_ssc,
     regression_ssc_score, hsic, coverage_width_based, regression_mwi_score,
 )
@@ -262,7 +262,7 @@ def test_regression_same_length() -> None:
 
 def test_regression_toydata_coverage_score() -> None:
     """Test coverage_score for toy data."""
-    scr = regression_coverage_score_v2(y_toy, y_preds[:, 1:])[0]
+    scr = regression_coverage_score(y_toy, y_preds[:, 1:])[0]
     assert scr == 0.8
 
 
@@ -557,15 +557,15 @@ def test_hsic_correlation_value() -> None:
     np.testing.assert_allclose(coef, np.array([0.16829506, 0.3052798]))
 
 
-def test_regression_coverage_score_v2_ytrue_valid_shape() -> None:
+def test_regression_coverage_score_ytrue_valid_shape() -> None:
     """Test that no error is raised if y_true has the shape (n_samples,)."""
-    regression_coverage_score_v2(y_toy, intervals)
+    regression_coverage_score(y_toy, intervals)
 
 
-def test_regression_coverage_score_v2_intervals_invalid_shape() -> None:
+def test_regression_coverage_score_intervals_invalid_shape() -> None:
     """Test that an error is raised if intervals has not the good shape."""
     with pytest.raises(ValueError):
-        regression_coverage_score_v2(
+        regression_coverage_score(
             np.expand_dims(y_toy, 1), intervals[:, 0, 0]
         )
 
