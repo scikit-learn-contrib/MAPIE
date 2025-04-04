@@ -197,12 +197,12 @@ In MAPIE v1, metrics are divided into three modules: ``calibration``, ``classifi
 Below is an example of the import needed for the ``classification_coverage_score`` function:
 
 - **v0.x**:
-.. testcode::
+.. code-block::
 
     from mapie.metrics import classification_coverage_score
 
 - **v1**:
-.. testcode::
+.. code-block::
 
     from mapie.metrics.classification import classification_coverage_score
 
