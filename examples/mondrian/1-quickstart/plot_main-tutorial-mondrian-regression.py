@@ -26,7 +26,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 
-from mapie.metrics.regression import regression_coverage_score_v2
+from mapie.metrics.regression import regression_coverage_score
 from mapie.mondrian import MondrianCP
 from mapie.regression import MapieRegressor
 
@@ -152,10 +152,10 @@ _, y_pss_mondrian = mondrian_regressor.predict(
 coverages = {}
 for group in np.unique(partition_test):
     coverages[group] = {}
-    coverages[group]["split"] = regression_coverage_score_v2(
+    coverages[group]["split"] = regression_coverage_score(
         y_test[partition_test == group], y_pss_split[partition_test == group]
     )
-    coverages[group]["mondrian"] = regression_coverage_score_v2(
+    coverages[group]["mondrian"] = regression_coverage_score(
         y_test[partition_test == group],
         y_pss_mondrian[partition_test == group]
     )

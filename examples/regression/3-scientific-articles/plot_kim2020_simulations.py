@@ -47,7 +47,7 @@ from sklearn.model_selection import train_test_split
 
 from numpy.typing import ArrayLike, NDArray
 from mapie.metrics.regression import (
-    regression_coverage_score_v2,
+    regression_coverage_score,
     regression_mean_width_score,
 )
 from mapie_v1.regression import (
@@ -225,7 +225,7 @@ def get_coverage_width(PIs: pd.DataFrame, y: NDArray) -> Tuple[float, float]:
     (coverage, width) : Tuple[float, float]
         The mean coverage and width of the PIs.
     """
-    coverage = regression_coverage_score_v2(
+    coverage = regression_coverage_score(
         y_true=y, y_intervals=np.stack((PIs["lower"], PIs["upper"]), axis=-1)
     )[0]
     width = regression_mean_width_score(

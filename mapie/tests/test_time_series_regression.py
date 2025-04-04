@@ -14,7 +14,7 @@ from numpy.typing import NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.metrics.regression import (
-    regression_coverage_score_v2,
+    regression_coverage_score,
 )
 from mapie.regression import MapieTimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
@@ -286,7 +286,7 @@ def test_linear_regression_results(strategy: str) -> None:
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
 
-    coverage = regression_coverage_score_v2(y, y_pis)[0]
+    coverage = regression_coverage_score(y, y_pis)[0]
     np.testing.assert_allclose(width_mean, WIDTHS[strategy], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
@@ -306,7 +306,7 @@ def test_results_prefit() -> None:
     mapie_ts_reg.fit(X_val, y_val)
     _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = regression_coverage_score_v2(y_test, y_pis)[0]
+    coverage = regression_coverage_score(y_test, y_pis)[0]
     np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
 
@@ -423,7 +423,7 @@ def test_interval_prediction_with_beta_optimize() -> None:
     mapie_ts_reg.update(X_val, y_val)
     _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05, optimize_beta=True)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
-    coverage = regression_coverage_score_v2(y_test, y_pis)[0]
+    coverage = regression_coverage_score(y_test, y_pis)[0]
     np.testing.assert_allclose(width_mean, 3.67, rtol=1e-2)
     np.testing.assert_allclose(coverage, 0.916, rtol=1e-2)
 

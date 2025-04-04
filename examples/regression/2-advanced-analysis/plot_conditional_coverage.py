@@ -30,7 +30,7 @@ from numpy.typing import NDArray
 from mapie.conformity_scores import (GammaConformityScore,
                                      ResidualNormalisedScore)
 from mapie.metrics.regression import (
-    regression_coverage_score_v2,
+    regression_coverage_score,
     regression_ssc,
     regression_ssc_score, hsic,
 )
@@ -162,7 +162,7 @@ for strategy_name, strategy_params in STRATEGIES.items():
         y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test)
 
     # computing metrics
-    coverage[strategy_name] = regression_coverage_score_v2(
+    coverage[strategy_name] = regression_coverage_score(
         y_test, y_pis[strategy_name]
     )
     cond_coverage[strategy_name] = regression_ssc_score(

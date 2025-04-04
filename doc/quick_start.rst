@@ -69,9 +69,9 @@ Here, we generate one-dimensional noisy data that we fit with a linear model.
 
     # You can compute the coverage of your prediction intervals.
 
-    from mapie.metrics.regression import regression_coverage_score_v2
+    from mapie.metrics.regression import regression_coverage_score
 
-    coverage_scores = regression_coverage_score_v2(y_test, y_pred_intervals)
+    coverage_scores = regression_coverage_score(y_test, y_pred_intervals)
 
     #  The estimated prediction intervals can then be plotted as follows.
 
