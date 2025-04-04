@@ -60,8 +60,7 @@ class SplitConformalRegressor:
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
 
-        See :ref:``theoretical_description_conformity_scores``.
-
+        See :ref:`theoretical_description_conformity_scores`.
     prefit : bool, default=False
         If True, the base regressor must be fitted, and the ``fit``
         method must be skipped.
