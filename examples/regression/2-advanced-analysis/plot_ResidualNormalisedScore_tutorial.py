@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split
 
 from mapie.conformity_scores import ResidualNormalisedScore
 from mapie.metrics.regression import (
-    regression_coverage_score_v2,
+    regression_coverage_score,
     regression_ssc_score,
 )
 from mapie_v1.regression import SplitConformalRegressor
@@ -197,7 +197,7 @@ for strategy_name, strategy_params in STRATEGIES.items():
         mapie.fit(X_train, y_train)
         mapie.conformalize(X_conformalize, y_conformalize)
     y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test)
-    coverage[strategy_name] = regression_coverage_score_v2(
+    coverage[strategy_name] = regression_coverage_score(
         y_test, y_pis[strategy_name]
     )
     cond_coverage[strategy_name] = regression_ssc_score(

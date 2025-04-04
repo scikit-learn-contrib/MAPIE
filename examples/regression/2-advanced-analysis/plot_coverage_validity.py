@@ -30,7 +30,7 @@ from sklearn.model_selection import train_test_split
 
 from mapie_v1.regression import SplitConformalRegressor
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.metrics.regression import regression_coverage_score_v2
+from mapie.metrics.regression import regression_coverage_score
 
 from joblib import Parallel, delayed
 
@@ -135,14 +135,14 @@ def get_coverage_prefit(
         # Prediction step
         _, y_pis = conformalizer.predict_interval(X_test)
         # Coverage step
-        coverage = regression_coverage_score_v2(y_test, y_pis)
+        coverage = regression_coverage_score(y_test, y_pis)
     else:
         # Calibration step
         conformalizer.fit(X_conformalize, y_conformalize)
         # Prediction step
         _, y_pis = conformalizer.predict(X_test)
         # Coverage step
-        coverage = regression_coverage_score_v2(y_test, y_pis)
+        coverage = regression_coverage_score(y_test, y_pis)
 
     return coverage
 

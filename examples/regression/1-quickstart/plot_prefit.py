@@ -27,7 +27,7 @@ from matplotlib import pyplot as plt
 from sklearn.neural_network import MLPRegressor
 
 from numpy.typing import NDArray
-from mapie.metrics.regression import regression_coverage_score_v2
+from mapie.metrics.regression import regression_coverage_score
 from mapie_v1.regression import SplitConformalRegressor, ConformalizedQuantileRegressor
 from mapie_v1.utils import train_conformalize_test_split
 
@@ -99,7 +99,7 @@ mapie.conformalize(X_conformalize.reshape(-1, 1), y_conformalize)
 
 # Evaluate prediction and coverage level on testing set
 y_pred, y_pis = mapie.predict_interval(X_test.reshape(-1, 1))
-coverage = regression_coverage_score_v2(y_test, y_pis)[0]
+coverage = regression_coverage_score(y_test, y_pis)[0]
 
 
 ##############################################################################
@@ -206,7 +206,7 @@ mapie_cqr.conformalize(X_conformalize.reshape(-1, 1), y_conformalize)
 
 # Evaluate prediction and coverage level on testing set
 y_pred_cqr, y_pis_cqr = mapie_cqr.predict_interval(X_test.reshape(-1, 1))
-coverage_cqr = regression_coverage_score_v2(
+coverage_cqr = regression_coverage_score(
     y_test,
     y_pis_cqr
 )[0]

@@ -37,7 +37,7 @@ from sklearn.linear_model import LinearRegression
 
 from numpy.typing import NDArray
 from mapie.metrics.regression import (
-    regression_coverage_score_v2,
+    regression_coverage_score,
     regression_mean_width_score,
 )
 from mapie_v1.regression import CrossConformalRegressor
@@ -128,7 +128,7 @@ def PIs_vs_dimensions(
                 _, y_pis = mapie.predict_interval(
                     X_test, aggregate_predictions="median"
                 )
-                coverage = regression_coverage_score_v2(
+                coverage = regression_coverage_score(
                     y_test, y_pis
                 )[0]
                 results[strategy][dimension]["coverage"][trial] = coverage
