@@ -80,7 +80,6 @@ class SplitConformalRegressor:
     >>> from mapie_v1.regression import SplitConformalRegressor
     >>> from mapie_v1.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_regression
-    >>> from sklearn.model_selection import train_test_split
     >>> from sklearn.linear_model import Ridge
 
     >>> X, y = make_regression(n_samples=500, n_features=2, noise=1.0)

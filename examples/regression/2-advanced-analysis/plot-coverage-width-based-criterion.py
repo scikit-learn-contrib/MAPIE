@@ -25,7 +25,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import train_test_split
 
 from mapie.metrics.regression import (
-    regression_coverage_score,
+    regression_coverage_score_v2,
     regression_mean_width_score, coverage_width_based,
 )
 from mapie_v1.regression import (
@@ -260,11 +260,10 @@ width_mean_score = {}
 cwc_score = {}
 
 for strategy in STRATEGIES:
-    coverage_score[strategy] = regression_coverage_score(
+    coverage_score[strategy] = regression_coverage_score_v2(
         y_test,
-        y_pis[strategy][:, 0, 0],
-        y_pis[strategy][:, 1, 0]
-    )
+        y_pis[strategy]
+    )[0]
     width_mean_score[strategy] = regression_mean_width_score(
         y_pis[strategy][:, 0, 0],
         y_pis[strategy][:, 1, 0]

@@ -19,7 +19,9 @@ from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from numpy.typing import NDArray
-from mapie.metrics.regression import regression_coverage_score
+from mapie.metrics.regression import (
+    regression_coverage_score_v2,
+)
 from mapie.regression import MapieQuantileRegressor
 
 X_toy = np.array(
@@ -514,7 +516,7 @@ def test_linear_regression_results(strategy: str) -> None:
     _, y_pis = mapie.predict(X)
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
-    coverage = regression_coverage_score(y, y_pred_low, y_pred_up)
+    coverage = regression_coverage_score_v2(y, y_pis)[0]
     np.testing.assert_allclose(width_mean, WIDTHS[strategy], rtol=1e-2)
     np.testing.assert_allclose(coverage, COVERAGES[strategy], rtol=1e-2)
 
