@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from sklearn.datasets import make_regression
 from sklearn.ensemble import GradientBoostingRegressor
 
-from mapie.metrics.regression import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score_v2
 from mapie_v1.regression import ConformalizedQuantileRegressor
 from mapie_v1.utils import train_conformalize_test_split
 
@@ -56,12 +56,12 @@ print(f"y.shape: {y.shape}")
 print(f"y_pis_sym[:, 0].shape: {y_pis_sym[:, 0].shape}")
 print(f"y_pis_sym[:, 1].shape: {y_pis_sym[:, 1].shape}")
 # Calculate coverage scores
-coverage_score_sym = regression_coverage_score(
-    y_test, y_pis_sym[:, 0], y_pis_sym[:, 1]
-)
-coverage_score_asym = regression_coverage_score(
-    y_test, y_pis_asym[:, 0], y_pis_asym[:, 1]
-)
+coverage_score_sym = regression_coverage_score_v2(
+    y_test, y_pis_sym
+)[0]
+coverage_score_asym = regression_coverage_score_v2(
+    y_test, y_pis_asym
+)[0]
 
 # Sort the values for plotting
 order = np.argsort(X_test[:, 0])

@@ -45,7 +45,7 @@ from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from sklearn.datasets import make_sparse_uncorrelated
 
-from mapie.metrics.regression import regression_coverage_score
+from mapie.metrics.regression import regression_coverage_score_v2
 from mapie_v1.regression import CrossConformalRegressor
 
 
@@ -91,9 +91,9 @@ y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict_interval(
     X_test, aggregate_predictions='median'
 )
 widths_non_nested = y_pis_non_nested[:, 1, 0] - y_pis_non_nested[:, 0, 0]
-coverage_non_nested = regression_coverage_score(
-    y_test, y_pis_non_nested[:, 0, 0], y_pis_non_nested[:, 1, 0]
-)
+coverage_non_nested = regression_coverage_score_v2(
+    y_test, y_pis_non_nested
+)[0]
 score_non_nested = root_mean_squared_error(y_test, y_pred_non_nested)
 
 # Nested approach with the CV+ strategy using the Random Forest model.
@@ -117,9 +117,9 @@ y_pred_nested, y_pis_nested = mapie_nested.predict_interval(
     X_test, aggregate_predictions='median'
 )
 widths_nested = y_pis_nested[:, 1, 0] - y_pis_nested[:, 0, 0]
-coverage_nested = regression_coverage_score(
-    y_test, y_pis_nested[:, 0, 0], y_pis_nested[:, 1, 0]
-)
+coverage_nested = regression_coverage_score_v2(
+    y_test, y_pis_nested
+)[0]
 score_nested = root_mean_squared_error(y_test, y_pred_nested)
 
 # Print scores and effective coverages.

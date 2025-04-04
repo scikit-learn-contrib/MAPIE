@@ -57,7 +57,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie.metrics.regression import (
-    regression_coverage_score,
+    regression_coverage_score_v2,
     regression_mean_width_score, coverage_width_based,
 )
 from mapie.regression import MapieTimeSeriesRegressor
@@ -217,9 +217,9 @@ y_pred_enbpi_npfit, y_pis_enbpi_npfit = mapie_enbpi.predict(
     allow_infinite_bounds=True
 )
 y_pis_enbpi_npfit = np.clip(y_pis_enbpi_npfit, 1, 10)
-coverage_enbpi_npfit = regression_coverage_score(
-    y_test, y_pis_enbpi_npfit[:, 0, 0], y_pis_enbpi_npfit[:, 1, 0]
-)
+coverage_enbpi_npfit = regression_coverage_score_v2(
+    y_test, y_pis_enbpi_npfit
+)[0]
 width_enbpi_npfit = regression_mean_width_score(
     y_pis_enbpi_npfit[:, 0, 0], y_pis_enbpi_npfit[:, 1, 0]
 )
@@ -258,9 +258,9 @@ for step in range(gap, len(X_test), gap):
         y_pis_aci_npfit[step:step + gap, :, :], 1, 10
     )
 
-coverage_aci_npfit = regression_coverage_score(
-    y_test, y_pis_aci_npfit[:, 0, 0], y_pis_aci_npfit[:, 1, 0]
-)
+coverage_aci_npfit = regression_coverage_score_v2(
+    y_test, y_pis_aci_npfit
+)[0]
 width_aci_npfit = regression_mean_width_score(
     y_pis_aci_npfit[:, 0, 0], y_pis_aci_npfit[:, 1, 0]
 )
@@ -307,9 +307,9 @@ for step in range(gap, len(X_test), gap):
     y_pis_enbpi_pfit[step:step + gap, :, :] = np.clip(
         y_pis_enbpi_pfit[step:step + gap, :, :], 1, 10
     )
-coverage_enbpi_pfit = regression_coverage_score(
-    y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0]
-)
+coverage_enbpi_pfit = regression_coverage_score_v2(
+    y_test, y_pis_enbpi_pfit
+)[0]
 width_enbpi_pfit = regression_mean_width_score(
     y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0]
 )
@@ -360,9 +360,9 @@ for step in range(gap, len(X_test), gap):
         y_pis_aci_pfit[step:step + gap, :, :], 1, 10
     )
 
-coverage_aci_pfit = regression_coverage_score(
-    y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0]
-)
+coverage_aci_pfit = regression_coverage_score_v2(
+    y_test, y_pis_aci_pfit
+)[0]
 width_aci_pfit = regression_mean_width_score(
     y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0]
 )
@@ -462,29 +462,25 @@ window = 24
 
 for i in range(window, len(y_test), 1):
     rolling_coverage_aci_npfit.append(
-        regression_coverage_score(
-            y_test[i-window:i], y_pis_aci_npfit[i-window:i, 0, 0],
-            y_pis_aci_npfit[i-window:i, 1, 0]
-        )
+        regression_coverage_score_v2(
+            y_test[i-window:i], y_pis_aci_npfit[i-window:i]
+        )[0]
     )
     rolling_coverage_aci_pfit.append(
-        regression_coverage_score(
-            y_test[i-window:i], y_pis_aci_pfit[i-window:i, 0, 0],
-            y_pis_aci_pfit[i-window:i, 1, 0]
-        )
+        regression_coverage_score_v2(
+            y_test[i-window:i], y_pis_aci_pfit[i-window:i]
+        )[0]
     )
 
     rolling_coverage_enbpi_npfit.append(
-        regression_coverage_score(
-            y_test[i-window:i], y_pis_enbpi_npfit[i-window:i, 0, 0],
-            y_pis_enbpi_npfit[i-window:i, 1, 0]
-        )
+        regression_coverage_score_v2(
+            y_test[i-window:i], y_pis_enbpi_npfit[i-window:i]
+        )[0]
     )
     rolling_coverage_enbpi_pfit.append(
-        regression_coverage_score(
-            y_test[i-window:i], y_pis_enbpi_pfit[i-window:i, 0, 0],
-            y_pis_enbpi_pfit[i-window:i, 1, 0]
-        )
+        regression_coverage_score_v2(
+            y_test[i-window:i], y_pis_enbpi_pfit[i-window:i]
+        )[0]
     )
 
 plt.figure(figsize=(10, 5))

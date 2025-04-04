@@ -30,7 +30,7 @@ from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import KFold, RandomizedSearchCV, train_test_split
 
 from mapie.metrics.regression import (
-    regression_coverage_score,
+    regression_coverage_score_v2,
     regression_mean_width_score,
 )
 from mapie_v1.regression import (
@@ -277,11 +277,10 @@ for strategy_name, strategy_params in STRATEGIES.items():
         lower_bound[strategy_name],
         upper_bound[strategy_name]
     ) = sort_y_values(y_test, y_pred[strategy_name], y_pis[strategy_name])
-    coverage[strategy_name] = regression_coverage_score(
+    coverage[strategy_name] = regression_coverage_score_v2(
         y_test,
-        y_pis[strategy_name][:, 0, 0],
-        y_pis[strategy_name][:, 1, 0]
-        )
+        y_pis[strategy_name]
+        )[0]
     width[strategy_name] = regression_mean_width_score(
         y_pis[strategy_name][:, 0, 0],
         y_pis[strategy_name][:, 1, 0]
@@ -363,11 +362,9 @@ def get_coverages_widths_by_bins(
             y_low_ = np.take(lower_bound[strategy], indices)
             y_high_ = np.take(upper_bound[strategy], indices)
             if want == "coverage":
-                recap[name].append(regression_coverage_score(
-                    y_test_trunc[0],
-                    y_low_[0],
-                    y_high_[0]
-                ))
+                recap[name].append(regression_coverage_score_v2(
+                    y_test_trunc[0], np.stack((y_low_[0], y_high_[0]), axis=-1)
+                )[0])
             elif want == "width":
                 recap[name].append(
                     regression_mean_width_score(y_low_[0], y_high_[0])
