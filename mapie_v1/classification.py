@@ -57,7 +57,7 @@ class SplitConformalClassifier:
         A custom score function inheriting from BaseClassificationScore may also
         be provided.
 
-        See :ref:``theoretical_description_classification``.
+        See :ref:`theoretical_description_classification`.
 
     prefit : bool, default=False
         If True, the base classifier must be fitted, and the ``fit``
