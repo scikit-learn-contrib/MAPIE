@@ -413,6 +413,10 @@ class RAPSConformityScore(APSConformityScore):
 
             By default, ``True``.
 
+            See the docstring of
+            :meth:`conformity_scores.sets.aps.APSConformityScore.get_prediction_sets`
+            for more details.
+
         X_raps: NDArray of shape (n_samples, n_features)
             Observed feature values for the RAPS method (split data).
 

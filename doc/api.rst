@@ -2,7 +2,7 @@
 MAPIE API
 #########
 
-Regression V1 (from mapie_v1)
+Regression
 =============================
 
 .. autosummary::
@@ -13,14 +13,6 @@ Regression V1 (from mapie_v1)
    mapie_v1.regression.CrossConformalRegressor
    mapie_v1.regression.JackknifeAfterBootstrapRegressor
    mapie_v1.regression.ConformalizedQuantileRegressor
-
-Regression (from mapie)
-=======================
-
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
-
    mapie.regression.MapieRegressor
    mapie.regression.MapieQuantileRegressor
    mapie.regression.MapieTimeSeriesRegressor
@@ -33,6 +25,8 @@ Classification
    :template: class.rst
 
    mapie.classification.MapieClassifier
+   mapie_v1.classification.SplitConformalClassifier
+   mapie_v1.classification.CrossConformalClassifier
 
 Multi-Label Classification
 ==========================
