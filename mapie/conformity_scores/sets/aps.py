@@ -360,15 +360,40 @@ class APSConformityScore(NaiveConformityScore):
             By default ``"mean"``.
 
         include_last_label: Optional[Union[bool, str]]
-            Whether or not to include last label in prediction sets.
-            Choose among ``False``, ``True``  or ``"randomized"``.
+            Whether or not to include last label in
+            prediction sets for the "aps" method. Choose among:
 
-            By default, ``True``.
+            - False, does not include label whose cumulated score is just over
+              the quantile.
+            - True, includes label whose cumulated score is just over the
+              quantile, unless there is only one label in the prediction set.
+            - "randomized", randomly includes label whose cumulated score is
+              just over the quantile based on the comparison of a uniform
+              number and the difference between the cumulated score of
+              the last label and the quantile.
+
+            When set to ``True`` or ``False``, it may result in a coverage
+            higher than ``1 - alpha`` (because contrary to the "randomized"
+            setting, none of these methods create empty prediction sets). See
+            [1] and [2] for more details.
+
+            By default ``True``.
 
         Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
+
+        References
+        ----------
+        [1] Yaniv Romano, Matteo Sesia and Emmanuel J. Candès.
+        "Classification with Valid and Adaptive Coverage."
+        NeurIPS 202 (spotlight) 2020.
+
+        [2] Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan
+        and Jitendra Malik.
+        "Uncertainty Sets for Image Classifiers using Conformal Prediction."
+        International Conference on Learning Representations 2021.
         """
         include_last_label = check_include_last_label(include_last_label)
 
