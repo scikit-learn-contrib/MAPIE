@@ -299,36 +299,31 @@ class CrossConformalClassifier:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
+        """
+        All except raps & top-k
+        """
         pass
 
-    def fit(
+    def fit_conformalize(
         self,
-        X_train: ArrayLike,
-        y_train: ArrayLike,
-        fit_params: Optional[dict] = None,
-    ) -> Self:
-        return self
-
-    def conformalize(
-        self,
-        X_conformalize: ArrayLike,
-        y_conformalize: ArrayLike,
+        X: ArrayLike,
+        y: ArrayLike,
         groups: Optional[ArrayLike] = None,
-        predict_params: Optional[dict] = None
+        fit_params: Optional[dict] = None,
+        predict_params: Optional[dict] = None,
     ) -> Self:
         return self
-
-    def predict(self, X: ArrayLike) -> NDArray:
-        return np.ndarray(0)
 
     def predict_set(
         self,
         X: ArrayLike,
-        aggregation_method: Optional[str] = "mean",
-        # How to aggregate the scores by the estimators on test data
-        conformity_score_params: Optional[dict] = None
+        conformity_score_params: Optional[dict] = None,
+        aggregate_conformity_scores: str = "mean",
     ) -> Tuple[NDArray, NDArray]:
         """
         Shape: (n, ), (n, n_class, n_confidence_level)
         """
         return np.ndarray(0), np.ndarray(0)
+
+    def predict(self, X: ArrayLike) -> NDArray:
+        return np.ndarray(0)
