@@ -24,6 +24,78 @@ from mapie_v1.conformity_scores._utils import check_and_select_conformity_score
 
 
 class SplitConformalClassifier:
+    """
+    Computes prediction sets using the split conformal classification technique:
+
+    1. The ``fit`` method (optional) fits the base classifier to the training data.
+    2. The ``conformalize`` method estimates the uncertainty of the base classifier by
+       computing conformity scores on the conformity set.
+    3. The ``predict_set`` method predicts labels and sets of labels.
+
+    Parameters
+    ----------
+    estimator : ClassifierMixin, default=LogisticRegression()
+        The base classifier used to predict labels.
+
+    confidence_level : Union[float, List[float]], default=0.9
+        The confidence level(s) for the prediction sets, indicating the
+        desired coverage probability of the prediction sets. If a float is
+        provided, it represents a single confidence level. If a list, multiple
+        prediction sets for each specified confidence level are returned.
+
+    conformity_score : Union[str, BaseClassificationScore], default="lac"
+        The method used to compute conformity scores.
+
+        Valid options:
+
+        - "lac"
+        - "top_k"
+        - "aps"
+        - "raps"
+        - Any subclass of BaseClassificationScore
+
+        A custom score function inheriting from BaseClassificationScore may also
+        be provided.
+
+        See :ref:`theoretical_description_classification`.
+
+    prefit : bool, default=False
+        If True, the base classifier must be fitted, and the ``fit``
+        method must be skipped.
+
+        If False, the base classifier will be fitted during the ``fit`` method.
+
+    n_jobs : Optional[int], default=None
+        The number of jobs to run in parallel when applicable.
+
+    verbose : int, default=0
+        Controls the verbosity level.
+        Higher values increase the output details.
+
+    Examples
+    --------
+    >>> from mapie_v1.classification import SplitConformalClassifier
+    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.neighbors import KNeighborsClassifier
+
+    >>> X, y = make_classification(n_samples=500)
+    >>> (
+    ...     X_train, X_conformalize, X_test,
+    ...     y_train, y_conformalize, y_test
+    ... ) = train_conformalize_test_split(
+    ...     X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=1
+    ... )
+
+    >>> mapie_classifier = SplitConformalClassifier(
+    ...     estimator=KNeighborsClassifier(),
+    ...     confidence_level=0.95,
+    ...     prefit=False,
+    ... ).fit(X_train, y_train).conformalize(X_conformalize, y_conformalize)
+
+    >>> predicted_labels, predicted_sets = mapie_classifier.predict_set(X_test)
+    """
+
     def __init__(
         self,
         estimator: ClassifierMixin = LogisticRegression(),
@@ -34,13 +106,6 @@ class SplitConformalClassifier:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
-        """
-        Notes
-        -----
-        This implementation currently uses a ShuffleSplit cross-validation scheme
-        for splitting the conformalization set. Future implementations may allow the use
-        of groups.
-        """
         self._estimator = estimator
         self._alphas = transform_confidence_level_to_alpha_list(
             confidence_level
@@ -72,6 +137,25 @@ class SplitConformalClassifier:
         y_train: ArrayLike,
         fit_params: Optional[dict] = None,
     ) -> Self:
+        """
+        Fits the base classifier to the training data.
+
+        Parameters
+        ----------
+        X_train : ArrayLike
+            Training data features.
+
+        y_train : ArrayLike
+            Training data targets.
+
+        fit_params : Optional[dict], default=None
+            Parameters to pass to the ``fit`` method of the base classifier.
+
+        Returns
+        -------
+        Self
+            The fitted SplitConformalClassifier instance.
+        """
         raise_error_if_fit_called_in_prefit_mode(self._prefit)
         raise_error_if_method_already_called("fit", self._is_fitted)
 
@@ -90,8 +174,26 @@ class SplitConformalClassifier:
         predict_params: Optional[dict] = None,
     ) -> Self:
         """
-        Specify that predict_params are passed to predict AND predict_proba,
-        and are used in .conformalize but also in .predict_set and .predict
+        Estimates the uncertainty of the base classifier by computing
+        conformity scores on the conformity set.
+
+        Parameters
+        ----------
+        X_conformalize : ArrayLike
+            Features of the conformity set.
+
+        y_conformalize : ArrayLike
+            Targets of the conformity set.
+
+        predict_params : Optional[dict], default=None
+            Parameters to pass to the ``predict`` and ``predict_proba`` methods
+            of the base classifier. These parameters will also be used in the
+            ``predict_set`` and ``predict`` methods of this SplitConformalClassifier.
+
+        Returns
+        -------
+        Self
+            The conformalized SplitConformalClassifier instance.
         """
         raise_error_if_previous_method_not_called(
             "conformalize",
@@ -117,12 +219,33 @@ class SplitConformalClassifier:
         self,
         X: ArrayLike,
         conformity_score_params: Optional[dict] = None,
-        # Prediction time parameters specific to conformity scores,
-        # The only example for now is: include_last_label
-        # Add the doc of include_last_label to the docstring
     ) -> Tuple[NDArray, NDArray]:
         """
-        Shapes: (n, ) and (n, n_class, n_confidence_levels)
+        For each sample in X, returns the predicted label and a set of labels.
+
+        If several confidence levels were provided during initialisation, several
+        sets will be predicted for each sample. See the return signature.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Features
+
+        conformity_score_params : dict, default=None
+            Parameters specific to conformity scores, used at prediction time.
+
+            The only example for now is ``include_last_label``, available for `aps`
+            and `raps` conformity scores. For detailed information on
+            ``include_last_label``, see the docstring of
+            :meth:`conformity_scores.sets.aps.APSConformityScore.get_prediction_sets`.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray]
+            Two arrays:
+
+            - Prediction labels, of shape ``(n_samples,)``
+            - Prediction sets, of shape ``(n_samples, n_class, n_confidence_levels)``
         """
         raise_error_if_previous_method_not_called(
             "predict_set",
@@ -139,6 +262,19 @@ class SplitConformalClassifier:
         return cast_predictions_to_ndarray_tuple(predictions)
 
     def predict(self, X: ArrayLike) -> NDArray:
+        """
+        For each sample in X, returns the predicted label
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Features
+
+        Returns
+        -------
+        NDArray
+            Array of predicted labels, with shape (n_samples,).
+        """
         raise_error_if_previous_method_not_called(
             "predict",
             "conformalize",

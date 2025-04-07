@@ -31,10 +31,10 @@ class SplitConformalRegressor:
     """
     Computes prediction intervals using the split conformal regression technique:
 
-    1. The `fit` method (optional) fits the base regressor to the training data.
-    2. The `conformalize` method estimates the uncertainty of the base regressor by
+    1. The ``fit`` method (optional) fits the base regressor to the training data.
+    2. The ``conformalize`` method estimates the uncertainty of the base regressor by
        computing conformity scores on the conformity set.
-    3. The `predict_interval` computes prediction points and intervals.
+    3. The ``predict_interval`` method predicts points and intervals.
 
     Parameters
     ----------
@@ -61,12 +61,11 @@ class SplitConformalRegressor:
         be provided.
 
         See :ref:`theoretical_description_conformity_scores`.
-
     prefit : bool, default=False
-        If True, the base regressor must be fitted, and the `fit`
+        If True, the base regressor must be fitted, and the ``fit``
         method must be skipped.
 
-        If False, the base regressor will be fitted during the `fit` method.
+        If False, the base regressor will be fitted during the ``fit`` method.
 
     n_jobs : Optional[int], default=None
         The number of jobs to run in parallel when applicable.
@@ -153,7 +152,7 @@ class SplitConformalRegressor:
             Training data targets.
 
         fit_params : Optional[dict], default=None
-            Parameters to pass to the `fit` method of the base regressor.
+            Parameters to pass to the ``fit`` method of the base regressor.
 
         Returns
         -------
@@ -190,9 +189,9 @@ class SplitConformalRegressor:
             Targets of the conformity set.
 
         predict_params : Optional[dict], default=None
-            Parameters to pass to the `predict` method of the base regressor.
-            These parameters will also be used in the `predict_interval`
-            and `predict` methods of this SplitConformalRegressor.
+            Parameters to pass to the ``predict`` method of the base regressor.
+            These parameters will also be used in the ``predict_interval``
+            and ``predict`` methods of this SplitConformalRegressor.
 
         Returns
         -------
@@ -247,8 +246,8 @@ class SplitConformalRegressor:
         Tuple[NDArray, NDArray]
             Two arrays:
 
-            - Prediction points, of shape `(n_samples,)`
-            - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
+            - Prediction points, of shape ``(n_samples,)``
+            - Prediction intervals, of shape ``(n_samples, 2, n_confidence_levels)``
         """
         raise_error_if_previous_method_not_called(
             "predict_interval",
@@ -298,10 +297,10 @@ class CrossConformalRegressor:
     """
     Computes prediction intervals using the cross conformal regression technique:
 
-    1. The `fit_conformalize` method estimates the uncertainty of the base regressor in
-       a cross-validation style. It fits the base regressor on folds of the dataset and
-       computes conformity scores on the out-of-fold data.
-    2. The `predict_interval` computes prediction points and intervals.
+    1. The ``fit_conformalize`` method estimates the uncertainty of the base regressor
+       in a cross-validation style. It fits the base regressor on folds of the dataset
+       and computes conformity scores on the out-of-fold data.
+    2. The ``predict_interval`` computes prediction points and intervals.
 
     Parameters
     ----------
@@ -325,7 +324,7 @@ class CrossConformalRegressor:
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
 
-        See :ref:`theoretical_description_conformity_scores`.
+        See :ref:``theoretical_description_conformity_scores``.
 
     method : str, default="plus"
         The method used to compute prediction intervals. Options are:
@@ -445,12 +444,12 @@ class CrossConformalRegressor:
             Groups to pass to the cross-validator.
 
         fit_params : Optional[dict], default=None
-            Parameters to pass to the `fit` method of the base regressor.
+            Parameters to pass to the ``fit`` method of the base regressor.
 
         predict_params : Optional[dict], default=None
-            Parameters to pass to the `predict` method of the base regressor.
-            These parameters will also be used in the `predict_interval`
-            and `predict` methods of this CrossConformalRegressor.
+            Parameters to pass to the ``predict`` method of the base regressor.
+            These parameters will also be used in the ``predict_interval``
+            and ``predict`` methods of this CrossConformalRegressor.
 
         Returns
         -------
@@ -492,7 +491,7 @@ class CrossConformalRegressor:
         intervals will be predicted for each sample. See the return signature.
 
         By default, points are predicted using an aggregation.
-        See the `ensemble` parameter.
+        See the ``ensemble`` parameter.
 
         Parameters
         ----------
@@ -519,8 +518,8 @@ class CrossConformalRegressor:
         Tuple[NDArray, NDArray]
             Two arrays:
 
-            - Prediction points, of shape `(n_samples,)`
-            - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
+            - Prediction points, of shape ``(n_samples,)``
+            - Prediction intervals, of shape ``(n_samples, 2, n_confidence_levels)``
         """
         raise_error_if_previous_method_not_called(
             "predict_interval",
@@ -550,7 +549,7 @@ class CrossConformalRegressor:
         Predicts points.
 
         By default, points are predicted using an aggregation.
-        See the `ensemble` parameter.
+        See the ``ensemble`` parameter.
 
         Parameters
         ----------
@@ -569,7 +568,7 @@ class CrossConformalRegressor:
         Returns
         -------
         NDArray
-            Array of point predictions, with shape `(n_samples,)`.
+            Array of point predictions, with shape ``(n_samples,)``.
         """
         raise_error_if_previous_method_not_called(
             "predict",
@@ -602,10 +601,10 @@ class JackknifeAfterBootstrapRegressor:
     """
     Computes prediction intervals using the jackknife-after-bootstrap technique:
 
-    1. The `fit_conformalize` method estimates the uncertainty of the base regressor
+    1. The ``fit_conformalize`` method estimates the uncertainty of the base regressor
        using bootstrap sampling. It fits the base regressor on samples of the dataset
        and computes conformity scores on the out-of-sample data.
-    2. The `predict_interval` computes prediction points and intervals.
+    2. The ``predict_interval`` computes prediction points and intervals.
 
     Parameters
     ----------
@@ -630,7 +629,7 @@ class JackknifeAfterBootstrapRegressor:
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
 
-        See :ref:`theoretical_description_conformity_scores`.
+        See :ref:``theoretical_description_conformity_scores``.
 
     method : str, default="plus"
 
@@ -646,7 +645,7 @@ class JackknifeAfterBootstrapRegressor:
         here.
 
     resampling : Union[int, Subsample], default=30
-        Number of bootstrap resamples or an instance of `Subsample` for
+        Number of bootstrap resamples or an instance of ``Subsample`` for
         custom sampling strategy.
 
     aggregation_method : str, default="mean"
@@ -762,12 +761,12 @@ class JackknifeAfterBootstrapRegressor:
             Targets. Must be the same y used in .fit
 
         fit_params : Optional[dict], default=None
-            Parameters to pass to the `fit` method of the base regressor.
+            Parameters to pass to the ``fit`` method of the base regressor.
 
         predict_params : Optional[dict], default=None
-            Parameters to pass to the `predict` method of the base regressor.
-            These parameters will also be used in the `predict_interval`
-            and `predict` methods of this JackknifeAfterBootstrapRegressor.
+            Parameters to pass to the ``predict`` method of the base regressor.
+            These parameters will also be used in the ``predict_interval``
+            and ``predict`` methods of this JackknifeAfterBootstrapRegressor.
 
         Returns
         -------
@@ -808,7 +807,7 @@ class JackknifeAfterBootstrapRegressor:
         intervals will be predicted for each sample. See the return signature.
 
         By default, points are predicted using an aggregation.
-        See the `ensemble` parameter.
+        See the ``ensemble`` parameter.
 
         Parameters
         ----------
@@ -818,7 +817,7 @@ class JackknifeAfterBootstrapRegressor:
         ensemble : bool, default=True
             If True, a predicted point is an aggregation of the predictions of the
             regressors trained on each bootstrap samples. This aggregation depends on
-            the `aggregation_method` provided during initialisation.
+            the ``aggregation_method`` provided during initialisation.
 
             If False, a point is predicted using the regressor trained on the entire
             data
@@ -834,8 +833,8 @@ class JackknifeAfterBootstrapRegressor:
         Tuple[NDArray, NDArray]
             Two arrays:
 
-            - Prediction points, of shape `(n_samples,)`
-            - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
+            - Prediction points, of shape ``(n_samples,)``
+            - Prediction intervals, of shape ``(n_samples, 2, n_confidence_levels)``
         """
         raise_error_if_previous_method_not_called(
             "predict_interval",
@@ -862,7 +861,7 @@ class JackknifeAfterBootstrapRegressor:
         Predicts points.
 
         By default, points are predicted using an aggregation.
-        See the `ensemble` parameter.
+        See the ``ensemble`` parameter.
 
         Parameters
         ----------
@@ -872,14 +871,14 @@ class JackknifeAfterBootstrapRegressor:
         ensemble : bool, default=True
             If True, a predicted point is an aggregation of the predictions of the
             regressors trained on each bootstrap samples. This aggregation depends on
-            the `aggregation_method` provided during initialisation.
+            the ``aggregation_method`` provided during initialisation.
             If False, a point is predicted using the regressor trained on the entire
             data
 
         Returns
         -------
         NDArray
-            Array of point predictions, with shape `(n_samples,)`.
+            Array of point predictions, with shape ``(n_samples,)``.
         """
         raise_error_if_previous_method_not_called(
             "predict",
@@ -897,20 +896,20 @@ class ConformalizedQuantileRegressor:
     """
     Computes prediction intervals using the conformalized quantile regression technique:
 
-    1. The `fit` method fits three models to the training data using the provided
+    1. The ``fit`` method fits three models to the training data using the provided
        regressor: a model to predict the target, and models to predict upper
        and lower quantiles around the target.
-    2. The `conformalize` method estimates the uncertainty of the quantile models
+    2. The ``conformalize`` method estimates the uncertainty of the quantile models
        using the conformity set.
-    3. The `predict_interval` computes prediction points and intervals.
+    3. The ``predict_interval`` computes prediction points and intervals.
 
     Parameters
     ----------
-    estimator : Union[`RegressorMixin`, `Pipeline`, \
-`List[Union[RegressorMixin, Pipeline]]`]
+    estimator : Union[``RegressorMixin``, ``Pipeline``, \
+``List[Union[RegressorMixin, Pipeline]]``]
         The regressor used to predict points and quantiles.
 
-        When `prefit=False` (default), a single regressor that supports the quantile
+        When ``prefit=False`` (default), a single regressor that supports the quantile
         loss must be passed. Valid options:
 
         - ``sklearn.linear_model.QuantileRegressor``
@@ -918,23 +917,23 @@ class ConformalizedQuantileRegressor:
         - ``sklearn.ensemble.HistGradientBoostingRegressor``
         - ``lightgbm.LGBMRegressor``
 
-        When `prefit=True`, a list of three fitted quantile regressors predicting the
+        When ``prefit=True``, a list of three fitted quantile regressors predicting the
         lower, upper, and median quantiles must be passed (in that order).
         These quantiles must be:
 
-        - `lower quantile = (1 - confidence_level) / 2`
-        - `upper quantile = (1 + confidence_level) / 2`
-        - `median quantile = 0.5`
+        - ``lower quantile = (1 - confidence_level) / 2``
+        - ``upper quantile = (1 + confidence_level) / 2``
+        - ``median quantile = 0.5``
 
     confidence_level : float default=0.9
         The confidence level for the prediction intervals, indicating the
         desired coverage probability of the prediction intervals.
 
     prefit : bool, default=False
-        If True, three fitted quantile regressors must be provided, and the `fit`
+        If True, three fitted quantile regressors must be provided, and the ``fit``
         method must be skipped.
 
-        If False, the three regressors will be fitted during the `fit` method.
+        If False, the three regressors will be fitted during the ``fit`` method.
 
     Examples
     --------
@@ -1009,7 +1008,7 @@ class ConformalizedQuantileRegressor:
             Training data targets.
 
         fit_params : Optional[dict], default=None
-            Parameters to pass to the `fit` method of the regressors.
+            Parameters to pass to the ``fit`` method of the regressors.
 
         Returns
         -------
@@ -1052,9 +1051,9 @@ class ConformalizedQuantileRegressor:
             Targets of the conformity set.
 
         predict_params : Optional[dict], default=None
-            Parameters to pass to the `predict` method of the regressors.
-            These parameters will also be used in the `predict_interval`
-            and `predict` methods of this SplitConformalRegressor.
+            Parameters to pass to the ``predict`` method of the regressors.
+            These parameters will also be used in the ``predict_interval``
+            and ``predict`` methods of this SplitConformalRegressor.
 
         Returns
         -------
@@ -1111,17 +1110,17 @@ class ConformalizedQuantileRegressor:
             technique corrects the predictions of the upper and lower quantile
             regressors by adding a constant.
 
-            If `symmetric_correction` is set to `False` , this constant is different for
-            the upper and the lower quantile predictions. If set to True, this constant
-            is the same for both.
+            If ``symmetric_correction`` is set to ``False`` , this constant is different
+            for the upper and the lower quantile predictions. If set to ``True``,
+            this constant is the same for both.
 
         Returns
         -------
         Tuple[NDArray, NDArray]
             Two arrays:
 
-            - Prediction points, of shape `(n_samples,)`
-            - Prediction intervals, of shape `(n_samples, 2, 1)`
+            - Prediction points, of shape ``(n_samples,)``
+            - Prediction intervals, of shape ``(n_samples, 2, 1)``
         """
         raise_error_if_previous_method_not_called(
             "predict_interval",
@@ -1153,7 +1152,7 @@ class ConformalizedQuantileRegressor:
         Returns
         -------
         NDArray
-            Array of point predictions with shape `(n_samples,)`.
+            Array of point predictions with shape ``(n_samples,)``.
         """
         raise_error_if_previous_method_not_called(
             "predict",
