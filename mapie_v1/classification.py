@@ -19,6 +19,8 @@ from mapie_v1.utils import (
     raise_error_if_previous_method_not_called,
     raise_error_if_method_already_called,
     raise_error_if_fit_called_in_prefit_mode,
+    check_cv_not_string,
+    prepare_fit_params_and_sample_weight,
 )
 from mapie_v1.conformity_scores._utils import check_and_select_conformity_score
 
@@ -302,7 +304,26 @@ class CrossConformalClassifier:
         """
         All except raps & top-k
         """
-        pass
+        check_cv_not_string(cv)
+
+        self._mapie_classifier = MapieClassifier(
+            estimator=estimator,
+            cv=cv,
+            n_jobs=n_jobs,
+            verbose=verbose,
+            conformity_score=check_and_select_conformity_score(
+                conformity_score,
+                BaseClassificationScore,
+            ),
+            random_state=random_state,
+        )
+
+        self._alphas = transform_confidence_level_to_alpha_list(
+            confidence_level
+        )
+        self.is_fitted_and_conformalized = False
+
+        self._predict_params: dict = {}
 
     def fit_conformalize(
         self,
@@ -312,6 +333,25 @@ class CrossConformalClassifier:
         fit_params: Optional[dict] = None,
         predict_params: Optional[dict] = None,
     ) -> Self:
+        raise_error_if_method_already_called(
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+
+        fit_params_, sample_weight = prepare_fit_params_and_sample_weight(
+            fit_params
+        )
+        self._predict_params = prepare_params(predict_params)
+        self._mapie_classifier.fit(
+            X=X,
+            y=y,
+            sample_weight=sample_weight,
+            groups=groups,
+            fit_params=fit_params_,
+            predict_params=self._predict_params
+        )
+
+        self.is_fitted_and_conformalized = True
         return self
 
     def predict_set(
@@ -323,7 +363,29 @@ class CrossConformalClassifier:
         """
         Shape: (n, ), (n, n_class, n_confidence_level)
         """
-        return np.ndarray(0), np.ndarray(0)
+        raise_error_if_previous_method_not_called(
+            "predict_set",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+
+        conformity_score_params_ = prepare_params(conformity_score_params)
+        predictions = self._mapie_classifier.predict(
+            X,
+            alpha=self._alphas,
+            include_last_label=conformity_score_params_.get("include_last_label", True),
+            agg_scores=aggregate_conformity_scores,
+            **self._predict_params,
+        )
+        return cast_predictions_to_ndarray_tuple(predictions)
 
     def predict(self, X: ArrayLike) -> NDArray:
-        return np.ndarray(0)
+        raise_error_if_previous_method_not_called(
+            "predict",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+        predictions = self._mapie_classifier.predict(
+            X, alpha=None, **self._predict_params,
+        )
+        return cast_point_predictions_to_ndarray(predictions)
