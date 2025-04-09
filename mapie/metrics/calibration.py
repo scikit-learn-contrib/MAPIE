@@ -569,7 +569,7 @@ def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
     y_score = column_or_1d(y_score)
     cum_diff = cumulative_differences(y_true, y_score)
     sigma = length_scale(y_score)
-    ku_stat = (np.max(cum_diff) - np.min(cum_diff)) / sigma
+    ku_stat = (np.max(cum_diff) - np.min(cum_diff)) / sigma  # type: ignore
     return ku_stat
 
 
@@ -734,7 +734,7 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
 
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
-    numerator = np.sum(
+    numerator: float = np.sum(
         (y_true - y_score) * (1 - 2 * y_score)
     )
     denominator = np.sqrt(
