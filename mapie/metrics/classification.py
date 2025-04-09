@@ -220,7 +220,7 @@ def classification_ssc(
             b[0] for b in np.array_split(range(n_classes + 1), num_bins)
         ]
 
-    digitized_sizes = np.digitize(sizes, bins)
+    digitized_sizes: NDArray = np.digitize(sizes, bins)
     coverages = np.zeros((y_pred_set.shape[2], len(bins)))
     for alpha in range(y_pred_set.shape[2]):
         indexes_bybins = [
