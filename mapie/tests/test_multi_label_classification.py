@@ -421,7 +421,7 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
 def test_valid_prediction(alpha: Any, delta: Any, bound: Any) -> None:
     """Test fit and predict."""
     model = MultiOutputClassifier(
-        LogisticRegression(multi_class="multinomial")
+        LogisticRegression()
     )
     model.fit(X_toy, y_toy)
     mapie_clf = MapieMultiLabelClassifier(
