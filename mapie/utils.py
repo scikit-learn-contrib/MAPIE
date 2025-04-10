@@ -432,7 +432,7 @@ def get_effective_calibration_samples(scores: NDArray, sym: bool):
     n: int
         The effective number of calibration samples.
     """
-    n: int = np.sum(~np.isnan(scores))
+    n = np.sum(~np.isnan(scores))
     if not sym:
         n //= 2
     return n
@@ -474,10 +474,8 @@ def check_alpha_and_n_samples(
     lower than the number of samples.
     """
     if isinstance(alphas, float):
-        alphas_: Iterable[float] = [alphas]
-    else:
-        alphas_ = alphas
-    for alpha in alphas_:
+        alphas = np.array([alphas])
+    for alpha in alphas:
         if n < np.max([1/alpha, 1/(1-alpha)]):
             raise ValueError(
                 "Number of samples of the score is too low,\n"
