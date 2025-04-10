@@ -351,7 +351,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             )
         if (estimator is None) and (_refit):
             estimator = MultiOutputClassifier(
-                LogisticRegression(multi_class="multinomial")
+                LogisticRegression()
             )
             X_train, X_calib, y_train, y_calib = train_test_split(
                     X,
