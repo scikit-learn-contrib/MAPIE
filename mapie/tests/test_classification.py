@@ -968,7 +968,7 @@ def test_binary_classif_same_result() -> None:
         random_state=random_state,
     )
     mapie_predict = mapie_clf.fit(X, y).predict(X)
-    lr = LogisticRegression(multi_class="multinomial").fit(X, y)
+    lr = LogisticRegression().fit(X, y)
     lr_predict = lr.predict(X)
     np.testing.assert_allclose(mapie_predict, lr_predict)
 
@@ -1000,7 +1000,7 @@ def test_valid_method(method: str) -> None:
 )
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raises no errors."""
-    model = LogisticRegression(multi_class="multinomial")
+    model = LogisticRegression()
     model.fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(
         estimator=model, cv=cv, random_state=random_state
@@ -1423,7 +1423,7 @@ def test_results_with_groups() -> None:
 )
 def test_valid_prediction(alpha: Any) -> None:
     """Test fit and predict."""
-    model = LogisticRegression(multi_class="multinomial")
+    model = LogisticRegression()
     model.fit(X_toy, y_toy)
     mapie_clf = MapieClassifier(
         estimator=model, cv="prefit", random_state=random_state
