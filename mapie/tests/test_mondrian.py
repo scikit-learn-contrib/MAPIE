@@ -160,7 +160,7 @@ ML_MODELS = {
     "calibration": LogisticRegression(),
     "classification": LogisticRegression(),
     "multilabel_classification": MultiOutputClassifier(
-        LogisticRegression(multi_class="multinomial")
+        LogisticRegression()
     ),
     "regression": LinearRegression(),
 }
