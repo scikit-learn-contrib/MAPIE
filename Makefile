@@ -1,8 +1,6 @@
 ### Config ###
 
 .PHONY: tests doc build
-mapie_v0_folder_name = mapie_v0_package
-
 
 ### To run when working locally ###
 
@@ -21,7 +19,7 @@ v1-all-checks:
 ### Checks that are run in GitHub CI ###
 
 lint:
-	flake8 . --max-line-length=88 --exclude=doc
+	flake8 examples mapie mapie_v1 notebooks tests_v1 --max-line-length=88
 
 type-check:
 	mypy mapie
@@ -78,7 +76,7 @@ clean:
 
 # Issues when trying to include it in CI, see related task on the project board
 v1-type-check:
-	mypy mapie_v1 --disallow-untyped-defs --exclude $(mapie_v0_folder_name)
+	mypy mapie_v1
 
 v1-coverage:
 	pytest -vsx \
