@@ -60,19 +60,19 @@ results = {
 results_binary = {
     "split": {
         "y_score": [
-            [0.76226014, np.nan],
-            [0.39557708, np.nan],
+            [0.74020596, np.nan],
+            [0.4247601, np.nan],
             [np.nan, 0.66666667],
-            [0.75506701, np.nan],
+            [0.72980855, np.nan],
             [np.nan, 0.66666667],
-            [0.81175724, np.nan],
-            [0.77294068, np.nan],
-            [0.62599563, np.nan],
+            [0.81058943, np.nan],
+            [0.7551083, np.nan],
+            [0.59798388, np.nan],
             [np.nan, 0.66666667],
             [np.nan, 0.66666667],
         ],
-        "top_label_ece": 0.30562,
-        "ece": 0.56657,
+        "top_label_ece": 0.315922,
+        "ece": 0.554227,
     },
     "prefit": {
         "y_score": [
@@ -347,6 +347,8 @@ def test_correct_results_binary(cv: str) -> None:
     pred_ = mapie_cal.predict_proba(X_binary)
     top_label_ece_ = top_label_ece(y_binary, pred_)
     ece = expected_calibration_error(y_binary, pred_)
+    print(f"{pred_:}")
+    print(f"{results_binary[cv]['y_score']:}")
     np.testing.assert_array_almost_equal(
         np.array(results_binary[cv]["y_score"]),
         np.array(pred_),

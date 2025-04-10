@@ -849,7 +849,7 @@ def check_estimator_classification(
         If the estimator is not fitted and ``cv`` attribute is "prefit".
     """
     if estimator is None:
-        return LogisticRegression(multi_class="multinomial").fit(X, y)
+        return LogisticRegression().fit(X, y)
 
     if isinstance(estimator, Pipeline):
         est = estimator[-1]
