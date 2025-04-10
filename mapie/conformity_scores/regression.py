@@ -149,7 +149,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             y_pred, conformity_scores, **kwargs
         )
         abs_conformity_scores = np.abs(np.subtract(score_distribution, y))
-        max_conf_score: float = np.max(abs_conformity_scores)
+        max_conf_score = np.max(abs_conformity_scores)
         if max_conf_score > self.eps:
             raise ValueError(
                 "The two functions get_conformity_scores and "

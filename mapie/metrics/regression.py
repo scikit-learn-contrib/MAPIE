@@ -558,9 +558,9 @@ def regression_mwi_score(
         check_array_nan(array)
         check_array_inf(array)
 
-    width = np.sum(y_pred_up) - np.sum(y_pred_low)  # type: ignore
-    error_above: float = np.sum((y_true - y_pred_up)[y_true > y_pred_up])
-    error_below: float = np.sum((y_pred_low - y_true)[y_true < y_pred_low])
+    width = np.sum(y_pred_up) - np.sum(y_pred_low)
+    error_above = np.sum((y_true - y_pred_up)[y_true > y_pred_up])
+    error_below = np.sum((y_pred_low - y_true)[y_true < y_pred_low])
     total_error = error_above + error_below
     mwi = (width + total_error * 2 / (1 - confidence_level)) / len(y_true)
     return mwi
