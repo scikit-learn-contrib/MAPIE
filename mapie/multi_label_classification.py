@@ -291,7 +291,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             if self.valid_index[i] == []:
                 warnings.warn(
                     "Warning: LTT method has returned an empty sequence"
-                    + " for confidence level=" + str(1-alpha[i])
+                    + " for alpha=" + str(alpha[i])
                 )
 
     def _check_estimator(
