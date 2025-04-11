@@ -47,4 +47,5 @@ Contributors
 * Mohammed Jawhar <mohammedjawhar365@gmail.com>
 * Syed Affan <saffand03@gmail.com>
 * Cyprien Bertran <cbertrandebalanda@yahoo.fr>
+* Faustin Pulvéric <faustin.pulveric@capgemini.com>
 To be continued ...
