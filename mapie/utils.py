@@ -316,20 +316,20 @@ def check_alpha(
         alpha_np = np.array(alpha)
     else:
         raise ValueError(
-            "Invalid confidence_level. Allowed values are float or Iterable."
+            "Invalid confidence_level or alpha. Allowed values are float or Iterable."
         )
     if len(alpha_np.shape) != 1:
         raise ValueError(
-            "Invalid confidence_level."
+            "Invalid confidence_level or alpha. "
             "Please provide a one-dimensional list of values."
         )
     if alpha_np.dtype.type not in [np.float64, np.float32]:
         raise ValueError(
-            "Invalid confidence_level. Allowed values are Iterable of floats."
+            "Invalid confidence_level or alpha. Allowed values are Iterable of floats."
         )
     if np.any(np.logical_or(alpha_np < 0, alpha_np > 1)):
         raise ValueError(
-            "Invalid confidence_level. Allowed values are between 0 and 1."
+            "Invalid confidence_level or alpha. Allowed values are between 0 and 1."
         )
     return alpha_np
 
