@@ -124,10 +124,8 @@ def check_target(
         not isinstance(conformity_score, LACConformityScore)
     ):
         raise ValueError(
-            "Invalid method for binary target. "
-            "Your target is not of type multiclass and "
-            "allowed values for binary type are "
-            f"{['score', 'lac']}."
+            "Invalid conformity score for binary target. "
+            "The only valid score is 'lac'."
         )
 
 

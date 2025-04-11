@@ -395,7 +395,7 @@ class MapieClassifier(BaseEstimator, ClassifierMixin):
         ):
             raise ValueError(
                 "RAPS method can only be used "
-                "with ``cv='split'`` and ``cv='prefit'``."
+                "with SplitConformalClassifier."
             )
 
         # Cast
