@@ -321,7 +321,7 @@ def params_cross_test_3(dataset):
                 "fit_params": {"dummy_fit_param": True},
             },
             "predict_set": {
-                "aggregate_conformity_scores": "crossval",
+                "agg_scores": "crossval",
             },
         },
         "v0": {

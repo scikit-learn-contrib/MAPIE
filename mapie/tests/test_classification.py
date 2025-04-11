@@ -952,7 +952,7 @@ def test_warning_binary_classif(cv: str, method: str) -> None:
         random_state=random_state,
     )
     with pytest.raises(
-        ValueError, match=r".*Invalid method for binary target.*"
+        ValueError, match=r".*Invalid conformity score for binary target.*"
     ):
         mapie_clf.fit(X, y)
 

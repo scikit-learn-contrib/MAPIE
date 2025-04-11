@@ -358,7 +358,7 @@ class CrossConformalClassifier:
         self,
         X: ArrayLike,
         conformity_score_params: Optional[dict] = None,
-        aggregate_conformity_scores: str = "mean",
+        agg_scores: str = "mean",
     ) -> Tuple[NDArray, NDArray]:
         """
         Shape: (n, ), (n, n_class, n_confidence_level)
@@ -374,7 +374,7 @@ class CrossConformalClassifier:
             X,
             alpha=self._alphas,
             include_last_label=conformity_score_params_.get("include_last_label", True),
-            agg_scores=aggregate_conformity_scores,
+            agg_scores=agg_scores,
             **self._predict_params,
         )
         return cast_predictions_to_ndarray_tuple(predictions)
