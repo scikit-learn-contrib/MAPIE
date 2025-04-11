@@ -320,7 +320,7 @@ def check_alpha(
         )
     if len(alpha_np.shape) != 1:
         raise ValueError(
-            "Invalid confidence_level or alpha."
+            "Invalid confidence_level or alpha. "
             "Please provide a one-dimensional list of values."
         )
     if alpha_np.dtype.type not in [np.float64, np.float32]:
