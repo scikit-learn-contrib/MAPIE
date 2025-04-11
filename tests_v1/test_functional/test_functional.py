@@ -9,7 +9,7 @@ from mapie_v1.regression import (
     CrossConformalRegressor,
     ConformalizedQuantileRegressor, JackknifeAfterBootstrapRegressor,
 )
-from mapie_v1.classification import SplitConformalClassifier
+from mapie_v1.classification import SplitConformalClassifier, CrossConformalClassifier
 
 RANDOM_STATE = 1
 
@@ -160,33 +160,53 @@ class TestWrongMethodsOrderRaisesErrorForSplitTechniques:
 
 
 @pytest.mark.parametrize(
-    "cross_technique,dataset",
+    "cross_technique,predict_method,dataset,estimator_class",
     [
-        (CrossConformalRegressor, "dataset_regression"),
-        (JackknifeAfterBootstrapRegressor, "dataset_regression")
+        (
+            CrossConformalRegressor,
+            "predict_interval",
+            "dataset_regression",
+            DummyRegressor
+        ),
+        (
+            JackknifeAfterBootstrapRegressor,
+            "predict_interval",
+            "dataset_regression",
+            DummyRegressor
+        ),
+        (
+            CrossConformalClassifier,
+            "predict_set",
+            "dataset_classification",
+            DummyClassifier
+        ),
     ]
 )
-def test_wrong_methods_order_raises_error_for_cross_techniques(
-    cross_technique,
-    dataset,
-    request
-):
-    dataset = request.getfixturevalue(dataset)
-    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
-    technique = cross_technique(estimator=DummyRegressor())
-
-    with pytest.raises(
-        ValueError,
-        match=r"call fit_conformalize before calling predict"
+class TestWrongMethodsOrderRaisesErrorForCrossTechniques:
+    def test_wrong_methods_order(
+        self,
+        cross_technique,
+        predict_method,
+        dataset,
+        estimator_class,
+        request
     ):
-        technique.predict(X_test)
-    with pytest.raises(
-        ValueError,
-        match=r"call fit_conformalize before calling predict_interval"
-    ):
-        technique.predict_interval(X_test)
+        dataset = request.getfixturevalue(dataset)
+        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
+        technique = cross_technique(estimator=estimator_class())
 
-    technique.fit_conformalize(X_conformalize, y_conformalize)
+        with pytest.raises(
+            ValueError,
+            match=r"call fit_conformalize before calling predict"
+        ):
+            technique.predict(X_test)
+        with pytest.raises(
+            ValueError,
+            match=f"call fit_conformalize before calling {predict_method}"
+        ):
+            getattr(technique, predict_method)(X_test)
 
-    with pytest.raises(ValueError, match=r"fit_conformalize method already called"):
         technique.fit_conformalize(X_conformalize, y_conformalize)
+
+        with pytest.raises(ValueError, match=r"fit_conformalize method already called"):
+            technique.fit_conformalize(X_conformalize, y_conformalize)
