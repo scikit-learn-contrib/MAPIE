@@ -194,7 +194,7 @@ def check_cv(
         else:
             raise ValueError(
                 "Invalid cv argument. "
-                "Allowed integer values are -1 or int >= 2"
+                "Allowed integer values are -1 or int >= 2, "
                 "or a suitable BaseCrossValidator object"
             )
     elif isinstance(cv, BaseCrossValidator):
