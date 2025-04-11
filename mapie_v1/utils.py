@@ -199,6 +199,8 @@ def check_cv_not_string(cv: Union[int, str, BaseCrossValidator]) -> None:
     if isinstance(cv, str):
         raise ValueError(
             "'cv' string options not available in MAPIE >= v1.0.0"
+            "Use SplitConformalClassifier or SplitConformalRegressor"
+            'for "split" and "prefit" modes.'
         )
 
 
