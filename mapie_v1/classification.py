@@ -486,8 +486,8 @@ class CrossConformalClassifier:
             How to aggregate conformity scores.
 
             Each classifier fitted on different folds of the dataset is used to produce
-            conformity scores on the test data. The agg_score parameter allows to control
-            how those scores are aggregated. Valid options:
+            conformity scores on the test data. The agg_score parameter allows to
+            control how those scores are aggregated. Valid options:
 
             - "mean", takes the mean of scores.
             - "crossval", compares the scores between all training data and each
