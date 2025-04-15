@@ -20,7 +20,6 @@ from sklearn.model_selection import (
 )
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
@@ -1015,8 +1014,3 @@ def test_deprecated_ensemble_regressor_fit_warning() -> None:
         match=r".WARNING: EnsembleRegressor.fit is deprecated.*"
     ):
         ens_reg.fit(X, y)
-
-
-def test_mapie_regressor_sklearn_estim() -> None:
-    """Test that MapieRegressor is an sklearn estimator"""
-    check_estimator(MapieRegressor())

@@ -53,7 +53,7 @@ def classification_coverage_score(
     y_pred_set = cast(
         NDArray,
         check_array(
-            y_pred_set, force_all_finite=True, dtype=["bool"]
+            y_pred_set, dtype=["bool"]
         )
     )
 
