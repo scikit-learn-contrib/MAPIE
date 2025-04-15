@@ -138,12 +138,3 @@ Resampling
 
    mapie.subsample.BlockBootstrap
    mapie.subsample.Subsample
-
-Mondrian
-========
-
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
-
-   mapie.mondrian.MondrianCP
