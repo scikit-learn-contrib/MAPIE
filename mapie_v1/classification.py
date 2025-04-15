@@ -223,7 +223,8 @@ class SplitConformalClassifier:
         conformity_score_params: Optional[dict] = None,
     ) -> Tuple[NDArray, NDArray]:
         """
-        For each sample in X, returns the predicted label and a set of labels.
+        For each sample in X, predicts a label (using the base classifier),
+        and a set of labels.
 
         If several confidence levels were provided during initialisation, several
         sets will be predicted for each sample. See the return signature.
@@ -233,7 +234,7 @@ class SplitConformalClassifier:
         X : ArrayLike
             Features
 
-        conformity_score_params : dict, default=None
+        conformity_score_params : Optional[dict], default=None
             Parameters specific to conformity scores, used at prediction time.
 
             The only example for now is ``include_last_label``, available for `aps`
@@ -265,7 +266,7 @@ class SplitConformalClassifier:
 
     def predict(self, X: ArrayLike) -> NDArray:
         """
-        For each sample in X, returns the predicted label
+        For each sample in X, returns the predicted label by the base classifier.
 
         Parameters
         ----------
@@ -275,7 +276,7 @@ class SplitConformalClassifier:
         Returns
         -------
         NDArray
-            Array of predicted labels, with shape (n_samples,).
+            Array of predicted labels, with shape ``(n_samples,)``.
         """
         raise_error_if_previous_method_not_called(
             "predict",
@@ -291,6 +292,81 @@ class SplitConformalClassifier:
 
 
 class CrossConformalClassifier:
+    """
+    Computes prediction sets using the cross conformal classification technique:
+
+    1. The ``fit_conformalize`` method estimates the uncertainty of the base classifier
+       in a cross-validation style. It fits the base classifier on folds of the dataset
+       and computes conformity scores on the out-of-fold data.
+    2. The ``predict_set`` method predicts labels and sets of labels.
+
+    Parameters
+    ----------
+    estimator : ClassifierMixin, default=LogisticRegression()
+        The base classifier used to predict labels.
+
+    confidence_level : Union[float, List[float]], default=0.9
+        The confidence level(s) for the prediction sets, indicating the
+        desired coverage probability of the prediction sets. If a float is
+        provided, it represents a single confidence level. If a list, multiple
+        prediction sets for each specified confidence level are returned.
+
+    conformity_score : Union[str, BaseClassificationScore], default="lac"
+        The method used to compute conformity scores.
+        Valid options:
+
+        - "lac"
+        - "aps"
+        - Any subclass of BaseClassificationScore
+
+        A custom score function inheriting from BaseClassificationScore may also
+        be provided.
+
+        See :ref:`theoretical_description_classification`.
+
+    cv : Union[int, BaseCrossValidator], default=5
+        The cross-validator used to compute conformity scores.
+        Valid options:
+
+        - integer, to specify the number of folds
+        - any ``sklearn.model_selection.BaseCrossValidator`` suitable for
+          classification, or a custom cross-validator inheriting from it.
+
+        Main variants in the cross conformal setting are:
+
+        - ``sklearn.model_selection.KFold`` (vanilla cross conformal)
+        - ``sklearn.model_selection.LeaveOneOut`` (jackknife)
+
+    n_jobs : Optional[int], default=None
+        The number of jobs to run in parallel when applicable.
+
+    verbose : int, default=0
+        Controls the verbosity level. Higher values increase the
+        output details.
+
+    random_state : Optional[Union[int, np.random.RandomState]], default=None
+        A seed or random state instance to ensure reproducibility in any random
+        operations within the classifier.
+
+    Examples
+    --------
+    >>> from mapie_v1.classification import CrossConformalClassifier
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.model_selection import train_test_split
+    >>> from sklearn.neighbors import KNeighborsClassifier
+
+    >>> X_full, y_full = make_classification(n_samples=500)
+    >>> X, X_test, y, y_test = train_test_split(X_full, y_full)
+
+    >>> mapie_classifier = CrossConformalClassifier(
+    ...     estimator=KNeighborsClassifier(),
+    ...     confidence_level=0.95,
+    ...     cv=10
+    ... ).fit_conformalize(X, y)
+
+    >>> predicted_labels, predicted_sets = mapie_classifier.predict_set(X_test)
+    """
+
     def __init__(
         self,
         estimator: ClassifierMixin = LogisticRegression(),
@@ -301,9 +377,6 @@ class CrossConformalClassifier:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
-        """
-        All except raps & top-k
-        """
         check_cv_not_string(cv)
 
         self._mapie_classifier = MapieClassifier(
@@ -333,6 +406,35 @@ class CrossConformalClassifier:
         fit_params: Optional[dict] = None,
         predict_params: Optional[dict] = None,
     ) -> Self:
+        """
+        Estimates the uncertainty of the base classifier in a cross-validation style:
+        fits the base classifier on different folds of the dataset
+        and computes conformity scores on the corresponding out-of-fold data.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Features
+
+        y : ArrayLike
+            Targets
+
+        groups: Optional[ArrayLike] of shape (n_samples,), default=None
+            Groups to pass to the cross-validator.
+
+        fit_params : Optional[dict], default=None
+            Parameters to pass to the ``fit`` method of the base classifier.
+
+        predict_params : Optional[dict], default=None
+            Parameters to pass to the ``predict`` and ``predict_proba`` methods
+            of the base classifier. These parameters will also be used in the
+            ``predict_set`` and ``predict`` methods of this CrossConformalClassifier.
+
+        Returns
+        -------
+        Self
+            This CrossConformalClassifier instance, fitted and conformalized.
+        """
         raise_error_if_method_already_called(
             "fit_conformalize",
             self.is_fitted_and_conformalized,
@@ -361,7 +463,45 @@ class CrossConformalClassifier:
         agg_scores: str = "mean",
     ) -> Tuple[NDArray, NDArray]:
         """
-        Shape: (n, ), (n, n_class, n_confidence_level)
+        For each sample in X, predicts a label (using the base classifier),
+        and a set of labels.
+
+        If several confidence levels were provided during initialisation, several
+        sets will be predicted for each sample. See the return signature.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Features
+
+        conformity_score_params : Optional[dict], default=None
+            Parameters specific to conformity scores, used at prediction time.
+
+            The only example for now is ``include_last_label``, available for `aps`
+            and `raps` conformity scores. For detailed information on
+            ``include_last_label``, see the docstring of
+            :meth:`conformity_scores.sets.aps.APSConformityScore.get_prediction_sets`.
+
+        agg_scores : str, default="mean"
+            How to aggregate conformity scores.
+
+            Each classifier fitted on different folds of the dataset is used to produce
+            conformity scores on the test data. The agg_score parameter allows to
+            control how those scores are aggregated. Valid options:
+
+            - "mean", takes the mean of scores.
+            - "crossval", compares the scores between all training data and each
+              test point for each label to estimate if the label must be
+              included in the prediction set. Follows algorithm 2 of
+              Classification with Valid and Adaptive Coverage (Romano+2020).
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray]
+            Two arrays:
+
+            - Prediction labels, of shape ``(n_samples,)``
+            - Prediction sets, of shape ``(n_samples, n_class, n_confidence_levels)``
         """
         raise_error_if_previous_method_not_called(
             "predict_set",
@@ -380,6 +520,19 @@ class CrossConformalClassifier:
         return cast_predictions_to_ndarray_tuple(predictions)
 
     def predict(self, X: ArrayLike) -> NDArray:
+        """
+        For each sample in X, returns the predicted label by the base classifier.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Features
+
+        Returns
+        -------
+        NDArray
+            Array of predicted labels, with shape ``(n_samples,)``.
+        """
         raise_error_if_previous_method_not_called(
             "predict",
             "fit_conformalize",

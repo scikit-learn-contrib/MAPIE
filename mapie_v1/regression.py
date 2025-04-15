@@ -225,7 +225,7 @@ class SplitConformalRegressor:
         allow_infinite_bounds: bool = False,
     ) -> Tuple[NDArray, NDArray]:
         """
-        Predicts points and intervals.
+        Predicts points (using the base regressor) and intervals.
 
         If several confidence levels were provided during initialisation, several
         intervals will be predicted for each sample. See the return signature.
@@ -324,7 +324,7 @@ class CrossConformalRegressor:
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
 
-        See :ref:``theoretical_description_conformity_scores``.
+        See :ref:`theoretical_description_conformity_scores`.
 
     method : str, default="plus"
         The method used to compute prediction intervals. Options are:
@@ -454,7 +454,7 @@ class CrossConformalRegressor:
         Returns
         -------
         Self
-            The fitted CrossConformalRegressor instance.
+            This CrossConformalRegressor instance, fitted and conformalized.
         """
         raise_error_if_method_already_called(
             "fit_conformalize",
@@ -771,7 +771,7 @@ class JackknifeAfterBootstrapRegressor:
         Returns
         -------
         Self
-            The JackknifeAfterBootstrapRegressor instance.
+            This JackknifeAfterBootstrapRegressor instance, fitted and conformalized.
         """
         raise_error_if_method_already_called(
             "fit_conformalize",
@@ -1088,7 +1088,7 @@ class ConformalizedQuantileRegressor:
         symmetric_correction: bool = False,
     ) -> Tuple[NDArray, NDArray]:
         """
-        Predicts points and intervals.
+        Predicts points (using the base regressor) and intervals.
 
         The returned NDArray containing the prediction intervals is of shape
         (n_samples, 2, 1). The third dimension is unnecessary, but kept for consistency
