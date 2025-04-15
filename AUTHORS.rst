@@ -47,4 +47,5 @@ Contributors
 * Mohammed Jawhar <mohammedjawhar365@gmail.com>
 * Syed Affan <saffand03@gmail.com>
 * Cyprien Bertran <cbertrandebalanda@yahoo.fr>
+* Brijesh Thummar <brijeshthummar02@gmail.com>
 To be continued ...

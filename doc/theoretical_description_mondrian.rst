@@ -22,10 +22,9 @@ coverage guarantee.  The coverage guarantee is given by:
 where :math:`G_{n+1}` is the group of the new test point :math:`X_{n+1}` and :math:`g`
 is a group in the set of groups :math:`\mathcal{G}`.
 
-MCP can be used with any split conformal predictor and can be particularly useful when one have a prior 
-knowledge about existing groups wheter the information is directly included in the features
-of the data or not.
-In a classifcation setting, the groups can be defined as the predicted classes of the data. Doing so,
+MCP can be used with any split conformal predictor and can be particularly useful when one have a prior
+knowledge about existing groups whether the information is directly included in the features of the data or not.
+In a classification setting, the groups can be defined as the predicted classes of the data. Doing so,
 one can ensure that, for each predicted class, the coverage guarantee is satisfied.
 
 In order to achieve the group-conditional coverage guarantee, MCP simply classifies the data
