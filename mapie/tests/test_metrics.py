@@ -193,8 +193,6 @@ y_true = prng.randint(0, 2, 51)
 
 def test_regression_ypredlow_shape() -> None:
     """Test shape of y_pred_low."""
-    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError):
         coverage_width_based(
             y_toy, y_preds[:1], y_preds[:, 2], eta=30, alpha=0.1
@@ -203,8 +201,6 @@ def test_regression_ypredlow_shape() -> None:
 
 def test_regression_ypredup_shape() -> None:
     """Test shape of y_pred_up."""
-    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError):
         coverage_width_based(
             y_toy, y_preds[:, 1], y_preds[:1], eta=30, alpha=0.1
@@ -219,6 +215,8 @@ def test_regression_intervals_invalid_shape() -> None:
         regression_ssc_score(y_toy, y_preds[0])
     with pytest.raises(ValueError, match=r".*should be a 3D array*"):
         hsic(y_toy, y_preds[0])
+    with pytest.raises(ValueError, match=r".*should be a 3D array*"):
+        regression_mean_width_score(y_preds[0])
 
 
 def test_regression_ytrue_invalid_shape() -> None:
@@ -242,12 +240,11 @@ def test_regression_valid_input_shape() -> None:
     regression_ssc_score(y_toy, intervals)
     hsic(y_toy, intervals)
     coverage_width_based(y_toy, y_preds[:, 1], y_preds[:, 2], eta=0, alpha=0.1)
+    regression_mean_width_score(intervals)
 
 
 def test_regression_same_length() -> None:
     """Test when y_true and y_preds have different lengths."""
-    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        regression_mean_width_score(y_preds[:, :2], y_preds[:, 2])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         regression_ssc(y_toy, intervals[:-1, ])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
@@ -336,20 +333,8 @@ def test_classification_y_pred_set_width_shape() -> None:
 
 def test_regression_toydata_mean_width_score() -> None:
     """Test mean_width_score for toy data."""
-    scr = regression_mean_width_score(y_preds[:, 1], y_preds[:, 2])
-    assert scr == 2.3
-
-
-def test_regression_ypredlow_type_mean_width_score() -> None:
-    """Test that list(y_pred_low) gives right coverage."""
-    scr = regression_mean_width_score(list(y_preds[:, 1]), y_preds[:, 2])
-    assert scr == 2.3
-
-
-def test_regression_ypredup_type_mean_width_score() -> None:
-    """Test that list(y_pred_up) gives right coverage."""
-    scr = regression_mean_width_score(y_preds[:, 1], list(y_preds[:, 2]))
-    assert scr == 2.3
+    scr = regression_mean_width_score(intervals)
+    assert scr == [2.3, 2.2]
 
 
 def test_ece_score() -> None:
@@ -370,7 +355,7 @@ def test_ece_scores() -> None:
     assert np.round(scr, 4) == 0.5363
 
 
-def test_top_lable_ece() -> None:
+def test_top_label_ece() -> None:
     """Test that score is """
     scr = top_label_ece(y_true, y_scores)
     assert np.round(scr, 4) == 0.6997
@@ -378,7 +363,7 @@ def test_top_lable_ece() -> None:
 
 def test_top_label_same_result() -> None:
     """
-    Test that we have the same results if the input contais
+    Test that we have the same results if the input contains
     the maximum with the argmax values or if it is the probabilities
     """
     pred_proba_ = np.array(
