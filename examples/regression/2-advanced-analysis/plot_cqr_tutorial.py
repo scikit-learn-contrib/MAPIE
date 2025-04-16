@@ -366,7 +366,7 @@ def get_coverages_widths_by_bins(
                 )[0])
             elif want == "width":
                 recap[name].append(regression_mean_width_score(
-                    np.stack((y_low_[0], y_high_[0]), axis=-1)
+                    np.stack((y_low_[0], y_high_[0]), axis=-1)[:, :, np.newaxis]
                 )[0])
     recap_df = pd.DataFrame(recap, index=STRATEGIES)
     return recap_df
