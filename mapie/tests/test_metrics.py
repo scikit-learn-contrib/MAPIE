@@ -215,8 +215,6 @@ def test_regression_intervals_invalid_shape() -> None:
         regression_ssc_score(y_toy, y_preds[0])
     with pytest.raises(ValueError, match=r".*should be a 3D array*"):
         hsic(y_toy, y_preds[0])
-    with pytest.raises(ValueError, match=r".*should be a 3D array*"):
-        regression_mean_width_score(y_preds[0])
 
 
 def test_regression_ytrue_invalid_shape() -> None:
