@@ -246,7 +246,7 @@ y_prediction_intervals_mondrian = np.empty((len(X_test), 2, 1))
 
 for _, group in enumerate(partition_groups_test):
     indices_groups = np.argwhere(partition_test == group)[:, 0]
-    X_group = [X_test[index] for index in indices_groups]
+    X_group = X_test[indices_groups]
     y_pred_group, y_prediction_intervals_group = mondrian_regressor[
         group].predict_interval(X_group)
     y_pred_mondrian[indices_groups] = y_pred_group
