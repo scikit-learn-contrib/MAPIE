@@ -282,9 +282,8 @@ for strategy_name, strategy_params in STRATEGIES.items():
         y_pis[strategy_name]
         )[0]
     width[strategy_name] = regression_mean_width_score(
-        y_pis[strategy_name][:, 0, 0],
-        y_pis[strategy_name][:, 1, 0]
-        )
+        y_pis[strategy_name]
+        )[0]
 
 
 ##############################################################################
@@ -366,9 +365,9 @@ def get_coverages_widths_by_bins(
                     y_test_trunc[0], np.stack((y_low_[0], y_high_[0]), axis=-1)
                 )[0])
             elif want == "width":
-                recap[name].append(
-                    regression_mean_width_score(y_low_[0], y_high_[0])
-                )
+                recap[name].append(regression_mean_width_score(
+                    np.stack((y_low_[0], y_high_[0]), axis=-1)
+                )[0])
     recap_df = pd.DataFrame(recap, index=STRATEGIES)
     return recap_df
 

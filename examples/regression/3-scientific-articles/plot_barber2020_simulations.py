@@ -133,7 +133,7 @@ def PIs_vs_dimensions(
                 )[0]
                 results[strategy][dimension]["coverage"][trial] = coverage
                 width_mean = regression_mean_width_score(
-                    y_pis[:, 0, 0], y_pis[:, 1, 0]
+                    y_pis
                 )
                 results[strategy][dimension]["width_mean"][trial] = width_mean
     return results

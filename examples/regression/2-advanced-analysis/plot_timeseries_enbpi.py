@@ -126,7 +126,7 @@ coverage_npfit_enbpi = regression_coverage_score(
 )[0]
 
 width_npfit_enbpi = regression_mean_width_score(
-    y_pis_npfit_enbpi[:, 1, 0], y_pis_npfit_enbpi[:, 0, 0]
+    y_pis_npfit_enbpi
 )
 
 print("EnbPI with partial_fit, width optimization")
@@ -159,7 +159,7 @@ coverage_pfit_enbpi = regression_coverage_score(
     y_test, y_pis_pfit_enbpi
 )[0]
 width_pfit_enbpi = regression_mean_width_score(
-    y_pis_pfit_enbpi[:, 1, 0], y_pis_pfit_enbpi[:, 0, 0]
+    y_pis_pfit_enbpi
 )
 
 # Print results

@@ -229,8 +229,8 @@ def get_coverage_width(PIs: pd.DataFrame, y: NDArray) -> Tuple[float, float]:
         y_true=y, y_intervals=np.stack((PIs["lower"], PIs["upper"]), axis=-1)
     )[0]
     width = regression_mean_width_score(
-        y_pred_low=PIs["lower"], y_pred_up=PIs["upper"]
-    )
+        y_intervals=np.stack((PIs["lower"], PIs["upper"]), axis=-1)
+    )[0]
     return (coverage, width)
 
 

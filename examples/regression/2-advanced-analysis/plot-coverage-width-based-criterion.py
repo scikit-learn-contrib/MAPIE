@@ -265,9 +265,8 @@ for strategy in STRATEGIES:
         y_pis[strategy]
     )[0]
     width_mean_score[strategy] = regression_mean_width_score(
-        y_pis[strategy][:, 0, 0],
-        y_pis[strategy][:, 1, 0]
-    )
+        y_pis[strategy]
+    )[0]
     cwc_score[strategy] = coverage_width_based(
         y_test,
         y_pis[strategy][:, 0, 0],
