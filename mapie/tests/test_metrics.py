@@ -234,6 +234,8 @@ def test_regression_ytrue_invalid_shape() -> None:
 
 def test_regression_valid_input_shape() -> None:
     """Test valid shape of intervals raises no error"""
+    print("Shape:", intervals.shape)
+    print("Dtype:", intervals.dtype)
     regression_ssc(y_toy, intervals)
     regression_ssc_score(y_toy, intervals)
     hsic(y_toy, intervals)
@@ -332,7 +334,7 @@ def test_classification_y_pred_set_width_shape() -> None:
 def test_regression_toydata_mean_width_score() -> None:
     """Test mean_width_score for toy data."""
     scr = regression_mean_width_score(intervals)
-    assert scr == [2.3, 2.2]
+    np.testing.assert_allclose(scr, [2.3, 2.2], rtol=1e-2, atol=1e-2)
 
 
 def test_ece_score() -> None:

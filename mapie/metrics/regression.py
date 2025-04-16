@@ -36,13 +36,15 @@ def regression_mean_width_score(
     --------
     >>> import numpy as np
     >>> y_intervals = np.array([[[4, 6, 8], [6, 9, 11]],
-    >>>                    [[9, 10, 11], [10, 12, 14]],
-    >>>                    [[8.5, 9.5, 10], [12.5, 12, 13]],
-    >>>                    [[7, 8, 9], [8.5, 9.5, 10]],
-    >>>                    [[5, 6, 7], [6.5, 8, 9]]])
+    ...                    [[9, 10, 11], [10, 12, 14]],
+    ...                    [[8.5, 9.5, 10], [12.5, 12, 13]],
+    ...                    [[7, 8, 9], [8.5, 9.5, 10]],
+    ...                    [[5, 6, 7], [6.5, 8, 9]]])
     >>> print(regression_mean_width_score(y_intervals))
-    [2.0 2.2 2.4]
+    [2.  2.2 2.4]
     """
+    y_intervals = np.asarray(y_intervals, dtype=float)
+
     check_array_nan(y_intervals)
     check_array_inf(y_intervals)
 
@@ -488,7 +490,7 @@ def coverage_width_based(
         np.column_stack((y_pred_low, y_pred_up)),
     )[0]
     mean_width = regression_mean_width_score(
-        np.column_stack((y_pred_low, y_pred_up))
+        np.column_stack((y_pred_low, y_pred_up))[:, :, np.newaxis]
     )[0]
     ref_length = np.subtract(
         float(y_true.max()),
