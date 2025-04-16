@@ -213,7 +213,7 @@ Additionally, two regression functions have undergone some change from v0.x to v
 - **regression_mwi_score**: Now takes ``confidence_level`` as input instead of ``alpha`` (``confidence_level`` is equivalent to ``1 - alpha``).
 
 
-6. Mondrian method changes
+6. MondrianCP class suppression
 ----------------------------------------------------------------------------------------
 
 Currently, the ``MondrianCP`` class from v0.x is no longer available in v1, but it will be reimplemented in a future release.
