@@ -218,7 +218,7 @@ Additionally, two regression functions have undergone some change from v0.x to v
 
 Currently, the ``MondrianCP`` class from v0.x is no longer available in v1, but it will be reimplemented in a future release.
 
-In the meantime, a `tutorial <https://mapie.readthedocs.io/en/v1/examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html>`_ for tabular regression with Mondrian is available in the documentation. This tutorial walks you through the process of performing Mondrian "by hand" (i.e., without using the ``MondrianCP`` class) on a simple regression example, while shedding light on the benefits of using Mondrian.
+A `tutorial <https://mapie.readthedocs.io/en/v1/examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html>`_ for tabular regression with Mondrian is available in the documentation. This tutorial demonstrates how to implement Mondrian manually (i.e., without using the ``MondrianCP`` class) on a simple regression example, while shedding light on the benefits of this technique.
 
 
 7. Migration examples: MAPIE v0.x to MAPIE v1
