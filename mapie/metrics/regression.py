@@ -35,6 +35,7 @@ def regression_mean_width_score(
     Examples
     --------
     >>> import numpy as np
+    >>> from mapie.metrics.regression import regression_mean_width_score
     >>> y_intervals = np.array([[[4, 6, 8], [6, 9, 11]],
     ...                    [[9, 10, 11], [10, 12, 14]],
     ...                    [[8.5, 9.5, 10], [12.5, 12, 13]],
