@@ -197,14 +197,14 @@ In MAPIE v1, metrics are divided into three modules: ``calibration``, ``classifi
 Below is an example of the import needed for the ``classification_coverage_score`` function:
 
 - **v0.x**:
-.. code-block::
+    .. code-block::
 
-    from mapie.metrics import classification_coverage_score
+        from mapie.metrics import classification_coverage_score
 
 - **v1**:
-.. code-block::
+    .. code-block::
 
-    from mapie.metrics.classification import classification_coverage_score
+        from mapie.metrics.classification import classification_coverage_score
 
 
 Additionally, two regression functions have undergone some change from v0.x to v1:
@@ -213,7 +213,17 @@ Additionally, two regression functions have undergone some change from v0.x to v
 - **regression_mwi_score**: Now takes ``confidence_level`` as input instead of ``alpha`` (``confidence_level`` is equivalent to ``1 - alpha``).
 
 
-6. Migration examples: MAPIE v0.x to MAPIE v1
+6. MondrianCP class suppression
+----------------------------------------------------------------------------------------
+
+The ``MondrianCP`` class is no longer available in v1.
+
+The class API was not aligned with the new philosophy we brought to the regression and classification use-cases. The class scope was also limited. We want to rethink the way we integrate Mondrian to MAPIE, in a future-proof way. Moreover, the Mondrian technique can be easily implemented manually.
+
+A `tutorial <https://mapie.readthedocs.io/en/v1/examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html>`_ for tabular regression with Mondrian is available in the documentation. This tutorial demonstrates how to implement Mondrian manually (i.e., without using the ``MondrianCP`` class) on a simple regression example, while shedding light on the benefits of this technique.
+
+
+7. Migration examples: MAPIE v0.x to MAPIE v1
 ----------------------------------------------------------------------------------------
 
 Below is a side-by-side example of code in MAPIE v0.x and its equivalent in MAPIE v1
