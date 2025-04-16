@@ -227,8 +227,8 @@ for group in partition_groups_conformalization:
     mapie_group_estimator = SplitConformalRegressor(copy(random_forest), prefit=True,
                                                     confidence_level=0.9)
     indices_groups = np.argwhere(partition_conformalize == group)[:, 0]
-    X_group = [X_conformalize[index] for index in indices_groups]
-    y_group = [y_conformalize[index] for index in indices_groups]
+    X_group = X_conformalize[indices_groups]
+    y_group = y_conformalize[indices_groups]
     mapie_group_estimator.conformalize(X_group, y_group)
     mondrian_regressor[group] = mapie_group_estimator
 
