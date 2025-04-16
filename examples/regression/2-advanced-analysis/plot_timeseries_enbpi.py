@@ -127,7 +127,7 @@ coverage_npfit_enbpi = regression_coverage_score(
 
 width_npfit_enbpi = regression_mean_width_score(
     y_pis_npfit_enbpi
-)
+)[0]
 
 print("EnbPI with partial_fit, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
@@ -160,7 +160,7 @@ coverage_pfit_enbpi = regression_coverage_score(
 )[0]
 width_pfit_enbpi = regression_mean_width_score(
     y_pis_pfit_enbpi
-)
+)[0]
 
 # Print results
 print(
