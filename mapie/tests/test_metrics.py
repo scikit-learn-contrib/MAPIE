@@ -234,8 +234,6 @@ def test_regression_ytrue_invalid_shape() -> None:
 
 def test_regression_valid_input_shape() -> None:
     """Test valid shape of intervals raises no error"""
-    print("Shape:", intervals.shape)
-    print("Dtype:", intervals.dtype)
     regression_ssc(y_toy, intervals)
     regression_ssc_score(y_toy, intervals)
     hsic(y_toy, intervals)
