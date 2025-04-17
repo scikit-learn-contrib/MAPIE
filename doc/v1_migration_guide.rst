@@ -207,10 +207,31 @@ Below is an example of the import needed for the ``classification_coverage_score
         from mapie.metrics.classification import classification_coverage_score
 
 
-Additionally, two regression functions have undergone some change from v0.x to v1:
+Additionally, a number of classification and regression functions have been updated from v0.x to v1:
 
-- **regression_coverage_score**: Merged with ``regression_coverage_v2``. In MAPIE v1, ``regression_coverage_score`` now corresponds to MAPIE v0.x's ``regression_coverage_score_v2``.
-- **regression_mwi_score**: Now takes ``confidence_level`` as input instead of ``alpha`` (``confidence_level`` is equivalent to ``1 - alpha``).
+``classification_mean_width``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **v0.x**: Took the prediction sets in an array of shape (n_samples, n_class) for a given confidence level as input, and returned the effective mean width as a float.
+- **v1**: Now takes the prediction sets in an array of shape (n_samples, n_class, n_confidence_level) as input, and returns the effective mean width for each confidence level as an array of shape (n_confidence_level,).
+
+``regression_mean_width``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **v0.x**: Took the lower and upper bounds of the prediction intervals in arrays of shape (n_samples,) for a given confidence level as input, and returned the effective mean width as a float.
+- **v1**: Now takes a single array of shape (n_samples, 2, n_confidence_level) as input, and returns the effective mean width for each confidence level as an array of shape (n_confidence_level,).
+
+``regression_coverage_score``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **v0.x**: Had two separate versions: ``regression_coverage_score`` and ``regression_coverage_v2``.
+- **v1**: ``regression_coverage_score`` now corresponds to MAPIE v0.x's ``regression_coverage_score_v2``. MAPIE v0.x's ``regression_coverage_score`` is now deprecated.
+
+``regression_mwi_score``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **v0.x**: Took ``alpha`` as input.
+- **v1**: Now takes ``confidence_level`` as input (``confidence_level`` is equivalent to ``1 - alpha``).
 
 
 6. MondrianCP class suppression
