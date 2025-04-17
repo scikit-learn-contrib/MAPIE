@@ -151,7 +151,7 @@ def test_valid_alpha(alpha: Any) -> None:
 
 
 @pytest.mark.parametrize("cv", ["prefit", None])
-def test_valid_shape_no_n_features_in(cv: Any) -> None:
+def test_check_n_features_in_estimator_without_attribute(cv: Any) -> None:
     """
     Test that estimators fitted with a right number of features
     but missing an n_features_in_ attribute raise no errors.
@@ -159,6 +159,32 @@ def test_valid_shape_no_n_features_in(cv: Any) -> None:
     estimator = DumbEstimator()
     n_features_in = check_n_features_in(X=X, cv=cv, estimator=estimator)
     assert n_features_in == n_features
+
+
+def test_check_n_features_in_X_1d_array() -> None:
+    """
+    Test that check_n_features_in returns 1 for a one-dimensional array.
+    """
+    X_1d = np.array([1, 2, 3, 4, 5])
+    n_features_in = check_n_features_in(X=X_1d)
+    assert n_features_in == 1
+
+
+def test_check_n_features_in_X_without_shape() -> None:
+    """
+    Test that check_n_features_in handles objects without shape attribute.
+    """
+    n_features_in = check_n_features_in(X=[[1, 2], [3, 4], [5, 6]])
+    assert n_features_in == 2
+
+
+def test_check_n_features_in_invalid_prefit_estimator() -> None:
+    """
+    Test that estimators fitted with a wrong number of features raise errors.
+    """
+    estimator = LinearRegression().fit(X, y)
+    with pytest.raises(ValueError, match=r".*mismatch between.*"):
+        check_n_features_in(X_toy, cv="prefit", estimator=estimator)
 
 
 @pytest.mark.parametrize(
@@ -192,15 +218,6 @@ def test_invalid_calculation_of_quantile(alpha: Any) -> None:
         ValueError, match=r".*Number of samples of the score is too low.*"
     ):
         check_alpha_and_n_samples(alpha, n)
-
-
-def test_invalid_prefit_estimator_shape() -> None:
-    """
-    Test that estimators fitted with a wrong number of features raise errors.
-    """
-    estimator = LinearRegression().fit(X, y)
-    with pytest.raises(ValueError, match=r".*mismatch between.*"):
-        check_n_features_in(X_toy, cv="prefit", estimator=estimator)
 
 
 @pytest.mark.parametrize("n_jobs", ["dummy", 0, 1.5, [1, 2]])
