@@ -298,6 +298,7 @@ def test_classification_valid_input_shape() -> None:
     """Test that valid inputs shape raise no error."""
     classification_ssc(y_true_class, y_pred_set_2alphas)
     classification_ssc_score(y_true_class, y_pred_set_2alphas)
+    classification_mean_width_score(y_pred_set_2alphas)
 
 
 def test_classification_toydata() -> None:
@@ -320,13 +321,8 @@ def test_classification_y_pred_set_type() -> None:
 @pytest.mark.parametrize("pred_set", [y_pred_set, list(y_pred_set)])
 def test_classification_toydata_width(pred_set: ArrayLike) -> None:
     """Test width mean for toy data."""
-    assert classification_mean_width_score(pred_set) == 2.0
-
-
-def test_classification_y_pred_set_width_shape() -> None:
-    """Test shape of y_pred_set in classification_mean_width_score."""
-    with pytest.raises(ValueError, match=r".*Expected 2D array*"):
-        classification_mean_width_score(y_pred_set[:, 0])
+    scr = classification_mean_width_score(y_pred_set_2alphas)
+    np.testing.assert_allclose(scr, [2.2, 1.8], rtol=1e-2, atol=1e-2)
 
 
 def test_regression_toydata_mean_width_score() -> None:
