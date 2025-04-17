@@ -136,7 +136,7 @@ def test_mapie_time_series_regressor_sklearn_estim() -> None:
     estimator itself in pipelines for example
     2. the new classes introduced in v1 break the .fit/.predict API
     """
-    check_estimator(
+    check_estimator(  # pragma: no cover
         MapieTimeSeriesRegressor(),
         expected_failed_checks={
             "check_estimators_partial_fit_n_features":
