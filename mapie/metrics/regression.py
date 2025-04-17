@@ -16,44 +16,42 @@ from mapie.utils import (
 
 
 def regression_mean_width_score(
-    y_pred_low: ArrayLike,
-    y_pred_up: ArrayLike
-) -> float:
+    y_intervals: NDArray
+) -> NDArray:
     """
     Effective mean width score obtained by the prediction intervals.
 
     Parameters
     ----------
-    y_pred_low: ArrayLike of shape (n_samples,)
-        Lower bound of prediction intervals.
-    y_pred_up: ArrayLike of shape (n_samples,)
-        Upper bound of prediction intervals.
+    y_intervals: NDArray of shape (n_samples, 2, n_confidence_level)
+        Lower and upper bound of prediction intervals
+        with different confidence levels, given by the ``predict_interval`` method
 
     Returns
-    -------
-    float
-        Effective mean width of the prediction intervals.
+    ---------
+    NDArray of shape (n_confidence_level,)
+        Effective mean width of the prediction intervals for each confidence level.
 
     Examples
     --------
-    >>> from mapie.metrics.regression import regression_mean_width_score
     >>> import numpy as np
-    >>> y_pred_low = np.array([4, 6, 9, 8.5, 10.5])
-    >>> y_pred_up = np.array([6, 9, 10, 12.5, 12])
-    >>> print(regression_mean_width_score(y_pred_low, y_pred_up))
-    2.3
+    >>> from mapie.metrics.regression import regression_mean_width_score
+    >>> y_intervals = np.array([[[4, 6, 8], [6, 9, 11]],
+    ...                    [[9, 10, 11], [10, 12, 14]],
+    ...                    [[8.5, 9.5, 10], [12.5, 12, 13]],
+    ...                    [[7, 8, 9], [8.5, 9.5, 10]],
+    ...                    [[5, 6, 7], [6.5, 8, 9]]])
+    >>> print(regression_mean_width_score(y_intervals))
+    [2.  2.2 2.4]
     """
-    y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
-    y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
+    y_intervals = np.asarray(y_intervals, dtype=float)
 
-    check_arrays_length(y_pred_low, y_pred_up)
-    check_array_nan(y_pred_low)
-    check_array_inf(y_pred_low)
-    check_array_nan(y_pred_up)
-    check_array_inf(y_pred_up)
+    check_array_nan(y_intervals)
+    check_array_inf(y_intervals)
 
-    mean_width = np.abs(y_pred_up - y_pred_low).mean()
-    return float(mean_width)
+    width = np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :])
+    mean_width = width.mean(axis=0)
+    return mean_width
 
 
 def regression_coverage_score(
@@ -493,9 +491,8 @@ def coverage_width_based(
         np.column_stack((y_pred_low, y_pred_up)),
     )[0]
     mean_width = regression_mean_width_score(
-        y_pred_low,
-        y_pred_up
-    )
+        np.column_stack((y_pred_low, y_pred_up))[:, :, np.newaxis]
+    )[0]
     ref_length = np.subtract(
         float(y_true.max()),
         float(y_true.min())
