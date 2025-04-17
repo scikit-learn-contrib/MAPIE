@@ -98,6 +98,7 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     >>> print(classification_mean_width_score(y_pred_set))
     [2.  1.8]
     """
+    y_pred_set = np.asarray(y_pred_set, dtype=bool)
     check_array_nan(y_pred_set)
     check_array_inf(y_pred_set)
     width = y_pred_set.sum(axis=1)
