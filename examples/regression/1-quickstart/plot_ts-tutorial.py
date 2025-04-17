@@ -221,8 +221,8 @@ coverage_enbpi_npfit = regression_coverage_score(
     y_test, y_pis_enbpi_npfit
 )[0]
 width_enbpi_npfit = regression_mean_width_score(
-    y_pis_enbpi_npfit[:, 0, 0], y_pis_enbpi_npfit[:, 1, 0]
-)
+    y_pis_enbpi_npfit
+)[0]
 cwc_enbpi_npfit = coverage_width_based(
     y_test, y_pis_enbpi_npfit[:, 0, 0],
     y_pis_enbpi_npfit[:, 1, 0],
@@ -262,8 +262,8 @@ coverage_aci_npfit = regression_coverage_score(
     y_test, y_pis_aci_npfit
 )[0]
 width_aci_npfit = regression_mean_width_score(
-    y_pis_aci_npfit[:, 0, 0], y_pis_aci_npfit[:, 1, 0]
-)
+    y_pis_aci_npfit
+)[0]
 cwc_aci_npfit = coverage_width_based(
     y_test,
     y_pis_aci_npfit[:, 0, 0],
@@ -311,8 +311,8 @@ coverage_enbpi_pfit = regression_coverage_score(
     y_test, y_pis_enbpi_pfit
 )[0]
 width_enbpi_pfit = regression_mean_width_score(
-    y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0]
-)
+    y_pis_enbpi_pfit
+)[0]
 cwc_enbpi_pfit = coverage_width_based(
     y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0],
     eta=10,
@@ -364,8 +364,8 @@ coverage_aci_pfit = regression_coverage_score(
     y_test, y_pis_aci_pfit
 )[0]
 width_aci_pfit = regression_mean_width_score(
-    y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0]
-)
+    y_pis_aci_pfit
+)[0]
 cwc_aci_pfit = coverage_width_based(
     y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0],
     eta=0.01,
