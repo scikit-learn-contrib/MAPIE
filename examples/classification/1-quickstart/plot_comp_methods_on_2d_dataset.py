@@ -263,10 +263,7 @@ for method in methods:
         classification_coverage_score(y, y_ps_mapie[method][:, :, i])
         for i, _ in enumerate(alpha_)
     ]
-    mean_width[method] = [
-        classification_mean_width_score(y_ps_mapie[method][:, :, i])
-        for i, _ in enumerate(alpha_)
-    ]
+    mean_width[method] = classification_mean_width_score(y_ps_mapie[method])
 
 fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 axs[0].set_xlabel("1 - alpha")
