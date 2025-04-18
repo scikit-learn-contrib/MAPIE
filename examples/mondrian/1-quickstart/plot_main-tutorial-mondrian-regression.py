@@ -1,6 +1,6 @@
 r"""
 ====================================================================
-Tutorial: how to ensure fairness across data subgroups with Mondrian
+Tutorial: how to ensure fairness across groups with Mondrian
 ====================================================================
 
 Mondrian is a method that allows to build prediction sets (for classification) and
