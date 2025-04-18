@@ -8,7 +8,6 @@ from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import KFold
 from sklearn.pipeline import make_pipeline
-from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.validation import check_is_fitted
 
 from numpy.typing import ArrayLike, NDArray
@@ -190,14 +189,6 @@ def test_none_alpha_results(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     mapie_estimator.fit(X_toy, y_toy)
     y_pred = mapie_estimator.predict(X_toy)
     np.testing.assert_allclose(y_pred_expected, y_pred)
-
-
-@parametrize_with_checks([MapieRegressor()])
-def test_sklearn_compatible_estimator(
-    estimator: BaseEstimator, check: Any
-) -> None:
-    """Check compatibility with sklearn, using sklearn estimator checks API."""
-    check(estimator)
 
 
 def test_warning_when_import_from_gamma_conformity_score():

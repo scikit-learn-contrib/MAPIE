@@ -5,12 +5,20 @@ MAPIE v1 introduces several updates, enhancements, and structural changes that s
 
 This guide outlines the differences between MAPIE v0.x and MAPIE v1 and provides instructions for migrating your code to the new API.
 
-1. Python and NumPy versions support
--------------------------------------------------
+1. Python, scikit-learn and NumPy versions support
+--------------------------------------------------------------------------
 
-We now support Python >= 3.9 (formerly >=3.7), and NumPy >= 1.23 (formerly >=1.21).
+Requirements have been updated and clarified. We now support:
 
-MAPIE v1 may run with Python < 3.9, but we do not recommend it.
+- Python >=3.9, <3.12 (formerly >=3.7, with no clear indication on a maximum version)
+- NumPy >=1.23 (formerly >=1.21)
+- scikit-learn >=1.4 (formerly no indications)
+
+Note that even though we're not officially supporting and testing it, MAPIE may run using either:
+
+- Python >=3.12, without using multi-processing (ie, ``n_jobs=-1``)
+- Python <3.9
+- scikit-learn <1.4, provided SciPy <=1.10
 
 2. Class restructuring
 -----------------------------------
@@ -197,11 +205,13 @@ In MAPIE v1, metrics are divided into three modules: ``calibration``, ``classifi
 Below is an example of the import needed for the ``classification_coverage_score`` function:
 
 - **v0.x**:
+
     .. code-block::
 
         from mapie.metrics import classification_coverage_score
 
 - **v1**:
+
     .. code-block::
 
         from mapie.metrics.classification import classification_coverage_score

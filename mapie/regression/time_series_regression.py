@@ -467,11 +467,3 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
             allow_infinite_bounds=allow_infinite_bounds, **predict_params
         )
-
-    def _more_tags(self):
-        return {
-            "_xfail_checks": {
-                "check_estimators_partial_fit_n_features":
-                "partial_fit can only be called on fitted models"
-            }
-        }

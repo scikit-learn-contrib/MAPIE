@@ -22,7 +22,7 @@ from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_predict_params)
 
 
-class MapieRegressor(BaseEstimator, RegressorMixin):
+class MapieRegressor(RegressorMixin, BaseEstimator):
     """
     Prediction interval with out-of-fold conformity scores.
 

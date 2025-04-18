@@ -24,7 +24,7 @@ from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
                          check_verbose)
 
 
-class MapieClassifier(BaseEstimator, ClassifierMixin):
+class MapieClassifier(ClassifierMixin, BaseEstimator):
     """
     Prediction sets for classification.
 
