@@ -270,10 +270,7 @@ split_coverages = np.array(
 split_widths = np.array(
     [
         [
-            [
-                classification_mean_width_score(y_ps[:, :, ia])
-                for ia, _ in enumerate(alpha)
-            ]
+            classification_mean_width_score(y_ps)
             for _, y_ps in y_ps2.items()
         ] for _, y_ps2 in y_ps_mapies.items()
     ]
@@ -389,10 +386,7 @@ for strategy, y_ps_ in y_ps.items():
         ]
     )
     widths[strategy] = np.array(
-        [
-            classification_mean_width_score(y_ps_[:, :, ia])
-            for ia, _ in enumerate(alpha)
-        ]
+        classification_mean_width_score(y_ps_)
     )
     violations[strategy] = np.abs(coverages[strategy] - (1 - alpha)).mean()
 
