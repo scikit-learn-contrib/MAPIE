@@ -13,7 +13,7 @@ one-dimensional, ground truth function with classical conformal prediction inter
 versus Mondrian conformal prediction intervals. The function is a sinusoidal function
 with added noise, and the data is split in 10 `disjoint` groups. Such groups can
 include categories like gender or demographic segments, such as different age ranges.
-Ultimately, he goal is to estimate the prediction intervals for new data points and
+Ultimately, the goal is to estimate the prediction intervals for new data points and
 compare the coverage of these intervals across groups.
 
 Please note that the coverage obtained with Mondrian depends on the size of the
