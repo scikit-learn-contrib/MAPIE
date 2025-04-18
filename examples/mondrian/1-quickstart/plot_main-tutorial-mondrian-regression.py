@@ -32,7 +32,7 @@ Throughout this tutorial, we will answer the following questions:
 Here, :class:`~mapie_v1.regression.SplitConformalRegressor` is used, along with the
 ``"absolute"`` conformity score.
 
-The Mondrian method is compatible with any MAPIE v1 estimator, except those involving
+The Mondrian method is compatible with any MAPIE estimator, except those involving
 cross-conformal predictions. There are no restrictions on the conformity scores used.
 """
 
