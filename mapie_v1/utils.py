@@ -18,13 +18,13 @@ def train_conformalize_test_split(
     random_state: Optional[int] = None,
     shuffle: bool = True,
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
-    """Split arrays or matrices into train, conformalize and test subsets.
+    """Split arrays or matrices into train, conformity and test subsets.
 
     Utility similar to sklearn.model_selection.train_test_split
     for splitting data into 3 sets.
 
     We advise to give the major part of the data points to the train set
-    and at least 200 data points to the conformalize set.
+    and at least 200 data points to the conformity set.
 
     Parameters
     ----------
