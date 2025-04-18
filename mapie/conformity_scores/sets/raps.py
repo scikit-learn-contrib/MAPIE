@@ -281,10 +281,7 @@ class RAPSConformityScore(APSConformityScore):
             respectively represent the updated values of lambda_star
             and the new best sizes.
         """
-        sizes = [
-            classification_mean_width_score(y_ps[:, :, i])
-            for i in range(len(alpha_np))
-        ]
+        sizes = classification_mean_width_score(y_ps)
 
         sizes_improve = (sizes < best_sizes - EPSILON)
         lambda_star = (

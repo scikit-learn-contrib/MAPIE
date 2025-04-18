@@ -217,10 +217,7 @@ coverages_score = [
     classification_coverage_score(y_test, y_ps_score2[:, :, i])
     for i, _ in enumerate(alpha2)
 ]
-widths_score = [
-    classification_mean_width_score(y_ps_score2[:, :, i])
-    for i, _ in enumerate(alpha2)
-]
+widths_score = classification_mean_width_score(y_ps_score2)
 
 
 def plot_coverages_widths(alpha, coverage, width, method):
@@ -279,10 +276,7 @@ coverages_aps = [
     classification_coverage_score(y_test, y_ps_aps2[:, :, i])
     for i, _ in enumerate(alpha2)
 ]
-widths_aps = [
-    classification_mean_width_score(y_ps_aps2[:, :, i])
-    for i, _ in enumerate(alpha2)
-]
+widths_aps = classification_mean_width_score(y_ps_aps2)
 
 plot_coverages_widths(alpha2, coverages_aps, widths_aps, "lac")
 

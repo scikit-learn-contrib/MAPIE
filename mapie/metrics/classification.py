@@ -76,38 +76,34 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
 
     Parameters
     ----------
-    y_pred_set: ArrayLike of shape (n_samples, n_class)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
         Prediction sets given by booleans of labels.
 
     Returns
     -------
-    float
-        Mean width of the prediction set.
+    NDArray of shape (n_confidence_level,)
+        Mean width of the prediction sets for each confidence level.
 
     Examples
     --------
-    >>> from mapie.metrics.classification import classification_mean_width_score
     >>> import numpy as np
+    >>> from mapie.metrics.classification import classification_mean_width_score
     >>> y_pred_set = np.array([
-    ...     [False, False,  True,  True],
-    ...     [False,  True, False,  True],
-    ...     [False,  True,  True, False],
-    ...     [False, False,  True,  True],
-    ...     [False,  True, False,  True]
+    ...     [[False, False], [False, True], [True, True]],
+    ...     [[False, True], [True, False], [True, True]],
+    ...     [[True, False], [True, True], [True, False]],
+    ...     [[False, False], [True, True], [True, True]],
+    ...     [[True, True], [False, True], [True, False]]
     ... ])
     >>> print(classification_mean_width_score(y_pred_set))
-    2.0
+    [2.  1.8]
     """
-    y_pred_set = cast(
-        NDArray,
-        check_array(
-            y_pred_set, force_all_finite=True, dtype=["bool"]
-        )
-    )
+    y_pred_set = np.asarray(y_pred_set, dtype=bool)
     check_array_nan(y_pred_set)
     check_array_inf(y_pred_set)
-    mean_width = y_pred_set.sum(axis=1).mean()
-    return float(mean_width)
+    width = y_pred_set.sum(axis=1)
+    mean_width = width.mean(axis=0)
+    return mean_width
 
 
 def classification_coverage_score_v2(
