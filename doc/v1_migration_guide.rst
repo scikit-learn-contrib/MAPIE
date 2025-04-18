@@ -225,7 +225,7 @@ Additionally, a number of classification and regression functions have been upda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - **v0.x**: Had two separate versions: ``regression_coverage_score`` and ``regression_coverage_v2``.
-- **v1**: ``regression_coverage_score`` now corresponds to MAPIE v0.x's ``regression_coverage_score_v2``. MAPIE v0.x's ``regression_coverage_score`` is now deprecated.
+- **v1**: ``regression_coverage_score`` now corresponds to MAPIE v0.x's ``regression_coverage_score_v2``.
 
 ``regression_mwi_score``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
