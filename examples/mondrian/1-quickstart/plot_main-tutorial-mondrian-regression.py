@@ -1,7 +1,7 @@
 r"""
-=============================================
-Tutorial for tabular regression with Mondrian
-=============================================
+====================================================================
+Tutorial: how to ensure fairness across groups with Mondrian
+====================================================================
 
 Mondrian is a method that allows to build prediction sets (for classification) and
 prediction intervals (for regression) with a group-conditional coverage guarantee. To
@@ -11,31 +11,29 @@ and hence achieves marginal coverage on each of them.
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a simple,
 one-dimensional, ground truth function with classical conformal prediction intervals
 versus Mondrian conformal prediction intervals. The function is a sinusoidal function
-with added noise, and the data is grouped in 10 groups. The goal is to estimate the
-prediction intervals for new data points, and to compare the coverage of the
-prediction intervals by groups. Throughout this tutorial, we will answer the
-following questions:
+with added noise, and the data is split in 10 `disjoint` groups. Such groups can
+include categories like gender or demographic segments, such as different age ranges.
+Ultimately, the goal is to estimate the prediction intervals for new data points and
+compare the coverage of these intervals across groups.
 
+Please note that the coverage obtained with Mondrian depends on the size of the
+groups: therefore, the groups must be large enough for the coverage to represent the
+model's performance on each of them accurately. If the groups are too small (e.g.,
+fewer than 200 samples within the group's conformity set), the conformalization may
+become unstable, likely resulting in high variance in the effective coverage obtained.
+
+
+Throughout this tutorial, we will answer the following questions:
 
 - How to use MAPIE to estimate prediction intervals for a regression problem?
-- How to use Mondrian conformal prediction intervals for regression?
+- How to build Mondrian conformal prediction intervals using MAPIE for regression?
 - How to compare the coverage of the prediction intervals by groups?
 
 Here, :class:`~mapie_v1.regression.SplitConformalRegressor` is used, along with the
 ``"absolute"`` conformity score.
 
-Please note that the Mondrian method must be used on a pre-fitted underlying
-estimator: therefore, :class:`~mapie_v1.classification.SplitConformalClassifier(
-prefit=True)` (for classification) or
-:class:`~mapie_v1.regression.SplitConformalRegressor(prefit=True)` (for regression)
-must be used.
-Besides, the conformity score must be one of the following:
-
-- For :class:`~mapie_v1.classification.SplitConformalClassifier`: ``"lac"``,
-  ``"aps"`` or ``"top_k"``;
-
-- For :class:`~mapie_v1.regression.SplitConformalRegressor(prefit=True)`:
-  ``"absolute"`` or ``"gamma"``.
+The Mondrian method is compatible with any MAPIE estimator, except those involving
+cross-conformal predictions. There are no restrictions on the conformity scores used.
 """
 
 import os
@@ -67,7 +65,8 @@ group_size = n_points // 10
 partition_list = []
 for i in range(10):
     partition_list.append(np.array([i] * group_size))
-# The `partition` array contains the group of each of the 100000 data points.
+# The `partition` array contains the group of each of the 100,000 data points. We
+# ensured that the groups are disjoint.
 partition = np.concatenate(partition_list)
 
 noise_0_1 = np.random.normal(0, 0.1, group_size)
@@ -103,7 +102,7 @@ plt.scatter(X, y, c=partition)
 plt.show()
 
 #######################################################################################
-# 2. Split the dataset into a training set, a conformalization set, and a test set
+# 2. Split the dataset into a training set, a conformity set, and a test set
 # ------------------------------------------------------------------------------------
 
 (X_train, X_conformalize, X_test,
@@ -119,14 +118,14 @@ plt.show()
 )
 
 ##############################################################################
-# We plot the training set, the conformalization set, and the test set.
+# We plot the training set, the conformity set, and the test set.
 
 
 f, ax = plt.subplots(1, 3, figsize=(15, 5))
 ax[0].scatter(X_train, y_train, c=partition_train)
 ax[0].set_title("Train set")
 ax[1].scatter(X_conformalize, y_conformalize, c=partition_conformalize)
-ax[1].set_title("Conformalization set")
+ax[1].set_title("Conformity set")
 ax[2].scatter(X_test, y_test, c=partition_test)
 ax[2].set_title("Test set")
 plt.show()
@@ -146,7 +145,7 @@ random_forest.fit(X_train, y_train)
 
 
 #######################################################################################
-# Conformalize a SplitConformalRegressor on the conformalization set
+# Conformalize a SplitConformalRegressor on the conformity set
 # *************************************************************************************
 
 
@@ -198,10 +197,10 @@ average_coverage = np.mean(split_coverages)
 print("Average coverage across the 10 groups:", average_coverage)
 
 #######################################################################################
-# As shown in the graph above, the average coverage across the 10 groups is above the
-# 90% we aimed for, which was expected. However, the coverage varies greatly from one
-# group to another; this behavior is not desirable, as we want to achieve 90% coverage
-# in each group.
+# As shown in the graph above, the average coverage across the 10 groups (i.e., marginal
+# coverage) is above the target coverage (90%), which was expected. However, the
+# coverage varies greatly from one group to another; this behavior is not desirable, as
+# we want to achieve 90% coverage in each group (i.e., conditional coverage).
 #
 # Let us see how Mondrian allows us to handle this situation.
 
@@ -213,17 +212,17 @@ print("Average coverage across the 10 groups:", average_coverage)
 
 
 #######################################################################################
-# Conformalize a SplitConformalRegressor on the conformalization set for each group
+# Conformalize a SplitConformalRegressor on the conformity set for each group
 # *************************************************************************************
-# For each group in the conformalization set, we conformalize a distinct
+# For each group in the conformity set, we conformalize a distinct
 # :class:`~mapie_v1.regression.SplitConformalRegressor`.
 
 
 mondrian_regressor = {}
 
-partition_groups_conformalization = np.unique(partition_conformalize)
+partition_groups_conformity = np.unique(partition_conformalize)
 
-for group in partition_groups_conformalization:
+for group in partition_groups_conformity:
     mapie_group_estimator = SplitConformalRegressor(copy(random_forest), prefit=True,
                                                     confidence_level=0.9)
     indices_groups = np.argwhere(partition_conformalize == group)[:, 0]
@@ -308,6 +307,7 @@ print("Average coverage across the 10 groups with the Mondrian method:",
       average_coverage)
 
 #######################################################################################
-# As expected, both methods achieve an average coverage above 90% across the 10 groups.
-# However, the Mondrian method provides coverage for each group that is much closer to
-# 90% compared to the classic method.
+# As expected, both methods achieve an average coverage (marginal coverage) above
+# 90% across the 10 groups.
+# However, the Mondrian method provides coverage for each group (conditional coverage)
+# that is much closer to the target coverage compared to the classic method.
