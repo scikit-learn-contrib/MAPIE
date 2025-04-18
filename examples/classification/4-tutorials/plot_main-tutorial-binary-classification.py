@@ -304,10 +304,7 @@ coverage = np.array([
     classification_coverage_score(y, y_ps_mapie[:, :, i])
     for i, _ in enumerate(alpha_)
 ])
-mean_width = [
-    classification_mean_width_score(y_ps_mapie[:, :, i])
-    for i, _ in enumerate(alpha_)
-]
+mean_width = classification_mean_width_score(y_ps_mapie)
 
 
 def plot_coverages_widths(alpha, coverage, width, method):
