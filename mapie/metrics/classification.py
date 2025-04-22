@@ -164,7 +164,6 @@ def classification_coverage_score_v2(
 
     >>> predicted_points, predicted_sets = mapie_classifier.predict_set(X_test)
     >>> coverage = classification_coverage_score_v2(y_test, predicted_sets)[0]
-    >>> print(coverage)
     """
     check_arrays_length(y_true, y_pred_set)
     check_array_nan(y_true)
