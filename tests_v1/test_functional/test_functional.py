@@ -9,7 +9,7 @@ from mapie_v1.regression import (
     CrossConformalRegressor,
     ConformalizedQuantileRegressor, JackknifeAfterBootstrapRegressor,
 )
-from mapie_v1.classification import SplitConformalClassifier, CrossConformalClassifier
+from mapie.classification import SplitConformalClassifier, CrossConformalClassifier
 
 RANDOM_STATE = 1
 

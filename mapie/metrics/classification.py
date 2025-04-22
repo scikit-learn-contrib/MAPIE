@@ -142,7 +142,7 @@ def classification_coverage_score_v2(
     Examples
     --------
     >>> from mapie.metrics.classification import classification_coverage_score_v2
-    >>> from mapie_v1.classification import SplitConformalClassifier
+    >>> from mapie.classification import SplitConformalClassifier
     >>> from mapie_v1.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_classification
     >>> from sklearn.model_selection import train_test_split
