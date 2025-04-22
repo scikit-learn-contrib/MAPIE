@@ -121,8 +121,7 @@ def classification_coverage_score_v2(
 
     Beside this intended use, this function also works with:
 
-    - ``y_true`` of shape (n_sample,) and ``y_pred_set`` of shape (n_sample,
-    n_class)
+    - ``y_true`` of shape (n_sample,) and ``y_pred_set`` of shape (n_sample, n_class)
     - ``y_true`` of shape (n_sample, n) and ``y_pred_set`` of shape
       (n_sample, n_class, n)
 
