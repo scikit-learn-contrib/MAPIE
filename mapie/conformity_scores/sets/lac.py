@@ -17,7 +17,7 @@ class LACConformityScore(BaseClassificationScore):
     non conformity score (also formerly called ``"score"``).
 
     It is based on the scores (i.e. 1 minus the softmax score of the true
-    label) on the calibration set.
+    label) on the conformity set.
 
     References
     ----------
