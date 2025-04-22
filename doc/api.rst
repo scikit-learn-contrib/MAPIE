@@ -25,8 +25,8 @@ Classification
    :template: class.rst
 
    mapie.classification.MapieClassifier
-   mapie_v1.classification.SplitConformalClassifier
-   mapie_v1.classification.CrossConformalClassifier
+   mapie.classification.SplitConformalClassifier
+   mapie.classification.CrossConformalClassifier
 
 Multi-Label Classification
 ==========================
