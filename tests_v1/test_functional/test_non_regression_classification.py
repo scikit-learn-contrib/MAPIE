@@ -6,14 +6,17 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import LeaveOneOut, GroupKFold
 
-from mapie.classification import MapieClassifier
+from mapie.classification import (
+    MapieClassifier,
+    SplitConformalClassifier,
+    CrossConformalClassifier,
+)
 from mapie.conformity_scores import (
     RAPSConformityScore,
     APSConformityScore,
     TopKConformityScore,
     LACConformityScore,
 )
-from mapie_v1.classification import SplitConformalClassifier, CrossConformalClassifier
 from tests_v1.test_functional.utils import (
     DummyClassifierWithFitAndPredictParams,
     train_test_split_shuffle,
