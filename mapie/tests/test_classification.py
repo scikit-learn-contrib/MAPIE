@@ -22,7 +22,7 @@ from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from numpy.typing import ArrayLike, NDArray
-from mapie.classification import MapieClassifier
+from mapie.classification import _MapieClassifier
 from mapie.conformity_scores import LACConformityScore
 from mapie.conformity_scores.utils import METHOD_SCORE_MAP
 from mapie.conformity_scores.sets.utils import check_proba_normalized
@@ -928,14 +928,14 @@ def do_nothing(*args: Any) -> None:
 
 def test_initialized() -> None:
     """Test that initialization does not crash."""
-    MapieClassifier()
+    _MapieClassifier()
 
 
 @pytest.mark.parametrize("cv", ["prefit", "split"])
 @pytest.mark.parametrize("method", ["aps", "raps"])
 def test_warning_binary_classif(cv: str, method: str) -> None:
     """Test that a warning is raised y is binary."""
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
       cv=cv, method=method, random_state=random_state
     )
     X, y = make_classification(
@@ -953,7 +953,7 @@ def test_warning_binary_classif(cv: str, method: str) -> None:
 
 def test_binary_classif_same_result() -> None:
     """Test MAPIE doesnt change model output when y is binary."""
-    mapie_clf = MapieClassifier(random_state=random_state)
+    mapie_clf = _MapieClassifier(random_state=random_state)
     X, y = make_classification(
         n_samples=500,
         n_features=10,
@@ -971,7 +971,7 @@ def test_binary_classif_same_result() -> None:
 def test_valid_estimator(strategy: str) -> None:
     """Test that valid estimators are not corrupted, for all strategies."""
     clf = LogisticRegression().fit(X, y)
-    mapie_clf = MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
+    mapie_clf = _MapieClassifier(estimator=clf, **STRATEGIES[strategy][0])
     mapie_clf.fit(X, y)
     assert (
         isinstance(mapie_clf.estimator_.single_estimator_, LogisticRegression)
@@ -981,7 +981,7 @@ def test_valid_estimator(strategy: str) -> None:
 @pytest.mark.parametrize("method", METHODS)
 def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         method=method, cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X, y)
@@ -996,7 +996,7 @@ def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raises no errors."""
     model = LogisticRegression()
     model.fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=model, cv=cv, random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
@@ -1006,7 +1006,7 @@ def test_valid_cv(cv: Any) -> None:
 @pytest.mark.parametrize("agg_scores", ["mean", "crossval"])
 def test_agg_scores_argument(agg_scores: str) -> None:
     """Test that predict passes with all valid 'agg_scores' arguments."""
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         cv=3, method="lac", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
@@ -1016,7 +1016,7 @@ def test_agg_scores_argument(agg_scores: str) -> None:
 @pytest.mark.parametrize("agg_scores", ["median", 1, None])
 def test_invalid_agg_scores_argument(agg_scores: str) -> None:
     """Test that invalid 'agg_scores' raise errors."""
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         cv=3, method="lac", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
@@ -1029,7 +1029,7 @@ def test_invalid_agg_scores_argument(agg_scores: str) -> None:
 @pytest.mark.parametrize("cv", [100, 200, 300])
 def test_too_large_cv(cv: Any) -> None:
     """Test that too large cv raise sklearn errors."""
-    mapie_clf = MapieClassifier(cv=cv, random_state=random_state)
+    mapie_clf = _MapieClassifier(cv=cv, random_state=random_state)
     with pytest.raises(
         ValueError,
         match=rf".*Cannot have number of splits n_splits={cv} greater.*",
@@ -1043,7 +1043,7 @@ def test_too_large_cv(cv: Any) -> None:
 )
 def test_invalid_include_last_label(include_last_label: Any) -> None:
     """Test that invalid include_last_label raise errors."""
-    mapie_clf = MapieClassifier(method='aps', random_state=random_state)
+    mapie_clf = _MapieClassifier(method='aps', random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(
         ValueError, match=r".*Invalid include_last_label argument.*"
@@ -1062,7 +1062,7 @@ def test_predict_output_shape(
 ) -> None:
     """Test predict output shape."""
     args_init, args_predict = STRATEGIES[strategy]
-    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf = _MapieClassifier(**args_init)
     mapie_clf.fit(X, y)
     y_pred, y_ps = mapie_clf.predict(
         X,
@@ -1082,7 +1082,7 @@ def test_y_is_list_of_string(
 ) -> None:
     """Test predict output shape with string y."""
     args_init, args_predict = STRATEGIES[strategy]
-    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf = _MapieClassifier(**args_init)
     mapie_clf.fit(X, y.astype('str'))
     y_pred, y_ps = mapie_clf.predict(
         X,
@@ -1117,13 +1117,13 @@ def test_same_results_prefit_split(strategy: str) -> None:
 
     args_init, args_predict = deepcopy(STRATEGIES[strategy + '_split'])
     args_init["cv"] = cv
-    mapie_reg = MapieClassifier(**args_init)
+    mapie_reg = _MapieClassifier(**args_init)
     mapie_reg.fit(X, y)
     y_pred_1, y_pis_1 = mapie_reg.predict(X, alpha=0.1, **args_predict)
 
     args_init, _ = STRATEGIES[strategy]
     model = LogisticRegression().fit(X_train_, y_train_)
-    mapie_reg = MapieClassifier(estimator=model, **args_init)
+    mapie_reg = _MapieClassifier(estimator=model, **args_init)
     mapie_reg.fit(X_calib_, y_calib_)
     y_pred_2, y_pis_2 = mapie_reg.predict(X, alpha=0.1, **args_predict)
 
@@ -1140,9 +1140,9 @@ def test_same_result_y_numeric_and_string(
     """Test that MAPIE outputs the same results if y is
     numeric or string"""
     args_init, args_predict = STRATEGIES[strategy]
-    mapie_clf_str = MapieClassifier(**args_init)
+    mapie_clf_str = _MapieClassifier(**args_init)
     mapie_clf_str.fit(X, y.astype('str'))
-    mapie_clf_int = MapieClassifier(**args_init)
+    mapie_clf_int = _MapieClassifier(**args_init)
     mapie_clf_int.fit(X, y)
     _, y_ps_str = mapie_clf_str.predict(
         X,
@@ -1166,7 +1166,7 @@ def test_y_1_to_l_minus_1(
 ) -> None:
     """Test predict output shape with string y."""
     args_init, args_predict = STRATEGIES[strategy]
-    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf = _MapieClassifier(**args_init)
     mapie_clf.fit(X, y + 1)
     y_pred, y_ps = mapie_clf.predict(
         X,
@@ -1187,9 +1187,9 @@ def test_same_result_y_numeric_and_1_to_l_minus_1(
     """Test that MAPIE outputs the same results if y is
     numeric or string"""
     args_init, args_predict = STRATEGIES[strategy]
-    mapie_clf_1 = MapieClassifier(**args_init)
+    mapie_clf_1 = _MapieClassifier(**args_init)
     mapie_clf_1.fit(X, y + 1)
-    mapie_clf_int = MapieClassifier(**args_init)
+    mapie_clf_int = _MapieClassifier(**args_init)
     mapie_clf_int.fit(X, y)
     _, y_ps_1 = mapie_clf_1.predict(
         X,
@@ -1213,7 +1213,7 @@ def test_results_for_same_alpha(strategy: str) -> None:
     are similar with two equal values of alpha.
     """
     args_init, args_predict = STRATEGIES[strategy]
-    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf = _MapieClassifier(**args_init)
     mapie_clf.fit(X, y)
     _, y_ps = mapie_clf.predict(
         X,
@@ -1234,7 +1234,7 @@ def test_results_for_alpha_as_float_and_arraylike(
 ) -> None:
     """Test that output values do not depend on type of alpha."""
     args_init, args_predict = STRATEGIES[strategy]
-    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf = _MapieClassifier(**args_init)
     mapie_clf.fit(X, y)
     y_pred_float1, y_ps_float1 = mapie_clf.predict(
         X,
@@ -1267,8 +1267,8 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     regardless of number of parallel jobs.
     """
     args_init, args_predict = STRATEGIES[strategy]
-    mapie_clf_single = MapieClassifier(n_jobs=1, **args_init)
-    mapie_clf_multi = MapieClassifier(n_jobs=-1, **args_init)
+    mapie_clf_single = _MapieClassifier(n_jobs=1, **args_init)
+    mapie_clf_multi = _MapieClassifier(n_jobs=-1, **args_init)
     mapie_clf_single.fit(X, y)
     mapie_clf_multi.fit(X, y)
     y_pred_single, y_ps_single = mapie_clf_single.predict(
@@ -1299,9 +1299,9 @@ def test_results_with_constant_sample_weights(
     lr = LogisticRegression(C=1e-99)
     lr.fit(X, y)
     n_samples = len(X)
-    mapie_clf0 = MapieClassifier(lr, **args_init)
-    mapie_clf1 = MapieClassifier(lr, **args_init)
-    mapie_clf2 = MapieClassifier(lr, **args_init)
+    mapie_clf0 = _MapieClassifier(lr, **args_init)
+    mapie_clf1 = _MapieClassifier(lr, **args_init)
+    mapie_clf2 = _MapieClassifier(lr, **args_init)
     mapie_clf0.fit(X, y, sample_weight=None)
     mapie_clf1.fit(X, y, sample_weight=np.ones(shape=n_samples))
     mapie_clf2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
@@ -1339,9 +1339,9 @@ def test_results_with_constant_groups(strategy: str) -> None:
     lr = LogisticRegression(C=1e-99)
     lr.fit(X, y)
     n_samples = len(X)
-    mapie_clf0 = MapieClassifier(lr, **args_init)
-    mapie_clf1 = MapieClassifier(lr, **args_init)
-    mapie_clf2 = MapieClassifier(lr, **args_init)
+    mapie_clf0 = _MapieClassifier(lr, **args_init)
+    mapie_clf1 = _MapieClassifier(lr, **args_init)
+    mapie_clf2 = _MapieClassifier(lr, **args_init)
     mapie_clf0.fit(X, y, groups=None)
     mapie_clf1.fit(X, y, groups=np.ones(shape=n_samples))
     mapie_clf2.fit(X, y, groups=np.ones(shape=n_samples) * 5)
@@ -1390,8 +1390,8 @@ def test_results_with_groups() -> None:
         cv=GroupKFold(n_splits=3),
     )
 
-    mapie0 = MapieClassifier(**strategy_no_group)
-    mapie1 = MapieClassifier(**strategy_group)
+    mapie0 = _MapieClassifier(**strategy_no_group)
+    mapie1 = _MapieClassifier(**strategy_group)
     mapie0.fit(X, y, groups=None)
     mapie1.fit(X, y, groups=groups)
     # check class member conformity_scores_:
@@ -1419,7 +1419,7 @@ def test_valid_prediction(alpha: Any) -> None:
     """Test fit and predict."""
     model = LogisticRegression()
     model.fit(X_toy, y_toy)
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=model, cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
@@ -1428,7 +1428,7 @@ def test_valid_prediction(alpha: Any) -> None:
 
 @pytest.mark.parametrize("strategy", [*COVERAGES])
 def test_toy_dataset_predictions(strategy: str) -> None:
-    """Test prediction sets estimated by MapieClassifier on a toy dataset"""
+    """Test prediction sets estimated by _MapieClassifier on a toy dataset"""
     if strategy == "aps_randomized_cv_crossval":
         return
     args_init, args_predict = STRATEGIES[strategy]
@@ -1436,7 +1436,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
         clf = LogisticRegression().fit(X_toy, y_toy)
     else:
         clf = LogisticRegression()
-    mapie_clf = MapieClassifier(estimator=clf, **args_init)
+    mapie_clf = _MapieClassifier(estimator=clf, **args_init)
     mapie_clf.fit(X_toy, y_toy, size_raps=0.5)
     _, y_ps = mapie_clf.predict(
         X_toy,
@@ -1453,13 +1453,13 @@ def test_toy_dataset_predictions(strategy: str) -> None:
 
 @pytest.mark.parametrize("strategy", [*LARGE_COVERAGES])
 def test_large_dataset_predictions(strategy: str) -> None:
-    """Test prediction sets estimated by MapieClassifier on a larger dataset"""
+    """Test prediction sets estimated by _MapieClassifier on a larger dataset"""
     args_init, args_predict = STRATEGIES[strategy]
     if "split" not in strategy:
         clf = LogisticRegression().fit(X, y)
     else:
         clf = LogisticRegression()
-    mapie_clf = MapieClassifier(estimator=clf, **args_init)
+    mapie_clf = _MapieClassifier(estimator=clf, **args_init)
     mapie_clf.fit(X, y, size_raps=0.5)
     _, y_ps = mapie_clf.predict(
         X,
@@ -1476,7 +1476,7 @@ def test_large_dataset_predictions(strategy: str) -> None:
 @pytest.mark.parametrize("strategy", [*LARGE_COVERAGES])
 def test_same_result_with_score_and_method(strategy: str) -> None:
     """
-    Test that prediction sets estimated by MapieClassifier on a larger dataset
+    Test that prediction sets estimated by _MapieClassifier on a larger dataset
     archive same coverage with conformity_score or method parameters.
     """
 
@@ -1485,7 +1485,7 @@ def test_same_result_with_score_and_method(strategy: str) -> None:
             clf = LogisticRegression().fit(X, y)
         else:
             clf = LogisticRegression()
-        mapie_clf = MapieClassifier(estimator=clf, **args_init)
+        mapie_clf = _MapieClassifier(estimator=clf, **args_init)
         mapie_clf.fit(X, y, size_raps=0.5)
         _, y_ps = mapie_clf.predict(
             X,
@@ -1516,14 +1516,14 @@ def test_same_result_with_score_and_method(strategy: str) -> None:
 @pytest.mark.parametrize("strategy", [*STRATEGIES_BINARY])
 def test_toy_binary_dataset_predictions(strategy: str) -> None:
     """
-    Test prediction sets estimated by MapieClassifier on a toy binary dataset
+    Test prediction sets estimated by _MapieClassifier on a toy binary dataset
     """
     args_init, args_predict = STRATEGIES_BINARY[strategy]
     if "split" not in strategy:
         clf = LogisticRegression().fit(X_toy_binary, y_toy_binary)
     else:
         clf = LogisticRegression()
-    mapie_clf = MapieClassifier(estimator=clf, **args_init)
+    mapie_clf = _MapieClassifier(estimator=clf, **args_init)
     mapie_clf.fit(X_toy_binary, y_toy_binary)
     _, y_ps = mapie_clf.predict(
         X_toy,
@@ -1545,7 +1545,7 @@ def test_cumulated_scores() -> None:
     # fit
     cumclf = CumulatedScoreClassifier()
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         cumclf,
         method="aps",
         cv="prefit",
@@ -1575,7 +1575,7 @@ def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
     X_test = X["X_test"]
     cumclf = ImageClassifier(X_calib, X_test)
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
-    mapie = MapieClassifier(
+    mapie = _MapieClassifier(
         cumclf,
         method="aps",
         cv="prefit",
@@ -1600,7 +1600,7 @@ def test_sum_proba_to_one_fit(y_pred_proba: NDArray) -> None:
     sum to one, return an error in the fit method.
     """
     wrong_model = WrongOutputModel(y_pred_proba)
-    mapie_clf = MapieClassifier(wrong_model, cv="prefit")
+    mapie_clf = _MapieClassifier(wrong_model, cv="prefit")
     with pytest.raises(
         AssertionError, match=r".*The sum of the scores is not equal to one.*"
     ):
@@ -1618,7 +1618,7 @@ def test_sum_proba_to_one_predict(
     sum to one, return an error in the predict method.
     """
     wrong_model = WrongOutputModel(y_pred_proba)
-    mapie_clf = MapieClassifier(cv="prefit", random_state=random_state)
+    mapie_clf = _MapieClassifier(cv="prefit", random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.estimator_.single_estimator_ = wrong_model
     with pytest.raises(
@@ -1641,7 +1641,7 @@ def test_classifier_without_classes_attribute(
         delattr(estimator[-1], "classes_")
     else:
         delattr(estimator, "classes_")
-    mapie = MapieClassifier(
+    mapie = _MapieClassifier(
         estimator=estimator, cv="prefit", random_state=random_state
     )
     with pytest.raises(
@@ -1654,9 +1654,9 @@ def test_classifier_without_classes_attribute(
 def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
     """Test else condition for the method in .fit"""
     monkeypatch.setattr(
-        MapieClassifier, "_check_parameters", do_nothing
+        _MapieClassifier, "_check_parameters", do_nothing
     )
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         method=method, random_state=random_state
     )
     with pytest.raises(
@@ -1677,7 +1677,7 @@ def test_include_label_error_in_predict(
         "check_include_last_label",
         do_nothing
     )
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         method="aps", random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
@@ -1690,7 +1690,7 @@ def test_include_label_error_in_predict(
 
 def test_pred_loof_isnan() -> None:
     """Test that if validation set is empty then prediction is empty."""
-    mapie_clf = MapieClassifier(random_state=random_state)
+    mapie_clf = _MapieClassifier(random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     y_pred, _, _ = mapie_clf.estimator_._predict_proba_calib_oof_estimator(
         estimator=LogisticRegression().fit(X_toy, y_toy),
@@ -1731,7 +1731,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
     )
     pipe = make_pipeline(preprocessor, LogisticRegression())
     pipe.fit(X, y)
-    mapie = MapieClassifier(estimator=pipe, **STRATEGIES[strategy][0])
+    mapie = _MapieClassifier(estimator=pipe, **STRATEGIES[strategy][0])
     mapie.fit(X, y)
     mapie.predict(X)
 
@@ -1772,7 +1772,7 @@ def test_classif_float32(cv) -> None:
     alpha = .9
     dummy_classif = Float32OuputModel()
 
-    mapie = MapieClassifier(
+    mapie = _MapieClassifier(
         estimator=dummy_classif, method="naive",
         cv=cv, random_state=random_state
     )
@@ -1790,7 +1790,7 @@ def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
     Test that an error is raised if the method is RAPS
     and cv is different from prefit and split.
     """
-    mapie = MapieClassifier(
+    mapie = _MapieClassifier(
         method="raps", cv=cv, random_state=random_state
     )
     with pytest.raises(ValueError, match=r".*RAPS method can only.*"):
@@ -1807,7 +1807,7 @@ def test_not_all_label_in_calib() -> None:
     indices_remove = np.where(y != 2)
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, method="aps",
         cv="prefit", random_state=random_state
     )
@@ -1826,7 +1826,7 @@ def test_warning_not_all_label_in_calib() -> None:
     indices_remove = np.where(y != 2)
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, method="aps",
         cv="prefit", random_state=random_state
     )
@@ -1846,7 +1846,7 @@ def test_n_classes_prefit() -> None:
     indices_remove = np.where(y != 2)
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, method="aps",
         cv="prefit", random_state=random_state
     )
@@ -1864,7 +1864,7 @@ def test_classes_prefit() -> None:
     indices_remove = np.where(y != 2)
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, method="aps",
         cv="prefit", random_state=random_state
     )
@@ -1882,7 +1882,7 @@ def test_classes_encoder_same_than_model() -> None:
     indices_remove = np.where(y != 2)
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, method="aps",
         cv="prefit"
     )
@@ -1897,7 +1897,7 @@ def test_n_classes_cv() -> None:
     """
     clf = LogisticRegression()
 
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, method="aps",
         cv=5, random_state=random_state
     )
@@ -1912,7 +1912,7 @@ def test_classes_cv() -> None:
     """
     clf = LogisticRegression()
 
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, method="aps",
         cv=5, random_state=random_state
     )
@@ -1928,7 +1928,7 @@ def test_raise_error_new_class() -> None:
     clf = LogisticRegression()
     clf.fit(X, y)
     y[-1] = 10
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, method="aps",
         cv="prefit", random_state=random_state
     )
@@ -1946,7 +1946,7 @@ def test_fit_parameters_passing() -> None:
     """
     gb = GradientBoostingClassifier(random_state=random_state)
 
-    mapie = MapieClassifier(
+    mapie = _MapieClassifier(
         estimator=gb, method="aps", random_state=random_state
     )
 
@@ -1968,7 +1968,7 @@ def test_predict_parameters_passing() -> None:
     )
     custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
     score = LACConformityScore()
-    mapie_model = MapieClassifier(estimator=custom_gbc, conformity_score=score)
+    mapie_model = _MapieClassifier(estimator=custom_gbc, conformity_score=score)
 
     predict_params = {'check_predict_params': True}
     mapie_model = mapie_model.fit(
@@ -1992,7 +1992,7 @@ def test_with_no_predict_parameters_passing() -> None:
         train_test_split(X, y, test_size=0.2, random_state=random_state)
     )
     custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
-    mapie_model = MapieClassifier(estimator=custom_gbc)
+    mapie_model = _MapieClassifier(estimator=custom_gbc)
     mapie_model = mapie_model.fit(X_train, y_train)
     y_pred = mapie_model.predict(X_test, agg_scores="mean")
 
@@ -2011,7 +2011,7 @@ def test_fit_params_expected_behavior_unaffected_by_predict_params() -> None:
         train_test_split(X, y, test_size=0.2, random_state=random_state)
     )
     custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
-    mapie_model = MapieClassifier(estimator=custom_gbc)
+    mapie_model = _MapieClassifier(estimator=custom_gbc)
     fit_params = {'monitor': early_stopping_monitor}
     predict_params = {'check_predict_params': True}
     mapie_model = mapie_model.fit(
@@ -2035,7 +2035,7 @@ def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
     )
     custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
     score = LACConformityScore()
-    mapie_model = MapieClassifier(estimator=custom_gbc, conformity_score=score)
+    mapie_model = _MapieClassifier(estimator=custom_gbc, conformity_score=score)
     fit_params = {'monitor': early_stopping_monitor}
     predict_params = {'check_predict_params': True}
     mapie_model = mapie_model.fit(
@@ -2061,7 +2061,7 @@ def test_using_one_predict_parameter_into_predict_but_not_in_fit() -> None:
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)
     )
-    mapie = MapieClassifier(estimator=custom_gbc)
+    mapie = _MapieClassifier(estimator=custom_gbc)
     predict_params = {'check_predict_params': True}
     mapie_fitted = mapie.fit(X_train, y_train)
 
@@ -2083,7 +2083,7 @@ def test_using_one_predict_parameter_into_fit_but_not_in_predict() -> None:
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)
     )
-    mapie = MapieClassifier(estimator=custom_gbc)
+    mapie = _MapieClassifier(estimator=custom_gbc)
     predict_params = {'check_predict_params': True}
     mapie_fitted = mapie.fit(X_train, y_train, predict_params=predict_params)
 

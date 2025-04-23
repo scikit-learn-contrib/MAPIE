@@ -64,8 +64,8 @@ Here's a quick instantiation of MAPIE models for regression and classification p
 .. code:: python
 
     # Uncertainty quantification for classification problem
-    from mapie.classification import MapieClassifier
-    mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
+    from mapie.classification import _MapieClassifier
+    mapie_classifier = _MapieClassifier(estimator=classifier, method='score', cv=5)
 
 Implemented methods in **MAPIE** respect three fundamental pillars:
 
@@ -145,7 +145,7 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
     from sklearn.datasets import make_blobs
     from sklearn.model_selection import train_test_split
 
-    from mapie.classification import MapieClassifier
+    from mapie.classification import _MapieClassifier
 
 
     X, y = make_blobs(n_samples=500, n_features=2, centers=3)
@@ -153,7 +153,7 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
 
     classifier = LogisticRegression()
 
-    mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
+    mapie_classifier = _MapieClassifier(estimator=classifier, method='score', cv=5)
 
     mapie_classifier = mapie_classifier.fit(X_train, y_train)
     y_pred, y_pis = mapie_classifier.predict(X_test, alpha=[0.05, 0.32])

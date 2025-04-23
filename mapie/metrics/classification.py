@@ -72,7 +72,7 @@ def classification_coverage_score(
 def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     """
     Mean width of prediction set output by
-    :class:`~mapie.classification.MapieClassifier`.
+    :class:`~mapie.classification._MapieClassifier`.
 
     Parameters
     ----------
