@@ -141,7 +141,7 @@ class SplitConformalClassifier:
         # Note to developers: to implement this v1 class without touching the
         # v0 backend, we're for now using a hack. We always set cv="prefit",
         # and we fit the estimator if needed. See the .fit method below.
-        self._mapie_classifier = MapieClassifier(
+        self._mapie_classifier = _MapieClassifier(
             estimator=self._estimator,
             cv="prefit",
             n_jobs=n_jobs,
@@ -397,7 +397,7 @@ class CrossConformalClassifier:
     ) -> None:
         check_cv_not_string(cv)
 
-        self._mapie_classifier = MapieClassifier(
+        self._mapie_classifier = _MapieClassifier(
             estimator=estimator,
             cv=cv,
             n_jobs=n_jobs,
@@ -562,8 +562,12 @@ class CrossConformalClassifier:
         return cast_point_predictions_to_ndarray(predictions)
 
 
-class MapieClassifier(ClassifierMixin, BaseEstimator):
+class _MapieClassifier(ClassifierMixin, BaseEstimator):
     """
+    Note to users: _MapieClassifier is now private, and may change at any time.
+    Please use CrossConformalClassifier or CrossConformalClassifier instead.
+    See the v1 migration guide for more information.
+
     Prediction sets for classification.
 
     This class implements several conformal prediction strategies for
@@ -723,11 +727,11 @@ class MapieClassifier(ClassifierMixin, BaseEstimator):
     --------
     >>> import numpy as np
     >>> from sklearn.naive_bayes import GaussianNB
-    >>> from mapie.classification import MapieClassifier
+    >>> from mapie.classification import _MapieClassifier
     >>> X_toy = np.arange(9).reshape(-1, 1)
     >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
     >>> clf = GaussianNB().fit(X_toy, y_toy)
-    >>> mapie = MapieClassifier(estimator=clf, cv="prefit").fit(X_toy, y_toy)
+    >>> mapie = _MapieClassifier(estimator=clf, cv="prefit").fit(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.2)
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False False]
@@ -959,7 +963,7 @@ class MapieClassifier(ClassifierMixin, BaseEstimator):
         size_raps: Optional[float] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any
-    ) -> MapieClassifier:
+    ) -> _MapieClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
 
@@ -997,7 +1001,7 @@ class MapieClassifier(ClassifierMixin, BaseEstimator):
 
         Returns
         -------
-        MapieClassifier
+        _MapieClassifier
             The model itself.
         """
         fit_params = kwargs.pop('fit_params', {})

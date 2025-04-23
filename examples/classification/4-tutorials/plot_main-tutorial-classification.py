@@ -22,7 +22,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
-from mapie.classification import MapieClassifier
+from mapie.classification import _MapieClassifier
 from mapie.metrics.classification import (
     classification_coverage_score,
     classification_mean_width_score,
@@ -113,7 +113,7 @@ clf = GaussianNB().fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
-mapie_score = MapieClassifier(estimator=clf, cv="prefit", method="lac")
+mapie_score = _MapieClassifier(estimator=clf, cv="prefit", method="lac")
 mapie_score.fit(X_cal, y_cal)
 alpha = [0.2, 0.1, 0.05]
 y_pred_score, y_ps_score = mapie_score.predict(X_test_mesh, alpha=alpha)
@@ -253,7 +253,7 @@ plot_coverages_widths(alpha2, coverages_score, widths_score, "lac")
 # Let's visualize the prediction sets obtained with the APS method on the test
 # set after fitting MAPIE on the calibration set.
 
-mapie_aps = MapieClassifier(
+mapie_aps = _MapieClassifier(
     estimator=clf, cv="prefit", method="aps"
 )
 mapie_aps.fit(X_cal, y_cal)

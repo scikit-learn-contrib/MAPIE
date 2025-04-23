@@ -377,7 +377,7 @@ def test_results_for_alpha_as_float_and_arraylike(
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_single_and_multi_jobs(strategy: str) -> None:
     """
-    Test that MapieClassifier gives equal predictions
+    Test that _MapieClassifier gives equal predictions
     regardless of number of parallel jobs.
     """
     args = STRATEGIES[strategy][0]

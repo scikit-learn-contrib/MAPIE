@@ -89,9 +89,9 @@ def check_depreciated_size_raps(
             "WARNING: Deprecated parameter. "
             "The parameter `size_raps` is deprecated. "
             "In the next release, `RAPSConformityScore` takes precedence over "
-            "`MapieClassifier` for setting the size used. "
+            "`_MapieClassifier` for setting the size used. "
             "Prefer to define `size_raps` in `RAPSConformityScore` rather "
-            "than in the `fit` method of `MapieClassifier`.",
+            "than in the `fit` method of `_MapieClassifier`.",
             DeprecationWarning
         )
 
