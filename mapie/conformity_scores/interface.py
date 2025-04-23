@@ -138,7 +138,7 @@ class BaseConformityScore(metaclass=ABCMeta):
             The quantiles of the conformity scores.
         """
         n_ref = conformity_scores.shape[1-axis]
-        n_calib = np.min(np.sum(~np.isnan(conformity_scores), axis=axis))
+        n_calib: int = np.min(np.sum(~np.isnan(conformity_scores), axis=axis))
         signed = 1-2*reversed
 
         # Adapt alpha w.r.t upper/lower : alpha vs. 1-alpha

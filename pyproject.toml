@@ -16,9 +16,9 @@ maintainers = [
     {name = "Louis Lacombe", email = "louis.lacombe@capgemini.com"},
     {name = "Vincent Blot", email = "vincent.blot@capgemini.com"},
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.9, <3.12"
 dependencies = [
-    "scikit-learn<1.6.0",
+    "scikit-learn>=1.4",
     "scipy",
     "numpy>=1.23"
 ]
@@ -32,8 +32,6 @@ classifiers = [
     "Operating System :: POSIX",
     "Operating System :: Unix",
     "Operating System :: MacOS",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11"
