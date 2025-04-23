@@ -299,11 +299,12 @@ class TimeSeriesRegressor(MapieRegressor):
         X, y = cast(NDArray, X), cast(NDArray, y)
 
         self._get_alpha()
-        confidence_level = check_alpha(confidence_level)
         if confidence_level is None:
             alpha_np = np.array(list(self.current_alpha.keys()))
         else:
-            alpha_np = transform_confidence_level_to_alpha_list(confidence_level)
+            alpha_np = cast(
+                NDArray, transform_confidence_level_to_alpha_list(confidence_level)
+            )
 
         for x_row, y_row in zip(X, y):
             x = np.expand_dims(x_row, axis=0)
