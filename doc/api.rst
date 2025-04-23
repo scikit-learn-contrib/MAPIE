@@ -24,7 +24,6 @@ Classification
    :toctree: generated/
    :template: class.rst
 
-   mapie.classification.MapieClassifier
    mapie.classification.SplitConformalClassifier
    mapie.classification.CrossConformalClassifier
 

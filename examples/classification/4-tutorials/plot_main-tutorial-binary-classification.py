@@ -4,7 +4,7 @@ Tutorial for set prediction
 ===========================
 
 In this tutorial, we propose set prediction for binary classification
-estimated by :class:`~mapie.classification.MapieClassifier` with the "lac"
+estimated by :class:`~mapie.classification._MapieClassifier` with the "lac"
 method on two-dimensional dataset.
 
 Throughout this tutorial, we will answer the following questions:
@@ -34,7 +34,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
 from numpy.typing import NDArray
-from mapie.classification import MapieClassifier
+from mapie.classification import _MapieClassifier
 from mapie.metrics.classification import (
     classification_coverage_score,
     classification_mean_width_score,
@@ -121,7 +121,7 @@ plt.show()
 # :class:`~sklearn.calibration.CalibratedClassifierCV` proposed by sklearn
 # so that scores can be interpreted as probabilities
 # (see documentation for more information).
-# Then we apply :class:`~mapie.classification.MapieClassifier` in the
+# Then we apply :class:`~mapie.classification._MapieClassifier` in the
 # calibration data with the methods ``score``
 # to the estimator indicating that it has already been fitted with
 # `cv="prefit"`.
@@ -138,7 +138,7 @@ calib = CalibratedClassifierCV(
 )
 calib.fit(X_c1, y_c1)
 
-mapie_clf = MapieClassifier(
+mapie_clf = _MapieClassifier(
     estimator=calib, method='lac', cv='prefit', random_state=42
 )
 mapie_clf.fit(X_c2, y_c2)
@@ -292,7 +292,7 @@ calib = CalibratedClassifierCV(
 )
 calib.fit(X_c1, y_c1)
 
-mapie_clf = MapieClassifier(
+mapie_clf = _MapieClassifier(
     estimator=calib, method='lac', cv='prefit', random_state=42
 )
 mapie_clf.fit(X_c2, y_c2)
@@ -340,7 +340,7 @@ calib = CalibratedClassifierCV(
 )
 calib.fit(X_c1, y_c1)
 
-mapie_clf = MapieClassifier(
+mapie_clf = _MapieClassifier(
     estimator=calib, method='lac', cv='prefit', random_state=42
 )
 mapie_clf.fit(X_c2, y_c2)

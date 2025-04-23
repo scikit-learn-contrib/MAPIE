@@ -3,7 +3,7 @@
 Reproducing Example 7 from Sadinle et al. (2019)
 ================================================
 
-We use :class:`~mapie.classification.MapieClassifier` to reproduce
+We use :class:`~mapie.classification._MapieClassifier` to reproduce
 Example 7 from Sadinle et al. (2019).
 
 We consider a two-dimensional dataset with three labels. The distribution
@@ -12,7 +12,7 @@ each label.
 We model the data with Gaussian Naive Bayes classifier
 :class:`~sklearn.naive_bayes.GaussianNB` as a base model.
 
-Prediction sets are estimated by :class:`~mapie.classification.MapieClassifier`
+Prediction sets are estimated by :class:`~mapie.classification._MapieClassifier`
 from the distribution of the softmax scores of the true labels for three
 alpha values (0.2, 0.1, and 0.05) giving different class coverage levels.
 
@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.naive_bayes import GaussianNB
 
-from mapie.classification import MapieClassifier
+from mapie.classification import _MapieClassifier
 
 # Create training set from multivariate normal distribution
 centers = [(0, 3.5), (-2, 0), (2, 0)]
@@ -51,12 +51,12 @@ xx, yy = np.meshgrid(
 )
 X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
-# Apply MapieClassifier on the dataset to get prediction sets
+# Apply _MapieClassifier on the dataset to get prediction sets
 clf = GaussianNB().fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
-mapie = MapieClassifier(estimator=clf, cv="prefit", method="lac")
+mapie = _MapieClassifier(estimator=clf, cv="prefit", method="lac")
 mapie.fit(X_train, y_train)
 y_pred_mapie, y_ps_mapie = mapie.predict(X_test, alpha=alpha)
 
