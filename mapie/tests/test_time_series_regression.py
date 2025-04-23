@@ -301,7 +301,7 @@ def test_linear_regression_results(strategy: str) -> None:
     if 'enbpi' in strategy:
         mapie_ts.update(X, y, ensemble=True)
     if 'aci' in strategy:
-        mapie_ts.update(X, y, alpha=0.05, ensemble=True)
+        mapie_ts.update(X, y, confidence_level=0.95, ensemble=True)
     optimize_beta = "opt" in strategy
     _, y_pis = mapie_ts.predict(
         X, alpha=0.05, optimize_beta=optimize_beta, ensemble=True
@@ -562,5 +562,5 @@ def test_methods_preservation_in_fit(method: str, cv: str) -> None:
         cv=cv, method=method
     )
     mapie_ts_reg.fit(X_val, y_val)
-    mapie_ts_reg.update(X_test, y_test, gamma=0.1, alpha=0.1)
+    mapie_ts_reg.update(X_test, y_test, gamma=0.1, confidence_level=0.9)
     assert mapie_ts_reg.method == method

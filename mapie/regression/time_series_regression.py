@@ -332,7 +332,7 @@ class TimeSeriesRegressor(MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         ensemble: bool = False,
-        alpha: Optional[Union[float, Iterable[float]]] = None,
+        confidence_level: Optional[Union[float, Iterable[float]]] = None,
         gamma: float = 0.,
         optimize_beta: bool = False,
     ) -> TimeSeriesRegressor:
@@ -360,9 +360,8 @@ class TimeSeriesRegressor(MapieRegressor):
 
             By default ``False``.
 
-        alpha: Optional[Union[float, Iterable[float]]]
-            Between ``0`` and ``1``, represents the uncertainty of the
-            confidence interval.
+        confidence_level: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the confidence level of the interval.
 
             By default ``None``.
 
@@ -393,7 +392,7 @@ class TimeSeriesRegressor(MapieRegressor):
             return self.partial_fit(X, y, ensemble=ensemble)
         elif self.method == 'aci':
             return self.adapt_conformal_inference(
-                X, y, ensemble=ensemble, confidence_level=1-alpha,
+                X, y, ensemble=ensemble, confidence_level=confidence_level,
                 gamma=gamma, optimize_beta=optimize_beta
             )
         else:
