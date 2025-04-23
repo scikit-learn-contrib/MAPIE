@@ -4,7 +4,7 @@ Adaptive conformal predictions for time series, Zaffran et al. (2022)
 =====================================================================================================
 
 
-:class:`~mapie.regression.MapieTimeSeriesRegressor` is used to reproduce a
+:class:`~mapie.regression.TimeSeriesRegressor` is used to reproduce a
 part of the paper experiments of Zaffran et al. (2022) in their article [1]
 which we argue that Adaptive Conformal Inference (ACI, Gibbs & Candès, 2021)
 [2], developed for distribution-shift time series, is a good procedure for
@@ -47,7 +47,7 @@ from sklearn.model_selection import PredefinedSplit
 
 from numpy.typing import NDArray
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.time_series_regression import MapieTimeSeriesRegressor
+from mapie.time_series_regression import TimeSeriesRegressor
 
 warnings.simplefilter("ignore")
 
@@ -179,7 +179,7 @@ gamma = 0.04
 
 model = init_model()
 
-mapie_aci = MapieTimeSeriesRegressor(
+mapie_aci = TimeSeriesRegressor(
     model,
     method="aci",
     agg_function="mean",

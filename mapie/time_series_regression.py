@@ -1,12 +1,12 @@
 from sklearn.utils import deprecated
 
-from mapie.regression import MapieTimeSeriesRegressor as NewClass
+from mapie.regression import TimeSeriesRegressor as NewClass
 
 
 @deprecated(
-    "WARNING: Deprecated path to import MapieTimeSeriesRegressor. "
+    "WARNING: Deprecated path to import TimeSeriesRegressor. "
     "Please prefer the new path: "
-    "[from mapie.regression import MapieTimeSeriesRegressor]."
+    "[from mapie.regression import TimeSeriesRegressor]."
 )
-class MapieTimeSeriesRegressor(NewClass):
+class TimeSeriesRegressor(NewClass):
     pass

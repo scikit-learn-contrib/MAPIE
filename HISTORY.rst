@@ -71,7 +71,7 @@ History
 ------------------
 
 * Fix the quantile formula to ensure valid coverage for any number of calibration data in `ConformityScore`.
-* Fix overloading of the value of the `method` attribute when using `MapieRegressor` and `MapieTimeSeriesRegressor`.
+* Fix overloading of the value of the `method` attribute when using `MapieRegressor` and `TimeSeriesRegressor`.
 * Fix conda versionning.
 * Reduce precision for test in `MapieCalibrator`.
 * Fix invalid certificate when downloading data.
@@ -100,11 +100,11 @@ History
 0.8.0 (2024-01-03)
 ------------------
 
-* Add Adaptative Conformal Inference (ACI) method for MapieTimeSeriesRegressor.
+* Add Adaptative Conformal Inference (ACI) method for TimeSeriesRegressor.
 * Add Coverage Width-based Criterion (CWC) metric.
 * Allow to use more split methods for MapieRegressor (ShuffleSplit, PredefinedSplit).
 * Allow infinite prediction intervals to be produced in regressor classes.
-* Integrate ConformityScore into MapieTimeSeriesRegressor.
+* Integrate ConformityScore into TimeSeriesRegressor.
 * Add (extend) the optimal estimation strategy for the bounds of the prediction intervals for regression via ConformityScore.
 * Add new checks for metrics calculations.
 * Fix reference for residual normalised score in documentation.

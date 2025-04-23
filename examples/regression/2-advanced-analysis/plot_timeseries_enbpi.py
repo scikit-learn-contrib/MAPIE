@@ -4,7 +4,7 @@ Time series: example of the EnbPI technique
 ==================================================================
 
 This example uses
-:class:`~mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate
+:class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate
 prediction intervals associated with time series forecast. It follows [6].
 
 We use here the Victoria electricity demand dataset used in the book
@@ -17,7 +17,7 @@ optimized with a :class:`~sklearn.model_selection.RandomizedSearchCV` using a
 sequential :class:`~sklearn.model_selection.TimeSeriesSplit` cross validation,
 in which the training set is prior to the validation set.
 The best model is then feeded into
-:class:`~mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate the
+:class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate the
 associated prediction intervals. We compare two approaches: with or without
 ``partial_fit`` called at every step following [6]. It appears that
 ``partial_fit`` offer a coverage closer to the targeted coverage, and with
@@ -39,7 +39,7 @@ from mapie.metrics.regression import (
     regression_coverage_score,
     regression_mean_width_score,
 )
-from mapie.regression import MapieTimeSeriesRegressor
+from mapie.regression import TimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
 
 warnings.simplefilter("ignore")
@@ -108,7 +108,7 @@ cv_mapietimeseries = BlockBootstrap(
     n_resamplings=10, n_blocks=10, overlapping=False, random_state=59
 )
 
-mapie_enpbi = MapieTimeSeriesRegressor(
+mapie_enpbi = TimeSeriesRegressor(
     model,
     method="enbpi",
     cv=cv_mapietimeseries,
@@ -164,12 +164,12 @@ width_pfit_enbpi = regression_mean_width_score(
 
 # Print results
 print(
-    "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
+    "Coverage / prediction interval width mean for TimeSeriesRegressor: "
     "\nEnbPI without any partial_fit:"
     f"{coverage_npfit_enbpi:.3f}, {width_npfit_enbpi:.3f}"
 )
 print(
-    "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
+    "Coverage / prediction interval width mean for TimeSeriesRegressor: "
     "\nEnbPI with partial_fit:"
     f"{coverage_pfit_enbpi:.3f}, {width_pfit_enbpi:.3f}"
 )
@@ -217,7 +217,7 @@ for i, (ax, w, result) in enumerate(
         y_pis[:, 1, 0],
         color="C2",
         alpha=0.2,
-        label="MapieTimeSeriesRegressor PIs",
+        label="TimeSeriesRegressor PIs",
     )
 
     ax.set_title(

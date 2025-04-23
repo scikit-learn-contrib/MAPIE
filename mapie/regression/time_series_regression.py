@@ -14,7 +14,7 @@ from mapie.regression import MapieRegressor
 from mapie.utils import check_alpha, check_gamma
 
 
-class MapieTimeSeriesRegressor(MapieRegressor):
+class TimeSeriesRegressor(MapieRegressor):
     """
     Prediction intervals with out-of-fold residuals for time series.
     This class only has two valid ``method`` : ``"enbpi"`` or ``"aci"``
@@ -27,7 +27,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     function. It will replace the oldest one with the newest scores.
     It will keep the same amount of total scores
 
-    Actually, EnbPI only corresponds to ``MapieTimeSeriesRegressor`` if the
+    Actually, EnbPI only corresponds to ``TimeSeriesRegressor`` if the
     ``cv`` argument is of type ``BlockBootstrap``.
 
     The ACI strategy allows you to adapt the conformal inference
@@ -125,7 +125,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         ensemble: bool = False,
-    ) -> MapieTimeSeriesRegressor:
+    ) -> TimeSeriesRegressor:
         """
         Update the ``conformity_scores_`` attribute when new data with known
         labels are available.
@@ -152,7 +152,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         Returns
         -------
-        MapieTimeSeriesRegressor
+        TimeSeriesRegressor
             The model itself.
 
         Raises
@@ -238,7 +238,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         ensemble: bool = False,
         optimize_beta: bool = False,
-    ) -> MapieTimeSeriesRegressor:
+    ) -> TimeSeriesRegressor:
         """
         Adapt the ``alpha_t`` attribute when new data with known
         labels are available.
@@ -279,7 +279,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         Returns
         -------
-        MapieTimeSeriesRegressor
+        TimeSeriesRegressor
             The model itself.
 
         Raises
@@ -334,7 +334,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         gamma: float = 0.,
         optimize_beta: bool = False,
-    ) -> MapieTimeSeriesRegressor:
+    ) -> TimeSeriesRegressor:
         """
         Update with respect to the used ``method``.
         ``method="enbpi"`` will call ``partial_fit`` method and
@@ -378,7 +378,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         Returns
         -------
-        MapieTimeSeriesRegressor
+        TimeSeriesRegressor
             The model itself.
 
         Raises

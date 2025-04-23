@@ -4,7 +4,7 @@ Tutorial for time series
 ========================
 
 In this tutorial we describe how to use
-:class:`~mapie.regression.MapieTimeSeriesRegressor`
+:class:`~mapie.regression.TimeSeriesRegressor`
 to estimate prediction intervals associated with time series forecast.
 
 Here, we use the Victoria electricity demand dataset used in the book
@@ -19,12 +19,12 @@ sequential :class:`~sklearn.model_selection.TimeSeriesSplit` cross validation,
 in which the training set is prior to the validation set.
 
 Once the base model is optimized, we can use
-:class:`~MapieTimeSeriesRegressor` to estimate
+:class:`~TimeSeriesRegressor` to estimate
 the prediction intervals associated with one-step ahead forecasts through
 the EnbPI method.
 
 As its parent class :class:`~MapieRegressor`,
-:class:`~mapie.regression.MapieTimeSeriesRegressor` has two main arguments :
+:class:`~mapie.regression.TimeSeriesRegressor` has two main arguments :
 "cv", and "method".
 In order to implement EnbPI, "method" must be set to "enbpi" (the default
 value) while "cv" must be set to the :class:`~mapie.subsample.BlockBootstrap`
@@ -35,7 +35,7 @@ strategy as it is more suited for time series data.
 The EnbPI method allows you update the residuals during the prediction,
 each time new observations are available so that the deterioration of
 predictions, or the increase of noise level, can be dynamically taken into
-account. It can be done with :class:`~mapie.regression.MapieTimeSeriesRegressor`
+account. It can be done with :class:`~mapie.regression.TimeSeriesRegressor`
 through the ``partial_fit`` class method called at every step.
 
 
@@ -60,7 +60,7 @@ from mapie.metrics.regression import (
     regression_coverage_score,
     regression_mean_width_score, coverage_width_based,
 )
-from mapie.regression import MapieTimeSeriesRegressor
+from mapie.regression import TimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
 
 warnings.simplefilter("ignore")
@@ -167,7 +167,7 @@ else:
 # 3. Estimate prediction intervals on the test set
 # ------------------------------------------------
 #
-# We now use :class:`~MapieTimeSeriesRegressor` to build prediction intervals
+# We now use :class:`~TimeSeriesRegressor` to build prediction intervals
 # associated with one-step ahead forecasts. As explained in the introduction,
 # we use the EnbPI method and the ACI method.
 #
@@ -198,10 +198,10 @@ gap = 1
 cv_mapiets = BlockBootstrap(
     n_resamplings=10, n_blocks=10, overlapping=False, random_state=59
 )
-mapie_enbpi = MapieTimeSeriesRegressor(
+mapie_enbpi = TimeSeriesRegressor(
     model, method="enbpi", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
-mapie_aci = MapieTimeSeriesRegressor(
+mapie_aci = TimeSeriesRegressor(
     model, method="aci", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
 
@@ -278,7 +278,7 @@ cwc_aci_npfit = coverage_width_based(
 # previously, the update of the residuals and the one-step ahead predictions
 # are performed sequentially in a loop.
 
-mapie_enbpi = MapieTimeSeriesRegressor(
+mapie_enbpi = TimeSeriesRegressor(
     model, method="enbpi", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
@@ -325,7 +325,7 @@ cwc_enbpi_pfit = coverage_width_based(
 # As discussed previously, the update of the current alpha and the one-step
 # ahead predictions are performed sequentially in a loop.
 
-mapie_aci = MapieTimeSeriesRegressor(
+mapie_aci = TimeSeriesRegressor(
     model, method="aci", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
 mapie_aci = mapie_aci.fit(X_train, y_train)
