@@ -110,7 +110,7 @@ prediction intervals that we aim to obtain for a given dataset.
 It is given by the ``confidence_level`` parameter defined in ``SplitConformalRegressor``, here equal to ``0.95`` and ``0.68``.
 The effective coverage is the actual fraction of true labels lying in the prediction intervals.
 
-3. Run MapieClassifier
+3. Run _MapieClassifier
 =======================
 
 Similarly, it's possible to do the same for a basic classification problem.
@@ -128,9 +128,9 @@ Similarly, it's possible to do the same for a basic classification problem.
 
 .. code:: python
 
-    from mapie.classification import MapieClassifier
+    from mapie.classification import _MapieClassifier
 
-    mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
+    mapie_classifier = _MapieClassifier(estimator=classifier, method='score', cv=5)
     mapie_classifier = mapie_classifier.fit(X_train, y_train)
 
     alpha = [0.05, 0.32]

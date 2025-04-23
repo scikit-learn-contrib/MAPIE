@@ -6,7 +6,7 @@ from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 
 from numpy.typing import NDArray
-from mapie.classification import MapieClassifier
+from mapie.classification import _MapieClassifier
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.sets import (
     APSConformityScore, LACConformityScore, NaiveConformityScore,
@@ -138,7 +138,7 @@ def test_check_depreciated_size_raps(size_raps: float, cv: str) -> None:
     a DeprecationWarning when using size_raps.
     """
     clf = LogisticRegression().fit(X, y)
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, conformity_score=RAPSConformityScore(), cv=cv
     )
     with pytest.warns(
@@ -171,7 +171,7 @@ def test_get_true_label_cumsum_proba_shape() -> None:
     clf = LogisticRegression()
     clf.fit(X, y)
     y_pred = clf.predict_proba(X)
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, random_state=random_state
     )
     mapie_clf.fit(X, y)
@@ -191,7 +191,7 @@ def test_get_true_label_cumsum_proba_result() -> None:
     clf = LogisticRegression()
     clf.fit(X_toy, y_toy)
     y_pred = clf.predict_proba(X_toy)
-    mapie_clf = MapieClassifier(
+    mapie_clf = _MapieClassifier(
         estimator=clf, random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)

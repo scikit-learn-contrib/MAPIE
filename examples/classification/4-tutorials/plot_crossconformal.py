@@ -6,7 +6,7 @@ Cross-conformal for classification
 In this tutorial, we estimate the impact of the
 training/calibration split on the prediction sets and
 on the resulting coverage estimated by
-:class:`~mapie.classification.MapieClassifier`.
+:class:`~mapie.classification._MapieClassifier`.
 We then adopt a cross-validation approach in which the
 conformity scores of all calibration sets are used to
 estimate the quantile. We demonstrate that this second
@@ -22,7 +22,7 @@ in ``K`` folds and sequentially use each fold as a
 calibration set, the ``K-1`` folds remaining folds are
 used for training the base model using
 the ``cv="prefit"`` option of
-:class:`~mapie.classification.MapieClassifier`.
+:class:`~mapie.classification._MapieClassifier`.
 """
 
 
@@ -36,7 +36,7 @@ from sklearn.naive_bayes import GaussianNB
 from typing_extensions import TypedDict
 
 from numpy.typing import NDArray
-from mapie.classification import MapieClassifier
+from mapie.classification import _MapieClassifier
 from mapie.metrics.classification import (
     classification_coverage_score,
     classification_mean_width_score,
@@ -105,7 +105,7 @@ plt.show()
 # We split our training dataset into 5 folds and use each fold as a
 # calibration set. Each calibration set is therefore used to estimate the
 # conformity scores and the given quantiles for the two methods implemented in
-# :class:`~mapie.classification.MapieClassifier`.
+# :class:`~mapie.classification._MapieClassifier`.
 
 
 kf = KFold(n_splits=5, shuffle=True)
@@ -117,7 +117,7 @@ for method in methods:
     for fold, (train_index, calib_index) in enumerate(kf.split(X_train)):
         clf = GaussianNB().fit(X_train[train_index], y_train[train_index])
         clfs_[fold] = clf
-        mapie = MapieClassifier(estimator=clf, cv="prefit", method=method)
+        mapie = _MapieClassifier(estimator=clf, cv="prefit", method=method)
         mapie.fit(X_train[calib_index], y_train[calib_index])
         mapies_[fold] = mapie
         y_pred_mapie, y_ps_mapie = mapie.predict(
@@ -311,7 +311,7 @@ plot_coverage_width(
 #    (as presented in Romano et al. 2020 for the "aps" method)
 #
 # Let's explore the two possibilites with the "lac" method using
-# :class:`~mapie.classification.MapieClassifier`.
+# :class:`~mapie.classification._MapieClassifier`.
 #
 # All we need to do is to provide with the `cv` argument a cross-validation
 # object or an integer giving the number of folds.
@@ -358,7 +358,7 @@ STRATEGIES = {
 y_ps = {}
 for strategy, params in STRATEGIES.items():
     args_init, args_predict = STRATEGIES[strategy]
-    mapie_clf = MapieClassifier(**args_init)
+    mapie_clf = _MapieClassifier(**args_init)
     mapie_clf.fit(X_train, y_train)
     _, y_ps[strategy] = mapie_clf.predict(
         X_test_distrib,

@@ -4,7 +4,7 @@ Comparing prediction sets on a two-dimensional dataset
 ======================================================
 
 In this tutorial, we compare the prediction sets estimated by
-:class:`~mapie.classification.MapieClassifier` with the "lac"
+:class:`~mapie.classification._MapieClassifier` with the "lac"
 and "aps" on the two-dimensional dataset presented
 by Sadinle et al. (2019).
 """
@@ -54,7 +54,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
 from numpy.typing import NDArray
-from mapie.classification import MapieClassifier
+from mapie.classification import _MapieClassifier
 from mapie.metrics.classification import (
     classification_coverage_score,
     classification_mean_width_score,
@@ -102,7 +102,7 @@ plt.show()
 
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator.
-# Then we apply :class:`~mapie.classification.MapieClassifier` in the
+# Then we apply :class:`~mapie.classification._MapieClassifier` in the
 # calibration data with the methods ``"lac"`` and ``"aps"```
 # to the estimator indicating that it has already been fitted with
 # `cv="prefit"`.
@@ -118,7 +118,7 @@ methods = ["lac", "aps"]
 mapie, y_pred_mapie, y_ps_mapie = {}, {}, {}
 alpha = [0.2, 0.1, 0.05]
 for method in methods:
-    mapie[method] = MapieClassifier(
+    mapie[method] = _MapieClassifier(
         estimator=clf,
         method=method,
         cv="prefit",
@@ -249,7 +249,7 @@ alpha_ = np.arange(0.02, 0.98, 0.02)
 coverage, mean_width = {}, {}
 mapie, y_ps_mapie = {}, {}
 for method in methods:
-    mapie[method] = MapieClassifier(
+    mapie[method] = _MapieClassifier(
         estimator=clf,
         method=method,
         cv="prefit",

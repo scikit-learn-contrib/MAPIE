@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import LeaveOneOut, GroupKFold
 
 from mapie.classification import (
-    MapieClassifier,
+    _MapieClassifier,
     SplitConformalClassifier,
     CrossConformalClassifier,
 )
@@ -217,7 +217,7 @@ def test_split(dataset, params_, request):
         params["v0_init"]["estimator"].fit(X_train, y_train)
         params["v1_init"]["estimator"].fit(X_train, y_train)
 
-    v0 = MapieClassifier(**params["v0_init"])
+    v0 = _MapieClassifier(**params["v0_init"])
     v1 = SplitConformalClassifier(**params["v1_init"])
 
     if prefit:
@@ -378,7 +378,7 @@ def test_cross(dataset, params_, request):
 
     params = extract_params(request.getfixturevalue(params_))
 
-    v0 = MapieClassifier(**params["v0_init"])
+    v0 = _MapieClassifier(**params["v0_init"])
     v1 = CrossConformalClassifier(**params["v1_init"])
 
     v0.fit(X, y, **params["v0_fit"])
