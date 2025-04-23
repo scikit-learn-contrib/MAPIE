@@ -53,7 +53,7 @@ def classification_coverage_score(
     y_pred_set = cast(
         NDArray,
         check_array(
-            y_pred_set, force_all_finite=True, dtype=["bool"]
+            y_pred_set, dtype=["bool"]
         )
     )
 
@@ -249,7 +249,7 @@ def classification_ssc(
             b[0] for b in np.array_split(range(n_classes + 1), num_bins)
         ]
 
-    digitized_sizes = np.digitize(sizes, bins)
+    digitized_sizes: NDArray = np.digitize(sizes, bins)
     coverages = np.zeros((y_pred_set.shape[2], len(bins)))
     for alpha in range(y_pred_set.shape[2]):
         indexes_bybins = [
