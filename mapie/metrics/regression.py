@@ -67,8 +67,8 @@ def regression_coverage_score(
     Beside this intended use, this function also works with:
 
     - ``y_true`` of shape (n_sample,) and ``y_intervals`` of shape (n_sample, 2)
-    - ``y_true`` of shape (n_sample, n_experiment) and `y_intervals` of shape
-      (n_sample, 2, n_experiment)
+    - ``y_true`` of shape (n_sample, n) and `y_intervals` of shape
+      (n_sample, 2, n)
 
     The effective coverage is obtained by computing the fraction
     of true labels that lie within the prediction intervals.
