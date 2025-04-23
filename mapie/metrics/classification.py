@@ -116,21 +116,54 @@ def classification_coverage_score_v2(
     The effective coverage is obtained by estimating the fraction
     of true labels that lie within the prediction sets.
 
-    It is different from ``classification_coverage_score`` because it uses
-    directly the output of ``predict`` method and can compute the
-    coverage for each confidence level.
+    Prediction sets obtained by the ``predict`` method can be passed directly to the
+    ``y_pred_set`` argument (see example below).
+
+    Beside this intended use, this function also works with:
+
+    - ``y_true`` of shape (n_sample,) and ``y_pred_set`` of shape (n_sample, n_class)
+    - ``y_true`` of shape (n_sample, n) and ``y_pred_set`` of shape
+      (n_sample, n_class, n)
 
     Parameters
     ----------
-    y_true: NDArray of shape (n_samples, n_confidence_level) or (n_samples,)
+    y_true: NDArray of shape (n_samples,)
         True labels.
+
     y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
-        Prediction sets given by booleans of labels.
+        Prediction sets with different confidence levels, given by booleans of labels
+        with the ``predict`` method.
 
     Returns
     -------
     NDArray of shape (n_confidence_level,)
-        Effective coverage obtained by the prediction sets.
+        Effective coverage obtained by the prediction sets for each confidence level.
+
+    Examples
+    --------
+    >>> from mapie.metrics.classification import classification_coverage_score_v2
+    >>> from mapie_v1.classification import SplitConformalClassifier
+    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.model_selection import train_test_split
+    >>> from sklearn.neighbors import KNeighborsClassifier
+
+    >>> X, y = make_classification(n_samples=500)
+    >>> (
+    ...     X_train, X_conformalize, X_test,
+    ...     y_train, y_conformalize, y_test
+    ... ) = train_conformalize_test_split(
+    ...     X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=1
+    ... )
+
+    >>> mapie_classifier = SplitConformalClassifier(
+    ...     estimator=KNeighborsClassifier(),
+    ...     confidence_level=[0.9, 0.95, 0.99],
+    ...     prefit=False,
+    ... ).fit(X_train, y_train).conformalize(X_conformalize, y_conformalize)
+
+    >>> predicted_points, predicted_sets = mapie_classifier.predict_set(X_test)
+    >>> coverage = classification_coverage_score_v2(y_test, predicted_sets)[0]
     """
     check_arrays_length(y_true, y_pred_set)
     check_array_nan(y_true)
