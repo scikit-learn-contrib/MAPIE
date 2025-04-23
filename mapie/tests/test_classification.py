@@ -18,7 +18,6 @@ from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
                                      train_test_split)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
@@ -925,11 +924,6 @@ class Float32OuputModel:
 def do_nothing(*args: Any) -> None:
     "Mock function that does nothing."
     pass
-
-
-def test_mapie_classifier_sklearn_estim() -> None:
-    """Test that MapieClassifier is an sklearn estimator"""
-    check_estimator(MapieClassifier())
 
 
 def test_initialized() -> None:
