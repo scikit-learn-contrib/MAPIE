@@ -165,7 +165,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
     ) -> Tuple[NDArray, NDArray]:
         """
         Fit the residual estimator and returns the indexes used for the
-        training of the base estimator and those needed for the calibration.
+        training of the base estimator and those needed for the conformalization.
 
         Parameters
         ----------
