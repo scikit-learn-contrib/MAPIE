@@ -518,7 +518,8 @@ def test_aci__get_alpha_with_unknown_alpha() -> None:
     """
     mapie_ts_reg = TimeSeriesRegressor(method="aci")
     mapie_ts_reg.fit(X_toy, y_toy)
-    mapie_ts_reg.adapt_conformal_inference(X_toy, y_toy, gamma=0.1, alpha=0.2)
+    mapie_ts_reg.adapt_conformal_inference(X_toy, y_toy, gamma=0.1,
+                                           confidence_level=0.8)
     np.testing.assert_allclose(mapie_ts_reg.current_alpha[0.2], 0.3, rtol=1e-3)
 
 

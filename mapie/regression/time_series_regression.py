@@ -12,6 +12,7 @@ from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import MapieRegressor
 from mapie.utils import check_alpha, check_gamma
+from mapie_v1.utils import transform_confidence_level_to_alpha_list
 
 
 class TimeSeriesRegressor(MapieRegressor):
@@ -235,7 +236,7 @@ class TimeSeriesRegressor(MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         gamma: float,
-        alpha: Optional[Union[float, Iterable[float]]] = None,
+        confidence_level: Optional[Union[float, Iterable[float]]] = None,
         ensemble: bool = False,
         optimize_beta: bool = False,
     ) -> TimeSeriesRegressor:
@@ -266,9 +267,8 @@ class TimeSeriesRegressor(MapieRegressor):
             Coefficient that decides the correction of the conformal inference.
             If it equals 0, there are no corrections.
 
-        alpha: Optional[Union[float, Iterable[float]]]
-            Between ``0`` and ``1``, represents the uncertainty of the
-            confidence interval.
+        confidence_level: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the confidence level of the interval.
 
             By default ``None``.
 
@@ -299,10 +299,11 @@ class TimeSeriesRegressor(MapieRegressor):
         X, y = cast(NDArray, X), cast(NDArray, y)
 
         self._get_alpha()
-        alpha = cast(Optional[NDArray], check_alpha(alpha))
-        if alpha is None:
-            alpha = np.array(list(self.current_alpha.keys()))
-        alpha_np = cast(NDArray, alpha)
+        confidence_level = check_alpha(confidence_level)
+        if confidence_level is None:
+            alpha_np = np.array(list(self.current_alpha.keys()))
+        else:
+            alpha_np = transform_confidence_level_to_alpha_list(confidence_level)
 
         for x_row, y_row in zip(X, y):
             x = np.expand_dims(x_row, axis=0)
@@ -392,7 +393,7 @@ class TimeSeriesRegressor(MapieRegressor):
             return self.partial_fit(X, y, ensemble=ensemble)
         elif self.method == 'aci':
             return self.adapt_conformal_inference(
-                X, y, ensemble=ensemble, alpha=alpha,
+                X, y, ensemble=ensemble, confidence_level=1-alpha,
                 gamma=gamma, optimize_beta=optimize_beta
             )
         else:
