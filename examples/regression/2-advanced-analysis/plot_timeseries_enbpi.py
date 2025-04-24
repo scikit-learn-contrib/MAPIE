@@ -3,6 +3,13 @@
 Time series: example of the EnbPI technique
 ==================================================================
 
+Note: in this example, we use the following terms employed in the scientific literature:
+
+- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
+- *calibrate* and *calibration* are equivalent to *conformalize* and *conformalization*.
+
+—
+
 This example uses
 :class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate
 prediction intervals associated with time series forecast. It follows [6].

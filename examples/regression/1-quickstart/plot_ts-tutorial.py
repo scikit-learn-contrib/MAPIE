@@ -3,6 +3,14 @@
 Tutorial for time series
 ========================
 
+Note: in this tutorial, we use the following terms employed in the scientific
+literature:
+
+- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
+- *calibrate* and *calibration* are equivalent to *conformalize* and *conformalization*.
+
+—
+
 In this tutorial we describe how to use
 :class:`~mapie.regression.TimeSeriesRegressor`
 to estimate prediction intervals associated with time series forecast.

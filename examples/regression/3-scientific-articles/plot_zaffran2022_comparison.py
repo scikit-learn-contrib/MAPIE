@@ -3,6 +3,12 @@
 Adaptive conformal predictions for time series, Zaffran et al. (2022)
 =====================================================================================================
 
+Note: in this example, we use the following terms employed in the scientific literature:
+
+- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
+- *calibrate* and *calibration* are equivalent to *conformalize* and *conformalization*.
+
+—
 
 :class:`~mapie.regression.TimeSeriesRegressor` is used to reproduce a
 part of the paper experiments of Zaffran et al. (2022) in their article [1]
