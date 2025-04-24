@@ -282,8 +282,10 @@ def test_prediction_agg_function(
         method=method, cv=cv, agg_function=agg_function
     )
     mapie.fit(X, y)
-    y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True, confidence_level=1-np.array(alpha))
-    y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False, confidence_level=1-np.array(alpha))
+    y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True,
+                                      confidence_level=1-np.array(alpha))
+    y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False,
+                                      confidence_level=1-np.array(alpha))
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     with pytest.raises(AssertionError):
