@@ -195,7 +195,7 @@ def test_regression_ypredlow_shape() -> None:
     """Test shape of y_pred_low."""
     with pytest.raises(ValueError):
         coverage_width_based(
-            y_toy, y_preds[:1], y_preds[:, 2], eta=30, alpha=0.1
+            y_toy, y_preds[:1], y_preds[:, 2], eta=30, confidence_level=0.9
         )
 
 
@@ -203,7 +203,7 @@ def test_regression_ypredup_shape() -> None:
     """Test shape of y_pred_up."""
     with pytest.raises(ValueError):
         coverage_width_based(
-            y_toy, y_preds[:, 1], y_preds[:1], eta=30, alpha=0.1
+            y_toy, y_preds[:, 1], y_preds[:1], eta=30, confidence_level=0.9
         )
 
 
@@ -228,7 +228,7 @@ def test_regression_ytrue_invalid_shape() -> None:
     with pytest.raises(ValueError):
         coverage_width_based(
             np.tile(y_toy, 2).reshape(5, 2), y_preds[:, 1], y_preds[:, 2],
-            eta=30, alpha=0.1
+            eta=30, confidence_level=0.9
         )
 
 
@@ -237,7 +237,9 @@ def test_regression_valid_input_shape() -> None:
     regression_ssc(y_toy, intervals)
     regression_ssc_score(y_toy, intervals)
     hsic(y_toy, intervals)
-    coverage_width_based(y_toy, y_preds[:, 1], y_preds[:, 2], eta=0, alpha=0.1)
+    coverage_width_based(
+        y_toy, y_preds[:, 1], y_preds[:, 2], eta=0, confidence_level=0.9
+    )
     regression_mean_width_score(intervals)
 
 
@@ -251,7 +253,7 @@ def test_regression_same_length() -> None:
         hsic(y_toy, intervals[:-1, ])
     with pytest.raises(ValueError):
         coverage_width_based(
-            y_toy, y_preds[:-1, 1], y_preds[:, 2], eta=0, alpha=0.1
+            y_toy, y_preds[:-1, 1], y_preds[:, 2], eta=0, confidence_level=0.9
         )
 
 
@@ -578,23 +580,23 @@ def test_alpha_invalid_cwc_score() -> None:
     """Test a non-valid value of mu in cwc score."""
     with pytest.raises(ValueError):
         coverage_width_based(
-            y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, alpha=-1
+            y_preds[:, 0], y_preds[:, 1], y_preds[:, 2], eta=30, confidence_level=-1
         )
 
 
 def test_valid_eta() -> None:
     """Test different values of eta in cwc metric."""
     y, y_low, y_up = y_preds[:, 0], y_preds[:, 1], y_preds[:, 2]
-    cwb = coverage_width_based(y, y_low, y_up, eta=30, alpha=0.1)
+    cwb = coverage_width_based(y, y_low, y_up, eta=30, confidence_level=0.9)
     np.testing.assert_allclose(cwb, 0.48, rtol=1e-2)
 
-    cwb = coverage_width_based(y, y_low, y_up, eta=0.01, alpha=0.1)
+    cwb = coverage_width_based(y, y_low, y_up, eta=0.01, confidence_level=0.9)
     np.testing.assert_allclose(cwb, 0.65, rtol=1e-2)
 
-    cwb = coverage_width_based(y, y_low, y_up, eta=-1, alpha=0.1)
+    cwb = coverage_width_based(y, y_low, y_up, eta=-1, confidence_level=0.9)
     np.testing.assert_allclose(cwb, 0.65, rtol=1e-2)
 
-    cwb = coverage_width_based(y, y_low, y_up, eta=0, alpha=0.1)
+    cwb = coverage_width_based(y, y_low, y_up, eta=0, confidence_level=0.9)
     np.testing.assert_allclose(cwb, 0.65, rtol=1e-2)
 
 

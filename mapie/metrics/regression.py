@@ -378,7 +378,7 @@ def coverage_width_based(
     y_pred_low: ArrayLike,
     y_pred_up: ArrayLike,
     eta: float,
-    alpha: float
+    confidence_level: float
 ) -> float:
     """
     Coverage Width-based Criterion (CWC) obtained by the prediction intervals.
@@ -403,7 +403,7 @@ def coverage_width_based(
     eta : int
         A user-defined parameter that balances the contributions of
         Mean Width Score and Coverage score in the CWC calculation.
-    alpha : float
+    confidence_level : float
         A user-defined parameter representing the designed confidence level of
         the PI.
 
@@ -476,7 +476,7 @@ def coverage_width_based(
     >>> y_preds_up = np.array([6, 9, 10, 12.5, 12])
     >>> eta = 0.01
     >>> alpha = 0.1
-    >>> cwb = coverage_width_based(y_true, y_preds_low, y_preds_up, eta, alpha)
+    >>> cwb = coverage_width_based(y_true, y_preds_low, y_preds_up, eta, 1-alpha)
     >>> print(np.round(cwb ,2))
     0.69
     """
@@ -484,7 +484,7 @@ def coverage_width_based(
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
-    check_alpha(1-alpha)
+    check_alpha(confidence_level)
 
     coverage_score = regression_coverage_score(
         y_true,
@@ -499,7 +499,7 @@ def coverage_width_based(
     )
     avg_length = mean_width / ref_length
 
-    cwc = (1-avg_length)*np.exp(-eta*(coverage_score-(1-alpha))**2)
+    cwc = (1-avg_length)*np.exp(-eta * (coverage_score - confidence_level) ** 2)
 
     return float(cwc)
 

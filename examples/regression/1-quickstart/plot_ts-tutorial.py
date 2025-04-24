@@ -227,7 +227,7 @@ cwc_enbpi_npfit = coverage_width_based(
     y_test, y_pis_enbpi_npfit[:, 0, 0],
     y_pis_enbpi_npfit[:, 1, 0],
     eta=10,
-    alpha=0.05
+    confidence_level=0.95
 )
 
 # For ACI
@@ -269,7 +269,7 @@ cwc_aci_npfit = coverage_width_based(
     y_pis_aci_npfit[:, 0, 0],
     y_pis_aci_npfit[:, 1, 0],
     eta=10,
-    alpha=0.05
+    confidence_level=0.95
 )
 
 
@@ -316,7 +316,7 @@ width_enbpi_pfit = regression_mean_width_score(
 cwc_enbpi_pfit = coverage_width_based(
     y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0],
     eta=10,
-    alpha=0.05
+    confidence_level=0.95
 )
 
 
@@ -369,7 +369,7 @@ width_aci_pfit = regression_mean_width_score(
 cwc_aci_pfit = coverage_width_based(
     y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0],
     eta=0.01,
-    alpha=0.05
+    confidence_level=0.95
 )
 
 ##############################################################################
