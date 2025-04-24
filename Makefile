@@ -1,47 +1,26 @@
 ### Config ###
-
 .PHONY: tests doc build
-
-### To run when working locally ###
-
-all-checks:
-	$(MAKE) lint
-	$(MAKE) type-check
-	$(MAKE) coverage
-
-v1-all-checks:
-	$(MAKE) type-check
-	$(MAKE) v1-tests
-	$(MAKE) v1-docstring-tests
-	$(MAKE) lint
 
 
 ### Checks that are run in GitHub CI ###
-
 lint:
-	flake8 examples mapie mapie_v1 notebooks tests_v1 --max-line-length=88
+	flake8 examples mapie notebooks tests_v1 --max-line-length=88
 
 type-check:
-	mypy mapie mapie_v1
+	mypy mapie
 
 coverage:
 	pytest -vsx \
 		--cov-branch \
 		--cov=mapie \
 		--cov-report term-missing \
-		--pyargs mapie \
+		--pyargs mapie tests_v1 \
 		--cov-fail-under=100 \
-		--no-cov-on-fail
-
-v1-tests:
-	python -m pytest -vs tests_v1
-
-v1-docstring-tests:
-	pytest -vs --doctest-modules mapie_v1
+		--no-cov-on-fail \
+		--doctest-modules
 
 
 ### Checks that are run in ReadTheDocs CI ###
-
 doc:
 	$(MAKE) html -C doc
 
@@ -50,10 +29,15 @@ doctest:
 	$(MAKE) doctest -C doc
 
 
-### Local utilities ###
+### Other utilities (for local use) ###
+all-checks:
+	$(MAKE) lint
+	$(MAKE) type-check
+	$(MAKE) coverage
 
 tests:
 	pytest -vs --doctest-modules mapie
+	python -m pytest -vs tests_v1
 
 clean-doc:
 	$(MAKE) clean -C doc
@@ -69,15 +53,3 @@ clean:
 	rm -rf **__pycache__
 	$(MAKE) clean-build
 	$(MAKE) clean-doc
-
-
-### Local utilities (v1 specific) ###
-
-v1-coverage:
-	pytest -vsx \
-		--cov-branch \
-		--cov=mapie_v1 \
-		--cov-report term-missing \
-		--pyargs tests_v1 \
-		--cov-fail-under=100 \
-		--no-cov-on-fail
