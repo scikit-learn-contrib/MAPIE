@@ -206,7 +206,7 @@ for i in range(min(test_size, iteration_max + 1)):
 
     # Predict on test dataset
     y_pred_aci_pfit[i:i+1], y_pis_aci_pfit[i:i+1] = mapie_aci.predict(
-        x_test, alpha=alpha, ensemble=False, optimize_beta=False
+        x_test, confidence_level=1-alpha, ensemble=False, optimize_beta=False
     )
 
     # Update the current_alpha_t (hidden for the user)

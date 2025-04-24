@@ -299,25 +299,24 @@ class TimeSeriesRegressor(MapieRegressor):
         X, y = cast(NDArray, X), cast(NDArray, y)
 
         self._get_alpha()
+        confidence_level = cast(Optional[NDArray], check_alpha(confidence_level))
         if confidence_level is None:
-            alpha_np = np.array(list(self.current_alpha.keys()))
-        else:
-            alpha_np = cast(
-                NDArray, transform_confidence_level_to_alpha_list(confidence_level)
-            )
+            confidence_level = 1 - np.array(list(self.current_alpha.keys()))
+        confidence_level_np = cast(NDArray, confidence_level)
 
         for x_row, y_row in zip(X, y):
             x = np.expand_dims(x_row, axis=0)
-            alpha_np = np.array(alpha_np)
             _, y_pred_bounds = self.predict(
                 x,
                 ensemble=ensemble,
-                confidence_level=1-alpha_np,
+                confidence_level=confidence_level_np,
                 optimize_beta=optimize_beta,
                 allow_infinite_bounds=True
             )
 
-            for alpha_ix, alpha_0 in enumerate(alpha_np):
+            for alpha_ix, alpha_0 in enumerate(
+                    transform_confidence_level_to_alpha_list(confidence_level_np)
+            ):
                 alpha_t = self.current_alpha[alpha_0]
 
                 is_lower_bounded = y_row > y_pred_bounds[:, 0, alpha_ix]
@@ -402,11 +401,8 @@ class TimeSeriesRegressor(MapieRegressor):
                 f"Invalid method. Allowed values are {self.valid_methods_}."
             )
 
-    # For this ``predict`` function, we have chosen to ignore errors related to
-    # overriding because it does not take the same arguments as the ``predict``
-    # function from the superclass MapieRegressor. Moreover, inheriting from
-    # MapieRegressor is not ideal for TimeSeriesRegressor as it imposes unnecessary
-    # constraints on the code.
+    # Overriding _MapieRegressor .predict method here. Bad practise, but this
+    # inheritance is questionable and will probably be reconsidered anyway.
 
     def predict(  # type: ignore[override]
         self,
@@ -462,19 +458,21 @@ class TimeSeriesRegressor(MapieRegressor):
               - [:, 1, :]: Upper bound of the prediction interval.
         """
         if confidence_level is None:
-            return super().predict(
-                X, ensemble=ensemble, alpha=None,
+            alpha = None
+            super().predict(
+                X, ensemble=ensemble, alpha=alpha,
                 optimize_beta=optimize_beta, **predict_params
             )
-
         else:
             if self.method == "aci":
-                alpha = self._get_alpha(1-np.array(confidence_level))
+                alpha = self._get_alpha(
+                    transform_confidence_level_to_alpha_list(confidence_level)
+                )
             else:
-                alpha = 1-np.array(confidence_level)
+                alpha = transform_confidence_level_to_alpha_list(confidence_level)
 
-            return super().predict(
-                X, ensemble=ensemble, alpha=alpha,
-                optimize_beta=optimize_beta,
-                allow_infinite_bounds=allow_infinite_bounds, **predict_params
-            )
+        return super().predict(
+            X, ensemble=ensemble, alpha=alpha,
+            optimize_beta=optimize_beta,
+            allow_infinite_bounds=allow_infinite_bounds, **predict_params
+        )
