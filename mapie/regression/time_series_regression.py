@@ -194,8 +194,8 @@ class TimeSeriesRegressor(MapieRegressor):
         reset: bool = False
     ) -> Optional[Union[float, Iterable[float]]]:
         """
-        Get and set the current alpha value(s) given the initial alpha value(s)
-        for ACI method.
+        Get and set the current alpha (or confidence_level) value(s) given the
+        initial alpha (or confidence_level) value(s) for ACI method.
 
         This method retrieves the alpha value(s) used for confidence intervals.
         If the alpha value(s) is provided, it returns the current alpha
@@ -308,10 +308,11 @@ class TimeSeriesRegressor(MapieRegressor):
 
         for x_row, y_row in zip(X, y):
             x = np.expand_dims(x_row, axis=0)
+            alpha_np = np.array(alpha_np)
             _, y_pred_bounds = self.predict(
                 x,
                 ensemble=ensemble,
-                alpha=alpha_np,
+                confidence_level=1-alpha_np,
                 optimize_beta=optimize_beta,
                 allow_infinite_bounds=True
             )
@@ -401,11 +402,17 @@ class TimeSeriesRegressor(MapieRegressor):
                 f"Invalid method. Allowed values are {self.valid_methods_}."
             )
 
-    def predict(
+    # For this ``predict`` function, we have chosen to ignore errors related to
+    # overriding because it does not take the same arguments as the ``predict``
+    # function from the superclass MapieRegressor. Moreover, inheriting from
+    # MapieRegressor is not ideal for TimeSeriesRegressor as it imposes unnecessary
+    # constraints on the code.
+
+    def predict(  # type: ignore[override]
         self,
         X: ArrayLike,
         ensemble: bool = False,
-        alpha: Optional[Union[float, Iterable[float]]] = None,
+        confidence_level: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
         **predict_params
@@ -429,9 +436,8 @@ class TimeSeriesRegressor(MapieRegressor):
 
             By default ``False``.
 
-        alpha: Optional[Union[float, Iterable[float]]]
-            Between ``0`` and ``1``, represents the uncertainty of the
-            confidence interval.
+        confidence_level: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the confidence level of the interval.
 
             By default ``None``.
 
@@ -455,16 +461,20 @@ class TimeSeriesRegressor(MapieRegressor):
               - [:, 0, :]: Lower bound of the prediction interval.
               - [:, 1, :]: Upper bound of the prediction interval.
         """
-        if alpha is None:
-            super().predict(
-                X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
-                **predict_params
+        if confidence_level is None:
+            return super().predict(
+                X, ensemble=ensemble, alpha=None,
+                optimize_beta=optimize_beta, **predict_params
             )
 
-        if self.method == "aci":
-            alpha = self._get_alpha(alpha)
+        else:
+            if self.method == "aci":
+                alpha = self._get_alpha(1-np.array(confidence_level))
+            else:
+                alpha = 1-np.array(confidence_level)
 
-        return super().predict(
-            X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
-            allow_infinite_bounds=allow_infinite_bounds, **predict_params
-        )
+            return super().predict(
+                X, ensemble=ensemble, alpha=alpha,
+                optimize_beta=optimize_beta,
+                allow_infinite_bounds=allow_infinite_bounds, **predict_params
+            )

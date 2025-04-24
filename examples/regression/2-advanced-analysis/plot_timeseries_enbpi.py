@@ -119,7 +119,7 @@ mapie_enpbi = TimeSeriesRegressor(
 print("EnbPI, with no partial_fit, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
 y_pred_npfit_enbpi, y_pis_npfit_enbpi = mapie_enpbi.predict(
-    X_test, alpha=alpha, ensemble=True, optimize_beta=True
+    X_test, confidence_level=1-alpha, ensemble=True, optimize_beta=True
 )
 coverage_npfit_enbpi = regression_coverage_score(
     y_test, y_pis_npfit_enbpi
@@ -139,7 +139,8 @@ step_size = 1
     y_pred_pfit_enbpi[:step_size],
     y_pis_pfit_enbpi[:step_size, :, :],
 ) = mapie_enpbi.predict(
-    X_test.iloc[:step_size, :], alpha=alpha, ensemble=True, optimize_beta=True
+    X_test.iloc[:step_size, :], confidence_level=1-alpha, ensemble=True,
+    optimize_beta=True
 )
 
 for step in range(step_size, len(X_test), step_size):
@@ -152,7 +153,7 @@ for step in range(step_size, len(X_test), step_size):
         y_pis_pfit_enbpi[step:step + step_size, :, :],
     ) = mapie_enpbi.predict(
         X_test.iloc[step:(step + step_size), :],
-        alpha=alpha,
+        confidence_level=1-alpha,
         ensemble=True,
     )
 coverage_pfit_enbpi = regression_coverage_score(

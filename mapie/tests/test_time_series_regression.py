@@ -174,7 +174,7 @@ def test_predict_output_shape(
     (X, y) = dataset
     mapie_ts_reg.fit(X, y)
     y_pred, y_pis = mapie_ts_reg.predict(
-        X, alpha=alpha, allow_infinite_bounds=True
+        X, confidence_level=1-np.array(alpha), allow_infinite_bounds=True
     )
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
@@ -189,7 +189,7 @@ def test_results_for_same_alpha(strategy: str) -> None:
     """
     mapie_ts_reg = TimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts_reg.fit(X, y)
-    _, y_pis = mapie_ts_reg.predict(X, alpha=[0.1, 0.1])
+    _, y_pis = mapie_ts_reg.predict(X, confidence_level=[0.9, 0.9])
     np.testing.assert_allclose(y_pis[:, 0, 0], y_pis[:, 0, 1])
     np.testing.assert_allclose(y_pis[:, 1, 0], y_pis[:, 1, 1])
 
@@ -204,9 +204,10 @@ def test_results_for_alpha_as_float_and_arraylike(
     """Test that output values do not depend on type of alpha."""
     mapie_ts_reg = TimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts_reg.fit(X, y)
-    y_pred_float1, y_pis_float1 = mapie_ts_reg.predict(X, alpha=alpha[0])
-    y_pred_float2, y_pis_float2 = mapie_ts_reg.predict(X, alpha=alpha[1])
-    y_pred_array, y_pis_array = mapie_ts_reg.predict(X, alpha=alpha)
+    alpha = np.array(alpha)
+    y_pred_float1, y_pis_float1 = mapie_ts_reg.predict(X, confidence_level=1-alpha[0])
+    y_pred_float2, y_pis_float2 = mapie_ts_reg.predict(X, confidence_level=1-alpha[1])
+    y_pred_array, y_pis_array = mapie_ts_reg.predict(X, confidence_level=1-alpha)
     np.testing.assert_allclose(y_pred_float1, y_pred_array)
     np.testing.assert_allclose(y_pred_float2, y_pred_array)
     np.testing.assert_allclose(y_pis_float1[:, :, 0], y_pis_array[:, :, 0])
@@ -221,7 +222,7 @@ def test_results_for_ordered_alpha(strategy: str) -> None:
     """
     mapie = TimeSeriesRegressor(**STRATEGIES[strategy])
     mapie.fit(X, y)
-    y_pred, y_pis = mapie.predict(X, alpha=[0.05, 0.1])
+    y_pred, y_pis = mapie.predict(X, confidence_level=[0.95, 0.9])
     assert np.all(
         np.abs(y_pis[:, 1, 0] - y_pis[:, 0, 0])
         >= np.abs(y_pis[:, 1, 1] - y_pis[:, 0, 1])
@@ -238,8 +239,8 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     mapie_multi = TimeSeriesRegressor(n_jobs=-1, **STRATEGIES[strategy])
     mapie_single.fit(X_toy, y_toy)
     mapie_multi.fit(X_toy, y_toy)
-    y_pred_single, y_pis_single = mapie_single.predict(X_toy, alpha=0.5)
-    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, alpha=0.5)
+    y_pred_single, y_pis_single = mapie_single.predict(X_toy, confidence_level=0.5)
+    y_pred_multi, y_pis_multi = mapie_multi.predict(X_toy, confidence_level=0.5)
     np.testing.assert_allclose(y_pred_single, y_pred_multi)
     np.testing.assert_allclose(y_pis_single, y_pis_multi)
 
@@ -257,9 +258,9 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     mapie0.fit(X, y, sample_weight=None)
     mapie1.fit(X, y, sample_weight=np.ones(shape=n_samples))
     mapie2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
-    y_pred0, y_pis0 = mapie0.predict(X, alpha=0.05)
-    y_pred1, y_pis1 = mapie1.predict(X, alpha=0.05)
-    y_pred2, y_pis2 = mapie2.predict(X, alpha=0.05)
+    y_pred0, y_pis0 = mapie0.predict(X, confidence_level=0.95)
+    y_pred1, y_pis1 = mapie1.predict(X, confidence_level=0.95)
+    y_pred2, y_pis2 = mapie2.predict(X, confidence_level=0.95)
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred1, y_pred2)
     np.testing.assert_allclose(y_pis0, y_pis1)
@@ -281,8 +282,8 @@ def test_prediction_agg_function(
         method=method, cv=cv, agg_function=agg_function
     )
     mapie.fit(X, y)
-    y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True, alpha=alpha)
-    y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False, alpha=alpha)
+    y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True, confidence_level=1-np.array(alpha))
+    y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False, confidence_level=1-np.array(alpha))
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     with pytest.raises(AssertionError):
@@ -304,7 +305,7 @@ def test_linear_regression_results(strategy: str) -> None:
         mapie_ts.update(X, y, confidence_level=0.95, ensemble=True)
     optimize_beta = "opt" in strategy
     _, y_pis = mapie_ts.predict(
-        X, alpha=0.05, optimize_beta=optimize_beta, ensemble=True
+        X, confidence_level=0.95, optimize_beta=optimize_beta, ensemble=True
     )
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
@@ -327,7 +328,7 @@ def test_results_prefit() -> None:
         estimator=estimator, cv="prefit"
     )
     mapie_ts_reg.fit(X_val, y_val)
-    _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05)
+    _, y_pis = mapie_ts_reg.predict(X_test, confidence_level=0.95)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
     coverage = regression_coverage_score(y_test, y_pis)[0]
     np.testing.assert_allclose(width_mean, WIDTHS["prefit"], rtol=1e-2)
@@ -388,7 +389,7 @@ def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
     mapie_ts_reg = TimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
 
     with pytest.raises(ValueError, match=r".*too many values to unpackt*"):
-        y_pred, y_pis = mapie_ts_reg.predict(X_toy, alpha=None)
+        y_pred, y_pis = mapie_ts_reg.predict(X_toy, confidence_level=None)
 
 
 def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
@@ -424,7 +425,7 @@ def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
     with pytest.raises(
         ValueError, match=r"Interval width minimization cannot be used*"
     ):
-        mapie_ts_reg.predict(X_toy, alpha=0.4, optimize_beta=True)
+        mapie_ts_reg.predict(X_toy, confidence_level=0.6, optimize_beta=True)
 
 
 def test_interval_prediction_with_beta_optimize() -> None:
@@ -444,7 +445,7 @@ def test_interval_prediction_with_beta_optimize() -> None:
     )
     mapie_ts_reg.fit(X_val, y_val)
     mapie_ts_reg.update(X_val, y_val)
-    _, y_pis = mapie_ts_reg.predict(X_test, alpha=0.05, optimize_beta=True)
+    _, y_pis = mapie_ts_reg.predict(X_test, confidence_level=0.95, optimize_beta=True)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
     coverage = regression_coverage_score(y_test, y_pis)[0]
     np.testing.assert_allclose(width_mean, 3.67, rtol=1e-2)
@@ -472,8 +473,8 @@ def test_consistent_class() -> None:
     mapie_c1 = C1(random_state=random_state).fit(X, y)
     mapie_c2 = C2(random_state=random_state).fit(X, y)
 
-    y_pred_1, y_pis_1 = mapie_c1.predict(X, alpha=0.1)
-    y_pred_2, y_pis_2 = mapie_c2.predict(X, alpha=0.1)
+    y_pred_1, y_pis_1 = mapie_c1.predict(X, confidence_level=0.9)
+    y_pred_2, y_pis_2 = mapie_c2.predict(X, confidence_level=0.9)
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     np.testing.assert_allclose(y_pred_1, y_pred_2)
@@ -489,7 +490,7 @@ def test_aci_method() -> None:
     """
     mapie_regressor = TimeSeriesRegressor(method="aci")
     mapie_regressor.fit(X, y)
-    mapie_regressor.predict(X, alpha=0.05)
+    mapie_regressor.predict(X, confidence_level=0.95)
     mapie_regressor.adapt_conformal_inference(X, y, gamma=0.01)
     with pytest.raises(
         AttributeError,
