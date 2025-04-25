@@ -192,7 +192,7 @@ class TimeSeriesRegressor(MapieRegressor):
         self,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         reset: bool = False
-    ) -> Optional[Union[float, Iterable[float]]]:
+    ) -> Optional[NDArray]:
         """
         Get and set the current alpha (or confidence_level) value(s) given the
         initial alpha (or confidence_level) value(s) for ACI method.
@@ -204,7 +204,7 @@ class TimeSeriesRegressor(MapieRegressor):
 
         Parameters
         ----------
-        alpha: Optional[Union[float, Iterable[float]]]
+        alpha: Optional[NDArray]
             Between ``0`` and ``1``, represents the uncertainty of the
             confidence interval.
 
@@ -461,17 +461,17 @@ class TimeSeriesRegressor(MapieRegressor):
                 **predict_params
             )
         if self.method == "aci":
-            alpha = np.array(self._get_alpha(alpha))
+            alpha = self._get_alpha(alpha)
 
         return super().predict(
             X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
             allow_infinite_bounds=allow_infinite_bounds, **predict_params
         )
 
-    # The changed the API here, but didn't take the time to refactor the entire
-    # TimeSeriesRegressor class.
+    # The public API changed from alpha to confidence_level.
+    # TODO: refactor this class to use confidence_level everywhere
+    @staticmethod
     def transform_confidence_level_to_alpha_array(
-        self,
         confidence_level: Optional[Union[float, Iterable[float]]] = None
     ) -> Optional[NDArray]:
         confidence_level = cast(Optional[NDArray], check_alpha(confidence_level))

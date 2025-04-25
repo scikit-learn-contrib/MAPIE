@@ -253,7 +253,9 @@ Additionally, a number of classification and regression functions have been upda
 6. MapieTimeSeriesRegressor class refactoring
 ----------------------------------------------------------------------------------
 
-MAPIE v1 introduces several updates to the ``MapieTimeSeriesRegressor`` class:
+MAPIE v1 introduces several updates to the ``MapieTimeSeriesRegressor`` class in order to remain consistent with the
+classification and regression methods. However, unlike classification and regression, the API here has not been
+extensively refactored.
 
 Class renaming
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
