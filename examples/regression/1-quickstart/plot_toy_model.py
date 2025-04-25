@@ -2,7 +2,7 @@
 =====================================================================================
 Use MAPIE to plot prediction intervals
 =====================================================================================
-An example plot of :class:`~mapie_v1.regression.SplitConformalRegressor` used
+An example plot of :class:`~mapie.regression.SplitConformalRegressor` used
 in the Quickstart.
 """
 import numpy as np
@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from sklearn.datasets import make_regression
 
 from mapie.metrics.regression import regression_coverage_score
-from mapie_v1.regression import SplitConformalRegressor
+from mapie.regression import SplitConformalRegressor
 from mapie_v1.utils import train_conformalize_test_split
 
 RANDOM_STATE = 42

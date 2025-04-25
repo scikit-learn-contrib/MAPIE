@@ -4,7 +4,7 @@ from sklearn.datasets import make_regression, make_classification
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.dummy import DummyRegressor, DummyClassifier
 from sklearn.model_selection import train_test_split
-from mapie_v1.regression import (
+from mapie.regression import (
     SplitConformalRegressor,
     CrossConformalRegressor,
     ConformalizedQuantileRegressor, JackknifeAfterBootstrapRegressor,

@@ -4,14 +4,14 @@ Use MAPIE on data with uneven uncertainty
 ===========================================================================================
 
 
-:class:`~mapie_v1.regression.CrossConformalRegressor`,
-:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor`,
-:class:`~mapie_v1.regression.ConformalizedQuantileRegressor` are used
+:class:`~mapie.regression.CrossConformalRegressor`,
+:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`,
+:class:`~mapie.regression.ConformalizedQuantileRegressor` are used
 to estimate the prediction intervals of 1D heteroscedastic data using
 different strategies.
 
 The example clearly shows that
-:class:`~mapie_v1.regression.ConformalizedQuantileRegressor`
+:class:`~mapie.regression.ConformalizedQuantileRegressor`
 should provide the same coverage for a lower width of intervals because it
 adapts the prediction intervals to the local heteroscedastic noise.
 """
@@ -26,7 +26,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import train_test_split
 
 from numpy.typing import NDArray
-from mapie_v1.regression import (
+from mapie.regression import (
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
     ConformalizedQuantileRegressor

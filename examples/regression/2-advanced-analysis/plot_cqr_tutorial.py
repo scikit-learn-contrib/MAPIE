@@ -6,9 +6,9 @@ ConformalizedQuantileRegressor on gamma distributed data
 
 We will use the sklearn california housing dataset as the base for the
 comparison of the different methods available on MAPIE. Two classes will
-be used: :class:`~mapie_v1.regression.ConformalizedQuantileRegressor` for CQR.
-We use :class:`~mapie_v1.regression.CrossConformalRegressor` and
-:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor` for the other methods.
+be used: :class:`~mapie.regression.ConformalizedQuantileRegressor` for CQR.
+We use :class:`~mapie.regression.CrossConformalRegressor` and
+:class:`~mapie.regression.JackknifeAfterBootstrapRegressor` for the other methods.
 
 For this example, the estimator will be :class:`~lightgbm.LGBMRegressor` with
 ``objective="quantile"`` as this is a necessary component for CQR, the
@@ -33,7 +33,7 @@ from mapie.metrics.regression import (
     regression_coverage_score,
     regression_mean_width_score,
 )
-from mapie_v1.regression import (
+from mapie.regression import (
     ConformalizedQuantileRegressor,
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor)

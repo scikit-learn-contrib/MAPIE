@@ -6,7 +6,7 @@ Hyperparameters tuning with CrossConformalRegressor
 
 This example compares non-nested and nested cross-validation strategies
 when using
-:class:`~mapie_v1.regression.CrossConformalRegressor`.
+:class:`~mapie.regression.CrossConformalRegressor`.
 
 In the regular sequential method, a cross-validation parameter search is performed
 on the entire training set. The best model is then used in MAPIE to estimate
@@ -46,7 +46,7 @@ from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from sklearn.datasets import make_sparse_uncorrelated
 
 from mapie.metrics.regression import regression_coverage_score
-from mapie_v1.regression import CrossConformalRegressor
+from mapie.regression import CrossConformalRegressor
 
 
 RANDOM_STATE = 42

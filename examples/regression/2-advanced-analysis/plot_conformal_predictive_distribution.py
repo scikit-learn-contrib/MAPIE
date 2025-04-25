@@ -26,7 +26,7 @@ from sklearn.linear_model import LinearRegression
 
 from mapie.conformity_scores import (AbsoluteConformityScore,
                                      ResidualNormalisedScore)
-from mapie_v1.regression import SplitConformalRegressor
+from mapie.regression import SplitConformalRegressor
 from mapie_v1.utils import train_conformalize_test_split
 
 warnings.filterwarnings('ignore')
@@ -65,7 +65,7 @@ plt.show()
 #
 # To be able to obtain the cumulative distribution function of
 # a prediction with MAPIE, we propose here to wrap the
-# :class:`~mapie_v1.regression.SplitConformalRegressor` to add a new method named
+# :class:`~mapie.regression.SplitConformalRegressor` to add a new method named
 # `get_cumulative_distribution_function`.
 
 class MapieConformalPredictiveDistribution(SplitConformalRegressor):
