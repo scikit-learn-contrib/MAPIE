@@ -331,7 +331,7 @@ Below is the equivalent MAPIE v1 code for split conformal prediction:
 
     from sklearn.linear_model import LinearRegression
     from sklearn.model_selection import train_test_split
-    from mapie_v1.regression import SplitConformalRegressor
+    from mapie.regression import SplitConformalRegressor
     from sklearn.datasets import make_regression
 
     X, y = make_regression(n_samples=100, n_features=2, noise=0.1)
@@ -405,7 +405,7 @@ Below is the equivalent MAPIE v1 code for cross-conformal prediction:
     import numpy as np
     from sklearn.ensemble import RandomForestRegressor
     from sklearn.model_selection import train_test_split, GroupKFold
-    from mapie_v1.regression import CrossConformalRegressor
+    from mapie.regression import CrossConformalRegressor
     from sklearn.datasets import make_regression
 
     X_full, y_full = make_regression(n_samples=100, n_features=2, noise=0.1)

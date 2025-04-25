@@ -28,7 +28,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 
-from mapie_v1.regression import SplitConformalRegressor
+from mapie.regression import SplitConformalRegressor
 from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.metrics.regression import regression_coverage_score
 

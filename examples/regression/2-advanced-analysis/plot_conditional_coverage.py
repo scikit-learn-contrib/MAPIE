@@ -4,13 +4,13 @@ Focus on local (or "conditional") coverage
 ==============================================================
 
 
-This example uses :class:`~mapie_v1.regression.SplitConformalRegressor`,
-:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor`,
+This example uses :class:`~mapie.regression.SplitConformalRegressor`,
+:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`,
 with conformal scores that returns adaptive intervals i.e.
 (:class:`~mapie.conformity_scores.GammaConformityScore` and
 :class:`~mapie.conformity_scores.ResidualNormalisedScore`) as well as
-:class:`~mapie_v1.regression.ConformalizedQuantileRegressor` and
-:class:`~mapie_v1.regression.CrossConformalRegressor.
+:class:`~mapie.regression.ConformalizedQuantileRegressor` and
+:class:`~mapie.regression.CrossConformalRegressor.
 The conditional coverage is computed with the three
 functions that allows to estimate the conditional coverage in regression
 :func:`~mapie.metrics.regression_ssc`,
@@ -34,7 +34,7 @@ from mapie.metrics.regression import (
     regression_ssc,
     regression_ssc_score, hsic,
 )
-from mapie_v1.regression import (
+from mapie.regression import (
     SplitConformalRegressor,
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,

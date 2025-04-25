@@ -58,7 +58,7 @@ Here's a quick instantiation of MAPIE models for regression and classification p
 .. code:: python
 
     # Uncertainty quantification for regression problem
-    from mapie_v1.regression import SplitConformalRegressor
+    from mapie.regression import SplitConformalRegressor
     mapie_regressor = SplitConformalRegressor(estimator=regressor)
 
 .. code:: python
@@ -121,7 +121,7 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
     from sklearn.linear_model import LinearRegression
     from sklearn.datasets import make_regression
     from sklearn.model_selection import train_test_split
-    from mapie_v1.regression import SplitConformalRegressor
+    from mapie.regression import SplitConformalRegressor
 
     X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
     X_train_conformalize, X_test, y_train_conformalize, y_test = train_test_split(X, y, test_size=0.5)

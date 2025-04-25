@@ -6,9 +6,9 @@ Use MAPIE on data with constant uncertainty
 
 We show here how to use various MAPIE methods on data with homoscedastic data.
 
-:class:`~mapie_v1.regression.CrossConformalRegressor`,
-:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor`,
-:class:`~mapie_v1.regression.ConformalizedQuantileRegressor`,
+:class:`~mapie.regression.CrossConformalRegressor`,
+:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`,
+:class:`~mapie.regression.ConformalizedQuantileRegressor`,
 are used to estimate the prediction intervals of 1D homoscedastic
 data using different strategies.
 """
@@ -24,7 +24,7 @@ from sklearn.model_selection import train_test_split
 
 
 from numpy.typing import NDArray
-from mapie_v1.regression import (
+from mapie.regression import (
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
     ConformalizedQuantileRegressor

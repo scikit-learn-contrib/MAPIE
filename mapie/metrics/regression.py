@@ -91,7 +91,7 @@ def regression_coverage_score(
     Examples
     ---------
     >>> from mapie.metrics.regression import regression_coverage_score
-    >>> from mapie_v1.regression import SplitConformalRegressor
+    >>> from mapie.regression import SplitConformalRegressor
     >>> from mapie_v1.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_regression
     >>> from sklearn.model_selection import train_test_split

@@ -4,7 +4,7 @@ The symmetric_correction parameter of ConformalizedQuantileRegressor
 ==========================================================================================================
 
 
-An example plot of :class:`~mapie_v1.regression.ConformalizedQuantileRegressor`
+An example plot of :class:`~mapie.regression.ConformalizedQuantileRegressor`
 illustrating the impact of the ``symmetric_correction`` parameter.
 """
 import numpy as np
@@ -13,7 +13,7 @@ from sklearn.datasets import make_regression
 from sklearn.ensemble import GradientBoostingRegressor
 
 from mapie.metrics.regression import regression_coverage_score
-from mapie_v1.regression import ConformalizedQuantileRegressor
+from mapie.regression import ConformalizedQuantileRegressor
 from mapie_v1.utils import train_conformalize_test_split
 
 RANDOM_STATE = 1

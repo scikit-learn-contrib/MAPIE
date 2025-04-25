@@ -15,7 +15,7 @@ from mapie.subsample import Subsample
 from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import GammaConformityScore, \
     AbsoluteConformityScore, ResidualNormalisedScore
-from mapie_v1.regression import SplitConformalRegressor, \
+from mapie.regression import SplitConformalRegressor, \
     CrossConformalRegressor, \
     JackknifeAfterBootstrapRegressor, \
     ConformalizedQuantileRegressor
