@@ -9,10 +9,10 @@ Regression
    :toctree: generated/
    :template: class.rst
 
-   mapie_v1.regression.SplitConformalRegressor
-   mapie_v1.regression.CrossConformalRegressor
-   mapie_v1.regression.JackknifeAfterBootstrapRegressor
-   mapie_v1.regression.ConformalizedQuantileRegressor
+   mapie.regression.SplitConformalRegressor
+   mapie.regression.CrossConformalRegressor
+   mapie.regression.JackknifeAfterBootstrapRegressor
+   mapie.regression.ConformalizedQuantileRegressor
    mapie.regression.MapieRegressor
    mapie.regression.MapieQuantileRegressor
    mapie.regression.TimeSeriesRegressor

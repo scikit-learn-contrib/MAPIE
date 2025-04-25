@@ -29,7 +29,7 @@ Throughout this tutorial, we will answer the following questions:
 - How to build Mondrian conformal prediction intervals using MAPIE for regression?
 - How to compare the coverage of the prediction intervals by groups?
 
-Here, :class:`~mapie_v1.regression.SplitConformalRegressor` is used, along with the
+Here, :class:`~mapie.regression.SplitConformalRegressor` is used, along with the
 ``"absolute"`` conformity score.
 
 The Mondrian method is compatible with any MAPIE estimator, except those involving
@@ -46,7 +46,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 from mapie.metrics.regression import regression_coverage_score
 from mapie_v1.utils import train_conformalize_test_split
-from mapie_v1.regression import SplitConformalRegressor
+from mapie.regression import SplitConformalRegressor
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 warnings.filterwarnings("ignore")
@@ -141,7 +141,7 @@ random_forest.fit(X_train, y_train)
 # 4. Build the classical conformal prediction intervals
 # ----------------------------------------------------------------------------
 # In this first part, let us build the prediction intervals with MAPIE using a single
-# :class:`~mapie_v1.regression.SplitConformalRegressor`.
+# :class:`~mapie.regression.SplitConformalRegressor`.
 
 
 #######################################################################################
@@ -215,7 +215,7 @@ print("Average coverage across the 10 groups:", average_coverage)
 # Conformalize a SplitConformalRegressor on the conformity set for each group
 # *************************************************************************************
 # For each group in the conformity set, we conformalize a distinct
-# :class:`~mapie_v1.regression.SplitConformalRegressor`.
+# :class:`~mapie.regression.SplitConformalRegressor`.
 
 
 mondrian_regressor = {}
@@ -235,7 +235,7 @@ for group in partition_groups_conformity:
 # Predict the prediction intervals on the test set
 # *************************************************************************************
 # Next, for each group in the test set, we build the prediction intervals using the
-# :class:`~mapie_v1.regression.SplitConformalRegressor` associated with the group.
+# :class:`~mapie.regression.SplitConformalRegressor` associated with the group.
 
 
 partition_groups_test = np.unique(partition_test)

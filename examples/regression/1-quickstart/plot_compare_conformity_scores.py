@@ -4,7 +4,7 @@ Use MAPIE on data with gamma distribution
 ==========================================================================================
 
 
-This example uses :class:`~mapie_v1.regression.CrossConformalRegressor` to estimate
+This example uses :class:`~mapie.regression.CrossConformalRegressor` to estimate
 prediction intervals associated with Gamma distributed target.
 The limit of the absolute residual conformity score is illustrated.
 
@@ -16,7 +16,7 @@ Note : OpenML is down as of 14/01/25, so we'll load the data from Kaggle instead
 The data is modelled by a Random Forest model
 :class:`~sklearn.ensemble.RandomForestRegressor` with a fixed parameter set.
 The prediction intervals are determined by means of the MAPIE regressor
-:class:`~mapie_v1.regression.CrossConformalRegressor` considering two conformity scores:
+:class:`~mapie.regression.CrossConformalRegressor` considering two conformity scores:
 ``"absolute"`` which
 considers the absolute residuals as the conformity scores and
 ``"gamma"`` which
@@ -43,7 +43,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
 from mapie.metrics.regression import regression_coverage_score
-from mapie_v1.regression import CrossConformalRegressor
+from mapie.regression import CrossConformalRegressor
 
 RANDOM_STATE = 42
 

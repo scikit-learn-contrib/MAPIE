@@ -4,9 +4,9 @@ Focus on intervals width
 ===============================================================================
 
 
-This example uses :class:`~mapie_v1.regression.CrossConformalRegressor`,
-:class:`~mapie_v1.regression.ConformalizedQuantileRegressor` and
-:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor`.
+This example uses :class:`~mapie.regression.CrossConformalRegressor`,
+:class:`~mapie.regression.ConformalizedQuantileRegressor` and
+:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`.
 :class:`~mapie.metrics` is used to estimate the coverage width
 based criterion of 1D homoscedastic data using different strategies.
 The coverage width based criterion is computed with the function
@@ -28,7 +28,7 @@ from mapie.metrics.regression import (
     regression_coverage_score,
     regression_mean_width_score, coverage_width_based,
 )
-from mapie_v1.regression import (
+from mapie.regression import (
     CrossConformalRegressor,
     ConformalizedQuantileRegressor,
     JackknifeAfterBootstrapRegressor)
