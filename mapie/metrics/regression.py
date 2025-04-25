@@ -475,8 +475,10 @@ def coverage_width_based(
     >>> y_preds_low = np.array([4, 6, 9, 8.5, 10.5])
     >>> y_preds_up = np.array([6, 9, 10, 12.5, 12])
     >>> eta = 0.01
-    >>> alpha = 0.1
-    >>> cwb = coverage_width_based(y_true, y_preds_low, y_preds_up, eta, 1-alpha)
+    >>> confidence_level = 0.9
+    >>> cwb = coverage_width_based(
+    ... y_true, y_preds_low, y_preds_up, eta, confidence_level
+    ... )
     >>> print(np.round(cwb ,2))
     0.69
     """

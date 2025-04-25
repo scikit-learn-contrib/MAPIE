@@ -105,7 +105,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
     """
     Generate a sampling method, that block bootstraps the training set.
     It can replace KFold, LeaveOneOut or SubSample as cv argument in the
-    MapieRegressor class.
+    TimeSeriesRegressor class.
 
     Parameters
     ----------

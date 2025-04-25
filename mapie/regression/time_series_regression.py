@@ -299,11 +299,7 @@ class TimeSeriesRegressor(MapieRegressor):
         X, y = cast(NDArray, X), cast(NDArray, y)
 
         self._get_alpha()
-        confidence_level = cast(Optional[NDArray], check_alpha(confidence_level))
-        if confidence_level is None:
-            alpha = None
-        else:
-            alpha = np.array(transform_confidence_level_to_alpha_list(confidence_level))
+        alpha = self.transform_confidence_level_to_alpha_array(confidence_level)
         if alpha is None:
             alpha = np.array(list(self.current_alpha.keys()))
         alpha_np = cast(NDArray, alpha)
@@ -313,7 +309,7 @@ class TimeSeriesRegressor(MapieRegressor):
             _, y_pred_bounds = self.predict(
                 x,
                 ensemble=ensemble,
-                confidence_level=1 - alpha_np,
+                confidence_level=1-alpha_np,
                 optimize_beta=optimize_beta,
                 allow_infinite_bounds=True
             )
@@ -458,21 +454,29 @@ class TimeSeriesRegressor(MapieRegressor):
               - [:, 0, :]: Lower bound of the prediction interval.
               - [:, 1, :]: Upper bound of the prediction interval.
         """
-        confidence_level = cast(Optional[NDArray], check_alpha(confidence_level))
-        if confidence_level is None:
-            alpha = None
-        else:
-            alpha = np.array(transform_confidence_level_to_alpha_list(confidence_level))
+        alpha = self.transform_confidence_level_to_alpha_array(confidence_level)
         if alpha is None:
             super().predict(
                 X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
                 **predict_params
             )
-
         if self.method == "aci":
-            alpha = self._get_alpha(alpha)
+            alpha = np.array(self._get_alpha(alpha))
 
         return super().predict(
             X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
             allow_infinite_bounds=allow_infinite_bounds, **predict_params
         )
+
+    # The changed the API here, but didn't take the time to refactor the entire
+    # TimeSeriesRegressor class.
+    def transform_confidence_level_to_alpha_array(
+        self,
+        confidence_level: Optional[Union[float, Iterable[float]]] = None
+    ) -> Optional[NDArray]:
+        confidence_level = cast(Optional[NDArray], check_alpha(confidence_level))
+        if confidence_level is None:
+            alpha = None
+        else:
+            alpha = np.array(transform_confidence_level_to_alpha_list(confidence_level))
+        return alpha
