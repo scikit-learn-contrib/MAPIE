@@ -301,22 +301,24 @@ class TimeSeriesRegressor(MapieRegressor):
         self._get_alpha()
         confidence_level = cast(Optional[NDArray], check_alpha(confidence_level))
         if confidence_level is None:
-            confidence_level = 1 - np.array(list(self.current_alpha.keys()))
-        confidence_level_np = cast(NDArray, confidence_level)
+            alpha = None
+        else:
+            alpha = np.array(transform_confidence_level_to_alpha_list(confidence_level))
+        if alpha is None:
+            alpha = np.array(list(self.current_alpha.keys()))
+        alpha_np = cast(NDArray, alpha)
 
         for x_row, y_row in zip(X, y):
             x = np.expand_dims(x_row, axis=0)
             _, y_pred_bounds = self.predict(
                 x,
                 ensemble=ensemble,
-                confidence_level=confidence_level_np,
+                confidence_level=1 - alpha_np,
                 optimize_beta=optimize_beta,
                 allow_infinite_bounds=True
             )
 
-            for alpha_ix, alpha_0 in enumerate(
-                    transform_confidence_level_to_alpha_list(confidence_level_np)
-            ):
+            for alpha_ix, alpha_0 in enumerate(alpha_np):
                 alpha_t = self.current_alpha[alpha_0]
 
                 is_lower_bounded = y_row > y_pred_bounds[:, 0, alpha_ix]
@@ -403,7 +405,6 @@ class TimeSeriesRegressor(MapieRegressor):
 
     # Overriding _MapieRegressor .predict method here. Bad practise, but this
     # inheritance is questionable and will probably be reconsidered anyway.
-
     def predict(  # type: ignore[override]
         self,
         X: ArrayLike,
@@ -457,22 +458,21 @@ class TimeSeriesRegressor(MapieRegressor):
               - [:, 0, :]: Lower bound of the prediction interval.
               - [:, 1, :]: Upper bound of the prediction interval.
         """
+        confidence_level = cast(Optional[NDArray], check_alpha(confidence_level))
         if confidence_level is None:
             alpha = None
-            super().predict(
-                X, ensemble=ensemble, alpha=alpha,
-                optimize_beta=optimize_beta, **predict_params
-            )
         else:
-            if self.method == "aci":
-                alpha = self._get_alpha(
-                    transform_confidence_level_to_alpha_list(confidence_level)
-                )
-            else:
-                alpha = transform_confidence_level_to_alpha_list(confidence_level)
+            alpha = np.array(transform_confidence_level_to_alpha_list(confidence_level))
+        if alpha is None:
+            super().predict(
+                X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
+                **predict_params
+            )
+
+        if self.method == "aci":
+            alpha = self._get_alpha(alpha)
 
         return super().predict(
-            X, ensemble=ensemble, alpha=alpha,
-            optimize_beta=optimize_beta,
+            X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
             allow_infinite_bounds=allow_infinite_bounds, **predict_params
         )
