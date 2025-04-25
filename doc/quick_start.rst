@@ -55,7 +55,7 @@ Here, we generate one-dimensional noisy data that we fit with a linear model.
     #  We set the confidence level to estimate prediction intervals at approximately one and two
     #  standard deviation from the mean.
 
-    from mapie_v1.regression import SplitConformalRegressor
+    from mapie.regression import SplitConformalRegressor
 
     mapie_regressor = SplitConformalRegressor(confidence_level=[0.95, 0.68], prefit=False)
     mapie_regressor.fit(X_train, y_train)

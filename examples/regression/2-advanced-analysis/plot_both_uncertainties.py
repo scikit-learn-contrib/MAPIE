@@ -4,9 +4,9 @@ Estimating aleatoric and epistemic uncertainties
 ===============================================================================
 
 
-This example uses :class:`~mapie_v1.regression.CrossConformalRegressor`,
-:class:`~mapie_v1.regression.ConformalizedQuantileRegressor` and
-:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor` to estimate
+This example uses :class:`~mapie.regression.CrossConformalRegressor`,
+:class:`~mapie.regression.ConformalizedQuantileRegressor` and
+:class:`~mapie.regression.JackknifeAfterBootstrapRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
@@ -20,7 +20,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import train_test_split
 
 from numpy.typing import NDArray
-from mapie_v1.regression import (
+from mapie.regression import (
     CrossConformalRegressor,
     ConformalizedQuantileRegressor,
     JackknifeAfterBootstrapRegressor)

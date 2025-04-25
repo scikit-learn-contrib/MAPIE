@@ -4,8 +4,8 @@ Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (20
 =====================================================================================================
 
 
-:class:`~mapie_v1.regression.JackknifeAfterBootstrapRegressor` and
-:class:`~mapie_v1.regression.CrossConformalRegressor` are used to
+:class:`~mapie.regression.JackknifeAfterBootstrapRegressor` and
+:class:`~mapie.regression.CrossConformalRegressor` are used to
 reproduce the simulations by Kim et al. (2020) [1] in their article
 which introduces the jackknife+-after-bootstrap method.
 
@@ -50,7 +50,7 @@ from mapie.metrics.regression import (
     regression_coverage_score,
     regression_mean_width_score,
 )
-from mapie_v1.regression import (
+from mapie.regression import (
     JackknifeAfterBootstrapRegressor,
     CrossConformalRegressor
 )
