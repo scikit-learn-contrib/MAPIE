@@ -54,7 +54,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
 from numpy.typing import NDArray
-from mapie_v1.classification import SplitConformalClassifier
+from mapie.classification import SplitConformalClassifier
 from mapie.metrics.classification import (
     classification_coverage_score_v2,
     classification_mean_width_score,
