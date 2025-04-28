@@ -551,7 +551,7 @@ def test_method_error_in_update(monkeypatch: Any, method: str) -> None:
 @pytest.mark.parametrize("method", ["enbpi", "aci"])
 @pytest.mark.parametrize("cv", ["split", "prefit"])
 def test_methods_preservation_in_fit(method: str, cv: str) -> None:
-    """Test of enbpi and aci method preservation in the fit MapieRegressor"""
+    """Test of enbpi and aci method preservation in the fit _MapieRegressor"""
 
     X_train_val, X_test, y_train_val, y_test = train_test_split(
         X, y, test_size=0.33, random_state=random_state

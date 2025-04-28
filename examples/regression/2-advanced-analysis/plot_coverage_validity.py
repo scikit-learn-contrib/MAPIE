@@ -300,7 +300,7 @@ for random_state in range(1, num_splits):
     )
     empirical_coverages_ref.append(coverage)
 
-    # Compute empirical coverage for each trial with MapieRegressor
+    # Compute empirical coverage for each trial
     conformalizer = SplitConformalRegressor(
         estimator=model, confidence_level=confidence_level, prefit=True
     )

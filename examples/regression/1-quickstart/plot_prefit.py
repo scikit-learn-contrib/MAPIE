@@ -180,7 +180,7 @@ plt.show()
 # three estimators need to be trained at quantile values of
 # ``(1+confidence_level)/2, (1-confidence_level)/2, 0.5)``.
 
-# Train LGBMRegressor models for MapieQuantileRegressor
+# Train LGBMRegressor models for _MapieQuantileRegressor
 list_estimators_cqr = []
 for alpha_ in [(1 - confidence_level) / 2, (1 + confidence_level) / 2, 0.5]:
     estimator_ = LGBMRegressor(

@@ -606,7 +606,7 @@ def check_defined_variables_predict_cqr(
 ) -> None:
     """
     Check that the parameters defined for the predict method
-    of ``MapieQuantileRegressor`` are correct.
+    of ``_MapieQuantileRegressor`` are correct.
 
     Parameters
     ----------
@@ -621,10 +621,10 @@ def check_defined_variables_predict_cqr(
     ------
     Warning
         If the ensemble value is defined in the predict function
-        of ``MapieQuantileRegressor``.
+        of ``_MapieQuantileRegressor``.
     Warning
         If the alpha value is defined in the predict function
-        of ``MapieQuantileRegressor``.
+        of ``_MapieQuantileRegressor``.
 
     Examples
     --------
@@ -636,11 +636,11 @@ def check_defined_variables_predict_cqr(
     ... except Exception as exception:
     ...     print(exception)
     ...
-    WARNING: ensemble is not utilized in ``MapieQuantileRegressor``.
+    WARNING: ensemble is not utilized in ``_MapieQuantileRegressor``.
     """
     if ensemble is True:
         warnings.warn(
-            "WARNING: ensemble is not utilized in ``MapieQuantileRegressor``."
+            "WARNING: ensemble is not utilized in ``_MapieQuantileRegressor``."
         )
     if alpha is not None:
         warnings.warn(

@@ -130,7 +130,7 @@ class SplitConformalRegressor:
         # Note to developers: to implement this v1 class without touching the
         # v0 backend, we're for now using a hack. We always set cv="prefit",
         # and we fit the estimator if needed. See the .fit method below.
-        self._mapie_regressor = MapieRegressor(
+        self._mapie_regressor = _MapieRegressor(
             estimator=self._estimator,
             method="base",
             cv="prefit",
@@ -409,7 +409,7 @@ class CrossConformalRegressor:
         )
         check_cv_not_string(cv)
 
-        self._mapie_regressor = MapieRegressor(
+        self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
             method=method,
             cv=cv,
@@ -722,7 +722,7 @@ class JackknifeAfterBootstrapRegressor:
 
         cv = self._check_and_convert_resampling_to_cv(resampling)
 
-        self._mapie_regressor = MapieRegressor(
+        self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
             method=method,
             cv=cv,
@@ -909,8 +909,13 @@ class JackknifeAfterBootstrapRegressor:
         return cv
 
 
-class MapieRegressor(RegressorMixin, BaseEstimator):
+class _MapieRegressor(RegressorMixin, BaseEstimator):
     """
+    Note to users: _MapieRegressor is now private, and may change at any time.
+    Please use CrossConformalRegressor, CrossConformalRegressor or
+    JackknifeAfterBootstrapRegressor instead.
+    See the v1 migration guide for more information.
+
     Prediction interval with out-of-fold conformity scores.
 
     This class implements the jackknife+ strategy and its variations
@@ -1075,12 +1080,12 @@ class MapieRegressor(RegressorMixin, BaseEstimator):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.regression import MapieRegressor
+    >>> from mapie.regression.regression import _MapieRegressor
     >>> from sklearn.linear_model import LinearRegression
     >>> X_toy = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> clf = LinearRegression().fit(X_toy, y_toy)
-    >>> mapie_reg = MapieRegressor(estimator=clf, cv="prefit")
+    >>> mapie_reg = _MapieRegressor(estimator=clf, cv="prefit")
     >>> mapie_reg = mapie_reg.fit(X_toy, y_toy)
     >>> y_pred, y_pis = mapie_reg.predict(X_toy, alpha=0.5)
     >>> print(y_pis[:, :, 0])
@@ -1358,7 +1363,7 @@ class MapieRegressor(RegressorMixin, BaseEstimator):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any
-    ) -> MapieRegressor:
+    ) -> _MapieRegressor:
         """
         Fit estimator and compute conformity scores used for
         prediction intervals.
@@ -1395,7 +1400,7 @@ class MapieRegressor(RegressorMixin, BaseEstimator):
 
         Returns
         -------
-        MapieRegressor
+        _MapieRegressor
             The model itself.
         """
 
@@ -1449,7 +1454,7 @@ class MapieRegressor(RegressorMixin, BaseEstimator):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-    ) -> MapieRegressor:
+    ) -> _MapieRegressor:
 
         self.estimator_.fit_single_estimator(
             X,
@@ -1468,7 +1473,7 @@ class MapieRegressor(RegressorMixin, BaseEstimator):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any
-    ) -> MapieRegressor:
+    ) -> _MapieRegressor:
 
         predict_params = kwargs.pop('predict_params', {})
         self._predict_params = len(predict_params) > 0
