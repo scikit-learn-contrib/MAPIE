@@ -102,12 +102,10 @@ plt.show()
 
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator.
-# Then we apply :class:`~mapie_v1.classification.SplitConformalClassifier` in the
-# conformalization data with the methods ``"lac"`` and ``"aps"```
-# to the estimator indicating that it has already been fitted with
-# `prefit=True`.
-# We then estimate the prediction sets with different alpha values with a
-# ``conformalize`` and ``predict`` process.
+# Then, we initialize a :class:`~mapie_v1.classification.SplitConformalClassifier` with
+# conformity scores ``"lac"`` and ``"aps"`` , using our pre-fitted estimator.
+# Lastly, we compute the prediction sets with different alpha values using the
+# ``conformalize`` and ``predict`` methods.
 
 clf = GaussianNB()
 clf.fit(X_train, y_train)
