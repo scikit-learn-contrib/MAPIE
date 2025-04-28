@@ -4,7 +4,7 @@ Comparing prediction sets on a two-dimensional dataset
 ======================================================
 
 In this tutorial, we compare the prediction sets estimated by
-:class:`~mapie.classification._MapieClassifier` with the "lac"
+:class:`~mapie_v1.classification.SplitConformalClassifier` with the "lac"
 and "aps" on the two-dimensional dataset presented
 by Sadinle et al. (2019).
 """
@@ -20,12 +20,12 @@ by Sadinle et al. (2019).
 # classifier as the conformity score on a toy two-dimensional dataset.
 # We estimate the prediction sets as follows :
 #
-# * First we generate a dataset with train, calibration and test, the model
+# * First we generate a dataset with train, conformalization and test, the model
 #   is fitted in the training set.
 #
 # * We set the conformal score ``Sᵢ = 𝑓̂(Xᵢ)ᵧᵢ``
 #   from the softmax output of the true class or the cumulated score
-#   (by decreasing order) for each sample in the calibration set.
+#   (by decreasing order) for each sample in the conformalization set.
 #
 # * Then we define q̂ as being the
 #   ``(n + 1)(1 - α) / n``
@@ -54,9 +54,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
 from numpy.typing import NDArray
-from mapie.classification import _MapieClassifier
+from mapie_v1.classification import SplitConformalClassifier
 from mapie.metrics.classification import (
-    classification_coverage_score,
+    classification_coverage_score_v2,
     classification_mean_width_score,
 )
 
@@ -73,7 +73,7 @@ X = np.vstack(
     ]
 )
 y = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
-X_train, X_cal, y_train, y_cal = train_test_split(X, y, test_size=0.3)
+X_train, X_conf, y_train, y_conf = train_test_split(X, y, test_size=0.3)
 
 xx, yy = np.meshgrid(
     np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
@@ -102,31 +102,35 @@ plt.show()
 
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator.
-# Then we apply :class:`~mapie.classification._MapieClassifier` in the
-# calibration data with the methods ``"lac"`` and ``"aps"```
+# Then we apply :class:`~mapie_v1.classification.SplitConformalClassifier` in the
+# conformalization data with the methods ``"lac"`` and ``"aps"```
 # to the estimator indicating that it has already been fitted with
-# `cv="prefit"`.
-# We then estimate the prediction sets with differents alpha values with a
-# ``fit`` and ``predict`` process.
+# `prefit=True`.
+# We then estimate the prediction sets with different alpha values with a
+# ``conformalize`` and ``predict`` process.
 
-clf = GaussianNB().fit(X_train, y_train)
+clf = GaussianNB()
+clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
 
-methods = ["lac", "aps"]
+conformity_scores = ["lac", "aps"]
 mapie, y_pred_mapie, y_ps_mapie = {}, {}, {}
 alpha = [0.2, 0.1, 0.05]
-for method in methods:
-    mapie[method] = _MapieClassifier(
+for conformity_score in conformity_scores:
+    mapie[conformity_score] = SplitConformalClassifier(
         estimator=clf,
-        method=method,
-        cv="prefit",
+        confidence_level=1-np.array(alpha),
+        conformity_score=conformity_score,
+        prefit=True,
         random_state=42,
     )
-    mapie[method].fit(X_cal, y_cal)
-    y_pred_mapie[method], y_ps_mapie[method] = mapie[method].predict(
-        X_test, alpha=alpha, include_last_label=True,
+    mapie[conformity_score].conformalize(X_conf, y_conf)
+    y_pred_mapie[conformity_score], y_ps_mapie[conformity_score] = (
+        mapie[conformity_score].predict_set(
+            X_test, conformity_score_params={"include_last_label": True}
+        )
     )
 
 
@@ -146,7 +150,7 @@ def plot_scores(
     alphas: List[float],
     scores: NDArray,
     quantiles: NDArray,
-    method: str,
+    conformity_score: str,
     ax: plt.Axes,
 ) -> None:
     colors = {0: "#1f77b4", 1: "#ff7f0e", 2: "#2ca02c"}
@@ -162,18 +166,19 @@ def plot_scores(
             label=f"alpha = {alphas[i]}",
         )
         i = i + 1
-    ax.set_title(f"Distribution of scores for '{method}' method")
+    ax.set_title(f"Distribution of scores for '{conformity_score}' method")
     ax.legend()
     ax.set_xlabel("scores")
     ax.set_ylabel("count")
 
 
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-for i, method in enumerate(methods):
-    conformity_scores = mapie[method].conformity_scores_
-    n = mapie[method].n_samples_
-    quantiles = mapie[method].conformity_score_function_.quantiles_
-    plot_scores(alpha, conformity_scores, quantiles, method, axs[i])
+for i, conformity_score in enumerate(conformity_scores):
+    conf_scores = mapie[conformity_score]._mapie_classifier.conformity_scores_
+    n = mapie[conformity_score]._mapie_classifier.n_samples_
+    quantiles = (
+        mapie[conformity_score]._mapie_classifier.conformity_score_function_.quantiles_)
+    plot_scores(alpha, conf_scores, quantiles, conformity_score, axs[i])
 plt.show()
 
 
@@ -228,8 +233,8 @@ def plot_results(
     plt.show()
 
 
-for method in methods:
-    plot_results(alpha, y_pred_mapie[method], y_ps_mapie[method])
+for conformity_score in conformity_scores:
+    plot_results(alpha, y_pred_mapie[conformity_score], y_ps_mapie[conformity_score])
 
 
 ##############################################################################
@@ -248,38 +253,41 @@ for method in methods:
 alpha_ = np.arange(0.02, 0.98, 0.02)
 coverage, mean_width = {}, {}
 mapie, y_ps_mapie = {}, {}
-for method in methods:
-    mapie[method] = _MapieClassifier(
+for conformity_score in conformity_scores:
+    mapie[conformity_score] = SplitConformalClassifier(
         estimator=clf,
-        method=method,
-        cv="prefit",
+        confidence_level=1-alpha_,
+        conformity_score=conformity_score,
+        prefit=True,
         random_state=42,
     )
-    mapie[method].fit(X_cal, y_cal)
-    _, y_ps_mapie[method] = mapie[method].predict(
-        X, alpha=alpha_, include_last_label="randomized"
+    mapie[conformity_score].conformalize(X_conf, y_conf)
+    _, y_ps_mapie[conformity_score] = mapie[conformity_score].predict_set(
+        X, conformity_score_params={"include_last_label": "randomized"}
     )
-    coverage[method] = [
-        classification_coverage_score(y, y_ps_mapie[method][:, :, i])
-        for i, _ in enumerate(alpha_)
+    coverage[conformity_score] = [
+        classification_coverage_score_v2(y, y_ps_mapie[conformity_score])
     ]
-    mean_width[method] = classification_mean_width_score(y_ps_mapie[method])
+    mean_width[conformity_score] = classification_mean_width_score(
+        y_ps_mapie[conformity_score]
+    )
 
 fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 axs[0].set_xlabel("1 - alpha")
 axs[0].set_ylabel("Quantile")
-for method in methods:
-    quantiles = mapie[method].conformity_score_function_.quantiles_
-    axs[0].scatter(1 - alpha_, quantiles, label=method)
+for conformity_score in conformity_scores:
+    quantiles = (
+        mapie[conformity_score]._mapie_classifier.conformity_score_function_.quantiles_)
+    axs[0].scatter(1 - alpha_, quantiles, label=conformity_score)
 axs[0].legend()
-for method in methods:
-    axs[1].scatter(1 - alpha_, coverage[method], label=method)
+for conformity_score in conformity_scores:
+    axs[1].scatter(1 - alpha_, coverage[conformity_score], label=conformity_score)
 axs[1].set_xlabel("1 - alpha")
 axs[1].set_ylabel("Coverage score")
 axs[1].plot([0, 1], [0, 1], label="x=y", color="black")
 axs[1].legend()
-for method in methods:
-    axs[2].scatter(1 - alpha_, mean_width[method], label=method)
+for conformity_score in conformity_scores:
+    axs[2].scatter(1 - alpha_, mean_width[conformity_score], label=conformity_score)
 axs[2].set_xlabel("1 - alpha")
 axs[2].set_ylabel("Average size of prediction sets")
 axs[2].legend()
