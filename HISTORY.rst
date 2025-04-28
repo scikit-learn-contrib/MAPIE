@@ -6,6 +6,7 @@ History
 ------------------
 
 * Fix issue  512 to replace setup.py by pyproject.toml, bump twine and wheel dependencies to latest
+* Fix issue  670 to correct the import path which cause ModuleNotFoundError
 
 0.9.2 (2025-15-01)
 ------------------

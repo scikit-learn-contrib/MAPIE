@@ -48,4 +48,5 @@ Contributors
 * Syed Affan <saffand03@gmail.com>
 * Cyprien Bertran <cbertrandebalanda@yahoo.fr>
 * Faustin Pulvéric <faustin.pulveric@gmail.com>
+* Chaoqi Zhang <prncoprs@163.com>
 To be continued ...
