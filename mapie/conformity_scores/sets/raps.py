@@ -1,7 +1,7 @@
 from typing import Optional, Tuple, Union, cast
 
 import numpy as np
-from sklearn.calibration import LabelEncoder
+from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
