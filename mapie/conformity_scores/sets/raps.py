@@ -13,7 +13,7 @@ from mapie.estimator.classifier import EnsembleClassifier
 from mapie._machine_precision import EPSILON
 from numpy.typing import NDArray
 from mapie.metrics.classification import classification_mean_width_score
-from mapie.utils import check_alpha_and_n_samples, compute_quantiles
+from mapie.utils import _check_alpha_and_n_samples, _compute_quantiles
 
 
 class RAPSConformityScore(APSConformityScore):
@@ -347,7 +347,7 @@ class RAPSConformityScore(APSConformityScore):
                 cutoff
             )
 
-            quantiles_ = compute_quantiles(
+            quantiles_ = _compute_quantiles(
                 true_label_cumsum_proba_reg,
                 alpha_np
             )
@@ -447,8 +447,8 @@ class RAPSConformityScore(APSConformityScore):
         # y_pred_proba_raps = cast(NDArray, y_pred_proba_raps)
         # position_raps = cast(NDArray, position_raps)
 
-        check_alpha_and_n_samples(alpha_np, self.X_raps.shape[0])
-        self.k_star = compute_quantiles(
+        _check_alpha_and_n_samples(alpha_np, self.X_raps.shape[0])
+        self.k_star = _compute_quantiles(
             self.position_raps,
             alpha_np
         ) + 1
@@ -472,7 +472,7 @@ class RAPSConformityScore(APSConformityScore):
                 self.cutoff
             )
         )
-        quantiles_ = compute_quantiles(
+        quantiles_ = _compute_quantiles(
             conformity_scores_regularized,
             alpha_np
         )

@@ -11,8 +11,8 @@ from sklearn.utils.validation import check_is_fitted
 from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression.regression import _MapieRegressor
-from mapie.utils import check_alpha, check_gamma
-from mapie_v1.utils import transform_confidence_level_to_alpha_list
+from mapie.utils import _check_alpha, _check_gamma
+from mapie.utils import _transform_confidence_level_to_alpha_list
 
 
 class TimeSeriesRegressor(_MapieRegressor):
@@ -221,7 +221,7 @@ class TimeSeriesRegressor(_MapieRegressor):
             self.current_alpha: dict[float, float] = {}
 
         if alpha is not None:
-            alpha_np = cast(NDArray, check_alpha(alpha))
+            alpha_np = cast(NDArray, _check_alpha(alpha))
             alpha_np = np.round(alpha_np, 2)
             for ix, alpha_checked in enumerate(alpha_np):
                 alpha_np[ix] = self.current_alpha.setdefault(
@@ -294,7 +294,7 @@ class TimeSeriesRegressor(_MapieRegressor):
             )
 
         check_is_fitted(self, self.fit_attributes)
-        check_gamma(gamma)
+        _check_gamma(gamma)
         X, y = cast(NDArray, X), cast(NDArray, y)
 
         self._get_alpha()
@@ -473,9 +473,11 @@ class TimeSeriesRegressor(_MapieRegressor):
     def _transform_confidence_level_to_alpha_array(
         confidence_level: Optional[Union[float, Iterable[float]]] = None
     ) -> Optional[NDArray]:
-        confidence_level = cast(Optional[NDArray], check_alpha(confidence_level))
+        confidence_level = cast(Optional[NDArray], _check_alpha(confidence_level))
         if confidence_level is None:
             alpha = None
         else:
-            alpha = np.array(transform_confidence_level_to_alpha_list(confidence_level))
+            alpha = np.array(
+                _transform_confidence_level_to_alpha_list(confidence_level)
+            )
         return alpha

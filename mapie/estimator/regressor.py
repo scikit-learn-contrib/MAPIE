@@ -11,8 +11,8 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from numpy.typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
-from mapie.utils import (check_nan_in_aposteriori_prediction, check_no_agg_cv,
-                         fit_estimator)
+from mapie.utils import (_check_nan_in_aposteriori_prediction, _check_no_agg_cv,
+                         _fit_estimator)
 
 
 class EnsembleRegressor:
@@ -212,7 +212,7 @@ class EnsembleRegressor:
             sample_weight = _safe_indexing(sample_weight, train_index)
             sample_weight = cast(NDArray, sample_weight)
 
-        estimator = fit_estimator(
+        estimator = _fit_estimator(
             estimator,
             X_train,
             y_train,
@@ -400,7 +400,7 @@ class EnsembleRegressor:
                 if self.use_split_method_:
                     y_pred = pred_matrix.flatten()
                 else:
-                    check_nan_in_aposteriori_prediction(pred_matrix)
+                    _check_nan_in_aposteriori_prediction(pred_matrix)
                     y_pred = aggregate_all(self.agg_function, pred_matrix)
 
         return y_pred
@@ -528,7 +528,7 @@ class EnsembleRegressor:
         **fit_params
     ) -> EnsembleRegressor:
 
-        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+        self.use_split_method_ = _check_no_agg_cv(X, self.cv, self.no_agg_cv_)
         single_estimator_: RegressorMixin
 
         if self.cv == "prefit":

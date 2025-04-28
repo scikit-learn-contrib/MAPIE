@@ -98,7 +98,7 @@ Utils (from mapie_v1)
    :toctree: generated/
    :template: function.rst
 
-   mapie_v1.utils.train_conformalize_test_split
+   mapie.utils.train_conformalize_test_split
 
 Conformity Scores (Regression)
 ==============================

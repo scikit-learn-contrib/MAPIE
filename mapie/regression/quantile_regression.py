@@ -13,19 +13,19 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
 from numpy.typing import ArrayLike, NDArray
-from mapie.utils import (check_alpha_and_n_samples,
-                         check_defined_variables_predict_cqr,
-                         check_estimator_fit_predict, check_lower_upper_bounds,
-                         check_null_weight, fit_estimator)
+from mapie.utils import (_check_alpha_and_n_samples,
+                         _check_defined_variables_predict_cqr,
+                         _check_estimator_fit_predict, _check_lower_upper_bounds,
+                         _check_null_weight, _fit_estimator)
 
 from .regression import _MapieRegressor
-from mapie_v1.utils import (
-    cast_predictions_to_ndarray_tuple,
-    prepare_params,
-    prepare_fit_params_and_sample_weight,
-    raise_error_if_previous_method_not_called,
-    raise_error_if_method_already_called,
-    raise_error_if_fit_called_in_prefit_mode, transform_confidence_level_to_alpha,
+from mapie.utils import (
+    _cast_predictions_to_ndarray_tuple,
+    _prepare_params,
+    _prepare_fit_params_and_sample_weight,
+    _raise_error_if_previous_method_not_called,
+    _raise_error_if_method_already_called,
+    _raise_error_if_fit_called_in_prefit_mode, _transform_confidence_level_to_alpha,
 )
 
 
@@ -75,7 +75,7 @@ class ConformalizedQuantileRegressor:
     Examples
     --------
     >>> from mapie.regression import ConformalizedQuantileRegressor
-    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> from mapie.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_regression
     >>> from sklearn.model_selection import train_test_split
     >>> from sklearn.linear_model import QuantileRegressor
@@ -108,7 +108,7 @@ class ConformalizedQuantileRegressor:
         confidence_level: float = 0.9,
         prefit: bool = False,
     ) -> None:
-        self._alpha = transform_confidence_level_to_alpha(confidence_level)
+        self._alpha = _transform_confidence_level_to_alpha(confidence_level)
         self._prefit = prefit
         self._is_fitted = prefit
         self._is_conformalized = False
@@ -152,10 +152,10 @@ class ConformalizedQuantileRegressor:
         Self
             The fitted ConformalizedQuantileRegressor instance.
         """
-        raise_error_if_fit_called_in_prefit_mode(self._prefit)
-        raise_error_if_method_already_called("fit", self._is_fitted)
+        _raise_error_if_fit_called_in_prefit_mode(self._prefit)
+        _raise_error_if_method_already_called("fit", self._is_fitted)
 
-        fit_params_, self._sample_weight = prepare_fit_params_and_sample_weight(
+        fit_params_, self._sample_weight = _prepare_fit_params_and_sample_weight(
             fit_params
         )
         self._mapie_quantile_regressor._initialize_fit_conformalize()
@@ -197,17 +197,17 @@ class ConformalizedQuantileRegressor:
         Self
             The ConformalizedQuantileRegressor instance.
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "conformalize",
             "fit",
             self._is_fitted,
         )
-        raise_error_if_method_already_called(
+        _raise_error_if_method_already_called(
             "conformalize",
             self._is_conformalized,
         )
 
-        self._predict_params = prepare_params(predict_params)
+        self._predict_params = _prepare_params(predict_params)
         self._mapie_quantile_regressor.conformalize(
             X_conformalize,
             y_conformalize,
@@ -259,7 +259,7 @@ class ConformalizedQuantileRegressor:
             - Prediction points, of shape ``(n_samples,)``
             - Prediction intervals, of shape ``(n_samples, 2, 1)``
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict_interval",
             "conformalize",
             self._is_conformalized,
@@ -272,7 +272,7 @@ class ConformalizedQuantileRegressor:
             symmetry=symmetric_correction,
             **self._predict_params
         )
-        return cast_predictions_to_ndarray_tuple(predictions)
+        return _cast_predictions_to_ndarray_tuple(predictions)
 
     def predict(
         self,
@@ -291,7 +291,7 @@ class ConformalizedQuantileRegressor:
         NDArray
             Array of point predictions with shape ``(n_samples,)``.
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict",
             "conformalize",
             self._is_conformalized,
@@ -545,7 +545,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
                 solver="highs-ds",
                 alpha=0.0,
             )
-        check_estimator_fit_predict(estimator)
+        _check_estimator_fit_predict(estimator)
         if isinstance(estimator, Pipeline):
             self._check_estimator(estimator[-1])
             return estimator
@@ -695,7 +695,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
             )
         if len(estimator) == 3:
             for est in estimator:
-                check_estimator_fit_predict(est)
+                _check_estimator_fit_predict(est)
                 check_is_fitted(est)
         else:
             raise ValueError(
@@ -887,7 +887,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         X, y = indexable(X, y)
         y = _check_y(y)
 
-        sample_weight, X, y = check_null_weight(
+        sample_weight, X, y = _check_null_weight(
             sample_weight, X, y
         )
 
@@ -910,7 +910,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
                 cloned_estimator_.set_params(**params)
 
             self.estimators_.append(
-                fit_estimator(
+                _fit_estimator(
                     cloned_estimator_,
                     X,
                     y,
@@ -938,7 +938,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         y_calib = _check_y(y_calib)
 
         self.n_calib_samples = _num_samples(y_calib)
-        check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
+        _check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
 
         y_calib_preds = np.full(
                 shape=(3, self.n_calib_samples),
@@ -1012,9 +1012,9 @@ class _MapieQuantileRegressor(_MapieRegressor):
               - [:, 1, :]: Upper bound of the prediction interval.
         """
         check_is_fitted(self, self.fit_attributes)
-        check_defined_variables_predict_cqr(ensemble, alpha)
+        _check_defined_variables_predict_cqr(ensemble, alpha)
         alpha = self.alpha if symmetry else self.alpha/2
-        check_alpha_and_n_samples(alpha, self.n_calib_samples)
+        _check_alpha_and_n_samples(alpha, self.n_calib_samples)
 
         n = self.n_calib_samples
         q = (1 - (alpha)) * (1 + (1 / n))
@@ -1026,7 +1026,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         )
         for i, est in enumerate(self.estimators_):
             y_preds[i] = est.predict(X, **predict_params)
-        check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
+        _check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
         if symmetry:
             quantile = np.full(
                 2,
@@ -1047,5 +1047,5 @@ class _MapieQuantileRegressor(_MapieRegressor):
             )
         y_pred_low = y_preds[0][:, np.newaxis] - quantile[0]
         y_pred_up = y_preds[1][:, np.newaxis] + quantile[1]
-        check_lower_upper_bounds(y_pred_low, y_pred_up, y_preds[2])
+        _check_lower_upper_bounds(y_pred_low, y_pred_up, y_preds[2])
         return y_preds[2], np.stack([y_pred_low, y_pred_up], axis=1)

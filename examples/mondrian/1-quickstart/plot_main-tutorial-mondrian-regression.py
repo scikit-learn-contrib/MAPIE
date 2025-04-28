@@ -45,7 +45,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 
 from mapie.metrics.regression import regression_coverage_score
-from mapie_v1.utils import train_conformalize_test_split
+from mapie.utils import train_conformalize_test_split
 from mapie.regression import SplitConformalRegressor
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"

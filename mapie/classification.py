@@ -25,21 +25,21 @@ from mapie.conformity_scores.utils import (
     check_target
 )
 from mapie.estimator.classifier import EnsembleClassifier
-from mapie.utils import (check_alpha, check_alpha_and_n_samples, check_cv,
-                         check_estimator_classification, check_n_features_in,
-                         check_n_jobs, check_null_weight, check_predict_params,
-                         check_verbose)
+from mapie.utils import (_check_alpha, _check_alpha_and_n_samples, _check_cv,
+                         _check_estimator_classification, _check_n_features_in,
+                         _check_n_jobs, _check_null_weight, _check_predict_params,
+                         _check_verbose)
 from mapie_v1.conformity_scores._utils import check_and_select_conformity_score
-from mapie_v1.utils import (
-    transform_confidence_level_to_alpha_list,
-    raise_error_if_fit_called_in_prefit_mode,
-    raise_error_if_method_already_called,
-    prepare_params,
-    raise_error_if_previous_method_not_called,
-    cast_predictions_to_ndarray_tuple,
-    cast_point_predictions_to_ndarray,
-    check_cv_not_string,
-    prepare_fit_params_and_sample_weight,
+from mapie.utils import (
+    _transform_confidence_level_to_alpha_list,
+    _raise_error_if_fit_called_in_prefit_mode,
+    _raise_error_if_method_already_called,
+    _prepare_params,
+    _raise_error_if_previous_method_not_called,
+    _cast_predictions_to_ndarray_tuple,
+    _cast_point_predictions_to_ndarray,
+    _check_cv_not_string,
+    _prepare_fit_params_and_sample_weight,
 )
 
 
@@ -95,7 +95,7 @@ class SplitConformalClassifier:
     Examples
     --------
     >>> from mapie.classification import SplitConformalClassifier
-    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> from mapie.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_classification
     >>> from sklearn.neighbors import KNeighborsClassifier
 
@@ -127,7 +127,7 @@ class SplitConformalClassifier:
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         self._estimator = estimator
-        self._alphas = transform_confidence_level_to_alpha_list(
+        self._alphas = _transform_confidence_level_to_alpha_list(
             confidence_level
         )
         self._conformity_score = check_and_select_conformity_score(
@@ -176,11 +176,11 @@ class SplitConformalClassifier:
         Self
             The fitted SplitConformalClassifier instance.
         """
-        raise_error_if_fit_called_in_prefit_mode(self._prefit)
-        raise_error_if_method_already_called("fit", self._is_fitted)
+        _raise_error_if_fit_called_in_prefit_mode(self._prefit)
+        _raise_error_if_method_already_called("fit", self._is_fitted)
 
         cloned_estimator = clone(self._estimator)
-        fit_params_ = prepare_params(fit_params)
+        fit_params_ = _prepare_params(fit_params)
         cloned_estimator.fit(X_train, y_train, **fit_params_)
         self._mapie_classifier.estimator = cloned_estimator
 
@@ -215,17 +215,17 @@ class SplitConformalClassifier:
         Self
             The conformalized SplitConformalClassifier instance.
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "conformalize",
             "fit",
             self._is_fitted,
         )
-        raise_error_if_method_already_called(
+        _raise_error_if_method_already_called(
             "conformalize",
             self._is_conformalized,
         )
 
-        self._predict_params = prepare_params(predict_params)
+        self._predict_params = _prepare_params(predict_params)
         self._mapie_classifier.fit(
             X_conformalize,
             y_conformalize,
@@ -268,19 +268,19 @@ class SplitConformalClassifier:
             - Prediction labels, of shape ``(n_samples,)``
             - Prediction sets, of shape ``(n_samples, n_class, n_confidence_levels)``
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict_set",
             "conformalize",
             self._is_conformalized,
         )
-        conformity_score_params_ = prepare_params(conformity_score_params)
+        conformity_score_params_ = _prepare_params(conformity_score_params)
         predictions = self._mapie_classifier.predict(
             X,
             alpha=self._alphas,
             include_last_label=conformity_score_params_.get("include_last_label", True),
             **self._predict_params,
         )
-        return cast_predictions_to_ndarray_tuple(predictions)
+        return _cast_predictions_to_ndarray_tuple(predictions)
 
     def predict(self, X: ArrayLike) -> NDArray:
         """
@@ -296,7 +296,7 @@ class SplitConformalClassifier:
         NDArray
             Array of predicted labels, with shape ``(n_samples,)``.
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict",
             "conformalize",
             self._is_conformalized,
@@ -306,7 +306,7 @@ class SplitConformalClassifier:
             alpha=None,
             **self._predict_params,
         )
-        return cast_point_predictions_to_ndarray(predictions)
+        return _cast_point_predictions_to_ndarray(predictions)
 
 
 class CrossConformalClassifier:
@@ -395,7 +395,7 @@ class CrossConformalClassifier:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
-        check_cv_not_string(cv)
+        _check_cv_not_string(cv)
 
         self._mapie_classifier = _MapieClassifier(
             estimator=estimator,
@@ -409,7 +409,7 @@ class CrossConformalClassifier:
             random_state=random_state,
         )
 
-        self._alphas = transform_confidence_level_to_alpha_list(
+        self._alphas = _transform_confidence_level_to_alpha_list(
             confidence_level
         )
         self.is_fitted_and_conformalized = False
@@ -453,15 +453,15 @@ class CrossConformalClassifier:
         Self
             This CrossConformalClassifier instance, fitted and conformalized.
         """
-        raise_error_if_method_already_called(
+        _raise_error_if_method_already_called(
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
 
-        fit_params_, sample_weight = prepare_fit_params_and_sample_weight(
+        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(
             fit_params
         )
-        self._predict_params = prepare_params(predict_params)
+        self._predict_params = _prepare_params(predict_params)
         self._mapie_classifier.fit(
             X=X,
             y=y,
@@ -521,13 +521,13 @@ class CrossConformalClassifier:
             - Prediction labels, of shape ``(n_samples,)``
             - Prediction sets, of shape ``(n_samples, n_class, n_confidence_levels)``
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict_set",
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
 
-        conformity_score_params_ = prepare_params(conformity_score_params)
+        conformity_score_params_ = _prepare_params(conformity_score_params)
         predictions = self._mapie_classifier.predict(
             X,
             alpha=self._alphas,
@@ -535,7 +535,7 @@ class CrossConformalClassifier:
             agg_scores=agg_scores,
             **self._predict_params,
         )
-        return cast_predictions_to_ndarray_tuple(predictions)
+        return _cast_predictions_to_ndarray_tuple(predictions)
 
     def predict(self, X: ArrayLike) -> NDArray:
         """
@@ -551,7 +551,7 @@ class CrossConformalClassifier:
         NDArray
             Array of predicted labels, with shape ``(n_samples,)``.
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict",
             "fit_conformalize",
             self.is_fitted_and_conformalized,
@@ -559,7 +559,7 @@ class CrossConformalClassifier:
         predictions = self._mapie_classifier.predict(
             X, alpha=None, **self._predict_params,
         )
-        return cast_point_predictions_to_ndarray(predictions)
+        return _cast_point_predictions_to_ndarray(predictions)
 
 
 class _MapieClassifier(ClassifierMixin, BaseEstimator):
@@ -783,8 +783,8 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         ValueError
             If parameters are not valid.
         """
-        check_n_jobs(self.n_jobs)
-        check_verbose(self.verbose)
+        _check_n_jobs(self.n_jobs)
+        _check_verbose(self.verbose)
         check_random_state(self.random_state)
 
     def _get_classes_info(
@@ -898,7 +898,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             ``"base"``.
         """
         self._check_parameters()
-        cv = check_cv(
+        cv = _check_cv(
             self.cv, test_size=self.test_size, random_state=self.random_state
         )
         X, y = indexable(X, y)
@@ -906,12 +906,12 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
 
         sample_weight = cast(Optional[NDArray], sample_weight)
         groups = cast(Optional[NDArray], groups)
-        sample_weight, X, y = check_null_weight(sample_weight, X, y)
+        sample_weight, X, y = _check_null_weight(sample_weight, X, y)
 
         y = cast(NDArray, y)
 
-        estimator = check_estimator_classification(X, y, cv, self.estimator)
-        self.n_features_in_ = check_n_features_in(X, cv, estimator)
+        estimator = _check_estimator_classification(X, y, cv, self.estimator)
+        self.n_features_in_ = _check_n_features_in(X, cv, estimator)
 
         self.n_classes_, self.classes_ = self._get_classes_info(estimator, y)
         self.label_encoder_ = self._get_label_encoder()
@@ -1136,11 +1136,13 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         # Checks
 
         if hasattr(self, '_predict_params'):
-            check_predict_params(self._predict_params,
-                                 predict_params, self.cv)
+            _check_predict_params(
+                self._predict_params,
+                predict_params, self.cv
+            )
 
         check_is_fitted(self, self.fit_attributes)
-        alpha = cast(Optional[NDArray], check_alpha(alpha))
+        alpha = cast(Optional[NDArray], _check_alpha(alpha))
 
         # Estimate predictions
         y_pred = self.estimator_.single_estimator_.predict(X, **predict_params)
@@ -1152,7 +1154,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         # with  (n_test, n_classes, n_alpha or n_train_samples)
         n = len(self.conformity_scores_)
         alpha_np = cast(NDArray, alpha)
-        check_alpha_and_n_samples(alpha_np, n)
+        _check_alpha_and_n_samples(alpha_np, n)
 
         # Estimate prediction sets
         prediction_sets = self.conformity_score_function_.predict_set(

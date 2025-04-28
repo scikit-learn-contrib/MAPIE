@@ -5,13 +5,13 @@ from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import column_or_1d
 
 from mapie.utils import (
-    check_arrays_length,
-    check_array_nan,
-    check_array_inf,
-    check_array_shape_regression,
-    check_number_bins,
-    check_nb_intervals_sizes,
-    check_alpha,
+    _check_arrays_length,
+    _check_array_nan,
+    _check_array_inf,
+    _check_array_shape_regression,
+    _check_number_bins,
+    _check_nb_intervals_sizes,
+    _check_alpha,
 )
 
 
@@ -46,8 +46,8 @@ def regression_mean_width_score(
     """
     y_intervals = np.asarray(y_intervals, dtype=float)
 
-    check_array_nan(y_intervals)
-    check_array_inf(y_intervals)
+    _check_array_nan(y_intervals)
+    _check_array_inf(y_intervals)
 
     width = np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :])
     mean_width = width.mean(axis=0)
@@ -92,7 +92,7 @@ def regression_coverage_score(
     ---------
     >>> from mapie.metrics.regression import regression_coverage_score
     >>> from mapie.regression import SplitConformalRegressor
-    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> from mapie.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_regression
     >>> from sklearn.model_selection import train_test_split
     >>> from sklearn.linear_model import Ridge
@@ -114,13 +114,13 @@ def regression_coverage_score(
     >>> predicted_points, predicted_intervals = mapie_regressor.predict_interval(X_test)
     >>> coverage = regression_coverage_score(y_test, predicted_intervals)[0]
     """
-    check_arrays_length(y_true, y_intervals)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_intervals)
-    check_array_inf(y_intervals)
+    _check_arrays_length(y_true, y_intervals)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_intervals)
+    _check_array_inf(y_intervals)
 
-    y_intervals = check_array_shape_regression(y_true, y_intervals)
+    y_intervals = _check_array_shape_regression(y_true, y_intervals)
     if len(y_true.shape) != 2:
         y_true = cast(NDArray, column_or_1d(y_true))
         y_true = np.expand_dims(y_true, axis=1)
@@ -182,16 +182,16 @@ def regression_ssc(
     [[1. 1.]]
     """
     y_true = cast(NDArray, column_or_1d(y_true))
-    y_intervals = check_array_shape_regression(y_true, y_intervals)
-    check_number_bins(num_bins)
+    y_intervals = _check_array_shape_regression(y_true, y_intervals)
+    _check_number_bins(num_bins)
     widths = np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :])
-    check_nb_intervals_sizes(widths, num_bins)
+    _check_nb_intervals_sizes(widths, num_bins)
 
-    check_arrays_length(y_true, y_intervals)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_intervals)
-    check_array_inf(y_intervals)
+    _check_arrays_length(y_true, y_intervals)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_intervals)
+    _check_array_inf(y_intervals)
 
     indexes_sorted = np.argsort(widths, axis=0)
     indexes_bybins = np.array_split(indexes_sorted, num_bins, axis=0)
@@ -332,13 +332,13 @@ def hsic(
     [0.31787614 0.2962914 ]
     """
     y_true = cast(NDArray, column_or_1d(y_true))
-    y_intervals = check_array_shape_regression(y_true, y_intervals)
+    y_intervals = _check_array_shape_regression(y_true, y_intervals)
 
-    check_arrays_length(y_true, y_intervals)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_intervals)
-    check_array_inf(y_intervals)
+    _check_arrays_length(y_true, y_intervals)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_intervals)
+    _check_array_inf(y_intervals)
 
     kernel_sizes = cast(NDArray, column_or_1d(kernel_sizes))
     if len(kernel_sizes) != 2:
@@ -486,7 +486,7 @@ def coverage_width_based(
     y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
     y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
 
-    check_alpha(confidence_level)
+    _check_alpha(confidence_level)
 
     coverage_score = regression_coverage_score(
         y_true,
@@ -550,12 +550,12 @@ def regression_mwi_score(
     y_pred_low = np.minimum(y_pis[:, 0, 0], y_pis[:, 1, 0])
     y_pred_up = np.maximum(y_pis[:, 0, 0], y_pis[:, 1, 0])
 
-    check_arrays_length(y_true, y_pred_low, y_pred_up)
+    _check_arrays_length(y_true, y_pred_low, y_pred_up)
 
     # Checking for NaN and inf values
     for array in (y_true, y_pred_low, y_pred_up):
-        check_array_nan(array)
-        check_array_inf(array)
+        _check_array_nan(array)
+        _check_array_inf(array)
 
     width = np.sum(y_pred_up) - np.sum(y_pred_low)  # type: ignore
     error_above: float = np.sum((y_true - y_pred_up)[y_true > y_pred_up])
