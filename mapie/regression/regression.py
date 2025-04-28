@@ -720,14 +720,7 @@ class JackknifeAfterBootstrapRegressor:
             JackknifeAfterBootstrapRegressor._VALID_AGGREGATION_METHODS
         )
 
-        if isinstance(resampling, int):
-            cv = Subsample(n_resamplings=resampling)
-        elif isinstance(resampling, Subsample):
-            cv = resampling
-        else:
-            raise ValueError(
-                "resampling must be an integer or a Subsample instance"
-            )
+        cv = self._check_and_convert_resampling_to_cv(resampling)
 
         self._mapie_regressor = MapieRegressor(
             estimator=estimator,
@@ -900,6 +893,20 @@ class JackknifeAfterBootstrapRegressor:
             X, alpha=None, ensemble=ensemble, **self._predict_params,
         )
         return cast_point_predictions_to_ndarray(predictions)
+
+    @staticmethod
+    def _check_and_convert_resampling_to_cv(
+        resampling: Union[int, Subsample]
+    ) -> Subsample:
+        if isinstance(resampling, int):
+            cv = Subsample(n_resamplings=resampling)
+        elif isinstance(resampling, Subsample):
+            cv = resampling
+        else:
+            raise ValueError(
+                "resampling must be an integer or a Subsample instance"
+            )
+        return cv
 
 
 class MapieRegressor(RegressorMixin, BaseEstimator):
