@@ -299,7 +299,7 @@ class TimeSeriesRegressor(MapieRegressor):
         X, y = cast(NDArray, X), cast(NDArray, y)
 
         self._get_alpha()
-        alpha = self.transform_confidence_level_to_alpha_array(confidence_level)
+        alpha = self._transform_confidence_level_to_alpha_array(confidence_level)
         if alpha is None:
             alpha = np.array(list(self.current_alpha.keys()))
         alpha_np = cast(NDArray, alpha)
@@ -454,7 +454,7 @@ class TimeSeriesRegressor(MapieRegressor):
               - [:, 0, :]: Lower bound of the prediction interval.
               - [:, 1, :]: Upper bound of the prediction interval.
         """
-        alpha = self.transform_confidence_level_to_alpha_array(confidence_level)
+        alpha = self._transform_confidence_level_to_alpha_array(confidence_level)
         if alpha is None:
             super().predict(
                 X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
@@ -471,7 +471,7 @@ class TimeSeriesRegressor(MapieRegressor):
     # The public API changed from alpha to confidence_level.
     # TODO: refactor this class to use confidence_level everywhere
     @staticmethod
-    def transform_confidence_level_to_alpha_array(
+    def _transform_confidence_level_to_alpha_array(
         confidence_level: Optional[Union[float, Iterable[float]]] = None
     ) -> Optional[NDArray]:
         confidence_level = cast(Optional[NDArray], check_alpha(confidence_level))

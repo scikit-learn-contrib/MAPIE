@@ -268,12 +268,6 @@ Functions update
 The ``adapt_conformal_inference``, ``update``, ``predict`` and ``coverage_width_based`` functions of the class now
 take ``confidence_level`` as input, instead of ``alpha`` (``confidence_level`` is equivalent to ``1 - alpha``).
 
-New function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A new function, named ``transform_confidence_level_to_alpha_array``, has been added to the ``TimeSeriesRegressor``
-class to facilitate the conversion from ``confidence_level`` to ``alpha``.
-
 
 7. MondrianCP class suppression
 ----------------------------------------------------------------------------------------
