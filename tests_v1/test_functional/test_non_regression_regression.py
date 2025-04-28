@@ -20,8 +20,8 @@ from mapie.regression import SplitConformalRegressor, \
     JackknifeAfterBootstrapRegressor, \
     ConformalizedQuantileRegressor
 
-from mapie.regression import MapieRegressor
-from mapie.regression import MapieQuantileRegressor
+from mapie.regression.regression import _MapieRegressor
+from mapie.regression.quantile_regression import _MapieQuantileRegressor
 from tests_v1.test_functional.utils import filter_params, train_test_split_shuffle
 from sklearn.model_selection import LeaveOneOut, GroupKFold
 
@@ -270,7 +270,7 @@ params_test_cases_jackknife = [
 
 def run_v0_pipeline_cross_or_jackknife(params):
     params_ = params["v0"]
-    mapie_regressor = MapieRegressor(**params_.get("__init__", {}))
+    mapie_regressor = _MapieRegressor(**params_.get("__init__", {}))
 
     mapie_regressor.fit(X, y, **params_.get("fit", {}))
     preds, pred_intervals = mapie_regressor.predict(X, **params_.get("predict", {}))
@@ -430,7 +430,7 @@ def test_intervals_and_predictions_exact_equality_split(params_split: dict) -> N
     prefit = v1_params.get("prefit", False)
 
     compare_model_predictions_and_intervals(
-        model_v0=MapieRegressor,
+        model_v0=_MapieRegressor,
         model_v1=SplitConformalRegressor,
         X=X,
         y=y,
@@ -547,7 +547,7 @@ def test_intervals_and_predictions_exact_equality_quantile(
     prefit = v1_params.get("prefit", False)
 
     compare_model_predictions_and_intervals(
-        model_v0=MapieQuantileRegressor,
+        model_v0=_MapieQuantileRegressor,
         model_v1=ConformalizedQuantileRegressor,
         X=X,
         y=y,
@@ -560,7 +560,7 @@ def test_intervals_and_predictions_exact_equality_quantile(
 
 
 def compare_model_predictions_and_intervals(
-    model_v0: Type[MapieRegressor],
+    model_v0: Type[_MapieRegressor],
     model_v1: Type[Union[
         SplitConformalRegressor,
         CrossConformalRegressor,

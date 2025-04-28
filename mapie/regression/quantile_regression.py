@@ -18,7 +18,7 @@ from mapie.utils import (check_alpha_and_n_samples,
                          check_estimator_fit_predict, check_lower_upper_bounds,
                          check_null_weight, fit_estimator)
 
-from .regression import MapieRegressor
+from .regression import _MapieRegressor
 from mapie_v1.utils import (
     cast_predictions_to_ndarray_tuple,
     prepare_params,
@@ -113,7 +113,7 @@ class ConformalizedQuantileRegressor:
         self._is_fitted = prefit
         self._is_conformalized = False
 
-        self._mapie_quantile_regressor = MapieQuantileRegressor(
+        self._mapie_quantile_regressor = _MapieQuantileRegressor(
             estimator=estimator,
             method="quantile",
             cv="prefit" if prefit else "split",
@@ -302,8 +302,12 @@ class ConformalizedQuantileRegressor:
         return predictions
 
 
-class MapieQuantileRegressor(MapieRegressor):
+class _MapieQuantileRegressor(_MapieRegressor):
     """
+    Note to users: _MapieQuantileRegressor is now private, and may change at any time.
+    Please use ConformalizedQuantileRegressor instead.
+    See the v1 migration guide for more information.
+
     This class implements the conformalized quantile regression strategy
     as proposed by Romano et al. (2019) to make conformal predictions.
 
@@ -372,12 +376,12 @@ class MapieQuantileRegressor(MapieRegressor):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.regression import MapieQuantileRegressor
+    >>> from mapie.regression.regression import _MapieQuantileRegressor
     >>> X_train = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_train = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> X_calib = np.array([[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]])
     >>> y_calib = np.array([5, 7, 9, 4, 8, 1, 5, 7.5, 9.5, 12])
-    >>> mapie_reg = MapieQuantileRegressor().fit(
+    >>> mapie_reg = _MapieQuantileRegressor().fit(
     ...     X_train,
     ...     y_train,
     ...     X_calib=X_calib,
@@ -496,7 +500,7 @@ class MapieQuantileRegressor(MapieRegressor):
         """
         Perform several checks on the estimator to check if it has
         all the required specifications to be used with this methodology.
-        The estimators that can be used in MapieQuantileRegressor need to
+        The estimators that can be used in _MapieQuantileRegressor need to
         have a ``fit`` and ``predict`` attribute, but also need to allow
         a quantile loss and therefore also setting a quantile value.
         Note that there is a ``TypedDict`` to check which methods allow for
@@ -530,7 +534,7 @@ class MapieQuantileRegressor(MapieRegressor):
 
         ValueError
             There is no quantile ``"loss_name"`` and therefore this estimator
-            can not be used as a ``MapieQuantileRegressor``.
+            can not be used as a ``_MapieQuantileRegressor``.
 
         ValueError
             The parameter to set the alpha value does not exist in this
@@ -714,7 +718,7 @@ class MapieQuantileRegressor(MapieRegressor):
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
         **fit_params,
-    ) -> MapieQuantileRegressor:
+    ) -> _MapieQuantileRegressor:
         """
         Fit estimator and compute residuals used for prediction intervals.
         All the clones of the estimators for different quantile values are
@@ -786,7 +790,7 @@ class MapieQuantileRegressor(MapieRegressor):
 
         Returns
         -------
-        MapieQuantileRegressor
+        _MapieQuantileRegressor
              The model itself.
         """
         self._initialize_fit_conformalize()
@@ -922,10 +926,10 @@ class MapieQuantileRegressor(MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        # Parameter groups kept for compliance with superclass MapieRegressor
+        # Parameter groups kept for compliance with superclass _MapieRegressor
         groups: Optional[ArrayLike] = None,
         **kwargs: Any,
-    ) -> MapieRegressor:
+    ) -> _MapieRegressor:
         if self.cv == "prefit":
             self._initialize_and_check_prefit_estimators()
 
