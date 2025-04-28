@@ -26,6 +26,7 @@ import numpy as np
 from sklearn.naive_bayes import GaussianNB
 
 from mapie.classification import _MapieClassifier
+from mapie.conformity_scores import LACConformityScore
 
 # Create training set from multivariate normal distribution
 centers = [(0, 3.5), (-2, 0), (2, 0)]
@@ -56,7 +57,11 @@ clf = GaussianNB().fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
-mapie = _MapieClassifier(estimator=clf, cv="prefit", method="lac")
+mapie = _MapieClassifier(
+    estimator=clf,
+    cv="prefit",
+    conformity_score=LACConformityScore()
+)
 mapie.fit(X_train, y_train)
 y_pred_mapie, y_ps_mapie = mapie.predict(X_test, alpha=alpha)
 

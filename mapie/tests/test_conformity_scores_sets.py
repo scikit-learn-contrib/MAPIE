@@ -69,55 +69,6 @@ def test_check_classification_conformity_score(
     )
 
 
-@pytest.mark.parametrize("method", all_method_list)
-def test_check_classification_method(
-    method: Optional[str]
-) -> None:
-    """
-    Test that the function check_classification_conformity_score returns
-    an instance of BaseClassificationScore when using method.
-    """
-    assert isinstance(
-        check_classification_conformity_score(method=method),
-        BaseClassificationScore
-    )
-
-
-@pytest.mark.parametrize("method", valid_method_list)
-@pytest.mark.parametrize("conformity_score", cs_list)
-def test_check_conflict_parameters(
-    method: Optional[str],
-    conformity_score: Optional[BaseClassificationScore]
-) -> None:
-    """
-    Test that the function check_classification_conformity_score raises
-    a warning when both method and conformity_score are provided.
-    """
-    if conformity_score is None:
-        return
-    with pytest.warns(
-        UserWarning,
-        match="WARNING: the `conformity_score` parameter takes precedence*"
-    ):
-        check_classification_conformity_score(
-            method=method, conformity_score=conformity_score
-        )
-
-
-@pytest.mark.parametrize("method", wrong_method_list)
-def test_check_wrong_classification_method(
-    method: Optional[str]
-) -> None:
-    """
-    Test that the function check_classification_conformity_score raises
-    a ValueError when using a wrong method.
-    """
-    with pytest.raises(
-        ValueError, match="(Invalid method.)|(Invalid conformity score.)*"
-    ):
-        check_classification_conformity_score(method=method)
-
-
 @pytest.mark.parametrize("score", wrong_cs_list)
 def test_check_wrong_classification_score(
     score: Any
