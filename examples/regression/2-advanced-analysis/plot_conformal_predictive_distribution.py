@@ -27,7 +27,7 @@ from sklearn.linear_model import LinearRegression
 from mapie.conformity_scores import (AbsoluteConformityScore,
                                      ResidualNormalisedScore)
 from mapie.regression import SplitConformalRegressor
-from mapie_v1.utils import train_conformalize_test_split
+from mapie.utils import train_conformalize_test_split
 
 warnings.filterwarnings('ignore')
 

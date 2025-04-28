@@ -12,7 +12,7 @@ from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
 from numpy.typing import ArrayLike, NDArray
-from mapie.utils import compute_quantiles
+from mapie.utils import _compute_quantiles
 
 
 class APSConformityScore(NaiveConformityScore):
@@ -205,7 +205,7 @@ class APSConformityScore(NaiveConformityScore):
         n = len(conformity_scores)
 
         if estimator.cv == "prefit" or agg_scores in ["mean"]:
-            quantiles_ = compute_quantiles(conformity_scores, alpha_np)
+            quantiles_ = _compute_quantiles(conformity_scores, alpha_np)
         else:
             quantiles_ = (n + 1) * (1 - alpha_np)
 

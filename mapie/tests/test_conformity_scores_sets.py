@@ -13,7 +13,7 @@ from mapie.conformity_scores.sets import (
     RAPSConformityScore, TopKConformityScore
 )
 from mapie.conformity_scores.utils import check_classification_conformity_score
-from mapie.utils import check_alpha
+from mapie.utils import _check_alpha
 
 
 random_state = 42
@@ -228,7 +228,7 @@ def test_get_last_included_proba_shape(k_lambda, include_last_label):
         thresholds = .2
     else:
         thresholds = np.random.rand(len(k))
-    thresholds = cast(NDArray, check_alpha(thresholds))
+    thresholds = cast(NDArray, _check_alpha(thresholds))
     clf = LogisticRegression()
     clf.fit(X, y)
     y_pred_proba = clf.predict_proba(X)
