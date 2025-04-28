@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import binom
 
 from numpy.typing import NDArray
-from mapie.utils import check_alpha
+from mapie.utils import _check_alpha
 
 
 def compute_hoeffdding_bentkus_p_value(
@@ -49,7 +49,7 @@ def compute_hoeffdding_bentkus_p_value(
     M. I., & Lei, L. (2021). Learn then test:
     "Calibrating predictive algorithms to achieve risk control".
     """
-    alpha_np = cast(NDArray, check_alpha(alpha))
+    alpha_np = cast(NDArray, _check_alpha(alpha))
     alpha_np = alpha_np[:, np.newaxis]
     r_hat_repeat = np.repeat(
         np.expand_dims(r_hat, axis=1),

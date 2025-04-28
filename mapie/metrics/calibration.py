@@ -4,13 +4,13 @@ from sklearn.utils import check_random_state
 from mapie._machine_precision import EPSILON
 from numpy.typing import NDArray
 from mapie.utils import (
-    calc_bins,
-    check_array_inf,
-    check_array_nan,
-    check_arrays_length,
-    check_binary_zero_one,
-    check_number_bins,
-    check_split_strategy,
+    _calc_bins,
+    _check_array_inf,
+    _check_array_nan,
+    _check_arrays_length,
+    _check_binary_zero_one,
+    _check_number_bins,
+    _check_split_strategy,
 )
 
 
@@ -53,16 +53,16 @@ def expected_calibration_error(
     float
         The score of ECE (Expected Calibration Error).
     """
-    split_strategy = check_split_strategy(split_strategy)
-    num_bins = check_number_bins(num_bins)
-    y_true_ = check_binary_zero_one(y_true)
+    split_strategy = _check_split_strategy(split_strategy)
+    num_bins = _check_number_bins(num_bins)
+    y_true_ = _check_binary_zero_one(y_true)
     y_scores = cast(NDArray, y_scores)
 
-    check_arrays_length(y_true_, y_scores)
-    check_array_nan(y_true_)
-    check_array_inf(y_true_)
-    check_array_nan(y_scores)
-    check_array_inf(y_scores)
+    _check_arrays_length(y_true_, y_scores)
+    _check_array_nan(y_true_)
+    _check_array_inf(y_true_)
+    _check_array_nan(y_scores)
+    _check_array_inf(y_scores)
 
     if np.size(y_scores.shape) == 2:
         y_score = cast(
@@ -71,7 +71,7 @@ def expected_calibration_error(
     else:
         y_score = cast(NDArray, column_or_1d(y_scores))
 
-    _, bin_accs, bin_confs, bin_sizes = calc_bins(
+    _, bin_accs, bin_confs, bin_sizes = _calc_bins(
         y_true_, y_score, num_bins, split_strategy
     )
 
@@ -128,22 +128,22 @@ def top_label_ece(
     """
     y_scores = cast(NDArray, y_scores)
     y_true = cast(NDArray, y_true)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_scores)
-    check_array_inf(y_scores)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_scores)
+    _check_array_inf(y_scores)
 
     if y_score_arg is None:
-        check_arrays_length(y_true, y_scores)
+        _check_arrays_length(y_true, y_scores)
     else:
         y_score_arg = cast(NDArray, y_score_arg)
-        check_array_nan(y_score_arg)
-        check_array_inf(y_score_arg)
-        check_arrays_length(y_true, y_scores, y_score_arg)
+        _check_array_nan(y_score_arg)
+        _check_array_inf(y_score_arg)
+        _check_arrays_length(y_true, y_scores, y_score_arg)
 
     ece = float(0.)
-    split_strategy = check_split_strategy(split_strategy)
-    num_bins = check_number_bins(num_bins)
+    split_strategy = _check_split_strategy(split_strategy)
+    num_bins = _check_number_bins(num_bins)
     y_true = cast(NDArray, column_or_1d(y_true))
     if y_score_arg is None:
         y_score = cast(
@@ -306,11 +306,11 @@ def cumulative_differences(
     >>> cum_diff
     array([-0.1, -0.3, -0.2])
     """
-    check_arrays_length(y_true, y_score)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_score)
-    check_array_inf(y_score)
+    _check_arrays_length(y_true, y_score)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_score)
+    _check_array_inf(y_score)
 
     n = len(y_true)
     y_score_jittered = add_jitter(
@@ -400,11 +400,11 @@ def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(kolmogorov_smirnov_statistic(y_true, y_score), 3))
     0.978
     """
-    check_arrays_length(y_true, y_score)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_score)
-    check_array_inf(y_score)
+    _check_arrays_length(y_true, y_score)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_score)
+    _check_array_inf(y_score)
 
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
@@ -509,11 +509,11 @@ def kolmogorov_smirnov_p_value(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(ks_p_value, 4))
     0.7857
     """
-    check_arrays_length(y_true, y_score)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_score)
-    check_array_inf(y_score)
+    _check_arrays_length(y_true, y_score)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_score)
+    _check_array_inf(y_score)
 
     ks_stat = kolmogorov_smirnov_statistic(y_true, y_score)
     ks_p_value = 1 - kolmogorov_smirnov_cdf(ks_stat)
@@ -559,11 +559,11 @@ def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(kuiper_statistic(y_true, y_score), 3))
     0.857
     """
-    check_arrays_length(y_true, y_score)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_score)
-    check_array_inf(y_score)
+    _check_arrays_length(y_true, y_score)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_score)
+    _check_array_inf(y_score)
 
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
@@ -677,11 +677,11 @@ def kuiper_p_value(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(ku_p_value, 4))
     0.9684
     """
-    check_arrays_length(y_true, y_score)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_score)
-    check_array_inf(y_score)
+    _check_arrays_length(y_true, y_score)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_score)
+    _check_array_inf(y_score)
 
     ku_stat = kuiper_statistic(y_true, y_score)
     ku_p_value = 1 - kuiper_cdf(ku_stat)
@@ -726,11 +726,11 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(spiegelhalter_statistic(y_true, y_score), 3))
     -0.757
     """
-    check_arrays_length(y_true, y_score)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_score)
-    check_array_inf(y_score)
+    _check_arrays_length(y_true, y_score)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_score)
+    _check_array_inf(y_score)
 
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
@@ -784,11 +784,11 @@ def spiegelhalter_p_value(y_true: NDArray, y_score: NDArray) -> float:
     >>> print(np.round(sp_p_value, 4))
     0.8486
     """
-    check_arrays_length(y_true, y_score)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_score)
-    check_array_inf(y_score)
+    _check_arrays_length(y_true, y_score)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_score)
+    _check_array_inf(y_score)
     sp_stat = spiegelhalter_statistic(y_true, y_score)
     sp_p_value = 1 - scipy.stats.norm.cdf(sp_stat)
     return sp_p_value

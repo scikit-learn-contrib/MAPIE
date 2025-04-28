@@ -26,7 +26,7 @@ from mapie.metrics.regression import (
     regression_ssc_score,
 )
 from mapie.regression import SplitConformalRegressor
-from mapie_v1.utils import train_conformalize_test_split
+from mapie.utils import train_conformalize_test_split
 
 warnings.filterwarnings("ignore")
 

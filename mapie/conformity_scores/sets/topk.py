@@ -10,7 +10,7 @@ from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
 from numpy.typing import NDArray
-from mapie.utils import compute_quantiles
+from mapie.utils import _compute_quantiles
 
 
 class TopKConformityScore(BaseClassificationScore):
@@ -143,7 +143,7 @@ class TopKConformityScore(BaseClassificationScore):
         NDArray
             Array of quantiles with respect to alpha_np.
         """
-        return compute_quantiles(conformity_scores, alpha_np)
+        return _compute_quantiles(conformity_scores, alpha_np)
 
     def get_prediction_sets(
         self,
