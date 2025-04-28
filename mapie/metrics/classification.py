@@ -5,10 +5,10 @@ from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import column_or_1d, check_array
 
 from mapie.utils import (
-    check_arrays_length,
-    check_array_nan,
-    check_array_inf,
-    check_array_shape_classification, check_nb_sets_sizes, check_number_bins,
+    _check_arrays_length,
+    _check_array_nan,
+    _check_array_inf,
+    _check_array_shape_classification, _check_nb_sets_sizes, _check_number_bins,
 )
 
 
@@ -57,11 +57,11 @@ def classification_coverage_score(
         )
     )
 
-    check_arrays_length(y_true, y_pred_set)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_pred_set)
-    check_array_inf(y_pred_set)
+    _check_arrays_length(y_true, y_pred_set)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_pred_set)
+    _check_array_inf(y_pred_set)
 
     coverage = np.take_along_axis(
         y_pred_set, y_true.reshape(-1, 1), axis=1
@@ -99,8 +99,8 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     [2.  1.8]
     """
     y_pred_set = np.asarray(y_pred_set, dtype=bool)
-    check_array_nan(y_pred_set)
-    check_array_inf(y_pred_set)
+    _check_array_nan(y_pred_set)
+    _check_array_inf(y_pred_set)
     width = y_pred_set.sum(axis=1)
     mean_width = width.mean(axis=0)
     return mean_width
@@ -143,7 +143,7 @@ def classification_coverage_score_v2(
     --------
     >>> from mapie.metrics.classification import classification_coverage_score_v2
     >>> from mapie.classification import SplitConformalClassifier
-    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> from mapie.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_classification
     >>> from sklearn.model_selection import train_test_split
     >>> from sklearn.neighbors import KNeighborsClassifier
@@ -165,13 +165,13 @@ def classification_coverage_score_v2(
     >>> predicted_points, predicted_sets = mapie_classifier.predict_set(X_test)
     >>> coverage = classification_coverage_score_v2(y_test, predicted_sets)[0]
     """
-    check_arrays_length(y_true, y_pred_set)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_pred_set)
-    check_array_inf(y_pred_set)
+    _check_arrays_length(y_true, y_pred_set)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_pred_set)
+    _check_array_inf(y_pred_set)
 
-    y_pred_set = check_array_shape_classification(y_true, y_pred_set)
+    y_pred_set = _check_array_shape_classification(y_true, y_pred_set)
     if len(y_true.shape) != 2:
         y_true = cast(NDArray, column_or_1d(y_true))
         y_true = np.expand_dims(y_true, axis=1)
@@ -230,21 +230,21 @@ def classification_ssc(
     [[1.         0.66666667]]
     """
     y_true = cast(NDArray, column_or_1d(y_true))
-    y_pred_set = check_array_shape_classification(y_true, y_pred_set)
+    y_pred_set = _check_array_shape_classification(y_true, y_pred_set)
 
-    check_arrays_length(y_true, y_pred_set)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_pred_set)
-    check_array_inf(y_pred_set)
+    _check_arrays_length(y_true, y_pred_set)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_pred_set)
+    _check_array_inf(y_pred_set)
 
     sizes = np.sum(y_pred_set, axis=1)
     n_classes = y_pred_set.shape[1]
     if num_bins is None:
         bins = list(range(n_classes + 1))
     else:
-        check_nb_sets_sizes(sizes, num_bins)
-        check_number_bins(num_bins)
+        _check_nb_sets_sizes(sizes, num_bins)
+        _check_number_bins(num_bins)
         bins = [
             b[0] for b in np.array_split(range(n_classes + 1), num_bins)
         ]
@@ -309,10 +309,10 @@ def classification_ssc_score(
     >>> print(classification_ssc_score(y_true, y_pred_set, num_bins=2))
     [0.66666667]
     """
-    check_arrays_length(y_true, y_pred_set)
-    check_array_nan(y_true)
-    check_array_inf(y_true)
-    check_array_nan(y_pred_set)
-    check_array_inf(y_pred_set)
+    _check_arrays_length(y_true, y_pred_set)
+    _check_array_nan(y_true)
+    _check_array_inf(y_true)
+    _check_array_nan(y_pred_set)
+    _check_array_inf(y_pred_set)
 
     return np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)

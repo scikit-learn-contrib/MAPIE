@@ -18,7 +18,7 @@ from numpy.typing import ArrayLike, NDArray
 from .control_risk.crc_rcps import find_lambda_star, get_r_hat_plus
 from .control_risk.ltt import find_lambda_control_star, ltt_procedure
 from .control_risk.risks import compute_risk_precision, compute_risk_recall
-from .utils import check_alpha, check_n_jobs, check_verbose
+from .utils import _check_alpha, _check_n_jobs, _check_verbose
 
 
 class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
@@ -183,8 +183,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         ValueError
             If parameters are not valid.
         """
-        check_n_jobs(self.n_jobs)
-        check_verbose(self.verbose)
+        _check_n_jobs(self.n_jobs)
+        _check_verbose(self.verbose)
         check_random_state(self.random_state)
 
     def _check_method(self) -> None:
@@ -648,7 +648,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         self._check_delta(delta)
         self._check_bound(bound)
-        alpha = cast(Optional[NDArray], check_alpha(alpha))
+        alpha = cast(Optional[NDArray], _check_alpha(alpha))
         check_is_fitted(self, self.fit_attributes)
 
         # Estimate prediction sets

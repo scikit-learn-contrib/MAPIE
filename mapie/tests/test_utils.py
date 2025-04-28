@@ -15,14 +15,14 @@ from sklearn.utils.validation import check_is_fitted
 
 from numpy.typing import ArrayLike, NDArray
 from mapie.regression.quantile_regression import _MapieQuantileRegressor
-from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_array_inf, check_array_nan, check_arrays_length,
-                         check_binary_zero_one, check_cv, check_gamma,
-                         check_lower_upper_bounds, check_n_features_in,
-                         check_n_jobs, check_n_samples, check_no_agg_cv,
-                         check_null_weight, check_number_bins,
-                         check_split_strategy, check_verbose,
-                         compute_quantiles, fit_estimator, get_binning_groups)
+from mapie.utils import (_check_alpha, _check_alpha_and_n_samples,
+                         _check_array_inf, _check_array_nan, _check_arrays_length,
+                         _check_binary_zero_one, _check_cv, _check_gamma,
+                         _check_lower_upper_bounds, _check_n_features_in,
+                         _check_n_jobs, _check_n_samples, _check_no_agg_cv,
+                         _check_null_weight, _check_number_bins,
+                         _check_split_strategy, _check_verbose,
+                         _compute_quantiles, _fit_estimator, _get_binning_groups)
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -75,7 +75,7 @@ class DumbEstimator:
 
 def test_check_null_weight_with_none() -> None:
     """Test that the function has no effect if sample weight is None."""
-    sw_out, X_out, y_out = check_null_weight(None, X_toy, y_toy)
+    sw_out, X_out, y_out = _check_null_weight(None, X_toy, y_toy)
     assert sw_out is None
     np.testing.assert_almost_equal(np.array(X_out), X_toy)
     np.testing.assert_almost_equal(np.array(y_out), y_toy)
@@ -84,7 +84,7 @@ def test_check_null_weight_with_none() -> None:
 def test_check_null_weight_with_nonzeros() -> None:
     """Test that the function has no effect if sample weight is never zero."""
     sample_weight = np.ones_like(y_toy)
-    sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
+    sw_out, X_out, y_out = _check_null_weight(sample_weight, X_toy, y_toy)
     np.testing.assert_almost_equal(np.array(sw_out), sample_weight)
     np.testing.assert_almost_equal(np.array(X_out), X_toy)
     np.testing.assert_almost_equal(np.array(y_out), y_toy)
@@ -94,7 +94,7 @@ def test_check_null_weight_with_zeros() -> None:
     """Test that the function reduces the shape if there are zeros."""
     sample_weight = np.ones_like(y_toy)
     sample_weight[:1] = 0.0
-    sw_out, X_out, y_out = check_null_weight(sample_weight, X_toy, y_toy)
+    sw_out, X_out, y_out = _check_null_weight(sample_weight, X_toy, y_toy)
     np.testing.assert_almost_equal(np.array(sw_out), np.array([1, 1, 1, 1, 1]))
     np.testing.assert_almost_equal(
         np.array(X_out), np.array([[1], [2], [3], [4], [5]])
@@ -111,7 +111,7 @@ def test_fit_estimator(
     sample_weight: Optional[NDArray]
 ) -> None:
     """Test that the returned estimator is always fitted."""
-    estimator = fit_estimator(estimator, X_toy, y_toy, sample_weight)
+    estimator = _fit_estimator(estimator, X_toy, y_toy, sample_weight)
     check_is_fitted(estimator)
 
 
@@ -120,8 +120,8 @@ def test_fit_estimator_sample_weight() -> None:
     X = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
     y = np.array([21, 7, 9, 11, 13, 15])
     sample_weight = np.array([5.0, 1.0, 1.0, 1.0, 1.0, 1.0])
-    estimator_1 = fit_estimator(LinearRegression(), X, y)
-    estimator_2 = fit_estimator(LinearRegression(), X, y, sample_weight)
+    estimator_1 = _fit_estimator(LinearRegression(), X, y)
+    estimator_2 = _fit_estimator(LinearRegression(), X, y, sample_weight)
     y_pred_1 = estimator_1.predict(X)
     y_pred_2 = estimator_2.predict(X)
     with pytest.raises(AssertionError):
@@ -132,7 +132,7 @@ def test_fit_estimator_sample_weight() -> None:
 def test_invalid_alpha(alpha: Any) -> None:
     """Test that invalid alphas raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid confidence_level.*"):
-        check_alpha(alpha=alpha)
+        _check_alpha(alpha=alpha)
 
 
 @pytest.mark.parametrize(
@@ -147,7 +147,7 @@ def test_invalid_alpha(alpha: Any) -> None:
 )
 def test_valid_alpha(alpha: Any) -> None:
     """Test that valid alphas raise no errors."""
-    check_alpha(alpha=alpha)
+    _check_alpha(alpha=alpha)
 
 
 @pytest.mark.parametrize("cv", ["prefit", None])
@@ -157,24 +157,24 @@ def test_check_n_features_in_estimator_without_attribute(cv: Any) -> None:
     but missing an n_features_in_ attribute raise no errors.
     """
     estimator = DumbEstimator()
-    n_features_in = check_n_features_in(X=X, cv=cv, estimator=estimator)
+    n_features_in = _check_n_features_in(X=X, cv=cv, estimator=estimator)
     assert n_features_in == n_features
 
 
 def test_check_n_features_in_X_1d_array() -> None:
     """
-    Test that check_n_features_in returns 1 for a one-dimensional array.
+    Test that _check_n_features_in returns 1 for a one-dimensional array.
     """
     X_1d = np.array([1, 2, 3, 4, 5])
-    n_features_in = check_n_features_in(X=X_1d)
+    n_features_in = _check_n_features_in(X=X_1d)
     assert n_features_in == 1
 
 
 def test_check_n_features_in_X_without_shape() -> None:
     """
-    Test that check_n_features_in handles objects without shape attribute.
+    Test that _check_n_features_in handles objects without shape attribute.
     """
-    n_features_in = check_n_features_in(X=[[1, 2], [3, 4], [5, 6]])
+    n_features_in = _check_n_features_in(X=[[1, 2], [3, 4], [5, 6]])
     assert n_features_in == 2
 
 
@@ -184,7 +184,7 @@ def test_check_n_features_in_invalid_prefit_estimator() -> None:
     """
     estimator = LinearRegression().fit(X, y)
     with pytest.raises(ValueError, match=r".*mismatch between.*"):
-        check_n_features_in(X_toy, cv="prefit", estimator=estimator)
+        _check_n_features_in(X_toy, cv="prefit", estimator=estimator)
 
 
 @pytest.mark.parametrize(
@@ -199,7 +199,7 @@ def test_check_n_features_in_invalid_prefit_estimator() -> None:
 def test_valid_calculation_of_quantile(alpha: Any) -> None:
     """Test that valid alphas raise no errors."""
     n = 30
-    check_alpha_and_n_samples(alpha, n)
+    _check_alpha_and_n_samples(alpha, n)
 
 
 @pytest.mark.parametrize(
@@ -217,40 +217,40 @@ def test_invalid_calculation_of_quantile(alpha: Any) -> None:
     with pytest.raises(
         ValueError, match=r".*Number of samples of the score is too low.*"
     ):
-        check_alpha_and_n_samples(alpha, n)
+        _check_alpha_and_n_samples(alpha, n)
 
 
 @pytest.mark.parametrize("n_jobs", ["dummy", 0, 1.5, [1, 2]])
 def test_invalid_n_jobs(n_jobs: Any) -> None:
     """Test that invalid n_jobs raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid n_jobs argument.*"):
-        check_n_jobs(n_jobs)
+        _check_n_jobs(n_jobs)
 
 
 @pytest.mark.parametrize("n_jobs", [-5, -1, 1, 4])
 def test_valid_n_jobs(n_jobs: Any) -> None:
     """Test that valid n_jobs raise no errors."""
-    check_n_jobs(n_jobs)
+    _check_n_jobs(n_jobs)
 
 
 @pytest.mark.parametrize("verbose", ["dummy", -1, 1.5, [1, 2]])
 def test_invalid_verbose(verbose: Any) -> None:
     """Test that invalid verboses raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid verbose argument.*"):
-        check_verbose(verbose)
+        _check_verbose(verbose)
 
 
 @pytest.mark.parametrize("verbose", [0, 10, 50])
 def test_valid_verbose(verbose: Any) -> None:
     """Test that valid verboses raise no errors."""
-    check_verbose(verbose)
+    _check_verbose(verbose)
 
 
 def test_initial_low_high_pred(caplog) -> None:
     """Test lower/upper predictions of the quantiles regression crossing"""
     y_preds = np.array([[4, 5, 2], [4, 4, 4], [2, 3, 4]])
     with caplog.at_level(logging.INFO):
-        check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
+        _check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
     assert "The predictions are ill-sorted" in caplog.text
 
 
@@ -262,7 +262,7 @@ def test_final_low_high_pred(caplog) -> None:
     y_pred_low = np.array([4, 7, 2])
     y_pred_up = np.array([3, 3, 3])
     with caplog.at_level(logging.INFO):
-        check_lower_upper_bounds(y_pred_low, y_pred_up, y_preds[2])
+        _check_lower_upper_bounds(y_pred_low, y_pred_up, y_preds[2])
     assert "The predictions are ill-sorted" in caplog.text
 
 
@@ -292,7 +292,7 @@ def test_compute_quantiles_value_error():
     alphas = [0.1, 0.2, 0.3]
 
     with pytest.raises(ValueError, match=r".*In case of the vector .*"):
-        compute_quantiles(vector, alphas)
+        _compute_quantiles(vector, alphas)
 
 
 @pytest.mark.parametrize("alphas", ALPHAS)
@@ -306,7 +306,7 @@ def test_compute_quantiles_2D_shape(alphas: NDArray):
         Levels of confidence.
     """
     vector = np.random.rand(1000, 1)
-    quantiles = compute_quantiles(vector, alphas)
+    quantiles = _compute_quantiles(vector, alphas)
 
     assert len(quantiles) == len(alphas)
 
@@ -318,7 +318,7 @@ def test_compute_quantiles_3D_shape(alphas: NDArray):
     """
     vector = np.random.rand(1000, 1)
     vector = np.repeat(vector, len(alphas), axis=1)
-    quantiles = compute_quantiles(vector, alphas)
+    quantiles = _compute_quantiles(vector, alphas)
 
     assert len(quantiles) == len(alphas)
 
@@ -331,8 +331,8 @@ def test_compute_quantiles_2D_and_3D(alphas: NDArray):
     vector1 = np.random.rand(1000, 1)
     vector2 = np.repeat(vector1, len(alphas), axis=1)
 
-    quantiles1 = compute_quantiles(vector1, alphas)
-    quantiles2 = compute_quantiles(vector2, alphas)
+    quantiles1 = _compute_quantiles(vector1, alphas)
+    quantiles2 = _compute_quantiles(vector2, alphas)
 
     assert (quantiles1 == quantiles2).all()
 
@@ -354,7 +354,7 @@ def test_quantile_prefit_non_iterable(estimator: Any) -> None:
 @pytest.mark.parametrize("strategy", ["quantile", "uniform", "array split"])
 def test_binning_group_strategies(strategy: str) -> None:
     """Test that different strategies have the correct outputs."""
-    bins_ = get_binning_groups(
+    bins_ = _get_binning_groups(
         y_score, num_bins=10, strategy=strategy
     )
     np.testing.assert_allclose(
@@ -367,12 +367,12 @@ def test_binning_group_strategies(strategy: str) -> None:
 def test_wrong_split_strategy() -> None:
     """Test for wrong split strategies."""
     with pytest.raises(ValueError, match=r"Please provide a valid*"):
-        check_split_strategy(strategy="not_valid")
+        _check_split_strategy(strategy="not_valid")
 
 
 def test_split_strategy_None() -> None:
     """Test what occurs if None is provided as split strategy."""
-    strategy = check_split_strategy(None)
+    strategy = _check_split_strategy(None)
     assert strategy == "uniform"
 
 
@@ -383,7 +383,7 @@ def test_num_bins_not_int(bins: int) -> None:
         ValueError,
         match=r"Please provide a bin number as an int*"
     ):
-        check_number_bins(num_bins=bins)
+        _check_number_bins(num_bins=bins)
 
 
 def test_num_bins_below_zero() -> None:
@@ -392,7 +392,7 @@ def test_num_bins_below_zero() -> None:
         ValueError,
         match=r"Please provide a bin number greater*"
     ):
-        check_number_bins(num_bins=-1)
+        _check_number_bins(num_bins=-1)
 
 
 def test_binary_target() -> None:
@@ -403,7 +403,7 @@ def test_binary_target() -> None:
         ValueError,
         match=r"Please provide y_true as a bina*"
     ):
-        check_binary_zero_one(np.array([0, 5, 4]))
+        _check_binary_zero_one(np.array([0, 5, 4]))
 
 
 def test_nan_values() -> None:
@@ -414,7 +414,7 @@ def test_nan_values() -> None:
         ValueError,
         match=r"Array contains only NaN*"
     ):
-        check_array_nan(np.array([np.nan, np.nan, np.nan, np.nan]))
+        _check_array_nan(np.array([np.nan, np.nan, np.nan, np.nan]))
 
 
 def test_inf_values() -> None:
@@ -425,7 +425,7 @@ def test_inf_values() -> None:
         ValueError,
         match=r"Array contains infinite va*"
     ):
-        check_array_inf(np.array([1, 2, -np.inf, 4]))
+        _check_array_inf(np.array([1, 2, -np.inf, 4]))
 
 
 def test_length() -> None:
@@ -436,19 +436,19 @@ def test_length() -> None:
         ValueError,
         match=r"There are arrays with different len*"
     ):
-        check_arrays_length(np.array([1, 2, 3]), np.array([4, 5, 6, 7]))
+        _check_arrays_length(np.array([1, 2, 3]), np.array([4, 5, 6, 7]))
 
 
 def test_change_values_zero_one() -> None:
     """Test that binary output are changed to zero one outputs."""
-    array_ = check_binary_zero_one(np.array([0, 4, 4]))
+    array_ = _check_binary_zero_one(np.array([0, 4, 4]))
     assert (np.unique(array_) == np.array([0, 1])).all()
 
 
 @pytest.mark.parametrize("gamma", [0.1, 0.5, 0.9])
 def test_valid_gamma(gamma: float) -> None:
     """Test a valid gamma parameter."""
-    check_gamma(gamma)
+    _check_gamma(gamma)
 
 
 @pytest.mark.parametrize("gamma", [1.5, -0.1])
@@ -458,13 +458,13 @@ def test_invalid_large_gamma(gamma: float) -> None:
         ValueError,
         match="Invalid gamma. Allowed values are between 0 and 1."
     ):
-        check_gamma(gamma)
+        _check_gamma(gamma)
 
 
 @pytest.mark.parametrize("cv", [5, "split"])
 def test_check_cv_same_split_with_random_state(cv: BaseCrossValidator) -> None:
     """Test that cv generate same split with fixed random_state."""
-    cv = check_cv(cv, random_state=random_state)
+    cv = _check_cv(cv, random_state=random_state)
 
     train_indices_1, train_indices_2 = [], []
     for train_index, _ in cv.split(X):
@@ -479,7 +479,7 @@ def test_check_cv_same_split_with_random_state(cv: BaseCrossValidator) -> None:
 @pytest.mark.parametrize("cv", [5, "split"])
 def test_check_cv_same_split_no_random_state(cv: BaseCrossValidator) -> None:
     """Test that cv generate same split with no random_state."""
-    cv = check_cv(cv, random_state=None)
+    cv = _check_cv(cv, random_state=None)
 
     train_indices_1, train_indices_2 = [], []
     for train_index, _ in cv.split(X):
@@ -501,21 +501,21 @@ def test_check_cv_same_split_no_random_state(cv: BaseCrossValidator) -> None:
     ]
 )
 def test_check_no_agg_cv(cv_result: Tuple) -> None:
-    """Test that if `check_no_agg_cv` function returns the expected result."""
+    """Test that if `_check_no_agg_cv` function returns the expected result."""
     array = ["prefit", "split"]
     cv, result = cv_result
-    np.testing.assert_almost_equal(check_no_agg_cv(X_toy, cv, array), result)
+    np.testing.assert_almost_equal(_check_no_agg_cv(X_toy, cv, array), result)
 
 
 @pytest.mark.parametrize("cv", [object()])
 def test_check_no_agg_cv_value_error(cv: Any) -> None:
-    """Test that if `check_no_agg_cv` function raises value error."""
+    """Test that if `_check_no_agg_cv` function raises value error."""
     array = ["prefit", "split"]
     with pytest.raises(
         ValueError,
         match=r"Allowed values must have the `get_n_splits` method"
     ):
-        check_no_agg_cv(X_toy, cv, array)
+        _check_no_agg_cv(X_toy, cv, array)
 
 
 @pytest.mark.parametrize("n_samples", [-4, -2, -1])
@@ -531,7 +531,7 @@ def test_invalid_n_samples_int_negative(n_samples: int) -> None:
             r" int in the range [1, inf)"
         )
     ):
-        check_n_samples(X=X, n_samples=n_samples, indices=indices)
+        _check_n_samples(X=X, n_samples=n_samples, indices=indices)
 
 
 @pytest.mark.parametrize("n_samples", [0.002, 0.003, 0.04])
@@ -547,7 +547,7 @@ def test_invalid_n_samples_int_zero(n_samples: int) -> None:
             r"otherwise n_samples should be an int"
         )
     ):
-        check_n_samples(X=X, n_samples=n_samples, indices=indices)
+        _check_n_samples(X=X, n_samples=n_samples, indices=indices)
 
 
 @pytest.mark.parametrize("n_samples", [-5.5, -4.3, -0.2, 1.2, 2.5, 3.4])
@@ -563,4 +563,4 @@ def test_invalid_n_samples_float(n_samples: float) -> None:
             r" int in the range [1, inf)"
         )
     ):
-        check_n_samples(X=X, n_samples=n_samples, indices=indices)
+        _check_n_samples(X=X, n_samples=n_samples, indices=indices)

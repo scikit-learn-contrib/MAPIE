@@ -11,7 +11,7 @@ from sklearn.datasets import make_regression
 
 from mapie.metrics.regression import regression_coverage_score
 from mapie.regression import SplitConformalRegressor
-from mapie_v1.utils import train_conformalize_test_split
+from mapie.utils import train_conformalize_test_split
 
 RANDOM_STATE = 42
 

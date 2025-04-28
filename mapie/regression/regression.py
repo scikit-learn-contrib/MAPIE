@@ -17,23 +17,23 @@ from mapie.conformity_scores import (BaseRegressionScore,
 from mapie.conformity_scores.utils import check_regression_conformity_score
 from mapie.estimator.regressor import EnsembleRegressor
 from mapie.subsample import Subsample
-from mapie.utils import (check_alpha, check_alpha_and_n_samples,
-                         check_cv, check_estimator_fit_predict,
-                         check_n_features_in, check_n_jobs, check_null_weight,
-                         check_verbose, get_effective_calibration_samples,
-                         check_predict_params)
+from mapie.utils import (_check_alpha, _check_alpha_and_n_samples,
+                         _check_cv, _check_estimator_fit_predict,
+                         _check_n_features_in, _check_n_jobs, _check_null_weight,
+                         _check_verbose, _get_effective_calibration_samples,
+                         _check_predict_params)
 from mapie_v1.conformity_scores._utils import check_and_select_conformity_score
-from mapie_v1.utils import (
-    transform_confidence_level_to_alpha_list,
-    check_if_param_in_allowed_values,
-    check_cv_not_string,
-    cast_point_predictions_to_ndarray,
-    cast_predictions_to_ndarray_tuple,
-    prepare_params,
-    prepare_fit_params_and_sample_weight,
-    raise_error_if_previous_method_not_called,
-    raise_error_if_method_already_called,
-    raise_error_if_fit_called_in_prefit_mode,
+from mapie.utils import (
+    _transform_confidence_level_to_alpha_list,
+    _check_if_param_in_allowed_values,
+    _check_cv_not_string,
+    _cast_point_predictions_to_ndarray,
+    _cast_predictions_to_ndarray_tuple,
+    _prepare_params,
+    _prepare_fit_params_and_sample_weight,
+    _raise_error_if_previous_method_not_called,
+    _raise_error_if_method_already_called,
+    _raise_error_if_fit_called_in_prefit_mode,
 )
 
 
@@ -87,7 +87,7 @@ class SplitConformalRegressor:
     Examples
     --------
     >>> from mapie.regression import SplitConformalRegressor
-    >>> from mapie_v1.utils import train_conformalize_test_split
+    >>> from mapie.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_regression
     >>> from sklearn.linear_model import Ridge
 
@@ -117,7 +117,7 @@ class SplitConformalRegressor:
         n_jobs: Optional[int] = None,
         verbose: int = 0,
     ) -> None:
-        check_estimator_fit_predict(estimator)
+        _check_estimator_fit_predict(estimator)
         self._estimator = estimator
         self._prefit = prefit
         self._is_fitted = prefit
@@ -139,7 +139,7 @@ class SplitConformalRegressor:
             conformity_score=self._conformity_score,
         )
 
-        self._alphas = transform_confidence_level_to_alpha_list(
+        self._alphas = _transform_confidence_level_to_alpha_list(
             confidence_level
         )
         self._predict_params: dict = {}
@@ -169,11 +169,11 @@ class SplitConformalRegressor:
         Self
             The fitted SplitConformalRegressor instance.
         """
-        raise_error_if_fit_called_in_prefit_mode(self._prefit)
-        raise_error_if_method_already_called("fit", self._is_fitted)
+        _raise_error_if_fit_called_in_prefit_mode(self._prefit)
+        _raise_error_if_method_already_called("fit", self._is_fitted)
 
         cloned_estimator = clone(self._estimator)
-        fit_params_ = prepare_params(fit_params)
+        fit_params_ = _prepare_params(fit_params)
         cloned_estimator.fit(X_train, y_train, **fit_params_)
         self._mapie_regressor.estimator = cloned_estimator
 
@@ -208,17 +208,17 @@ class SplitConformalRegressor:
         Self
             The conformalized SplitConformalRegressor instance.
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "conformalize",
             "fit",
             self._is_fitted,
         )
-        raise_error_if_method_already_called(
+        _raise_error_if_method_already_called(
             "conformalize",
             self._is_conformalized,
         )
 
-        self._predict_params = prepare_params(predict_params)
+        self._predict_params = _prepare_params(predict_params)
         self._mapie_regressor.fit(
             X_conformalize,
             y_conformalize,
@@ -259,7 +259,7 @@ class SplitConformalRegressor:
             - Prediction points, of shape ``(n_samples,)``
             - Prediction intervals, of shape ``(n_samples, 2, n_confidence_levels)``
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict_interval",
             "conformalize",
             self._is_conformalized,
@@ -271,7 +271,7 @@ class SplitConformalRegressor:
             allow_infinite_bounds=allow_infinite_bounds,
             **self._predict_params,
         )
-        return cast_predictions_to_ndarray_tuple(predictions)
+        return _cast_predictions_to_ndarray_tuple(predictions)
 
     def predict(
         self,
@@ -290,7 +290,7 @@ class SplitConformalRegressor:
         NDArray
             Array of point predictions, with shape (n_samples,).
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict",
             "conformalize",
             self._is_conformalized,
@@ -300,7 +300,7 @@ class SplitConformalRegressor:
             alpha=None,
             **self._predict_params
         )
-        return cast_point_predictions_to_ndarray(predictions)
+        return _cast_point_predictions_to_ndarray(predictions)
 
 
 class CrossConformalRegressor:
@@ -402,12 +402,12 @@ class CrossConformalRegressor:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None
     ) -> None:
-        check_if_param_in_allowed_values(
+        _check_if_param_in_allowed_values(
             method,
             "method",
             CrossConformalRegressor._VALID_METHODS
         )
-        check_cv_not_string(cv)
+        _check_cv_not_string(cv)
 
         self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
@@ -422,7 +422,7 @@ class CrossConformalRegressor:
             random_state=random_state,
         )
 
-        self._alphas = transform_confidence_level_to_alpha_list(
+        self._alphas = _transform_confidence_level_to_alpha_list(
             confidence_level
         )
         self.is_fitted_and_conformalized = False
@@ -466,15 +466,15 @@ class CrossConformalRegressor:
         Self
             This CrossConformalRegressor instance, fitted and conformalized.
         """
-        raise_error_if_method_already_called(
+        _raise_error_if_method_already_called(
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
 
-        fit_params_, sample_weight = prepare_fit_params_and_sample_weight(
+        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(
             fit_params
         )
-        self._predict_params = prepare_params(predict_params)
+        self._predict_params = _prepare_params(predict_params)
         self._mapie_regressor.fit(
             X,
             y,
@@ -531,7 +531,7 @@ class CrossConformalRegressor:
             - Prediction points, of shape ``(n_samples,)``
             - Prediction intervals, of shape ``(n_samples, 2, n_confidence_levels)``
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict_interval",
             "fit_conformalize",
             self.is_fitted_and_conformalized,
@@ -548,7 +548,7 @@ class CrossConformalRegressor:
             ensemble=ensemble,
             **self._predict_params,
         )
-        return cast_predictions_to_ndarray_tuple(predictions)
+        return _cast_predictions_to_ndarray_tuple(predictions)
 
     def predict(
         self,
@@ -580,7 +580,7 @@ class CrossConformalRegressor:
         NDArray
             Array of point predictions, with shape ``(n_samples,)``.
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict",
             "fit_conformalize",
             self.is_fitted_and_conformalized,
@@ -592,7 +592,7 @@ class CrossConformalRegressor:
         predictions = self._mapie_regressor.predict(
             X, alpha=None, ensemble=ensemble, **self._predict_params,
         )
-        return cast_point_predictions_to_ndarray(predictions)
+        return _cast_point_predictions_to_ndarray(predictions)
 
     def _set_aggregate_predictions_and_return_ensemble(
         self, aggregate_predictions: Optional[str]
@@ -709,12 +709,12 @@ class JackknifeAfterBootstrapRegressor:
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
-        check_if_param_in_allowed_values(
+        _check_if_param_in_allowed_values(
             method,
             "method",
             JackknifeAfterBootstrapRegressor._VALID_METHODS
         )
-        check_if_param_in_allowed_values(
+        _check_if_param_in_allowed_values(
             aggregation_method,
             "aggregation_method",
             JackknifeAfterBootstrapRegressor._VALID_AGGREGATION_METHODS
@@ -736,7 +736,7 @@ class JackknifeAfterBootstrapRegressor:
             random_state=random_state,
         )
 
-        self._alphas = transform_confidence_level_to_alpha_list(
+        self._alphas = _transform_confidence_level_to_alpha_list(
             confidence_level
         )
 
@@ -776,15 +776,15 @@ class JackknifeAfterBootstrapRegressor:
         Self
             This JackknifeAfterBootstrapRegressor instance, fitted and conformalized.
         """
-        raise_error_if_method_already_called(
+        _raise_error_if_method_already_called(
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
 
-        fit_params_, sample_weight = prepare_fit_params_and_sample_weight(
+        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(
             fit_params
         )
-        self._predict_params = prepare_params(predict_params)
+        self._predict_params = _prepare_params(predict_params)
         self._mapie_regressor.fit(
             X,
             y,
@@ -839,7 +839,7 @@ class JackknifeAfterBootstrapRegressor:
             - Prediction points, of shape ``(n_samples,)``
             - Prediction intervals, of shape ``(n_samples, 2, n_confidence_levels)``
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict_interval",
             "fit_conformalize",
             self.is_fitted_and_conformalized,
@@ -853,7 +853,7 @@ class JackknifeAfterBootstrapRegressor:
             ensemble=ensemble,
             **self._predict_params,
         )
-        return cast_predictions_to_ndarray_tuple(predictions)
+        return _cast_predictions_to_ndarray_tuple(predictions)
 
     def predict(
         self,
@@ -883,7 +883,7 @@ class JackknifeAfterBootstrapRegressor:
         NDArray
             Array of point predictions, with shape ``(n_samples,)``.
         """
-        raise_error_if_previous_method_not_called(
+        _raise_error_if_previous_method_not_called(
             "predict",
             "fit_conformalize",
             self.is_fitted_and_conformalized,
@@ -892,7 +892,7 @@ class JackknifeAfterBootstrapRegressor:
         predictions = self._mapie_regressor.predict(
             X, alpha=None, ensemble=ensemble, **self._predict_params,
         )
-        return cast_point_predictions_to_ndarray(predictions)
+        return _cast_point_predictions_to_ndarray(predictions)
 
     @staticmethod
     def _check_and_convert_resampling_to_cv(
@@ -1145,8 +1145,8 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             If parameters are not valid.
         """
         self._check_method(self.method)
-        check_n_jobs(self.n_jobs)
-        check_verbose(self.verbose)
+        _check_n_jobs(self.n_jobs)
+        _check_verbose(self.verbose)
         check_random_state(self.random_state)
 
     def _check_method(
@@ -1248,7 +1248,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         if estimator is None:
             return LinearRegression()
         else:
-            check_estimator_fit_predict(estimator)
+            _check_estimator_fit_predict(estimator)
             if self.cv == "prefit":
                 if isinstance(estimator, Pipeline):
                     check_is_fitted(estimator[-1])
@@ -1318,7 +1318,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         """
         # Checking
         self._check_parameters()
-        cv = check_cv(
+        cv = _check_cv(
             self.cv, test_size=self.test_size, random_state=self.random_state
         )
         if self.cv in ["split", "prefit"] and \
@@ -1338,8 +1338,8 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         X, y = indexable(X, y)
         y = _check_y(y)
-        sample_weight, X, y = check_null_weight(sample_weight, X, y)
-        self.n_features_in_ = check_n_features_in(X)
+        sample_weight, X, y = _check_null_weight(sample_weight, X, y)
+        self.n_features_in_ = _check_n_features_in(X)
 
         # Casting
         cv = cast(BaseCrossValidator, cv)
@@ -1570,10 +1570,10 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         """
         # Checks
         if hasattr(self, '_predict_params'):
-            check_predict_params(self._predict_params, predict_params, self.cv)
+            _check_predict_params(self._predict_params, predict_params, self.cv)
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
-        alpha = cast(Optional[NDArray], check_alpha(alpha))
+        alpha = cast(Optional[NDArray], _check_alpha(alpha))
 
         # If alpha is None, predict the target without confidence intervals
         if alpha is None:
@@ -1586,11 +1586,11 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             # Check alpha and the number of effective calibration samples
             alpha_np = cast(NDArray, alpha)
             if not allow_infinite_bounds:
-                n = get_effective_calibration_samples(
+                n = _get_effective_calibration_samples(
                     self.conformity_scores_,
                     self.conformity_score_function_.sym
                 )
-                check_alpha_and_n_samples(alpha_np, n)
+                _check_alpha_and_n_samples(alpha_np, n)
 
             # Predict the target with confidence intervals
             outputs = self.conformity_score_function_.predict_set(

@@ -13,9 +13,9 @@ from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
                                       indexable)
 
 from numpy.typing import ArrayLike, NDArray
-from .utils import (check_estimator_classification,
-                    check_estimator_fit_predict, check_n_features_in,
-                    check_null_weight, fit_estimator, get_calib_set)
+from .utils import (_check_estimator_classification,
+                    _check_estimator_fit_predict, _check_n_features_in,
+                    _check_null_weight, _fit_estimator, _get_calib_set)
 
 
 class MapieCalibrator(BaseEstimator, ClassifierMixin):
@@ -202,7 +202,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                     "Please provide a string in: "
                     + (", ").join(self.named_calibrators.keys()) + "."
                 )
-        check_estimator_fit_predict(calibrator)
+        _check_estimator_fit_predict(calibrator)
         return calibrator
 
     def _get_labels(
@@ -313,14 +313,14 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             sample_weight_ = sample_weight[given_label_indices]
             (
                 sample_weight_, top_class_prob_, y_calib_
-            ) = check_null_weight(
+            ) = _check_null_weight(
                 sample_weight_,
                 top_class_prob_,
                 y_calib_
             )
         else:
             sample_weight_ = sample_weight
-        calibrator_ = fit_estimator(
+        calibrator_ = _fit_estimator(
             calibrator_, top_class_prob_, y_calib_, sample_weight_
         )
         return calibrator_
@@ -479,10 +479,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         X, y = indexable(X, y)
         y = _check_y(y)
         self._check_type_of_target(y)
-        estimator = check_estimator_classification(X, y, cv, self.estimator)
+        estimator = _check_estimator_classification(X, y, cv, self.estimator)
         calibrator = self._check_calibrator(self.calibrator)
-        sample_weight, X, y = check_null_weight(sample_weight, X, y)
-        self.n_features_in_ = check_n_features_in(X, cv, estimator)
+        sample_weight, X, y = _check_null_weight(sample_weight, X, y)
+        self.n_features_in_ = _check_n_features_in(X, cv, estimator)
         random_state = check_random_state(random_state)
 
         if cv == "prefit":
@@ -493,7 +493,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
                 X, y, sample_weight, calibrator
             )
         if cv == "split":
-            results = get_calib_set(
+            results = _get_calib_set(
                 X,
                 y,
                 sample_weight=sample_weight,
@@ -505,12 +505,12 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
             X_train, y_train, X_calib, y_calib, sw_train, sw_calib = results
             X_train, y_train = indexable(X_train, y_train)
             y_train = _check_y(y_train)
-            sw_train, X_train, y_train = check_null_weight(
+            sw_train, X_train, y_train = _check_null_weight(
                 sw_train,
                 X_train,
                 y_train
             )
-            estimator = fit_estimator(
+            estimator = _fit_estimator(
                 clone(estimator), X_train, y_train, sw_train, **fit_params,
             )
             self.single_estimator_ = estimator

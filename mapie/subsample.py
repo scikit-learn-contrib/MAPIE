@@ -10,7 +10,7 @@ from sklearn.utils import check_random_state, resample
 from sklearn.utils.validation import _num_samples
 
 from numpy.typing import NDArray
-from .utils import check_n_samples
+from .utils import _check_n_samples
 
 
 class Subsample(BaseCrossValidator):
@@ -76,7 +76,7 @@ class Subsample(BaseCrossValidator):
             The testing set indices for that split.
         """
         indices = np.arange(_num_samples(X))
-        n_samples = check_n_samples(X, self.n_samples, indices)
+        n_samples = _check_n_samples(X, self.n_samples, indices)
         random_state = check_random_state(self.random_state)
         for k in range(self.n_resamplings):
             train_index = resample(
