@@ -14,7 +14,7 @@ from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
 from sklearn.utils.validation import check_is_fitted
 
 from numpy.typing import ArrayLike, NDArray
-from mapie.regression import MapieQuantileRegressor
+from mapie.regression.quantile_regression import _MapieQuantileRegressor
 from mapie.utils import (check_alpha, check_alpha_and_n_samples,
                          check_array_inf, check_array_nan, check_arrays_length,
                          check_binary_zero_one, check_cv, check_gamma,
@@ -268,7 +268,7 @@ def test_final_low_high_pred(caplog) -> None:
 
 def test_ensemble_in_predict() -> None:
     """Checking for ensemble defined in predict of CQR"""
-    mapie_reg = MapieQuantileRegressor()
+    mapie_reg = _MapieQuantileRegressor()
     mapie_reg.fit(X, y)
     with pytest.warns(
         UserWarning, match=r"WARNING: Alpha should not be spec.*"
@@ -278,7 +278,7 @@ def test_ensemble_in_predict() -> None:
 
 def test_alpha_in_predict() -> None:
     """Checking for alpha defined in predict of CQR"""
-    mapie_reg = MapieQuantileRegressor()
+    mapie_reg = _MapieQuantileRegressor()
     mapie_reg.fit(X, y)
     with pytest.warns(UserWarning, match=r"WARNING: ensemble is not util*"):
         mapie_reg.predict(X, ensemble=True)
@@ -341,13 +341,13 @@ def test_compute_quantiles_2D_and_3D(alphas: NDArray):
 def test_quantile_prefit_non_iterable(estimator: Any) -> None:
     """
     Test that there is a list of estimators provided when cv='prefit'
-    is called for MapieQuantileRegressor.
+    is called for _MapieQuantileRegressor.
     """
     with pytest.raises(
         ValueError,
         match=r".*Estimator for prefit must be an iterable object.*",
     ):
-        mapie_reg = MapieQuantileRegressor(estimator=estimator, cv="prefit")
+        mapie_reg = _MapieQuantileRegressor(estimator=estimator, cv="prefit")
         mapie_reg.fit([1, 2, 3], [4, 5, 6])
 
 

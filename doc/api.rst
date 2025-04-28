@@ -13,8 +13,6 @@ Regression
    mapie.regression.CrossConformalRegressor
    mapie.regression.JackknifeAfterBootstrapRegressor
    mapie.regression.ConformalizedQuantileRegressor
-   mapie.regression.MapieRegressor
-   mapie.regression.MapieQuantileRegressor
    mapie.regression.TimeSeriesRegressor
 
 Classification
