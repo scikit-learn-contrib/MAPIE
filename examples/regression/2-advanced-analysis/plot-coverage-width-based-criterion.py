@@ -272,7 +272,7 @@ for strategy in STRATEGIES:
         y_pis[strategy][:, 0, 0],
         y_pis[strategy][:, 1, 0],
         eta=0.001,
-        alpha=0.05
+        confidence_level=0.95
     )
 
 results = pd.DataFrame(

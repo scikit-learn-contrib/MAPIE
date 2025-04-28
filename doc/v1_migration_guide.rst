@@ -243,8 +243,33 @@ Additionally, a number of classification and regression functions have been upda
 - **v0.x**: Took ``alpha`` as input.
 - **v1**: Now takes ``confidence_level`` as input (``confidence_level`` is equivalent to ``1 - alpha``).
 
+``coverage_width_based``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-6. MondrianCP class suppression
+- **v0.x**: Took ``alpha`` as input.
+- **v1**: Now takes ``confidence_level`` as input (``confidence_level`` is equivalent to ``1 - alpha``).
+
+
+6. MapieTimeSeriesRegressor class refactoring
+----------------------------------------------------------------------------------
+
+MAPIE v1 introduces several updates to the ``MapieTimeSeriesRegressor`` class in order to remain consistent with the
+classification and regression methods. However, unlike classification and regression, the API here has not been
+extensively refactored.
+
+Class renaming
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``MapieTimeSeriesRegressor`` class is now called ``TimeSeriesRegressor``.
+
+Functions update
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``adapt_conformal_inference``, ``update``, ``predict`` and ``coverage_width_based`` functions of the class now
+take ``confidence_level`` as input, instead of ``alpha`` (``confidence_level`` is equivalent to ``1 - alpha``).
+
+
+7. MondrianCP class suppression
 ----------------------------------------------------------------------------------------
 
 The ``MondrianCP`` class is no longer available in v1.
@@ -254,7 +279,7 @@ The class API was not aligned with the new philosophy we brought to the regressi
 A `tutorial <https://mapie.readthedocs.io/en/v1/examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html>`_ for tabular regression with Mondrian is available in the documentation. This tutorial demonstrates how to implement Mondrian manually (i.e., without using the ``MondrianCP`` class) on a simple regression example, while shedding light on the benefits of this technique.
 
 
-7. Migration examples: MAPIE v0.x to MAPIE v1
+8. Migration examples: MAPIE v0.x to MAPIE v1
 ----------------------------------------------------------------------------------------
 
 Below is a side-by-side example of code in MAPIE v0.x and its equivalent in MAPIE v1

@@ -282,7 +282,7 @@ def check_alpha(
     alpha: Optional[Union[float, Iterable[float]]] = None
 ) -> Optional[ArrayLike]:
     """
-    Check alpha and prepare it as a ArrayLike.
+    Check alpha (or confidence_level) and prepare it as a ArrayLike.
 
     Parameters
     ----------
