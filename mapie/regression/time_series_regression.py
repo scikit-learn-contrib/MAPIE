@@ -10,12 +10,12 @@ from sklearn.utils.validation import check_is_fitted
 
 from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
-from mapie.regression import MapieRegressor
+from mapie.regression.regression import _MapieRegressor
 from mapie.utils import check_alpha, check_gamma
 from mapie_v1.utils import transform_confidence_level_to_alpha_list
 
 
-class TimeSeriesRegressor(MapieRegressor):
+class TimeSeriesRegressor(_MapieRegressor):
     """
     Prediction intervals with out-of-fold residuals for time series.
     This class only has two valid ``method`` : ``"enbpi"`` or ``"aci"``
@@ -54,8 +54,7 @@ class TimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/pdf/2202.07282.pdf
     """
 
-    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ \
-        + ["BlockBootstrap"]
+    cv_need_agg_function_ = _MapieRegressor.cv_need_agg_function_ + ["BlockBootstrap"]
     valid_methods_ = ["enbpi", "aci"]
     default_sym_ = False
 

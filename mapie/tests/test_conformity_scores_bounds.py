@@ -10,7 +10,7 @@ from mapie.conformity_scores import (
     AbsoluteConformityScore, BaseRegressionScore, GammaConformityScore,
     ResidualNormalisedScore
 )
-from mapie.regression import MapieRegressor
+from mapie.regression.regression import _MapieRegressor
 from mapie.conformity_scores.utils import check_regression_conformity_score
 
 
@@ -319,7 +319,7 @@ def test_cross_residual_normalised() -> None:
     Test that residual normalised score with cross method raises an error.
     """
     with pytest.raises(ValueError):
-        MapieRegressor(conformity_score=ResidualNormalisedScore()).fit(
+        _MapieRegressor(conformity_score=ResidualNormalisedScore()).fit(
             X_toy, y_toy
         )
 
@@ -333,7 +333,7 @@ def test_residual_normalised_score_pipe() -> None:
             ("poly", PolynomialFeatures(degree=2)),
             ("linear", LinearRegression())
         ])
-    mapie_reg = MapieRegressor(
+    mapie_reg = _MapieRegressor(
         conformity_score=ResidualNormalisedScore(
             residual_estimator=pipe, split_size=0.2
         ),
@@ -354,7 +354,7 @@ def test_residual_normalised_score_pipe_prefit() -> None:
             ("linear", LinearRegression())
         ])
     pipe.fit(X_toy, y_toy)
-    mapie_reg = MapieRegressor(
+    mapie_reg = _MapieRegressor(
         conformity_score=ResidualNormalisedScore(
             residual_estimator=pipe, split_size=0.2, prefit=True
         ),
@@ -450,7 +450,7 @@ def test_intervals_shape_with_every_score(
     alpha: NDArray
 ) -> None:
     estim = LinearRegression().fit(X_toy, y_toy)
-    mapie_reg = MapieRegressor(
+    mapie_reg = _MapieRegressor(
         estimator=estim, method="base", cv="prefit", conformity_score=score
     )
     mapie_reg = mapie_reg.fit(X_toy, y_toy)

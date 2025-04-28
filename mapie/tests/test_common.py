@@ -12,7 +12,8 @@ from sklearn.utils.validation import check_is_fitted
 
 from numpy.typing import ArrayLike, NDArray
 from mapie.classification import _MapieClassifier
-from mapie.regression import MapieQuantileRegressor, MapieRegressor
+from mapie.regression.regression import _MapieRegressor
+from mapie.regression.quantile_regression import _MapieQuantileRegressor
 
 X_toy = np.arange(18).reshape(-1, 1)
 y_toy = np.array(
@@ -21,24 +22,24 @@ y_toy = np.array(
 
 
 def MapieSimpleEstimators() -> List[BaseEstimator]:
-    return [MapieRegressor, _MapieClassifier]
+    return [_MapieRegressor, _MapieClassifier]
 
 
 def MapieEstimators() -> List[BaseEstimator]:
-    return [MapieRegressor, _MapieClassifier, MapieQuantileRegressor]
+    return [_MapieRegressor, _MapieClassifier, _MapieQuantileRegressor]
 
 
 def MapieDefaultEstimators() -> List[BaseEstimator]:
     return [
-        (MapieRegressor, LinearRegression),
+        (_MapieRegressor, LinearRegression),
         (_MapieClassifier, LogisticRegression),
     ]
 
 
 def MapieTestEstimators() -> List[BaseEstimator]:
     return [
-        (MapieRegressor, LinearRegression()),
-        (MapieRegressor, make_pipeline(LinearRegression())),
+        (_MapieRegressor, LinearRegression()),
+        (_MapieRegressor, make_pipeline(LinearRegression())),
         (_MapieClassifier, LogisticRegression()),
         (_MapieClassifier, make_pipeline(LogisticRegression())),
     ]
@@ -112,7 +113,7 @@ def test_none_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
         assert isinstance(
             mapie_estimator.estimator_.single_estimator_, DefaultEstimator
         )
-    if isinstance(mapie_estimator, MapieRegressor):
+    if isinstance(mapie_estimator, _MapieRegressor):
         assert isinstance(
             mapie_estimator.estimator_.single_estimator_, DefaultEstimator
         )

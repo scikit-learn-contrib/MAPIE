@@ -296,7 +296,7 @@ MAPIE v0.x Code
 
 Below is a MAPIE v0.x code for split conformal prediction in case of pre-fitted model:
 
-.. testcode::
+.. code:: python
 
     from sklearn.linear_model import LinearRegression
     from mapie.regression import MapieRegressor
@@ -366,7 +366,7 @@ MAPIE v0.x code
 
 Below is a MAPIE v0.x code for cross-conformal prediction:
 
-.. testcode::
+.. code:: python
 
     import numpy as np
     from sklearn.ensemble import RandomForestRegressor
