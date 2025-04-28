@@ -15,7 +15,7 @@ Regression
    mapie_v1.regression.ConformalizedQuantileRegressor
    mapie.regression.MapieRegressor
    mapie.regression.MapieQuantileRegressor
-   mapie.regression.MapieTimeSeriesRegressor
+   mapie.regression.TimeSeriesRegressor
 
 Classification
 ==============

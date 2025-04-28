@@ -3,8 +3,16 @@
 Tutorial for time series
 ========================
 
+Note: in this tutorial, we use the following terms employed in the scientific
+literature:
+
+- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
+- *calibrate* and *calibration* are equivalent to *conformalize* and *conformalization*.
+
+—
+
 In this tutorial we describe how to use
-:class:`~mapie.regression.MapieTimeSeriesRegressor`
+:class:`~mapie.regression.TimeSeriesRegressor`
 to estimate prediction intervals associated with time series forecast.
 
 Here, we use the Victoria electricity demand dataset used in the book
@@ -19,12 +27,12 @@ sequential :class:`~sklearn.model_selection.TimeSeriesSplit` cross validation,
 in which the training set is prior to the validation set.
 
 Once the base model is optimized, we can use
-:class:`~MapieTimeSeriesRegressor` to estimate
+:class:`~TimeSeriesRegressor` to estimate
 the prediction intervals associated with one-step ahead forecasts through
 the EnbPI method.
 
 As its parent class :class:`~MapieRegressor`,
-:class:`~mapie.regression.MapieTimeSeriesRegressor` has two main arguments :
+:class:`~mapie.regression.TimeSeriesRegressor` has two main arguments :
 "cv", and "method".
 In order to implement EnbPI, "method" must be set to "enbpi" (the default
 value) while "cv" must be set to the :class:`~mapie.subsample.BlockBootstrap`
@@ -35,7 +43,7 @@ strategy as it is more suited for time series data.
 The EnbPI method allows you update the residuals during the prediction,
 each time new observations are available so that the deterioration of
 predictions, or the increase of noise level, can be dynamically taken into
-account. It can be done with :class:`~mapie.regression.MapieTimeSeriesRegressor`
+account. It can be done with :class:`~mapie.regression.TimeSeriesRegressor`
 through the ``partial_fit`` class method called at every step.
 
 
@@ -60,7 +68,7 @@ from mapie.metrics.regression import (
     regression_coverage_score,
     regression_mean_width_score, coverage_width_based,
 )
-from mapie.regression import MapieTimeSeriesRegressor
+from mapie.regression import TimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
 
 warnings.simplefilter("ignore")
@@ -167,7 +175,7 @@ else:
 # 3. Estimate prediction intervals on the test set
 # ------------------------------------------------
 #
-# We now use :class:`~MapieTimeSeriesRegressor` to build prediction intervals
+# We now use :class:`~TimeSeriesRegressor` to build prediction intervals
 # associated with one-step ahead forecasts. As explained in the introduction,
 # we use the EnbPI method and the ACI method.
 #
@@ -198,10 +206,10 @@ gap = 1
 cv_mapiets = BlockBootstrap(
     n_resamplings=10, n_blocks=10, overlapping=False, random_state=59
 )
-mapie_enbpi = MapieTimeSeriesRegressor(
+mapie_enbpi = TimeSeriesRegressor(
     model, method="enbpi", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
-mapie_aci = MapieTimeSeriesRegressor(
+mapie_aci = TimeSeriesRegressor(
     model, method="aci", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
 
@@ -213,7 +221,7 @@ mapie_aci = MapieTimeSeriesRegressor(
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 
 y_pred_enbpi_npfit, y_pis_enbpi_npfit = mapie_enbpi.predict(
-    X_test, alpha=alpha, ensemble=True,
+    X_test, confidence_level=1-alpha, ensemble=True,
     allow_infinite_bounds=True
 )
 y_pis_enbpi_npfit = np.clip(y_pis_enbpi_npfit, 1, 10)
@@ -227,7 +235,7 @@ cwc_enbpi_npfit = coverage_width_based(
     y_test, y_pis_enbpi_npfit[:, 0, 0],
     y_pis_enbpi_npfit[:, 1, 0],
     eta=10,
-    alpha=0.05
+    confidence_level=0.95
 )
 
 # For ACI
@@ -236,7 +244,7 @@ mapie_aci = mapie_aci.fit(X_train, y_train)
 y_pred_aci_npfit = np.zeros(y_pred_enbpi_npfit.shape)
 y_pis_aci_npfit = np.zeros(y_pis_enbpi_npfit.shape)
 y_pred_aci_npfit[:gap], y_pis_aci_npfit[:gap, :, :] = mapie_aci.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True,
+    X_test.iloc[:gap, :], confidence_level=1-alpha, ensemble=True,
     allow_infinite_bounds=True
 )
 for step in range(gap, len(X_test), gap):
@@ -250,7 +258,7 @@ for step in range(gap, len(X_test), gap):
         y_pis_aci_npfit[step:step + gap, :, :],
     ) = mapie_aci.predict(
         X_test.iloc[step:(step + gap), :],
-        alpha=alpha,
+        confidence_level=1-alpha,
         ensemble=True,
         allow_infinite_bounds=True
     )
@@ -269,7 +277,7 @@ cwc_aci_npfit = coverage_width_based(
     y_pis_aci_npfit[:, 0, 0],
     y_pis_aci_npfit[:, 1, 0],
     eta=10,
-    alpha=0.05
+    confidence_level=0.95
 )
 
 
@@ -278,7 +286,7 @@ cwc_aci_npfit = coverage_width_based(
 # previously, the update of the residuals and the one-step ahead predictions
 # are performed sequentially in a loop.
 
-mapie_enbpi = MapieTimeSeriesRegressor(
+mapie_enbpi = TimeSeriesRegressor(
     model, method="enbpi", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
@@ -286,7 +294,7 @@ mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 y_pred_enbpi_pfit = np.zeros(y_pred_enbpi_npfit.shape)
 y_pis_enbpi_pfit = np.zeros(y_pis_enbpi_npfit.shape)
 y_pred_enbpi_pfit[:gap], y_pis_enbpi_pfit[:gap, :, :] = mapie_enbpi.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True,
+    X_test.iloc[:gap, :], confidence_level=1-alpha, ensemble=True,
     allow_infinite_bounds=True
 )
 
@@ -300,7 +308,7 @@ for step in range(gap, len(X_test), gap):
         y_pis_enbpi_pfit[step:step + gap, :, :],
     ) = mapie_enbpi.predict(
         X_test.iloc[step:(step + gap), :],
-        alpha=alpha,
+        confidence_level=1-alpha,
         ensemble=True,
         allow_infinite_bounds=True
     )
@@ -316,7 +324,7 @@ width_enbpi_pfit = regression_mean_width_score(
 cwc_enbpi_pfit = coverage_width_based(
     y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0],
     eta=10,
-    alpha=0.05
+    confidence_level=0.95
 )
 
 
@@ -325,7 +333,7 @@ cwc_enbpi_pfit = coverage_width_based(
 # As discussed previously, the update of the current alpha and the one-step
 # ahead predictions are performed sequentially in a loop.
 
-mapie_aci = MapieTimeSeriesRegressor(
+mapie_aci = TimeSeriesRegressor(
     model, method="aci", cv=cv_mapiets, agg_function="mean", n_jobs=-1
 )
 mapie_aci = mapie_aci.fit(X_train, y_train)
@@ -333,7 +341,7 @@ mapie_aci = mapie_aci.fit(X_train, y_train)
 y_pred_aci_pfit = np.zeros(y_pred_aci_npfit.shape)
 y_pis_aci_pfit = np.zeros(y_pis_aci_npfit.shape)
 y_pred_aci_pfit[:gap], y_pis_aci_pfit[:gap, :, :] = mapie_aci.predict(
-    X_test.iloc[:gap, :], alpha=alpha, ensemble=True,
+    X_test.iloc[:gap, :], confidence_level=1-alpha, ensemble=True,
     allow_infinite_bounds=True
 )
 
@@ -352,7 +360,7 @@ for step in range(gap, len(X_test), gap):
         y_pis_aci_pfit[step:step + gap, :, :],
     ) = mapie_aci.predict(
         X_test.iloc[step:(step + gap), :],
-        alpha=alpha,
+        confidence_level=1-alpha,
         ensemble=True,
         allow_infinite_bounds=True
     )
@@ -369,7 +377,7 @@ width_aci_pfit = regression_mean_width_score(
 cwc_aci_pfit = coverage_width_based(
     y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0],
     eta=0.01,
-    alpha=0.05
+    confidence_level=0.95
 )
 
 ##############################################################################
