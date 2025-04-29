@@ -1,8 +1,8 @@
 from typing import Optional, Tuple, Union, cast
 
 import numpy as np
-from sklearn.dummy import check_random_state
-from sklearn.calibration import label_binarize
+from sklearn.utils import check_random_state
+from sklearn.preprocessing import label_binarize
 
 from mapie.conformity_scores.sets.naive import NaiveConformityScore
 from mapie.conformity_scores.sets.utils import (
