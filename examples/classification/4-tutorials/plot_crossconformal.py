@@ -37,6 +37,7 @@ from typing_extensions import TypedDict
 
 from numpy.typing import NDArray
 from mapie.classification import _MapieClassifier
+from mapie.conformity_scores import LACConformityScore, APSConformityScore
 from mapie.metrics.classification import (
     classification_coverage_score,
     classification_mean_width_score,
@@ -110,21 +111,30 @@ plt.show()
 
 kf = KFold(n_splits=5, shuffle=True)
 clfs, mapies, y_preds, y_ps_mapies = {}, {}, {}, {}
-methods = ["lac", "aps"]
+conformity_scores = [LACConformityScore(), APSConformityScore()]
 alpha = np.arange(0.01, 1, 0.01)
-for method in methods:
+for conformity_score in conformity_scores:
     clfs_, mapies_, y_preds_, y_ps_mapies_ = {}, {}, {}, {}
     for fold, (train_index, calib_index) in enumerate(kf.split(X_train)):
         clf = GaussianNB().fit(X_train[train_index], y_train[train_index])
         clfs_[fold] = clf
-        mapie = _MapieClassifier(estimator=clf, cv="prefit", method=method)
+        mapie = _MapieClassifier(
+            estimator=clf,
+            cv="prefit",
+            conformity_score=conformity_score
+        )
         mapie.fit(X_train[calib_index], y_train[calib_index])
         mapies_[fold] = mapie
         y_pred_mapie, y_ps_mapie = mapie.predict(
             X_test_distrib, alpha=alpha, include_last_label="randomized"
         )
         y_preds_[fold], y_ps_mapies_[fold] = y_pred_mapie, y_ps_mapie
-    clfs[method], mapies[method], y_preds[method], y_ps_mapies[method] = (
+    (
+        clfs[conformity_score],
+        mapies[conformity_score],
+        y_preds[conformity_score],
+        y_ps_mapies[conformity_score]
+    ) = (
         clfs_, mapies_, y_preds_, y_ps_mapies_
     )
 
@@ -134,8 +144,8 @@ for method in methods:
 # set and the estimated quantile for ``alpha`` = 0.1.
 
 
-fig, axs = plt.subplots(1, len(mapies["lac"]), figsize=(20, 4))
-for i, (key, mapie) in enumerate(mapies["lac"].items()):
+fig, axs = plt.subplots(1, len(mapies[conformity_scores[0]]), figsize=(20, 4))
+for i, (key, mapie) in enumerate(mapies[conformity_scores[0]].items()):
     quantiles = mapie.conformity_score_function_.quantiles_[9]
     axs[i].set_xlabel("Conformity scores")
     axs[i].hist(mapie.conformity_scores_)
@@ -143,14 +153,14 @@ for i, (key, mapie) in enumerate(mapies["lac"].items()):
     axs[i].set_title(f"split={key}\nquantile={quantiles:.3f}")
 plt.suptitle(
     "Distribution of scores on each calibration fold for the "
-    f"{methods[0]} method"
+    f"{conformity_scores[0]} method"
 )
 plt.show()
 
 
 ##############################################################################
 # We notice that the estimated quantile slightly varies among the calibration
-# sets for the two methods explored here, suggesting that the
+# sets for the two conformity scores explored here, suggesting that the
 # train/calibration splitting can slightly impact our results.
 #
 # Let's now visualize this impact on the number of labels included in each
@@ -202,7 +212,7 @@ def plot_results(
 
 
 plot_results(
-    mapies["lac"],
+    mapies[conformity_scores[0]],
     X_test,
     X_test_distrib,
     y_test_distrib,
@@ -211,7 +221,7 @@ plot_results(
 )
 
 plot_results(
-    mapies["aps"],
+    mapies[conformity_scores[1]],
     X_test,
     X_test_distrib,
     y_test_distrib,
@@ -338,19 +348,19 @@ kf = KFold(n_splits=5, shuffle=True)
 
 STRATEGIES = {
     "score_cv_mean": (
-        Params(method="lac", cv=kf, random_state=42),
+        Params(conformity_score=LACConformityScore(), cv=kf, random_state=42),
         ParamsPredict(include_last_label=False, agg_scores="mean")
     ),
     "score_cv_crossval": (
-        Params(method="lac", cv=kf, random_state=42),
+        Params(conformity_score=LACConformityScore(), cv=kf, random_state=42),
         ParamsPredict(include_last_label=False, agg_scores="crossval")
     ),
     "cum_score_cv_mean": (
-        Params(method="aps", cv=kf, random_state=42),
+        Params(conformity_score=APSConformityScore(), cv=kf, random_state=42),
         ParamsPredict(include_last_label="randomized", agg_scores="mean")
     ),
     "cum_score_cv_crossval": (
-        Params(method="aps", cv=kf, random_state=42),
+        Params(conformity_score=APSConformityScore(), cv=kf, random_state=42),
         ParamsPredict(include_last_label='randomized', agg_scores="crossval")
     )
 }

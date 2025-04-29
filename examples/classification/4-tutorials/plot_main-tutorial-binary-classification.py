@@ -35,6 +35,7 @@ from sklearn.naive_bayes import GaussianNB
 
 from numpy.typing import NDArray
 from mapie.classification import _MapieClassifier
+from mapie.conformity_scores import LACConformityScore
 from mapie.metrics.classification import (
     classification_coverage_score,
     classification_mean_width_score,
@@ -122,7 +123,7 @@ plt.show()
 # so that scores can be interpreted as probabilities
 # (see documentation for more information).
 # Then we apply :class:`~mapie.classification._MapieClassifier` in the
-# calibration data with the methods ``score``
+# calibration data with the LAC conformity_score
 # to the estimator indicating that it has already been fitted with
 # `cv="prefit"`.
 # We then estimate the prediction sets with differents alpha values with a
@@ -139,7 +140,7 @@ calib = CalibratedClassifierCV(
 calib.fit(X_c1, y_c1)
 
 mapie_clf = _MapieClassifier(
-    estimator=calib, method='lac', cv='prefit', random_state=42
+    estimator=calib, cv='prefit', random_state=42
 )
 mapie_clf.fit(X_c2, y_c2)
 
@@ -156,7 +157,7 @@ y_pred_mapie, y_ps_mapie = mapie_clf.predict(
 #   base estimator.
 #
 # - ``y_ps_mapie``: the prediction sets estimated by MAPIE using the "lac"
-#   method.
+#   conformity score.
 #
 # Let's now visualize the distribution of the conformity scores with the two
 # methods with the calculated quantiles for the three alpha values.
@@ -261,7 +262,7 @@ plot_results(alpha, y_pred_mapie, y_ps_mapie)
 
 
 ##############################################################################
-# For the "lac" method, when the class coverage is not large enough, the
+# For the "lac" conformity score, when the class coverage is not large enough, the
 # prediction sets can be empty when the model is uncertain at the border
 # between two classes. These null regions disappear for larger class coverages
 # but ambiguous classification regions arise with both classes included in
@@ -293,7 +294,7 @@ calib = CalibratedClassifierCV(
 calib.fit(X_c1, y_c1)
 
 mapie_clf = _MapieClassifier(
-    estimator=calib, method='lac', cv='prefit', random_state=42
+    estimator=calib, conformity_score=LACConformityScore(), cv='prefit', random_state=42
 )
 mapie_clf.fit(X_c2, y_c2)
 _, y_ps_mapie = mapie_clf.predict(
@@ -341,7 +342,7 @@ calib = CalibratedClassifierCV(
 calib.fit(X_c1, y_c1)
 
 mapie_clf = _MapieClassifier(
-    estimator=calib, method='lac', cv='prefit', random_state=42
+    estimator=calib, cv='prefit', random_state=42
 )
 mapie_clf.fit(X_c2, y_c2)
 _, y_ps_mapie = mapie_clf.predict(
