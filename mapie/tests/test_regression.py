@@ -1014,3 +1014,13 @@ def test_deprecated_ensemble_regressor_fit_warning() -> None:
         match=r".WARNING: EnsembleRegressor.fit is deprecated.*"
     ):
         ens_reg.fit(X, y)
+
+
+@pytest.mark.parametrize("method", [0.5, 1, "cv", ["base", "plus"]])
+def test_invalid_method(method: str) -> None:
+    """Test that invalid methods raise errors."""
+    mapie_estimator = _MapieRegressor(method=method)
+    with pytest.raises(
+        ValueError, match="(Invalid method.)|(Invalid conformity score.)*"
+    ):
+        mapie_estimator.fit(X_toy, y_toy)

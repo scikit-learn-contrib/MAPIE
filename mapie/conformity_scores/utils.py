@@ -7,21 +7,9 @@ from sklearn.utils.multiclass import (check_classification_targets,
 from .regression import BaseRegressionScore
 from .classification import BaseClassificationScore
 from .bounds import AbsoluteConformityScore
-from .sets import (
-    APSConformityScore, LACConformityScore, NaiveConformityScore,
-    RAPSConformityScore, TopKConformityScore
-)
+from .sets import LACConformityScore
 
 from numpy.typing import ArrayLike
-
-
-METHOD_SCORE_MAP = {
-    'lac': lambda: LACConformityScore(),
-    'aps': lambda: APSConformityScore(),
-    'naive': lambda: NaiveConformityScore(),
-    'raps': lambda: RAPSConformityScore(),
-    'top_k': lambda: TopKConformityScore()
-}
 
 
 def check_regression_conformity_score(
@@ -131,7 +119,6 @@ def check_target(
 
 def check_classification_conformity_score(
     conformity_score: Optional[BaseClassificationScore] = None,
-    method: Optional[str] = None,
 ) -> BaseClassificationScore:
     """
     Check parameter ``conformity_score`` for classification task.
@@ -144,50 +131,18 @@ def check_classification_conformity_score(
 
         By default, `None`.
 
-    method: str
-        Method to compute the conformity score.
-
-        By default, `None`.
-
     Raises
     ------
     ValueError
-        If parameters are not valid.
-
-    Examples
-    --------
-    >>> from mapie.conformity_scores.utils import (
-    ...     check_classification_conformity_score
-    ... )
-    >>> try:
-    ...     check_classification_conformity_score(1)
-    ... except Exception as exception:
-    ...     print(exception)
-    ...
-    Invalid conformity_score argument.
-    Must be None or a BaseClassificationScore instance.
+        If conformity_score is not valid.
     """
     if conformity_score is not None:
-        if method is not None:
-            warnings.warn(
-                "WARNING: the `conformity_score` parameter takes precedence "
-                "over the `method` parameter to define the method used.",
-                UserWarning
-            )
         if isinstance(conformity_score, BaseClassificationScore):
             return conformity_score
         else:
             raise ValueError(
                 "Invalid conformity_score argument.\n"
                 "Must be None or a BaseClassificationScore instance."
-            )
-    elif method is not None:
-        if isinstance(method, str) and method in METHOD_SCORE_MAP:
-            return METHOD_SCORE_MAP[method]()
-        else:
-            raise ValueError(
-                "Invalid conformity score. "
-                f"Allowed values are {list(METHOD_SCORE_MAP.keys())}."
             )
     else:
         return LACConformityScore()

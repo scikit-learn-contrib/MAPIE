@@ -582,42 +582,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         (i.e. with fit, predict, and predict_proba methods), by default None.
         If ``None``, estimator defaults to a ``LogisticRegression`` instance.
 
-    method: Optional[str]
-        [DEPRECIATED see instead conformity_score]
-        Method to choose for prediction interval estimates.
-        Choose among:
-
-        - ``"naive"``, sum of the probabilities until the 1-alpha threshold.
-
-        - ``"lac"``, Least Ambiguous set-valued
-          Classifier. It is based on the scores
-          (i.e. 1 minus the softmax score of the true label)
-          on the calibration set. See [1] for more details.
-
-        - ``"aps"``, Adaptive Prediction
-          Sets method. It is based on the sum of the softmax outputs of the
-          labels until the true label is reached, on the calibration set.
-          See [2] for more details.
-
-        - ``"raps"``, Regularized Adaptive Prediction Sets method. It uses the
-          same technique as ``"aps"`` method but with a penalty term
-          to reduce the size of prediction sets. See [3] for more
-          details. For now, this method only works with ``"prefit"`` and
-          ``"split"`` strategies.
-
-        - ``"top_k"``, based on the sorted index of the probability of the true
-          label in the softmax outputs, on the calibration set. In case two
-          probabilities are equal, both are taken, thus, the size of some
-          prediction sets may be different from the others. See [3] for
-          more details.
-
-        - ``None``, that does not specify the method used.
-
-        In any case, the `method` parameter does not take precedence over the
-        `conformity_score` parameter to define the method used.
-
-        By default ``None``.
-
     cv: Optional[Union[int, str, BaseCrossValidator]]
         The cross-validation strategy for computing scores.
         It directly drives the distinction between jackknife and cv variants.
@@ -666,9 +630,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
 
     conformity_score: BaseClassificationScore
         Score function that handle all that is related to conformity scores.
-
-        In any case, the `conformity_score` parameter takes precedence over the
-        `method` parameter to define the method used.
 
         By default ``None``.
 
@@ -757,7 +718,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
-        method: Optional[str] = None,
         cv: Optional[Union[int, str, BaseCrossValidator]] = None,
         test_size: Optional[Union[int, float]] = None,
         n_jobs: Optional[int] = None,
@@ -766,7 +726,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         verbose: int = 0
     ) -> None:
         self.estimator = estimator
-        self.method = method
         self.cv = cv
         self.test_size = test_size
         self.n_jobs = n_jobs
@@ -862,40 +821,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
     ):
         """
         Perform several checks on class parameters.
-
-        Parameters
-        ----------
-        X: ArrayLike
-            Observed values.
-
-        y: ArrayLike
-            Target values.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Non-null sample weights.
-
-        groups: Optional[ArrayLike] of shape (n_samples,)
-            Group labels for the samples used while splitting the dataset into
-            train/test set.
-            By default ``None``.
-
-        Returns
-        -------
-        Tuple[Optional[ClassifierMixin],
-        Optional[Union[int, str, BaseCrossValidator]],
-        ArrayLike, NDArray, NDArray, Optional[NDArray],
-        Optional[NDArray], ArrayLike]
-            Parameters checked
-
-        Raises
-        ------
-        ValueError
-            If conformity score is FittedResidualNormalizing score and method
-            is neither ``"prefit"`` or ``"split"``.
-
-        ValueError
-            If ``cv`` is `"prefit"`` or ``"split"`` and ``method`` is not
-            ``"base"``.
         """
         self._check_parameters()
         cv = _check_cv(
@@ -917,10 +842,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         self.label_encoder_ = self._get_label_encoder()
         y_enc = self.label_encoder_.transform(y)
 
-        cs_estimator = check_classification_conformity_score(
-            conformity_score=self.conformity_score,
-            method=self.method,
-        )
+        cs_estimator = check_classification_conformity_score(self.conformity_score)
         check_depreciated_size_raps(size_raps)
         cs_estimator.set_external_attributes(
             classes=self.classes_,
@@ -936,7 +858,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             )
         ):
             raise ValueError(
-                "RAPS method can only be used "
+                "RAPS conformity score can only be used "
                 "with SplitConformalClassifier."
             )
 

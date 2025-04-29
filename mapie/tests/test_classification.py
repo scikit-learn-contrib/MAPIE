@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, Iterable, Optional, Union, cast
+from typing import Any, Dict, Iterable, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -23,15 +23,19 @@ from typing_extensions import TypedDict
 
 from numpy.typing import ArrayLike, NDArray
 from mapie.classification import _MapieClassifier
-from mapie.conformity_scores import LACConformityScore
-from mapie.conformity_scores.utils import METHOD_SCORE_MAP
+from mapie.conformity_scores import (
+    LACConformityScore,
+    RAPSConformityScore,
+    APSConformityScore,
+    BaseClassificationScore,
+    TopKConformityScore,
+    NaiveConformityScore,
+)
 from mapie.conformity_scores.sets.utils import check_proba_normalized
 from mapie.metrics.classification import classification_coverage_score
 
 random_state = 42
 
-METHODS = ["lac", "aps", "raps"]
-WRONG_METHODS = ["scores", "cumulated", "test", "", 1, 2.5, (1, 2)]
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "other", 1, 2.5, (1, 2)]
 Y_PRED_PROBA_WRONG = [
     np.array(
@@ -62,7 +66,7 @@ Y_PRED_PROBA_WRONG = [
 Params = TypedDict(
     "Params",
     {
-        "method": str,
+        "conformity_score": BaseClassificationScore,
         "cv": Optional[Union[int, str]],
         "test_size": Optional[Union[int, float]],
         "random_state": Optional[int]
@@ -80,7 +84,7 @@ ParamsPredict = TypedDict(
 STRATEGIES = {
     "lac": (
         Params(
-            method="lac",
+            conformity_score=LACConformityScore(),
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -92,7 +96,7 @@ STRATEGIES = {
     ),
     "lac_split": (
         Params(
-            method="lac",
+            conformity_score=LACConformityScore(),
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -104,7 +108,7 @@ STRATEGIES = {
     ),
     "lac_cv_mean": (
         Params(
-            method="lac",
+            conformity_score=LACConformityScore(),
             cv=3,
             test_size=None,
             random_state=random_state
@@ -116,7 +120,7 @@ STRATEGIES = {
     ),
     "lac_cv_crossval": (
         Params(
-            method="lac",
+            conformity_score=LACConformityScore(),
             cv=3,
             test_size=None,
             random_state=random_state
@@ -128,7 +132,7 @@ STRATEGIES = {
     ),
     "aps_include": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -140,7 +144,7 @@ STRATEGIES = {
     ),
     "aps_not_include": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -152,7 +156,7 @@ STRATEGIES = {
     ),
     "aps_randomized": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -164,7 +168,7 @@ STRATEGIES = {
     ),
     "aps_include_split": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -176,7 +180,7 @@ STRATEGIES = {
     ),
     "aps_not_include_split": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -188,7 +192,7 @@ STRATEGIES = {
     ),
     "aps_randomized_split": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -200,7 +204,7 @@ STRATEGIES = {
     ),
     "aps_include_cv_mean": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv=3,
             test_size=None,
             random_state=random_state
@@ -212,7 +216,7 @@ STRATEGIES = {
     ),
     "aps_not_include_cv_mean": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv=3,
             test_size=None,
             random_state=random_state
@@ -224,7 +228,7 @@ STRATEGIES = {
     ),
     "aps_randomized_cv_mean": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv=3,
             test_size=None,
             random_state=random_state
@@ -236,7 +240,7 @@ STRATEGIES = {
     ),
     "aps_include_cv_crossval": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv=3,
             test_size=None,
             random_state=random_state
@@ -248,7 +252,7 @@ STRATEGIES = {
     ),
     "aps_not_include_cv_crossval": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv=3,
             test_size=None,
             random_state=random_state
@@ -260,7 +264,7 @@ STRATEGIES = {
     ),
     "aps_randomized_cv_crossval": (
         Params(
-            method="aps",
+            conformity_score=APSConformityScore(),
             cv=3,
             test_size=None,
             random_state=random_state
@@ -272,7 +276,7 @@ STRATEGIES = {
     ),
     "naive": (
         Params(
-            method="naive",
+            conformity_score=NaiveConformityScore(),
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -284,7 +288,7 @@ STRATEGIES = {
     ),
     "naive_split": (
         Params(
-            method="naive",
+            conformity_score=NaiveConformityScore(),
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -296,7 +300,7 @@ STRATEGIES = {
     ),
     "top_k": (
         Params(
-            method="top_k",
+            conformity_score=TopKConformityScore(),
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -308,7 +312,7 @@ STRATEGIES = {
     ),
     "top_k_split": (
         Params(
-            method="top_k",
+            conformity_score=TopKConformityScore(),
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -320,7 +324,7 @@ STRATEGIES = {
     ),
     "raps": (
         Params(
-            method="raps",
+            conformity_score=RAPSConformityScore(),
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -332,7 +336,7 @@ STRATEGIES = {
     ),
     "raps_split": (
         Params(
-            method="raps",
+            conformity_score=RAPSConformityScore(),
             cv=StratifiedShuffleSplit(
                 n_splits=1, train_size=0.5, random_state=random_state
             ),
@@ -346,7 +350,7 @@ STRATEGIES = {
     ),
     "raps_randomized": (
         Params(
-            method="raps",
+            conformity_score=RAPSConformityScore(),
             cv="prefit",
             test_size=None,
             random_state=random_state
@@ -358,7 +362,7 @@ STRATEGIES = {
     ),
     "raps_randomized_split": (
         Params(
-            method="raps",
+            conformity_score=RAPSConformityScore(),
             cv="split",
             test_size=0.5,
             random_state=random_state
@@ -375,7 +379,7 @@ STRATEGIES = {
 STRATEGIES_BINARY = {
     "lac": (
         Params(
-            method="lac",
+            conformity_score=LACConformityScore(),
             cv="prefit",
             test_size=None,
             random_state=42
@@ -387,7 +391,7 @@ STRATEGIES_BINARY = {
     ),
     "lac_split": (
         Params(
-            method="lac",
+            conformity_score=LACConformityScore(),
             cv="split",
             test_size=0.5,
             random_state=42
@@ -399,7 +403,7 @@ STRATEGIES_BINARY = {
     ),
     "lac_cv_mean": (
         Params(
-            method="lac",
+            conformity_score=LACConformityScore(),
             cv=3,
             test_size=None,
             random_state=42
@@ -411,7 +415,7 @@ STRATEGIES_BINARY = {
     ),
     "lac_cv_crossval": (
         Params(
-            method="lac",
+            conformity_score=LACConformityScore(),
             cv=3,
             test_size=None,
             random_state=42
@@ -792,7 +796,7 @@ X, y = make_classification(
 )
 
 # Here, we only list the strategies we want to test on larger data sets,
-# particularly for the raps methods which require larger data sets.
+# particularly for the raps conformity_scores which require larger data sets.
 LARGE_COVERAGES = {
     "lac": 0.802,
     "lac_split": 0.842,
@@ -921,22 +925,25 @@ class Float32OuputModel:
         return {"prefit": False}
 
 
-def do_nothing(*args: Any) -> None:
-    "Mock function that does nothing."
-    pass
-
-
 def test_initialized() -> None:
     """Test that initialization does not crash."""
     _MapieClassifier()
 
 
 @pytest.mark.parametrize("cv", ["prefit", "split"])
-@pytest.mark.parametrize("method", ["aps", "raps"])
-def test_warning_binary_classif(cv: str, method: str) -> None:
+@pytest.mark.parametrize(
+    "conformity_score",
+    [APSConformityScore(), RAPSConformityScore()],
+)
+def test_warning_binary_classif(
+    cv: str,
+    conformity_score: BaseClassificationScore
+) -> None:
     """Test that a warning is raised y is binary."""
     mapie_clf = _MapieClassifier(
-      cv=cv, method=method, random_state=random_state
+        cv=cv,
+        conformity_score=conformity_score,
+        random_state=random_state
     )
     X, y = make_classification(
         n_samples=500,
@@ -978,11 +985,15 @@ def test_valid_estimator(strategy: str) -> None:
     )
 
 
-@pytest.mark.parametrize("method", METHODS)
-def test_valid_method(method: str) -> None:
-    """Test that valid methods raise no errors."""
+@pytest.mark.parametrize(
+    "conformity_score",
+    [LACConformityScore(), APSConformityScore(), RAPSConformityScore(),
+        TopKConformityScore()],
+)
+def test_valid_conformity_score(conformity_score: BaseClassificationScore) -> None:
+    """Test that valid conformity scores raise no errors."""
     mapie_clf = _MapieClassifier(
-        method=method, cv="prefit", random_state=random_state
+        conformity_score=conformity_score, cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X, y)
     check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
@@ -1007,7 +1018,7 @@ def test_valid_cv(cv: Any) -> None:
 def test_agg_scores_argument(agg_scores: str) -> None:
     """Test that predict passes with all valid 'agg_scores' arguments."""
     mapie_clf = _MapieClassifier(
-        cv=3, method="lac", random_state=random_state
+        cv=3, conformity_score=LACConformityScore(), random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, alpha=0.5, agg_scores=agg_scores)
@@ -1017,7 +1028,7 @@ def test_agg_scores_argument(agg_scores: str) -> None:
 def test_invalid_agg_scores_argument(agg_scores: str) -> None:
     """Test that invalid 'agg_scores' raise errors."""
     mapie_clf = _MapieClassifier(
-        cv=3, method="lac", random_state=random_state
+        cv=3, conformity_score=LACConformityScore(), random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(
@@ -1043,7 +1054,10 @@ def test_too_large_cv(cv: Any) -> None:
 )
 def test_invalid_include_last_label(include_last_label: Any) -> None:
     """Test that invalid include_last_label raise errors."""
-    mapie_clf = _MapieClassifier(method='aps', random_state=random_state)
+    mapie_clf = _MapieClassifier(
+        conformity_score=APSConformityScore(),
+        random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(
         ValueError, match=r".*Invalid include_last_label argument.*"
@@ -1381,12 +1395,12 @@ def test_results_with_groups() -> None:
 
     strategy_no_group = dict(
         estimator=estimator,
-        method="lac",
+        conformity_score=LACConformityScore(),
         cv=KFold(n_splits=3, shuffle=False),
     )
     strategy_group = dict(
         estimator=estimator,
-        method="lac",
+        conformity_score=LACConformityScore(),
         cv=GroupKFold(n_splits=3),
     )
 
@@ -1473,46 +1487,6 @@ def test_large_dataset_predictions(strategy: str) -> None:
     )
 
 
-@pytest.mark.parametrize("strategy", [*LARGE_COVERAGES])
-def test_same_result_with_score_and_method(strategy: str) -> None:
-    """
-    Test that prediction sets estimated by _MapieClassifier on a larger dataset
-    archive same coverage with conformity_score or method parameters.
-    """
-
-    def get_results(args_init, args_predict):
-        if "split" not in strategy:
-            clf = LogisticRegression().fit(X, y)
-        else:
-            clf = LogisticRegression()
-        mapie_clf = _MapieClassifier(estimator=clf, **args_init)
-        mapie_clf.fit(X, y, size_raps=0.5)
-        _, y_ps = mapie_clf.predict(
-            X,
-            alpha=0.2,
-            include_last_label=args_predict["include_last_label"],
-            agg_scores=args_predict["agg_scores"]
-        )
-        return classification_coverage_score(y, y_ps[:, :, 0])
-
-    # Take args of the strategy to test
-    args_init = cast(dict, deepcopy(STRATEGIES[strategy][0]))
-    args_predict = cast(dict, deepcopy(STRATEGIES[strategy][1]))
-
-    # Test with method parameters
-    cov_method = get_results(args_init, args_predict)
-
-    # Change method to conformity_score
-    method = args_init.pop('method', None)
-    args_init['conformity_score'] = METHOD_SCORE_MAP[method]()
-
-    # Test with method parameters
-    cov_conformity_score = get_results(args_init, args_predict)
-
-    # Test that results are the same
-    np.testing.assert_allclose(cov_method, cov_conformity_score, rtol=1e-2)
-
-
 @pytest.mark.parametrize("strategy", [*STRATEGIES_BINARY])
 def test_toy_binary_dataset_predictions(strategy: str) -> None:
     """
@@ -1547,7 +1521,7 @@ def test_cumulated_scores() -> None:
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
     mapie_clf = _MapieClassifier(
         cumclf,
-        method="aps",
+        conformity_score=APSConformityScore(),
         cv="prefit",
         random_state=random_state
     )
@@ -1577,7 +1551,7 @@ def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
     cumclf.fit(cumclf.X_calib, cumclf.y_calib)
     mapie = _MapieClassifier(
         cumclf,
-        method="aps",
+        conformity_score=APSConformityScore(),
         cv="prefit",
         random_state=random_state
     )
@@ -1650,21 +1624,6 @@ def test_classifier_without_classes_attribute(
         mapie.fit(X_toy, y_toy)
 
 
-@pytest.mark.parametrize("method", WRONG_METHODS)
-def test_method_error_in_fit(monkeypatch: Any, method: str) -> None:
-    """Test else condition for the method in .fit"""
-    monkeypatch.setattr(
-        _MapieClassifier, "_check_parameters", do_nothing
-    )
-    mapie_clf = _MapieClassifier(
-        method=method, random_state=random_state
-    )
-    with pytest.raises(
-        ValueError, match=r".*(Invalid method.)|(Invalid conformity score.)*"
-    ):
-        mapie_clf.fit(X_toy, y_toy)
-
-
 @pytest.mark.parametrize("include_labels", WRONG_INCLUDE_LABELS)
 @pytest.mark.parametrize("alpha", [0.2, [0.2, 0.3], (0.2, 0.3)])
 def test_include_label_error_in_predict(
@@ -1675,10 +1634,10 @@ def test_include_label_error_in_predict(
     monkeypatch.setattr(
         utils,
         "check_include_last_label",
-        do_nothing
+        lambda *args, **kwargs: None,
     )
     mapie_clf = _MapieClassifier(
-        method="aps", random_state=random_state
+        conformity_score=APSConformityScore(), random_state=random_state
     )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid include.*"):
@@ -1773,7 +1732,7 @@ def test_classif_float32(cv) -> None:
     dummy_classif = Float32OuputModel()
 
     mapie = _MapieClassifier(
-        estimator=dummy_classif, method="naive",
+        estimator=dummy_classif, conformity_score=NaiveConformityScore(),
         cv=cv, random_state=random_state
     )
     mapie.fit(X_cal, y_cal)
@@ -1791,9 +1750,9 @@ def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
     and cv is different from prefit and split.
     """
     mapie = _MapieClassifier(
-        method="raps", cv=cv, random_state=random_state
+        conformity_score=RAPSConformityScore(), cv=cv, random_state=random_state
     )
-    with pytest.raises(ValueError, match=r".*RAPS method can only.*"):
+    with pytest.raises(ValueError, match=r".*RAPS conformity score can only.*"):
         mapie.fit(X_toy, y_toy)
 
 
@@ -1808,7 +1767,7 @@ def test_not_all_label_in_calib() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
-        estimator=clf, method="aps",
+        estimator=clf, conformity_score=APSConformityScore(),
         cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
@@ -1827,7 +1786,7 @@ def test_warning_not_all_label_in_calib() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
-        estimator=clf, method="aps",
+        estimator=clf, conformity_score=APSConformityScore(),
         cv="prefit", random_state=random_state
     )
     with pytest.warns(
@@ -1847,7 +1806,7 @@ def test_n_classes_prefit() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
-        estimator=clf, method="aps",
+        estimator=clf, conformity_score=APSConformityScore(),
         cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
@@ -1865,7 +1824,7 @@ def test_classes_prefit() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
-        estimator=clf, method="aps",
+        estimator=clf, conformity_score=APSConformityScore(),
         cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X_mapie, y_mapie)
@@ -1883,7 +1842,7 @@ def test_classes_encoder_same_than_model() -> None:
     X_mapie = X[indices_remove]
     y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
-        estimator=clf, method="aps",
+        estimator=clf, conformity_score=APSConformityScore(),
         cv="prefit"
     )
     mapie_clf.fit(X_mapie, y_mapie)
@@ -1898,7 +1857,7 @@ def test_n_classes_cv() -> None:
     clf = LogisticRegression()
 
     mapie_clf = _MapieClassifier(
-        estimator=clf, method="aps",
+        estimator=clf, conformity_score=APSConformityScore(),
         cv=5, random_state=random_state
     )
     mapie_clf.fit(X, y)
@@ -1913,7 +1872,7 @@ def test_classes_cv() -> None:
     clf = LogisticRegression()
 
     mapie_clf = _MapieClassifier(
-        estimator=clf, method="aps",
+        estimator=clf, conformity_score=APSConformityScore(),
         cv=5, random_state=random_state
     )
     mapie_clf.fit(X, y)
@@ -1929,7 +1888,7 @@ def test_raise_error_new_class() -> None:
     clf.fit(X, y)
     y[-1] = 10
     mapie_clf = _MapieClassifier(
-        estimator=clf, method="aps",
+        estimator=clf, conformity_score=APSConformityScore(),
         cv="prefit", random_state=random_state
     )
     with pytest.raises(
@@ -1947,9 +1906,8 @@ def test_fit_parameters_passing() -> None:
     gb = GradientBoostingClassifier(random_state=random_state)
 
     mapie = _MapieClassifier(
-        estimator=gb, method="aps", random_state=random_state
+        estimator=gb, conformity_score=APSConformityScore()
     )
-
     mapie.fit(X, y, fit_params={'monitor': early_stopping_monitor})
 
     assert mapie.estimator_.single_estimator_.estimators_.shape[0] == 3
