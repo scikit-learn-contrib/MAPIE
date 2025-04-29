@@ -97,7 +97,7 @@ class NotFitPredictEstimator:
         self.alpha = alpha
 
 
-class NoLossPamameterEstimator(BaseEstimator):
+class NoLossParameterEstimator(BaseEstimator):
     def __init__(self, alpha):
         self.alpha = alpha
 
@@ -108,7 +108,7 @@ class NoLossPamameterEstimator(BaseEstimator):
         """Dummy predict."""
 
 
-class NoAlphaPamameterEstimator(BaseEstimator):
+class NoAlphaParameterEstimator(BaseEstimator):
     def __init__(self, alpha, loss):
         self.alpha = alpha
         self.loss = loss
@@ -176,12 +176,12 @@ def test_no_para_loss_estimator() -> None:
     ):
         mapie_reg = MapieQuantileRegressor()
         mapie_reg.quantile_estimator_params[
-            "NoLossPamameterEstimator"
+            "NoLossParameterEstimator"
         ] = {
             "loss_name": "noloss",
             "alpha_name": "alpha"
         }
-        mapie_reg.estimator = NoLossPamameterEstimator(
+        mapie_reg.estimator = NoLossParameterEstimator(
             alpha=0.2
             )
         mapie_reg.fit(
@@ -200,12 +200,12 @@ def test_no_para_alpha_estimator() -> None:
     ):
         mapie_reg = MapieQuantileRegressor()
         mapie_reg.quantile_estimator_params[
-            "NoAlphaPamameterEstimator"
+            "NoAlphaParameterEstimator"
         ] = {
             "loss_name": "loss",
             "alpha_name": "noalpha"
         }
-        mapie_reg.estimator = NoAlphaPamameterEstimator(
+        mapie_reg.estimator = NoAlphaParameterEstimator(
             alpha=0.2,
             loss="quantile"
             )
