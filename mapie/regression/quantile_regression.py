@@ -376,7 +376,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.regression.regression import _MapieQuantileRegressor
+    >>> from mapie.regression.quantile_regression import _MapieQuantileRegressor
     >>> X_train = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y_train = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
     >>> X_calib = np.array([[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]])
