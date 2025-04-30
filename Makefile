@@ -16,7 +16,8 @@ coverage:
 		--cov-report term-missing \
 		--pyargs mapie tests_v1 \
 		--cov-fail-under=100 \
-		--no-cov-on-fail
+		--no-cov-on-fail \
+		--doctest-modules
 
 
 ### Checks that are run in ReadTheDocs CI ###
