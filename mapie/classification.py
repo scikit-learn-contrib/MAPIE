@@ -22,14 +22,13 @@ from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.sets.raps import RAPSConformityScore
 from mapie.conformity_scores.utils import (
     check_depreciated_size_raps, check_classification_conformity_score,
-    check_target
+    check_target, check_and_select_conformity_score,
 )
 from mapie.estimator.classifier import EnsembleClassifier
 from mapie.utils import (_check_alpha, _check_alpha_and_n_samples, _check_cv,
                          _check_estimator_classification, _check_n_features_in,
                          _check_n_jobs, _check_null_weight, _check_predict_params,
                          _check_verbose)
-from mapie_v1.conformity_scores._utils import check_and_select_conformity_score
 from mapie.utils import (
     _transform_confidence_level_to_alpha_list,
     _raise_error_if_fit_called_in_prefit_mode,

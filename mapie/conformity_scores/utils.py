@@ -1,15 +1,51 @@
-from typing import Optional
+from typing import Optional, no_type_check
 import warnings
 
-from sklearn.utils.multiclass import (check_classification_targets,
-                                      type_of_target)
+from sklearn.utils.multiclass import (
+    check_classification_targets,
+    type_of_target,
+)
 
 from .regression import BaseRegressionScore
 from .classification import BaseClassificationScore
-from .bounds import AbsoluteConformityScore
-from .sets import LACConformityScore
+from .bounds import (
+    AbsoluteConformityScore,
+    GammaConformityScore,
+    ResidualNormalisedScore,
+)
+from .sets import (
+    LACConformityScore,
+    TopKConformityScore,
+    APSConformityScore,
+    RAPSConformityScore,
+)
 
 from numpy.typing import ArrayLike
+
+
+CONFORMITY_SCORES_STRING_MAP = {
+    BaseRegressionScore: {
+        "absolute": AbsoluteConformityScore,
+        "gamma": GammaConformityScore,
+        "residual_normalized": ResidualNormalisedScore,
+    },
+    BaseClassificationScore: {
+        "lac": LACConformityScore,
+        "top_k": TopKConformityScore,
+        "aps": APSConformityScore,
+        "raps": RAPSConformityScore,
+    },
+}
+
+
+@no_type_check  # Cumbersome to type
+def check_and_select_conformity_score(conformity_score, conformity_score_type):
+    if isinstance(conformity_score, conformity_score_type):
+        return conformity_score
+    elif conformity_score in CONFORMITY_SCORES_STRING_MAP[conformity_score_type]:
+        return CONFORMITY_SCORES_STRING_MAP[conformity_score_type][conformity_score]()
+    else:
+        raise ValueError("Invalid conformity_score parameter")
 
 
 def check_regression_conformity_score(
