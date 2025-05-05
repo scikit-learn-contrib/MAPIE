@@ -14,7 +14,10 @@ from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import (BaseRegressionScore,
                                      ResidualNormalisedScore)
-from mapie.conformity_scores.utils import check_regression_conformity_score
+from mapie.conformity_scores.utils import (
+    check_regression_conformity_score,
+    check_and_select_conformity_score,
+)
 from mapie.estimator.regressor import EnsembleRegressor
 from mapie.subsample import Subsample
 from mapie.utils import (_check_alpha, _check_alpha_and_n_samples,
@@ -22,7 +25,6 @@ from mapie.utils import (_check_alpha, _check_alpha_and_n_samples,
                          _check_n_features_in, _check_n_jobs, _check_null_weight,
                          _check_verbose, _get_effective_calibration_samples,
                          _check_predict_params)
-from mapie_v1.conformity_scores._utils import check_and_select_conformity_score
 from mapie.utils import (
     _transform_confidence_level_to_alpha_list,
     _check_if_param_in_allowed_values,
