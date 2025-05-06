@@ -91,7 +91,7 @@ Regression Metrics
    mapie.metrics.regression.coverage_width_based
    mapie.metrics.regression.regression_mwi_score
 
-Utils (from mapie_v1)
+Utils
 ==============================
 
 .. autosummary::
