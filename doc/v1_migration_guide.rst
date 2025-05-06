@@ -63,7 +63,7 @@ The ``cv`` parameter is key to understand what new class to use in the v1 API:
 
 For more details regarding the difference between split and cross conformal types, see :doc:`split_cross_conformal`.
 
-Note that ``MapieClassifier`` and ``MapieRegressor`` are now considered implementation details and should not be used directly. They have been renamed ``_MapieClassifier`` and ``_MapieRegressor``.
+Note that ``MapieClassifier`` and ``MapieRegressor`` are now considered implementation details and should not be used directly. They have been renamed :class:`~mapie.classification._MapieClassifier` and :class:`~mapie.classification._MapieRegressor`.
 
 3. Method changes
 -----------------
@@ -82,28 +82,27 @@ In v0.x, the ``fit`` method handled both model training and calibration.
 
 In v1.0: MAPIE separates between training and calibration. We decided to name the *calibration* step *conformalization*, to avoid confusion with probability calibration.
 
-For split conformal techniques:
+For split conformal techniques, ``.fit`` is replaced by ``.fit`` then ``.conformalize``
 
-``.fit()`` method:
+``.fit()``:
 
 - In v1, ``fit`` only trains the model on training data, without handling conformalization.
 - Additional fitting parameters, like ``sample_weight``, should be included in ``fit_params``, keeping this method focused on training alone.
 
-``.conformalize()`` method:
+``.conformalize()``:
 
-- Used in split methods only
 - This new method performs conformalization after fitting, using separate conformity data ``(X_conformalize, y_conformalize)``.
 - ``predict_params`` should be passed here
 
 For cross conformal techniques:
 
-``.fit_conformalize()`` method: because those techniques rely on fitting and conformalizing models in a cross-validation fashion, the fitting and conformalization steps are not distinct.
+- ``.fit_conformalize()`` method: because those techniques rely on fitting and conformalizing models in a cross-validation fashion, the fitting and conformalization steps are not distinct.
 
-Step 4: Making predictions (``predict`` and ``predict_interval`` methods)
+Step 4: Making predictions (``predict`` and ``predict_interval``/``predict_set`` methods)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In MAPIE v0.x, both point predictions and prediction intervals were produced through the ``predict`` method.
+In MAPIE v0.x, both point predictions and prediction intervals/sets were produced through the ``predict`` method.
 
-MAPIE v1 introduces a new method for prediction, ``.predict_interval()``, that behaves like v0.x ``.predict(alpha=...)`` method. Namely, it predicts points and intervals.
+MAPIE v1 introduces two new methods for prediction: ``.predict_interval()`` for regression, and ``.predict_set()`` for classification. Those two methods predict points and intervals/sets. They behave the same way than the ``.predict(alpha=...)`` v0.x method, with some minor output shape changes, to keep it consistent across all conformal techniques.
 The ``.predict()`` method now focuses solely on producing point predictions.
 
 
