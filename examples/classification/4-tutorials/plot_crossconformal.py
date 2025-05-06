@@ -4,25 +4,25 @@ Cross-conformal for classification
 ==================================
 
 In this tutorial, we estimate the impact of the
-training/calibration split on the prediction sets and
+training/conformalization split on the prediction sets and
 on the resulting coverage estimated by
-:class:`~mapie.classification._MapieClassifier`.
+:class:`~mapie_v1.classification.SplitConformalClassifier`.
 We then adopt a cross-validation approach in which the
-conformity scores of all calibration sets are used to
+conformity scores of all conformity sets are used to
 estimate the quantile. We demonstrate that this second
 "cross-conformal" approach gives more robust prediction
-sets with accurate calibration plots.
+sets with accurate conformity plots.
 
 The two-dimensional dataset used here is the one presented
 by Sadinle et al. (2019) also introduced by other examples
 of this documentation.
 
 We start the tutorial by splitting our training dataset
-in ``K`` folds and sequentially use each fold as a
-calibration set, the ``K-1`` folds remaining folds are
+in ``K`` folds, and sequentially use each fold as a
+conformity set, while the ``K-1`` folds remaining are
 used for training the base model using
-the ``cv="prefit"`` option of
-:class:`~mapie.classification._MapieClassifier`.
+the ``prefit=True`` option of
+:class:`~mapie_v1.classification.SplitConformalClassifier`.
 """
 
 
@@ -36,16 +36,15 @@ from sklearn.naive_bayes import GaussianNB
 from typing_extensions import TypedDict
 
 from numpy.typing import NDArray
-from mapie.classification import _MapieClassifier
-from mapie.conformity_scores import LACConformityScore, APSConformityScore
+from mapie.classification import SplitConformalClassifier, CrossConformalClassifier
 from mapie.metrics.classification import (
-    classification_coverage_score,
+    classification_coverage_score_v2,
     classification_mean_width_score,
 )
 
-##############################################################################
-# 1. Estimating the impact of train/calibration split on the prediction sets
-# --------------------------------------------------------------------------
+##################################################################################
+# 1. Estimating the impact of train/conformalization split on the prediction sets
+# --------------------------------------------------------------------------------
 #
 # We start by generating the two-dimensional dataset and extracting training
 # and test sets. Two test sets are created, one with the same distribution
@@ -104,29 +103,31 @@ plt.show()
 
 ##############################################################################
 # We split our training dataset into 5 folds and use each fold as a
-# calibration set. Each calibration set is therefore used to estimate the
+# conformity set. Each conformity set is therefore used to estimate the
 # conformity scores and the given quantiles for the two methods implemented in
-# :class:`~mapie.classification._MapieClassifier`.
+# :class:`~mapie_v1.classification.SplitConformalClassifier`.
 
 
 kf = KFold(n_splits=5, shuffle=True)
 clfs, mapies, y_preds, y_ps_mapies = {}, {}, {}, {}
-conformity_scores = [LACConformityScore(), APSConformityScore()]
-alpha = np.arange(0.01, 1, 0.01)
+conformity_scores = ["lac", "aps"]
+confidence_level = np.arange(0.01, 1, 0.01)
 for conformity_score in conformity_scores:
     clfs_, mapies_, y_preds_, y_ps_mapies_ = {}, {}, {}, {}
-    for fold, (train_index, calib_index) in enumerate(kf.split(X_train)):
-        clf = GaussianNB().fit(X_train[train_index], y_train[train_index])
+    for fold, (train_index, conf_index) in enumerate(kf.split(X_train)):
+        clf = GaussianNB()
+        clf.fit(X_train[train_index], y_train[train_index])
         clfs_[fold] = clf
-        mapie = _MapieClassifier(
+        mapie = SplitConformalClassifier(
             estimator=clf,
-            cv="prefit",
+            confidence_level=confidence_level,
+            prefit=True,
             conformity_score=conformity_score
         )
-        mapie.fit(X_train[calib_index], y_train[calib_index])
+        mapie.conformalize(X_train[conf_index], y_train[conf_index])
         mapies_[fold] = mapie
-        y_pred_mapie, y_ps_mapie = mapie.predict(
-            X_test_distrib, alpha=alpha, include_last_label="randomized"
+        y_pred_mapie, y_ps_mapie = mapie.predict_set(
+            X_test_distrib, conformity_score_params={"include_last_label": "randomized"}
         )
         y_preds_[fold], y_ps_mapies_[fold] = y_pred_mapie, y_ps_mapie
     (
@@ -140,31 +141,31 @@ for conformity_score in conformity_scores:
 
 
 ##############################################################################
-# Let's now plot the distribution of conformity scores for each calibration
-# set and the estimated quantile for ``alpha`` = 0.1.
+# Let's now plot the distribution of conformity scores for each conformity
+# set and the estimated quantile for ``confidence_level`` = 0.9.
 
 
 fig, axs = plt.subplots(1, len(mapies[conformity_scores[0]]), figsize=(20, 4))
 for i, (key, mapie) in enumerate(mapies[conformity_scores[0]].items()):
-    quantiles = mapie.conformity_score_function_.quantiles_[9]
+    quantiles = mapie._mapie_classifier.conformity_score_function_.quantiles_[89]
     axs[i].set_xlabel("Conformity scores")
-    axs[i].hist(mapie.conformity_scores_)
+    axs[i].hist(mapie._mapie_classifier.conformity_scores_)
     axs[i].axvline(quantiles, ls="--", color="k")
     axs[i].set_title(f"split={key}\nquantile={quantiles:.3f}")
 plt.suptitle(
-    "Distribution of scores on each calibration fold for the "
-    f"{conformity_scores[0]} method"
+    "Distribution of scores on each conformity fold for the "
+    f"{conformity_scores[0]} conformity score"
 )
 plt.show()
 
 
 ##############################################################################
-# We notice that the estimated quantile slightly varies among the calibration
+# We notice that the estimated quantile slightly varies among the conformity
 # sets for the two conformity scores explored here, suggesting that the
-# train/calibration splitting can slightly impact our results.
+# train/conformalization splitting can slightly impact our results.
 #
 # Let's now visualize this impact on the number of labels included in each
-# prediction set induced by the different calibration sets.
+# prediction set induced by the different conformity sets.
 
 
 def plot_results(
@@ -172,17 +173,15 @@ def plot_results(
     X_test: NDArray,
     X_test2: NDArray,
     y_test2: NDArray,
-    alpha: float,
-    method: str
+    conformity_score: str
 ) -> None:
     tab10 = plt.cm.get_cmap('Purples', 4)
     fig, axs = plt.subplots(1, len(mapies), figsize=(20, 4))
     for i, (_, mapie) in enumerate(mapies.items()):
-        y_pi_sums = mapie.predict(
+        y_pi_sums = mapie.predict_set(
             X_test,
-            alpha=alpha,
-            include_last_label=True
-        )[1][:, :, 0].sum(axis=1)
+            conformity_score_params={"include_last_label": True}
+        )[1][:, :, 89].sum(axis=1)
         axs[i].scatter(
             X_test[:, 0],
             X_test[:, 1],
@@ -194,21 +193,21 @@ def plot_results(
             vmin=0,
             vmax=3
         )
-        coverage = classification_coverage_score(
-            y_test2, mapie.predict(X_test2, alpha=alpha)[1][:, :, 0]
-        )
+        coverage = classification_coverage_score_v2(
+            y_test2, mapie.predict_set(X_test2)[1][:, :, 89]
+        )[0]
         axs[i].set_title(f"coverage = {coverage:.3f}")
     plt.suptitle(
         "Number of labels in prediction sets "
-        f"for the {method} method"
+        f"for the {conformity_score} conformity score"
     )
     plt.show()
 
 
 ##############################################################################
 # The prediction sets and the resulting coverages slightly vary among
-# calibration sets. Let's now visualize the coverage score and the
-# prediction set size as function of the ``alpha`` parameter.
+# conformity sets. Let's now visualize the coverage score and the
+# prediction set size as function of the ``confidence_level`` parameter.
 
 
 plot_results(
@@ -216,7 +215,6 @@ plot_results(
     X_test,
     X_test_distrib,
     y_test_distrib,
-    alpha[9],
     "lac"
 )
 
@@ -225,21 +223,20 @@ plot_results(
     X_test,
     X_test_distrib,
     y_test_distrib,
-    alpha[9],
     "aps"
 )
 
 
 ##############################################################################
 # Let's now compare the coverages and prediction set sizes obtained with the
-# different folds used as calibration sets.
+# different folds used as conformity sets.
 
 
 def plot_coverage_width(
-    alpha: NDArray,
+    confidence_level: NDArray,
     coverages: List[NDArray],
     widths: List[NDArray],
-    method: str,
+    conformity_score: str,
     comp: str = "split"
 ) -> None:
     if comp == "split":
@@ -247,20 +244,20 @@ def plot_coverage_width(
     else:
         legends = ["Mean", "Crossval"]
     _, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
-    axes[0].set_xlabel("1 - alpha")
+    axes[0].set_xlabel("Confidence level")
     axes[0].set_ylabel("Effective coverage")
     for i, coverage in enumerate(coverages):
-        axes[0].plot(1 - alpha, coverage, label=legends[i])
+        axes[0].plot(confidence_level, coverage, label=legends[i])
     axes[0].plot([0, 1], [0, 1], ls="--", color="k")
     axes[0].legend()
-    axes[1].set_xlabel("1 - alpha")
+    axes[1].set_xlabel("Confidence level")
     axes[1].set_ylabel("Average of prediction set sizes")
     for i, width in enumerate(widths):
-        axes[1].plot(1 - alpha, width, label=legends[i])
+        axes[1].plot(confidence_level, width, label=legends[i])
     axes[1].legend()
     plt.suptitle(
         "Effective coverage and prediction set size "
-        f"for the {method} method"
+        f"for the {conformity_score} conformity score"
     )
     plt.show()
 
@@ -268,10 +265,7 @@ def plot_coverage_width(
 split_coverages = np.array(
     [
         [
-            [
-                classification_coverage_score(
-                    y_test_distrib, y_ps[:, :, ia]
-                ) for ia, _ in enumerate(alpha)]
+            classification_coverage_score_v2(y_test_distrib, y_ps)
             for _, y_ps in y_ps2.items()
         ] for _, y_ps2 in y_ps_mapies.items()
     ]
@@ -287,23 +281,23 @@ split_widths = np.array(
 )
 
 plot_coverage_width(
-    alpha, split_coverages[0], split_widths[0], "lac"
+    confidence_level, split_coverages[0], split_widths[0], "lac"
 )
 
 plot_coverage_width(
-    alpha, split_coverages[1], split_widths[1], "aps"
+    confidence_level, split_coverages[1], split_widths[1], "aps"
 )
 
 
 ##############################################################################
-# One can notice that the train/calibration indeed impacts the coverage and
+# One can notice that the train/conformity indeed impacts the coverage and
 # prediction set.
 #
 # In conclusion, the split-conformal method has two main limitations:
 #
-# - It prevents us to use the whole training set for training our base model
+# - It prevents us from using the whole training set for training our base model;
 #
-# - The prediction sets are impacted by the way we extract the calibration set
+# - The prediction sets are impacted by the way we extract the conformity set.
 
 ##############################################################################
 # 2. Aggregating the conformity scores through cross-validation
@@ -320,8 +314,8 @@ plot_coverage_width(
 #    the conformity scores from the associated model for a new test point
 #    (as presented in Romano et al. 2020 for the "aps" method)
 #
-# Let's explore the two possibilites with the "lac" method using
-# :class:`~mapie.classification._MapieClassifier`.
+# Let's explore the two possibilities with the "lac" method using
+# :class:`~mapie_v1.classification.CrossConformalClassifier`.
 #
 # All we need to do is to provide with the `cv` argument a cross-validation
 # object or an integer giving the number of folds.
@@ -348,31 +342,62 @@ kf = KFold(n_splits=5, shuffle=True)
 
 STRATEGIES = {
     "score_cv_mean": (
-        Params(conformity_score=LACConformityScore(), cv=kf, random_state=42),
-        ParamsPredict(include_last_label=False, agg_scores="mean")
+        Params(
+            confidence_level=confidence_level,
+            conformity_score="lac",
+            cv=kf,
+            random_state=42
+        ),
+        ParamsPredict(
+            conformity_score_params={"include_last_label": False},
+            agg_scores="mean"
+        )
     ),
     "score_cv_crossval": (
-        Params(conformity_score=LACConformityScore(), cv=kf, random_state=42),
-        ParamsPredict(include_last_label=False, agg_scores="crossval")
+        Params(
+            confidence_level=confidence_level,
+            conformity_score="lac",
+            cv=kf,
+            random_state=42
+        ),
+        ParamsPredict(
+            conformity_score_params={"include_last_label": False},
+            agg_scores="crossval"
+        )
     ),
     "cum_score_cv_mean": (
-        Params(conformity_score=APSConformityScore(), cv=kf, random_state=42),
-        ParamsPredict(include_last_label="randomized", agg_scores="mean")
+        Params(
+            confidence_level=confidence_level,
+            conformity_score="aps",
+            cv=kf,
+            random_state=42
+        ),
+        ParamsPredict(
+            conformity_score_params={"include_last_label": "randomized"},
+            agg_scores="mean"
+        )
     ),
     "cum_score_cv_crossval": (
-        Params(conformity_score=APSConformityScore(), cv=kf, random_state=42),
-        ParamsPredict(include_last_label='randomized', agg_scores="crossval")
+        Params(
+            confidence_level=confidence_level,
+            conformity_score="aps",
+            cv=kf,
+            random_state=42
+        ),
+        ParamsPredict(
+            conformity_score_params={"include_last_label": "randomized"},
+            agg_scores="crossval"
+        )
     )
 }
 
 y_ps = {}
 for strategy, params in STRATEGIES.items():
     args_init, args_predict = STRATEGIES[strategy]
-    mapie_clf = _MapieClassifier(**args_init)
-    mapie_clf.fit(X_train, y_train)
-    _, y_ps[strategy] = mapie_clf.predict(
+    mapie_clf = CrossConformalClassifier(**args_init)
+    mapie_clf.fit_conformalize(X_train, y_train)
+    _, y_ps[strategy] = mapie_clf.predict_set(
         X_test_distrib,
-        alpha=alpha,
         **args_predict
     )
 
@@ -382,31 +407,26 @@ for strategy, params in STRATEGIES.items():
 # aggregation strategies and both methods.
 # We also estimate the "violation" score defined as the absolute difference
 # between the effective coverage and the target coverage averaged over all
-# alpha values.
+# confidence level values.
 
 coverages, widths, violations = {}, {}, {}
 
 for strategy, y_ps_ in y_ps.items():
     coverages[strategy] = np.array(
-        [
-            classification_coverage_score(
-                y_test_distrib,
-                y_ps_[:, :, ia]
-            ) for ia, _ in enumerate(alpha)
-        ]
+        classification_coverage_score_v2(y_test_distrib, y_ps_)
     )
     widths[strategy] = np.array(
         classification_mean_width_score(y_ps_)
     )
-    violations[strategy] = np.abs(coverages[strategy] - (1 - alpha)).mean()
+    violations[strategy] = np.abs(coverages[strategy] - confidence_level).mean()
 
 
 ##############################################################################
 # Next, we visualize their coverages and prediction set sizes as function of
-# the `alpha` parameter.
+# the `confidence_level` parameter.
 
 plot_coverage_width(
-    alpha,
+    confidence_level,
     [coverages["score_cv_mean"], coverages["score_cv_crossval"]],
     [widths["score_cv_mean"], widths["score_cv_crossval"]],
     "lac",
@@ -414,7 +434,7 @@ plot_coverage_width(
 )
 
 plot_coverage_width(
-    alpha,
+    confidence_level,
     [coverages["cum_score_cv_mean"], coverages["cum_score_cv_mean"]],
     [widths["cum_score_cv_crossval"], widths["cum_score_cv_crossval"]],
     "aps",
@@ -425,9 +445,9 @@ plot_coverage_width(
 ##############################################################################
 # Both methods give here the same coverages and prediction set sizes for this
 # example. In practice, we obtain very similar results for datasets containing
-# a high number of points. This is not the case for small datasets.
+# a high number of points. However, this is not the case for small datasets.
 #
-# The calibration plots obtained with the cross-conformal methods seem to be
+# The conformity plots obtained with the cross-conformal methods seem to be
 # more robust than with the split-conformal used above. Let's check this first
 # impression by comparing the violation of the effective coverage from the
 # target coverage between the cross-conformal and split-conformal methods.
@@ -440,7 +460,7 @@ violations_df.loc["lac", "cv_mean"] = violations["score_cv_mean"]
 violations_df.loc["lac", "cv_crossval"] = violations["score_cv_crossval"]
 violations_df.loc["lac", "splits"] = np.stack(
     [
-        np.abs(cov - (1 - alpha)).mean()
+        np.abs(cov - confidence_level).mean()
         for cov in split_coverages[0]
     ]
 ).mean()
@@ -452,7 +472,7 @@ violations_df.loc["aps", "cv_crossval"] = (
 )
 violations_df.loc["aps", "splits"] = np.stack(
     [
-        np.abs(cov - (1 - alpha)).mean()
+        np.abs(cov - confidence_level).mean()
         for cov in split_coverages[1]
     ]
 ).mean()
