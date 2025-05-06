@@ -10,7 +10,7 @@ methods implemented in MAPIE on a toy two-dimensional dataset.
 Throughout this tutorial, we will answer the following questions:
 
 - How does the number of classes in the prediction sets vary according to
-  the significance level?
+  the confidence level?
 
 - Is the chosen conformal method well calibrated?
 
@@ -45,7 +45,7 @@ from mapie.metrics.classification import (
 #   fitted on the training set.
 #
 # * Set the conformal score ``Sᵢ = 𝑓̂(Xᵢ)ᵧᵢ``, the softmax
-#   output of the true class for each sample in the conformalization set.
+#   output of the true class for each sample in the conformity set.
 #
 # * Define ``q̂`` as being the ``(n + 1)(α) / n``
 #   previous quantile of ``S₁, ..., Sₙ``
@@ -102,7 +102,7 @@ plt.show()
 
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator. And then we
-# apply MAPIE in the conformalization data with the LAC conformity score to the
+# apply MAPIE in the conformity data with the LAC conformity score to the
 # estimator indicating that it has already been fitted with `prefit=True`.
 # We then estimate the prediction sets with different confidence level values with a
 # ``conformalize`` and ``predict`` process.
@@ -222,7 +222,7 @@ mapie_score2 = SplitConformalClassifier(
 )
 mapie_score2.conformalize(X_conf, y_conf)
 _, y_ps_score2 = mapie_score2.predict_set(X_test)
-coverages_score = [classification_coverage_score_v2(y_test, y_ps_score2)]
+coverages_score = classification_coverage_score_v2(y_test, y_ps_score2)
 widths_score = classification_mean_width_score(y_ps_score2)
 
 
@@ -259,7 +259,7 @@ plot_coverages_widths(
 # prediction sets by giving slightly bigger prediction sets.
 #
 # Let's visualize the prediction sets obtained with the APS method on the test
-# set after fitting MAPIE on the conformalization set.
+# set after fitting MAPIE on the conformity set.
 
 confidence_level = [0.8, 0.9, 0.95]
 mapie_aps = SplitConformalClassifier(
@@ -290,7 +290,7 @@ mapie_aps2.conformalize(X_conf, y_conf)
 _, y_ps_aps2 = mapie_aps2.predict_set(
     X_test, conformity_score_params={"include_last_label": "randomized"}
 )
-coverages_aps = [classification_coverage_score_v2(y_test, y_ps_aps2)]
+coverages_aps = classification_coverage_score_v2(y_test, y_ps_aps2)
 widths_aps = classification_mean_width_score(y_ps_aps2)
 
 plot_coverages_widths(
