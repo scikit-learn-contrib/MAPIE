@@ -61,7 +61,9 @@ The ``cv`` parameter is key to understand what new class to use in the v1 API:
      - ``CrossConformalClassifier``
      - Cross
 
-For more details regarding the difference between split and cross conformal types, see :doc:`split_cross_conformal`
+For more details regarding the difference between split and cross conformal types, see :doc:`split_cross_conformal`.
+
+Note that ``MapieClassifier`` and ``MapieRegressor`` are now considered implementation details and should not be used directly. They have been renamed ``_MapieClassifier`` and ``_MapieRegressor``.
 
 3. Method changes
 -----------------
