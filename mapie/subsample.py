@@ -16,8 +16,8 @@ from .utils import _check_n_samples
 class Subsample(BaseCrossValidator):
     """
     Generate a sampling method, that resamples the training set with
-    possible bootstraps. It can replace KFold or  LeaveOneOut as cv argument
-    in the MAPIE class.
+    possible bootstraps. It can be used as cv argument in
+    :class:`~mapie.regression.JackknifeAfterBootstrapRegressor`.
 
     Parameters
     ----------
