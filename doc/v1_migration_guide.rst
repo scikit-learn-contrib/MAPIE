@@ -42,7 +42,7 @@ The ``cv`` parameter is key to understand what new class to use in the v1 API:
      - Split
    * - ``MapieRegressor``
      - ``None``, integer, or any ``sklearn.model_selection.BaseCrossValidator``
-     - ``CrossConformalRegressor`
+     - ``CrossConformalRegressor``
      - Cross
    * - ``MapieRegressor``
      - ``subsample.Subsample``
