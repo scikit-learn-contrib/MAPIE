@@ -138,9 +138,9 @@ Similarly, it's possible to do the same for a basic classification problem.
 
 .. code:: python
 
-    from mapie.metrics import classification_coverage_score_v2
+    from mapie.metrics import classification_coverage_score
 
-    coverage_scores = classification_coverage_score_v2(y_test, y_pis)
+    coverage_scores = classification_coverage_score(y_test, y_pis)
 
 .. code:: python
 

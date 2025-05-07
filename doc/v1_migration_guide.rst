@@ -209,6 +209,12 @@ Additionally, a number of classification and regression functions have been upda
 - **v0.x**: Took the prediction sets in an array of shape (n_samples, n_class) for a given confidence level as input, and returned the effective mean width as a float.
 - **v1**: Now takes the prediction sets in an array of shape (n_samples, n_class, n_confidence_level) as input, and returns the effective mean width for each confidence level as an array of shape (n_confidence_level,).
 
+``classification_coverage_score``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **v0.x**: Had two separate versions: ``classification_coverage_score`` and ``classification_coverage_v2``.
+- **v1**: ``classification_coverage_score`` now corresponds to MAPIE v0.x's ``classification_coverage_score_v2``.
+
 ``regression_mean_width``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

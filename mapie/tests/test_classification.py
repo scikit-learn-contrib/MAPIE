@@ -1460,7 +1460,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     )
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy])
     np.testing.assert_allclose(
-        classification_coverage_score(y_toy, y_ps[:, :, 0]),
+        classification_coverage_score(y_toy, y_ps)[0],
         COVERAGES[strategy],
     )
 
@@ -1482,7 +1482,7 @@ def test_large_dataset_predictions(strategy: str) -> None:
         agg_scores=args_predict["agg_scores"]
     )
     np.testing.assert_allclose(
-        classification_coverage_score(y, y_ps[:, :, 0]),
+        classification_coverage_score(y, y_ps)[0],
         LARGE_COVERAGES[strategy], rtol=1e-2
     )
 
@@ -1507,7 +1507,7 @@ def test_toy_binary_dataset_predictions(strategy: str) -> None:
     )
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_binary_mapie[strategy])
     np.testing.assert_allclose(
-        classification_coverage_score(y_toy_binary, y_ps[:, :, 0]),
+        classification_coverage_score(y_toy_binary, y_ps)[0],
         COVERAGES_BINARY[strategy],
     )
 

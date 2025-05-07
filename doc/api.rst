@@ -71,7 +71,6 @@ Classification Metrics
    :template: function.rst
 
    mapie.metrics.classification.classification_coverage_score
-   mapie.metrics.classification.classification_coverage_score_v2
    mapie.metrics.classification.classification_mean_width_score
    mapie.metrics.classification.classification_ssc
    mapie.metrics.classification.classification_ssc_score

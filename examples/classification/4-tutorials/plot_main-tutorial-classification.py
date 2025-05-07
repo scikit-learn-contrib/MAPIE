@@ -24,7 +24,7 @@ from sklearn.naive_bayes import GaussianNB
 from mapie.classification import SplitConformalClassifier
 from mapie.utils import train_conformalize_test_split
 from mapie.metrics.classification import (
-    classification_coverage_score_v2,
+    classification_coverage_score,
     classification_mean_width_score,
 )
 
@@ -222,7 +222,7 @@ mapie_score2 = SplitConformalClassifier(
 )
 mapie_score2.conformalize(X_conf, y_conf)
 _, y_ps_score2 = mapie_score2.predict_set(X_test)
-coverages_score = classification_coverage_score_v2(y_test, y_ps_score2)
+coverages_score = classification_coverage_score(y_test, y_ps_score2)
 widths_score = classification_mean_width_score(y_ps_score2)
 
 
@@ -290,7 +290,7 @@ mapie_aps2.conformalize(X_conf, y_conf)
 _, y_ps_aps2 = mapie_aps2.predict_set(
     X_test, conformity_score_params={"include_last_label": "randomized"}
 )
-coverages_aps = classification_coverage_score_v2(y_test, y_ps_aps2)
+coverages_aps = classification_coverage_score(y_test, y_ps_aps2)
 widths_aps = classification_mean_width_score(y_ps_aps2)
 
 plot_coverages_widths(
