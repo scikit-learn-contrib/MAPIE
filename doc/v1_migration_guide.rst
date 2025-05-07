@@ -155,7 +155,7 @@ How to aggregate predictions in cross conformal methods.
 - **v1**: This parameter is now named `symmetric_correction` and is set to False by default, because the resulting intervals are smaller. It is used in the `predict_interval` method of the ConformalizedQuantileRegressor.
 
 ``include_last_label``
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Parameter specific to APS or RAPS conformity scores in classification.
 
 - **v0.x**: This parameter is passed to the ``predict`` method of ``MapieClassifier``.
@@ -400,7 +400,7 @@ MAPIE v1 code
     prediction_points_v1 = v1.predict(X_test, aggregate_predictions="median")
 
 Example 3: split conformal classification, using non-trivial parameters and an unfitted model
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 MAPIE v0 code
 
