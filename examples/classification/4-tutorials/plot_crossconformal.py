@@ -207,7 +207,8 @@ def plot_results(
 ##############################################################################
 # The prediction sets and the resulting coverages slightly vary among
 # conformity sets. Let's now visualize the coverage score and the
-# prediction set size as function of the ``confidence_level`` parameter.
+# prediction set size of each fold and for both conformity scores, when
+# ``confidence_level`` = 0.9.
 
 
 plot_results(
