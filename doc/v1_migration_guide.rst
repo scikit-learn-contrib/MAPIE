@@ -38,11 +38,11 @@ The ``cv`` parameter is key to understand what new class to use in the v1 API:
      - Conformal prediction type
    * - ``MapieRegressor``
      - ``"split"`` or ``"prefit"``
-     - ``SplitConformalRegressor``
+     - ``SplitConformalRegressor`` (used with ``prefit=False`` or ``prefit=True``)
      - Split
    * - ``MapieRegressor``
      - ``None``, integer, or any ``sklearn.model_selection.BaseCrossValidator``
-     - ``CrossConformalRegressor``
+     - :class:`~mapie.classification.CrossConformalRegressor`
      - Cross
    * - ``MapieRegressor``
      - ``subsample.Subsample``
@@ -54,7 +54,7 @@ The ``cv`` parameter is key to understand what new class to use in the v1 API:
      - Split
    * - ``MapieClassifier``
      - ``"split"`` or ``"prefit"``
-     - ``SplitConformalClassifier``
+     - ``SplitConformalClassifier`` (used with ``prefit=False`` or ``prefit=True``)
      - Split
    * - ``MapieClassifier``
      - ``None``, integer, or any ``sklearn.model_selection.BaseCrossValidator``
@@ -63,48 +63,31 @@ The ``cv`` parameter is key to understand what new class to use in the v1 API:
 
 For more details regarding the difference between split and cross conformal types, see :doc:`split_cross_conformal`.
 
-Note that ``MapieClassifier`` and ``MapieRegressor`` are now considered implementation details and should not be used directly. They have been renamed :class:`~mapie.classification._MapieClassifier` and :class:`~mapie.classification._MapieRegressor`.
+Note that ``MapieClassifier``, ``MapieRegressor``, and ``MapieQuantileRegressor`` are now considered implementation details and should not be used directly. They have been renamed ``_MapieClassifier``, ``_MapieRegressor`` and ``_MapieQuantileRegressor``.
 
-3. Method changes
------------------
+3. Workflow and method changes
+--------------------------------------------------------------------
 
-In MAPIE v1, the conformal prediction workflow is more streamlined and modular, with distinct methods for training, conformalization (named calibration in the scientific literature), and prediction. The conformalization process in v1 consists of four steps.
+The conformal prediction workflow has been changed, to clarify the process involved under-the-hood, and to allow a better control on data splitting.
 
-Step 1: Data splitting
-~~~~~~~~~~~~~~~~~~~~~~
-In v0.x, data splitting is handled by MAPIE.
+In v0.x, the workflow was:
 
-In v1, the data splitting is left to the user for split conformal techniques. The user can split the data into training, conformalization, and test sets using scikit-learn's ``train_test_split`` or other methods.
+1. Data splitting, model training, and calibration, using the ``.fit`` method with ``(X, y)``.
+2. Interval (or set) prediction, using the ``.predict`` method with ``(X_test, y_test)``.
 
-Step 2 & 3: Model training and conformalization (ie: calibration)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In v0.x, the ``fit`` method handled both model training and calibration.
+In v1, the workflow is:
 
-In v1.0: MAPIE separates between training and calibration. We decided to name the *calibration* step *conformalization*, to avoid confusion with probability calibration.
+1. Data splitting, left to the user. We provide a new utility :func:`~mapie.utils.train_conformalize_test_split` to split data into train, conformalize, and test sets.
+2. Model training, using the ``.fit`` method with ``(X_train, y_train)``.
+3. Model calibration, using the ``.conformalize`` method with ``(X_conformalize, y_conformalize)``.
+4. Interval (or set) prediction, using the ``.predict_interval``/``.predict_set`` methods with ``(X_test, y_test)``.
 
-For split conformal techniques, ``.fit`` is replaced by ``.fit`` then ``.conformalize``
+The *calibration* step has been named *conformalization*, to avoid confusion with probability calibration, and facilitate usage by users unfamiliar with conformal predictions.
 
-``.fit()``:
+For cross conformal techniques, steps 2 and 3 are performed simultaneously using the ``.fit_conformalize()`` method. Indeed, these techniques rely on fitting and conformalizing models in a cross-validation fashion, thus the steps are not distinct.
 
-- In v1, ``fit`` only trains the model on training data, without handling conformalization.
-- Additional fitting parameters, like ``sample_weight``, should be included in ``fit_params``, keeping this method focused on training alone.
-
-``.conformalize()``:
-
-- This new method performs conformalization after fitting, using separate conformity data ``(X_conformalize, y_conformalize)``.
-- ``predict_params`` should be passed here
-
-For cross conformal techniques:
-
-- ``.fit_conformalize()`` method: because those techniques rely on fitting and conformalizing models in a cross-validation fashion, the fitting and conformalization steps are not distinct.
-
-Step 4: Making predictions (``predict`` and ``predict_interval``/``predict_set`` methods)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In MAPIE v0.x, both point predictions and prediction intervals/sets were produced through the ``predict`` method.
-
-MAPIE v1 introduces two new methods for prediction: ``.predict_interval()`` for regression, and ``.predict_set()`` for classification. Those two methods predict points and intervals/sets. They behave the same way than the ``.predict(alpha=...)`` v0.x method, with some minor output shape changes, to keep it consistent across all conformal techniques.
+MAPIE v1 introduces two new methods for prediction: ``.predict_interval()`` for regression, and ``.predict_set()`` for classification. They return the model prediction `and` prediction intervals/sets. They thus behave the same way than the ``.predict(alpha=...)`` v0.x method (with some minor output shape changes to keep consistency across all conformal techniques).
 The ``.predict()`` method now focuses solely on producing point predictions.
-
 
 
 4. Parameters change
@@ -112,56 +95,44 @@ The ``.predict()`` method now focuses solely on producing point predictions.
 
 ``alpha``
 ~~~~~~~~~~~~~~~~~~~~
-Indicates the desired coverage probability of the prediction intervals.
-
-- **v0.x**: Specified as ``alpha`` during prediction, representing error rate.
-- **v1**: Replaced with ``confidence_level`` to denote the coverage rate directly. Set at model initialization, improving consistency and clarity. ``confidence_level`` is equivalent to ``1 - alpha``.
+Has been replaced with ``confidence_level``, as this is a more usual concept. ``confidence_level`` indicates the desired coverage rate, and is equivalent to ``1 - alpha``. It is now set at initialization, to improve consistency across all conformal techniques.
 
 ``cv``
 ~~~~~~~
-See the first section of this guide. The ``cv`` parameter is now only declared at cross conformal techniques initialization.
+See the "Class restructuring" section of this guide for an overview of the breakdown of the ``cv`` parameter.
+
+- **v0.x**: Used to indicate if the model is pretrained or not (``"split"`` or ``"prefit"``) in the vanilla split conformal technique, or to specify the cross-validation scheme in cross conformal techniques.
+- **v1**:
+
+  - The ``cv`` parameter is now only relevant to cross conformal techniques, and accepts different values depending on the specific technique used. See docstrings of the classes introduced in v1 for more details.
+  - For split conformal techniques, the new ``prefit`` parameter is used to specify model pre-training. ``prefit`` is set by default to ``True`` for ``SplitConformalRegressor``, as we believe this is MAPIE nominal usage.
 
 ``conformity_score``
 ~~~~~~~~~~~~~~~~~~~~
-A parameter used to specify the scoring approach for evaluating model predictions.
-
-- **v0.x**: Only allowed subclass instances of ``BaseRegressionScore``, like AbsoluteConformityScore()
+- **v0.x**: Only allowed subclass instances of ``BaseRegressionScore`` or ``BaseClassificationScore``, like ``AbsoluteConformityScore()``
 - **v1**: Now also accepts strings, like ``"absolute"``.
 
 ``method``
 ~~~~~~~~~~
-Specifies the approach for calculating prediction intervals for cross conformal techniques.
-
-- **v0.x**: Part of ``MapieRegressor``. Configured for the main prediction process.
-- **v1**: Specific to ``CrossConformalRegressor`` and ``JackknifeAfterBootstrapRegressor``, indicating the interval calculation approach (``"base"``, ``"plus"``, or ``"minmax"``).
+- **v0.x**: Used in ``MapieRegressor``, this parameter was only relevant to cross conformal techniques. Its usage in classification (``MapieClassifier``) was deprecated.
+- **v1**: Now only used in ``CrossConformalRegressor`` and ``JackknifeAfterBootstrapRegressor``, with the same possible values (``"base"``, ``"plus"``, or ``"minmax"``), except ``naive`` that has been removed because of its unlikeliness to be used in a real-world scenario.
 
 ``groups``
 ~~~~~~~~~~~
-The ``groups`` parameter is used to specify group labels for cross-validation, ensuring that the same group is not present in both training and conformity sets.
+- **v0.x**: Passed as a parameter to the ``fit`` method, it was effectively used only in cross techniques.
+- **v1**: ``groups`` is used in ``CrossConformalRegressor`` and ``CrossConformalClassifier``. It is passed to the ``.conformalize()`` method.
 
-- **v0.x**: Passed as a parameter to the ``fit`` method.
-- **v1**: The ``groups`` present is now only present in ``CrossConformalRegressor``. It is passed in the ``.conformalize()`` method instead of the ``.fit()`` method. In other classes (like ``SplitConformalRegressor``), groups can be directly handled by the user during data splitting.
-
-``prefit``
-~~~~~~~~~~
-Controls whether the model has been pre-fitted before applying conformal prediction.
-
-- **v0.x**: Indicated through ``cv="prefit"`` in ``MapieRegressor``.
-- **v1**: ``prefit`` is now a separate boolean parameter, allowing explicit control over whether the model has been pre-fitted before conformalizing. It is set by default to ``True`` for ``SplitConformalRegressor``, as we believe this will become MAPIE nominal usage.
-
-``fit_params`` (includes ``sample_weight``)
+``fit_params`` and ``sample_weight``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Dictionary of parameters specifically used during training, such as ``sample_weight`` in scikit-learn.
-
-- **v0.x**: Passed additional parameters in a flexible but less explicit manner.
-- **v1**: Now explicitly structured as a dedicated dictionary, ``fit_params``, ensuring parameters used during training are clearly defined and separated from other stages.
+- **v0.x**: ``sample_weight`` is a keyword argument of the ``fit`` method. Other fit parameters are passed in a dictionary through the ``fit_params`` argument.
+- **v1**: The ``fit`` and ``fit_conformalize`` methods now take all fit parameters in the ``fit_params`` argument, including ``sample_weight``.
 
 ``predict_params``
 ~~~~~~~~~~~~~~~~~~
-Defines additional parameters exclusively for prediction.
+Note that because the conformalization step includes model inference, predict params are used both for conformalization and prediction steps.
 
-- **v0.x**: Passed additional parameters in a flexible but less explicit manner, sometimes mixed within training configurations.
-- **v1**: Now structured as a dedicated dictionary, ``predict_params``, to be used during calibration (``conformalize`` method) and prediction stages, ensuring no overlap with training parameters.
+- **v0.x**: Predict parameters are passed to the ``fit`` method in a dictionary through the ``predict_params`` argument. The exact same params must be passed at prediction time to the ``predict`` method.
+- **v1**: Predict parameters are now passed only to the ``fit`` (or  ``fit_conformalize``) method, as a dictionary. The same params are reused at prediction time, without the need to pass them again.
 
 ``agg_function`` and ``ensemble``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -175,26 +146,38 @@ How to aggregate predictions in cross conformal methods.
 
 ``random_state``
 ~~~~~~~~~~~~~~~~~~
-
 - **v0.x**: This parameter was used to control the randomness of the data splitting.
 - **v1**: This parameter has been removed in cases where data splitting is now manual. Future evolutions may reintroduce it as a general purpose randomness control parameter.
 
 ``symmetry``
 ~~~~~~~~~~~~~~~~~~
-
-- **v0.x**: This parameter of the `predict` method of the MapieQuantileRegressor was set to True by default
+- **v0.x**: This parameter of the `predict` method of ``MapieQuantileRegressor`` was set to True by default
 - **v1**: This parameter is now named `symmetric_correction` and is set to False by default, because the resulting intervals are smaller. It is used in the `predict_interval` method of the ConformalizedQuantileRegressor.
+
+``include_last_label``
+~~~~~~~~~~~~~~~~~~
+Parameter specific to APS or RAPS conformity scores in classification.
+
+- **v0.x**: This parameter is passed to the ``predict`` method of ``MapieClassifier``.
+- **v1**: This parameter is now passed in a dictionary to the ``conformity_score_params`` of the ``predict_set`` method of classification techniques.
+
+``size_raps``
+~~~~~~~~~~~~~~~~~~
+Parameter specific to the RAPS conformity score in classification.
+
+- **v0.x**: This parameter is passed to the ``fit`` method of ``MapieClassifier``.
+- **v1**: This parameter must now be passed to the ``conformity_score`` argument at initialization. Ex: ``SplitConformalClassifier(conformity_score=RAPSConformityScore(size_raps=0.3))``
 
 ``optimize_beta``
 ~~~~~~~~~~~~~~~~~~
-
-This parameter used during interval prediction in regression has been renamed ``minimize_interval_width`` for clarity.
+It has been found during v1 development that this parameter has never been working as expected (currently does nothing). At v1 release time, the bug hasn't been fixed yet. See the related GitHub issue.
+Note that in v1, this parameter has been renamed ``minimize_interval_width`` for clarity.
 
 None defaults
 ~~~~~~~~~~~~~~~~~~~~
-No more parameters with incorrect ``None`` defaults.
+No more parameters with misleading ``None`` defaults.
 
-- **v0.x**: Eg: ``estimator`` had a ``None`` default value, even though the actual default value is ``LinearRegression()``. This was the case for other parameters as well.
+- **v0.x**: Eg: ``estimator`` in ``MapieRegressor`` has a ``None`` default value, even though the actual default value is ``LinearRegression()``. This is the case for other parameters as well.
 - **v1**: All parameters now have explicit defaults.
 
 
