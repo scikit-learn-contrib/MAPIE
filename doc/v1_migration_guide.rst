@@ -42,7 +42,7 @@ The ``cv`` parameter is key to understand what new class to use in the v1 API:
      - Split
    * - ``MapieRegressor``
      - ``None``, integer, or any ``sklearn.model_selection.BaseCrossValidator``
-     - :class:`~mapie.classification.CrossConformalRegressor`
+     - ``CrossConformalRegressor`
      - Cross
    * - ``MapieRegressor``
      - ``subsample.Subsample``
@@ -266,19 +266,12 @@ A `tutorial <https://mapie.readthedocs.io/en/v1/examples_mondrian/1-quickstart/p
 8. Migration examples: MAPIE v0.x to MAPIE v1
 ----------------------------------------------------------------------------------------
 
-Below is a side-by-side example of code in MAPIE v0.x and its equivalent in MAPIE v1
+Below are side-by-side examples of code in MAPIE v0.x and its equivalent in MAPIE v1
 
-Example 1: Split Conformal Prediction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Example 1: split conformal regression, pre-fitted model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Description
-############
-Split conformal prediction is a widely used technique for generating prediction intervals, it splits the data into training, conformity, and test sets. The model is trained on the training set, calibrated on the conformity set, and then used to make predictions on the test set. In `MAPIE v1`, the `SplitConformalRegressor` replaces the older `MapieRegressor` with a more modular design and simplified API.
-
-MAPIE v0.x Code
-###############
-
-Below is a MAPIE v0.x code for split conformal prediction in case of pre-fitted model:
+MAPIE v0.x code
 
 .. code:: python
 
@@ -288,10 +281,10 @@ Below is a MAPIE v0.x code for split conformal prediction in case of pre-fitted 
     from sklearn.model_selection import train_test_split
     from sklearn.datasets import make_regression
 
-    X, y = make_regression(n_samples=100, n_features=2, noise=0.1)
+    X, y = make_regression(n_samples=1000, n_features=2, noise=0.1)
 
-    X_train, X_conf_test, y_train, y_conf_test = train_test_split(X, y)
-    X_conf, X_test, y_conf, y_test = train_test_split(X_conf_test, y_conf_test)
+    X_train, X_conf_test, y_train, y_conf_test = train_test_split(X, y, test_size=0.4)
+    X_conf, X_test, y_conf, y_test = train_test_split(X_conf_test, y_conf_test, test_size=0.5)
 
     prefit_model = LinearRegression().fit(X_train, y_train)
 
@@ -306,22 +299,25 @@ Below is a MAPIE v0.x code for split conformal prediction in case of pre-fitted 
     prediction_points_v0, prediction_intervals_v0 = v0.predict(X_test, alpha=0.1)
     prediction_points_v0 = v0.predict(X_test)
 
-Equivalent MAPIE v1 code
-########################
-
-Below is the equivalent MAPIE v1 code for split conformal prediction:
+MAPIE v1 code
 
 .. testcode::
 
-    from sklearn.linear_model import LinearRegression
-    from sklearn.model_selection import train_test_split
     from mapie.regression import SplitConformalRegressor
+    from mapie.utils import train_conformalize_test_split
     from sklearn.datasets import make_regression
+    from sklearn.linear_model import LinearRegression
 
-    X, y = make_regression(n_samples=100, n_features=2, noise=0.1)
 
-    X_train, X_conf_test, y_train, y_conf_test = train_test_split(X, y)
-    X_conf, X_test, y_conf, y_test = train_test_split(X_conf_test, y_conf_test)
+    X, y = make_regression(n_samples=1000, n_features=2, noise=0.1)
+
+    X_train, X_conf, X_test, y_train, y_conf, y_test = train_conformalize_test_split(
+        X,
+        y,
+        train_size=0.6,
+        conformalize_size=0.2,
+        test_size=0.2
+    )
 
     prefit_model = LinearRegression().fit(X_train, y_train)
 
@@ -337,18 +333,10 @@ Below is the equivalent MAPIE v1 code for split conformal prediction:
     prediction_points_v1, prediction_intervals_v1 = v1.predict_interval(X_test)
     prediction_points_v1 = v1.predict(X_test)
 
-Example 2: Cross-Conformal Prediction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Description
-############
-
-Cross-conformal prediction extends split conformal prediction by using multiple cross-validation folds to improve the efficiency of the prediction intervals. In MAPIE v1, `CrossConformalRegressor`` replaces the older `MapieRegressor`` for this purpose.
+Example 2: cross conformal regression, using non-trivial parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 MAPIE v0.x code
-###############
-
-Below is a MAPIE v0.x code for cross-conformal prediction:
 
 .. code:: python
 
@@ -358,7 +346,7 @@ Below is a MAPIE v0.x code for cross-conformal prediction:
     from sklearn.model_selection import train_test_split, GroupKFold
     from sklearn.datasets import make_regression
 
-    X_full, y_full = make_regression(n_samples=100, n_features=2, noise=0.1)
+    X_full, y_full = make_regression(n_samples=1000, n_features=2, noise=0.1)
     X, X_test, y, y_test = train_test_split(X_full, y_full)
     groups = np.random.randint(0, 10, X.shape[0])
     sample_weight = np.random.rand(X.shape[0])
@@ -379,10 +367,7 @@ Below is a MAPIE v0.x code for cross-conformal prediction:
     prediction_points_v0, prediction_intervals_v0 = v0.predict(X_test, alpha=0.1)
     prediction_points_v0 = v0.predict(X_test, ensemble=True)
 
-Equivalent MAPIE v1 code
-########################
-
-Below is the equivalent MAPIE v1 code for cross-conformal prediction:
+MAPIE v1 code
 
 .. testcode::
 
@@ -392,7 +377,7 @@ Below is the equivalent MAPIE v1 code for cross-conformal prediction:
     from mapie.regression import CrossConformalRegressor
     from sklearn.datasets import make_regression
 
-    X_full, y_full = make_regression(n_samples=100, n_features=2, noise=0.1)
+    X_full, y_full = make_regression(n_samples=1000, n_features=2, noise=0.1)
     X, X_test, y, y_test = train_test_split(X_full, y_full)
     groups = np.random.randint(0, 10, X.shape[0])
     sample_weight = np.random.rand(X.shape[0])
@@ -413,3 +398,65 @@ Below is the equivalent MAPIE v1 code for cross-conformal prediction:
 
     prediction_points_v1, prediction_intervals_v1 = v1.predict_interval(X_test)
     prediction_points_v1 = v1.predict(X_test, aggregate_predictions="median")
+
+Example 3: split conformal classification, using non-trivial parameters and an unfitted model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+MAPIE v0 code
+
+.. code:: python
+
+    from sklearn.datasets import make_classification
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    from mapie.classification import MapieClassifier
+    from mapie.conformity_scores import RAPSConformityScore
+
+    X, y = make_classification(n_samples=1000, n_classes=3, n_features=20, n_informative=10)
+    X_train_conf, X_test, y_train_conf, y_test = train_test_split(X, y, test_size=0.2)
+
+    v0 = MapieClassifier(
+        estimator=RandomForestClassifier(),
+        cv="split",
+        conformity_score=RAPSConformityScore(),
+        test_size=0.25,
+    )
+
+    v0.fit(X_train_conf, y_train_conf, size_raps=0.1)
+
+    prediction_labels, prediction_sets = v0.predict(
+        X_test,
+        alpha=0.1,
+        include_last_label="randomized",
+    )
+
+MAPIE v1 code
+
+.. testcode::
+
+    from sklearn.datasets import make_classification
+    from sklearn.ensemble import RandomForestClassifier
+    from mapie.classification import SplitConformalClassifier
+    from mapie.conformity_scores import RAPSConformityScore
+    from mapie.utils import train_conformalize_test_split
+
+    X, y = make_classification(n_samples=1000, n_classes=3, n_features=20, n_informative=10)
+    X_train, X_conf, X_test, y_train, y_conf, y_test = train_conformalize_test_split(
+        X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2
+    )
+
+    v1 = SplitConformalClassifier(
+        estimator=RandomForestClassifier(),
+        confidence_level=0.9,
+        prefit=False,
+        conformity_score=RAPSConformityScore(size_raps=0.1)
+    )
+
+    v1.fit(X_train, y_train)
+    v1.conformalize(X_conf, y_conf)
+
+    prediction_labels, prediction_sets = v1.predict_set(
+        X_test,
+        conformity_score_params={"include_last_label": "randomized"}
+    )
+    prediction_labels = v1.predict(X_test)
