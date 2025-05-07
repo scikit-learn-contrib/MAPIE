@@ -82,7 +82,7 @@ Definition 3 (Approximate calibration) [1].
 .. math:: 
     |\mathbb{E}[Y|\hat{\mu}(X)] - \hat{\mu}(X)| \leq \epsilon
 
-See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calibration.MapieCalibrator`
+See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calibration.TopLabelCalibrator`
 to use a calibrator.
 
 In the CP framework, it is worth noting that Venn predictors produce probability-type predictions

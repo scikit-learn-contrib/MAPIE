@@ -18,12 +18,11 @@ from .utils import (_check_estimator_classification,
                     _check_null_weight, _fit_estimator, _get_calib_set)
 
 
-class MapieCalibrator(BaseEstimator, ClassifierMixin):
+class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
     """
-    Calibration for multi-class problems.
-
-    This class performs calibration for various methods, currently only
-    top-label calibration [1].
+    Top-label calibration for multi-class problems.
+    Performs a calibration on the class with the highest score
+    given both score and class, see section 2 of [1].
 
     Parameters
     ----------
@@ -32,13 +31,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         (i.e. with fit, predict, and predict_proba methods), by default
         ``None``.
         If ``None``, estimator defaults to a ``LogisticRegression`` instance.
-
-    method: Optional[str]
-        The only valid method is "top_label".
-        Performs a calibration on the class with highest score
-        given both score and class, see section 2 of [1].
-
-        By default "top_label".
 
     calibrator : Optional[Union[str, RegressorMixin]]
         Any calibrator with scikit-learn API
@@ -90,10 +82,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.calibration import MapieCalibrator
+    >>> from mapie.calibration import TopLabelCalibrator
     >>> X_toy = np.arange(9).reshape(-1, 1)
     >>> y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])
-    >>> mapie = MapieCalibrator().fit(X_toy, y_toy, random_state=20)
+    >>> mapie = TopLabelCalibrator().fit(X_toy, y_toy, random_state=20)
     >>> y_calib = mapie.predict_proba(X_toy)
     >>> print(y_calib)
     [[0.84......        nan        nan]
@@ -117,8 +109,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         "isotonic": IsotonicRegression(out_of_bounds="clip")
     }
 
-    valid_methods = ["top_label"]
-
     valid_cv = ["prefit", "split"]
 
     valid_inputs = ["multiclass", "binary"]
@@ -126,12 +116,10 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
-        method: str = "top_label",
         calibrator: Optional[Union[str, RegressorMixin]] = None,
         cv: Optional[str] = "split",
     ) -> None:
         self.estimator = estimator
-        self.method = method
         self.calibrator = calibrator
         self.cv = cv
 
@@ -237,21 +225,6 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         max_class_prob = np.max(pred, axis=1).reshape(-1, 1)
         y_pred = self.classes_[np.argmax(pred, axis=1)]
         return max_class_prob, y_pred
-
-    def _check_method(self) -> None:
-        """
-        Check that the method is valid.
-
-        Raises
-        ------
-        ValueError
-            If the method does not belong to the valid methods.
-        """
-        if self.method not in self.valid_methods:
-            raise ValueError(
-                "Invalid method, allowed method are: "
-                + (", ").join(self.valid_methods) + "."
-            )
 
     def _check_type_of_target(self, y: ArrayLike):
         """
@@ -431,7 +404,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
         **fit_params,
-    ) -> MapieCalibrator:
+    ) -> TopLabelCalibrator:
         """
         Calibrate the estimator on given datasets, according to the chosen
         method.
@@ -471,7 +444,7 @@ class MapieCalibrator(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        MapieCalibrator
+        TopLabelCalibrator
             The model itself.
         """
         self._check_method()

@@ -41,7 +41,7 @@ Calibration
    :toctree: generated/
    :template: class.rst
 
-   mapie.calibration.MapieCalibrator
+   mapie.calibration.TopLabelCalibrator
 
 Calibration Metrics
 ======================================
