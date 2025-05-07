@@ -54,9 +54,6 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
 
     Attributes
     ----------
-    valid_methods: List[str]
-        List of all valid methods.
-
     classes_: NDArray
         Array with the name of each class.
 
@@ -447,7 +444,6 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         TopLabelCalibrator
             The model itself.
         """
-        self._check_method()
         cv = self._check_cv(self.cv)
         X, y = indexable(X, y)
         y = _check_y(y)
