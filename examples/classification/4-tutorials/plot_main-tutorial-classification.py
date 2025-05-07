@@ -10,22 +10,21 @@ methods implemented in MAPIE on a toy two-dimensional dataset.
 Throughout this tutorial, we will answer the following questions:
 
 - How does the number of classes in the prediction sets vary according to
-  the significance level ?
+  the confidence level?
 
-- Is the chosen conformal method well calibrated ?
+- Is the chosen conformal method well calibrated?
 
-- What are the pros and cons of the conformal methods included in MAPIE ?
+- What are the pros and cons of the conformal methods included in MAPIE?
 """
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
-from mapie.classification import _MapieClassifier
-from mapie.conformity_scores import APSConformityScore
+from mapie.classification import SplitConformalClassifier
+from mapie.utils import train_conformalize_test_split
 from mapie.metrics.classification import (
-    classification_coverage_score,
+    classification_coverage_score_v2,
     classification_mean_width_score,
 )
 
@@ -36,17 +35,17 @@ from mapie.metrics.classification import (
 # We will use MAPIE to estimate a prediction set of several classes such
 # that the probability that the true label of a new test point is included
 # in the prediction set is always higher than the target confidence level :
-# ``P(Yₙ₊₁ ∈ Ĉₙ,α(Xₙ₊₁)) ≥ 1 - α``
+# ``P(Yₙ₊₁ ∈ Ĉₙ,α(Xₙ₊₁)) ≥ 1 - α``.
 # We start by using the softmax score output by the base classifier as the
 # conformity score on a toy two-dimensional dataset.
 #
 # We estimate the prediction sets as follows :
 #
-# * Generate a dataset with train, calibration and test, the model is
+# * Generate a dataset with train, conformalization and test, the model is
 #   fitted on the training set.
 #
 # * Set the conformal score ``Sᵢ = 𝑓̂(Xᵢ)ᵧᵢ``, the softmax
-#   output of the true class for each sample in the calibration set.
+#   output of the true class for each sample in the conformity set.
 #
 # * Define ``q̂`` as being the ``(n + 1)(α) / n``
 #   previous quantile of ``S₁, ..., Sₙ``
@@ -73,11 +72,9 @@ X = np.vstack([
     for center, cov in zip(centers, covs)
 ])
 y = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
-X_train_cal, X_test, y_train_cal, y_test = train_test_split(
-    X, y, test_size=0.2
-)
-X_train, X_cal, y_train, y_cal = train_test_split(
-    X_train_cal, y_train_cal, test_size=0.25
+(X_train, X_conf, X_test,
+ y_train, y_conf, y_test) = train_conformalize_test_split(
+    X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2
 )
 
 xx, yy = np.meshgrid(
@@ -105,28 +102,33 @@ plt.show()
 
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator. And then we
-# apply MAPIE in the calibration data with the LAC conformity score to the
-# estimator indicating that it has already been fitted with `cv="prefit"`.
-# We then estimate the prediction sets with differents alpha values with a
-# ``fit`` and ``predict`` process.
+# apply MAPIE in the conformity data with the LAC conformity score to the
+# estimator indicating that it has already been fitted with `prefit=True`.
+# We then estimate the prediction sets with different confidence level values with a
+# ``conformalize`` and ``predict`` process.
 
-clf = GaussianNB().fit(X_train, y_train)
+clf = GaussianNB()
+clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
-mapie_score = _MapieClassifier(estimator=clf, cv="prefit")
-mapie_score.fit(X_cal, y_cal)
-alpha = [0.2, 0.1, 0.05]
-y_pred_score, y_ps_score = mapie_score.predict(X_test_mesh, alpha=alpha)
+confidence_level = [0.8, 0.9, 0.95]
+mapie_score = SplitConformalClassifier(
+    estimator=clf,
+    confidence_level=confidence_level,
+    prefit=True
+)
+mapie_score.conformalize(X_conf, y_conf)
+y_pred_score, y_ps_score = mapie_score.predict_set(X_test_mesh)
 
 ##############################################################################
 # * ``y_pred_score``: represents the prediction in the test set by the base
 #   estimator.
-# * ``y_ps_score``: reprensents the prediction sets estimated by MAPIE with
+# * ``y_ps_score``: represents the prediction sets estimated by MAPIE with
 #   the "lac" conformity score.
 
 
-def plot_scores(n, alphas, scores, quantiles):
+def plot_scores(n, confidence_levels, scores, quantiles):
     colors = {0: "#1f77b4", 1: "#ff7f0e", 2: "#2ca02c"}
     plt.figure(figsize=(7, 5))
     plt.hist(scores, bins="auto")
@@ -137,7 +139,7 @@ def plot_scores(n, alphas, scores, quantiles):
             ymax=400,
             color=colors[i],
             ls="dashed",
-            label=f"alpha = {alphas[i]}"
+            label=f"confidence_level = {confidence_levels[i]}"
         )
     plt.title("Distribution of scores")
     plt.legend()
@@ -149,22 +151,22 @@ def plot_scores(n, alphas, scores, quantiles):
 ##############################################################################
 # Let’s see the distribution of the scores with the calculated quantiles.
 
-scores = mapie_score.conformity_scores_
-n = len(mapie_score.conformity_scores_)
-quantiles = mapie_score.conformity_score_function_.quantiles_
-plot_scores(n, alpha, scores, quantiles)
+scores = mapie_score._mapie_classifier.conformity_scores_
+n = len(mapie_score._mapie_classifier.conformity_scores_)
+quantiles = mapie_score._mapie_classifier.conformity_score_function_.quantiles_
+plot_scores(n, confidence_level, scores, quantiles)
 
 ##############################################################################
-# The estimated quantile increases with alpha.
-# A high value of alpha can potentially lead to a high quantile which would
-# not necessarily be reached by any class in uncertain areas, resulting in
-# null regions.
+# The estimated quantile increases with the confidence level.
+# A low confidence level can potentially lead to a low quantile ``q``; the associated
+# ``1 - q`` threshold would therefore not necessarily be reached by any class in
+# uncertain areas, resulting in null regions.
 #
 # We will now visualize the differences between the prediction sets of the
-# different values of alpha.
+# different values of confidence level.
 
 
-def plot_results(alphas, X, y_pred, y_ps):
+def plot_results(confidence_levels, X, y_pred, y_ps):
     tab10 = plt.cm.get_cmap('Purples', 4)
     colors = {0: "#1f77b4", 1: "#ff7f0e", 2:  "#2ca02c", 3: "#d62728"}
     y_pred_col = list(map(colors.get, y_pred))
@@ -179,7 +181,7 @@ def plot_results(alphas, X, y_pred, y_ps):
         alpha=0.4
     )
     axs[0].set_title("Predicted labels")
-    for i, alpha in enumerate(alphas):
+    for i, confidence_level in enumerate(confidence_levels):
         y_pi_sums = y_ps[:, :, i].sum(axis=1)
         num_labels = axs[i+1].scatter(
             X[:, 0],
@@ -193,11 +195,11 @@ def plot_results(alphas, X, y_pred, y_ps):
             vmax=3
         )
         plt.colorbar(num_labels, ax=axs[i+1])
-        axs[i+1].set_title(f"Number of labels for alpha={alpha}")
+        axs[i+1].set_title(f"Number of labels for confidence_level={confidence_level}")
     plt.show()
 
 
-plot_results(alpha, X_test_mesh, y_pred_score, y_ps_score)
+plot_results(confidence_level, X_test_mesh, y_pred_score, y_ps_score)
 
 ##############################################################################
 # When the class coverage is not large enough, the prediction sets can be
@@ -208,34 +210,39 @@ plot_results(alpha, X_test_mesh, y_pred_score, y_ps_score)
 # classifier.
 #
 # Let’s now study the effective coverage and the mean prediction set widths
-# as function of the ``1 - α`` target coverage. To this aim, we use once
+# as function of the ``confidence_level`` target coverage. To this aim, we use once
 # again the ``predict`` method of MAPIE to estimate predictions sets on a
-# large number of ``α`` values.
+# large number of ``confidence_level`` values.
 
-alpha2 = np.arange(0.02, 0.98, 0.02)
-_, y_ps_score2 = mapie_score.predict(X_test, alpha=alpha2)
-coverages_score = [
-    classification_coverage_score(y_test, y_ps_score2[:, :, i])
-    for i, _ in enumerate(alpha2)
-]
+confidence_level2 = np.arange(0.02, 0.98, 0.02)
+mapie_score2 = SplitConformalClassifier(
+    estimator=clf,
+    confidence_level=confidence_level2,
+    prefit=True
+)
+mapie_score2.conformalize(X_conf, y_conf)
+_, y_ps_score2 = mapie_score2.predict_set(X_test)
+coverages_score = classification_coverage_score_v2(y_test, y_ps_score2)
 widths_score = classification_mean_width_score(y_ps_score2)
 
 
-def plot_coverages_widths(alpha, coverage, width, method):
+def plot_coverages_widths(confidence_level, coverage, width, conformity_score):
     fig, axs = plt.subplots(1, 2, figsize=(12, 5))
-    axs[0].scatter(1 - alpha, coverage, label=method)
-    axs[0].set_xlabel("1 - alpha")
+    axs[0].scatter(confidence_level, coverage, label=conformity_score)
+    axs[0].set_xlabel("Confidence level")
     axs[0].set_ylabel("Coverage score")
     axs[0].plot([0, 1], [0, 1], label="x=y", color="black")
     axs[0].legend()
-    axs[1].scatter(1 - alpha, width, label=method)
-    axs[1].set_xlabel("1 - alpha")
+    axs[1].scatter(confidence_level, width, label=conformity_score)
+    axs[1].set_xlabel("Confidence level")
     axs[1].set_ylabel("Average size of prediction sets")
     axs[1].legend()
     plt.show()
 
 
-plot_coverages_widths(alpha2, coverages_score, widths_score, "lac")
+plot_coverages_widths(
+    confidence_level2, coverages_score, widths_score, "lac"
+)
 
 ##############################################################################
 # 2. Conformal Prediction method using the cumulative softmax score
@@ -243,45 +250,54 @@ plot_coverages_widths(alpha2, coverages_score, widths_score, "lac")
 #
 # We saw in the previous section that the "lac" conformity score is well calibrated by
 # providing accurate coverage levels. However, it tends to give null
-# prediction sets for uncertain regions, especially when the ``α``
-# value is high.
+# prediction sets for uncertain regions, especially when the ``confidence_level``
+# value is low.
 # MAPIE includes another method, called Adaptive Prediction Set (APS),
 # whose conformity score is the cumulated score of the softmax output until
 # the true label is reached (see the theoretical description for more details).
-# We will see in this Section that this method no longer estimates null
-# prediction sets but by giving slightly bigger prediction sets.
+# We will see in this section that this method no longer estimates null
+# prediction sets by giving slightly bigger prediction sets.
 #
 # Let's visualize the prediction sets obtained with the APS method on the test
-# set after fitting MAPIE on the calibration set.
+# set after fitting MAPIE on the conformity set.
 
-mapie_aps = _MapieClassifier(
-    estimator=clf, cv="prefit", conformity_score=APSConformityScore()
+confidence_level = [0.8, 0.9, 0.95]
+mapie_aps = SplitConformalClassifier(
+    estimator=clf,
+    confidence_level=confidence_level,
+    conformity_score="aps",
+    prefit=True
 )
-mapie_aps.fit(X_cal, y_cal)
-alpha = [0.2, 0.1, 0.05]
-y_pred_aps, y_ps_aps = mapie_aps.predict(
-    X_test_mesh, alpha=alpha, include_last_label=True
+mapie_aps.conformalize(X_conf, y_conf)
+y_pred_aps, y_ps_aps = mapie_aps.predict_set(
+    X_test_mesh, conformity_score_params={"include_last_label": True}
 )
 
-plot_results(alpha, X_test_mesh, y_pred_aps, y_ps_aps)
+plot_results(confidence_level, X_test_mesh, y_pred_aps, y_ps_aps)
 
 ##############################################################################
 # One can notice that the uncertain regions are emphasized by wider
 # boundaries,  but without null prediction sets with respect to the first
 # "lac" method.
 
-_, y_ps_aps2 = mapie_aps.predict(
-    X_test, alpha=alpha2, include_last_label="randomized"
+mapie_aps2 = SplitConformalClassifier(
+    estimator=clf,
+    confidence_level=confidence_level2,
+    conformity_score="aps",
+    prefit=True
 )
-coverages_aps = [
-    classification_coverage_score(y_test, y_ps_aps2[:, :, i])
-    for i, _ in enumerate(alpha2)
-]
+mapie_aps2.conformalize(X_conf, y_conf)
+_, y_ps_aps2 = mapie_aps2.predict_set(
+    X_test, conformity_score_params={"include_last_label": "randomized"}
+)
+coverages_aps = classification_coverage_score_v2(y_test, y_ps_aps2)
 widths_aps = classification_mean_width_score(y_ps_aps2)
 
-plot_coverages_widths(alpha2, coverages_aps, widths_aps, "lac")
+plot_coverages_widths(
+    confidence_level2, coverages_aps, widths_aps, "aps"
+)
 
 ##############################################################################
-# This method also gives accurate calibration plots, meaning that the
+# This method also gives accurate conformalization plots, meaning that the
 # effective coverage level is always very close to the target coverage,
 # sometimes at the expense of slightly bigger prediction sets.
