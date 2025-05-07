@@ -49,7 +49,7 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     return mean_width
 
 
-def classification_coverage_score_v2(
+def classification_coverage_score(
     y_true: NDArray,
     y_pred_set: NDArray
 ) -> NDArray:
@@ -84,7 +84,7 @@ def classification_coverage_score_v2(
 
     Examples
     --------
-    >>> from mapie.metrics.classification import classification_coverage_score_v2
+    >>> from mapie.metrics.classification import classification_coverage_score
     >>> from mapie.classification import SplitConformalClassifier
     >>> from mapie.utils import train_conformalize_test_split
     >>> from sklearn.datasets import make_classification
@@ -106,7 +106,7 @@ def classification_coverage_score_v2(
     ... ).fit(X_train, y_train).conformalize(X_conformalize, y_conformalize)
 
     >>> predicted_points, predicted_sets = mapie_classifier.predict_set(X_test)
-    >>> coverage = classification_coverage_score_v2(y_test, predicted_sets)[0]
+    >>> coverage = classification_coverage_score(y_test, predicted_sets)[0]
     """
     _check_arrays_length(y_true, y_pred_set)
     _check_array_nan(y_true)
@@ -201,7 +201,7 @@ def classification_ssc(
         ]
 
         for i, indexes in enumerate(indexes_bybins):
-            coverages[alpha, i] = classification_coverage_score_v2(
+            coverages[alpha, i] = classification_coverage_score(
                 y_true[indexes],
                 np.take_along_axis(
                     y_pred_set[:, :, alpha],

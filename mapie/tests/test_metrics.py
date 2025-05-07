@@ -27,7 +27,7 @@ from mapie.metrics.calibration import (
 )
 from mapie.metrics.classification import (
     classification_mean_width_score,
-    classification_coverage_score_v2,
+    classification_coverage_score,
     classification_ssc, classification_ssc_score,
 )
 from mapie.metrics.regression import (
@@ -282,7 +282,7 @@ def test_classification_y_pred_set_shape() -> None:
 def test_classification_same_length() -> None:
     """Test when y_true and y_pred_set have different lengths."""
     with pytest.raises(ValueError, match=r".*are arrays with different len*"):
-        classification_coverage_score_v2(y_true_class, y_pred_set[:-1, :])
+        classification_coverage_score(y_true_class, y_pred_set[:-1, :])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         classification_ssc(y_true_class, y_pred_set_2alphas[:-1, :, :])
     with pytest.raises(ValueError, match=r".*are arrays with different len*"):
@@ -298,7 +298,7 @@ def test_classification_valid_input_shape() -> None:
 
 def test_classification_toydata() -> None:
     """Test coverage_score for toy data."""
-    assert classification_coverage_score_v2(y_true_class, y_pred_set)[0] == 0.8
+    assert classification_coverage_score(y_true_class, y_pred_set)[0] == 0.8
 
 
 def test_classification_mean_width_score_toydata() -> None:
@@ -531,15 +531,15 @@ def test_regression_coverage_score_intervals_invalid_shape() -> None:
         )
 
 
-def test_classification_coverage_score_v2_ytrue_valid_shape() -> None:
+def test_classification_coverage_score_ytrue_valid_shape() -> None:
     """Test that no error is raised if y_true has a shape (n_samples,)."""
-    classification_coverage_score_v2(y_true_class, y_pred_set_2alphas)
+    classification_coverage_score(y_true_class, y_pred_set_2alphas)
 
 
-def test_classification_coverage_score_v2_ypredset_invalid_shape() -> None:
+def test_classification_coverage_score_ypredset_invalid_shape() -> None:
     """Test that an error is raised if y_pred_set has not the good shape."""
     with pytest.raises(ValueError):
-        classification_coverage_score_v2(
+        classification_coverage_score(
             np.expand_dims(y_true_class, axis=1), y_pred_set[:, 0]
         )
 

@@ -38,7 +38,7 @@ from typing_extensions import TypedDict
 from numpy.typing import NDArray
 from mapie.classification import SplitConformalClassifier, CrossConformalClassifier
 from mapie.metrics.classification import (
-    classification_coverage_score_v2,
+    classification_coverage_score,
     classification_mean_width_score,
 )
 
@@ -193,7 +193,7 @@ def plot_results(
             vmin=0,
             vmax=3
         )
-        coverage = classification_coverage_score_v2(
+        coverage = classification_coverage_score(
             y_test2, mapie.predict_set(X_test2)[1][:, :, 89]
         )[0]
         axs[i].set_title(f"coverage = {coverage:.3f}")
@@ -266,7 +266,7 @@ def plot_coverage_width(
 split_coverages = np.array(
     [
         [
-            classification_coverage_score_v2(y_test_distrib, y_ps)
+            classification_coverage_score(y_test_distrib, y_ps)
             for _, y_ps in y_ps2.items()
         ] for _, y_ps2 in y_ps_mapies.items()
     ]
@@ -414,7 +414,7 @@ coverages, widths, violations = {}, {}, {}
 
 for strategy, y_ps_ in y_ps.items():
     coverages[strategy] = np.array(
-        classification_coverage_score_v2(y_test_distrib, y_ps_)
+        classification_coverage_score(y_test_distrib, y_ps_)
     )
     widths[strategy] = np.array(
         classification_mean_width_score(y_ps_)

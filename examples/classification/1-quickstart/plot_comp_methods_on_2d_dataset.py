@@ -56,7 +56,7 @@ from sklearn.naive_bayes import GaussianNB
 from numpy.typing import NDArray
 from mapie.classification import SplitConformalClassifier
 from mapie.metrics.classification import (
-    classification_coverage_score_v2,
+    classification_coverage_score,
     classification_mean_width_score,
 )
 
@@ -264,7 +264,7 @@ for conformity_score in conformity_scores:
         X, conformity_score_params={"include_last_label": "randomized"}
     )
     coverage[conformity_score] = [
-        classification_coverage_score_v2(y, y_ps_mapie[conformity_score])
+        classification_coverage_score(y, y_ps_mapie[conformity_score])
     ]
     mean_width[conformity_score] = classification_mean_width_score(
         y_ps_mapie[conformity_score]

@@ -37,7 +37,7 @@ from numpy.typing import NDArray
 from mapie.classification import SplitConformalClassifier
 from mapie.utils import train_conformalize_test_split
 from mapie.metrics.classification import (
-    classification_coverage_score_v2,
+    classification_coverage_score,
     classification_mean_width_score,
 )
 
@@ -304,7 +304,7 @@ mapie_clf = SplitConformalClassifier(
 mapie_clf.conformalize(X_c2, y_c2)
 _, y_ps_mapie = mapie_clf.predict_set(X)
 
-coverage = classification_coverage_score_v2(y, y_ps_mapie)
+coverage = classification_coverage_score(y, y_ps_mapie)
 mean_width = classification_mean_width_score(y_ps_mapie)
 
 
