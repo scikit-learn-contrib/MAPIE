@@ -26,7 +26,6 @@ from mapie.metrics.calibration import (
     top_label_ece,
 )
 from mapie.metrics.classification import (
-    classification_coverage_score,
     classification_mean_width_score,
     classification_coverage_score_v2,
     classification_ssc, classification_ssc_score,
@@ -266,10 +265,6 @@ def test_regression_toydata_coverage_score() -> None:
 def test_classification_y_true_shape() -> None:
     """Test shape of y_true."""
     with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
-        classification_coverage_score(
-            np.tile(y_true_class, (2, 1)), y_pred_set
-        )
-    with pytest.raises(ValueError, match=r".*y should be a 1d array*"):
         classification_ssc(np.tile(y_true_class, (2, 1)), y_pred_set_2alphas)
     with pytest.raises(ValueError, match=r".*are arrays with different len*"):
         classification_ssc_score(np.tile(y_true_class, (2, 1)),
@@ -278,8 +273,6 @@ def test_classification_y_true_shape() -> None:
 
 def test_classification_y_pred_set_shape() -> None:
     """Test shape of y_pred_set."""
-    with pytest.raises(ValueError, match=r".*Expected 2D array*"):
-        classification_coverage_score(y_true_class, y_pred_set[:, 0])
     with pytest.raises(ValueError, match=r".*should be a 3D array*"):
         classification_ssc(y_true_class, y_pred_set[:, 0])
     with pytest.raises(ValueError, match=r".*should be a 3D array*"):
@@ -289,7 +282,7 @@ def test_classification_y_pred_set_shape() -> None:
 def test_classification_same_length() -> None:
     """Test when y_true and y_pred_set have different lengths."""
     with pytest.raises(ValueError, match=r".*are arrays with different len*"):
-        classification_coverage_score(y_true_class, y_pred_set[:-1, :])
+        classification_coverage_score_v2(y_true_class, y_pred_set[:-1, :])
     with pytest.raises(ValueError, match=r".*shape mismatch*"):
         classification_ssc(y_true_class, y_pred_set_2alphas[:-1, :, :])
     with pytest.raises(ValueError, match=r".*are arrays with different len*"):
@@ -305,19 +298,7 @@ def test_classification_valid_input_shape() -> None:
 
 def test_classification_toydata() -> None:
     """Test coverage_score for toy data."""
-    assert classification_coverage_score(y_true_class, y_pred_set) == 0.8
-
-
-def test_classification_ytrue_type() -> None:
-    """Test that list(y_true_class) gives right coverage."""
-    scr = classification_coverage_score(list(y_true_class), y_pred_set)
-    assert scr == 0.8
-
-
-def test_classification_y_pred_set_type() -> None:
-    """Test that list(y_pred_set) gives right coverage."""
-    scr = classification_coverage_score(y_true_class, list(y_pred_set))
-    assert scr == 0.8
+    assert classification_coverage_score_v2(y_true_class, y_pred_set)[0] == 0.8
 
 
 def test_classification_mean_width_score_toydata() -> None:
@@ -548,19 +529,6 @@ def test_regression_coverage_score_intervals_invalid_shape() -> None:
         regression_coverage_score(
             np.expand_dims(y_toy, 1), intervals[:, 0, 0]
         )
-
-
-def test_classification_coverage_v1andv2() -> None:
-    """
-    Test that ``classification_coverage_score`` and
-    ```classification_coverage_score_v2``` returns the same results
-    """
-    cov_v1 = classification_coverage_score(y_true_class, y_pred_set)
-    cov_v2 = classification_coverage_score_v2(
-        np.expand_dims(y_true_class, axis=1),
-        np.expand_dims(y_pred_set, axis=2)
-    )
-    np.testing.assert_allclose(cov_v1, cov_v2[0])
 
 
 def test_classification_coverage_score_v2_ytrue_valid_shape() -> None:

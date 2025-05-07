@@ -2,7 +2,7 @@ from typing import cast, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from sklearn.utils import column_or_1d, check_array
+from sklearn.utils import column_or_1d
 
 from mapie.utils import (
     _check_arrays_length,
@@ -10,63 +10,6 @@ from mapie.utils import (
     _check_array_inf,
     _check_array_shape_classification, _check_nb_sets_sizes, _check_number_bins,
 )
-
-
-def classification_coverage_score(
-    y_true: ArrayLike,
-    y_pred_set: ArrayLike
-) -> float:
-    """
-    Effective coverage score obtained by the prediction sets.
-
-    The effective coverage is obtained by estimating the fraction
-    of true labels that lie within the prediction sets.
-
-    Parameters
-    ----------
-    y_true: ArrayLike of shape (n_samples,)
-        True labels.
-    y_pred_set: ArrayLike of shape (n_samples, n_class)
-        Prediction sets given by booleans of labels.
-
-    Returns
-    -------
-    float
-        Effective coverage obtained by the prediction sets.
-
-    Examples
-    --------
-    >>> from mapie.metrics.classification import classification_coverage_score
-    >>> import numpy as np
-    >>> y_true = np.array([3, 3, 1, 2, 2])
-    >>> y_pred_set = np.array([
-    ...     [False, False,  True,  True],
-    ...     [False,  True, False,  True],
-    ...     [False,  True,  True, False],
-    ...     [False, False,  True,  True],
-    ...     [False,  True, False,  True]
-    ... ])
-    >>> print(classification_coverage_score(y_true, y_pred_set))
-    0.8
-    """
-    y_true = cast(NDArray, column_or_1d(y_true))
-    y_pred_set = cast(
-        NDArray,
-        check_array(
-            y_pred_set, dtype=["bool"]
-        )
-    )
-
-    _check_arrays_length(y_true, y_pred_set)
-    _check_array_nan(y_true)
-    _check_array_inf(y_true)
-    _check_array_nan(y_pred_set)
-    _check_array_inf(y_pred_set)
-
-    coverage = np.take_along_axis(
-        y_pred_set, y_true.reshape(-1, 1), axis=1
-    ).mean()
-    return float(coverage)
 
 
 def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
