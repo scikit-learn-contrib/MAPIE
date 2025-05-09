@@ -3,6 +3,7 @@ Migrating to MAPIE v1
 
 .. contents:: Table of Contents
    :depth: 2
+   :local:
 
 Introduction
 --------------------------------------------------------------------------
@@ -431,11 +432,10 @@ Below is an example of the import needed for the ``classification_coverage_score
 
 Additionally, a number of classification and regression functions have been updated from v0.x to v1:
 
-``classification_coverage_score``
+``classification_coverage_score`` and ``classification_coverage_score_v2``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- **v0.x**: Had two separate versions: ``classification_coverage_score`` and ``classification_coverage_v2``.
-- **v1**: ``classification_coverage_score`` now corresponds to MAPIE v0.x's ``classification_coverage_score_v2``.
+Now only one version exists (``classification_coverage_score``), that corresponds to v0.x ``classification_coverage_score_v2``.
 
 ``classification_mean_width``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -443,11 +443,10 @@ Additionally, a number of classification and regression functions have been upda
 - **v0.x**: Took the prediction sets in an array of shape (n_samples, n_class) for a given confidence level as input, and returned the effective mean width as a float.
 - **v1**: Now takes the prediction sets in an array of shape (n_samples, n_class, n_confidence_level) as input, and returns the effective mean width for each confidence level as an array of shape (n_confidence_level,).
 
-``regression_coverage_score``
+``regression_coverage_score`` and ``regression_coverage_score_v2``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- **v0.x**: Had two separate versions: ``regression_coverage_score`` and ``regression_coverage_v2``.
-- **v1**: ``regression_coverage_score`` now corresponds to MAPIE v0.x's ``regression_coverage_score_v2``.
+Now only one version exists (``regression_coverage_score``), that corresponds to v0.x ``regression_coverage_score_v2``.
 
 ``regression_mean_width``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
