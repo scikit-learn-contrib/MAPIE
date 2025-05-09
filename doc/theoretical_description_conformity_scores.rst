@@ -13,7 +13,7 @@ Note: in theoretical parts of the documentation, we use the following terms empl
 
 —
 
-The :class:`mapie.conformity_scores.ConformityScore` class implements various
+The :class:`mapie.conformity_scores.BaseRegressionScore` class implements various
 methods to compute conformity scores for regression.
 We give here a brief theoretical description of the scores included in the module.
 Note that it is possible for the user to create any conformal scores that are not 

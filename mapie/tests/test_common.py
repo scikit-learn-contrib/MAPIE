@@ -220,53 +220,6 @@ def test_warning_when_import_from_residual_conformity_score():
         ResidualNormalisedScore()
 
 
-def test_warning_when_import_from_conformity_scores():
-    """Check that a DepreciationWarning is raised when importing from
-    mapie.conformity_scores.conformity_score"""
-
-    with pytest.warns(
-        FutureWarning, match=r".*WARNING: Deprecated path to import.*"
-    ):
-        from mapie.conformity_scores.conformity_scores import (
-            ConformityScore
-        )
-
-        class DummyConformityScore(ConformityScore):
-            def __init__(self) -> None:
-                super().__init__(sym=True, consistency_check=True)
-
-            def get_signed_conformity_scores(
-                self, y: ArrayLike, y_pred: ArrayLike, **kwargs
-            ) -> NDArray:
-                return np.array([])
-
-            def get_estimation_distribution(
-                self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
-            ) -> NDArray:
-                """
-                A positive constant is added to the sum between predictions and
-                conformity scores to make the estimated distribution
-                inconsistent with the conformity score.
-                """
-                return np.array([])
-
-            def get_conformity_scores(
-                self, y: ArrayLike, y_pred: ArrayLike, **kwargs
-            ) -> NDArray:
-                return np.array([])
-
-            def predict_set(
-                self, X: NDArray, alpha_np: NDArray, **kwargs
-            ) -> NDArray:
-                return np.array([])
-
-        dcs = DummyConformityScore()
-        dcs.get_signed_conformity_scores(y_toy, y_toy)
-        dcs.get_estimation_distribution(y_toy, y_toy)
-        dcs.get_conformity_scores(y_toy, y_toy)
-        dcs.predict_set(y_toy, 0.5)
-
-
 def test_warning_when_import_from_old_get_true_label_position():
     """Check that a DepreciationWarning is raised when importing from
     mapie.conformity_scores.residual_conformity_scores"""
