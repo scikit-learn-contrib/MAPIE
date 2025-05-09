@@ -84,8 +84,7 @@ where :math:`\hat{q}_{n, \alpha}^+` is the :math:`(1-\alpha)` quantile of the di
 Since this method estimates the conformity scores only on a calibration set, one must have enough
 observations to split its original dataset into train and calibration as mentioned in [5]. We can
 notice that this method is very similar to the naive one, the only difference being that the conformity
-scores are not computed on the calibration set. Moreover, this method will always give prediction intervals
-with a constant width.
+scores are not computed on the training set but on the calibration set instead.
   
 
 3. The jackknife method
