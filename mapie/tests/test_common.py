@@ -181,45 +181,6 @@ def test_none_alpha_results(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     np.testing.assert_allclose(y_pred_expected, y_pred)
 
 
-def test_warning_when_import_from_gamma_conformity_score():
-    """Check that a DepreciationWarning is raised when importing from
-    mapie.conformity_scores.residual_conformity_scores"""
-
-    with pytest.warns(
-        FutureWarning, match=r".*WARNING: Deprecated path to import.*"
-    ):
-        from mapie.conformity_scores.residual_conformity_scores import (
-            GammaConformityScore
-        )
-        GammaConformityScore()
-
-
-def test_warning_when_import_from_absolute_conformity_score():
-    """Check that a DepreciationWarning is raised when importing from
-    mapie.conformity_scores.residual_conformity_scores"""
-
-    with pytest.warns(
-        FutureWarning, match=r".*WARNING: Deprecated path to import.*"
-    ):
-        from mapie.conformity_scores.residual_conformity_scores import (
-            AbsoluteConformityScore
-        )
-        AbsoluteConformityScore()
-
-
-def test_warning_when_import_from_residual_conformity_score():
-    """Check that a DepreciationWarning is raised when importing from
-    mapie.conformity_scores.residual_conformity_scores"""
-
-    with pytest.warns(
-        FutureWarning, match=r".*WARNING: Deprecated path to import.*"
-    ):
-        from mapie.conformity_scores.residual_conformity_scores import (
-            ResidualNormalisedScore
-        )
-        ResidualNormalisedScore()
-
-
 def test_warning_when_import_from_old_get_true_label_position():
     """Check that a DepreciationWarning is raised when importing from
     mapie.conformity_scores.residual_conformity_scores"""
