@@ -1,27 +1,20 @@
 Migrating to MAPIE v1
 ===========================================
 
-MAPIE v1 introduces several updates, enhancements, and structural changes that simplify the API by breaking down ``MapieRegressor`` and ``MapieClassifier``  into dedicated classes for different conformal prediction techniques.
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+
+Introduction
+--------------------------------------------------------------------------
 
 This guide outlines the differences between MAPIE v0.x and MAPIE v1 and provides instructions for migrating your code to the new API.
 
-1. Python, scikit-learn and NumPy versions support
---------------------------------------------------------------------------
+Classification and regression API changes (excluding time series)
+---------------------------------------------------------------------------------------------------------
 
-Requirements have been updated and clarified. We now support:
-
-- Python >=3.9, <3.12 (formerly >=3.7, with no clear indication on a maximum version)
-- NumPy >=1.23 (formerly >=1.21)
-- scikit-learn >=1.4 (formerly no indications)
-
-Note that even though we're not officially supporting and testing it, MAPIE may run using either:
-
-- Python >=3.12, without using multi-processing (ie, ``n_jobs=-1``)
-- Python <3.9
-- scikit-learn <1.4, provided SciPy <=1.10
-
-2. Class restructuring
------------------------------------
+Classes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 MAPIE v1 breaks down the ``MapieRegressor`` and ``MapieClassifier`` classes into 5 classes, each dedicated to a particular conformal prediction technique. ``MapieQuantileRegressor`` has also been revamped, and renamed ``ConformalizedQuantileRegressor``.
 
@@ -65,8 +58,8 @@ For more details regarding the difference between split and cross conformal type
 
 Note that ``MapieClassifier``, ``MapieRegressor``, and ``MapieQuantileRegressor`` are now considered implementation details and should not be used directly. They have been renamed ``_MapieClassifier``, ``_MapieRegressor`` and ``_MapieQuantileRegressor``.
 
-3. Workflow and method changes
---------------------------------------------------------------------
+Workflow and methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The conformal prediction workflow has been changed, to clarify the process involved under-the-hood, and to allow a better control on data splitting.
 
@@ -90,15 +83,18 @@ MAPIE v1 introduces two new methods for prediction: ``.predict_interval()`` for 
 The ``.predict()`` method now focuses solely on producing point predictions.
 
 
-4. Parameters change
-------------------------
+Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Shared between classification and regression
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``alpha``
-~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 Has been replaced with ``confidence_level``, as this is a more usual concept. ``confidence_level`` indicates the desired coverage rate, and is equivalent to ``1 - alpha``. It is now set at initialization, to improve consistency across all conformal techniques.
 
 ``cv``
-~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 See the "Class restructuring" section of this guide for an overview of the breakdown of the ``cv`` parameter.
 
 - **v0.x**: Used to indicate if the model is pretrained or not (``"split"`` or ``"prefit"``) in the vanilla split conformal technique, or to specify the cross-validation scheme in cross conformal techniques.
@@ -108,174 +104,89 @@ See the "Class restructuring" section of this guide for an overview of the break
   - For split conformal techniques, the new ``prefit`` parameter is used to specify model pre-training. ``prefit`` is set by default to ``True`` for ``SplitConformalRegressor``, as we believe this is MAPIE nominal usage.
 
 ``conformity_score``
-~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 - **v0.x**: Only allowed subclass instances of ``BaseRegressionScore`` or ``BaseClassificationScore``, like ``AbsoluteConformityScore()``
 - **v1**: Now also accepts strings, like ``"absolute"``.
 
 ``method``
-~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 - **v0.x**: Used in ``MapieRegressor``, this parameter was only relevant to cross conformal techniques. Its usage in classification (``MapieClassifier``) was deprecated.
 - **v1**: Now only used in ``CrossConformalRegressor`` and ``JackknifeAfterBootstrapRegressor``, with the same possible values (``"base"``, ``"plus"``, or ``"minmax"``), except ``naive`` that has been removed because of its unlikeliness to be used in a real-world scenario.
 
 ``groups``
-~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 - **v0.x**: Passed as a parameter to the ``fit`` method, it was effectively used only in cross techniques.
 - **v1**: ``groups`` is used in ``CrossConformalRegressor`` and ``CrossConformalClassifier``. It is passed to the ``.conformalize()`` method.
 
 ``fit_params`` and ``sample_weight``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 - **v0.x**: ``sample_weight`` is a keyword argument of the ``fit`` method. Other fit parameters are passed in a dictionary through the ``fit_params`` argument.
 - **v1**: The ``fit`` and ``fit_conformalize`` methods now take all fit parameters in the ``fit_params`` argument, including ``sample_weight``.
 
 ``predict_params``
-~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 Note that because the conformalization step includes model inference, predict params are used both for conformalization and prediction steps.
 
 - **v0.x**: Predict parameters are passed to the ``fit`` method in a dictionary through the ``predict_params`` argument. The exact same params must be passed at prediction time to the ``predict`` method.
 - **v1**: Predict parameters are now passed only to the ``fit`` (or  ``fit_conformalize``) method, as a dictionary. The same params are reused at prediction time, without the need to pass them again.
 
-``agg_function`` and ``ensemble``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-How to aggregate predictions in cross conformal methods.
-
-- **v0.x**: Previously, the ``agg_function`` parameter had two usage: to aggregate predictions when setting ``ensemble=True`` in the ``predict`` method, and to specify the aggregation used in ``JackknifeAfterBootstrapRegressor``.
-- **v1**:
-
-  - The ``agg_function`` parameter has been split into two distinct parameters: ``aggregate_predictions`` and ``aggregation_method``. ``aggregate_predictions`` is specific to ``CrossConformalRegressor``, and it specifies how predictions from multiple conformal regressors are aggregated when making point predictions. ``aggregation_method`` is specific to ``JackknifeAfterBootstrapRegressor``, and it specifies the aggregation technique for combining predictions across different bootstrap samples during conformalization.
-  - Note that for both cross conformal techniques, predictions points are now computed by default using mean aggregation. This is to avoid prediction points outside of prediction intervals in the default setting.
-
 ``random_state``
-~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 - **v0.x**: This parameter was used to control the randomness of the data splitting.
 - **v1**: This parameter has been removed in cases where data splitting is now manual. Future evolutions may reintroduce it as a general purpose randomness control parameter.
 
+Regression-specific
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``agg_function`` and ``ensemble``
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+- **v0.x**: Previously, the ``agg_function`` parameter had two usage: to aggregate predictions when setting ``ensemble=True`` in the ``predict`` method of ``MapieRegressor``, and to specify the aggregation used in ``JackknifeAfterBootstrapRegressor``.
+- **v1**:
+
+  - The ``agg_function`` parameter has been split into two distinct parameters: ``aggregate_predictions`` and ``aggregation_method``. ``aggregate_predictions`` is specific to ``CrossConformalRegressor``, and it specifies how predictions from multiple conformal regressors are aggregated when making point predictions. ``aggregation_method`` is specific to ``JackknifeAfterBootstrapRegressor``, and it specifies the aggregation technique for combining predictions across different bootstrap samples during conformalization.
+  - Note that for both cross conformal regression techniques, predictions points are now computed by default using mean aggregation. This is to avoid prediction points outside of prediction intervals in the default setting.
+
 ``symmetry``
-~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 - **v0.x**: This parameter of the `predict` method of ``MapieQuantileRegressor`` was set to True by default
 - **v1**: This parameter is now named `symmetric_correction` and is set to False by default, because the resulting intervals are smaller. It is used in the `predict_interval` method of the ConformalizedQuantileRegressor.
 
+``optimize_beta``
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+It has been found during v1 development that this parameter (specific to regression) has never been working as expected (currently does nothing). At v1 release time, the bug hasn't been fixed yet. See the related GitHub issue.
+Note that in v1, this parameter has been renamed ``minimize_interval_width`` for clarity.
+
+Classification-specific
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 ``include_last_label``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 Parameter specific to APS or RAPS conformity scores in classification.
 
 - **v0.x**: This parameter is passed to the ``predict`` method of ``MapieClassifier``.
 - **v1**: This parameter is now passed in a dictionary to the ``conformity_score_params`` of the ``predict_set`` method of classification techniques.
 
 ``size_raps``
-~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 Parameter specific to the RAPS conformity score in classification.
 
 - **v0.x**: This parameter is passed to the ``fit`` method of ``MapieClassifier``.
 - **v1**: This parameter must now be passed to the ``conformity_score`` argument at initialization. Ex: ``SplitConformalClassifier(conformity_score=RAPSConformityScore(size_raps=0.3))``
 
-``optimize_beta``
-~~~~~~~~~~~~~~~~~~
-It has been found during v1 development that this parameter has never been working as expected (currently does nothing). At v1 release time, the bug hasn't been fixed yet. See the related GitHub issue.
-Note that in v1, this parameter has been renamed ``minimize_interval_width`` for clarity.
-
 None defaults
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 No more parameters with misleading ``None`` defaults.
 
 - **v0.x**: Eg: ``estimator`` in ``MapieRegressor`` has a ``None`` default value, even though the actual default value is ``LinearRegression()``. This is the case for other parameters as well.
 - **v1**: All parameters now have explicit defaults.
 
-
-5. Metrics change
-----------------------------------------------------------------------------------------
-
-In MAPIE v1, metrics are divided into three modules: ``calibration``, ``classification``, and ``regression``, which changes the import paths.
-
-Below is an example of the import needed for the ``classification_coverage_score`` function:
-
-- **v0.x**:
-
-    .. code-block::
-
-        from mapie.metrics import classification_coverage_score
-
-- **v1**:
-
-    .. code-block::
-
-        from mapie.metrics.classification import classification_coverage_score
-
-
-Additionally, a number of classification and regression functions have been updated from v0.x to v1:
-
-``classification_mean_width``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- **v0.x**: Took the prediction sets in an array of shape (n_samples, n_class) for a given confidence level as input, and returned the effective mean width as a float.
-- **v1**: Now takes the prediction sets in an array of shape (n_samples, n_class, n_confidence_level) as input, and returns the effective mean width for each confidence level as an array of shape (n_confidence_level,).
-
-``classification_coverage_score``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- **v0.x**: Had two separate versions: ``classification_coverage_score`` and ``classification_coverage_v2``.
-- **v1**: ``classification_coverage_score`` now corresponds to MAPIE v0.x's ``classification_coverage_score_v2``.
-
-``regression_mean_width``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- **v0.x**: Took the lower and upper bounds of the prediction intervals in arrays of shape (n_samples,) for a given confidence level as input, and returned the effective mean width as a float.
-- **v1**: Now takes a single array of shape (n_samples, 2, n_confidence_level) as input, and returns the effective mean width for each confidence level as an array of shape (n_confidence_level,).
-
-``regression_coverage_score``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- **v0.x**: Had two separate versions: ``regression_coverage_score`` and ``regression_coverage_v2``.
-- **v1**: ``regression_coverage_score`` now corresponds to MAPIE v0.x's ``regression_coverage_score_v2``.
-
-``regression_mwi_score``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- **v0.x**: Took ``alpha`` as input.
-- **v1**: Now takes ``confidence_level`` as input (``confidence_level`` is equivalent to ``1 - alpha``).
-
-``coverage_width_based``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- **v0.x**: Took ``alpha`` as input.
-- **v1**: Now takes ``confidence_level`` as input (``confidence_level`` is equivalent to ``1 - alpha``).
-
-
-6. MapieTimeSeriesRegressor class refactoring
-----------------------------------------------------------------------------------
-
-MAPIE v1 introduces several updates to the ``MapieTimeSeriesRegressor`` class in order to remain consistent with the
-classification and regression methods. However, unlike classification and regression, the API here has not been
-extensively refactored.
-
-Class renaming
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The ``MapieTimeSeriesRegressor`` class is now called ``TimeSeriesRegressor``.
-
-Functions update
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The ``adapt_conformal_inference``, ``update``, ``predict`` and ``coverage_width_based`` functions of the class now
-take ``confidence_level`` as input, instead of ``alpha`` (``confidence_level`` is equivalent to ``1 - alpha``).
-
-
-7. MondrianCP class suppression
-----------------------------------------------------------------------------------------
-
-The ``MondrianCP`` class is no longer available in v1.
-
-The class API was not aligned with the new philosophy we brought to the regression and classification use-cases. The class scope was also limited. We want to rethink the way we integrate Mondrian to MAPIE, in a future-proof way. Moreover, the Mondrian technique can be easily implemented manually.
-
-A `tutorial <https://mapie.readthedocs.io/en/v1/examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html>`_ for tabular regression with Mondrian is available in the documentation. This tutorial demonstrates how to implement Mondrian manually (i.e., without using the ``MondrianCP`` class) on a simple regression example, while shedding light on the benefits of this technique.
-
-
-8. Migration examples: MAPIE v0.x to MAPIE v1
-----------------------------------------------------------------------------------------
+Code migration examples
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Below are side-by-side examples of code in MAPIE v0.x and its equivalent in MAPIE v1
 
-Example 1: split conformal regression, pre-fitted model
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Split conformal regression, pre-fitted model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 MAPIE v0.x code
 
@@ -339,8 +250,8 @@ MAPIE v1 code
     prediction_points_v1, prediction_intervals_v1 = v1.predict_interval(X_test)
     prediction_points_v1 = v1.predict(X_test)
 
-Example 2: cross conformal regression, using non-trivial parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Cross conformal regression, using non-trivial parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 MAPIE v0.x code
 
@@ -405,8 +316,8 @@ MAPIE v1 code
     prediction_points_v1, prediction_intervals_v1 = v1.predict_interval(X_test)
     prediction_points_v1 = v1.predict(X_test, aggregate_predictions="median")
 
-Example 3: split conformal classification, using non-trivial parameters and an unfitted model
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Split conformal classification, using non-trivial parameters and an unfitted model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 MAPIE v0 code
 
@@ -466,3 +377,106 @@ MAPIE v1 code
         conformity_score_params={"include_last_label": "randomized"}
     )
     prediction_labels = v1.predict(X_test)
+
+Other API changes
+--------------------------------------------------------------------------
+
+Time series
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``MapieTimeSeriesRegressor`` class has been renamed ``TimeSeriesRegressor``.
+
+The ``adapt_conformal_inference``, ``update``, ``predict`` and ``coverage_width_based`` functions of the class now take ``confidence_level`` as input, instead of ``alpha`` (``confidence_level`` is equivalent to ``1 - alpha``).
+
+Risk control
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+TODO
+
+Calibration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``MapieCalibrator`` class has been renamed ``TopLabelCalibrator``.
+
+This class now being specific to top-label calibration, the ``method`` parameter, that was accepting only the value ``"top-label"``, has been removed.
+
+Mondrian
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``MondrianCP`` class is no longer available in v1.
+
+The class API was not aligned with the new philosophy we brought to the regression and classification use-cases. The class scope was also limited. We want to rethink the way we integrate Mondrian to MAPIE, in a future-proof way. Moreover, the Mondrian technique can be easily implemented manually.
+
+A `tutorial <https://mapie.readthedocs.io/en/v1/examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html>`_ for tabular regression with Mondrian is available in the documentation. This tutorial demonstrates how to implement Mondrian manually (i.e., without using the ``MondrianCP`` class) on a simple regression example, while shedding light on the benefits of this technique.
+
+
+Metrics
+~~~~~~~~~~~~~~~~~~~~
+
+In MAPIE v1, metrics are divided into three modules: ``calibration``, ``classification``, and ``regression``, which changes the import paths.
+
+Below is an example of the import needed for the ``classification_coverage_score`` function:
+
+- **v0.x**:
+
+    .. code-block::
+
+        from mapie.metrics import classification_coverage_score
+
+- **v1**:
+
+    .. code-block::
+
+        from mapie.metrics.classification import classification_coverage_score
+
+
+Additionally, a number of classification and regression functions have been updated from v0.x to v1:
+
+``classification_coverage_score`` and ``classification_coverage_score_v2``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now only one version exists (``classification_coverage_score``), that corresponds to v0.x ``classification_coverage_score_v2``.
+
+``classification_mean_width``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- **v0.x**: Took the prediction sets in an array of shape (n_samples, n_class) for a given confidence level as input, and returned the effective mean width as a float.
+- **v1**: Now takes the prediction sets in an array of shape (n_samples, n_class, n_confidence_level) as input, and returns the effective mean width for each confidence level as an array of shape (n_confidence_level,).
+
+``regression_coverage_score`` and ``regression_coverage_score_v2``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now only one version exists (``regression_coverage_score``), that corresponds to v0.x ``regression_coverage_score_v2``.
+
+``regression_mean_width``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- **v0.x**: Took the lower and upper bounds of the prediction intervals in arrays of shape (n_samples,) for a given confidence level as input, and returned the effective mean width as a float.
+- **v1**: Now takes a single array of shape (n_samples, 2, n_confidence_level) as input, and returns the effective mean width for each confidence level as an array of shape (n_confidence_level,).
+
+``regression_mwi_score``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- **v0.x**: Took ``alpha`` as input.
+- **v1**: Now takes ``confidence_level`` as input (``confidence_level`` is equivalent to ``1 - alpha``).
+
+``coverage_width_based``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- **v0.x**: Took ``alpha`` as input.
+- **v1**: Now takes ``confidence_level`` as input (``confidence_level`` is equivalent to ``1 - alpha``).
+
+Python, scikit-learn and NumPy versions support
+--------------------------------------------------------------------------
+
+Requirements have been updated and clarified. We now support:
+
+- Python >=3.9, <3.12 (formerly >=3.7, with no clear indication on a maximum version)
+- NumPy >=1.23 (formerly >=1.21)
+- scikit-learn >=1.4 (formerly no indications)
+
+Note that even though we're not officially supporting and testing it, MAPIE may run using either:
+
+- Python >=3.12, without using multi-processing (ie, ``n_jobs=-1``)
+- Python <3.9
+- scikit-learn <1.4, provided SciPy <=1.10
