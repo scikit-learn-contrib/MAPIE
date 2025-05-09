@@ -1,7 +1,7 @@
 """
-===========================
-Tutorial for set prediction
-===========================
+============================================================
+Set prediction example in the binary classification setting
+============================================================
 
 In this example, we propose set prediction for binary classification
 estimated by :class:`~mapie_v1.classification.SplitConformalClassifier` with the "lac"

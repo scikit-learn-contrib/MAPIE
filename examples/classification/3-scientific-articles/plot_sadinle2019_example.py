@@ -1,7 +1,7 @@
 """
-================================================
-Reproducing Example 7 from Sadinle et al. (2019)
-================================================
+=======================================================================================
+Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)
+=======================================================================================
 
 We use :class:`~mapie_v1.classification.SplitConformalClassifier` to reproduce
 Example 7 from Sadinle et al. (2019).

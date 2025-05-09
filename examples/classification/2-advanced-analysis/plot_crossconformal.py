@@ -1,7 +1,7 @@
 """
-==================================
-Cross-conformal for classification
-==================================
+=========================================
+Cross conformal classification explained
+=========================================
 
 In this tutorial, we estimate the impact of the
 training/conformalization split on the prediction sets and
