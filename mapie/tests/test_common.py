@@ -10,7 +10,6 @@ from sklearn.model_selection import KFold
 from sklearn.pipeline import make_pipeline
 from sklearn.utils.validation import check_is_fitted
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.classification import _MapieClassifier
 from mapie.regression.regression import _MapieRegressor
 from mapie.regression.quantile_regression import _MapieQuantileRegressor

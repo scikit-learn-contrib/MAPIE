@@ -170,7 +170,7 @@ Parameter specific to APS or RAPS conformity scores in classification.
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 Parameter specific to the RAPS conformity score in classification.
 
-- **v0.x**: This parameter is passed to the ``fit`` method of ``MapieClassifier``.
+- **v0.x**: Passing this parameter to the ``fit`` method of ``MapieClassifier`` is deprecated.
 - **v1**: This parameter must now be passed to the ``conformity_score`` argument at initialization. Ex: ``SplitConformalClassifier(conformity_score=RAPSConformityScore(size_raps=0.3))``
 
 None defaults
