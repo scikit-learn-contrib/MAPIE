@@ -180,18 +180,6 @@ def test_none_alpha_results(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     np.testing.assert_allclose(y_pred_expected, y_pred)
 
 
-def test_warning_when_import_from_old_get_true_label_position():
-    """Check that a DepreciationWarning is raised when importing from
-    mapie.conformity_scores.residual_conformity_scores"""
-
-    with pytest.warns(
-        FutureWarning, match=r".*WARNING: Deprecated path to import.*"
-    ):
-        from mapie.conformity_scores.utils_classification_conformity_scores\
-              import get_true_label_position
-        get_true_label_position(np.array([[0.1, 0.2, 0.7]]), np.array([2]))
-
-
 def test_warning_when_import_from_estimator():
     """Check that a DepreciationWarning is raised when importing from
     mapie.estimator.estimator"""
