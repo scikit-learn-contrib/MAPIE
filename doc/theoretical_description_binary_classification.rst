@@ -19,8 +19,9 @@ calibration (see :doc:`theoretical_description_calibration`), confidence interva
 These 3 notions are tightly related for score-based classifier, as it is shown in [1]. 
 
 Prediction sets can be computed in the same way for multiclass and binary classification with
-:class:`~mapie.classification._MapieClassifier`, and there are the same theoretical guarantees.
-Nevertheless, prediction sets are often much less informative in the binary case than in the multiclass case.
+:class:`~mapie.classification.SplitConformalClassifier` or :class:`~mapie.classification.CrossConformalClassifier`,
+and there are the same theoretical guarantees. Nevertheless, prediction sets are often much less informative in the
+binary case than in the multiclass case.
 
 From Gupta et al [1]:
 
@@ -53,7 +54,8 @@ Definition 1 (Prediction Set (PS) w.r.t :math:`f`) [1].
 PSs are typically studied for larger output sets, such as :math:`\mathcal{Y}_{regression}=\mathbb{R}` or
 :math:`\mathcal{Y}_{multiclass}=\{1, 2, ..., L > 2\}`.
 
-See :class:`~mapie.classification._MapieClassifier` to use a set predictor.
+See :class:`~mapie.classification.SplitConformalClassifier` and :class:`~mapie.classification.CrossConformalClassifier`
+to use a set predictor.
 
 
 2. Probabilistic Prediction
