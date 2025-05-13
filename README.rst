@@ -126,26 +126,10 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
     mapie_regressor = mapie_regressor.fit(X_train, y_train)
     y_pred, y_pis = mapie_regressor.predict(X_test, alpha=[0.05, 0.32])
 
-.. code:: python
+Uncertainty quantification for a classification problem
+--------------------------------------------------------
 
-    # Uncertainty quantification for classification problem
-    import numpy as np
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.datasets import make_blobs
-    from sklearn.model_selection import train_test_split
-
-    from mapie.classification import MapieClassifier
-
-
-    X, y = make_blobs(n_samples=500, n_features=2, centers=3)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
-
-    classifier = LogisticRegression()
-
-    mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
-
-    mapie_classifier = mapie_classifier.fit(X_train, y_train)
-    y_pred, y_pis = mapie_classifier.predict(X_test, alpha=[0.05, 0.32])
+`MAPIE quickstart: classification example <https://github.com/scikit-learn-contrib/MAPIE/tree/examples/classification/1-quickstart/plot_quickstart_classification.py>`_
 
 
 📘 Documentation
