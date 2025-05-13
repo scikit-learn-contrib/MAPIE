@@ -26,7 +26,7 @@ np.random.seed(42)
 X, y = make_blobs(n_samples=500, n_features=2, centers=3, cluster_std=3.4)
 
 (X_train, X_conformalize, X_test,
-y_train, y_conformalize, y_test) = train_conformalize_test_split(
+ y_train, y_conformalize, y_test) = train_conformalize_test_split(
     X, y, train_size=0.4, conformalize_size=0.4, test_size=0.2
 )
 
@@ -66,7 +66,7 @@ step = 0.1
 xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(y_min, y_max, step))
 X_test_mesh = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
-y_pis = mapie_classifier.predict_set(X_test_mesh)[1][:,:,0]
+y_pis = mapie_classifier.predict_set(X_test_mesh)[1][:, :, 0]
 
 cmap_back = ListedColormap(
     [(0.7803921568627451, 0.9137254901960784, 0.7529411764705882),
@@ -79,12 +79,12 @@ cmap_back = ListedColormap(
 cmap_dots = ListedColormap(
     [(0.19215686274509805, 0.5098039215686274, 0.7411764705882353),
      (0.9019607843137255, 0.3333333333333333, 0.050980392156862744),
-    (0.19215686274509805, 0.6392156862745098, 0.32941176470588235)]
+     (0.19215686274509805, 0.6392156862745098, 0.32941176470588235)]
 )
 
 plt.scatter(
    X_test_mesh[:, 0], X_test_mesh[:, 1],
-   c=np.ravel_multi_index(y_pis.T, (2,2,2)),
+   c=np.ravel_multi_index(y_pis.T, (2, 2, 2)),
    cmap=cmap_back, marker='.', s=10
 )
 plt.scatter(X[:, 0], X[:, 1], c=y, cmap=cmap_dots)
