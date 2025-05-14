@@ -999,7 +999,9 @@ def test_check_change_method_to_base(method: str, cv: str) -> None:
     assert mapie_reg.method == "base"
 
 
-def test_deprecated_ensemble_regressor_fit_warning() -> None:
+def test_ensemble_regressor_fit() -> None:
+    """EnsembleRegressor fit method shouldn't be used but still exists for now. This
+    dummy test keeps coverage at 100%"""
     ens_reg = EnsembleRegressor(
         LinearRegression(),
         "plus",
@@ -1009,11 +1011,7 @@ def test_deprecated_ensemble_regressor_fit_warning() -> None:
         0.20,
         False
     )
-    with pytest.warns(
-        FutureWarning,
-        match=r".WARNING: EnsembleRegressor.fit is deprecated.*"
-    ):
-        ens_reg.fit(X, y)
+    ens_reg.fit(X, y)
 
 
 @pytest.mark.parametrize("method", [0.5, 1, "cv", ["base", "plus"]])

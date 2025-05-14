@@ -21,7 +21,7 @@ from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.sets.raps import RAPSConformityScore
 from mapie.conformity_scores.utils import (
-    check_depreciated_size_raps, check_classification_conformity_score,
+    check_classification_conformity_score,
     check_target, check_and_select_conformity_score,
 )
 from mapie.estimator.classifier import EnsembleClassifier
@@ -816,7 +816,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        size_raps: Optional[float] = None,
     ):
         """
         Perform several checks on class parameters.
@@ -842,11 +841,9 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         y_enc = self.label_encoder_.transform(y)
 
         cs_estimator = check_classification_conformity_score(self.conformity_score)
-        check_depreciated_size_raps(size_raps)
         cs_estimator.set_external_attributes(
             classes=self.classes_,
             label_encoder=self.label_encoder_,
-            size_raps=size_raps,
             random_state=self.random_state
         )
         if (
@@ -881,7 +878,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        size_raps: Optional[float] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any
     ) -> _MapieClassifier:
@@ -902,12 +898,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             If some weights are null,
             their corresponding observations are removed
             before the fitting process and hence have no prediction sets.
-
-            By default ``None``.
-
-        size_raps: Optional[float]
-            Percentage of the data to be used for choosing lambda_star and
-            k_star for the RAPS method.
 
             By default ``None``.
 
@@ -942,7 +932,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
          y_enc,
          sample_weight,
          groups) = self._check_fit_parameter(
-            X, y, sample_weight, groups, size_raps
+            X, y, sample_weight, groups
         )
 
         # Cast

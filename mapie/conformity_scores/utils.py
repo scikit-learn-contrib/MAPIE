@@ -1,5 +1,4 @@
 from typing import Optional, no_type_check
-import warnings
 
 from sklearn.utils.multiclass import (
     check_classification_targets,
@@ -94,29 +93,6 @@ def check_regression_conformity_score(
         raise ValueError(
             "Invalid conformity_score argument.\n"
             "Must be None or a BaseRegressionScore instance."
-        )
-
-
-def check_depreciated_size_raps(
-    size_raps: Optional[float]
-) -> None:
-    """
-    Check if the parameter ``size_raps`` is used. If so, raise a warning.
-
-    Raises
-    ------
-    Warning
-        If ``size_raps`` is not ``None``.
-    """
-    if not (size_raps is None):
-        warnings.warn(
-            "WARNING: Deprecated parameter. "
-            "The parameter `size_raps` is deprecated. "
-            "In the next release, `RAPSConformityScore` takes precedence over "
-            "`_MapieClassifier` for setting the size used. "
-            "Prefer to define `size_raps` in `RAPSConformityScore` rather "
-            "than in the `fit` method of `_MapieClassifier`.",
-            DeprecationWarning
         )
 
 

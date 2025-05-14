@@ -13,9 +13,11 @@ from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
-                                     ShuffleSplit, StratifiedShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import (
+    GroupKFold, KFold, LeaveOneOut,
+    ShuffleSplit,
+    train_test_split,
+)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -337,9 +339,7 @@ STRATEGIES = {
     "raps_split": (
         Params(
             conformity_score=RAPSConformityScore(),
-            cv=StratifiedShuffleSplit(
-                n_splits=1, train_size=0.5, random_state=random_state
-            ),
+            cv="split",
             test_size=None,
             random_state=random_state
         ),
@@ -808,7 +808,7 @@ LARGE_COVERAGES = {
     "top_k": 0.96,
     "top_k_split": 0.952,
     "raps": 0.928,
-    "raps_split": 0.918,
+    "raps_split": 0.942,
     "raps_randomized": 0.806,
     "raps_randomized_split": 0.848,
 }
@@ -1451,7 +1451,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     else:
         clf = LogisticRegression()
     mapie_clf = _MapieClassifier(estimator=clf, **args_init)
-    mapie_clf.fit(X_toy, y_toy, size_raps=0.5)
+    mapie_clf.fit(X_toy, y_toy)
     _, y_ps = mapie_clf.predict(
         X_toy,
         alpha=0.5,
@@ -1473,8 +1473,10 @@ def test_large_dataset_predictions(strategy: str) -> None:
         clf = LogisticRegression().fit(X, y)
     else:
         clf = LogisticRegression()
+    if isinstance(args_init["conformity_score"], RAPSConformityScore):
+        args_init["conformity_score"] = RAPSConformityScore(size_raps=0.5)
     mapie_clf = _MapieClassifier(estimator=clf, **args_init)
-    mapie_clf.fit(X, y, size_raps=0.5)
+    mapie_clf.fit(X, y)
     _, y_ps = mapie_clf.predict(
         X,
         alpha=0.2,

@@ -6,7 +6,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils import _safe_indexing, deprecated
+from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from numpy.typing import ArrayLike, NDArray
@@ -405,11 +405,6 @@ class EnsembleRegressor:
 
         return y_pred
 
-    @deprecated(
-        "WARNING: EnsembleRegressor.fit is deprecated."
-        "Instead use EnsembleRegressor.fit_single_estimator"
-        "then EnsembleRegressor.fit_multi_estimators"
-    )
     def fit(
         self,
         X: ArrayLike,
@@ -419,6 +414,11 @@ class EnsembleRegressor:
         **fit_params
     ) -> EnsembleRegressor:
         """
+        Note to developer: this fit method has been broken down into
+        fit_single_estimator and fit_multi_estimators,
+        but we kept it so that EnsembleRegressor passes sklearn.check_is_fitted.
+        Prefer using fit_single_estimator and fit_multi_estimators.
+
         Fit the base estimator under the ``single_estimator_`` attribute.
         Fit all cross-validated estimator clones
         and rearrange them into a list, the ``estimators_`` attribute.
