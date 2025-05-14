@@ -61,6 +61,15 @@ y_pred, y_pred_set = mapie_classifier.predict_set(X_test)
 # true labels fall within the predicted sets).
 
 coverage_score = classification_coverage_score(y_test, y_pred_set)
+print(f"For a confidence level of {confidence_level:.2f}, "
+      f"the target coverage is {confidence_level:.3f}, "
+      f"and the effective coverage is {coverage_score[0]:.3f}.")
+
+##############################################################################
+# In this example, the effective coverage is slightly above the target coverage
+# (i.e., 0.95), indicating that the confidence level we set has been reached.
+# Therefore, we can confirm that the prediction sets effectively contain the
+# true label more than 95% of the time.
 
 ##############################################################################
 # Now, let us plot the confidence regions across the plane.
@@ -100,11 +109,6 @@ plt.xlabel("x1")
 plt.ylabel("x2")
 plt.title("Confidence regions with KNN")
 plt.show()
-print(
-    f"Target and effective coverages for "
-    f"confidence_level={confidence_level:.2f}: ("
-    f"{confidence_level:.3f}, {coverage_score[0]:.3f}"
-    f")")
 
 ##############################################################################
 # On the plot above, the dots represent the samples from our dataset, with their
