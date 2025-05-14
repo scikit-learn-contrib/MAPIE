@@ -466,6 +466,17 @@ Now only one version exists (``regression_coverage_score``), that corresponds to
 - **v0.x**: Took ``alpha`` as input.
 - **v1**: Now takes ``confidence_level`` as input (``confidence_level`` is equivalent to ``1 - alpha``).
 
+Conformity scores
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The import of ``AbsoluteConformityScore``, ``GammaConformityScore`` and ``ResidualNormalisedScore`` from ``mapie.conformity_scores.residual_conformity_scores`` was deprecated and is now unsupported.
+
+You can now import those scores from ``mapie.conformity_scores.bounds`` or simply ``mapie.conformity_scores``.
+
+The usage of ``ConformityScore`` was deprecated and is now unsupported. The new class to use is ``BaseRegressionScore``, that can be found in ``mapie.conformity_scores.regression``.
+
+We may clarify the ``conformity_scores`` package structure in the future.
+
 Python, scikit-learn and NumPy versions support
 --------------------------------------------------------------------------
 
