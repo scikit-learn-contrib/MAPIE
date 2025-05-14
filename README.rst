@@ -140,7 +140,7 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
 Uncertainty quantification for a classification problem
 ---------------------------------------------------------
 
-`MAPIE quickstart: classification example <https://github.com/scikit-learn-contrib/MAPIE/tree/examples/classification/1-quickstart/plot_quickstart_classification.py>`_
+`Use MAPIE to plot prediction sets <https://github.com/scikit-learn-contrib/MAPIE/tree/examples/classification/1-quickstart/plot_quickstart_classification.py>`_
 
 
 📘 Documentation
