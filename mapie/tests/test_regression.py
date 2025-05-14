@@ -16,7 +16,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import (
     GroupKFold, KFold, LeaveOneOut, PredefinedSplit, ShuffleSplit,
-    train_test_split
+    train_test_split, LeaveOneGroupOut, LeavePGroupsOut
 )
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
@@ -285,6 +285,42 @@ def test_predict_output_shape(
     (X, y) = dataset
     mapie_reg.fit(X, y)
     y_pred, y_pis = mapie_reg.predict(X, alpha=alpha)
+    n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
+    assert y_pred.shape == (X.shape[0],)
+    assert y_pis.shape == (X.shape[0], 2, n_alpha)
+
+
+@pytest.mark.parametrize(
+    "cv,   n_groups, n_leave",
+    [
+        (LeaveOneGroupOut(),      5, 1),
+        (LeavePGroupsOut(2),     10, 2),
+    ],
+)
+@pytest.mark.parametrize("alpha", [0.1, [0.05, 0.1]])
+def test_group_cv_output_shape(
+    cv: Any, n_groups: int, n_leave: int, alpha: Any
+) -> None:
+    """
+    Regression: MapieRegressor must accept group‑based CV
+    splitters (LeaveOneGroupOut, LeavePGroupsOut) without
+    raising and must return outputs with the canonical shapes
+    (n_samples, 2, n_alpha).
+    """
+    # synthetic regression data
+    n_per_group = 30 if n_leave == 1 else 50
+    X, y = make_regression(
+        n_samples=n_groups * n_per_group,
+        n_features=5,
+        noise=0.1,
+        random_state=42,
+    )
+    groups = np.repeat(np.arange(n_groups), n_per_group)
+
+    mapie = _MapieRegressor(cv=cv)
+    mapie.fit(X, y, groups=groups)
+    y_pred, y_pis = mapie.predict(X, alpha=alpha)
+
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
     assert y_pis.shape == (X.shape[0], 2, n_alpha)
