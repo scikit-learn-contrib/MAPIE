@@ -1,6 +1,6 @@
 """
 ======================================================
-MAPIE quickstart: classification example
+Use MAPIE to plot prediction sets
 ======================================================
 
 In this example, we explain how to use MAPIE on a basic classification setting.
@@ -47,6 +47,13 @@ mapie_classifier = SplitConformalClassifier(
 )
 mapie_classifier.conformalize(X_conformalize, y_conformalize)
 y_pred, y_pis = mapie_classifier.predict_set(X_test)
+
+##############################################################################
+# `y_pred` represents the point predictions as a ``np.ndarray`` of shape
+# ``(n_samples)``.
+# `y_pis` corresponds to the prediction sets as a ``np.ndarray`` of shape
+# ``(n_samples, 3, 1)``. This array contains only boolean values: `True` if the label
+# is included in the prediction set, and `False` if not.
 
 ##############################################################################
 # Finally, we can easily compute the coverage score (i.e., the proportion of times the

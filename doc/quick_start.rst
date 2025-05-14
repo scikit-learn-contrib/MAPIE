@@ -115,4 +115,4 @@ The effective coverage is the actual fraction of true labels lying in the predic
 
 Similarly, it's possible to do the same for a basic classification problem.
 
-- `MAPIE quickstart: classification example <https://github.com/scikit-learn-contrib/MAPIE/tree/examples/classification/1-quickstart/plot_quickstart_classification.py>`_
+- `Use MAPIE to plot prediction sets <https://github.com/scikit-learn-contrib/MAPIE/tree/examples/classification/1-quickstart/plot_quickstart_classification.py>`_
