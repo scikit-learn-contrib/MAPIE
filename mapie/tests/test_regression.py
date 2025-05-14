@@ -999,23 +999,6 @@ def test_check_change_method_to_base(method: str, cv: str) -> None:
     assert mapie_reg.method == "base"
 
 
-def test_deprecated_ensemble_regressor_fit_warning() -> None:
-    ens_reg = EnsembleRegressor(
-        LinearRegression(),
-        "plus",
-        KFold(n_splits=5, random_state=None, shuffle=True),
-        "nonsense",
-        None,
-        0.20,
-        False
-    )
-    with pytest.warns(
-        FutureWarning,
-        match=r".WARNING: EnsembleRegressor.fit is deprecated.*"
-    ):
-        ens_reg.fit(X, y)
-
-
 @pytest.mark.parametrize("method", [0.5, 1, "cv", ["base", "plus"]])
 def test_invalid_method(method: str) -> None:
     """Test that invalid methods raise errors."""
