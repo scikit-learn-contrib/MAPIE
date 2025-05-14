@@ -21,7 +21,7 @@ from .control_risk.risks import compute_risk_precision, compute_risk_recall
 from .utils import _check_alpha, _check_n_jobs, _check_verbose
 
 
-class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
+class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     """
     Prediction sets for multilabel-classification.
 
@@ -130,11 +130,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     >>> import numpy as np
     >>> from sklearn.multioutput import MultiOutputClassifier
     >>> from sklearn.linear_model import LogisticRegression
-    >>> from mapie.multi_label_classification import MapieMultiLabelClassifier
+    >>> from mapie.risk_control import PrecisionRecallController
     >>> X_toy = np.arange(4).reshape(-1, 1)
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    >>> mapie = MapieMultiLabelClassifier(estimator=clf).fit(X_toy, y_toy)
+    >>> mapie = PrecisionRecallController(estimator=clf).fit(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False  True]
@@ -483,7 +483,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: ArrayLike,
         _refit: Optional[bool] = False,
-    ) -> MapieMultiLabelClassifier:
+    ) -> PrecisionRecallController:
         """
         Fit the base estimator or use the fitted base estimator on
         batch data. All the computed risks will be concatenated each
@@ -504,7 +504,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        MapieMultiLabelClassifier
+        PrecisionRecallController
             The model itself.
         """
         # Checks
@@ -569,7 +569,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: ArrayLike,
         calib_size: Optional[float] = .3
-    ) -> MapieMultiLabelClassifier:
+    ) -> PrecisionRecallController:
         """
         Fit the base estimator or use the fitted base estimator.
 
@@ -589,7 +589,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        MapieMultiLabelClassifier
+        PrecisionRecallController
             The model itself.
         """
         self.calib_size = calib_size
