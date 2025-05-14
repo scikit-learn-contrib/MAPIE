@@ -454,34 +454,6 @@ def test_interval_prediction_with_beta_optimize() -> None:
     np.testing.assert_allclose(coverage, 0.916, rtol=1e-2)
 
 
-def test_deprecated_path_warning() -> None:
-    """Test that a warning is raised if import with deprecated path."""
-    with pytest.warns(
-        FutureWarning,
-        match=r".*WARNING: Deprecated path*"
-    ):
-        from mapie.time_series_regression import TimeSeriesRegressor
-        _ = TimeSeriesRegressor()
-
-
-def test_consistent_class() -> None:
-    """
-    Test that importing a class with a new or obsolete path
-    produces the same results.
-    """
-    from mapie.regression import TimeSeriesRegressor as C2
-    from mapie.time_series_regression import TimeSeriesRegressor as C1
-
-    mapie_c1 = C1(random_state=random_state).fit(X, y)
-    mapie_c2 = C2(random_state=random_state).fit(X, y)
-
-    y_pred_1, y_pis_1 = mapie_c1.predict(X, confidence_level=0.9)
-    y_pred_2, y_pis_2 = mapie_c2.predict(X, confidence_level=0.9)
-    np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
-    np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
-    np.testing.assert_allclose(y_pred_1, y_pred_2)
-
-
 def test_aci_method() -> None:
     """
     Test function for the "aci" (Adapted Conformal Inference) method
