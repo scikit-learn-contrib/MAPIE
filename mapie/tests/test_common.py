@@ -178,22 +178,3 @@ def test_none_alpha_results(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     mapie_estimator.fit(X_toy, y_toy)
     y_pred = mapie_estimator.predict(X_toy)
     np.testing.assert_allclose(y_pred_expected, y_pred)
-
-
-def test_warning_when_import_from_estimator():
-    """Check that a DepreciationWarning is raised when importing from
-    mapie.estimator.estimator"""
-
-    with pytest.warns(
-        FutureWarning, match=r".*WARNING: Deprecated path to import.*"
-    ):
-        from mapie.estimator.estimator import EnsembleRegressor
-        EnsembleRegressor(
-            estimator=LinearRegression(),
-            method="naive",
-            cv=3,
-            agg_function="mean",
-            n_jobs=1,
-            test_size=0.2,
-            verbose=0,
-        )

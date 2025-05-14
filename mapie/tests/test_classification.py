@@ -13,9 +13,11 @@ from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import (GroupKFold, KFold, LeaveOneOut,
-                                     ShuffleSplit, StratifiedShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import (
+    GroupKFold, KFold, LeaveOneOut,
+    ShuffleSplit,
+    train_test_split,
+)
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
