@@ -34,10 +34,10 @@ To install directly from the github repository :
 =====================
 
 Let us start with a basic regression problem.
-Here, we generate one-dimensional noisy data that we fit with a MLPRegressor: `Use MAPIE to plot prediction intervals <https://github.com/scikit-learn-contrib/MAPIE/tree/examples/regression/1-quickstart/plot_toy_model.py>`_
+Here, we generate one-dimensional noisy data that we fit with a MLPRegressor: `Use MAPIE to plot prediction intervals <https://github.com/scikit-learn-contrib/MAPIE/tree/master/examples/regression/1-quickstart/plot_toy_model.py>`_
 
 
 3. Classification
 =======================
 
-Similarly, it's possible to do the same for a basic classification problem: `Use MAPIE to plot prediction sets <https://github.com/scikit-learn-contrib/MAPIE/tree/examples/classification/1-quickstart/plot_quickstart_classification.py>`_
+Similarly, it's possible to do the same for a basic classification problem: `Use MAPIE to plot prediction sets <https://github.com/scikit-learn-contrib/MAPIE/tree/master/examples/classification/1-quickstart/plot_quickstart_classification.py>`_
