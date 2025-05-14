@@ -1,7 +1,7 @@
 """
-======================================
-Tutorial for multilabel-classification
-======================================
+=========================================================================
+Tutorial for recall and precision control for multi-label classification
+=========================================================================
 In this tutorial, we compare the prediction sets estimated by the
 RCPS and CRC methods implemented in MAPIE, for recall control purpose,
 on a two-dimensional toy dataset.

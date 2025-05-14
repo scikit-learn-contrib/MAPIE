@@ -1,6 +1,6 @@
-.. title:: Theoretical Description Multi label Classification : contents
+.. title:: Theoretical Description Recall and Precision Control for Multi label Classification : contents
 
-.. _theoretical_description_multilabel_classification:
+.. _theoretical_description_risk_control:
 
 #######################
 Theoretical Description
