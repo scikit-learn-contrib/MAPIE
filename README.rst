@@ -114,28 +114,10 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
 - How easy it is **to wrap your favorite scikit-learn-compatible model** around your model.
 - How easy it is **to follow the standard sequential** ``fit`` and ``predict`` process like any scikit-learn estimator.
 
-.. code:: python
+Uncertainty quantification for a regression problem
+---------------------------------------------------------
 
-    # Uncertainty quantification for regression problem
-    import numpy as np
-    from sklearn.linear_model import LinearRegression
-    from sklearn.datasets import make_regression
-    from sklearn.model_selection import train_test_split
-    from mapie.regression import SplitConformalRegressor
-
-    X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
-    X_train_conformalize, X_test, y_train_conformalize, y_test = train_test_split(X, y, test_size=0.5)
-    X_train, X_conformalize, y_train, y_conformalize = train_test_split(X_train_conformalize, y_train_conformalize, test_size=0.5)
-
-    regressor = LinearRegression()
-    regressor.fit(X_train, y_train)
-    mapie_regressor = SplitConformalRegressor(
-        regressor,
-        confidence_level=[0.95, 0.68],
-    )
-    mapie_regressor.conformalize(X_conformalize, y_conformalize)
-
-    y_pred, y_pred_intervals = mapie_regressor.predict_interval(X_test)
+`Use MAPIE to plot prediction intervals <https://github.com/scikit-learn-contrib/MAPIE/tree/examples/regression/1-quickstart/plot_toy_model.py>`_
 
 Uncertainty quantification for a classification problem
 ---------------------------------------------------------

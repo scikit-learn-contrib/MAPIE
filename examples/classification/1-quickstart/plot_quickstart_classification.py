@@ -18,6 +18,7 @@ from matplotlib.colors import ListedColormap
 from mapie.utils import train_conformalize_test_split
 from mapie.classification import SplitConformalClassifier
 from mapie.metrics.classification import classification_coverage_score
+
 np.random.seed(42)
 
 ##############################################################################
@@ -32,10 +33,10 @@ X, y = make_blobs(n_samples=500, n_features=2, centers=3, cluster_std=3.4)
 
 ##############################################################################
 # We fit our training data with a KNN estimator.
-# Then, we initialize a :class:`~mapie_v1.classification.SplitConformalClassifier`
+# Then, we initialize a :class:`~mapie.classification.SplitConformalClassifier`
 # using our estimator, indicating that it has already been fitted with
 # `prefit=True`.
-# Lastly, we compute the prediction sets with different alpha values using the
+# Lastly, we compute the prediction sets with the desired confidence level using the
 # ``conformalize`` and ``predict_set`` methods.
 
 classifier = KNeighborsClassifier(n_neighbors=10)
@@ -46,20 +47,20 @@ mapie_classifier = SplitConformalClassifier(
     estimator=classifier, confidence_level=confidence_level, prefit=True
 )
 mapie_classifier.conformalize(X_conformalize, y_conformalize)
-y_pred, y_pis = mapie_classifier.predict_set(X_test)
+y_pred, y_pred_set = mapie_classifier.predict_set(X_test)
 
 ##############################################################################
-# `y_pred` represents the point predictions as a ``np.ndarray`` of shape
+# ``y_pred`` represents the point predictions as a ``np.ndarray`` of shape
 # ``(n_samples)``.
-# `y_pis` corresponds to the prediction sets as a ``np.ndarray`` of shape
-# ``(n_samples, 3, 1)``. This array contains only boolean values: `True` if the label
-# is included in the prediction set, and `False` if not.
+# ``y_pred_set`` corresponds to the prediction sets as a ``np.ndarray`` of shape
+# ``(n_samples, 3, 1)``. This array contains only boolean values: ``True`` if the label
+# is included in the prediction set, and ``False`` if not.
 
 ##############################################################################
 # Finally, we can easily compute the coverage score (i.e., the proportion of times the
 # true labels fall within the predicted sets).
 
-coverage_score = classification_coverage_score(y_test, y_pis)
+coverage_score = classification_coverage_score(y_test, y_pred_set)
 
 ##############################################################################
 # Now, let us plot the confidence regions across the plane.
@@ -73,7 +74,7 @@ step = 0.1
 xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(y_min, y_max, step))
 X_test_mesh = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
-y_pis = mapie_classifier.predict_set(X_test_mesh)[1][:, :, 0]
+y_pred_set = mapie_classifier.predict_set(X_test_mesh)[1][:, :, 0]
 
 cmap_back = ListedColormap(
     [(0.7803921568627451, 0.9137254901960784, 0.7529411764705882),
@@ -91,7 +92,7 @@ cmap_dots = ListedColormap(
 
 plt.scatter(
    X_test_mesh[:, 0], X_test_mesh[:, 1],
-   c=np.ravel_multi_index(y_pis.T, (2, 2, 2)),
+   c=np.ravel_multi_index(y_pred_set.T, (2, 2, 2)),
    cmap=cmap_back, marker='.', s=10
 )
 plt.scatter(X[:, 0], X[:, 1], c=y, cmap=cmap_dots)
