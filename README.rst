@@ -114,15 +114,11 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
 - How easy it is **to wrap your favorite scikit-learn-compatible model** around your model.
 - How easy it is **to follow the standard sequential** ``fit`` and ``predict`` process like any scikit-learn estimator.
 
-Uncertainty quantification for a regression problem
----------------------------------------------------------
+Below are two simple examples that show how **MAPIE** is used in a regression setting and a classification setting:
 
-`Use MAPIE to plot prediction intervals <https://mapie.readthedocs.io/en/stable/examples_regression/1-quickstart/plot_toy_model.html>`_
+- Uncertainty quantification for a regression problem: `Use MAPIE to plot prediction intervals <https://mapie.readthedocs.io/en/stable/examples_regression/1-quickstart/plot_toy_model.html>`_
 
-Uncertainty quantification for a classification problem
----------------------------------------------------------
-
-`Use MAPIE to plot prediction sets <https://mapie.readthedocs.io/en/stable/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
+- Uncertainty quantification for a classification problem: `Use MAPIE to plot prediction sets <https://mapie.readthedocs.io/en/stable/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
 
 
 📘 Documentation
