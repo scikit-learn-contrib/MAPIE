@@ -117,12 +117,12 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
 Uncertainty quantification for a regression problem
 ---------------------------------------------------------
 
-`Use MAPIE to plot prediction intervals <https://github.com/scikit-learn-contrib/MAPIE/tree/master/examples/regression/1-quickstart/plot_toy_model.py>`_
+`Use MAPIE to plot prediction intervals <https://mapie.readthedocs.io/en/stable/examples_regression/1-quickstart/plot_toy_model.html>`_
 
 Uncertainty quantification for a classification problem
 ---------------------------------------------------------
 
-`Use MAPIE to plot prediction sets <https://github.com/scikit-learn-contrib/MAPIE/tree/master/examples/classification/1-quickstart/plot_quickstart_classification.py>`_
+`Use MAPIE to plot prediction sets <https://mapie.readthedocs.io/en/stable/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
 
 
 📘 Documentation
