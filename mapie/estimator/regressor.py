@@ -528,7 +528,12 @@ class EnsembleRegressor:
         **fit_params
     ) -> EnsembleRegressor:
 
-        self.use_split_method_ = _check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+        self.use_split_method_ = _check_no_agg_cv(
+            X,
+            self.cv,
+            self.no_agg_cv_,
+            groups=groups
+            )
         single_estimator_: RegressorMixin
 
         if self.cv == "prefit":

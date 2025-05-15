@@ -16,7 +16,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import (
     GroupKFold, KFold, LeaveOneOut, PredefinedSplit, ShuffleSplit,
-    train_test_split
+    train_test_split, LeaveOneGroupOut, LeavePGroupsOut
 )
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
@@ -288,6 +288,30 @@ def test_predict_output_shape(
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
     assert y_pis.shape == (X.shape[0], 2, n_alpha)
+
+
+@pytest.mark.parametrize(
+    "cv, n_groups",
+    [
+        (LeaveOneGroupOut(), 5),
+        (LeavePGroupsOut(2), 10),
+    ],
+)
+def test_group_cv_fit_runs_regressor(cv, n_groups):
+    """
+    `_MapieRegressor` should accept group‑based CV splitters
+    (LeaveOneGroupOut, LeavePGroupsOut) without raising.
+    """
+    X, y = make_regression(
+        n_samples=n_groups * 30,
+        n_features=5,
+        noise=0.1,
+        random_state=42,
+    )
+    groups = np.repeat(np.arange(n_groups), 30)
+
+    # Ensuring `.fit` does not raise
+    _MapieRegressor(cv=cv).fit(X, y, groups=groups)
 
 
 @pytest.mark.parametrize("delta", [0.6, 0.8])
