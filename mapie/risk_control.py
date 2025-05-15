@@ -40,6 +40,17 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         instance.
 
          by default ``None``
+    
+    metric_control : Optional[str]
+        Metric to control. Either "recall" or "precision".
+        By default ``recall``.
+    
+    method : Optional[str]
+        Method to use for the prediction sets. If `metric_control` is
+        "recall", then the method can be either "crc" or "rcps". 
+        If `metric_control` is "precision", then the method used to control
+        the precision is "ltt".
+        If `metric_control` is "recall" the default method is "crc".
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
