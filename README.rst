@@ -69,7 +69,7 @@ Here's a quick instantiation of MAPIE models for regression and classification p
 
 Implemented methods in **MAPIE** respect three fundamental pillars:
 
-- They are **model and use case agnostic**,
+- They are **model and use case agnostic**, 
 - They possess **theoretical guarantees** under minimal assumptions on the data and the model,
 - They are based on **peer-reviewed algorithms** and respect programming standards.
 
