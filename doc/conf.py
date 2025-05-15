@@ -343,4 +343,4 @@ def setup(app):
     app.add_js_file("js/copybutton.js")
 
     # temporary banner to announce the v1 release
-    app.add_css_file('informative-banner.css')
+    app.add_css_file("css/informative-banner.css")
