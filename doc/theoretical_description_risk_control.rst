@@ -1,15 +1,12 @@
-.. title:: Theoretical Description Multi label Classification : contents
+.. title:: Theoretical Description Recall and Precision Control for Multi label Classification : contents
 
-.. _theoretical_description_multilabel_classification:
+.. _theoretical_description_risk_control:
 
 #######################
 Theoretical Description
 #######################
 
-Note: in theoretical parts of the documentation, we use the following terms employed in the scientific literature:
-
-- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
-- *calibrate* and *calibration*, are equivalent to *conformalize* and *conformalization*.
+Note: in theoretical parts of this documentation, we use the terms *calibrate* and *calibration* employed in the scientific literature, that are equivalent to *conformalize* and *conformalization*.
 
 —
 

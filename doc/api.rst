@@ -32,7 +32,7 @@ Multi-Label Classification
    :toctree: generated/
    :template: class.rst
 
-   mapie.multi_label_classification.MapieMultiLabelClassifier
+   mapie.risk_control.PrecisionRecallController
 
 Calibration
 ===========

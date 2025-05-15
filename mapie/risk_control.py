@@ -21,7 +21,7 @@ from .control_risk.risks import compute_risk_precision, compute_risk_recall
 from .utils import _check_alpha, _check_n_jobs, _check_verbose
 
 
-class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
+class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     """
     Prediction sets for multilabel-classification.
 
@@ -40,6 +40,17 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         instance.
 
          by default ``None``
+
+    metric_control : Optional[str]
+        Metric to control. Either "recall" or "precision".
+        By default ``recall``.
+
+    method : Optional[str]
+        Method to use for the prediction sets. If `metric_control` is
+        "recall", then the method can be either "crc" or "rcps".
+        If `metric_control` is "precision", then the method used to control
+        the precision is "ltt".
+        If `metric_control` is "recall" the default method is "crc".
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
@@ -130,11 +141,11 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
     >>> import numpy as np
     >>> from sklearn.multioutput import MultiOutputClassifier
     >>> from sklearn.linear_model import LogisticRegression
-    >>> from mapie.multi_label_classification import MapieMultiLabelClassifier
+    >>> from mapie.risk_control import PrecisionRecallController
     >>> X_toy = np.arange(4).reshape(-1, 1)
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    >>> mapie = MapieMultiLabelClassifier(estimator=clf).fit(X_toy, y_toy)
+    >>> mapie = PrecisionRecallController(estimator=clf).fit(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False  True]
@@ -341,7 +352,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Warning
             If estimator is then to warn about the split of the
-            data between train and calibration
+            data between train and conformalization
         """
         if (estimator is None) and (not _refit):
             raise ValueError(
@@ -353,19 +364,19 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
             estimator = MultiOutputClassifier(
                 LogisticRegression()
             )
-            X_train, X_calib, y_train, y_calib = train_test_split(
+            X_train, X_conf, y_train, y_conf = train_test_split(
                     X,
                     y,
-                    test_size=self.calib_size,
+                    test_size=self.conformalize_size,
                     random_state=self.random_state,
             )
             estimator.fit(X_train, y_train)
             warnings.warn(
-                "WARNING: To avoid overffiting, X has been splitted"
+                "WARNING: To avoid overfitting, X has been split"
                 + "into X_train and X_conf. The conformalization will only"
                 + "be done on X_conf"
             )
-            return estimator, X_calib, y_calib
+            return estimator, X_conf, y_conf
 
         if isinstance(estimator, Pipeline):
             est = estimator[-1]
@@ -464,7 +475,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        NDArray of shape (n_samples, n_classe, 1)
+        NDArray of shape (n_samples, n_classes, 1)
             Output of the model ready for risk computation.
         """
         if isinstance(y_pred_proba, np.ndarray):
@@ -483,7 +494,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: ArrayLike,
         _refit: Optional[bool] = False,
-    ) -> MapieMultiLabelClassifier:
+    ) -> PrecisionRecallController:
         """
         Fit the base estimator or use the fitted base estimator on
         batch data. All the computed risks will be concatenated each
@@ -504,7 +515,7 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        MapieMultiLabelClassifier
+        PrecisionRecallController
             The model itself.
         """
         # Checks
@@ -568,8 +579,8 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        calib_size: Optional[float] = .3
-    ) -> MapieMultiLabelClassifier:
+        conformalize_size: Optional[float] = .3
+    ) -> PrecisionRecallController:
         """
         Fit the base estimator or use the fitted base estimator.
 
@@ -581,18 +592,18 @@ class MapieMultiLabelClassifier(BaseEstimator, ClassifierMixin):
         y: NDArray of shape (n_samples, n_classes)
             Training labels.
 
-        calib_size: Optional[float]
-            Size of the calibration dataset with respect to X if the
+        conformalize_size: Optional[float]
+            Size of the conformity dataset with respect to X if the
             given model is ``None`` need to fit a LogisticRegression.
 
             By default .3
 
         Returns
         -------
-        MapieMultiLabelClassifier
+        PrecisionRecallController
             The model itself.
         """
-        self.calib_size = calib_size
+        self.conformalize_size = conformalize_size
         return self.partial_fit(X, y, _refit=True)
 
     def predict(

@@ -3,7 +3,7 @@ from . import (
     metrics,
     regression,
     utils,
-    multi_label_classification,
+    risk_control,
     calibration,
     subsample,
 )
@@ -12,7 +12,7 @@ from ._version import __version__
 __all__ = [
     "regression",
     "classification",
-    "multi_label_classification",
+    "risk_control",
     "calibration",
     "metrics",
     "utils",

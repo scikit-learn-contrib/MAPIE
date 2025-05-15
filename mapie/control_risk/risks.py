@@ -12,7 +12,7 @@ def compute_risk_recall(
     y: NDArray
 ) -> NDArray:
     """
-    In `MapieMultiLabelClassifier` when `metric_control=recall`,
+    In `PrecisionRecallController` when `metric_control=recall`,
     compute the recall per observation for each different
     thresholds lambdas.
 
@@ -70,7 +70,7 @@ def compute_risk_precision(
     y: NDArray
 ) -> NDArray:
     """
-    In `MapieMultiLabelClassifier` when `metric_control=precision`,
+    In `PrecisionRecallController` when `metric_control=precision`,
     compute the precision per observation for each different
     thresholds lambdas.
 

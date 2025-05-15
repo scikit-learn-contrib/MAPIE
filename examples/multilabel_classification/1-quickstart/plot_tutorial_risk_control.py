@@ -1,7 +1,7 @@
 """
-======================================
-Tutorial for multilabel-classification
-======================================
+=========================================================================
+Tutorial for recall and precision control for multi-label classification
+=========================================================================
 In this tutorial, we compare the prediction sets estimated by the
 RCPS and CRC methods implemented in MAPIE, for recall control purpose,
 on a two-dimensional toy dataset.
@@ -23,7 +23,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
 
-from mapie.multi_label_classification import MapieMultiLabelClassifier
+from mapie.risk_control import PrecisionRecallController
 
 ##############################################################################
 # 1. Construction of the dataset
@@ -95,9 +95,9 @@ plt.show()
 ##############################################################################
 # 2 Recall control risk with CRC and RCPS
 # ----------------------------------------------------------------------------
-# 2.1 Fitting MapieMultiLabelClassifier
+# 2.1 Fitting PrecisionRecallController
 # ----------------------------------------------------------------------------
-# MapieMultiLabelClassifier will be fitted with RCPS and CRC methods. For the
+# PrecisionRecallController will be fitted with RCPS and CRC methods. For the
 # RCPS method, we will test all three Upper Confidence Bounds (Hoeffding,
 # Bernstein and Waudby-Smith–Ramdas).
 # The two methods give two different guarantees on the risk:
@@ -129,7 +129,7 @@ y_pss, recalls, thresholds, r_hats, r_hat_pluss = {}, {}, {}, {}, {}
 y_test_repeat = np.repeat(y_test[:, :, np.newaxis], len(alpha), 2)
 for i, (name, (method, bound)) in enumerate(method_params.items()):
 
-    mapie = MapieMultiLabelClassifier(
+    mapie = PrecisionRecallController(
         estimator=clf, method=method, metric_control="recall"
     )
     mapie.fit(X_cal, y_cal)
@@ -217,7 +217,7 @@ plt.show()
 ##############################################################################
 # 3. Precision control risk with LTT
 # ----------------------------------------------------------------------------
-# 3.1 Fitting MapieMultilabelClassifier
+# 3.1 Fitting PrecisionRecallController
 # ----------------------------------------------------------------------------
 #
 # In this part, we will use LTT to control precision.
@@ -240,7 +240,7 @@ plt.show()
 # doesn't necessarly pass the FWER control! This is what we are going to
 # explore.
 
-mapie_clf = MapieMultiLabelClassifier(
+mapie_clf = PrecisionRecallController(
     estimator=clf,
     method='ltt',
     metric_control='precision'

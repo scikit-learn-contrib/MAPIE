@@ -23,9 +23,9 @@
    :hidden:
    :caption: Control prediction errors
 
-   theoretical_description_multilabel_classification
-   examples_multilabel_classification/1-quickstart/plot_tutorial_multilabel_classification
-   notebooks_multilabel_classification
+   theoretical_description_risk_control
+   examples_multilabel_classification/1-quickstart/plot_tutorial_risk_control
+   notebooks_risk_control
 
 .. toctree::
    :maxdepth: 2
