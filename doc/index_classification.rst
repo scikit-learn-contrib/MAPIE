@@ -2,7 +2,7 @@ Prediction sets (classification)
 ================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    choosing_the_right_algorithm_classification
    examples_classification/1-quickstart/plot_quickstart_classification
