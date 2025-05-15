@@ -393,7 +393,9 @@ The already deprecated path to import the class (``from mapie.time_series_regres
 Risk control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+The ``MapieMultiLabelClassifier`` class has been renamed ``PrecisionRecallController``.
+
+The parameter ``calib_size`` from the ``fit`` method has been renamed ``conformalize_size``.
 
 Calibration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
