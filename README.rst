@@ -58,18 +58,18 @@ Here's a quick instantiation of MAPIE models for regression and classification p
 .. code:: python
 
     # Uncertainty quantification for regression problem
-    from mapie.regression import SplitConformalRegressor
-    mapie_regressor = SplitConformalRegressor(estimator=regressor)
+    from mapie.regression import MapieRegressor
+    mapie_regressor = MapieRegressor(estimator=regressor, method='plus', cv=5)
 
 .. code:: python
 
     # Uncertainty quantification for classification problem
-    from mapie.classification import _MapieClassifier
-    mapie_classifier = _MapieClassifier(estimator=classifier, method='score', cv=5)
+    from mapie.classification import MapieClassifier
+    mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
 
 Implemented methods in **MAPIE** respect three fundamental pillars:
 
-- They are **model and use case agnostic**, 
+- They are **model and use case agnostic**,
 - They possess **theoretical guarantees** under minimal assumptions on the data and the model,
 - They are based on **peer-reviewed algorithms** and respect programming standards.
 
@@ -79,17 +79,8 @@ Implemented methods in **MAPIE** respect three fundamental pillars:
 🔗 Requirements
 ===============
 
-**MAPIE** runs on:
-
-- Python >=3.9, <3.12
-- NumPy >=1.23
-- scikit-learn >=1.4
-
-Note that even though we're not officially supporting and testing it, **MAPIE** may run using either:
-
-- Python >=3.12, without using multi-processing (ie, ``n_jobs=-1``)
-- Python <3.9
-- scikit-learn <1.4, provided SciPy <=1.10
+- **MAPIE** runs on Python 3.7+.
+- **MAPIE** stands on the shoulders of giants. Its only internal dependencies are `scikit-learn <https://scikit-learn.org/stable/>`_ and `numpy=>1.21 <https://numpy.org/>`_.
 
 
 🛠 Installation
@@ -114,11 +105,47 @@ As **MAPIE** is compatible with the standard scikit-learn API, you can see that 
 - How easy it is **to wrap your favorite scikit-learn-compatible model** around your model.
 - How easy it is **to follow the standard sequential** ``fit`` and ``predict`` process like any scikit-learn estimator.
 
-Below are two simple examples that show how **MAPIE** is used in a regression setting and a classification setting:
+.. code:: python
 
-- Uncertainty quantification for a regression problem: `Use MAPIE to plot prediction intervals <https://mapie.readthedocs.io/en/stable/examples_regression/1-quickstart/plot_toy_model.html>`_
+    # Uncertainty quantification for regression problem
+    import numpy as np
+    from sklearn.linear_model import LinearRegression
+    from sklearn.datasets import make_regression
+    from sklearn.model_selection import train_test_split
 
-- Uncertainty quantification for a classification problem: `Use MAPIE to plot prediction sets <https://mapie.readthedocs.io/en/stable/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
+    from mapie.regression import MapieRegressor
+
+
+    X, y = make_regression(n_samples=500, n_features=1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+
+    regressor = LinearRegression()
+
+    mapie_regressor = MapieRegressor(estimator=regressor, method='plus', cv=5)
+
+    mapie_regressor = mapie_regressor.fit(X_train, y_train)
+    y_pred, y_pis = mapie_regressor.predict(X_test, alpha=[0.05, 0.32])
+
+.. code:: python
+
+    # Uncertainty quantification for classification problem
+    import numpy as np
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.datasets import make_blobs
+    from sklearn.model_selection import train_test_split
+
+    from mapie.classification import MapieClassifier
+
+
+    X, y = make_blobs(n_samples=500, n_features=2, centers=3)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+
+    classifier = LogisticRegression()
+
+    mapie_classifier = MapieClassifier(estimator=classifier, method='score', cv=5)
+
+    mapie_classifier = mapie_classifier.fit(X_train, y_train)
+    y_pred, y_pis = mapie_classifier.predict(X_test, alpha=[0.05, 0.32])
 
 
 📘 Documentation
