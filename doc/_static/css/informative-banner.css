@@ -1,0 +1,20 @@
+.banner {
+    background-color: #ffcc00;
+    color: black;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.banner-link {
+    color: blue;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.banner-link:hover {
+    text-decoration: underline;
+}
