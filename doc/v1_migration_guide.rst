@@ -388,7 +388,7 @@ The ``MapieTimeSeriesRegressor`` class has been renamed ``TimeSeriesRegressor``.
 
 The ``adapt_conformal_inference``, ``update``, ``predict`` and ``coverage_width_based`` functions of the class now take ``confidence_level`` as input, instead of ``alpha`` (``confidence_level`` is equivalent to ``1 - alpha``).
 
-The already deprecated path to import the class (``from mapie.time_series_regression import TimeSeriesRegressor`) is now unsupported, use path `mapie.regression` instead.
+The already deprecated path to import the class (``from mapie.time_series_regression import TimeSeriesRegressor``) is now unsupported, use path `mapie.regression` instead.
 
 Risk control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
