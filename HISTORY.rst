@@ -2,11 +2,13 @@
 History
 =======
 
-0.9.x (2025-xx-xx)
+1.0.0 (2025-xx-xx)
 ------------------
 
-* Fix issue  512 to replace setup.py by pyproject.toml, bump twine and wheel dependencies to latest
-* Fix issue  670 to correct the import path which cause ModuleNotFoundError
+* Major update, including a complete classification and regression public API rework, and a documentation revamp
+* Other parts of the public API have been improved as well
+* See the v1_changelog_and_migration_guide.rst documentation file for an extensive user-focused changelog
+* This update also includes developer experience improvements
 
 0.9.2 (2025-15-01)
 ------------------
