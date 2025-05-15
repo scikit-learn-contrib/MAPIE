@@ -341,3 +341,6 @@ sphinx_gallery_conf = {
 def setup(app):
     # a copy button to copy snippet of code from the documentation
     app.add_js_file("js/copybutton.js")
+
+    # temporary banner to announce the v1 release
+    app.add_css_file('informative-banner.css')
