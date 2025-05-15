@@ -1,7 +1,6 @@
 # Release checklist
 
 - [ ] Edit HISTORY.rst and AUTHORS.rst to make sure it’s up-to-date and add release date
-- [ ] Check whether any new files need to go in MANIFEST.in
 - [ ] Make sure tests run, pass and cover 100% of the package:
     * `make lint`
     * `make type-check`
