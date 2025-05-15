@@ -53,7 +53,7 @@ from sklearn.model_selection import PredefinedSplit
 
 from numpy.typing import NDArray
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.time_series_regression import TimeSeriesRegressor
+from mapie.regression import TimeSeriesRegressor
 
 warnings.simplefilter("ignore")
 
