@@ -593,7 +593,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             Training labels.
 
         conformalize_size: Optional[float]
-            Size of the conformity dataset with respect to X if the
+            Size of the conformalization dataset with respect to X if the
             given model is ``None`` need to fit a LogisticRegression.
 
             By default .3

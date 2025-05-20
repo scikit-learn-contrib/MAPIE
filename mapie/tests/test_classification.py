@@ -1792,7 +1792,7 @@ def test_warning_not_all_label_in_calib() -> None:
         cv="prefit", random_state=random_state
     )
     with pytest.warns(
-        UserWarning, match=r".*WARNING: your conformity dataset.*"
+        UserWarning, match=r".*WARNING: your conformalization dataset.*"
     ):
         mapie_clf.fit(X_mapie, y_mapie)
 

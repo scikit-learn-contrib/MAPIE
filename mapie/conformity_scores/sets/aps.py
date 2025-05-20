@@ -19,7 +19,7 @@ class APSConformityScore(NaiveConformityScore):
     """
     Adaptive Prediction Sets (APS) method-based non-conformity score.
     It is based on the sum of the softmax outputs of the labels until the true
-    label is reached, on the conformity set. See [1] for more details.
+    label is reached, on the conformalization set. See [1] for more details.
 
     References
     ----------

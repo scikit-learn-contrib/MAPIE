@@ -8,7 +8,7 @@ training/conformalization split on the prediction sets and
 on the resulting coverage estimated by
 :class:`~mapie_v1.classification.SplitConformalClassifier`.
 We then adopt a cross-validation approach in which the
-conformity scores of all conformity sets are used to
+conformity scores of all conformalization sets are used to
 estimate the quantile. We demonstrate that this second
 "cross-conformal" approach gives more robust prediction
 sets with accurate conformity plots.
@@ -19,7 +19,7 @@ of this documentation.
 
 We start the tutorial by splitting our training dataset
 in ``K`` folds, and sequentially use each fold as a
-conformity set, while the ``K-1`` folds remaining are
+conformalization set, while the ``K-1`` folds remaining are
 used for training the base model using
 the ``prefit=True`` option of
 :class:`~mapie_v1.classification.SplitConformalClassifier`.
@@ -103,7 +103,7 @@ plt.show()
 
 ##############################################################################
 # We split our training dataset into 5 folds and use each fold as a
-# conformity set. Each conformity set is therefore used to estimate the
+# conformalization set. Each conformalization set is therefore used to estimate the
 # conformity scores and the given quantiles for the two methods implemented in
 # :class:`~mapie_v1.classification.SplitConformalClassifier`.
 
@@ -165,7 +165,7 @@ plt.show()
 # train/conformalization splitting can slightly impact our results.
 #
 # Let's now visualize this impact on the number of labels included in each
-# prediction set induced by the different conformity sets.
+# prediction set induced by the different conformalization sets.
 
 
 def plot_results(
@@ -206,7 +206,7 @@ def plot_results(
 
 ##############################################################################
 # The prediction sets and the resulting coverages slightly vary among
-# conformity sets. Let's now visualize the coverage score and the
+# conformalization sets. Let's now visualize the coverage score and the
 # prediction set size of each fold and for both conformity scores, when
 # ``confidence_level`` = 0.9.
 
@@ -230,7 +230,7 @@ plot_results(
 
 ##############################################################################
 # Let's now compare the coverages and prediction set sizes obtained with the
-# different folds used as conformity sets.
+# different folds used as conformalization sets.
 
 
 def plot_coverage_width(
@@ -298,7 +298,7 @@ plot_coverage_width(
 #
 # - It prevents us from using the whole training set for training our base model;
 #
-# - The prediction sets are impacted by the way we extract the conformity set.
+# - The prediction sets are impacted by the way we extract the conformalization set.
 
 ##############################################################################
 # 2. Aggregating the conformity scores through cross-validation

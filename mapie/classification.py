@@ -48,7 +48,7 @@ class SplitConformalClassifier:
 
     1. The ``fit`` method (optional) fits the base classifier to the training data.
     2. The ``conformalize`` method estimates the uncertainty of the base classifier by
-       computing conformity scores on the conformity set.
+       computing conformity scores on the conformalization set.
     3. The ``predict_set`` method predicts labels and sets of labels.
 
     Parameters
@@ -194,15 +194,15 @@ class SplitConformalClassifier:
     ) -> Self:
         """
         Estimates the uncertainty of the base classifier by computing
-        conformity scores on the conformity set.
+        conformity scores on the conformalization set.
 
         Parameters
         ----------
         X_conformalize : ArrayLike
-            Features of the conformity set.
+            Features of the conformalization set.
 
         y_conformalize : ArrayLike
-            Targets of the conformity set.
+            Targets of the conformalization set.
 
         predict_params : Optional[dict], default=None
             Parameters to pass to the ``predict`` and ``predict_proba`` methods
@@ -788,7 +788,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
                 )
             if n_classes > n_unique_y_labels:
                 warnings.warn(
-                    "WARNING: your conformity dataset has less labels"
+                    "WARNING: your conformalization dataset has less labels"
                     + " than your training dataset (training"
                     + f" has {n_classes} unique labels while"
                     + f" conformity have {n_unique_y_labels} unique labels"

@@ -57,7 +57,7 @@ from mapie.metrics.classification import (
 #
 # * We set the conformal score ``Sᵢ = 𝑓̂(Xᵢ)ᵧᵢ``
 #   from the softmax output of the true class for each sample
-#   in the conformity set.
+#   in the conformalization set.
 #
 # * Then we define ``q̂`` as being the
 #   ``(n + 1) (1 - α) / n``

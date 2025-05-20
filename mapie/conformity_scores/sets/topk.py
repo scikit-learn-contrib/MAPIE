@@ -18,7 +18,7 @@ class TopKConformityScore(BaseClassificationScore):
     Top-K method-based non-conformity score.
 
     It is based on the sorted index of the probability of the true label in the
-    softmax outputs, on the conformity set. In case two probabilities are
+    softmax outputs, on the conformalization set. In case two probabilities are
     equal, both are taken, thus, the size of some prediction sets may be
     different from the others.
 

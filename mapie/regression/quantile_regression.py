@@ -37,7 +37,7 @@ class ConformalizedQuantileRegressor:
        regressor: a model to predict the target, and models to predict upper
        and lower quantiles around the target.
     2. The ``conformalize`` method estimates the uncertainty of the quantile models
-       using the conformity set.
+       using the conformalization set.
     3. The ``predict_interval`` computes prediction points and intervals.
 
     Parameters
@@ -177,15 +177,15 @@ class ConformalizedQuantileRegressor:
     ) -> Self:
         """
         Estimates the uncertainty of the quantile regressors by computing
-        conformity scores on the conformity set.
+        conformity scores on the conformalization set.
 
         Parameters
         ----------
         X_conformalize : ArrayLike
-            Features of the conformity set.
+            Features of the conformalization set.
 
         y_conformalize : ArrayLike
-            Targets of the conformity set.
+            Targets of the conformalization set.
 
         predict_params : Optional[dict], default=None
             Parameters to pass to the ``predict`` method of the regressors.

@@ -19,8 +19,9 @@ compare the coverage of these intervals across groups.
 Please note that the coverage obtained with Mondrian depends on the size of the
 groups: therefore, the groups must be large enough for the coverage to represent the
 model's performance on each of them accurately. If the groups are too small (e.g.,
-fewer than 200 samples within the group's conformity set), the conformalization may
-become unstable, likely resulting in high variance in the effective coverage obtained.
+fewer than 200 samples within the group's conformalization set), the conformalization
+may become unstable, likely resulting in high variance in the effective coverage
+obtained.
 
 
 Throughout this tutorial, we will answer the following questions:
@@ -102,7 +103,7 @@ plt.scatter(X, y, c=partition)
 plt.show()
 
 #######################################################################################
-# 2. Split the dataset into a training set, a conformity set, and a test set
+# 2. Split the dataset into a training set, a conformalization set, and a test set
 # ------------------------------------------------------------------------------------
 
 (X_train, X_conformalize, X_test,
@@ -118,14 +119,14 @@ plt.show()
 )
 
 ##############################################################################
-# We plot the training set, the conformity set, and the test set.
+# We plot the training set, the conformalization set, and the test set.
 
 
 f, ax = plt.subplots(1, 3, figsize=(15, 5))
 ax[0].scatter(X_train, y_train, c=partition_train)
 ax[0].set_title("Train set")
 ax[1].scatter(X_conformalize, y_conformalize, c=partition_conformalize)
-ax[1].set_title("Conformity set")
+ax[1].set_title("Conformalization set")
 ax[2].scatter(X_test, y_test, c=partition_test)
 ax[2].set_title("Test set")
 plt.show()
@@ -145,7 +146,7 @@ random_forest.fit(X_train, y_train)
 
 
 #######################################################################################
-# Conformalize a SplitConformalRegressor on the conformity set
+# Conformalize a SplitConformalRegressor on the conformalization set
 # *************************************************************************************
 
 
@@ -212,9 +213,9 @@ print("Average coverage across the 10 groups:", average_coverage)
 
 
 #######################################################################################
-# Conformalize a SplitConformalRegressor on the conformity set for each group
+# Conformalize a SplitConformalRegressor on the conformalization set for each group
 # *************************************************************************************
-# For each group in the conformity set, we conformalize a distinct
+# For each group in the conformalization set, we conformalize a distinct
 # :class:`~mapie.regression.SplitConformalRegressor`.
 
 
