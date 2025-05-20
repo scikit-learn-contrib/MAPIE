@@ -8,18 +8,19 @@ MAPIE v1 release notes
 Introduction
 --------------------------------------------------------------------------
 
-MAPIE v1's primary goal is to make the library easier to use, especially for users unfamiliar with conformal predictions. This release primarily focuses on revamping the API and documentation, enhancing MAPIE's clarity and accessibility. While there are no significant code refactoring changes in this version, foundational improvements have been made to pave the way for future developments.
+MAPIE v1's primary goal is to make the library easier to use, especially for users unfamiliar with conformal predictions. This release consists of an API and documentation revamp, enhancing MAPIE's clarity and accessibility.
+Moreover, the new API structure paves the way for efficient development and internal refactoring in the future.
+
+These release notes will help you easily migrate your code to MAPIE v1 and enjoy upcoming new features!
 
 API changes overview
 ---------------------
 
-The majority of changes in MAPIE v1 affect the regression and classification methods. For the other methods (calibration, risk control, etc.), MAPIE v1 introduces several updates in order to remain consistent with the classification and regression methods. However, unlike classification and regression, the API has not been extensively refactored.
+The classification and regression APIs have been thoroughly revamped (except for time series). Other API changes (calibration, multi-label classification, time series, etc.) consist mostly of renaming to bring overall consistency and clarity.
 
-The `following section <detail_API_changes_>`_ precisely details the changes introduced by MAPIE v1, as well as the motivations behind them.
+Below are the high-level, key changes introduced in MAPIE v1. For details and rationales behind these changes, see the section `"API changes in detail" <detail_API_changes_>`_.
 
-Below are the high-level, key changes introduced by MAPIE v1:
-
-- Regression and classification classes have been broken down into more specific, modular classes:
+- Regression and classification classes have been split into more specific classes:
 
 .. list-table:: Mapie v0.x -> v1 high-level classes correspondence
    :header-rows: 1
@@ -39,9 +40,9 @@ Below are the high-level, key changes introduced by MAPIE v1:
    * - ``MapieCalibrator``
      - ``TopLabelCalibrator``
 
-- The ``alpha`` parameter has been replaced with ``confidence_level`` (``confidence_level`` is equivalent to ``1 - alpha``).
+- For classification and regression, the v1 ``.fit`` method is not equivalent to the ``.fit`` method of previous MAPIE versions. It has been split into ``.fit`` and ``.conformalize`` for split conformal techniques, and replaced by ``.fit_conformalize`` for cross-conformal techniques.
 
-- The ``.fit`` method no longer performs the calibration step: for split conformal techniques, the model can be trained using ``.fit`` before its calibration, using ``.conformalize``. For cross conformal techniques, the ``.fit_conformalize`` method allows to perform the training and calibration steps simultaneously.
+- The ``alpha`` parameter has been replaced with ``confidence_level`` (``confidence_level`` is equivalent to ``1 - alpha``).
 
 *Differences between MAPIE v0.9 and v1.0 on a regression example*
 
@@ -51,11 +52,11 @@ Below are the high-level, key changes introduced by MAPIE v1:
 
 |
 
-Please be aware that MAPIE v1 comes with a small number of functional regressions:
+⚠️ MAPIE v1 comes with some functional regressions:
+
+- The ``MondrianCP`` class is temporarily unavailable in MAPIE v1. Mondrian can still easily be implemented manually (tutorial provided).
 
 - In regression settings, the naive method no longer exists for cross conformal techniques. It can still be done manually for split conformal techniques by performing the calibration step on the training set.
-
-- The ``MondrianCP`` class is temporarily unavailable on MAPIE, but the Mondrian technique can still easily be implemented manually.
 
 Python, scikit-learn and NumPy versions support
 ---------------------------------------------------
@@ -66,9 +67,7 @@ Requirements have been updated and clarified. We now support:
 - NumPy >=1.23
 - scikit-learn >=1.4
 
-Please be aware that Python versions between 3.7 and 3.9, and NumPy versions between 1.21 and 1.23 are no longer supported.
-
-Note that even though we're not officially supporting and testing it, MAPIE may run using either:
+We no longer officially support Python versions between 3.7 and 3.9, and NumPy versions between 1.21 and 1.23. Note that for now, MAPIE still runs using either:
 
 - Python <3.9
 - scikit-learn <1.4, provided SciPy <=1.10
@@ -185,14 +184,18 @@ See the "Class restructuring" section of this guide for an overview of the break
 
 ``predict_params``
 ..................................................
-Note that because the conformalization step includes model inference, predict params are used both for conformalization and prediction steps.
+Note that because the conformalization step includes model inference, predict parameters are used both for conformalization and prediction steps.
 
-- **v0.x**: Predict parameters are passed to the ``fit`` method in a dictionary through the ``predict_params`` argument. The exact same params must be passed at prediction time to the ``predict`` method.
-- **v1**: Predict parameters are now passed only to the ``fit`` (or  ``fit_conformalize``) method, as a dictionary. The same params are reused at prediction time, without the need to pass them again.
+- **v0.x**: Predict parameters are passed to the ``fit`` method in a dictionary through the ``predict_params`` argument. The exact same parameters must be passed at prediction time to the ``predict`` method.
+- **v1**: Predict parameters are now passed only to the ``fit`` (or  ``fit_conformalize``) method, as a dictionary. The same parameters are reused at prediction time, without the need to pass them again.
 
 ``random_state``
 ..................................................
-This parameter allows to control the randomness of the data splitting for cross conformal techniques. When the data splitting is done manually (i.e., for split conformal techniques), the randomness control is left to the user. Future evolutions may introduce ``random_state`` as a general purpose randomness control parameter.
+This parameter allowed to control the randomness of data splitting in MAPIE v0.x.
+In v1, data splitting is now done manually for split conformal techniques, so the randomness control is left to the user.
+This parameter is now specific to allows to data splitting randomness control for cross conformal techniques.
+
+Future evolutions may introduce ``random_state`` as a general purpose randomness control parameter.
 
 Regression-specific
 """""""""""""""""""""""""""""""""""
