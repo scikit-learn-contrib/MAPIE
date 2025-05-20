@@ -17,7 +17,7 @@ In all cases, the training/conformalization process can be broken down as follow
 1. Split conformal predictions
 ==============================
 
-- Compute conformity scores ("conformalization") on a conformalization not seen by the model during training.
+- Compute conformity scores ("conformalization") on a conformalization set not seen by the model during training.
   (Use :func:`~mapie.utils.train_conformalize_test_split` to obtain the different sets.)
 
 **MAPIE** then uses the conformity scores to estimate sets associated with the desired coverage on new data with strong theoretical guarantees.
