@@ -565,7 +565,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
     """
     Note to users: _MapieClassifier is now private, and may change at any time.
     Please use CrossConformalClassifier or CrossConformalClassifier instead.
-    See the v1 migration guide for more information.
+    See the v1 release notes for more information.
 
     Prediction sets for classification.
 

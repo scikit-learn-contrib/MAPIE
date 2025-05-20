@@ -30,14 +30,26 @@ Below are the high-level, key changes introduced by MAPIE v1:
      - ``SplitConformalRegressor``, ``CrossConformalRegressor``, ``JackknifeAfterBootstrapRegressor``
    * - ``MapieClassifier``
      - ``SplitConformalClassifier``, ``CrossConformalClassifier``
+   * - ``MapieQuantileRegressor``
+     - ``ConformalizedQuantileRegressor``
+   * - ``MapieTimeSeriesRegressor``
+     - ``TimeSeriesRegressor``
+   * - ``MapieMultiLabelClassifier``
+     - ``PrecisionRecallController``
+   * - ``MapieCalibrator``
+     - ``TopLabelCalibrator``
 
 - The ``alpha`` parameter has been replaced with ``confidence_level`` (``confidence_level`` is equivalent to ``1 - alpha``).
 
 - The ``.fit`` method no longer performs the calibration step: for split conformal techniques, the model can be trained using ``.fit`` before its calibration, using ``.conformalize``. For cross conformal techniques, the ``.fit_conformalize`` method allows to perform the training and calibration steps simultaneously.
 
+*Differences between MAPIE v0.9 and v1.0 on a regression example*
+
 .. image:: images/v1_release_notes_gitdiff.png
-   :title: Differences between MAPIE v0.9 and v1.0 on a regression example
-   :align: center
+    :alt: Differences between MAPIE v0.9 and v1.0 on a regression example
+    :align: center
+
+|
 
 Please be aware that MAPIE v1 comes with a small number of functional regressions:
 
