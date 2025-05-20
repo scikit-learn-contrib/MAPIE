@@ -45,7 +45,7 @@ class SplitConformalRegressor:
 
     1. The ``fit`` method (optional) fits the base regressor to the training data.
     2. The ``conformalize`` method estimates the uncertainty of the base regressor by
-       computing conformity scores on the conformity set.
+       computing conformity scores on the conformalization set.
     3. The ``predict_interval`` method predicts points and intervals.
 
     Parameters
@@ -190,15 +190,15 @@ class SplitConformalRegressor:
     ) -> Self:
         """
         Estimates the uncertainty of the base regressor by computing
-        conformity scores on the conformity set.
+        conformity scores on the conformalization set.
 
         Parameters
         ----------
         X_conformalize : ArrayLike
-            Features of the conformity set.
+            Features of the conformalization set.
 
         y_conformalize : ArrayLike
-            Targets of the conformity set.
+            Targets of the conformalization set.
 
         predict_params : Optional[dict], default=None
             Parameters to pass to the ``predict`` method of the base regressor.
