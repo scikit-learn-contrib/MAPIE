@@ -791,7 +791,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
                     "WARNING: your conformalization dataset has less labels"
                     + " than your training dataset (training"
                     + f" has {n_classes} unique labels while"
-                    + f" conformity have {n_unique_y_labels} unique labels"
+                    + f" conformalization have {n_unique_y_labels} unique labels"
                 )
 
         else:
