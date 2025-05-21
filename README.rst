@@ -1,6 +1,9 @@
 .. -*- mode: rst -*-
 
-|GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Conda| |Release| |Commits| |DOI|
+.. important::
+   🎉 MAPIE v1.0.0 is live! 🎉 You're seeing the documentation of this new version, which introduces major changes to the API. The extensive release notes are available `here <https://mapie.readthedocs.io/en/latest/v1_migration_guide.html>`_. You can switch to the documentation of previous versions using the button on the bottom right of this page.
+
+|GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Conda| |Release| |Commits|
 
 .. |GitHubActions| image:: https://github.com/scikit-learn-contrib/MAPIE/actions/workflows/test.yml/badge.svg
     :target: https://github.com/scikit-learn-contrib/MAPIE/actions
@@ -30,9 +33,6 @@
 .. |Commits| image:: https://img.shields.io/github/commits-since/scikit-learn-contrib/mapie/latest/master
     :target: https://github.com/scikit-learn-contrib/MAPIE/commits/master
 
-.. |DOI| image:: https://img.shields.io/badge/10.48550/arXiv.2207.12274-B31B1B.svg
-    :target: https://arxiv.org/abs/2207.12274
-
 .. image:: https://github.com/scikit-learn-contrib/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
     :align: center
@@ -43,26 +43,29 @@ MAPIE - Model Agnostic Prediction Interval Estimator
 ====================================================
 
 **MAPIE** is an open-source Python library for quantifying uncertainties and controlling the risks of machine learning models.
-It is a scikit-learn-contrib project that allows you to:
 
-- Easily **compute conformal prediction intervals** (or prediction sets) with controlled (or guaranteed) marginal coverage rate
-  for regression [3,4,8], classification (binary and multi-class) [5-7] and time series [9].
+It relies notably on the field of *Conformal Prediction* and *Distribution-Free Inference*.
+This scikit-learn-contrib, peer-reviewed project is **model and use case agnostic**, and possesses **theoretical guarantees** under minimal assumptions on the data and the model.
+
+.. image:: images/educational_visual.png
+    :width: 500
+    :align: center
+
+*Credits:
+Wholehearted Lifestyle (https://www.wholeheartedlifestyle.com) || Majestic Barbary Zebra Horse Hybrid by hogrmahmood*
+
+
+**MAPIE** allows you to:
+
+- Easily **compute conformal prediction intervals (or prediction sets)** for regression [3,4,8], classification (binary and multi-class) [5-7],
+  and time series [9] with guaranteed coverage rates by using the conformity set to estimate conformity scores.
 - Easily **control risks** of more complex tasks such as multi-label classification,
-  semantic segmentation in computer vision (probabilistic guarantees on recall, precision, ...) [10-12].
-- Easily **wrap any model (scikit-learn, tensorflow, pytorch, ...) with, if needed, a scikit-learn-compatible wrapper**
-  for the purposes just mentioned.
-
-Implemented methods in **MAPIE** respect three fundamental pillars:
-
-- They are **model and use case agnostic**,
-- They possess **theoretical guarantees** under minimal assumptions on the data and the model,
-- They are based on **peer-reviewed algorithms** and respect programming standards.
-
-**MAPIE** relies notably on the field of *Conformal Prediction* and *Distribution-Free Inference*.
+  semantic segmentation in computer vision, providing probabilistic guarantees on metrics like recall and precision [10-12].
+- Easily **integrate with any model (scikit-learn, TensorFlow, PyTorch) using a scikit-learn-compatible wrapper** if needed.
 
 
-🔗 Requirements
-===============
+🛠 Requirements & installation
+=================================
 
 **MAPIE** runs on:
 
@@ -75,10 +78,6 @@ Note that even though we're not officially supporting and testing it, **MAPIE** 
 - Python >=3.12, without using multi-processing (ie, ``n_jobs=-1``)
 - Python <3.9
 - scikit-learn <1.4, provided SciPy <=1.10
-
-
-🛠 Installation
-===============
 
 **MAPIE** can be installed in different ways:
 
@@ -94,20 +93,15 @@ Note that even though we're not officially supporting and testing it, **MAPIE** 
 
 Here we propose two basic uncertainty quantification problems for regression and classification tasks with scikit-learn.
 
-As **MAPIE** is compatible with the standard scikit-learn API, you can see that with just these few lines of code:
+As **MAPIE** is compatible with the standard scikit-learn API, you can see with just these few lines of code:
 
 - How easy it is **to wrap your favorite scikit-learn-compatible model** around your model.
-- How easy it is **to follow the standard sequential** ``fit`` and ``predict`` process like any scikit-learn estimator.
 
 Below are two simple examples that show how **MAPIE** is used in a regression setting and a classification setting:
 
-- Uncertainty quantification for a regression problem: `Use MAPIE to plot prediction intervals <https://mapie.readthedocs.io/en/stable/examples_regression/1-quickstart/plot_toy_model.html>`_
+- Uncertainty quantification for a regression problem: `Use MAPIE to plot prediction intervals <https://mapie.readthedocs.io/en/latest/examples_regression/1-quickstart/plot_toy_model.html>`_
 
-- Uncertainty quantification for a classification problem: `Use MAPIE to plot prediction sets <https://mapie.readthedocs.io/en/stable/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
-
-
-📘 Documentation
-================
+- Uncertainty quantification for a classification problem: `Use MAPIE to plot prediction sets <https://mapie.readthedocs.io/en/latest/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
 
 The full documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
 
@@ -124,15 +118,15 @@ For more information on the contribution process, please go `here <https://githu
 🤝  Affiliations
 ================
 
-MAPIE has been developed through a collaboration between Capgemini, Quantmetry, Michelin, ENS Paris-Saclay,
+MAPIE has been developed through a collaboration between Capgemini Invent, Quantmetry, Michelin, ENS Paris-Saclay,
 and with the financial support from Région Ile de France and Confiance.ai.
 
-|Capgemini| |Quantmetry| |Michelin| |ENS| |Confiance.ai| |IledeFrance|
+|Capgemini Invent| |Quantmetry| |Michelin| |ENS| |Confiance.ai| |IledeFrance|
 
-.. |Capgemini| image:: https://www.capgemini.com/wp-content/themes/capgemini2020/assets/images/logo.svg
+.. |Capgemini Invent| image:: https://www.capgemini.com/wp-content/themes/capgemini2020/assets/images/capgemini-invent.svg
     :height: 35px
     :width: 140px
-    :target: https://www.capgemini.com/
+    :target: https://www.capgemini.com/about-us/who-we-are/our-brands/capgemini-invent/
 
 .. |Quantmetry| image:: https://www.quantmetry.com/wp-content/uploads/2020/08/08-Logo-quant-Texte-noir.svg
     :height: 35px
@@ -144,10 +138,10 @@ and with the financial support from Région Ile de France and Confiance.ai.
     :width: 45px
     :target: https://www.michelin.com/en/
 
-.. |ENS| image:: https://www.ens.psl.eu/sites/default/files/logo_ens_psl_en_png.png
+.. |ENS| image:: https://ens-paris-saclay.fr/sites/default/files/ENSPS_UPSAY_logo_couleur_2.png
     :height: 35px
     :width: 140px
-    :target: https://ens-paris-saclay.fr/en/
+    :target: https://ens-paris-saclay.fr/en
 
 .. |Confiance.ai| image:: https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg
     :height: 45px
@@ -188,14 +182,10 @@ and with the financial support from Région Ile de France and Confiance.ai.
 [12] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al. "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022).
 
 
-📝 License
-==========
+📚 License & citation
+======================
 
-MAPIE is free and open-source software licensed under the `license <https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE>`_.
-
-
-📚 Citation
-===========
+MAPIE is free and open-source software licensed under the `BSD-3-Clause license <https://github.com/scikit-learn-contrib/MAPIE/blob/master/LICENSE>`_.
 
 If you use MAPIE in your research, please cite the main paper:
 
