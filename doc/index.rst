@@ -8,7 +8,7 @@
    quick_start
    split_cross_conformal
    choosing_the_right_algorithm
-   v1_migration_guide
+   v1_release_notes
 
 .. toctree::
    :maxdepth: 2

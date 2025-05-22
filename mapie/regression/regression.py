@@ -916,7 +916,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
     Note to users: _MapieRegressor is now private, and may change at any time.
     Please use CrossConformalRegressor, CrossConformalRegressor or
     JackknifeAfterBootstrapRegressor instead.
-    See the v1 migration guide for more information.
+    See the v1 release notes for more information.
 
     Prediction interval with out-of-fold conformity scores.
 

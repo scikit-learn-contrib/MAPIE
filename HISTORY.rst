@@ -7,7 +7,7 @@ History
 
 * Major update, including a complete classification and regression public API rework, and a documentation revamp
 * Other parts of the public API have been improved as well
-* See the v1_changelog_and_migration_guide.rst documentation file for an extensive user-focused changelog
+* See the v1_release_notes.rst documentation file for extensive and user-focused release notes
 * This update also includes developer experience improvements
 
 0.9.2 (2025-15-01)

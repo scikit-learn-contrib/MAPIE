@@ -306,7 +306,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
     """
     Note to users: _MapieQuantileRegressor is now private, and may change at any time.
     Please use ConformalizedQuantileRegressor instead.
-    See the v1 migration guide for more information.
+    See the v1 release notes for more information.
 
     This class implements the conformalized quantile regression strategy
     as proposed by Romano et al. (2019) to make conformal predictions.
