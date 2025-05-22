@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Any, Iterable, Optional, Tuple, Union, cast
-from typing_extensions import Self
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, clone
@@ -151,7 +150,7 @@ class SplitConformalRegressor:
         X_train: ArrayLike,
         y_train: ArrayLike,
         fit_params: Optional[dict] = None,
-    ) -> Self:
+    ) -> SplitConformalRegressor:
         """
         Fits the base regressor to the training data.
 
@@ -187,7 +186,7 @@ class SplitConformalRegressor:
         X_conformalize: ArrayLike,
         y_conformalize: ArrayLike,
         predict_params: Optional[dict] = None,
-    ) -> Self:
+    ) -> SplitConformalRegressor:
         """
         Estimates the uncertainty of the base regressor by computing
         conformity scores on the conformalization set.
@@ -438,7 +437,7 @@ class CrossConformalRegressor:
         groups: Optional[ArrayLike] = None,
         fit_params: Optional[dict] = None,
         predict_params: Optional[dict] = None,
-    ) -> Self:
+    ) -> CrossConformalRegressor:
         """
         Estimates the uncertainty of the base regressor in a cross-validation style:
         fits the base regressor on different folds of the dataset
@@ -751,7 +750,7 @@ class JackknifeAfterBootstrapRegressor:
         y: ArrayLike,
         fit_params: Optional[dict] = None,
         predict_params: Optional[dict] = None,
-    ) -> Self:
+    ) -> JackknifeAfterBootstrapRegressor:
         """
         Estimates the uncertainty of the base regressor using bootstrap sampling:
         fits the base regressor on (potentially overlapping) samples of the dataset,

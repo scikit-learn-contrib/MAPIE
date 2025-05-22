@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Iterable, List, Optional, Tuple, Union, cast, Any
-from typing_extensions import Self
 
 import numpy as np
 from sklearn.base import RegressorMixin, clone
@@ -128,7 +127,7 @@ class ConformalizedQuantileRegressor:
         X_train: ArrayLike,
         y_train: ArrayLike,
         fit_params: Optional[dict] = None,
-    ) -> Self:
+    ) -> ConformalizedQuantileRegressor:
         """
         Fits three models using the regressor provided at initialisation:
 
@@ -174,7 +173,7 @@ class ConformalizedQuantileRegressor:
         X_conformalize: ArrayLike,
         y_conformalize: ArrayLike,
         predict_params: Optional[dict] = None,
-    ) -> Self:
+    ) -> ConformalizedQuantileRegressor:
         """
         Estimates the uncertainty of the quantile regressors by computing
         conformity scores on the conformalization set.

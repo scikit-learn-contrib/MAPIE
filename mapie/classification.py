@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import warnings
 from typing import Any, Iterable, Optional, Tuple, Union, cast
-from typing_extensions import Self
 
 import numpy as np
 from sklearn import clone
@@ -155,7 +154,7 @@ class SplitConformalClassifier:
         X_train: ArrayLike,
         y_train: ArrayLike,
         fit_params: Optional[dict] = None,
-    ) -> Self:
+    ) -> SplitConformalClassifier:
         """
         Fits the base classifier to the training data.
 
@@ -191,7 +190,7 @@ class SplitConformalClassifier:
         X_conformalize: ArrayLike,
         y_conformalize: ArrayLike,
         predict_params: Optional[dict] = None,
-    ) -> Self:
+    ) -> SplitConformalClassifier:
         """
         Estimates the uncertainty of the base classifier by computing
         conformity scores on the conformalization set.
@@ -422,7 +421,7 @@ class CrossConformalClassifier:
         groups: Optional[ArrayLike] = None,
         fit_params: Optional[dict] = None,
         predict_params: Optional[dict] = None,
-    ) -> Self:
+    ) -> CrossConformalClassifier:
         """
         Estimates the uncertainty of the base classifier in a cross-validation style:
         fits the base classifier on different folds of the dataset
