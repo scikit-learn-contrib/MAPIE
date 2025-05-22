@@ -159,7 +159,7 @@ and with the financial support from Région Ile de France and Confiance.ai.
 
 [12] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al. "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022).
 
-Images credits:
+Image credits:
 *Portrait: Cemrecan Yurtman / Zebra Horse Hybrid: hogrmahmood*
 
 📚 License & citation
