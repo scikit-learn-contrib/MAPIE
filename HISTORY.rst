@@ -2,7 +2,7 @@
 History
 =======
 
-1.0.0 (2025-xx-xx)
+1.0.0 (2025-05-22)
 ------------------
 
 * Major update, including a complete classification and regression public API rework, and a documentation revamp
@@ -10,7 +10,7 @@ History
 * See the v1_release_notes.rst documentation file for extensive and user-focused release notes
 * This update also includes developer experience improvements
 
-0.9.2 (2025-15-01)
+0.9.2 (2025-01-15)
 ------------------
 
 * Fix issue 525 in contribution guidelines with syntax errors in hyperlinks and other formatting issues.
