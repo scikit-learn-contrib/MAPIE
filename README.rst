@@ -1,8 +1,5 @@
 .. -*- mode: rst -*-
 
-.. important::
-   🎉 MAPIE v1.0.0 is live! 🎉 You're seeing the documentation of this new version, which introduces major changes to the API. The extensive release notes are available `here <https://mapie.readthedocs.io/en/latest/v1_migration_guide.html>`_. You can switch to the documentation of previous versions using the button on the bottom right of this page.
-
 |GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Conda| |Release| |Commits|
 
 .. |GitHubActions| image:: https://github.com/scikit-learn-contrib/MAPIE/actions/workflows/test.yml/badge.svg
@@ -38,48 +35,38 @@
     :align: center
 
 
-
 MAPIE - Model Agnostic Prediction Interval Estimator
 ====================================================
 
+ 🎉 MAPIE v1.0.0 is live!  🎉 You're seeing the documentation of this new version, which introduces major changes to the API. Extensive release notes are available `here <https://mapie.readthedocs.io/en/latest/v1_migration_guide.html>`_. You can switch to the documentation of previous versions using the button on the bottom right of ReadTheDoc pages.
+
 **MAPIE** is an open-source Python library for quantifying uncertainties and controlling the risks of machine learning models.
 
-It relies notably on the field of *Conformal Prediction* and *Distribution-Free Inference*.
-This scikit-learn-contrib, peer-reviewed project is **model and use case agnostic**, and possesses **theoretical guarantees** under minimal assumptions on the data and the model.
-
-.. image:: images/educational_visual.png
-    :width: 500
-    :align: center
-
-*Credits:
-Wholehearted Lifestyle (https://www.wholeheartedlifestyle.com) || Majestic Barbary Zebra Horse Hybrid by hogrmahmood*
-
-
-**MAPIE** allows you to:
+It allows you to:
 
 - Easily **compute conformal prediction intervals (or prediction sets)** for regression [3,4,8], classification (binary and multi-class) [5-7],
   and time series [9] with guaranteed coverage rates by using the conformity set to estimate conformity scores.
 - Easily **control risks** of more complex tasks such as multi-label classification,
   semantic segmentation in computer vision, providing probabilistic guarantees on metrics like recall and precision [10-12].
-- Easily **integrate with any model (scikit-learn, TensorFlow, PyTorch) using a scikit-learn-compatible wrapper** if needed.
+- Easily **integrate with any model (scikit-learn, TensorFlow, PyTorch) using a scikit-learn-compatible wrapper** if needed. MAPIE is part of the scikit-learn-contrib ecosystem.
+
+.. image:: https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/refs/heads/master/doc/images/educational_visual.png
+    :width: 500
+    :align: center
+
+MAPIE relies notably on the fields of Conformal Prediction and Distribution-Free Inference. It implements **peer-reviewed** algorithms that are  **model and use case agnostic** and possesses **theoretical guarantees** under minimal assumptions on the data and the model.
 
 
 🛠 Requirements & installation
 =================================
 
-**MAPIE** runs on:
+MAPIE runs on:
 
 - Python >=3.9, <3.12
 - NumPy >=1.23
 - scikit-learn >=1.4
 
-Note that even though we're not officially supporting and testing it, **MAPIE** may run using either:
-
-- Python >=3.12, without using multi-processing (ie, ``n_jobs=-1``)
-- Python <3.9
-- scikit-learn <1.4, provided SciPy <=1.10
-
-**MAPIE** can be installed in different ways:
+MAPIE can be installed in different ways:
 
 .. code:: sh
 
@@ -88,23 +75,14 @@ Note that even though we're not officially supporting and testing it, **MAPIE** 
     $ pip install git+https://github.com/scikit-learn-contrib/MAPIE  # or directly from the github repository
 
 
-⚡ Quickstart
-=============
+⚡ Quickstart and documentation
+=======================================
 
-Here we propose two basic uncertainty quantification problems for regression and classification tasks with scikit-learn.
+Below are two simple examples from `our documentation <https://mapie.readthedocs.io/en/latest/>`_ that show how MAPIE is used in a regression setting and a classification setting:
 
-As **MAPIE** is compatible with the standard scikit-learn API, you can see with just these few lines of code:
+- `Uncertainty quantification for a regression problem <https://mapie.readthedocs.io/en/latest/examples_regression/1-quickstart/plot_toy_model.html>`_
 
-- How easy it is **to wrap your favorite scikit-learn-compatible model** around your model.
-
-Below are two simple examples that show how **MAPIE** is used in a regression setting and a classification setting:
-
-- Uncertainty quantification for a regression problem: `Use MAPIE to plot prediction intervals <https://mapie.readthedocs.io/en/latest/examples_regression/1-quickstart/plot_toy_model.html>`_
-
-- Uncertainty quantification for a classification problem: `Use MAPIE to plot prediction sets <https://mapie.readthedocs.io/en/latest/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
-
-The full documentation can be found `on this link <https://mapie.readthedocs.io/en/latest/>`_.
-
+- `Uncertainty quantification for a classification problem <https://mapie.readthedocs.io/en/latest/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
 
 📝 Contributing
 ===============
@@ -112,7 +90,7 @@ The full documentation can be found `on this link <https://mapie.readthedocs.io/
 You are welcome to propose and contribute new ideas.
 We encourage you to `open an issue <https://github.com/scikit-learn-contrib/MAPIE/issues>`_ so that we can align on the work to be done.
 It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
-For more information on the contribution process, please go `here <https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.rst>`_.
+For more information on the contribution process, read our `contribution guidelines <https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.rst>`_.
 
 
 🤝  Affiliations
@@ -181,6 +159,8 @@ and with the financial support from Région Ile de France and Confiance.ai.
 
 [12] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al. "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022).
 
+Images credits:
+*Portrait: Cemrecan Yurtman / Zebra Horse Hybrid: hogrmahmood*
 
 📚 License & citation
 ======================
