@@ -42,17 +42,15 @@ MAPIE - Model Agnostic Prediction Interval Estimator
 
 **MAPIE** is an open-source Python library for quantifying uncertainties and controlling the risks of machine learning models.
 
-It allows you to:
-
-- Easily **compute conformal prediction intervals (or prediction sets)** for regression [3,4,8], classification (binary and multi-class) [5-7],
-  and time series [9] with guaranteed coverage rates by using the conformity set to estimate conformity scores.
-- Easily **control risks** of more complex tasks such as multi-label classification,
-  semantic segmentation in computer vision, providing probabilistic guarantees on metrics like recall and precision [10-12].
-- Easily **integrate with any model (scikit-learn, TensorFlow, PyTorch) using a scikit-learn-compatible wrapper** if needed. MAPIE is part of the scikit-learn-contrib ecosystem.
-
 .. image:: https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/refs/heads/master/doc/images/educational_visual.png
     :width: 500
     :align: center
+
+MAPIE allows you to:
+
+- **Compute prediction intervals or prediction sets** for regression [3,4,8], classification [5-7], and time series [9], by estimating your model uncertainty on a conformalization dataset.
+- **Control risks** of more complex tasks such as multi-label classification, semantic segmentation in computer vision, providing probabilistic guarantees on metrics like recall and precision [10-12].
+- Easily use **any model (scikit-learn, TensorFlow, PyTorch)** thanks to scikit-learn-compatible wrapper if needed. MAPIE is part of the scikit-learn-contrib ecosystem.
 
 MAPIE relies notably on the fields of Conformal Prediction and Distribution-Free Inference. It implements **peer-reviewed** algorithms that are  **model and use case agnostic** and possesses **theoretical guarantees** under minimal assumptions on the data and the model.
 
