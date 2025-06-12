@@ -1657,3 +1657,25 @@ def _raise_error_if_fit_called_in_prefit_mode(
             "The fit method must be skipped when the prefit parameter is set to True. "
             "Use the conformalize method directly after instanciation."
         )
+
+
+def check_if_X_dataframe(
+    X: ArrayLike,
+) -> None:
+    """
+    Check if X is a pandas DataFrame.
+
+    Parameters
+    ----------
+    X: ArrayLike
+        The input data to check.
+
+    Raises
+    ------
+    TypeError
+        If X is not a pandas DataFrame.
+    """
+    if not hasattr(X, 'iloc') or not hasattr(X, 'columns'):
+        raise TypeError(
+            "X must be a pandas DataFrame."
+        )

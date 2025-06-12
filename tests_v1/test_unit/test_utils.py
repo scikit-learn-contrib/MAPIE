@@ -14,9 +14,11 @@ from mapie.utils import (
     _raise_error_if_previous_method_not_called,
     _raise_error_if_method_already_called,
     _raise_error_if_fit_called_in_prefit_mode,
-    train_conformalize_test_split
+    train_conformalize_test_split,
+    check_if_X_dataframe
 )
 from unittest.mock import patch
+import pandas as pd
 
 
 RANDOM_STATE = 1
@@ -264,3 +266,21 @@ class TestRaiseErrorIfFitCalledInPrefitMode:
 
     def test_does_nothing_when_not_in_prefit_mode(self):
         assert _raise_error_if_fit_called_in_prefit_mode(False) is None
+
+
+class TestCheckIfXDataFrame:
+    def test_valid_dataframe(self):
+        df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
+        # Should not raise
+        assert check_if_X_dataframe(df) is None
+
+    @pytest.mark.parametrize("invalid_X", [
+        np.array([[1, 2], [3, 4]]),
+        [[1, 2], [3, 4]],
+        {"a": [1, 2]},
+        42,
+        "not a dataframe"
+    ])
+    def test_invalid_types_raise(self, invalid_X):
+        with pytest.raises(TypeError):
+            check_if_X_dataframe(invalid_X)
