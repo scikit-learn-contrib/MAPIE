@@ -57,10 +57,9 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     method : Optional[str]
         Method to use for the prediction sets. If `metric_control` is
-        "recall", then the method can be either "crc" or "rcps".
+        "recall", then the method can be either "crc" (default) or "rcps".
         If `metric_control` is "precision", then the method used to control
         the precision is "ltt".
-        If `metric_control` is "recall" the default method is "crc".
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
@@ -95,7 +94,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     ----------
     valid_methods: List[str]
         List of all valid methods. Either CRC or RCPS
-    valid_methods: List[Union[str, ``None``]]
+    valid_bounds: List[Union[str, ``None``]]
         List of all valid bounds computation for RCPS only.
     single_estimator_ : sklearn.ClassifierMixin
         Estimator fitted on the whole training set.
@@ -624,8 +623,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         bound: Optional[Union[str, None]] = None
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
-        Prediction sets on new samples based on target confidence
-        interval.
+        Prediction sets on new samples based on the target risk level.
         Prediction sets for a given ``alpha`` are deduced from the computed
         risks.
 
@@ -634,13 +632,12 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         X: ArrayLike of shape (n_samples, n_features)
 
         alpha : Optional[Union[float, Iterable[float]]]
-            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
-            Between 0 and 1, represent the uncertainty of the confidence
-            interval.
+            The target risk level.
+            Can be a float, a list of floats, or a ``ArrayLike`` of floats,
+            between 0 and .
             Lower ``alpha`` produce larger (more conservative) prediction
             sets.
-            ``alpha`` is the complement of the target coverage level.
-            By default ``None``.
+            By default ``None`` (which means alpha=0.1).
 
         delta : Optional[float]
             Can be a float, or ``None``. If using method="rcps", then it
