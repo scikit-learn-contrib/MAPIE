@@ -43,6 +43,7 @@
 
    Metrics: how to measure conformal prediction performance? <theoretical_description_metrics>
    index_mondrian
+   mapie_llm
 
 .. toctree::
    :maxdepth: 2
