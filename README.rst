@@ -42,7 +42,7 @@ MAPIE - Model Agnostic Prediction Interval Estimator
 
 **MAPIE** is an open-source Python library for quantifying uncertainties and controlling the risks of machine learning models.
 
-.. image:: images/educational_visual.png
+.. image:: https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/refs/heads/master/doc/images/educational_visual.png
     :width: 500
     :align: center
 
