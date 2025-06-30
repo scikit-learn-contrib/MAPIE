@@ -273,7 +273,7 @@ Mondrian
 
 The ``MondrianCP`` class is temporarily unavailable in v1. We want to rethink the way we integrate Mondrian to MAPIE, in a future-proof way.
 
-In the mean time, the Mondrian technique can be easily implemented manually: a `tutorial <https://mapie.readthedocs.io/en/v1/examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html>`_ for tabular regression with Mondrian is available in the documentation. This tutorial demonstrates how to implement Mondrian manually (i.e., without using the ``MondrianCP`` class) on a simple regression example, while shedding light on the benefits of this technique.
+In the mean time, the Mondrian technique can be easily implemented manually: a `tutorial <https://mapie.readthedocs.io/en/latest/examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html>`_ for tabular regression with Mondrian is available in the documentation. This tutorial demonstrates how to implement Mondrian manually (i.e., without using the ``MondrianCP`` class) on a simple regression example, while shedding light on the benefits of this technique.
 
 
 Metrics

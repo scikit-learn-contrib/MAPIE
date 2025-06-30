@@ -78,9 +78,9 @@ MAPIE can be installed in different ways:
 
 Below are two simple examples from `our documentation <https://mapie.readthedocs.io/en/latest/>`_ that show how MAPIE is used in a regression setting and a classification setting:
 
-- `Uncertainty quantification for a regression problem <https://mapie.readthedocs.io/en/latest/examples_regression/1-quickstart/plot_toy_model.html>`_
+- `Uncertainty quantification for a regression task <https://mapie.readthedocs.io/en/latest/examples_regression/1-quickstart/plot_toy_model.html>`_
 
-- `Uncertainty quantification for a classification problem <https://mapie.readthedocs.io/en/latest/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
+- `Uncertainty quantification for a classification task <https://mapie.readthedocs.io/en/latest/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
 
 📝 Contributing
 ===============
