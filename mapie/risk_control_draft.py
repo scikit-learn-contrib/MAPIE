@@ -23,7 +23,7 @@ class BinaryClassificationController:
     Parameters
     ----------
     fitted_binary_classifier: Any
-        Any object that provides `predict_proba` and `predict` methods.
+        Any object that provides a `predict_proba` method.
 
     metric: str
         The performance metric we want to control (ex: "precision")
@@ -95,6 +95,7 @@ class BinaryClassificationController:
             If no thresholds that meet the target precision with the desired
             confidence level are found.
         """
+        # TODO: Make sure this works with sklearn train_test_split/Series
         y_calibrate_ = np.asarray(y_calibrate)
 
         predictions_proba = self._classifier.predict_proba(X_calibrate)[:, 1]
@@ -136,7 +137,7 @@ class BinaryClassificationController:
         predictions_proba = self._classifier.predict_proba(X_test)[:, 1]
         return (predictions_proba >= self.best_threshold).astype(int)
 
-    def _compute_precision(
+    def _compute_precision( # TODO: use sklearn or MAPIE ?
         self, predictions_proba: NDArray[np.float32], y_cal: NDArray[np.float32]
     ) -> NDArray[np.float32]:
         """
