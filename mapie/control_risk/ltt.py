@@ -103,7 +103,7 @@ def find_lambda_control_star(
         the empirical risk is less than alpha.
 
     valid_index: List[List[Any]].
-        Contain the valid index that satisfy fwer control
+        Contain the valid index that satisfy FWER control
         for each alpha (length aren't the same for each alpha).
 
     lambdas: NDArray of shape (n_lambda, )
@@ -121,7 +121,8 @@ def find_lambda_control_star(
     if [] in valid_index:
         warnings.warn(
             """
-            Warning: At least one sequence is empty!
+            Warning: the risk couldn't be controlled for at least one value of alpha.
+            The corresponding lambdas have been set to 1.
             """
         )
     l_lambda_star = []  # type: List[Any]
