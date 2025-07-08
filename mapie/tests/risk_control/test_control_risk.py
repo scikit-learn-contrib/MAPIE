@@ -165,7 +165,7 @@ def test_warning_valid_index_empty() -> None:
     """Test warning sent when empty list"""
     valid_index = [[]]  # type: List[List[int]]
     with pytest.warns(
-        UserWarning, match=r".*At least one sequence is empty*"
+        UserWarning, match=r".*Warning: the risk couldn'*"
     ):
         find_lambda_control_star(r_hat, valid_index, lambdas)
 
