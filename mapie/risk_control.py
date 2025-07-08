@@ -506,7 +506,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     ) -> PrecisionRecallController:
         """
         Fit the base estimator or use the fitted base estimator on
-        batch data. All the computed risks will be concatenated each
+        batch data to compute risks. All the computed risks will be concatenated each
         time the partial_fit method is called.
 
         Parameters
@@ -591,7 +591,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         calib_size: Optional[float] = .3
     ) -> PrecisionRecallController:
         """
-        Fit the base estimator or use the fitted base estimator.
+        Fit the base estimator (or use the fitted base estimator) and compute risks.
 
         Parameters
         ----------
