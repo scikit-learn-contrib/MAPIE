@@ -4,7 +4,7 @@ from typing import Optional, Union
 import numpy as np
 
 from mapie.conformity_scores.interface import BaseConformityScore
-from mapie.estimator.classifier import EnsembleClassifier
+from sklearn.model_selection import BaseCrossValidator
 
 from numpy.typing import ArrayLike, NDArray
 
@@ -53,7 +53,8 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        y_pred_proba: NDArray,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         **kwargs
     ) -> NDArray:
         """
@@ -84,7 +85,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         **kwargs
     ) -> NDArray:
         """
@@ -116,7 +117,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         y_pred_proba: NDArray,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         **kwargs
     ) -> NDArray:
         """
@@ -150,13 +151,14 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        y_pred_proba: NDArray,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         conformity_scores: NDArray,
         **kwargs
     ) -> NDArray:
         """
         Compute classes of the prediction sets from the observed values,
-        the estimator of type ``EnsembleClassifier`` and the conformity scores.
+        the predicted probabilities and the conformity scores.
 
         Parameters
         ----------
@@ -167,8 +169,11 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence set.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        y_pred_proba: NDArray
+            Predicted probabilities from the estimator.
+
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         conformity_scores: NDArray of shape (n_samples,)
             Conformity scores.
@@ -178,19 +183,19 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         NDArray of shape (n_samples, n_classes, n_alpha)
             Prediction sets (Booleans indicate whether classes are included).
         """
+        # Choice of the quantile
         # Predict probabilities
         y_pred_proba = self.get_predictions(
-            X, alpha_np, estimator, **kwargs
+            X, alpha_np, y_pred_proba, cv, **kwargs
         )
 
-        # Choice of the quantile
         self.quantiles_ = self.get_conformity_score_quantiles(
-            conformity_scores, alpha_np, estimator, **kwargs
+            conformity_scores, alpha_np, cv, **kwargs
         )
 
         # Build prediction sets
         prediction_sets = self.get_prediction_sets(
-            y_pred_proba, conformity_scores, alpha_np, estimator, **kwargs
+            y_pred_proba, conformity_scores, alpha_np, cv, **kwargs
         )
 
         return prediction_sets
@@ -213,6 +218,12 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         alpha_np: NDArray of shape (n_alpha, )
             Represents the uncertainty of the confidence set to produce.
 
+        y_pred_proba: NDArray
+            Predicted probabilities from the estimator.
+
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
+
         **kwargs: dict
             Additional keyword arguments.
 
@@ -221,4 +232,6 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         The output structure depend on the ``get_sets`` method.
             The prediction sets for each sample and each alpha level.
         """
-        return self.get_sets(X=X, alpha_np=alpha_np, **kwargs)
+        return self.get_sets(
+            X=X, alpha_np=alpha_np, **kwargs
+        )

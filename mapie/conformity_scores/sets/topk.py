@@ -1,12 +1,12 @@
-from typing import Optional, cast
+from typing import Optional, cast, Union
 
 import numpy as np
 
 from mapie.conformity_scores.classification import BaseClassificationScore
 from mapie.conformity_scores.sets.utils import (
-    check_proba_normalized, get_true_label_position
+    get_true_label_position
 )
-from mapie.estimator.classifier import EnsembleClassifier
+from sklearn.model_selection import BaseCrossValidator
 
 from mapie._machine_precision import EPSILON
 from numpy.typing import NDArray
@@ -84,33 +84,35 @@ class TopKConformityScore(BaseClassificationScore):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        y_pred_proba: NDArray,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         **kwargs
     ) -> NDArray:
         """
-        Get predictions from an EnsembleClassifier.
+        Just processes the passed y_pred_proba.
 
         This method should be implemented by any subclass of the current class.
 
         Parameters
         -----------
         X: NDArray of shape (n_samples, n_features)
-            Observed feature values.
+            Observed feature values (not used since predictions are passed).
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between ``0`` and ``1``, represents the
             uncertainty of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        y_pred_proba: NDArray
+            Predicted probabilities from the estimator.
+
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         Returns
         --------
         NDArray
             Array of predictions.
         """
-        y_pred_proba = estimator.predict(X, agg_scores="mean")
-        y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
         y_pred_proba = np.repeat(
             y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
         )
@@ -120,7 +122,7 @@ class TopKConformityScore(BaseClassificationScore):
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         **kwargs
     ) -> NDArray:
         """
@@ -135,8 +137,8 @@ class TopKConformityScore(BaseClassificationScore):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         Returns
         --------
@@ -150,7 +152,7 @@ class TopKConformityScore(BaseClassificationScore):
         y_pred_proba: NDArray,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         **kwargs
     ) -> NDArray:
         """
@@ -169,8 +171,8 @@ class TopKConformityScore(BaseClassificationScore):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         Returns
         --------

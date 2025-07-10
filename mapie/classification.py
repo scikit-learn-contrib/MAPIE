@@ -24,10 +24,12 @@ from mapie.conformity_scores.utils import (
     check_target, check_and_select_conformity_score,
 )
 from mapie.estimator.classifier import EnsembleClassifier
-from mapie.utils import (_check_alpha, _check_alpha_and_n_samples, _check_cv,
-                         _check_estimator_classification, _check_n_features_in,
-                         _check_n_jobs, _check_null_weight, _check_predict_params,
-                         _check_verbose)
+from mapie.utils import (
+    _check_alpha, _check_alpha_and_n_samples, _check_cv,
+    _check_estimator_classification, _check_n_features_in,
+    _check_n_jobs, _check_null_weight, _check_predict_params,
+    _check_verbose, check_proba_normalized,
+)
 from mapie.utils import (
     _transform_confidence_level_to_alpha_list,
     _raise_error_if_fit_called_in_prefit_mode,
@@ -1055,7 +1057,12 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         alpha = cast(Optional[NDArray], _check_alpha(alpha))
 
         # Estimate predictions
-        y_pred = self.estimator_.single_estimator_.predict(X, **predict_params)
+        y_pred_proba = self.estimator_.single_estimator_.predict_proba(
+            X,
+            **predict_params
+        )
+        y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
+        y_pred = self.label_encoder_.inverse_transform(np.argmax(y_pred_proba, axis=1))
         if alpha is None:
             return y_pred
 
@@ -1067,9 +1074,17 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         _check_alpha_and_n_samples(alpha_np, n)
 
         # Estimate prediction sets
+        if self.estimator_.cv != "prefit":
+            y_pred_proba = self.estimator_.predict_agg_proba(
+                X,
+                agg_scores,
+                **predict_params
+            )
+
         prediction_sets = self.conformity_score_function_.predict_set(
             X, alpha_np,
-            estimator=self.estimator_,
+            y_pred_proba=y_pred_proba,
+            cv=self.estimator_.cv,
             conformity_scores=self.conformity_scores_,
             include_last_label=include_last_label,
             agg_scores=agg_scores,

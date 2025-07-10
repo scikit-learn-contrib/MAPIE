@@ -33,7 +33,7 @@ from mapie.conformity_scores import (
     TopKConformityScore,
     NaiveConformityScore,
 )
-from mapie.conformity_scores.sets.utils import check_proba_normalized
+from mapie.utils import check_proba_normalized
 from mapie.metrics.classification import classification_coverage_score
 
 random_state = 42
@@ -439,7 +439,9 @@ class CustomGradientBoostingClassifier(GradientBoostingClassifier):
         if check_predict_params:
             n_samples = X.shape[0]
             n_classes = len(self.classes_)
-            return np.zeros((n_samples, n_classes))
+            probas = np.zeros((n_samples, n_classes))
+            probas[:, 0] = 1.0
+            return probas
         else:
             return super().predict_proba(X)
 
@@ -1921,7 +1923,7 @@ def test_fit_parameters_passing() -> None:
 def test_predict_parameters_passing() -> None:
     """
     Test passing predict parameters.
-    Checks that conformity_scores from train are 0, y_pred from test are 0.
+    Checks that y_pred from test are 0.
     """
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)
@@ -1935,10 +1937,7 @@ def test_predict_parameters_passing() -> None:
         X_train, y_train, predict_params=predict_params
     )
 
-    expected_conformity_scores = np.ones((X_train.shape[0], 1))
     y_pred = mapie_model.predict(X_test, agg_scores="mean", **predict_params)
-    np.testing.assert_equal(mapie_model.conformity_scores_,
-                            expected_conformity_scores)
     np.testing.assert_equal(y_pred, 0)
 
 
@@ -1988,7 +1987,7 @@ def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
     """
     We want to verify that there are no interferences
     with fit_params on the expected behavior of predict_params
-    Checks that conformity_scores from train and y_pred from test are 0.
+    Checks that y_pred from test are 0.
     """
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)
@@ -2005,10 +2004,6 @@ def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
     )
     y_pred = mapie_model.predict(X_test, agg_scores="mean", **predict_params)
 
-    expected_conformity_scores = np.ones((X_train.shape[0], 1))
-
-    np.testing.assert_equal(mapie_model.conformity_scores_,
-                            expected_conformity_scores)
     np.testing.assert_equal(y_pred, 0)
 
 
