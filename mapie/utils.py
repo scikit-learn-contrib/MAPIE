@@ -1035,7 +1035,7 @@ def _check_estimator_classification(
 
 def check_proba_normalized(
     y_pred_proba: NDArray,
-    axis: int = 1
+    axis: int = -1
 ) -> NDArray:
     """
     Check if for all the samples the sum of the probabilities is equal to one.
