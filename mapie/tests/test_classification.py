@@ -445,11 +445,6 @@ class CustomGradientBoostingClassifier(GradientBoostingClassifier):
         else:
             return super().predict_proba(X)
 
-    def predict(self, X, check_predict_params=False):
-        if check_predict_params:
-            return np.zeros(X.shape[0])
-        return super().predict(X)
-
 
 def early_stopping_monitor(i, est, locals):
     """Returns True on the 3rd iteration."""
@@ -839,9 +834,6 @@ class CumulatedScoreClassifier:
         self.fitted_ = True
         return self
 
-    def predict(self, X: ArrayLike) -> NDArray:
-        return np.array([1, 2, 1])
-
     def predict_proba(self, X: ArrayLike) -> NDArray:
         if np.max(X) <= 2:
             return np.array(
@@ -871,9 +863,6 @@ class ImageClassifier:
         self.fitted_ = True
         return self
 
-    def predict(self, *args: Any) -> NDArray:
-        return np.array([1, 2, 1])
-
     def predict_proba(self, X: ArrayLike) -> NDArray:
         if np.max(X) == 0:
             return np.array(
@@ -898,12 +887,6 @@ class WrongOutputModel:
     def predict_proba(self, *args: Any) -> NDArray:
         return self.proba_out
 
-    def predict(self, *args: Any) -> NDArray:
-        pred = (
-            self.proba_out == self.proba_out.max(axis=1)[:, None]
-        ).astype(int)
-        return pred
-
 
 class Float32OuputModel:
 
@@ -919,9 +902,6 @@ class Float32OuputModel:
         probas = np.array([[.9, .05, .05]])
         proba_out = np.repeat(probas, len(X), axis=0).astype(np.float32)
         return proba_out
-
-    def predict(self, X: NDArray, *args: Any) -> NDArray:
-        return np.repeat(1, len(X))
 
     def get_params(self, *args: Any, **kwargs: Any):
         return {"prefit": False}
