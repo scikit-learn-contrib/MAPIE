@@ -439,15 +439,14 @@ class EnsembleClassifier:
 
         return y_pred_proba, y, y_enc
 
-    def predict(
+    def predict_agg_proba(
         self,
         X: ArrayLike,
         agg_scores: Optional[str] = None,
         **predict_params,
     ) -> NDArray:
         """
-        Predict target from X. It also computes the prediction per train sample
-        for each test sample according to ``agg_scores``.
+        Computes aggregated probabilities from the estimators.
 
         Parameters
         ----------
@@ -469,23 +468,18 @@ class EnsembleClassifier:
         """
         check_is_fitted(self, self.fit_attributes)
 
-        if self.cv == "prefit":
-            y_pred_proba = self.single_estimator_.predict_proba(
-                X, **predict_params
+        y_pred_proba_k = np.asarray(
+            Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                delayed(self._predict_proba_oof_estimator)(
+                    estimator, X, **predict_params
+                ) for estimator in self.estimators_
             )
+        )
+        if agg_scores == "crossval":
+            y_pred_proba = np.moveaxis(y_pred_proba_k[self.k_], 0, 2)
+        elif agg_scores == "mean":
+            y_pred_proba = np.mean(y_pred_proba_k, axis=0)
         else:
-            y_pred_proba_k = np.asarray(
-                Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                    delayed(self._predict_proba_oof_estimator)(
-                        estimator, X, **predict_params
-                    ) for estimator in self.estimators_
-                )
-            )
-            if agg_scores == "crossval":
-                y_pred_proba = np.moveaxis(y_pred_proba_k[self.k_], 0, 2)
-            elif agg_scores == "mean":
-                y_pred_proba = np.mean(y_pred_proba_k, axis=0)
-            else:
-                raise ValueError("Invalid 'agg_scores' argument.")
+            raise ValueError("Invalid 'agg_scores' argument.")
 
         return y_pred_proba

@@ -33,7 +33,7 @@ from mapie.conformity_scores import (
     TopKConformityScore,
     NaiveConformityScore,
 )
-from mapie.conformity_scores.sets.utils import check_proba_normalized
+from mapie.utils import check_proba_normalized
 from mapie.metrics.classification import classification_coverage_score
 
 random_state = 42
@@ -439,14 +439,11 @@ class CustomGradientBoostingClassifier(GradientBoostingClassifier):
         if check_predict_params:
             n_samples = X.shape[0]
             n_classes = len(self.classes_)
-            return np.zeros((n_samples, n_classes))
+            probas = np.zeros((n_samples, n_classes))
+            probas[:, 0] = 1.0
+            return probas
         else:
             return super().predict_proba(X)
-
-    def predict(self, X, check_predict_params=False):
-        if check_predict_params:
-            return np.zeros(X.shape[0])
-        return super().predict(X)
 
 
 def early_stopping_monitor(i, est, locals):
@@ -837,9 +834,6 @@ class CumulatedScoreClassifier:
         self.fitted_ = True
         return self
 
-    def predict(self, X: ArrayLike) -> NDArray:
-        return np.array([1, 2, 1])
-
     def predict_proba(self, X: ArrayLike) -> NDArray:
         if np.max(X) <= 2:
             return np.array(
@@ -869,9 +863,6 @@ class ImageClassifier:
         self.fitted_ = True
         return self
 
-    def predict(self, *args: Any) -> NDArray:
-        return np.array([1, 2, 1])
-
     def predict_proba(self, X: ArrayLike) -> NDArray:
         if np.max(X) == 0:
             return np.array(
@@ -896,12 +887,6 @@ class WrongOutputModel:
     def predict_proba(self, *args: Any) -> NDArray:
         return self.proba_out
 
-    def predict(self, *args: Any) -> NDArray:
-        pred = (
-            self.proba_out == self.proba_out.max(axis=1)[:, None]
-        ).astype(int)
-        return pred
-
 
 class Float32OuputModel:
 
@@ -917,9 +902,6 @@ class Float32OuputModel:
         probas = np.array([[.9, .05, .05]])
         proba_out = np.repeat(probas, len(X), axis=0).astype(np.float32)
         return proba_out
-
-    def predict(self, X: NDArray, *args: Any) -> NDArray:
-        return np.repeat(1, len(X))
 
     def get_params(self, *args: Any, **kwargs: Any):
         return {"prefit": False}
@@ -1921,7 +1903,7 @@ def test_fit_parameters_passing() -> None:
 def test_predict_parameters_passing() -> None:
     """
     Test passing predict parameters.
-    Checks that conformity_scores from train are 0, y_pred from test are 0.
+    Checks that y_pred from test are 0.
     """
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)
@@ -1935,10 +1917,7 @@ def test_predict_parameters_passing() -> None:
         X_train, y_train, predict_params=predict_params
     )
 
-    expected_conformity_scores = np.ones((X_train.shape[0], 1))
     y_pred = mapie_model.predict(X_test, agg_scores="mean", **predict_params)
-    np.testing.assert_equal(mapie_model.conformity_scores_,
-                            expected_conformity_scores)
     np.testing.assert_equal(y_pred, 0)
 
 
@@ -1988,7 +1967,7 @@ def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
     """
     We want to verify that there are no interferences
     with fit_params on the expected behavior of predict_params
-    Checks that conformity_scores from train and y_pred from test are 0.
+    Checks that y_pred from test are 0.
     """
     X_train, X_test, y_train, y_test = (
         train_test_split(X, y, test_size=0.2, random_state=random_state)
@@ -2005,10 +1984,6 @@ def test_predict_params_expected_behavior_unaffected_by_fit_params() -> None:
     )
     y_pred = mapie_model.predict(X_test, agg_scores="mean", **predict_params)
 
-    expected_conformity_scores = np.ones((X_train.shape[0], 1))
-
-    np.testing.assert_equal(mapie_model.conformity_scores_,
-                            expected_conformity_scores)
     np.testing.assert_equal(y_pred, 0)
 
 

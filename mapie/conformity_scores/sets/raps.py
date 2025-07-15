@@ -2,13 +2,12 @@ from typing import Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedShuffleSplit, BaseCrossValidator
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
 
 from mapie.conformity_scores.sets.aps import APSConformityScore
 from mapie.conformity_scores.sets.utils import get_true_label_position
-from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
 from numpy.typing import NDArray
@@ -377,7 +376,7 @@ class RAPSConformityScore(APSConformityScore):
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
         include_last_label: Optional[Union[bool, str]] = True,
         **kwargs
@@ -394,8 +393,8 @@ class RAPSConformityScore(APSConformityScore):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         agg_scores: Optional[str]
             Method to aggregate the scores from the base estimators.

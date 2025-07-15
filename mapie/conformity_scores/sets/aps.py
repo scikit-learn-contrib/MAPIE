@@ -3,12 +3,12 @@ from typing import Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.utils import check_random_state
 from sklearn.preprocessing import label_binarize
+from sklearn.model_selection import BaseCrossValidator
 
 from mapie.conformity_scores.sets.naive import NaiveConformityScore
 from mapie.conformity_scores.sets.utils import (
-    check_include_last_label, check_proba_normalized
+    check_include_last_label
 )
-from mapie.estimator.classifier import EnsembleClassifier
 
 from mapie._machine_precision import EPSILON
 from numpy.typing import ArrayLike, NDArray
@@ -46,24 +46,28 @@ class APSConformityScore(NaiveConformityScore):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        y_pred_proba: NDArray,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
         **kwargs
     ) -> NDArray:
         """
-        Get predictions from an EnsembleClassifier.
+        Just processes the passed y_pred_proba.
 
         Parameters
         -----------
         X: NDArray of shape (n_samples, n_features)
-            Observed feature values.
+            Observed feature values (not used since predictions are passed).
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between ``0`` and ``1``, represents the
             uncertainty of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        y_pred_proba: NDArray
+            Predicted probabilities from the estimator.
+
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         agg_scores: Optional[str]
             Method to aggregate the scores from the base estimators.
@@ -77,8 +81,6 @@ class APSConformityScore(NaiveConformityScore):
         NDArray
             Array of predictions.
         """
-        y_pred_proba = estimator.predict(X, agg_scores)
-        y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
         if agg_scores != "crossval":
             y_pred_proba = np.repeat(
                 y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
@@ -171,7 +173,7 @@ class APSConformityScore(NaiveConformityScore):
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
         **kwargs
     ) -> NDArray:
@@ -187,8 +189,8 @@ class APSConformityScore(NaiveConformityScore):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         agg_scores: Optional[str]
             Method to aggregate the scores from the base estimators.
@@ -204,7 +206,7 @@ class APSConformityScore(NaiveConformityScore):
         """
         n = len(conformity_scores)
 
-        if estimator.cv == "prefit" or agg_scores in ["mean"]:
+        if cv == "prefit" or agg_scores in ["mean"]:
             quantiles_ = _compute_quantiles(conformity_scores, alpha_np)
         else:
             quantiles_ = (n + 1) * (1 - alpha_np)
@@ -328,7 +330,7 @@ class APSConformityScore(NaiveConformityScore):
         y_pred_proba: NDArray,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
         include_last_label: Optional[Union[bool, str]] = True,
         **kwargs
@@ -349,8 +351,8 @@ class APSConformityScore(NaiveConformityScore):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         agg_scores: Optional[str]
             Method to aggregate the scores from the base estimators.
@@ -398,7 +400,7 @@ class APSConformityScore(NaiveConformityScore):
         include_last_label = check_include_last_label(include_last_label)
 
         # specify which thresholds will be used
-        if estimator.cv == "prefit" or agg_scores in ["mean"]:
+        if cv == "prefit" or agg_scores in ["mean"]:
             thresholds = self.quantiles_
         else:
             thresholds = conformity_scores.ravel()
@@ -414,7 +416,7 @@ class APSConformityScore(NaiveConformityScore):
             )
         )
         # get the prediction set by taking all probabilities above the last one
-        if estimator.cv == "prefit" or agg_scores in ["mean"]:
+        if cv == "prefit" or agg_scores in ["mean"]:
             y_pred_included = np.greater_equal(
                 y_pred_proba - y_pred_proba_last, -EPSILON
             )
@@ -432,7 +434,7 @@ class APSConformityScore(NaiveConformityScore):
                 thresholds,
                 **kwargs
             )
-        if estimator.cv == "prefit" or agg_scores in ["mean"]:
+        if cv == "prefit" or agg_scores in ["mean"]:
             prediction_sets = y_pred_included
         else:
             # compute the number of times the inequality is verified
