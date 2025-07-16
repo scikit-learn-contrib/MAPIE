@@ -25,14 +25,7 @@ Local setup
 
 We encourage you to use a virtual environment, with Python `3.11`. You'll want to activate it every time you want to work on `mapie`.
 
-You can create a virtual environment via ``conda``:
-
-.. code-block:: sh
-
-    $ conda env create -f environment.dev.yml
-    $ conda activate mapie
-
-Alternatively, using ``pip``, create a virtual environment and install dependencies with the following command:
+Using ``pip``, you can install dependencies with the following command:
 
 .. code-block:: sh
 
@@ -87,7 +80,7 @@ Updating changelog
 You can make your contribution visible by:
 
 1. Adding your name to the Contributors section of `AUTHORS.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.rst>`_
-2. Adding a line describing your change into `HISTORY.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.rst>`_
+2. If your change is user-facing (bug fix, feature, ...), adding a line to describe it in `HISTORY.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.rst>`_
 
 Testing
 -------
