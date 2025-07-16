@@ -8,4 +8,3 @@ dependencies:
     - mypy<1.15
     - pandas
     - pytest-cov
-    - typed-ast
