@@ -2,11 +2,15 @@
 History
 =======
 
-1.0.1 (2025-05-22)
+1.x.x (2025-xx-xx)
 ------------------
 
 * Fix double inference when using `predict_set` function in split conformal classification
 * Add FAQ entry in the documentation about ongoing works to extend MAPIE for LLM control
+
+1.0.1 (2025-05-22)
+------------------
+
 * Patch following v1.0.0 release: removing dependence to typing_extensions, making MAPIE unusable if this package is not installed
 
 1.0.0 (2025-05-22)
