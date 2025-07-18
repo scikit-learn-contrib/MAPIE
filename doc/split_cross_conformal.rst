@@ -26,7 +26,7 @@ Split conformal predictions with a pre-trained model
 ------------------------------------------------------------------------------------
 
 .. image:: images/cp_prefit.png
-    :width: 600
+    :width: 800
     :align: center
 
 
@@ -34,7 +34,7 @@ Split conformal predictions with an untrained model
 ------------------------------------------------------------------------------------
 
 .. image:: images/cp_split.png
-    :width: 600
+    :width: 800
     :align: center
 
 
