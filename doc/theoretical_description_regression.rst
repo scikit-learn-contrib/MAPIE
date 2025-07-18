@@ -259,6 +259,11 @@ heteroscedastic data. It uses quantile regressors with different quantile values
 the prediction bounds. The residuals of these methods are used to create the guaranteed
 coverage value.
 
+The figure below illustrates the conformalized quantile regression method.
+
+.. image:: images/cqr.png
+   :width: 800
+
 Notations and Definitions
 -------------------------
 - :math:`\mathcal{I}_1` is the set of indices of the data in the training set.
