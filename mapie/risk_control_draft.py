@@ -137,7 +137,7 @@ class BinaryClassificationController:
         predictions_proba = self._classifier.predict_proba(X_test)[:, 1]
         return (predictions_proba >= self.best_threshold).astype(int)
 
-    def _compute_precision( # TODO: use sklearn or MAPIE ?
+    def _compute_precision(  # TODO: use sklearn or MAPIE ?
         self, predictions_proba: NDArray[np.float32], y_cal: NDArray[np.float32]
     ) -> NDArray[np.float32]:
         """
@@ -230,7 +230,7 @@ def ltt_procedure(
     for i in range(len(alpha_np)):
         l_index = np.where(p_values[:, i] <= delta/N)[0].tolist()
         valid_index.append(l_index)
-    return valid_index, p_values # TODO : p_values is not used, we could remove it
+    return valid_index, p_values  # TODO : p_values is not used, we could remove it
     # Or return corrected p_values
 
 

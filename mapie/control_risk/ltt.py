@@ -9,11 +9,12 @@ from .p_values import compute_hoeffdding_bentkus_p_value
 
 
 def ltt_procedure(
-    r_hat: NDArray,
-    alpha_np: NDArray,
+    r_hat: NDArray[np.float32],
+    alpha_np: NDArray[np.float32],
     delta: Optional[float],
-    n_obs: int
-) -> Tuple[List[List[Any]], NDArray]:
+    n_obs: int,
+    binary: bool = False,  # TODO: maybe should pass p_values fonction instead
+) -> Tuple[List[List[Any]], NDArray[np.float32]]:
     """
     Apply the Learn-Then-Test procedure for risk control.
     Note that we will do a multiple test for ``r_hat`` that are
@@ -24,7 +25,6 @@ def ltt_procedure(
         here Bonferonni correction
         - Return the index lambdas that give you the control
         at alpha level
-
     Parameters
     ----------
     r_hat: NDArray of shape (n_lambdas, ).
@@ -32,26 +32,21 @@ def ltt_procedure(
         to the lambdas.
         Here lambdas are thresholds that impact decision making,
         therefore empirical risk.
-
     alpha_np: NDArray of shape (n_alpha, ).
         Contains the different alphas control level.
         The empirical risk should be less than alpha with
         probability 1-delta.
-
     delta: float.
         Probability of not controlling empirical risk.
         Correspond to proportion of failure we don't
         want to exceed.
-
     Returns
     -------
     valid_index: List[List[Any]].
         Contain the valid index that satisfy fwer control
         for each alpha (length aren't the same for each alpha).
-
     p_values: NDArray of shape (n_lambda, n_alpha).
         Contains the values of p_value for different alpha.
-
     References
     ----------
     [1] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
@@ -63,13 +58,14 @@ def ltt_procedure(
             "Invalid delta: delta cannot be None while"
             + " controlling precision with LTT. "
         )
-    p_values = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha_np)
+    p_values = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha_np, binary)
     N = len(p_values)
     valid_index = []
     for i in range(len(alpha_np)):
         l_index = np.where(p_values[:, i] <= delta/N)[0].tolist()
         valid_index.append(l_index)
-    return valid_index, p_values
+    return valid_index, p_values  # TODO : p_values is not used, we could remove it
+    # Or return corrected p_values
 
 
 def find_lambda_control_star(
