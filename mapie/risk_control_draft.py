@@ -14,7 +14,7 @@ from mapie.utils import _check_n_jobs, _check_verbose
 # to get the probabilities depending on the classifier
 
 
-class BinaryClassificationController:
+class BinaryClassificationController:  # pragma: no cover
     # TODO : test that this is working with a sklearn pipeline
     # TODO : test that this is working with a pandas dataframes
     """
@@ -174,7 +174,7 @@ def ltt_procedure(
     delta: Optional[float],
     n_obs: int,
     binary: bool = False,  # TODO: maybe should pass p_values fonction instead
-) -> Tuple[List[List[Any]], NDArray[np.float32]]:
+) -> Tuple[List[List[Any]], NDArray[np.float32]]:  # pragma: no cover
     """
     Apply the Learn-Then-Test procedure for risk control.
     Note that we will do a multiple test for ``r_hat`` that are
@@ -239,7 +239,7 @@ def compute_hoeffdding_bentkus_p_value(
     n_obs: int,
     alpha: Union[float, NDArray[np.float32]],
     binary: bool = False,
-) -> NDArray[np.float32]:
+) -> NDArray[np.float32]:  # pragma: no cover
     """
     The method computes the p_values according to
     the Hoeffding_Bentkus inequality for each
@@ -314,7 +314,7 @@ def compute_hoeffdding_bentkus_p_value(
 
 def _h1(
     r_hats: NDArray[np.float32], alphas: NDArray[np.float32]
-) -> NDArray[np.float32]:
+) -> NDArray[np.float32]:  # pragma: no cover
     """
     This function allow us to compute
     the tighter version of hoeffding inequality.
