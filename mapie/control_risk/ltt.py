@@ -25,6 +25,7 @@ def ltt_procedure(
         here Bonferonni correction
         - Return the index lambdas that give you the control
         at alpha level
+
     Parameters
     ----------
     r_hat: NDArray of shape (n_lambdas, ).
@@ -32,21 +33,26 @@ def ltt_procedure(
         to the lambdas.
         Here lambdas are thresholds that impact decision making,
         therefore empirical risk.
+
     alpha_np: NDArray of shape (n_alpha, ).
         Contains the different alphas control level.
         The empirical risk should be less than alpha with
         probability 1-delta.
+
     delta: float.
         Probability of not controlling empirical risk.
         Correspond to proportion of failure we don't
         want to exceed.
+
     Returns
     -------
     valid_index: List[List[Any]].
         Contain the valid index that satisfy fwer control
         for each alpha (length aren't the same for each alpha).
+
     p_values: NDArray of shape (n_lambda, n_alpha).
         Contains the values of p_value for different alpha.
+
     References
     ----------
     [1] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
