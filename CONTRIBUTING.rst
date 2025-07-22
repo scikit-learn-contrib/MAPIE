@@ -23,7 +23,7 @@ The typical workflow for contributing to `mapie` is:
 Local setup
 -----------
 
-We encourage you to use a virtual environment, with Python `3.13`. You'll want to activate it every time you want to work on `mapie`.
+We encourage you to use a virtual environment, with Python `3.11`. You'll want to activate it every time you want to work on `mapie`.
 
 Using ``pip``, you can install dependencies with the following command:
 
