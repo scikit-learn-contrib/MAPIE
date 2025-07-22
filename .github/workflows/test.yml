@@ -7,7 +7,18 @@ on:
   pull_request:
 
 jobs:
+  get-latest-python:
+    runs-on: ubuntu-latest
+    outputs:
+      latest-python: ${{ steps.latest.outputs.version }}
+    steps:
+      - uses: snok/latest-python-versions@v1
+        id: latest
+        with:
+          min-version: "3.13"
+
   build:
+    needs: get-latest-python
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -19,19 +30,15 @@ jobs:
             sklearn-version: "=1.4"
           # latest stable dependencies
           - os: ubuntu-latest
-            python-version: "3.12"
-            numpy-version: ""
-            sklearn-version: ""
-          - os: ubuntu-latest
-            python-version: "3.13"
+            python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
             sklearn-version: ""
           - os: windows-latest
-            python-version: "3.13"
+            python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
             sklearn-version: ""
           - os: macos-latest
-            python-version: "3.13"
+            python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
             sklearn-version: ""
     defaults:
