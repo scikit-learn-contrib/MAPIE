@@ -67,7 +67,7 @@ Python, scikit-learn and NumPy versions support
 
 Requirements have been updated and clarified. We now support:
 
-- Python >=3.9, <3.12
+- Python >=3.9
 - NumPy >=1.23
 - scikit-learn >=1.4
 
