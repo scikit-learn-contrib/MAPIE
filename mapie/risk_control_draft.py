@@ -1,10 +1,10 @@
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 from numpy._typing import ArrayLike, NDArray
-from scipy.stats import binom
 from sklearn.utils import check_random_state
 
+from mapie.control_risk.ltt import ltt_procedure
 from mapie.utils import _check_n_jobs, _check_verbose
 
 # General TODOs:
