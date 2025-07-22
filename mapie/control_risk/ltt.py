@@ -9,11 +9,12 @@ from .p_values import compute_hoeffdding_bentkus_p_value
 
 
 def ltt_procedure(
-    r_hat: NDArray,
-    alpha_np: NDArray,
+    r_hat: NDArray[np.float32],
+    alpha_np: NDArray[np.float32],
     delta: Optional[float],
-    n_obs: int
-) -> Tuple[List[List[Any]], NDArray]:
+    n_obs: int,
+    binary: bool = False,  # TODO: maybe should pass p_values fonction instead
+) -> Tuple[List[List[Any]], NDArray[np.float32]]:
     """
     Apply the Learn-Then-Test procedure for risk control.
     Note that we will do a multiple test for ``r_hat`` that are
@@ -63,13 +64,14 @@ def ltt_procedure(
             "Invalid delta: delta cannot be None while"
             + " controlling precision with LTT. "
         )
-    p_values = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha_np)
+    p_values = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha_np, binary)
     N = len(p_values)
     valid_index = []
     for i in range(len(alpha_np)):
         l_index = np.where(p_values[:, i] <= delta/N)[0].tolist()
         valid_index.append(l_index)
-    return valid_index, p_values
+    return valid_index, p_values  # TODO : p_values is not used, we could remove it
+    # Or return corrected p_values
 
 
 def find_lambda_control_star(
