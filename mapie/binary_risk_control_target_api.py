@@ -25,8 +25,9 @@ class BinaryClassificationRisk:
         self,
         y_true: ArrayLike,
         y_pred: ArrayLike
-    ) -> Tuple[float, int]:  # float between 0 and 1, int between 0 and len(y_true)
+    ) -> Optional[Tuple[float, int]]:  # value : float between 0 and 1, effective_sample_size: int between 0 and len(y_true)
         pass  # this function will most probably be the same for all risks
+        # if the risk is not defined, return None
 
     def transform_to_opposite(self) -> BinaryClassificationRisk:
         def opposite_occurrence(y_true, y_pred):
@@ -52,10 +53,8 @@ class BinaryClassificationController:
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[str, BinaryClassificationRisk] = "auto",
         # Can't be "auto" in multi-risk or for custom risk
-        predict_params=None,  # Can't be None if predict_function is not a predict_proba
-        # list of dict (each element of the list corresponds to a set of parameters for predict_func)
-        # dict of list possible? in this case we compute all combinations, a bit violent combinatorially
-        # can also be an array of parameters (numpy array), it works in both cases, a parameter would be needed to choose (combination or array)
+        predict_params: Optional[NDArray] = None,  # Can't be None if predict_function is not a predict_proba
+        # An array of parameters of shape (nb_combinations, nb_parameters), or shape (nb_combinations, ) in case of a unidimensional parameter, explicitly listing all possible joint values of the parameters
         predict_params_graph=None,
         # list of lists (for each param value, the list of its neighbors), we start with the first element of the list of params_values
     ):
