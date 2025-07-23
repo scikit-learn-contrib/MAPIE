@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Iterable, Optional, Sequence, Tuple, Union, cast
+from typing import Iterable, Optional, Sequence, Tuple, Union, cast, Callable
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -706,3 +706,53 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                 self.lambdas_star[np.newaxis, np.newaxis, :]
             )
         return y_pred, y_pred_proba_array
+
+
+class BinaryClassificationRisk:
+    # Any risk that can be defined in the following way will work using the binary
+    # Hoeffding-Bentkus p-values used in MAPIE
+    # Take the example of precision in the docstring to explain how the class works.
+    def __init__(
+        self,
+        occurrence: Callable[[int, int], Optional[int]],
+        # (y_true, y_pred), output: int (0 or 1) or None if undefined
+        higher_is_better: bool,
+    ):
+        self.occurrence = occurrence
+        self.higher_is_better = higher_is_better
+
+    def get_value_and_effective_sample_size(
+        self,
+        y_true: NDArray[int], # shape (n_samples,), values in {0, 1}
+        y_pred: NDArray[int], # shape (n_samples,), values in {0, 1}
+    ) -> Optional[Tuple[float, int]]:
+        # float between 0 and 1, int between 0 and len(y_true)
+        risk_occurrences = [
+            self.occurrence(y_true_i, y_pred_i)
+            for y_true_i, y_pred_i in zip(y_true, y_pred)
+        ]
+        effective_sample_size = len(y_true) - risk_occurrences.count(None)
+        if effective_sample_size != 0:
+            risk_value = sum(
+                occurrence for occurrence in risk_occurrences if occurrence is not None
+            ) / effective_sample_size
+            if self.higher_is_better:
+                risk_value = 1 - risk_value
+            return risk_value, effective_sample_size
+        return None
+
+
+precision = BinaryClassificationRisk(
+    occurrence=lambda y_true, y_pred: None if y_pred == 0 else int(y_pred == y_true),
+    higher_is_better=True,
+)
+
+accuracy = BinaryClassificationRisk(
+    occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    higher_is_better=True,
+)
+
+recall = BinaryClassificationRisk(
+    occurrence=lambda y_true, y_pred: None if y_true == 0 else int(y_pred == y_true),
+    higher_is_better=True,
+)
