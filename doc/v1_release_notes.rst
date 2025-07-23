@@ -5,6 +5,10 @@ MAPIE v1 release notes
    :depth: 3
    :local:
 
+.. note::
+
+   These release notes are kept up to date with the latest version of MAPIE v1.
+
 Introduction
 --------------------------------------------------------------------------
 
