@@ -7,6 +7,7 @@ History
 
 * Fix double inference when using `predict_set` function in split conformal classification
 * Add FAQ entry in the documentation about ongoing works to extend MAPIE for LLM control
+* Lift restrictions on Python versions 3.12 and 3.13
 
 1.0.1 (2025-05-22)
 ------------------
