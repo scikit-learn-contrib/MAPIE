@@ -1,3 +1,4 @@
+import warnings
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -114,7 +115,7 @@ class BinaryClassificationController:  # pragma: no cover
         self.valid_thresholds = self._thresholds[valid_thresholds_index[0]]
         if len(self.valid_thresholds) == 0:
             # TODO: just warn, and raise error at prediction if no valid thresholds
-            raise ValueError("No valid thresholds found")
+            warnings.warn("No valid thresholds found", UserWarning)
 
         # Minimum in case of precision control only
         self.best_threshold = min(self.valid_thresholds)
