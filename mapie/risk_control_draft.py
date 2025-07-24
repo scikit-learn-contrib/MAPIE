@@ -114,7 +114,6 @@ class BinaryClassificationController:  # pragma: no cover
         )
         self.valid_thresholds = self._thresholds[valid_thresholds_index[0]]
         if len(self.valid_thresholds) == 0:
-            # TODO: just warn, and raise error at prediction if no valid thresholds
             warnings.warn("No valid thresholds found", UserWarning)
 
         # Minimum in case of precision control only
