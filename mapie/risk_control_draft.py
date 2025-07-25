@@ -116,8 +116,10 @@ class BinaryClassificationController:  # pragma: no cover
         if len(self.valid_thresholds) == 0:
             warnings.warn("No valid thresholds found", UserWarning)
 
-        # Minimum in case of precision control only
-        self.best_threshold = min(self.valid_thresholds)
+        else:
+            # Minimum in case of precision control only
+            self.best_threshold = min(self.valid_thresholds)
+
 
     def predict(self, X_test: ArrayLike) -> NDArray:
         """
