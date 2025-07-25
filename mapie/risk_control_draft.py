@@ -101,7 +101,7 @@ class BinaryClassificationController:  # pragma: no cover
 
         predictions_proba = self._classifier.predict_proba(X_calibrate)[:, 1]
 
-        risk_per_threshold = 1 - self._compute_recall(
+        risk_per_threshold = 1 - self._compute_precision(
             predictions_proba, y_calibrate_
         )
 
