@@ -120,7 +120,6 @@ class BinaryClassificationController:  # pragma: no cover
             # Minimum in case of precision control only
             self.best_threshold = min(self.valid_thresholds)
 
-
     def predict(self, X_test: ArrayLike) -> NDArray:
         """
         Predict binary labels on the test set, using the best threshold found
