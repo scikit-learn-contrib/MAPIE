@@ -1,3 +1,4 @@
+import warnings
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -113,11 +114,11 @@ class BinaryClassificationController:  # pragma: no cover
         )
         self.valid_thresholds = self._thresholds[valid_thresholds_index[0]]
         if len(self.valid_thresholds) == 0:
-            # TODO: just warn, and raise error at prediction if no valid thresholds
-            raise ValueError("No valid thresholds found")
+            warnings.warn("No valid thresholds found", UserWarning)
 
-        # Minimum in case of precision control only
-        self.best_threshold = min(self.valid_thresholds)
+        else:
+            # Minimum in case of precision control only
+            self.best_threshold = min(self.valid_thresholds)
 
     def predict(self, X_test: ArrayLike) -> NDArray:
         """
@@ -166,3 +167,33 @@ class BinaryClassificationController:  # pragma: no cover
         )
 
         return precision_per_threshold
+
+    def _compute_recall(
+        self, predictions_proba: NDArray[np.float32], y_cal: NDArray[np.float32]
+    ) -> NDArray[np.float32]:
+        """
+        Compute the recall for each threshold.
+        """
+        predictions_per_threshold = (
+            predictions_proba[:, np.newaxis] >= self._thresholds
+        ).astype(int)
+
+        true_positives = np.sum(
+            (predictions_per_threshold == 1) & (y_cal[:, np.newaxis] == 1),
+            axis=0,
+        )
+        false_negatives = np.sum(
+            (predictions_per_threshold == 0) & (y_cal[:, np.newaxis] == 1),
+            axis=0,
+        )
+
+        actual_positives = true_positives + false_negatives
+
+        # Avoid division by zero
+        recall_per_threshold = np.ones_like(self._thresholds, dtype=float)
+        nonzero_mask = actual_positives > 0
+        recall_per_threshold[nonzero_mask] = (
+            true_positives[nonzero_mask] / actual_positives[nonzero_mask]
+        )
+
+        return recall_per_threshold
