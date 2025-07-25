@@ -714,11 +714,12 @@ class BinaryClassificationRisk:
     # Take the example of precision in the docstring to explain how the class works.
     def __init__(
         self,
-        occurrence: Callable[[int, int], Optional[int]],
-        # (y_true, y_pred), output: int (0 or 1) or None if undefined
+        risk_occurrence: Callable[[int, int], int],
+        risk_condition: Callable[[int, int], bool],
         higher_is_better: bool,
     ):
-        self.occurrence = occurrence
+        self.risk_occurrence = risk_occurrence
+        self.risk_condition = risk_condition
         self.higher_is_better = higher_is_better
 
     def get_value_and_effective_sample_size(
@@ -728,14 +729,20 @@ class BinaryClassificationRisk:
     ) -> Optional[Tuple[float, int]]:
         # float between 0 and 1, int between 0 and len(y_true)
         risk_occurrences = [
-            self.occurrence(y_true_i, y_pred_i)
+            self.risk_occurrence(y_true_i, y_pred_i)
             for y_true_i, y_pred_i in zip(y_true, y_pred)
         ]
-        effective_sample_size = len(y_true) - risk_occurrences.count(None)
+        risk_conditions = [
+            self.risk_condition(y_true_i, y_pred_i)
+            for y_true_i, y_pred_i in zip(y_true, y_pred)
+        ]
+        effective_sample_size = len(y_true) - risk_conditions.count(False)
         if effective_sample_size != 0:
-            risk_value = sum(
-                occurrence for occurrence in risk_occurrences if occurrence is not None
-            ) / effective_sample_size
+            risk_sum = sum(
+                risk_occurrence for risk_occurrence, risk_condition
+                    in zip(risk_occurrences, risk_conditions)
+                    if risk_condition)
+            risk_value = risk_sum / effective_sample_size
             if self.higher_is_better:
                 risk_value = 1 - risk_value
             return risk_value, effective_sample_size
@@ -743,16 +750,19 @@ class BinaryClassificationRisk:
 
 
 precision = BinaryClassificationRisk(
-    occurrence=lambda y_true, y_pred: None if y_pred == 0 else int(y_pred == y_true),
+    risk_occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    risk_condition=lambda y_true, y_pred: y_pred == 1,
     higher_is_better=True,
 )
 
 accuracy = BinaryClassificationRisk(
-    occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    risk_occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    risk_condition=lambda y_true, y_pred: True,
     higher_is_better=True,
 )
 
 recall = BinaryClassificationRisk(
-    occurrence=lambda y_true, y_pred: None if y_true == 0 else int(y_pred == y_true),
+    risk_occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    risk_condition=lambda y_true, y_pred: y_true == 1,
     higher_is_better=True,
 )
