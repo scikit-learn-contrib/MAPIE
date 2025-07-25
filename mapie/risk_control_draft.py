@@ -198,6 +198,3 @@ class BinaryClassificationController:  # pragma: no cover
         )
 
         return recall_per_threshold
-
-def test11():
-    print('ok')
