@@ -101,7 +101,7 @@ class BinaryClassificationController:  # pragma: no cover
 
         predictions_proba = self._classifier.predict_proba(X_calibrate)[:, 1]
 
-        risk_per_threshold = 1 - self._compute_precision(
+        risk_per_threshold = 1 - self._compute_recall(
             predictions_proba, y_calibrate_
         )
 
@@ -168,3 +168,33 @@ class BinaryClassificationController:  # pragma: no cover
         )
 
         return precision_per_threshold
+
+    def _compute_recall(
+        self, predictions_proba: NDArray[np.float32], y_cal: NDArray[np.float32]
+    ) -> NDArray[np.float32]:
+        """
+        Compute the recall for each threshold.
+        """
+        predictions_per_threshold = (
+            predictions_proba[:, np.newaxis] >= self._thresholds
+        ).astype(int)
+
+        true_positives = np.sum(
+            (predictions_per_threshold == 1) & (y_cal[:, np.newaxis] == 1),
+            axis=0,
+        )
+        false_negatives = np.sum(
+            (predictions_per_threshold == 0) & (y_cal[:, np.newaxis] == 1),
+            axis=0,
+        )
+
+        actual_positives = true_positives + false_negatives
+
+        # Avoid division by zero
+        recall_per_threshold = np.ones_like(self._thresholds, dtype=float)
+        nonzero_mask = actual_positives > 0
+        recall_per_threshold[nonzero_mask] = (
+            true_positives[nonzero_mask] / actual_positives[nonzero_mask]
+        )
+
+        return recall_per_threshold
