@@ -79,7 +79,7 @@ class SplitConformalClassifier:
 
         See :ref:`theoretical_description_classification`.
 
-    prefit : bool, default=False
+    prefit : bool, default=True
         If True, the base classifier must be fitted, and the ``fit``
         method must be skipped.
 

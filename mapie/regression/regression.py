@@ -72,7 +72,7 @@ class SplitConformalRegressor:
         be provided.
 
         See :ref:`theoretical_description_conformity_scores`.
-    prefit : bool, default=False
+    prefit : bool, default=True
         If True, the base regressor must be fitted, and the ``fit``
         method must be skipped.
 
