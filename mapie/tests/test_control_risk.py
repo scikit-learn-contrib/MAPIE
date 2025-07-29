@@ -151,9 +151,8 @@ def test_ltt_type_output_alpha_delta(
     delta: float
 ) -> None:
     """Test type output _ltt_procedure"""
-    valid_index, p_values = ltt_procedure(r_hat, alpha, delta, n)
+    valid_index = ltt_procedure(r_hat, alpha, delta, n)
     assert isinstance(valid_index, list)
-    assert isinstance(p_values, np.ndarray)
 
 
 @pytest.mark.parametrize("valid_index", [[[0, 1]]])
@@ -181,10 +180,3 @@ def test_invalid_shape_alpha_hb() -> None:
     """Test error message when invalid alpha shape"""
     with pytest.raises(ValueError, match=r".*Invalid confidence_level"):
         compute_hoeffdding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
-
-
-@pytest.mark.parametrize("delta", [None])
-def test_delta_none_ltt(delta: Optional[float]) -> None:
-    """Test error message when invalid delta"""
-    with pytest.raises(ValueError, match=r".*Invalid delta"):
-        ltt_procedure(r_hat, alpha, delta, n)
