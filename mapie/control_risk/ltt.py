@@ -64,7 +64,8 @@ def ltt_procedure(
             "Invalid delta: delta cannot be None while"
             + " controlling precision with LTT. "
         )
-    p_values = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha_np, binary)
+    n_prime = int(n_obs/2)
+    p_values = compute_hoeffdding_bentkus_p_value(r_hat, n_prime, alpha_np, binary)
     N = len(p_values)
     valid_index = []
     for i in range(len(alpha_np)):
