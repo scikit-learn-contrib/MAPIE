@@ -132,3 +132,6 @@ def find_lambda_control_star(
             l_r_star.append(r_hat[valid_index[i][idx]])
 
     return l_lambda_star, l_r_star
+
+def test12():
+    print("test")
