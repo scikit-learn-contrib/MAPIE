@@ -681,8 +681,8 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         if self.metric_control == 'precision':
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
-            self.valid_index, self.p_values = ltt_procedure(
-                self.r_hat, alpha_np, delta, self.n_obs
+            self.valid_index = ltt_procedure(
+                self.r_hat, alpha_np, cast(float, delta), self.n_obs
             )
             self._check_valid_index(alpha_np)
             self.lambdas_star, self.r_star = find_lambda_control_star(
@@ -724,8 +724,8 @@ class BinaryClassificationRisk:
 
     def get_value_and_effective_sample_size(
         self,
-        y_true: NDArray[int], # shape (n_samples,), values in {0, 1}
-        y_pred: NDArray[int], # shape (n_samples,), values in {0, 1}
+        y_true: NDArray[int],  # shape (n_samples,), values in {0, 1}
+        y_pred: NDArray[int],  # shape (n_samples,), values in {0, 1}
     ) -> Optional[Tuple[float, int]]:
         # float between 0 and 1, int between 0 and len(y_true)
         risk_occurrences = [
@@ -766,3 +766,9 @@ recall = BinaryClassificationRisk(
     risk_condition=lambda y_true, y_pred: y_true == 1,
     higher_is_better=True,
 )
+
+_automatic_best_predict_param_choice = {
+    precision: recall,
+    recall: precision,
+    accuracy: accuracy,
+}
