@@ -103,11 +103,8 @@ def _h1(
     r_hats: NDArray[float], alphas: NDArray[float]
 ) -> NDArray[float]:
     """
-    This function allow us to compute
-    the tighter version of hoeffding inequality.
-    This function is then used in the
-    hoeffding_bentkus_p_value function for the
-    computation of p-values.
+    This function allow us to compute the tighter version of hoeffding inequality.
+    When r_hat = 0, the log is undefined, but the limit is 0, so we set the result to 0.
 
     Parameters
     ----------
@@ -131,9 +128,6 @@ def _h1(
     NDArray of shape (n_lambdas, n_alpha).
     """
     elt1 = np.zeros_like(r_hats, dtype=float)
-
-    # Compute only where r_hats != 0 to avoid log(0)
-    # TODO: check Angelopoulos implementation
     mask = r_hats != 0
     elt1[mask] = r_hats[mask] * np.log(r_hats[mask] / alphas[mask])
     elt2 = (1 - r_hats) * np.log((1 - r_hats) / (1 - alphas))
