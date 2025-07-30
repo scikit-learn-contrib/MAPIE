@@ -89,7 +89,7 @@ def compute_hoeffdding_bentkus_p_value(
     )
     factor = 1 if binary else np.e
     bentkus_p_value = factor * binom.cdf(
-        np.ceil(n_obs_repeat * r_hat_repeat), n_obs, alpha_repeat
+        np.ceil(n_obs_repeat * r_hat_repeat), n_obs_repeat, alpha_repeat
     )
     hb_p_value = np.where(
         bentkus_p_value > hoeffding_p_value,

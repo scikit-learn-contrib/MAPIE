@@ -743,8 +743,6 @@ class BinaryClassificationRisk:
                     in zip(risk_occurrences, risk_conditions)
                     if risk_condition)
             risk_value = risk_sum / effective_sample_size
-            if self.higher_is_better:
-                risk_value = 1 - risk_value
             return risk_value, effective_sample_size
         return None
 

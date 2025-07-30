@@ -30,7 +30,7 @@ class BinaryClassificationController:  # pragma: no cover
         self._predict_function = predict_function
         self._risk = risk
         self._best_predict_param_choice = best_predict_param_choice
-        self._alpha = 1 - target_level
+        self._target_level = target_level
         self._delta = 1 - confidence_level
 
         self._thresholds: NDArray[float] = np.linspace(0, 0.99, 100)
@@ -56,9 +56,15 @@ class BinaryClassificationController:  # pragma: no cover
             ) for predictions in predictions_per_threshold]
         )
 
+        if self._risk.higher_is_better:
+            risks_and_eff_sizes[:, 0] = 1 - risks_and_eff_sizes[:, 0]
+            alpha = self._target_level
+        else:
+            alpha = 1 - self._target_level
+
         valid_thresholds_index = ltt_procedure(
             risks_and_eff_sizes[:, 0],
-            np.array([self._alpha]),
+            np.array([alpha]),
             self._delta,
             risks_and_eff_sizes[:, 1],
             True,
