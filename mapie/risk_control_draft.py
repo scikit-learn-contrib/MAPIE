@@ -101,7 +101,7 @@ class BinaryClassificationController:  # pragma: no cover
 
         predictions_proba = self._classifier.predict_proba(X_calibrate)[:, 1]
 
-        risk_per_threshold = 1 - self._compute_precision(
+        risk_per_threshold = 1 - self._compute_accuracy(
             predictions_proba, y_calibrate_
         )
 
@@ -197,3 +197,21 @@ class BinaryClassificationController:  # pragma: no cover
         )
 
         return recall_per_threshold
+
+    def _compute_accuracy(
+        self, predictions_proba: NDArray[np.float32], y_cal: NDArray[np.float32]
+    ) -> NDArray[np.float32]:
+        """
+        Compute the accuracy for each threshold.
+        """
+        predictions_per_threshold = (
+            predictions_proba[:, np.newaxis] >= self._thresholds
+        ).astype(int)
+
+        correct_predictions = (
+            predictions_per_threshold == y_cal[:, np.newaxis]
+        ).astype(int)
+
+        accuracy_per_threshold = np.mean(correct_predictions, axis=0)
+
+        return accuracy_per_threshold
