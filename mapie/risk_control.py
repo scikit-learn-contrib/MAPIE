@@ -731,21 +731,17 @@ class BinaryClassificationRisk:
         y_pred: NDArray[int],  # shape (n_samples,), values in {0, 1}
     ) -> Optional[Tuple[float, int]]:
         # float between 0 and 1, int between 0 and len(y_true)
-        risk_occurrences = [
+        risk_occurrences = np.array([
             self.risk_occurrence(y_true_i, y_pred_i)
             for y_true_i, y_pred_i in zip(y_true, y_pred)
-        ]
-        risk_conditions = [
+        ])
+        risk_conditions = np.array([
             self.risk_condition(y_true_i, y_pred_i)
             for y_true_i, y_pred_i in zip(y_true, y_pred)
-        ]
-        effective_sample_size = len(y_true) - risk_conditions.count(False)
+        ])
+        effective_sample_size = len(y_true) - np.sum(~risk_conditions)
         if effective_sample_size != 0:
-            risk_sum = sum(
-                occurrence for occurrence, condition in zip(
-                    risk_occurrences, risk_conditions
-                ) if condition
-            )
+            risk_sum = np.sum(risk_occurrences[risk_conditions])
             risk_value = risk_sum / effective_sample_size
             return risk_value, effective_sample_size
         return None
