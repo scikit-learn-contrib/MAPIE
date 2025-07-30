@@ -2,7 +2,7 @@
 Testing for control_risk module.
 Testing for now risks for multilabel classification
 """
-from typing import List, Optional, Union
+from typing import List, Union
 
 import numpy as np
 import pytest
