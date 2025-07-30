@@ -11,10 +11,17 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
+from sklearn.metrics import precision_score, recall_score, accuracy_score
 from typing_extensions import TypedDict
 
 from numpy.typing import NDArray
-from mapie.risk_control import PrecisionRecallController
+from mapie.risk_control import (
+    PrecisionRecallController,
+    precision,
+    recall,
+    accuracy,
+    BinaryClassificationRisk,
+)
 
 Params = TypedDict(
     "Params",
@@ -260,7 +267,7 @@ def test_predict_output_shape(
         X,
         alpha=alpha,
         bound=args["bound"],
-        delta=.1
+        delta=delta
     )
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == y.shape
@@ -808,3 +815,41 @@ def test_method_none_recall() -> None:
     )
     mapie_clf.fit(X_toy, y_toy)
     assert mapie_clf.method == "crc"
+
+
+# The following test is voluntarily agnostic
+# to the specific binary classification risk control implementation.
+@pytest.mark.parametrize(
+    "risk_instance, metric_func, effective_sample_func",
+    [
+        (precision, precision_score, lambda y_true, y_pred: np.sum(y_pred == 1)),
+        (recall, recall_score, lambda y_true, y_pred: np.sum(y_true == 1)),
+        (accuracy, accuracy_score, lambda y_true, y_pred: len(y_true)),
+    ],
+)
+@pytest.mark.parametrize(
+    "y_true, y_pred",
+    [
+        (np.array([1, 0, 1, 0]), np.array([1, 1, 0, 0])),
+        (np.array([1, 1, 0, 0]), np.array([1, 1, 1, 0])),
+        (np.array([0, 0, 0, 0]), np.array([0, 1, 0, 1])),
+    ],
+)
+def test_binary_classification_risk(
+    risk_instance: BinaryClassificationRisk,
+    metric_func,
+    effective_sample_func,
+    y_true,
+    y_pred
+):
+    result = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
+    if effective_sample_func(y_true, y_pred) == 0:
+        assert result is None
+    elif result is None:
+        raise ValueError()
+    else:
+        value, n = result
+        expected_value = metric_func(y_true, y_pred)
+        expected_n = effective_sample_func(y_true, y_pred)
+        assert np.isclose(value, expected_value)
+        assert n == expected_n
