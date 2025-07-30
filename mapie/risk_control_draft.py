@@ -71,7 +71,11 @@ class BinaryClassificationController:  # pragma: no cover
         )
         self.valid_thresholds = self._thresholds[valid_thresholds_index[0]]
         if len(self.valid_thresholds) == 0:
-            warnings.warn("No predict parameters were found to control the risk.")
+            warnings.warn(
+                "No predict parameters were found to control the risk at the given "
+                "target and confidence levels. "
+                "Try using a larger calibration set or a better model.",
+            )
 
         # Minimum in case of precision control only
         self.best_threshold = min(self.valid_thresholds)
