@@ -19,6 +19,8 @@ from mapie.calibration import TopLabelCalibrator
 from mapie.metrics.calibration import top_label_ece
 from mapie.metrics.calibration import expected_calibration_error
 
+from mapie.calibration import VennABERSCalibrator
+
 random_state = 20
 
 CALIBRATORS = [
@@ -477,3 +479,183 @@ def test_fit_parameters_passing() -> None:
     mapie.fit(X, y, monitor=early_stopping_monitor)
 
     assert mapie.single_estimator_.estimators_.shape[0] == 3
+
+
+def test_venn_abers_initialized() -> None:
+    """Test that VennABERSCalibrator initialization does not crash."""
+    VennABERSCalibrator()
+
+
+def test_venn_abers_default_parameters() -> None:
+    """Test default values of VennABERSCalibrator input parameters."""
+    calibrator = VennABERSCalibrator()
+    assert calibrator.estimator is None
+    assert calibrator.cv == "split"
+
+
+def test_venn_abers_prefit_cv_argument() -> None:
+    """Test that prefit method works with VennABERSCalibrator"""
+    # Create binary classification data
+    X_binary, y_binary = make_classification(
+        n_samples=100, n_features=4, n_classes=2, random_state=random_state
+    )
+    est = LogisticRegression().fit(X_binary, y_binary)
+    calibrator = VennABERSCalibrator(estimator=est, cv="prefit")
+    calibrator.fit(X_binary, y_binary)
+
+
+def test_venn_abers_split_cv_argument() -> None:
+    """Test that split method works with VennABERSCalibrator"""
+    # Create binary classification data
+    X_binary, y_binary = make_classification(
+        n_samples=100, n_features=4, n_classes=2, random_state=random_state
+    )
+    calibrator = VennABERSCalibrator(cv="split")
+    calibrator.fit(X_binary, y_binary)
+
+
+@pytest.mark.parametrize("cv", ["noprefit", "nosplit"])
+def test_venn_abers_invalid_cv_argument(cv: str) -> None:
+    """Test that other cv method does not work with VennABERSCalibrator"""
+    # Create binary classification data
+    X_binary, y_binary = make_classification(
+        n_samples=100, n_features=4, n_classes=2, random_state=random_state
+    )
+    with pytest.raises(
+        ValueError,
+        match=r".*Invalid cv argument.*",
+    ):
+        calibrator = VennABERSCalibrator(cv=cv)
+        calibrator.fit(X_binary, y_binary)
+
+
+def test_venn_abers_binary_classification() -> None:
+    """Test VennABERSCalibrator on binary classification problem"""
+    X_binary, y_binary = make_classification(
+        n_samples=100, n_features=4, n_classes=2, random_state=random_state
+    )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_binary, y_binary, test_size=0.33, random_state=random_state
+    )
+
+    model = LogisticRegression().fit(X_train, y_train)
+    calibrator = VennABERSCalibrator(estimator=model, cv="prefit")
+    calibrator.fit(X_test, y_test)
+
+    # Check that predict_proba returns probabilities
+    probs = calibrator.predict_proba(X_test)
+    assert probs.shape == (len(X_test), 2)
+    assert np.all((0 <= probs) & (probs <= 1))
+    assert np.allclose(np.sum(probs, axis=1), 1.0)
+
+    # Check that predict returns class labels
+    preds = calibrator.predict(X_test)
+    assert preds.shape == (len(X_test),)
+    assert set(np.unique(preds)).issubset(set(np.unique(y_binary)))
+
+
+def test_venn_abers_prefit_split_same_results() -> None:
+    """Test that prefit and split method
+    return similar results for VennABERSCalibrator"""
+    X_binary, y_binary = make_classification(
+        n_samples=100, n_features=4, n_classes=2, random_state=random_state
+    )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_binary, y_binary, test_size=0.33, random_state=random_state
+    )
+    X_calib, X_test_final, y_calib, y_test_final = train_test_split(
+        X_test, y_test, test_size=0.5, random_state=random_state
+    )
+
+    est = LogisticRegression(random_state=random_state).fit(X_train, y_train)
+
+    # Prefit method
+    calibrator_prefit = VennABERSCalibrator(estimator=est, cv="prefit")
+    calibrator_prefit.fit(X_calib, y_calib)
+
+    # Split method
+    X_combined = np.vstack([X_train, X_calib])
+    y_combined = np.hstack([y_train, y_calib])
+    calibrator_split = VennABERSCalibrator(
+        estimator=LogisticRegression(random_state=random_state)
+    )
+    calibrator_split.fit(X_combined, y_combined, random_state=random_state)
+
+    # Compare results - note that we don't expect exact equality due to
+    # the different calibration points used in each method
+    y_prefit = calibrator_prefit.predict_proba(X_test_final)
+    y_split = calibrator_split.predict_proba(X_test_final)
+
+    # Check that predictions are at least correlated
+    assert np.corrcoef(y_prefit[:, 1], y_split[:, 1])[0, 1] > 0.5
+
+
+def test_venn_abers_calibration_effect() -> None:
+    """Test that VennABERSCalibrator changes the probability estimates"""
+    X_binary, y_binary = make_classification(
+        n_samples=200, n_features=4, n_classes=2, random_state=random_state
+    )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_binary, y_binary, test_size=0.5, random_state=random_state
+    )
+
+    # Train a model
+    model = LogisticRegression(random_state=random_state).fit(X_train, y_train)
+
+    # Get uncalibrated probabilities
+    uncalibrated_probs = model.predict_proba(X_test)
+
+    # Apply Venn-ABERS calibration
+    calibrator = VennABERSCalibrator(estimator=model, cv="prefit")
+    calibrator.fit(X_train, y_train)  # Use training data for calibration
+
+    # Get calibrated probabilities
+    calibrated_probs = calibrator.predict_proba(X_test)
+
+    # Check that calibration changes the probabilities
+    assert not np.allclose(uncalibrated_probs, calibrated_probs)
+
+
+def test_venn_abers_with_pipeline() -> None:
+    """Check that VennABERSCalibrator works with sklearn pipeline"""
+    X = pd.DataFrame({
+        "x_cat": ["A", "A", "B", "A", "A", "B"] * 10,
+        "x_num": [0, 1, 1, 4, 2, 5] * 10,
+    })
+    y = pd.Series([0, 1, 0, 1, 0, 1] * 10)
+
+    numeric_preprocessor = Pipeline([
+        ("imputer", SimpleImputer(strategy="mean")),
+    ])
+    categorical_preprocessor = Pipeline(steps=[
+        ("encoding", OneHotEncoder(handle_unknown="ignore"))
+    ])
+    preprocessor = ColumnTransformer([
+        ("cat", categorical_preprocessor, ["x_cat"]),
+        ("num", numeric_preprocessor, ["x_num"])
+    ])
+    pipe = make_pipeline(preprocessor, LogisticRegression())
+    pipe.fit(X, y)
+
+    calibrator = VennABERSCalibrator(estimator=pipe)
+    calibrator.fit(X, y)
+
+    # Check predictions
+    probs = calibrator.predict_proba(X)
+    assert probs.shape == (len(X), 2)
+    assert np.all((0 <= probs) & (probs <= 1))
+
+    preds = calibrator.predict(X)
+    assert preds.shape == (len(X),)
+    assert set(np.unique(preds)).issubset(set(np.unique(y)))
+
+
+def test_venn_abers_multiclass_error() -> None:
+    """Test that VennABERSCalibrator raises error for multiclass problems"""
+    calibrator = VennABERSCalibrator()
+
+    with pytest.raises(
+        ValueError,
+        match=r".*Make sure to have one of the allowed targets:*"
+    ):
+        calibrator.fit(X, y)
