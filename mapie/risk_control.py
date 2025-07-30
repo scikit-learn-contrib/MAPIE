@@ -741,7 +741,7 @@ class BinaryClassificationRisk:
         ])
         effective_sample_size = len(y_true) - np.sum(~risk_conditions)
         if effective_sample_size != 0:
-            risk_sum = np.sum(risk_occurrences[risk_conditions])
+            risk_sum: int = np.sum(risk_occurrences[risk_conditions])
             risk_value = risk_sum / effective_sample_size
             return risk_value, effective_sample_size
         return None

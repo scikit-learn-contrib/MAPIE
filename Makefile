@@ -7,6 +7,7 @@ lint:
 	flake8 examples mapie notebooks --max-line-length=88
 
 type-check:
+	mypy --version
 	mypy mapie
 
 coverage:
