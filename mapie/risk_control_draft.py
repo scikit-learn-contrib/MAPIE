@@ -70,6 +70,7 @@ class BinaryClassificationController:  # pragma: no cover
         self._n_jobs = n_jobs  # TODO : use this in the class or delete
         self._random_state = random_state  # TODO : use this in the class or delete
         self._verbose = verbose  # TODO : use this in the class or delete
+        self._metric = metric
 
         self._thresholds: NDArray[np.float32] = np.arange(0, 1, 0.01)
         # TODO: add a _is_calibrated attribute to check at prediction time
@@ -101,17 +102,42 @@ class BinaryClassificationController:  # pragma: no cover
 
         predictions_proba = self._classifier.predict_proba(X_calibrate)[:, 1]
 
-        risk_per_threshold = 1 - self._compute_recall(
-            predictions_proba, y_calibrate_
-        )
+        if self._metric == "precision":
+            risk_per_threshold = 1 - self._compute_precision(
+                predictions_proba, y_calibrate_
+            )
+            valid_thresholds_index, _ = ltt_procedure(
+                risk_per_threshold,
+                np.array([self._alpha]),
+                self._delta,
+                int(len(y_calibrate_)/2),
+                True,
+            )
 
-        valid_thresholds_index, _ = ltt_procedure(
-            risk_per_threshold,
-            np.array([self._alpha]),
-            self._delta,
-            int(len(y_calibrate_)/2),
-            True,
-        )
+        elif self._metric == "recall":
+            risk_per_threshold = 1 - self._compute_recall(
+                predictions_proba, y_calibrate_
+            )
+            valid_thresholds_index, _ = ltt_procedure(
+                risk_per_threshold,
+                np.array([self._alpha]),
+                self._delta,
+                int(len(y_calibrate_)/2),
+                True,
+            )
+
+        elif self._metric == "accuracy":
+            risk_per_threshold = 1 - self._compute_accuracy(
+                predictions_proba, y_calibrate_
+            )
+            valid_thresholds_index, _ = ltt_procedure(
+                risk_per_threshold,
+                np.array([self._alpha]),
+                self._delta,
+                len(y_calibrate_),
+                True,
+            )
+
         self.valid_thresholds = self._thresholds[valid_thresholds_index[0]]
         if len(self.valid_thresholds) == 0:
             warnings.warn("No valid thresholds found", UserWarning)
@@ -215,6 +241,3 @@ class BinaryClassificationController:  # pragma: no cover
         accuracy_per_threshold = np.mean(correct_predictions, axis=0)
 
         return accuracy_per_threshold
-
-def test2():
-    print("test")
