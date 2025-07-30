@@ -180,3 +180,26 @@ def test_invalid_shape_alpha_hb() -> None:
     """Test error message when invalid alpha shape"""
     with pytest.raises(ValueError, match=r".*Invalid confidence_level"):
         compute_hoeffdding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
+
+
+def test_p_values_n_obs_int_vs_array() -> None:
+    """Test that using n_obs as an array gives the same values as an int"""
+    r_hat = np.array([0.5, 0.8])
+    n_obs = np.array([1100, 1200])
+    alpha = np.array([0.6, 0.7])
+
+    pval_0 = compute_hoeffdding_bentkus_p_value(
+        np.array([r_hat[0]]),
+        int(n_obs[0]),
+        alpha
+    )
+    pval_1 = compute_hoeffdding_bentkus_p_value(
+        np.array([r_hat[1]]),
+        int(n_obs[1]),
+        alpha
+    )
+    pval_manual = np.vstack([pval_0, pval_1])
+
+    pval_array = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha)
+
+    np.testing.assert_allclose(pval_manual, pval_array, rtol=1e-12)
