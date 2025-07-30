@@ -101,7 +101,7 @@ class BinaryClassificationController:  # pragma: no cover
 
         predictions_proba = self._classifier.predict_proba(X_calibrate)[:, 1]
 
-        risk_per_threshold = 1 - self._compute_accuracy(
+        risk_per_threshold = 1 - self._compute_recall(
             predictions_proba, y_calibrate_
         )
 
@@ -109,7 +109,7 @@ class BinaryClassificationController:  # pragma: no cover
             risk_per_threshold,
             np.array([self._alpha]),
             self._delta,
-            len(y_calibrate_),
+            int(len(y_calibrate_)/2),
             True,
         )
         self.valid_thresholds = self._thresholds[valid_thresholds_index[0]]
@@ -215,3 +215,6 @@ class BinaryClassificationController:  # pragma: no cover
         accuracy_per_threshold = np.mean(correct_predictions, axis=0)
 
         return accuracy_per_threshold
+
+def test2():
+    print("test")
