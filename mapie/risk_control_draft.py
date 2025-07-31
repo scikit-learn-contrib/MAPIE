@@ -1,3 +1,4 @@
+import warnings
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -69,6 +70,7 @@ class BinaryClassificationController:  # pragma: no cover
         self._n_jobs = n_jobs  # TODO : use this in the class or delete
         self._random_state = random_state  # TODO : use this in the class or delete
         self._verbose = verbose  # TODO : use this in the class or delete
+        self._metric = metric
 
         self._thresholds: NDArray[np.float32] = np.arange(0, 1, 0.01)
         # TODO: add a _is_calibrated attribute to check at prediction time
@@ -100,24 +102,49 @@ class BinaryClassificationController:  # pragma: no cover
 
         predictions_proba = self._classifier.predict_proba(X_calibrate)[:, 1]
 
-        risk_per_threshold = 1 - self._compute_precision(
-            predictions_proba, y_calibrate_
-        )
+        if self._metric == "precision":
+            risk_per_threshold = 1 - self._compute_precision(
+                predictions_proba, y_calibrate_
+            )
+            valid_thresholds_index, _ = ltt_procedure(
+                risk_per_threshold,
+                np.array([self._alpha]),
+                self._delta,
+                int(len(y_calibrate_)/2),
+                True,
+            )
 
-        valid_thresholds_index, _ = ltt_procedure(
-            risk_per_threshold,
-            np.array([self._alpha]),
-            self._delta,
-            len(y_calibrate_),
-            True,
-        )
+        elif self._metric == "recall":
+            risk_per_threshold = 1 - self._compute_recall(
+                predictions_proba, y_calibrate_
+            )
+            valid_thresholds_index, _ = ltt_procedure(
+                risk_per_threshold,
+                np.array([self._alpha]),
+                self._delta,
+                int(len(y_calibrate_)/2),
+                True,
+            )
+
+        elif self._metric == "accuracy":
+            risk_per_threshold = 1 - self._compute_accuracy(
+                predictions_proba, y_calibrate_
+            )
+            valid_thresholds_index, _ = ltt_procedure(
+                risk_per_threshold,
+                np.array([self._alpha]),
+                self._delta,
+                len(y_calibrate_),
+                True,
+            )
+
         self.valid_thresholds = self._thresholds[valid_thresholds_index[0]]
         if len(self.valid_thresholds) == 0:
-            # TODO: just warn, and raise error at prediction if no valid thresholds
-            raise ValueError("No valid thresholds found")
+            warnings.warn("No valid thresholds found", UserWarning)
 
-        # Minimum in case of precision control only
-        self.best_threshold = min(self.valid_thresholds)
+        else:
+            # Minimum in case of precision control only
+            self.best_threshold = min(self.valid_thresholds)
 
     def predict(self, X_test: ArrayLike) -> NDArray:
         """
@@ -159,10 +186,58 @@ class BinaryClassificationController:  # pragma: no cover
         positive_predictions = true_positives + false_positives
 
         # Avoid division by zero
-        precision_per_threshold = np.ones_like(self._thresholds, dtype=float)
+        precision_per_threshold = np.zeros_like(self._thresholds, dtype=float)
         nonzero_mask = positive_predictions > 0
         precision_per_threshold[nonzero_mask] = (
             true_positives[nonzero_mask] / positive_predictions[nonzero_mask]
         )
 
         return precision_per_threshold
+
+    def _compute_recall(
+        self, predictions_proba: NDArray[np.float32], y_cal: NDArray[np.float32]
+    ) -> NDArray[np.float32]:
+        """
+        Compute the recall for each threshold.
+        """
+        predictions_per_threshold = (
+            predictions_proba[:, np.newaxis] >= self._thresholds
+        ).astype(int)
+
+        true_positives = np.sum(
+            (predictions_per_threshold == 1) & (y_cal[:, np.newaxis] == 1),
+            axis=0,
+        )
+        false_negatives = np.sum(
+            (predictions_per_threshold == 0) & (y_cal[:, np.newaxis] == 1),
+            axis=0,
+        )
+
+        actual_positives = true_positives + false_negatives
+
+        # Avoid division by zero
+        recall_per_threshold = np.ones_like(self._thresholds, dtype=float)
+        nonzero_mask = actual_positives > 0
+        recall_per_threshold[nonzero_mask] = (
+            true_positives[nonzero_mask] / actual_positives[nonzero_mask]
+        )
+
+        return recall_per_threshold
+
+    def _compute_accuracy(
+        self, predictions_proba: NDArray[np.float32], y_cal: NDArray[np.float32]
+    ) -> NDArray[np.float32]:
+        """
+        Compute the accuracy for each threshold.
+        """
+        predictions_per_threshold = (
+            predictions_proba[:, np.newaxis] >= self._thresholds
+        ).astype(int)
+
+        correct_predictions = (
+            predictions_per_threshold == y_cal[:, np.newaxis]
+        ).astype(int)
+
+        accuracy_per_threshold = np.mean(correct_predictions, axis=0)
+
+        return accuracy_per_threshold
