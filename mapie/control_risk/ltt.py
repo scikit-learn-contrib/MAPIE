@@ -5,7 +5,7 @@ import numpy as np
 
 from numpy.typing import ArrayLike, NDArray
 
-from .p_values import compute_hoeffdding_bentkus_p_value
+from mapie.control_risk.p_values import compute_hoeffdding_bentkus_p_value
 
 
 def ltt_procedure(
