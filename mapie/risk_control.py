@@ -729,8 +729,12 @@ class BinaryClassificationRisk:
         self,
         y_true: NDArray[int],  # shape (n_samples,), values in {0, 1}
         y_pred: NDArray[int],  # shape (n_samples,), values in {0, 1}
-    ) -> Optional[Tuple[float, int]]:
+    ) -> Tuple[float, int]:
         # float between 0 and 1, int between 0 and len(y_true)
+        # returns (1, -1) when the risk is not defined (condition never met)
+        # In this case, the corresponding lambda shouldn't be considered valid.
+        # In the current LTT implementation, providing n_obs=-1 will result
+        # in an infinite p_value, effectively invaliding the lambda
         risk_occurrences = np.array([
             self.risk_occurrence(y_true_i, y_pred_i)
             for y_true_i, y_pred_i in zip(y_true, y_pred)
@@ -744,7 +748,7 @@ class BinaryClassificationRisk:
             risk_sum: int = np.sum(risk_occurrences[risk_conditions])
             risk_value = risk_sum / effective_sample_size
             return risk_value, effective_sample_size
-        return None
+        return 1, -1
 
 
 precision = BinaryClassificationRisk(
