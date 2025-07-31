@@ -17,7 +17,7 @@ from mapie.conformity_scores import (
     TopKConformityScore,
     LACConformityScore,
 )
-from tests_v1.test_functional.utils import (
+from mapie.tests.test_utils import (
     DummyClassifierWithFitAndPredictParams,
     train_test_split_shuffle,
 )

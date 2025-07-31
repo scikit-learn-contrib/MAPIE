@@ -13,7 +13,7 @@ from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.model_selection import (
     GroupKFold, KFold, LeaveOneOut, PredefinedSplit, ShuffleSplit,
     train_test_split, LeaveOneGroupOut, LeavePGroupsOut
@@ -33,7 +33,9 @@ from mapie.estimator.regressor import EnsembleRegressor
 from mapie.metrics.regression import (
     regression_coverage_score,
 )
-from mapie.regression.regression import _MapieRegressor
+from mapie.regression import ConformalizedQuantileRegressor
+from mapie.regression.regression import _MapieRegressor, \
+    JackknifeAfterBootstrapRegressor, SplitConformalRegressor, CrossConformalRegressor
 from mapie.subsample import Subsample
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -1046,3 +1048,200 @@ def test_invalid_method(method: str) -> None:
         ValueError, match="(Invalid method.)|(Invalid conformity score.)*"
     ):
         mapie_estimator.fit(X_toy, y_toy)
+
+
+class TestCheckAndConvertResamplingToCv:
+    def test_with_integer(self):
+        regressor = JackknifeAfterBootstrapRegressor()
+        cv = regressor._check_and_convert_resampling_to_cv(50)
+
+        assert isinstance(cv, Subsample)
+        assert cv.n_resamplings == 50
+
+    def test_with_subsample(self):
+        custom_subsample = Subsample(n_resamplings=25, random_state=42)
+        regressor = JackknifeAfterBootstrapRegressor()
+        cv = regressor._check_and_convert_resampling_to_cv(custom_subsample)
+
+        assert cv is custom_subsample
+
+    def test_with_invalid_input(self):
+        regressor = JackknifeAfterBootstrapRegressor()
+
+        with pytest.raises(
+            ValueError,
+            match="resampling must be an integer or a Subsample instance"
+        ):
+            regressor._check_and_convert_resampling_to_cv("invalid_input")
+
+
+@pytest.fixture(scope="module")
+def dataset_regression():
+    X, y = make_regression(
+        n_samples=500, n_features=2, noise=1.0, random_state=random_state
+    )
+    X_train, X_conf_test, y_train, y_conf_test = train_test_split(
+        X, y, random_state=random_state
+    )
+    X_conformalize, X_test, y_conformalize, y_test = train_test_split(
+        X_conf_test, y_conf_test, random_state=random_state
+    )
+    return X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+
+
+def test_scr_same_predictions_prefit_not_prefit(dataset_regression) -> None:
+    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = (
+        dataset_regression)
+    regressor = LinearRegression()
+    regressor.fit(X_train, y_train)
+    scr_prefit = SplitConformalRegressor(estimator=regressor, prefit=True)
+    scr_prefit.conformalize(X_conformalize, y_conformalize)
+    predictions_scr_prefit = scr_prefit.predict_interval(X_test)
+
+    scr_not_prefit = SplitConformalRegressor(estimator=LinearRegression(), prefit=False)
+    scr_not_prefit.fit(X_train, y_train).conformalize(X_conformalize, y_conformalize)
+    predictions_scr_not_prefit = scr_not_prefit.predict_interval(X_test)
+    np.testing.assert_equal(predictions_scr_prefit, predictions_scr_not_prefit)
+
+
+@pytest.mark.parametrize(
+    "split_technique,predict_method,dataset,estimator_class",
+    [
+        (
+            SplitConformalRegressor,
+            "predict_interval",
+            "dataset_regression",
+            DummyRegressor
+        ),
+        (
+            ConformalizedQuantileRegressor,
+            "predict_interval",
+            "dataset_regression",
+            QuantileRegressor
+        )
+    ]
+)
+class TestWrongMethodsOrderRaisesErrorForSplitTechniquesRegression:
+    def test_with_prefit_false(
+        self,
+        split_technique,
+        predict_method,
+        dataset,
+        estimator_class,
+        request
+    ):
+        dataset = request.getfixturevalue(dataset)
+        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
+        estimator = estimator_class()
+        technique = split_technique(estimator=estimator, prefit=False)
+
+        with pytest.raises(ValueError, match=r"call fit before calling conformalize"):
+            technique.conformalize(
+                X_conformalize,
+                y_conformalize
+            )
+
+        technique.fit(X_train, y_train)
+
+        with pytest.raises(ValueError, match=r"fit method already called"):
+            technique.fit(X_train, y_train)
+        with pytest.raises(
+            ValueError,
+            match=r"call conformalize before calling predict"
+        ):
+            technique.predict(X_test)
+
+        with pytest.raises(
+            ValueError,
+            match=f"call conformalize before calling {predict_method}"
+        ):
+            getattr(technique, predict_method)(X_test)
+
+        technique.conformalize(X_conformalize, y_conformalize)
+
+        with pytest.raises(ValueError, match=r"conformalize method already called"):
+            technique.conformalize(X_conformalize, y_conformalize)
+
+    def test_with_prefit_true(
+        self,
+        split_technique,
+        predict_method,
+        dataset,
+        estimator_class,
+        request
+    ):
+        dataset = request.getfixturevalue(dataset)
+        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
+        estimator = estimator_class()
+        estimator.fit(X_train, y_train)
+
+        if split_technique == ConformalizedQuantileRegressor:
+            technique = split_technique(estimator=[estimator] * 3, prefit=True)
+        else:
+            technique = split_technique(estimator=estimator, prefit=True)
+
+        with pytest.raises(ValueError, match=r"The fit method must be skipped"):
+            technique.fit(X_train, y_train)
+        with pytest.raises(
+            ValueError,
+            match=r"call conformalize before calling predict"
+        ):
+            technique.predict(X_test)
+
+        with pytest.raises(
+            ValueError,
+            match=f"call conformalize before calling {predict_method}"
+        ):
+            getattr(technique, predict_method)(X_test)
+
+        technique.conformalize(X_conformalize, y_conformalize)
+
+        with pytest.raises(ValueError, match=r"conformalize method already called"):
+            technique.conformalize(X_conformalize, y_conformalize)
+
+
+@pytest.mark.parametrize(
+    "cross_technique,predict_method,dataset,estimator_class",
+    [
+        (
+            CrossConformalRegressor,
+            "predict_interval",
+            "dataset_regression",
+            DummyRegressor
+        ),
+        (
+            JackknifeAfterBootstrapRegressor,
+            "predict_interval",
+            "dataset_regression",
+            DummyRegressor
+        )
+    ]
+)
+class TestWrongMethodsOrderRaisesErrorForCrossTechniques:
+    def test_wrong_methods_order(
+        self,
+        cross_technique,
+        predict_method,
+        dataset,
+        estimator_class,
+        request
+    ):
+        dataset = request.getfixturevalue(dataset)
+        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
+        technique = cross_technique(estimator=estimator_class())
+
+        with pytest.raises(
+            ValueError,
+            match=r"call fit_conformalize before calling predict"
+        ):
+            technique.predict(X_test)
+        with pytest.raises(
+            ValueError,
+            match=f"call fit_conformalize before calling {predict_method}"
+        ):
+            getattr(technique, predict_method)(X_test)
+
+        technique.fit_conformalize(X_conformalize, y_conformalize)
+
+        with pytest.raises(ValueError, match=r"fit_conformalize method already called"):
+            technique.fit_conformalize(X_conformalize, y_conformalize)
