@@ -186,7 +186,7 @@ class BinaryClassificationController:  # pragma: no cover
         positive_predictions = true_positives + false_positives
 
         # Avoid division by zero
-        precision_per_threshold = np.ones_like(self._thresholds, dtype=float)
+        precision_per_threshold = np.zeros_like(self._thresholds, dtype=float)
         nonzero_mask = positive_predictions > 0
         precision_per_threshold[nonzero_mask] = (
             true_positives[nonzero_mask] / positive_predictions[nonzero_mask]
