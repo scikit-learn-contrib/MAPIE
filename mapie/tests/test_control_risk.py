@@ -182,7 +182,7 @@ def test_invalid_shape_alpha_hb() -> None:
         compute_hoeffdding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
 
 
-def test_p_values_n_obs_int_vs_array() -> None:
+def test_hb_p_values_n_obs_int_vs_array() -> None:
     """Test that using n_obs as an array gives the same values as an int"""
     r_hat = np.array([0.5, 0.8])
     n_obs = np.array([1100, 1200])
@@ -203,3 +203,17 @@ def test_p_values_n_obs_int_vs_array() -> None:
     pval_array = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha)
 
     np.testing.assert_allclose(pval_manual, pval_array, rtol=1e-12)
+
+
+def test_ltt_procedure_n_obs_negative() -> None:
+    """
+    Test ltt_procedure with negative n_obs.
+     This happens when the risk, defined as the conditional expectation of
+     a loss, is undefined because the condition is never met.
+     This should return an invalid lambda.
+     """
+    r_hat = np.array([0.5])
+    n_obs = np.array([-1])
+    alpha_np = np.array([0.6])
+    binary = True
+    assert ltt_procedure(r_hat, alpha_np, 0.1, n_obs, binary) == [[]]
