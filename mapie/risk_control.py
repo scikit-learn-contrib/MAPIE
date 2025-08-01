@@ -11,10 +11,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import (
-    _check_y, _num_samples, check_is_fitted,
-    indexable,
-)
+from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
+                                      indexable)
 
 from numpy.typing import ArrayLike, NDArray
 from .control_risk.crc_rcps import find_lambda_star, get_r_hat_plus
@@ -220,9 +218,8 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                 "Invalid method for metric: "
                 + "You are controlling " + self.metric_control
                 + " and you are using invalid method: " + self.method
-                + ". Use instead: " + "".join(
-                    self.valid_methods_by_metric_[
-                        self.metric_control]
+                + ". Use instead: " + "".join(self.valid_methods_by_metric_[
+                    self.metric_control]
                 )
             )
 
@@ -368,10 +365,10 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                 LogisticRegression()
             )
             X_train, X_conf, y_train, y_conf = train_test_split(
-                X,
-                y,
-                test_size=self.conformalize_size,
-                random_state=self.random_state,
+                    X,
+                    y,
+                    test_size=self.conformalize_size,
+                    random_state=self.random_state,
             )
             estimator.fit(X_train, y_train)
             warnings.warn(
@@ -689,7 +686,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             )
             self._check_valid_index(alpha_np)
             self.lambdas_star, self.r_star = find_lambda_control_star(
-                self.r_hat, self.valid_index, self.lambdas
+               self.r_hat, self.valid_index, self.lambdas
             )
             y_pred_proba_array = (
                 y_pred_proba_array >
