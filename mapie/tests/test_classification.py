@@ -37,6 +37,148 @@ from mapie.conformity_scores import (
 from mapie.utils import check_proba_normalized
 from mapie.metrics.classification import classification_coverage_score
 
+@pytest.fixture(scope="module")
+def dataset_classification():
+    X, y = make_classification(
+        n_samples=500, n_informative=5, n_classes=4, random_state=random_state,
+    )
+    X_train, X_conf_test, y_train, y_conf_test = train_test_split(
+        X, y, random_state=random_state
+    )
+    X_conformalize, X_test, y_conformalize, y_test = train_test_split(
+        X_conf_test, y_conf_test, random_state=random_state
+    )
+    return X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
+
+
+@pytest.mark.parametrize(
+    "split_technique,predict_method,dataset,estimator_class",
+    [
+        (
+            SplitConformalClassifier,
+            "predict_set",
+            "dataset_classification",
+            DummyClassifier
+        )
+    ]
+)
+class TestWrongMethodsOrderRaisesErrorForSplitTechniquesClassification:
+    def test_with_prefit_false(
+        self,
+        split_technique,
+        predict_method,
+        dataset,
+        estimator_class,
+        request
+    ):
+        dataset = request.getfixturevalue(dataset)
+        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
+        estimator = estimator_class()
+        technique = split_technique(estimator=estimator, prefit=False)
+
+        with pytest.raises(ValueError, match=r"call fit before calling conformalize"):
+            technique.conformalize(
+                X_conformalize,
+                y_conformalize
+            )
+
+        technique.fit(X_train, y_train)
+
+        with pytest.raises(ValueError, match=r"fit method already called"):
+            technique.fit(X_train, y_train)
+        with pytest.raises(
+            ValueError,
+            match=r"call conformalize before calling predict"
+        ):
+            technique.predict(X_test)
+
+        with pytest.raises(
+            ValueError,
+            match=f"call conformalize before calling {predict_method}"
+        ):
+            getattr(technique, predict_method)(X_test)
+
+        technique.conformalize(X_conformalize, y_conformalize)
+
+        with pytest.raises(ValueError, match=r"conformalize method already called"):
+            technique.conformalize(X_conformalize, y_conformalize)
+
+    def test_with_prefit_true(
+        self,
+        split_technique,
+        predict_method,
+        dataset,
+        estimator_class,
+        request
+    ):
+        dataset = request.getfixturevalue(dataset)
+        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
+        estimator = estimator_class()
+        estimator.fit(X_train, y_train)
+
+        technique = split_technique(estimator=estimator, prefit=True)
+
+        with pytest.raises(ValueError, match=r"The fit method must be skipped"):
+            technique.fit(X_train, y_train)
+        with pytest.raises(
+            ValueError,
+            match=r"call conformalize before calling predict"
+        ):
+            technique.predict(X_test)
+
+        with pytest.raises(
+            ValueError,
+            match=f"call conformalize before calling {predict_method}"
+        ):
+            getattr(technique, predict_method)(X_test)
+
+        technique.conformalize(X_conformalize, y_conformalize)
+
+        with pytest.raises(ValueError, match=r"conformalize method already called"):
+            technique.conformalize(X_conformalize, y_conformalize)
+
+
+@pytest.mark.parametrize(
+    "cross_technique,predict_method,dataset,estimator_class",
+    [
+        (
+            CrossConformalClassifier,
+            "predict_set",
+            "dataset_classification",
+            DummyClassifier
+        )
+    ]
+)
+class TestWrongMethodsOrderRaisesErrorForCrossTechniques:
+    def test_wrong_methods_order(
+        self,
+        cross_technique,
+        predict_method,
+        dataset,
+        estimator_class,
+        request
+    ):
+        dataset = request.getfixturevalue(dataset)
+        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
+        technique = cross_technique(estimator=estimator_class())
+
+        with pytest.raises(
+            ValueError,
+            match=r"call fit_conformalize before calling predict"
+        ):
+            technique.predict(X_test)
+        with pytest.raises(
+            ValueError,
+            match=f"call fit_conformalize before calling {predict_method}"
+        ):
+            getattr(technique, predict_method)(X_test)
+
+        technique.fit_conformalize(X_conformalize, y_conformalize)
+
+        with pytest.raises(ValueError, match=r"fit_conformalize method already called"):
+            technique.fit_conformalize(X_conformalize, y_conformalize)
+
+
 random_state = 42
 
 WRONG_INCLUDE_LABELS = ["randomised", "True", "False", "other", 1, 2.5, (1, 2)]
@@ -2030,145 +2172,3 @@ def test_using_one_predict_parameter_into_fit_but_not_in_predict() -> None:
         r"is used in the predict method as called in the fit."
     )):
         mapie_fitted.predict(X_test)
-
-
-@pytest.fixture(scope="module")
-def dataset_classification():
-    X, y = make_classification(
-        n_samples=500, n_informative=5, n_classes=4, random_state=random_state,
-    )
-    X_train, X_conf_test, y_train, y_conf_test = train_test_split(
-        X, y, random_state=random_state
-    )
-    X_conformalize, X_test, y_conformalize, y_test = train_test_split(
-        X_conf_test, y_conf_test, random_state=random_state
-    )
-    return X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
-
-
-@pytest.mark.parametrize(
-    "split_technique,predict_method,dataset,estimator_class",
-    [
-        (
-            SplitConformalClassifier,
-            "predict_set",
-            "dataset_classification",
-            DummyClassifier
-        )
-    ]
-)
-class TestWrongMethodsOrderRaisesErrorForSplitTechniquesClassification:
-    def test_with_prefit_false(
-        self,
-        split_technique,
-        predict_method,
-        dataset,
-        estimator_class,
-        request
-    ):
-        dataset = request.getfixturevalue(dataset)
-        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
-        estimator = estimator_class()
-        technique = split_technique(estimator=estimator, prefit=False)
-
-        with pytest.raises(ValueError, match=r"call fit before calling conformalize"):
-            technique.conformalize(
-                X_conformalize,
-                y_conformalize
-            )
-
-        technique.fit(X_train, y_train)
-
-        with pytest.raises(ValueError, match=r"fit method already called"):
-            technique.fit(X_train, y_train)
-        with pytest.raises(
-            ValueError,
-            match=r"call conformalize before calling predict"
-        ):
-            technique.predict(X_test)
-
-        with pytest.raises(
-            ValueError,
-            match=f"call conformalize before calling {predict_method}"
-        ):
-            getattr(technique, predict_method)(X_test)
-
-        technique.conformalize(X_conformalize, y_conformalize)
-
-        with pytest.raises(ValueError, match=r"conformalize method already called"):
-            technique.conformalize(X_conformalize, y_conformalize)
-
-    def test_with_prefit_true(
-        self,
-        split_technique,
-        predict_method,
-        dataset,
-        estimator_class,
-        request
-    ):
-        dataset = request.getfixturevalue(dataset)
-        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
-        estimator = estimator_class()
-        estimator.fit(X_train, y_train)
-
-        technique = split_technique(estimator=estimator, prefit=True)
-
-        with pytest.raises(ValueError, match=r"The fit method must be skipped"):
-            technique.fit(X_train, y_train)
-        with pytest.raises(
-            ValueError,
-            match=r"call conformalize before calling predict"
-        ):
-            technique.predict(X_test)
-
-        with pytest.raises(
-            ValueError,
-            match=f"call conformalize before calling {predict_method}"
-        ):
-            getattr(technique, predict_method)(X_test)
-
-        technique.conformalize(X_conformalize, y_conformalize)
-
-        with pytest.raises(ValueError, match=r"conformalize method already called"):
-            technique.conformalize(X_conformalize, y_conformalize)
-
-
-@pytest.mark.parametrize(
-    "cross_technique,predict_method,dataset,estimator_class",
-    [
-        (
-            CrossConformalClassifier,
-            "predict_set",
-            "dataset_classification",
-            DummyClassifier
-        )
-    ]
-)
-class TestWrongMethodsOrderRaisesErrorForCrossTechniques:
-    def test_wrong_methods_order(
-        self,
-        cross_technique,
-        predict_method,
-        dataset,
-        estimator_class,
-        request
-    ):
-        dataset = request.getfixturevalue(dataset)
-        X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
-        technique = cross_technique(estimator=estimator_class())
-
-        with pytest.raises(
-            ValueError,
-            match=r"call fit_conformalize before calling predict"
-        ):
-            technique.predict(X_test)
-        with pytest.raises(
-            ValueError,
-            match=f"call fit_conformalize before calling {predict_method}"
-        ):
-            getattr(technique, predict_method)(X_test)
-
-        technique.fit_conformalize(X_conformalize, y_conformalize)
-
-        with pytest.raises(ValueError, match=r"fit_conformalize method already called"):
-            technique.fit_conformalize(X_conformalize, y_conformalize)

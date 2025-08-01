@@ -1,18 +1,89 @@
+import inspect
 from inspect import signature
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Optional, Union, Callable, Dict
 
 import numpy as np
 import pytest
-from sklearn.base import BaseEstimator
+from numpy._typing import NDArray, ArrayLike
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.pipeline import make_pipeline
 from sklearn.utils.validation import check_is_fitted
+from typing_extensions import Self
 
 from mapie.classification import _MapieClassifier
 from mapie.regression.regression import _MapieRegressor
 from mapie.regression.quantile_regression import _MapieQuantileRegressor
+
+def train_test_split_shuffle(
+    X: NDArray,
+    y: NDArray,
+    test_size: Optional[float] = None,
+    random_state: int = 42,
+    sample_weight: Optional[NDArray] = None,
+) -> Union[Tuple[Any, Any, Any, Any], Tuple[Any, Any, Any, Any, Any, Any]]:
+    splitter = ShuffleSplit(
+        n_splits=1,
+        test_size=test_size,
+        random_state=random_state
+    )
+    train_idx, test_idx = next(splitter.split(X))
+
+    X_train, X_test = X[train_idx], X[test_idx]
+    y_train, y_test = y[train_idx], y[test_idx]
+    if sample_weight is not None:
+        sample_weight_train = sample_weight[train_idx]
+        sample_weight_test = sample_weight[test_idx]
+        return X_train, X_test, y_train, y_test, sample_weight_train, sample_weight_test
+
+    return X_train, X_test, y_train, y_test
+
+
+def filter_params(
+    function: Callable,
+    params: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    if params is None:
+        return {}
+
+    model_params = inspect.signature(function).parameters
+    return {k: v for k, v in params.items() if k in model_params}
+
+
+class DummyClassifierWithFitAndPredictParams(BaseEstimator, ClassifierMixin):
+    def __init__(self):
+        self.classes_ = None
+        self._dummy_fit_param = None
+
+    def fit(self, X: ArrayLike, y: ArrayLike, dummy_fit_param: bool = False) -> Self:
+        self.classes_ = np.unique(y)
+        if len(self.classes_) < 2:
+            raise ValueError("Dummy classifier needs at least 3 classes")
+        self._dummy_fit_param = dummy_fit_param
+        return self
+
+    def predict_proba(self, X: ArrayLike, dummy_predict_param: bool = False) -> NDArray:
+        probas = np.zeros((len(X), len(self.classes_)))
+        if self._dummy_fit_param & dummy_predict_param:
+            probas[:, 0] = 0.1
+            probas[:, 1] = 0.9
+        elif self._dummy_fit_param:
+            probas[:, 1] = 0.1
+            probas[:, 2] = 0.9
+        elif dummy_predict_param:
+            probas[:, 1] = 0.1
+            probas[:, 0] = 0.9
+        else:
+            probas[:, 2] = 0.1
+            probas[:, 0] = 0.9
+        return probas
+
+    def predict(self, X: ArrayLike, dummy_predict_param: bool = False) -> NDArray:
+        y_preds_proba = self.predict_proba(X, dummy_predict_param)
+        return np.amax(y_preds_proba, axis=0)
+
 
 X_toy = np.arange(18).reshape(-1, 1)
 y_toy = np.array(
