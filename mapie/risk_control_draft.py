@@ -56,17 +56,20 @@ class BinaryClassificationController:  # pragma: no cover
             ) for predictions in predictions_per_threshold]
         )
 
+        risks_per_threshold = risks_and_eff_sizes[:, 0]
+        eff_sample_sizes_per_threshold = risks_and_eff_sizes[:, 1]
+
         if self._risk.higher_is_better:
-            risks_and_eff_sizes[:, 0] = 1 - risks_and_eff_sizes[:, 0]
+            risks_per_threshold = 1 - risks_per_threshold
             alpha = self._target_level
         else:
             alpha = 1 - self._target_level
 
         valid_thresholds_index = ltt_procedure(
-            risks_and_eff_sizes[:, 0],
+            risks_per_threshold,
             np.array([alpha]),
             self._delta,
-            risks_and_eff_sizes[:, 1],
+            eff_sample_sizes_per_threshold,
             True,
         )
         self.valid_thresholds = self._thresholds[valid_thresholds_index[0]]
