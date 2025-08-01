@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Iterable, Optional, Sequence, Tuple, Union, cast
+from typing import Iterable, Optional, Sequence, Tuple, Union, cast, Callable
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -681,8 +681,8 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         if self.metric_control == 'precision':
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
-            self.valid_index, self.p_values = ltt_procedure(
-                self.r_hat, alpha_np, delta, self.n_obs
+            self.valid_index = ltt_procedure(
+                self.r_hat, alpha_np, cast(float, delta), self.n_obs
             )
             self._check_valid_index(alpha_np)
             self.lambdas_star, self.r_star = find_lambda_control_star(
@@ -706,3 +706,68 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                 self.lambdas_star[np.newaxis, np.newaxis, :]
             )
         return y_pred, y_pred_proba_array
+
+
+class BinaryClassificationRisk:
+    # Any risk that can be defined in the following way will work using the binary
+    # Hoeffding-Bentkus p-values used in MAPIE
+    # Take the example of precision in the docstring to explain how the class works.
+    def __init__(
+        self,
+        risk_occurrence: Callable[[int, int], int],
+        risk_condition: Callable[[int, int], bool],
+        higher_is_better: bool,
+    ):
+        self.risk_occurrence = risk_occurrence
+        self.risk_condition = risk_condition
+        self.higher_is_better = higher_is_better
+
+    def get_value_and_effective_sample_size(
+        self,
+        y_true: NDArray[int],  # shape (n_samples,), values in {0, 1}
+        y_pred: NDArray[int],  # shape (n_samples,), values in {0, 1}
+    ) -> Tuple[float, int]:
+        # float between 0 and 1, int between 0 and len(y_true)
+        # returns (1, -1) when the risk is not defined (condition never met)
+        # In this case, the corresponding lambda shouldn't be considered valid.
+        # In the current LTT implementation, providing n_obs=-1 will result
+        # in an infinite p_value, effectively invaliding the lambda
+        risk_occurrences = np.array([
+            self.risk_occurrence(y_true_i, y_pred_i)
+            for y_true_i, y_pred_i in zip(y_true, y_pred)
+        ])
+        risk_conditions = np.array([
+            self.risk_condition(y_true_i, y_pred_i)
+            for y_true_i, y_pred_i in zip(y_true, y_pred)
+        ])
+        effective_sample_size = len(y_true) - np.sum(~risk_conditions)
+        if effective_sample_size != 0:
+            risk_sum: int = np.sum(risk_occurrences[risk_conditions])
+            risk_value = risk_sum / effective_sample_size
+            return risk_value, effective_sample_size
+        return 1, -1
+
+
+precision = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    risk_condition=lambda y_true, y_pred: y_pred == 1,
+    higher_is_better=True,
+)
+
+accuracy = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    risk_condition=lambda y_true, y_pred: True,
+    higher_is_better=True,
+)
+
+recall = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    risk_condition=lambda y_true, y_pred: y_true == 1,
+    higher_is_better=True,
+)
+
+_automatic_best_predict_param_choice = {
+    precision: recall,
+    recall: precision,
+    accuracy: accuracy,
+}
