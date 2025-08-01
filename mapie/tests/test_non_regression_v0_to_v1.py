@@ -205,7 +205,7 @@ def params_split_test_5():
         "params_split_test_5",
     ]
 )
-def test_split_classification(dataset, params_, request):
+def test_split(dataset, params_, request):
     X, y, X_train, X_conformalize, y_train, y_conformalize = (
         dataset["X"],
         dataset["y"],
@@ -379,7 +379,7 @@ def params_cross_test_4():
         "params_cross_test_4",
     ]
 )
-def test_cross_classification(dataset, params_, request):
+def test_cross(dataset, params_, request):
     X, y = dataset["X"], dataset["y"]
 
     params = extract_params(request.getfixturevalue(params_))
@@ -710,7 +710,7 @@ def run_v1_pipeline_cross_or_jackknife(params):
     "params",
     params_test_cases_cross + params_test_cases_jackknife
 )
-def test_cross_and_jackknife_regression(params: dict) -> None:
+def test_cross_and_jackknife(params: dict) -> None:
     v0_preds, v0_pred_intervals = run_v0_pipeline_cross_or_jackknife(params)
     (
         v1_preds,
@@ -816,7 +816,7 @@ params_test_cases_split = [
 
 
 @pytest.mark.parametrize("params_split", params_test_cases_split)
-def test_intervals_and_predictions_exact_equality_split_regression(
+def test_intervals_and_predictions_exact_equality_split(
         params_split: dict) -> None:
     v0_params = params_split["v0"]
     v1_params = params_split["v1"]
@@ -932,7 +932,7 @@ params_test_cases_quantile = [
 
 
 @pytest.mark.parametrize("params_quantile", params_test_cases_quantile)
-def test_intervals_and_predictions_exact_equality_quantile_regression(
+def test_intervals_and_predictions_exact_equality_quantile(
     params_quantile: dict
 ) -> None:
     v0_params = params_quantile["v0"]
