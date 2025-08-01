@@ -1096,7 +1096,7 @@ class DummyClassifierWithFitAndPredictParams(BaseEstimator, ClassifierMixin):
         self._dummy_fit_param = dummy_fit_param
         return self
 
-    def predict_proba(self, X: ArrayLike, dummy_predict_param: bool = False) -> NDArray:
+    def predict_proba(self, X: NDArray, dummy_predict_param: bool = False) -> NDArray:
         probas = np.zeros((len(X), len(self.classes_)))
         if self._dummy_fit_param & dummy_predict_param:
             probas[:, 0] = 0.1
@@ -1112,6 +1112,6 @@ class DummyClassifierWithFitAndPredictParams(BaseEstimator, ClassifierMixin):
             probas[:, 0] = 0.9
         return probas
 
-    def predict(self, X: ArrayLike, dummy_predict_param: bool = False) -> NDArray:
+    def predict(self, X: NDArray, dummy_predict_param: bool = False) -> NDArray:
         y_preds_proba = self.predict_proba(X, dummy_predict_param)
         return np.amax(y_preds_proba, axis=0)
