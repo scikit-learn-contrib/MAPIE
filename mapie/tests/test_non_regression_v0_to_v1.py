@@ -979,7 +979,14 @@ def compare_model_predictions_and_intervals(
         n_alpha = 1
 
     if test_size is not None:
-        X_train, X_conf, y_train, y_conf = train_test_split_shuffle(
+        (
+            X_train,
+            X_conf,
+            y_train,
+            y_conf,
+            sample_weight_train,
+            sample_weight_conf,
+        ) = train_test_split_shuffle(
             X,
             y,
             test_size=test_size,
@@ -1046,7 +1053,7 @@ def train_test_split_shuffle(
     test_size: Optional[float] = None,
     random_state: int = 42,
     sample_weight: Optional[NDArray] = None,
-) -> Union[Tuple[Any, Any, Any, Any], Tuple[Any, Any, Any, Any, Any, Any]]:
+) -> Tuple[Any, Any, Any, Any, Any, Any]:
     splitter = ShuffleSplit(
         n_splits=1,
         test_size=test_size,
@@ -1059,9 +1066,11 @@ def train_test_split_shuffle(
     if sample_weight is not None:
         sample_weight_train = sample_weight[train_idx]
         sample_weight_test = sample_weight[test_idx]
-        return X_train, X_test, y_train, y_test, sample_weight_train, sample_weight_test
+    else:
+        sample_weight_train = None
+        sample_weight_test = None
 
-    return X_train, X_test, y_train, y_test
+    return X_train, X_test, y_train, y_test, sample_weight_train, sample_weight_test
 
 
 def filter_params(
