@@ -11,6 +11,7 @@ from numpy.typing import NDArray
 
 from mapie.conformity_scores.utils import check_and_select_conformity_score
 
+
 class TestCheckAndSelectConformityScore:
 
     @pytest.mark.parametrize(

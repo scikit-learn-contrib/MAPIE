@@ -36,6 +36,7 @@ from mapie.utils import (_check_alpha, _check_alpha_and_n_samples,
                          _raise_error_if_method_already_called,
                          _raise_error_if_fit_called_in_prefit_mode)
 
+
 @pytest.fixture(scope="module")
 def dataset():
     X, y = make_regression(
