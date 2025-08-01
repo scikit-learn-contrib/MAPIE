@@ -4,7 +4,7 @@
 
 ### Checks that are run in GitHub CI ###
 lint:
-	flake8 examples mapie notebooks tests_v1 --max-line-length=88
+	flake8 examples mapie notebooks --max-line-length=88
 
 type-check:
 	mypy mapie
@@ -14,7 +14,7 @@ coverage:
 		--cov-branch \
 		--cov=mapie \
 		--cov-report term-missing \
-		--pyargs mapie tests_v1 \
+		--pyargs mapie \
 		--cov-fail-under=100 \
 		--no-cov-on-fail \
 		--doctest-modules
@@ -37,7 +37,6 @@ all-checks:
 
 tests:
 	pytest -vs --doctest-modules mapie
-	python -m pytest -vs tests_v1
 
 clean-doc:
 	$(MAKE) clean -C doc
