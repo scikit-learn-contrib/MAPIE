@@ -25,10 +25,10 @@ sequential :class:`~sklearn.model_selection.TimeSeriesSplit` cross validation,
 in which the training set is prior to the validation set.
 The best model is then feeded into
 :class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate the
-associated prediction intervals. We compare two approaches: with or without calling 
-``update`` at every step, following [6]. Since ``update`` internally calls the 
-now-deprecated ``partial_fit`` method when ``method='enbpi'``, 
-the observed improved coverage and narrower PIs 
+associated prediction intervals. We compare two approaches: with or without calling
+``update`` at every step, following [6]. Since ``update`` internally calls the
+now-deprecated ``partial_fit`` method when ``method='enbpi'``,
+the observed improved coverage and narrower PIs
 are due to the underlying behavior of ``partial_fit``.
 """
 
