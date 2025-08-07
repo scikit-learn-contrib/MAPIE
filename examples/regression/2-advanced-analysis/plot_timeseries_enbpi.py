@@ -25,10 +25,11 @@ sequential :class:`~sklearn.model_selection.TimeSeriesSplit` cross validation,
 in which the training set is prior to the validation set.
 The best model is then feeded into
 :class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate the
-associated prediction intervals. We compare two approaches: with or without
-``partial_fit`` called at every step following [6]. It appears that
-``partial_fit`` offer a coverage closer to the targeted coverage, and with
-narrower PIs.
+associated prediction intervals. We compare two approaches: with or without calling 
+``update`` at every step, following [6]. Since ``update`` internally calls the 
+now-deprecated ``partial_fit`` method when ``method='enbpi'``, 
+the observed improved coverage and narrower PIs 
+are due to the underlying behavior of ``partial_fit``.
 """
 
 import warnings
@@ -151,7 +152,7 @@ step_size = 1
 )
 
 for step in range(step_size, len(X_test), step_size):
-    mapie_enpbi.partial_fit(
+    mapie_enpbi.update(
         X_test.iloc[(step - step_size):step, :],
         y_test.iloc[(step - step_size):step],
     )
