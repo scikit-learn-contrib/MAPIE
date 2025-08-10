@@ -312,7 +312,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "EnbPI, with no update, width optimization\n"
+      "EnbPI, with no partial_fit, width optimization\n"
      ]
     },
     {
@@ -334,7 +334,7 @@
     }
    },
    "source": [
-    "print(\"ACI, with no update\")\n",
+    "print(\"ACI, with no partial_fit\")\n",
     "mapie_aci = mapie_aci.fit(X_train, y_train)\n",
     "\n",
     "y_pred_aci_npfit, y_pis_aci_npfit = mapie_aci.predict(\n",
@@ -351,7 +351,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "ACI, with no update\n"
+      "ACI, with no partial_fit\n"
      ]
     },
     {
@@ -381,7 +381,7 @@
     }
    },
    "source": [
-    "print(\"EnbPI with update, width optimization\")\n",
+    "print(\"EnbPI with partial_fit, width optimization\")\n",
     "mapie_enbpi = mapie_enbpi.fit(X_train, y_train)\n",
     "\n",
     "y_pred_enbpi_pfit = np.zeros(y_pred_enbpi_npfit.shape)\n",
@@ -390,7 +390,7 @@
     "    X_test.iloc[:gap, :], confidence_level=1-alpha, ensemble=True, optimize_beta=True\n",
     ")\n",
     "for step in range(gap, len(X_test), gap):\n",
-    "    mapie_enbpi.update(\n",
+    "    mapie_enbpi.partial_fit(\n",
     "        X_test.iloc[(step - gap):step, :],\n",
     "        y_test.iloc[(step - gap):step],\n",
     "    )\n",
@@ -414,7 +414,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "EnbPI with update, width optimization\n"
+      "EnbPI with partial_fit, width optimization\n"
      ]
     },
     {
@@ -613,7 +613,7 @@
     ")\n",
     "\n",
     "for step in range(gap, len(X_test), gap):\n",
-    "    mapie_aci.update(\n",
+    "    mapie_aci.partial_fit(\n",
     "        X_test.iloc[(step - gap):step, :],\n",
     "        y_test.iloc[(step - gap):step],\n",
     "    )\n",
@@ -1096,7 +1096,7 @@
     }
    },
    "source": [
-    "print(\"EnbPI, with no update, width optimization\")\n",
+    "print(\"EnbPI, with no partial_fit, width optimization\")\n",
     "mapie_enbpi = mapie_enbpi.fit(X_train, y_train)\n",
     "y_pred_enbpi_npfit, y_pis_enbpi_npfit = mapie_enbpi.predict(\n",
     "    X_test, confidence_level=1-alpha, ensemble=True, optimize_beta=True, allow_infinite_bounds=True\n",
@@ -1120,7 +1120,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "EnbPI, with no update, width optimization\n"
+      "EnbPI, with no partial_fit, width optimization\n"
      ]
     },
     {
@@ -1142,7 +1142,7 @@
     }
    },
    "source": [
-    "print(\"ACI, with no update\")\n",
+    "print(\"ACI, with no partial_fit\")\n",
     "mapie_aci = mapie_aci.fit(X_train, y_train)\n",
     "\n",
     "y_pred_aci_npfit = np.zeros(y_pred_enbpi_npfit.shape)\n",
@@ -1197,7 +1197,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "ACI, with no update\n"
+      "ACI, with no partial_fit\n"
      ]
     },
     {
@@ -1445,7 +1445,7 @@
     }
    },
    "source": [
-    "print(\"EnbPI with update, width optimization\")\n",
+    "print(\"EnbPI with partial_fit, width optimization\")\n",
     "mapie_enbpi = TimeSeriesRegressor(\n",
     "    model, method=\"enbpi\", cv=cv_mapiets, agg_function=\"mean\", n_jobs=-1\n",
     ")\n",
@@ -1460,7 +1460,7 @@
     "clip_used = False\n",
     "\n",
     "for step in range(gap, len(X_test), gap):\n",
-    "    mapie_enbpi.update(\n",
+    "    mapie_enbpi.partial_fit(\n",
     "        X_test.iloc[(step - gap):step, :],\n",
     "        y_test.iloc[(step - gap):step],\n",
     "    )\n",
@@ -1512,7 +1512,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "EnbPI with update, width optimization\n"
+      "EnbPI with partial_fit, width optimization\n"
      ]
     },
     {
@@ -1868,7 +1868,7 @@
     }
    },
    "source": [
-    "print(\"ACI with update and adapt_conformal_inference\")\n",
+    "print(\"ACI with partial_fit and adapt_conformal_inference\")\n",
     "mapie_aci = TimeSeriesRegressor(\n",
     "    model, method=\"aci\", cv=cv_mapiets, agg_function=\"mean\", n_jobs=-1\n",
     ")\n",
@@ -1885,7 +1885,7 @@
     "\n",
     "for step in range(gap, len(X_test), gap):\n",
     "\n",
-    "    mapie_aci.update(\n",
+    "    mapie_aci.partial_fit(\n",
     "        X_test.iloc[(step - gap):step, :],\n",
     "        y_test.iloc[(step - gap):step],\n",
     "    )\n",
@@ -1940,7 +1940,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "ACI with update and adapt_conformal_inference\n"
+      "ACI with partial_fit and adapt_conformal_inference\n"
      ]
     },
     {

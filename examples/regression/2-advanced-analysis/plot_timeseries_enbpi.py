@@ -26,8 +26,8 @@ in which the training set is prior to the validation set.
 The best model is then feeded into
 :class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate the
 associated prediction intervals. We compare two approaches: with or without
-``partial_fit`` called at every step following [6]. It appears that
-``partial_fit`` offer a coverage closer to the targeted coverage, and with
+``update`` called at every step following [6]. It appears that
+``update`` offer a coverage closer to the targeted coverage, and with
 narrower PIs.
 """
 
@@ -123,7 +123,7 @@ mapie_enpbi = TimeSeriesRegressor(
     n_jobs=-1,
 )
 
-print("EnbPI, with no partial_fit, width optimization")
+print("EnbPI, with no update, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
 y_pred_npfit_enbpi, y_pis_npfit_enbpi = mapie_enpbi.predict(
     X_test, confidence_level=1-alpha, ensemble=True, optimize_beta=True
@@ -136,7 +136,7 @@ width_npfit_enbpi = regression_mean_width_score(
     y_pis_npfit_enbpi
 )[0]
 
-print("EnbPI with partial_fit, width optimization")
+print("EnbPI with update, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
 y_pred_pfit_enbpi = np.zeros(y_pred_npfit_enbpi.shape)
 y_pis_pfit_enbpi = np.zeros(y_pis_npfit_enbpi.shape)
@@ -151,7 +151,7 @@ step_size = 1
 )
 
 for step in range(step_size, len(X_test), step_size):
-    mapie_enpbi.partial_fit(
+    mapie_enpbi.update(
         X_test.iloc[(step - step_size):step, :],
         y_test.iloc[(step - step_size):step],
     )
@@ -173,12 +173,12 @@ width_pfit_enbpi = regression_mean_width_score(
 # Print results
 print(
     "Coverage / prediction interval width mean for TimeSeriesRegressor: "
-    "\nEnbPI without any partial_fit:"
+    "\nEnbPI without any update:"
     f"{coverage_npfit_enbpi:.3f}, {width_npfit_enbpi:.3f}"
 )
 print(
     "Coverage / prediction interval width mean for TimeSeriesRegressor: "
-    "\nEnbPI with partial_fit:"
+    "\nEnbPI with update:"
     f"{coverage_pfit_enbpi:.3f}, {width_pfit_enbpi:.3f}"
 )
 
@@ -204,7 +204,7 @@ fig, axs = plt.subplots(
 )
 
 for i, (ax, w, result) in enumerate(
-    zip(axs, ["EnbPI, without partial_fit", "EnbPI with partial_fit"], results)
+    zip(axs, ["EnbPI, without update", "EnbPI with update"], results)
 ):
     ax.set_ylabel("Hourly demand (GW)", fontsize=20)
     ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")

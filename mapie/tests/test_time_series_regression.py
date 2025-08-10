@@ -503,7 +503,7 @@ def test_deprecated_partial_fit_warning() -> None:
     mapie_ts_reg = TimeSeriesRegressor(method='enbpi', cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
     with pytest.warns(
-        DeprecationWarning, match=r".*WARNING: Deprecated method.*"
+        DeprecationWarning, match=r".*WARNING: Deprecated method.*This method will be removed in v1\.1\."
     ):
         mapie_ts_reg = mapie_ts_reg.partial_fit(X_toy, y_toy)
 
