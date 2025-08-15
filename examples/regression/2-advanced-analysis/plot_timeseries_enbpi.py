@@ -26,10 +26,8 @@ in which the training set is prior to the validation set.
 The best model is then feeded into
 :class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate the
 associated prediction intervals. We compare two approaches: with or without calling
-``update`` at every step, following [6]. Since ``update`` internally calls the
-now-deprecated ``partial_fit`` method when ``method='enbpi'``,
-the observed improved coverage and narrower PIs
-are due to the underlying behavior of ``partial_fit``.
+``update`` at every step, following [6]. The results show coverage closer
+to the target, along with narrower PIs.
 """
 
 import warnings
@@ -124,28 +122,28 @@ mapie_enpbi = TimeSeriesRegressor(
     n_jobs=-1,
 )
 
-print("EnbPI, with no partial_fit, width optimization")
+print("EnbPI, with no update, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
-y_pred_npfit_enbpi, y_pis_npfit_enbpi = mapie_enpbi.predict(
+y_pred_n_update_enbpi, y_pis_n_update_enbpi = mapie_enpbi.predict(
     X_test, confidence_level=1-alpha, ensemble=True, optimize_beta=True
 )
-coverage_npfit_enbpi = regression_coverage_score(
-    y_test, y_pis_npfit_enbpi
+coverage_n_update_enbpi = regression_coverage_score(
+    y_test, y_pis_n_update_enbpi
 )[0]
 
-width_npfit_enbpi = regression_mean_width_score(
-    y_pis_npfit_enbpi
+width_n_update_enbpi = regression_mean_width_score(
+    y_pis_n_update_enbpi
 )[0]
 
-print("EnbPI with partial_fit, width optimization")
+print("EnbPI with update, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
-y_pred_pfit_enbpi = np.zeros(y_pred_npfit_enbpi.shape)
-y_pis_pfit_enbpi = np.zeros(y_pis_npfit_enbpi.shape)
+y_pred_update_enbpi = np.zeros(y_pred_n_update_enbpi.shape)
+y_pis_update_enbpi = np.zeros(y_pis_n_update_enbpi.shape)
 
 step_size = 1
 (
-    y_pred_pfit_enbpi[:step_size],
-    y_pis_pfit_enbpi[:step_size, :, :],
+    y_pred_update_enbpi[:step_size],
+    y_pis_update_enbpi[:step_size, :, :],
 ) = mapie_enpbi.predict(
     X_test.iloc[:step_size, :], confidence_level=1-alpha, ensemble=True,
     optimize_beta=True
@@ -157,47 +155,47 @@ for step in range(step_size, len(X_test), step_size):
         y_test.iloc[(step - step_size):step],
     )
     (
-        y_pred_pfit_enbpi[step:step + step_size],
-        y_pis_pfit_enbpi[step:step + step_size, :, :],
+        y_pred_update_enbpi[step:step + step_size],
+        y_pis_update_enbpi[step:step + step_size, :, :],
     ) = mapie_enpbi.predict(
         X_test.iloc[step:(step + step_size), :],
         confidence_level=1-alpha,
         ensemble=True,
     )
-coverage_pfit_enbpi = regression_coverage_score(
-    y_test, y_pis_pfit_enbpi
+coverage_update_enbpi = regression_coverage_score(
+    y_test, y_pis_update_enbpi
 )[0]
-width_pfit_enbpi = regression_mean_width_score(
-    y_pis_pfit_enbpi
+width_update_enbpi = regression_mean_width_score(
+    y_pis_update_enbpi
 )[0]
 
 # Print results
 print(
     "Coverage / prediction interval width mean for TimeSeriesRegressor: "
-    "\nEnbPI without any partial_fit:"
-    f"{coverage_npfit_enbpi:.3f}, {width_npfit_enbpi:.3f}"
+    "\nEnbPI without any update:"
+    f"{coverage_n_update_enbpi:.3f}, {width_n_update_enbpi:.3f}"
 )
 print(
     "Coverage / prediction interval width mean for TimeSeriesRegressor: "
-    "\nEnbPI with partial_fit:"
-    f"{coverage_pfit_enbpi:.3f}, {width_pfit_enbpi:.3f}"
+    "\nEnbPI with update:"
+    f"{coverage_update_enbpi:.3f}, {width_update_enbpi:.3f}"
 )
 
-enbpi_no_pfit = {
-    "y_pred": y_pred_npfit_enbpi,
-    "y_pis": y_pis_npfit_enbpi,
-    "coverage": coverage_npfit_enbpi,
-    "width": width_npfit_enbpi,
+enbpi_no_update = {
+    "y_pred": y_pred_n_update_enbpi,
+    "y_pis": y_pis_n_update_enbpi,
+    "coverage": coverage_n_update_enbpi,
+    "width": width_n_update_enbpi,
 }
 
-enbpi_pfit = {
-    "y_pred": y_pred_pfit_enbpi,
-    "y_pis": y_pis_pfit_enbpi,
-    "coverage": coverage_pfit_enbpi,
-    "width": width_pfit_enbpi,
+enbpi_update = {
+    "y_pred": y_pred_update_enbpi,
+    "y_pis": y_pis_update_enbpi,
+    "coverage": coverage_update_enbpi,
+    "width": width_update_enbpi,
 }
 
-results = [enbpi_no_pfit, enbpi_pfit]
+results = [enbpi_no_update, enbpi_update]
 
 # Plot estimated prediction intervals on test set
 fig, axs = plt.subplots(
@@ -205,7 +203,7 @@ fig, axs = plt.subplots(
 )
 
 for i, (ax, w, result) in enumerate(
-    zip(axs, ["EnbPI, without partial_fit", "EnbPI with partial_fit"], results)
+    zip(axs, ["EnbPI, without update", "EnbPI with update"], results)
 ):
     ax.set_ylabel("Hourly demand (GW)", fontsize=20)
     ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
