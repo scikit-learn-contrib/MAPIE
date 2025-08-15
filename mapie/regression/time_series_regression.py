@@ -163,8 +163,8 @@ class TimeSeriesRegressor(_MapieRegressor):
         """
         warnings.warn(
             "WARNING: Deprecated method. "
-            + "The method \"partial_fit\" is outdated. "
-            + "Prefer to use \"update\" instead to keep "
+            + "The method \"partial_fit\" will be removed in v1.2. "
+            + "Use \"update\" instead to keep "
             + "the same behavior in the future.",
             DeprecationWarning
         )
