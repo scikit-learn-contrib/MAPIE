@@ -833,7 +833,7 @@ def test_intervals_and_predictions_exact_equality_split(
     test_size = v1_params.get("test_size", None)
     prefit = v1_params.get("prefit", False)
 
-    compare_model_predictions_and_intervals(
+    compare_model_predictions_and_intervals_split_and_quantile(
         model_v0=_MapieRegressor,
         model_v1=SplitConformalRegressor,
         X=X,
@@ -950,7 +950,7 @@ def test_intervals_and_predictions_exact_equality_quantile(
     test_size = v1_params.get("test_size", None)
     prefit = v1_params.get("prefit", False)
 
-    compare_model_predictions_and_intervals(
+    compare_model_predictions_and_intervals_split_and_quantile(
         model_v0=_MapieQuantileRegressor,
         model_v1=ConformalizedQuantileRegressor,
         X=X,
@@ -963,12 +963,10 @@ def test_intervals_and_predictions_exact_equality_quantile(
     )
 
 
-def compare_model_predictions_and_intervals(
+def compare_model_predictions_and_intervals_split_and_quantile(
     model_v0: Type[_MapieRegressor],
     model_v1: Type[Union[
         SplitConformalRegressor,
-        CrossConformalRegressor,
-        JackknifeAfterBootstrapRegressor,
         ConformalizedQuantileRegressor
     ]],
     X: NDArray,
