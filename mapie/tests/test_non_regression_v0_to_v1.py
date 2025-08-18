@@ -1076,9 +1076,8 @@ def train_test_split_shuffle(
 
 def filter_params(
     function: Callable,
-    params: Optional[Dict[str, Any]] = None
+    params: Dict[str, Any]
 ) -> Dict[str, Any]:
-
     model_params = inspect.signature(function).parameters
     return {k: v for k, v in params.items() if k in model_params}
 
