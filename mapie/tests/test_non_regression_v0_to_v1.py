@@ -977,30 +977,24 @@ def compare_model_predictions_and_intervals_split_and_quantile(
     test_size: Optional[float] = None,
     random_state: int = RANDOM_STATE,
 ) -> None:
-    if v0_params.get("alpha"):
-        if isinstance(v0_params["alpha"], float):
-            n_alpha = 1
-        else:
-            n_alpha = len(v0_params["alpha"])
-    else:
+    if isinstance(v0_params["alpha"], float):
         n_alpha = 1
-
-    if test_size is not None:
-        (
-            X_train,
-            X_conf,
-            y_train,
-            y_conf,
-            sample_weight_train,
-            sample_weight_conf,
-        ) = train_test_split_shuffle(
-            X,
-            y,
-            test_size=test_size,
-            random_state=random_state,
-        )
     else:
-        X_train, X_conf, y_train, y_conf = X, X, y, y
+        n_alpha = len(v0_params["alpha"])
+
+    (
+        X_train,
+        X_conf,
+        y_train,
+        y_conf,
+        sample_weight_train,
+        sample_weight_conf,
+    ) = train_test_split_shuffle(
+        X,
+        y,
+        test_size=test_size,
+        random_state=random_state,
+    )
 
     if prefit:
         estimator = v0_params["estimator"]
@@ -1084,8 +1078,6 @@ def filter_params(
     function: Callable,
     params: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    if params is None:
-        return {}
 
     model_params = inspect.signature(function).parameters
     return {k: v for k, v in params.items() if k in model_params}
@@ -1098,27 +1090,11 @@ class DummyClassifierWithFitAndPredictParams(BaseEstimator, ClassifierMixin):
 
     def fit(self, X: NDArray, y: NDArray, dummy_fit_param: bool = False) -> Self:
         self.classes_ = np.unique(y)
-        if len(self.classes_) < 2:
-            raise ValueError("Dummy classifier needs at least 3 classes")
         self._dummy_fit_param = dummy_fit_param
         return self
 
     def predict_proba(self, X: NDArray, dummy_predict_param: bool = False) -> NDArray:
         probas = np.zeros((len(X), len(self.classes_)))
-        if self._dummy_fit_param & dummy_predict_param:
-            probas[:, 0] = 0.1
-            probas[:, 1] = 0.9
-        elif self._dummy_fit_param:
-            probas[:, 1] = 0.1
-            probas[:, 2] = 0.9
-        elif dummy_predict_param:
-            probas[:, 1] = 0.1
-            probas[:, 0] = 0.9
-        else:
-            probas[:, 2] = 0.1
-            probas[:, 0] = 0.9
+        probas[:, 0] = 0.1
+        probas[:, 1] = 0.9
         return probas
-
-    def predict(self, X: NDArray, dummy_predict_param: bool = False) -> NDArray:
-        y_preds_proba = self.predict_proba(X, dummy_predict_param)
-        return np.amax(y_preds_proba, axis=0)
