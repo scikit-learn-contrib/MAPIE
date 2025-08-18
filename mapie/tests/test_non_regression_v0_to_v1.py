@@ -3,6 +3,7 @@ from typing import Type, Union, Dict, Optional, Callable, Any, Tuple
 
 import numpy as np
 import pytest
+from _pytest.fixtures import FixtureRequest
 from numpy._typing import ArrayLike, NDArray
 from numpy.random import RandomState
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -205,7 +206,11 @@ def params_split_test_5():
         "params_split_test_5",
     ]
 )
-def test_split(dataset, params_, request):
+def test_split(
+    dataset: Dict[str, Any],
+    params_: str,
+    request: FixtureRequest
+) -> None:
     X, y, X_train, X_conformalize, y_train, y_conformalize = (
         dataset["X"],
         dataset["y"],
@@ -236,7 +241,7 @@ def test_split(dataset, params_, request):
     v0_preds, v0_pred_sets = v0.predict(X_conformalize, **params["v0_predict"])
     v1_preds, v1_pred_sets = v1.predict_set(X_conformalize, **params["v1_predict_set"])
 
-    v1_preds_using_predict: ArrayLike = v1.predict(X_conformalize)
+    v1_preds_using_predict: NDArray = v1.predict(X_conformalize)
 
     np.testing.assert_array_equal(v0_preds, v1_preds)
     np.testing.assert_array_equal(v0_pred_sets, v1_pred_sets)
@@ -379,7 +384,11 @@ def params_cross_test_4():
         "params_cross_test_4",
     ]
 )
-def test_cross(dataset, params_, request):
+def test_cross(
+    dataset: Dict[str, Any],
+    params_: str,
+    request: FixtureRequest
+):
     X, y = dataset["X"], dataset["y"]
 
     params = extract_params(request.getfixturevalue(params_))
@@ -393,7 +402,7 @@ def test_cross(dataset, params_, request):
     v0_preds, v0_pred_sets = v0.predict(X, **params["v0_predict"])
     v1_preds, v1_pred_sets = v1.predict_set(X, **params["v1_predict_set"])
 
-    v1_preds_using_predict: ArrayLike = v1.predict(X)
+    v1_preds_using_predict: NDArray = v1.predict(X)
 
     np.testing.assert_array_equal(v0_preds, v1_preds)
     np.testing.assert_array_equal(v0_pred_sets, v1_pred_sets)
@@ -1089,7 +1098,7 @@ class DummyClassifierWithFitAndPredictParams(BaseEstimator, ClassifierMixin):
         self.classes_ = None
         self._dummy_fit_param = None
 
-    def fit(self, X: ArrayLike, y: ArrayLike, dummy_fit_param: bool = False) -> Self:
+    def fit(self, X: NDArray, y: NDArray, dummy_fit_param: bool = False) -> Self:
         self.classes_ = np.unique(y)
         if len(self.classes_) < 2:
             raise ValueError("Dummy classifier needs at least 3 classes")
