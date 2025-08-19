@@ -121,6 +121,6 @@ References
 Predictive Inference for Regression. Journal of the American Statistical Association, 113(523), 1094–1111. 
 Available from https://doi.org/10.1080/01621459.2017.1307116
 
-[2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. & Brunel, N.. (2023).
+[2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. & Brunel, N. (2023).
 Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library.
 Available from https://proceedings.mlr.press/v204/cordier23a.html.
