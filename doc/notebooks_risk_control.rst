@@ -1,10 +1,6 @@
 Risk control notebooks
 ====================================
 
-The following examples present advanced analyses on risk control problems with different methods proposed in MAPIE.
+This section showcases examples that present advanced analyses on risk control problems with different methods proposed in MAPIE.
 
-1. Overview of Recall Control for Multi-Label Classification : `recall_notebook <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/classification/tutorial_risk_control_recall.ipynb>`_
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-2. Overview of Precision Control for Multi-Label Classification : `precision_notebook <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/classification/tutorial_risk_control_precision.ipynb>`_
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+While no notebooks are available yet, this `tutorial <https://github.com/scikit-learn-contrib/MAPIE/tree/master-delete-risk-control-notebooks/examples/multilabel_classification/1-quickstart/plot_tutorial_risk_control.py>`_ offers a comprehensive overview of recall and precision control for multi-label classification.
