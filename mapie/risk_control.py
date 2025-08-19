@@ -269,7 +269,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         if (not isinstance(delta, float)) and (delta is not None):
             raise ValueError(
                 "Invalid delta. "
-                "delta must be a float, not a {type(delta)}"
+                f"delta must be a float, not a {type(delta)}"
             )
         if (self.method == "rcps") or (self.method == "ltt"):
             if delta is None:
@@ -579,7 +579,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        conformalize_size: Optional[float] = .3,
+        conformalize_size: Optional[float] = .3
     ) -> PrecisionRecallController:
         """
         Fit the base estimator or use the fitted base estimator.
