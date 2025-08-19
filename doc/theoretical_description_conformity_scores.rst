@@ -34,7 +34,7 @@ and the other on the left side.
 1. The absolute residual score
 ------------------------------
 
-The absolute residual score (:class:`mapie.conformity_scores.AbsoluteConformityScore`)
+The absolute residual score [1] (:class:`mapie.conformity_scores.AbsoluteConformityScore`)
 is the simplest and most commonly used conformal score, it translates the error
 of the model : in regression, it is called the residual.
 
@@ -117,10 +117,10 @@ Key takeaways
 References
 ----------
 
-[1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J., & Wasserman, L. (2018). Distribution-Free 
+[1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J. & Wasserman, L. (2018). Distribution-Free
 Predictive Inference for Regression. Journal of the American Statistical Association, 113(523), 1094–1111. 
 Available from https://doi.org/10.1080/01621459.2017.1307116
 
-[2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. &amp; Brunel, N.. (2023).
+[2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. & Brunel, N.. (2023).
 Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library.
 Available from https://proceedings.mlr.press/v204/cordier23a.html.
