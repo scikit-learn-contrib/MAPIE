@@ -76,6 +76,13 @@ We no longer officially support Python versions between 3.7 and 3.9, and NumPy v
 - Python <3.9
 - scikit-learn <1.4, provided SciPy <=1.10
 
+Documentation changes
+----------------------
+
+New content has been added to the documentation:
+
+- The link to Thibault Cordier's repository on risk control has been added to the risk control section.
+
 .. _detail_API_changes:
 
 API changes in detail
