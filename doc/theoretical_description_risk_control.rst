@@ -1,4 +1,4 @@
-.. title:: Theoretical Description Recall and Precision Control for Multi label Classification : contents
+.. title:: Theoretical Description Risk Control
 
 .. _theoretical_description_risk_control:
 
@@ -9,6 +9,18 @@ Theoretical Description
 Note: in theoretical parts of this documentation, we use the terms *calibrate* and *calibration* employed in the scientific literature, that are equivalent to *conformalize* and *conformalization*.
 
 —
+
+1. What is risk control?
+========================
+
+Risk control is the science of adjusting a model's parameter, typically denoted :math:`\lambda`, so that a given risk stays below a desired level with high probability on unseen data.
+Note that here, the term *risk* is used to describe an undesirable outcome of the model (e.g., type I error): therefore, it is a value we want to minimize, and in our case, keep under a certain level. Also note that risk control can easily be applied to metrics we want to maximize (e.g., recall), simply by controlling the complement (e.g., 1-recall).
+
+The strength of risk control lies in the statistical guarantees it provides on unseen data. It leverages a calibration set to determine a value of :math:\lambda that ensures the risk is controlled beyond the training data. This guarantee is critical in a wide range of use cases, especially in high-stakes applications. Take, for example, medical diagnosis: here, the parameter :math:`\lambda` is the binarization threshold that determines whether a patient is classified as sick. We aim to minimize false negatives (i.e., cases where sick patients are incorrectly diagnosed as healthy), which corresponds to controlling the type II error. In this setting, risk control allows us to find a :math:`\lambda` such that, on future patients, the model’s type II error does not exceed, say, 5%, with high confidence.
+
+As of now, MAPIE supports risk control for two machine learning tasks:
+- binary classification;
+- multi-label classification, including applications like image segmentation.
 
 Three methods for multi-label uncertainty quantification have been implemented in MAPIE so far :
 Risk-Controlling Prediction Sets (RCPS) [1], Conformal Risk Control (CRC) [2] and Learn Then Test (LTT) [3].
@@ -37,12 +49,12 @@ on the recall. RCPS, LTT, and CRC give three slightly different guarantees:
     \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta \quad \texttt{with} \quad p_{\hat{\lambda}} \leq \frac{\delta}{\lvert \Lambda \rvert}
 
 
-Notice that at the opposite of the other two methods, LTT allows to control any non-monotone loss. In MAPIE for multilabel classification,
+Notice that at the opposite of the other two methods, LTT allows to control any non-monotone loss. In MAPIE for multi-label classification,
 we use CRC and RCPS for recall control and LTT for precision control.
 
-1. Risk-Controlling Prediction Sets
+2. Risk-Controlling Prediction Sets
 ===================================
-1.1. General settings
+2.1. General settings
 ---------------------
 
 
@@ -81,7 +93,7 @@ Following those settings, the RCPS method gives the following guarantee on the r
     \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta
 
 
-1.2. Bounds calculation
+2.2. Bounds calculation
 -----------------------
 
 In this section, we will consider only bounded losses (as for now, only the :math:`1-recall` loss is implemented).
@@ -92,7 +104,7 @@ based on the empirical risk which is defined as follows:
     \hat{R}(\lambda) = \frac{1}{n}\sum_{i=1}^n L(Y_i, T_{\lambda}(X_i))
 
 
-1.2.1. Hoeffding Bound
+2.2.1. Hoeffding Bound
 ----------------------
 
 Suppose the loss is bounded above by one, then we have by the Hoeffding inequality that:
@@ -106,7 +118,7 @@ Which implies the following UCB:
     \hat{R}_{Hoeffding}^+(\lambda) = \hat{R}(\lambda) + \sqrt{\frac{1}{2n}\log\frac{1}{\delta}}
 
 
-1.2.2. Bernstein Bound
+2.2.2. Bernstein Bound
 ----------------------
 
 Contrary to the Hoeffding bound, which can sometimes be too simple, the Bernstein UCB takes into account the variance
@@ -121,7 +133,7 @@ Where:
     \hat{\sigma}(\lambda) = \frac{1}{n-1}\sum_{i=1}^n(L(Y_i, T_{\lambda}(X_i)) - \hat{R}(\lambda))^2
 
 
-1.2.3. Waudby-Smith–Ramdas
+2.2.3. Waudby-Smith–Ramdas
 --------------------------
 
 This last UCB is the one recommended by the authors of [1] to use when using a bounded loss as this is the one that gives
@@ -145,7 +157,7 @@ Then:
     \hat{R}_{WSR}^+(\lambda) = \inf \{ R \geq 0 : \max_{i=1,...n} K_i(R, \lambda) > \frac{1}{\delta}\}
 
 
-2. Conformal Risk Control
+3. Conformal Risk Control
 =========================
 
 The goal of this method is to control any monotone and bounded loss. The result of this method can be expressed as follows:
@@ -168,7 +180,7 @@ With :
     \hat{R}_n (\lambda) = (L_{1}(\lambda) + ... + L_{n}(\lambda)) / n
 
 
-3. Learn Then Test
+4. Learn Then Test
 ==================
 
 We are going to present the Learn Then Test framework that allows the user to control non-monotonic risk such as precision score.
