@@ -19,7 +19,9 @@ Note that here, the term *risk* is used to describe an undesirable outcome of th
 The strength of risk control lies in the statistical guarantees it provides on unseen data. It leverages a calibration set to determine a value of :math:`\lambda` that ensures the risk is controlled beyond the training data. This guarantee is critical in a wide range of use cases, especially in high-stakes applications. Take, for example, medical diagnosis: here, the parameter :math:`\lambda` is the binarization threshold that determines whether a patient is classified as sick. We aim to minimize false negatives (i.e., cases where sick patients are incorrectly diagnosed as healthy), which corresponds to controlling the type II error. In this setting, risk control allows us to find a :math:`\lambda` such that, on future patients, the model’s type II error does not exceed, say, 5%, with high confidence.
 
 As of now, MAPIE supports risk control for two machine learning tasks:
+
 - binary classification;
+
 - multi-label classification, including applications like image segmentation.
 
 Three methods for multi-label uncertainty quantification have been implemented in MAPIE so far :
