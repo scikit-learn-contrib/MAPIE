@@ -66,7 +66,7 @@ on the specified risk. RCPS, LTT, and CRC give three slightly different guarante
 Notice that at the opposite of the other two methods, LTT allows to control any non-monotonic risk.
 
 As of now, MAPIE supports risk control for two machine learning tasks: binary classification, as well as multi-label classification (including applications like image segmentation).
-Below is a table showing the available methods for each task:
+The table below details the available methods for each task:
 
 .. list-table:: Available risk control methods in MAPIE for each ML task
    :header-rows: 1
@@ -84,13 +84,15 @@ Below is a table showing the available methods for each task:
      - ✅
      - ✅
 
-In MAPIE for multi-label classification, we use CRC and RCPS for recall control and LTT for precision control.
+In MAPIE for multi-label classification, CRC and RCPS are used for recall control, while LTT is used for precision control.
+
+The following section provides a detailed overview of each method.
+
 
 2. Risk-Controlling Prediction Sets
 ===================================
 2.1. General settings
 ---------------------
-
 
 Let's first give the settings and the notations of the method:
 
