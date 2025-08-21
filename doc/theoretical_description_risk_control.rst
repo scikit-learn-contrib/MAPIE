@@ -32,9 +32,9 @@ In other words, the risk is said to be controlled if :math:`R \leq \alpha` with 
 
 There exists two types of risk control in terms of guarantees they give.
 
-- Guarantee on the expectation of the risk: :math:`\math{E}(R) \leq \alpha`;
+- Guarantee on the expectation of the risk: :math:`\mathbb{E}(R) \leq \alpha`;
 
-- Guarantee on the probability of the risk being lower than :math:`\alpha`: :math:`\math{P}(R \leq \alpha) \geq 1 - \delta`.
+- Guarantee on the probability of the risk being lower than :math:`\alpha`: :math:`\mathbb{P}(R \leq \alpha) \geq 1 - \delta`.
 
 As of now, MAPIE supports risk control for two machine learning tasks:
 
