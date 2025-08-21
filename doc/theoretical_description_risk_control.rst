@@ -8,8 +8,6 @@ Theoretical Description
 
 Note: in theoretical parts of this documentation, we use the terms *calibrate* and *calibration* employed in the scientific literature, that are equivalent to *conformalize* and *conformalization*.
 
-—
-
 1. What is risk control?
 ========================
 
@@ -17,6 +15,26 @@ Risk control is the science of adjusting a model's parameter, typically denoted 
 Note that here, the term *risk* is used to describe an undesirable outcome of the model (e.g., type I error): therefore, it is a value we want to minimize, and in our case, keep under a certain level. Also note that risk control can easily be applied to metrics we want to maximize (e.g., recall), simply by controlling the complement (e.g., 1-recall).
 
 The strength of risk control lies in the statistical guarantees it provides on unseen data. It leverages a calibration set to determine a value of :math:`\lambda` that ensures the risk is controlled beyond the training data. This guarantee is critical in a wide range of use cases, especially in high-stakes applications. Take, for example, medical diagnosis: here, the parameter :math:`\lambda` is the binarization threshold that determines whether a patient is classified as sick. We aim to minimize false negatives (i.e., cases where sick patients are incorrectly diagnosed as healthy), which corresponds to controlling the type II error. In this setting, risk control allows us to find a :math:`\lambda` such that, on future patients, the model’s type II error does not exceed, say, 5%, with high confidence.
+
+—
+
+To express this in mathematical terms, we denote by R the risk we want to control, and introduce the following two parameters:
+
+- :math:`\alpha`: the target level below which we want the risk to remain, as shown in the figure below;
+
+.. image:: images/risk_distribution.png
+   :width: 600
+   :align: center
+
+- :math:`\delta`: the confidence level associated with the risk control.
+
+In other words, the risk is said to be controlled if :math:`R \leq \alpha` with probability at least :math:`1 - \delta`.
+
+There exists two types of risk control in terms of guarantees they give.
+
+- Guarantee on the expectation of the risk: :math:`\math{E}(R) \leq \alpha`;
+
+- Guarantee on the probability of the risk being lower than :math:`\alpha`: :math:`\math{P}(R \leq \alpha) \geq 1 - \delta`.
 
 As of now, MAPIE supports risk control for two machine learning tasks:
 
@@ -220,7 +238,7 @@ References
 
 [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos,
 and Michael I. Jordan. Distribution-free, risk-controlling prediction
-sets. CoRR, abs/2101.02703, 2021. URL https://arxiv.org/abs/2101.02703.39
+sets. CoRR, abs/2101.02703, 2021. URL https://arxiv.org/abs/2101.02703
 
 [2] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
 Lei, and Tal, Schuster. "Conformal Risk Control." (2022).
