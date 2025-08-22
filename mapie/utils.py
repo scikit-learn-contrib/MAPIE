@@ -635,7 +635,7 @@ def _check_alpha_and_n_samples(
     else:
         alphas_ = alphas
     for alpha in alphas_:
-        if n < np.max([1/alpha, 1/(1-alpha)]):
+        if alpha == 0 or alpha == 1 or n < np.max([1/alpha, 1/(1-alpha)]):
             raise ValueError(
                 "Number of samples of the score is too low,\n"
                 "1/confidence_level and 1/(1 - confidence_level) must be\n"
