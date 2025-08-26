@@ -22,7 +22,7 @@ To express this in mathematical terms, we denote by R the risk we want to contro
 
 - :math:`\alpha`: the target level below which we want the risk to remain, as shown in the figure below;
 
-.. image:: images/risk_distribution.png
+.. image:: images/plot_alpha.png
    :width: 600
    :align: center
 
@@ -37,8 +37,18 @@ There exists two types of risk control in terms of guarantees they give.
 - Guarantee on the probability that the risk does not exceed :math:`\alpha`: :math:`\mathbb{P}(R \leq \alpha) \geq 1 - \delta`.
 
 Three methods of risk control have been implemented in MAPIE so far :
-Risk-Controlling Prediction Sets (RCPS) [1], Conformal Risk Control (CRC) [2] and Learn Then Test (LTT) [3].
-The difference between these methods is the way the conformity scores are computed. 
+Risk-Controlling Prediction Sets (RCPS) [1], Conformal Risk Control (CRC) [2] and Learn Then Test (LTT) [3]. While RCPS and LTT control the probability that the risk does not exceed :math:`\alpha`, CRC controls its expectation.
+The difference between these methods is the way the conformity scores are computed.
+
+.. image:: images/risk_distribution.png
+   :width: 600
+   :align: center
+
+The plot above gives a visual representation of the difference between the two types of guarantees:
+
+- The risk is controlled in expectation (CRC) if the mean of its distribution over unseen data is below :math:`\alpha`;
+
+- The risk is controlled in probability (RCPS/LTT) if at least :math:`1 - \delta` percent of its distribution over unseen data is below :math:`\alpha`.
 
 For a classification problem in a standard independent and identically distributed (i.i.d) case,
 our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`` has an unknown distribution :math:`P_{X, Y}`. 
