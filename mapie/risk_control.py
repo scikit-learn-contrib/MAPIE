@@ -127,7 +127,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
     and Michael I. Jordan. Distribution-free, risk-controlling prediction
     sets. CoRR, abs/2101.02703, 2021.
-    URL https://arxiv.org/abs/2101.02703.39
+    URL https://arxiv.org/abs/2101.02703
 
     [2] Angelopoulos, Anastasios N., Stephen, Bates, Adam, Fisch, Lihua,
     Lei, and Tal, Schuster. "Conformal Risk Control." (2022).

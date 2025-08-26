@@ -5,6 +5,7 @@ History
 1.x.x (2025-xx-xx)
 ------------------
 
+* Fix incorrect URL in PrecisionRecallController docstring
 * Delete redundant risk control notebooks
 * Add link to Thibault Cordier's repository on risk control
 * Add scientific references for regression conformity scores
