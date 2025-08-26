@@ -5,7 +5,6 @@ History
 1.x.x (2025-xx-xx)
 ------------------
 
-* Merge MAPIE v1 tests with v0 legacy tests
 * Fix double inference when using `predict_set` function in split conformal classification
 * Add FAQ entry in the documentation about ongoing works to extend MAPIE for LLM control
 * MAPIE now supports Python versions up to the latest release (currently 3.13)
