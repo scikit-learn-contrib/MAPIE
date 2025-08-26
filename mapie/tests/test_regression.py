@@ -33,8 +33,35 @@ from mapie.estimator.regressor import EnsembleRegressor
 from mapie.metrics.regression import (
     regression_coverage_score,
 )
-from mapie.regression.regression import _MapieRegressor
+from mapie.regression.regression import _MapieRegressor, \
+    JackknifeAfterBootstrapRegressor
 from mapie.subsample import Subsample
+
+
+class TestCheckAndConvertResamplingToCv:
+    def test_with_integer(self):
+        regressor = JackknifeAfterBootstrapRegressor()
+        cv = regressor._check_and_convert_resampling_to_cv(50)
+
+        assert isinstance(cv, Subsample)
+        assert cv.n_resamplings == 50
+
+    def test_with_subsample(self):
+        custom_subsample = Subsample(n_resamplings=25, random_state=42)
+        regressor = JackknifeAfterBootstrapRegressor()
+        cv = regressor._check_and_convert_resampling_to_cv(custom_subsample)
+
+        assert cv is custom_subsample
+
+    def test_with_invalid_input(self):
+        regressor = JackknifeAfterBootstrapRegressor()
+
+        with pytest.raises(
+            ValueError,
+            match="resampling must be an integer or a Subsample instance"
+        ):
+            regressor._check_and_convert_resampling_to_cv("invalid_input")
+
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
