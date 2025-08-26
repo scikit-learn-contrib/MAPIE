@@ -25,7 +25,6 @@
 
    theoretical_description_risk_control
    examples_multilabel_classification/1-quickstart/plot_tutorial_risk_control
-   notebooks_risk_control
    external_risk_control_package
 
 .. toctree::

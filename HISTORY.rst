@@ -5,6 +5,7 @@ History
 1.x.x (2025-xx-xx)
 ------------------
 
+* Delete redundant risk control notebooks
 * Add link to Thibault Cordier's repository on risk control
 * Add scientific references for regression conformity scores
 * Fix double inference when using `predict_set` function in split conformal classification
