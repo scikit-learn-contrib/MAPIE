@@ -14,6 +14,13 @@ class GammaConformityScore(BaseRegressionScore):
     This is appropriate when the confidence interval is not symmetrical and
     its range depends on the predicted values. Like the Gamma distribution,
     its support is limited to strictly positive reals.
+
+    References
+    ----------
+    [1] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. & Brunel, N..
+    "Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the
+    MAPIE library."
+    Proceedings of Machine Learning Research 2023.
     """
 
     def __init__(
