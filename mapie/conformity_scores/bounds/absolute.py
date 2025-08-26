@@ -13,6 +13,12 @@ class AbsoluteConformityScore(BaseRegressionScore):
 
     This is appropriate when the confidence interval is symmetrical and
     its range is approximatively the same over the range of predicted values.
+
+    References
+    ----------
+    [1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J. & Wasserman, L..
+    "Distribution-Free Predictive Inference for Regression."
+    Journal of the American Statistical Association 2018.
     """
 
     def __init__(

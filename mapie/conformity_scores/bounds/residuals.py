@@ -30,6 +30,12 @@ class ResidualNormalisedScore(BaseRegressionScore):
     Warning : if the estimator provided is not fitted a subset of the
     calibration data will be used to fit the model (20% by default).
 
+    References
+    ----------
+    [1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J. & Wasserman, L..
+    "Distribution-Free Predictive Inference for Regression."
+    Journal of the American Statistical Association 2018.
+
     Parameters
     ----------
     residual_estimator: Optional[RegressorMixin]
