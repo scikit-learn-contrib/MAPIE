@@ -69,9 +69,9 @@ In other words, the risk is said to be controlled if :math:`R \leq \alpha` with 
 
 Furthermore, there exist two types of risk control in terms of guarantees they give.
 
-- Guarantee on the expectation of the risk: :math:`\mathbb{E}(R) \leq \alpha` --> CRC;
+- Guarantee on the expectation of the risk: :math:`\mathbb{E}(R) \leq \alpha` → CRC;
 
-- Guarantee on the probability that the risk does not exceed :math:`\alpha`: :math:`\mathbb{P}(R \leq \alpha) \geq 1 - \delta` --> RCPS/LTT.
+- Guarantee on the probability that the risk does not exceed :math:`\alpha`: :math:`\mathbb{P}(R \leq \alpha) \geq 1 - \delta` → RCPS/LTT.
 
 .. image:: images/risk_distribution.png
    :width: 600
