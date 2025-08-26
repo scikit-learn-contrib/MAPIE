@@ -1,4 +1,4 @@
-.. title:: Theoretical Description Risk Control
+.. title:: Risk Control Explained : contents
 
 .. _theoretical_description_risk_control:
 
@@ -6,74 +6,31 @@
 Theoretical Description
 #######################
 
-Note: in theoretical parts of this documentation, we use the terms *calibrate* and *calibration* employed in the scientific literature, that are equivalent to *conformalize* and *conformalization*.
-
 1. What is risk control?
 ========================
 
-Risk control is the science of adjusting a model's parameter, typically denoted :math:`\lambda`, so that a given risk stays below a desired level with high probability on unseen data.
-Note that here, the term *risk* is used to describe an undesirable outcome of the model (e.g., type I error): therefore, it is a value we want to minimize, and in our case, keep under a certain level. Also note that risk control can easily be applied to metrics we want to maximize (e.g., recall), simply by controlling the complement (e.g., 1-recall).
+Machine learning very often involves optimization, and thresholding is an efficient way to achieve it.
 
-The strength of risk control lies in the statistical guarantees it provides on unseen data. It leverages a calibration set to determine a value of :math:`\lambda` that ensures the risk is controlled beyond the training data. This guarantee is critical in a wide range of use cases, especially in high-stakes applications. Take, for example, medical diagnosis: here, the parameter :math:`\lambda` is the binarization threshold that determines whether a patient is classified as sick. We aim to minimize false negatives (i.e., cases where sick patients are incorrectly diagnosed as healthy), which corresponds to controlling the type II error. In this setting, risk control allows us to find a :math:`\lambda` such that, on future patients, the model’s type II error does not exceed, say, 5%, with high confidence.
+Let's take the simple example of a binary classification model, which separates the incoming data into the two classes thanks to its threshold: predictions above it are classified as 1, and those below as 0. Suppose we want to find a threshold that guarantees that our model achieves a certain level of precision. A naive, yet straightforward approach to do this is to evaluate how precision varies with different threshold values on a validation dataset. By plotting this relationship (see plot below), we can identify the range of thresholds that meet our desired precision requirement (green zone on the graph).
+
+.. image:: images/risk_control_intro.png
+   :width: 600
+   :align: center
+
+So far, so good. But here is the catch: while the chosen threshold effectively keeps precision above the desired level on the validation data, it offers no guarantee on the precision of the model when faced with new, unseen data. That is where risk control comes into play.
 
 —
 
-To express this in mathematical terms, we denote by R the risk we want to control, and introduce the following two parameters:
+Risk control is the science of adjusting a model's parameter, typically denoted :math:`\lambda`, so that a given risk stays below a desired level with high probability on unseen data.
+Note that here, the term *risk* is used to describe an undesirable outcome of the model (e.g., type I error): therefore, it is a value we want to minimize, and in our case, keep under a certain level. Also note that risk control can easily be applied to metrics we want to maximize (e.g., precision), simply by controlling the complement (e.g., 1-precision).
 
-- :math:`\alpha`: the target level below which we want the risk to remain, as shown in the figure below;
+The strength of risk control lies in the statistical guarantees it provides on unseen data. Unlike the naive method presented earlier, it determines a value of :math:`\lambda` that ensures the risk is controlled *beyond* the training data. This guarantee is critical in a wide range of use cases, especially in high-stakes applications. Take, for example, medical diagnosis: here, the parameter :math:`\lambda` is the binarization threshold that determines whether a patient is classified as sick. We aim to minimize false negatives (i.e., cases where sick patients are incorrectly diagnosed as healthy), which corresponds to controlling the type II error. In this setting, risk control allows us to find a :math:`\lambda` such that, on future patients, the model’s type II error does not exceed, say, 5%, with high confidence.
 
-.. image:: images/plot_alpha.png
-   :width: 600
-   :align: center
-
-- :math:`\delta`: the confidence level associated with the risk control.
-
-In other words, the risk is said to be controlled if :math:`R \leq \alpha` with probability at least :math:`1 - \delta`.
-
-There exists two types of risk control in terms of guarantees they give.
-
-- Guarantee on the expectation of the risk: :math:`\mathbb{E}(R) \leq \alpha`;
-
-- Guarantee on the probability that the risk does not exceed :math:`\alpha`: :math:`\mathbb{P}(R \leq \alpha) \geq 1 - \delta`.
+—
 
 Three methods of risk control have been implemented in MAPIE so far :
-Risk-Controlling Prediction Sets (RCPS) [1], Conformal Risk Control (CRC) [2] and Learn Then Test (LTT) [3]. While RCPS and LTT control the probability that the risk does not exceed :math:`\alpha`, CRC controls its expectation.
+**Risk-Controlling Prediction Sets** (RCPS) [1], **Conformal Risk Control** (CRC) [2] and **Learn Then Test** (LTT) [3].
 The difference between these methods is the way the conformity scores are computed.
-
-.. image:: images/risk_distribution.png
-   :width: 600
-   :align: center
-
-The plot above gives a visual representation of the difference between the two types of guarantees:
-
-- The risk is controlled in expectation (CRC) if the mean of its distribution over unseen data is below :math:`\alpha`;
-
-- The risk is controlled in probability (RCPS/LTT) if at least :math:`1 - \delta` percent of its distribution over unseen data is below :math:`\alpha`.
-
-For a classification problem in a standard independent and identically distributed (i.i.d) case,
-our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`` has an unknown distribution :math:`P_{X, Y}`. 
-
-For any target level :math:`\alpha` between 0 and 1, the methods implemented in MAPIE allow the user to construct a prediction
-set :math:`\hat{C}_{n, \alpha}(X_{n+1})` for a new observation :math:`\left( X_{n+1},Y_{n+1} \right)` with a guarantee
-on the specified risk. RCPS, LTT, and CRC give three slightly different guarantees:
-
-- RCPS:
-
-.. math::
-    \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta
-
-- CRC:
-
-.. math::
-    \mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha
-
-- LTT:
-
-.. math::
-    \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta \quad \texttt{with} \quad p_{\hat{\lambda}} \leq \frac{\delta}{\lvert \Lambda \rvert}
-
-
-Notice that at the opposite of the other two methods, LTT allows to control any non-monotonic risk.
 
 As of now, MAPIE supports risk control for two machine learning tasks: binary classification, as well as multi-label classification (including applications like image segmentation).
 The table below details the available methods for each task:
@@ -95,6 +52,61 @@ The table below details the available methods for each task:
      - ✅
 
 In MAPIE for multi-label classification, CRC and RCPS are used for recall control, while LTT is used for precision control.
+
+—
+
+To express risk control in mathematical terms, we denote by R the risk we want to control, and introduce the following two parameters:
+
+- :math:`\alpha`: the target level below which we want the risk to remain, as shown in the figure below;
+
+.. image:: images/plot_alpha.png
+   :width: 600
+   :align: center
+
+- :math:`\delta`: the confidence level associated with the risk control.
+
+In other words, the risk is said to be controlled if :math:`R \leq \alpha` with probability at least :math:`1 - \delta`.
+
+Furthermore, there exist two types of risk control in terms of guarantees they give.
+
+- Guarantee on the expectation of the risk: :math:`\mathbb{E}(R) \leq \alpha` --> CRC;
+
+- Guarantee on the probability that the risk does not exceed :math:`\alpha`: :math:`\mathbb{P}(R \leq \alpha) \geq 1 - \delta` --> RCPS/LTT.
+
+.. image:: images/risk_distribution.png
+   :width: 600
+   :align: center
+
+The plot above gives a visual representation of the difference between the two types of guarantees:
+
+- The risk is controlled in expectation (CRC) if the mean of its distribution over unseen data is below :math:`\alpha`;
+
+- The risk is controlled in probability (RCPS/LTT) if at least :math:`1 - \delta` percent of its distribution over unseen data is below :math:`\alpha`.
+
+For a classification problem in a standard independent and identically distributed (i.i.d) case,
+our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`` has an unknown distribution :math:`P_{X, Y}`. 
+
+For any target level :math:`\alpha` between 0 and 1, the methods implemented in MAPIE allow the user to construct a prediction
+set :math:`\hat{C}_{n, \alpha}(X_{n+1})` for a new observation :math:`\left( X_{n+1},Y_{n+1} \right)` with a guarantee
+on the specified risk. As mentioned above, RCPS, LTT, and CRC give three slightly different guarantees:
+
+- RCPS:
+
+.. math::
+    \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta
+
+- CRC:
+
+.. math::
+    \mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha
+
+- LTT:
+
+.. math::
+    \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta \quad \texttt{with} \quad p_{\hat{\lambda}} \leq \frac{\delta}{\lvert \Lambda \rvert}
+
+
+Notice that at the opposite of the other two methods, LTT allows to control any non-monotonic risk.
 
 The following section provides a detailed overview of each method.
 
