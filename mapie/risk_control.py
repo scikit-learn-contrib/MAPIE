@@ -740,7 +740,7 @@ class BinaryClassificationRisk:
             self.risk_condition(y_true_i, y_pred_i)
             for y_true_i, y_pred_i in zip(y_true, y_pred)
         ])
-        effective_sample_size = len(y_true) - np.sum(~risk_conditions)
+        effective_sample_size: int = len(y_true) - np.sum(~risk_conditions)
         if effective_sample_size != 0:
             risk_sum: int = np.sum(risk_occurrences[risk_conditions])
             risk_value = risk_sum / effective_sample_size
