@@ -21,7 +21,7 @@ class BinaryClassificationController:  # pragma: no cover
     def __init__(
         self,
         # X -> y_proba of shape (n_samples, 2)
-        predict_function: Callable[[ArrayLike], ArrayLike],
+        predict_function: Callable[[ArrayLike], NDArray],
         risk: BinaryClassificationRisk,
         target_level: float,
         confidence_level: float = 0.9,
@@ -33,10 +33,10 @@ class BinaryClassificationController:  # pragma: no cover
         self._target_level = target_level
         self._delta = 1 - confidence_level
 
-        self._thresholds: NDArray[float] = np.linspace(0, 0.99, 100)
+        self._thresholds: NDArray = np.linspace(0, 0.99, 100)
         # TODO: add a _is_calibrated attribute to check at prediction time
 
-        self.valid_thresholds: Optional[NDArray[float]] = None
+        self.valid_thresholds: Optional[NDArray] = None
         self.best_threshold: Optional[float] = None
 
     def calibrate(self, X_calibrate: ArrayLike, y_calibrate: ArrayLike) -> None:
@@ -79,9 +79,9 @@ class BinaryClassificationController:  # pragma: no cover
                 "target and confidence levels. "
                 "Try using a larger calibration set or a better model.",
             )
-
-        # Minimum in case of precision control only
-        self.best_threshold = min(self.valid_thresholds)
+        else:
+            # Minimum in case of precision control only
+            self.best_threshold = min(self.valid_thresholds)
 
     def predict(self, X_test: ArrayLike) -> NDArray:
         if self.best_threshold is None:

@@ -724,8 +724,8 @@ class BinaryClassificationRisk:
 
     def get_value_and_effective_sample_size(
         self,
-        y_true: NDArray[int],  # shape (n_samples,), values in {0, 1}
-        y_pred: NDArray[int],  # shape (n_samples,), values in {0, 1}
+        y_true: NDArray,  # shape (n_samples,), values in {0, 1}
+        y_pred: NDArray,  # shape (n_samples,), values in {0, 1}
     ) -> Tuple[float, int]:
         # float between 0 and 1, int between 0 and len(y_true)
         # returns (1, -1) when the risk is not defined (condition never met)
@@ -741,10 +741,12 @@ class BinaryClassificationRisk:
             for y_true_i, y_pred_i in zip(y_true, y_pred)
         ])
         effective_sample_size = len(y_true) - np.sum(~risk_conditions)
-        if effective_sample_size != 0:
+        # Casting needed for MyPy with Python 3.9
+        effective_sample_size_int = cast(int, effective_sample_size)
+        if effective_sample_size_int != 0:
             risk_sum: int = np.sum(risk_occurrences[risk_conditions])
-            risk_value = risk_sum / effective_sample_size
-            return risk_value, effective_sample_size
+            risk_value = risk_sum / effective_sample_size_int
+            return risk_value, effective_sample_size_int
         return 1, -1
 
 
