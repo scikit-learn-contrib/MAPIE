@@ -9,8 +9,8 @@ from mapie.control_risk.p_values import compute_hoeffdding_bentkus_p_value
 
 
 def ltt_procedure(
-    r_hat: NDArray[float],
-    alpha_np: NDArray[float],
+    r_hat: NDArray,
+    alpha_np: NDArray,
     delta: float,
     n_obs: Union[int, NDArray],
     binary: bool = False,
