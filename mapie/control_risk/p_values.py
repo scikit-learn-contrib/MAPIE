@@ -8,11 +8,11 @@ from mapie.utils import _check_alpha
 
 
 def compute_hoeffdding_bentkus_p_value(
-    r_hat: NDArray[float],
+    r_hat: NDArray,
     n_obs: Union[int, NDArray],
-    alpha: Union[float, NDArray[float]],
+    alpha: Union[float, NDArray],
     binary: bool = False,
-) -> NDArray[float]:
+) -> NDArray:
     """
     The method computes the p_values according to
     the Hoeffding_Bentkus inequality for each
@@ -100,8 +100,8 @@ def compute_hoeffdding_bentkus_p_value(
 
 
 def _h1(
-    r_hats: NDArray[float], alphas: NDArray[float]
-) -> NDArray[float]:
+    r_hats: NDArray, alphas: NDArray
+) -> NDArray:
     """
     This function allow us to compute the tighter version of hoeffding inequality.
     When r_hat = 0, the log is undefined, but the limit is 0, so we set the result to 0.
