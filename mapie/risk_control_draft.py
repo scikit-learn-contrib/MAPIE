@@ -79,9 +79,9 @@ class BinaryClassificationController:  # pragma: no cover
                 "target and confidence levels. "
                 "Try using a larger calibration set or a better model.",
             )
-
-        # Minimum in case of precision control only
-        self.best_threshold = min(self.valid_thresholds)
+        else:
+            # Minimum in case of precision control only
+            self.best_threshold = min(self.valid_thresholds)
 
     def predict(self, X_test: ArrayLike) -> NDArray:
         if self.best_threshold is None:
