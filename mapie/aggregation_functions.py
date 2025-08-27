@@ -112,12 +112,8 @@ def aggregate_all(agg_function: Optional[str], X: NDArray) -> NDArray:
     array([14.5, 14.5])
 
     """
-    row_nan_mask = np.isnan(X).all(axis=1)
-    result = np.full(X.shape[0], np.nan)
-    if agg_function == "mean":
-        result[~row_nan_mask] = np.nanmean(X[~row_nan_mask], axis=1)
-        return result
-    elif agg_function == "median":
-        result[~row_nan_mask] = np.nanmedian(X[~row_nan_mask], axis=1)
-        return result
+    if agg_function == "median":
+        return np.nanmedian(X, axis=1)
+    elif agg_function == "mean":
+        return np.nanmean(X, axis=1)
     raise ValueError("Aggregation function called but not defined.")
