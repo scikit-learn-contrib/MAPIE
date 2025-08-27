@@ -1,38 +1,23 @@
-.. title:: Risk Control Explained : contents
+.. title:: Getting started with risk control in MAPIE : contents
 
 .. _theoretical_description_risk_control:
 
-#######################
-Theoretical Description
-#######################
+############################################
+Getting Started With Risk Control In MAPIE
+############################################
 
-1. What is risk control?
-========================
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
 
-Machine learning very often involves optimization, and thresholding is an efficient way to achieve it.
-
-Let's take the simple example of a binary classification model, which separates the incoming data into the two classes thanks to its threshold: predictions above it are classified as 1, and those below as 0. Suppose we want to find a threshold that guarantees that our model achieves a certain level of precision. A naive, yet straightforward approach to do this is to evaluate how precision varies with different threshold values on a validation dataset. By plotting this relationship (see plot below), we can identify the range of thresholds that meet our desired precision requirement (green zone on the graph).
-
-.. image:: images/risk_control_intro.png
-   :width: 600
-   :align: center
-
-So far, so good. But here is the catch: while the chosen threshold effectively keeps precision above the desired level on the validation data, it offers no guarantee on the precision of the model when faced with new, unseen data. That is where risk control comes into play.
-
-—
-
-Risk control is the science of adjusting a model's parameter, typically denoted :math:`\lambda`, so that a given risk stays below a desired level with high probability on unseen data.
-Note that here, the term *risk* is used to describe an undesirable outcome of the model (e.g., type I error): therefore, it is a value we want to minimize, and in our case, keep under a certain level. Also note that risk control can easily be applied to metrics we want to maximize (e.g., precision), simply by controlling the complement (e.g., 1-precision).
-
-The strength of risk control lies in the statistical guarantees it provides on unseen data. Unlike the naive method presented earlier, it determines a value of :math:`\lambda` that ensures the risk is controlled *beyond* the training data. This guarantee is critical in a wide range of use cases, especially in high-stakes applications. Take, for example, medical diagnosis: here, the parameter :math:`\lambda` is the binarization threshold that determines whether a patient is classified as sick. We aim to minimize false negatives (i.e., cases where sick patients are incorrectly diagnosed as healthy), which corresponds to controlling the type II error. In this setting, risk control allows us to find a :math:`\lambda` such that, on future patients, the model’s type II error does not exceed, say, 5%, with high confidence.
-
-—
+Overview
+========
 
 Three methods of risk control have been implemented in MAPIE so far :
 **Risk-Controlling Prediction Sets** (RCPS) [1], **Conformal Risk Control** (CRC) [2] and **Learn Then Test** (LTT) [3].
 The difference between these methods is the way the conformity scores are computed.
 
-As of now, MAPIE supports risk control for two machine learning tasks: binary classification, as well as multi-label classification (including applications like image segmentation).
+As of now, MAPIE supports risk control for two machine learning tasks: **binary classification**, as well as **multi-label classification** (including applications like image segmentation).
 The table below details the available methods for each task:
 
 .. list-table:: Available risk control methods in MAPIE for each ML task
@@ -52,6 +37,32 @@ The table below details the available methods for each task:
      - ✅
 
 In MAPIE for multi-label classification, CRC and RCPS are used for recall control, while LTT is used for precision control.
+
+1. What is risk control?
+========================
+
+Before diving into risk control, let's take the simple example of a binary classification model, which separates the incoming data into the two classes thanks to its threshold: predictions above it are classified as 1, and those below as 0. Suppose we want to find a threshold that guarantees that our model achieves a certain level of precision. A naive, yet straightforward approach to do this is to evaluate how precision varies with different threshold values on a validation dataset. By plotting this relationship (see plot below), we can identify the range of thresholds that meet our desired precision requirement (green zone on the graph).
+
+.. image:: images/example_without_risk_control.png
+   :width: 600
+   :align: center
+
+So far, so good. But here is the catch: while the chosen threshold effectively keeps precision above the desired level on the validation data, it offers no guarantee on the precision of the model when faced with new, unseen data. That is where risk control comes into play.
+
+—
+
+Risk control is the science of adjusting a model's parameter, typically denoted :math:`\lambda`, so that a given risk stays below a desired level with high probability on unseen data.
+Note that here, the term *risk* is used to describe an undesirable outcome of the model (e.g., type I error): therefore, it is a value we want to minimize, and in our case, keep under a certain level. Also note that risk control can easily be applied to metrics we want to maximize (e.g., precision), simply by controlling the complement (e.g., 1-precision).
+
+The strength of risk control lies in the statistical guarantees it provides on unseen data. Unlike the naive method presented earlier, it determines a value of :math:`\lambda` that ensures the risk is controlled *beyond* the training data.
+
+Applying risk control to the previous example would allow us to get a new — albeit narrower — range of thresholds (blue zone on the graph) that are **statistically guaranteed**.
+
+.. image:: images/example_with_risk_control.png
+   :width: 600
+   :align: center
+
+This guarantee is critical in a wide range of use cases, especially in high-stakes applications. Take, for example, medical diagnosis: here, the parameter :math:`\lambda` is the binarization threshold that determines whether a patient is classified as sick. We aim to minimize false negatives (i.e., cases where sick patients are incorrectly diagnosed as healthy), which corresponds to controlling the type II error. In this setting, risk control allows us to find a :math:`\lambda` such that, on future patients, the model’s type II error does not exceed, say, 5%, with high confidence.
 
 —
 
@@ -110,11 +121,12 @@ Notice that at the opposite of the other two methods, LTT allows to control any 
 
 The following section provides a detailed overview of each method.
 
-
-2. Risk-Controlling Prediction Sets
-===================================
-2.1. General settings
----------------------
+2. Theoretical Description
+==========================
+2.1 Risk-Controlling Prediction Sets
+------------------------------------
+2.1.1 General settings
+^^^^^^^^^^^^^^^^^^^^^^
 
 Let's first give the settings and the notations of the method:
 
@@ -151,8 +163,8 @@ Following those settings, the RCPS method gives the following guarantee on the r
     \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta
 
 
-2.2. Bounds calculation
------------------------
+2.1.2 Bounds calculation
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this section, we will consider only bounded losses (as for now, only the :math:`1-recall` loss is implemented).
 We will show three different Upper Calibration Bounds (UCB) (Hoeffding, Bernstein, and Waudby-Smith–Ramdas) of :math:`R(\lambda)`
@@ -162,8 +174,8 @@ based on the empirical risk which is defined as follows:
     \hat{R}(\lambda) = \frac{1}{n}\sum_{i=1}^n L(Y_i, T_{\lambda}(X_i))
 
 
-2.2.1. Hoeffding Bound
-----------------------
+2.1.2.1 Hoeffding Bound
+"""""""""""""""""""""""
 
 Suppose the loss is bounded above by one, then we have by the Hoeffding inequality that:
 
@@ -176,8 +188,8 @@ Which implies the following UCB:
     \hat{R}_{Hoeffding}^+(\lambda) = \hat{R}(\lambda) + \sqrt{\frac{1}{2n}\log\frac{1}{\delta}}
 
 
-2.2.2. Bernstein Bound
-----------------------
+2.1.2.2 Bernstein Bound
+"""""""""""""""""""""""
 
 Contrary to the Hoeffding bound, which can sometimes be too simple, the Bernstein UCB takes into account the variance
 and gives a smaller prediction set size:
@@ -191,8 +203,8 @@ Where:
     \hat{\sigma}(\lambda) = \frac{1}{n-1}\sum_{i=1}^n(L(Y_i, T_{\lambda}(X_i)) - \hat{R}(\lambda))^2
 
 
-2.2.3. Waudby-Smith–Ramdas
---------------------------
+2.1.2.3 Waudby-Smith–Ramdas
+"""""""""""""""""""""""""""
 
 This last UCB is the one recommended by the authors of [1] to use when using a bounded loss as this is the one that gives
 the smallest prediction sets size while having the same risk guarantees. This UCB is defined as follows:
@@ -215,8 +227,8 @@ Then:
     \hat{R}_{WSR}^+(\lambda) = \inf \{ R \geq 0 : \max_{i=1,...n} K_i(R, \lambda) > \frac{1}{\delta}\}
 
 
-3. Conformal Risk Control
-=========================
+2.2 Conformal Risk Control
+--------------------------
 
 The goal of this method is to control any monotone and bounded loss. The result of this method can be expressed as follows:
 
@@ -238,8 +250,8 @@ With :
     \hat{R}_n (\lambda) = (L_{1}(\lambda) + ... + L_{n}(\lambda)) / n
 
 
-4. Learn Then Test
-==================
+2.3 Learn Then Test
+-------------------
 
 We are going to present the Learn Then Test framework that allows the user to control non-monotonic risk such as precision score.
 This method has been introduced in article [3].
