@@ -747,78 +747,96 @@ def test_cross_and_jackknife(params: dict) -> None:
 params_test_cases_split = [
     {
         "v0": {
-            "alpha": 0.2,
-            "conformity_score": AbsoluteConformityScore(),
-            "cv": "split",
-            "test_size": 0.4,
-            "sample_weight": sample_weight,
-            "random_state": RANDOM_STATE,
+            "__init__": {
+                "alpha": 0.2,
+                "conformity_score": AbsoluteConformityScore(),
+                "cv": "split",
+                "test_size": 0.4,
+                "sample_weight": sample_weight,
+                "random_state": RANDOM_STATE,
+            }
         },
         "v1": {
-            "confidence_level": 0.8,
-            "conformity_score": "absolute",
-            "prefit": False,
-            "test_size": 0.4,
-            "fit_params": {"sample_weight": sample_weight_train},
+            "__init__": {
+                "confidence_level": 0.8,
+                "conformity_score": "absolute",
+                "prefit": False,
+                "test_size": 0.4,
+            },
+            "fit": {
+                "sample_weight": sample_weight_train
+            }
         }
     },
     {
         "v0": {
-            "estimator": positive_predictor,
-            "test_size": 0.2,
-            "alpha": [0.5, 0.5],
-            "conformity_score": GammaConformityScore(),
-            "cv": "split",
-            "random_state": RANDOM_STATE,
+            "__init__": {
+                "estimator": positive_predictor,
+                "test_size": 0.2,
+                "alpha": [0.5, 0.5],
+                "conformity_score": GammaConformityScore(),
+                "cv": "split",
+                "random_state": RANDOM_STATE,
+            }
         },
         "v1": {
-            "estimator": positive_predictor,
-            "test_size": 0.2,
-            "confidence_level": [0.5, 0.5],
-            "conformity_score": "gamma",
-            "prefit": False,
+            "__init__": {
+                "estimator": positive_predictor,
+                "test_size": 0.2,
+                "confidence_level": [0.5, 0.5],
+                "conformity_score": "gamma",
+                "prefit": False,
+            }
         }
     },
     {
         "v0": {
-            "estimator": LinearRegression(),
-            "alpha": 0.1,
-            "test_size": 0.2,
-            "conformity_score": ResidualNormalisedScore(
-                random_state=RANDOM_STATE
-            ),
-            "cv": "prefit",
-            "allow_infinite_bounds": True,
-            "random_state": RANDOM_STATE,
+            "__init__": {
+                "estimator": LinearRegression(),
+                "alpha": 0.1,
+                "test_size": 0.2,
+                "conformity_score": ResidualNormalisedScore(
+                    random_state=RANDOM_STATE
+                ),
+                "cv": "prefit",
+                "allow_infinite_bounds": True,
+                "random_state": RANDOM_STATE,
+            }
         },
         "v1": {
-            "estimator": LinearRegression(),
-            "confidence_level": 0.9,
-            "prefit": True,
-            "test_size": 0.2,
-            "conformity_score": ResidualNormalisedScore(
-                random_state=RANDOM_STATE
-            ),
-            "allow_infinite_bounds": True,
+            "__init__": {
+                "estimator": LinearRegression(),
+                "confidence_level": 0.9,
+                "prefit": True,
+                "test_size": 0.2,
+                "conformity_score": ResidualNormalisedScore(
+                    random_state=RANDOM_STATE
+                ),
+                "allow_infinite_bounds": True,
+            }
         }
     },
     {
         "v0": {
-            "estimator": positive_predictor,
-            "alpha": 0.1,
-            "conformity_score": GammaConformityScore(),
-            "cv": "split",
-            "random_state": RANDOM_STATE,
-            "test_size": 0.3,
-            "optimize_beta": True
+            "__init__": {
+                "estimator": positive_predictor,
+                "alpha": 0.1,
+                "conformity_score": GammaConformityScore(),
+                "cv": "split",
+                "random_state": RANDOM_STATE,
+                "test_size": 0.3,
+                "optimize_beta": True
+            }
         },
         "v1": {
-            "estimator": positive_predictor,
-            "confidence_level": 0.9,
-            "prefit": False,
-            "conformity_score": GammaConformityScore(),
-            "test_size": 0.3,
-            "minimize_interval_width": True
+            "__init__": {
+                "estimator": positive_predictor,
+                "confidence_level": 0.9,
+                "prefit": False,
+                "conformity_score": GammaConformityScore(),
+                "test_size": 0.3,
+                "minimize_interval_width": True
+            }
         }
     },
 ]
