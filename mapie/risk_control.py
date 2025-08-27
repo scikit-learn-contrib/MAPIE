@@ -724,8 +724,8 @@ class BinaryClassificationRisk:
 
     def get_value_and_effective_sample_size(
         self,
-        y_true: NDArray[int],  # shape (n_samples,), values in {0, 1}
-        y_pred: NDArray[int],  # shape (n_samples,), values in {0, 1}
+        y_true: NDArray,  # shape (n_samples,), values in {0, 1}
+        y_pred: NDArray,  # shape (n_samples,), values in {0, 1}
     ) -> Tuple[float, int]:
         # float between 0 and 1, int between 0 and len(y_true)
         # returns (1, -1) when the risk is not defined (condition never met)
