@@ -844,9 +844,7 @@ def test_binary_classification_risk(
 ):
     result = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
     if effective_sample_func(y_true, y_pred) == 0:
-        assert result is None
-    elif result is None:
-        raise ValueError()
+        assert result == (1, -1)
     else:
         value, n = result
         expected_value = metric_func(y_true, y_pred)
