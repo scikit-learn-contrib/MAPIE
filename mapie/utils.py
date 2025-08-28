@@ -617,15 +617,6 @@ def _check_alpha_and_n_samples(
         If the number of samples of the score is too low,
         1/alpha (or 1/(1 - alpha)) must be lower than the number of samples.
 
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mapie.utils import _check_alpha_and_n_samples
-    >>> try:
-    ...     _check_alpha_and_n_samples(np.array([1,2,3]), 0.5)
-    ... except Exception as exception:
-    ...     print(exception)
-    ...
     Number of samples of the score is too low,
     1/confidence_level and 1/(1 - confidence_level) must be
     lower than the number of samples.

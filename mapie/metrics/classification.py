@@ -208,7 +208,7 @@ def classification_ssc(
                     indexes,
                     axis=0
                 )
-            )
+            ).item()
     return coverages
 
 

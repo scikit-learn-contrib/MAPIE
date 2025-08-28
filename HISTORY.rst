@@ -5,6 +5,7 @@ History
 1.x.x (2025-xx-xx)
 ------------------
 
+* Fix warnings when running tests
 * Fix incorrect URL in PrecisionRecallController docstring
 * Delete redundant risk control notebooks
 * Add link to Thibault Cordier's repository on risk control
