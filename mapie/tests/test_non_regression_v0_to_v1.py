@@ -594,6 +594,7 @@ params_test_cases_quantile = [
             "prefit": False,
             "test_size": 0.4,
             "fit_params": {"sample_weight": sample_weight_train},
+            "class": ConformalizedQuantileRegressor
         },
     },
     {
@@ -605,6 +606,7 @@ params_test_cases_quantile = [
             "fit_params": {"sample_weight": sample_weight},
             "minimize_interval_width": True,
             "symmetric_correction": True,
+            "class": ConformalizedQuantileRegressor
         },
     },
     {
@@ -614,6 +616,7 @@ params_test_cases_quantile = [
             "prefit": False,
             "test_size": 0.3,
             "allow_infinite_bounds": True,
+            "class": ConformalizedQuantileRegressor
         },
     },
     {
@@ -622,6 +625,7 @@ params_test_cases_quantile = [
             "prefit": False,
             "test_size": 0.3,
             "symmetric_correction": True,
+            "class": ConformalizedQuantileRegressor
         },
     },
 ]
@@ -631,13 +635,12 @@ def run_v1_pipeline_split_or_quantile(params):
     params_ = params["v1"]
     test_size = params_["test_size"]
     prefit = params_["prefit"]
-    random_state = params_["random_state"]
     minimize_interval_width = params_.get("minimal_interval_width", False)
 
-    if isinstance(params_["alpha"], float):
-        n_alpha = 1
+    if isinstance(params_["confidence_level"], float):
+        n_confidence_level = 1
     else:
-        n_alpha = len(params_["alpha"])
+        n_confidence_level = len(params_["confidence_level"])
 
     (
         X_train,
@@ -650,7 +653,7 @@ def run_v1_pipeline_split_or_quantile(params):
         X,
         y,
         test_size=test_size,
-        random_state=random_state,
+        random_state=RANDOM_STATE,
     )
 
     if prefit:
@@ -685,7 +688,7 @@ def run_v1_pipeline_split_or_quantile(params):
     preds_using_predict: ArrayLike = mapie_regressor.predict(X_conf, **predict_params)
 
     return (
-        n_alpha,
+        n_confidence_level,
         minimize_interval_width,
         X_conf,
         preds,
@@ -701,7 +704,7 @@ def run_v1_pipeline_split_or_quantile(params):
 def test_intervals_and_predictions_exact_equality_split_and_quantile(
         params: dict) -> None:
     (
-        n_alpha,
+        n_confidence_level,
         minimize_interval_width,
         X_conf,
         v1_preds,
@@ -713,7 +716,7 @@ def test_intervals_and_predictions_exact_equality_split_and_quantile(
     if not minimize_interval_width:
         # condition to remove when optimize_beta/minimize_interval_width works
         # but keep assertion to check shapes
-        assert v1_pred_intervals.shape == (len(X_conf), 2, n_alpha)
+        assert v1_pred_intervals.shape == (len(X_conf), 2, n_confidence_level)
 
 
 def train_test_split_shuffle(
