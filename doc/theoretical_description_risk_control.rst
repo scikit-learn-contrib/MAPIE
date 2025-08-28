@@ -3,10 +3,10 @@
 .. _theoretical_description_risk_control:
 
 ############################################
-Getting Started With Risk Control In MAPIE
+Getting started with risk control in MAPIE
 ############################################
 
-.. contents:: Table of Contents
+.. contents:: Table of contents
    :depth: 2
    :local:
 
@@ -121,7 +121,7 @@ Notice that at the opposite of the other two methods, LTT allows to control any 
 
 The following section provides a detailed overview of each method.
 
-2. Theoretical Description
+2. Theoretical description
 ==========================
 2.1 Risk-Controlling Prediction Sets
 ------------------------------------
