@@ -760,6 +760,7 @@ params_test_cases_split = [
             "prefit": False,
             "test_size": 0.4,
             "fit_params": {"sample_weight": sample_weight_train},
+            "class": SplitConformalRegressor
         }
     },
     {
@@ -777,6 +778,7 @@ params_test_cases_split = [
             "confidence_level": [0.5, 0.5],
             "conformity_score": "gamma",
             "prefit": False,
+            "class": SplitConformalRegressor
         }
     },
     {
@@ -800,6 +802,7 @@ params_test_cases_split = [
                 random_state=RANDOM_STATE
             ),
             "allow_infinite_bounds": True,
+            "class": SplitConformalRegressor
         }
     },
     {
@@ -818,38 +821,11 @@ params_test_cases_split = [
             "prefit": False,
             "conformity_score": GammaConformityScore(),
             "test_size": 0.3,
-            "minimize_interval_width": True
+            "minimize_interval_width": True,
+            "class": SplitConformalRegressor
         }
     },
 ]
-
-def run_v0_pipeline_split(params):
-    params_ = params["v0"]
-    mapie_regressor = _MapieRegressor(**params_.get("__init__", {}))
-
-    mapie_regressor.fit(X, y, )
-
-@pytest.mark.parametrize("params_split", params_test_cases_split)
-def test_intervals_and_predictions_exact_equality_split(
-        params_split: dict) -> None:
-    v0_params = params_split["v0"]
-    v1_params = params_split["v1"]
-
-    test_size = v1_params.get("test_size", None)
-    prefit = v1_params.get("prefit", False)
-
-    compare_model_predictions_and_intervals_split_and_quantile(
-        model_v0=_MapieRegressor,
-        model_v1=SplitConformalRegressor,
-        X=X,
-        y=y,
-        v0_params=v0_params,
-        v1_params=v1_params,
-        test_size=test_size,
-        prefit=prefit,
-        random_state=RANDOM_STATE,
-    )
-
 
 split_model = QuantileRegressor(
                 solver="highs-ds",
@@ -945,47 +921,65 @@ params_test_cases_quantile = [
 ]
 
 
-@pytest.mark.parametrize("params_quantile", params_test_cases_quantile)
-def test_intervals_and_predictions_exact_equality_quantile(
-    params_quantile: dict
-) -> None:
-    v0_params = params_quantile["v0"]
-    v1_params = params_quantile["v1"]
+def run_v0_pipeline_split_or_quantile(params):
+    params_ = params["v0"]
+    test_size = params_["test_size"]
+    random_state = params_["random_state"]
 
-    test_size = v1_params.get("test_size", None)
-    prefit = v1_params.get("prefit", False)
-
-    compare_model_predictions_and_intervals_split_and_quantile(
-        model_v0=_MapieQuantileRegressor,
-        model_v1=ConformalizedQuantileRegressor,
-        X=X,
-        y=y,
-        v0_params=v0_params,
-        v1_params=v1_params,
+    (
+        X_train,
+        X_conf,
+        y_train,
+        y_conf,
+        sample_weight_train,
+        sample_weight_conf,
+    ) = train_test_split_shuffle(
+        X,
+        y,
         test_size=test_size,
-        prefit=prefit,
-        random_state=RANDOM_STATE,
+        random_state=random_state,
     )
 
+    if params_["cv"] == "prefit":
+        estimator = params_["estimator"]
+        if isinstance(estimator, list):
+            for single_estimator in estimator:
+                single_estimator.fit(X_train, y_train)
+        else:
+            estimator.fit(X_train, y_train)
 
-def compare_model_predictions_and_intervals_split_and_quantile(
-    model_v0: Type[_MapieRegressor],
-    model_v1: Type[Union[
-        SplitConformalRegressor,
-        ConformalizedQuantileRegressor
-    ]],
-    X: NDArray,
-    y: NDArray,
-    v0_params: Dict = {},
-    v1_params: Dict = {},
-    prefit: bool = False,
-    test_size: Optional[float] = None,
-    random_state: int = RANDOM_STATE,
-) -> None:
-    if isinstance(v0_params["alpha"], float):
+        params_["estimator"] = estimator
+
+    init_params = filter_params(_MapieRegressor.__init__, params_)
+
+    mapie_regressor = _MapieRegressor(**init_params)
+
+    fit_params = filter_params(mapie_regressor.fit, params_)
+
+    if params_["cv"] == "prefit":
+        mapie_regressor.fit(X_conf, y_conf, **fit_params)
+    else:
+        mapie_regressor.fit(X, y, **fit_params)
+
+    predict_params = filter_params(mapie_regressor.predict, params_)
+    if "alpha" in init_params:
+        predict_params.pop("alpha")
+
+    preds, pred_intervals = mapie_regressor.predict(X_conf, **predict_params)
+
+    return preds, pred_intervals
+
+
+def run_v1_pipeline_split_or_quantile(params):
+    params_ = params["v1"]
+    test_size = params_["test_size"]
+    prefit = params_["prefit"]
+    random_state = params_["random_state"]
+
+    if isinstance(params_["alpha"], float):
         n_alpha = 1
     else:
-        n_alpha = len(v0_params["alpha"])
+        n_alpha = len(params_["alpha"])
 
     (
         X_train,
@@ -1002,47 +996,52 @@ def compare_model_predictions_and_intervals_split_and_quantile(
     )
 
     if prefit:
-        estimator = v0_params["estimator"]
+        estimator = params_["estimator"]
         if isinstance(estimator, list):
             for single_estimator in estimator:
                 single_estimator.fit(X_train, y_train)
         else:
             estimator.fit(X_train, y_train)
 
-        v0_params["estimator"] = estimator
-        v1_params["estimator"] = estimator
+        params_["estimator"] = estimator
 
-    v0_init_params = filter_params(model_v0.__init__, v0_params)
-    v1_init_params = filter_params(model_v1.__init__, v1_params)
+    init_params = filter_params(params_["class"].__init__, params_)
 
-    v0 = model_v0(**v0_init_params)
-    v1 = model_v1(**v1_init_params)
+    mapie_regressor = params_["class"](**init_params)
 
-    v0_fit_params = filter_params(v0.fit, v0_params)
-    v1_fit_params = filter_params(v1.fit, v1_params)
-    v1_conformalize_params = filter_params(v1.conformalize, v1_params)
+    fit_params = filter_params(mapie_regressor.fit, params_)
+    conformalize_params = filter_params(mapie_regressor.conformalize, params_)
 
-    if prefit:
-        v0.fit(X_conf, y_conf, **v0_fit_params)
-    else:
-        v0.fit(X, y, **v0_fit_params)
-        v1.fit(X_train, y_train, **v1_fit_params)
+    if not prefit:
+        mapie_regressor.fit(X_train, y_train, **fit_params)
 
-    v1.conformalize(X_conf, y_conf, **v1_conformalize_params)
+    mapie_regressor.conformalize(X_conf, y_conf, **conformalize_params)
 
-    v0_predict_params = filter_params(v0.predict, v0_params)
-    if 'alpha' in v0_init_params:
-        v0_predict_params.pop('alpha')
+    predict_params = filter_params(mapie_regressor.predict, params_)
+    predict_interval_params = filter_params(mapie_regressor.predict_interval, params_)
 
-    v1_predict_params = filter_params(v1.predict, v1_params)
-    v1_predict_interval_params = filter_params(v1.predict_interval, v1_params)
-
-    v0_preds, v0_pred_intervals = v0.predict(X_conf, **v0_predict_params)
-    v1_preds, v1_pred_intervals = v1.predict_interval(
-        X_conf, **v1_predict_interval_params
+    preds, pred_intervals = mapie_regressor.predict_interval(
+        X_conf, **predict_interval_params
     )
 
-    v1_preds_using_predict: ArrayLike = v1.predict(X_conf, **v1_predict_params)
+    preds_using_predict: ArrayLike = mapie_regressor.predict(X_conf, **predict_params)
+
+    return n_alpha, preds, pred_intervals, preds_using_predict
+
+
+@pytest.mark.parametrize(
+    "params",
+    params_test_cases_split + params_test_cases_quantile
+)
+def test_intervals_and_predictions_exact_equality_split_and_quantile(
+        params: dict) -> None:
+    v0_preds, v0_pred_intervals = run_v0_pipeline_split_or_quantile(params)
+    (
+        n_alpha,
+        v1_preds,
+        v1_pred_intervals,
+        v1_preds_using_predict
+    ) = run_v1_pipeline_split_or_quantile(params)
 
     np.testing.assert_array_equal(v0_preds, v1_preds)
     np.testing.assert_array_equal(v0_pred_intervals, v1_pred_intervals)
