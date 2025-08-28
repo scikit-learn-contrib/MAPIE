@@ -464,11 +464,11 @@ def run_v1_pipeline_cross_or_jackknife(params):
     params_ = params["v1"]
     init_params = params_.get("__init__", {})
     confidence_level = init_params.get("confidence_level", 0.9)
-    confidence_level_length = 1 if isinstance(confidence_level, float) else len(
+    n_confidence_level = 1 if isinstance(confidence_level, float) else len(
         confidence_level
     )
     minimize_interval_width = params_.get("predict_interval", {}).get(
-        "minimize_interval_width"
+        "minimize_interval_width", False
     )
 
     mapie_regressor = params_["class"](**init_params)
@@ -489,7 +489,7 @@ def run_v1_pipeline_cross_or_jackknife(params):
         pred_intervals,
         preds_using_predict,
         len(X_test),
-        confidence_level_length,
+        n_confidence_level,
         minimize_interval_width,
     )
 
@@ -504,7 +504,7 @@ def test_cross_and_jackknife(params: dict) -> None:
         v1_pred_intervals,
         v1_preds_using_predict,
         X_test_length,
-        confidence_level_length,
+        n_confidence_level,
         minimize_interval_width,
     ) = run_v1_pipeline_cross_or_jackknife(params)
 
@@ -513,7 +513,7 @@ def test_cross_and_jackknife(params: dict) -> None:
     if not minimize_interval_width:
         # condition to remove when optimize_beta/minimize_interval_width works
         # but keep assertion to check shapes
-        assert v1_pred_intervals.shape == (X_test_length, 2, confidence_level_length)
+        assert v1_pred_intervals.shape == (X_test_length, 2, n_confidence_level)
 
 
 params_test_cases_split = [
@@ -682,12 +682,12 @@ def run_v1_pipeline_split_or_quantile(params):
     preds_using_predict: ArrayLike = mapie_regressor.predict(X_conf, **predict_params)
 
     return (
-        n_confidence_level,
-        minimize_interval_width,
-        X_conf,
         preds,
         pred_intervals,
-        preds_using_predict
+        preds_using_predict,
+        X_conf,
+        n_confidence_level,
+        minimize_interval_width
     )
 
 
@@ -695,22 +695,20 @@ def run_v1_pipeline_split_or_quantile(params):
     "params",
     params_test_cases_split + params_test_cases_quantile
 )
-def test_intervals_and_predictions_exact_equality_split_and_quantile(
+def test_split_and_quantile(
         params: dict) -> None:
     (
-        n_confidence_level,
-        minimize_interval_width,
-        X_conf,
         v1_preds,
         v1_pred_intervals,
-        v1_preds_using_predict
+        v1_preds_using_predict,
+        X_conf,
+        n_confidence_level,
+        minimize_interval_width
     ) = run_v1_pipeline_split_or_quantile(params)
 
     np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
-    if not minimize_interval_width:
-        # condition to remove when optimize_beta/minimize_interval_width works
-        # but keep assertion to check shapes
-        assert v1_pred_intervals.shape == (len(X_conf), 2, n_confidence_level)
+
+    assert v1_pred_intervals.shape == (len(X_conf), 2, n_confidence_level)
 
 
 def train_test_split_shuffle(
