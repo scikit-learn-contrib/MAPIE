@@ -518,10 +518,6 @@ def test_cross_and_jackknife(params: dict) -> None:
         assert v1_pred_intervals.shape == (X_test_length, 2, confidence_level_length)
 
 
-# Below are SplitConformalRegressor and ConformalizedQuantileRegressor tests
-# They're using an outdated structure, prefer the style used for CrossConformalRegressor
-# and JackknifeAfterBootstrapRegressor above
-
 params_test_cases_split = [
     {
         "v1": {
