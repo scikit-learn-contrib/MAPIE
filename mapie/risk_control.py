@@ -742,11 +742,11 @@ class BinaryClassificationRisk:
         ])
         effective_sample_size = len(y_true) - np.sum(~risk_conditions)
         # Casting needed for MyPy with Python 3.9
-        effective_sample_size = cast(int, effective_sample_size)
-        if effective_sample_size != 0:
+        effective_sample_size_int = cast(int, effective_sample_size)
+        if effective_sample_size_int != 0:
             risk_sum: int = np.sum(risk_occurrences[risk_conditions])
-            risk_value = risk_sum / effective_sample_size
-            return risk_value, effective_sample_size
+            risk_value = risk_sum / effective_sample_size_int
+            return risk_value, effective_sample_size_int
         return 1, -1
 
 
