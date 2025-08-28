@@ -1,5 +1,5 @@
 import inspect
-from typing import Type, Union, Dict, Optional, Callable, Any, Tuple
+from typing import Dict, Optional, Callable, Any, Tuple
 
 import numpy as np
 import pytest
@@ -15,15 +15,13 @@ from sklearn.model_selection import LeaveOneOut, GroupKFold, train_test_split, \
     ShuffleSplit
 from typing_extensions import Self
 
-from mapie.classification import _MapieClassifier, SplitConformalClassifier, \
+from mapie.classification import SplitConformalClassifier, \
     CrossConformalClassifier
-from mapie.conformity_scores import LACConformityScore, TopKConformityScore, \
-    APSConformityScore, RAPSConformityScore, AbsoluteConformityScore, \
+from mapie.conformity_scores import LACConformityScore, RAPSConformityScore, \
     GammaConformityScore, ResidualNormalisedScore
 from mapie.regression import CrossConformalRegressor, JackknifeAfterBootstrapRegressor
-from mapie.regression.quantile_regression import _MapieQuantileRegressor, \
-    ConformalizedQuantileRegressor
-from mapie.regression.regression import _MapieRegressor, SplitConformalRegressor
+from mapie.regression.quantile_regression import ConformalizedQuantileRegressor
+from mapie.regression.regression import SplitConformalRegressor
 from mapie.subsample import Subsample
 
 RANDOM_STATE = 1
@@ -158,7 +156,7 @@ def test_split(
     params_: str,
     request: FixtureRequest
 ) -> None:
-    X, y, X_train, X_conformalize, y_train, y_conformalize = (
+    _, y, X_train, X_conformalize, y_train, y_conformalize = (
         dataset["X"],
         dataset["y"],
         dataset["X_train"],
