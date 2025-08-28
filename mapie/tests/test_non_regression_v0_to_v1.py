@@ -340,7 +340,7 @@ sample_weight_train = train_test_split(
 )[-2]
 
 
-params_test_cases_cross = [
+params_test_cases_regression_cross = [
     {
         "v1": {
             "class": CrossConformalRegressor,
@@ -400,7 +400,7 @@ params_test_cases_cross = [
     },
 ]
 
-params_test_cases_jackknife = [
+params_test_cases_regression_jackknife = [
     {
         "v1": {
             "class": JackknifeAfterBootstrapRegressor,
@@ -496,7 +496,7 @@ def run_v1_pipeline_cross_or_jackknife(params):
 
 @pytest.mark.parametrize(
     "params",
-    params_test_cases_cross + params_test_cases_jackknife
+    params_test_cases_regression_cross + params_test_cases_regression_jackknife
 )
 def test_cross_and_jackknife(params: dict) -> None:
     (
@@ -516,7 +516,7 @@ def test_cross_and_jackknife(params: dict) -> None:
         assert v1_pred_intervals.shape == (X_test_length, 2, n_confidence_level)
 
 
-params_test_cases_split = [
+params_test_cases_regression_split = [
     {
         "v1": {
             "confidence_level": 0.8,
@@ -581,7 +581,7 @@ for alpha_ in [gbr_alpha / 2, (1 - (gbr_alpha / 2)), 0.5]:
     )
     gbr_models.append(estimator_)
 
-params_test_cases_quantile = [
+params_test_cases_regression_quantile = [
     {
         "v1": {
             "confidence_level": 0.8,
@@ -693,7 +693,7 @@ def run_v1_pipeline_split_or_quantile(params):
 
 @pytest.mark.parametrize(
     "params",
-    params_test_cases_split + params_test_cases_quantile
+    params_test_cases_regression_split + params_test_cases_regression_quantile
 )
 def test_split_and_quantile(
         params: dict) -> None:
