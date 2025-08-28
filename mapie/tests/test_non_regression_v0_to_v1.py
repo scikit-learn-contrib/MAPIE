@@ -841,6 +841,11 @@ params_test_cases_split = [
     },
 ]
 
+def run_v0_pipeline_split(params):
+    params_ = params["v0"]
+    mapie_regressor = _MapieRegressor(**params_.get("__init__", {}))
+
+    mapie_regressor.fit(X, y, )
 
 @pytest.mark.parametrize("params_split", params_test_cases_split)
 def test_intervals_and_predictions_exact_equality_split(
