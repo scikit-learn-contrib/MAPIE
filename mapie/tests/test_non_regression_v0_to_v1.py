@@ -31,7 +31,6 @@ N_SAMPLES = 200
 N_GROUPS = 5
 
 
-@pytest.fixture(scope="module")
 def dataset():
     X, y = make_classification(
         n_samples=1000,
@@ -67,20 +66,66 @@ def dataset():
     }
 
 
-@pytest.fixture()
-def params_split_test_1():
-    return {
+def train_test_split_shuffle(
+    X: NDArray,
+    y: NDArray,
+    test_size: Optional[float] = None,
+    random_state: int = 42,
+    sample_weight: Optional[NDArray] = None,
+) -> Tuple[Any, Any, Any, Any, Any, Any]:
+    splitter = ShuffleSplit(
+        n_splits=1,
+        test_size=test_size,
+        random_state=random_state
+    )
+    train_idx, test_idx = next(splitter.split(X))
+
+    X_train, X_test = X[train_idx], X[test_idx]
+    y_train, y_test = y[train_idx], y[test_idx]
+    if sample_weight is not None:
+        sample_weight_train = sample_weight[train_idx]
+        sample_weight_test = sample_weight[test_idx]
+    else:
+        sample_weight_train = None
+        sample_weight_test = None
+
+    return X_train, X_test, y_train, y_test, sample_weight_train, sample_weight_test
+
+
+def filter_params(
+    function: Callable,
+    params: Dict[str, Any]
+) -> Dict[str, Any]:
+    model_params = inspect.signature(function).parameters
+    return {k: v for k, v in params.items() if k in model_params}
+
+
+class DummyClassifierWithFitAndPredictParams(BaseEstimator, ClassifierMixin):
+    def __init__(self):
+        self.classes_ = None
+        self._dummy_fit_param = None
+
+    def fit(self, X: NDArray, y: NDArray, dummy_fit_param: bool = False) -> Self:
+        self.classes_ = np.unique(y)
+        self._dummy_fit_param = dummy_fit_param
+        return self
+
+    def predict_proba(self, X: NDArray, dummy_predict_param: bool = False) -> NDArray:
+        probas = np.zeros((len(X), len(self.classes_)))
+        probas[:, 0] = 0.1
+        probas[:, 1] = 0.9
+        return probas
+
+
+params_test_cases_classification_split = [
+    {
         "v1": {
             "__init__": {
                 "estimator": LogisticRegression(),
             },
         },
-    }
-
-
-@pytest.fixture()
-def params_split_test_2():
-    return {
+    },
+    {
         "v1": {
             "__init__": {
                 "estimator": DummyClassifierWithFitAndPredictParams(),
@@ -94,13 +139,10 @@ def params_split_test_2():
             },
             "conformalize": {
                 "predict_params": {"dummy_predict_param": True},
-            }},
-    }
-
-
-@pytest.fixture()
-def params_split_test_3(dataset):
-    return {
+            },
+        },
+    },
+    {
         "v1": {
             "__init__": {
                 "estimator": RandomForestClassifier(random_state=RANDOM_STATE),
@@ -110,92 +152,102 @@ def params_split_test_3(dataset):
                 "random_state": RANDOM_STATE,
             },
             "fit": {
-                "fit_params": {"sample_weight": dataset["sample_weight_train"]},
+                "fit_params": {"sample_weight": dataset()["sample_weight_train"]},
             },
             "predict_set": {
                 "conformity_score_params": {"include_last_label": False}
-            }},
-    }
-
-
-@pytest.fixture()
-def params_split_test_4():
-    return {
+            },
+        },
+    },
+    {
         "v1": {
             "__init__": {
                 "estimator": LogisticRegression(),
                 "conformity_score": "raps",
                 "random_state": RANDOM_STATE,
-            }},
-    }
-
-
-@pytest.fixture()
-def params_split_test_5():
-    return {
+            },
+        },
+    },
+    {
         "v1": {
             "__init__": {
                 "estimator": LogisticRegression(),
                 "conformity_score": RAPSConformityScore(size_raps=0.4),
                 "random_state": RANDOM_STATE,
-            }},
+            },
+        },
     }
+]
 
 
-@pytest.mark.parametrize(
-    "params_", [
-        "params_split_test_1",
-        "params_split_test_2",
-        "params_split_test_3",
-        "params_split_test_4",
-        "params_split_test_5",
-    ]
-)
-def test_split(
-    dataset: Dict[str, Any],
-    params_: str,
-    request: FixtureRequest
-) -> None:
+def run_v1_pipeline_split(params):
     _, y, X_train, X_conformalize, y_train, y_conformalize = (
-        dataset["X"],
-        dataset["y"],
-        dataset["X_train"],
-        dataset["X_conformalize"],
-        dataset["y_train"],
-        dataset["y_conformalize"],
+        dataset()["X"],
+        dataset()["y"],
+        dataset()["X_train"],
+        dataset()["X_conformalize"],
+        dataset()["y_train"],
+        dataset()["y_conformalize"],
     )
 
-    params = extract_params(request.getfixturevalue(params_))
-
-    prefit = params["v1_init"].get("prefit", True)
+    params_ = params["v1"]
+    init_params = params_.get("__init__", {})
+    n_confidence_level = get_number_of_confidence_levels(init_params)
+    prefit = init_params.get("prefit", True)
+    X_conf_length = len(X_conformalize)
+    n_classes = len(np.unique(y))
 
     if prefit:
-        params["v1_init"]["estimator"].fit(X_train, y_train)
+        init_params["estimator"].fit(X_train, y_train)
 
-    v1 = SplitConformalClassifier(**params["v1_init"])
+    mapie_classifier = SplitConformalClassifier(**init_params)
 
     if not prefit:
-        v1.fit(X_train, y_train, **params["v1_fit"])
-    v1.conformalize(X_conformalize, y_conformalize, **params["v1_conformalize"])
+        mapie_classifier.fit(X_train, y_train, **params_.get("fit", {}))
 
-    v1_preds, v1_pred_sets = v1.predict_set(X_conformalize, **params["v1_predict_set"])
+    mapie_classifier.conformalize(
+        X_conformalize,
+        y_conformalize,
+        **params_.get("conformalize", {})
+    )
+    preds, pred_sets = mapie_classifier.predict_set(
+        X_conformalize,
+        **params_.get("predict_set", {})
+    )
+    preds_using_predict: NDArray = mapie_classifier.predict(X_conformalize)
 
-    v1_preds_using_predict: NDArray = v1.predict(X_conformalize)
+    return (
+        preds,
+        pred_sets,
+        preds_using_predict,
+        X_conf_length,
+        n_classes,
+        n_confidence_level
+    )
+
+
+@pytest.mark.parametrize("params", params_test_cases_classification_split)
+def test_split(params: dict) -> None:
+    (
+        v1_preds,
+        v1_pred_sets,
+        v1_preds_using_predict,
+        X_conf_length,
+        n_classes,
+        n_confidence_level,
+    ) = run_v1_pipeline_split(params)
 
     np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
 
-    n_confidence_level = get_number_of_confidence_levels(params["v1_init"])
-
     assert v1_pred_sets.shape == (
-        len(X_conformalize),
-        len(np.unique(y)),
+        X_conf_length,
+        n_classes,
         n_confidence_level,
     )
 
 
-@pytest.fixture()
-def params_cross_test_1(dataset):
-    return {
+params_test_cases_classification_cross = [
+    {
         "v1": {
             "__init__": {
                 "estimator": LogisticRegression(),
@@ -205,15 +257,11 @@ def params_cross_test_1(dataset):
                 "random_state": RANDOM_STATE,
             },
             "fit_conformalize": {
-                "fit_params": {"sample_weight": dataset["sample_weight"]},
+                "fit_params": {"sample_weight": dataset()["sample_weight"]},
             },
         },
-    }
-
-
-@pytest.fixture()
-def params_cross_test_2():
-    return {
+    },
+    {
         "v1": {
             "__init__": {
                 "estimator": DummyClassifierWithFitAndPredictParams(),
@@ -229,12 +277,8 @@ def params_cross_test_2():
                 "conformity_score_params": {"include_last_label": False}
             },
         },
-    }
-
-
-@pytest.fixture()
-def params_cross_test_3(dataset):
-    return {
+    },
+    {
         "v1": {
             "__init__": {
                 "estimator": DummyClassifierWithFitAndPredictParams(),
@@ -242,19 +286,15 @@ def params_cross_test_3(dataset):
                 "random_state": RANDOM_STATE,
             },
             "fit_conformalize": {
-                "groups": dataset["groups"],
+                "groups": dataset()["groups"],
                 "fit_params": {"dummy_fit_param": True},
             },
             "predict_set": {
                 "agg_scores": "crossval",
             },
         },
-    }
-
-
-@pytest.fixture()
-def params_cross_test_4():
-    return {
+    },
+    {
         "v1": {
             "__init__": {
                 "estimator": RandomForestClassifier(random_state=RANDOM_STATE),
@@ -264,51 +304,54 @@ def params_cross_test_4():
             },
         },
     }
+]
 
 
-@pytest.mark.parametrize(
-    "params_", [
-        "params_cross_test_1",
-        "params_cross_test_2",
-        "params_cross_test_3",
-        "params_cross_test_4",
-    ]
-)
-def test_cross(
-    dataset: Dict[str, Any],
-    params_: str,
-    request: FixtureRequest
-):
-    X, y = dataset["X"], dataset["y"]
+def run_v1_pipeline_cross(params):
+    X, y = dataset()["X"], dataset()["y"]
 
-    params = extract_params(request.getfixturevalue(params_))
+    params_ = params["v1"]
+    init_params = params_.get("__init__", {})
+    n_confidence_level = get_number_of_confidence_levels(init_params)
+    X_length = len(X)
+    n_classes = len(np.unique(y))
 
-    v1 = CrossConformalClassifier(**params["v1_init"])
+    mapie_classifier = CrossConformalClassifier(**init_params)
 
-    v1.fit_conformalize(X, y, **params["v1_fit_conformalize"])
+    mapie_classifier.fit_conformalize(X, y, **params_.get("fit_conformalize", {}))
 
-    v1_preds, v1_pred_sets = v1.predict_set(X, **params["v1_predict_set"])
+    preds, pred_sets = mapie_classifier.predict_set(X, **params_.get("predict_set", {}))
 
-    v1_preds_using_predict: NDArray = v1.predict(X)
+    preds_using_predict: NDArray = mapie_classifier.predict(X)
 
-    np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
-
-    n_confidence_level = get_number_of_confidence_levels(params["v1_init"])
-    assert v1_pred_sets.shape == (
-        len(X),
-        len(np.unique(y)),
-        n_confidence_level,
+    return (
+        preds,
+        pred_sets,
+        preds_using_predict,
+        X_length,
+        n_classes,
+        n_confidence_level
     )
 
 
-def extract_params(params):
-    return {
-        "v1_init": params["v1"].get("__init__", {}),
-        "v1_fit": params["v1"].get("fit", {}),
-        "v1_conformalize": params["v1"].get("conformalize", {}),
-        "v1_predict_set": params["v1"].get("predict_set", {}),
-        "v1_fit_conformalize": params["v1"].get("fit_conformalize", {})
-    }
+@pytest.mark.parametrize("params", params_test_cases_classification_cross)
+def test_cross(params: dict) -> None:
+    (
+        v1_preds,
+        v1_pred_sets,
+        v1_preds_using_predict,
+        X_length,
+        n_classes,
+        n_confidence_level,
+    ) = run_v1_pipeline_cross(params)
+
+    np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
+
+    assert v1_pred_sets.shape == (
+        X_length,
+        n_classes,
+        n_confidence_level,
+    )
 
 
 def get_number_of_confidence_levels(v1_init_params):
@@ -709,54 +752,3 @@ def test_split_and_quantile(
     np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
 
     assert v1_pred_intervals.shape == (len(X_conf), 2, n_confidence_level)
-
-
-def train_test_split_shuffle(
-    X: NDArray,
-    y: NDArray,
-    test_size: Optional[float] = None,
-    random_state: int = 42,
-    sample_weight: Optional[NDArray] = None,
-) -> Tuple[Any, Any, Any, Any, Any, Any]:
-    splitter = ShuffleSplit(
-        n_splits=1,
-        test_size=test_size,
-        random_state=random_state
-    )
-    train_idx, test_idx = next(splitter.split(X))
-
-    X_train, X_test = X[train_idx], X[test_idx]
-    y_train, y_test = y[train_idx], y[test_idx]
-    if sample_weight is not None:
-        sample_weight_train = sample_weight[train_idx]
-        sample_weight_test = sample_weight[test_idx]
-    else:
-        sample_weight_train = None
-        sample_weight_test = None
-
-    return X_train, X_test, y_train, y_test, sample_weight_train, sample_weight_test
-
-
-def filter_params(
-    function: Callable,
-    params: Dict[str, Any]
-) -> Dict[str, Any]:
-    model_params = inspect.signature(function).parameters
-    return {k: v for k, v in params.items() if k in model_params}
-
-
-class DummyClassifierWithFitAndPredictParams(BaseEstimator, ClassifierMixin):
-    def __init__(self):
-        self.classes_ = None
-        self._dummy_fit_param = None
-
-    def fit(self, X: NDArray, y: NDArray, dummy_fit_param: bool = False) -> Self:
-        self.classes_ = np.unique(y)
-        self._dummy_fit_param = dummy_fit_param
-        return self
-
-    def predict_proba(self, X: NDArray, dummy_predict_param: bool = False) -> NDArray:
-        probas = np.zeros((len(X), len(self.classes_)))
-        probas[:, 0] = 0.1
-        probas[:, 1] = 0.9
-        return probas
