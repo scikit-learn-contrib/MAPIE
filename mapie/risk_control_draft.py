@@ -61,9 +61,9 @@ class BinaryClassificationController:  # pragma: no cover
 
         if self._risk.higher_is_better:
             risks_per_threshold = 1 - risks_per_threshold
-            alpha = self._target_level
-        else:
             alpha = 1 - self._target_level
+        else:
+            alpha = self._target_level
 
         valid_thresholds_index = ltt_procedure(
             risks_per_threshold,
