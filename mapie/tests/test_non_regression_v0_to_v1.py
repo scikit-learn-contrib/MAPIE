@@ -3,7 +3,6 @@ from typing import Dict, Optional, Callable, Any, Tuple
 
 import numpy as np
 import pytest
-from _pytest.fixtures import FixtureRequest
 from numpy._typing import ArrayLike, NDArray
 from numpy.random import RandomState
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -119,68 +118,58 @@ class DummyClassifierWithFitAndPredictParams(BaseEstimator, ClassifierMixin):
 
 params_test_cases_classification_split = [
     {
-        "v1": {
-            "__init__": {
-                "estimator": LogisticRegression(),
-            },
+        "__init__": {
+            "estimator": LogisticRegression(),
         },
     },
     {
-        "v1": {
-            "__init__": {
-                "estimator": DummyClassifierWithFitAndPredictParams(),
-                "confidence_level": 0.8,
-                "prefit": False,
-                "conformity_score": "top_k",
-                "random_state": RANDOM_STATE,
-            },
-            "fit": {
-                "fit_params": {"dummy_fit_param": True},
-            },
-            "conformalize": {
-                "predict_params": {"dummy_predict_param": True},
-            },
+        "__init__": {
+            "estimator": DummyClassifierWithFitAndPredictParams(),
+            "confidence_level": 0.8,
+            "prefit": False,
+            "conformity_score": "top_k",
+            "random_state": RANDOM_STATE,
+        },
+        "fit": {
+            "fit_params": {"dummy_fit_param": True},
+        },
+        "conformalize": {
+            "predict_params": {"dummy_predict_param": True},
         },
     },
     {
-        "v1": {
-            "__init__": {
-                "estimator": RandomForestClassifier(random_state=RANDOM_STATE),
-                "confidence_level": [0.8, 0.9],
-                "prefit": False,
-                "conformity_score": "aps",
-                "random_state": RANDOM_STATE,
-            },
-            "fit": {
-                "fit_params": {"sample_weight": dataset()["sample_weight_train"]},
-            },
-            "predict_set": {
-                "conformity_score_params": {"include_last_label": False}
-            },
+        "__init__": {
+            "estimator": RandomForestClassifier(random_state=RANDOM_STATE),
+            "confidence_level": [0.8, 0.9],
+            "prefit": False,
+            "conformity_score": "aps",
+            "random_state": RANDOM_STATE,
+        },
+        "fit": {
+            "fit_params": {"sample_weight": dataset()["sample_weight_train"]},
+        },
+        "predict_set": {
+            "conformity_score_params": {"include_last_label": False}
         },
     },
     {
-        "v1": {
-            "__init__": {
-                "estimator": LogisticRegression(),
-                "conformity_score": "raps",
-                "random_state": RANDOM_STATE,
-            },
+        "__init__": {
+            "estimator": LogisticRegression(),
+            "conformity_score": "raps",
+            "random_state": RANDOM_STATE,
         },
     },
     {
-        "v1": {
-            "__init__": {
-                "estimator": LogisticRegression(),
-                "conformity_score": RAPSConformityScore(size_raps=0.4),
-                "random_state": RANDOM_STATE,
-            },
+        "__init__": {
+            "estimator": LogisticRegression(),
+            "conformity_score": RAPSConformityScore(size_raps=0.4),
+            "random_state": RANDOM_STATE,
         },
     }
 ]
 
 
-def run_v1_pipeline_split(params):
+def run_pipeline_split(params):
     _, y, X_train, X_conformalize, y_train, y_conformalize = (
         dataset()["X"],
         dataset()["y"],
@@ -190,8 +179,7 @@ def run_v1_pipeline_split(params):
         dataset()["y_conformalize"],
     )
 
-    params_ = params["v1"]
-    init_params = params_.get("__init__", {})
+    init_params = params.get("__init__", {})
     n_confidence_level = get_number_of_confidence_levels(init_params)
     prefit = init_params.get("prefit", True)
     X_conf_length = len(X_conformalize)
@@ -203,16 +191,16 @@ def run_v1_pipeline_split(params):
     mapie_classifier = SplitConformalClassifier(**init_params)
 
     if not prefit:
-        mapie_classifier.fit(X_train, y_train, **params_.get("fit", {}))
+        mapie_classifier.fit(X_train, y_train, **params.get("fit", {}))
 
     mapie_classifier.conformalize(
         X_conformalize,
         y_conformalize,
-        **params_.get("conformalize", {})
+        **params.get("conformalize", {})
     )
     preds, pred_sets = mapie_classifier.predict_set(
         X_conformalize,
-        **params_.get("predict_set", {})
+        **params.get("predict_set", {})
     )
     preds_using_predict: NDArray = mapie_classifier.predict(X_conformalize)
 
@@ -229,17 +217,17 @@ def run_v1_pipeline_split(params):
 @pytest.mark.parametrize("params", params_test_cases_classification_split)
 def test_split(params: dict) -> None:
     (
-        v1_preds,
-        v1_pred_sets,
-        v1_preds_using_predict,
+        preds,
+        pred_sets,
+        preds_using_predict,
         X_conf_length,
         n_classes,
         n_confidence_level,
-    ) = run_v1_pipeline_split(params)
+    ) = run_pipeline_split(params)
 
-    np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
+    np.testing.assert_array_equal(preds_using_predict, preds)
 
-    assert v1_pred_sets.shape == (
+    assert pred_sets.shape == (
         X_conf_length,
         n_classes,
         n_confidence_level,
@@ -248,79 +236,70 @@ def test_split(params: dict) -> None:
 
 params_test_cases_classification_cross = [
     {
-        "v1": {
-            "__init__": {
-                "estimator": LogisticRegression(),
-                "confidence_level": 0.8,
-                "conformity_score": "lac",
-                "cv": 4,
-                "random_state": RANDOM_STATE,
-            },
-            "fit_conformalize": {
-                "fit_params": {"sample_weight": dataset()["sample_weight"]},
-            },
+        "__init__": {
+            "estimator": LogisticRegression(),
+            "confidence_level": 0.8,
+            "conformity_score": "lac",
+            "cv": 4,
+            "random_state": RANDOM_STATE,
+        },
+        "fit_conformalize": {
+            "fit_params": {"sample_weight": dataset()["sample_weight"]},
         },
     },
     {
-        "v1": {
-            "__init__": {
-                "estimator": DummyClassifierWithFitAndPredictParams(),
-                "confidence_level": [0.9, 0.8],
-                "conformity_score": "aps",
-                "cv": LeaveOneOut(),
-                "random_state": RANDOM_STATE,
-            },
-            "fit_conformalize": {
-                "predict_params": {"dummy_predict_param": True},
-            },
-            "predict_set": {
-                "conformity_score_params": {"include_last_label": False}
-            },
+        "__init__": {
+            "estimator": DummyClassifierWithFitAndPredictParams(),
+            "confidence_level": [0.9, 0.8],
+            "conformity_score": "aps",
+            "cv": LeaveOneOut(),
+            "random_state": RANDOM_STATE,
+        },
+        "fit_conformalize": {
+            "predict_params": {"dummy_predict_param": True},
+        },
+        "predict_set": {
+            "conformity_score_params": {"include_last_label": False}
         },
     },
     {
-        "v1": {
-            "__init__": {
-                "estimator": DummyClassifierWithFitAndPredictParams(),
-                "cv": GroupKFold(),
-                "random_state": RANDOM_STATE,
-            },
-            "fit_conformalize": {
-                "groups": dataset()["groups"],
-                "fit_params": {"dummy_fit_param": True},
-            },
-            "predict_set": {
-                "agg_scores": "crossval",
-            },
+        "__init__": {
+            "estimator": DummyClassifierWithFitAndPredictParams(),
+            "cv": GroupKFold(),
+            "random_state": RANDOM_STATE,
+        },
+        "fit_conformalize": {
+            "groups": dataset()["groups"],
+            "fit_params": {"dummy_fit_param": True},
+        },
+        "predict_set": {
+            "agg_scores": "crossval",
         },
     },
     {
-        "v1": {
-            "__init__": {
-                "estimator": RandomForestClassifier(random_state=RANDOM_STATE),
-                "confidence_level": 0.7,
-                "conformity_score": LACConformityScore(),
-                "random_state": RANDOM_STATE,
-            },
+        "__init__": {
+            "estimator": RandomForestClassifier(random_state=RANDOM_STATE),
+            "confidence_level": 0.7,
+            "conformity_score": LACConformityScore(),
+            "random_state": RANDOM_STATE,
         },
     }
 ]
 
 
-def run_v1_pipeline_cross(params):
+def run_pipeline_cross(params):
     X, y = dataset()["X"], dataset()["y"]
 
-    params_ = params["v1"]
-    init_params = params_.get("__init__", {})
+    init_params = params.get("__init__", {})
     n_confidence_level = get_number_of_confidence_levels(init_params)
     X_length = len(X)
     n_classes = len(np.unique(y))
 
     mapie_classifier = CrossConformalClassifier(**init_params)
 
-    mapie_classifier.fit_conformalize(X, y, **params_.get("fit_conformalize", {}))
+    mapie_classifier.fit_conformalize(X, y, **params.get("fit_conformalize", {}))
 
-    preds, pred_sets = mapie_classifier.predict_set(X, **params_.get("predict_set", {}))
+    preds, pred_sets = mapie_classifier.predict_set(X, **params.get("predict_set", {}))
 
     preds_using_predict: NDArray = mapie_classifier.predict(X)
 
@@ -337,25 +316,25 @@ def run_v1_pipeline_cross(params):
 @pytest.mark.parametrize("params", params_test_cases_classification_cross)
 def test_cross(params: dict) -> None:
     (
-        v1_preds,
-        v1_pred_sets,
-        v1_preds_using_predict,
+        preds,
+        pred_sets,
+        preds_using_predict,
         X_length,
         n_classes,
         n_confidence_level,
-    ) = run_v1_pipeline_cross(params)
+    ) = run_pipeline_cross(params)
 
-    np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
+    np.testing.assert_array_equal(preds_using_predict, preds)
 
-    assert v1_pred_sets.shape == (
+    assert pred_sets.shape == (
         X_length,
         n_classes,
         n_confidence_level,
     )
 
 
-def get_number_of_confidence_levels(v1_init_params):
-    confidence_level = v1_init_params.get("confidence_level", 0.9)
+def get_number_of_confidence_levels(init_params):
+    confidence_level = init_params.get("confidence_level", 0.9)
     return 1 if isinstance(confidence_level, float) else len(confidence_level)
 
 
@@ -385,146 +364,133 @@ sample_weight_train = train_test_split(
 
 params_test_cases_regression_cross = [
     {
-        "v1": {
-            "class": CrossConformalRegressor,
-            "__init__": {
-                "confidence_level": 0.8,
-                "conformity_score": "absolute",
-                "cv": 4,
-                "method": "base",
-                "random_state": RANDOM_STATE,
-            },
-            "fit_conformalize": {
-                "fit_params": {"sample_weight": sample_weight},
-            },
-            "predict_interval": {
-                "aggregate_predictions": "median",
-            },
-            "predict": {
-                "aggregate_predictions": "median",
-            }
+        "class": CrossConformalRegressor,
+        "__init__": {
+            "confidence_level": 0.8,
+            "conformity_score": "absolute",
+            "cv": 4,
+            "method": "base",
+            "random_state": RANDOM_STATE,
+        },
+        "fit_conformalize": {
+            "fit_params": {"sample_weight": sample_weight},
+        },
+        "predict_interval": {
+            "aggregate_predictions": "median",
+        },
+        "predict": {
+            "aggregate_predictions": "median",
+        }
+    },
+    {
+        "class": CrossConformalRegressor,
+        "__init__": {
+            "estimator": positive_predictor,
+            "confidence_level": [0.5, 0.5],
+            "conformity_score": "gamma",
+            "cv": LeaveOneOut(),
+            "method": "plus",
+            "random_state": RANDOM_STATE,
+        },
+        "predict_interval": {
+            "minimize_interval_width": True,
         },
     },
     {
-        "v1": {
-            "class": CrossConformalRegressor,
-            "__init__": {
-                "estimator": positive_predictor,
-                "confidence_level": [0.5, 0.5],
-                "conformity_score": "gamma",
-                "cv": LeaveOneOut(),
-                "method": "plus",
-                "random_state": RANDOM_STATE,
-            },
-            "predict_interval": {
-                "minimize_interval_width": True,
-            },
+        "class": CrossConformalRegressor,
+        "__init__": {
+            "cv": GroupKFold(),
+            "method": "minmax",
+            "random_state": RANDOM_STATE,
         },
-    },
-    {
-        "v1": {
-            "class": CrossConformalRegressor,
-            "__init__": {
-                "cv": GroupKFold(),
-                "method": "minmax",
-                "random_state": RANDOM_STATE,
-            },
-            "fit_conformalize": {
-                "groups": groups,
-            },
-            "predict_interval": {
-                "allow_infinite_bounds": True,
-                "aggregate_predictions": None,
-            },
-            "predict": {
-                "aggregate_predictions": None,
-            },
+        "fit_conformalize": {
+            "groups": groups,
+        },
+        "predict_interval": {
+            "allow_infinite_bounds": True,
+            "aggregate_predictions": None,
+        },
+        "predict": {
+            "aggregate_predictions": None,
         },
     },
 ]
 
 params_test_cases_regression_jackknife = [
     {
-        "v1": {
-            "class": JackknifeAfterBootstrapRegressor,
-            "__init__": {
-                "confidence_level": 0.8,
-                "conformity_score": "absolute",
-                "resampling": Subsample(
-                    n_resamplings=15, random_state=RANDOM_STATE
-                ),
-                "aggregation_method": "median",
-                "method": "plus",
-                "random_state": RANDOM_STATE,
-            },
-            "fit_conformalize": {
-                "fit_params": {"sample_weight": sample_weight},
-            },
+        "class": JackknifeAfterBootstrapRegressor,
+        "__init__": {
+            "confidence_level": 0.8,
+            "conformity_score": "absolute",
+            "resampling": Subsample(
+                n_resamplings=15, random_state=RANDOM_STATE
+            ),
+            "aggregation_method": "median",
+            "method": "plus",
+            "random_state": RANDOM_STATE,
+        },
+        "fit_conformalize": {
+            "fit_params": {"sample_weight": sample_weight},
         },
     },
     {
-        "v1": {
-            "class": JackknifeAfterBootstrapRegressor,
-            "__init__": {
-                "estimator": positive_predictor,
-                "confidence_level": [0.5, 0.5],
-                "aggregation_method": "mean",
-                "conformity_score": "gamma",
-                "resampling": Subsample(
-                    n_resamplings=20,
-                    replace=True,
-                    random_state=RANDOM_STATE
-                ),
-                "method": "plus",
-                "random_state": RANDOM_STATE,
-            },
-            "predict_interval": {
-                "minimize_interval_width": True,
-            },
+        "class": JackknifeAfterBootstrapRegressor,
+        "__init__": {
+            "estimator": positive_predictor,
+            "confidence_level": [0.5, 0.5],
+            "aggregation_method": "mean",
+            "conformity_score": "gamma",
+            "resampling": Subsample(
+                n_resamplings=20,
+                replace=True,
+                random_state=RANDOM_STATE
+            ),
+            "method": "plus",
+            "random_state": RANDOM_STATE,
+        },
+        "predict_interval": {
+            "minimize_interval_width": True,
         },
     },
     {
-        "v1": {
-            "class": JackknifeAfterBootstrapRegressor,
-            "__init__": {
-                "confidence_level": 0.9,
-                "resampling": Subsample(
-                    n_resamplings=30, random_state=RANDOM_STATE
-                ),
-                "method": "minmax",
-                "aggregation_method": "mean",
-                "random_state": RANDOM_STATE,
-            },
-            "predict_interval": {
-                "allow_infinite_bounds": True,
-            },
+        "class": JackknifeAfterBootstrapRegressor,
+        "__init__": {
+            "confidence_level": 0.9,
+            "resampling": Subsample(
+                n_resamplings=30, random_state=RANDOM_STATE
+            ),
+            "method": "minmax",
+            "aggregation_method": "mean",
+            "random_state": RANDOM_STATE,
+        },
+        "predict_interval": {
+            "allow_infinite_bounds": True,
         },
     },
 ]
 
 
-def run_v1_pipeline_cross_or_jackknife(params):
-    params_ = params["v1"]
-    init_params = params_.get("__init__", {})
+def run_pipeline_cross_or_jackknife(params):
+    init_params = params.get("__init__", {})
     confidence_level = init_params.get("confidence_level", 0.9)
     n_confidence_level = 1 if isinstance(confidence_level, float) else len(
         confidence_level
     )
-    minimize_interval_width = params_.get("predict_interval", {}).get(
+    minimize_interval_width = params.get("predict_interval", {}).get(
         "minimize_interval_width", False
     )
 
-    mapie_regressor = params_["class"](**init_params)
-    mapie_regressor.fit_conformalize(X, y, **params_.get("fit_conformalize", {}))
+    mapie_regressor = params["class"](**init_params)
+    mapie_regressor.fit_conformalize(X, y, **params.get("fit_conformalize", {}))
 
     X_test = X
     preds, pred_intervals = mapie_regressor.predict_interval(
         X_test,
-        **params_.get("predict_interval", {})
+        **params.get("predict_interval", {})
     )
     preds_using_predict = mapie_regressor.predict(
         X_test,
-        **params_.get("predict", {})
+        **params.get("predict", {})
     )
 
     return (
@@ -543,66 +509,58 @@ def run_v1_pipeline_cross_or_jackknife(params):
 )
 def test_cross_and_jackknife(params: dict) -> None:
     (
-        v1_preds,
-        v1_pred_intervals,
-        v1_preds_using_predict,
+        preds,
+        pred_intervals,
+        preds_using_predict,
         X_test_length,
         n_confidence_level,
         minimize_interval_width,
-    ) = run_v1_pipeline_cross_or_jackknife(params)
+    ) = run_pipeline_cross_or_jackknife(params)
 
-    np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
+    np.testing.assert_array_equal(preds_using_predict, preds)
 
     if not minimize_interval_width:
         # condition to remove when optimize_beta/minimize_interval_width works
         # but keep assertion to check shapes
-        assert v1_pred_intervals.shape == (X_test_length, 2, n_confidence_level)
+        assert pred_intervals.shape == (X_test_length, 2, n_confidence_level)
 
 
 params_test_cases_regression_split = [
     {
-        "v1": {
-            "confidence_level": 0.8,
-            "conformity_score": "absolute",
-            "prefit": False,
-            "test_size": 0.4,
-            "fit_params": {"sample_weight": sample_weight_train},
-            "class": SplitConformalRegressor
-        }
+        "confidence_level": 0.8,
+        "conformity_score": "absolute",
+        "prefit": False,
+        "test_size": 0.4,
+        "fit_params": {"sample_weight": sample_weight_train},
+        "class": SplitConformalRegressor
     },
     {
-        "v1": {
-            "estimator": positive_predictor,
-            "test_size": 0.2,
-            "confidence_level": [0.5, 0.5],
-            "conformity_score": "gamma",
-            "prefit": False,
-            "class": SplitConformalRegressor
-        }
+        "estimator": positive_predictor,
+        "test_size": 0.2,
+        "confidence_level": [0.5, 0.5],
+        "conformity_score": "gamma",
+        "prefit": False,
+        "class": SplitConformalRegressor
     },
     {
-        "v1": {
-            "estimator": LinearRegression(),
-            "confidence_level": 0.9,
-            "prefit": True,
-            "test_size": 0.2,
-            "conformity_score": ResidualNormalisedScore(
-                random_state=RANDOM_STATE
-            ),
-            "allow_infinite_bounds": True,
-            "class": SplitConformalRegressor
-        }
+        "estimator": LinearRegression(),
+        "confidence_level": 0.9,
+        "prefit": True,
+        "test_size": 0.2,
+        "conformity_score": ResidualNormalisedScore(
+            random_state=RANDOM_STATE
+        ),
+        "allow_infinite_bounds": True,
+        "class": SplitConformalRegressor
     },
     {
-        "v1": {
-            "estimator": positive_predictor,
-            "confidence_level": 0.9,
-            "prefit": False,
-            "conformity_score": GammaConformityScore(),
-            "test_size": 0.3,
-            "minimize_interval_width": True,
-            "class": SplitConformalRegressor
-        }
+        "estimator": positive_predictor,
+        "confidence_level": 0.9,
+        "prefit": False,
+        "conformity_score": GammaConformityScore(),
+        "test_size": 0.3,
+        "minimize_interval_width": True,
+        "class": SplitConformalRegressor
     },
 ]
 
@@ -626,58 +584,49 @@ for alpha_ in [gbr_alpha / 2, (1 - (gbr_alpha / 2)), 0.5]:
 
 params_test_cases_regression_quantile = [
     {
-        "v1": {
-            "confidence_level": 0.8,
-            "prefit": False,
-            "test_size": 0.4,
-            "fit_params": {"sample_weight": sample_weight_train},
-            "class": ConformalizedQuantileRegressor
-        },
+        "confidence_level": 0.8,
+        "prefit": False,
+        "test_size": 0.4,
+        "fit_params": {"sample_weight": sample_weight_train},
+        "class": ConformalizedQuantileRegressor
     },
     {
-        "v1": {
-            "estimator": gbr_models,
-            "confidence_level": 1-gbr_alpha,
-            "prefit": True,
-            "test_size": 0.2,
-            "fit_params": {"sample_weight": sample_weight},
-            "minimize_interval_width": True,
-            "symmetric_correction": True,
-            "class": ConformalizedQuantileRegressor
-        },
+        "estimator": gbr_models,
+        "confidence_level": 1-gbr_alpha,
+        "prefit": True,
+        "test_size": 0.2,
+        "fit_params": {"sample_weight": sample_weight},
+        "minimize_interval_width": True,
+        "symmetric_correction": True,
+        "class": ConformalizedQuantileRegressor
     },
     {
-        "v1": {
-            "estimator": split_model,
-            "confidence_level": 0.5,
-            "prefit": False,
-            "test_size": 0.3,
-            "allow_infinite_bounds": True,
-            "class": ConformalizedQuantileRegressor
-        },
+        "estimator": split_model,
+        "confidence_level": 0.5,
+        "prefit": False,
+        "test_size": 0.3,
+        "allow_infinite_bounds": True,
+        "class": ConformalizedQuantileRegressor
     },
     {
-        "v1": {
-            "confidence_level": 0.9,
-            "prefit": False,
-            "test_size": 0.3,
-            "symmetric_correction": True,
-            "class": ConformalizedQuantileRegressor
-        },
+        "confidence_level": 0.9,
+        "prefit": False,
+        "test_size": 0.3,
+        "symmetric_correction": True,
+        "class": ConformalizedQuantileRegressor
     },
 ]
 
 
-def run_v1_pipeline_split_or_quantile(params):
-    params_ = params["v1"]
-    test_size = params_["test_size"]
-    prefit = params_["prefit"]
-    minimize_interval_width = params_.get("minimal_interval_width", False)
+def run_pipeline_split_or_quantile(params):
+    test_size = params["test_size"]
+    prefit = params["prefit"]
+    minimize_interval_width = params.get("minimal_interval_width", False)
 
-    if isinstance(params_["confidence_level"], float):
+    if isinstance(params["confidence_level"], float):
         n_confidence_level = 1
     else:
-        n_confidence_level = len(params_["confidence_level"])
+        n_confidence_level = len(params["confidence_level"])
 
     (
         X_train,
@@ -694,29 +643,29 @@ def run_v1_pipeline_split_or_quantile(params):
     )
 
     if prefit:
-        estimator = params_["estimator"]
+        estimator = params["estimator"]
         if isinstance(estimator, list):
             for single_estimator in estimator:
                 single_estimator.fit(X_train, y_train)
         else:
             estimator.fit(X_train, y_train)
 
-        params_["estimator"] = estimator
+        params["estimator"] = estimator
 
-    init_params = filter_params(params_["class"].__init__, params_)
+    init_params = filter_params(params["class"].__init__, params)
 
-    mapie_regressor = params_["class"](**init_params)
+    mapie_regressor = params["class"](**init_params)
 
-    fit_params = filter_params(mapie_regressor.fit, params_)
-    conformalize_params = filter_params(mapie_regressor.conformalize, params_)
+    fit_params = filter_params(mapie_regressor.fit, params)
+    conformalize_params = filter_params(mapie_regressor.conformalize, params)
 
     if not prefit:
         mapie_regressor.fit(X_train, y_train, **fit_params)
 
     mapie_regressor.conformalize(X_conf, y_conf, **conformalize_params)
 
-    predict_params = filter_params(mapie_regressor.predict, params_)
-    predict_interval_params = filter_params(mapie_regressor.predict_interval, params_)
+    predict_params = filter_params(mapie_regressor.predict, params)
+    predict_interval_params = filter_params(mapie_regressor.predict_interval, params)
 
     preds, pred_intervals = mapie_regressor.predict_interval(
         X_conf, **predict_interval_params
@@ -741,14 +690,14 @@ def run_v1_pipeline_split_or_quantile(params):
 def test_split_and_quantile(
         params: dict) -> None:
     (
-        v1_preds,
-        v1_pred_intervals,
-        v1_preds_using_predict,
+        preds,
+        pred_intervals,
+        preds_using_predict,
         X_conf,
         n_confidence_level,
         minimize_interval_width
-    ) = run_v1_pipeline_split_or_quantile(params)
+    ) = run_pipeline_split_or_quantile(params)
 
-    np.testing.assert_array_equal(v1_preds_using_predict, v1_preds)
+    np.testing.assert_array_equal(preds_using_predict, preds)
 
-    assert v1_pred_intervals.shape == (len(X_conf), 2, n_confidence_level)
+    assert pred_intervals.shape == (len(X_conf), 2, n_confidence_level)
