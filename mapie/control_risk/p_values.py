@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from mapie.utils import _check_alpha
 
 
-def compute_hoeffdding_bentkus_p_value(
+def compute_hoeffding_bentkus_p_value(
     r_hat: NDArray,
     n_obs: Union[int, NDArray],
     alpha: Union[float, NDArray],

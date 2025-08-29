@@ -9,7 +9,7 @@ import pytest
 
 from numpy.typing import NDArray
 from mapie.control_risk.ltt import find_lambda_control_star, ltt_procedure
-from mapie.control_risk.p_values import compute_hoeffdding_bentkus_p_value
+from mapie.control_risk.p_values import compute_hoeffding_bentkus_p_value
 from mapie.control_risk.risks import (compute_risk_precision,
                                       compute_risk_recall)
 
@@ -129,7 +129,7 @@ def test_compute_precision_with_wrong_shape() -> None:
 @pytest.mark.parametrize("alpha", [0.5, [0.5], [0.5, 0.9]])
 def test_p_values_different_alpha(alpha: Union[float, NDArray]) -> None:
     """Test type for different alpha for p_values"""
-    result = compute_hoeffdding_bentkus_p_value(r_hat, n, alpha)
+    result = compute_hoeffding_bentkus_p_value(r_hat, n, alpha)
     assert isinstance(result, np.ndarray)
 
 
@@ -173,13 +173,13 @@ def test_warning_valid_index_empty() -> None:
 def test_invalid_alpha_hb() -> None:
     """Test error message when invalid alpha"""
     with pytest.raises(ValueError, match=r".*Invalid confidence_level"):
-        compute_hoeffdding_bentkus_p_value(r_hat, n, wrong_alpha)
+        compute_hoeffding_bentkus_p_value(r_hat, n, wrong_alpha)
 
 
 def test_invalid_shape_alpha_hb() -> None:
     """Test error message when invalid alpha shape"""
     with pytest.raises(ValueError, match=r".*Invalid confidence_level"):
-        compute_hoeffdding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
+        compute_hoeffding_bentkus_p_value(r_hat, n, wrong_alpha_shape)
 
 
 def test_hb_p_values_n_obs_int_vs_array() -> None:
@@ -188,19 +188,19 @@ def test_hb_p_values_n_obs_int_vs_array() -> None:
     n_obs = np.array([1100, 1200])
     alpha = np.array([0.6, 0.7])
 
-    pval_0 = compute_hoeffdding_bentkus_p_value(
+    pval_0 = compute_hoeffding_bentkus_p_value(
         np.array([r_hat[0]]),
         int(n_obs[0]),
         alpha
     )
-    pval_1 = compute_hoeffdding_bentkus_p_value(
+    pval_1 = compute_hoeffding_bentkus_p_value(
         np.array([r_hat[1]]),
         int(n_obs[1]),
         alpha
     )
     pval_manual = np.vstack([pval_0, pval_1])
 
-    pval_array = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha)
+    pval_array = compute_hoeffding_bentkus_p_value(r_hat, n_obs, alpha)
 
     np.testing.assert_allclose(pval_manual, pval_array, rtol=1e-12)
 
