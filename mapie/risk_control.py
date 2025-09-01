@@ -799,11 +799,11 @@ class BinaryClassificationController:  # pragma: no cover
         self._target_level = target_level
         self._delta = 1 - confidence_level
 
-        self._thresholds: NDArray = np.linspace(0, 0.99, 100)
+        self._predict_params: NDArray = np.linspace(0, 0.99, 100)
         # TODO: add a _is_calibrated attribute to check at prediction time
 
-        self.valid_thresholds: Optional[NDArray] = None
-        self.best_threshold: Optional[float] = None
+        self.valid_predict_params: Optional[NDArray] = None
+        self.best_predict_params: Optional[float] = None
 
     def calibrate(self, X_calibrate: ArrayLike, y_calibrate: ArrayLike) -> None:
         # TODO: Make sure the following works with sklearn train_test_split/Series
@@ -812,7 +812,7 @@ class BinaryClassificationController:  # pragma: no cover
         predictions_proba = self._predict_function(X_calibrate)[:, 1]
 
         predictions_per_threshold = (
-            predictions_proba[:, np.newaxis] >= self._thresholds
+            predictions_proba[:, np.newaxis] >= self._predict_params
         ).T.astype(int)
 
         risks_and_eff_sizes = np.array(
@@ -838,8 +838,8 @@ class BinaryClassificationController:  # pragma: no cover
             eff_sample_sizes_per_threshold,
             True,
         )
-        self.valid_thresholds = self._thresholds[valid_thresholds_index[0]]
-        if len(self.valid_thresholds) == 0:
+        self.valid_predict_params = self._predict_params[valid_thresholds_index[0]]
+        if len(self.valid_predict_params) == 0:
             warnings.warn(
                 "No predict parameters were found to control the risk at the given "
                 "target and confidence levels. "
@@ -847,12 +847,12 @@ class BinaryClassificationController:  # pragma: no cover
             )
         else:
             # Minimum in case of precision control only
-            self.best_threshold = min(self.valid_thresholds)
+            self.best_predict_params = min(self.valid_predict_params)
 
     def predict(self, X_test: ArrayLike) -> NDArray:
-        if self.best_threshold is None:
+        if self.best_predict_params is None:
             raise ValueError(
                 "No predict parameters were found to control the risk. Cannot predict."
             )
         predictions_proba = self._predict_function(X_test)[:, 1]
-        return (predictions_proba >= self.best_threshold).astype(int)
+        return (predictions_proba >= self.best_predict_params).astype(int)
