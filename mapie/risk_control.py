@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Iterable, Optional, Sequence, Tuple, Union, cast, Callable
+from typing import Iterable, Optional, Sequence, Tuple, Union, cast, Callable, Literal
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -728,6 +728,7 @@ class BinaryClassificationRisk:
         y_pred: NDArray,  # shape (n_samples,), values in {0, 1}
     ) -> Tuple[float, int]:
         # float between 0 and 1, int between 0 and len(y_true)
+        # Returns 1-risk_occurrence if higher_is_better is True
         # returns (1, -1) when the risk is not defined (condition never met)
         # In this case, the corresponding lambda shouldn't be considered valid.
         # In the current LTT implementation, providing n_obs=-1 will result
@@ -746,6 +747,8 @@ class BinaryClassificationRisk:
         if effective_sample_size_int != 0:
             risk_sum: int = np.sum(risk_occurrences[risk_conditions])
             risk_value = risk_sum / effective_sample_size_int
+            if self.higher_is_better:
+                risk_value = 1 - risk_value
             return risk_value, effective_sample_size_int
         return 1, -1
 
@@ -768,10 +771,17 @@ recall = BinaryClassificationRisk(
     higher_is_better=True,
 )
 
-_automatic_best_predict_param_choice = {
+false_positive_rate = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: int(y_pred == 1),
+    risk_condition=lambda y_true, y_pred: y_true == 0,
+    higher_is_better=False,
+)
+
+_best_predict_param_choice_map = {
     precision: recall,
     recall: precision,
     accuracy: accuracy,
+    false_positive_rate: recall,
 }
 
 # General TODOs:
@@ -791,19 +801,35 @@ class BinaryClassificationController:  # pragma: no cover
         risk: BinaryClassificationRisk,
         target_level: float,
         confidence_level: float = 0.9,
-        best_predict_param_choice: Union[str, BinaryClassificationRisk] = "auto",
+        best_predict_param_choice: Union[
+            Literal["auto"], BinaryClassificationRisk] = "auto",
     ):
         self._predict_function = predict_function
         self._risk = risk
-        self._best_predict_param_choice = best_predict_param_choice
-        self._target_level = target_level
+        if self._risk.higher_is_better:
+            self._alpha = 1 - target_level
+        else:
+            self._alpha = target_level
         self._delta = 1 - confidence_level
+
+        self._best_predict_param_choice: BinaryClassificationRisk
+        if best_predict_param_choice == "auto":
+            try:
+                self._best_predict_param_choice = _best_predict_param_choice_map[risk]
+            except KeyError:
+                raise ValueError(
+                    "When best_predict_param_choice is 'auto', "
+                    "risk must be one of the risks defined in mapie.risk_control"
+                    "(e.g. precision, recall, accuracy)."
+                )
+        else:
+            self._best_predict_param_choice = best_predict_param_choice
 
         self._predict_params: NDArray = np.linspace(0, 0.99, 100)
         # TODO: add a _is_calibrated attribute to check at prediction time
 
         self.valid_predict_params: Optional[NDArray] = None
-        self.best_predict_params: Optional[float] = None
+        self.best_predict_param: Optional[float] = None
 
     def calibrate(self, X_calibrate: ArrayLike, y_calibrate: ArrayLike) -> None:
         # TODO: Make sure the following works with sklearn train_test_split/Series
@@ -815,30 +841,23 @@ class BinaryClassificationController:  # pragma: no cover
             predictions_proba[:, np.newaxis] >= self._predict_params
         ).T.astype(int)
 
-        risks_and_eff_sizes = np.array(
-            [self._risk.get_value_and_effective_sample_size(
-                y_calibrate_,
-                predictions
-            ) for predictions in predictions_per_threshold]
+        risks_and_eff_sizes = self.get_risks_and_effective_sample_sizes_per_threshold(
+            y_calibrate_,
+            predictions_per_threshold,
+            self._risk
         )
 
         risks_per_threshold = risks_and_eff_sizes[:, 0]
         eff_sample_sizes_per_threshold = risks_and_eff_sizes[:, 1]
 
-        if self._risk.higher_is_better:
-            risks_per_threshold = 1 - risks_per_threshold
-            alpha = 1 - self._target_level
-        else:
-            alpha = self._target_level
-
         valid_thresholds_index = ltt_procedure(
             risks_per_threshold,
-            np.array([alpha]),
+            np.array([self._alpha]),
             self._delta,
             eff_sample_sizes_per_threshold,
             True,
-        )
-        self.valid_predict_params = self._predict_params[valid_thresholds_index[0]]
+        )[0]
+        self.valid_predict_params = self._predict_params[valid_thresholds_index]
         if len(self.valid_predict_params) == 0:
             warnings.warn(
                 "No predict parameters were found to control the risk at the given "
@@ -846,13 +865,34 @@ class BinaryClassificationController:  # pragma: no cover
                 "Try using a larger calibration set or a better model.",
             )
         else:
-            # Minimum in case of precision control only
-            self.best_predict_params = min(self.valid_predict_params)
+            self.secondary_risks_per_threshold = \
+                self.get_risks_and_effective_sample_sizes_per_threshold(
+                    y_calibrate_,
+                    predictions_per_threshold[valid_thresholds_index],
+                    self._best_predict_param_choice
+                )[:, 0]
+
+            self.best_predict_param = self.valid_predict_params[
+                np.argmin(self.secondary_risks_per_threshold)
+            ]
 
     def predict(self, X_test: ArrayLike) -> NDArray:
-        if self.best_predict_params is None:
+        if self.best_predict_param is None:
             raise ValueError(
                 "No predict parameters were found to control the risk. Cannot predict."
             )
         predictions_proba = self._predict_function(X_test)[:, 1]
-        return (predictions_proba >= self.best_predict_params).astype(int)
+        return (predictions_proba >= self.best_predict_param).astype(int)
+
+    @staticmethod
+    def get_risks_and_effective_sample_sizes_per_threshold(
+        y_true: NDArray,
+        predictions_per_threshold: NDArray,
+        risk: BinaryClassificationRisk,
+    ) -> NDArray:
+        return np.array(
+            [risk.get_value_and_effective_sample_size(
+                y_true,
+                predictions
+            ) for predictions in predictions_per_threshold]
+        )
