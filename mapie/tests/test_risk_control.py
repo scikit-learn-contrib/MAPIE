@@ -11,7 +11,7 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
-from sklearn.metrics import precision_score, recall_score, accuracy_score
+from sklearn.metrics import precision_score, recall_score
 from typing_extensions import TypedDict
 
 from numpy.typing import NDArray
@@ -19,8 +19,7 @@ from mapie.risk_control import (
     PrecisionRecallController,
     precision,
     recall,
-    accuracy,
-    BinaryClassificationRisk,
+    BinaryClassificationRisk, false_positive_rate,
 )
 
 Params = TypedDict(
@@ -817,6 +816,13 @@ def test_method_none_recall() -> None:
     assert mapie_clf.method == "crc"
 
 
+def fpr_func(y_true: NDArray, y_pred: NDArray) -> float:
+    """Computes false positive rate."""
+    tn: int = np.sum((y_true == 0) & (y_pred == 0))
+    fp: int = np.sum((y_true == 0) & (y_pred == 1))
+    return fp / (tn + fp)
+
+
 # The following test is voluntarily agnostic
 # to the specific binary classification risk control implementation.
 @pytest.mark.parametrize(
@@ -824,7 +830,7 @@ def test_method_none_recall() -> None:
     [
         (precision, precision_score, lambda y_true, y_pred: np.sum(y_pred == 1)),
         (recall, recall_score, lambda y_true, y_pred: np.sum(y_true == 1)),
-        (accuracy, accuracy_score, lambda y_true, y_pred: len(y_true)),
+        (false_positive_rate, fpr_func, lambda y_true, y_pred: np.sum(y_true == 0)),
     ],
 )
 @pytest.mark.parametrize(
@@ -848,6 +854,8 @@ def test_binary_classification_risk(
     else:
         value, n = result
         expected_value = metric_func(y_true, y_pred)
+        if risk_instance.higher_is_better:
+            expected_value = 1 - expected_value
         expected_n = effective_sample_func(y_true, y_pred)
         assert np.isclose(value, expected_value)
         assert n == expected_n
