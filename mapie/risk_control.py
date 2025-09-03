@@ -814,7 +814,7 @@ class BinaryClassificationController:  # pragma: no cover
         self.best_predict_param: Optional[float] = None
 
     def calibrate(self, X_calibrate: ArrayLike, y_calibrate: ArrayLike) -> None:
-        y_calibrate_ = np.asarray(y_calibrate)
+        y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
         predictions_proba = self._predict_function(X_calibrate)[:, 1]
 

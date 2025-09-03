@@ -863,7 +863,7 @@ def test_binary_classification_risk(
         assert n == expected_n
 
 
-class TestBestPredictParamChoice:
+class TestBinaryClassificationControllerBestPredictParamChoice:
     @pytest.mark.parametrize(
         "risk_instance, expected",
         [
@@ -914,3 +914,23 @@ class TestBestPredictParamChoice:
                 target_level=0.8,
                 best_predict_param_choice="auto"
             )
+
+
+@pytest.mark.parametrize(
+    "risk_instance,target_level,expected_alpha",
+    [
+        (recall, 0.6, 0.4),  # higher_is_better=True
+        (false_positive_rate, 0.6, 0.6),  # higher_is_better=False
+    ],
+)
+def test_binary_classification_controller_alpha(
+    risk_instance: BinaryClassificationRisk,
+    target_level: float,
+    expected_alpha: float,
+) -> None:
+    controller = BinaryClassificationController(
+        predict_function=lambda X: np.random.rand(1, 2),
+        risk=risk_instance,
+        target_level=target_level,
+    )
+    assert np.isclose(controller._alpha, expected_alpha)
