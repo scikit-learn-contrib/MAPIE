@@ -777,13 +777,6 @@ false_positive_rate = BinaryClassificationRisk(
     higher_is_better=False,
 )
 
-_best_predict_param_choice_map = {
-    precision: recall,
-    recall: precision,
-    accuracy: accuracy,
-    false_positive_rate: recall,
-}
-
 # General TODOs:
 # TODO : in calibration and prediction,
 #  use _transform_pred_proba or a function adapted to binary
@@ -794,6 +787,14 @@ _best_predict_param_choice_map = {
 class BinaryClassificationController:  # pragma: no cover
     # TODO : test that this is working with a sklearn pipeline
     # TODO : test that this is working with a pandas dataframes
+
+    _best_predict_param_choice_map = {
+        precision: recall,
+        recall: precision,
+        accuracy: accuracy,
+        false_positive_rate: recall,
+    }
+
     def __init__(
         self,
         # X -> y_proba of shape (n_samples, 2)
@@ -812,18 +813,9 @@ class BinaryClassificationController:  # pragma: no cover
             self._alpha = target_level
         self._delta = 1 - confidence_level
 
-        self._best_predict_param_choice: BinaryClassificationRisk
-        if best_predict_param_choice == "auto":
-            try:
-                self._best_predict_param_choice = _best_predict_param_choice_map[risk]
-            except KeyError:
-                raise ValueError(
-                    "When best_predict_param_choice is 'auto', "
-                    "risk must be one of the risks defined in mapie.risk_control"
-                    "(e.g. precision, recall, accuracy)."
-                )
-        else:
-            self._best_predict_param_choice = best_predict_param_choice
+        self._best_predict_param_choice = self._set_best_predict_param_choice(
+            best_predict_param_choice
+        )
 
         self._predict_params: NDArray = np.linspace(0, 0.99, 100)
         # TODO: add a _is_calibrated attribute to check at prediction time
@@ -841,7 +833,7 @@ class BinaryClassificationController:  # pragma: no cover
             predictions_proba[:, np.newaxis] >= self._predict_params
         ).T.astype(int)
 
-        risks_and_eff_sizes = self.get_risks_and_effective_sample_sizes_per_threshold(
+        risks_and_eff_sizes = self._get_risks_and_effective_sample_sizes_per_threshold(
             y_calibrate_,
             predictions_per_threshold,
             self._risk
@@ -866,7 +858,7 @@ class BinaryClassificationController:  # pragma: no cover
             )
         else:
             self.secondary_risks_per_threshold = \
-                self.get_risks_and_effective_sample_sizes_per_threshold(
+                self._get_risks_and_effective_sample_sizes_per_threshold(
                     y_calibrate_,
                     predictions_per_threshold[valid_thresholds_index],
                     self._best_predict_param_choice
@@ -884,8 +876,27 @@ class BinaryClassificationController:  # pragma: no cover
         predictions_proba = self._predict_function(X_test)[:, 1]
         return (predictions_proba >= self.best_predict_param).astype(int)
 
+    def _set_best_predict_param_choice(
+        self,
+        best_predict_param_choice: Union[
+            Literal["auto"], BinaryClassificationRisk] = "auto",
+    ) -> BinaryClassificationRisk:
+        if best_predict_param_choice == "auto":
+            try:
+                return self._best_predict_param_choice_map[
+                    self._risk
+                ]
+            except KeyError:
+                raise ValueError(
+                    "When best_predict_param_choice is 'auto', "
+                    "risk must be one of the risks defined in mapie.risk_control"
+                    "(e.g. precision, accuracy, false_positive_rate)."
+                )
+        else:
+            return best_predict_param_choice
+
     @staticmethod
-    def get_risks_and_effective_sample_sizes_per_threshold(
+    def _get_risks_and_effective_sample_sizes_per_threshold(
         y_true: NDArray,
         predictions_per_threshold: NDArray,
         risk: BinaryClassificationRisk,
