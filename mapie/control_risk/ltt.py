@@ -104,7 +104,7 @@ def find_lambda_control_star(
     Returns
     -------
     l_lambda_star: ArrayLike of shape (n_alpha, ).
-        The lambda that give the highest precision
+        The lambda that give the minimum precision
         for a given alpha.
 
     r_star: ArrayLike of shape (n_alpha, ).
