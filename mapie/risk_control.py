@@ -777,17 +777,8 @@ false_positive_rate = BinaryClassificationRisk(
     higher_is_better=False,
 )
 
-# General TODOs:
-# TODO : in calibration and prediction,
-#  use _transform_pred_proba or a function adapted to binary
-# to get the probabilities depending on the classifier
 
-
-# TODO: remove the no cover below
 class BinaryClassificationController:  # pragma: no cover
-    # TODO : test that this is working with a sklearn pipeline
-    # TODO : test that this is working with a pandas dataframes
-
     _best_predict_param_choice_map = {
         precision: recall,
         recall: precision,
@@ -818,13 +809,11 @@ class BinaryClassificationController:  # pragma: no cover
         )
 
         self._predict_params: NDArray = np.linspace(0, 0.99, 100)
-        # TODO: add a _is_calibrated attribute to check at prediction time
 
         self.valid_predict_params: Optional[NDArray] = None
         self.best_predict_param: Optional[float] = None
 
     def calibrate(self, X_calibrate: ArrayLike, y_calibrate: ArrayLike) -> None:
-        # TODO: Make sure the following works with sklearn train_test_split/Series
         y_calibrate_ = np.asarray(y_calibrate)
 
         predictions_proba = self._predict_function(X_calibrate)[:, 1]
