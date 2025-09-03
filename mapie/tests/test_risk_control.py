@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any, Optional
 
 import numpy as np
@@ -20,6 +21,7 @@ from mapie.risk_control import (
     precision,
     recall,
     BinaryClassificationRisk, false_positive_rate,
+    BinaryClassificationController, accuracy,
 )
 
 Params = TypedDict(
@@ -859,3 +861,56 @@ def test_binary_classification_risk(
         expected_n = effective_sample_func(y_true, y_pred)
         assert np.isclose(value, expected_value)
         assert n == expected_n
+
+
+class TestBestPredictParamChoice:
+    @pytest.mark.parametrize(
+        "risk_instance, expected",
+        [
+            (precision, recall),
+            (recall, precision),
+            (accuracy, accuracy),
+            (false_positive_rate, recall),
+        ],
+    )
+    def test_auto(
+        self,
+        risk_instance: BinaryClassificationRisk,
+        expected
+    ):
+        """Test _set_best_predict_param_choice with 'auto' mode for known risks."""
+        controller = BinaryClassificationController(
+            predict_function=lambda X: np.random.rand(1, 2),
+            risk=risk_instance,
+            target_level=0.8,
+            best_predict_param_choice="auto"
+        )
+
+        result = controller._best_predict_param_choice
+        assert result is expected
+
+    def test_custom(self):
+        """Test _set_best_predict_param_choice with a custom risk instance."""
+        custom_risk = accuracy
+
+        controller = BinaryClassificationController(
+            predict_function=lambda X: np.random.rand(1, 2),
+            risk=precision,
+            target_level=0.8,
+            best_predict_param_choice=custom_risk
+        )
+
+        result = controller._set_best_predict_param_choice(custom_risk)
+        assert result is custom_risk
+
+    def test_auto_unknown_risk(self):
+        """Test _set_best_predict_param_choice with 'auto' mode for unknown risk."""
+        unknown_risk = deepcopy(accuracy)
+
+        with pytest.raises(ValueError):
+            BinaryClassificationController(
+                predict_function=lambda X: np.random.rand(1, 2),
+                risk=unknown_risk,
+                target_level=0.8,
+                best_predict_param_choice="auto"
+            )
