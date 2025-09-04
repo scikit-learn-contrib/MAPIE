@@ -13,6 +13,7 @@ from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from sklearn.metrics import precision_score, recall_score
+from sklearn.dummy import DummyClassifier
 from typing_extensions import TypedDict
 
 from numpy.typing import NDArray
@@ -934,3 +935,21 @@ def test_binary_classification_controller_alpha(
         target_level=target_level,
     )
     assert np.isclose(controller._alpha, expected_alpha)
+
+
+def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> None:
+    X_df = pd.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]})
+    y = np.array([1, 1, 0, 1], dtype=int)
+
+    pipe = Pipeline(steps=[("clf", DummyClassifier(random_state=random_state))])
+    pipe.fit(X_df, y)
+
+    controller = BinaryClassificationController(
+        predict_function=pipe.predict_proba,
+        risk=precision,
+        target_level=0.1,
+        confidence_level=0.1,
+    )
+
+    controller.calibrate(X_df, y)
+    controller.predict(X_df)
