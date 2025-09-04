@@ -577,7 +577,7 @@ def test_error_delta_wrong_value_ltt(delta: Any) -> None:
 
 
 def test_bound_none_crc() -> None:
-    """Test that a warning is raised nound is not None with CRC method."""
+    """Test that a warning is raised when bound is not None with CRC method."""
     mapie_clf = PrecisionRecallController(
       random_state=random_state, method="crc"
     )
