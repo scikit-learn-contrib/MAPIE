@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any, Optional
 
 import numpy as np
@@ -11,10 +12,18 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
+from sklearn.metrics import precision_score, recall_score
+from sklearn.dummy import DummyClassifier
 from typing_extensions import TypedDict
 
 from numpy.typing import NDArray
-from mapie.risk_control import PrecisionRecallController
+from mapie.risk_control import (
+    PrecisionRecallController,
+    precision,
+    recall,
+    BinaryClassificationRisk, false_positive_rate,
+    BinaryClassificationController, accuracy,
+)
 
 Params = TypedDict(
     "Params",
@@ -260,7 +269,7 @@ def test_predict_output_shape(
         X,
         alpha=alpha,
         bound=args["bound"],
-        delta=.1
+        delta=delta
     )
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == y.shape
@@ -808,3 +817,139 @@ def test_method_none_recall() -> None:
     )
     mapie_clf.fit(X_toy, y_toy)
     assert mapie_clf.method == "crc"
+
+
+def fpr_func(y_true: NDArray, y_pred: NDArray) -> float:
+    """Computes false positive rate."""
+    tn: int = np.sum((y_true == 0) & (y_pred == 0))
+    fp: int = np.sum((y_true == 0) & (y_pred == 1))
+    return fp / (tn + fp)
+
+
+# The following test is voluntarily agnostic
+# to the specific binary classification risk control implementation.
+@pytest.mark.parametrize(
+    "risk_instance, metric_func, effective_sample_func",
+    [
+        (precision, precision_score, lambda y_true, y_pred: np.sum(y_pred == 1)),
+        (recall, recall_score, lambda y_true, y_pred: np.sum(y_true == 1)),
+        (false_positive_rate, fpr_func, lambda y_true, y_pred: np.sum(y_true == 0)),
+    ],
+)
+@pytest.mark.parametrize(
+    "y_true, y_pred",
+    [
+        (np.array([1, 0, 1, 0]), np.array([1, 1, 0, 0])),
+        (np.array([1, 1, 0, 0]), np.array([1, 1, 1, 0])),
+        (np.array([0, 0, 0, 0]), np.array([0, 1, 0, 1])),
+    ],
+)
+def test_binary_classification_risk(
+    risk_instance: BinaryClassificationRisk,
+    metric_func,
+    effective_sample_func,
+    y_true,
+    y_pred
+):
+    result = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
+    if effective_sample_func(y_true, y_pred) == 0:
+        assert result == (1, -1)
+    else:
+        value, n = result
+        expected_value = metric_func(y_true, y_pred)
+        if risk_instance.higher_is_better:
+            expected_value = 1 - expected_value
+        expected_n = effective_sample_func(y_true, y_pred)
+        assert np.isclose(value, expected_value)
+        assert n == expected_n
+
+
+class TestBinaryClassificationControllerBestPredictParamChoice:
+    @pytest.mark.parametrize(
+        "risk_instance, expected",
+        [
+            (precision, recall),
+            (recall, precision),
+            (accuracy, accuracy),
+            (false_positive_rate, recall),
+        ],
+    )
+    def test_auto(
+        self,
+        risk_instance: BinaryClassificationRisk,
+        expected
+    ):
+        """Test _set_best_predict_param_choice with 'auto' mode for known risks."""
+        controller = BinaryClassificationController(
+            predict_function=lambda X: np.random.rand(1, 2),
+            risk=risk_instance,
+            target_level=0.8,
+            best_predict_param_choice="auto"
+        )
+
+        result = controller._best_predict_param_choice
+        assert result is expected
+
+    def test_custom(self):
+        """Test _set_best_predict_param_choice with a custom risk instance."""
+        custom_risk = accuracy
+
+        controller = BinaryClassificationController(
+            predict_function=lambda X: np.random.rand(1, 2),
+            risk=precision,
+            target_level=0.8,
+            best_predict_param_choice=custom_risk
+        )
+
+        result = controller._set_best_predict_param_choice(custom_risk)
+        assert result is custom_risk
+
+    def test_auto_unknown_risk(self):
+        """Test _set_best_predict_param_choice with 'auto' mode for unknown risk."""
+        unknown_risk = deepcopy(accuracy)
+
+        with pytest.raises(ValueError):
+            BinaryClassificationController(
+                predict_function=lambda X: np.random.rand(1, 2),
+                risk=unknown_risk,
+                target_level=0.8,
+                best_predict_param_choice="auto"
+            )
+
+
+@pytest.mark.parametrize(
+    "risk_instance,target_level,expected_alpha",
+    [
+        (recall, 0.6, 0.4),  # higher_is_better=True
+        (false_positive_rate, 0.6, 0.6),  # higher_is_better=False
+    ],
+)
+def test_binary_classification_controller_alpha(
+    risk_instance: BinaryClassificationRisk,
+    target_level: float,
+    expected_alpha: float,
+) -> None:
+    controller = BinaryClassificationController(
+        predict_function=lambda X: np.random.rand(1, 2),
+        risk=risk_instance,
+        target_level=target_level,
+    )
+    assert np.isclose(controller._alpha, expected_alpha)
+
+
+def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> None:
+    X_df = pd.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]})
+    y = np.array([1, 1, 0, 1], dtype=int)
+
+    pipe = Pipeline(steps=[("clf", DummyClassifier(random_state=random_state))])
+    pipe.fit(X_df, y)
+
+    controller = BinaryClassificationController(
+        predict_function=pipe.predict_proba,
+        risk=precision,
+        target_level=0.1,
+        confidence_level=0.1,
+    )
+
+    controller.calibrate(X_df, y)
+    controller.predict(X_df)
