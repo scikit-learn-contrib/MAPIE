@@ -62,7 +62,7 @@ Applying risk control to the previous example would allow us to get a new — al
    :width: 600
    :align: center
 
-This guarantee is critical in a wide range of use cases, especially in high-stakes applications. Take, for example, medical diagnosis: here, the parameter :math:`\lambda` is the binarization threshold that determines whether a patient is classified as sick. We aim to minimize false negatives (i.e., cases where sick patients are incorrectly diagnosed as healthy), which corresponds to controlling the type II error. In this setting, risk control allows us to find a :math:`\lambda` such that, on future patients, the model’s type II error does not exceed, say, 5%, with high confidence.
+This guarantee is critical in a wide range of use cases (especially in high-stakes applications), and can be applied to any risk or metric: in the example above, it was the precision that was controlled, but the same can be done with the recall, for example. Take medical diagnosis: here, the parameter :math:`\lambda` is the binarization threshold that determines whether a patient is classified as sick. We aim to minimize false negatives (i.e., cases where sick patients are incorrectly diagnosed as healthy), which corresponds to controlling the recall. In this setting, risk control allows us to find a :math:`\lambda` such that, on future patients, the model’s recall remains above, say, 95%, with high confidence.
 
 —
 
@@ -78,11 +78,11 @@ To express risk control in mathematical terms, we denote by R the risk we want t
 
 In other words, the risk is said to be controlled if :math:`R \leq \alpha` with probability at least :math:`1 - \delta`.
 
-Furthermore, there exist two types of risk control in terms of guarantees they give.
+The three risk control methods implemented in MAPIE — RCPS, CRC and LTT — rely on different assumptions, and offer slightly different guarantees:
 
-- Guarantee on the expectation of the risk: :math:`\mathbb{E}(R) \leq \alpha` → CRC;
+- **CRC** requires the data to be **exchangeable**, and gives a guarantee on the **expectation of the risk**: :math:`\mathbb{E}(R) \leq \alpha`;
 
-- Guarantee on the probability that the risk does not exceed :math:`\alpha`: :math:`\mathbb{P}(R \leq \alpha) \geq 1 - \delta` → RCPS/LTT.
+- **RCPS** and **LTT** both impose stricter assumptions, requiring the data to be **independent and identically distributed** (i.i.d.), which implies exchangeability. The guarantee they provide is on the **probability that the risk does not exceed :math:`\alpha`**: :math:`\mathbb{P}(R \leq \alpha) \geq 1 - \delta`.
 
 .. image:: images/risk_distribution.png
    :width: 600
@@ -94,30 +94,7 @@ The plot above gives a visual representation of the difference between the two t
 
 - The risk is controlled in probability (RCPS/LTT) if at least :math:`1 - \delta` percent of its distribution over unseen data is below :math:`\alpha`.
 
-For a classification problem in a standard independent and identically distributed (i.i.d) case,
-our training data :math:`(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}`` has an unknown distribution :math:`P_{X, Y}`. 
-
-For any target level :math:`\alpha` between 0 and 1, the methods implemented in MAPIE allow the user to construct a prediction
-set :math:`\hat{C}_{n, \alpha}(X_{n+1})` for a new observation :math:`\left( X_{n+1},Y_{n+1} \right)` with a guarantee
-on the specified risk. As mentioned above, RCPS, LTT, and CRC give three slightly different guarantees:
-
-- RCPS:
-
-.. math::
-    \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta
-
-- CRC:
-
-.. math::
-    \mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha
-
-- LTT:
-
-.. math::
-    \mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha ) \geq 1 - \delta \quad \texttt{with} \quad p_{\hat{\lambda}} \leq \frac{\delta}{\lvert \Lambda \rvert}
-
-
-Notice that at the opposite of the other two methods, LTT allows to control any non-monotonic risk.
+Note that at the opposite of the other two methods, LTT allows to control any non-monotonic risk.
 
 The following section provides a detailed overview of each method.
 
@@ -273,7 +250,7 @@ In order to find all the parameters :math:`\lambda` that satisfy the above condi
   :math:`\{(x_1, y_1), \dots, (x_n, y_n)\}`.
 
 - For each :math:`\lambda_j` in a discrete set :math:`\Lambda = \{\lambda_1, \lambda_2,\dots, \lambda_n\}`, we associate the null hypothesis
-  :math:`\mathcal{H}_j: R(\lambda_j) > \alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk 
+  :math:`\mathcal{H}_j: R(\lambda_j) > \alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk
   is controlled.
 
 - For each null hypothesis, we compute a valid p-value using a concentration inequality :math:`p_{\lambda_j}`. Here we choose to compute the Hoeffding-Bentkus p-value
