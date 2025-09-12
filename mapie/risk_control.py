@@ -816,45 +816,37 @@ class BinaryClassificationController:  # pragma: no cover
     def calibrate(self, X_calibrate: ArrayLike, y_calibrate: ArrayLike) -> None:
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
-        predictions_proba = self._predict_function(X_calibrate)[:, 1]
+        predictions_per_param = self._get_predictions_per_param(X_calibrate)
 
-        predictions_per_threshold = (
-            predictions_proba[:, np.newaxis] >= self._predict_params
-        ).T.astype(int)
-
-        risks_and_eff_sizes = self._get_risks_and_effective_sample_sizes_per_threshold(
+        risks_and_eff_sizes = self._get_risks_and_effective_sample_sizes_per_param(
             y_calibrate_,
-            predictions_per_threshold,
+            predictions_per_param,
             self._risk
         )
 
-        risks_per_threshold = risks_and_eff_sizes[:, 0]
-        eff_sample_sizes_per_threshold = risks_and_eff_sizes[:, 1]
+        risks_per_param = risks_and_eff_sizes[:, 0]
+        eff_sample_sizes_per_param = risks_and_eff_sizes[:, 1]
 
-        valid_thresholds_index = ltt_procedure(
-            risks_per_threshold,
+        valid_params_index = ltt_procedure(
+            risks_per_param,
             np.array([self._alpha]),
             self._delta,
-            eff_sample_sizes_per_threshold,
+            eff_sample_sizes_per_param,
             True,
         )[0]
-        self.valid_predict_params = self._predict_params[valid_thresholds_index]
+        self.valid_predict_params = self._predict_params[valid_params_index]
         if len(self.valid_predict_params) == 0:
-            warnings.warn(
-                "No predict parameters were found to control the risk at the given "
-                "target and confidence levels. "
-                "Try using a larger calibration set or a better model.",
-            )
+            self._set_risk_not_controlled()
         else:
-            self.secondary_risks_per_threshold = \
-                self._get_risks_and_effective_sample_sizes_per_threshold(
+            self.secondary_risks_per_param = \
+                self._get_risks_and_effective_sample_sizes_per_param(
                     y_calibrate_,
-                    predictions_per_threshold[valid_thresholds_index],
+                    predictions_per_param[valid_params_index],
                     self._best_predict_param_choice
                 )[:, 0]
 
             self.best_predict_param = self.valid_predict_params[
-                np.argmin(self.secondary_risks_per_threshold)
+                np.argmin(self.secondary_risks_per_param)
             ]
 
     def predict(self, X_test: ArrayLike) -> NDArray:
@@ -884,15 +876,27 @@ class BinaryClassificationController:  # pragma: no cover
         else:
             return best_predict_param_choice
 
+    def _get_predictions_per_param(self, X_calibrate):
+        predictions_proba = self._predict_function(X_calibrate)[:, 1]
+
+        return (predictions_proba[:, np.newaxis] >= self._predict_params).T.astype(int)
+
+    def _set_risk_not_controlled(self):
+        warnings.warn(
+            "No predict parameters were found to control the risk at the given "
+            "target and confidence levels. "
+            "Try using a larger calibration set or a better model.",
+        )
+
     @staticmethod
-    def _get_risks_and_effective_sample_sizes_per_threshold(
+    def _get_risks_and_effective_sample_sizes_per_param(
         y_true: NDArray,
-        predictions_per_threshold: NDArray,
+        predictions_per_param: NDArray,
         risk: BinaryClassificationRisk,
     ) -> NDArray:
         return np.array(
             [risk.get_value_and_effective_sample_size(
                 y_true,
                 predictions
-            ) for predictions in predictions_per_threshold]
+            ) for predictions in predictions_per_param]
         )

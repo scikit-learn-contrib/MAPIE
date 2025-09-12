@@ -953,3 +953,43 @@ def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> N
 
     controller.calibrate(X_df, y)
     controller.predict(X_df)
+
+
+def test_set_risk_not_controlled():
+    controller = BinaryClassificationController(
+        predict_function=lambda X: np.random.rand(1, 2),
+        risk=precision,
+        target_level=0.9,
+    )
+    with pytest.warns(UserWarning, match="No predict parameters were found"):
+        controller._set_risk_not_controlled()
+
+
+def test_get_predictions_per_param():
+    def predict_fn(X):
+        # Define deterministic probabilities for class 1: [0.2, 0.5, 0.9]
+        probs1 = np.array([0.2, 0.5, 0.9])
+        probs0 = 1.0 - probs1
+        return np.stack([probs0, probs1], axis=1)
+
+    controller = BinaryClassificationController(
+        predict_function=predict_fn,
+        risk=precision,
+        target_level=0.9,
+    )
+
+    controller._predict_params = np.array([0.0, 0.5, 0.8])
+
+    preds_per_param = controller._get_predictions_per_param(X_calibrate=[])
+
+    expected = np.array(
+        [
+            [True, True, True],
+            [False, True, True],
+            [False, False, True],
+        ],
+        dtype=bool,
+    )
+
+    assert preds_per_param.shape == expected.shape
+    np.testing.assert_array_equal(preds_per_param, expected)
