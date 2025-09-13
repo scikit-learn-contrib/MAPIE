@@ -879,7 +879,6 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
         risk_instance: BinaryClassificationRisk,
         expected
     ):
-        """Test _set_best_predict_param_choice with 'auto' mode for known risks."""
         controller = BinaryClassificationController(
             predict_function=lambda X: np.random.rand(1, 2),
             risk=risk_instance,
@@ -993,3 +992,91 @@ def test_get_predictions_per_param():
 
     assert preds_per_param.shape == expected.shape
     np.testing.assert_array_equal(preds_per_param, expected)
+
+
+class TestBinaryClassificationControllerSetBestPredictParam:
+    @pytest.mark.parametrize("best_predict_param_choice", ["auto", precision, recall])
+    def test_only_one_param(self, best_predict_param_choice):
+        """
+        Expected: should always set this param
+        """
+        controller = BinaryClassificationController(
+            predict_function=lambda X: np.random.rand(1, 2),
+            risk=precision,
+            target_level=0.9,
+            best_predict_param_choice=best_predict_param_choice
+        )
+
+        dummy_param = 0.5
+        y_calibrate = np.array([1, 0])
+        dummy_predictions = np.array([[True, False]])
+        valid_params_index = [0]
+        controller.valid_predict_params = np.array([dummy_param])
+
+        controller._set_best_predict_param(
+            y_calibrate_=y_calibrate,
+            predictions_per_param=dummy_predictions,
+            valid_params_index=valid_params_index
+        )
+
+        assert controller.best_predict_param == dummy_param
+
+    @pytest.mark.parametrize(
+        "best_predict_param_choice, expected",
+        [[precision, 0.5], [recall, 0.7]]
+    )
+    def test_correct_param_out_of_two(self, best_predict_param_choice, expected):
+        dummy_param = 0.5
+        dummy_param_2 = 0.7
+
+        controller = BinaryClassificationController(
+            predict_function=lambda X: np.random.rand(1, 2),
+            risk=precision,
+            target_level=0.9,
+            best_predict_param_choice=best_predict_param_choice
+        )
+
+        y_calibrate = np.array([1, 1, 0])
+        predictions_per_param = np.array(
+            [
+                [True, False, False],
+                [True, True, True]
+            ]
+        )
+        valid_params_index = [0, 1]
+
+        controller.valid_predict_params = np.array(
+            [dummy_param, dummy_param_2]
+        )
+
+        controller._set_best_predict_param(
+            y_calibrate_=y_calibrate,
+            predictions_per_param=predictions_per_param,
+            valid_params_index=valid_params_index
+        )
+
+        assert controller.best_predict_param == expected
+
+    def test_secondary_risk_undefined(self):
+        """
+        Expected: should set the param even though precision is not defined
+        """
+        controller = BinaryClassificationController(
+            predict_function=lambda X: np.random.rand(1, 2),
+            risk=precision,
+            target_level=0.9,
+            best_predict_param_choice=precision
+        )
+
+        y_calibrate = np.array([1, 0])
+        predictions_per_param = np.array([[False, False]])  # precision undefined
+        valid_params_index = [0]
+        dummy_param = 0.5
+        controller.valid_predict_params = np.array([dummy_param])
+
+        controller._set_best_predict_param(
+            y_calibrate_=y_calibrate,
+            predictions_per_param=predictions_per_param,
+            valid_params_index=valid_params_index
+        )
+        assert controller.best_predict_param == dummy_param

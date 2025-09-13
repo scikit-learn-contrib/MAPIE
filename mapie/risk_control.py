@@ -2,7 +2,17 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Iterable, Optional, Sequence, Tuple, Union, cast, Callable, Literal
+from typing import (
+    Iterable,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+    cast,
+    Callable,
+    Literal,
+    List, Any,
+)
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -810,7 +820,7 @@ class BinaryClassificationController:  # pragma: no cover
 
         self._predict_params: NDArray = np.linspace(0, 0.99, 100)
 
-        self.valid_predict_params: Optional[NDArray] = None
+        self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[float] = None
 
     def calibrate(self, X_calibrate: ArrayLike, y_calibrate: ArrayLike) -> None:
@@ -834,20 +844,17 @@ class BinaryClassificationController:  # pragma: no cover
             eff_sample_sizes_per_param,
             True,
         )[0]
+
         self.valid_predict_params = self._predict_params[valid_params_index]
+
         if len(self.valid_predict_params) == 0:
             self._set_risk_not_controlled()
         else:
-            self.secondary_risks_per_param = \
-                self._get_risks_and_effective_sample_sizes_per_param(
-                    y_calibrate_,
-                    predictions_per_param[valid_params_index],
-                    self._best_predict_param_choice
-                )[:, 0]
-
-            self.best_predict_param = self.valid_predict_params[
-                np.argmin(self.secondary_risks_per_param)
-            ]
+            self._set_best_predict_param(
+                y_calibrate_,
+                predictions_per_param,
+                valid_params_index,
+            )
 
     def predict(self, X_test: ArrayLike) -> NDArray:
         if self.best_predict_param is None:
@@ -876,17 +883,33 @@ class BinaryClassificationController:  # pragma: no cover
         else:
             return best_predict_param_choice
 
-    def _get_predictions_per_param(self, X_calibrate):
+    def _get_predictions_per_param(self, X_calibrate: ArrayLike) -> NDArray:
         predictions_proba = self._predict_function(X_calibrate)[:, 1]
-
         return (predictions_proba[:, np.newaxis] >= self._predict_params).T.astype(int)
 
-    def _set_risk_not_controlled(self):
+    def _set_risk_not_controlled(self) -> None:
         warnings.warn(
             "No predict parameters were found to control the risk at the given "
             "target and confidence levels. "
             "Try using a larger calibration set or a better model.",
         )
+
+    def _set_best_predict_param(
+        self,
+        y_calibrate_: NDArray,
+        predictions_per_param: NDArray,
+        valid_params_index: List[Any],
+    ):
+        secondary_risks_per_param = \
+            self._get_risks_and_effective_sample_sizes_per_param(
+                y_calibrate_,
+                predictions_per_param[valid_params_index],
+                self._best_predict_param_choice
+            )[:, 0]
+
+        self.best_predict_param = self.valid_predict_params[
+            np.argmin(secondary_risks_per_param)
+        ]
 
     @staticmethod
     def _get_risks_and_effective_sample_sizes_per_param(
