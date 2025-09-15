@@ -722,9 +722,10 @@ class BinaryClassificationRisk:
     # Any risk that can be defined in the following way will work using the binary
     # Hoeffding-Bentkus p-values used in MAPIE
     # Take the example of precision in the docstring to explain how the class works.
+    # Explain that it works by computing sum(risk_occurence[risk_cond])
     def __init__(
         self,
-        risk_occurrence: Callable[[int, int], int],
+        risk_occurrence: Callable[[int, int], bool],
         risk_condition: Callable[[int, int], bool],
         higher_is_better: bool,
     ):
@@ -764,25 +765,25 @@ class BinaryClassificationRisk:
 
 
 precision = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
     risk_condition=lambda y_true, y_pred: y_pred == 1,
     higher_is_better=True,
 )
 
 accuracy = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
     risk_condition=lambda y_true, y_pred: True,
     higher_is_better=True,
 )
 
 recall = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: int(y_pred == y_true),
+    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
     risk_condition=lambda y_true, y_pred: y_true == 1,
     higher_is_better=True,
 )
 
 false_positive_rate = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: int(y_pred == 1),
+    risk_occurrence=lambda y_true, y_pred: y_pred == 1,
     risk_condition=lambda y_true, y_pred: y_true == 0,
     higher_is_better=False,
 )
