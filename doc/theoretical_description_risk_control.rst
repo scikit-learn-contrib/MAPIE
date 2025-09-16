@@ -13,26 +13,43 @@ Getting started with risk control in MAPIE
 Overview
 ========
 
+This section provides an overview of risk control in MAPIE. For those unfamiliar with the concept of risk control, the next section provides an introduction to the topic.
+
 Three methods of risk control have been implemented in MAPIE so far :
 **Risk-Controlling Prediction Sets** (RCPS) [1], **Conformal Risk Control** (CRC) [2] and **Learn Then Test** (LTT) [3].
-The difference between these methods is the way the conformity scores are computed.
 
-As of now, MAPIE supports risk control for two machine learning tasks: **binary classification**, as well as **multi-label classification** (including applications like image segmentation).
+As of now, MAPIE supports risk control for two machine learning tasks: **binary classification**, as well as **multi-label classification** (in particular applications like image segmentation).
 The table below details the available methods for each task:
 
+.. |br| raw:: html
+
+   <br />
+   
 .. list-table:: Available risk control methods in MAPIE for each ML task
    :header-rows: 1
 
-   * - Risk control method
-     - Binary classification
-     - Multi-label classification (image segmentation)
+   * - Risk control |br| method
+     - Type of |br| control
+     - Assumption |br| on the data
+     - Non-monotonic |br| risks
+     - Binary |br| classification
+     - Multi-label |br| classification
    * - RCPS
+     - Probability
+     - i.i.d.
+     - ❌
      - ❌
      - ✅
    * - CRC
+     - Expectation
+     - Exchangeable
+     - ❌
      - ❌
      - ✅
    * - LTT
+     - Probability
+     - i.i.d
+     - ✅
      - ✅
      - ✅
 
@@ -41,7 +58,7 @@ In MAPIE for multi-label classification, CRC and RCPS are used for recall contro
 1. What is risk control?
 ========================
 
-Before diving into risk control, let's take the simple example of a binary classification model, which separates the incoming data into the two classes thanks to its threshold: predictions above it are classified as 1, and those below as 0. Suppose we want to find a threshold that guarantees that our model achieves a certain level of precision. A naive, yet straightforward approach to do this is to evaluate how precision varies with different threshold values on a validation dataset. By plotting this relationship (see plot below), we can identify the range of thresholds that meet our desired precision requirement (green zone on the graph).
+Before diving into risk control, let's take the simple example of a binary classification model, which separates the incoming data into two classes. Predicted probabilities above a given threshold (e.g., 0.5) correspond to predicting the "positive" class and probabilities below correspond to the "negative" class. Suppose we want to find a threshold that guarantees that our model achieves a certain level of precision. A naive, yet straightforward approach to do this is to evaluate how precision varies with different threshold values on a validation dataset. By plotting this relationship (see plot below), we can identify the range of thresholds that meet our desired precision requirement (green zone on the graph).
 
 .. image:: images/example_without_risk_control.png
    :width: 600
@@ -54,7 +71,7 @@ So far, so good. But here is the catch: while the chosen threshold effectively k
 Risk control is the science of adjusting a model's parameter, typically denoted :math:`\lambda`, so that a given risk stays below a desired level with high probability on unseen data.
 Note that here, the term *risk* is used to describe an undesirable outcome of the model (e.g., type I error): therefore, it is a value we want to minimize, and in our case, keep under a certain level. Also note that risk control can easily be applied to metrics we want to maximize (e.g., precision), simply by controlling the complement (e.g., 1-precision).
 
-The strength of risk control lies in the statistical guarantees it provides on unseen data. Unlike the naive method presented earlier, it determines a value of :math:`\lambda` that ensures the risk is controlled *beyond* the training data.
+The strength of risk control lies in the statistical guarantees it provides on unseen data. Unlike the naive method presented earlier, it determines a value of :math:`\lambda` that ensures the risk is controlled *beyond* the validation data.
 
 Applying risk control to the previous example would allow us to get a new — albeit narrower — range of thresholds (blue zone on the graph) that are **statistically guaranteed**.
 
@@ -66,7 +83,7 @@ This guarantee is critical in a wide range of use cases (especially in high-stak
 
 —
 
-To express risk control in mathematical terms, we denote by R the risk we want to control, and introduce the following two parameters:
+To express risk control in mathematical terms, we denote by :math:`R` the risk we want to control, and introduce the following two parameters:
 
 - :math:`\alpha`: the target level below which we want the risk to remain, as shown in the figure below;
 
@@ -76,13 +93,13 @@ To express risk control in mathematical terms, we denote by R the risk we want t
 
 - :math:`\delta`: the confidence level associated with the risk control.
 
-In other words, the risk is said to be controlled if :math:`R \leq \alpha` with probability at least :math:`1 - \delta`.
+In other words, the risk is said to be controlled if :math:`R \leq \alpha` with probability at least :math:`1 - \delta`, where the probability is over the randomness in the sampling of the dataset.
 
 The three risk control methods implemented in MAPIE — RCPS, CRC and LTT — rely on different assumptions, and offer slightly different guarantees:
 
 - **CRC** requires the data to be **exchangeable**, and gives a guarantee on the **expectation of the risk**: :math:`\mathbb{E}(R) \leq \alpha`;
 
-- **RCPS** and **LTT** both impose stricter assumptions, requiring the data to be **independent and identically distributed** (i.i.d.), which implies exchangeability. The guarantee they provide is on the **probability that the risk does not exceed :math:`\alpha`**: :math:`\mathbb{P}(R \leq \alpha) \geq 1 - \delta`.
+- **RCPS** and **LTT** both impose stricter assumptions, requiring the data to be **independent and identically distributed** (i.i.d.), which implies exchangeability. The guarantee they provide is on the **probability that the risk does not exceed** :math:`\boldsymbol{\alpha}`: :math:`\mathbb{P}(R \leq \alpha) \geq 1 - \delta`.
 
 .. image:: images/risk_distribution.png
    :width: 600
@@ -94,7 +111,7 @@ The plot above gives a visual representation of the difference between the two t
 
 - The risk is controlled in probability (RCPS/LTT) if at least :math:`1 - \delta` percent of its distribution over unseen data is below :math:`\alpha`.
 
-Note that at the opposite of the other two methods, LTT allows to control any non-monotonic risk.
+Note that contrary to the other two methods, LTT allows to control any non-monotonic risk.
 
 The following section provides a detailed overview of each method.
 
@@ -234,7 +251,7 @@ We are going to present the Learn Then Test framework that allows the user to co
 This method has been introduced in article [3].
 The settings here are the same as RCPS and CRC, we just need to introduce some new parameters:
 
-- Let :math:`\Lambda` be a discretized for our :math:`\lambda`, meaning that :math:`\Lambda = \{\lambda_1, ..., \lambda_n\}`.
+- Let :math:`\Lambda` be a discretized set for our :math:`\lambda`, meaning that :math:`\Lambda = \{\lambda_1, ..., \lambda_n\}`.
 
 - Let :math:`p_\lambda` be a valid p-value for the null hypothesis :math:`\mathbb{H}_j: R(\lambda_j)>\alpha`.
 
@@ -250,7 +267,7 @@ In order to find all the parameters :math:`\lambda` that satisfy the above condi
   :math:`\{(x_1, y_1), \dots, (x_n, y_n)\}`.
 
 - For each :math:`\lambda_j` in a discrete set :math:`\Lambda = \{\lambda_1, \lambda_2,\dots, \lambda_n\}`, we associate the null hypothesis
-  :math:`\mathcal{H}_j: R(\lambda_j) > \alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where risk the risk
+  :math:`\mathcal{H}_j: R(\lambda_j) > \alpha`, as rejecting the hypothesis corresponds to selecting :math:`\lambda_j` as a point where the risk
   is controlled.
 
 - For each null hypothesis, we compute a valid p-value using a concentration inequality :math:`p_{\lambda_j}`. Here we choose to compute the Hoeffding-Bentkus p-value
