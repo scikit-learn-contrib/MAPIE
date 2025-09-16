@@ -964,36 +964,6 @@ def test_set_risk_not_controlled():
         controller._set_risk_not_controlled()
 
 
-def test_get_predictions_per_param():
-    def predict_fn(X):
-        # Define deterministic probabilities for class 1: [0.2, 0.5, 0.9]
-        probs1 = np.array([0.2, 0.5, 0.9])
-        probs0 = 1.0 - probs1
-        return np.stack([probs0, probs1], axis=1)
-
-    controller = BinaryClassificationController(
-        predict_function=predict_fn,
-        risk=precision,
-        target_level=0.9,
-    )
-
-    controller._predict_params = np.array([0.0, 0.5, 0.8])
-
-    preds_per_param = controller._get_predictions_per_param(X_calibrate=[])
-
-    expected = np.array(
-        [
-            [True, True, True],
-            [False, True, True],
-            [False, False, True],
-        ],
-        dtype=bool,
-    )
-
-    assert preds_per_param.shape == expected.shape
-    np.testing.assert_array_equal(preds_per_param, expected)
-
-
 class TestBinaryClassificationControllerSetBestPredictParam:
     @pytest.mark.parametrize("best_predict_param_choice", ["auto", precision, recall])
     def test_only_one_param(self, best_predict_param_choice):
@@ -1080,3 +1050,61 @@ class TestBinaryClassificationControllerSetBestPredictParam:
             valid_params_index=valid_params_index
         )
         assert controller.best_predict_param == dummy_param
+
+
+def deterministic_predict_function(X):
+    probs1 = np.array([0.2, 0.5, 0.9])
+    probs0 = 1.0 - probs1
+    return np.stack([probs0, probs1], axis=1)
+
+
+@pytest.fixture
+def bcc_deterministic():
+    return BinaryClassificationController(
+        predict_function=deterministic_predict_function,
+        risk=precision,
+        target_level=0.9,
+    )
+
+
+class TestBinaryClassificationControllerGetPredictionsPerParam:
+    def test_single_parameter(self, bcc_deterministic):
+        result = bcc_deterministic._get_predictions_per_param(
+            X=[],
+            params=np.array([0.5])
+        )
+
+        expected = np.array([[False, True, True]])
+        assert result.shape == (1, 3)
+        assert result.dtype == int
+        np.testing.assert_array_equal(result, expected)
+
+    def test_multiple_parameters(self, bcc_deterministic):
+        result = bcc_deterministic._get_predictions_per_param(
+            X=[],
+            params=np.array([0.0, 0.5, 0.8])
+        )
+
+        expected = np.array([
+            [True, True, True],
+            [False, True, True],
+            [False, False, True],
+        ])
+        assert result.shape == (3, 3)
+        np.testing.assert_array_equal(result, expected)
+
+    def test_output_shape_consistency(self):
+        def predict_fn(X):
+            return np.array([[0.1, 0.9], [0.7, 0.3], [0.4, 0.6]])
+
+        controller = BinaryClassificationController(
+            predict_function=predict_fn,
+            risk=precision,
+            target_level=0.9,
+        )
+
+        params = np.array([0.2, 0.5, 0.8])
+        result = controller._get_predictions_per_param(X=[], params=params)
+
+        assert result.shape == (len(params), 3)
+

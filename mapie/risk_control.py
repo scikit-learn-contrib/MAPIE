@@ -802,6 +802,7 @@ class BinaryClassificationController:  # pragma: no cover
         # X -> y_proba of shape (n_samples, 2)
         predict_function: Callable[[ArrayLike], NDArray],
         risk: BinaryClassificationRisk,
+        # above or below depending if risk is higher_is_better or not
         target_level: float,
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
@@ -827,7 +828,10 @@ class BinaryClassificationController:  # pragma: no cover
     def calibrate(self, X_calibrate: ArrayLike, y_calibrate: ArrayLike) -> None:
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
-        predictions_per_param = self._get_predictions_per_param(X_calibrate)
+        predictions_per_param = self._get_predictions_per_param(
+            X_calibrate,
+            self._predict_params
+        )
 
         risks_and_eff_sizes = self._get_risks_and_effective_sample_sizes_per_param(
             y_calibrate_,
@@ -862,8 +866,10 @@ class BinaryClassificationController:  # pragma: no cover
             raise ValueError(
                 "No predict parameters were found to control the risk. Cannot predict."
             )
-        predictions_proba = self._predict_function(X_test)[:, 1]
-        return (predictions_proba >= self.best_predict_param).astype(int)
+        return self._get_predictions_per_param(
+            X_test,
+            np.array([self.best_predict_param]),
+        )[0]
 
     def _set_best_predict_param_choice(
         self,
@@ -884,11 +890,8 @@ class BinaryClassificationController:  # pragma: no cover
         else:
             return best_predict_param_choice
 
-    def _get_predictions_per_param(self, X_calibrate: ArrayLike) -> NDArray:
-        predictions_proba = self._predict_function(X_calibrate)[:, 1]
-        return (predictions_proba[:, np.newaxis] >= self._predict_params).T.astype(int)
-
-    def _set_risk_not_controlled(self) -> None:
+    @staticmethod
+    def _set_risk_not_controlled() -> None:
         warnings.warn(
             "No predict parameters were found to control the risk at the given "
             "target and confidence levels. "
@@ -924,3 +927,7 @@ class BinaryClassificationController:  # pragma: no cover
                 predictions
             ) for predictions in predictions_per_param]
         )
+
+    def _get_predictions_per_param(self, X: ArrayLike, params: NDArray) -> NDArray:
+        predictions_proba = self._predict_function(X)[:, 1]
+        return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
