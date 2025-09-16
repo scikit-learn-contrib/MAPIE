@@ -789,7 +789,7 @@ false_positive_rate = BinaryClassificationRisk(
 )
 
 
-class BinaryClassificationController:  # pragma: no cover
+class BinaryClassificationController:
     _best_predict_param_choice_map = {
         precision: recall,
         recall: precision,
@@ -801,7 +801,7 @@ class BinaryClassificationController:  # pragma: no cover
         self,
         # X -> y_proba of shape (n_samples, 2)
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: BinaryClassificationRisk,
+        risk: BinaryClassificationRisk,  # to import from mapie.risk_control
         # above or below depending if risk is higher_is_better or not
         target_level: float,
         confidence_level: float = 0.9,
@@ -825,7 +825,14 @@ class BinaryClassificationController:  # pragma: no cover
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[float] = None
 
-    def calibrate(self, X_calibrate: ArrayLike, y_calibrate: ArrayLike) -> None:
+    # All subfunctions are unit-tested. To avoid having to write
+    # tests just to make sure those subfunctions are called,
+    # we don't include .calibrate in the coverage report
+    def calibrate(  # pragma: no cover
+        self,
+        X_calibrate: ArrayLike,
+        y_calibrate: ArrayLike
+    ) -> None:
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
         predictions_per_param = self._get_predictions_per_param(
@@ -864,7 +871,9 @@ class BinaryClassificationController:  # pragma: no cover
     def predict(self, X_test: ArrayLike) -> NDArray:
         if self.best_predict_param is None:
             raise ValueError(
-                "No predict parameters were found to control the risk. Cannot predict."
+                "Cannot predict. "
+                "Either you forgot to calibrate the controller first, "
+                "either calibration was not successful."
             )
         return self._get_predictions_per_param(
             X_test,
@@ -890,8 +899,8 @@ class BinaryClassificationController:  # pragma: no cover
         else:
             return best_predict_param_choice
 
-    @staticmethod
-    def _set_risk_not_controlled() -> None:
+    def _set_risk_not_controlled(self) -> None:
+        self.best_predict_param = None
         warnings.warn(
             "No predict parameters were found to control the risk at the given "
             "target and confidence levels. "

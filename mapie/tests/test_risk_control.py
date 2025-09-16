@@ -960,8 +960,12 @@ def test_set_risk_not_controlled():
         risk=precision,
         target_level=0.9,
     )
-    with pytest.warns(UserWarning, match="No predict parameters were found"):
+    with pytest.warns(
+        UserWarning,
+        match=r"No predict parameters were found to control the risk"
+    ):
         controller._set_risk_not_controlled()
+    assert controller.best_predict_param is None
 
 
 class TestBinaryClassificationControllerSetBestPredictParam:
@@ -1108,3 +1112,22 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
 
         assert result.shape == (len(params), 3)
 
+
+class TestBinaryClassificationControllerPredict:
+    def test_output_shape(self, bcc_deterministic):
+        controller = bcc_deterministic
+        controller.best_predict_param = 0.5
+        predictions = controller.predict([])
+
+        assert predictions.shape == (3,)
+        assert predictions.dtype == int
+
+    def test_error(self, bcc_deterministic):
+        controller = bcc_deterministic
+        controller.best_predict_param = None
+
+        with pytest.raises(
+            ValueError,
+            match=r"Cannot predict"
+        ):
+            controller.predict(X)
