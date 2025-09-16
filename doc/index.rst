@@ -24,7 +24,7 @@
    :caption: Control prediction errors
 
    theoretical_description_risk_control
-   examples_multilabel_classification/1-quickstart/plot_tutorial_risk_control
+   examples_risk_control/index
    external_risk_control_package
 
 .. toctree::

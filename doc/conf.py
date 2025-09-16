@@ -321,14 +321,14 @@ sphinx_gallery_conf = {
     "examples_dirs": [
         "../examples/regression",
         "../examples/classification",
-        "../examples/multilabel_classification",
+        "../examples/risk_control",
         "../examples/calibration",
         "../examples/mondrian",
     ],
     "gallery_dirs": [
         "examples_regression",
         "examples_classification",
-        "examples_multilabel_classification",
+        "examples_risk_control",
         "examples_calibration",
         "examples_mondrian",
     ],
