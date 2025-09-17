@@ -1112,6 +1112,44 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
 
         assert result.shape == (len(params), 3)
 
+    def test_error_passing_classifier(self):
+        """
+        Test when the user provides a classifier instead of a predict_proba
+        method
+        """
+        clf = LogisticRegression().fit([[0], [1]], [0, 1])
+        bcc = BinaryClassificationController(
+            predict_function=clf,
+            risk=precision,
+            target_level=0.9
+        )
+        X_test = []
+        params = np.array([0.5])
+
+        with pytest.raises(
+            TypeError,
+            match=r"Error when calling the predict_function"
+        ):
+            bcc._get_predictions_per_param(X_test, params)
+
+    def test_other_error(self):
+        """Test that other errors are re-raised without modification"""
+
+        def failing_predict_function(X):
+            raise TypeError("Some other error message")
+
+        bcc = BinaryClassificationController(
+            predict_function=failing_predict_function,
+            risk=precision,
+            target_level=0.9
+        )
+
+        X_test = []
+        params = np.array([0.5])
+
+        with pytest.raises(TypeError, match="Some other error message"):
+            bcc._get_predictions_per_param(X_test, params)
+
 
 class TestBinaryClassificationControllerPredict:
     def test_output_shape(self, bcc_deterministic):

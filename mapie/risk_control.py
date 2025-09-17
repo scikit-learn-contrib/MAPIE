@@ -938,5 +938,16 @@ class BinaryClassificationController:
         )
 
     def _get_predictions_per_param(self, X: ArrayLike, params: NDArray) -> NDArray:
-        predictions_proba = self._predict_function(X)[:, 1]
+        try:
+            predictions_proba = self._predict_function(X)[:, 1]
+        except TypeError as e:
+            if "object is not callable" in str(e):
+                raise TypeError(
+                    "Error when calling the predict_function. "
+                    "Maybe you provided a binary classifier to the "
+                    "predict_function parameter of the BinaryClassificationController. "
+                    "You should provide your classifier's predict_proba method instead."
+                ) from e
+            else:
+                raise
         return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
