@@ -134,7 +134,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     References
     ----------
-    [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
+    [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos,
     and Michael I. Jordan. Distribution-free, risk-controlling prediction
     sets. CoRR, abs/2101.02703, 2021.
     URL https://arxiv.org/abs/2101.02703
@@ -197,7 +197,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     def _check_parameters(self) -> None:
         """
-        Check n_jobs, verbose and random_states.
+        Check n_jobs, verbose, and random_states.
 
         Raises
         ------
@@ -719,6 +719,22 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
 
 class BinaryClassificationRisk:
+    """
+    Parameters
+    ----------
+    risk_occurrence : Callable[[int, int], bool]
+    risk_condition : Callable[[int, int], bool]
+    higher_is_better : bool
+
+    Attributes
+    ----------
+    risk_occurrence : Callable[[int, int], bool]
+    risk_condition : Callable[[int, int], bool]
+    higher_is_better : bool
+
+    Examples
+    --------
+    """
     # Any risk that can be defined in the following way will work using the binary
     # Hoeffding-Bentkus p-values used in MAPIE
     # Take the example of precision in the docstring to explain how the class works.
@@ -738,6 +754,16 @@ class BinaryClassificationRisk:
         y_true: NDArray,  # shape (n_samples,), values in {0, 1}
         y_pred: NDArray,  # shape (n_samples,), values in {0, 1}
     ) -> Tuple[float, int]:
+        """
+        Parameters
+        ----------
+        y_true : NDArray
+        y_pred : NDArray
+
+        Returns
+        -------
+        Tuple[float, int]
+        """
         # float between 0 and 1, int between 0 and len(y_true)
         # Returns 1-risk_occurrence if higher_is_better is True
         # returns (1, -1) when the risk is not defined (condition never met)
@@ -790,6 +816,108 @@ false_positive_rate = BinaryClassificationRisk(
 
 
 class BinaryClassificationController:
+    """
+    Controls the risk or performance of a binary classifier.
+
+    BinaryClassificationController finds the decision thresholds of a binary classifier
+    that statistically guarantee a risk to be below a target level
+    (the risk is "controlled").
+    It can be used to control a performance metric as well, such as the precision.
+    In that case, the thresholds guarantee that the performance is above a target level.
+
+    Usage:
+
+    1. Instantiate a BinaryClassificationController, providing the predict_proba method
+       of your binary classifier
+    2. Call the calibrate method to find the thresholds
+    3. Use the predict method to predict using the best threshold
+
+    Note: for a given model, calibration dataset, target level, and confidence level,
+    there may not be any thresholds controlling the risk.
+
+    Parameters
+    ----------
+    predict_function : Callable[[ArrayLike], NDArray]
+        predict_proba method of a fitted binary classifier.
+        Its output signature must be of shape (len(X), 2)
+
+    risk : BinaryClassificationRisk
+        The risk or performance metric to control.
+        Valid options:
+
+        - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
+          accuracy, false_positive_rate)
+        - A custom instance of BinaryClassificationRisk object
+
+    target_level : float
+        The maximum risk level (or minimum performance level). Must be between 0 and 1.
+
+    confidence_level : float, default=0.9
+        The confidence level with which the risk (or performance) is controlled.
+        See the documentation for detailed explanations.
+
+    best_predict_param_choice : Union["auto", BinaryClassificationRisk], default="auto"
+        How to select the best threshold from the valid thresholds that control the risk
+        (or performance). The BinaryClassificationController will try to minimize
+        (or maximize) a secondary objective.
+        Valid options:
+
+        - "auto" (default)
+        - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
+          accuracy, false_positive_rate)
+        - A custom instance of BinaryClassificationRisk object
+
+    Attributes
+    ----------
+    valid_predict_params : NDArray
+        The valid thresholds that control the risk (or performance).
+        Use the calibrate method to compute these.
+
+    best_predict_param : Optional[float]
+        The best thresholds that control the risk (or performance).
+        Use the calibrate method to compute it.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.model_selection import train_test_split
+    >>> from mapie.risk_control import BinaryClassificationController, precision
+
+    >>> X, y = make_classification(
+    ...     n_features=2,
+    ...     n_redundant=0,
+    ...     n_informative=2,
+    ...     n_clusters_per_class=1,
+    ...     n_classes=2,
+    ...     random_state=42,
+    ...     class_sep=2.0
+    ... )
+    >>> X_train, X_temp, y_train, y_temp = train_test_split(
+    ...     X, y, test_size=0.4, random_state=42
+    ... )
+    >>> X_calib, X_test, y_calib, y_test = train_test_split(
+    ...     X_temp, y_temp, test_size=0.1, random_state=42
+    ... )
+
+    >>> clf = LogisticRegression().fit(X_train, y_train)
+
+    >>> controller = BinaryClassificationController(
+    ...     predict_function=clf.predict_proba,
+    ...     risk=precision,
+    ...     target_level=0.6
+    ... )
+
+    >>> controller.calibrate(X_calib, y_calib)
+    >>> predictions = controller.predict(X_test)  # doctest: +SKIP
+
+    References
+    ----------
+    Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
+    "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
+
+    """
     _best_predict_param_choice_map = {
         precision: recall,
         recall: precision,
@@ -799,10 +927,8 @@ class BinaryClassificationController:
 
     def __init__(
         self,
-        # X -> y_proba of shape (n_samples, 2)
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: BinaryClassificationRisk,  # to import from mapie.risk_control
-        # above or below depending if risk is higher_is_better or not
+        risk: BinaryClassificationRisk,
         target_level: float,
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
@@ -833,6 +959,23 @@ class BinaryClassificationController:
         X_calibrate: ArrayLike,
         y_calibrate: ArrayLike
     ) -> None:
+        """
+        Calibrate the BinaryClassificationController.
+        Sets attributes valid_predict_params and best_predict_param (if the risk
+        or performance can be controlled at the target level).
+
+        Parameters
+        ----------
+        X_calibrate : ArrayLike
+            Features of the calibration set.
+
+        y_calibrate : ArrayLike
+            Binary labels of the calibration set.
+
+        Returns
+        -------
+        None
+        """
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
         predictions_per_param = self._get_predictions_per_param(
@@ -869,6 +1012,23 @@ class BinaryClassificationController:
             )
 
     def predict(self, X_test: ArrayLike) -> NDArray:
+        """
+        Predict using predict_function at the best threshold.
+
+        Parameters
+        ----------
+        X_test : ArrayLike
+            Features
+
+        Returns
+        -------
+        NDArray of shape (n_samples,)
+
+        Raises
+        ------
+        ValueError if the method .calibrate was not called,
+        or if no valid thresholds were found during calibration.
+        """
         if self.best_predict_param is None:
             raise ValueError(
                 "Cannot predict. "
