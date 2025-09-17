@@ -21,6 +21,7 @@ jobs:
     needs: get-latest-python
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           # minimum supported dependencies
@@ -37,6 +38,7 @@ jobs:
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
             sklearn-version: ""
+            continue-on-error: true
           - os: macos-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
