@@ -263,8 +263,6 @@ Risk control
 
 The ``MapieMultiLabelClassifier`` class has been renamed ``PrecisionRecallController``.
 
-The parameter ``calib_size`` from the ``fit`` method has been renamed ``conformalize_size``.
-
 Calibration
 ^^^^^^^^^^^^^
 
