@@ -41,3 +41,9 @@ Here, we generate one-dimensional noisy data that we fit with a MLPRegressor: `U
 =======================
 
 Similarly, it's possible to do the same for a basic classification problem: `Use MAPIE to plot prediction sets <https://mapie.readthedocs.io/en/stable/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
+
+
+4. Risk Control
+=======================
+
+MAPIE implements risk control methods for multilabel classification (in particular, image segmentation) and binary classification: `Use MAPIE to control risk for a binary classifier <https://mapie.readthedocs.io/en/stable/examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html>`_
