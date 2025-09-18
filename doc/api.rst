@@ -102,6 +102,8 @@ Risk Control
    :template: class.rst
 
    mapie.risk_control.PrecisionRecallController
+   mapie.risk_control.BinaryClassificationController
+   mapie.risk_control.BinaryClassificationRisk
 
 Calibration
 ===========

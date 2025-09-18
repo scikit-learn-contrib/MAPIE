@@ -760,7 +760,7 @@ class BinaryClassificationRisk:
     Attributes
     ----------
     higher_is_better : bool
-        See above.
+        See params.
 
     References
     ----------
@@ -803,14 +803,15 @@ class BinaryClassificationRisk:
 
         Returns
         -------
-        A tuple containing the value of the risk between 0 and 1,
-        and the number of effective samples used to compute that value
-        (between 1 and n_samples).
+        Tuple[float, int]
+            A tuple containing the value of the risk between 0 and 1,
+            and the number of effective samples used to compute that value
+            (between 1 and n_samples).
 
-        In the case of a performance metric, this function returns 1 - perf_value.
+            In the case of a performance metric, this function returns 1 - perf_value.
 
-        If the risk is not defined (condition never met), the value is set to 1,
-        and the number of effective samples is set to -1.
+            If the risk is not defined (condition never met), the value is set to 1,
+            and the number of effective samples is set to -1.
         """
         risk_occurrences = np.array([
             self._risk_occurrence(y_true_i, y_pred_i)
@@ -1066,12 +1067,14 @@ class BinaryClassificationController:
 
         Returns
         -------
-        NDArray of shape (n_samples,)
+        NDArray
+            NDArray of shape (n_samples,)
 
         Raises
         ------
-        ValueError if the method .calibrate was not called,
-        or if no valid thresholds were found during calibration.
+        ValueError
+            If the method .calibrate was not called,
+            or if no valid thresholds were found during calibration.
         """
         if self.best_predict_param is None:
             raise ValueError(
