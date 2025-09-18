@@ -117,6 +117,8 @@ The following section provides a detailed overview of each method.
 
 2. Theoretical description
 ==========================
+Note that a notebook testing theoretical guarantees of risk control in binary classification using a random classifier and synthetic data is available here: `theoretical_validity_tests.ipynb <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/risk_control/theoretical_validity_tests.ipynb>`__.
+
 2.1 Risk-Controlling Prediction Sets
 ------------------------------------
 2.1.1 General settings
