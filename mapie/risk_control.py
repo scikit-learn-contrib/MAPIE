@@ -720,62 +720,104 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
 class BinaryClassificationRisk:
     """
+    Define a risk (or a performance metric) to be used with the
+    BinaryClassificationController. Predefined instances are implemented,
+    see :func:`mapie.risk_control.precision`, :func:`mapie.risk_control.recall`,
+    :func:`mapie.risk_control.accuracy` and
+    :func:`mapie.risk_control.false_positive_rate`.
+
+    Here, a binary classification risk (or performance) is defined by an occurrence and
+    a condition. Let's take the example of precision. Precision is the sum of true
+    positives over the total number of positives. In other words, precision is
+    the average of correct predictions (occurrence) given that those predictions
+    are positive (condition). Programmatically,
+    ``precision = (sum(y_pred == y_true) if y_pred == 1)/sum(y_pred == 1)``.
+    Because precision is a performance metric rather than a risk, `higher_is_better`
+    must be set to `True`. See the implementation of `precision` in mapie.risk_control.
+
+    Note: any risk or performance metric that can be defined as
+    ``sum(occurrence if condition) / sum(occurrence)`` can be theoretically controlled
+    with the BinaryClassificationController, thanks to the LearnThenTest framework [1]
+    and the binary Hoeffding-Bentkus p-values implemented in MAPIE.
+
+    Note: by definition, the value of the risk (or performance metric) here is always
+    between 0 and 1.
+
     Parameters
     ----------
     risk_occurrence : Callable[[int, int], bool]
+        A function defining the occurrence of the risk for a given sample.
+        Must take y_true and y_pred as input and return a boolean.
+
     risk_condition : Callable[[int, int], bool]
+        A function defining the condition of the risk for a given sample,
+        Must take y_true and y_pred as input and return a boolean.
+
     higher_is_better : bool
+        Whether this BinaryClassificationRisk instance is a risk
+        (higher_is_better=False) or a performance metric (higher_is_better=True).
 
     Attributes
     ----------
-    risk_occurrence : Callable[[int, int], bool]
-    risk_condition : Callable[[int, int], bool]
     higher_is_better : bool
+        See above.
 
-    Examples
-    --------
+    References
+    ----------
+    [1] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
+    "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
     """
-    # Any risk that can be defined in the following way will work using the binary
-    # Hoeffding-Bentkus p-values used in MAPIE
-    # Take the example of precision in the docstring to explain how the class works.
-    # Explain that it works by computing sum(risk_occurence[risk_cond])
+
     def __init__(
         self,
         risk_occurrence: Callable[[int, int], bool],
         risk_condition: Callable[[int, int], bool],
         higher_is_better: bool,
     ):
-        self.risk_occurrence = risk_occurrence
-        self.risk_condition = risk_condition
+        self._risk_occurrence = risk_occurrence
+        self._risk_condition = risk_condition
         self.higher_is_better = higher_is_better
 
     def get_value_and_effective_sample_size(
         self,
-        y_true: NDArray,  # shape (n_samples,), values in {0, 1}
-        y_pred: NDArray,  # shape (n_samples,), values in {0, 1}
+        y_true: NDArray,
+        y_pred: NDArray,
     ) -> Tuple[float, int]:
         """
+        Computes the value of a risk given an array of ground
+        truth labels and the corresponding predictions. Also returns the number of
+        samples used to compute that value.
+
+        That number can be different from the total number of samples. For example, in
+        the case of precision, only the samples with positive predictions are used.
+
+        In the case of a performance metric, this function returns 1 - perf_value.
+
         Parameters
         ----------
         y_true : NDArray
+            NDArray of ground truth labels, of shape (n_samples,), with values in {0, 1}
+
         y_pred : NDArray
+            NDArray of predictions, of shape (n_samples,), with values in {0, 1}
 
         Returns
         -------
-        Tuple[float, int]
+        A tuple containing the value of the risk between 0 and 1,
+        and the number of effective samples used to compute that value
+        (between 1 and n_samples).
+
+        In the case of a performance metric, this function returns 1 - perf_value.
+
+        If the risk is not defined (condition never met), the value is set to 1,
+        and the number of effective samples is set to -1.
         """
-        # float between 0 and 1, int between 0 and len(y_true)
-        # Returns 1-risk_occurrence if higher_is_better is True
-        # returns (1, -1) when the risk is not defined (condition never met)
-        # In this case, the corresponding lambda shouldn't be considered valid.
-        # In the current LTT implementation, providing n_obs=-1 will result
-        # in an infinite p_value, effectively invaliding the lambda
         risk_occurrences = np.array([
-            self.risk_occurrence(y_true_i, y_pred_i)
+            self._risk_occurrence(y_true_i, y_pred_i)
             for y_true_i, y_pred_i in zip(y_true, y_pred)
         ])
         risk_conditions = np.array([
-            self.risk_condition(y_true_i, y_pred_i)
+            self._risk_condition(y_true_i, y_pred_i)
             for y_true_i, y_pred_i in zip(y_true, y_pred)
         ])
         effective_sample_size = len(y_true) - np.sum(~risk_conditions)
@@ -787,6 +829,9 @@ class BinaryClassificationRisk:
             if self.higher_is_better:
                 risk_value = 1 - risk_value
             return risk_value, effective_sample_size_int
+        # In this case, the corresponding lambda shouldn't be considered valid.
+        # In the current LTT implementation, providing n_obs=-1 will result
+        # in an infinite p_value, effectively invaliding the lambda
         return 1, -1
 
 
@@ -916,7 +961,6 @@ class BinaryClassificationController:
     ----------
     Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
     "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
-
     """
     _best_predict_param_choice_map = {
         precision: recall,
