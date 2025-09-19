@@ -722,13 +722,13 @@ class BinaryClassificationRisk:
     """
     Define a risk (or a performance metric) to be used with the
     BinaryClassificationController. Predefined instances are implemented,
-    see :func:`mapie.risk_control.precision`, :func:`mapie.risk_control.recall`,
-    :func:`mapie.risk_control.accuracy` and
-    :func:`mapie.risk_control.false_positive_rate`.
+    see :data:`mapie.risk_control.precision`, :data:`mapie.risk_control.recall`,
+    :data:`mapie.risk_control.accuracy` and
+    :data:`mapie.risk_control.false_positive_rate`.
 
     Here, a binary classification risk (or performance) is defined by an occurrence and
     a condition. Let's take the example of precision. Precision is the sum of true
-    positives over the total number of positives. In other words, precision is
+    positives over the total number of predicted positives. In other words, precision is
     the average of correct predictions (occurrence) given that those predictions
     are positive (condition). Programmatically,
     ``precision = (sum(y_pred == y_true) if y_pred == 1)/sum(y_pred == 1)``.
@@ -736,7 +736,7 @@ class BinaryClassificationRisk:
     must be set to `True`. See the implementation of `precision` in mapie.risk_control.
 
     Note: any risk or performance metric that can be defined as
-    ``sum(occurrence if condition) / sum(occurrence)`` can be theoretically controlled
+    ``sum(occurrence if condition) / sum(condition)`` can be theoretically controlled
     with the BinaryClassificationController, thanks to the LearnThenTest framework [1]
     and the binary Hoeffding-Bentkus p-values implemented in MAPIE.
 
@@ -879,7 +879,7 @@ class BinaryClassificationController:
     3. Use the predict method to predict using the best threshold
 
     Note: for a given model, calibration dataset, target level, and confidence level,
-    there may not be any thresholds controlling the risk.
+    there may not be any threshold controlling the risk.
 
     Parameters
     ----------
@@ -920,7 +920,7 @@ class BinaryClassificationController:
         Use the calibrate method to compute these.
 
     best_predict_param : Optional[float]
-        The best thresholds that control the risk (or performance).
+        The best threshold that control the risk (or performance).
         Use the calibrate method to compute it.
 
     Examples
@@ -956,7 +956,7 @@ class BinaryClassificationController:
     ... )
 
     >>> controller.calibrate(X_calib, y_calib)
-    >>> predictions = controller.predict(X_test)  # doctest: +SKIP
+    >>> predictions = controller.predict(X_test)
 
     References
     ----------
@@ -1154,6 +1154,17 @@ class BinaryClassificationController:
                     "Maybe you provided a binary classifier to the "
                     "predict_function parameter of the BinaryClassificationController. "
                     "You should provide your classifier's predict_proba method instead."
+                ) from e
+            else:
+                raise
+        except IndexError as e:
+            if "array is 1-dimensional, but 2 were indexed" in str(e):
+                raise IndexError(
+                    "Error when calling the predict_function. "
+                    "Maybe the predict function you provided returns only the "
+                    "probability of the positive class. "
+                    "You should provide a predict function that returns the "
+                    "probabilities of both classes, like scikit-learn estimators."
                 ) from e
             else:
                 raise
