@@ -1123,20 +1123,53 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
             risk=precision,
             target_level=0.9
         )
-        X_test = []
+        X_test = [[0]]
         params = np.array([0.5])
 
         with pytest.raises(
             TypeError,
-            match=r"Error when calling the predict_function"
+            match=r"Maybe you provided a binary classifier"
         ):
             bcc._get_predictions_per_param(X_test, params)
 
-    def test_other_error(self):
+    def test_error_incorrect_predict_shape(self):
+        """
+        Test when the user provides a predict function that outputs only
+        the positive class.
+        """
+        clf = LogisticRegression().fit([[0], [1]], [0, 1])
+
+        def pred_func(X):
+            return clf.predict_proba(X)[:, 0]
+
+        bcc = BinaryClassificationController(
+            predict_function=pred_func,
+            risk=precision,
+            target_level=0.9
+        )
+        X_test = [[0]]
+        params = np.array([0.5])
+
+        with pytest.raises(
+            IndexError,
+            match=r"Maybe the predict function you provided returns only the "
+                  r"probability of the positive class."
+        ):
+            bcc._get_predictions_per_param(X_test, params)
+
+    @pytest.mark.parametrize(
+        "error,expected_error_type,expected_error_message",
+        [
+            (ValueError("Hey"), ValueError, "Hey"),
+            (IndexError("Gloups"), IndexError, "Gloups"),
+            (TypeError("I'm hungry"), TypeError, "I'm hungry"),
+        ],
+    )
+    def test_other_error(self, error, expected_error_type, expected_error_message):
         """Test that other errors are re-raised without modification"""
 
         def failing_predict_function(X):
-            raise TypeError("Some other error message")
+            raise error
 
         bcc = BinaryClassificationController(
             predict_function=failing_predict_function,
@@ -1144,10 +1177,10 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
             target_level=0.9
         )
 
-        X_test = []
+        X_test = [[0]]
         params = np.array([0.5])
 
-        with pytest.raises(TypeError, match="Some other error message"):
+        with pytest.raises(expected_error_type, match=expected_error_message):
             bcc._get_predictions_per_param(X_test, params)
 
 
