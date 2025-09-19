@@ -26,7 +26,7 @@ RANDOM_STATE = 1
 X, y = make_circles(n_samples=3000, noise=0.3, factor=0.3, random_state=RANDOM_STATE)
 (X_train, X_calib, X_test,
  y_train, y_calib, y_test) = train_conformalize_test_split(
-     X, y, 
+     X, y,
      train_size=0.8, conformalize_size=0.1, test_size=0.1,
      random_state=RANDOM_STATE
      )
@@ -44,8 +44,8 @@ clf.fit(X_train, y_train)
 target_precision = 0.8
 confidence_level = 0.9
 bcc = BinaryClassificationController(
-    clf.predict_proba, 
-    precision, target_level=target_precision, 
+    clf.predict_proba,
+    precision, target_level=target_precision,
     confidence_level=confidence_level
     )
 bcc.calibrate(X_calib, y_calib)
@@ -75,7 +75,7 @@ best_threshold_index = np.where(
 
 plt.figure()
 plt.scatter(
-    tested_thresholds[valid_thresholds_indices], precisions[valid_thresholds_indices], 
+    tested_thresholds[valid_thresholds_indices], precisions[valid_thresholds_indices],
     c='tab:green', label='Valid thresholds'
     )
 plt.scatter(
@@ -98,8 +98,8 @@ plt.show()
 ##############################################################################
 # Contrary to the naive way of computing a threshold to satisfy a precision target on
 # calibration data, risk control provides statistical guarantees on unseen data.
-# In the plot above, we can see that not all thresholds corresponding to a precision 
-# higher that the target are valid. This is due to the uncertainty inherent to the 
+# In the plot above, we can see that not all thresholds corresponding to a precision
+# higher that the target are valid. This is due to the uncertainty inherent to the
 # finite size of the calibration set, which risk control takes into account.
 #
 # In particular, the highest threshold values are considered invalid due to the
@@ -109,7 +109,7 @@ plt.show()
 
 # Besides computing a set of valid thresholds,
 # :class:`~mapie.risk_control.BinaryClassificationController` also outputs the "best"
-# one, which is the valid threshold that maximizes a secondary objective 
+# one, which is the valid threshold that maximizes a secondary objective
 # (recall here).
 #
 # After obtaining the best threshold, we can use the ``predict`` function of
@@ -120,7 +120,7 @@ plt.show()
 y_pred = bcc.predict(X_test)
 
 clf_threshold = FixedThresholdClassifier(clf, threshold=bcc.best_predict_param)
-clf_threshold.fit(X_train, y_train) 
+clf_threshold.fit(X_train, y_train)
 # .fit necessary for plotting, alternatively you can use sklearn.frozen.FrozenEstimator
 
 
@@ -145,5 +145,5 @@ plt.show()
 ##############################################################################
 # Different risk functions have been implemented, such as precision and recall, but you
 # can also implement your own custom function using
-# :class:`~mapie.risk_control.BinaryClassificationRisk` and choose your own 
+# :class:`~mapie.risk_control.BinaryClassificationRisk` and choose your own
 # secondary objective.
