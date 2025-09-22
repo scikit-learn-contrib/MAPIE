@@ -827,13 +827,14 @@ class BinaryClassificationRisk:
         if effective_sample_size_int != 0:
             risk_sum: int = np.sum(risk_occurrences[risk_conditions])
             risk_value = risk_sum / effective_sample_size_int
-            if self.higher_is_better:
-                risk_value = 1 - risk_value
-            return risk_value, effective_sample_size_int
-        # In this case, the corresponding lambda shouldn't be considered valid.
-        # In the current LTT implementation, providing n_obs=-1 will result
-        # in an infinite p_value, effectively invaliding the lambda
-        return 1, -1
+        else:
+            # In this case, the corresponding lambda shouldn't be considered valid.
+            # In the current LTT implementation, providing n_obs=-1 will result
+            # in an infinite p_value, effectively invaliding the lambda
+            risk_value, effective_sample_size_int = 1, -1
+        if self.higher_is_better:
+            risk_value = 1 - risk_value
+        return risk_value, effective_sample_size_int
 
 
 precision = BinaryClassificationRisk(
