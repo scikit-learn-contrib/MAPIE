@@ -5,17 +5,17 @@ Credits
 Development Lead
 ----------------
 
-* Thibault Cordier <thibault.a.cordier@capgemini.com>
 * Vincent Blot <vincent.blot@capgemini.com>
-* Louis Lacombe <louis.lacombe@capgemini.com>
 * Valentin Laurent <valentin.laurent@capgemini.com>
-* Hussein Jawad <hussein.jawad@capgemini.com>
+* Adrien Le Coz <adrien.le-coz@inria.fr>
 
 Emeritus Core Developers
 ------------------------
 
 * Grégoire Martinon <gregoire.martinon@capgemini.com>
 * Vianney Taquet <vianney.taquet@gmail.com>
+* Thibault Cordier <thibault.a.cordier@capgemini.com>
+* Louis Lacombe <louis.lacombe@capgemini.com>
 
 Contributors
 ------------
@@ -43,6 +43,7 @@ Contributors
 * Ambros Marzetta <ambrosm>
 * Carl McBride Ellis <Carl-McBride-Ellis>
 * Baptiste Calot <baptiste.calot@capgemini.com>
+* Hussein Jawad <hussein.jawad@capgemini.com>
 * Leonardo Garma <leonardo.garma@gmail.com>
 * Mohammed Jawhar <mohammedjawhar365@gmail.com>
 * Syed Affan <saffand03@gmail.com>
