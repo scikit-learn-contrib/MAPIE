@@ -117,7 +117,6 @@ The following section provides a detailed overview of each method.
 
 2. Theoretical description
 ==========================
-Note that a notebook testing theoretical guarantees of risk control in binary classification using a random classifier and synthetic data is available here: `theoretical_validity_tests.ipynb <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/risk_control/theoretical_validity_tests.ipynb>`__.
 
 2.1 Risk-Controlling Prediction Sets
 ------------------------------------
@@ -278,6 +277,7 @@ In order to find all the parameters :math:`\lambda` that satisfy the above condi
 - Return :math:`\hat{\Lambda} =  \mathcal{A}(\{p_j\}_{j\in\{1,\dots,\lvert \Lambda \rvert})`, where :math:`\mathcal{A}`, is an algorithm
   that controls the family-wise error rate (FWER), for example, Bonferonni correction.
 
+Note that a notebook testing theoretical guarantees of risk control in binary classification using a random classifier and synthetic data is available here: `theoretical_validity_tests.ipynb <https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/risk_control/theoretical_validity_tests.ipynb>`__.
 
 References
 ==========
