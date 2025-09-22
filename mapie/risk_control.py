@@ -901,7 +901,7 @@ class BinaryClassificationController:
 
     confidence_level : float, default=0.9
         The confidence level with which the risk (or performance) is controlled.
-        See the documentation for detailed explanations.
+        Must be between 0 and 1. See the documentation for detailed explanations.
 
     best_predict_param_choice : Union["auto", BinaryClassificationRisk], default="auto"
         How to select the best threshold from the valid thresholds that control the risk
