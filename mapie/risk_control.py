@@ -362,7 +362,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         Warning
             If estimator is then to warn about the split of the
-            data between train and conformalization
+            data between train and calibration
         """
         if (estimator is None) and (not _refit):
             raise ValueError(
@@ -374,19 +374,19 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             estimator = MultiOutputClassifier(
                 LogisticRegression()
             )
-            X_train, X_conf, y_train, y_conf = train_test_split(
-                    X,
-                    y,
-                    test_size=self.conformalize_size,
-                    random_state=self.random_state,
+            X_train, X_calib, y_train, y_calib = train_test_split(
+                X,
+                y,
+                test_size=self.calib_size,
+                random_state=self.random_state,
             )
             estimator.fit(X_train, y_train)
             warnings.warn(
                 "WARNING: To avoid overfitting, X has been split"
-                + "into X_train and X_conf. The conformalization will only"
-                + "be done on X_conf"
+                + "into X_train and X_calib. The calibration will only"
+                + "be done on X_calib"
             )
-            return estimator, X_conf, y_conf
+            return estimator, X_calib, y_calib
 
         if isinstance(estimator, Pipeline):
             est = estimator[-1]
@@ -589,7 +589,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        conformalize_size: Optional[float] = .3
+        calib_size: Optional[float] = .3
     ) -> PrecisionRecallController:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -602,8 +602,8 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         y: NDArray of shape (n_samples, n_classes)
             Training labels.
 
-        conformalize_size: Optional[float]
-            Size of the conformalization dataset with respect to X if the
+        calib_size: Optional[float]
+            Size of the calibration dataset with respect to X if the
             given model is ``None`` need to fit a LogisticRegression.
 
             By default .3
@@ -613,7 +613,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         PrecisionRecallController
             The model itself.
         """
-        self.conformalize_size = conformalize_size
+        self.calib_size = calib_size
         return self.partial_fit(X, y, _refit=True)
 
     def predict(
@@ -696,7 +696,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             )
             self._check_valid_index(alpha_np)
             self.lambdas_star, self.r_star = find_lambda_control_star(
-               self.r_hat, self.valid_index, self.lambdas
+                self.r_hat, self.valid_index, self.lambdas
             )
             y_pred_proba_array = (
                 y_pred_proba_array >
