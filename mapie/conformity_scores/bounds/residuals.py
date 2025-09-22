@@ -51,7 +51,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
     split_size: Optional[Union[int, float]]
         The proportion of data that is used to fit the ``residual_estimator``.
         By default it is the default value of
-        ``sklearn.model_selection.train_test_split`` ie 0.2.
+        ``sklearn.model_selection.train_test_split`` ie 0.25.
 
     random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number used for random sampling.
