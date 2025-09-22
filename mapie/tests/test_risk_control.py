@@ -851,17 +851,19 @@ def test_binary_classification_risk(
     y_true,
     y_pred
 ):
-    result = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
-    if effective_sample_func(y_true, y_pred) == 0:
-        assert result == (1, -1)
-    else:
-        value, n = result
+    value, n = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
+    effective_sample_size = effective_sample_func(y_true, y_pred)
+
+    if effective_sample_size != 0:
         expected_value = metric_func(y_true, y_pred)
-        if risk_instance.higher_is_better:
-            expected_value = 1 - expected_value
-        expected_n = effective_sample_func(y_true, y_pred)
-        assert np.isclose(value, expected_value)
-        assert n == expected_n
+        expected_n = effective_sample_size
+    else:
+        expected_value = 1
+        expected_n = -1
+    if risk_instance.higher_is_better:
+        expected_value = 1 - expected_value
+    assert np.isclose(value, expected_value)
+    assert n == expected_n
 
 
 class TestBinaryClassificationControllerBestPredictParamChoice:
