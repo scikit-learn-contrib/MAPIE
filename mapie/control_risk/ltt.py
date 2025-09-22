@@ -1,36 +1,34 @@
 import warnings
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Tuple, Union
 
 import numpy as np
 
 from numpy.typing import ArrayLike, NDArray
 
-from .p_values import compute_hoeffdding_bentkus_p_value
+from mapie.control_risk.p_values import compute_hoeffding_bentkus_p_value
 
 
 def ltt_procedure(
     r_hat: NDArray,
     alpha_np: NDArray,
-    delta: Optional[float],
-    n_obs: int
-) -> Tuple[List[List[Any]], NDArray]:
+    delta: float,
+    n_obs: Union[int, NDArray],
+    binary: bool = False,
+) -> List[List[Any]]:
     """
     Apply the Learn-Then-Test procedure for risk control.
     Note that we will do a multiple test for ``r_hat`` that are
     less than level ``alpha_np``.
     The procedure follows the instructions in [1]:
-        - Calculate p-values for each lambdas descretized
-        - Apply a family wise error rate algorithm,
-        here Bonferonni correction
-        - Return the index lambdas that give you the control
-        at alpha level
+        - Calculate p-values for each lambdas discretized
+        - Apply a family wise error rate algorithm, here Bonferonni correction
+        - Return the index lambdas that give you the control at alpha level
 
     Parameters
     ----------
     r_hat: NDArray of shape (n_lambdas, ).
-        Empirical risk with respect
-        to the lambdas.
-        Here lambdas are thresholds that impact decision making,
+        Empirical risk with respect to the lambdas.
+        Here lambdas are thresholds that impact decision-making,
         therefore empirical risk.
 
     alpha_np: NDArray of shape (n_alpha, ).
@@ -43,14 +41,20 @@ def ltt_procedure(
         Correspond to proportion of failure we don't
         want to exceed.
 
+    n_obs: Union[int, NDArray]
+        Correspond to the number of observations used to compute the risk.
+        In the case of a conditional loss, n_obs must be the
+        number of effective observations used to compute the empirical risk
+        for each lambda, hence of shape (n_lambdas, ).
+
+    binary: bool, default=False
+        Must be True if the loss associated to the risk is binary.
+
     Returns
     -------
     valid_index: List[List[Any]].
-        Contain the valid index that satisfy fwer control
+        Contain the valid index that satisfy FWER control
         for each alpha (length aren't the same for each alpha).
-
-    p_values: NDArray of shape (n_lambda, n_alpha).
-        Contains the values of p_value for different alpha.
 
     References
     ----------
@@ -58,18 +62,13 @@ def ltt_procedure(
     M. I., & Lei, L. (2021). Learn then test:
     "Calibrating predictive algorithms to achieve risk control".
     """
-    if delta is None:
-        raise ValueError(
-            "Invalid delta: delta cannot be None while"
-            + " controlling precision with LTT. "
-        )
-    p_values = compute_hoeffdding_bentkus_p_value(r_hat, n_obs, alpha_np)
+    p_values = compute_hoeffding_bentkus_p_value(r_hat, n_obs, alpha_np, binary)
     N = len(p_values)
     valid_index = []
     for i in range(len(alpha_np)):
         l_index = np.where(p_values[:, i] <= delta/N)[0].tolist()
         valid_index.append(l_index)
-    return valid_index, p_values
+    return valid_index
 
 
 def find_lambda_control_star(

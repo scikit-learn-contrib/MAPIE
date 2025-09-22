@@ -16,6 +16,7 @@ History
 * MAPIE now supports Python versions up to the latest release (currently 3.13)
 * Change `prefit` default value to `True` in split methods' docstrings to remain consistent with the implementation
 * Fix issue 699 to replace `TimeSeriesRegressor.partial_fit` with `TimeSeriesRegressor.update`
+* Revert incorrect renaming of calibration to conformalization in risk_control.py
 
 1.0.1 (2025-05-22)
 ------------------

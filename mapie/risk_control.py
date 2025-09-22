@@ -2,7 +2,17 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Iterable, Optional, Sequence, Tuple, Union, cast
+from typing import (
+    Iterable,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+    cast,
+    Callable,
+    Literal,
+    List, Any,
+)
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -124,7 +134,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     References
     ----------
-    [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos
+    [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos,
     and Michael I. Jordan. Distribution-free, risk-controlling prediction
     sets. CoRR, abs/2101.02703, 2021.
     URL https://arxiv.org/abs/2101.02703
@@ -187,7 +197,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     def _check_parameters(self) -> None:
         """
-        Check n_jobs, verbose and random_states.
+        Check n_jobs, verbose, and random_states.
 
         Raises
         ------
@@ -352,7 +362,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         Warning
             If estimator is then to warn about the split of the
-            data between train and conformalization
+            data between train and calibration
         """
         if (estimator is None) and (not _refit):
             raise ValueError(
@@ -364,19 +374,19 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             estimator = MultiOutputClassifier(
                 LogisticRegression()
             )
-            X_train, X_conf, y_train, y_conf = train_test_split(
-                    X,
-                    y,
-                    test_size=self.conformalize_size,
-                    random_state=self.random_state,
+            X_train, X_calib, y_train, y_calib = train_test_split(
+                X,
+                y,
+                test_size=self.calib_size,
+                random_state=self.random_state,
             )
             estimator.fit(X_train, y_train)
             warnings.warn(
                 "WARNING: To avoid overfitting, X has been split"
-                + "into X_train and X_conf. The conformalization will only"
-                + "be done on X_conf"
+                + "into X_train and X_calib. The calibration will only"
+                + "be done on X_calib"
             )
-            return estimator, X_conf, y_conf
+            return estimator, X_calib, y_calib
 
         if isinstance(estimator, Pipeline):
             est = estimator[-1]
@@ -579,7 +589,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        conformalize_size: Optional[float] = .3
+        calib_size: Optional[float] = .3
     ) -> PrecisionRecallController:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -592,8 +602,8 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         y: NDArray of shape (n_samples, n_classes)
             Training labels.
 
-        conformalize_size: Optional[float]
-            Size of the conformalization dataset with respect to X if the
+        calib_size: Optional[float]
+            Size of the calibration dataset with respect to X if the
             given model is ``None`` need to fit a LogisticRegression.
 
             By default .3
@@ -603,7 +613,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         PrecisionRecallController
             The model itself.
         """
-        self.conformalize_size = conformalize_size
+        self.calib_size = calib_size
         return self.partial_fit(X, y, _refit=True)
 
     def predict(
@@ -681,12 +691,12 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         if self.metric_control == 'precision':
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
-            self.valid_index, self.p_values = ltt_procedure(
-                self.r_hat, alpha_np, delta, self.n_obs
+            self.valid_index = ltt_procedure(
+                self.r_hat, alpha_np, cast(float, delta), self.n_obs
             )
             self._check_valid_index(alpha_np)
             self.lambdas_star, self.r_star = find_lambda_control_star(
-               self.r_hat, self.valid_index, self.lambdas
+                self.r_hat, self.valid_index, self.lambdas
             )
             y_pred_proba_array = (
                 y_pred_proba_array >
@@ -706,3 +716,457 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                 self.lambdas_star[np.newaxis, np.newaxis, :]
             )
         return y_pred, y_pred_proba_array
+
+
+class BinaryClassificationRisk:
+    """
+    Define a risk (or a performance metric) to be used with the
+    BinaryClassificationController. Predefined instances are implemented,
+    see :data:`mapie.risk_control.precision`, :data:`mapie.risk_control.recall`,
+    :data:`mapie.risk_control.accuracy` and
+    :data:`mapie.risk_control.false_positive_rate`.
+
+    Here, a binary classification risk (or performance) is defined by an occurrence and
+    a condition. Let's take the example of precision. Precision is the sum of true
+    positives over the total number of predicted positives. In other words, precision is
+    the average of correct predictions (occurrence) given that those predictions
+    are positive (condition). Programmatically,
+    ``precision = (sum(y_pred == y_true) if y_pred == 1)/sum(y_pred == 1)``.
+    Because precision is a performance metric rather than a risk, `higher_is_better`
+    must be set to `True`. See the implementation of `precision` in mapie.risk_control.
+
+    Note: any risk or performance metric that can be defined as
+    ``sum(occurrence if condition) / sum(condition)`` can be theoretically controlled
+    with the BinaryClassificationController, thanks to the LearnThenTest framework [1]
+    and the binary Hoeffding-Bentkus p-values implemented in MAPIE.
+
+    Note: by definition, the value of the risk (or performance metric) here is always
+    between 0 and 1.
+
+    Parameters
+    ----------
+    risk_occurrence : Callable[[int, int], bool]
+        A function defining the occurrence of the risk for a given sample.
+        Must take y_true and y_pred as input and return a boolean.
+
+    risk_condition : Callable[[int, int], bool]
+        A function defining the condition of the risk for a given sample,
+        Must take y_true and y_pred as input and return a boolean.
+
+    higher_is_better : bool
+        Whether this BinaryClassificationRisk instance is a risk
+        (higher_is_better=False) or a performance metric (higher_is_better=True).
+
+    Attributes
+    ----------
+    higher_is_better : bool
+        See params.
+
+    References
+    ----------
+    [1] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
+    "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
+    """
+
+    def __init__(
+        self,
+        risk_occurrence: Callable[[int, int], bool],
+        risk_condition: Callable[[int, int], bool],
+        higher_is_better: bool,
+    ):
+        self._risk_occurrence = risk_occurrence
+        self._risk_condition = risk_condition
+        self.higher_is_better = higher_is_better
+
+    def get_value_and_effective_sample_size(
+        self,
+        y_true: NDArray,
+        y_pred: NDArray,
+    ) -> Tuple[float, int]:
+        """
+        Computes the value of a risk given an array of ground
+        truth labels and the corresponding predictions. Also returns the number of
+        samples used to compute that value.
+
+        That number can be different from the total number of samples. For example, in
+        the case of precision, only the samples with positive predictions are used.
+
+        In the case of a performance metric, this function returns 1 - perf_value.
+
+        Parameters
+        ----------
+        y_true : NDArray
+            NDArray of ground truth labels, of shape (n_samples,), with values in {0, 1}
+
+        y_pred : NDArray
+            NDArray of predictions, of shape (n_samples,), with values in {0, 1}
+
+        Returns
+        -------
+        Tuple[float, int]
+            A tuple containing the value of the risk between 0 and 1,
+            and the number of effective samples used to compute that value
+            (between 1 and n_samples).
+
+            In the case of a performance metric, this function returns 1 - perf_value.
+
+            If the risk is not defined (condition never met), the value is set to 1,
+            and the number of effective samples is set to -1.
+        """
+        risk_occurrences = np.array([
+            self._risk_occurrence(y_true_i, y_pred_i)
+            for y_true_i, y_pred_i in zip(y_true, y_pred)
+        ])
+        risk_conditions = np.array([
+            self._risk_condition(y_true_i, y_pred_i)
+            for y_true_i, y_pred_i in zip(y_true, y_pred)
+        ])
+        effective_sample_size = len(y_true) - np.sum(~risk_conditions)
+        # Casting needed for MyPy with Python 3.9
+        effective_sample_size_int = cast(int, effective_sample_size)
+        if effective_sample_size_int != 0:
+            risk_sum: int = np.sum(risk_occurrences[risk_conditions])
+            risk_value = risk_sum / effective_sample_size_int
+        else:
+            # In this case, the corresponding lambda shouldn't be considered valid.
+            # In the current LTT implementation, providing n_obs=-1 will result
+            # in an infinite p_value, effectively invaliding the lambda
+            risk_value, effective_sample_size_int = 1, -1
+        if self.higher_is_better:
+            risk_value = 1 - risk_value
+        return risk_value, effective_sample_size_int
+
+
+precision = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
+    risk_condition=lambda y_true, y_pred: y_pred == 1,
+    higher_is_better=True,
+)
+
+accuracy = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
+    risk_condition=lambda y_true, y_pred: True,
+    higher_is_better=True,
+)
+
+recall = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
+    risk_condition=lambda y_true, y_pred: y_true == 1,
+    higher_is_better=True,
+)
+
+false_positive_rate = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: y_pred == 1,
+    risk_condition=lambda y_true, y_pred: y_true == 0,
+    higher_is_better=False,
+)
+
+
+class BinaryClassificationController:
+    """
+    Controls the risk or performance of a binary classifier.
+
+    BinaryClassificationController finds the decision thresholds of a binary classifier
+    that statistically guarantee a risk to be below a target level
+    (the risk is "controlled").
+    It can be used to control a performance metric as well, such as the precision.
+    In that case, the thresholds guarantee that the performance is above a target level.
+
+    Usage:
+
+    1. Instantiate a BinaryClassificationController, providing the predict_proba method
+       of your binary classifier
+    2. Call the calibrate method to find the thresholds
+    3. Use the predict method to predict using the best threshold
+
+    Note: for a given model, calibration dataset, target level, and confidence level,
+    there may not be any threshold controlling the risk.
+
+    Parameters
+    ----------
+    predict_function : Callable[[ArrayLike], NDArray]
+        predict_proba method of a fitted binary classifier.
+        Its output signature must be of shape (len(X), 2)
+
+    risk : BinaryClassificationRisk
+        The risk or performance metric to control.
+        Valid options:
+
+        - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
+          accuracy, false_positive_rate)
+        - A custom instance of BinaryClassificationRisk object
+
+    target_level : float
+        The maximum risk level (or minimum performance level). Must be between 0 and 1.
+
+    confidence_level : float, default=0.9
+        The confidence level with which the risk (or performance) is controlled.
+        Must be between 0 and 1. See the documentation for detailed explanations.
+
+    best_predict_param_choice : Union["auto", BinaryClassificationRisk], default="auto"
+        How to select the best threshold from the valid thresholds that control the risk
+        (or performance). The BinaryClassificationController will try to minimize
+        (or maximize) a secondary objective.
+        Valid options:
+
+        - "auto" (default)
+        - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
+          accuracy, false_positive_rate)
+        - A custom instance of BinaryClassificationRisk object
+
+    Attributes
+    ----------
+    valid_predict_params : NDArray
+        The valid thresholds that control the risk (or performance).
+        Use the calibrate method to compute these.
+
+    best_predict_param : Optional[float]
+        The best threshold that control the risk (or performance).
+        Use the calibrate method to compute it.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.model_selection import train_test_split
+    >>> from mapie.risk_control import BinaryClassificationController, precision
+
+    >>> X, y = make_classification(
+    ...     n_features=2,
+    ...     n_redundant=0,
+    ...     n_informative=2,
+    ...     n_clusters_per_class=1,
+    ...     n_classes=2,
+    ...     random_state=42,
+    ...     class_sep=2.0
+    ... )
+    >>> X_train, X_temp, y_train, y_temp = train_test_split(
+    ...     X, y, test_size=0.4, random_state=42
+    ... )
+    >>> X_calib, X_test, y_calib, y_test = train_test_split(
+    ...     X_temp, y_temp, test_size=0.1, random_state=42
+    ... )
+
+    >>> clf = LogisticRegression().fit(X_train, y_train)
+
+    >>> controller = BinaryClassificationController(
+    ...     predict_function=clf.predict_proba,
+    ...     risk=precision,
+    ...     target_level=0.6
+    ... )
+
+    >>> controller.calibrate(X_calib, y_calib)
+    >>> predictions = controller.predict(X_test)
+
+    References
+    ----------
+    Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
+    "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
+    """
+    _best_predict_param_choice_map = {
+        precision: recall,
+        recall: precision,
+        accuracy: accuracy,
+        false_positive_rate: recall,
+    }
+
+    def __init__(
+        self,
+        predict_function: Callable[[ArrayLike], NDArray],
+        risk: BinaryClassificationRisk,
+        target_level: float,
+        confidence_level: float = 0.9,
+        best_predict_param_choice: Union[
+            Literal["auto"], BinaryClassificationRisk] = "auto",
+    ):
+        self._predict_function = predict_function
+        self._risk = risk
+        if self._risk.higher_is_better:
+            self._alpha = 1 - target_level
+        else:
+            self._alpha = target_level
+        self._delta = 1 - confidence_level
+
+        self._best_predict_param_choice = self._set_best_predict_param_choice(
+            best_predict_param_choice
+        )
+
+        self._predict_params: NDArray = np.linspace(0, 0.99, 100)
+
+        self.valid_predict_params: NDArray = np.array([])
+        self.best_predict_param: Optional[float] = None
+
+    # All subfunctions are unit-tested. To avoid having to write
+    # tests just to make sure those subfunctions are called,
+    # we don't include .calibrate in the coverage report
+    def calibrate(  # pragma: no cover
+        self,
+        X_calibrate: ArrayLike,
+        y_calibrate: ArrayLike
+    ) -> None:
+        """
+        Calibrate the BinaryClassificationController.
+        Sets attributes valid_predict_params and best_predict_param (if the risk
+        or performance can be controlled at the target level).
+
+        Parameters
+        ----------
+        X_calibrate : ArrayLike
+            Features of the calibration set.
+
+        y_calibrate : ArrayLike
+            Binary labels of the calibration set.
+
+        Returns
+        -------
+        None
+        """
+        y_calibrate_ = np.asarray(y_calibrate, dtype=int)
+
+        predictions_per_param = self._get_predictions_per_param(
+            X_calibrate,
+            self._predict_params
+        )
+
+        risks_and_eff_sizes = self._get_risks_and_effective_sample_sizes_per_param(
+            y_calibrate_,
+            predictions_per_param,
+            self._risk
+        )
+
+        risks_per_param = risks_and_eff_sizes[:, 0]
+        eff_sample_sizes_per_param = risks_and_eff_sizes[:, 1]
+
+        valid_params_index = ltt_procedure(
+            risks_per_param,
+            np.array([self._alpha]),
+            self._delta,
+            eff_sample_sizes_per_param,
+            True,
+        )[0]
+
+        self.valid_predict_params = self._predict_params[valid_params_index]
+
+        if len(self.valid_predict_params) == 0:
+            self._set_risk_not_controlled()
+        else:
+            self._set_best_predict_param(
+                y_calibrate_,
+                predictions_per_param,
+                valid_params_index,
+            )
+
+    def predict(self, X_test: ArrayLike) -> NDArray:
+        """
+        Predict using predict_function at the best threshold.
+
+        Parameters
+        ----------
+        X_test : ArrayLike
+            Features
+
+        Returns
+        -------
+        NDArray
+            NDArray of shape (n_samples,)
+
+        Raises
+        ------
+        ValueError
+            If the method .calibrate was not called,
+            or if no valid thresholds were found during calibration.
+        """
+        if self.best_predict_param is None:
+            raise ValueError(
+                "Cannot predict. "
+                "Either you forgot to calibrate the controller first, "
+                "either calibration was not successful."
+            )
+        return self._get_predictions_per_param(
+            X_test,
+            np.array([self.best_predict_param]),
+        )[0]
+
+    def _set_best_predict_param_choice(
+        self,
+        best_predict_param_choice: Union[
+            Literal["auto"], BinaryClassificationRisk] = "auto",
+    ) -> BinaryClassificationRisk:
+        if best_predict_param_choice == "auto":
+            try:
+                return self._best_predict_param_choice_map[
+                    self._risk
+                ]
+            except KeyError:
+                raise ValueError(
+                    "When best_predict_param_choice is 'auto', "
+                    "risk must be one of the risks defined in mapie.risk_control"
+                    "(e.g. precision, accuracy, false_positive_rate)."
+                )
+        else:
+            return best_predict_param_choice
+
+    def _set_risk_not_controlled(self) -> None:
+        self.best_predict_param = None
+        warnings.warn(
+            "No predict parameters were found to control the risk at the given "
+            "target and confidence levels. "
+            "Try using a larger calibration set or a better model.",
+        )
+
+    def _set_best_predict_param(
+        self,
+        y_calibrate_: NDArray,
+        predictions_per_param: NDArray,
+        valid_params_index: List[Any],
+    ):
+        secondary_risks_per_param = \
+            self._get_risks_and_effective_sample_sizes_per_param(
+                y_calibrate_,
+                predictions_per_param[valid_params_index],
+                self._best_predict_param_choice
+            )[:, 0]
+
+        self.best_predict_param = self.valid_predict_params[
+            np.argmin(secondary_risks_per_param)
+        ]
+
+    @staticmethod
+    def _get_risks_and_effective_sample_sizes_per_param(
+        y_true: NDArray,
+        predictions_per_param: NDArray,
+        risk: BinaryClassificationRisk,
+    ) -> NDArray:
+        return np.array(
+            [risk.get_value_and_effective_sample_size(
+                y_true,
+                predictions
+            ) for predictions in predictions_per_param]
+        )
+
+    def _get_predictions_per_param(self, X: ArrayLike, params: NDArray) -> NDArray:
+        try:
+            predictions_proba = self._predict_function(X)[:, 1]
+        except TypeError as e:
+            if "object is not callable" in str(e):
+                raise TypeError(
+                    "Error when calling the predict_function. "
+                    "Maybe you provided a binary classifier to the "
+                    "predict_function parameter of the BinaryClassificationController. "
+                    "You should provide your classifier's predict_proba method instead."
+                ) from e
+            else:
+                raise
+        except IndexError as e:
+            if "array is 1-dimensional, but 2 were indexed" in str(e):
+                raise IndexError(
+                    "Error when calling the predict_function. "
+                    "Maybe the predict function you provided returns only the "
+                    "probability of the positive class. "
+                    "You should provide a predict function that returns the "
+                    "probabilities of both classes, like scikit-learn estimators."
+                ) from e
+            else:
+                raise
+        return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
