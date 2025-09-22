@@ -5,18 +5,18 @@ History
 1.x.x (2025-xx-xx)
 ------------------
 
+1.1.0 (2025-09-22)
+------------------
+
+* Implement new binary risk control feature, see BinaryClassificationController and BinaryClassificationRisk
+* See also the reworked risk control documentation
+* Revert incorrect renaming of calibration to conformalization in PrecisionRecallController
 * Fix warnings when running tests
-* Rework risk control documentation
-* Fix incorrect URL in PrecisionRecallController docstring
-* Delete redundant risk control notebooks
-* Add link to Thibault Cordier's repository on risk control
 * Add scientific references for regression conformity scores
 * Fix double inference when using `predict_set` function in split conformal classification
-* Add FAQ entry in the documentation about ongoing works to extend MAPIE for LLM control
 * MAPIE now supports Python versions up to the latest release (currently 3.13)
 * Change `prefit` default value to `True` in split methods' docstrings to remain consistent with the implementation
 * Fix issue 699 to replace `TimeSeriesRegressor.partial_fit` with `TimeSeriesRegressor.update`
-* Revert incorrect renaming of calibration to conformalization in risk_control.py
 
 1.0.1 (2025-05-22)
 ------------------
