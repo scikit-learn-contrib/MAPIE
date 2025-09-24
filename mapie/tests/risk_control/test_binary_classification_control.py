@@ -34,8 +34,22 @@ def fpr_func(y_true: NDArray, y_pred: NDArray) -> float:
     return fp / (tn + fp)
 
 
+def dummy_predict(X):
+    return np.random.rand(1, 2)
+
+
+@pytest.fixture
+def bcc_dummy():
+    return BinaryClassificationController(
+        predict_function=dummy_predict,
+        risk=precision,
+        target_level=0.9,
+    )
+
 # The following test is voluntarily agnostic
 # to the specific binary classification risk control implementation.
+
+
 @pytest.mark.parametrize(
     "risk_instance, metric_func, effective_sample_func",
     [
@@ -91,7 +105,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
         expected
     ):
         controller = BinaryClassificationController(
-            predict_function=lambda X: np.random.rand(1, 2),
+            predict_function=dummy_predict,
             risk=risk_instance,
             target_level=0.8,
             best_predict_param_choice="auto"
@@ -105,7 +119,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
         custom_risk = accuracy
 
         controller = BinaryClassificationController(
-            predict_function=lambda X: np.random.rand(1, 2),
+            predict_function=dummy_predict,
             risk=precision,
             target_level=0.8,
             best_predict_param_choice=custom_risk
@@ -120,7 +134,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
 
         with pytest.raises(ValueError):
             BinaryClassificationController(
-                predict_function=lambda X: np.random.rand(1, 2),
+                predict_function=dummy_predict,
                 risk=unknown_risk,
                 target_level=0.8,
                 best_predict_param_choice="auto"
@@ -140,7 +154,7 @@ def test_binary_classification_controller_alpha(
     expected_alpha: float,
 ) -> None:
     controller = BinaryClassificationController(
-        predict_function=lambda X: np.random.rand(1, 2),
+        predict_function=dummy_predict,
         risk=risk_instance,
         target_level=target_level,
     )
@@ -166,12 +180,8 @@ def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> N
     controller.predict(X_df)
 
 
-def test_set_risk_not_controlled():
-    controller = BinaryClassificationController(
-        predict_function=lambda X: np.random.rand(1, 2),
-        risk=precision,
-        target_level=0.9,
-    )
+def test_set_risk_not_controlled(bcc_dummy):
+    controller = bcc_dummy
     with pytest.warns(
         UserWarning,
         match=r"No predict parameters were found to control the risk"
@@ -187,7 +197,7 @@ class TestBinaryClassificationControllerSetBestPredictParam:
         Expected: should always set this param
         """
         controller = BinaryClassificationController(
-            predict_function=lambda X: np.random.rand(1, 2),
+            predict_function=dummy_predict,
             risk=precision,
             target_level=0.9,
             best_predict_param_choice=best_predict_param_choice
@@ -216,7 +226,7 @@ class TestBinaryClassificationControllerSetBestPredictParam:
         dummy_param_2 = 0.7
 
         controller = BinaryClassificationController(
-            predict_function=lambda X: np.random.rand(1, 2),
+            predict_function=dummy_predict,
             risk=precision,
             target_level=0.9,
             best_predict_param_choice=best_predict_param_choice
@@ -248,7 +258,7 @@ class TestBinaryClassificationControllerSetBestPredictParam:
         Expected: should set the param even though precision is not defined
         """
         controller = BinaryClassificationController(
-            predict_function=lambda X: np.random.rand(1, 2),
+            predict_function=dummy_predict,
             risk=precision,
             target_level=0.9,
             best_predict_param_choice=precision
@@ -406,8 +416,8 @@ class TestBinaryClassificationControllerPredict:
         assert predictions.shape == (3,)
         assert predictions.dtype == int
 
-    def test_error(self, bcc_deterministic):
-        controller = bcc_deterministic
+    def test_error(self, bcc_dummy):
+        controller = bcc_dummy
         controller.best_predict_param = None
 
         with pytest.raises(
