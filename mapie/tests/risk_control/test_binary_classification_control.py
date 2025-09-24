@@ -19,19 +19,17 @@ from mapie.risk_control import (
 
 random_state = 42
 
-X, y = make_multilabel_classification(
-    n_samples=1000,
-    n_classes=5,
-    random_state=random_state,
-    allow_unlabeled=False
-)
-
 
 def fpr_func(y_true: NDArray, y_pred: NDArray) -> float:
     """Computes false positive rate."""
     tn: int = np.sum((y_true == 0) & (y_pred == 0))
     fp: int = np.sum((y_true == 0) & (y_pred == 1))
     return fp / (tn + fp)
+
+
+dummy_param = np.array([0.5])
+dummy_target = 0.9
+dummy_X_test = [[0]]
 
 
 def dummy_predict(X):
@@ -43,7 +41,7 @@ def bcc_dummy():
     return BinaryClassificationController(
         predict_function=dummy_predict,
         risk=precision,
-        target_level=0.9,
+        target_level=dummy_target,
     )
 
 # The following test is voluntarily agnostic
@@ -107,7 +105,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
         controller = BinaryClassificationController(
             predict_function=dummy_predict,
             risk=risk_instance,
-            target_level=0.8,
+            target_level=dummy_target,
             best_predict_param_choice="auto"
         )
 
@@ -121,7 +119,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
         controller = BinaryClassificationController(
             predict_function=dummy_predict,
             risk=precision,
-            target_level=0.8,
+            target_level=dummy_target,
             best_predict_param_choice=custom_risk
         )
 
@@ -136,7 +134,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
             BinaryClassificationController(
                 predict_function=dummy_predict,
                 risk=unknown_risk,
-                target_level=0.8,
+                target_level=dummy_target,
                 best_predict_param_choice="auto"
             )
 
@@ -199,15 +197,14 @@ class TestBinaryClassificationControllerSetBestPredictParam:
         controller = BinaryClassificationController(
             predict_function=dummy_predict,
             risk=precision,
-            target_level=0.9,
+            target_level=dummy_target,
             best_predict_param_choice=best_predict_param_choice
         )
 
-        dummy_param = 0.5
         y_calibrate = np.array([1, 0])
         dummy_predictions = np.array([[True, False]])
         valid_params_index = [0]
-        controller.valid_predict_params = np.array([dummy_param])
+        controller.valid_predict_params = dummy_param
 
         controller._set_best_predict_param(
             y_calibrate_=y_calibrate,
@@ -222,13 +219,10 @@ class TestBinaryClassificationControllerSetBestPredictParam:
         [[precision, 0.5], [recall, 0.7]]
     )
     def test_correct_param_out_of_two(self, best_predict_param_choice, expected):
-        dummy_param = 0.5
-        dummy_param_2 = 0.7
-
         controller = BinaryClassificationController(
             predict_function=dummy_predict,
             risk=precision,
-            target_level=0.9,
+            target_level=dummy_target,
             best_predict_param_choice=best_predict_param_choice
         )
 
@@ -242,8 +236,7 @@ class TestBinaryClassificationControllerSetBestPredictParam:
         valid_params_index = [0, 1]
 
         controller.valid_predict_params = np.array(
-            [dummy_param, dummy_param_2]
-        )
+            [dummy_param, dummy_param + 0.2])
 
         controller._set_best_predict_param(
             y_calibrate_=y_calibrate,
@@ -260,7 +253,7 @@ class TestBinaryClassificationControllerSetBestPredictParam:
         controller = BinaryClassificationController(
             predict_function=dummy_predict,
             risk=precision,
-            target_level=0.9,
+            target_level=dummy_target,
             best_predict_param_choice=precision
         )
 
@@ -268,8 +261,7 @@ class TestBinaryClassificationControllerSetBestPredictParam:
         predictions_per_param = np.array(
             [[False, False]])  # precision undefined
         valid_params_index = [0]
-        dummy_param = 0.5
-        controller.valid_predict_params = np.array([dummy_param])
+        controller.valid_predict_params = dummy_param
 
         controller._set_best_predict_param(
             y_calibrate_=y_calibrate,
@@ -290,7 +282,7 @@ def bcc_deterministic():
     return BinaryClassificationController(
         predict_function=deterministic_predict_function,
         risk=precision,
-        target_level=0.9,
+        target_level=dummy_target,
     )
 
 
@@ -298,7 +290,7 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
     def test_single_parameter(self, bcc_deterministic):
         result = bcc_deterministic._get_predictions_per_param(
             X=[],
-            params=np.array([0.5])
+            params=dummy_param
         )
 
         expected = np.array([[False, True, True]])
@@ -327,7 +319,7 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
         controller = BinaryClassificationController(
             predict_function=predict_fn,
             risk=precision,
-            target_level=0.9,
+            target_level=dummy_target,
         )
 
         params = np.array([0.2, 0.5, 0.8])
@@ -344,16 +336,14 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
         bcc = BinaryClassificationController(
             predict_function=clf,
             risk=precision,
-            target_level=0.9
+            target_level=dummy_target
         )
-        X_test = [[0]]
-        params = np.array([0.5])
 
         with pytest.raises(
             TypeError,
             match=r"Maybe you provided a binary classifier"
         ):
-            bcc._get_predictions_per_param(X_test, params)
+            bcc._get_predictions_per_param(dummy_X_test, dummy_param)
 
     def test_error_incorrect_predict_shape(self):
         """
@@ -368,17 +358,15 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
         bcc = BinaryClassificationController(
             predict_function=pred_func,
             risk=precision,
-            target_level=0.9
+            target_level=dummy_target
         )
-        X_test = [[0]]
-        params = np.array([0.5])
 
         with pytest.raises(
             IndexError,
             match=r"Maybe the predict function you provided returns only the "
                   r"probability of the positive class."
         ):
-            bcc._get_predictions_per_param(X_test, params)
+            bcc._get_predictions_per_param(dummy_X_test, dummy_param)
 
     @pytest.mark.parametrize(
         "error,expected_error_type,expected_error_message",
@@ -397,14 +385,11 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
         bcc = BinaryClassificationController(
             predict_function=failing_predict_function,
             risk=precision,
-            target_level=0.9
+            target_level=dummy_target
         )
 
-        X_test = [[0]]
-        params = np.array([0.5])
-
         with pytest.raises(expected_error_type, match=expected_error_message):
-            bcc._get_predictions_per_param(X_test, params)
+            bcc._get_predictions_per_param(dummy_X_test, dummy_param)
 
 
 class TestBinaryClassificationControllerPredict:
@@ -424,4 +409,4 @@ class TestBinaryClassificationControllerPredict:
             ValueError,
             match=r"Cannot predict"
         ):
-            controller.predict(X)
+            controller.predict(dummy_X_test)
