@@ -30,7 +30,7 @@ def fpr_func(y_true: NDArray, y_pred: NDArray) -> float:
 
 
 def dummy_predict(X):
-    return np.random.rand(1, 2)
+    return np.random.rand(1, 2)  # pragma: no cover
 
 
 @pytest.fixture
