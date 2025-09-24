@@ -3,7 +3,6 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 import pytest
-from sklearn.datasets import make_multilabel_classification
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import precision_score, recall_score
@@ -18,6 +17,9 @@ from mapie.risk_control import (
 )
 
 random_state = 42
+dummy_param = np.array([0.5])
+dummy_target = 0.9
+dummy_X_test = [[0]]
 
 
 def fpr_func(y_true: NDArray, y_pred: NDArray) -> float:
@@ -25,11 +27,6 @@ def fpr_func(y_true: NDArray, y_pred: NDArray) -> float:
     tn: int = np.sum((y_true == 0) & (y_pred == 0))
     fp: int = np.sum((y_true == 0) & (y_pred == 1))
     return fp / (tn + fp)
-
-
-dummy_param = np.array([0.5])
-dummy_target = 0.9
-dummy_X_test = [[0]]
 
 
 def dummy_predict(X):
@@ -44,10 +41,24 @@ def bcc_dummy():
         target_level=dummy_target,
     )
 
+
+def deterministic_predict_function(X):
+    probs1 = np.array([0.2, 0.5, 0.9])
+    probs0 = 1.0 - probs1
+    return np.stack([probs0, probs1], axis=1)
+
+
+@pytest.fixture
+def bcc_deterministic():
+    return BinaryClassificationController(
+        predict_function=deterministic_predict_function,
+        risk=precision,
+        target_level=dummy_target,
+    )
+
+
 # The following test is voluntarily agnostic
 # to the specific binary classification risk control implementation.
-
-
 @pytest.mark.parametrize(
     "risk_instance, metric_func, effective_sample_func",
     [
@@ -269,21 +280,6 @@ class TestBinaryClassificationControllerSetBestPredictParam:
             valid_params_index=valid_params_index
         )
         assert controller.best_predict_param == dummy_param
-
-
-def deterministic_predict_function(X):
-    probs1 = np.array([0.2, 0.5, 0.9])
-    probs0 = 1.0 - probs1
-    return np.stack([probs0, probs1], axis=1)
-
-
-@pytest.fixture
-def bcc_deterministic():
-    return BinaryClassificationController(
-        predict_function=deterministic_predict_function,
-        risk=precision,
-        target_level=dummy_target,
-    )
 
 
 class TestBinaryClassificationControllerGetPredictionsPerParam:
