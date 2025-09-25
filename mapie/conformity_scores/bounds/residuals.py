@@ -244,7 +244,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
     ) -> NDArray:
         """
         Computes the signed conformity score = (y - y_pred) / r_pred.
-        r_pred being the predicted residual (y - y_pred) of the estimator.
+        r_pred being the predicted residual abs(y - y_pred) of the estimator.
         It is calculated by a model (``residual_estimator_``) that learns
         to predict this residual.
 
