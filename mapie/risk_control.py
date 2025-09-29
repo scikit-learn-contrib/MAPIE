@@ -888,16 +888,20 @@ class BinaryClassificationController:
         predict_proba method of a fitted binary classifier.
         Its output signature must be of shape (len(X), 2)
 
-    risk : BinaryClassificationRisk
+    risk : Union[BinaryClassificationRisk, List[BinaryClassificationRisk]]
         The risk or performance metric to control.
         Valid options:
 
         - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
           accuracy, false_positive_rate)
         - A custom instance of BinaryClassificationRisk object
+        
+        Can be a list of risks in the case of multi risk control.
 
-    target_level : float
+    target_level : Union[float, List[float]]
         The maximum risk level (or minimum performance level). Must be between 0 and 1.
+        Can be a list of target levels in the case of multi risk control (length should
+        match the length of the risks list).
 
     confidence_level : float, default=0.9
         The confidence level with which the risk (or performance) is controlled.
@@ -973,12 +977,14 @@ class BinaryClassificationController:
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: BinaryClassificationRisk,
-        target_level: float,
+        risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
+        target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
             Literal["auto"], BinaryClassificationRisk] = "auto",
-    ):
+    ):  
+        self._check_risks_targets_same_len(risk, target_level)
+        
         self._predict_function = predict_function
         self._risk = risk
         if self._risk.higher_is_better:
@@ -1171,3 +1177,28 @@ class BinaryClassificationController:
             else:
                 raise
         return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
+     
+    @staticmethod
+    def _check_risks_targets_same_len(
+        risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
+        target_level: Union[float, List[float]],
+    ) -> None:
+        if (
+            isinstance(risk, list) and isinstance(target_level, float)
+            or (
+                isinstance(risk, BinaryClassificationRisk)
+                and isinstance(target_level, list)
+            )
+            or (
+                isinstance(risk, list) 
+                and isinstance(target_level, list)
+                and len(risk) != len(target_level)
+            )
+        ):
+            raise ValueError(
+                "If you provide a list of risks, "
+                "you must provide a list of target levels of the same length. "
+                "and vice versa."
+            )
+        else:
+            return
