@@ -36,11 +36,11 @@ X, y = make_circles(n_samples=3000, noise=0.3, factor=0.3, random_state=RANDOM_S
 )
 
 # Plot the three datasets to visualize the distribution of the two classes.
-fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 titles = ["Training Data", "Calibration Data", "Test Data"]
 datasets = [(X_train, y_train), (X_calib, y_calib), (X_test, y_test)]
 
-for ax, (X_data, y_data), title in zip(axes, datasets, titles):
+for i, (ax, (X_data, y_data), title) in enumerate(zip(axes, datasets, titles)):
     ax.scatter(
         X_data[y_data == 0, 0],
         X_data[y_data == 0, 1],
@@ -57,18 +57,34 @@ for ax, (X_data, y_data), title in zip(axes, datasets, titles):
         alpha=0.5,
         label='"positive" class',
     )
-    ax.set_title(title)
-    ax.set_xlabel("Feature 1")
-    ax.set_ylabel("Feature 2")
-    ax.legend(loc="upper right")
+    ax.set_title(title, fontsize=18)
+    ax.set_xlabel("Feature 1", fontsize=16)
+    ax.tick_params(labelsize=14)
 
-plt.suptitle("Visualization of Train, Calibration, and Test Sets")
-plt.tight_layout()
+    if i == 0:
+        ax.set_ylabel("Feature 2", fontsize=16)
+    else:
+        ax.set_ylabel("")
+        ax.set_yticks([])
+
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(
+    handles,
+    labels,
+    loc="lower center",
+    bbox_to_anchor=(0.5, -0.01),
+    ncol=2,
+    fontsize=16,
+)
+
+plt.suptitle("Visualization of Train, Calibration, and Test Sets", fontsize=22)
+plt.tight_layout(rect=[0, 0.05, 1, 0.95])
 plt.show()
 
 ##############################################################################
 # Second, fit a KNeighborsClassifier on the training data.
 
+# Fit KNeighborsClassifier on training data
 clf = KNeighborsClassifier(n_neighbors=10)
 clf.fit(X_train, y_train)
 
