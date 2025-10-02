@@ -888,13 +888,9 @@ class BinaryClassificationController:
         predict_proba method of a fitted binary classifier.
         Its output signature must be of shape (len(X), 2)
 
-    risk : BinaryClassificationRisk
+    risk : str
         The risk or performance metric to control.
-        Valid options:
-
-        - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
-          accuracy, false_positive_rate)
-        - A custom instance of BinaryClassificationRisk object
+        Valid options: "precision", "recall", "accuracy", "fpr"
 
     target_level : float
         The maximum risk level (or minimum performance level). Must be between 0 and 1.
@@ -971,17 +967,25 @@ class BinaryClassificationController:
         false_positive_rate: recall,
     }
 
+
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: BinaryClassificationRisk,
+        risk: str,
         target_level: float,
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
             Literal["auto"], BinaryClassificationRisk] = "auto",
     ):
         self._predict_function = predict_function
-        self._risk = risk
+        self.risk_map = {
+            "precision" : precision,
+            "recall" : recall,
+            "accuracy": accuracy,
+            "fpr": false_positive_rate
+        }
+        # we don't use get to raise an error if key doesn't exist
+        self._risk = self.risk_map[risk]
         if self._risk.higher_is_better:
             self._alpha = 1 - target_level
         else:
