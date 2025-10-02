@@ -115,7 +115,7 @@ def test_compute_recall_with_wrong_shape() -> None:
 
 
 def test_compute_precision_with_wrong_shape() -> None:
-    """Test shape when using _compute_precision"""
+    """Test error when wrong shape in _compute_precision"""
     with pytest.raises(ValueError, match=r".*y_pred_proba should be a 3d*"):
         compute_risk_precision(lambdas, y_preds_proba.squeeze(), y_toy)
     with pytest.raises(ValueError, match=r".*y should be a 2d*"):

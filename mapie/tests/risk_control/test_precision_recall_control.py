@@ -588,7 +588,7 @@ def test_bound_none_crc() -> None:
 
 
 def test_delta_none_crc() -> None:
-    """Test that a warning is raised nound is not None with CRC method."""
+    """Test that a warning is raised when delta is not None with CRC method."""
     mapie_clf = PrecisionRecallController(
         random_state=random_state, method="crc"
     )
@@ -598,7 +598,7 @@ def test_delta_none_crc() -> None:
 
 
 def test_warning_estimator_none() -> None:
-    """Test that a warning is raised nound is not None with CRC method."""
+    """Test that a warning is raised when estimator is not None with CRC method."""
     mapie_clf = PrecisionRecallController(random_state=random_state)
     with pytest.warns(UserWarning, match=r"WARNING: To avoid overfitting,*"):
         mapie_clf.fit(X_toy, y_toy)
