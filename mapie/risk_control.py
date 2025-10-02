@@ -899,17 +899,18 @@ class BinaryClassificationController:
         The confidence level with which the risk (or performance) is controlled.
         Must be between 0 and 1. See the documentation for detailed explanations.
 
-    best_predict_param_choice : Union["auto", BinaryClassificationRisk], default="auto"
+    best_predict_param_choice : Union["auto", str], default="auto"
         How to select the best threshold from the valid thresholds that control the risk
         (or performance). The BinaryClassificationController will try to minimize
         (or maximize) a secondary objective.
         Valid options:
 
         - "auto" (default)
-        - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
-          accuracy, false_positive_rate)
-        - A custom instance of BinaryClassificationRisk object
-
+        - "precision"
+        - "recall"
+        - "accuracy"
+        - "fpr"
+        
     Attributes
     ----------
     valid_predict_params : NDArray
@@ -948,7 +949,7 @@ class BinaryClassificationController:
 
     >>> controller = BinaryClassificationController(
     ...     predict_function=clf.predict_proba,
-    ...     risk=precision,
+    ...     risk="precision",
     ...     target_level=0.6
     ... )
 
@@ -975,7 +976,7 @@ class BinaryClassificationController:
         target_level: float,
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
-            Literal["auto"], BinaryClassificationRisk] = "auto",
+            Literal["auto"], str] = "auto",
     ):
         self._predict_function = predict_function
         self.risk_map = {
@@ -1109,7 +1110,8 @@ class BinaryClassificationController:
                     "(e.g. precision, accuracy, false_positive_rate)."
                 )
         else:
-            return best_predict_param_choice
+            # we don't use get to raise an error if key doesn't exist
+            return self.risk_map[best_predict_param_choice]
 
     def _set_risk_not_controlled(self) -> None:
         self.best_predict_param = None
