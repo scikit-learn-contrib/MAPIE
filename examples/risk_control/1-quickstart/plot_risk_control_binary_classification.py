@@ -10,7 +10,7 @@ In this example, we explain how to do risk control for binary classification wit
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_circles
-from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import FixedThresholdClassifier
 from sklearn.metrics import precision_score
 from sklearn.inspection import DecisionBoundaryDisplay
@@ -21,7 +21,8 @@ from mapie.utils import train_conformalize_test_split
 RANDOM_STATE = 1
 
 ##############################################################################
-# Let us first load the dataset and fit an SVC on the training data.
+# Fist, load the dataset and then split it into training, calibration
+# (for conformalization), and test sets.
 
 X, y = make_circles(n_samples=3000, noise=0.3, factor=0.3, random_state=RANDOM_STATE)
 (X_train, X_calib, X_test,
@@ -31,7 +32,56 @@ X, y = make_circles(n_samples=3000, noise=0.3, factor=0.3, random_state=RANDOM_S
      random_state=RANDOM_STATE
      )
 
-clf = SVC(probability=True, random_state=RANDOM_STATE)
+# Plot the three datasets to visualize the distribution of the two classes.
+fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+titles = ["Training Data", "Calibration Data", "Test Data"]
+datasets = [(X_train, y_train), (X_calib, y_calib), (X_test, y_test)]
+
+for i, (ax, (X_data, y_data), title) in enumerate(zip(axes, datasets, titles)):
+    ax.scatter(
+        X_data[y_data == 0, 0],
+        X_data[y_data == 0, 1],
+        edgecolors="k",
+        c="tab:blue",
+        alpha=0.5,
+        label='"negative" class',
+    )
+    ax.scatter(
+        X_data[y_data == 1, 0],
+        X_data[y_data == 1, 1],
+        edgecolors="k",
+        c="tab:red",
+        alpha=0.5,
+        label='"positive" class',
+    )
+    ax.set_title(title, fontsize=18)
+    ax.set_xlabel("Feature 1", fontsize=16)
+    ax.tick_params(labelsize=14)
+
+    if i == 0:
+        ax.set_ylabel("Feature 2", fontsize=16)
+    else:
+        ax.set_ylabel("")
+        ax.set_yticks([])
+
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(
+    handles,
+    labels,
+    loc="lower center",
+    bbox_to_anchor=(0.5, -0.01),
+    ncol=2,
+    fontsize=16,
+)
+
+plt.suptitle("Visualization of Train, Calibration, and Test Sets", fontsize=22)
+plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+plt.show()
+
+##############################################################################
+# Second, fit a KNeighborsClassifier on the training data.
+
+clf = KNeighborsClassifier(n_neighbors=10)
 clf.fit(X_train, y_train)
 
 ##############################################################################
@@ -106,6 +156,9 @@ plt.show()
 # small number of observations used to compute the precision, following the Learn then
 # Test procedure. In the most extreme case, no observation is available, which causes
 # the precision value to be ill-defined and set to 0.
+#
+# Note: The output of ``clf.predict_proba`` is discrete, not continuous, so the plotted function
+# appears as a step function. This reflects the finite set of probability levels predicted by the model.
 
 # Besides computing a set of valid thresholds,
 # :class:`~mapie.risk_control.BinaryClassificationController` also outputs the "best"
