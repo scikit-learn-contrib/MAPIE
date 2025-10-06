@@ -1201,4 +1201,3 @@ class BinaryClassificationController:
                 "and vice versa."
             )
         else:
-            return
