@@ -1002,6 +1002,20 @@ class BinaryClassificationController:
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[float] = None
 
+    def convert_target_level_to_alpha(self, target_level):
+        if isinstance(target_level, float):
+            if self._risk.higher_is_better:
+                self._alpha = 1 - target_level
+            else:
+                self._alpha = target_level
+        else:
+            self._alpha = []
+            for risk, target in zip(self._risk, target_level):
+                if risk.higher_is_better:
+                    self._alpha.append(1 - target)
+                else:
+                    self._alpha.append(target)
+
     # All subfunctions are unit-tested. To avoid having to write
     # tests just to make sure those subfunctions are called,
     # we don't include .calibrate in the coverage report
@@ -1179,7 +1193,7 @@ class BinaryClassificationController:
         return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
      
     @staticmethod
-    def _check_risks_targets_same_len(
+    def _check_risks_targets_same_len( #TODO what about lists of len 1
         risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
         target_level: Union[float, List[float]],
     ) -> None:

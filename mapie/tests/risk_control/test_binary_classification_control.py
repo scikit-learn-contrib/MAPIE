@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Union, List
 
 import numpy as np
 import pandas as pd
@@ -406,3 +407,17 @@ class TestBinaryClassificationControllerPredict:
             match=r"Cannot predict"
         ):
             controller.predict(dummy_X)
+
+@pytest.mark.parametrize(
+    "risk,target_level",
+    [
+        ([recall, false_positive_rate], 0.6,
+        (false_positive_rate, [0.6, 0.8]),
+        [recall, false_positive_rate], [0.6, 0.8, 0.7]),
+    ],
+)
+def test_check_risks_targets_same_len(
+    risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
+    target_level: Union[float, List[float]],
+) -> None:
+    BinaryClassificationController._check_risks_targets_same_len(risk, target_level)
