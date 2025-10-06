@@ -2,8 +2,10 @@
 History
 =======
 
-1.x.x (2025-xx-xx)
+1.1.1 (2025-10-06)
 ------------------
+
+* Update binary risk control feature, see BinaryClassificationController now takes as input a string and not a BinaryClassificationRisk
 
 1.1.0 (2025-09-22)
 ------------------
