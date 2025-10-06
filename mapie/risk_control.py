@@ -1197,7 +1197,6 @@ class BinaryClassificationController:
         ):
             raise ValueError(
                 "If you provide a list of risks, "
-                "you must provide a list of target levels of the same length. "
+                "you must provide a list of target levels of the same length "
                 "and vice versa."
             )
-        else:
