@@ -956,8 +956,7 @@ class BinaryClassificationController:
     ...     target_level=0.6
     ... )
 
-    >>> controler = controller.calibrate(X_calib, y_calib)
-    >>> predictions = controller.predict(X_test)
+    >>> predictions = controller.calibrate(X_calib, y_calib).predict(X_test)
 
     References
     ----------
@@ -1004,7 +1003,7 @@ class BinaryClassificationController:
         self,
         X_calibrate: ArrayLike,
         y_calibrate: ArrayLike
-    ) -> "BinaryClassificationController":
+    ) -> BinaryClassificationController:
         """
         Calibrate the BinaryClassificationController.
         Sets attributes valid_predict_params and best_predict_param (if the risk
@@ -1021,7 +1020,7 @@ class BinaryClassificationController:
         Returns
         -------
         BinaryClassificationController
-            The fitted controller instance (for chaining).
+            The calibrated controller instance.
         """
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
