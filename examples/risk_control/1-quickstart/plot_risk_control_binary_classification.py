@@ -81,7 +81,7 @@ plt.show()
 ##############################################################################
 # Second, fit a Multi-layer Perceptron classifier on the training data.
 
-clf = clf = clf = MLPClassifier(max_iter=150, random_state=RANDOM_STATE)
+clf = MLPClassifier(max_iter=150, random_state=RANDOM_STATE)
 clf.fit(X_train, y_train)
 
 ##############################################################################
