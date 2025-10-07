@@ -895,7 +895,7 @@ class BinaryClassificationController:
         - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
           accuracy, false_positive_rate)
         - A custom instance of BinaryClassificationRisk object
-        
+
         Can be a list of risks in the case of multi risk control.
 
     target_level : Union[float, List[float]]
@@ -982,9 +982,9 @@ class BinaryClassificationController:
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
             Literal["auto"], BinaryClassificationRisk] = "auto",
-    ):  
+    ):
         self._check_risks_targets_same_len(risk, target_level)
-        
+
         self._predict_function = predict_function
         self._risk = risk
         if self._risk.higher_is_better:
@@ -1191,9 +1191,9 @@ class BinaryClassificationController:
             else:
                 raise
         return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
-     
+
     @staticmethod
-    def _check_risks_targets_same_len( #TODO what about lists of len 1
+    def _check_risks_targets_same_len(  # TODO what about lists of len 1
         risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
         target_level: Union[float, List[float]],
     ) -> None:
@@ -1204,7 +1204,7 @@ class BinaryClassificationController:
                 and isinstance(target_level, list)
             )
             or (
-                isinstance(risk, list) 
+                isinstance(risk, list)
                 and isinstance(target_level, list)
                 and len(risk) != len(target_level)
             )

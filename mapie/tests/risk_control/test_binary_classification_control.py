@@ -427,4 +427,3 @@ def test_check_risks_targets_same_len(
     """
     with pytest.raises(ValueError, match='If you provide a list of risks,'):
         BinaryClassificationController._check_risks_targets_same_len(risk, target_level)
-    
