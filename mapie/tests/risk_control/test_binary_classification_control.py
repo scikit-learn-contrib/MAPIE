@@ -422,8 +422,9 @@ def test_check_risks_targets_same_len(
     target_level: Union[float, List[float]],
 ) -> None:
     """
-    Test that BinaryClassificationController._check_risks_targets_same_len raises an
-    error when the lengths of the provided risk and target_level lists do not match.
+    Test that BinaryClassificationController._check_if_multi_risk_control raises an
+    error when the lengths of the provided risk and target_level lists do not match,
+    or when a single risk is provided with multiple target levels and vice versa.
     """
     with pytest.raises(ValueError, match='If you provide a list of risks,'):
-        BinaryClassificationController._check_risks_targets_same_len(risk, target_level)
+        BinaryClassificationController._check_if_multi_risk_control(risk, target_level)
