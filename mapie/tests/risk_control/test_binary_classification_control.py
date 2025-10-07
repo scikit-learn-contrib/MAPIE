@@ -408,16 +408,23 @@ class TestBinaryClassificationControllerPredict:
         ):
             controller.predict(dummy_X)
 
+
 @pytest.mark.parametrize(
     "risk,target_level",
     [
-        ([recall, false_positive_rate], 0.6,
+        ([recall, false_positive_rate], 0.6),
         (false_positive_rate, [0.6, 0.8]),
-        [recall, false_positive_rate], [0.6, 0.8, 0.7]),
+        ([recall, false_positive_rate], [0.6, 0.8, 0.7]),
     ],
 )
 def test_check_risks_targets_same_len(
     risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
     target_level: Union[float, List[float]],
 ) -> None:
-    BinaryClassificationController._check_risks_targets_same_len(risk, target_level)
+    """
+    Test that BinaryClassificationController._check_risks_targets_same_len raises an
+    error when the lengths of the provided risk and target_level lists do not match.
+    """
+    with pytest.raises(ValueError, match='If you provide a list of risks,'):
+        BinaryClassificationController._check_risks_targets_same_len(risk, target_level)
+    
