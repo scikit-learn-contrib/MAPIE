@@ -983,14 +983,10 @@ class BinaryClassificationController:
         best_predict_param_choice: Union[
             Literal["auto"], BinaryClassificationRisk] = "auto",
     ):
-        self._check_risks_targets_same_len(risk, target_level)
-
+        self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
         self._risk = risk
-        if self._risk.higher_is_better:
-            self._alpha = 1 - target_level
-        else:
-            self._alpha = target_level
+        self._alpha = self._convert_target_level_to_alpha(target_level)
         self._delta = 1 - confidence_level
 
         self._best_predict_param_choice = self._set_best_predict_param_choice(
@@ -1001,20 +997,6 @@ class BinaryClassificationController:
 
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[float] = None
-
-    def convert_target_level_to_alpha(self, target_level):
-        if isinstance(target_level, float):
-            if self._risk.higher_is_better:
-                self._alpha = 1 - target_level
-            else:
-                self._alpha = target_level
-        else:
-            self._alpha = []
-            for risk, target in zip(self._risk, target_level):
-                if risk.higher_is_better:
-                    self._alpha.append(1 - target)
-                else:
-                    self._alpha.append(target)
 
     # All subfunctions are unit-tested. To avoid having to write
     # tests just to make sure those subfunctions are called,
@@ -1115,16 +1097,20 @@ class BinaryClassificationController:
             Literal["auto"], BinaryClassificationRisk] = "auto",
     ) -> BinaryClassificationRisk:
         if best_predict_param_choice == "auto":
-            try:
-                return self._best_predict_param_choice_map[
-                    self._risk
-                ]
-            except KeyError:
-                raise ValueError(
-                    "When best_predict_param_choice is 'auto', "
-                    "risk must be one of the risks defined in mapie.risk_control"
-                    "(e.g. precision, accuracy, false_positive_rate)."
-                )
+            if self.is_multi_risk:
+                # when multi risk, we minimize the first risk in the list
+                return self._risk[0]  # type: ignore
+            else:
+                try:
+                    return self._best_predict_param_choice_map[
+                        self._risk  # type: ignore
+                    ]
+                except KeyError:
+                    raise ValueError(
+                        "When best_predict_param_choice is 'auto', "
+                        "risk must be one of the risks defined in mapie.risk_control"
+                        "(e.g. precision, accuracy, false_positive_rate)."
+                    )
         else:
             return best_predict_param_choice
 
@@ -1192,25 +1178,43 @@ class BinaryClassificationController:
                 raise
         return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
 
+    def _convert_target_level_to_alpha(self, target_level):
+        if self.is_multi_risk:
+            alpha = []
+            for risk, target in zip(self._risk, target_level):
+                if risk.higher_is_better:
+                    alpha.append(1 - target)
+                else:
+                    alpha.append(target)
+        else:
+            if self._risk.higher_is_better:
+                alpha = 1 - target_level
+            else:
+                alpha = target_level
+        return alpha
+
     @staticmethod
-    def _check_risks_targets_same_len(  # TODO what about lists of len 1
+    def _check_if_multi_risk_control(  # TODO what about lists of len 1
         risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
         target_level: Union[float, List[float]],
-    ) -> None:
+    ) -> bool:
+        """
+        Check if we are in a multi risk setting and if inputs types are correct.
+        """
         if (
-            isinstance(risk, list) and isinstance(target_level, float)
-            or (
-                isinstance(risk, BinaryClassificationRisk)
-                and isinstance(target_level, list)
-            )
-            or (
-                isinstance(risk, list)
-                and isinstance(target_level, list)
-                and len(risk) != len(target_level)
-            )
+            isinstance(risk, list) and isinstance(target_level, list)
+            and len(risk) == len(target_level)
         ):
+            return True
+        elif (
+            isinstance(risk, BinaryClassificationRisk)
+            and isinstance(target_level, float)
+        ):
+            return False
+        else:
             raise ValueError(
-                "If you provide a list of risks, "
-                "you must provide a list of target levels of the same length "
-                "and vice versa."
+                "If you provide a list of risks, you must provide "
+                "a list of target levels of the same length and vice versa. "
+                "If you provide a single BinaryClassificationRisk risk, "
+                "you must provide a single float target level."
             )
