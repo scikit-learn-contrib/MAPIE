@@ -10,7 +10,7 @@ In this example, we explain how to do risk control for binary classification wit
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_circles
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import FixedThresholdClassifier
 from sklearn.metrics import precision_score
 from sklearn.inspection import DecisionBoundaryDisplay
@@ -18,7 +18,7 @@ from sklearn.inspection import DecisionBoundaryDisplay
 from mapie.risk_control import BinaryClassificationController, precision
 from mapie.utils import train_conformalize_test_split
 
-RANDOM_STATE = 1
+RANDOM_STATE = 17
 
 ##############################################################################
 # Fist, load the dataset and then split it into training, calibration
@@ -79,9 +79,9 @@ plt.tight_layout(rect=[0, 0.05, 1, 0.95])
 plt.show()
 
 ##############################################################################
-# Second, fit a KNeighborsClassifier on the training data.
+# Second, fit a Multi-layer Perceptron classifier on the training data.
 
-clf = KNeighborsClassifier(n_neighbors=10)
+clf = clf = clf = MLPClassifier(max_iter=150, random_state=RANDOM_STATE)
 clf.fit(X_train, y_train)
 
 ##############################################################################
@@ -156,9 +156,6 @@ plt.show()
 # small number of observations used to compute the precision, following the Learn then
 # Test procedure. In the most extreme case, no observation is available, which causes
 # the precision value to be ill-defined and set to 0.
-#
-# Note: The output of ``clf.predict_proba`` is discrete, not continuous, so the plotted function
-# appears as a step function. This reflects the finite set of probability levels predicted by the model.
 
 # Besides computing a set of valid thresholds,
 # :class:`~mapie.risk_control.BinaryClassificationController` also outputs the "best"
