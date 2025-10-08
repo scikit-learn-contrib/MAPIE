@@ -1125,12 +1125,11 @@ class BinaryClassificationController:
         predictions_per_param: NDArray,
         valid_params_index: List[Any],
     ):
-        secondary_risks_per_param = \
-            self._get_risk_values_and_eff_sample_sizes(
+        secondary_risks_per_param, _ = self._get_risk_values_and_eff_sample_sizes(
                 y_calibrate_,
                 predictions_per_param[valid_params_index],
-                self._best_predict_param_choice
-            )[:, 0]
+                [self._best_predict_param_choice]
+            )
 
         self.best_predict_param = self.valid_predict_params[
             np.argmin(secondary_risks_per_param)
@@ -1143,7 +1142,7 @@ class BinaryClassificationController:
         risks: List[BinaryClassificationRisk],
     ) -> Tuple[NDArray, NDArray]:
         """
-        Compute the values of risks and effective sample sizes for multiple risks 
+        Compute the values of risks and effective sample sizes for multiple risks
         and for multiple parameter values.
         Returns a tuple of two arrays with shape (n_risks, n_params).
         """
