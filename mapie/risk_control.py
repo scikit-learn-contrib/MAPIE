@@ -1031,20 +1031,17 @@ class BinaryClassificationController:
             self._predict_params
         )
 
-        risks_and_eff_sizes = self._get_risks_and_effective_sample_sizes_per_param(
+        risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_,
             predictions_per_param,
-            self._risk
+            self._risk if isinstance(self._risk, list) else [self._risk]
         )
 
-        risks_per_param = risks_and_eff_sizes[:, 0]
-        eff_sample_sizes_per_param = risks_and_eff_sizes[:, 1]
-
         valid_params_index = ltt_procedure(
-            risks_per_param,
+            risk_values,
             np.array([self._alpha]),
             self._delta,
-            eff_sample_sizes_per_param,
+            eff_sample_sizes,
             True,
         )[0]
 
@@ -1129,7 +1126,7 @@ class BinaryClassificationController:
         valid_params_index: List[Any],
     ):
         secondary_risks_per_param = \
-            self._get_risks_and_effective_sample_sizes_per_param(
+            self._get_risk_values_and_eff_sample_sizes(
                 y_calibrate_,
                 predictions_per_param[valid_params_index],
                 self._best_predict_param_choice
@@ -1140,17 +1137,26 @@ class BinaryClassificationController:
         ]
 
     @staticmethod
-    def _get_risks_and_effective_sample_sizes_per_param(
+    def _get_risk_values_and_eff_sample_sizes(
         y_true: NDArray,
         predictions_per_param: NDArray,
-        risk: BinaryClassificationRisk,
-    ) -> NDArray:
-        return np.array(
-            [risk.get_value_and_effective_sample_size(
-                y_true,
-                predictions
-            ) for predictions in predictions_per_param]
-        )
+        risks: List[BinaryClassificationRisk],
+    ) -> Tuple[NDArray, NDArray]:
+        """
+        Compute the values of risks and effective sample sizes for multiple risks 
+        and for multiple parameter values.
+        Returns a tuple of two arrays with shape (n_risks, n_params).
+        """
+        risks_values_and_eff_sizes = np.array([
+            [risk.get_value_and_effective_sample_size(y_true, predictions)
+             for predictions in predictions_per_param]
+            for risk in risks
+        ])
+
+        risk_values = risks_values_and_eff_sizes[:, :, 0]
+        effective_sample_sizes = risks_values_and_eff_sizes[:, :, 1]
+
+        return risk_values, effective_sample_sizes
 
     def _get_predictions_per_param(self, X: ArrayLike, params: NDArray) -> NDArray:
         try:
