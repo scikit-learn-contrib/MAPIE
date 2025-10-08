@@ -141,7 +141,7 @@ plt.show()
 # finite size of the calibration set, which risk control takes into account.
 #
 # In particular, the highest threshold values are considered invalid due to the
-# small number of observations used to compute the precision, following the Learn then
+# small number of observations used to compute the precision, following the Learn Then
 # Test procedure. In the most extreme case, no observation is available, which causes
 # the precision value to be ill-defined and set to 0.
 
