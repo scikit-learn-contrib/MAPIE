@@ -39,20 +39,12 @@ datasets = [(X_train, y_train), (X_calib, y_calib), (X_test, y_test)]
 
 for i, (ax, (X_data, y_data), title) in enumerate(zip(axes, datasets, titles)):
     ax.scatter(
-        X_data[y_data == 0, 0],
-        X_data[y_data == 0, 1],
-        edgecolors="k",
-        c="tab:blue",
-        alpha=0.5,
-        label='"negative" class',
+        X_data[y_data == 0, 0], X_data[y_data == 0, 1],
+        edgecolors="k", c="tab:blue", label='"negative" class', alpha=0.5
     )
     ax.scatter(
-        X_data[y_data == 1, 0],
-        X_data[y_data == 1, 1],
-        edgecolors="k",
-        c="tab:red",
-        alpha=0.5,
-        label='"positive" class',
+        X_data[y_data == 1, 0], X_data[y_data == 1, 1],
+        edgecolors="k", c="tab:red", label='"positive" class', alpha=0.5
     )
     ax.set_title(title, fontsize=18)
     ax.set_xlabel("Feature 1", fontsize=16)
@@ -66,12 +58,8 @@ for i, (ax, (X_data, y_data), title) in enumerate(zip(axes, datasets, titles)):
 
 handles, labels = axes[0].get_legend_handles_labels()
 fig.legend(
-    handles,
-    labels,
-    loc="lower center",
-    bbox_to_anchor=(0.5, -0.01),
-    ncol=2,
-    fontsize=16,
+    handles, labels, oc="lower center", bbox_to_anchor=(0.5, -0.01),
+    ncol=2, fontsize=16
 )
 
 plt.suptitle("Visualization of Train, Calibration, and Test Sets", fontsize=22)
