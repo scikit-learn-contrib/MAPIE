@@ -18,13 +18,13 @@ from sklearn.inspection import DecisionBoundaryDisplay
 from mapie.risk_control import BinaryClassificationController, precision
 from mapie.utils import train_conformalize_test_split
 
-RANDOM_STATE = 17
+RANDOM_STATE = 1
 
 ##############################################################################
 # Fist, load the dataset and then split it into training, calibration
 # (for conformalization), and test sets.
 
-X, y = make_circles(n_samples=3000, noise=0.3, factor=0.3, random_state=RANDOM_STATE)
+X, y = make_circles(n_samples=5000, noise=0.3, factor=0.3, random_state=RANDOM_STATE)
 (X_train, X_calib, X_test,
  y_train, y_calib, y_test) = train_conformalize_test_split(
      X, y,
@@ -58,7 +58,7 @@ for i, (ax, (X_data, y_data), title) in enumerate(zip(axes, datasets, titles)):
 
 handles, labels = axes[0].get_legend_handles_labels()
 fig.legend(
-    handles, labels, oc="lower center", bbox_to_anchor=(0.5, -0.01),
+    handles, labels, loc="lower center", bbox_to_anchor=(0.5, -0.01),
     ncol=2, fontsize=16
 )
 
