@@ -1039,7 +1039,7 @@ class BinaryClassificationController:
 
         valid_params_index = ltt_procedure(
             risk_values,
-            np.array([self._alpha]),
+            self._alpha,
             self._delta,
             eff_sample_sizes,
             True,
@@ -1196,7 +1196,8 @@ class BinaryClassificationController:
                 alpha = 1 - target_level
             else:
                 alpha = target_level
-        return alpha
+            alpha = [alpha]
+        return np.array(alpha)
 
     @staticmethod
     def _check_if_multi_risk_control(  # TODO what about lists of len 1
