@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Tuple, Union, cast
 
 import numpy as np
 
@@ -63,17 +63,26 @@ def ltt_procedure(
     "Calibrating predictive algorithms to achieve risk control".
     """
     if r_hat.ndim > 1:  # multi risk: use max p-value over risks
+        n_obs = cast(NDArray, n_obs)
         p_values = np.array([
-            compute_hoeffding_bentkus_p_value(r_hat_i, n_obs, alpha_np_i, binary)
-            for r_hat_i, alpha_np_i in zip(r_hat, alpha_np)
+            compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
+            for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
         ]).max(axis=0)
-    else:
-        p_values = compute_hoeffding_bentkus_p_value(r_hat, n_obs, alpha_np, binary)
-    N = len(p_values)
-    valid_index = []
-    for i in range(len(alpha_np)):
-        l_index = np.where(p_values[:, i] <= delta/N)[0].tolist()
+        N = len(p_values)
+        valid_index = []
+        l_index = np.where(p_values <= delta/N)[0].tolist()
         valid_index.append(l_index)
+    else:
+        r_hat = r_hat.flatten()  # only necessary for binary
+        if isinstance(n_obs, np.ndarray):
+            n_obs = n_obs.flatten()
+            # n_obs never int for binary classif (maybe in multilabel case?)
+        p_values = compute_hoeffding_bentkus_p_value(r_hat, n_obs, alpha_np, binary)
+        N = len(p_values)
+        valid_index = []
+        for i in range(len(alpha_np)):
+            l_index = np.where(p_values[:, i] <= delta/N)[0].tolist()
+            valid_index.append(l_index)
     return valid_index
 
 
