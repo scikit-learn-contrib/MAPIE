@@ -492,7 +492,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             y_pred_proba_array = y_pred_proba
         else:
             y_pred_proba_stacked = np.stack(
-                y_pred_proba,  # type: ignore
+                y_pred_proba,
                 axis=0
             )[:, :, 1]
             y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
@@ -985,7 +985,10 @@ class BinaryClassificationController:
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
-        self._risk = risk
+        self._risk = risk if isinstance(risk, list) else [risk]
+        target_level = (
+            target_level if isinstance(target_level, list) else [target_level]
+        )
         self._alpha = self._convert_target_level_to_alpha(target_level)
         self._delta = 1 - confidence_level
 
@@ -1034,7 +1037,7 @@ class BinaryClassificationController:
         risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_,
             predictions_per_param,
-            self._risk if isinstance(self._risk, list) else [self._risk]
+            self._risk
         )
 
         valid_params_index = ltt_procedure(
@@ -1096,11 +1099,11 @@ class BinaryClassificationController:
         if best_predict_param_choice == "auto":
             if self.is_multi_risk:
                 # when multi risk, we minimize the first risk in the list
-                return self._risk[0]  # type: ignore
+                return self._risk[0]
             else:
                 try:
                     return self._best_predict_param_choice_map[
-                        self._risk  # type: ignore
+                        self._risk[0]
                     ]
                 except KeyError:
                     raise ValueError(
@@ -1144,7 +1147,7 @@ class BinaryClassificationController:
         """
         Compute the values of risks and effective sample sizes for multiple risks
         and for multiple parameter values.
-        Returns a tuple of two arrays with shape (n_risks, n_params).
+        Returns arrays with shape (n_risks, n_params).
         """
         risks_values_and_eff_sizes = np.array([
             [risk.get_value_and_effective_sample_size(y_true, predictions)
@@ -1184,19 +1187,12 @@ class BinaryClassificationController:
         return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
 
     def _convert_target_level_to_alpha(self, target_level):
-        if self.is_multi_risk:
-            alpha = []
-            for risk, target in zip(self._risk, target_level):
-                if risk.higher_is_better:
-                    alpha.append(1 - target)
-                else:
-                    alpha.append(target)
-        else:
-            if self._risk.higher_is_better:
-                alpha = 1 - target_level
+        alpha = []
+        for risk, target in zip(self._risk, target_level):
+            if risk.higher_is_better:
+                alpha.append(1 - target)
             else:
-                alpha = target_level
-            alpha = [alpha]
+                alpha.append(target)
         return np.array(alpha)
 
     @staticmethod
