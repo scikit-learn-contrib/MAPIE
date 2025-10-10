@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Tuple, Union, cast
 
 import numpy as np
 
@@ -26,7 +26,7 @@ def ltt_procedure(
 
     Parameters
     ----------
-    r_hat: NDArray of shape (n_lambdas, ).
+    r_hat: NDArray of shape (n_lambdas, ) or (n_risks, n_lambdas) for multi risk.
         Empirical risk with respect to the lambdas.
         Here lambdas are thresholds that impact decision-making,
         therefore empirical risk.
@@ -62,12 +62,24 @@ def ltt_procedure(
     M. I., & Lei, L. (2021). Learn then test:
     "Calibrating predictive algorithms to achieve risk control".
     """
-    p_values = compute_hoeffding_bentkus_p_value(r_hat, n_obs, alpha_np, binary)
-    N = len(p_values)
-    valid_index = []
-    for i in range(len(alpha_np)):
-        l_index = np.where(p_values[:, i] <= delta/N)[0].tolist()
+    if binary:
+        n_obs = cast(NDArray, n_obs)
+        p_values = np.array([
+            compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
+            for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
+        ])
+        p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
+        N = len(p_values)
+        valid_index = []
+        l_index = np.where(p_values <= delta/N)[0].tolist()
         valid_index.append(l_index)
+    else:  # previous implementation (to correctly handle PrecisionRecallController)
+        p_values = compute_hoeffding_bentkus_p_value(r_hat, n_obs, alpha_np, binary)
+        N = len(p_values)
+        valid_index = []
+        for i in range(len(alpha_np)):
+            l_index = np.where(p_values[:, i] <= delta/N)[0].tolist()
+            valid_index.append(l_index)
     return valid_index
 
 

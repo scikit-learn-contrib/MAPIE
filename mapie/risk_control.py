@@ -492,7 +492,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             y_pred_proba_array = y_pred_proba
         else:
             y_pred_proba_stacked = np.stack(
-                y_pred_proba,  # type: ignore
+                y_pred_proba,
                 axis=0
             )[:, :, 1]
             y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
@@ -888,7 +888,7 @@ class BinaryClassificationController:
         predict_proba method of a fitted binary classifier.
         Its output signature must be of shape (len(X), 2)
 
-    risk : BinaryClassificationRisk
+    risk : Union[BinaryClassificationRisk, List[BinaryClassificationRisk]]
         The risk or performance metric to control.
         Valid options:
 
@@ -896,8 +896,12 @@ class BinaryClassificationController:
           accuracy, false_positive_rate)
         - A custom instance of BinaryClassificationRisk object
 
-    target_level : float
+        Can be a list of risks in the case of multi risk control.
+
+    target_level : Union[float, List[float]]
         The maximum risk level (or minimum performance level). Must be between 0 and 1.
+        Can be a list of target levels in the case of multi risk control (length should
+        match the length of the risks list).
 
     confidence_level : float, default=0.9
         The confidence level with which the risk (or performance) is controlled.
@@ -973,18 +977,19 @@ class BinaryClassificationController:
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: BinaryClassificationRisk,
-        target_level: float,
+        risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
+        target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
             Literal["auto"], BinaryClassificationRisk] = "auto",
     ):
+        self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
-        self._risk = risk
-        if self._risk.higher_is_better:
-            self._alpha = 1 - target_level
-        else:
-            self._alpha = target_level
+        self._risk = risk if isinstance(risk, list) else [risk]
+        target_level = (
+            target_level if isinstance(target_level, list) else [target_level]
+        )
+        self._alpha = self._convert_target_level_to_alpha(target_level)
         self._delta = 1 - confidence_level
 
         self._best_predict_param_choice = self._set_best_predict_param_choice(
@@ -1029,20 +1034,17 @@ class BinaryClassificationController:
             self._predict_params
         )
 
-        risks_and_eff_sizes = self._get_risks_and_effective_sample_sizes_per_param(
+        risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_,
             predictions_per_param,
             self._risk
         )
 
-        risks_per_param = risks_and_eff_sizes[:, 0]
-        eff_sample_sizes_per_param = risks_and_eff_sizes[:, 1]
-
         valid_params_index = ltt_procedure(
-            risks_per_param,
-            np.array([self._alpha]),
+            risk_values,
+            self._alpha,
             self._delta,
-            eff_sample_sizes_per_param,
+            eff_sample_sizes,
             True,
         )[0]
 
@@ -1095,16 +1097,20 @@ class BinaryClassificationController:
             Literal["auto"], BinaryClassificationRisk] = "auto",
     ) -> BinaryClassificationRisk:
         if best_predict_param_choice == "auto":
-            try:
-                return self._best_predict_param_choice_map[
-                    self._risk
-                ]
-            except KeyError:
-                raise ValueError(
-                    "When best_predict_param_choice is 'auto', "
-                    "risk must be one of the risks defined in mapie.risk_control"
-                    "(e.g. precision, accuracy, false_positive_rate)."
-                )
+            if self.is_multi_risk:
+                # when multi risk, we minimize the first risk in the list
+                return self._risk[0]
+            else:
+                try:
+                    return self._best_predict_param_choice_map[
+                        self._risk[0]
+                    ]
+                except KeyError:
+                    raise ValueError(
+                        "When best_predict_param_choice is 'auto', "
+                        "risk must be one of the risks defined in mapie.risk_control"
+                        "(e.g. precision, accuracy, false_positive_rate)."
+                    )
         else:
             return best_predict_param_choice
 
@@ -1122,29 +1128,37 @@ class BinaryClassificationController:
         predictions_per_param: NDArray,
         valid_params_index: List[Any],
     ):
-        secondary_risks_per_param = \
-            self._get_risks_and_effective_sample_sizes_per_param(
+        secondary_risks_per_param, _ = self._get_risk_values_and_eff_sample_sizes(
                 y_calibrate_,
                 predictions_per_param[valid_params_index],
-                self._best_predict_param_choice
-            )[:, 0]
+                [self._best_predict_param_choice]
+            )
 
         self.best_predict_param = self.valid_predict_params[
             np.argmin(secondary_risks_per_param)
         ]
 
     @staticmethod
-    def _get_risks_and_effective_sample_sizes_per_param(
+    def _get_risk_values_and_eff_sample_sizes(
         y_true: NDArray,
         predictions_per_param: NDArray,
-        risk: BinaryClassificationRisk,
-    ) -> NDArray:
-        return np.array(
-            [risk.get_value_and_effective_sample_size(
-                y_true,
-                predictions
-            ) for predictions in predictions_per_param]
-        )
+        risks: List[BinaryClassificationRisk],
+    ) -> Tuple[NDArray, NDArray]:
+        """
+        Compute the values of risks and effective sample sizes for multiple risks
+        and for multiple parameter values.
+        Returns arrays with shape (n_risks, n_params).
+        """
+        risks_values_and_eff_sizes = np.array([
+            [risk.get_value_and_effective_sample_size(y_true, predictions)
+             for predictions in predictions_per_param]
+            for risk in risks
+        ])
+
+        risk_values = risks_values_and_eff_sizes[:, :, 0]
+        effective_sample_sizes = risks_values_and_eff_sizes[:, :, 1]
+
+        return risk_values, effective_sample_sizes
 
     def _get_predictions_per_param(self, X: ArrayLike, params: NDArray) -> NDArray:
         try:
@@ -1171,3 +1185,42 @@ class BinaryClassificationController:
             else:
                 raise
         return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
+
+    def _convert_target_level_to_alpha(self, target_level):
+        alpha = []
+        for risk, target in zip(self._risk, target_level):
+            if risk.higher_is_better:
+                alpha.append(1 - target)
+            else:
+                alpha.append(target)
+        return np.array(alpha)
+
+    @staticmethod
+    def _check_if_multi_risk_control(
+        risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
+        target_level: Union[float, List[float]],
+    ) -> bool:
+        """
+        Check if we are in a multi risk setting and if inputs types are correct.
+        """
+        if (
+            isinstance(risk, list) and isinstance(target_level, list)
+            and len(risk) == len(target_level)
+            and len(risk) > 0
+        ):
+            if len(risk) == 1:
+                return False
+            else:
+                return True
+        elif (
+            isinstance(risk, BinaryClassificationRisk)
+            and isinstance(target_level, float)
+        ):
+            return False
+        else:
+            raise ValueError(
+                "If you provide a list of risks, you must provide "
+                "a list of target levels of the same length and vice versa. "
+                "If you provide a single BinaryClassificationRisk risk, "
+                "you must provide a single float target level."
+            )
