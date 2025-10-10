@@ -5,7 +5,11 @@ Contribution guidelines
 What to work on?
 ----------------
 
-You are welcome to propose and contribute new ideas.
+Issues tagged "Good first issue" are perfect for open-source beginners.
+
+For the more experienced, issues tagged "Contributors welcome" are recommended if you want to help.
+
+You are also welcome to propose and contribute to new ideas.
 We encourage you to `open an issue <https://github.com/scikit-learn-contrib/MAPIE/issues>`_ so that we can align on the work to be done.
 It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
 
@@ -43,6 +47,39 @@ Finally, install ``mapie`` in development mode:
 
     $ pip install -e .
 
+Implementing your change
+------------------------------------------
+
+The linter must pass:
+
+.. code-block:: sh
+
+    $ make lint
+
+The typing must pass.
+
+.. code-block:: sh
+
+    $ make type-check
+
+
+
+Testing your change
+---------------------
+
+See `the tests README.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/mapie/tests/README.rst>`_ for guidance.
+
+The tests absolutely have to pass.
+
+.. code-block:: sh
+
+    $ make tests
+
+The coverage should absolutely be 100%.
+
+.. code-block:: sh
+
+    $ make coverage
 
 Documenting your change
 -----------------------
@@ -72,44 +109,3 @@ You can make your contribution visible by:
 
 1. Adding your name to the Contributors section of `AUTHORS.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.rst>`_
 2. If your change is user-facing (bug fix, feature, ...), adding a line to describe it in `HISTORY.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.rst>`_
-
-Testing
--------
-
-Linting
-^^^^^^^
-
-These tests absolutely have to pass.
-
-.. code-block:: sh
-
-    $ make lint
-
-
-Static typing
-^^^^^^^^^^^^^
-
-These tests absolutely have to pass.
-
-.. code-block:: sh
-
-    $ make type-check
-
-
-Unit tests
-^^^^^^^^^^
-
-These tests absolutely have to pass.
-
-.. code-block:: sh
-
-    $ make tests
-
-Coverage
-^^^^^^^^
-
-The coverage should absolutely be 100%.
-
-.. code-block:: sh
-
-    $ make coverage
