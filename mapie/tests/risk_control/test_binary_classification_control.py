@@ -1,5 +1,4 @@
 from copy import deepcopy
-from typing import Union, List
 
 import numpy as np
 import pandas as pd
@@ -151,7 +150,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
                 target_level=dummy_target,
                 best_predict_param_choice="auto"
             )
-            
+
     def test_multi_risk_auto(self):
         """Test _set_best_predict_param_choice with 'auto' mode for multiple risks."""
         first_risk = precision
@@ -164,6 +163,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
 
         result = controller._best_predict_param_choice
         assert result is first_risk
+
 
 @pytest.mark.parametrize(
     "risk_instance,target_level,expected_alpha",
@@ -183,7 +183,7 @@ def test_binary_classification__convert_target_level_to_alpha(
         risk=risk_instance,
         target_level=target_level,
     )
-    assert all(np.isclose(controller._alpha, expected_alpha))
+    assert np.isclose(controller._alpha, expected_alpha).all()
 
 
 def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> None:
@@ -437,7 +437,7 @@ class TestCheckIfMultiRiskControl:
 
     def test_multi_risk(self, bcc_deterministic):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
-            [BinaryClassificationRisk, BinaryClassificationRisk], 
+            [BinaryClassificationRisk, BinaryClassificationRisk],
             [dummy_target, dummy_target]
         )
         assert is_multi_risk
