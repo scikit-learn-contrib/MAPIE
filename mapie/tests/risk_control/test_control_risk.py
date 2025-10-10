@@ -212,8 +212,8 @@ def test_ltt_procedure_n_obs_negative() -> None:
      a loss, is undefined because the condition is never met.
      This should return an invalid lambda.
      """
-    r_hat = np.array([0.5])
-    n_obs = np.array([-1])
+    r_hat = np.array([[0.5]])
+    n_obs = np.array([[-1]])
     alpha_np = np.array([0.6])
     binary = True
     assert ltt_procedure(r_hat, alpha_np, 0.1, n_obs, binary) == [[]]
