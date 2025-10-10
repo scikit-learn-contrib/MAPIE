@@ -62,21 +62,18 @@ def ltt_procedure(
     M. I., & Lei, L. (2021). Learn then test:
     "Calibrating predictive algorithms to achieve risk control".
     """
-    if r_hat.ndim > 1:  # multi risk: use max p-value over risks
+    if binary:
         n_obs = cast(NDArray, n_obs)
         p_values = np.array([
             compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
             for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
-        ]).max(axis=0)
+        ])
+        p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
         N = len(p_values)
         valid_index = []
         l_index = np.where(p_values <= delta/N)[0].tolist()
         valid_index.append(l_index)
-    else:
-        r_hat = r_hat.flatten()  # only necessary for binary
-        if isinstance(n_obs, np.ndarray):
-            n_obs = n_obs.flatten()
-            # n_obs never int for binary classif (maybe in multilabel case?)
+    else:  # previous implementation (to correctly handle PrecisionRecallController)
         p_values = compute_hoeffding_bentkus_p_value(r_hat, n_obs, alpha_np, binary)
         N = len(p_values)
         valid_index = []
