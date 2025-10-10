@@ -424,20 +424,23 @@ class TestBinaryClassificationControllerPredict:
 
 class TestCheckIfMultiRiskControl:
     def test_mono_risk(self, bcc_deterministic):
-        assert not bcc_deterministic._check_if_multi_risk_control(
+        is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             precision, dummy_target
         )
-    
+        assert not is_multi_risk
+
     def test_mono_risk_list(self, bcc_deterministic):
-        assert not bcc_deterministic._check_if_multi_risk_control(
+        is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             [precision], [dummy_target]
         )
+        assert not is_multi_risk
 
     def test_multi_risk(self, bcc_deterministic):
-        assert bcc_deterministic._check_if_multi_risk_control(
+        is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             [BinaryClassificationRisk, BinaryClassificationRisk], 
             [dummy_target, dummy_target]
         )
+        assert is_multi_risk
 
     @pytest.mark.parametrize(
         "risk,target_level",
