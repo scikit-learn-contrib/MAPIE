@@ -1196,7 +1196,7 @@ class BinaryClassificationController:
         return np.array(alpha)
 
     @staticmethod
-    def _check_if_multi_risk_control(  # TODO what about lists of len 1
+    def _check_if_multi_risk_control(
         risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
         target_level: Union[float, List[float]],
     ) -> bool:
@@ -1206,8 +1206,12 @@ class BinaryClassificationController:
         if (
             isinstance(risk, list) and isinstance(target_level, list)
             and len(risk) == len(target_level)
+            and len(risk) > 0
         ):
-            return True
+            if len(risk) == 1:
+                return False
+            else:
+                return True
         elif (
             isinstance(risk, BinaryClassificationRisk)
             and isinstance(target_level, float)
