@@ -151,16 +151,29 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
                 target_level=dummy_target,
                 best_predict_param_choice="auto"
             )
+            
+    def test_multi_risk_auto(self):
+        """Test _set_best_predict_param_choice with 'auto' mode for multiple risks."""
+        first_risk = precision
+        controller = BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=[first_risk, recall],
+            target_level=[dummy_target, dummy_target],
+            best_predict_param_choice="auto"
+        )
 
+        result = controller._best_predict_param_choice
+        assert result is first_risk
 
 @pytest.mark.parametrize(
     "risk_instance,target_level,expected_alpha",
     [
         (recall, 0.6, 0.4),  # higher_is_better=True
         (false_positive_rate, 0.6, 0.6),  # higher_is_better=False
+        ([recall, false_positive_rate], [0.7, 0.8], [0.3, 0.8]),  # multi-risk
     ],
 )
-def test_binary_classification_controller_alpha(
+def test_binary_classification__convert_target_level_to_alpha(
     risk_instance: BinaryClassificationRisk,
     target_level: float,
     expected_alpha: float,
@@ -170,7 +183,7 @@ def test_binary_classification_controller_alpha(
         risk=risk_instance,
         target_level=target_level,
     )
-    assert np.isclose(controller._alpha, expected_alpha)
+    assert all(np.isclose(controller._alpha, expected_alpha))
 
 
 def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> None:
@@ -409,22 +422,34 @@ class TestBinaryClassificationControllerPredict:
             controller.predict(dummy_X)
 
 
-@pytest.mark.parametrize(
-    "risk,target_level",
-    [
-        ([recall, false_positive_rate], 0.6),
-        (false_positive_rate, [0.6, 0.8]),
-        ([recall, false_positive_rate], [0.6, 0.8, 0.7]),
-    ],
-)
-def test_check_risks_targets_same_len(
-    risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
-    target_level: Union[float, List[float]],
-) -> None:
-    """
-    Test that BinaryClassificationController._check_if_multi_risk_control raises an
-    error when the lengths of the provided risk and target_level lists do not match,
-    or when a single risk is provided with multiple target levels and vice versa.
-    """
-    with pytest.raises(ValueError, match='If you provide a list of risks,'):
-        BinaryClassificationController._check_if_multi_risk_control(risk, target_level)
+class TestCheckIfMultiRiskControl:
+    def test_mono_risk(self, bcc_deterministic):
+        assert not bcc_deterministic._check_if_multi_risk_control(
+            precision, dummy_target
+        )
+    
+    def test_mono_risk_list(self, bcc_deterministic):
+        assert not bcc_deterministic._check_if_multi_risk_control(
+            [precision], [dummy_target]
+        )
+
+    def test_multi_risk(self, bcc_deterministic):
+        assert bcc_deterministic._check_if_multi_risk_control(
+            [BinaryClassificationRisk, BinaryClassificationRisk], 
+            [dummy_target, dummy_target]
+        )
+
+    @pytest.mark.parametrize(
+        "risk,target_level",
+        [
+            ([], []),
+            ([recall, false_positive_rate], 0.6),
+            (false_positive_rate, [0.6, 0.8]),
+            ([recall, false_positive_rate], [0.6, 0.8, 0.7]),
+        ],
+    )
+    def test_error_cases(self, risk, target_level):
+        with pytest.raises(ValueError, match='If you provide a list of risks,'):
+            BinaryClassificationController._check_if_multi_risk_control(
+                risk, target_level
+            )
