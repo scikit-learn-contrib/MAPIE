@@ -70,7 +70,7 @@ def ltt_procedure(
         ])
         p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
         N = len(p_values)
-        valid_index = np.where(p_values <= delta/N)[0].tolist()
+        valid_index = [np.where(p_values <= delta/N)[0].tolist()]
     else:  # previous implementation (to correctly handle PrecisionRecallController)
         p_values = compute_hoeffding_bentkus_p_value(r_hat, n_obs, alpha_np, binary)
         N = len(p_values)
