@@ -67,7 +67,7 @@ The typing must pass.
 Testing your change
 ---------------------
 
-See `the tests README.rst <https://github.com/scikit-learn-contrib/MAPIE/blob/master/mapie/tests/README.rst>`_ for guidance.
+See `the tests README.md <https://github.com/scikit-learn-contrib/MAPIE/blob/master/mapie/tests/README.md>`_ for guidance.
 
 The tests absolutely have to pass.
 
