@@ -1046,7 +1046,7 @@ class BinaryClassificationController:
             self._delta,
             eff_sample_sizes,
             True,
-        )[0]
+        )
 
         self.valid_predict_params = self._predict_params[valid_params_index]
 
