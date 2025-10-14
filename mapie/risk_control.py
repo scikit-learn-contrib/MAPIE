@@ -269,7 +269,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-            If delta is ``None`` and method is RCSP or
+            If delta is ``None`` and method is RCPS or
             if delta is not in [0, 1] and method
             is RCPS.
         Warning
@@ -320,7 +320,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         y: ArrayLike,
         estimator: Optional[ClassifierMixin] = None,
         _refit: Optional[bool] = False,
-    ) -> ClassifierMixin:
+    ) -> Tuple[ClassifierMixin, ArrayLike, ArrayLike]:
         """
         Check the estimator value. If it is ``None``,
         it returns a multi-output ``LogisticRegression``
@@ -342,13 +342,6 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             partial_fit (False).
 
             By default False
-
-
-        Returns
-        -------
-        ClassifierMixin
-            The estimator itself or a default multi-output
-            ``LogisticRegression`` instance.
 
         Raises
         ------
@@ -419,19 +412,6 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     def _check_bound(self, bound: Optional[str]):
         """
         Check the value of the bound.
-
-        Parameters
-        ----------
-        bound : Optional[str]
-            Bound defined in the predict.
-
-        Raises
-        ------
-        AttributeError
-            If bound is not in ["hoeffding", "bernstein", "wsr", ``None``]
-
-        Warning
-            If bound is not ``None``and method is CRC
         """
         if bound not in self.valid_bounds_:
             raise ValueError(
@@ -1083,7 +1063,7 @@ class BinaryClassificationController:
             raise ValueError(
                 "Cannot predict. "
                 "Either you forgot to calibrate the controller first, "
-                "either calibration was not successful."
+                "or calibration was not successful."
             )
         return self._get_predictions_per_param(
             X_test,
