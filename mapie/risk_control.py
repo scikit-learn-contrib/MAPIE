@@ -614,7 +614,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         alpha : Optional[Union[float, Iterable[float]]]
             The target risk level.
             Can be a float, a list of floats, or a ``ArrayLike`` of floats,
-            between 0 and .
+            between 0 and 1.
             Lower ``alpha`` produce larger (more conservative) prediction
             sets.
             By default ``None`` (which means alpha=0.1).
