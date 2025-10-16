@@ -57,10 +57,9 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     method : Optional[str]
         Method to use for the prediction sets. If `metric_control` is
-        "recall", then the method can be either "crc" or "rcps".
+        "recall", then the method can be either "crc" (default) or "rcps".
         If `metric_control` is "precision", then the method used to control
         the precision is "ltt".
-        If `metric_control` is "recall" the default method is "crc".
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
@@ -95,7 +94,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     ----------
     valid_methods: List[str]
         List of all valid methods. Either CRC or RCPS
-    valid_methods: List[Union[str, ``None``]]
+    valid_bounds: List[Union[str, ``None``]]
         List of all valid bounds computation for RCPS only.
     single_estimator_ : sklearn.ClassifierMixin
         Estimator fitted on the whole training set.
@@ -270,7 +269,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-            If delta is ``None`` and method is RCSP or
+            If delta is ``None`` and method is RCPS or
             if delta is not in [0, 1] and method
             is RCPS.
         Warning
@@ -321,7 +320,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         y: ArrayLike,
         estimator: Optional[ClassifierMixin] = None,
         _refit: Optional[bool] = False,
-    ) -> ClassifierMixin:
+    ) -> Tuple[ClassifierMixin, ArrayLike, ArrayLike]:
         """
         Check the estimator value. If it is ``None``,
         it returns a multi-output ``LogisticRegression``
@@ -343,13 +342,6 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             partial_fit (False).
 
             By default False
-
-
-        Returns
-        -------
-        ClassifierMixin
-            The estimator itself or a default multi-output
-            ``LogisticRegression`` instance.
 
         Raises
         ------
@@ -420,19 +412,6 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     def _check_bound(self, bound: Optional[str]):
         """
         Check the value of the bound.
-
-        Parameters
-        ----------
-        bound : Optional[str]
-            Bound defined in the predict.
-
-        Raises
-        ------
-        AttributeError
-            If bound is not in ["hoeffding", "bernstein", "wsr", ``None``]
-
-        Warning
-            If bound is not ``None``and method is CRC
         """
         if bound not in self.valid_bounds_:
             raise ValueError(
@@ -507,7 +486,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     ) -> PrecisionRecallController:
         """
         Fit the base estimator or use the fitted base estimator on
-        batch data. All the computed risks will be concatenated each
+        batch data to compute risks. All the computed risks will be concatenated each
         time the partial_fit method is called.
 
         Parameters
@@ -592,7 +571,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         calib_size: Optional[float] = .3
     ) -> PrecisionRecallController:
         """
-        Fit the base estimator or use the fitted base estimator.
+        Fit the base estimator (or use the fitted base estimator) and compute risks.
 
         Parameters
         ----------
@@ -624,8 +603,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         bound: Optional[Union[str, None]] = None
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
-        Prediction sets on new samples based on target confidence
-        interval.
+        Prediction sets on new samples based on the target risk level.
         Prediction sets for a given ``alpha`` are deduced from the computed
         risks.
 
@@ -634,13 +612,12 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         X: ArrayLike of shape (n_samples, n_features)
 
         alpha : Optional[Union[float, Iterable[float]]]
-            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
-            Between 0 and 1, represent the uncertainty of the confidence
-            interval.
+            The target risk level.
+            Can be a float, a list of floats, or a ``ArrayLike`` of floats,
+            between 0 and 1.
             Lower ``alpha`` produce larger (more conservative) prediction
             sets.
-            ``alpha`` is the complement of the target coverage level.
-            By default ``None``.
+            By default ``None`` (which means alpha=0.1).
 
         delta : Optional[float]
             Can be a float, or ``None``. If using method="rcps", then it
@@ -1082,7 +1059,7 @@ class BinaryClassificationController:
             raise ValueError(
                 "Cannot predict. "
                 "Either you forgot to calibrate the controller first, "
-                "either calibration was not successful."
+                "or calibration was not successful."
             )
         return self._get_predictions_per_param(
             X_test,
