@@ -986,10 +986,10 @@ class BinaryClassificationController:
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
         self._risk = risk if isinstance(risk, list) else [risk]
-        target_level = (
+        target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
         )
-        self._alpha = self._convert_target_level_to_alpha(target_level)
+        self._alpha = self._convert_target_level_to_alpha(target_level_list)
         self._delta = 1 - confidence_level
 
         self._best_predict_param_choice = self._set_best_predict_param_choice(
@@ -1186,7 +1186,7 @@ class BinaryClassificationController:
                 raise
         return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
 
-    def _convert_target_level_to_alpha(self, target_level):
+    def _convert_target_level_to_alpha(self, target_level: List[float]) -> NDArray:
         alpha = []
         for risk, target in zip(self._risk, target_level):
             if risk.higher_is_better:
