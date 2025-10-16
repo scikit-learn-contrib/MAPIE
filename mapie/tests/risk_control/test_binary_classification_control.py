@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
@@ -423,21 +424,21 @@ class TestBinaryClassificationControllerPredict:
 
 
 class TestCheckIfMultiRiskControl:
-    def test_mono_risk(self, bcc_deterministic):
+    def test_mono_risk(self, bcc_deterministic: BinaryClassificationController):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             precision, dummy_target
         )
         assert not is_multi_risk
 
-    def test_mono_risk_list(self, bcc_deterministic):
+    def test_mono_risk_list(self, bcc_deterministic: BinaryClassificationController):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             [precision], [dummy_target]
         )
         assert not is_multi_risk
 
-    def test_multi_risk(self, bcc_deterministic):
+    def test_multi_risk(self, bcc_deterministic: BinaryClassificationController):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
-            [BinaryClassificationRisk, BinaryClassificationRisk],
+            [precision, recall],
             [dummy_target, dummy_target]
         )
         assert is_multi_risk
@@ -451,8 +452,40 @@ class TestCheckIfMultiRiskControl:
             ([recall, false_positive_rate], [0.6, 0.8, 0.7]),
         ],
     )
-    def test_error_cases(self, risk, target_level):
+    def test_error_cases(
+        self,
+        risk: Union[List[BinaryClassificationRisk], BinaryClassificationRisk],
+        target_level: Union[List[float], float]
+    ):
         with pytest.raises(ValueError, match='If you provide a list of risks,'):
             BinaryClassificationController._check_if_multi_risk_control(
                 risk, target_level
             )
+
+
+@pytest.mark.parametrize(
+    "y_true, y_pred",
+    [
+        (np.array([1, 0, 1, 0]), np.array([1, 1, 0, 0])),
+        (np.array([1, 1, 0, 0]), np.array([1, 1, 1, 0])),
+        (np.array([0, 0, 0, 0]), np.array([0, 1, 0, 1])),
+    ],
+)
+def test_get_risk_values_and_eff_sample_sizes(
+    y_true: NDArray, y_pred: NDArray
+):
+    risk_list = [precision, recall, false_positive_rate]
+
+    bcc = BinaryClassificationController(
+            predict_function=deterministic_predict_function,
+            risk=risk_list,
+            target_level=[dummy_target] * len(risk_list),
+        )
+    all_values, all_n = bcc._get_risk_values_and_eff_sample_sizes(
+        y_true, y_pred[np.newaxis, :], risk_list
+        )
+
+    for i, risk in enumerate(risk_list):
+        value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
+        assert np.isclose(all_values[i], value)
+        assert all_n[i] == n
