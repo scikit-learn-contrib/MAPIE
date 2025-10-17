@@ -45,11 +45,11 @@ test_precision = np.array([
     [0., 1.]
 ])
 
-r_hat = np.array([0.5, 0.8])
+r_hat = np.array([[0.5, 0.8]])
 
-n = 1100
+n = np.array([[1100]])
 
-alpha = np.array([0.6])
+alpha = np.array([[0.6]])
 
 valid_index = [[0, 1]]
 
@@ -129,7 +129,7 @@ def test_compute_precision_with_wrong_shape() -> None:
 @pytest.mark.parametrize("alpha", [0.5, [0.5], [0.5, 0.9]])
 def test_p_values_different_alpha(alpha: Union[float, NDArray]) -> None:
     """Test type for different alpha for p_values"""
-    result = compute_hoeffding_bentkus_p_value(r_hat, n, alpha)
+    result = compute_hoeffding_bentkus_p_value(r_hat[0], n[0], alpha)
     assert isinstance(result, np.ndarray)
 
 
@@ -145,7 +145,7 @@ def test_find_lambda_control_star() -> None:
 
 
 @pytest.mark.parametrize("delta", [0.1, 0.8])
-@pytest.mark.parametrize("alpha", [[0.5], [0.6, 0.8]])
+@pytest.mark.parametrize("alpha", [np.array([[0.5]]), np.array([[0.6, 0.8]])])
 def test_ltt_type_output_alpha_delta(
     alpha: NDArray,
     delta: float
@@ -214,6 +214,6 @@ def test_ltt_procedure_n_obs_negative() -> None:
      """
     r_hat = np.array([[0.5]])
     n_obs = np.array([[-1]])
-    alpha_np = np.array([0.6])
+    alpha_np = np.array([[0.6]])
     binary = True
     assert ltt_procedure(r_hat, alpha_np, 0.1, n_obs, binary) == [[]]

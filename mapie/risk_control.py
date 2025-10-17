@@ -692,7 +692,10 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
             self.valid_index = ltt_procedure(
-                self.r_hat, alpha_np, cast(float, delta), self.n_obs
+                np.expand_dims(self.r_hat, axis=0),
+                np.expand_dims(alpha_np, axis=0),
+                cast(float, delta),
+                np.expand_dims(np.array([self.n_obs]), axis=0)
             )
             self._check_valid_index(alpha_np)
             self.lambdas_star, self.r_star = find_lambda_control_star(
@@ -1039,10 +1042,9 @@ class BinaryClassificationController:
             predictions_per_param,
             self._risk
         )
-
         valid_params_index = ltt_procedure(
             risk_values,
-            self._alpha,
+            np.expand_dims(self._alpha, axis=1),
             self._delta,
             eff_sample_sizes,
             True,
