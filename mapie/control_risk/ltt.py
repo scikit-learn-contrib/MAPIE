@@ -68,7 +68,7 @@ def ltt_procedure(
     """
     p_values = np.array([
         compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
-        for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
+        for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np, strict=True)
     ])
     p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
     N = len(p_values)
