@@ -217,3 +217,25 @@ def test_ltt_procedure_n_obs_negative() -> None:
     alpha_np = np.array([[0.6]])
     binary = True
     assert ltt_procedure(r_hat, alpha_np, 0.1, n_obs, binary) == [[]]
+
+
+def test_ltt_multi_risk() -> None:
+    """Test _ltt_procedure for multi risk scenario"""
+    assert ltt_procedure(
+        np.repeat(r_hat, 2, axis=0),
+        np.repeat(alpha, 2, axis=0),
+        0.1,
+        np.repeat(n, 2, axis=0)
+    )
+
+
+def test_ltt_multi_risk_error() -> None:
+    """Test _ltt_procedure for multi risk scenario error where n_risks differ"""
+    with pytest.raises(ValueError, match=r"zip\(\) argument"):
+        ltt_procedure(
+            np.repeat(r_hat, 2, axis=0),
+            np.repeat(alpha, 1, axis=0),
+            0.1,
+            np.repeat(n, 2, axis=0)
+        )
+   
