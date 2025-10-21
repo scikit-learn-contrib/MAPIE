@@ -573,7 +573,11 @@ def test_functional_multi_risk(
     )
     bcc_2.calibrate(realistic_X_calib, realistic_y_calib)
 
-    if len(bcc_1.valid_predict_params) > 1 and len(bcc_2.valid_predict_params) > 1:
+    if (
+        len(bcc_1.valid_predict_params) > 1 and len(bcc_2.valid_predict_params) > 1
+        and bcc_1.best_predict_param is not None 
+        and bcc_2.best_predict_param is not None
+    ):
         assert np.isclose(bcc_1.valid_predict_params, bcc_2.valid_predict_params).all()
         assert np.isclose(bcc_1.best_predict_param, bcc_2.best_predict_param)
     else:
