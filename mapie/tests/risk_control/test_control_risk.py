@@ -238,4 +238,3 @@ def test_ltt_multi_risk_error() -> None:
             0.1,
             np.repeat(n, 2, axis=0)
         )
-   
