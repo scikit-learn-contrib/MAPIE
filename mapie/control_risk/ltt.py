@@ -23,6 +23,10 @@ def ltt_procedure(
         - Calculate p-values for each lambdas discretized
         - Apply a family wise error rate algorithm, here Bonferonni correction
         - Return the index lambdas that give you the control at alpha level
+        
+    Note that in the case of multi-risk, the arrays r_hat, alpha_np, and n_obs
+    should have the same length for the first dimension which corresponds
+    to the number of risks. In the case of a single risk, the length should be 1.
 
     Parameters
     ----------
