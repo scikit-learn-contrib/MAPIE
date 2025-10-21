@@ -45,11 +45,11 @@ test_precision = np.array([
     [0., 1.]
 ])
 
-r_hat = np.array([0.5, 0.8])
+r_hat = np.array([[0.5, 0.8]])
 
-n = 1100
+n = np.array([[1100]])
 
-alpha = np.array([0.6])
+alpha = np.array([[0.6]])
 
 valid_index = [[0, 1]]
 
@@ -129,7 +129,7 @@ def test_compute_precision_with_wrong_shape() -> None:
 @pytest.mark.parametrize("alpha", [0.5, [0.5], [0.5, 0.9]])
 def test_p_values_different_alpha(alpha: Union[float, NDArray]) -> None:
     """Test type for different alpha for p_values"""
-    result = compute_hoeffding_bentkus_p_value(r_hat, n, alpha)
+    result = compute_hoeffding_bentkus_p_value(r_hat[0], n[0], alpha)
     assert isinstance(result, np.ndarray)
 
 
@@ -145,7 +145,7 @@ def test_find_lambda_control_star() -> None:
 
 
 @pytest.mark.parametrize("delta", [0.1, 0.8])
-@pytest.mark.parametrize("alpha", [[0.5], [0.6, 0.8]])
+@pytest.mark.parametrize("alpha", [np.array([[0.5]]), np.array([[0.6, 0.8]])])
 def test_ltt_type_output_alpha_delta(
     alpha: NDArray,
     delta: float
@@ -212,8 +212,31 @@ def test_ltt_procedure_n_obs_negative() -> None:
      a loss, is undefined because the condition is never met.
      This should return an invalid lambda.
      """
-    r_hat = np.array([0.5])
-    n_obs = np.array([-1])
-    alpha_np = np.array([0.6])
+    r_hat = np.array([[0.5]])
+    n_obs = np.array([[-1]])
+    alpha_np = np.array([[0.6]])
     binary = True
     assert ltt_procedure(r_hat, alpha_np, 0.1, n_obs, binary) == [[]]
+
+
+def test_ltt_multi_risk() -> None:
+    """Test _ltt_procedure for multi risk scenario"""
+    assert ltt_procedure(
+        np.repeat(r_hat, 2, axis=0),
+        np.repeat(alpha, 2, axis=0),
+        0.1,
+        np.repeat(n, 2, axis=0)
+    )
+
+
+def test_ltt_multi_risk_error() -> None:
+    """Test _ltt_procedure for multi risk scenario error where n_risks differ"""
+    with pytest.raises(
+        ValueError, match=r"r_hat, n_obs, and alpha_np must have the same length."
+    ):
+        ltt_procedure(
+            np.repeat(r_hat, 2, axis=0),
+            np.repeat(alpha, 1, axis=0),
+            0.1,
+            np.repeat(n, 2, axis=0)
+        )

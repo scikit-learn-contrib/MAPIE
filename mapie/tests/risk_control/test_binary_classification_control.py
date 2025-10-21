@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
@@ -151,15 +152,29 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
                 best_predict_param_choice="auto"
             )
 
+    def test_multi_risk_auto(self):
+        """Test _set_best_predict_param_choice with 'auto' mode for multiple risks."""
+        first_risk = precision
+        controller = BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=[first_risk, recall],
+            target_level=[dummy_target, dummy_target],
+            best_predict_param_choice="auto"
+        )
+
+        result = controller._best_predict_param_choice
+        assert result is first_risk
+
 
 @pytest.mark.parametrize(
     "risk_instance,target_level,expected_alpha",
     [
         (recall, 0.6, 0.4),  # higher_is_better=True
         (false_positive_rate, 0.6, 0.6),  # higher_is_better=False
+        ([recall, false_positive_rate], [0.7, 0.8], [0.3, 0.8]),  # multi-risk
     ],
 )
-def test_binary_classification_controller_alpha(
+def test_binary_classification__convert_target_level_to_alpha(
     risk_instance: BinaryClassificationRisk,
     target_level: float,
     expected_alpha: float,
@@ -169,7 +184,7 @@ def test_binary_classification_controller_alpha(
         risk=risk_instance,
         target_level=target_level,
     )
-    assert np.isclose(controller._alpha, expected_alpha)
+    assert np.isclose(controller._alpha, expected_alpha).all()
 
 
 def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> None:
@@ -406,3 +421,71 @@ class TestBinaryClassificationControllerPredict:
             match=r"Cannot predict"
         ):
             controller.predict(dummy_X)
+
+
+class TestCheckIfMultiRiskControl:
+    def test_mono_risk(self, bcc_deterministic: BinaryClassificationController):
+        is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
+            precision, dummy_target
+        )
+        assert not is_multi_risk
+
+    def test_mono_risk_list(self, bcc_deterministic: BinaryClassificationController):
+        is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
+            [precision], [dummy_target]
+        )
+        assert not is_multi_risk
+
+    def test_multi_risk(self, bcc_deterministic: BinaryClassificationController):
+        is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
+            [precision, recall],
+            [dummy_target, dummy_target]
+        )
+        assert is_multi_risk
+
+    @pytest.mark.parametrize(
+        "risk,target_level",
+        [
+            ([], []),
+            ([recall, false_positive_rate], 0.6),
+            (false_positive_rate, [0.6, 0.8]),
+            ([recall, false_positive_rate], [0.6, 0.8, 0.7]),
+        ],
+    )
+    def test_error_cases(
+        self,
+        risk: Union[List[BinaryClassificationRisk], BinaryClassificationRisk],
+        target_level: Union[List[float], float]
+    ):
+        with pytest.raises(ValueError, match='If you provide a list of risks,'):
+            BinaryClassificationController._check_if_multi_risk_control(
+                risk, target_level
+            )
+
+
+@pytest.mark.parametrize(
+    "y_true, y_pred",
+    [
+        (np.array([1, 0, 1, 0]), np.array([1, 1, 0, 0])),
+        (np.array([1, 1, 0, 0]), np.array([1, 1, 1, 0])),
+        (np.array([0, 0, 0, 0]), np.array([0, 1, 0, 1])),
+    ],
+)
+def test_get_risk_values_and_eff_sample_sizes(
+    y_true: NDArray, y_pred: NDArray
+):
+    risk_list = [precision, recall, false_positive_rate]
+
+    bcc = BinaryClassificationController(
+            predict_function=deterministic_predict_function,
+            risk=risk_list,
+            target_level=[dummy_target] * len(risk_list),
+        )
+    all_values, all_n = bcc._get_risk_values_and_eff_sample_sizes(
+        y_true, y_pred[np.newaxis, :], risk_list
+        )
+
+    for i, risk in enumerate(risk_list):
+        value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
+        assert np.isclose(all_values[i], value)
+        assert all_n[i] == n
