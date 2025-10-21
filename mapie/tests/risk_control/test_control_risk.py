@@ -231,7 +231,9 @@ def test_ltt_multi_risk() -> None:
 
 def test_ltt_multi_risk_error() -> None:
     """Test _ltt_procedure for multi risk scenario error where n_risks differ"""
-    with pytest.raises(ValueError, match=r"zip\(\) argument"):
+    with pytest.raises(
+        ValueError, match=r"r_hat, n_obs, and alpha_np must have the same length."
+    ):
         ltt_procedure(
             np.repeat(r_hat, 2, axis=0),
             np.repeat(alpha, 1, axis=0),

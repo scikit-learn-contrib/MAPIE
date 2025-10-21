@@ -70,9 +70,13 @@ def ltt_procedure(
     M. I., & Lei, L. (2021). Learn then test:
     "Calibrating predictive algorithms to achieve risk control".
     """
+    if not (r_hat.shape[0] == n_obs.shape[0] == alpha_np.shape[0]):
+        raise ValueError(
+            "r_hat, n_obs, and alpha_np must have the same length."
+        )
     p_values = np.array([
         compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
-        for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np, strict=True)
+        for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
     ])
     p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
     N = len(p_values)
