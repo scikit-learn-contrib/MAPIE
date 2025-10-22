@@ -841,6 +841,9 @@ false_positive_rate = BinaryClassificationRisk(
     higher_is_better=False,
 )
 
+Risk = Union[BinaryClassificationRisk, Literal("precision"),
+             Literal("recall"), Literal("accuracy"), Literal("fpr")]
+
 
 class BinaryClassificationController:
     """
@@ -953,19 +956,28 @@ class BinaryClassificationController:
         accuracy: accuracy,
         false_positive_rate: recall,
     }
-
+    
+    risk_mapping = {
+        "precision": precision,
+        "recall": recall,
+        "accuracy": accuracy,
+        "fpr": false_positive_rate,
+    }
+    
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
+        risk: Union[Risk, List[Risk]],
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
-            Literal["auto"], BinaryClassificationRisk] = "auto",
+            Literal["auto"], Risk] = "auto",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
         self._risk = risk if isinstance(risk, list) else [risk]
+        self._risk = [BinaryClassificationController.risk_mapping[risk]
+                      for risk in self._risk if isinstance(risk, str)]
         target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
         )
@@ -975,6 +987,11 @@ class BinaryClassificationController:
         self._best_predict_param_choice = self._set_best_predict_param_choice(
             best_predict_param_choice
         )
+        self._best_predict_param_choice = [
+            BinaryClassificationController.risk_mapping[risk]
+            for risk in self._best_predict_param_choice
+            if (isinstance(risk, str) & (risk != "auto"))
+        ]
 
         self._predict_params: NDArray = np.linspace(0, 0.99, 100)
 
