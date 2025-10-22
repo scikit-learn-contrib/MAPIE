@@ -573,8 +573,46 @@ def test_functional_multi_risk(
     )
     bcc_2.calibrate(realistic_X_calib, realistic_y_calib)
 
+    # check that both controllers found valid parameters
     assert len(bcc_1.valid_predict_params) > 1 and len(bcc_2.valid_predict_params) > 1
     assert bcc_1.best_predict_param is not None and bcc_2.best_predict_param is not None
 
+    # check that both controllers found the same valid parameters and best param
     assert np.isclose(bcc_1.valid_predict_params, bcc_2.valid_predict_params).all()
     assert np.isclose(bcc_1.best_predict_param, bcc_2.best_predict_param)
+
+
+def test_functional_multi_risk_vs_twice_mono_risk():
+    """
+    Functional test comparing multi-risk calibration to two separate
+    mono-risk calibrations.
+    """
+    risks = [precision, recall]
+    targets = [0.65, 0.7]
+
+    bcc_multi = BinaryClassificationController(
+        predict_function=realistic_clf.predict_proba,
+        risk=risks,
+        target_level=targets,
+    )
+    bcc_multi.calibrate(realistic_X_calib, realistic_y_calib)
+
+    valid_predict_params_mono = []
+    for risk, target in zip(risks, targets):
+        bcc_mono = BinaryClassificationController(
+            predict_function=realistic_clf.predict_proba,
+            risk=risk,
+            target_level=target,
+        )
+        bcc_mono.calibrate(realistic_X_calib, realistic_y_calib)
+        valid_predict_params_mono.append(bcc_mono.valid_predict_params)
+
+    # check that multi-risk controller found valid parameters
+    assert len(bcc_multi.valid_predict_params) > 1
+    assert bcc_multi.best_predict_param is not None
+
+    # check that multi-risk valid parameters set is the intersection of mono-risk ones
+    assert np.isclose(
+        bcc_multi.valid_predict_params,
+        np.intersect1d(valid_predict_params_mono[0], valid_predict_params_mono[1])
+    ).all()
