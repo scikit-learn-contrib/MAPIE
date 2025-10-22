@@ -3,6 +3,7 @@ from typing import Any, Optional
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_multilabel_classification
 from sklearn.impute import SimpleImputer
@@ -152,7 +153,7 @@ class WrongOutputModel:
         """Dummy predict."""
 
 
-class ArrayOutputModel:
+class ArrayOutputModel(BaseEstimator):
 
     def __init__(self):
         self.trained_ = True

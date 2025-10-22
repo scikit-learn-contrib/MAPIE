@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
-from sklearn.base import ClassifierMixin, clone
+from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit)
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
@@ -13,7 +13,7 @@ from numpy.typing import ArrayLike, NDArray
 from mapie.utils import _check_no_agg_cv, _fit_estimator, _fix_number_of_classes
 
 
-class EnsembleClassifier:
+class EnsembleClassifier(BaseEstimator):
     """
     This class implements methods to handle the training and usage of the
     estimator. This estimator can be unique or composed by cross validated

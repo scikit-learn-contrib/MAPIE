@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterable, Optional, Union
 import numpy as np
 import pandas as pd
 import pytest
-from sklearn.base import ClassifierMixin
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
@@ -811,7 +811,7 @@ LARGE_COVERAGES = {
 }
 
 
-class CumulatedScoreClassifier:
+class CumulatedScoreClassifier(BaseEstimator):
 
     def __init__(self) -> None:
         self.X_calib = np.array([0, 1, 2]).reshape(-1, 1)
@@ -845,7 +845,7 @@ class CumulatedScoreClassifier:
             )
 
 
-class ImageClassifier:
+class ImageClassifier(BaseEstimator):
 
     def __init__(self, X_calib: ArrayLike, X_test: ArrayLike) -> None:
         self.X_calib = X_calib
@@ -874,7 +874,7 @@ class ImageClassifier:
             )
 
 
-class WrongOutputModel:
+class WrongOutputModel(BaseEstimator):
 
     def __init__(self, proba_out: NDArray):
         self.trained_ = True
@@ -888,7 +888,7 @@ class WrongOutputModel:
         return self.proba_out
 
 
-class Float32OuputModel:
+class Float32OutputModel(BaseEstimator):
 
     def __init__(self, prefit: bool = True):
         self.trained_ = prefit
@@ -1713,7 +1713,7 @@ def test_classif_float32(cv) -> None:
         n_classes=3
     )
     alpha = .9
-    dummy_classif = Float32OuputModel()
+    dummy_classif = Float32OutputModel()
 
     mapie = _MapieClassifier(
         estimator=dummy_classif, conformity_score=NaiveConformityScore(),
