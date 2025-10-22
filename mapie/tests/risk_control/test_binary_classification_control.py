@@ -4,7 +4,9 @@ from typing import List, Union
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import precision_score, recall_score
 from sklearn.dummy import DummyClassifier
@@ -24,6 +26,17 @@ dummy_target = 0.9
 dummy_X = [[0]]
 dummy_y = np.array([1, 0])
 dummy_predictions = np.array([[True, False]])
+realistic_X, realistic_y = make_classification(
+    n_features=2,
+    n_redundant=0,
+    n_informative=2,
+    random_state=42,
+)
+(realistic_X_train, realistic_X_calib,
+ realistic_y_train, realistic_y_calib) = train_test_split(
+    realistic_X, realistic_y, test_size=0.4, random_state=42
+)
+realistic_clf = LogisticRegression().fit(realistic_X_train, realistic_y_train)
 
 
 def fpr_func(y_true: NDArray, y_pred: NDArray) -> float:
@@ -504,3 +517,117 @@ def test_get_risk_values_and_eff_sample_sizes(
         value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
         assert np.isclose(all_values[i], value)
         assert all_n[i] == n
+
+
+@pytest.mark.parametrize(
+    "risks_1, targets_1, risks_2, targets_2",
+    [
+        # Lists of one risk and target should be equivalent to a single risk
+        # and target.
+        (
+            [precision],
+            [0.7],
+            precision,
+            0.7,
+        ),
+        # Lists with two identical risks and targets should be equivalent to a
+        # single risk and target.
+        (
+            [precision, precision],
+            [0.7, 0.7],
+            precision,
+            0.7,
+        ),
+        # Lists of multiple risks and targets should be equivalent
+        # when order is swapped.
+        (
+            [precision, recall],
+            [0.65, 0.6],
+            [recall, precision],
+            [0.6, 0.65],
+        ),
+        # Lists of identical risks with different targets should be equivalent to a
+        # single risk with the most strict target.
+        (
+            [precision, precision],
+            [0.7, 0.6],
+            precision,
+            0.7,
+        ),
+        # Lists with many risks should not pose an issue.
+        (
+            10*[precision],
+            10*[0.7],
+            precision,
+            0.7,
+        )
+    ],
+)
+def test_functional_multi_risk(
+    risks_1: List[BinaryClassificationRisk],
+    targets_1: List[float],
+    risks_2: Union[List[BinaryClassificationRisk], BinaryClassificationRisk],
+    targets_2: Union[List[float], float],
+):
+    """
+    Functional tests for multi-risk binary classification controller.
+    Test cases where two different combinations of risks and targets should lead
+    to the same result.
+    """
+    bcc_1 = BinaryClassificationController(
+        predict_function=realistic_clf.predict_proba,
+        risk=risks_1,
+        target_level=targets_1,
+    )
+    bcc_1.calibrate(realistic_X_calib, realistic_y_calib)
+
+    bcc_2 = BinaryClassificationController(
+        predict_function=realistic_clf.predict_proba,
+        risk=risks_2,
+        target_level=targets_2,
+    )
+    bcc_2.calibrate(realistic_X_calib, realistic_y_calib)
+
+    # check that both controllers found valid parameters
+    assert len(bcc_1.valid_predict_params) > 1 and len(bcc_2.valid_predict_params) > 1
+    assert bcc_1.best_predict_param is not None and bcc_2.best_predict_param is not None
+
+    # check that both controllers found the same valid parameters and best param
+    assert np.isclose(bcc_1.valid_predict_params, bcc_2.valid_predict_params).all()
+    assert np.isclose(bcc_1.best_predict_param, bcc_2.best_predict_param)
+
+
+def test_functional_multi_risk_vs_twice_mono_risk():
+    """
+    Functional test comparing multi-risk calibration to two separate
+    mono-risk calibrations.
+    """
+    risks = [precision, recall]
+    targets = [0.65, 0.7]
+
+    bcc_multi = BinaryClassificationController(
+        predict_function=realistic_clf.predict_proba,
+        risk=risks,
+        target_level=targets,
+    )
+    bcc_multi.calibrate(realistic_X_calib, realistic_y_calib)
+
+    valid_predict_params_mono = []
+    for risk, target in zip(risks, targets):
+        bcc_mono = BinaryClassificationController(
+            predict_function=realistic_clf.predict_proba,
+            risk=risk,
+            target_level=target,
+        )
+        bcc_mono.calibrate(realistic_X_calib, realistic_y_calib)
+        valid_predict_params_mono.append(bcc_mono.valid_predict_params)
+
+    # check that multi-risk controller found valid parameters
+    assert len(bcc_multi.valid_predict_params) > 1
+    assert bcc_multi.best_predict_param is not None
+
+    # check that multi-risk valid parameters set is the intersection of mono-risk ones
+    assert np.isclose(
+        bcc_multi.valid_predict_params,
+        np.intersect1d(valid_predict_params_mono[0], valid_predict_params_mono[1])
+    ).all()
