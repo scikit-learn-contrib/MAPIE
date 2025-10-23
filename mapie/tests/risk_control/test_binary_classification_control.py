@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Union
+from typing import List, Union, Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -16,6 +16,15 @@ from mapie.risk_control import (
     BinaryClassificationRisk, false_positive_rate,
     BinaryClassificationController, accuracy,
 )
+
+Risk = Union[BinaryClassificationRisk,
+             Literal["precision", "recall", "accuracy", "fpr"]]
+risk_choice_map = {
+        "precision": precision,
+        "recall": recall,
+        "accuracy": accuracy,
+        "fpr": false_positive_rate,
+    }
 
 random_state = 42
 dummy_single_param = np.array([0.5])
@@ -454,7 +463,7 @@ class TestCheckIfMultiRiskControl:
     )
     def test_error_cases(
         self,
-        risk: Union[List[BinaryClassificationRisk], BinaryClassificationRisk],
+        risk: Union[Risk, List[Risk]],
         target_level: Union[List[float], float]
     ):
         with pytest.raises(ValueError, match='If you provide a list of risks,'):
@@ -474,7 +483,8 @@ class TestCheckIfMultiRiskControl:
 def test_get_risk_values_and_eff_sample_sizes(
     y_true: NDArray, y_pred: NDArray
 ):
-    risk_list = [precision, recall, false_positive_rate]
+    risk_list_init = [precision, recall, false_positive_rate]
+    risk_list = cast(List[Risk], risk_list_init)
 
     bcc = BinaryClassificationController(
             predict_function=deterministic_predict_function,
@@ -486,6 +496,8 @@ def test_get_risk_values_and_eff_sample_sizes(
         )
 
     for i, risk in enumerate(risk_list):
+        if isinstance(risk, str):
+            risk = risk_choice_map[risk]
         value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
         assert np.isclose(all_values[i], value)
         assert all_n[i] == n
