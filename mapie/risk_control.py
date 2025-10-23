@@ -871,12 +871,13 @@ class BinaryClassificationController:
         predict_proba method of a fitted binary classifier.
         Its output signature must be of shape (len(X), 2)
 
-    risk : Union[BinaryClassificationRisk, List[BinaryClassificationRisk]]
+    risk : Union[BinaryClassificationRisk, str, List[BinaryClassificationRisk, str]]
         The risk or performance metric to control.
         Valid options:
 
         - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
-          accuracy, false_positive_rate)
+          accuracy, false_positive_rate) or its string equivalent: 
+          "precision", "recall", "accuracy", or "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
         Can be a list of risks in the case of multi risk control.
@@ -890,7 +891,7 @@ class BinaryClassificationController:
         The confidence level with which the risk (or performance) is controlled.
         Must be between 0 and 1. See the documentation for detailed explanations.
 
-    best_predict_param_choice : Union["auto", BinaryClassificationRisk], default="auto"
+    best_predict_param_choice : Union["auto", BinaryClassificationRisk, str], default="auto"
         How to select the best threshold from the valid thresholds that control the risk
         (or performance). The BinaryClassificationController will try to minimize
         (or maximize) a secondary objective.
@@ -898,7 +899,8 @@ class BinaryClassificationController:
 
         - "auto" (default)
         - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
-          accuracy, false_positive_rate)
+          accuracy, false_positive_rate) or its string equivalent: 
+          "precision", "recall", "accuracy", or "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
     Attributes
