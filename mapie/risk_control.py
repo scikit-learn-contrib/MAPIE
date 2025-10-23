@@ -977,7 +977,7 @@ class BinaryClassificationController:
         self._predict_function = predict_function
         self._risk = risk if isinstance(risk, list) else [risk]
         self._risk = [BinaryClassificationController.risk_choice_map[risk]
-                      for risk in self._risk if isinstance(risk, str)]
+                      if isinstance(risk, str) else risk for risk in self._risk]
         target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
         )
@@ -1095,11 +1095,11 @@ class BinaryClassificationController:
         if best_predict_param_choice == "auto":
             if self.is_multi_risk:
                 # when multi risk, we minimize the first risk in the list
-                return self._risk[0]
+                return cast(BinaryClassificationRisk, self._risk[0])
             else:
                 try:
                     return self._best_predict_param_choice_map[
-                        self._risk[0]
+                        cast(BinaryClassificationRisk, self._risk[0])
                     ]
                 except KeyError:
                     raise ValueError(
@@ -1195,6 +1195,7 @@ class BinaryClassificationController:
     def _convert_target_level_to_alpha(self, target_level: List[float]) -> NDArray:
         alpha = []
         for risk, target in zip(self._risk, target_level):
+            risk = cast(BinaryClassificationRisk, risk)
             if risk.higher_is_better:
                 alpha.append(1 - target)
             else:
