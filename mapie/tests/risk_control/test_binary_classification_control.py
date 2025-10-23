@@ -134,7 +134,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
 
         result = controller._best_predict_param_choice
         assert result is expected
-    
+
     def test_str(self):
         """Test _set_best_predict_param_choice with a string risk name."""
         str_risk = "precision"

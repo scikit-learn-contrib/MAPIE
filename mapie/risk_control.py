@@ -875,8 +875,8 @@ class BinaryClassificationController:
         The risk or performance metric to control.
         Valid options:
 
-        - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
-          accuracy, false_positive_rate) or its string equivalent: 
+        - An existing risk defined in `mapie.risk_control` (e.g. precision,
+        recall, accuracy, false_positive_rate) or its string equivalent:
           "precision", "recall", "accuracy", or "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
@@ -891,7 +891,8 @@ class BinaryClassificationController:
         The confidence level with which the risk (or performance) is controlled.
         Must be between 0 and 1. See the documentation for detailed explanations.
 
-    best_predict_param_choice : Union["auto", BinaryClassificationRisk, str], default="auto"
+    best_predict_param_choice : Union["auto", BinaryClassificationRisk, str],
+        default="auto"
         How to select the best threshold from the valid thresholds that control the risk
         (or performance). The BinaryClassificationController will try to minimize
         (or maximize) a secondary objective.
@@ -899,7 +900,7 @@ class BinaryClassificationController:
 
         - "auto" (default)
         - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
-          accuracy, false_positive_rate) or its string equivalent: 
+          accuracy, false_positive_rate) or its string equivalent:
           "precision", "recall", "accuracy", or "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
