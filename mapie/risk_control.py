@@ -1215,7 +1215,7 @@ class BinaryClassificationController:
             else:
                 return True
         elif (
-            isinstance(risk, BinaryClassificationRisk)
+            (isinstance(risk, BinaryClassificationRisk) or isinstance(risk, str))
             and isinstance(target_level, float)
         ):
             return False
