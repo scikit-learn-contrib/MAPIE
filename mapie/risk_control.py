@@ -987,11 +987,6 @@ class BinaryClassificationController:
         self._best_predict_param_choice = self._set_best_predict_param_choice(
             best_predict_param_choice
         )
-        # self._best_predict_param_choice = [
-        #     BinaryClassificationController.risk_choice_map[risk]
-        #     for risk in self._best_predict_param_choice
-        #     if (isinstance(risk, str) & (risk != "auto"))
-        # ]
 
         self._predict_params: NDArray = np.linspace(0, 0.99, 100)
 
