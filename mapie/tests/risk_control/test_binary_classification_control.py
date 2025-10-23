@@ -134,6 +134,20 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
 
         result = controller._best_predict_param_choice
         assert result is expected
+    
+    def test_str(self):
+        """Test _set_best_predict_param_choice with a string risk name."""
+        str_risk = "precision"
+
+        controller = BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=precision,
+            target_level=dummy_target,
+            best_predict_param_choice=str_risk
+        )
+
+        result = controller._set_best_predict_param_choice(str_risk)
+        assert result is risk_choice_map[str_risk]
 
     def test_custom(self):
         """Test _set_best_predict_param_choice with a custom risk instance."""
@@ -483,7 +497,7 @@ class TestCheckIfMultiRiskControl:
 def test_get_risk_values_and_eff_sample_sizes(
     y_true: NDArray, y_pred: NDArray
 ):
-    risk_list_init = [precision, recall, false_positive_rate]
+    risk_list_init = [precision, recall, false_positive_rate, "accuracy"]
     risk_list = cast(List[Risk], risk_list_init)
 
     bcc = BinaryClassificationController(
