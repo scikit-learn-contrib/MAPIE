@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
-from sklearn.base import RegressorMixin, clone
+from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
@@ -15,7 +15,7 @@ from mapie.utils import (_check_nan_in_aposteriori_prediction, _check_no_agg_cv,
                          _fit_estimator)
 
 
-class EnsembleRegressor:
+class EnsembleRegressor(BaseEstimator):
     """
     This class implements methods to handle the training and usage of the
     estimator. This estimator can be unique or composed by cross validated
@@ -364,7 +364,6 @@ class EnsembleRegressor:
         NDArray of shape (n_samples_test, 1)
             The predictions.
         """
-        check_is_fitted(self, self.fit_attributes)
 
         if self.cv == "prefit":
             y_pred = self.single_estimator_.predict(X)

@@ -31,7 +31,7 @@ from .control_risk.risks import compute_risk_precision, compute_risk_recall
 from .utils import _check_alpha, _check_n_jobs, _check_verbose
 
 
-class PrecisionRecallController(BaseEstimator, ClassifierMixin):
+class PrecisionRecallController(ClassifierMixin, BaseEstimator):
     """
     Prediction sets for multilabel-classification.
 
