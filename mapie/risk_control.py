@@ -842,11 +842,12 @@ false_positive_rate = BinaryClassificationRisk(
 )
 
 Risk_str = Literal["precision", "recall", "accuracy", "fpr"]
-Risk = Union[BinaryClassificationRisk, Risk_str,
-             List[BinaryClassificationRisk],
-             List[Risk_str],
-             List[Union[BinaryClassificationRisk, Risk_str]]
-        ]
+Risk = Union[
+    BinaryClassificationRisk, Risk_str,
+    List[BinaryClassificationRisk],
+    List[Risk_str],
+    List[Union[BinaryClassificationRisk, Risk_str]]
+]
 
 
 class BinaryClassificationController:

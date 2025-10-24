@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Union, Literal, cast
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
@@ -16,14 +16,7 @@ from mapie.risk_control import (
     BinaryClassificationRisk, false_positive_rate,
     BinaryClassificationController, accuracy,
     Risk,
-)   
-
-risk_choice_map = {
-        "precision": precision,
-        "recall": recall,
-        "accuracy": accuracy,
-        "fpr": false_positive_rate,
-    }
+)
 
 random_state = 42
 dummy_single_param = np.array([0.5])
@@ -508,8 +501,6 @@ def test_get_risk_values_and_eff_sample_sizes(
         )
 
     for i, risk in enumerate(risk_list):
-        if isinstance(risk, str):
-            risk = risk_choice_map[risk]
         value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
         assert np.isclose(all_values[i], value)
         assert all_n[i] == n
