@@ -841,8 +841,12 @@ false_positive_rate = BinaryClassificationRisk(
     higher_is_better=False,
 )
 
-Risk = Union[BinaryClassificationRisk,
-             Literal["precision", "recall", "accuracy", "fpr"]]
+Risk_str = Literal["precision", "recall", "accuracy", "fpr"]
+Risk = Union[BinaryClassificationRisk, Risk_str,
+             List[BinaryClassificationRisk],
+             List[Risk_str],
+             List[Union[BinaryClassificationRisk, Risk_str]]
+        ]
 
 
 class BinaryClassificationController:
@@ -970,17 +974,17 @@ class BinaryClassificationController:
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: Union[Risk, List[Risk]],
+        risk: Risk,
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
-            Literal["auto"], Risk] = "auto",
+            Literal["auto"], Risk_str, BinaryClassificationRisk] = "auto",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
-        self._risk = risk if isinstance(risk, list) else [risk]
+        risk_list = risk if isinstance(risk, list) else [risk]
         self._risk = [BinaryClassificationController.risk_choice_map[risk]
-                      if isinstance(risk, str) else risk for risk in self._risk]
+                      if isinstance(risk, str) else risk for risk in risk_list]
         target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
         )
@@ -1088,16 +1092,16 @@ class BinaryClassificationController:
     def _set_best_predict_param_choice(
         self,
         best_predict_param_choice: Union[
-            Literal["auto"], Risk] = "auto",
+            Literal["auto"], Risk_str, BinaryClassificationRisk] = "auto",
     ) -> BinaryClassificationRisk:
         if best_predict_param_choice == "auto":
             if self.is_multi_risk:
                 # when multi risk, we minimize the first risk in the list
-                return cast(BinaryClassificationRisk, self._risk[0])
+                return self._risk[0]
             else:
                 try:
                     return self._best_predict_param_choice_map[
-                        cast(BinaryClassificationRisk, self._risk[0])
+                        self._risk[0]
                     ]
                 except KeyError:
                     raise ValueError(
@@ -1106,7 +1110,6 @@ class BinaryClassificationController:
                         "(e.g. precision, accuracy, false_positive_rate)."
                     )
         else:
-            # Mapping if passed as string
             if isinstance(best_predict_param_choice, str):
                 return BinaryClassificationController.risk_choice_map[
                     best_predict_param_choice
@@ -1141,22 +1144,18 @@ class BinaryClassificationController:
     def _get_risk_values_and_eff_sample_sizes(
         y_true: NDArray,
         predictions_per_param: NDArray,
-        risks: List[Risk],
+        risks: List[BinaryClassificationRisk],
     ) -> Tuple[NDArray, NDArray]:
         """
         Compute the values of risks and effective sample sizes for multiple risks
         and for multiple parameter values.
         Returns arrays with shape (n_risks, n_params).
         """
-        # Mapping the risks
-        mapped_risks = [
-            BinaryClassificationController.risk_choice_map[risk]
-            if isinstance(risk, str) else risk for risk in risks
-        ]
+
         risks_values_and_eff_sizes = np.array([
             [risk.get_value_and_effective_sample_size(y_true, predictions)
              for predictions in predictions_per_param]
-            for risk in mapped_risks
+            for risk in risks
         ])
 
         risk_values = risks_values_and_eff_sizes[:, :, 0]
@@ -1193,7 +1192,6 @@ class BinaryClassificationController:
     def _convert_target_level_to_alpha(self, target_level: List[float]) -> NDArray:
         alpha = []
         for risk, target in zip(self._risk, target_level):
-            risk = cast(BinaryClassificationRisk, risk)
             if risk.higher_is_better:
                 alpha.append(1 - target)
             else:
@@ -1202,7 +1200,7 @@ class BinaryClassificationController:
 
     @staticmethod
     def _check_if_multi_risk_control(
-        risk: Union[Risk, List[Risk]],
+        risk: Risk,
         target_level: Union[float, List[float]],
     ) -> bool:
         """
