@@ -556,8 +556,6 @@ def test_get_risk_values_and_eff_sample_sizes(
         )
 
     for i, risk in enumerate(risk_list):
-        if isinstance(risk, str):
-            risk = BinaryClassificationController.risk_choice_map[risk]
         value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
         assert np.isclose(all_values[i], value)
         assert all_n[i] == n
