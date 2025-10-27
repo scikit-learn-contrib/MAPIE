@@ -880,9 +880,9 @@ class BinaryClassificationController:
         The risk or performance metric to control.
         Valid options:
 
-        - An existing risk defined in `mapie.risk_control` (e.g. precision,
-        recall, accuracy, false_positive_rate) or its string equivalent:
-          "precision", "recall", "accuracy", or "fpr" for false positive rate.
+        - An existing risk defined in `mapie.risk_control` accessible through
+        its string equivalent: "precision", "recall", "accuracy", or
+        "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
         Can be a list of risks in the case of multi risk control.
@@ -904,9 +904,9 @@ class BinaryClassificationController:
         Valid options:
 
         - "auto" (default)
-        - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
-          accuracy, false_positive_rate) or its string equivalent:
-          "precision", "recall", "accuracy", or "fpr" for false positive rate.
+        - An existing risk defined in `mapie.risk_control` accessible through
+        its string equivalent: "precision", "recall", "accuracy", or
+        "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
     Attributes
