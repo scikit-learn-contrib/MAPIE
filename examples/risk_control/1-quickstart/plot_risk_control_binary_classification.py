@@ -76,10 +76,10 @@ clf.fit(X_train, y_train)
 # Next, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
 # using the probability estimation function from the fitted estimator:
 # ``clf.predict_proba``, a risk or performance metric (here, "precision"),
-# a target risk level, and a confidence level. Then we use the calibration data 
+# a target risk level, and a confidence level. Then we use the calibration data
 # to compute statistically guaranteed thresholds using a risk control method.
 #
-# Different risks or performance metrics have been implemented, such as precision 
+# Different risks or performance metrics have been implemented, such as precision
 # and recall, but you can also implement your own custom function using
 # :class:`~mapie.risk_control.BinaryClassificationRisk` and choose your own
 # secondary objective.
