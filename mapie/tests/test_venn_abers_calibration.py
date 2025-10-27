@@ -2966,3 +2966,32 @@ def test_predict_without_classes() -> None:
         match=r"classes_ should not be None after fitting"
     ):
         va_cal.predict(X_binary_test)
+
+
+def test_prefit_classes_none_after_fitting() -> None:
+    """
+    Test that fit raises RuntimeError when classes_ is None
+    after fitting estimator in prefit mode.
+    """
+    from sklearn.naive_bayes import GaussianNB
+
+    # Create and fit a base estimator
+    clf = GaussianNB()
+    clf.fit(X_binary_train, y_binary_train)
+
+    # Create VennAbersCalibrator in prefit mode
+    va_cal = VennAbersCalibrator(
+        estimator=clf,
+        cv="prefit",
+        random_state=random_state
+    )
+
+    # Manually set the classes_ attribute to None
+    # to simulate the error condition
+    clf.classes_ = None
+
+    with pytest.raises(
+        RuntimeError,
+        match=r"classes_ should not be None after fitting estimator"
+    ):
+        va_cal.fit(X_binary_test, y_binary_test)
