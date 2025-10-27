@@ -8,6 +8,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 from numpy.random import RandomState
+from sklearn.base import BaseEstimator
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
@@ -321,7 +322,7 @@ results_binning = {
 }
 
 
-class DumbEstimator:
+class DumbEstimator(BaseEstimator):
     def fit(
             self,
             X: ArrayLike,

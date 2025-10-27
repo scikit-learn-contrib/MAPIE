@@ -99,7 +99,7 @@ def filter_params(
     return {k: v for k, v in params.items() if k in model_params}
 
 
-class DummyClassifierWithFitAndPredictParams(BaseEstimator, ClassifierMixin):
+class DummyClassifierWithFitAndPredictParams(ClassifierMixin, BaseEstimator):
     def __init__(self):
         self.classes_ = None
         self._dummy_fit_param = None
