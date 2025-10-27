@@ -1091,6 +1091,18 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         """
         check_is_fitted(self, self.fit_attributes)
 
+        # Type guard: ensure n_classes_ is not None after fit
+        if self.n_classes_ is None:
+            raise RuntimeError(
+                "n_classes_ should not be None after fitting"
+            )
+
+        # Type guard: ensure classes_ is not None after fit
+        if self.classes_ is None:
+            raise RuntimeError(
+                "classes_ should not be None after fitting"
+            )
+
         # Get calibrated probabilities
         p_prime = self.predict_proba(X, loss=loss)
 
