@@ -1106,24 +1106,16 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         # Get calibrated probabilities
         p_prime = self.predict_proba(X, loss=loss)
 
-        # Type guard: ensure n_classes_ is not None after fit
-        if self.n_classes_ is None:
-            raise RuntimeError(
-                "n_classes_ should not be None after fitting"
-            )
-
-        # Type guard: ensure classes_ is not None after fit
-        if self.classes_ is None:
-            raise RuntimeError(
-                "classes_ should not be None after fitting"
-            )
+        # Store classes_ in a local variable to help type checker
+        classes: NDArray = self.classes_
+        n_classes = self.n_classes_
 
         # Convert probabilities to class predictions
-        if self.n_classes_ <= 2:
+        if n_classes <= 2:
             # Binary classification
-            y_pred = self.classes_[(p_prime[:, 1] >= 0.5).astype(int)]
+            y_pred = classes[(p_prime[:, 1] >= 0.5).astype(int)]
         else:
             # Multi-class classification
-            y_pred = self.classes_[np.argmax(p_prime, axis=1)]
+            y_pred = classes[np.argmax(p_prime, axis=1)]
 
         return y_pred
