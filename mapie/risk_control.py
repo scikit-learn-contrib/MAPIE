@@ -841,6 +841,14 @@ false_positive_rate = BinaryClassificationRisk(
     higher_is_better=False,
 )
 
+Risk_str = Literal["precision", "recall", "accuracy", "fpr"]
+Risk = Union[
+    BinaryClassificationRisk, Risk_str,
+    List[BinaryClassificationRisk],
+    List[Risk_str],
+    List[Union[BinaryClassificationRisk, Risk_str]]
+]
+
 
 class BinaryClassificationController:
     """
@@ -868,12 +876,13 @@ class BinaryClassificationController:
         predict_proba method of a fitted binary classifier.
         Its output signature must be of shape (len(X), 2)
 
-    risk : Union[BinaryClassificationRisk, List[BinaryClassificationRisk]]
+    risk : Union[BinaryClassificationRisk, str, List[BinaryClassificationRisk, str]]
         The risk or performance metric to control.
         Valid options:
 
-        - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
-          accuracy, false_positive_rate)
+        - An existing risk defined in `mapie.risk_control` accessible through
+        its string equivalent: "precision", "recall", "accuracy", or
+        "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
         Can be a list of risks in the case of multi risk control.
@@ -887,15 +896,17 @@ class BinaryClassificationController:
         The confidence level with which the risk (or performance) is controlled.
         Must be between 0 and 1. See the documentation for detailed explanations.
 
-    best_predict_param_choice : Union["auto", BinaryClassificationRisk], default="auto"
+    best_predict_param_choice : Union["auto", BinaryClassificationRisk, str],
+        default="auto"
         How to select the best threshold from the valid thresholds that control the risk
         (or performance). The BinaryClassificationController will try to minimize
         (or maximize) a secondary objective.
         Valid options:
 
         - "auto" (default)
-        - An existing risk defined in `mapie.risk_control` (e.g. precision, recall,
-          accuracy, false_positive_rate)
+        - An existing risk defined in `mapie.risk_control` accessible through
+        its string equivalent: "precision", "recall", "accuracy", or
+        "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
     Attributes
@@ -954,18 +965,33 @@ class BinaryClassificationController:
         false_positive_rate: recall,
     }
 
+    risk_choice_map = {
+        "precision": precision,
+        "recall": recall,
+        "accuracy": accuracy,
+        "fpr": false_positive_rate,
+    }
+
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
+        risk: Risk,
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
-            Literal["auto"], BinaryClassificationRisk] = "auto",
+            Literal["auto"], Risk_str, BinaryClassificationRisk] = "auto",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
-        self._risk = risk if isinstance(risk, list) else [risk]
+        risk_list = risk if isinstance(risk, list) else [risk]
+        try:
+            self._risk = [BinaryClassificationController.risk_choice_map[risk]
+                          if isinstance(risk, str) else risk for risk in risk_list]
+        except KeyError as e:
+            raise ValueError(
+                "When risk is provided as a string, it must be one of: "
+                f"{list(BinaryClassificationController.risk_choice_map.keys())}"
+            ) from e
         target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
         )
@@ -1073,7 +1099,7 @@ class BinaryClassificationController:
     def _set_best_predict_param_choice(
         self,
         best_predict_param_choice: Union[
-            Literal["auto"], BinaryClassificationRisk] = "auto",
+            Literal["auto"], Risk_str, BinaryClassificationRisk] = "auto",
     ) -> BinaryClassificationRisk:
         if best_predict_param_choice == "auto":
             if self.is_multi_risk:
@@ -1091,6 +1117,10 @@ class BinaryClassificationController:
                         "(e.g. precision, accuracy, false_positive_rate)."
                     )
         else:
+            if isinstance(best_predict_param_choice, str):
+                return BinaryClassificationController.risk_choice_map[
+                    best_predict_param_choice
+                ]
             return best_predict_param_choice
 
     def _set_risk_not_controlled(self) -> None:
@@ -1128,6 +1158,7 @@ class BinaryClassificationController:
         and for multiple parameter values.
         Returns arrays with shape (n_risks, n_params).
         """
+
         risks_values_and_eff_sizes = np.array([
             [risk.get_value_and_effective_sample_size(y_true, predictions)
              for predictions in predictions_per_param]
@@ -1176,7 +1207,7 @@ class BinaryClassificationController:
 
     @staticmethod
     def _check_if_multi_risk_control(
-        risk: Union[BinaryClassificationRisk, List[BinaryClassificationRisk]],
+        risk: Risk,
         target_level: Union[float, List[float]],
     ) -> bool:
         """
@@ -1192,7 +1223,7 @@ class BinaryClassificationController:
             else:
                 return True
         elif (
-            isinstance(risk, BinaryClassificationRisk)
+            (isinstance(risk, BinaryClassificationRisk) or isinstance(risk, str))
             and isinstance(target_level, float)
         ):
             return False

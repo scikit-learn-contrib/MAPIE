@@ -15,7 +15,7 @@ from sklearn.model_selection import FixedThresholdClassifier
 from sklearn.metrics import precision_score
 from sklearn.inspection import DecisionBoundaryDisplay
 
-from mapie.risk_control import BinaryClassificationController, precision
+from mapie.risk_control import BinaryClassificationController
 from mapie.utils import train_conformalize_test_split
 
 RANDOM_STATE = 1
@@ -75,15 +75,21 @@ clf.fit(X_train, y_train)
 ##############################################################################
 # Next, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
 # using the probability estimation function from the fitted estimator:
-# ``clf.predict_proba``, a risk function (here the precision), a target risk level, and
-# a confidence level. Then we use the calibration data to compute statistically
-# guaranteed thresholds using a risk control method.
+# ``clf.predict_proba``, a risk or performance metric (here, "precision"),
+# a target risk level, and a confidence level. Then we use the calibration data
+# to compute statistically guaranteed thresholds using a risk control method.
+#
+# Different risks or performance metrics have been implemented, such as precision
+# and recall, but you can also implement your own custom function using
+# :class:`~mapie.risk_control.BinaryClassificationRisk` and choose your own
+# secondary objective.
 
 target_precision = 0.8
 confidence_level = 0.9
 bcc = BinaryClassificationController(
     clf.predict_proba,
-    precision, target_level=target_precision,
+    "precision",
+    target_level=target_precision,
     confidence_level=confidence_level
     )
 bcc.calibrate(X_calib, y_calib)
@@ -179,9 +185,3 @@ plt.xlabel("Feature 1")
 plt.ylabel("Feature 2")
 plt.legend()
 plt.show()
-
-##############################################################################
-# Different risk functions have been implemented, such as precision and recall, but you
-# can also implement your own custom function using
-# :class:`~mapie.risk_control.BinaryClassificationRisk` and choose your own
-# secondary objective.
