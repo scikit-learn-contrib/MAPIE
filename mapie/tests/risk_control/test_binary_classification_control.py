@@ -454,18 +454,25 @@ class TestBinaryClassificationControllerPredict:
 class TestCheckIfMultiRiskControl:
     @pytest.mark.parametrize(
         "risk",
-        [
-            precision,
-            "precision",
-            [precision],
-            ["precision"],
-        ],
+        [precision, "precision"],
     )
     def test_mono_risk(
         self, bcc_deterministic: BinaryClassificationController, risk: Risk
     ):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             risk, dummy_target
+        )
+        assert not is_multi_risk
+
+    @pytest.mark.parametrize(
+        "risk",
+        [[precision], ["precision"]],
+    )
+    def test_mono_risk_list(
+        self, bcc_deterministic: BinaryClassificationController, risk: Risk
+    ):
+        is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
+            risk, [dummy_target]
         )
         assert not is_multi_risk
 
@@ -484,23 +491,6 @@ class TestCheckIfMultiRiskControl:
             risk, [dummy_target, dummy_target]
         )
         assert is_multi_risk
-
-    @pytest.mark.parametrize(
-        "risk",
-        [
-            "invalid_metric",
-            "accuracy",
-            ["precision", "false_positive_rate", "invalid_metric"],
-            [precision, "sensitivity"],
-        ],
-    )
-    def test_invalid_risk_str_raises_error(
-        self, bcc_deterministic: BinaryClassificationController, risk: Risk
-    ):
-        with pytest.raises(
-            ValueError, match="must be one of 'precision', 'recall', or 'fpr'"
-        ):
-            bcc_deterministic._check_if_multi_risk_control(risk, dummy_target)
 
     @pytest.mark.parametrize(
         "risk,target_level",
@@ -523,6 +513,28 @@ class TestCheckIfMultiRiskControl:
 
 
 @pytest.mark.parametrize(
+    "risk, target_level",
+    [
+        ("invalid_metric", dummy_target),
+        (["precision", "false_positive_rate", "invalid_metric"],
+         3 * [dummy_target]),
+        ([precision, "sensitivity"], 2 * [dummy_target]),
+    ],
+)
+def test_invalid_risk_str_raises_error(
+    risk: Risk, target_level: Union[List[float], float]
+):
+    with pytest.raises(
+        ValueError, match="When risk is provided as a string,"
+    ):
+        BinaryClassificationController(
+            predict_function=deterministic_predict_function,
+            risk=risk,
+            target_level=target_level,
+        )
+
+
+@pytest.mark.parametrize(
     "y_true, y_pred",
     [
         (np.array([1, 0, 1, 0]), np.array([1, 1, 0, 0])),
@@ -530,18 +542,10 @@ class TestCheckIfMultiRiskControl:
         (np.array([0, 0, 0, 0]), np.array([0, 1, 0, 1])),
     ],
 )
-@pytest.mark.parametrize(
-    "risk_list",
-    [
-        [precision, recall, false_positive_rate],
-        ["precision", "recall", "fpr"],
-        [precision, "recall", "fpr"],
-    ],
-)
 def test_get_risk_values_and_eff_sample_sizes(
-    y_true: NDArray, y_pred: NDArray,
-    risk_list: List[Union[str, BinaryClassificationRisk]]
+    y_true: NDArray, y_pred: NDArray
 ):
+    risk_list = [precision, recall, false_positive_rate]
     bcc = BinaryClassificationController(
             predict_function=deterministic_predict_function,
             risk=risk_list,
@@ -600,7 +604,15 @@ def test_get_risk_values_and_eff_sample_sizes(
             10*[0.7],
             precision,
             0.7,
-        )
+        ),
+        # Lists of multiple risks and targets
+        # which mix str and BinaryClassificationRisk.
+        (
+            ["precision", "recall"],
+            [0.65, 0.6],
+            [precision, recall],
+            [0.65, 0.6],
+        ),
     ],
 )
 def test_functional_multi_risk(

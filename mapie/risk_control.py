@@ -984,8 +984,14 @@ class BinaryClassificationController:
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
         risk_list = risk if isinstance(risk, list) else [risk]
-        self._risk = [BinaryClassificationController.risk_choice_map[risk]
-                      if isinstance(risk, str) else risk for risk in risk_list]
+        try:
+            self._risk = [BinaryClassificationController.risk_choice_map[risk]
+                          if isinstance(risk, str) else risk for risk in risk_list]
+        except KeyError as e:
+            raise ValueError(
+                "When risk is provided as a string, it must be one of: "
+                f"{list(BinaryClassificationController.risk_choice_map.keys())}"
+            ) from e
         target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
         )
