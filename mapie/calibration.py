@@ -933,6 +933,13 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             # Set up classes from the fitted estimator
             self.single_estimator_ = last_estimator
             self.classes_ = self.single_estimator_.classes_
+
+            # Type guard: ensure classes_ is not None
+            if self.classes_ is None:
+                raise RuntimeError(
+                    "classes_ should not be None after fitting estimator"
+                )
+
             self.n_classes_ = len(self.classes_)
 
             # Get predictions from the fitted estimator
