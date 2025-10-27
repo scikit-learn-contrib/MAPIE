@@ -22,7 +22,7 @@ from mapie.subsample import BlockBootstrap
 
 random_state = 1
 X_toy = np.array(range(5)).reshape(-1, 1)
-y_toy = (5.0 + 2.0 * X_toy ** 1.1).flatten()
+y_toy = (5.0 + 2.0 * X_toy**1.1).flatten()
 X, y = make_regression(
     n_samples=500, n_features=10, noise=1.0, random_state=random_state
 )
@@ -43,56 +43,32 @@ STRATEGIES = {
     "blockbootstrap_enbpi_mean_wopt": Params(
         method="enbpi",
         agg_function="mean",
-        cv=BlockBootstrap(
-            n_resamplings=30,
-            n_blocks=5,
-            random_state=random_state
-        ),
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=random_state),
     ),
     "blockbootstrap_enbpi_median_wopt": Params(
         method="enbpi",
         agg_function="median",
-        cv=BlockBootstrap(
-            n_resamplings=30,
-            n_blocks=5,
-            random_state=random_state
-        ),
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=random_state),
     ),
     "blockbootstrap_enbpi_mean": Params(
         method="enbpi",
         agg_function="mean",
-        cv=BlockBootstrap(
-            n_resamplings=30,
-            n_blocks=5,
-            random_state=random_state
-        ),
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=random_state),
     ),
     "blockbootstrap_enbpi_median": Params(
         method="enbpi",
         agg_function="median",
-        cv=BlockBootstrap(
-            n_resamplings=30,
-            n_blocks=5,
-            random_state=random_state
-        ),
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=random_state),
     ),
     "blockbootstrap_aci_mean": Params(
         method="aci",
         agg_function="mean",
-        cv=BlockBootstrap(
-            n_resamplings=30,
-            n_blocks=5,
-            random_state=random_state
-        ),
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=random_state),
     ),
     "blockbootstrap_aci_median": Params(
         method="aci",
         agg_function="median",
-        cv=BlockBootstrap(
-            n_resamplings=30,
-            n_blocks=5,
-            random_state=random_state
-        ),
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=random_state),
     ),
 }
 
@@ -125,24 +101,22 @@ sklearn_version_float = float(sklearn_version.rsplit(".", 1)[0])
 )
 def test_mapie_time_series_regressor_sklearn_estim() -> None:
     """
-   Some checks are breaking because the usage of ``partial_fit`` does not match the
-   sklearn convention in the strictest sense since ``partial_fit`` can only be invoked
-    after ``fit``; the corresponding estimator check is marked as an expected failure.
+    Some checks are breaking because the usage of ``partial_fit`` does not match the
+    sklearn convention in the strictest sense since ``partial_fit`` can only be invoked
+     after ``fit``; the corresponding estimator check is marked as an expected failure.
 
-   The other checks are breaking because of sklearn 1.6,
-    following dependencies upgrade in MAPIE v1.
-    We may remove this test anyway, because
-    1. MAPIE is meant to wrap estimators rather than being used as an
-    estimator itself in pipelines for example
-    2. the new classes introduced in v1 break the .fit/.predict API
+    The other checks are breaking because of sklearn 1.6,
+     following dependencies upgrade in MAPIE v1.
+     We may remove this test anyway, because
+     1. MAPIE is meant to wrap estimators rather than being used as an
+     estimator itself in pipelines for example
+     2. the new classes introduced in v1 break the .fit/.predict API
     """
     check_estimator(  # pragma: no cover
         TimeSeriesRegressor(),
         expected_failed_checks={
-            "check_estimators_partial_fit_n_features":
-                "partial_fit can only be called on fitted models. See test docstring.",
-            "check_n_features_in_after_fitting":
-                "partial_fit can only be called on fitted models. See test docstring.",
+            "check_estimators_partial_fit_n_features": "partial_fit can only be called on fitted models. See test docstring.",
+            "check_n_features_in_after_fitting": "partial_fit can only be called on fitted models. See test docstring.",
             "check_sample_weight_equivalence_on_sparse_data": "See test docstring.",
             "check_sample_weight_equivalence_on_dense_data": "See test docstring.",
         },
@@ -174,7 +148,7 @@ def test_predict_output_shape(
     (X, y) = dataset
     mapie_ts_reg.fit(X, y)
     y_pred, y_pis = mapie_ts_reg.predict(
-        X, confidence_level=1-np.array(alpha), allow_infinite_bounds=True
+        X, confidence_level=1 - np.array(alpha), allow_infinite_bounds=True
     )
     n_alpha = len(alpha) if hasattr(alpha, "__len__") else 1
     assert y_pred.shape == (X.shape[0],)
@@ -195,19 +169,15 @@ def test_results_for_same_alpha(strategy: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
-@pytest.mark.parametrize(
-    "alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)]
-)
-def test_results_for_alpha_as_float_and_arraylike(
-    strategy: str, alpha: Any
-) -> None:
+@pytest.mark.parametrize("alpha", [np.array([0.05, 0.1]), [0.05, 0.1], (0.05, 0.1)])
+def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> None:
     """Test that output values do not depend on type of alpha."""
     mapie_ts_reg = TimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts_reg.fit(X, y)
     alpha = np.array(alpha)
-    y_pred_float1, y_pis_float1 = mapie_ts_reg.predict(X, confidence_level=1-alpha[0])
-    y_pred_float2, y_pis_float2 = mapie_ts_reg.predict(X, confidence_level=1-alpha[1])
-    y_pred_array, y_pis_array = mapie_ts_reg.predict(X, confidence_level=1-alpha)
+    y_pred_float1, y_pis_float1 = mapie_ts_reg.predict(X, confidence_level=1 - alpha[0])
+    y_pred_float2, y_pis_float2 = mapie_ts_reg.predict(X, confidence_level=1 - alpha[1])
+    y_pred_array, y_pis_array = mapie_ts_reg.predict(X, confidence_level=1 - alpha)
     np.testing.assert_allclose(y_pred_float1, y_pred_array)
     np.testing.assert_allclose(y_pred_float2, y_pred_array)
     np.testing.assert_allclose(y_pis_float1[:, :, 0], y_pis_array[:, :, 0])
@@ -278,14 +248,14 @@ def test_prediction_agg_function(
     Test that PIs are the same but predictions differ when ensemble is
     True or False.
     """
-    mapie = TimeSeriesRegressor(
-        method=method, cv=cv, agg_function=agg_function
-    )
+    mapie = TimeSeriesRegressor(method=method, cv=cv, agg_function=agg_function)
     mapie.fit(X, y)
-    y_pred_1, y_pis_1 = mapie.predict(X, ensemble=True,
-                                      confidence_level=1-np.array(alpha))
-    y_pred_2, y_pis_2 = mapie.predict(X, ensemble=False,
-                                      confidence_level=1-np.array(alpha))
+    y_pred_1, y_pis_1 = mapie.predict(
+        X, ensemble=True, confidence_level=1 - np.array(alpha)
+    )
+    y_pred_2, y_pis_2 = mapie.predict(
+        X, ensemble=False, confidence_level=1 - np.array(alpha)
+    )
     np.testing.assert_allclose(y_pis_1[:, 0, 0], y_pis_2[:, 0, 0])
     np.testing.assert_allclose(y_pis_1[:, 1, 0], y_pis_2[:, 1, 0])
     with pytest.raises(AssertionError):
@@ -301,9 +271,9 @@ def test_linear_regression_results(strategy: str) -> None:
     """
     mapie_ts = TimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts.fit(X, y)
-    if 'enbpi' in strategy:
+    if "enbpi" in strategy:
         mapie_ts.update(X, y, ensemble=True)
-    if 'aci' in strategy:
+    if "aci" in strategy:
         mapie_ts.update(X, y, confidence_level=0.95, ensemble=True)
     optimize_beta = "opt" in strategy
     _, y_pis = mapie_ts.predict(
@@ -320,15 +290,13 @@ def test_linear_regression_results(strategy: str) -> None:
 def test_results_prefit() -> None:
     """Test prefit results on a standard train/validation/test split."""
     X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X, y, test_size=1/3, random_state=random_state
+        X, y, test_size=1 / 3, random_state=random_state
     )
     X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val, y_train_val, test_size=1/2, random_state=random_state
+        X_train_val, y_train_val, test_size=1 / 2, random_state=random_state
     )
     estimator = LinearRegression().fit(X_train, y_train)
-    mapie_ts_reg = TimeSeriesRegressor(
-        estimator=estimator, cv="prefit"
-    )
+    mapie_ts_reg = TimeSeriesRegressor(estimator=estimator, cv="prefit")
     mapie_ts_reg.fit(X_val, y_val)
     _, y_pis = mapie_ts_reg.predict(X_test, confidence_level=0.95)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
@@ -339,13 +307,10 @@ def test_results_prefit() -> None:
 
 def test_not_enough_resamplings() -> None:
     """Test that a warning is raised if at least one residual is nan."""
-    with pytest.warns(
-        UserWarning,
-        match=r"WARNING: at least one point of*"
-    ):
+    with pytest.warns(UserWarning, match=r"WARNING: at least one point of*"):
         mapie_ts_reg = TimeSeriesRegressor(
             cv=BlockBootstrap(n_resamplings=2, n_blocks=1, random_state=0),
-            agg_function="mean"
+            agg_function="mean",
         )
         mapie_ts_reg.fit(X, y)
 
@@ -355,9 +320,7 @@ def test_no_agg_fx_specified_with_subsample() -> None:
     Test that an error is raised if ``cv`` is ``BlockBootstrap`` but
     ``agg_function`` is ``None``.
     """
-    with pytest.raises(
-        ValueError, match=r"You need to specify an aggregation*"
-    ):
+    with pytest.raises(ValueError, match=r"You need to specify an aggregation*"):
         mapie_ts_reg = TimeSeriesRegressor(
             cv=BlockBootstrap(n_resamplings=1, n_blocks=1),
             agg_function=None,
@@ -396,15 +359,14 @@ def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
 
 def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
     """Test ``partial_fit``."""
-    mapie_ts_reg = TimeSeriesRegressor(method='enbpi', cv=-1)
+    mapie_ts_reg = TimeSeriesRegressor(method="enbpi", cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
     mapie_ts_reg.partial_fit(X_toy, y_toy, ensemble=True)
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
         np.abs(CONFORMITY_SCORES[0]), 2
     )
     mapie_ts_reg.partial_fit(
-        X=np.array([UPDATE_DATA[0]]), y=np.array([UPDATE_DATA[1]]),
-        ensemble=True
+        X=np.array([UPDATE_DATA[0]]), y=np.array([UPDATE_DATA[1]]), ensemble=True
     )
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
         CONFORMITY_SCORES[1], 2
@@ -413,7 +375,7 @@ def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
 
 def test_MapieTimeSeriesRegressor_partial_fit_too_big() -> None:
     """Test ``partial_fit`` raised error."""
-    mapie_ts_reg = TimeSeriesRegressor(method='enbpi', cv=-1)
+    mapie_ts_reg = TimeSeriesRegressor(method="enbpi", cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*The number of observations*"):
         mapie_ts_reg = mapie_ts_reg.partial_fit(X=X, y=y)
@@ -433,17 +395,15 @@ def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
 def test_interval_prediction_with_beta_optimize() -> None:
     """Test use of ``beta_optimize`` in prediction."""
     X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X, y, test_size=1/3, random_state=random_state
+        X, y, test_size=1 / 3, random_state=random_state
     )
     X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val, y_train_val, test_size=1/2, random_state=random_state
+        X_train_val, y_train_val, test_size=1 / 2, random_state=random_state
     )
     estimator = LinearRegression().fit(X_train, y_train)
     mapie_ts_reg = TimeSeriesRegressor(
         estimator=estimator,
-        cv=BlockBootstrap(
-            n_resamplings=30, n_blocks=5, random_state=random_state
-        )
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=random_state),
     )
     mapie_ts_reg.fit(X_val, y_val)
     mapie_ts_reg.update(X_val, y_val)
@@ -467,8 +427,7 @@ def test_aci_method() -> None:
     mapie_regressor.predict(X, confidence_level=0.95)
     mapie_regressor.adapt_conformal_inference(X, y, gamma=0.01)
     with pytest.raises(
-        AttributeError,
-        match=r"This method can be called only with method='aci' *"
+        AttributeError, match=r"This method can be called only with method='aci' *"
     ):
         mapie_regressor_enbpi = TimeSeriesRegressor(method="enbpi")
         mapie_regressor_enbpi.fit(X, y)
@@ -493,27 +452,24 @@ def test_aci__get_alpha_with_unknown_alpha() -> None:
     """
     mapie_ts_reg = TimeSeriesRegressor(method="aci")
     mapie_ts_reg.fit(X_toy, y_toy)
-    mapie_ts_reg.adapt_conformal_inference(X_toy, y_toy, gamma=0.1,
-                                           confidence_level=0.8)
+    mapie_ts_reg.adapt_conformal_inference(
+        X_toy, y_toy, gamma=0.1, confidence_level=0.8
+    )
     np.testing.assert_allclose(mapie_ts_reg.current_alpha[0.2], 0.3, rtol=1e-3)
 
 
 def test_deprecated_partial_fit_warning() -> None:
     """Test that a warning is raised if use partial_fit"""
-    mapie_ts_reg = TimeSeriesRegressor(method='enbpi', cv=-1)
+    mapie_ts_reg = TimeSeriesRegressor(method="enbpi", cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
-    with pytest.warns(
-        DeprecationWarning, match=r".*WARNING: Deprecated method.*"
-    ):
+    with pytest.warns(DeprecationWarning, match=r".*WARNING: Deprecated method.*"):
         mapie_ts_reg = mapie_ts_reg.partial_fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("method", ["wrong_method"])
 def test_method_error_in_update(monkeypatch: Any, method: str) -> None:
     """Test else condition for the method in .update"""
-    monkeypatch.setattr(
-        TimeSeriesRegressor, "_check_method", lambda *args: ()
-    )
+    monkeypatch.setattr(TimeSeriesRegressor, "_check_method", lambda *args: ())
     mapie_ts_reg = TimeSeriesRegressor(method=method)
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         mapie_ts_reg.fit(X_toy, y_toy)
@@ -532,10 +488,7 @@ def test_methods_preservation_in_fit(method: str, cv: str) -> None:
         X_train_val, y_train_val, test_size=0.5, random_state=random_state
     )
     estimator = LinearRegression().fit(X_train, y_train)
-    mapie_ts_reg = TimeSeriesRegressor(
-        estimator=estimator,
-        cv=cv, method=method
-    )
+    mapie_ts_reg = TimeSeriesRegressor(estimator=estimator, cv=cv, method=method)
     mapie_ts_reg.fit(X_val, y_val)
     mapie_ts_reg.update(X_test, y_test, gamma=0.1, confidence_level=0.9)
     assert mapie_ts_reg.method == method

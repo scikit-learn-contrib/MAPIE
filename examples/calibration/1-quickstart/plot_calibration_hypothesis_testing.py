@@ -25,13 +25,15 @@ The First Passage Problem for a Continuous Markov Process.
 Ann. Math. Statist. 24 (4) 624 - 639, December,
 1953.
 """
+
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.utils import check_random_state
 
 from numpy.typing import NDArray
 from mapie.metrics.calibration import (
-    cumulative_differences, kolmogorov_smirnov_p_value,
+    cumulative_differences,
+    kolmogorov_smirnov_p_value,
     length_scale,
 )
 
@@ -49,10 +51,7 @@ def sigmoid(x: NDArray):
     return y
 
 
-def generate_y_true_calibrated(
-    y_prob: NDArray,
-    random_state: int = 1
-) -> NDArray:
+def generate_y_true_calibrated(y_prob: NDArray, random_state: int = 1) -> NDArray:
     generator = check_random_state(random_state)
     uniform = generator.uniform(size=len(y_prob))
     y_true = (uniform <= y_prob).astype(float)
@@ -67,11 +66,7 @@ y_true = generate_y_true_calibrated(y_prob)
 # Next we provide two additional miscalibrated scores (on purpose).
 
 
-y = {
-    "y_prob": y_prob,
-    "y_pred_1": sigmoid(1.3*X),
-    "y_pred_2": sigmoid(0.7*X)
-}
+y = {"y_prob": y_prob, "y_pred_1": sigmoid(1.3 * X), "y_pred_2": sigmoid(0.7 * X)}
 
 ####################################################################
 # This is how the two miscalibration curves stands next to the
@@ -118,15 +113,14 @@ plt.show()
 
 
 cum_diffs = {
-    name: cumulative_differences(y_true, y_score)
-    for name, y_score in y.items()
+    name: cumulative_differences(y_true, y_score) for name, y_score in y.items()
 }
 
 ####################################################################
 # We want to plot is along the proportion of scores taken into account.
 
 
-k = np.arange(len(y_true))/len(y_true)
+k = np.arange(len(y_true)) / len(y_true)
 
 ####################################################################
 # We also want to compare the extension of the curve to that of a typical
@@ -140,8 +134,7 @@ sigma = length_scale(y_prob)
 
 
 p_values = {
-    name: kolmogorov_smirnov_p_value(y_true, y_score)
-    for name, y_score in y.items()
+    name: kolmogorov_smirnov_p_value(y_true, y_score) for name, y_score in y.items()
 }
 
 ####################################################################
@@ -160,8 +153,8 @@ p_values = {
 
 for name, cum_diff in cum_diffs.items():
     plt.plot(k, cum_diff, label=f"name (p-value = {p_values[name]:.5f})")
-plt.axhline(y=2*sigma, color="r", linestyle="--")
-plt.axhline(y=-2*sigma, color="r", linestyle="--")
+plt.axhline(y=2 * sigma, color="r", linestyle="--")
+plt.axhline(y=-2 * sigma, color="r", linestyle="--")
 plt.title("Probability curves")
 plt.xlabel("Proportion of scores considered")
 plt.ylabel("Cumulative differences with the ground truth")

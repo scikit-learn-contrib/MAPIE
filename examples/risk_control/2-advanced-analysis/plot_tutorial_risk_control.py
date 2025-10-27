@@ -36,32 +36,27 @@ from mapie.risk_control import PrecisionRecallController
 
 centers = [(0, 10), (-5, 0), (5, 0), (0, 5), (0, 0), (-4, 5), (5, 5)]
 covs = [
-    np.eye(2), np.eye(2), np.eye(2), np.diag([5, 5]), np.diag([3, 1]),
-    np.array([
-        [4, 3],
-        [3, 4]
-    ]),
-    np.array([
-        [3, -2],
-        [-2, 3]
-    ]),
+    np.eye(2),
+    np.eye(2),
+    np.eye(2),
+    np.diag([5, 5]),
+    np.diag([3, 1]),
+    np.array([[4, 3], [3, 4]]),
+    np.array([[3, -2], [-2, 3]]),
 ]
 
 x_min, x_max, y_min, y_max, step = -15, 15, -5, 15, 0.1
 n_samples = 800
-X = np.vstack([
-    np.random.multivariate_normal(center, cov, n_samples)
-    for center, cov in zip(centers, covs)
-])
-classes = [
-    [1, 0, 1], [1, 1, 0], [0, 1, 1], [1, 1, 1],
-    [0, 1, 0], [1, 0, 0], [0, 0, 1]
-]
+X = np.vstack(
+    [
+        np.random.multivariate_normal(center, cov, n_samples)
+        for center, cov in zip(centers, covs)
+    ]
+)
+classes = [[1, 0, 1], [1, 1, 0], [0, 1, 1], [1, 1, 1], [0, 1, 0], [1, 0, 0], [0, 0, 1]]
 y = np.vstack([np.full((n_samples, 3), row) for row in classes])
 
-X_train_cal, X_test, y_train_cal, y_test = train_test_split(
-    X, y, test_size=0.2
-)
+X_train_cal, X_test, y_train_cal, y_test = train_test_split(X, y, test_size=0.2)
 X_train, X_cal, y_train, y_cal = train_test_split(
     X_train_cal, y_train_cal, test_size=0.25
 )
@@ -77,17 +72,17 @@ colors = {
     (0, 1, 0): {"color": "#d62728", "lac": "0-1-0"},
     (1, 1, 0): {"color": "#ffd700", "lac": "1-1-0"},
     (1, 0, 0): {"color": "#c20078", "lac": "1-0-0"},
-    (1, 1, 1): {"color": "#06C2AC", "lac": "1-1-1"}
+    (1, 1, 1): {"color": "#06C2AC", "lac": "1-1-1"},
 }
 
 for i in range(7):
     plt.scatter(
-        X[n_samples * i:n_samples * (i + 1), 0],
-        X[n_samples * i:n_samples * (i + 1), 1],
+        X[n_samples * i : n_samples * (i + 1), 0],
+        X[n_samples * i : n_samples * (i + 1), 1],
         color=colors[tuple(y[n_samples * i])]["color"],
-        marker='o',
+        marker="o",
         s=10,
-        edgecolor='k'
+        edgecolor="k",
     )
 plt.legend([c["lac"] for c in colors.values()])
 plt.show()
@@ -119,7 +114,7 @@ method_params = {
     "RCPS - Hoeffding": ("rcps", "hoeffding"),
     "RCPS - Bernstein": ("rcps", "bernstein"),
     "RCPS - WSR": ("rcps", "wsr"),
-    "CRC": ("crc", None)
+    "CRC": ("crc", None),
 }
 
 clf = MultiOutputClassifier(GaussianNB()).fit(X_train, y_train)
@@ -128,18 +123,14 @@ alpha = np.arange(0.01, 1, 0.01)
 y_pss, recalls, thresholds, r_hats, r_hat_pluss = {}, {}, {}, {}, {}
 y_test_repeat = np.repeat(y_test[:, :, np.newaxis], len(alpha), 2)
 for i, (name, (method, bound)) in enumerate(method_params.items()):
-
     mapie = PrecisionRecallController(
         estimator=clf, method=method, metric_control="recall"
     )
     mapie.fit(X_cal, y_cal)
 
-    _, y_pss[name] = mapie.predict(
-        X_test, alpha=alpha, bound=bound, delta=.1
-    )
+    _, y_pss[name] = mapie.predict(X_test, alpha=alpha, bound=bound, delta=0.1)
     recalls[name] = (
-        (y_test_repeat * y_pss[name]).sum(axis=1) /
-        y_test_repeat.sum(axis=1)
+        (y_test_repeat * y_pss[name]).sum(axis=1) / y_test_repeat.sum(axis=1)
     ).mean(axis=0)
     thresholds[name] = mapie.lambdas_star
     r_hats[name] = mapie.r_hat
@@ -164,7 +155,7 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
 vars_y = [recalls, thresholds]
 labels_y = ["Average number of kept labels", "Recall", "Threshold"]
 
-fig, axs = plt.subplots(1, len(vars_y), figsize=(8*len(vars_y), 8))
+fig, axs = plt.subplots(1, len(vars_y), figsize=(8 * len(vars_y), 8))
 for i, var in enumerate(vars_y):
     for name, (method, bound) in method_params.items():
         axs[i].plot(1 - alpha, var[name], label=name, linewidth=2)
@@ -187,31 +178,19 @@ plt.show()
 # * The CRC method gives the best results since it guarantees the coverage
 # with a larger threshold.
 
-fig, axs = plt.subplots(
-    1,
-    len(method_params),
-    figsize=(8*len(method_params), 8)
-)
+fig, axs = plt.subplots(1, len(method_params), figsize=(8 * len(method_params), 8))
 for i, (name, (method, bound)) in enumerate(method_params.items()):
-    axs[i].plot(
-        mapie.lambdas,
-        r_hats[name], label=r"$\hat{R}$", linewidth=2
-    )
+    axs[i].plot(mapie.lambdas, r_hats[name], label=r"$\hat{R}$", linewidth=2)
     if name != "CRC":
-        axs[i].plot(
-            mapie.lambdas,
-            r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2
-        )
+        axs[i].plot(mapie.lambdas, r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2)
     axs[i].plot([0, 1], [alpha[9], alpha[9]], label=r"$\alpha$")
     axs[i].plot(
-        [thresholds[name][9], thresholds[name][9]], [0, 1],
-        label=r"$\lambda^*" + f" = {thresholds[name][9]}$"
+        [thresholds[name][9], thresholds[name][9]],
+        [0, 1],
+        label=r"$\lambda^*" + f" = {thresholds[name][9]}$",
     )
     axs[i].legend(fontsize=20)
-    axs[i].set_title(
-        f"{name} - Recall = {round(recalls[name][9], 2)}",
-        fontsize=20
-    )
+    axs[i].set_title(f"{name} - Recall = {round(recalls[name][9], 2)}", fontsize=20)
 plt.show()
 
 ##############################################################################
@@ -241,18 +220,12 @@ plt.show()
 # explore.
 
 mapie_clf = PrecisionRecallController(
-    estimator=clf,
-    method='ltt',
-    metric_control='precision'
+    estimator=clf, method="ltt", metric_control="precision"
 )
 mapie_clf.fit(X_cal, y_cal)
 
 alpha = 0.1
-_, y_ps = mapie_clf.predict(
-    X_test,
-    alpha=alpha,
-    delta=0.1
-)
+_, y_ps = mapie_clf.predict(X_test, alpha=alpha, delta=0.1)
 
 valid_index = mapie_clf.valid_index[0]  # valid_index is a list of list
 
@@ -275,10 +248,11 @@ idx_max = np.argmin(r_hat[valid_index])
 plt.figure(figsize=(8, 8))
 plt.plot(mapie_clf.lambdas, r_hat, label=r"$\hat{R}_\lambda$")
 plt.plot([0, 1], [alpha, alpha], label=r"$\alpha$")
-plt.axvspan(mini, maxi, facecolor='red', alpha=0.3, label=r"LTT-$\lambda$")
+plt.axvspan(mini, maxi, facecolor="red", alpha=0.3, label=r"LTT-$\lambda$")
 plt.plot(
-    [lambdas[idx_max], lambdas[idx_max]], [0, 1],
-    label=r"$\lambda^* =" + f"{lambdas[idx_max]}$"
+    [lambdas[idx_max], lambdas[idx_max]],
+    [0, 1],
+    label=r"$\lambda^* =" + f"{lambdas[idx_max]}$",
 )
 plt.xlabel(r"Threshold $\lambda$")
 plt.ylabel(r"Empirical risk: $\hat{R}_\lambda$")

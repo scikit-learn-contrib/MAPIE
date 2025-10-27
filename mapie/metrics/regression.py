@@ -15,9 +15,7 @@ from mapie.utils import (
 )
 
 
-def regression_mean_width_score(
-    y_intervals: NDArray
-) -> NDArray:
+def regression_mean_width_score(y_intervals: NDArray) -> NDArray:
     """
     Effective mean width score obtained by the prediction intervals.
 
@@ -127,18 +125,14 @@ def regression_coverage_score(
     coverages = np.mean(
         np.logical_and(
             np.less_equal(y_intervals[:, 0, :], y_true),
-            np.greater_equal(y_intervals[:, 1, :], y_true)
+            np.greater_equal(y_intervals[:, 1, :], y_true),
         ),
-        axis=0
+        axis=0,
     )
     return coverages
 
 
-def regression_ssc(
-    y_true: NDArray,
-    y_intervals: NDArray,
-    num_bins: int = 3
-) -> NDArray:
+def regression_ssc(y_true: NDArray, y_intervals: NDArray, num_bins: int = 3) -> NDArray:
     """
     Compute Size-Stratified Coverage metrics proposed in [3] that is
     the conditional coverage conditioned by the size of the intervals.
@@ -197,19 +191,20 @@ def regression_ssc(
     indexes_bybins = np.array_split(indexes_sorted, num_bins, axis=0)
     coverages = np.zeros((y_intervals.shape[2], num_bins))
     for i, indexes in enumerate(indexes_bybins):
-        intervals_binned = np.stack([
-            np.take_along_axis(y_intervals[:, 0, :], indexes, axis=0),
-            np.take_along_axis(y_intervals[:, 1, :], indexes, axis=0)
-        ], axis=1)
+        intervals_binned = np.stack(
+            [
+                np.take_along_axis(y_intervals[:, 0, :], indexes, axis=0),
+                np.take_along_axis(y_intervals[:, 1, :], indexes, axis=0),
+            ],
+            axis=1,
+        )
         coverages[:, i] = regression_coverage_score(y_true[indexes], intervals_binned)
 
     return coverages
 
 
 def regression_ssc_score(
-    y_true: NDArray,
-    y_intervals: NDArray,
-    num_bins: int = 3
+    y_true: NDArray, y_intervals: NDArray, num_bins: int = 3
 ) -> NDArray:
     """
     Aggregate by the minimum for each confidence level the Size-Stratified Coverage [3]:
@@ -255,10 +250,7 @@ def regression_ssc_score(
     return np.min(regression_ssc(y_true, y_intervals, num_bins), axis=1)
 
 
-def _gaussian_kernel(
-    x: NDArray,
-    kernel_size: int
-) -> NDArray:
+def _gaussian_kernel(x: NDArray, kernel_size: int) -> NDArray:
     """
     Computes the gaussian kernel of x. (Used in hsic function)
 
@@ -269,16 +261,15 @@ def _gaussian_kernel(
     kernel_size: int
         The variance (sigma), this coefficient controls the width of the curve.
     """
-    norm_x = x ** 2
-    dist = -2 * np.matmul(x, x.transpose((0, 2, 1))) \
-        + norm_x + norm_x.transpose((0, 2, 1))
+    norm_x = x**2
+    dist = (
+        -2 * np.matmul(x, x.transpose((0, 2, 1))) + norm_x + norm_x.transpose((0, 2, 1))
+    )
     return np.exp(-dist / kernel_size)
 
 
 def hsic(
-    y_true: NDArray,
-    y_intervals: NDArray,
-    kernel_sizes: ArrayLike = (1, 1)
+    y_true: NDArray, y_intervals: NDArray, kernel_sizes: ArrayLike = (1, 1)
 ) -> NDArray:
     """
     Compute the square root of the hsic coefficient. HSIC is Hilbert-Schmidt
@@ -342,32 +333,29 @@ def hsic(
 
     kernel_sizes = cast(NDArray, column_or_1d(kernel_sizes))
     if len(kernel_sizes) != 2:
-        raise ValueError(
-            "kernel_sizes should be an ArrayLike of length 2"
-        )
+        raise ValueError("kernel_sizes should be an ArrayLike of length 2")
     if (kernel_sizes <= 0).any():
-        raise ValueError(
-            "kernel_size should be positive"
-        )
+        raise ValueError("kernel_size should be positive")
     n_samples, _, n_confidence_level = y_intervals.shape
     y_true_per_alpha = np.tile(y_true, (n_confidence_level, 1)).transpose()
     widths = np.expand_dims(
-        np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :]).transpose(),
-        axis=2
+        np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :]).transpose(), axis=2
     )
     cov_ind = np.expand_dims(
         np.int_(
-            ((y_intervals[:, 0, :] <= y_true_per_alpha) &
-             (y_intervals[:, 1, :] >= y_true_per_alpha))
+            (
+                (y_intervals[:, 0, :] <= y_true_per_alpha)
+                & (y_intervals[:, 1, :] >= y_true_per_alpha)
+            )
         ).transpose(),
-        axis=2
+        axis=2,
     )
 
     k_mat = _gaussian_kernel(widths, kernel_sizes[0])
     l_mat = _gaussian_kernel(cov_ind, kernel_sizes[1])
     h_mat = np.eye(n_samples) - 1 / n_samples * np.ones((n_samples, n_samples))
     hsic_mat = np.matmul(l_mat, np.matmul(h_mat, np.matmul(k_mat, h_mat)))
-    hsic_mat /= ((n_samples - 1) ** 2)
+    hsic_mat /= (n_samples - 1) ** 2
     coef_hsic = np.sqrt(np.matrix.trace(hsic_mat, axis1=1, axis2=2))
 
     return coef_hsic
@@ -378,7 +366,7 @@ def coverage_width_based(
     y_pred_low: ArrayLike,
     y_pred_up: ArrayLike,
     eta: float,
-    confidence_level: float
+    confidence_level: float,
 ) -> float:
     """
     Coverage Width-based Criterion (CWC) obtained by the prediction intervals.
@@ -495,21 +483,16 @@ def coverage_width_based(
     mean_width = regression_mean_width_score(
         np.column_stack((y_pred_low, y_pred_up))[:, :, np.newaxis]
     )[0]
-    ref_length = np.subtract(
-        float(y_true.max()),
-        float(y_true.min())
-    )
+    ref_length = np.subtract(float(y_true.max()), float(y_true.min()))
     avg_length = mean_width / ref_length
 
-    cwc = (1-avg_length)*np.exp(-eta * (coverage_score - confidence_level) ** 2)
+    cwc = (1 - avg_length) * np.exp(-eta * (coverage_score - confidence_level) ** 2)
 
     return float(cwc)
 
 
 def regression_mwi_score(
-        y_true: NDArray,
-        y_pis: NDArray,
-        confidence_level: float
+    y_true: NDArray, y_pis: NDArray, confidence_level: float
 ) -> float:
     """
     The Winkler score, proposed by Winkler (1972), is a measure used to

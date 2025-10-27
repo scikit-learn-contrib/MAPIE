@@ -185,9 +185,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         n = len(X)
 
         if self.n_blocks is not None:
-            length = (
-                self.length if self.length is not None else n // self.n_blocks
-            )
+            length = self.length if self.length is not None else n // self.n_blocks
             n_blocks = self.n_blocks
         else:
             length = cast(int, self.length)
@@ -203,7 +201,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         if self.overlapping:
             blocks = sliding_window_view(indices, window_shape=length)
         else:
-            indices = indices[(n % length):]
+            indices = indices[(n % length) :]
             blocks_number = n // length
             blocks = np.asarray(
                 np.array_split(indices, indices_or_sections=blocks_number)
@@ -219,12 +217,8 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
                 random_state=random_state,
                 stratify=None,
             )
-            train_index = np.concatenate(
-                [blocks[k] for k in block_indices], axis=0
-            )
-            test_index = np.array(
-                list(set(indices) - set(train_index)), dtype=np.int64
-            )
+            train_index = np.concatenate([blocks[k] for k in block_indices], axis=0)
+            test_index = np.array(list(set(indices) - set(train_index)), dtype=np.int64)
             yield train_index, test_index
 
     def get_n_splits(self, *args: Any, **kargs: Any) -> int:

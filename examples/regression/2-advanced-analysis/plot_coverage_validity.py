@@ -35,6 +35,7 @@ from mapie.metrics.regression import regression_coverage_score
 from joblib import Parallel, delayed
 
 import warnings
+
 warnings.filterwarnings("ignore")
 warnings.simplefilter("ignore", RuntimeWarning)
 warnings.simplefilter("ignore", UserWarning)
@@ -49,14 +50,10 @@ warnings.simplefilter("ignore", UserWarning)
 # We prepare the fit/conformalize/test routine in order to calculate the average
 # coverage over several simulations.
 
+
 # Conformalizer Class
-class StandardConformalizer():
-    def __init__(
-        self,
-        pre_trained_model,
-        non_conformity_func,
-        confidence_level
-    ):
+class StandardConformalizer:
+    def __init__(self, pre_trained_model, non_conformity_func, confidence_level):
         # Initialize the conformalizer with required parameters
         self.estimator = pre_trained_model
         self.non_conformity_func = non_conformity_func
@@ -64,15 +61,18 @@ class StandardConformalizer():
 
     def _calculate_quantile(self, scores_conformalize):
         # Calculate the quantile value based on delta and non-conformity scores
-        self.delta_cor = np.ceil(
-            self.confidence_level * (self.n_conformalize + 1)) / self.n_conformalize
-        return np.quantile(scores_conformalize, self.delta_cor, method='lower')
+        self.delta_cor = (
+            np.ceil(self.confidence_level * (self.n_conformalize + 1))
+            / self.n_conformalize
+        )
+        return np.quantile(scores_conformalize, self.delta_cor, method="lower")
 
     def _conformalize(self, X_conformalize, y_conformalize):
         # Calibrate the conformalizer to calculate q_hat
         y_conformalize_pred = self.estimator.predict(X_conformalize)
         scores_conformalize = self.non_conformity_func(
-            y_conformalize_pred, y_conformalize)
+            y_conformalize_pred, y_conformalize
+        )
         self.q_hat = self._calculate_quantile(scores_conformalize)
 
     def fit(self, X, y):
@@ -93,9 +93,7 @@ def non_conformity_func(y, y_hat):
     return np.abs(y - y_hat)
 
 
-def get_coverage_prefit(
-    conformalizer, data, target, n_conformalize, random_state=None
-):
+def get_coverage_prefit(conformalizer, data, target, n_conformalize, random_state=None):
     """
     Calculate the fraction of test samples within the predicted intervals.
 
@@ -204,7 +202,7 @@ model.fit(X_train, y_train)
 
 # Compute theorical bounds and exact coverage to attempt
 lower_bound = confidence_level
-upper_bound = (confidence_level + 1 / (n_conformalize + 1))
+upper_bound = confidence_level + 1 / (n_conformalize + 1)
 exact_cov = (np.ceil((n_conformalize + 1) * confidence_level)) / (n_conformalize + 1)
 
 # Run the experiment
@@ -216,14 +214,14 @@ for random_state in range(1, num_splits):
     conformalizer = StandardConformalizer(
         pre_trained_model=model,
         non_conformity_func=non_conformity_func,
-        confidence_level=confidence_level
+        confidence_level=confidence_level,
     )
     coverage = get_coverage_prefit(
         conformalizer=conformalizer,
         data=X_conformalize_test,
         target=y_conformalize_test,
         n_conformalize=n_conformalize,
-        random_state=random_state
+        random_state=random_state,
     )
     empirical_coverages_ref.append(coverage)
 
@@ -236,7 +234,7 @@ for random_state in range(1, num_splits):
         data=X_conformalize_test,
         target=y_conformalize_test,
         n_conformalize=n_conformalize,
-        random_state=random_state
+        random_state=random_state,
     )
     empirical_coverages_mapie.append(coverage)
 
@@ -245,18 +243,20 @@ cumulative_averages_mapie = cumulative_average(arr=empirical_coverages_mapie)
 
 # Plot the results
 fig, ax = plt.subplots()
-plt.plot(cumulative_averages_ref, alpha=0.5, label='SplitCP', color='r')
-plt.plot(cumulative_averages_mapie, alpha=0.5, label='MAPIE', color='g')
+plt.plot(cumulative_averages_ref, alpha=0.5, label="SplitCP", color="r")
+plt.plot(cumulative_averages_mapie, alpha=0.5, label="MAPIE", color="g")
 
-plt.hlines(exact_cov, 0, num_splits, color='r', ls='--', label='Exact Cov.')
-plt.hlines(lower_bound, 0, num_splits, color='k', label='Lower Bound')
-plt.hlines(upper_bound, 0, num_splits, color='b', label='Upper Bound')
+plt.hlines(exact_cov, 0, num_splits, color="r", ls="--", label="Exact Cov.")
+plt.hlines(lower_bound, 0, num_splits, color="k", label="Lower Bound")
+plt.hlines(upper_bound, 0, num_splits, color="b", label="Upper Bound")
 
-plt.xlabel(r'Split Number')
-plt.ylabel(r'$\overline{\mathbb{C}}$')
+plt.xlabel(r"Split Number")
+plt.ylabel(r"$\overline{\mathbb{C}}$")
 plt.title(
-    r'$|D_{cal}| = $' + str(n_conformalize) +
-    r' and $\delta = $' + str(confidence_level)
+    r"$|D_{cal}| = $"
+    + str(n_conformalize)
+    + r" and $\delta = $"
+    + str(confidence_level)
 )
 
 plt.legend(loc="upper right", ncol=2)
@@ -289,14 +289,14 @@ for random_state in range(1, num_splits):
     conformalizer = StandardConformalizer(
         pre_trained_model=model,
         non_conformity_func=non_conformity_func,
-        confidence_level=confidence_level
+        confidence_level=confidence_level,
     )
     coverage = get_coverage_prefit(
         conformalizer=conformalizer,
         data=X_conformalize_test,
         target=y_conformalize_test,
         n_conformalize=n_conformalize,
-        random_state=random_state
+        random_state=random_state,
     )
     empirical_coverages_ref.append(coverage)
 
@@ -309,7 +309,7 @@ for random_state in range(1, num_splits):
         data=X_conformalize_test,
         target=y_conformalize_test,
         n_conformalize=n_conformalize,
-        random_state=num_splits + random_state
+        random_state=num_splits + random_state,
     )
     empirical_coverages_mapie.append(coverage)
 
@@ -318,18 +318,20 @@ cumulative_averages_mapie = cumulative_average(empirical_coverages_mapie)
 
 # Plot the results
 fig, ax = plt.subplots()
-plt.plot(cumulative_averages_ref, alpha=0.5, label='SplitCP', color='r')
-plt.plot(cumulative_averages_mapie, alpha=0.5, label='MAPIE', color='g')
+plt.plot(cumulative_averages_ref, alpha=0.5, label="SplitCP", color="r")
+plt.plot(cumulative_averages_mapie, alpha=0.5, label="MAPIE", color="g")
 
-plt.hlines(exact_cov, 0, num_splits, color='r', ls='--', label='Exact Cov.')
-plt.hlines(lower_bound, 0, num_splits, color='k', label='Lower Bound')
-plt.hlines(upper_bound, 0, num_splits, color='b', label='Upper Bound')
+plt.hlines(exact_cov, 0, num_splits, color="r", ls="--", label="Exact Cov.")
+plt.hlines(lower_bound, 0, num_splits, color="k", label="Lower Bound")
+plt.hlines(upper_bound, 0, num_splits, color="b", label="Upper Bound")
 
-plt.xlabel(r'Split Number')
-plt.ylabel(r'$\overline{\mathbb{C}}$')
+plt.xlabel(r"Split Number")
+plt.ylabel(r"$\overline{\mathbb{C}}$")
 plt.title(
-    r'$|D_{cal}| = $' + str(n_conformalize) +
-    r' and $\delta = $' + str(confidence_level)
+    r"$|D_{cal}| = $"
+    + str(n_conformalize)
+    + r" and $\delta = $"
+    + str(confidence_level)
 )
 
 plt.legend(loc="upper right", ncol=2)
@@ -348,21 +350,28 @@ plt.show()
 
 
 def run_get_coverage_prefit(
-        model, method, params, n_conformalize, data,
-        target, confidence_level, random_state, num_splits
+    model,
+    method,
+    params,
+    n_conformalize,
+    data,
+    target,
+    confidence_level,
+    random_state,
+    num_splits,
 ):
     if method == "reference":
         ref_reg = StandardConformalizer(
             pre_trained_model=model,
             non_conformity_func=non_conformity_func,
-            confidence_level=confidence_level
+            confidence_level=confidence_level,
         )
         coverage = get_coverage_prefit(
             conformalizer=ref_reg,
             data=data,
             target=target,
             n_conformalize=n_conformalize,
-            random_state=random_state
+            random_state=random_state,
         )
     else:
         mapie_reg = SplitConformalRegressor(
@@ -373,20 +382,16 @@ def run_get_coverage_prefit(
             data=data,
             target=target,
             n_conformalize=n_conformalize,
-            random_state=num_splits + random_state
+            random_state=num_splits + random_state,
         )
     return coverage
 
 
 STRATEGIES = {
     "reference": None,
-    "prefit": dict(
-        prefit=True,
-        conformity_score=AbsoluteConformityScore(sym=True)
-    ),
+    "prefit": dict(prefit=True, conformity_score=AbsoluteConformityScore(sym=True)),
     "prefit_asym": dict(
-        prefit=True,
-        conformity_score=AbsoluteConformityScore(sym=False)
+        prefit=True, conformity_score=AbsoluteConformityScore(sym=False)
     ),
 }
 
@@ -424,15 +429,17 @@ fig, ax = plt.subplots()
 for method in STRATEGIES:
     plt.plot(cumulative_averages_dict[method], alpha=0.5, label=method)
 
-plt.hlines(exact_cov, 0, num_splits, color='r', ls='--', label='Exact Cov.')
-plt.hlines(lower_bound, 0, num_splits, color='k', label='Lower Bound')
-plt.hlines(upper_bound, 0, num_splits, color='b', label='Upper Bound')
+plt.hlines(exact_cov, 0, num_splits, color="r", ls="--", label="Exact Cov.")
+plt.hlines(lower_bound, 0, num_splits, color="k", label="Lower Bound")
+plt.hlines(upper_bound, 0, num_splits, color="b", label="Upper Bound")
 
-plt.xlabel(r'Split Number')
-plt.ylabel(r'$\overline{\mathbb{C}}$')
+plt.xlabel(r"Split Number")
+plt.ylabel(r"$\overline{\mathbb{C}}$")
 plt.title(
-    r'$|D_{cal}| = $' + str(n_conformalize) +
-    r' and $\delta = $' + str(confidence_level)
+    r"$|D_{cal}| = $"
+    + str(n_conformalize)
+    + r" and $\delta = $"
+    + str(confidence_level)
 )
 
 plt.legend(loc="upper right", ncol=2)
@@ -457,7 +464,7 @@ plt.show()
 num_splits = 100
 
 nc_min, nc_max = 10, 30
-n_calib_array = np.arange(nc_min, nc_max+1, 2)
+n_calib_array = np.arange(nc_min, nc_max + 1, 2)
 confidence_level = 0.8
 confidence_level_array = [confidence_level]
 
@@ -470,11 +477,18 @@ for method, params in STRATEGIES.items():
     for n_conformalize in n_calib_array:
         coverages_list = []
         run_params = (
-            model, method, params, n_conformalize, data, target, confidence_level
+            model,
+            method,
+            params,
+            n_conformalize,
+            data,
+            target,
+            confidence_level,
         )
         coverages_list = Parallel(n_jobs=-1)(
             delayed(run_get_coverage_prefit)(
-                *run_params, num_splits=num_splits, random_state=random_state)
+                *run_params, num_splits=num_splits, random_state=random_state
+            )
             for random_state in range(num_splits)
         )
         coverages_list = np.array(coverages_list)
@@ -488,11 +502,11 @@ def lower_bound_fct(delta):
 
 
 def upper_bound_fct(delta):
-    return delta + 1/(n_calib_array)
+    return delta + 1 / (n_calib_array)
 
 
 def upper_bound_asym_fct(delta):
-    return delta + 1/(n_calib_array//2)
+    return delta + 1 / (n_calib_array // 2)
 
 
 def exact_coverage_fct(delta):
@@ -500,7 +514,7 @@ def exact_coverage_fct(delta):
 
 
 def exact_coverage_asym_fct(delta):
-    new_n = n_calib_array//2 - 1
+    new_n = n_calib_array // 2 - 1
     return np.ceil((new_n + 1) * delta) / (new_n + 1)
 
 
@@ -516,27 +530,27 @@ for random_state, method in enumerate(final_coverage_dict):
     ub = upper_bound_fct(confidence_level)
     lb = lower_bound_fct(confidence_level)
     exact_cov = exact_coverage_fct(confidence_level)
-    if 'asym' in method:
+    if "asym" in method:
         ub = upper_bound_asym_fct(confidence_level)
         exact_cov = exact_coverage_asym_fct(confidence_level)
     ub = np.clip(ub, a_min=0, a_max=1)
     lb = np.clip(lb, a_min=0, a_max=1)
 
     # Plot the results
-    ax[random_state].plot(n_calib_array, cov, alpha=0.5, label=method, color='g')
-    ax[random_state].plot(n_calib_array, lb, color='k', label='Lower Bound')
-    ax[random_state].plot(n_calib_array, ub, color='b', label='Upper Bound')
+    ax[random_state].plot(n_calib_array, cov, alpha=0.5, label=method, color="g")
+    ax[random_state].plot(n_calib_array, lb, color="k", label="Lower Bound")
+    ax[random_state].plot(n_calib_array, ub, color="b", label="Upper Bound")
     ax[random_state].plot(
-        n_calib_array, exact_cov, color='g', ls='--', label='Exact Cov'
+        n_calib_array, exact_cov, color="g", ls="--", label="Exact Cov"
     )
     ax[random_state].hlines(
-        confidence_level, nc_min, nc_max, color='r', ls='--', label='Target Cov'
+        confidence_level, nc_min, nc_max, color="r", ls="--", label="Target Cov"
     )
 
     ax[random_state].legend(loc="upper right", ncol=2)
     ax[random_state].set_ylim(np.min(lb) - 0.05, 1.0)
-    ax[random_state].set_xlabel(r'$n_{calib}$')
-    ax[random_state].set_ylabel(r'$\overline{\mathbb{C}}$')
+    ax[random_state].set_xlabel(r"$n_{calib}$")
+    ax[random_state].set_ylabel(r"$\overline{\mathbb{C}}$")
 
-fig.suptitle(r'$\delta = $' + str(confidence_level))
+fig.suptitle(r"$\delta = $" + str(confidence_level))
 plt.show()

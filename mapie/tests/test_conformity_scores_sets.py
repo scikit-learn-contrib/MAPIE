@@ -9,8 +9,11 @@ from numpy.typing import NDArray
 from mapie.classification import _MapieClassifier
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.sets import (
-    APSConformityScore, LACConformityScore, NaiveConformityScore,
-    RAPSConformityScore, TopKConformityScore
+    APSConformityScore,
+    LACConformityScore,
+    NaiveConformityScore,
+    RAPSConformityScore,
+    TopKConformityScore,
 )
 from mapie.conformity_scores.utils import check_classification_conformity_score
 from mapie.utils import _check_alpha
@@ -19,19 +22,19 @@ from mapie.utils import _check_alpha
 random_state = 42
 
 cs_list = [
-    None, LACConformityScore(), APSConformityScore(), RAPSConformityScore(),
-    NaiveConformityScore(), TopKConformityScore()
+    None,
+    LACConformityScore(),
+    APSConformityScore(),
+    RAPSConformityScore(),
+    NaiveConformityScore(),
+    TopKConformityScore(),
 ]
 wrong_cs_list = [object(), "LAC", 1]
-valid_method_list = ['naive', 'aps', 'raps', 'lac', 'top_k']
+valid_method_list = ["naive", "aps", "raps", "lac", "top_k"]
 all_method_list = valid_method_list + [None]
-wrong_method_list = ['naive_', 'aps_', 'raps_', 'lac_', 'top_k_']
+wrong_method_list = ["naive_", "aps_", "raps_", "lac_", "top_k_"]
 
-REGULARIZATION_PARAMETERS = [
-    [.001, [1]],
-    [[.01, .2], [1, 3]],
-    [.1, [2, 4]]
-]
+REGULARIZATION_PARAMETERS = [[0.001, [1]], [[0.01, 0.2], [1, 3]], [0.1, [2, 4]]]
 
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 1, 2, 1, 2])
@@ -57,22 +60,19 @@ def test_error_mother_class_initialization() -> None:
 
 @pytest.mark.parametrize("conformity_score", cs_list)
 def test_check_classification_conformity_score(
-    conformity_score: Optional[BaseClassificationScore]
+    conformity_score: Optional[BaseClassificationScore],
 ) -> None:
     """
     Test that the function check_classification_conformity_score returns
     an instance of BaseClassificationScore when using conformity_score.
     """
     assert isinstance(
-        check_classification_conformity_score(conformity_score),
-        BaseClassificationScore
+        check_classification_conformity_score(conformity_score), BaseClassificationScore
     )
 
 
 @pytest.mark.parametrize("score", wrong_cs_list)
-def test_check_wrong_classification_score(
-    score: Any
-) -> None:
+def test_check_wrong_classification_score(score: Any) -> None:
     """
     Test that the function check_classification_conformity_score raises
     a ValueError when using a wrong score.
@@ -104,16 +104,14 @@ def test_get_true_label_cumsum_proba_shape() -> None:
     clf = LogisticRegression()
     clf.fit(X, y)
     y_pred = clf.predict_proba(X)
-    mapie_clf = _MapieClassifier(
-        estimator=clf, random_state=random_state
-    )
+    mapie_clf = _MapieClassifier(estimator=clf, random_state=random_state)
     mapie_clf.fit(X, y)
     classes = mapie_clf.classes_
     cumsum_proba, cutoff = APSConformityScore.get_true_label_cumsum_proba(
         y, y_pred, classes
     )
     assert cumsum_proba.shape == (len(X), 1)
-    assert cutoff.shape == (len(X), )
+    assert cutoff.shape == (len(X),)
 
 
 def test_get_true_label_cumsum_proba_result() -> None:
@@ -124,9 +122,7 @@ def test_get_true_label_cumsum_proba_result() -> None:
     clf = LogisticRegression()
     clf.fit(X_toy, y_toy)
     y_pred = clf.predict_proba(X_toy)
-    mapie_clf = _MapieClassifier(
-        estimator=clf, random_state=random_state
-    )
+    mapie_clf = _MapieClassifier(estimator=clf, random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
     classes = mapie_clf.classes_
     cumsum_proba, cutoff = APSConformityScore.get_true_label_cumsum_proba(
@@ -136,15 +132,17 @@ def test_get_true_label_cumsum_proba_result() -> None:
         cumsum_proba,
         np.array(
             [
-                y_pred[0, 0], y_pred[1, 0],
+                y_pred[0, 0],
+                y_pred[1, 0],
                 y_pred[2, 0] + y_pred[2, 1],
                 y_pred[3, 0] + y_pred[3, 1],
-                y_pred[4, 1], y_pred[5, 1],
+                y_pred[4, 1],
+                y_pred[5, 1],
                 y_pred[6, 1] + y_pred[6, 2],
                 y_pred[7, 1] + y_pred[7, 2],
-                y_pred[8, 2]
+                y_pred[8, 2],
             ]
-        )[:, np.newaxis]
+        )[:, np.newaxis],
     )
     np.testing.assert_allclose(cutoff, np.array([1, 1, 2, 2, 1, 1, 2, 2, 1]))
 
@@ -158,22 +156,23 @@ def test_get_last_included_proba_shape(k_lambda, include_last_label):
     """
     lambda_, k = k_lambda[0], k_lambda[1]
     if len(k) == 1:
-        thresholds = .2
+        thresholds = 0.2
     else:
         thresholds = np.random.rand(len(k))
     thresholds = cast(NDArray, _check_alpha(thresholds))
     clf = LogisticRegression()
     clf.fit(X, y)
     y_pred_proba = clf.predict_proba(X)
-    y_pred_proba = np.repeat(
-        y_pred_proba[:, :, np.newaxis], len(thresholds), axis=2
-    )
+    y_pred_proba = np.repeat(y_pred_proba[:, :, np.newaxis], len(thresholds), axis=2)
 
-    y_p_p_c, y_p_i_l, y_p_p_i_l = \
-        RAPSConformityScore._get_last_included_proba(
-            RAPSConformityScore(), y_pred_proba, thresholds,
-            include_last_label, lambda_=lambda_, k_star=k
-        )
+    y_p_p_c, y_p_i_l, y_p_p_i_l = RAPSConformityScore._get_last_included_proba(
+        RAPSConformityScore(),
+        y_pred_proba,
+        thresholds,
+        include_last_label,
+        lambda_=lambda_,
+        k_star=k,
+    )
 
     assert y_p_p_c.shape == (len(X), len(np.unique(y)), len(thresholds))
     assert y_p_i_l.shape == (len(X), 1, len(thresholds))

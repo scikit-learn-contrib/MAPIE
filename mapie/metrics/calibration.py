@@ -65,9 +65,7 @@ def expected_calibration_error(
     _check_array_inf(y_scores)
 
     if np.size(y_scores.shape) == 2:
-        y_score = cast(
-            NDArray, column_or_1d(np.nanmax(y_scores, axis=1))
-        )
+        y_score = cast(NDArray, column_or_1d(np.nanmax(y_scores, axis=1)))
     else:
         y_score = cast(NDArray, column_or_1d(y_scores))
 
@@ -76,8 +74,7 @@ def expected_calibration_error(
     )
 
     return np.divide(
-        np.sum(bin_sizes * np.abs(bin_accs - bin_confs)),
-        np.sum(bin_sizes)
+        np.sum(bin_sizes * np.abs(bin_accs - bin_confs)), np.sum(bin_sizes)
     )
 
 
@@ -141,18 +138,14 @@ def top_label_ece(
         _check_array_inf(y_score_arg)
         _check_arrays_length(y_true, y_scores, y_score_arg)
 
-    ece = float(0.)
+    ece = float(0.0)
     split_strategy = _check_split_strategy(split_strategy)
     num_bins = _check_number_bins(num_bins)
     y_true = cast(NDArray, column_or_1d(y_true))
     if y_score_arg is None:
-        y_score = cast(
-            NDArray, column_or_1d(np.nanmax(y_scores, axis=1))
-        )
+        y_score = cast(NDArray, column_or_1d(np.nanmax(y_scores, axis=1)))
         if classes is None:
-            y_score_arg = cast(
-                NDArray, column_or_1d(np.nanargmax(y_scores, axis=1))
-            )
+            y_score_arg = cast(NDArray, column_or_1d(np.nanargmax(y_scores, axis=1)))
         else:
             classes = cast(NDArray, classes)
             y_score_arg = cast(
@@ -170,7 +163,7 @@ def top_label_ece(
             y_true_,
             y_scores=y_score[label_ind],
             num_bins=num_bins,
-            split_strategy=split_strategy
+            split_strategy=split_strategy,
         )
     ece /= len(labels)
     return ece
@@ -179,7 +172,7 @@ def top_label_ece(
 def add_jitter(
     x: NDArray,
     noise_amplitude: float = 1e-8,
-    random_state: Optional[Union[int, np.random.RandomState]] = None
+    random_state: Optional[Union[int, np.random.RandomState]] = None,
 ) -> NDArray:
     """
     Add a tiny normal distributed perturbation to an array x.
@@ -257,7 +250,7 @@ def cumulative_differences(
     y_true: NDArray,
     y_score: NDArray,
     noise_amplitude: float = 1e-8,
-    random_state: Optional[Union[int, np.random.RandomState]] = 1
+    random_state: Optional[Union[int, np.random.RandomState]] = 1,
 ) -> NDArray:
     """
     Compute the cumulative difference between y_true and y_score, both ordered
@@ -314,12 +307,10 @@ def cumulative_differences(
 
     n = len(y_true)
     y_score_jittered = add_jitter(
-        y_score,
-        noise_amplitude=noise_amplitude,
-        random_state=random_state
+        y_score, noise_amplitude=noise_amplitude, random_state=random_state
     )
     y_true_sorted, y_score_sorted = sort_xy_by_y(y_true, y_score_jittered)
-    cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted)/n
+    cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted) / n
     return cumulative_differences
 
 
@@ -356,7 +347,7 @@ def length_scale(s: NDArray) -> float:
     0.16
     """
     n = len(s)
-    length_scale = np.sqrt(np.sum(s * (1 - s)))/n
+    length_scale = np.sqrt(np.sum(s * (1 - s))) / n
     return length_scale
 
 
@@ -455,12 +446,12 @@ def kolmogorov_smirnov_cdf(x: float) -> float:
     0.3708
     """
     kmax = np.ceil(
-        0.5 + x * np.sqrt(2) / np.pi * np.sqrt(np.log(4 / (np.pi*EPSILON)))
+        0.5 + x * np.sqrt(2) / np.pi * np.sqrt(np.log(4 / (np.pi * EPSILON)))
     )
     c = 0.0
     for k in range(int(kmax)):
         kplus = k + 1 / 2
-        c += (-1)**k / kplus * np.exp(-kplus**2 * np.pi**2 / (2 * x**2))
+        c += (-1) ** k / kplus * np.exp(-(kplus**2) * np.pi**2 / (2 * x**2))
     c *= 2 / np.pi
     return c
 
@@ -614,20 +605,19 @@ def kuiper_cdf(x: float) -> float:
     """
     kmax = np.ceil(
         (
-            0.5 + x / (np.pi * np.sqrt(2)) *
-            np.sqrt(
-                np.log(
-                    4 / (np.sqrt(2 * np.pi) * EPSILON) * (1 / x + x / np.pi**2)
-                )
+            0.5
+            + x
+            / (np.pi * np.sqrt(2))
+            * np.sqrt(
+                np.log(4 / (np.sqrt(2 * np.pi) * EPSILON) * (1 / x + x / np.pi**2))
             )
         )
     )
     c = 0.0
     for k in range(int(kmax)):
         kplus = k + 1 / 2
-        c += (
-            (8 / x**2 + 2 / kplus**2 / np.pi**2) *
-            np.exp(-2 * kplus**2 * np.pi**2 / x**2)
+        c += (8 / x**2 + 2 / kplus**2 / np.pi**2) * np.exp(
+            -2 * kplus**2 * np.pi**2 / x**2
         )
     return c
 
@@ -734,15 +724,9 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
 
     y_true = column_or_1d(y_true)
     y_score = column_or_1d(y_score)
-    numerator: float = np.sum(
-        (y_true - y_score) * (1 - 2 * y_score)
-    )
-    denominator = np.sqrt(
-        np.sum(
-            (1 - 2 * y_score) ** 2 * y_score * (1 - y_score)
-        )
-    )
-    sp_stat = numerator/denominator
+    numerator: float = np.sum((y_true - y_score) * (1 - 2 * y_score))
+    denominator = np.sqrt(np.sum((1 - 2 * y_score) ** 2 * y_score * (1 - y_score)))
+    sp_stat = numerator / denominator
     return sp_stat
 
 

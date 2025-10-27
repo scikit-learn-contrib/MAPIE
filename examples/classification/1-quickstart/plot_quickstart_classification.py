@@ -26,9 +26,10 @@ np.random.seed(42)
 
 X, y = make_blobs(n_samples=500, n_features=2, centers=3, cluster_std=3.4)
 
-(X_train, X_conformalize, X_test,
- y_train, y_conformalize, y_test) = train_conformalize_test_split(
-    X, y, train_size=0.4, conformalize_size=0.4, test_size=0.2
+(X_train, X_conformalize, X_test, y_train, y_conformalize, y_test) = (
+    train_conformalize_test_split(
+        X, y, train_size=0.4, conformalize_size=0.4, test_size=0.2
+    )
 )
 
 ##############################################################################
@@ -61,9 +62,11 @@ y_pred, y_pred_set = mapie_classifier.predict_set(X_test)
 # true labels fall within the predicted sets).
 
 coverage_score = classification_coverage_score(y_test, y_pred_set)
-print(f"For a confidence level of {confidence_level:.2f}, "
-      f"the target coverage is {confidence_level:.3f}, "
-      f"and the effective coverage is {coverage_score[0]:.3f}.")
+print(
+    f"For a confidence level of {confidence_level:.2f}, "
+    f"the target coverage is {confidence_level:.3f}, "
+    f"and the effective coverage is {coverage_score[0]:.3f}."
+)
 
 ##############################################################################
 # In this example, the effective coverage is slightly above the target coverage
@@ -86,23 +89,30 @@ X_test_mesh = np.stack([xx.ravel(), yy.ravel()], axis=1)
 y_pred_set = mapie_classifier.predict_set(X_test_mesh)[1][:, :, 0]
 
 cmap_back = ListedColormap(
-    [(0.7803921568627451, 0.9137254901960784, 0.7529411764705882),
-     (0.9921568627450981, 0.8156862745098039, 0.6352941176470588),
-     (0.6196078431372549, 0.6039215686274509, 0.7843137254901961),
-     (0.7764705882352941, 0.8588235294117647, 0.9372549019607843),
-     (0.6196078431372549, 0.6039215686274509, 0.7843137254901961),
-     (0.6196078431372549, 0.6039215686274509, 0.7843137254901961)]
+    [
+        (0.7803921568627451, 0.9137254901960784, 0.7529411764705882),
+        (0.9921568627450981, 0.8156862745098039, 0.6352941176470588),
+        (0.6196078431372549, 0.6039215686274509, 0.7843137254901961),
+        (0.7764705882352941, 0.8588235294117647, 0.9372549019607843),
+        (0.6196078431372549, 0.6039215686274509, 0.7843137254901961),
+        (0.6196078431372549, 0.6039215686274509, 0.7843137254901961),
+    ]
 )
 cmap_dots = ListedColormap(
-    [(0.19215686274509805, 0.5098039215686274, 0.7411764705882353),
-     (0.9019607843137255, 0.3333333333333333, 0.050980392156862744),
-     (0.19215686274509805, 0.6392156862745098, 0.32941176470588235)]
+    [
+        (0.19215686274509805, 0.5098039215686274, 0.7411764705882353),
+        (0.9019607843137255, 0.3333333333333333, 0.050980392156862744),
+        (0.19215686274509805, 0.6392156862745098, 0.32941176470588235),
+    ]
 )
 
 plt.scatter(
-   X_test_mesh[:, 0], X_test_mesh[:, 1],
-   c=np.ravel_multi_index(y_pred_set.T, (2, 2, 2)),
-   cmap=cmap_back, marker='.', s=10
+    X_test_mesh[:, 0],
+    X_test_mesh[:, 1],
+    c=np.ravel_multi_index(y_pred_set.T, (2, 2, 2)),
+    cmap=cmap_back,
+    marker=".",
+    s=10,
 )
 plt.scatter(X[:, 0], X[:, 1], c=y, cmap=cmap_dots)
 plt.xlabel("x1")

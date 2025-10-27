@@ -75,9 +75,7 @@ X = np.vstack(
 y = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 X_train, X_conf, y_train, y_conf = train_test_split(X, y, test_size=0.3)
 
-xx, yy = np.meshgrid(
-    np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
-)
+xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(x_min, x_max, step))
 X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
 
@@ -119,17 +117,15 @@ alpha = [0.2, 0.1, 0.05]
 for conformity_score in conformity_scores:
     mapie[conformity_score] = SplitConformalClassifier(
         estimator=clf,
-        confidence_level=1-np.array(alpha),
+        confidence_level=1 - np.array(alpha),
         conformity_score=conformity_score,
         prefit=True,
         random_state=42,
     )
     mapie[conformity_score].conformalize(X_conf, y_conf)
-    y_pred_mapie[conformity_score], y_ps_mapie[conformity_score] = (
-        mapie[conformity_score].predict_set(
-            X_test, conformity_score_params={"include_last_label": True}
-        )
-    )
+    y_pred_mapie[conformity_score], y_ps_mapie[conformity_score] = mapie[
+        conformity_score
+    ].predict_set(X_test, conformity_score_params={"include_last_label": True})
 
 
 ##############################################################################
@@ -174,8 +170,9 @@ fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 for i, conformity_score in enumerate(conformity_scores):
     conf_scores = mapie[conformity_score]._mapie_classifier.conformity_scores_
     n = mapie[conformity_score]._mapie_classifier.n_samples_
-    quantiles = (
-        mapie[conformity_score]._mapie_classifier.conformity_score_function_.quantiles_)
+    quantiles = mapie[
+        conformity_score
+    ]._mapie_classifier.conformity_score_function_.quantiles_
     plot_scores(alpha, conf_scores, quantiles, conformity_score, axs[i])
 plt.show()
 
@@ -254,7 +251,7 @@ mapie, y_ps_mapie = {}, {}
 for conformity_score in conformity_scores:
     mapie[conformity_score] = SplitConformalClassifier(
         estimator=clf,
-        confidence_level=1-alpha_,
+        confidence_level=1 - alpha_,
         conformity_score=conformity_score,
         prefit=True,
         random_state=42,
@@ -274,8 +271,9 @@ fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 axs[0].set_xlabel("1 - alpha")
 axs[0].set_ylabel("Quantile")
 for conformity_score in conformity_scores:
-    quantiles = (
-        mapie[conformity_score]._mapie_classifier.conformity_score_function_.quantiles_)
+    quantiles = mapie[
+        conformity_score
+    ]._mapie_classifier.conformity_score_function_.quantiles_
     axs[0].scatter(1 - alpha_, quantiles, label=conformity_score)
 axs[0].legend()
 for conformity_score in conformity_scores:

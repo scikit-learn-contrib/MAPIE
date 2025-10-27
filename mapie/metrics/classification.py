@@ -8,7 +8,9 @@ from mapie.utils import (
     _check_arrays_length,
     _check_array_nan,
     _check_array_inf,
-    _check_array_shape_classification, _check_nb_sets_sizes, _check_number_bins,
+    _check_array_shape_classification,
+    _check_nb_sets_sizes,
+    _check_number_bins,
 )
 
 
@@ -49,10 +51,7 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     return mean_width
 
 
-def classification_coverage_score(
-    y_true: NDArray,
-    y_pred_set: NDArray
-) -> NDArray:
+def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArray:
     """
     Effective coverage score obtained by the prediction sets.
 
@@ -119,17 +118,12 @@ def classification_coverage_score(
         y_true = cast(NDArray, column_or_1d(y_true))
         y_true = np.expand_dims(y_true, axis=1)
     y_true = np.expand_dims(y_true, axis=1)
-    coverage = np.nanmean(
-        np.take_along_axis(y_pred_set, y_true, axis=1),
-        axis=0
-    )
+    coverage = np.nanmean(np.take_along_axis(y_pred_set, y_true, axis=1), axis=0)
     return coverage[0]
 
 
 def classification_ssc(
-    y_true: NDArray,
-    y_pred_set: NDArray,
-    num_bins: Union[int, None] = None
+    y_true: NDArray, y_pred_set: NDArray, num_bins: Union[int, None] = None
 ) -> NDArray:
     """
     Compute Size-Stratified Coverage metrics proposed in [3] that is
@@ -188,34 +182,25 @@ def classification_ssc(
     else:
         _check_nb_sets_sizes(sizes, num_bins)
         _check_number_bins(num_bins)
-        bins = [
-            b[0] for b in np.array_split(range(n_classes + 1), num_bins)
-        ]
+        bins = [b[0] for b in np.array_split(range(n_classes + 1), num_bins)]
 
     digitized_sizes: NDArray = np.digitize(sizes, bins)
     coverages = np.zeros((y_pred_set.shape[2], len(bins)))
     for alpha in range(y_pred_set.shape[2]):
         indexes_bybins = [
-            np.argwhere(digitized_sizes[:, alpha] == i)
-            for i in range(1, len(bins)+1)
+            np.argwhere(digitized_sizes[:, alpha] == i) for i in range(1, len(bins) + 1)
         ]
 
         for i, indexes in enumerate(indexes_bybins):
             coverages[alpha, i] = classification_coverage_score(
                 y_true[indexes],
-                np.take_along_axis(
-                    y_pred_set[:, :, alpha],
-                    indexes,
-                    axis=0
-                )
+                np.take_along_axis(y_pred_set[:, :, alpha], indexes, axis=0),
             ).item()
     return coverages
 
 
 def classification_ssc_score(
-    y_true: NDArray,
-    y_pred_set: NDArray,
-    num_bins: Union[int, None] = None
+    y_true: NDArray, y_pred_set: NDArray, num_bins: Union[int, None] = None
 ) -> NDArray:
     """
     Aggregate by the minimum for each confidence level the Size-Stratified Coverage [3]:

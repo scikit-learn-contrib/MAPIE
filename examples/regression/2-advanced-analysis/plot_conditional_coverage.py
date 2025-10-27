@@ -27,18 +27,18 @@ from lightgbm import LGBMRegressor
 from sklearn.model_selection import train_test_split
 
 from numpy.typing import NDArray
-from mapie.conformity_scores import (GammaConformityScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import GammaConformityScore, ResidualNormalisedScore
 from mapie.metrics.regression import (
     regression_coverage_score,
     regression_ssc,
-    regression_ssc_score, hsic,
+    regression_ssc_score,
+    hsic,
 )
 from mapie.regression import (
     SplitConformalRegressor,
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
-    ConformalizedQuantileRegressor
+    ConformalizedQuantileRegressor,
 )
 
 warnings.filterwarnings("ignore")
@@ -95,17 +95,13 @@ def sin_with_controlled_noise(
 # Data generation
 min_x, max_x, n_samples = 0, 10, 3000
 X_train_conformalize, y_train_conformalize = sin_with_controlled_noise(
-    min_x, max_x, n_samples)
-X_test, y_test = sin_with_controlled_noise(min_x, max_x,
-                                           int(n_samples * split_size))
+    min_x, max_x, n_samples
+)
+X_test, y_test = sin_with_controlled_noise(min_x, max_x, int(n_samples * split_size))
 
 # Definition of our base models
 model = LGBMRegressor(random_state=RANDOM_STATE, alpha=0.5)
-model_quant = LGBMRegressor(
-            objective="quantile",
-            alpha=0.5,
-            random_state=RANDOM_STATE
-)
+model_quant = LGBMRegressor(objective="quantile", alpha=0.5, random_state=RANDOM_STATE)
 
 
 # Definition of the experimental set up
@@ -117,9 +113,10 @@ STRATEGIES = {
     "jackknife_plus_ab": {
         "class": JackknifeAfterBootstrapRegressor,
         "init_params": dict(
-            method="plus", resampling=100,
+            method="plus",
+            resampling=100,
             conformity_score=GammaConformityScore(),
-        )
+        ),
     },
     "residual_normalised": {
         "class": SplitConformalRegressor,
@@ -144,11 +141,11 @@ for strategy_name, strategy_params in STRATEGIES.items():
     init_params = strategy_params["init_params"]
     class_ = strategy_params["class"]
     if strategy_name in ["conformalized_quantile_regression", "residual_normalised"]:
-        X_train, X_conformalize, y_train, y_conformalize = (
-            train_test_split(
-                X_train_conformalize, y_train_conformalize,
-                test_size=0.3, random_state=RANDOM_STATE
-            )
+        X_train, X_conformalize, y_train, y_conformalize = train_test_split(
+            X_train_conformalize,
+            y_train_conformalize,
+            test_size=0.3,
+            random_state=RANDOM_STATE,
         )
         mapie = class_(model_quant, confidence_level=0.95, **init_params)
         mapie.fit(X_train, y_train)
@@ -162,9 +159,7 @@ for strategy_name, strategy_params in STRATEGIES.items():
         y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test)
 
     # computing metrics
-    coverage[strategy_name] = regression_coverage_score(
-        y_test, y_pis[strategy_name]
-    )
+    coverage[strategy_name] = regression_coverage_score(y_test, y_pis[strategy_name])
     cond_coverage[strategy_name] = regression_ssc_score(
         y_test, y_pis[strategy_name], num_bins=1
     )
@@ -174,18 +169,14 @@ for strategy_name, strategy_params in STRATEGIES.items():
 # Visualisation of the estimated conditional coverage
 estimated_cond_cov = pd.DataFrame(
     columns=["global coverage", "max coverage violation", "hsic"],
-    index=STRATEGIES.keys())
+    index=STRATEGIES.keys(),
+)
 for m, cov, ssc, coef in zip(
-    STRATEGIES.keys(),
-    coverage.values(),
-    cond_coverage.values(),
-    coef_corr.values()
+    STRATEGIES.keys(), coverage.values(), cond_coverage.values(), coef_corr.values()
 ):
-    estimated_cond_cov.loc[m] = [
-        round(cov[0], 2), round(ssc[0], 2), round(coef[0], 2)
-    ]
+    estimated_cond_cov.loc[m] = [round(cov[0], 2), round(ssc[0], 2), round(coef[0], 2)]
 
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+with pd.option_context("display.max_rows", None, "display.max_columns", None):
     print(estimated_cond_cov)
 
 ##############################################################################
@@ -242,8 +233,7 @@ def plot_intervals(X, y, y_pred, intervals, title="", ax=None):
     ax.scatter(X.ravel(), y, color="#1f77b4", alpha=0.3, label="data")
     # predictions
     ax.scatter(
-        X.ravel(), y_pred,
-        color="#ff7f0e", marker="+", label="predictions", alpha=0.5
+        X.ravel(), y_pred, color="#ff7f0e", marker="+", label="predictions", alpha=0.5
     )
     # intervals
     for i in range(intervals.shape[-1]):
@@ -252,7 +242,7 @@ def plot_intervals(X, y, y_pred, intervals, title="", ax=None):
             intervals[:, 0, i][order],
             intervals[:, 1, i][order],
             color="#ff7f0e",
-            alpha=0.3
+            alpha=0.3,
         )
 
     ax.set_xlabel("x")
@@ -283,22 +273,20 @@ def plot_coverage_by_width(y, intervals, num_bins, alpha, title="", ax=None):
     if ax is None:
         fig, ax = plt.subplots(figsize=(6, 5))
 
-    ax.bar(
-        np.arange(num_bins),
-        regression_ssc(y, intervals, num_bins=num_bins)[0]
-    )
-    ax.axhline(y=1 - alpha, color='r', linestyle='-')
+    ax.bar(np.arange(num_bins), regression_ssc(y, intervals, num_bins=num_bins)[0])
+    ax.axhline(y=1 - alpha, color="r", linestyle="-")
     ax.set_title(title)
     ax.set_xlabel("intervals grouped by size")
     ax.set_ylabel("coverage")
-    ax.tick_params(
-        axis='x', which='both', bottom=False, top=False, labelbottom=False
-    )
+    ax.tick_params(axis="x", which="both", bottom=False, top=False, labelbottom=False)
 
 
-max_width = np.max([
-    np.abs(y_pis[strategy][:, 0, 0] - y_pis[strategy][:, 1, 0])
-    for strategy in STRATEGIES.keys()])
+max_width = np.max(
+    [
+        np.abs(y_pis[strategy][:, 0, 0] - y_pis[strategy][:, 1, 0])
+        for strategy in STRATEGIES.keys()
+    ]
+)
 
 fig_distr, axs_distr = plt.subplots(nrows=2, ncols=2, figsize=(12, 10))
 fig_viz, axs_viz = plt.subplots(nrows=2, ncols=2, figsize=(12, 10))
@@ -308,17 +296,19 @@ for ax_viz, ax_hist, ax_distr, strategy in zip(
     axs_viz.flat, axs_hist.flat, axs_distr.flat, STRATEGIES.keys()
 ):
     plot_intervals(
-        X_test, y_test, y_pred[strategy], y_pis[strategy],
-        title=strategy, ax=ax_viz
+        X_test, y_test, y_pred[strategy], y_pis[strategy], title=strategy, ax=ax_viz
     )
     plot_coverage_by_width(
-        y_test, y_pis[strategy],
-        num_bins=num_bins, alpha=alpha, title=strategy, ax=ax_hist
+        y_test,
+        y_pis[strategy],
+        num_bins=num_bins,
+        alpha=alpha,
+        title=strategy,
+        ax=ax_hist,
     )
 
     ax_distr.hist(
-        np.abs(y_pis[strategy][:, 0, 0] - y_pis[strategy][:, 1, 0]),
-        bins=num_bins
+        np.abs(y_pis[strategy][:, 0, 0] - y_pis[strategy][:, 1, 0]), bins=num_bins
     )
     ax_distr.set_xlabel("Interval width")
     ax_distr.set_ylabel("Occurences")

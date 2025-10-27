@@ -71,26 +71,24 @@ def ltt_procedure(
     "Calibrating predictive algorithms to achieve risk control".
     """
     if not (r_hat.shape[0] == n_obs.shape[0] == alpha_np.shape[0]):
-        raise ValueError(
-            "r_hat, n_obs, and alpha_np must have the same length."
-        )
-    p_values = np.array([
-        compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
-        for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
-    ])
+        raise ValueError("r_hat, n_obs, and alpha_np must have the same length.")
+    p_values = np.array(
+        [
+            compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
+            for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
+        ]
+    )
     p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
     N = len(p_values)
     valid_index = []
     for i in range(alpha_np.shape[1]):
-        l_index = np.nonzero(p_values[:, i] <= delta/N)[0].tolist()
+        l_index = np.nonzero(p_values[:, i] <= delta / N)[0].tolist()
         valid_index.append(l_index)
     return valid_index
 
 
 def find_lambda_control_star(
-    r_hat: NDArray,
-    valid_index: List[List[Any]],
-    lambdas: NDArray
+    r_hat: NDArray, valid_index: List[List[Any]], lambdas: NDArray
 ) -> Tuple[ArrayLike, ArrayLike]:
     """
     Return the lambda that give the minimum precision along

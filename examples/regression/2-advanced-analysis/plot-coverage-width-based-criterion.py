@@ -26,12 +26,14 @@ from sklearn.model_selection import train_test_split
 
 from mapie.metrics.regression import (
     regression_coverage_score,
-    regression_mean_width_score, coverage_width_based,
+    regression_mean_width_score,
+    coverage_width_based,
 )
 from mapie.regression import (
     CrossConformalRegressor,
     ConformalizedQuantileRegressor,
-    JackknifeAfterBootstrapRegressor)
+    JackknifeAfterBootstrapRegressor,
+)
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 warnings.filterwarnings("ignore")
@@ -49,12 +51,10 @@ RANDOM_STATE = 1
 
 def x_sinx(x):
     """One-dimensional x*sin(x) function."""
-    return x*np.sin(x)
+    return x * np.sin(x)
 
 
-def get_1d_data_with_heteroscedastic_noise(
-    funct, min_x, max_x, n_samples, noise
-):
+def get_1d_data_with_heteroscedastic_noise(funct, min_x, max_x, n_samples, noise):
     """
     Generate 1D noisy data uniformely from the given function
     and standard deviation for the noise.
@@ -62,19 +62,11 @@ def get_1d_data_with_heteroscedastic_noise(
     np.random.seed(59)
     X_train = np.linspace(min_x, max_x, n_samples)
     np.random.shuffle(X_train)
-    X_test = np.linspace(min_x, max_x, n_samples*5)
-    y_train = (
-        funct(X_train) +
-        (np.random.normal(0, noise, len(X_train)) * X_train)
-    )
-    y_test = (
-        funct(X_test) +
-        (np.random.normal(0, noise, len(X_test)) * X_test)
-    )
+    X_test = np.linspace(min_x, max_x, n_samples * 5)
+    y_train = funct(X_train) + (np.random.normal(0, noise, len(X_train)) * X_train)
+    y_test = funct(X_test) + (np.random.normal(0, noise, len(X_test)) * X_test)
     y_mesh = funct(X_test)
-    return (
-        X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh
-    )
+    return (X_train.reshape(-1, 1), y_train, X_test.reshape(-1, 1), y_test, y_mesh)
 
 
 ##############################################################################
@@ -83,10 +75,8 @@ def get_1d_data_with_heteroscedastic_noise(
 # linearly with `x`.
 
 min_x, max_x, n_samples, noise = 0, 5, 300, 0.5
-(
-    X_train_conformalize, y_train_conformalize, X_test, y_test, y_mesh
-) = get_1d_data_with_heteroscedastic_noise(
-    x_sinx, min_x, max_x, n_samples, noise
+(X_train_conformalize, y_train_conformalize, X_test, y_test, y_mesh) = (
+    get_1d_data_with_heteroscedastic_noise(x_sinx, min_x, max_x, n_samples, noise)
 )
 
 ##############################################################################
@@ -106,18 +96,18 @@ plt.show()
 
 degree_polyn = 10
 polyn_model = Pipeline(
-    [
-        ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", LinearRegression())
-    ]
+    [("poly", PolynomialFeatures(degree=degree_polyn)), ("linear", LinearRegression())]
 )
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", QuantileRegressor(
+        (
+            "linear",
+            QuantileRegressor(
                 solver="highs",
                 alpha=0,
-        ))
+            ),
+        ),
     ]
 )
 
@@ -172,11 +162,11 @@ for strategy_name, strategy_params in STRATEGIES.items():
     init_params = strategy_params["init_params"]
     class_ = strategy_params["class"]
     if strategy_name == "conformalized_quantile_regression":
-        X_train, X_conformalize, y_train, y_conformalize = (
-            train_test_split(
-                X_train_conformalize, y_train_conformalize,
-                test_size=0.3, random_state=RANDOM_STATE
-            )
+        X_train, X_conformalize, y_train, y_conformalize = train_test_split(
+            X_train_conformalize,
+            y_train_conformalize,
+            test_size=0.3,
+            random_state=RANDOM_STATE,
         )
         mapie = class_(polyn_model_quant, confidence_level=0.95, **init_params)
         mapie.fit(X_train, y_train)
@@ -205,7 +195,7 @@ def plot_1d_data(
     y_pred_low,
     y_pred_up,
     ax=None,
-    title=None
+    title=None,
 ):
     ax.set_xlabel("x")
     ax.set_ylabel("y")
@@ -214,9 +204,7 @@ def plot_1d_data(
     ax.plot(X_test, y_test, color="gray", label="True confidence intervals")
     ax.plot(X_test, y_test - y_sigma, color="gray", ls="--")
     ax.plot(X_test, y_test + y_sigma, color="gray", ls="--")
-    ax.plot(
-        X_test, y_pred, color="blue", alpha=0.5, label="Prediction intervals"
-    )
+    ax.plot(X_test, y_pred, color="blue", alpha=0.5, label="Prediction intervals")
     if title is not None:
         ax.set_title(title)
     ax.legend()
@@ -228,7 +216,7 @@ strategies = [
     "cv_plus",
     "cv_minmax",
     "jackknife_plus_ab",
-    "conformalized_quantile_regression"
+    "conformalized_quantile_regression",
 ]
 n_figs = len(strategies)
 fig, axs = plt.subplots(3, 2, figsize=(9, 13))
@@ -239,12 +227,12 @@ for strategy, coord in zip(strategies, coords):
         y_train.ravel(),
         X_test.ravel(),
         y_mesh.ravel(),
-        (1.96*noise*X_test).ravel(),
+        (1.96 * noise * X_test).ravel(),
         y_pred[strategy].ravel(),
         y_pis[strategy][:, 0, 0].ravel(),
         y_pis[strategy][:, 1, 0].ravel(),
         ax=coord,
-        title=strategy
+        title=strategy,
     )
 plt.show()
 
@@ -260,31 +248,23 @@ width_mean_score = {}
 cwc_score = {}
 
 for strategy in STRATEGIES:
-    coverage_score[strategy] = regression_coverage_score(
-        y_test,
-        y_pis[strategy]
-    )[0]
-    width_mean_score[strategy] = regression_mean_width_score(
-        y_pis[strategy]
-    )[0]
+    coverage_score[strategy] = regression_coverage_score(y_test, y_pis[strategy])[0]
+    width_mean_score[strategy] = regression_mean_width_score(y_pis[strategy])[0]
     cwc_score[strategy] = coverage_width_based(
         y_test,
         y_pis[strategy][:, 0, 0],
         y_pis[strategy][:, 1, 0],
         eta=0.001,
-        confidence_level=0.95
+        confidence_level=0.95,
     )
 
 results = pd.DataFrame(
     [
-        [
-            coverage_score[strategy],
-            width_mean_score[strategy],
-            cwc_score[strategy]
-        ] for strategy in STRATEGIES
+        [coverage_score[strategy], width_mean_score[strategy], cwc_score[strategy]]
+        for strategy in STRATEGIES
     ],
     index=STRATEGIES,
-    columns=["Coverage", "Width average", "Coverage Width-based Criterion"]
+    columns=["Coverage", "Width average", "Coverage Width-based Criterion"],
 ).round(2)
 
 print(results)

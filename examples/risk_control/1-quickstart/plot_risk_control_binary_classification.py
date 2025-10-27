@@ -25,12 +25,14 @@ RANDOM_STATE = 1
 # (for conformalization), and test sets.
 
 X, y = make_circles(n_samples=5000, noise=0.3, factor=0.3, random_state=RANDOM_STATE)
-(X_train, X_calib, X_test,
- y_train, y_calib, y_test) = train_conformalize_test_split(
-     X, y,
-     train_size=0.8, conformalize_size=0.1, test_size=0.1,
-     random_state=RANDOM_STATE
-     )
+(X_train, X_calib, X_test, y_train, y_calib, y_test) = train_conformalize_test_split(
+    X,
+    y,
+    train_size=0.8,
+    conformalize_size=0.1,
+    test_size=0.1,
+    random_state=RANDOM_STATE,
+)
 
 # Plot the three datasets to visualize the distribution of the two classes.
 fig, axes = plt.subplots(1, 3, figsize=(18, 6))
@@ -39,12 +41,20 @@ datasets = [(X_train, y_train), (X_calib, y_calib), (X_test, y_test)]
 
 for i, (ax, (X_data, y_data), title) in enumerate(zip(axes, datasets, titles)):
     ax.scatter(
-        X_data[y_data == 0, 0], X_data[y_data == 0, 1],
-        edgecolors="k", c="tab:blue", label='"negative" class', alpha=0.5
+        X_data[y_data == 0, 0],
+        X_data[y_data == 0, 1],
+        edgecolors="k",
+        c="tab:blue",
+        label='"negative" class',
+        alpha=0.5,
     )
     ax.scatter(
-        X_data[y_data == 1, 0], X_data[y_data == 1, 1],
-        edgecolors="k", c="tab:red", label='"positive" class', alpha=0.5
+        X_data[y_data == 1, 0],
+        X_data[y_data == 1, 1],
+        edgecolors="k",
+        c="tab:red",
+        label='"positive" class',
+        alpha=0.5,
     )
     ax.set_title(title, fontsize=18)
     ax.set_xlabel("Feature 1", fontsize=16)
@@ -58,8 +68,12 @@ for i, (ax, (X_data, y_data), title) in enumerate(zip(axes, datasets, titles)):
 
 handles, labels = axes[0].get_legend_handles_labels()
 fig.legend(
-    handles, labels, loc="lower center", bbox_to_anchor=(0.5, -0.01),
-    ncol=2, fontsize=16
+    handles,
+    labels,
+    loc="lower center",
+    bbox_to_anchor=(0.5, -0.01),
+    ncol=2,
+    fontsize=16,
 )
 
 plt.suptitle("Visualization of Train, Calibration, and Test Sets", fontsize=22)
@@ -90,14 +104,16 @@ bcc = BinaryClassificationController(
     clf.predict_proba,
     "precision",
     target_level=target_precision,
-    confidence_level=confidence_level
-    )
+    confidence_level=confidence_level,
+)
 bcc.calibrate(X_calib, y_calib)
 
-print(f'{len(bcc.valid_predict_params)} thresholds found that guarantee a precision of '
-      f'at least {target_precision} with a confidence of {confidence_level}.\n'
-      'Among those, the one that maximizes the secondary objective (recall here) is: '
-      f'{bcc.best_predict_param:.3f}.')
+print(
+    f"{len(bcc.valid_predict_params)} thresholds found that guarantee a precision of "
+    f"at least {target_precision} with a confidence of {confidence_level}.\n"
+    "Among those, the one that maximizes the secondary objective (recall here) is: "
+    f"{bcc.best_predict_param:.3f}."
+)
 
 
 ##############################################################################
@@ -113,29 +129,42 @@ for i, threshold in enumerate(tested_thresholds):
     precisions[i] = precision_score(y_calib, y_pred)
 
 valid_thresholds_indices = np.array(
-    [t in bcc.valid_predict_params for t in tested_thresholds])
-best_threshold_index = np.where(
-    tested_thresholds == bcc.best_predict_param)[0][0]
+    [t in bcc.valid_predict_params for t in tested_thresholds]
+)
+best_threshold_index = np.where(tested_thresholds == bcc.best_predict_param)[0][0]
 
 plt.figure()
 plt.scatter(
-    tested_thresholds[valid_thresholds_indices], precisions[valid_thresholds_indices],
-    c='tab:green', label='Valid thresholds'
-    )
-plt.scatter(
-    tested_thresholds[~valid_thresholds_indices], precisions[~valid_thresholds_indices],
-    c='tab:red', label='Invalid thresholds'
-    )
-plt.scatter(
-    tested_thresholds[best_threshold_index], precisions[best_threshold_index],
-    c='tab:green', label='Best threshold', marker='*', edgecolors='k', s=300
-    )
-plt.axhline(target_precision, color='tab:gray', linestyle='--')
-plt.text(
-    0.7, target_precision+0.02, 'Target precision', color='tab:gray', fontstyle='italic'
+    tested_thresholds[valid_thresholds_indices],
+    precisions[valid_thresholds_indices],
+    c="tab:green",
+    label="Valid thresholds",
 )
-plt.xlabel('Threshold')
-plt.ylabel('Precision')
+plt.scatter(
+    tested_thresholds[~valid_thresholds_indices],
+    precisions[~valid_thresholds_indices],
+    c="tab:red",
+    label="Invalid thresholds",
+)
+plt.scatter(
+    tested_thresholds[best_threshold_index],
+    precisions[best_threshold_index],
+    c="tab:green",
+    label="Best threshold",
+    marker="*",
+    edgecolors="k",
+    s=300,
+)
+plt.axhline(target_precision, color="tab:gray", linestyle="--")
+plt.text(
+    0.7,
+    target_precision + 0.02,
+    "Target precision",
+    color="tab:gray",
+    fontstyle="italic",
+)
+plt.xlabel("Threshold")
+plt.ylabel("Precision")
 plt.legend()
 plt.show()
 
@@ -170,16 +199,24 @@ clf_threshold.fit(X_train, y_train)
 
 disp = DecisionBoundaryDisplay.from_estimator(
     clf_threshold, X_test, response_method="predict", cmap=plt.cm.coolwarm
-    )
+)
 
 plt.scatter(
-    X_test[y_test == 0, 0], X_test[y_test == 0, 1],
-    edgecolors='k', c='tab:blue', alpha=0.5, label='"negative" class'
-    )
+    X_test[y_test == 0, 0],
+    X_test[y_test == 0, 1],
+    edgecolors="k",
+    c="tab:blue",
+    alpha=0.5,
+    label='"negative" class',
+)
 plt.scatter(
-    X_test[y_test == 1, 0], X_test[y_test == 1, 1],
-    edgecolors='k', c='tab:red', alpha=0.5, label='"positive" class'
-    )
+    X_test[y_test == 1, 0],
+    X_test[y_test == 1, 1],
+    edgecolors="k",
+    c="tab:red",
+    alpha=0.5,
+    label='"positive" class',
+)
 plt.title("Decision Boundary of FixedThresholdClassifier")
 plt.xlabel("Feature 1")
 plt.ylabel("Feature 2")
