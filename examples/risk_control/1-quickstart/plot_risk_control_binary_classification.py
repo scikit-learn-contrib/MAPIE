@@ -88,7 +88,8 @@ target_precision = 0.8
 confidence_level = 0.9
 bcc = BinaryClassificationController(
     clf.predict_proba,
-    "precision", target_level=target_precision,
+    "precision",
+    target_level=target_precision,
     confidence_level=confidence_level
     )
 bcc.calibrate(X_calib, y_calib)
