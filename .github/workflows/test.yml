@@ -28,19 +28,23 @@ jobs:
             python-version: "3.9"
             numpy-version: "=1.23"
             sklearn-version: "=1.4"
+            ruff: "0.14.2"
           # latest stable dependencies
           - os: ubuntu-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
             sklearn-version: ""
+            ruff: ""
           - os: windows-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
             sklearn-version: ""
+            ruff: ""
           - os: macos-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
             sklearn-version: ""
+            ruff: ""
     defaults:
       run:
         shell: bash -l {0}
