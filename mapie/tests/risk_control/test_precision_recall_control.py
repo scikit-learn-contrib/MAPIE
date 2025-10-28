@@ -14,7 +14,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
-from mapie.risk_control.multi_label_classification import PrecisionRecallController
+from mapie.risk_control import PrecisionRecallController
 
 Params = TypedDict(
     "Params",

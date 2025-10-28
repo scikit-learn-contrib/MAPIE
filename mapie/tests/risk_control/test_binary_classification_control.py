@@ -12,17 +12,15 @@ from sklearn.metrics import precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
-from mapie.risk_control.binary_classification import (
+from mapie.risk_control import (
     BinaryClassificationController,
-    Risk,
-)
-from mapie.risk_control.risks import (
     BinaryClassificationRisk,
     accuracy,
     false_positive_rate,
     precision,
     recall,
 )
+from mapie.risk_control.binary_classification import Risk
 
 random_state = 42
 dummy_single_param = np.array([0.5])

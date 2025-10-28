@@ -15,7 +15,7 @@ from sklearn.metrics import precision_score
 from sklearn.model_selection import FixedThresholdClassifier
 from sklearn.neural_network import MLPClassifier
 
-from mapie.risk_control.binary_classification import BinaryClassificationController
+from mapie.risk_control import BinaryClassificationController
 from mapie.utils import train_conformalize_test_split
 
 RANDOM_STATE = 1
@@ -88,7 +88,7 @@ clf.fit(X_train, y_train)
 
 ##############################################################################
 # Next, we initialize a :class:
-# `~mapie.risk_control.binary_classification.BinaryClassificationController`
+# `~mapie.risk_control.BinaryClassificationController`
 # using the probability estimation function from the fitted estimator:
 # ``clf.predict_proba``, a risk or performance metric (here, "precision"),
 # a target risk level, and a confidence level. Then we use the calibration data
@@ -96,7 +96,7 @@ clf.fit(X_train, y_train)
 #
 # Different risks or performance metrics have been implemented, such as precision
 # and recall, but you can also implement your own custom function using
-# :class:`~mapie.risk_control.risks.BinaryClassificationRisk` and choose your own
+# :class:`~mapie.risk_control.BinaryClassificationRisk` and choose your own
 # secondary objective.
 
 target_precision = 0.8
@@ -182,12 +182,12 @@ plt.show()
 # the precision value to be ill-defined and set to 0.
 
 # Besides computing a set of valid thresholds,
-# :class:`~mapie.risk_control.binary_classification.BinaryClassificationController`
+# :class:`~mapie.risk_control.BinaryClassificationController`
 # also outputs the "best" one, which is the valid threshold that maximizes a
 # secondary objective (recall here).
 #
 # After obtaining the best threshold, we can use the ``predict`` function of
-# :class:`~mapie.risk_control.binary_classification.BinaryClassificationController`
+# :class:`~mapie.risk_control.BinaryClassificationController`
 # for future predictions, or use scikit-learn's ``FixedThresholdClassifier``
 # as a wrapper to benefit from functionalities like easily plotting the decision
 # boundary as seen below.

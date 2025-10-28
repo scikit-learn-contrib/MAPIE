@@ -144,7 +144,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     >>> import numpy as np
     >>> from sklearn.multioutput import MultiOutputClassifier
     >>> from sklearn.linear_model import LogisticRegression
-    >>> from mapie.risk_control.multi_label_classification import PrecisionRecallController
+    >>> from mapie.risk_control import PrecisionRecallController
     >>> X_toy = np.arange(4).reshape(-1, 1)
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)

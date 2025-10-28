@@ -55,7 +55,7 @@ class BinaryClassificationController:
         The risk or performance metric to control.
         Valid options:
 
-        - An existing risk defined in `mapie.risk_control.risks` accessible through
+        - An existing risk defined in `mapie.risk_control` accessible through
         its string equivalent: "precision", "recall", "accuracy", or
         "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
@@ -79,7 +79,7 @@ class BinaryClassificationController:
         Valid options:
 
         - "auto" (default)
-        - An existing risk defined in `mapie.risk_control.risks` accessible through
+        - An existing risk defined in `mapie.risk_control` accessible through
         its string equivalent: "precision", "recall", "accuracy", or
         "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
@@ -100,8 +100,7 @@ class BinaryClassificationController:
     >>> from sklearn.linear_model import LogisticRegression
     >>> from sklearn.datasets import make_classification
     >>> from sklearn.model_selection import train_test_split
-    >>> from mapie.risk_control.binary_classification import BinaryClassificationController
-    >>> from mapie.risk_control.risks import precision
+    >>> from mapie.risk_control import BinaryClassificationController, precision
 
     >>> X, y = make_classification(
     ...     n_features=2,
@@ -289,7 +288,7 @@ class BinaryClassificationController:
                 except KeyError:
                     raise ValueError(
                         "When best_predict_param_choice is 'auto', "
-                        "risk must be one of the risks defined in mapie.risk_control.risks"
+                        "risk must be one of the risks defined in mapie.risk_control"
                         "(e.g. precision, accuracy, false_positive_rate)."
                     )
         else:
