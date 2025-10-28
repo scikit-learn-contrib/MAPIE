@@ -679,7 +679,7 @@ class VennAbersCV:
 
         Returns
         ----------
-        p_prime: {array-like}, shape (n_samples,n_classses)
+        p_prime: {array-like}, shape (n_samples,n_classes)
             Venn-ABERS calibrated probabilities
 
         p0_p1: {array-like}, default  = None
@@ -924,7 +924,7 @@ class VennAbersMultiClass:
 
         Returns
         ----------
-        p_prime: {array-like}, shape (n_samples,n_classses)
+        p_prime: {array-like}, shape (n_samples,n_classes)
             Venn-ABERS calibrated probabilities
 
         p0_p1: {array-like}, default  = None
