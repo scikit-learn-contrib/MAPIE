@@ -531,7 +531,7 @@ class VennAbersCV:
 
     train_proper_size : float or int, default=None
         For IVAP only, if float, should be between 0.0 and 1.0 and represent the
-        proportion of the dataset to include in the poroper training set split. If
+        proportion of the dataset to include in the proper training set split. If
         int, represents the absolute number of train samples. If None,
         the value is automatically set to the complement of the test size.
 
@@ -767,7 +767,7 @@ class VennAbersMultiClass:
 
     train_size : float or int, default=None
         For IVAP only, if float, should be between 0.0 and 1.0 and represent the
-        proportion of the dataset to include in the poroper training set split. If
+        proportion of the dataset to include in the proper training set split. If
         int, represents the absolute number of train samples. If None,
         the value is automatically set to the complement of the test size.
 
